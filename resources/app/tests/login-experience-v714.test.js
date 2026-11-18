@@ -20,7 +20,7 @@ test('v7.14 login autocomplete uses dedicated lightweight auth endpoint and race
   assert.match(LOGIN, /SEARCH_LOADING_DELAY_MS = 200/);
   assert.match(LOGIN, /searchController\.abort\(\)/);
   assert.match(LOGIN, /const seq = \+\+requestSeq/);
-  assert.match(LOGIN, /if \(seq !== requestSeq\)/);
+  assert.match(LOGIN, /if \(seq !== requestSeq \|\| normalize\(\$\('username'\)\.value\) !== normalize\(query\) \|\| loginBusy\) return \[\]/);
 });
 
 test('v7.14 login user DTO is intentionally minimal and active-only', () => {
@@ -130,8 +130,10 @@ test('saved Shared Sync folder is reused on every login without reopening the pi
   const load = LOGIN.slice(loadStart, loadEnd);
   assert.match(load, /if \(hubStatus && hubStatus\.root\) \$\('hubPath'\)\.value = hubStatus\.root/);
 
-  const startup = LOGIN.slice(LOGIN.lastIndexOf('loadHubStatus().then'));
-  assert.match(startup, /restoreLastUser\(\)/);
+  const startup = LOGIN.slice(LOGIN.lastIndexOf('setHubDetailsOpen(false)'));
+  assert.match(startup, /restoreLastUser\(\);\s+void loadHubStatus\(\);/);
+  const restore = LOGIN.slice(LOGIN.indexOf('function restoreLastUser()'), LOGIN.indexOf("$('hubSettingsBtn').addEventListener"));
+  assert.match(restore, /\$\('password'\)\.focus\(\);\s+void searchUsers\(/);
   assert.doesNotMatch(startup, /hubPanel'\)\.hidden = false/);
   assert.match(LOGIN, /id="hubDetails" hidden/);
   assert.match(LOGIN, /aria-expanded="false"/);

@@ -50,7 +50,7 @@ test('Overview projection cache miss ham snapshotı UI kritik yolunda açmaz', (
   assert.match(SERVER, /app\.get\('\/api\/data\/overview'/);
   assert.match(APP, /async function ensureOverviewLoaded\(/);
   // v20260926: UI sonrası yükleme yalnız Genel Bakış açıksa; modül sekmesinde ilk girişte (switchTab).
-  assert.match(APP, /if\(state\.overviewDeferred&&currentActiveTab\(\)==='overview'\)void ensureOverviewLoaded\(\)/);
+  assert.match(APP, /if\(!window\.BLBootGuard\?\.autoContinue&&state\.overviewDeferred&&currentActiveTab\(\)==='overview'\)void ensureOverviewLoaded\(\)/);
   assert.match(APP, /if\(tab==='overview'&&state\.overviewDeferred\)void ensureOverviewLoaded\(\);/);
   const startupMiss = build.slice(build.indexOf('else if (startup) {'), build.indexOf('else if (!sourceFilterRequired)'));
   assert.doesNotMatch(startupMiss, /ensureDataLoaded\(/);

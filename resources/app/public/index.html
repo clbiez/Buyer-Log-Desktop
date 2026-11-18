@@ -21,6 +21,7 @@
   // hazırlığı ilk pencereyi veya native sekmeyi perde arkasında bekletmez.
   var gates={core:false,data:false,ui:false,profile:false,modules:false};
   var hardGates=['core','data','profile','ui'];
+  var autoContinue=Boolean(window.buyerLogDesktop)&&!new URLSearchParams(location.search).has('module');
   var moduleProgress=null,screenFailed=false,gateReadyAt=null,humanWaitMs=0;
   // A failed opening-screen projection never traps an authenticated user: the shell
   // opens with Retry available until the profile arrives, as before.
@@ -137,14 +138,19 @@
     finished=true;if(timer)clearTimeout(timer);if(slowTimer)clearTimeout(slowTimer);
     try{sessionStorage.removeItem(RETRY_KEY);}catch(_){}
     stopOrb();var el=guard();if(!el){recordGateReady();dismiss();return;}
-    // Ready no longer yanks the curtain away mid-sentence: the user continues explicitly.
     el.dataset.ready='1';delete el.dataset.failed;el.querySelector('[data-boot-retry]')?.remove();
+    recordGateReady();
+    if(autoContinue){
+      window.dispatchEvent(new CustomEvent('bl:startup-ready'));
+      dismiss(gateReadyAt);
+      return;
+    }
+    // Browser and explicitly opened module tabs keep their reading controls.
     var msg=el.querySelector('[data-boot-message]');if(msg)msg.textContent=english()?'Buyer Log is ready':'Buyer Log hazır';
     var slot=el.querySelector('[data-boot-continue-slot]')||el.querySelector('.blBootCard');
     if(slot&&!el.querySelector('[data-boot-continue]')){var b=document.createElement('button');b.type='button';b.className='blBootContinue';b.dataset.bootContinue='1';b.textContent=(english()?'Continue to Buyer Log':'Buyer Log\'a devam et')+' →';b.onclick=dismiss;slot.appendChild(b);try{b.focus({preventScroll:true});}catch(_){}}
     window.BLGuide?.refreshStartup?.();
     renderDetail();
-    recordGateReady();
     window.dispatchEvent(new CustomEvent('bl:startup-ready'));
   }
   function dismiss(){
@@ -240,7 +246,7 @@
     if(ev.shiftKey&&(document.activeElement===first||!el.contains(document.activeElement)||document.activeElement===el)){ev.preventDefault();last.focus();}
     else if(!ev.shiftKey&&(document.activeElement===last||!el.contains(document.activeElement)||document.activeElement===el)){ev.preventDefault();first.focus();}
   },true);
-  window.BLBootGuard={ready:ready,recover:recover,mount:ensureGuard,continue:function(intent){if(finished)dismiss(intent);},fail:function(reason){if(finished)return;lastFailure=String(reason||'initial-data-failed');if(lastFailure==='initial-screen-failed'){screenFailed=true;gates.ui=true;gates.modules=true;}message(english()?'Initial data could not be loaded. Press Retry.':'Başlangıç verisi yüklenemedi. Yeniden denemek için düğmeye basın.',true);if(screenFailed)ready('ui');},noteFailure:function(reason){lastFailure=String(reason||'resource-error');}};
+  window.BLBootGuard={autoContinue:autoContinue,ready:ready,recover:recover,mount:ensureGuard,continue:function(intent){if(finished)dismiss(intent);},fail:function(reason){if(finished)return;lastFailure=String(reason||'initial-data-failed');if(lastFailure==='initial-screen-failed'){screenFailed=true;gates.ui=true;gates.modules=true;}message(english()?'Initial data could not be loaded. Press Retry.':'Başlangıç verisi yüklenemedi. Yeniden denemek için düğmeye basın.',true);if(screenFailed)ready('ui');},noteFailure:function(reason){lastFailure=String(reason||'resource-error');}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensureGuard,{once:true});else ensureGuard();
   window.addEventListener('error',function(ev){var t=ev&&ev.target;if(t&&(t.tagName==='SCRIPT'||t.tagName==='LINK'))window.BLBootGuard.noteFailure((t.src||t.href||t.tagName)+' yüklenemedi.');},true);
   document.addEventListener('bl:language-changed',function(){syncBootLanguage();try{window.BLGuide?.refreshLanguage?.();}catch(_){}});

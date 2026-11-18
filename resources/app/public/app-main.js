@@ -2303,6 +2303,7 @@ window.BLRetryRefreshAfterFieldMapping=retryRefreshAfterFieldMapping;
 let ordersLoadPromise=null;
 let cpLoadPromise=null;
 let overviewLoadPromise=null;
+let startupOverviewPending=false,overviewProjectionFailed=false;
 let startupReadySignaled=false;
 let collectionCatalogLoadPromise=null;
 // Overview CP dependency lifecycle: CP projection is intentionally lazy, but
@@ -2382,16 +2383,25 @@ async function fetchOrdersProjection(){
 async function ensureOverviewLoaded(){
   if(!state.overviewDeferred)return true;
   if(overviewLoadPromise)return overviewLoadPromise;
+  const retryingStartupOverview=startupOverviewPending&&overviewProjectionFailed;
+  overviewProjectionFailed=false;
+  if(retryingStartupOverview)renderOverview();
   overviewLoadPromise=(async()=>{
     try{
       const result=await fetchProjectionWithFallback('overview','/api/data/overview');if(result.cancelled)return false;
       const data=result.payload||{},rows=Array.isArray(data.rows)?data.rows:(Array.isArray(data.overviewSummary)?data.overviewSummary:[]);
       reviveServerDates(rows);
       state.overviewSummary={fname:'Hazır ekran önbelleği',rows};state.overviewDeferred=false;
+      startupOverviewPending=false;
       window.BL_HAS_CACHED_MODEL_DATA=true;
       if(document.body.dataset.activeTab==='overview')renderOverview();
+      if(retryingStartupOverview&&startupReadySignaled&&currentActiveTab()==='overview'){
+        scheduleStartupScreenReady(()=>{signalStartupPrimaryScreenReady();scheduleBackgroundModuleWarmup();});
+      }
       return true;
     }catch(err){
+      overviewProjectionFailed=true;
+      if(startupOverviewPending&&currentActiveTab()==='overview')renderOverview();
       const message=(appLang==='en'?'Overview data could not be loaded: ':'Genel Bakış verisi yüklenemedi: ')+(err&&err.message||err);
       showToast(message);return false;
     }finally{overviewLoadPromise=null;}
@@ -2632,15 +2642,15 @@ function switchTab(tab){
   }
   void window.buyerLogDesktop?.workspace?.setModule?.(tab);
   const previousTab=document.body.dataset.activeTab||document.querySelector('nav.tabs button.active')?.dataset.tab||'';
-  if(startupReadySignaled&&previousTab!==tab)saveWorkspaceResume();
-  if(startupReadySignaled&&previousTab!==tab)startupViewResume=null;
+  const workspaceOpen=window.BL_STARTUP_COMPLETE||startupReadySignaled;
+  if(workspaceOpen&&previousTab!==tab){saveWorkspaceResume();startupViewResume=null;}
   if(tab==='lcwai'&&previousTab&&previousTab!=='lcwai')window.BL_LCWAI_LAST_TAB=previousTab;
   if(previousTab==='cp'||previousTab==='orders') saveCoreAutoFilterState();
   if(previousTab==='cp'&&tab!=='cp'){ _cpImageWarmupJob++; BLImageRuntime.cancelWarmup(); }
   if(typeof closeAllColumnPanels==='function') closeAllColumnPanels();
   document.body.dataset.activeTab = tab;
   window.BLModulePreparation?.noteOpened(tab);
-  if(startupReadySignaled)workspaceResume()?.save(tab);
+  if(workspaceOpen)workspaceResume()?.save(tab);
   if(tab==='overview'&&state.overviewDeferred)void ensureOverviewLoaded();
   // Arka planda yüklenmiş ama hiç çizilmemiş tablo, ilk girişte profil uygulandıktan
   // sonra bir kez çizilir; ertelenmiş erken çizim ikinci kez çalışmaz.
@@ -2718,8 +2728,10 @@ function switchTab(tab){
       if(currentActiveTab()==='lcwai')return window.initLcwAiChat?.();
     }).catch(err=>showToast(err&&err.message||String(err)));
   }
-  if(tab==='overview')void ensureOverviewOabModule();
-  if(tab==='overview')void ensureOverviewIntakeModule();
+  if(tab==='overview'&&(!window.BLBootGuard?.autoContinue||startupReadySignaled)){
+    void ensureOverviewOabModule();
+    void ensureOverviewIntakeModule();
+  }
   /* v7.81 — Veri Yönetimi. Lazy: ilk geçişte yüklenir, açılışta değil.
      Sekmeden çıkılıp geri dönülürse modül zaten yüklüdür ve yalnız tazelenir. */
   if(tab==='source'){
@@ -11993,10 +12005,19 @@ window.BLExceptionInboxBridge={
  },
 };
 function renderOverviewNow(){
+  const empty=document.getElementById('ovEmpty');
+  if(startupOverviewPending&&state.overviewDeferred){
+    const en=appLang==='en';
+    renderOverviewState(overviewProjectionFailed?{
+      kind:'error',title:en?'Overview data could not be loaded.':'Genel Bakış verisi yüklenemedi.',
+      actionLabel:en?'Retry':'Tekrar dene',onAction:()=>void ensureOverviewLoaded(),
+    }:{kind:'loading',title:en?'Loading Overview data…':'Genel Bakış verisi yükleniyor…'});
+    empty.style.display='flex';
+    return;
+  }
   renderOverviewExceptionInbox();
   renderOverviewCollectionSummary();
   if(!state.cp && !state.orderSummary && !state.overviewSummary){renderOverviewCpDependencyState('loading');return;}
-  const empty=document.getElementById('ovEmpty');
   /* Ana ekran widget'ları konumlarını korur; veri yokken her widget kendi boş
      durumunu gösterir, üstteki durum kartı nedenini ve aksiyonu söyler. */
   if(window.BL_CP_SOURCE_FILTER_REQUIRED){
@@ -15849,6 +15870,8 @@ async function waitForRefreshJob(expectedJob=null){
       if(parts.length) showToast(parts.join('   |   '));
     }
     state.overviewDeferred=Boolean(data.overviewDeferred);
+    if(initialScreenLoad)startupOverviewPending=state.overviewDeferred&&window.BLBootGuard?.autoContinue===true;
+    if(!state.overviewDeferred)startupOverviewPending=false;
     // Hafif/araya giren reload sırasında yerel CP çalışması korunuyorsa dirty,
     // selection ve undo/redo da aynı transaction'ın parçasıdır; bunları sıfırlamak
     // ekrandaki değeri koruyup "kaydedilecek değişiklik" bilgisini kaybetmek olur.
@@ -17667,6 +17690,13 @@ async function waitForStartupPrimaryScreen(){
 function scheduleStartupScreenReady(callback){
   requestAnimationFrame(()=>requestAnimationFrame(callback));
 }
+let primaryScreenReadySignaled=false;
+function signalStartupPrimaryScreenReady(){
+  if(primaryScreenReadySignaled)return;
+  primaryScreenReadySignaled=true;
+  window.BLPerf?.record?.('primaryScreenReadyMs',performance.now()-(window.BLPerf?.origin?.()??0));
+  window.dispatchEvent(new CustomEvent('bl:primary-screen-ready'));
+}
 window.addEventListener('DOMContentLoaded', async () => {
   window.BLPerf?.mark?.('DOM_CREATION_READY');
   const explicitModule=new URLSearchParams(location.search).get('module');
@@ -17685,15 +17715,18 @@ window.addEventListener('DOMContentLoaded', async () => {
     const switched=switchTab(requestedModule);
     if(switched===false&&requestedModule!=='overview')switchTab('overview');
   }
+  if(initialDataLoaded&&window.BLBootGuard?.autoContinue){
+    // The authenticated workspace can open while its tab's projection loads.
+    window.BLBootGuard.ready('ui');
+  }
   const primaryScreenReady=initialDataLoaded&&await waitForStartupPrimaryScreen();
   if(!primaryScreenReady)window.BLBootGuard?.fail('initial-screen-failed');
   scheduleStartupScreenReady(()=>{
     window.BLPerf?.mark?.('UI_READY');
-    if(primaryScreenReady)window.BLPerf?.record?.('primaryScreenReadyMs',performance.now()-(window.BLPerf?.origin?.()??0));
-    if(primaryScreenReady)window.dispatchEvent(new CustomEvent('bl:primary-screen-ready'));
+    if(primaryScreenReady)signalStartupPrimaryScreenReady();
     if(primaryScreenReady)window.BLBootGuard?.ready('ui');
     signalStartupReady();
-    // Oturumun kalp atışı kullanıcı Continue öncesinde beklerken de sürer.
+    // Keep the browser session alive if the startup card is still open.
     try{window.BL_START_HEARTBEAT?.();}catch(error){console.warn('Heartbeat başlatılamadı:',error);}
     void afterStartupReveal(()=>{
     // Erişim katmanı yüklendikten sonra yalnız yetkili modüller ön yüklenir.
@@ -17701,7 +17734,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       .then(scheduleBackgroundModuleWarmup).catch(error=>{console.warn('Arka plan ön yükleme başlatılamadı:',error);finishStartupModules();});
     schedulePostUiStartupTasks();
     if(currentActiveTab()==='overview')void ensureOverviewCpDependency();
-    if(state.overviewDeferred&&currentActiveTab()==='overview')void ensureOverviewLoaded();
+    if(!window.BLBootGuard?.autoContinue&&state.overviewDeferred&&currentActiveTab()==='overview')void ensureOverviewLoaded();
     const idle=window.requestIdleCallback||((fn)=>setTimeout(()=>fn({timeRemaining:()=>8}),40));
     idle(()=>{
       void loadPlmStyleLinks({rerender:false});
@@ -17833,9 +17866,9 @@ function workspaceResume(){return window.BLViewContext?.createResume({storage:wi
 }});}
 function saveWorkspaceResume(){const tab=currentActiveTab();workspaceResume()?.save(tab,isProfilePage(activeProfilePage())?collectViewState():null);}
 window.addEventListener('pagehide',saveWorkspaceResume);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&startupReadySignaled)saveWorkspaceResume();});
-document.addEventListener('pointerdown',()=>{if(startupReadySignaled)startupViewResume=null;},{capture:true});
-document.addEventListener('keydown',()=>{if(startupReadySignaled)startupViewResume=null;},{capture:true});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&(window.BL_STARTUP_COMPLETE||startupReadySignaled))saveWorkspaceResume();});
+document.addEventListener('pointerdown',()=>{if(window.BL_STARTUP_COMPLETE||startupReadySignaled)startupViewResume=null;},{capture:true});
+document.addEventListener('keydown',()=>{if(window.BL_STARTUP_COMPLETE||startupReadySignaled)startupViewResume=null;},{capture:true});
 function applyViewState(data){
   if(!data) return;
   const page = activeProfilePage();
