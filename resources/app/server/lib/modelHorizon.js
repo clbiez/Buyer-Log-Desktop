@@ -561,12 +561,16 @@ function buildSummarizeQuery(horizonInput, mapping, options = {}) {
   /* v7.81 — filtre argümanı üretimi summarizeFilterArgs()a taşındı;
      INTAKE pivot raporu da aynı mantığı kullanıyor. */
   summarizeFilterArgs(filter).forEach(arg => args.push(arg));
+  // Çağıranın ek filtre argümanları (ör. ayrı kumaş sorgusunda Ana Kumaş Mı = 1).
+  for (const arg of Array.isArray(options.extraFilterArgs) ? options.extraFilterArgs : []) args.push(`    ${arg}`);
   for (const entry of measures) {
     // Ölçü adları tabular modelde tekildir; köşeli parantezle doğrudan çağrılır.
     args.push(`    ${quoteString(entry.header)}, [${entry.name.replace(/]/g, ']]')}]`);
     headerMap[entry.header] = entry.header;
   }
-  if (measures.length) {
+  // forceRowGuard: ölçü olmasa da var olmayan tablo kombinasyonlarını ele
+  // (yalnız gruplama sütunlu SUMMARIZECOLUMNS tablolar arası çarpım üretir).
+  if (measures.length || options.forceRowGuard === true) {
     // BOŞ ÖLÇÜ SATIRI ELEME KORUMASI — ve neden sabit 1 OLMAZ.
     //
     // SUMMARIZECOLUMNS iki iş birden yapar:

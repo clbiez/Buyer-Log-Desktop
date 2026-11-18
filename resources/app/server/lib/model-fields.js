@@ -510,8 +510,12 @@ function mappingHealth(role, mapping) {
   };
 }
 
+// ASAS kumaş alanları. Kumaş modu 'separate' / 'off' iken ana ASAS sorgusundan
+// çıkarılır ve zorunlu alan sayılmaz (model-refresh asasFabricMode).
+const FABRIC_HEADERS = Object.freeze(['Ana Kumaş Mı', 'Kumaş Kategorisi', 'Kumaşçı Ülkesi', 'Kumaşçı', 'Kumaş Tipi', 'İplik No', 'Gramaj', 'Karışım']); // i18n-ignore
+
 module.exports = {
-  FIELD_CATALOGUE, DERIVED_FIELDS, MAPPING_STATUSES,
+  FIELD_CATALOGUE, DERIVED_FIELDS, MAPPING_STATUSES, FABRIC_HEADERS,
   fieldKey, fieldsForRole, intakeFieldsForMapping, autoMapColumns, autoMapSchema,
   normalizeMappingEntry, mappingHasInvalidEntries, missingRequired, suspectIdentityMappings,
   productDescriptionNeedsRepair, repairAsasProductDescriptionMapping,

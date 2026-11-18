@@ -384,10 +384,29 @@ function repairHorizonAgainstSchema(item, schema) {
  * şeması taranır, bozuk/zorunlu eksik alanlar otomatik eşlenir ve bağlantı nesnesi
  * yerinde güncellenir. Çağıran katman güncellenen bağlantıları kalıcı kaydeder.
  */
+/* ASAS KUMAŞ MODU (v20261118, Kaynak Veri › ASAS Kumaş Bilgileri)
+     inline   — bugünkü tek sorgu: kumaş alanları ana ASAS sorgusunda (varsayılan
+                seçenek verilmezse; eski çağıranlar ve testler için).
+     separate — ana sorgu kumaşsız; kumaş yalnız Ana Kumaş Mı = 1 satırlarını
+                getiren ayrı sorgudan sipariş+model+renk anahtarıyla eklenir.
+     off      — kumaş hiç çekilmez.
+   Saha (2026-11-18): inline kumaş satırları sonucu 2,07 kat çoğaltıyor ve
+   COUNTROWS('Kumaş') satır koruması kumaş kaydı olmayan 58 siparişi düşürüyordu. */
+function asasFabricMode(options = {}) {
+  const value = String(options && options.asasFabricMode || '').toLowerCase();
+  return value === 'separate' || value === 'off' ? value : 'inline';
+}
+function requiredMissing(role, mapping, options = {}) {
+  const missing = modelFields.missingRequired(role, mapping);
+  if (role !== 'asas' || asasFabricMode(options) === 'inline') return missing;
+  const fabric = new Set(modelFields.FABRIC_HEADERS);
+  return missing.filter(header => !fabric.has(header));
+}
+
 async function ensureConnectionMapping(item, options = {}) {
   const role = normalizedRole(item);
   const normalized = normalizedConnectionMapping(item);
-  const missingBefore = modelFields.missingRequired(role, normalized.mapping);
+  const missingBefore = requiredMissing(role, normalized.mapping, options);
   // V6.62 ile eklenen Teknik Resim zorunlu bir sipariş alanı değildir; ancak
   // eski, eksiksiz bağlantılar yalnız zorunlu alanlara bakıldığı için yeni alanı
   // kendiliğinden öğrenemezdi. ASAS bağlantısında bir kez şema taraması yapıp
@@ -467,7 +486,7 @@ async function ensureConnectionMapping(item, options = {}) {
   // yazılarak özel seçimler korunur.
   const repairedMapping = modelFields.repairAsasProductDescriptionMapping(
     { ...(auto.mapping || {}), ...normalized.mapping }, schema);
-  const missingAfter = modelFields.missingRequired(role, repairedMapping);
+  const missingAfter = requiredMissing(role, repairedMapping, options);
   if (missingAfter.length) {
     throw new ModelRefreshError(
       `${connectionLabel(item)} alan eşlemesi otomatik onarıldı ancak zorunlu alanlar modelde bulunamadı: ${missingAfter.join(', ')}`,
@@ -840,16 +859,20 @@ function buildConnectionQuery(item, options = {}) {
   if (!fullMapping) {
     throw new ModelRefreshError(`${connectionLabel(item)} için alan eşlemesi yapılmadı.`, 'MODEL_REFRESH_MAPPING_MISSING', 400);
   }
-  const missing = modelFields.missingRequired(role, fullMapping);
+  const missing = requiredMissing(role, fullMapping, options);
   if (missing.length) {
     throw new ModelRefreshError(`${connectionLabel(item)} için zorunlu alanlar eşleştirilmedi: ${missing.join(', ')}`, 'MODEL_REFRESH_MAPPING_INCOMPLETE', 400, { missingRequired: missing });
   }
   // Ufuk sütunları çıktıdan çıkarılsa bile sezon/tarih filtrelerinin hangi model
   // alanına bağlı olduğu önce tam eşleme üzerinden çözülür.
   const aligned = alignHorizonWithMapping(item, fullMapping);
-  const mapping = role === 'antrepo'
+  let mapping = role === 'antrepo'
     ? antrepoProjectionMapping(fullMapping, options.matchRule)
     : fullMapping;
+  if (role === 'asas' && asasFabricMode(options) !== 'inline') {
+    const fabric = new Set(modelFields.FABRIC_HEADERS);
+    mapping = Object.fromEntries(Object.entries(mapping).filter(([header]) => !fabric.has(header)));
+  }
   const horizonWithExtra = options.extraExpression
     ? { ...aligned.horizon, extraExpression: options.extraExpression }
     : aligned.horizon;
@@ -898,6 +921,63 @@ function buildConnectionQuery(item, options = {}) {
   };
 }
 
+const FABRIC_KEY_HEADERS = Object.freeze(['Sipariş Kod', 'Model Adı', 'Renk Kod']); // i18n-ignore
+const MAIN_FABRIC_TRUE_TEXT = Object.freeze(['1', '1.0', 'True', 'TRUE', 'true', 'Evet', 'EVET', 'Yes', 'YES']); // i18n-ignore
+
+/* Ayrı kumaş sorgusu: yalnız sipariş anahtarı + kumaş alanları, yalnız
+   Ana Kumaş Mı = 1 satırları, ana sorguyla AYNI ufuk. Ana Kumaş Mı sütununun
+   veri tipi (sayı / metin / mantıksal) modelden modele değiştiği için filtre
+   tipten bağımsız metin karşılaştırmasıyla kurulur (parse.isMainFabricFlag ile
+   aynı değerler). Satır koruması ölçü olmasa da zorunludur: yalnız gruplama
+   sütunlu SUMMARIZECOLUMNS tablolar arası çarpım üretir. */
+function buildFabricQuery(item, options = {}) {
+  const baseMapping = item && item.mapping && typeof item.mapping === 'object' ? item.mapping : {};
+  const fallbackTable = String(item && item.horizon && item.horizon.table || '');
+  const mainEntry = modelFields.normalizeMappingEntry(baseMapping['Ana Kumaş Mı'], fallbackTable);
+  if (!mainEntry || mainEntry.kind !== 'column' || !mainEntry.table) return null;
+  if (!FABRIC_KEY_HEADERS.every(header => baseMapping[header])) return null;
+  const picked = [...FABRIC_KEY_HEADERS, ...modelFields.FABRIC_HEADERS].filter(header => baseMapping[header]);
+  const fabricMapping = Object.fromEntries(picked.map(header => [header, baseMapping[header]]));
+  const aligned = alignHorizonWithMapping(item, baseMapping);
+  const column = modelHorizon.quoteColumn(mainEntry.table, mainEntry.name);
+  const mainFilter = `FILTER(ALL(${column}), ${column} & "" IN { ${MAIN_FABRIC_TRUE_TEXT.map(value => `"${value}"`).join(', ')} })`;
+  const horizon = options.extraExpression ? { ...aligned.horizon, extraExpression: options.extraExpression } : aligned.horizon;
+  const built = modelHorizon.buildSummarizeQuery(horizon, fabricMapping, {
+    columnType: options.columnType, filterMapping: baseMapping, extraFilterArgs: [mainFilter], forceRowGuard: true,
+  });
+  return { query: built.query, headerMap: built.headerMap || null, role: 'asas', mode: 'auto', generated: true };
+}
+
+/* Kumaş değerlerini ana ASAS satırlarına sipariş+model+renk ile ekler. Ana
+   satır başına TEK satır kaldığı için parseASASRows / LFL değişmeden çalışır.
+   Aynı anahtarda birden çok ana kumaş satırı varsa inline yolla aynı kural:
+   alan bazında son DOLU değer kazanır. */
+function enrichAsasRowsWithFabric(rows, fabricRows) {
+  const entries = new Map();
+  const duplicateKeys = new Set();
+  for (const row of Array.isArray(fabricRows) ? fabricRows : []) {
+    if (!row || typeof row !== 'object') continue;
+    const key = antrepoMatchKey(row['Sipariş Kod'], row['Model Adı'], row['Renk Kod']);
+    const current = entries.get(key);
+    if (!current) { entries.set(key, { ...row }); continue; }
+    duplicateKeys.add(key);
+    for (const header of modelFields.FABRIC_HEADERS) {
+      const value = row[header];
+      if (value != null && String(value).trim() !== '') current[header] = value;
+    }
+  }
+  let matched = 0;
+  for (const row of Array.isArray(rows) ? rows : []) {
+    if (!row || typeof row !== 'object') continue;
+    const entry = entries.get(antrepoMatchKey(row['Sipariş Kod'], row['Model Adı'], row['Renk Kod']));
+    if (entry) matched += 1;
+    for (const header of modelFields.FABRIC_HEADERS) {
+      row[header] = header === 'Ana Kumaş Mı' ? (entry ? 1 : 0) : (entry && entry[header] != null ? entry[header] : '');
+    }
+  }
+  return { matched, keys: entries.size, duplicates: duplicateKeys.size };
+}
+
 /* SSAS'ın RELATED'ı reddetmesi: fact tablosundan bu tabloya çoka-bir ilişki
    yok (çoka-çok, pasif ya da ters yönde). Gerçekten eksik bir sütun da aynı
    metni üretebilir; bu yüzden eski ifadeyle yalnız BİR kez yeniden denenir ve
@@ -927,7 +1007,7 @@ async function queryConnectionRows(item, options = {}) {
   if (telemetry) telemetry({ type:'end', category:'wait', connection:label, operation:'mapping-check', timestampMs:Date.now(), durationMs:mappingMs });
   const columnType = await resolveColumnTypes(item, options);
   const liveHorizonRepair = repairHorizonAgainstSchema(item, columnType && columnType.schema);
-  let built = buildConnectionQuery(item, { extraExpression: options.extraExpression, matchRule: options.matchRule, columnType, iasLookup: options.iasLookup });
+  let built = buildConnectionQuery(item, { extraExpression: options.extraExpression, matchRule: options.matchRule, columnType, iasLookup: options.iasLookup, asasFabricMode: options.asasFabricMode });
   debugGeneratedDax(label, built.query, options);
   const runRows = options.runModelRows || modelQuery.runModelRows;
   const queryStartedMs = Date.now();
@@ -951,6 +1031,19 @@ async function queryConnectionRows(item, options = {}) {
     ? options.queryCoordinator.run(planFor(current), executeFor(current))
     : executeFor(current)();
   let queryPlan = planFor(built);
+  const fabricMode = normalizedRole(item) === 'asas' && built.generated ? asasFabricMode(options) : 'inline';
+  let fabricBuilt = null;
+  if (fabricMode === 'separate') {
+    try { fabricBuilt = buildFabricQuery(item, { extraExpression: options.extraExpression, columnType }); }
+    catch (error) { lookupWarnings.push(`${label}: kumaş sorgusu kurulamadı; kumaş alanları bu yenilemede boş. ${String(error && error.message || error)} / ${label}: the fabric query could not be built; fabric fields are empty in this refresh.`); }
+    if (!fabricBuilt) {
+      lookupWarnings.push(`${label}: "Ana Kumaş Mı" (ya da Sipariş Kod / Model Adı / Renk Kod) Field Mapping'de bir model sütununa eşlenmemiş; kumaş alanları bu yenilemede boş. / ${label}: "Ana Kumaş Mı" (or Sipariş Kod / Model Adı / Renk Kod) is not mapped to a model column in Field Mapping; fabric fields are empty in this refresh.`);
+    } else debugGeneratedDax(`${label} · kumaş`, fabricBuilt.query, options);
+  }
+  const fabricStartedMs = Date.now();
+  const fabricPromise = fabricBuilt
+    ? runBuilt(fabricBuilt).then(value => ({ value, ms: Date.now() - fabricStartedMs }), error => ({ error, ms: Date.now() - fabricStartedMs }))
+    : null;
   let result;
   try {
     try {
@@ -958,7 +1051,7 @@ async function queryConnectionRows(item, options = {}) {
     } catch (error) {
       if (!(built.generated && built.role === 'antrepo' && isRelatedLookupError(error, built.query))) throw error;
       if (telemetry) telemetry({ type:'measure', category:'query', connection:label, operation:'model-query-related-fallback', timestampMs:queryStartedMs, durationMs:Date.now() - queryStartedMs, error:String(error && error.message || error) });
-      built = buildConnectionQuery(item, { extraExpression: options.extraExpression, matchRule: options.matchRule, columnType, iasLookup: 'selectedvalue' });
+      built = buildConnectionQuery(item, { extraExpression: options.extraExpression, matchRule: options.matchRule, columnType, iasLookup: 'selectedvalue', asasFabricMode: options.asasFabricMode });
       debugGeneratedDax(label, built.query, options);
       queryPlan = planFor(built);
       lookupWarnings.push(`${label}: IAS modelinde ilişki çoka-bir olmadığı için RELATED okuma reddedildi; sorgu eski CALCULATE(SELECTEDVALUE(...)) ifadesiyle yeniden çalıştırıldı (veri aynı, sunucu süresi daha uzun). / ${label}: the IAS model rejected RELATED because the relationship is not many-to-one; the query was re-run with the previous CALCULATE(SELECTEDVALUE(...)) form (same data, longer server time).`);
@@ -1018,6 +1111,32 @@ async function queryConnectionRows(item, options = {}) {
     }
   }
 
+  let fabricSummary = null;
+  if (fabricMode !== 'inline') {
+    let fabricRows = [];
+    if (fabricPromise) {
+      const fabric = await fabricPromise;
+      if (fabric.error) {
+        lookupWarnings.push(`${label}: kumaş sorgusu çalışmadı; sipariş verisi güncellendi ama kumaş alanları bu yenilemede boş. ${String(fabric.error && (fabric.error.publicMessage || fabric.error.message) || fabric.error)} / ${label}: the fabric query failed; orders were refreshed but fabric fields are empty in this refresh.`);
+      } else {
+        fabricRows = Array.isArray(fabric.value && fabric.value.rows) ? fabric.value.rows : [];
+        if (telemetry) telemetry({ type:'measure', category:'query', connection:label, operation:'fabric-query', timestampMs:fabricStartedMs, durationMs:fabric.ms });
+      }
+      fabricSummary = {
+        rows: fabricRows.length, ms: fabric.ms,
+        executeMs: Number(fabric.value && fabric.value.executeMs) || 0, writeMs: Number(fabric.value && fabric.value.writeMs) || 0,
+        error: fabric.error ? String(fabric.error && fabric.error.message || fabric.error) : '',
+      };
+    }
+    const enrichment = enrichAsasRowsWithFabric(rows, fabricRows);
+    if (fabricSummary) Object.assign(fabricSummary, enrichment);
+    if (enrichment.duplicates) {
+      lookupWarnings.push(`${enrichment.duplicates} sipariş kimliğinde birden fazla Ana Kumaş Mı = 1 satırı bulundu; her kumaş alanı dolu olan son satırdan alındı. / ${enrichment.duplicates} order identities have more than one main-fabric row; each fabric field was taken from the last non-empty row.`);
+    }
+  } else if (fabricPromise) {
+    await fabricPromise;
+  }
+
   // Yalnız Buyer Log'un ürettiği otomatik IAS Database sorgusunda uygulanır.
   // Manuel sorgu kullanan kullanıcı kendi satır semantiğini tanımladığı için
   // burada yeniden gruplandırılmaz.
@@ -1051,6 +1170,8 @@ async function queryConnectionRows(item, options = {}) {
       provider: String(result.provider || ''),
       // ModelQuery.ps1: 'csharp' (derlenmiş hızlı yazıcı) | 'powershell' (geri dönüş)
       csvWriter: String(result.csvWriter || ''),
+      asasFabricMode: fabricMode,
+      fabricQuery: fabricSummary,
       outFile: '',
       error: '',
     },
@@ -1565,7 +1686,7 @@ module.exports = {
   antrepoGrainTable,
   normalizeAntrepoDatabaseRows,
   validateAntrepoIntegrity,
-  queryConnectionRows,
+  queryConnectionRows, buildFabricQuery, enrichAsasRowsWithFabric, asasFabricMode,
   mapWithConcurrency,
   ORDER_CODE_PUSHDOWN_LIMIT,
   ORDER_CODE_PUSHDOWN_BUDGET,
