@@ -92,17 +92,20 @@
     }
   }
 
+  const schemaPath = entry => (window.BLSchemaTree ? window.BLSchemaTree.entryPath(entry) : [String(entry && entry.table || '')].filter(Boolean));
   function columnEntries() {
     if (!schema) return [];
+    /* Tablo → klasör yolu seçicide başlık satırı olarak çizilir. */
     const measures = (schema.measures || []).map(entry => ({
       value: `measure|${entry.table || ''}|${entry.name}`,
       label: entry.name,
-      hint: `${T('ölçü', 'measure')}${entry.table ? ` · ${entry.table}` : ''}`,
+      hint: T('ölçü', 'measure'),
+      group: schemaPath(entry),
     }));
     const columns = (schema.columns || []).map(entry => ({
       value: `column|${entry.table || ''}|${entry.name}`,
       label: entry.name,
-      hint: entry.table || '',
+      group: schemaPath(entry),
     }));
     /* Ölçüler ÖNCE. autoMapSchema da öyle yapıyor: FOB ve miktar alanları
        tabular modelde genellikle ölçüdür ve aynı adı taşıyan bir boyut sütunu

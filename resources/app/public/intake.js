@@ -701,7 +701,15 @@
   function intakeFieldOptionsHtml(fields, selectedId) {
     const list = Array.isArray(fields) ? fields : [];
     if (!list.length) return `<option value="">${esc(text('Alan yok', 'No fields'))}</option>`;
-    return list.map(field => `<option value="${esc(field.id)}"${field.id === selectedId ? ' selected' : ''}>${esc(fieldLabel(field))}</option>`).join('');
+    const option = field => `<option value="${esc(field.id)}"${field.id === selectedId ? ' selected' : ''}>${esc(fieldLabel(field))}</option>`;
+    /* Alanlar Excel alan listesindeki gibi Tablo › Klasör altında gruplanır.
+       Yerel <select> yalnız tek seviye grup taşır; yol tek etikette birleşir. */
+    const pathOf = field => (window.BLSchemaTree ? window.BLSchemaTree.entryPath(field) : [clean(field.table)].filter(Boolean)).join(' › ');
+    const groups = new Map();
+    list.forEach(field => { const key = pathOf(field); if (!groups.has(key)) groups.set(key, []); groups.get(key).push(field); });
+    if (groups.size < 2) return list.map(option).join('');
+    return [...groups.keys()].sort((a, b) => a.localeCompare(b, 'tr', { sensitivity: 'base', numeric: true }))
+      .map(key => (key ? `<optgroup label="${esc(key)}">${groups.get(key).map(option).join('')}</optgroup>` : groups.get(key).map(option).join(''))).join('');
   }
 
   function intakeConfigActionsHtml() {

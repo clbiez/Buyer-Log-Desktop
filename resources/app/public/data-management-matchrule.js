@@ -89,7 +89,7 @@
     return ((source && source.columns) || []).map(entry => ({
       value: `${entry.table || ''}|${entry.name}`,
       label: entry.name,
-      hint: entry.table || '',
+      group: [entry.table].filter(Boolean),
     }));
   }
 

@@ -482,11 +482,22 @@ async function discoverSchemaUncached(input = {}, options = {}) {
   const out = { columns: [], measures: [], errors: [] };
 
   try {
-    const result = await runModelRows({
+    /* Görüntü klasörü (HIERARCHY_DISPLAY_FOLDER) Excel alan listesindeki
+       klasör hiyerarşisini verir; seçiciler sütunları Tablo → Klasör → Sütun
+       olarak gösterir. Klasör BEST-EFFORT'tur: sütunu desteklemeyen bir
+       sağlayıcıda eski sorguya düşülür, şema keşfi klasör yüzünden düşmez. */
+    const hierarchyQuery = columns => ({
       server: input.server, catalog: input.catalog,
-      query: 'SELECT [DIMENSION_UNIQUE_NAME], [HIERARCHY_NAME] FROM $SYSTEM.MDSCHEMA_HIERARCHIES',
+      query: `SELECT ${columns} FROM $SYSTEM.MDSCHEMA_HIERARCHIES`,
       generated: true, maxRows: 200000, timeoutMs: input.timeoutMs || 120000,
-    }, options);
+    });
+    let result;
+    try {
+      result = await runModelRows(hierarchyQuery('[DIMENSION_UNIQUE_NAME], [HIERARCHY_NAME], [HIERARCHY_DISPLAY_FOLDER]'), options);
+    } catch (err) {
+      if (err.nativeQueryAuthorityDenied || err.code === 'MODEL_QUERY_UNSUPPORTED') throw err;
+      result = await runModelRows(hierarchyQuery('[DIMENSION_UNIQUE_NAME], [HIERARCHY_NAME]'), options);
+    }
     const seen = new Set();
     for (const row of result.rows) {
       const table = cleanName(row.DIMENSION_UNIQUE_NAME);
@@ -495,7 +506,8 @@ async function discoverSchemaUncached(input = {}, options = {}) {
       const key = `${table}\u0000${name}`.toLowerCase();
       if (seen.has(key)) continue;
       seen.add(key);
-      out.columns.push({ table, name, kind: 'column' });
+      const folder = String(row.HIERARCHY_DISPLAY_FOLDER == null ? '' : row.HIERARCHY_DISPLAY_FOLDER).trim();
+      out.columns.push(folder ? { table, name, kind: 'column', folder } : { table, name, kind: 'column' });
     }
     out.provider = result.provider;
   } catch (err) { if (err.nativeQueryAuthorityDenied || err.code === 'MODEL_QUERY_UNSUPPORTED') throw err; out.errors.push({ source: 'columns', error: String(err && err.message || err) }); }
