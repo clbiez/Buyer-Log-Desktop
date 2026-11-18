@@ -2728,10 +2728,8 @@ function switchTab(tab){
       if(currentActiveTab()==='lcwai')return window.initLcwAiChat?.();
     }).catch(err=>showToast(err&&err.message||String(err)));
   }
-  if(tab==='overview'&&(!window.BLBootGuard?.autoContinue||startupReadySignaled)){
-    void ensureOverviewOabModule();
-    void ensureOverviewIntakeModule();
-  }
+  if(tab==='overview')void ensureOverviewOabModule();
+  if(tab==='overview')void ensureOverviewIntakeModule();
   /* v7.81 — Veri Yönetimi. Lazy: ilk geçişte yüklenir, açılışta değil.
      Sekmeden çıkılıp geri dönülürse modül zaten yüklüdür ve yalnız tazelenir. */
   if(tab==='source'){
@@ -17535,7 +17533,11 @@ function hydrateUserPreferencesAfterUi(){
 let overviewOabLoadPromise=null;
 let overviewIntakeLoadPromise=null;
 function ensureOverviewOabModule(){
-  if(window.BLBootGuard&&!window.BL_STARTUP_COMPLETE)return afterStartupReveal(ensureOverviewOabModule);
+  if(window.BLBootGuard&&!window.BL_STARTUP_COMPLETE){
+    // Automatic landing loads idle widgets after the primary screen.
+    if(window.BLBootGuard.autoContinue)return Promise.resolve(null);
+    return afterStartupReveal(ensureOverviewOabModule);
+  }
   if(window.BLOAB)return Promise.resolve(window.BLOAB);
   if(overviewOabLoadPromise)return overviewOabLoadPromise;
   const loader=window.BLPerf?._loadScript;
@@ -17547,7 +17549,10 @@ function ensureOverviewOabModule(){
   return overviewOabLoadPromise;
 }
 function ensureOverviewIntakeModule(){
-  if(window.BLBootGuard&&!window.BL_STARTUP_COMPLETE)return afterStartupReveal(ensureOverviewIntakeModule);
+  if(window.BLBootGuard&&!window.BL_STARTUP_COMPLETE){
+    if(window.BLBootGuard.autoContinue)return Promise.resolve(null);
+    return afterStartupReveal(ensureOverviewIntakeModule);
+  }
   if(window.BLINTAKE)return Promise.resolve(window.BLINTAKE);
   if(overviewIntakeLoadPromise)return overviewIntakeLoadPromise;
   const loader=window.BLPerf?._loadScript;
