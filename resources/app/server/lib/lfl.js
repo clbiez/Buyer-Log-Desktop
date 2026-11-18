@@ -309,7 +309,9 @@ function finalizeParsedSheets(eligible) {
   const missingDimensionCounts = {};
   for (const item of eligible) {
     const parsed = parseDetectedSheet(item);
-    allRows.push(...parsed.rows);
+    // Tek çağrıya yüz binlerce argüman vermek (push(...rows)) V8 yığınını
+    // taşırıyordu: kumaşlı ASAS 139 bin satırda LFL hiç güncellenmiyordu.
+    for (const row of parsed.rows) allRows.push(row);
     skippedMissingPrice += parsed.skippedMissingPrice;
     skippedMissingQuantity += parsed.skippedMissingQuantity;
     skippedEmpty += parsed.skippedEmpty;
