@@ -428,7 +428,7 @@ const backlogPlanActual = require('./lib/backlog-plan-actual');
 const modelImageRegistry = require('./lib/model-image-registry');
 const { scopedCpImageRegistry } = require('./lib/cp-image-startup-registry');
 const {
-  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, replaceImportanceSettings, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, getUserSourceFolder, setUserSourceFolder,
+  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceAsasFabricMode, replaceLflSourceMode, replaceNoteColumnDefs, replaceImportanceSettings, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, getUserSourceFolder, setUserSourceFolder,
   loadViews, addView, updateView, deleteView, setFavoriteView, markUsedView,
   loadFilterProfiles, addFilterProfile, updateFilterProfile, deleteFilterProfile, setFavoriteFilterProfile, markUsedFilterProfile,
   loadShipping, addShippingRows, patchShippingRow, deleteShippingRows,
@@ -951,7 +951,7 @@ function changedMasterEntities(remoteRecords, localRecords, ids) {
     const before = local[id], after = remote[id];
     if (!different(before, after)) continue;
     if (id === 'store:overrides.json') {
-      for (const field of ['pricingRules','licenseCards','transitRules','transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','importanceSettings','cpManagedRules','tableReportLayouts']) {
+      for (const field of ['pricingRules','licenseCards','transitRules','transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoSourceMode','asasSourceMode','asasFabricMode','lflSourceMode','noteColumnDefs','importanceSettings','cpManagedRules','tableReportLayouts']) {
         if (different(before && before[field], after && after[field])) changed.add(field);
       }
       if (
@@ -7763,6 +7763,8 @@ async function loadFromModels(value, targets = null, options = {}) {
     includeAntrepo: antrepoMode === 'database' && needsAntrepo,
     includeAsas: asasMode === 'database',
     includeLfl: lflMode === 'database',
+    // Kaynak Veri › ASAS Kumaş Bilgileri: kumaş ayrı sorgudan (separate) ya da hiç (off).
+    asasFabricMode: overrides.asasFabricMode === 'off' ? 'off' : 'separate',
     // IASv2'nin kendisi işlenmemiş bir calculated column yüzünden geçici olarak
     // sorgulanamazsa bütün Buyer Log yenilemesini bloke etme. Yalnız daha önce
     // başarıyla yayınlanmış IAS snapshot'ı varsa onu koru; yeni/eksik veri üretme.
@@ -8548,6 +8550,7 @@ async function buildResponse(currentUser = null, options = {}) {
     antrepoHeaderInfo: active.antrepoHeaderInfo || null,
     antrepoSourceMode: ['database', 'dashboard'].includes(overrides.antrepoSourceMode) ? overrides.antrepoSourceMode : 'excel',
     asasSourceMode: overrides.asasSourceMode === 'database' ? 'database' : 'excel',
+    asasFabricMode: overrides.asasFabricMode === 'off' ? 'off' : 'separate',
     lflSourceMode: overrides.lflSourceMode === 'database' ? 'database' : 'excel',
     warnings: Array.isArray(active.refreshWarnings) ? active.refreshWarnings : [],
     warningDetails: [...new Map([
@@ -8567,7 +8570,7 @@ async function buildResponse(currentUser = null, options = {}) {
     importanceSettings: BLOrderImportance.normalizeSettings(overrides.importanceSettings),
     antrepoMatchRule: parseLib.normalizeAntrepoMatchRule(overrides.antrepoMatchRule),
     antrepoMatchConfig: parseLib.normalizeAntrepoMatchConfig(overrides.antrepoMatchConfig),
-    storeRevisions: { overrides: Number(overrides._revision)||0, orders: Number(overrides._revisions&&overrides._revisions.orders)||0, suppFob: Number(overrides._revisions&&overrides._revisions.suppFob)||0, pricingRules: Number(overrides._revisions&&overrides._revisions.pricingRules)||0, transitRules: Number(overrides._revisions&&overrides._revisions.transitRules)||0, nonDtrManufacturers: Number(overrides._revisions&&overrides._revisions.nonDtrManufacturers)||0, landedMultipliers: Number(overrides._revisions&&overrides._revisions.landedMultipliers)||0, freightRates: Number(overrides._revisions&&overrides._revisions.freightRates)||0, antrepoMatchRule: Number(overrides._revisions&&overrides._revisions.antrepoMatchRule)||0, antrepoSourceMode: Number(overrides._revisions&&overrides._revisions.antrepoSourceMode)||0, asasSourceMode: Number(overrides._revisions&&overrides._revisions.asasSourceMode)||0, lflSourceMode: Number(overrides._revisions&&overrides._revisions.lflSourceMode)||0, noteColumnDefs: Number(overrides._revisions&&overrides._revisions.noteColumnDefs)||0, importanceSettings: Number(overrides._revisions&&overrides._revisions.importanceSettings)||0, refreshHistory: Number(loadRefreshHistory(id)._revision)||0 },
+    storeRevisions: { overrides: Number(overrides._revision)||0, orders: Number(overrides._revisions&&overrides._revisions.orders)||0, suppFob: Number(overrides._revisions&&overrides._revisions.suppFob)||0, pricingRules: Number(overrides._revisions&&overrides._revisions.pricingRules)||0, transitRules: Number(overrides._revisions&&overrides._revisions.transitRules)||0, nonDtrManufacturers: Number(overrides._revisions&&overrides._revisions.nonDtrManufacturers)||0, landedMultipliers: Number(overrides._revisions&&overrides._revisions.landedMultipliers)||0, freightRates: Number(overrides._revisions&&overrides._revisions.freightRates)||0, antrepoMatchRule: Number(overrides._revisions&&overrides._revisions.antrepoMatchRule)||0, antrepoSourceMode: Number(overrides._revisions&&overrides._revisions.antrepoSourceMode)||0, asasSourceMode: Number(overrides._revisions&&overrides._revisions.asasSourceMode)||0, asasFabricMode: Number(overrides._revisions&&overrides._revisions.asasFabricMode)||0, lflSourceMode: Number(overrides._revisions&&overrides._revisions.lflSourceMode)||0, noteColumnDefs: Number(overrides._revisions&&overrides._revisions.noteColumnDefs)||0, importanceSettings: Number(overrides._revisions&&overrides._revisions.importanceSettings)||0, refreshHistory: Number(loadRefreshHistory(id)._revision)||0 },
     lflMeta: active.lflMeta || null,
     currentUser: currentUser ? userAccess.publicProfile(currentUser) : null,
     cp: startup ? null : (cpDataAllowed ? sharedAccessRows(cp, currentUser) : []),
@@ -10470,6 +10473,7 @@ require('./routes/asas-source-routes')(app, {
   publishSharedMasterChange,
   refreshAsasExcelBeforeRead,
   replaceAsasSourceMode,
+  replaceAsasFabricMode,
   replaceLflSourceMode,
   requestRevision,
   runExcelTask,
