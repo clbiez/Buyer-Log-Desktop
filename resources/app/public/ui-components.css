@@ -14157,6 +14157,28 @@ html[data-ui-system="manifest"] .cpModelColumnOption.active {background:var(--ui
 }
 html[data-ui-system="manifest"] .cpModelColumnOption span {color:var(--ui-text-muted) !important
 }
+html[data-ui-system="manifest"] .cpModelTreeGroup {border:0 !important;border-radius:var(--ui-radius) !important;background:transparent !important;color:var(--ui-text) !important;font:650 var(--ui-font-xs)/1.2 var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .cpModelTreeGroup.isFolder {font-weight:600 !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .cpModelTreeGroup:hover,html[data-ui-system="manifest"] .cpModelTreeGroup:focus-visible {background:var(--ui-row-hover) !important
+}
+html[data-ui-system="manifest"] .cpModelTreeGroup .ic {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpModelTreeCount {color:var(--ui-text-muted) !important;font:600 var(--ui-font-2xs)/1 var(--ui-font-mono) !important
+}
+html[data-ui-system="manifest"] .cpModelColumnOption.cpModelTreeLeaf {padding-top:5px !important;padding-bottom:5px !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpModelColumnOption.cpModelTreeLeaf strong {font-weight:500 !important
+}
+html[data-ui-system="manifest"] .cpModelColumnOption.cpModelTreeLeaf.active strong {font-weight:650 !important
+}
+html[data-ui-system="manifest"] .cpModelTreeFx {color:var(--ui-accent) !important;font-style:italic !important;font-weight:600 !important
+}
+html[data-ui-system="manifest"] .dmfPickerGroup {margin:0;padding:5px 9px 3px calc(9px + var(--tree-depth,0) * 14px);color:var(--ui-text-muted) !important;font:650 var(--ui-font-2xs)/1.2 var(--ui-font-body) !important;letter-spacing:.02em
+}
+html[data-ui-system="manifest"] .dmfPickerGroup.isTable {background:var(--ui-surface) !important;color:var(--ui-text-secondary) !important
+}
 html[data-ui-system="manifest"] .shipCompare {
   font-size:var(--ui-font-xs) !important
 }

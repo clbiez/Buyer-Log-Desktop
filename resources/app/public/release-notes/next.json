@@ -354,6 +354,35 @@
       }
     },
     {
+      "id": "database-field-hierarchy",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri tabanı sütunları",
+        "en": "Database columns"
+      },
+      "title": {
+        "tr": "ASAS ve IAS alanları Excel pivot düzeninde",
+        "en": "ASAS and IAS fields in the Excel pivot layout"
+      },
+      "body": {
+        "tr": "Veri Tabanından Sütun Ekle penceresi artık ölçüleri (fx) de listeler; Excel pivotunda görünen KPI gibi alanları bulabilirsiniz. Alanlar Excel PivotTable alan listesindeki gibi tablo ve klasöre göre gruplanır ve açılıp kapanır. Arama tablo, klasör, sütun ve ölçü adlarında çalışır. Horizon, alan eşleme ve INTAKE alan seçicileri de alanları tablo ve klasör başlıkları altında gösterir.",
+        "en": "The Add Database Column window now also lists measures (fx), so fields such as the KPIs shown in the Excel pivot can be found. Fields are grouped by table and folder, as in the Excel PivotTable field list, and the groups can be expanded and collapsed. Search covers table, folder, column and measure names. The Horizon, field mapping and INTAKE field pickers also show fields under table and folder headings."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "database-field-hierarchy.png",
+        "alt": {
+          "tr": "Veri Tabanından Sütun Ekle penceresinde KPI tablosu, klasörleri ve fx simgeli ölçüler; bir KPI ölçüsü seçili.",
+          "en": "The Add Database Column window shows the KPI table, its folders and fx measures, with one KPI measure selected."
+        },
+        "caption": {
+          "tr": "Demo şemasıyla Veri Tabanından Sütun Ekle penceresi.",
+          "en": "The Add Database Column window with a demo schema."
+        }
+      }
+    },
+    {
       "id": "asas-fabric-setting",
       "type": "feature",
       "module": {

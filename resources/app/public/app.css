@@ -1555,6 +1555,12 @@ tr:hover .quotationOptions:not(.hasOptions),tr:focus-within .quotationOptions:no
 .cpModelColumnList{grid-column:1/-1;overflow:auto;max-height:46vh;padding:6px;display:flex;flex-direction:column;gap:2px;}
 .cpModelColumnOption{display:grid;grid-template-columns:minmax(0,1fr) minmax(120px,.55fr);gap:14px;width:100%;padding:8px 10px;text-align:left;cursor:pointer;}
 .cpModelColumnOption strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.cpModelColumnOption span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cpModelTreeGroup{display:flex;align-items:center;gap:6px;width:100%;min-height:30px;padding:4px 10px 4px calc(10px + var(--tree-depth,0) * 18px);text-align:left;cursor:pointer;}
+.cpModelTreeGroup .ic{width:13px;height:13px;flex:0 0 auto;}
+.cpModelTreeGroup b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cpModelTreeCount{flex:0 0 auto;margin-left:auto;}
+.cpModelColumnOption.cpModelTreeLeaf{padding-left:calc(29px + var(--tree-depth,0) * 18px);}
+.cpModelTreeFx{display:inline-block;margin-right:6px;}
 @media(max-width:700px){.cpModelColumnBody{grid-template-columns:1fr}.cpModelColumnBody>label.cpModelWide{grid-column:auto}}
 #cpTable tbody tr{content-visibility:auto;contain-intrinsic-size:auto var(--cp-row-h-cp,var(--cp-row-h,46px));}
 #ordersTable tbody tr{content-visibility:auto;contain-intrinsic-size:auto var(--cp-row-h-orders,var(--cp-row-h,46px));}
