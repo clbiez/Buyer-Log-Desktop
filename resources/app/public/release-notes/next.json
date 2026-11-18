@@ -184,6 +184,58 @@
           "en": "The demo distinguishes the W7 and S7 images for a reused model name and a second W7 colour. Ambiguous and incomplete matches show placeholders."
         }
       }
+    },
+    {
+      "id": "shipping-comparison-clipboard-formats",
+      "type": "fix",
+      "module": {
+        "tr": "Nakliye Kıyaslama",
+        "en": "Shipping Comparison"
+      },
+      "title": {
+        "tr": "Yapıştırmaya hazır nakliye kıyası",
+        "en": "Shipping comparison ready to paste"
+      },
+      "body": {
+        "tr": "Kopyalanan kıyasta USD fiyatları iki ondalıkla, tarihler GG.AA.YY biçiminde ve transit süreleri 59 g gibi görünür. Aynı biçimler düz metin ve HTML çıktısında, özel taşıma türlerinde ve sıfır değerlerinde de kullanılır.",
+        "en": "Copied comparisons show USD prices with two decimal places, dates as DD.MM.YY, and transit durations such as 59 d. Plain text and HTML use the same formats for custom shipping methods and zero values."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Biçim değişikliği yapıştırılan pano çıktısında görünür.",
+          "en": "The formatting change appears in pasted clipboard content."
+        }
+      }
+    },
+    {
+      "id": "revision-origin-dates-b",
+      "type": "fix",
+      "module": {
+        "tr": "CP ve Siparişler",
+        "en": "CP and Orders"
+      },
+      "title": {
+        "tr": "Tarih değişikliğinin kaynağını görün",
+        "en": "See what changed a date"
+      },
+      "body": {
+        "tr": "Manuel tarih revizyonları okla, otomatik hesap farkları noktayla gösterilir. Hücre ipucu değişikliğin kaynağını açıklar. Geçerli yükleme onayı etkin Ex-Factory tarihini belirler ve alanı düzenlemeye kapatır. Bağımlı hesaplar da aynı tarihi kullanır.",
+        "en": "Arrows mark manual date revisions and dots mark changes from automatic calculations. The cell tooltip explains the source. A valid loading approval sets the effective Ex-Factory date and locks it for editing. Dependent calculations use the same date."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "revision-origin-dates-b.png",
+        "alt": {
+          "tr": "CP demo tablosunda manuel Ex-Factory revizyonu, otomatik hesap farkları ve yükleme onayı tarihleri.",
+          "en": "CP demo table with a manual Ex-Factory revision, recalculated values, and loading approval dates."
+        },
+        "caption": {
+          "tr": "İlk satırda manuel revizyon oku, izleyen satırlarda yükleme onayı ve otomatik hesap noktaları.",
+          "en": "The first row shows a manual revision arrow. Following rows show loading approvals and dots for recalculated values."
+        }
+      }
     }
   ]
 }

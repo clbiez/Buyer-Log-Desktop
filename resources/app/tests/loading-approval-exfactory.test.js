@@ -8,7 +8,7 @@ const day=value=>{const date=parse.parseDateOnly(value);return date?`${date.getF
 const order=(extra={})=>({ocode:1001,model:'DEMO',ccode:'BLUE',colour:'BLUE',qty:100,kalan:100,fob:1,season:'S6',countryRaw:'CIN',opd:'2026-10-01',ex:'2026-10-30',shipConf:'2026-11-05',retail:'2026-12-14',mb:'2026-12-28',...extra});
 function fn(source,name){const match=source.match(new RegExp('function '+name+'\\([\\s\\S]*?\\n\\}'));assert.ok(match,name);return match[0];}
 function context(names,extra={}){
- const ctx={BLBusinessRules:BR,BLRevision:Revision,dateOrdinal:parse.dateOrdinal,coerceDateLoose:parse.parseDateOnly,...extra};vm.createContext(ctx);
+ const ctx={BLBusinessRules:BR,BLRevision:Revision,REVISION_DATE_KEYS:new Set(Revision.DATE_KEYS),dateOrdinal:parse.dateOrdinal,coerceDateLoose:parse.parseDateOnly,...extra};vm.createContext(ctx);
  for(const name of names)vm.runInContext(fn(app,name),ctx);
  return ctx;
 }
@@ -21,19 +21,27 @@ test('late approval revises effective date without changing ASAS, manual maps or
  assert.equal(JSON.stringify({source,ov}),snapshot);
  assert.deepEqual(parse.applyDateOverrides([effective],ov),[effective],'repeated application is stable');
 });
-test('missing, invalid, equal or earlier approvals do not revise dates; no clock based postponement',()=>{
- for(const approval of [null,'','invalid','2026-10-29','2026-10-30']){
+test('missing or invalid approvals leave planning unchanged',()=>{
+ for(const approval of [null,'','invalid','2026-11-31']){
   const source=order({shipConf:approval});assert.equal(parse.applyDateOverrides([source],{})[0],source);
  }
- assert.equal(parse.applyDateOverrides([order({ex:null})],{})[0].ex,null);
 });
-test('manual planning remains distinct, later manual dates win; refreshed approvals are recomputed',()=>{
+test('approval takes precedence before, after or on the planned day and with no plan',()=>{
+ for(const planned of ['2026-10-29','2026-10-30','2026-12-12',null]){
+  const approval='2026-10-30';
+  const [effective]=parse.applyDateOverrides([order({ex:planned,shipConf:approval})],{});
+  assert.equal(day(effective.ex),approval);
+  assert.equal(day(effective._exFactoryRevision?.previousDate),planned);
+  assert.equal(effective._exFactoryRevision?.source,'loading-approval');
+ }
+});
+test('approval wins over manual planning; refreshing or removing it recomputes the active date',()=>{
  const ov={datemap:{'1001|DEMO|BLUE':{ex:'2026-11-03',retail:'2026-12-20'}}};
  const [effective]=parse.applyDateOverrides([order()],ov);
  assert.equal(day(effective.ex),'2026-11-05');assert.equal(day(effective.retail),'2026-12-20');
  assert.equal(day(effective._exFactoryRevision.previousDate),'2026-11-03');
  const [later]=parse.applyDateOverrides([order()],{datemap:{1001:{ex:'2026-11-10'}}});
- assert.equal(day(later.ex),'2026-11-10');assert.ok(!later._exFactoryRevision);
+ assert.equal(day(later.ex),'2026-11-05');assert.equal(day(later._exFactoryRevision.previousDate),'2026-11-10');
  const [refreshed]=parse.applyDateOverrides([{...effective,shipConf:'2026-11-08'}],ov);
  assert.equal(day(refreshed.ex),'2026-11-08');assert.equal(day(refreshed._asasEx),'2026-10-30');
  const [removed]=parse.applyDateOverrides([{...effective,shipConf:null}],ov);
@@ -54,10 +62,52 @@ test('CP, Orders, formulas, readiness rules, production ETA and Backlog consume 
  assert.equal(day(report[0]['Orijinal Exfactory Merch Tarih']),'2026-10-30');
  assert.equal(report[0]._backlogExcel.transitDays,20);
 });
+test('refreshed projections use the approval day in CP and Orders and preserve the saved revision',()=>{
+ const {buildProjections,serialize}=require('../server/lib/compute-tasks');
+ const overrides={datemap:{1001:{ex:'2026-12-12'}},transitRules:[{delType:'Gemi',exfStart:'2026-11-01',exfEnd:'2026-11-30',days:20}]};
+ const project=shipConf=>JSON.parse(serialize(buildProjections({asasOrders:[order({shipConf})]},
+  {modules:['cp','orders'],overrides}),'projection'));
+ const refreshed=project('2026-11-12'),removed=project(null);
+ for(const module of ['cp','orders']){
+  const [row]=refreshed[module].rows;
+  assert.equal(row['Ex-factory'],'2026-11-12');
+  assert.equal(row._exFactoryRevision.previousDate,'2026-12-12');
+  assert.equal(row.LT,42);
+  assert.equal(row['Ex→Retail'],32);
+  assert.equal(row._logisticSegments[0].arrival,'2026-12-02');
+  assert.equal(removed[module].rows[0]['Ex-factory'],'2026-12-12');
+ }
+});
+test('repeated client normalization preserves a missing previous plan and restores it if approval is withdrawn',()=>{
+ const ctx=context(['normalizeCPDates','applyCpApprovalDate'],{
+  CP_DATE_KEYS:['Ex-factory','Buying Son Onay Tarihi'],
+  cpLogisticSegments:()=>[],cpLogisticHasDetails:()=>false,
+ });
+ const row={'Ex-factory':null,'Buying Son Onay Tarihi':'2026-11-05'};
+ for(let i=0;i<2;i++){
+  ctx.normalizeCPDates([row]);
+  assert.equal(day(row['Ex-factory']),'2026-11-05');
+  assert.equal(row._exFactoryRevision.previousDate,null);
+ }
+ row['Buying Son Onay Tarihi']=null;
+ ctx.normalizeCPDates([row]);
+ assert.equal(row['Ex-factory'],null);
+ assert.equal(Revision.isAutomaticExFactory(row),false);
+});
 test('automatic revisions do not become manual date payloads and keep ASAS comparison',()=>{
  const [effective]=parse.applyDateOverrides([order()],{}),[row]=parse.buildCPRowsFromASAS([effective],{},{});
  assert.equal(Revision.isAutomaticExFactory(row),true);assert.deepEqual(Revision.revisedDateKeys(row),[]);
  assert.equal(day(Revision.baselineDate(row,'Ex-factory')),'2026-10-30');
+});
+test('calculated comparisons start at the same prior date shown for automatic Ex-Factory',()=>{
+ const overrides={datemap:{1001:{ex:'2026-12-12'}}};
+ const [effective]=parse.applyDateOverrides([order({shipConf:'2026-11-12'})],overrides);
+ const [row]=parse.buildCPRowsFromASAS([effective],{},overrides);
+ const base=Revision.baselineRow(row,parse.applyFormulas);
+ assert.equal(day(base['Ex-factory']),day(row._exFactoryRevision.previousDate));
+ assert.equal(day(Revision.baselineDate(row,'Ex-factory')),'2026-10-30');
+ assert.deepEqual(Revision.info(row,'LT',base),{from:72,to:42});
+ assert.deepEqual(Revision.info(row,'Ex→Retail',base),{from:2,to:32});
 });
 test('client resolves the same date and renders a separate translated automatic marker',()=>{
  const ctx=context(['applyCpApprovalDate','revisionHtml'],{appLang:'tr',escapeHtml:String,revisionText:(key,value)=>String(value),L:String});
@@ -65,15 +115,22 @@ test('client resolves the same date and renders a separate translated automatic 
  ctx.applyCpApprovalDate(row);assert.equal(day(row['Ex-factory']),'2026-11-05');assert.equal(Revision.isAutomaticExFactory(row),true);
  const rev={from:'2026-10-30',to:'2026-11-05',source:'loading-approval'};
  const rendered=ctx.revisionHtml('Ex-factory',rev);
- assert.match(rendered,/ASAS Ex-Factory/);assert.match(rendered,/2026-10-30/);assert.match(rendered,/Yükleme onayı/);assert.match(rendered,/2026-11-05/);assert.doesNotMatch(rendered,/class="revPair"/);
+ assert.match(rendered,/Önceki tarih/);assert.match(rendered,/2026-10-30/);assert.match(rendered,/Yükleme onayı/);assert.match(rendered,/2026-11-05/);assert.doesNotMatch(rendered,/class="revPair"/);
  assert.doesNotMatch(rendered,/🔒|<small>/);
  assert.equal(rendered.replace(/<[^>]*>/g,''),'2026-10-30·2026-11-05','only the two dates and a dot are visible');
- assert.equal(ctx.revisionHtml('LT',{from:29,to:35,source:'loading-approval'}).replace(/<[^>]*>/g,''),'35','derived values have no automatic-mode labels');
+ for(const key of ['LT','Ex→Retail','Priority']){
+  const html=ctx.revisionHtml(key,{from:29,to:35},value=>value===35?'<a href="/demo">35</a>':String(value));
+  assert.equal(html.replace(/<[^>]*>/g,''),'29·35');
+  assert.match(html,/Otomatik hesap/);
+  assert.match(html,/<a href="\/demo">35<\/a>/);
+ }
+ assert.equal(ctx.revisionHtml('Ex-factory',{...rev,from:rev.to}).replace(/<[^>]*>/g,''),'2026-11-05');
  ctx.appLang='en';assert.match(ctx.revisionHtml('Ex-factory',rev),/Loading approval/);
- assert.match(ctx.revisionHtml('Ex-factory',{...rev,source:'manual'}),/class="revPair"/);
+ assert.match(ctx.revisionHtml('Ex-factory',{...rev,source:'manual'}),/Manual revision/);
+ assert.equal(ctx.revisionHtml('Ex-factory',{...rev,source:'manual'}).replace(/<[^>]*>/g,''),'2026-10-30→2026-11-05');
 });
 test('server rejects individual, order-wide and batch manual edits of automatic dates before any writes',()=>{
- const [effective]=parse.applyDateOverrides([order()],{});
+ const [effective]=parse.applyDateOverrides([order({shipConf:'2026-10-15'})],{});
  const ctx={cacheForUser:()=>({asasOrders:[effective]}),sourceUserId:()=> 'demo',effectiveOverridesForUser:()=>({}),applyDateOverrides:parse.applyDateOverrides,parseLib:parse};
  vm.createContext(ctx);vm.runInContext(fn(server,'assertAutomaticDatesReadOnly'),ctx);
  for(const patch of [{dates:{exFactory:'2026-12-01'}},{model:'DEMO',ccode:'BLUE',dates:{exFactory:null}},{model:'demo',ccode:'blue',dates:{exFactory:'2026-12-01'}},{model:'OTHER',dates:{exFactory:'2026-12-01'}},{modelName:'OTHER',ccode:'RED',dates:{exFactory:'2026-12-01'}}]){
