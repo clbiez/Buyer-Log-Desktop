@@ -166,7 +166,11 @@ exports.verifyPackagedCoreParallel=async(core,version,options)=>({verified:true,
   assert.ok(profile,'profile logged');assert.equal(profile.lanes,6,'the launcher asks for automatic lane sizing');assert.equal(profile.files,3);
   assert.ok(f.logs.every(entry=>entry.pid===4242),'every launcher log line names its process');
   const environment=f.logs.find(entry=>entry.event==='launch-environment');
-  assert.deepEqual(environment.install,{kind:'local',drive:''});assert.equal(environment.launcherVersion,'1.2.1');
+  // Only the kind and the drive letter are logged, never the full path. On Windows
+  // the fixture root '/portable' resolves onto the current drive (e.g. D:).
+  const drive=(/^[A-Za-z]:/.exec(path.resolve('/portable'))||[''])[0].toUpperCase();
+  assert.deepEqual(environment.install,{kind:'local',drive});assert.equal(environment.launcherVersion,'1.2.1');
+  assert.ok(!JSON.stringify(environment).includes('portable'),'the install path itself is not logged');
 });
 
 test('an integrity failure from the parallel verifier still blocks the launch',async t=>{
