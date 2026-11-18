@@ -16,3 +16,6 @@ LICENSE text eol=lf
 
 *.cmd  text eol=crlf
 *.bat  text eol=crlf
+
+# Dağıtılan tek dosyalık tanı aracı: Windows CRLF baytlarıyla birebir saklanır.
+tools/source-parity/dist/*.cmd -text
