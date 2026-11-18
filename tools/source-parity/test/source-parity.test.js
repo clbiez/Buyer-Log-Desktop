@@ -255,3 +255,49 @@ test('CMD menüsü: Hayir / Hayır / No / H cevapları hayır sayılır (ilk har
     assert.ok(!text.includes(`if /I "!${v}!"=="H"`), 'eski tam-eşleşme kontrolü kalmamalı');
   }
 });
+
+function withAntrepoExcel(rows, work) {
+  const file = path.join(sourceFolder, 'antrepo.xlsx');
+  const before = fs.readFileSync(file);
+  writeWorkbook(file, 'Antrepo', rows.map(r => ({ ...r, 'Ürün Ad': r['Model Adı'] })));
+  return Promise.resolve().then(work).finally(() => fs.writeFileSync(file, before));
+}
+
+test('saha durumu: Excel\'de statüsü boş parsiyel + "Dosyası Oluşmamıştır" → neden açıkça yazılır', async () => {
+  const excelRows = [
+    ...IAS.map(r => r['İthalat Dosya No'] === 'D-3' ? { ...r, 'İthalat Dosya No': 'Dosyası Oluşmamıştır' } : r),
+    { 'İthalat Dosya No': 'Dosyası Oluşmamıştır', 'Sipariş Kod': 1002, 'Model Adı': 'MODEL B', 'Renk Kod': '002', 'Supplier Portal Statü': '', 'Tahmini Antrepo Giriş Tarihi': '', 'Yükleme Toplam Adet': 50 },
+  ];
+  const r = await withAntrepoExcel(excelRows, () => run(['--excel', 'evet', '--kumas', 'dahil', '--aday', 'hayir'], {
+    mutate: { 'ias-current': rows => rows.map(row => row['İthalat Dosya No'] === 'D-3' ? { ...row, 'İthalat Dosya No': '' } : row) },
+  }));
+  const check = r.summary.checks.find(c => c.id === 'excel-ias-mevcut-cp');
+  assert.equal(check.verdict, 'BAŞARISIZ', r.report);
+  const text = check.lines.join('\n');
+  assert.match(text, /Dosyası Oluşmamıştır.*eşdeğer/);
+  assert.match(text, /1 parsiyelde Supplier Portal Statü BOŞ/);
+  assert.match(text, /BİREBİR AYNI/);
+});
+
+test('Excel ASAS 0 sipariş okunursa karşılaştırma GEÇERSİZ; ortak sipariş 0 iken eşleştirme GEÇTİ demez', async () => {
+  const file = path.join(sourceFolder, 'asas.xlsx');
+  const before = fs.readFileSync(file);
+  // Pivot "öğe etiketlerini yinele" kapalı: Sipariş Kod hücreleri boş
+  writeWorkbook(file, 'ASAS (2)', ORDERS.map(o => ({ ...o, 'Sipariş Kod': null })));
+  try {
+    const r = await run(['--kumas', 'dahil', '--aday', 'hayir']);
+    assert.equal(r.verdict('excel-asas'), 'GEÇERSİZ', r.report);
+    assert.match(r.report, /0 sipariş okundu \(sayfa: ASAS \(2\)\)/);
+    assert.equal(r.verdict('excel-eslesme-mevcut'), 'GEÇERSİZ');
+    assert.equal(r.code, 2);
+  } finally { fs.writeFileSync(file, before); }
+});
+
+test('kumaşlı sorgu bazı siparişleri düşürüyorsa yön ve olası neden yazılır', async () => {
+  const r = await run(['--excel', 'hayir', '--aday', 'hayir'], { mutate: { 'asas-fabric': rows => rows.filter(row => row['Sipariş Kod'] !== 1002) } });
+  const check = r.summary.checks.find(c => c.id === 'kumas');
+  assert.equal(check.verdict, 'BAŞARISIZ');
+  assert.match(check.lines.join('\n'), /kumaşsız sorgu 1 siparişi FAZLA getiriyor/);
+  assert.match(check.lines.join('\n'), /COUNTROWS\('Kumaş'\)/);
+  assert.match(r.read('kumas-etkisi-cp.csv'), /YOK;var;W6;300/);
+});

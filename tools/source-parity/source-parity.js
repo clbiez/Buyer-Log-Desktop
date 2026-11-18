@@ -33,7 +33,7 @@ const fs = require('fs');
 const path = require('path');
 const cmp = require('./compare.js');
 
-const TOOL_VERSION = '2026-11-18.2';
+const TOOL_VERSION = '2026-11-18.3';
 const MATCH_TARGETS = Object.freeze(['cp', 'orders', 'backlog']);
 const ALL_TARGETS = Object.freeze(['cp', 'orders', 'backlog', 'lfl', 'priceanalysis']);
 const TARGET_LABELS = { cp: 'CP', orders: 'Siparişler', backlog: 'Backlog', lfl: 'LFL', priceanalysis: 'Price & Supplier' };
@@ -375,6 +375,7 @@ async function excelStep(bl, ctx, outDir, log, tracer, deps, core) {
   const meta = bl.parse.antrepoParseMeta(iasStep.value) || {};
   if (meta.ok === false) { result.problems.push(`Antrepo Excel eşleştirme alanları çözülemedi: ${meta.reason || ''}`); return result; }
   result.orders = asasStep.value.orders;
+  try { result.asasSheet = (XLSX.readFile(result.files.asas.copy, { bookSheets: true }).SheetNames || [])[0] || ''; } catch (_) { result.asasSheet = ''; }
   result.antrepoMap = iasStep.value;
   result.antrepoMeta = { dataRows: meta.dataRows, matchableRows: meta.matchableRows, blankStatus: meta.blankStatus, columns: meta.columns };
   // Fail-closed: pivotu yenilenmemiş Excel doğruluk referansı OLAMAZ.
@@ -557,7 +558,21 @@ function restrictIasToOrders(map, orderSets, cctx) {
   const out = Object.create(null);
   let dropped = 0;
   for (const [key, entry] of Object.entries(map || {})) { if (lines.has(lineKey(entry))) out[key] = entry; else dropped += 1; }
-  return { map: out, dropped };
+  return { map: out, dropped, noFileLabel: Number(map && map.__noFileLabel) || 0 };
+}
+/* Excel pivotu dosyası olmayan parsiyeli "Dosyası Oluşmamıştır" etiketiyle
+   gösteriyor; Database aynı satırda boş döndürüyor. Yalnız bu etiket boşa
+   eşitlenir ve sayısı raporlanır. */
+const NO_IMPORT_FILE_LABEL = /^dosyas[ıi] olu[sş]mam[ıi][sş]t[ıi]r\.?$/i;
+function normalizeExcelIas(map) {
+  const out = Object.create(null);
+  let count = 0;
+  for (const [key, entry] of Object.entries(map || {})) {
+    if (entry && NO_IMPORT_FILE_LABEL.test(String(entry.importFile || '').trim())) { out[key] = { ...entry, importFile: '' }; count += 1; }
+    else out[key] = entry;
+  }
+  Object.defineProperty(out, '__noFileLabel', { value: count, enumerable: false });
+  return out;
 }
 function targetGroups(result, cctx) {
   const groups = new Map();
@@ -628,7 +643,7 @@ function buildComparisons(bl, ctx, args, excel, db) {
       const error = [...db.asas.fabric, ...db.asas.noFabric].find(step => step && !step.ok);
       checks.push({ id: 'kumas', title: 'ASAS kumaşlı ⇄ kumaşsız', verdict: 'HATA', lines: [`Sorgu çalışmadı: ${error ? error.error : 'bilinmiyor'}`] });
     } else {
-      let fail = false;
+      let fail = false, onlyExtra = true, extraTotal = 0;
       const lines = [];
       for (const target of MATCH_TARGETS) {
         const x = a.value.asasOrdersByTarget[target], y = b.value.asasOrdersByTarget[target];
@@ -636,15 +651,20 @@ function buildComparisons(bl, ctx, args, excel, db) {
         const r = cmp.compareOrders(x, y, cctx, { strict: true, ignoreFields: cmp.FABRIC_ORDER_FIELDS });
         const n = r.missing.length + r.extra.length + r.valueDiffs.length + r.multiplicity.length;
         if (n) fail = true;
+        if (r.missing.length || r.valueDiffs.length || r.multiplicity.length) onlyExtra = false;
+        extraTotal = Math.max(extraTotal, r.extra.length);
         lines.push(`${TARGET_LABELS[target]}: sipariş ${r.referenceCount} ⇄ ${r.candidateCount}, kumaş dışı değer farkı ${r.valueDiffs.length}, eksik ${r.missing.length}, fazla ${r.extra.length}`);
         if (Object.keys(r.fieldDiffCounts).length) lines.push(`  Farklı alanlar: ${Object.entries(r.fieldDiffCounts).map(([f, c]) => `${f}=${c}`).join(', ')}`);
-        addCsv(`kumas-etkisi-${target}.csv`, ['sipariş', 'alan', 'kumaşlı', 'kumaşsız'], [
-          ...r.valueDiffs.map(d => [cmp.displayKey(d.key), d.field, d.reference, d.candidate]),
-          ...r.missing.map(d => [cmp.displayKey(d.key), '(sipariş)', 'var', 'YOK']),
-          ...r.extra.map(d => [cmp.displayKey(d.key), '(sipariş)', 'YOK', 'var']),
+        addCsv(`kumas-etkisi-${target}.csv`, ['sipariş', 'alan', 'kumaşlı', 'kumaşsız', 'sezon', 'Net Alım'], [
+          ...r.valueDiffs.map(d => [cmp.displayKey(d.key), d.field, d.reference, d.candidate, '', '']),
+          ...r.missing.map(d => [cmp.displayKey(d.key), '(sipariş)', 'var', 'YOK', d.order && d.order.season || '', d.order && d.order.qty]),
+          ...r.extra.map(d => [cmp.displayKey(d.key), '(sipariş)', 'YOK', 'var', d.order && d.order.season || '', d.order && d.order.qty]),
         ]);
       }
-      if (fail) lines.push('Kumaş alanları sipariş verisini (satır evreni / miktar) etkiliyor. Kumaşı ASAS sorgusundan çıkarmak bu haliyle GÜVENLİ DEĞİL.');
+      if (fail && onlyExtra) {
+        lines.push(`Yön: kumaşsız sorgu ${extraTotal} siparişi FAZLA getiriyor; ortak siparişlerde kumaş dışı değer farkı yok.`);
+        lines.push("Olası neden: BL'ın kumaşlı ASAS sorgusundaki satır koruması (__BLRowGuard ... COUNTROWS('Kumaş')) kumaş kaydı olmayan siparişleri düşürüyor. Bu siparişler BUGÜNKÜ BL'da görünmüyor olabilir (kumas-etkisi-*.csv: sezon ve miktar).");
+      } else if (fail) lines.push('Kumaş alanları sipariş verisini (satır evreni / miktar) etkiliyor. Kumaşı ASAS sorgusundan çıkarmak bu haliyle GÜVENLİ DEĞİL.');
       checks.push({ id: 'kumas', title: 'ASAS kumaşlı ⇄ kumaşsız (kumaş dışı alanlar)', verdict: verdictOf({ fail }), lines });
     }
   }
@@ -659,7 +679,9 @@ function buildComparisons(bl, ctx, args, excel, db) {
       const label = group.targets.map(t => TARGET_LABELS[t]).join(' / ');
       const dbOrders = full.asasOrdersByTarget[target] || [];
       const asas = cmp.compareOrders(excel.orders, dbOrders, cctx, { strict: false });
+      const excelEmpty = !excel.orders.length;
       const lines = [
+        ...(excelEmpty ? [`Excel ASAS'tan 0 sipariş okundu (sayfa: ${excel.asasSheet || 'ilk sayfa'}). BL yalnız ilk sayfayı okur ve Sipariş Kod hücresi boş satırları atlar: pivotun ilk sayfada olduğunu ve "Tüm Öğe Etiketlerini Yinele" ayarını kontrol edin. Karşılaştırma GEÇERSİZ.`] : []),
         `Sipariş satırı: Excel ${asas.referenceCount} · DB ${asas.candidateCount}`,
         `Excel'de olup DB'de olmayan: ${asas.missing.length} · DB'de olup Excel'de olmayan: ${asas.extra.length} · değer farkı: ${asas.valueDiffs.length}`,
         `Toplam Net Alım: Excel ${asas.totals.qty.reference} · DB ${asas.totals.qty.candidate}`,
@@ -668,7 +690,7 @@ function buildComparisons(bl, ctx, args, excel, db) {
       if (asas.coverage.length) lines.push(`Kapsam notu (alan yalnız bir kaynakta dolu): ${asas.coverage.map(c => `${c.field} (${c.onlyIn === 'reference' ? 'yalnız Excel' : 'yalnız DB'})`).join(', ')}`);
       if (asas.extra.length) lines.push('DB fazlası çoğunlukla ufuk/kapsam farkıdır (Excel raporunun filtresi ≠ BL Data Source and Filters).');
       checks.push({ id: `excel-asas-${target}`, title: `Excel ⇄ DB · ASAS siparişleri · ${label}`,
-        verdict: verdictOf({ fail: asas.missing.length > 0 || asas.valueDiffs.length > 0, warn: asas.extra.length > 0 || asas.coverage.length > 0 || asas.multiplicity.length > 0 }), lines });
+        verdict: verdictOf({ invalid: excelEmpty, fail: asas.missing.length > 0 || asas.valueDiffs.length > 0, warn: asas.extra.length > 0 || asas.coverage.length > 0 || asas.multiplicity.length > 0 }), lines });
       addCsv(`excel-db-asas-${target}.csv`, ['tür', 'sipariş', 'alan', 'Excel', 'DB', 'sezon'], [
         ...asas.missing.map(d => ['EXCEL VAR / DB YOK', cmp.displayKey(d.key), '', '', '', d.order && d.order.season || '']),
         ...asas.valueDiffs.map(d => ['DEĞER FARKI', cmp.displayKey(d.key), d.field, d.reference, d.candidate, '']),
@@ -677,16 +699,30 @@ function buildComparisons(bl, ctx, args, excel, db) {
       ]);
 
       const orderSets = [excel.orders, dbOrders];
-      const excelIas = restrictIasToOrders(excel.antrepoMap, orderSets, cctx);
+      const excelIas = restrictIasToOrders(normalizeExcelIas(excel.antrepoMap), orderSets, cctx);
       const variants = [['mevcut', full.antrepoMapByTarget && full.antrepoMapByTarget[target]]];
       if (candidate) variants.push(['aday', candidate.value.antrepoMapByTarget && candidate.value.antrepoMapByTarget[target]]);
       for (const [variant, map] of variants) {
         if (!map) continue;
         const dbIas = restrictIasToOrders(map, orderSets, cctx);
         const ias = cmp.compareIas(excelIas.map, dbIas.map, cctx, { strict: false });
+        const failIas = ias.line.missing.length > 0 || ias.line.qtyDiffs.length > 0 || ias.detail.missing.length > 0 || ias.detail.qtyDiffs.length > 0;
+        const notes = [];
+        if (excelIas.noFileLabel) notes.push(`Not: ${excelIas.noFileLabel} Excel satırında İthalat Dosya No = "Dosyası Oluşmamıştır"; DB'de bu alan boş geliyor ve eşdeğer sayıldı.`);
+        const blankStatus = Object.values(excelIas.map).filter(entry => !cctx.canon(entry.statu)).length;
+        if (failIas && blankStatus) {
+          const withoutBlank = Object.create(null);
+          for (const [key, entry] of Object.entries(excelIas.map)) if (cctx.canon(entry.statu)) withoutBlank[key] = entry;
+          const again = cmp.compareIas(withoutBlank, dbIas.map, cctx, { strict: false });
+          const clean = !again.line.missing.length && !again.line.qtyDiffs.length && !again.detail.missing.length && !again.detail.qtyDiffs.length;
+          notes.push(`Excel'de ${blankStatus} parsiyelde Supplier Portal Statü BOŞ. BL'ın Database yolu bu satırları bilerek atar (normalizeAntrepoDatabaseRows); Excel yolu atmaz.`);
+          notes.push(clean
+            ? 'Statüsü boş satırlar hariç tutulunca Excel ⇄ DB parsiyel ve adetleri BİREBİR AYNI. Farkın tamamı bu kuraldan.'
+            : `Statüsü boş satırlar hariç tutulduğunda bile fark kalıyor: eksik satır ${again.line.missing.length}, adet farkı ${again.line.qtyDiffs.length}, eksik parsiyel ${again.detail.missing.length}.`);
+        }
         checks.push({ id: `excel-ias-${variant}-${target}`, title: `Excel ⇄ DB ${variant} · IAS parsiyelleri · ${label}`,
           verdict: verdictOf({
-            fail: ias.line.missing.length > 0 || ias.line.qtyDiffs.length > 0 || ias.detail.missing.length > 0 || ias.detail.qtyDiffs.length > 0,
+            fail: failIas,
             warn: ias.line.extra.length > 0 || ias.detail.extra.length > 0 || ias.coverage.length > 0,
           }),
           lines: [
@@ -695,6 +731,7 @@ function buildComparisons(bl, ctx, args, excel, db) {
             `Sipariş+Model+Renk: Excel'de olup DB'de olmayan ${ias.line.missing.length} · adet farkı ${ias.line.qtyDiffs.length} · DB fazlası ${ias.line.extra.length}`,
             `Parsiyel (ortak alanlar: ${ias.identityFields.join(', ')}): eksik ${ias.detail.missing.length} · adet farkı ${ias.detail.qtyDiffs.length} · fazla ${ias.detail.extra.length}`,
             ...(ias.coverage.length ? [`Kapsam notu: ${ias.coverage.map(c => `${c.field} (${c.onlyIn === 'reference' ? 'yalnız Excel' : 'yalnız DB'})`).join(', ')}`] : []),
+            ...notes,
           ] });
         const fmt = item => item.key.split('\u0000').join(' | ');
         addCsv(`excel-db-ias-${variant}-${target}.csv`, ['düzey', 'tür', 'kimlik', 'Excel adet', 'DB adet', 'Excel satır', 'DB satır'], [
@@ -707,7 +744,7 @@ function buildComparisons(bl, ctx, args, excel, db) {
         ]);
         const match = cmp.compareMatches(cmp.matchSummary(excel.orders, excel.antrepoMap, cctx), cmp.matchSummary(dbOrders, map, cctx), cctx);
         checks.push({ id: `excel-eslesme-${variant}-${target}`, title: `Excel ⇄ DB ${variant} · ASAS-IAS eşleştirme sonucu · ${label}`,
-          verdict: verdictOf({ fail: match.diffs.length > 0 }),
+          verdict: verdictOf({ invalid: match.compared === 0, fail: match.diffs.length > 0 }),
           lines: [
             `Ortak sipariş: ${match.compared} · farklı sonuç: ${new Set(match.diffs.map(d => d.key)).size}`,
             `Excel: ${match.referenceStats.matched}/${match.referenceStats.orders} eşleşti (çoklu parsiyel ${match.referenceStats.ambiguous}) · DB: ${match.candidateStats.matched}/${match.candidateStats.orders} (çoklu ${match.candidateStats.ambiguous})`,
@@ -763,7 +800,11 @@ function performanceReport(report, tracer, db, excel, probes) {
     if (full.ok) line(`   Sorgu dışı (eşleştirme, bütünlük denetimi, LFL, şema) ≈ ${seconds(Math.max(0, full.ms - longest))} — paralel en uzun sorgu yolundan sonra kalan`);
   }
   const blMedian = median(report.blHistory.map(h => h.durationMs));
-  if (blMedian && full && full.ok) line(`   BL gerçek yenileme medyanı ${seconds(blMedian)} − veri katmanı ${seconds(full.ms)} ≈ ${seconds(Math.max(0, blMedian - full.ms))}: BL'ın veri sonrası işleri (snapshot kaydı, fark/geçmiş, hesap yayını, ekran) için kalan pay (yaklaşık; farklı zamanlarda ölçüldü)`);
+  if (blMedian && full && full.ok) {
+    line(blMedian > full.ms * 1.1
+      ? `   BL gerçek yenileme medyanı ${seconds(blMedian)} − veri katmanı ${seconds(full.ms)} ≈ ${seconds(blMedian - full.ms)}: BL'ın veri sonrası işleri (snapshot, fark/geçmiş, yayın) için kalan pay (yaklaşık; farklı zamanlarda ölçüldü)`
+      : `   BL gerçek yenileme medyanı ${seconds(blMedian)} ≈ veri katmanı ${seconds(full.ms)}: BL yenileme süresinin neredeyse tamamı veri çekme (sorgu + aktarım). Veri sonrası işler belirleyici değil.`);
+  }
   line('');
 
   line('3) TEK BAŞINA ÖLÇÜMLER (medyan)');
