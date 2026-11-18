@@ -616,7 +616,19 @@ function compareHashes(records) {
   return { pairs: pairs.length, mismatches, persistent, transient, largestBytes: largest };
 }
 
-module.exports = { CSHARP, buildPatchedScript, createRunner, compareHashes, ADODB_LOOP, ADOMD_LOOP };
+/* Yeni BL (C# yazıcı BL'ın kendisinde): karşılaştırma için kopyada derleme
+   sonucu yok sayılır ve PowerShell döngüsü zorlanır. */
+function buildPowerShellForcedScript(original) {
+  const bom = original.charCodeAt(0) === 0xFEFF;
+  const text = (bom ? original.slice(1) : original).replace(/\r\n/g, '\n');
+  const needle = '  $script:fastCsv = $true\n} catch {\n  if (\'BLFastCsv\' -as [type]) { $script:fastCsv = $true }\n}';
+  const count = text.split(needle).length - 1;
+  if (count !== 1) return { ok: false, problems: [`C# açma bloğu ${count} kez bulundu (1 bekleniyordu)`] };
+  const forced = text.replace(needle, needle + '\n# Kaynak doğrulama aracı: karşılaştırma için PowerShell döngüsü zorlandı (BL dosyası değil, kopya)\n$script:fastCsv = $false');
+  return { ok: true, script: '\uFEFF' + forced.replace(/\n/g, '\r\n') };
+}
+
+module.exports = { CSHARP, buildPatchedScript, buildPowerShellForcedScript, createRunner, compareHashes, ADODB_LOOP, ADOMD_LOOP };
 //@@BLFILE source-parity.js
 'use strict';
 
@@ -654,7 +666,7 @@ const path = require('path');
 const cmp = require('./compare.js');
 const transfer = require('./transfer-experiment.js');
 
-const TOOL_VERSION = '2026-11-18.5';
+const TOOL_VERSION = '2026-11-18.6';
 const MATCH_TARGETS = Object.freeze(['cp', 'orders', 'backlog']);
 const ALL_TARGETS = Object.freeze(['cp', 'orders', 'backlog', 'lfl', 'priceanalysis']);
 const TARGET_LABELS = { cp: 'CP', orders: 'Siparişler', backlog: 'Backlog', lfl: 'LFL', priceanalysis: 'Price & Supplier' };
@@ -819,6 +831,7 @@ function loadContext(bl, args) {
       lfl: overrides.lflSourceMode === 'database' ? 'database' : 'excel',
     },
     connections: active.map(item => ({ id: item.id, name: item.name, role: item.role, server: item.server, catalog: item.catalog })),
+    asasFabricMode: overrides.asasFabricMode === 'off' ? 'off' : 'separate',
   };
 }
 
@@ -1069,6 +1082,13 @@ async function databaseSteps(bl, ctx, args, log, tracer, deps) {
   const base = { matchRule: ctx.matchRule, runModelRows: fns.runModelRows, discoverSchema: fns.discoverSchema, telemetry: fns.telemetry, ...(deps.loadOptions || {}) };
   const out = { captured, probes, blankStatusRows, full: null, ias: { current: [], candidate: [] }, asas: { fabric: [], noFabric: [] },
     transfer: { baseline: [], csharp: [], records: [], enabled: false }, variantProblems: [] };
+  /* Yeni motor (BL ≥ kumaş modu sürümü): aday ve kumaşsız varyantlar BL'ın KENDİ
+     seçenekleriyle üretilir; araç sarmalayıcısı kullanılmaz.
+       IAS  : mevcut = eski SELECTEDVALUE ifadesi, aday = BL varsayılanı RELATED
+       ASAS : kumaşlı = eski tek sorgu (inline), kumaşsız = off, + ayrı kumaş (separate) */
+  const newEngine = typeof bl.modelRefresh.asasFabricMode === 'function';
+  out.newEngine = newEngine;
+  out.asas.separate = [];
   const time = (label, fn) => {
     const started = process.hrtime.bigint();
     const value = fn();
@@ -1096,7 +1116,7 @@ async function databaseSteps(bl, ctx, args, log, tracer, deps) {
   // 1) BL yenilemesinin veri katmanı, BL'daki gibi (ASAS + IAS paralel).
   const includeLfl = ctx.sourceModes.lfl === 'database';
   out.full = await tracer.phase('BL yenilemesi (ASAS + IAS paralel, BL ile birebir)', log,
-    () => load(ctx.items, { ...base, targets: ALL_TARGETS.slice(), includeAsas: true, includeAntrepo: true, includeLfl }));
+    () => load(ctx.items, { ...base, targets: ALL_TARGETS.slice(), includeAsas: true, includeAntrepo: true, includeLfl, ...(newEngine ? { asasFabricMode: ctx.asasFabricMode } : {}) }));
   if (!out.full.ok) return out;
   {
     const value = out.full.value;
@@ -1121,7 +1141,11 @@ async function databaseSteps(bl, ctx, args, log, tracer, deps) {
     const order = !args.aday ? ['current'] : (round % 2 === 0 ? ['current', 'candidate'] : ['candidate', 'current']);
     for (const variant of order) {
       const label = `${variant === 'current' ? 'IAS mevcut sorgu' : 'IAS aday sorgu (RELATED)'} · tur ${round + 1}/${args.tekrar}`;
-      const step = variant === 'current'
+      const step = newEngine
+        ? await tracer.phase(label, log, variant === 'current'
+          ? () => load(ctx.items, { ...matchBase, includeAsas: false, includeAntrepo: true, presetAsasOrdersByTarget: preset, iasLookup: 'selectedvalue' })
+          : iasRun)
+        : variant === 'current'
         ? await tracer.phase(label, log, iasRun)
         : await withPatched(bl.modelHorizon, 'buildFactRowQuery', original => (...a) => {
           const built = original(...a);
@@ -1137,10 +1161,15 @@ async function databaseSteps(bl, ctx, args, log, tracer, deps) {
     const asasRun = items => () => load(items, { ...matchBase, includeAsas: true, includeAntrepo: false });
     const noFabricItems = withoutFabric(ctx.items);
     for (let round = 0; round < args.tekrar; round++) {
-      const order = round % 2 === 0 ? ['fabric', 'noFabric'] : ['noFabric', 'fabric'];
+      const order = newEngine
+        ? (round % 2 === 0 ? ['fabric', 'separate', 'noFabric'] : ['noFabric', 'separate', 'fabric'])
+        : (round % 2 === 0 ? ['fabric', 'noFabric'] : ['noFabric', 'fabric']);
       for (const variant of order) {
-        const label = `${variant === 'fabric' ? 'ASAS kumaşlı' : 'ASAS kumaşsız'} · tur ${round + 1}/${args.tekrar}`;
-        const step = variant === 'fabric'
+        const label = `${variant === 'fabric' ? 'ASAS kumaşlı' : variant === 'separate' ? 'ASAS ayrı kumaş sorgusu' : 'ASAS kumaşsız'} · tur ${round + 1}/${args.tekrar}`;
+        const mode = { fabric: 'inline', separate: 'separate', noFabric: 'off' }[variant];
+        const step = newEngine
+          ? await tracer.phase(label, log, () => load(ctx.items, { ...matchBase, includeAsas: true, includeAntrepo: false, asasFabricMode: mode }))
+          : variant === 'fabric'
           ? await tracer.phase(label, log, asasRun(ctx.items))
           : await withPatched(bl.modelFields, 'missingRequired', original => (role, mapping) => {
             const missing = original(role, mapping);
@@ -1162,20 +1191,26 @@ async function databaseSteps(bl, ctx, args, log, tracer, deps) {
   if (args.aktarim) {
     const originalPath = path.join(deps.corePath || '', 'server', 'lib', 'ModelQuery.ps1');
     let patched;
-    try { patched = transfer.buildPatchedScript(fs.readFileSync(originalPath, 'utf8')); }
-    catch (error) { patched = { ok: false, problems: [String(error.message || error)] }; }
+    let blHasFastCsv = false;
+    try {
+      const original = fs.readFileSync(originalPath, 'utf8');
+      blHasFastCsv = /\$script:fastCsv = \$false/.test(original);
+      patched = blHasFastCsv ? transfer.buildPowerShellForcedScript(original) : transfer.buildPatchedScript(original);
+    } catch (error) { patched = { ok: false, problems: [String(error.message || error)] }; }
+    out.transfer.blHasFastCsv = blHasFastCsv;
     if (!patched.ok) out.variantProblems.push({ id: 'aktarim', message: `BL ModelQuery.ps1 beklenen yapıda değil; deney yapılmadı: ${patched.problems.join('; ')}` });
     else {
       out.transfer.enabled = true;
       const dir = path.join(deps.outDir || '.', 'aktarim-deneyi');
       fs.mkdirSync(dir, { recursive: true });
-      const patchedPath = path.join(dir, 'ModelQuery-csharp.ps1');
+      const patchedPath = path.join(dir, blHasFastCsv ? 'ModelQuery-powershell.ps1' : 'ModelQuery-csharp.ps1');
       fs.writeFileSync(patchedPath, patched.script, 'utf8');
       let round = 0;
       const record = r => { const item = { ...r, round, run: tracer.state.run }; out.transfer.records.push(item); tracer.add({ type: 'transfer-file', ...item }); };
       const runners = {
-        baseline: transfer.createRunner(originalPath, 'baseline', record, { execFile: deps.transferExec }),
-        csharp: transfer.createRunner(patchedPath, 'csharp', record, { execFile: deps.transferExec }),
+        // Yeni BL zaten C# kullanır: temel = C#'ı kapatılmış kopya, aday = BL'ın kendisi.
+        baseline: transfer.createRunner(blHasFastCsv ? patchedPath : originalPath, 'baseline', record, { execFile: deps.transferExec }),
+        csharp: transfer.createRunner(blHasFastCsv ? originalPath : patchedPath, 'csharp', record, { execFile: deps.transferExec }),
       };
       const rounds = Math.min(args.tekrar, 3);
       for (round = 1; round <= rounds; round++) {
@@ -1198,6 +1233,7 @@ async function databaseSteps(bl, ctx, args, log, tracer, deps) {
   const queriesOf = (prefix, role) => captured.filter(q => q.run.startsWith(prefix) && q.role === role).map(q => q.query);
   if (args.aday) {
     const cand = queriesOf('IAS aday', 'antrepo'), curr = queriesOf('IAS mevcut', 'antrepo');
+    if (newEngine && curr.length && !curr.some(q => /SELECTEDVALUE/.test(q))) out.variantProblems.push({ id: 'ias-aday', message: 'Eski IAS ifadesi (SELECTEDVALUE) üretilemedi; karşılaştırma yapılamaz.' });
     if (cand.length && !cand.some(q => q.includes('RELATED('))) out.variantProblems.push({ id: 'ias-aday', message: 'Mevcut IAS sorgusunda dönüştürülecek SELECTEDVALUE ifadesi yok; aday mevcutla aynı sorgu. Ölçüm anlamsız.' });
     if (cand.length && curr.length && cand.every(q => curr.includes(q))) out.variantProblems.push({ id: 'ias-aday', message: 'Aday sorgu mevcutla birebir aynı; RELATED dönüşümü uygulanmadı.' });
   }
@@ -1364,6 +1400,35 @@ function buildComparisons(bl, ctx, args, excel, db) {
     }
   }
 
+  // B2) Yeni motor: eski tek sorgu (inline) ⇄ ayrı kumaş sorgusu (separate), kumaş dahil
+  if (db.newEngine && args.kumas === 'ikisi') {
+    const a = firstOk(db.asas.fabric), b = firstOk(db.asas.separate);
+    if (!a || !b) {
+      const error = [...db.asas.fabric, ...(db.asas.separate || [])].find(step => step && !step.ok);
+      checks.push({ id: 'kumas-ayri', title: 'ASAS tek sorgu ⇄ ayrı kumaş sorgusu', verdict: 'HATA', lines: [`Sorgu çalışmadı: ${error ? error.error : 'bilinmiyor'}`] });
+    } else {
+      let fail = false, warn = false;
+      const lines = [];
+      for (const target of MATCH_TARGETS) {
+        const x = a.value.asasOrdersByTarget[target], y = b.value.asasOrdersByTarget[target];
+        if (!x && !y) continue;
+        const r = cmp.compareOrders(x, y, cctx, { strict: true });
+        if (r.missing.length || r.valueDiffs.length || r.multiplicity.length) fail = true;
+        if (r.extra.length) warn = true;
+        lines.push(`${TARGET_LABELS[target]}: sipariş ${r.referenceCount} ⇄ ${r.candidateCount}, değer farkı ${r.valueDiffs.length} (kumaş dahil), eksik ${r.missing.length}, fazla ${r.extra.length}`);
+        if (Object.keys(r.fieldDiffCounts).length) lines.push(`  Farklı alanlar: ${Object.entries(r.fieldDiffCounts).map(([f, c]) => `${f}=${c}`).join(', ')}`);
+        addCsv(`kumas-ayri-sorgu-${target}.csv`, ['sipariş', 'alan', 'tek sorgu', 'ayrı sorgu', 'sezon', 'Net Alım'], [
+          ...r.valueDiffs.map(d => [cmp.displayKey(d.key), d.field, d.reference, d.candidate, '', '']),
+          ...r.missing.map(d => [cmp.displayKey(d.key), '(sipariş)', 'var', 'YOK', d.order && d.order.season || '', d.order && d.order.qty]),
+          ...r.extra.map(d => [cmp.displayKey(d.key), '(sipariş)', 'YOK', 'var', d.order && d.order.season || '', d.order && d.order.qty]),
+        ]);
+      }
+      if (warn && !fail) lines.push('Ayrı sorgu fazladan sipariş getiriyor: eski tek sorgu kumaş kaydı olmayan siparişleri düşürüyordu (beklenen düzeltme). Ortak siparişlerde kumaş dahil fark yok.');
+      if (fail) lines.push('Ayrı kumaş sorgusu ortak siparişlerde farklı değer ya da eksik sipariş üretiyor; bu haliyle STABLE\'a alınmamalı.');
+      checks.push({ id: 'kumas-ayri', title: 'ASAS tek sorgu ⇄ ayrı kumaş sorgusu (kumaş dahil)', verdict: verdictOf({ fail, warn }), lines });
+    }
+  }
+
   // C) Excel ⇄ Database (Excel = doğruluk referansı)
   if (!excel.enabled) checks.push({ id: 'excel', title: 'Excel ⇄ Database', verdict: 'ATLANDI', lines: ['Excel adımı kapalı.'] });
   else if (!excel.valid || !full) checks.push({ id: 'excel', title: 'Excel ⇄ Database', verdict: excel.valid ? 'HATA' : 'GEÇERSİZ', lines: [...excel.problems, ...(!full ? ['BL Database yenilemesi tamamlanamadı.'] : [])] });
@@ -1517,6 +1582,7 @@ function performanceReport(report, tracer, db, excel, probes) {
   const iasCand = row('IAS aday (RELATED)', db.ias.candidate, '', 'antrepo');
   const asasF = row('ASAS kumaşlı', db.asas.fabric, '', 'asas');
   const asasNF = row('ASAS kumaşsız', db.asas.noFabric, '', 'asas');
+  const asasSep = db.newEngine ? row('ASAS ayrı kumaş sorgusu', db.asas.separate, '', 'asas') : null;
   if (excel && excel.enabled) {
     for (const [kind, r] of Object.entries(excel.refresh || {})) line(`   Excel pivot yenileme · ${kind.toUpperCase()}: ${r.ok ? seconds(r.ms) : `HATA (${r.error})`}`);
     if (excel.parse) line(`   Excel okuma: ASAS ${seconds(excel.parse.asasMs)} · Antrepo ${seconds(excel.parse.antrepoMs)}`);
@@ -1548,6 +1614,11 @@ function performanceReport(report, tracer, db, excel, probes) {
     }
   } else line('   Ölçülmedi (kumas=dahil ya da varyant çalışmadı).');
   if (fabricCheck) line(`   Veri eşitliği: ${fabricCheck.verdict}`);
+  if (asasSep && asasF && asasSep.wall && asasF.wall) {
+    line(`   Ayrı kumaş sorgusu (yeni varsayılan): ${seconds(asasF.wall)} → ${seconds(asasSep.wall)} · kazanç ${seconds(asasF.wall - asasSep.wall)} (${pct(asasF.wall - asasSep.wall, asasF.wall)}) · satır ${asasSep.rows}`);
+    const sepCheck = report.checks.find(c => c.id === 'kumas-ayri');
+    if (sepCheck) line(`   Tek sorgu ⇄ ayrı sorgu veri eşitliği (kumaş dahil): ${sepCheck.verdict}`);
+  }
   line('');
 
   line('6) IAS ADAY SORGU (RELATED)');
@@ -1614,6 +1685,7 @@ function accuracyReport(report) {
     const b = report.blankStatusSummary;
     line(`                  BL siparişlerinde ${b.inBl}: teknik alt satır ${b.sibling} (${b.siblingQty} adet; aynı dosyada statülü satır var) · bağımsız ${b.standalone} (${b.standaloneQty} adet; ${b.standaloneNoFile} tanesinin dosyası yok)`);
   }
+  if (report.newEngine) line('Motor            : yeni (IAS RELATED varsayılan, ASAS kumaş modu, C# aktarım). IAS "mevcut" = eski SELECTEDVALUE, "aday" = RELATED; ASAS "kumaşlı" = eski tek sorgu.');
   line(`BL kaynak modları: ASAS=${report.sourceModes.asas}, Antrepo=${report.sourceModes.antrepo}, LFL=${report.sourceModes.lfl} (araç ASAS ve IAS'ı her durumda Database'den çeker)`);
   for (const c of report.connections) line(`Bağlantı         : ${c.role === 'antrepo' ? 'IAS ' : 'ASAS'} · ${c.name || c.id} · ${c.catalog}`);
   for (const s of report.horizons) line(`Kullanılan ufuk  : ${s.target} · ${s.connection} · ${s.text || '(sınırsız)'}`);
@@ -1741,7 +1813,7 @@ async function main(argv, deps = {}) {
     overall, checks, warnings: db.full && db.full.ok ? (db.full.value.warnings || []).map(String) : [],
     blHistory: readBlRefreshHistory(localDataRoot),
     excel: excel.enabled ? { valid: excel.valid, files: excel.files, refresh: excel.refresh, parse: excel.parse, problems: excel.problems, antrepoMeta: excel.antrepoMeta } : { enabled: false },
-    variantProblems: db.variantProblems, cpuProbes: probes,
+    variantProblems: db.variantProblems, cpuProbes: probes, newEngine: Boolean(db.newEngine),
     csvFiles: Object.fromEntries(Object.entries(csv).map(([name, rows]) => [name, rows.length - 1])),
     csvRows: csv,
   };

@@ -189,4 +189,16 @@ function compareHashes(records) {
   return { pairs: pairs.length, mismatches, persistent, transient, largestBytes: largest };
 }
 
-module.exports = { CSHARP, buildPatchedScript, createRunner, compareHashes, ADODB_LOOP, ADOMD_LOOP };
+/* Yeni BL (C# yazıcı BL'ın kendisinde): karşılaştırma için kopyada derleme
+   sonucu yok sayılır ve PowerShell döngüsü zorlanır. */
+function buildPowerShellForcedScript(original) {
+  const bom = original.charCodeAt(0) === 0xFEFF;
+  const text = (bom ? original.slice(1) : original).replace(/\r\n/g, '\n');
+  const needle = '  $script:fastCsv = $true\n} catch {\n  if (\'BLFastCsv\' -as [type]) { $script:fastCsv = $true }\n}';
+  const count = text.split(needle).length - 1;
+  if (count !== 1) return { ok: false, problems: [`C# açma bloğu ${count} kez bulundu (1 bekleniyordu)`] };
+  const forced = text.replace(needle, needle + '\n# Kaynak doğrulama aracı: karşılaştırma için PowerShell döngüsü zorlandı (BL dosyası değil, kopya)\n$script:fastCsv = $false');
+  return { ok: true, script: '\uFEFF' + forced.replace(/\n/g, '\r\n') };
+}
+
+module.exports = { CSHARP, buildPatchedScript, buildPowerShellForcedScript, createRunner, compareHashes, ADODB_LOOP, ADOMD_LOOP };

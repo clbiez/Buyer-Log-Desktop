@@ -11,7 +11,26 @@ const os = require('os');
 const path = require('path');
 
 const REPO = path.resolve(__dirname, '..', '..', '..');
-const CORE = path.join(REPO, 'resources', 'app');
+/* Bu dosya ESKİ motoru (7.0.362: IAS SELECTEDVALUE, kumaş tek sorgu, PowerShell
+   aktarım) sınar: sahadaki kurulum budur. Yeni motor testleri
+   source-parity-new-engine.test.js'tedir. Eski çekirdek, BL değişikliklerinden
+   önceki main commit'inden git archive ile geçici klasöre çıkarılır (repo git
+   kayıtlarına yazılmaz). */
+const OLD_ENGINE_COMMIT = '3445160bd103a368183dd27a16c1b3e37a70fc1d';
+function oldCore() {
+  if (process.env.BL_PARITY_OLD_CORE) return process.env.BL_PARITY_OLD_CORE;
+  const dir = path.join(os.tmpdir(), `bl-parity-old-core-${OLD_ENGINE_COMMIT.slice(0, 8)}`);
+  const app = path.join(dir, 'resources', 'app');
+  if (!fs.existsSync(path.join(app, 'server', 'lib', 'model-refresh.js'))) {
+    fs.mkdirSync(dir, { recursive: true });
+    const { execSync } = require('child_process');
+    execSync(`git -C "${REPO}" archive ${OLD_ENGINE_COMMIT} resources/app | tar -x -C "${dir}"`, { stdio: 'ignore' });
+  }
+  const modules = path.join(app, 'node_modules');
+  if (!fs.existsSync(modules)) fs.symlinkSync(path.join(REPO, 'resources', 'app', 'node_modules'), modules, 'dir');
+  return app;
+}
+const CORE = oldCore();
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-kaynak-dogrulama-'));
 const dataRoot = path.join(tmp, 'server');
 Object.assign(process.env, {
