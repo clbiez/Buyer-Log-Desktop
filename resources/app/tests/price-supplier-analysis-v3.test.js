@@ -122,6 +122,68 @@ test('kim kiminle: her grup için ilk üç üretici + diğer payı %100 eder ve 
   assert.equal(row.other.items.length,2);
 });
 
+test('grafikler kanonik ürün tanımıyla ve seçilen kaynak sütunuyla gruplanır',async()=>{
+  const fields=require('../public/canonical-fields.js');
+  const order=E.canonicalObservation({'Ürün Ana Tanım':'Triko'},'orders',{},fields);
+  const collection=E.canonicalObservation({productDescription:'Basic',productMainDefinition:'Örme'},'collection',{},fields);
+  assert.equal(order.productDescription,'Triko');
+  assert.equal(collection.productDescription,'Basic');
+  assert.equal(collection.productMainDefinition,'Örme');
+
+  const rows=[
+    obs('26Y','A','Kazak',10,60,{productDescription:'Bisiklet Yaka',row:{'Demo: Kumaş':'Pamuk'}}),
+    obs('26Y','B','Kazak',12,40,{productDescription:'bisiklet yaka',row:{'Demo: Kumaş':'PAMUK'}}),
+    obs('26Y','C','Kazak',15,60,{productDescription:'V Yaka',row:{'Demo: Kumaş':'Yün'}}),
+  ];
+  const data=E.prepare(rows);
+  const model=E.analyze(data,{currentSeason:'26Y',groupBy:'productDescription'});
+  assert.deepEqual(model.groups.map(g=>[g.name,g.volume]),[['Bisiklet Yaka',100],['V Yaka',60]]);
+  const relations=E.relations(model,'col:Demo: Kumaş');
+  assert.deepEqual(relations[0].segments.map(segment=>segment.share),[60,40]);
+  assert.deepEqual(relations[0].segments[0].items,[rows[0]]);
+
+  const {root,context,drills}=await mountScreen(rows,'tr',JSON.stringify({tab:'advantage',groupBy:'col:Missing'}));
+  assert.match(root.innerHTML,/value="productDescription">Ürün Tanımı/);
+  assert.equal(context.BLPriceSupplierAnalysis.model.groupBy,'classification');
+  root.listeners.change({target:{dataset:{ps:'groupBy'},value:'col:Demo: Kumaş'}});
+  assert.equal(context.BLPriceSupplierAnalysis.model.groups[0].name,'Pamuk');
+  root.listeners.click({target:{closest:()=>({dataset:{psTab:'relations'}})}});
+  root.listeners.change({target:{dataset:{ps:'relationDim'},value:'productDescription'}});
+  assert.match(root.innerHTML,/Bisiklet Yaka/);
+  root.listeners.click({target:{closest:()=>({dataset:{psDrill:'r:0:0'}})}});
+  assert.deepEqual(drills[0].items,[rows[0]]);
+
+  const rawOnly=await mountScreen([{season:'26Y',manufacturer:'Demo',row:{Kumaş:'Pamuk'}}],'tr',JSON.stringify({tab:'advantage'}));
+  assert.equal(rawOnly.context.BLPriceSupplierAnalysis.model.groupBy,'col:Kumaş');
+  assert.match(rawOnly.root.innerHTML,/value="col:Kumaş" selected/);
+});
+
+test('karne para birimini, düşük kapsamalı değişimi ve hacim odağını açıkça gösterir',async()=>{
+  const rows=[
+    obs('25Y','Demo USD','Kazak',10,10),obs('26Y','Demo USD','Kazak',11,10),
+    obs('26Y','Demo USD','Mont',50,90),
+    obs('25Y','Demo TRY','Kazak',300,100,{currency:'TRY'}),obs('26Y','Demo TRY','Kazak',330,100,{currency:'TRY'}),
+    obs('26Y','Demo TRY','Kazak',10,40),obs('26Y','Demo TRY','Kazak',null,60,{currency:'TRY'}),
+    obs('25Y','Demo FX','Kazak',200,50,{currency:'TRY'}),obs('26Y','Demo FX','Kazak',12,50),
+  ];
+  const data=E.prepare(rows),model=E.analyze(data,{currentSeason:'26Y',previousSeason:'25Y',currency:'TRY'});
+  assert.equal(model.manufacturers.find(m=>m.name==='Demo USD').price,null);
+  const result=E.scorecardSuppliers(data,model);
+  const usd=result.find(m=>m.name==='Demo USD'),fx=result.find(m=>m.name==='Demo FX');
+  assert.equal(usd.priceCurrency,'USD');
+  assert.equal(E.round(usd.priceChange),10);
+  assert.equal(usd.priceChangeCoverage,10);
+  assert.equal(usd.volumeFocus.name,'Mont');
+  assert.equal(fx.priceChange,null,'para birimleri arasında değişim hesaplanmaz');
+  assert.equal(result.find(m=>m.name==='Demo TRY').priceChangeCoverage,50,'yalnız aynı dövizde fiyatı olan hacim kapsanır');
+
+  const {root}=await mountScreen(rows,'tr',JSON.stringify({tab:'scorecard',currency:'TRY'}));
+  assert.match(root.innerHTML,/\+%10/);
+  assert.match(root.innerHTML,/%10 kapsama/);
+  assert.match(root.innerHTML,/Mont[\s\S]*Hacim odağı/);
+  assert.match(root.innerHTML,/Önceki dönem fiyatı yok/);
+});
+
 test('asistan önerileri TR/EN düz dilde üretilir ve ilgili sekmeye yönlendirir',()=>{
   const data=E.prepare([
     obs('25Y','A','Kazak',10,100),obs('25Y','A','Kazak',10,100),obs('26Y','A','Kazak',11,100),obs('26Y','A','Kazak',11,100),
