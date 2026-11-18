@@ -3,31 +3,79 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const {BOOTSTRAP_VERSION,PRODUCT,IMMUTABLE_RUNTIME,filePath,fail}=require('./signature');
 const {atomicWriteJson}=require('../update/json-store');
 const ANCHOR='electron/manual-patch/bootstrap.json',RECEIPT='electron/manual-patch-receipt.json';
+const MAX_FILE_BYTES=128*1024*1024,SCAN_BUFFER_BYTES=512*1024;
 const BOOTSTRAP_FILES=['electron/launcher.js','electron/launcher-core.js','electron/portable-paths.js','electron/update/launcher-version.json',
  'electron/manual-patch/signature.js','electron/manual-patch/files.js','electron/manual-patch/manager.js','electron/manual-patch/desktop.js','electron/manual-patch/core-verification.js',
  'electron/update/json-store.js','electron/update/launcher-state.js','electron/update/semver.js',
  'electron/update/signature.js','electron/update/release-signing-keys.json','electron/update/zip.js','electron/update/integrity.js','electron/update/trial-backend.js',
  'electron/manual-patch/kernel/shared-file-transaction.js','electron/manual-patch/kernel/lease-worker-registry.js'].sort();
 const sha=buffer=>crypto.createHash('sha256').update(buffer).digest('hex');
-function regularFile(root,relative){
+function assertDirectory(stat){
+ if(!stat.isDirectory()||stat.isSymbolicLink())fail('PATCH_PATH_UNSAFE','Kurulum yolu güvenli değil.','The installation path is unsafe.');
+}
+function inspectRegularFile(root,relative){
  filePath(relative);const base=path.resolve(root);let current=base;
- const baseStat=fs.lstatSync(base);if(!baseStat.isDirectory()||baseStat.isSymbolicLink())fail('PATCH_PATH_UNSAFE','Kurulum yolu güvenli değil.','The installation path is unsafe.');
+ let stat=fs.lstatSync(base);
+ assertDirectory(stat);
  const parts=relative.split('/');
  for(let i=0;i<parts.length;i++){
-  current=path.join(current,parts[i]);const stat=fs.lstatSync(current);
+  current=path.join(current,parts[i]);stat=fs.lstatSync(current);
   if(stat.isSymbolicLink()||(i===parts.length-1?!stat.isFile():!stat.isDirectory()))fail('PATCH_PATH_UNSAFE','Yama dosyası normal dosya olmalı.','A patch file must be a regular file.');
  }
- return current;
+ return {file:current,stat};
 }
-function bytes(root,relative){const file=regularFile(root,relative);if(fs.statSync(file).size>128*1024*1024)fail('PATCH_FILE_LIMIT','Yama dosyası çok büyük.','The patch file is too large.');return fs.readFileSync(file);}
-function metadata(root,relative){const value=bytes(root,relative);return {path:relative,size:value.length,sha256:sha(value)};}
+function regularFile(root,relative){return inspectRegularFile(root,relative).file;}
+function assertFileSize(size){
+ if(size>MAX_FILE_BYTES)fail('PATCH_FILE_LIMIT','Yama dosyası çok büyük.','The patch file is too large.');
+}
+function bytes(root,relative){
+ const {file,stat}=inspectRegularFile(root,relative);
+ assertFileSize(stat.size);
+ return fs.readFileSync(file);
+}
+function metadata(root,relative){
+ const value=bytes(root,relative);
+ return {path:relative,size:value.length,sha256:sha(value)};
+}
+function hashFile(relative,file,stat,buffer){
+ assertFileSize(stat.size);
+ const fd=fs.openSync(file,fs.constants.O_RDONLY|(fs.constants.O_NOFOLLOW||0)|(fs.constants.O_NONBLOCK||0));
+ try{
+  const opened=fs.fstatSync(fd);
+  if(!opened.isFile()||opened.dev!==stat.dev||opened.ino!==stat.ino)fail('PATCH_PATH_UNSAFE','Doğrulama sırasında dosya yolu değişti.','The file path changed during verification.');
+  const hash=crypto.createHash('sha256');
+  let size=0;
+  for(let length;(length=fs.readSync(fd,buffer,0,buffer.length,null))>0;){
+   size+=length;
+   assertFileSize(size);
+   hash.update(buffer.subarray(0,length));
+  }
+  return {path:relative,size,sha256:hash.digest('hex')};
+ }finally{fs.closeSync(fd);}
+}
 function excluded(relative){return relative===RECEIPT||relative==='.release-pending.json'||/^(tests|dist-updates|dist-installer|\.desktop-dev|\.git)(\/|$)/.test(relative)||/^server\/data(\/|$)/.test(relative)||/^node_modules\/(\.bin|\.cache)(\/|$)/.test(relative);}
 function inventory(root,{exclude=excluded}={}){
- const out=[];const visit=(folder,relative='')=>{
-  for(const entry of fs.readdirSync(folder,{withFileTypes:true})){const rel=relative?relative+'/'+entry.name:entry.name;if(exclude(rel))continue;
+ // The same buffer serves every file in a scan, including multi-megabyte assets.
+ const out=[],buffer=Buffer.allocUnsafe(SCAN_BUFFER_BYTES);
+ const visit=(folder,relative='')=>{
+  // Check the tree as we descend, then confirm that the directory is still
+  // in place. Each leaf is checked and hashed before the scan can pass.
+  const opened=fs.lstatSync(folder,{bigint:true});
+  assertDirectory(opened);
+  for(const entry of fs.readdirSync(folder,{withFileTypes:true})){
+   const rel=relative?relative+'/'+entry.name:entry.name;
+   if(exclude(rel))continue;
    if(entry.isSymbolicLink())fail('PATCH_PATH_UNSAFE','Yama kaynağı bağlantı içeremez.','The patch source cannot contain links.');
-   if(entry.isDirectory())visit(path.join(folder,entry.name),rel);else if(entry.isFile())out.push(metadata(root,rel));else fail('PATCH_PATH_UNSAFE','Yama kaynağı normal dosya olmalı.','The patch source must contain regular files.');
+   const file=path.join(folder,entry.name);
+   if(entry.isDirectory()){visit(file,rel);continue;}
+   filePath(rel);
+   const stat=fs.lstatSync(file);
+   if(!entry.isFile()||!stat.isFile()||stat.isSymbolicLink())fail('PATCH_PATH_UNSAFE','Yama kaynağı normal dosya olmalı.','The patch source must contain regular files.');
+   out.push(hashFile(rel,file,stat,buffer));
   }
+  const closed=fs.lstatSync(folder,{bigint:true});
+  assertDirectory(closed);
+  if(closed.dev!==opened.dev||closed.ino!==opened.ino)fail('PATCH_PATH_UNSAFE','Doğrulama sırasında kurulum yolu değişti.','The installation path changed during verification.');
  };visit(path.resolve(root));return out.sort((a,b)=>a.path<b.path?-1:a.path>b.path?1:0);
 }
 function readBootstrap(root){

@@ -25,6 +25,20 @@ test('damaged archive and changed target files cannot be activated',t=>{
  fs.writeFileSync(path.join(prepared.pending.appCoreRoot,'electron/main.js'),'throw Error("must not execute");');
  assert.throws(()=>f.manager().verifyStaged(prepared.pending),{code:'PATCH_FILE_MISMATCH'});
 });
+test('installed signed patches read each program file once and reject an unexpected replacement path',t=>{
+ const f=fixture(t),p=f.build(),manager=f.manager();
+ const selected=manager.apply(p.manifest,p.archiveFile).pending;
+ const file=path.join(selected.appCoreRoot,'public/index.html'),open=fs.openSync;
+ let reads=0;
+ t.mock.method(fs,'openSync',(name,...args)=>{
+  if(name===file)reads++;
+  return open(name,...args);
+ });
+ assert.equal(manager.verifyInstalled(selected).core,selected.appCoreRoot);
+ assert.equal(reads,1);
+ fs.renameSync(file,path.join(path.dirname(file),'unexpected.html'));
+ assert.throws(()=>manager.verifyInstalled(selected),{code:'PATCH_FILE_MISMATCH'});
+});
 test('a modified installed kernel is rejected before its code can execute',t=>{
  const f=fixture(t),p=f.build(),sentinel=path.join(f.root,'kernel-executed');
  fs.writeFileSync(path.join(f.base,'electron/manual-patch/kernel/shared-file-transaction.js'),`require('fs').writeFileSync(${JSON.stringify(sentinel)},'bad');`);

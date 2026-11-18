@@ -5,9 +5,79 @@
 // synchronous scan, so verification is never skipped.
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),vm=require('node:vm');
 const {EventEmitter}=require('node:events');
+const {inventory,integrityBytes}=require('../electron/manual-patch/files');
+const {verifyPackagedCore}=require('../electron/manual-patch/core-verification');
 const source=fs.readFileSync(path.join(__dirname,'../electron/launcher-core.js'),'utf8');
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 const until=async(check)=>{for(let i=0;i<400&&!check();i++)await new Promise(resolve=>setTimeout(resolve,10));};
+
+test('packaged verification checks each directory around its traversal and reads every file on every launch',t=>{
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'bl-core-scan-'));
+  t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+  const version='7.0.362',directory=path.join(root,'public','vendor');
+  fs.mkdirSync(directory,{recursive:true});
+  fs.mkdirSync(path.join(root,'electron'));
+  for(let index=0;index<12;index++)fs.writeFileSync(path.join(directory,`file-${index}.js`),'valid');
+  fs.writeFileSync(path.join(directory,'file-11.js'),Buffer.alloc(1024*1024+7,5));
+  fs.writeFileSync(path.join(root,'electron','app-integrity.json'),integrityBytes(inventory(root),version));
+  const directoryChecks=new Map(),contentReads=new Map();
+  const lstat=fs.lstatSync,open=fs.openSync;
+  t.mock.method(fs,'lstatSync',(file,...args)=>{
+    const stat=lstat(file,...args);
+    if(stat.isDirectory())directoryChecks.set(file,(directoryChecks.get(file)||0)+1);
+    return stat;
+  });
+  t.mock.method(fs,'openSync',(file,...args)=>{
+    if(typeof file==='string'&&path.dirname(file)===directory)contentReads.set(file,(contentReads.get(file)||0)+1);
+    return open(file,...args);
+  });
+  assert.equal(verifyPackagedCore(root,version).fileCount,12);
+  assert.equal(directoryChecks.get(directory),2);
+  assert.deepEqual([...contentReads.values()],Array(12).fill(1));
+  const changed=path.join(directory,'file-0.js'),times=fs.statSync(changed);
+  fs.writeFileSync(changed,'other');
+  fs.utimesSync(changed,times.atime,times.mtime);
+  assert.throws(()=>verifyPackagedCore(root,version),{code:'UPDATE_CORE_INTEGRITY'});
+});
+
+test('a packaged directory replaced by a link is rejected before any linked content is read',t=>{
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'bl-core-linked-'));
+  t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+  const core=path.join(root,'core'),directory=path.join(core,'public'),target=path.join(root,'target');
+  fs.mkdirSync(directory,{recursive:true});
+  fs.mkdirSync(path.join(core,'electron'));
+  for(let index=0;index<4;index++)fs.writeFileSync(path.join(directory,`file-${index}.js`),'valid');
+  fs.writeFileSync(path.join(core,'electron','app-integrity.json'),integrityBytes(inventory(core),'7.0.362'));
+  fs.renameSync(directory,target);
+  fs.symlinkSync(target,directory,process.platform==='win32'?'junction':'dir');
+  const open=fs.openSync;
+  t.mock.method(fs,'openSync',(file,...args)=>{
+    assert.notEqual(typeof file==='string'&&path.dirname(file),directory,'the scanner must not open a file in the linked directory');
+    return open(file,...args);
+  });
+  assert.throws(()=>verifyPackagedCore(core,'7.0.362'),{code:'PATCH_PATH_UNSAFE'});
+});
+
+test('a directory replaced during traversal cannot pass verification even when its file hashes match',t=>{
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'bl-core-directory-swap-'));
+  t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+  const core=path.join(root,'core'),directory=path.join(core,'public');
+  fs.mkdirSync(directory,{recursive:true});
+  fs.mkdirSync(path.join(core,'electron'));
+  for(let index=0;index<4;index++)fs.writeFileSync(path.join(directory,`file-${index}.js`),'valid');
+  fs.writeFileSync(path.join(core,'electron','app-integrity.json'),integrityBytes(inventory(core),'7.0.362'));
+  const readdir=fs.readdirSync;
+  t.mock.method(fs,'readdirSync',(name,...args)=>{
+    const entries=readdir(name,...args);
+    if(name===directory){
+      const moved=path.join(root,'moved');
+      fs.renameSync(directory,moved);
+      fs.cpSync(moved,directory,{recursive:true});
+    }
+    return entries;
+  });
+  assert.throws(()=>verifyPackagedCore(core,'7.0.362'),{code:'PATCH_PATH_UNSAFE'});
+});
 function trustedRoot(body){
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'bl-offthread-verify-'));
   fs.mkdirSync(path.join(root,'manual-patch'));
