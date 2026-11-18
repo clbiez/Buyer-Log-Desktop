@@ -17,6 +17,7 @@ module.exports = function registerAsasSourceRoutes(app, deps) {
     publishSharedMasterChange,
     refreshAsasExcelBeforeRead,
     replaceAsasSourceMode,
+    replaceAsasFabricMode,
     replaceLflSourceMode,
     requestRevision,
     runExcelTask,
@@ -51,6 +52,27 @@ app.get('/api/asas-source', userAccess.requireArea('source'), (req, res) => {
     sourceFolder: sourceFolderForUser(req),
     sourceFile: file ? file.name : null,
   });
+});
+/* ASAS kumaş bilgileri (Kaynak Veri › Kaynak modu): 'separate' açık — kumaş
+   ana ASAS sorgusundan ayrı, yalnız ana kumaş satırlarıyla çekilir; 'off'
+   kapalı — kumaş çekilmez (ör. PLM SYNC'e bırakıldığında). Database yenilemesi
+   için geçerlidir; bir sonraki yenilemede uygulanır. */
+app.get('/api/asas-fabric', userAccess.requireArea('source'), (req, res) => {
+  const ov = loadOverrides();
+  const revision = Number(ov._revisions && ov._revisions.asasFabricMode) || 0;
+  res.set('ETag', `"${revision}"`);
+  res.json({ mode: ov.asasFabricMode === 'separate' ? 'separate' : 'off', revision });
+});
+app.put('/api/asas-fabric', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), (req, res) => {
+  try {
+    const mode = String(req.body && req.body.mode || '').toLowerCase();
+    if (!['separate', 'off'].includes(mode)) return res.status(400).json({ error: 'mode yalnız separate veya off olabilir. / mode must be separate or off.', code: 'VALIDATION_ERROR' });
+    const saved = replaceAsasFabricMode(mode, requestRevision(req));
+    userAccess.appendAudit(req.currentUser, 'ASAS_FABRIC_MODE_CHANGE', 'settings', { mode: saved.mode });
+    publishSharedMasterChange('asasFabricMode', req);
+    res.set('ETag', `"${saved.revision}"`);
+    res.json(saved);
+  } catch (err) { apiError(res, err, 'ASAS kumaş ayarı değiştirilemedi. / The ASAS fabric setting could not be changed.'); }
 });
 app.put('/api/asas-source', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), (req, res) => {
   try {

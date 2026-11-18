@@ -15766,6 +15766,7 @@ async function waitForRefreshJob(expectedJob=null){
     try{seedSourceStatusFromServer(data.lastRefreshResult);}catch(_){}
     renderAntrepoSourceControl(data);
     renderAsasSourceControl(data);
+    renderAsasFabricControl(data);
     renderLflSourceControl(data);
     applyLicensorMerges(data.licensorMerges);
     const incomingPricingRules=data.pricingRules || state.overrides.pricingRules || [];
@@ -16135,6 +16136,40 @@ async function setAsasSourceMode(mode){
       :(appLang==='en'?'ASAS source changed to Database. The ASAS model connection will be queried.':'ASAS kaynağı Database olarak değiştirildi. ASAS model bağlantısı sorgulanacak.');
     showToast(msg);updSourceHint(msg);
     await loadFromServer(true,['cp','orders','backlog','lfl']);
+  }catch(err){showToast(err.message||String(err));}
+  finally{buttons.forEach(btn=>btn.disabled=false);}
+}
+/* ASAS kumaş bilgileri (v20261118). Açık: kumaş, ana ASAS sorgusundan AYRI ve
+   yalnız ana kumaş satırlarıyla çekilir (satır çoğaltmaz, kumaş kaydı olmayan
+   siparişi düşürmez). Kapalı: kumaş hiç çekilmez (ör. PLM SYNC'e bırakıldığında).
+   Database yenilemesine bir sonraki yenilemede uygulanır. */
+let asasFabricMode='off';
+let asasFabricRevision=0;
+function renderAsasFabricControl(data){
+  if(data){
+    asasFabricMode=data.asasFabricMode==='separate'?'separate':'off';
+    asasFabricRevision=Number(data.storeRevisions&&data.storeRevisions.asasFabricMode)||asasFabricRevision||0;
+  }
+  document.querySelectorAll('#asasFabricControl [data-asas-fabric-mode]').forEach(btn=>{
+    btn.classList.toggle('isActive',btn.dataset.asasFabricMode===asasFabricMode);
+    btn.setAttribute('aria-pressed',btn.dataset.asasFabricMode===asasFabricMode?'true':'false');
+  });
+  const state=document.getElementById('asasFabricState');
+  if(state)state.textContent=asasFabricMode==='off'
+    ?(appLang==='en'?'Fabric is not fetched':'Kumaş çekilmez')
+    :(appLang==='en'?'Separate fabric query':'Ayrı kumaş sorgusu');
+}
+async function setAsasFabricMode(mode){
+  if(!['separate','off'].includes(mode)||mode===asasFabricMode)return;
+  const buttons=[...document.querySelectorAll('#asasFabricControl [data-asas-fabric-mode]')];buttons.forEach(btn=>btn.disabled=true);
+  try{
+    const saved=await fetchJSON('/api/asas-fabric',{method:'PUT',headers:{'Content-Type':'application/json'},expectedRevision:asasFabricRevision,body:JSON.stringify({mode})});
+    asasFabricMode=saved.mode==='separate'?'separate':'off';asasFabricRevision=Number(saved.revision)||0;
+    renderAsasFabricControl();
+    const msg=asasFabricMode==='off'
+      ?(appLang==='en'?'ASAS fabric details turned off. Fabric fields stay empty from the next Database refresh.':'ASAS kumaş bilgileri kapatıldı. Bir sonraki Veritabanı yenilemesinden itibaren kumaş alanları boş kalır.')
+      :(appLang==='en'?'ASAS fabric details turned on. Fabric is fetched with a separate query from the next Database refresh.':'ASAS kumaş bilgileri açıldı. Bir sonraki Veritabanı yenilemesinden itibaren kumaş ayrı sorguyla çekilir.');
+    showToast(msg);updSourceHint(msg);
   }catch(err){showToast(err.message||String(err));}
   finally{buttons.forEach(btn=>btn.disabled=false);}
 }
@@ -16752,6 +16787,7 @@ renderAntrepoSourceControl();
 document.getElementById('asasQuickUpload')?.addEventListener('click',()=>document.getElementById('fileAsasSourceUpload')?.click());
 document.getElementById('fileAsasSourceUpload')?.addEventListener('change', e=>{ uploadAsasExcel(e.target.files && e.target.files[0]); });
 renderAsasSourceControl();
+renderAsasFabricControl();
 renderLflSourceControl();
 /* v7.33 — AYARLAR ÇEKMECESİ ARTIK KIRPILMIYOR.
 
@@ -40151,7 +40187,7 @@ function refreshSharedMasterClient(area){
     return Promise.resolve();
   }
   if(area==='nonDtrManufacturers')return loadFromServer(false).then(()=>window.reloadLflFromCache?.());
-  if(['transitRules','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','importanceSettings','systemSettings'].includes(area)){
+  if(['transitRules','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','asasFabricMode','lflSourceMode','noteColumnDefs','importanceSettings','systemSettings'].includes(area)){
     // Program davranışını belirleyen Master kuralları SYNC'ten yerel cache'e
     // uygulandığında çalışan ekran da aynı kanonik state'i yeniden okumalıdır.
     return typeof loadFromServer==='function' ? loadFromServer(false) : Promise.resolve();
@@ -40199,7 +40235,7 @@ function initLiveSync(){
     }
     // Kendi yazdığın değişiklik için kendine yenileme tetikleme; ekran zaten güncel.
     if(payload.originClientId&&payload.originClientId===window.BL_CLIENT_ID)return;
-    if(['fx','endeksmatik','merchCalendar','transitRules','transitAnalysis','emailGroups','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','importanceSettings','modelConnections','systemSettings'].includes(payload.area)){
+    if(['fx','endeksmatik','merchCalendar','transitRules','transitAnalysis','emailGroups','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','asasFabricMode','lflSourceMode','noteColumnDefs','importanceSettings','modelConnections','systemSettings'].includes(payload.area)){
       void refreshSharedMasterClient(payload.area).catch(()=>{});
     }else if(payload.area==='tableReportLayouts'){
       void window.BLTableReportInline?.refreshShared(true);
@@ -40343,7 +40379,7 @@ window.addEventListener('bl-shared-revision',event=>{
   if(changed.has('merchCalendar')&&!liveSyncConnected)void refreshSharedMasterClient('merchCalendar').catch(()=>{});
   if(changed.has('transitRules')&&!liveSyncConnected)void refreshSharedMasterClient('transitRules').catch(()=>{});
   if(changed.has('emailGroups')&&!liveSyncConnected)void refreshSharedMasterClient('emailGroups').catch(()=>{});
-  for(const area of ['transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','modelConnections','systemSettings']){
+  for(const area of ['transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','asasFabricMode','lflSourceMode','noteColumnDefs','modelConnections','systemSettings']){
     if(changed.has(area)&&!liveSyncConnected)void refreshSharedMasterClient(area).catch(()=>{});
   }
   // v7.21: canlı akış açıkken bu yol AYNI kayıt için ikinci bir yeniden

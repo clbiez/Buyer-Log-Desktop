@@ -125,7 +125,13 @@ test('v4.44 IAS otomatik sorgusu SUMMARIZECOLUMNS yerine gerçek fact satırlar�
   assert.doesNotMatch(built.query, /SUMMARIZECOLUMNS/);
   assert.doesNotMatch(built.query, new RegExp(modelHorizon.BLANK_ROW_GUARD));
   assert.match(built.query, /"İthalat Dosya No", 'Ithalat'\[İthalat Dosya No\]/);
-  assert.match(built.query, /"Sipariş Kod", CALCULATE\(SELECTEDVALUE\('Siparis Bilgileri'\[Sipariş Kod\]\), CALCULATETABLE\('Ithalat'\)\)/);
+  // v20261118: fact dışı alanlar RELATED ile okunur (saha: aynı veri, IAS sunucu
+  // süresi ~%70 kısa). Model ilişkisi çoka-bir değilse eski ifadeye dönülür.
+  assert.match(built.query, /"Sipariş Kod", RELATED\('Siparis Bilgileri'\[Sipariş Kod\]\)/);
+  const fallback = modelRefresh.buildConnectionQuery(iasConnection(), { iasLookup: 'selectedvalue' });
+  assert.match(fallback.query, /"Sipariş Kod", CALCULATE\(SELECTEDVALUE\('Siparis Bilgileri'\[Sipariş Kod\]\), CALCULATETABLE\('Ithalat'\)\)/);
+  // Korunan regresyon: tablo filtresi OLMADAN SELECTEDVALUE (BLANK döner) asla üretilmez.
+  for (const q of [built.query, fallback.query]) assert.doesNotMatch(q, /"Sipariş Kod", SELECTEDVALUE\(/);
   assert.match(built.query, /"Yükleme Toplam Adet", CALCULATE\(\[Yükleme Toplam Adet\]\)/);
   assert.doesNotMatch(built.query, /"Net Alım Sipariş Miktarı"/);
   assert.match(built.query, /"HANDOVER Tarihi", CALCULATE\(\[Handover Tarihi - CutOff Tarihi\]\)/);
@@ -247,7 +253,9 @@ test('v7.0.209 İthalat Dosya No boyut tablosuna bağlıysa grain yine yükleme 
   assert.match(built.query, /CALCULATETABLE\(\s*'Ithalat'/);
   assert.doesNotMatch(built.query, /CALCULATETABLE\(\s*'Dim_Ithalat'/);
   assert.match(built.query, /"Konteyner No", 'Ithalat'\[Konteyner No\]/);
-  assert.match(built.query, /"İthalat Dosya No", CALCULATE\(SELECTEDVALUE\('Dim_Ithalat'\[İthalat Dosya No\]\), CALCULATETABLE\('Ithalat'\)\)/);
+  assert.match(built.query, /"İthalat Dosya No", RELATED\('Dim_Ithalat'\[İthalat Dosya No\]\)/);
+  assert.match(modelRefresh.buildConnectionQuery(connection, { iasLookup: 'selectedvalue' }).query,
+    /"İthalat Dosya No", CALCULATE\(SELECTEDVALUE\('Dim_Ithalat'\[İthalat Dosya No\]\), CALCULATETABLE\('Ithalat'\)\)/);
 });
 
 test('v7.0.209 grain dışı sütunlar fact satırının genişletilmiş tablosu üzerinden okunur', () => {
@@ -255,7 +263,13 @@ test('v7.0.209 grain dışı sütunlar fact satırının genişletilmiş tablosu
   // Context transition yalnız fact sütunlarını filtreler; çoka-bir ilişkideki
   // tabloya (Siparis Bilgileri) filtre akmaz ve SELECTEDVALUE boş döner. Fact
   // satırını tablo filtresi olarak vermek genişletilmiş tabloyu filtreler.
-  assert.match(built.query, /"Sipariş Kod", CALCULATE\(SELECTEDVALUE\('Siparis Bilgileri'\[Sipariş Kod\]\), CALCULATETABLE\('Ithalat'\)\)/);
+  // v20261118: fact dışı alanlar RELATED ile okunur (saha: aynı veri, IAS sunucu
+  // süresi ~%70 kısa). Model ilişkisi çoka-bir değilse eski ifadeye dönülür.
+  assert.match(built.query, /"Sipariş Kod", RELATED\('Siparis Bilgileri'\[Sipariş Kod\]\)/);
+  const fallback = modelRefresh.buildConnectionQuery(iasConnection(), { iasLookup: 'selectedvalue' });
+  assert.match(fallback.query, /"Sipariş Kod", CALCULATE\(SELECTEDVALUE\('Siparis Bilgileri'\[Sipariş Kod\]\), CALCULATETABLE\('Ithalat'\)\)/);
+  // Korunan regresyon: tablo filtresi OLMADAN SELECTEDVALUE (BLANK döner) asla üretilmez.
+  for (const q of [built.query, fallback.query]) assert.doesNotMatch(q, /"Sipariş Kod", SELECTEDVALUE\(/);
 });
 
 
@@ -325,6 +339,7 @@ test('IAS Database teknik fact parçalarını Antrepo Excel iş granülünde bir
     inputRows: 6,
     outputRows: 2,
     blankStatusRows: 2,
+    loadingRequestRows: 0,
     collapsedRows: 2,
   });
 });

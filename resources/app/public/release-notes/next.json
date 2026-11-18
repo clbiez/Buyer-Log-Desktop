@@ -381,6 +381,133 @@
           "en": "The Add Database Column window with a demo schema."
         }
       }
+    },
+    {
+      "id": "asas-fabric-setting",
+      "type": "feature",
+      "module": {
+        "tr": "Kaynak Veri · ASAS / IAS",
+        "en": "Source Data · ASAS / IAS"
+      },
+      "title": {
+        "tr": "ASAS kumaş bilgileri açılıp kapatılabilir",
+        "en": "ASAS fabric details can be turned on or off"
+      },
+      "body": {
+        "tr": "Kaynak modu bölümüne \"ASAS Kumaş Bilgileri\" ayarı geldi; güncellemeden sonra Kapalı gelir. Kapalıyken kumaş çekilmez, kumaş alanları boş kalır ve ASAS yenilemesi kısalır. Açılırsa kumaş, ana ASAS sorgusundan ayrı ve yalnız ana kumaş satırlarıyla çekilir; sipariş satırları kumaş bileşeni kadar çoğalmaz ve kumaş kaydı olmayan siparişler listeden düşmez. Ayar Veritabanı yenilemesine uygulanır.",
+        "en": "The Source mode section has a new \"ASAS Fabric Details\" setting; it is Off after the update. When off, fabric is not fetched, fabric fields stay empty and the ASAS refresh is shorter. When turned on, fabric is fetched separately from the main ASAS query, main-fabric rows only; order rows are not multiplied per fabric component and orders without a fabric record are not dropped. The setting applies to Database refresh."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "asas-fabric-setting.png",
+        "alt": {
+          "tr": "Kaynak modu bölümünde ASAS Kumaş Bilgileri ayarı varsayılan Kapalı durumda",
+          "en": "ASAS Fabric Details at its default Off state in the Source mode section"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi.",
+          "en": "Actual Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "ias-horizon-outside-warning",
+      "type": "improvement",
+      "module": {
+        "tr": "Kaynak Veri · ASAS / IAS",
+        "en": "Source Data · ASAS / IAS"
+      },
+      "title": {
+        "tr": "IAS ufku dışında kalan siparişler uyarılır",
+        "en": "Orders outside the IAS horizon are flagged"
+      },
+      "body": {
+        "tr": "IAS ile eşleşmeyen bir sipariş IAS ufkunun dışında kalıyorsa yenileme uyarı verir ve sipariş listesini gösterir; bu siparişler artık sessizce \"Üretimde\" görünmez. Sipariş ufkun içindeyse ve IAS'ta verisi yoksa davranış değişmez.",
+        "en": "When an order without an IAS match falls outside the IAS horizon, the refresh warns and lists the orders; they no longer silently show as \"In Production\". If the order is inside the horizon and IAS has no data for it, behaviour is unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "ias-horizon-warning.png",
+        "alt": {
+          "tr": "IAS ufku dışında kalan iki siparişi listeleyen uyarı ayrıntısı",
+          "en": "Warning detail listing two orders outside the IAS horizon"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi; uyarı Buyer Log yenileme motoruyla üretildi.",
+          "en": "Actual Buyer Log with isolated demo data; the warning was produced by the Buyer Log refresh engine."
+        }
+      }
+    },
+    {
+      "id": "database-refresh-speed",
+      "type": "improvement",
+      "module": {
+        "tr": "Kaynak Veri · ASAS / IAS",
+        "en": "Source Data · ASAS / IAS"
+      },
+      "title": {
+        "tr": "Veritabanı yenilemesi yaklaşık yarı sürede biter",
+        "en": "Database refresh finishes in about half the time"
+      },
+      "body": {
+        "tr": "Model sonuçları derlenmiş bir yazıcıyla aktarılır ve IAS sorgusu ilişkili alanları doğrudan okur. Saha ölçümünde ASAS ve IAS verisi bayt bayt aynı kalırken veri yenilemesi yaklaşık 220–270 saniyeden 100–120 saniyeye indi.",
+        "en": "Model results are transferred by a compiled writer and the IAS query reads related fields directly. In field measurement the ASAS and IAS data stayed byte-identical while the data refresh dropped from about 220–270 seconds to 100–120 seconds."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; yalnız Veritabanı yenilemesinin süresi kısalır.",
+          "en": "There is no change on screen; only the Database refresh takes less time."
+        }
+      }
+    },
+    {
+      "id": "asas-missing-orders-lfl-refresh",
+      "type": "fix",
+      "module": {
+        "tr": "Kaynak Veri · ASAS / IAS",
+        "en": "Source Data · ASAS / IAS"
+      },
+      "title": {
+        "tr": "Kumaş kaydı olmayan siparişler ve LFL güncellemesi",
+        "en": "Orders without a fabric record and LFL updates"
+      },
+      "body": {
+        "tr": "Kumaş kaydı olmayan siparişler artık Siparişler ve Backlog'a gelir. Büyük ASAS sonuçlarında LFL ayrıştırması hata verip eski veride kalıyordu; LFL artık her yenilemede güncellenir.",
+        "en": "Orders without a fabric record now reach Orders and Backlog. With large ASAS results, LFL parsing failed and kept the previous data; LFL now updates on every refresh."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekran bileşeni değişmedi; düzeltme yenileme motorunda, eksik kalan veriyi tamamlar.",
+          "en": "No screen component changed; the fix is in the refresh engine and completes data that was missing."
+        }
+      }
+    },
+    {
+      "id": "ias-loading-request-no-file",
+      "type": "fix",
+      "module": {
+        "tr": "Backlog · IAS",
+        "en": "Backlog · IAS"
+      },
+      "title": {
+        "tr": "Dosyası oluşmamış yükleme talepleri parsiyel olarak görünür",
+        "en": "Loading requests without an import file show as partials"
+      },
+      "body": {
+        "tr": "Supplier Portal statüsü boş, ithalat dosyası henüz oluşmamış ama yükleme talebi açılmış IAS satırları, Antrepo Excel'deki gibi \"Yükleme Operasyonları · Dosyası Oluşmamıştır\" parsiyeli olarak görünür; adetleri artık yanlışlıkla Üretimde kalmaz.",
+        "en": "IAS rows with a blank Supplier Portal status, no import file yet and an open loading request now show as \"Loading Operations · Dosyası Oluşmamıştır\" partials, as in the Antrepo Excel; their quantities no longer stay in In Production by mistake."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekran bileşeni değişmedi; mevcut parsiyel satırı ve statü kullanılır, yalnız veri tamamlanır.",
+          "en": "No screen component changed; the existing partial row and status are used, only the data is completed."
+        }
+      }
     }
   ]
 }

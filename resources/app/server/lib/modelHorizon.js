@@ -561,12 +561,16 @@ function buildSummarizeQuery(horizonInput, mapping, options = {}) {
   /* v7.81 — filtre argümanı üretimi summarizeFilterArgs()a taşındı;
      INTAKE pivot raporu da aynı mantığı kullanıyor. */
   summarizeFilterArgs(filter).forEach(arg => args.push(arg));
+  // Çağıranın ek filtre argümanları (ör. ayrı kumaş sorgusunda Ana Kumaş Mı = 1).
+  for (const arg of Array.isArray(options.extraFilterArgs) ? options.extraFilterArgs : []) args.push(`    ${arg}`);
   for (const entry of measures) {
     // Ölçü adları tabular modelde tekildir; köşeli parantezle doğrudan çağrılır.
     args.push(`    ${quoteString(entry.header)}, [${entry.name.replace(/]/g, ']]')}]`);
     headerMap[entry.header] = entry.header;
   }
-  if (measures.length) {
+  // forceRowGuard: ölçü olmasa da var olmayan tablo kombinasyonlarını ele
+  // (yalnız gruplama sütunlu SUMMARIZECOLUMNS tablolar arası çarpım üretir).
+  if (measures.length || options.forceRowGuard === true) {
     // BOŞ ÖLÇÜ SATIRI ELEME KORUMASI — ve neden sabit 1 OLMAZ.
     //
     // SUMMARIZECOLUMNS iki iş birden yapar:
@@ -634,6 +638,10 @@ function buildFactRowQuery(horizonInput, mapping, options = {}) {
     if (String(entry.table || '').toLocaleUpperCase('tr-TR') === grainTable.toLocaleUpperCase('tr-TR')) {
       return column;
     }
+    // RELATED: fact satırından çoka-bir ilişkiyle tek değeri doğrudan okur;
+    // satır başına CALCULATE gerektirmez. İlişki çoka-bir değilse SSAS hata
+    // verir (yanlış değer üretmez); çağıran eski ifadeyle yeniden dener.
+    if (options.lookup === 'related') return `RELATED(${column})`;
     // Context transition yalnız fact sütunlarını filtreler; çoka-bir ilişkideki
     // tabloya (ör. Siparis Bilgileri) filtre akmaz ve SELECTEDVALUE BLANK döner.
     // Geçerli fact satırı tablo filtresi olarak verildiğinde genişletilmiş tablo

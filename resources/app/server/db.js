@@ -391,6 +391,11 @@ function loadOverrides({ projectManufacturers = true } = {}) {
     ? 'database' : 'excel';
   merged.lflSourceMode = String(parsed && parsed.lflSourceMode || 'excel').toLowerCase() === 'database'
     ? 'database' : 'excel';
+  // ASAS kumaş bilgileri: 'separate' (açık; kumaş ayrı sorgudan) | 'off' (kapalı).
+  // Kayıt yoksa KAPALI (kullanıcı kararı 2026-11-18: kumaş PLM SYNC'e
+  // bırakılabilir; açmak Moderatör kararıdır). Eski tek sorgu (inline) bilerek
+  // seçilemez: kumaş kaydı olmayan siparişleri düşürüyor, satırları çoğaltıyordu.
+  merged.asasFabricMode = String(parsed && parsed.asasFabricMode || '').toLowerCase() === 'separate' ? 'separate' : 'off';
   merged.landedMultipliers = normalizeLandedMultipliers(parsed && parsed.landedMultipliers);
   merged.freightRates = BLFreight.normalizeSettings(parsed && parsed.freightRates);
   merged.transitAnalysis = BLTransitAnalysis.normalizeAnalysis(parsed && parsed.transitAnalysis);
@@ -545,6 +550,16 @@ function replaceAsasSourceMode(mode, expectedRevision = null) {
   ov._revisions.asasSourceMode = current + 1;
   const saved = saveOverrides(ov);
   return { mode: saved.asasSourceMode, revision: saved._revisions.asasSourceMode };
+}
+function replaceAsasFabricMode(mode, expectedRevision = null) {
+  const ov = loadOverrides();
+  const current = Number(ov._revisions.asasFabricMode) || 0;
+  const wanted = expectedNumber(expectedRevision);
+  if (wanted != null && wanted !== current) throw new RevisionConflictError('ASAS kumaş bilgileri', wanted, current, 'asasFabricMode');
+  ov.asasFabricMode = String(mode || '').toLowerCase() === 'separate' ? 'separate' : 'off';
+  ov._revisions.asasFabricMode = current + 1;
+  const saved = saveOverrides(ov);
+  return { mode: saved.asasFabricMode, revision: saved._revisions.asasFabricMode };
 }
 function replaceLflSourceMode(mode, expectedRevision = null) {
   const ov = loadOverrides();
@@ -2074,7 +2089,7 @@ module.exports = {
   mutateSharedResource,mutateSettings,mutateModelConnections,attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores, cpExFactoryRevisionSnapshot, restoreCpExFactoryRevisions,
   RevisionConflictError, revisionOf, expectedNumber, applyDatePatch, overrideWriteKey, normalizeLandedMultipliers,
   NOTE_AUTHOR_FIELDS, LEGACY_NOTE_AUTHOR_ID, LEGACY_NOTE_AUTHOR_NAME, backfillLegacyNoteAuthors,
-  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceCpManagedRules, normalizeCpManagedRules, replaceTableReportLayout, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, replaceImportanceSettings, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
+  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceCpManagedRules, normalizeCpManagedRules, replaceTableReportLayout, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceAsasFabricMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, replaceImportanceSettings, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
   normalizeMapping, normalizeCustomFields, normalizeCpModelColumns, normalizeModelConnection, normalizeModelConnections, loadModelConnections, replaceModelConnections, recordModelConnectionRun, MODEL_CONNECTION_LIMIT, MODEL_CONNECTION_DEFAULT_SEASONS,
   loadRefreshGroups, replaceRefreshGroups,
   loadHorizonFieldPairs, upsertHorizonFieldPairs,

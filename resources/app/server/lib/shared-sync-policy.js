@@ -8,7 +8,7 @@
 const MASTER_OVERRIDE_FIELDS = new Set([
   'pricingRules', 'licenseCards', 'transitRules', 'nonDtrManufacturers', 'landedMultipliers',
   'freightRates', 'transitAnalysis', 'antrepoMatchRule', 'antrepoMatchConfig', 'antrepoSourceMode',
-  'asasSourceMode', 'lflSourceMode', 'antrepoMatchConfigVersion', 'noteColumnDefs',
+  'asasSourceMode', 'asasFabricMode', 'lflSourceMode', 'antrepoMatchConfigVersion', 'noteColumnDefs',
   // Önem etiketi kataloğu + Line kuralları: Moderatör yayımıyla ekibe dağılır.
   'importanceSettings',
   'storeRevisionMeta',

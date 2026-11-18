@@ -627,6 +627,16 @@
       set: mode => setAsasSourceMode(mode),
     },
     {
+      id: 'asasFabricControl', attr: 'data-asas-fabric-mode', fileId: 'asasFabricState',
+      label: { tr: 'ASAS Kumaş Bilgileri', en: 'ASAS Fabric Details' },
+      hint: {
+        tr: 'Açıkken kumaş, ana ASAS sorgusundan ayrı ve yalnız ana kumaş satırlarıyla çekilir. Kapalıyken kumaş alanları boş kalır. Veritabanı yenilemesine uygulanır.',
+        en: 'When on, fabric is fetched separately from the main ASAS query, main-fabric rows only. When off, fabric fields stay empty. Applies to Database refresh.',
+      },
+      modes: [['separate', { tr: 'Açık', en: 'On' }], ['off', { tr: 'Kapalı', en: 'Off' }]],
+      set: mode => setAsasFabricMode(mode),
+    },
+    {
       id: 'antrepoSourceControl', attr: 'data-source-mode', fileId: 'antrepoSourceFile',
       label: { tr: 'Antrepo Kaynağı', en: 'Bonded Warehouse Source' },
       hint: {
@@ -664,7 +674,7 @@
         </span>
         <span class="sourceModeGroup" id="${esc(group.id)}" aria-label="${esc(group.label[en() ? 'en' : 'tr'])}">
           ${group.modes.map(([value, text]) =>
-            `<button type="button" class="sourceModeBtn" ${group.attr}="${esc(value)}">${esc(text)}</button>`).join('')}
+            `<button type="button" class="sourceModeBtn" ${group.attr}="${esc(value)}">${esc(text && typeof text === 'object' ? text[en() ? 'en' : 'tr'] : text)}</button>`).join('')}
           <span class="sourceModeFile" id="${esc(group.fileId)}">—</span>
         </span>
       </div>`).join('')}
@@ -675,7 +685,7 @@
      uygulanmalı. Durumun kendisi app-main.js'te yaşıyor; buradan yalnız
      "yeniden çiz" deniyor, ikinci bir kopya tutulmuyor. */
   function syncSourceModes() {
-    for (const fn of ['renderAsasSourceControl', 'renderAntrepoSourceControl',
+    for (const fn of ['renderAsasSourceControl', 'renderAsasFabricControl', 'renderAntrepoSourceControl',
       'renderLflSourceControl', 'renderAutoRefreshState']) {
       try { if (typeof window[fn] === 'function') window[fn](); } catch (_) { /* ekranı düşürme */ }
     }
