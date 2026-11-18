@@ -15,6 +15,7 @@
     const parsed=css?Number.parseFloat(css):NaN;
     return Number.isFinite(parsed)&&parsed>0?parsed:SPEED[name];
   };
+  const ROW_SELECTION_CONTROL='input[type="checkbox"]:is(.rowChk,.shipCompareChk,.shipRowChk,[data-tr-check],[data-ship-chk-all],[data-fabric-pick],[data-bin-id],[data-cpa-queue-check],[data-dc-item],[data-dc-toggle-all],[data-ta-pick],[data-ta-all],[data-act="selectRow"],[data-act="selectAll"],[data-xim="include"],#kolSelAll,#shipChkAll,[id$="_selAll"])';
   const TAB='main > section.active';
   const PAGE_HEADER='.ovDashboardToolbar,.workspaceContextBar,.bpaHero,.pricingWorkspaceHeader,.kolHeader,.psaHeader,.psaHead,.mfrHeader,.mfpHead,.lcHeader,.lcHead,.dmHead,.lcwaiChatHead';
   const PAGE_SUMMARY='.kpirow,.psaKpis,.pdKpis,.bpaKpis';
@@ -290,8 +291,43 @@
       for(const el of surfaces)play('overlay',el);
     });
   }
+  // Only rows reached by the pointer get a light layer. No table observers,
+  // per-cell listeners, row movement or idle pseudo-elements across large grids.
+  const rowLights=new WeakMap();
+  const rowSelectionAnimations=new WeakMap();
+  function rowLight(row,on){
+    const previous=rowLights.get(row);if(previous?.on===on)return;
+    const from=previous?Number(root.getComputedStyle?.(row,'::after').opacity||'0'):0;
+    const state={on,animation:null};rowLights.set(row,state);previous?.animation?.cancel();
+    row.classList.add('blSoftRowHover');row.classList.toggle('blRowHoverActive',on);
+    const a=animate(row,[{opacity:from},{opacity:on?1:0}],{duration:duration('theme'),pseudoElement:'::after'});state.animation=a;
+    const done=()=>{if(rowLights.get(row)!==state)return;state.animation=null;if(!on){row.classList.remove('blSoftRowHover');rowLights.delete(row);}};
+    if(a){a.id='bl-row-light';a.addEventListener?.('finish',done,{once:true});a.addEventListener?.('cancel',done,{once:true});}else done();
+  }
+  function hoverRow(event){
+    const row=event.target.closest?.('tbody tr');
+    if(!row||row.parentElement?.tagName!=='TBODY'||row===event.relatedTarget?.closest?.('tr'))return null;
+    return row.firstElementChild?.querySelector?.(':scope > '+ROW_SELECTION_CONTROL+',:scope > label > '+ROW_SELECTION_CONTROL)?row:null;
+  }
   function play(kind,element){
     if(!element||!enabled())return null;
+    if(kind==='row-select'||kind==='row-deselect'){
+      const on=kind==='row-select';
+      const previous=rowSelectionAnimations.get(element);
+      const from=previous&&root.getComputedStyle?.(element,'::before');
+      const startFrame={transform:from?.transform||(on?'scaleY(0)':'scaleY(1)'),opacity:from?.opacity||1};
+      previous?.cancel();
+      element.classList?.add('blFlowSelection');
+      const a=animate(element,[startFrame,{transform:on?'scaleY(1)':'scaleY(0)',opacity:on?1:0}],{duration:duration('card'),pseudoElement:'::before'});
+      rowSelectionAnimations.set(element,a);
+      const done=()=>{
+        if(rowSelectionAnimations.get(element)!==a)return;
+        rowSelectionAnimations.delete(element);
+        element.classList?.remove('blFlowSelection');
+      };
+      if(a){a.id='bl-row-selection';a.addEventListener?.('finish',done,{once:true});a.addEventListener?.('cancel',done,{once:true});}else done();
+      return a;
+    }
     if(kind==='branch')return animate(element,[{opacity:0,transform:'scaleY(0)'},{opacity:1,transform:'scaleY(1)'}],{duration:duration('overlay')});
     // Overview page navigation: one finite slide of the existing grid, without
     // cloning widgets or moving the toolbar. Shared cancellation owns its lifetime.
@@ -493,6 +529,14 @@
       }
     },true);
     bindActivityControls();
+    doc.addEventListener('pointerover',event=>{const row=hoverRow(event);if(row)rowLight(row,true);});
+    doc.addEventListener('pointerout',event=>{const row=hoverRow(event);if(row)rowLight(row,false);});
+    doc.addEventListener('change',event=>{
+      const input=event.target;
+      if(!event.isTrusted||!input?.matches?.(ROW_SELECTION_CONTROL))return;
+      const current=input.isConnected?input:input.id&&doc.getElementById(input.id);
+      if(current?.closest('table')&&!current.disabled&&current.checked===input.checked)play(current.checked?'row-select':'row-deselect',current);
+    });
     doc.addEventListener('pointerdown',rememberSegment,true);
     doc.addEventListener('click',slideSegment);
     doc.addEventListener('click',ev=>{

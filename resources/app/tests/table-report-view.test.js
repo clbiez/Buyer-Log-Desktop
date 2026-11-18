@@ -72,7 +72,7 @@ test('inline report stacks fields by the table column main headers, stays read-o
   // Hidden tabs do not render; the next table render brings it back.
   assert.match(src, /if\(!tabVisible\(adapter\)\)continue;/);
   // The table stays in the DOM (hidden by CSS) so selection, editing and export state survive.
-  assert.match(src, /wrap\?\.classList\.add\('blTableReportMode'\)/);
+  assert.match(src, /if\(wrap&&!wrap\.classList\.contains\('blTableReportMode'\)\)wrap\.classList\.add\('blTableReportMode'\)/);
   assert.match(read('detail-drawer.css'), /\.tablewrap\.blTableReportMode>table:not\(\.blTableReportTable\)/);
   // Preference is per table and storage failures are harmless.
   assert.match(src, /const STORE_PREFIX='buyerlog\.tableReportMode\.v1\.';/);

@@ -103,6 +103,8 @@ const sharedFieldBorder = d => d.file==='ui-components.css' && SHARED_FIELD_SELE
  border:['1px solid var(--ui-field-border)'],
  'border-color':['var(--ui-group-divider)']
 }[d.prop]||[]).includes(d.value);
+// User-chosen subtle selector boundary; exact shared selector/token only.
+const sharedRowSelectionBorder = d => d.file==='ui-components.css' && d.selector==='html:root[data-ui-system="manifest"] body[data-ui-migrated] table input[type="checkbox"]:is(.rowChk,.shipCompareChk,.shipRowChk,[data-tr-check],[data-ship-chk-all],[data-fabric-pick],[data-bin-id],[data-cpa-queue-check],[data-dc-item],[data-dc-toggle-all],[data-ta-pick],[data-ta-all],[data-act="selectRow"],[data-act="selectAll"],[data-xim="include"],#kolSelAll,#shipChkAll,[id$="_selAll"])' && d.prop==='border' && d.value==='1px solid var(--ui-group-divider)';
 const sharedNotificationBorder = d => d.file==='ui-components.css' && classicSelector(d.selector)==='.uiFeedback' && d.prop==='border' && d.value==='1px solid var(--ui-group-divider)';
 // Exact shared grid-range rectangle: no new module shadows or broad exemptions.
 const sharedGridRangePerimeter = d => d.file==='ui-components.css'
@@ -122,11 +124,11 @@ test('Manifest permits only shared classic frames and existing table/print borde
   if(/gradient\(|blur\(/.test(d.value)&&!(d.file==='ui-components.css'&&d.selector.startsWith('.blWorkspaceBlur')&&d.prop==='backdrop-filter'&&/^blur\((0|var\(--ui-backdrop-blur\))\)$/.test(d.value)))failures.push(d);
   if(/radius$/.test(d.prop)&&!/^0$|^var\(--ui-radius\)$/.test(d.value)&&!(d.file==='ui-components.css'&&d.value==='var(--ui-mark-radius)'&&(/#currentUserBtn|\.rail \.brandMark--image/.test(d.selector))))failures.push(d);
   if(/^border(?!-collapse|-spacing)/.test(d.prop)&&!/radius$/.test(d.prop)&&!/^0(?:\s|$)|^none$/.test(d.value)){
-   const row=['#cpTable tbody td','[data-ui-migrated] table tbody td'].includes(d.selector)&&d.prop==='border-bottom'&&d.value==='1px solid var(--ui-row-divider)';
+   const row=['#cpTable tbody td','[data-ui-migrated] table tbody td','.blTableReportTable tbody tr[data-id]>td'].includes(d.selector)&&d.prop==='border-bottom'&&d.value==='1px solid var(--ui-row-divider)';
    const group=['#cpTable','#ordersTable','#kolTable'].some(id=>d.selector===groupSeparator(id))&&d.prop==='border-inline-start'&&d.value==='1px solid var(--ui-group-divider)';
    const headerColumns=d.selector===':is(#cpTable,#ordersTable,#kolTable) thead tr.colRow th:not(:last-child)'&&d.prop==='border-inline-end'&&d.value==='1px solid var(--ui-row-divider)';
    const printRule=isPrint(d)&&d.selector==='.shipCompare tbody td'&&d.prop==='border-bottom'&&d.value==='1px solid var(--ui-print-rule)';
-   if(!row&&!group&&!headerColumns&&!printRule&&!classicBorder(d)&&!sharedFieldBorder(d)&&!sharedNotificationBorder(d))failures.push(d); // explicit shared-surface restoration
+   if(!row&&!group&&!headerColumns&&!printRule&&!classicBorder(d)&&!sharedFieldBorder(d)&&!sharedRowSelectionBorder(d)&&!sharedNotificationBorder(d))failures.push(d); // explicit shared-surface restoration
   }
   if(d.prop==='outline'&&!/^(?:none|0)$/.test(d.value)){
    const cursor=['.blDetailDrawer .blDetailTable td.blGridActiveCell','#cpTable td.blGridActiveCell,#ordersTable td.blGridActiveCell','[data-ui-migrated] .blDetailTable .blGridActiveCell','#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody .kolActiveGridCell,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody .kolSpreadsheetActiveCell'].includes(d.selector);
@@ -178,7 +180,7 @@ test('Main column separators cover both header tiers; classic frames do not add 
  }
  const additional=entries.filter(d=>d.prop.startsWith('border')&&d.value==='1px solid var(--ui-group-divider)'&&!rules.includes(d));
  assert.ok(additional.length>0,'Restored surfaces must be bordered');
- assert.ok(additional.every(d=>classicBorder(d)||sharedNotificationBorder(d)),'Only approved shared surfaces may add another group divider');
+ assert.ok(additional.every(d=>classicBorder(d)||sharedRowSelectionBorder(d)||sharedNotificationBorder(d)),'Only approved shared surfaces may add another group divider');
 });
 test('Shared button contract covers interaction states and restricts explicit variants',()=>{
  const source=read('ui-components.css');
