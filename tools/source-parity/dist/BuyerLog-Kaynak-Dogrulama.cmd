@@ -39,13 +39,17 @@ if "%ARGS%"=="" (
   set "K=E"
   set /p "K=Evet/Hayir [E]: "
   set "KUMAS=ikisi"
-  if /I "!K!"=="H" set "KUMAS=dahil"
+  set "K1=!K:~0,1!"
+  if /I "!K1!"=="H" set "KUMAS=dahil"
+  if /I "!K1!"=="N" set "KUMAS=dahil"
   echo.
   echo IAS aday sorgu ^(RELATED^) olculsun ve mevcut sorguyla karsilastirilsin mi?
   set "A=E"
   set /p "A=Evet/Hayir [E]: "
   set "ADAY=evet"
-  if /I "!A!"=="H" set "ADAY=hayir"
+  set "A1=!A:~0,1!"
+  if /I "!A1!"=="H" set "ADAY=hayir"
+  if /I "!A1!"=="N" set "ADAY=hayir"
   echo.
   echo Sure olcumu icin tekrar sayisi ^(1-5^). 3 onerilir; sure uzar.
   set "N=1"
@@ -55,7 +59,9 @@ if "%ARGS%"=="" (
   set "E=E"
   set /p "E=Evet/Hayir [E]: "
   set "EXCEL=evet"
-  if /I "!E!"=="H" set "EXCEL=hayir"
+  set "E1=!E:~0,1!"
+  if /I "!E1!"=="H" set "EXCEL=hayir"
+  if /I "!E1!"=="N" set "EXCEL=hayir"
   set "ARGS=--kumas !KUMAS! --aday !ADAY! --tekrar !N! --excel !EXCEL!"
 )
 
@@ -445,7 +451,7 @@ const fs = require('fs');
 const path = require('path');
 const cmp = require('./compare.js');
 
-const TOOL_VERSION = '2026-11-18.1';
+const TOOL_VERSION = '2026-11-18.2';
 const MATCH_TARGETS = Object.freeze(['cp', 'orders', 'backlog']);
 const ALL_TARGETS = Object.freeze(['cp', 'orders', 'backlog', 'lfl', 'priceanalysis']);
 const TARGET_LABELS = { cp: 'CP', orders: 'Siparişler', backlog: 'Backlog', lfl: 'LFL', priceanalysis: 'Price & Supplier' };
@@ -650,7 +656,7 @@ function createTracer() {
       try {
         const value = await work();
         const ms = Date.now() - started;
-        this.add({ type: 'phase-end', ms });
+        this.add({ type: 'phase-end', ms, heapMb: Math.round(process.memoryUsage().heapUsed / 1048576) });
         log(`  ✓ ${run} (${seconds(ms)})`);
         return { ok: true, ms, value, run };
       } catch (error) {
@@ -795,18 +801,96 @@ async function excelStep(bl, ctx, outDir, log, tracer, deps, core) {
   return result;
 }
 
+/* BELLEK: Buyer Log'un Electron çalışma zamanı V8 yığınını ~4 GB ile sınırlar
+   ve bu sınır yükseltilemez. Bu yüzden her koşudan yalnız karşılaştırmada
+   gerçekten kullanılan İLK başarılı sonuç tutulur; sonraki turlardan yalnız
+   süre ve veri parmak izi saklanır. Node CPU ölçümleri satırlar bellekteyken
+   hemen yapılır, ardından ham satırlar ve aynı içerikli hedef kopyaları
+   bırakılır. (7.0.362 sahada 13 koşuyu tutup 3.7 GB'ta çöktü.) */
+function runsOf(value, role) {
+  return (value && Array.isArray(value.runs) ? value.runs : [])
+    .filter(run => run && run.item && (role === 'all' || (role === 'antrepo' ? run.item.role === 'antrepo' : run.item.role !== 'antrepo')));
+}
+function stripRows(value, role = 'all') {
+  for (const run of runsOf(value, role)) {
+    run.rowCount = Array.isArray(run.rows) ? run.rows.length : 0;
+    run.rows = [];
+  }
+}
+/* CP / Siparişler / Backlog aynı kapsamdan geliyorsa BL her hedef için ayrı
+   dizi üretir; içerik aynıysa tek diziye indirilir (karşılaştırma değişmez). */
+function slimTargets(value, cctx) {
+  if (!value) return;
+  for (const key of ['asasOrdersByTarget', 'antrepoMapByTarget', 'fabricHeaderInfoByTarget']) {
+    const byTarget = value[key];
+    if (!byTarget || typeof byTarget !== 'object') continue;
+    for (const target of Object.keys(byTarget)) if (!MATCH_TARGETS.includes(target)) delete byTarget[target];
+    const seen = new Map();
+    for (const target of MATCH_TARGETS) {
+      const data = byTarget[target];
+      if (!data) continue;
+      const fp = key === 'asasOrdersByTarget' ? cmp.ordersFingerprint(data, cctx)
+        : key === 'antrepoMapByTarget' ? cmp.iasFingerprint(data, cctx) : JSON.stringify(data);
+      if (seen.has(fp)) byTarget[target] = seen.get(fp); else seen.set(fp, data);
+    }
+  }
+  value.lflRows = null;
+  value.asasOrders = null;
+  value.antrepoMap = null;
+}
+function heapMb() { return Math.round(process.memoryUsage().heapUsed / 1048576); }
+
 async function databaseSteps(bl, ctx, args, log, tracer, deps) {
   const captured = [];
+  const probes = [];
+  const cctx = { parseLib: bl.parse, rule: ctx.matchRule, canon: cmp.createCanon(bl.parse) };
   const fns = instrumentedQueryFns(bl, ctx, tracer, deps, captured);
   const load = bl.modelRefresh.loadFromModelConnections;
   const base = { matchRule: ctx.matchRule, runModelRows: fns.runModelRows, discoverSchema: fns.discoverSchema, telemetry: fns.telemetry, ...(deps.loadOptions || {}) };
-  const out = { captured, full: null, ias: { current: [], candidate: [] }, asas: { fabric: [], noFabric: [] }, variantProblems: [] };
+  const out = { captured, probes, full: null, ias: { current: [], candidate: [] }, asas: { fabric: [], noFabric: [] }, variantProblems: [] };
+  const time = (label, fn) => {
+    const started = process.hrtime.bigint();
+    const value = fn();
+    const probe = { label, ms: Number(process.hrtime.bigint() - started) / 1e6 };
+    probes.push(probe);
+    tracer.add({ type: 'cpu-probe', ...probe });
+    return value;
+  };
+  const iasPrint = value => {
+    const maps = value && value.antrepoMapByTarget || {};
+    return cmp.iasFingerprint(maps.backlog || maps.cp || maps.orders || {}, cctx);
+  };
+  /* İlk başarılı sonuç karşılaştırma için tutulur; diğerlerinde yalnız süre ve
+     parmak izi kalır. */
+  const settle = (step, list, prepare) => {
+    if (step.ok) {
+      step.fp = iasPrint(step.value);
+      if (list.some(other => other.ok && other.value)) step.value = undefined;
+      else prepare(step.value);
+    }
+    list.push(step);
+    tracer.add({ type: 'heap', heapMb: heapMb() });
+  };
 
   // 1) BL yenilemesinin veri katmanı, BL'daki gibi (ASAS + IAS paralel).
   const includeLfl = ctx.sourceModes.lfl === 'database';
   out.full = await tracer.phase('BL yenilemesi (ASAS + IAS paralel, BL ile birebir)', log,
     () => load(ctx.items, { ...base, targets: ALL_TARGETS.slice(), includeAsas: true, includeAntrepo: true, includeLfl }));
   if (!out.full.ok) return out;
+  {
+    const value = out.full.value;
+    const asasRows = runsOf(value, 'asas').flatMap(run => run.rows || []);
+    if (asasRows.length) time(`ASAS ayrıştırma (kumaşlı, ${asasRows.length} satır)`, () => { bl.parse.parseASASRows(asasRows, ctx.matchRule); });
+    const iasRows = runsOf(value, 'antrepo').flatMap(run => run.rows || []);
+    const orders = value.asasOrdersByTarget && (value.asasOrdersByTarget.backlog || value.asasOrdersByTarget.cp) || [];
+    if (iasRows.length) {
+      const map = time(`IAS ayrıştırma (${iasRows.length} satır)`, () => bl.parse.parseAntrepoRows(iasRows, ctx.matchRule));
+      time(`ASAS ⇄ IAS eşleştirme (${orders.length} sipariş)`, () => { for (const order of orders) bl.parse.findAntrepoHits(map, order, { rule: ctx.matchRule }); });
+    }
+    stripRows(value);
+    slimTargets(value, cctx);
+    tracer.add({ type: 'heap', heapMb: heapMb() });
+  }
   const preset = out.full.value.asasOrdersByTarget || {};
   const matchBase = { ...base, targets: MATCH_TARGETS.slice(), includeLfl: false };
 
@@ -822,7 +906,8 @@ async function databaseSteps(bl, ctx, args, log, tracer, deps) {
           const built = original(...a);
           return { ...built, query: toRelatedQuery(built.query) };
         }, () => tracer.phase(label, log, iasRun));
-      out.ias[variant].push(step);
+      // IAS ham satırları mevcut ⇄ aday ham karşılaştırması için tutulur.
+      settle(step, out.ias[variant], value => slimTargets(value, cctx));
     }
   }
 
@@ -840,7 +925,14 @@ async function databaseSteps(bl, ctx, args, log, tracer, deps) {
             const missing = original(role, mapping);
             return role === 'asas' ? missing.filter(header => !FABRIC_HEADERS.includes(header)) : missing;
           }, () => tracer.phase(label, log, asasRun(noFabricItems)));
-        out.asas[variant].push(step);
+        settle(step, out.asas[variant], value => {
+          if (variant === 'noFabric') {
+            const rows = runsOf(value, 'asas').flatMap(run => run.rows || []);
+            if (rows.length) time(`ASAS ayrıştırma (kumaşsız, ${rows.length} satır)`, () => { bl.parse.parseASASRows(rows, ctx.matchRule); });
+          }
+          stripRows(value);
+          slimTargets(value, cctx);
+        });
       }
     }
   }
@@ -860,27 +952,6 @@ async function databaseSteps(bl, ctx, args, log, tracer, deps) {
     else if (withoutF.some(q => refs.some(ref => q.includes(ref)))) out.variantProblems.push({ id: 'kumas', message: 'Kumaşsız varyant sorgusunda kumaş sütunu kaldı (BL alan eşlemesini otomatik onardı). Kumaş ölçümü GEÇERSİZ.' });
   }
   return out;
-}
-
-/* Sorgu sonrası Node tarafı CPU maliyeti: aynı satırlar BL fonksiyonlarıyla
-   yeniden işlenip süre ölçülür (soğuk önbellek). */
-function cpuProbes(bl, ctx, db) {
-  const probes = [];
-  const time = (label, fn) => { const s = process.hrtime.bigint(); const value = fn(); probes.push({ label, ms: Number(process.hrtime.bigint() - s) / 1e6 }); return value; };
-  const runsOf = (step, role) => (step && step.ok && Array.isArray(step.value.runs) ? step.value.runs : []).filter(run => run && run.item && (role === 'antrepo' ? run.item.role === 'antrepo' : run.item.role !== 'antrepo'));
-  const firstOk = list => (list || []).find(step => step && step.ok);
-  const asasRowsFabric = runsOf(db.full, 'asas').flatMap(run => run.rows || []);
-  if (asasRowsFabric.length) time(`ASAS ayrıştırma (kumaşlı, ${asasRowsFabric.length} satır)`, () => bl.parse.parseASASRows(asasRowsFabric, ctx.matchRule));
-  const noFabric = firstOk(db.asas.noFabric);
-  const asasRowsNoFabric = runsOf(noFabric, 'asas').flatMap(run => run.rows || []);
-  if (asasRowsNoFabric.length) time(`ASAS ayrıştırma (kumaşsız, ${asasRowsNoFabric.length} satır)`, () => bl.parse.parseASASRows(asasRowsNoFabric, ctx.matchRule));
-  const iasRows = runsOf(db.full, 'antrepo').flatMap(run => run.rows || []);
-  if (iasRows.length && db.full.ok) {
-    const map = time(`IAS ayrıştırma (${iasRows.length} satır)`, () => bl.parse.parseAntrepoRows(iasRows, ctx.matchRule));
-    const orders = db.full.value.asasOrdersByTarget && (db.full.value.asasOrdersByTarget.backlog || db.full.value.asasOrdersByTarget.cp) || [];
-    time(`ASAS ⇄ IAS eşleştirme (${orders.length} sipariş)`, () => { for (const order of orders) bl.parse.findAntrepoHits(map, order, { rule: ctx.matchRule }); });
-  }
-  return probes;
 }
 
 /* ------------------------------- karşılaştırma ------------------------------- */
@@ -925,7 +996,7 @@ function buildComparisons(bl, ctx, args, excel, db) {
   const csv = {};
   const addCsv = (name, header, rows) => { if (rows.length) csv[name] = [header, ...rows]; };
   const full = db.full && db.full.ok ? db.full.value : null;
-  const firstOk = list => (list || []).find(step => step && step.ok);
+  const firstOk = list => (list || []).find(step => step && step.ok && step.value);
   const problemFor = id => db.variantProblems.filter(p => p.id === id).map(p => p.message);
 
   // A) IAS mevcut ⇄ aday (sıfır tolerans)
@@ -960,7 +1031,7 @@ function buildComparisons(bl, ctx, args, excel, db) {
         lines.push(`${TARGET_LABELS[target]}: parsiyel ${ias.referenceRows} ⇄ ${ias.candidateRows}, kimlik/adet farkı ${n}, eşleştirme farkı ${match.diffs.length} (${match.compared} sipariş)`);
         addCsv(`ias-mevcut-aday-eslestirme-${target}.csv`, ['sipariş', 'alan', 'mevcut', 'aday'], match.diffs.map(d => [cmp.displayKey(d.key), d.field, d.reference, d.candidate]));
       }
-      const prints = (db.ias.current || []).filter(s => s.ok).map(s => cmp.iasFingerprint(s.value.antrepoMapByTarget && (s.value.antrepoMapByTarget.backlog || s.value.antrepoMapByTarget.cp) || {}, cctx));
+      const prints = (db.ias.current || []).filter(s => s.ok).map(s => s.fp);
       const unstable = new Set(prints).size > 1;
       if (unstable) lines.push('DİKKAT: Mevcut IAS sorgusu turlar arasında farklı veri döndürdü; model test sırasında güncelleniyor olabilir.');
       checks.push({ id: 'ias-aday', title: 'IAS mevcut ⇄ aday sorgu (RELATED)', verdict: verdictOf({ fail, warn: unstable }), lines });
@@ -1280,8 +1351,8 @@ async function main(argv, deps = {}) {
 
   const excel = args.excel ? await excelStep(bl, ctx, outDir, log, tracer, deps, coreInfo.core) : { enabled: false, problems: [] };
   const db = await databaseSteps(bl, ctx, args, log, tracer, deps);
-  const probes = cpuProbes(bl, ctx, db);
-  for (const p of probes) tracer.add({ type: 'cpu-probe', ...p });
+  const probes = db.probes || [];
+  if (typeof deps.inspect === 'function') deps.inspect({ db });
 
   const { checks, csv } = buildComparisons(bl, ctx, args, excel, db);
   if (db.full && !db.full.ok) checks.unshift({ id: 'bl-yenileme', title: 'BL Database yenilemesi', verdict: 'HATA', lines: [db.full.error] });

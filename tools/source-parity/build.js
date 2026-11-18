@@ -52,13 +52,17 @@ if "%ARGS%"=="" (
   set "K=E"
   set /p "K=Evet/Hayir [E]: "
   set "KUMAS=ikisi"
-  if /I "!K!"=="H" set "KUMAS=dahil"
+  set "K1=!K:~0,1!"
+  if /I "!K1!"=="H" set "KUMAS=dahil"
+  if /I "!K1!"=="N" set "KUMAS=dahil"
   echo.
   echo IAS aday sorgu ^(RELATED^) olculsun ve mevcut sorguyla karsilastirilsin mi?
   set "A=E"
   set /p "A=Evet/Hayir [E]: "
   set "ADAY=evet"
-  if /I "!A!"=="H" set "ADAY=hayir"
+  set "A1=!A:~0,1!"
+  if /I "!A1!"=="H" set "ADAY=hayir"
+  if /I "!A1!"=="N" set "ADAY=hayir"
   echo.
   echo Sure olcumu icin tekrar sayisi ^(1-5^). 3 onerilir; sure uzar.
   set "N=1"
@@ -68,7 +72,9 @@ if "%ARGS%"=="" (
   set "E=E"
   set /p "E=Evet/Hayir [E]: "
   set "EXCEL=evet"
-  if /I "!E!"=="H" set "EXCEL=hayir"
+  set "E1=!E:~0,1!"
+  if /I "!E1!"=="H" set "EXCEL=hayir"
+  if /I "!E1!"=="N" set "EXCEL=hayir"
   set "ARGS=--kumas !KUMAS! --aday !ADAY! --tekrar !N! --excel !EXCEL!"
 )
 

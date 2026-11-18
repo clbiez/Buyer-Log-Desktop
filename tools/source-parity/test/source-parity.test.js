@@ -91,7 +91,7 @@ function fakeDb(mutate = {}) {
   return { runModelRows, queries };
 }
 
-async function run(args = [], { mutate, refreshFails } = {}) {
+async function run(args = [], { mutate, refreshFails, inspect } = {}) {
   const db = fakeDb(mutate);
   const out = path.join(tmp, `rapor-${Math.random().toString(36).slice(2)}`);
   const logs = [];
@@ -99,7 +99,7 @@ async function run(args = [], { mutate, refreshFails } = {}) {
     skipEnvironment: true, log: t => logs.push(t),
     runModelRows: db.runModelRows, discoverSchema: async () => ({ columns: [], measures: [] }),
     refreshExcelFile: async () => { if (refreshFails) throw new Error('Excel COM yok'); return 'ok'; },
-    loadOptions: { columnType: false },
+    loadOptions: { columnType: false }, inspect,
   });
   const read = name => fs.readFileSync(path.join(out, name), 'utf8');
   const summary = JSON.parse(read('ozet.json'));
@@ -223,4 +223,35 @@ test('CMD derlemesi: gömülü dosyalar birebir, komut kısmı ASCII ve CRLF', (
   assert.ok(/^[\x00-\x7F]*$/.test(header), 'komut kısmı ASCII olmalı');
   assert.ok(!/[^\r]\n/.test(header), 'komut kısmı CRLF olmalı');
   assert.ok(!text.startsWith('\uFEFF'), 'BOM olmamalı');
+});
+
+test('bellek: her varyantta yalnız ilk sonuç veri tutar; ham satırlar ve kopya hedefler bırakılır', async () => {
+  let db;
+  const r = await run(['--tekrar', '3', '--excel', 'hayir'], { inspect: x => { db = x.db; } });
+  assert.equal(r.code, 0, r.report);
+  for (const list of [db.ias.current, db.ias.candidate, db.asas.fabric, db.asas.noFabric]) {
+    assert.equal(list.length, 3);
+    assert.equal(list.filter(step => step.value).length, 1, 'yalnız ilk sonuç tutulur');
+    assert.ok(list.every(step => step.ok && typeof step.fp === 'string'), 'her turun parmak izi var');
+  }
+  const full = db.full.value;
+  assert.ok(full.runs.every(run => run.rows.length === 0 && run.rowCount > 0), 'BL koşusunun ham satırları bırakıldı');
+  assert.equal(full.asasOrdersByTarget.priceanalysis, undefined);
+  assert.equal(full.asasOrdersByTarget.cp, full.asasOrdersByTarget.backlog, 'aynı içerikli hedefler tek dizi');
+  assert.ok(db.asas.noFabric[0].value.runs.every(run => run.rows.length === 0));
+  // IAS ham satırları mevcut ⇄ aday ham karşılaştırması için tutulur.
+  assert.ok(db.ias.current[0].value.runs.some(run => run.rows.length === 3));
+  assert.ok(db.probes.some(p => /kumaşsız/.test(p.label)) && db.probes.some(p => /eşleştirme/.test(p.label)));
+  const events = r.read('olaylar.jsonl').trim().split('\n').map(JSON.parse);
+  assert.ok(events.some(e => e.type === 'phase-end' && Number.isFinite(e.heapMb)), 'aşama sonu bellek kaydı');
+});
+
+test('CMD menüsü: Hayir / Hayır / No / H cevapları hayır sayılır (ilk harf)', () => {
+  const text = fs.readFileSync(builder.build(), 'utf8').split(builder.MARKER)[0];
+  for (const [v, target, value] of [['K', 'KUMAS', 'dahil'], ['A', 'ADAY', 'hayir'], ['E', 'EXCEL', 'hayir']]) {
+    assert.ok(text.includes(`set "${v}1=!${v}:~0,1!"`), v);
+    assert.ok(text.includes(`if /I "!${v}1!"=="H" set "${target}=${value}"`), v);
+    assert.ok(text.includes(`if /I "!${v}1!"=="N" set "${target}=${value}"`), v);
+    assert.ok(!text.includes(`if /I "!${v}!"=="H"`), 'eski tam-eşleşme kontrolü kalmamalı');
+  }
 });
