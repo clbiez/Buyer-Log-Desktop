@@ -141,6 +141,7 @@ function createRunner(scriptPath, variant, record, deps = {}) {
   const exec = deps.execFile || execFile;
   return (args, timeoutMs, options = {}) => new Promise((resolve, reject) => {
     const queryFile = args[args.indexOf('-QueryFile') + 1];
+    const target = `${args[args.indexOf('-Server') + 1] || ''}/${args[args.indexOf('-Catalog') + 1] || ''}`;
     const outFile = args[args.indexOf('-OutFile') + 1];
     let queryHash = '';
     try { queryHash = crypto.createHash('sha256').update(fs.readFileSync(queryFile)).digest('hex').slice(0, 16); } catch (_) {}
@@ -151,24 +152,41 @@ function createRunner(scriptPath, variant, record, deps = {}) {
         if (err && !stdout) return reject(Object.assign(err, { stderr: String(stderr || '') }));
         let bytes = 0;
         try { bytes = fs.statSync(outFile).size; } catch (_) {}
-        record({ variant, queryHash, sha256: sha256File(outFile), bytes, processMs: Date.now() - started });
+        record({ variant, target, queryHash, sha256: bytes ? sha256File(outFile) : 'empty', bytes, processMs: Date.now() - started });
         resolve({ stdout: String(stdout || ''), stderr: String(stderr || ''), error: err || null });
       });
     if (options.signal) options.signal.addEventListener('abort', () => { try { child.kill(); } catch (_) {} }, { once: true });
   });
 }
 
-/* Aynı turdaki temel ⇄ C# sonuç dosyalarını sorgu bazında eşleştirir. */
+/* Aynı turdaki temel ⇄ C# sonuç dosyalarını eşleştirir. Anahtar: tur +
+   sunucu/model + sorgu metni (aynı şema sorgusu ASAS'a da IAS'a da gider) +
+   aynı anahtardaki sıra. Sınıflandırma:
+     · kalıcı fark: bir sorgu HİÇBİR turda iki yolda aynı çıkmadıysa → C# hatası
+     · geçici fark: bazı turlarda aynı, bazılarında farklı → canlı veri olabilir */
 function compareHashes(records) {
-  const byRound = new Map();
+  const groups = new Map();
   for (const r of records) {
-    const key = `${r.round}|${r.queryHash}`;
-    if (!byRound.has(key)) byRound.set(key, {});
-    byRound.get(key)[r.variant] = r;
+    const base = `${r.round}|${r.target || ''}|${r.queryHash}`;
+    if (!groups.has(base)) groups.set(base, { baseline: [], csharp: [] });
+    groups.get(base)[r.variant].push(r);
   }
-  const pairs = [...byRound.values()].filter(p => p.baseline && p.csharp);
-  const mismatches = pairs.filter(p => p.baseline.sha256 !== p.csharp.sha256 || !p.baseline.sha256);
-  return { pairs: pairs.length, mismatches };
+  const pairs = [];
+  for (const [key, g] of groups) {
+    const sort = list => list.slice().sort((a, b) => (a.bytes - b.bytes) || String(a.sha256).localeCompare(String(b.sha256)));
+    const b = sort(g.baseline), c = sort(g.csharp);
+    for (let i = 0; i < Math.min(b.length, c.length); i++) pairs.push({ key, query: key.split('|').slice(1).join('|'), baseline: b[i], csharp: c[i] });
+  }
+  const mismatches = pairs.filter(p => p.baseline.sha256 !== p.csharp.sha256);
+  const byQuery = new Map();
+  for (const p of pairs) {
+    if (!byQuery.has(p.query)) byQuery.set(p.query, { equal: 0, differ: 0 });
+    byQuery.get(p.query)[p.baseline.sha256 === p.csharp.sha256 ? 'equal' : 'differ'] += 1;
+  }
+  const persistent = mismatches.filter(p => byQuery.get(p.query).equal === 0);
+  const transient = mismatches.filter(p => byQuery.get(p.query).equal > 0);
+  const largest = pairs.reduce((max, p) => Math.max(max, p.baseline.bytes || 0), 0);
+  return { pairs: pairs.length, mismatches, persistent, transient, largestBytes: largest };
 }
 
 module.exports = { CSHARP, buildPatchedScript, createRunner, compareHashes, ADODB_LOOP, ADOMD_LOOP };

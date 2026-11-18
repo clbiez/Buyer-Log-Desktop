@@ -357,10 +357,37 @@ test('aktarım deneyi: BL betiği beklenen yapıda değilse yarım yama çalış
 });
 
 test('Database tarafında statüsü boş IAS satırları ham haliyle dışa aktarılır', async () => {
-  const addBlank = rows => [...rows, { 'İthalat Dosya No': '', 'Sipariş Kod': 1002, 'Model Adı': 'MODEL B', 'Renk Kod': '002', 'Supplier Portal Statü': '', 'Tahmini Antrepo Giriş Tarihi': '', 'Yükleme Toplam Adet': 40 }];
+  const addBlank = rows => [...rows,
+    { 'İthalat Dosya No': '', 'Sipariş Kod': 1002, 'Model Adı': 'MODEL B', 'Renk Kod': '002', 'Supplier Portal Statü': '', 'Tahmini Antrepo Giriş Tarihi': '', 'Yükleme Toplam Adet': 40 },
+    // D-1 dosyasında statülü satırın teknik alt satırı
+    { 'İthalat Dosya No': 'D-1', 'Sipariş Kod': 1001, 'Model Adı': 'MODEL A', 'Renk Kod': '001', 'Supplier Portal Statü': '', 'Tahmini Antrepo Giriş Tarihi': '', 'Yükleme Toplam Adet': 15 }];
   const r = await run(['--excel', 'hayir', '--kumas', 'dahil', '--aday', 'hayir', '--aktarim', 'hayir'], { mutate: { 'ias-current': addBlank } });
   const text = r.read('ias-statusu-bos-db.csv');
   assert.match(text, /^\uFEFFBL Siparişler\/Backlog siparişi;/);
-  assert.match(text, /\r\nEvet;;1002;MODEL B;002;;;40/);
-  assert.match(r.report, /IAS statüsü boş : Database ham sonucunda 1 satır/);
+  assert.match(text, /\r\nEvet;Bağımsız \(dosya yok\);;1002;MODEL B;002;;;40/);
+  assert.match(text, /\r\nEvet;Teknik alt satır \(aynı dosyada statülü satır var\);D-1;1001/);
+  assert.match(r.report, /IAS statüsü boş : Database ham sonucunda 2 satır/);
+  assert.match(r.report, /BL siparişlerinde 2: teknik alt satır 1 \(15 adet; aynı dosyada statülü satır var\) · bağımsız 1 \(40 adet; 1 tanesinin dosyası yok\)/);
+});
+
+test('aktarım eşleştirmesi: saha koşusu (iki model aynı şema sorgusu, boş dosyalar, tek turda canlı veri farkı)', () => {
+  const transfer = require(path.join(__dirname, '..', 'transfer-experiment.js'));
+  const rec = (round, variant, target, queryHash, bytes, sha256) => ({ round, variant, target, queryHash, bytes, sha256 });
+  const records = [];
+  for (const round of [1, 2, 3]) for (const variant of ['baseline', 'csharp']) {
+    // Aynı DMV sorgusu iki modele: farklı boyut; sıra karışık gelebilir
+    const schema = [rec(round, variant, 'srv/ASAS_30', 'f5eb', 82559, 'A'), rec(round, variant, 'srv/IASv2', 'f5eb', 68327, 'B')];
+    records.push(...(variant === 'csharp' ? schema.reverse() : schema));
+    records.push(rec(round, variant, 'srv/ASAS_30', '1ad3', 0, 'empty'));
+    records.push(rec(round, variant, 'srv/ASAS_30', '4b47', 70765487, 'ASAS'));
+    records.push(rec(round, variant, 'srv/IASv2', 'c8fa', round === 3 && variant === 'csharp' ? 14023770 : 14023645, round === 3 && variant === 'csharp' ? 'IAS2' : 'IAS1'));
+  }
+  const r = transfer.compareHashes(records);
+  assert.equal(r.persistent.length, 0);
+  assert.equal(r.transient.length, 1);
+  assert.equal(r.transient[0].baseline.queryHash, 'c8fa');
+  assert.equal(r.largestBytes, 70765487);
+  // Hiçbir turda aynı çıkmayan sorgu → kalıcı fark
+  const bad = transfer.compareHashes(records.map(x => x.queryHash === '4b47' && x.variant === 'csharp' ? { ...x, sha256: 'X' } : x));
+  assert.equal(bad.persistent.length, 3);
 });

@@ -34,7 +34,7 @@ const path = require('path');
 const cmp = require('./compare.js');
 const transfer = require('./transfer-experiment.js');
 
-const TOOL_VERSION = '2026-11-18.4';
+const TOOL_VERSION = '2026-11-18.5';
 const MATCH_TARGETS = Object.freeze(['cp', 'orders', 'backlog']);
 const ALL_TARGETS = Object.freeze(['cp', 'orders', 'backlog', 'lfl', 'priceanalysis']);
 const TARGET_LABELS = { cp: 'CP', orders: 'Siparişler', backlog: 'Backlog', lfl: 'LFL', priceanalysis: 'Price & Supplier' };
@@ -282,10 +282,14 @@ function instrumentedQueryFns(bl, ctx, tracer, deps, captured, blankStatusRows =
       // BL statüsü boş IAS satırlarını ayrıştırmadan ÖNCE atar; ham hali burada
       // görülebilir. Yalnız BL ile birebir koşudan toplanır.
       if (role === 'antrepo' && tracer.state.run.startsWith('BL yenilemesi') && result && Array.isArray(result.rows)) {
+        const siblingKey = row => ['Sipariş Kod', 'Model Adı', 'Renk Kod', 'İthalat Dosya No'].map(h => String(row[h] == null ? '' : row[h]).trim()).join('|');
         for (const row of result.rows) {
           const status = row && row['Supplier Portal Statü'];
           if (status == null || String(status).trim() === '') {
             if (blankStatusRows.length < 100000) blankStatusRows.push({ ...row });
+          } else if (row) {
+            blankStatusRows.statusKeys = blankStatusRows.statusKeys || new Set();
+            blankStatusRows.statusKeys.add(siblingKey(row));
           }
         }
       }
@@ -692,10 +696,17 @@ function buildComparisons(bl, ctx, args, excel, db) {
     else if (failed.length) checks.push({ id: 'aktarim', title: 'Aktarım deneyi (PowerShell ⇄ C#)', verdict: 'HATA', lines: failed.map(step => `${step.run}: ${step.error}`) });
     else {
       const result = transfer.compareHashes(db.transfer.records);
-      const lines = [`Karşılaştırılan sonuç dosyası çifti: ${result.pairs} · bayt bayt farklı: ${result.mismatches.length}`];
-      for (const m of result.mismatches.slice(0, 10)) lines.push(`  tur ${m.baseline && m.baseline.round}: sorgu ${m.baseline && m.baseline.queryHash} · PowerShell ${m.baseline && m.baseline.bytes} bayt · C# ${m.csharp && m.csharp.bytes} bayt`);
-      if (result.mismatches.length) lines.push('C# çıktısı BL\'ınkiyle birebir değil; bu haliyle kullanılamaz (fark modelin canlı güncellenmesinden de kaynaklanabilir; tekrar edin).');
-      checks.push({ id: 'aktarim', title: 'Aktarım deneyi (PowerShell ⇄ C#) · sonuç dosyaları birebir', verdict: verdictOf({ invalid: result.pairs === 0, fail: result.mismatches.length > 0 }), lines });
+      const mb = bytes => `${(bytes / 1048576).toFixed(1)} MB`;
+      const lines = [`Karşılaştırılan sonuç dosyası çifti: ${result.pairs} (en büyüğü ${mb(result.largestBytes)}) · kalıcı fark: ${result.persistent.length} · geçici fark: ${result.transient.length}`];
+      const describe = m => `  tur ${m.baseline.round}: ${m.baseline.target || '-'} · sorgu ${m.baseline.queryHash} · PowerShell ${m.baseline.bytes} bayt · C# ${m.csharp.bytes} bayt`;
+      for (const m of result.persistent.slice(0, 10)) lines.push(describe(m));
+      if (result.persistent.length) lines.push('KALICI FARK: aynı sorgu hiçbir turda iki yolda aynı çıkmadı. C# biçimlendirmesi BL\'ınkiyle birebir değil; bu haliyle kullanılamaz.');
+      if (result.transient.length) {
+        for (const m of result.transient.slice(0, 10)) lines.push(`${describe(m)} (aynı sorgu başka turlarda birebir aynıydı)`);
+        lines.push('Geçici fark: aynı sorgu diğer turlarda bayt bayt aynı çıktı; fark büyük olasılıkla iki koşu arasında modelin canlı güncellenmesinden. Model işlenmesi bitince tekrar edin.');
+      }
+      if (!result.mismatches.length) lines.push('Tüm sonuç dosyaları iki yolda bayt bayt aynı.');
+      checks.push({ id: 'aktarim', title: 'Aktarım deneyi (PowerShell ⇄ C#) · sonuç dosyaları birebir', verdict: verdictOf({ invalid: result.pairs === 0, fail: result.persistent.length > 0, warn: result.transient.length > 0 }), lines });
     }
   }
 
@@ -979,6 +990,10 @@ function accuracyReport(report) {
   line(`Kaynak klasör    : ${report.sourceFolder || '(seçili değil)'}`);
   line(`Seçenekler       : kumaş=${report.kumas} · aday=${report.aday ? 'evet' : 'hayır'} · aktarım=${report.aktarim ? 'evet' : 'hayır'} · tekrar=${report.tekrar}`);
   if (report.blankStatusDb != null) line(`IAS statüsü boş : Database ham sonucunda ${report.blankStatusDb} satır (BL bu satırları atar) → ias-statusu-bos-db.csv`);
+  if (report.blankStatusSummary) {
+    const b = report.blankStatusSummary;
+    line(`                  BL siparişlerinde ${b.inBl}: teknik alt satır ${b.sibling} (${b.siblingQty} adet; aynı dosyada statülü satır var) · bağımsız ${b.standalone} (${b.standaloneQty} adet; ${b.standaloneNoFile} tanesinin dosyası yok)`);
+  }
   line(`BL kaynak modları: ASAS=${report.sourceModes.asas}, Antrepo=${report.sourceModes.antrepo}, LFL=${report.sourceModes.lfl} (araç ASAS ve IAS'ı her durumda Database'den çeker)`);
   for (const c of report.connections) line(`Bağlantı         : ${c.role === 'antrepo' ? 'IAS ' : 'ASAS'} · ${c.name || c.id} · ${c.catalog}`);
   for (const s of report.horizons) line(`Kullanılan ufuk  : ${s.target} · ${s.connection} · ${s.text || '(sınırsız)'}`);
@@ -1068,9 +1083,24 @@ async function main(argv, deps = {}) {
     const lineKey = (o, a, b) => [o, a, b].map(v => cctx.canon(v)).join('|');
     const orderLines = new Set(orders.map(o => lineKey(o.ocode, o.model, o.ccode)));
     const headers = [...new Set(db.blankStatusRows.flatMap(row => Object.keys(row)))];
-    csv['ias-statusu-bos-db.csv'] = [['BL Siparişler/Backlog siparişi', ...headers], ...db.blankStatusRows.map(row => [
-      orderLines.has(lineKey(row['Sipariş Kod'], row['Model Adı'], row['Renk Kod'])) ? 'Evet' : 'Hayır', ...headers.map(h => row[h]),
-    ])];
+    const statusKeys = db.blankStatusRows.statusKeys || new Set();
+    const siblingKey = row => ['Sipariş Kod', 'Model Adı', 'Renk Kod', 'İthalat Dosya No'].map(h => String(row[h] == null ? '' : row[h]).trim()).join('|');
+    const summary = { total: 0, inBl: 0, sibling: 0, siblingQty: 0, standalone: 0, standaloneQty: 0, standaloneNoFile: 0 };
+    const rows = db.blankStatusRows.map(row => {
+      const inBl = orderLines.has(lineKey(row['Sipariş Kod'], row['Model Adı'], row['Renk Kod']));
+      const hasFile = String(row['İthalat Dosya No'] == null ? '' : row['İthalat Dosya No']).trim() !== '';
+      const sibling = hasFile && statusKeys.has(siblingKey(row));
+      const qty = Number(row['Yükleme Toplam Adet']) || 0;
+      summary.total += 1;
+      if (inBl) {
+        summary.inBl += 1;
+        if (sibling) { summary.sibling += 1; summary.siblingQty += qty; }
+        else { summary.standalone += 1; summary.standaloneQty += qty; if (!hasFile) summary.standaloneNoFile += 1; }
+      }
+      return [inBl ? 'Evet' : 'Hayır', sibling ? 'Teknik alt satır (aynı dosyada statülü satır var)' : (hasFile ? 'Bağımsız (dosya var, statülü kardeş yok)' : 'Bağımsız (dosya yok)'), ...headers.map(h => row[h])];
+    });
+    csv['ias-statusu-bos-db.csv'] = [['BL Siparişler/Backlog siparişi', 'Sınıf', ...headers], ...rows];
+    db.blankStatusSummary = summary;
   }
   if (db.full && !db.full.ok) checks.unshift({ id: 'bl-yenileme', title: 'BL Database yenilemesi', verdict: 'HATA', lines: [db.full.error] });
   const verdicts = checks.map(c => c.verdict);
@@ -1082,6 +1112,7 @@ async function main(argv, deps = {}) {
     startedAt: startedAt.toISOString(), finishedAt: new Date().toISOString(), toolVersion: TOOL_VERSION,
     blVersion: coreInfo.version, coreSource: coreInfo.source, user: args.user, kumas: args.kumas, aday: args.aday, aktarim: args.aktarim, tekrar: args.tekrar,
     blankStatusDb: db.full && db.full.ok ? db.blankStatusRows.length : null,
+    blankStatusSummary: db.blankStatusSummary || null,
     sourceFolder: ctx.sourceFolder, sourceModes: ctx.sourceModes, connections: ctx.connections,
     horizons: db.full && db.full.ok ? (db.full.value.scopes || []).map(s => ({
       target: TARGET_LABELS[s.target] || s.target, connection: s.connection, rowCount: s.rowCount,
