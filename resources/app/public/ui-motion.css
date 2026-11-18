@@ -34,3 +34,5 @@
 @media(prefers-reduced-motion:reduce){
   details:not([data-bl-disclosure="overlay"])::details-content,details .blDisclosureItem{transition:none!important;transform:none!important;}
 }
+
+/* Row light and Akış checkbox fill use the shared Motion+ JS owner. */

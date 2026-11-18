@@ -48,6 +48,8 @@ function host(key,adapter,create){
   el.addEventListener('click',event=>{
     if(event.target.closest('[data-table-report-exit]')){setMode(key,false);return;}
     if(event.target.closest('[data-tr-more]')){limits.set(key,(limits.get(key)||CHUNK)+CHUNK);render(key);return;}
+    const imageSize=event.target.closest('[data-tr-image-size]');
+    if(imageSize){event.preventDefault();adapter.resizeImages?.(imageSize);return;}
     const filter=event.target.closest('[data-tr-filter]');
     if(filter){
       event.preventDefault();event.stopPropagation();
@@ -58,6 +60,7 @@ function host(key,adapter,create){
   return el;
 }
 function assignHtml(node,html){if(node._blReportHtml===html)return false;node.innerHTML=html;node._blReportHtml=html;return true;}
+function assignText(node,text){if(node.textContent!==text)node.textContent=text;}
 function labels(){return {identity:L('Sipariş / Model','Order / Model'),buyer:L('Buyer / Grup','Buyer / Group'),supplier:L('Üretici / Sezon','Manufacturer / Season'),status:L('Durum / Portföy','Status / Portfolio'),context:L('Sevkiyat / Rota','Shipment / Route')};}
 /* Sütun ana başlıkları (tablonun grup satırı) raporun sütunlarıdır: başlık satırındaki her ardışık
    grup tek rapor sütunu olur, alanları tablodaki sırayla alt alta durur (ilk alan birincil satır).
@@ -185,7 +188,15 @@ function bindLayoutEvents(el,key,adapter){
   });
   el.addEventListener('change',event=>{
     const checkbox=event.target.closest('[data-tr-check]');if(!checkbox)return;
-    const context=contexts.get(key);adapter.selectRows?.(checkbox.dataset.trCheck==='all'?context.rows:[context.shown[Number(checkbox.dataset.trCheck)]],checkbox.checked);
+    const context=contexts.get(key),table=checkbox.closest('table');
+    if(!context||!adapter.selectRows)return;
+    if(checkbox.dataset.trCheck==='all')adapter.selectRows(context.rows,checkbox.checked);
+    else{
+      const row=context.shown[Number(checkbox.dataset.trCheck)];if(!row)return;
+      const range=root.BLGridRangeSelect?.takeReportRange(checkbox);
+      adapter.selectRows(range?range.map(index=>context.shown[index]).filter(Boolean):[row],checkbox.checked);
+    }
+    syncRowSelection(table,contexts.get(key),adapter);
   });
   el.addEventListener('contextmenu',event=>{
     const target=event.target.closest('tbody tr[data-id]');
@@ -223,11 +234,51 @@ function imageCell(row,moduleId,index){
   return helper.thumbHtml(id.source,{...id,modelId:id.plmId||id.modelName},
     {title:L('Büyük önizleme için üzerine gelin','Hover for large preview'),allowEmpty:true});
 }
+function sizeColumns(table,wrap,{projected,images,checkable},imageDims){
+  if(images){
+    for(const [name,value] of Object.entries({col:imageDims.col,width:imageDims.w,height:imageDims.h,row:imageDims.row})){
+      const property='--bl-report-image-'+name,px=value+'px';
+      if(table.style.getPropertyValue(property)!==px)table.style.setProperty(property,px);
+    }
+  }
+  const imageWidth=images?imageDims.col:0,leading=imageWidth+(checkable?8:0);
+  let widths=projected.map(col=>Number(col.widthPx)||140);
+  const totalWidth=widths.reduce((sum,width)=>sum+width,0),viewport=wrap?.clientWidth||0;
+  const stretch=totalWidth>0&&viewport>totalWidth+leading;
+  if(stretch)widths=widths.map(width=>width*(viewport-leading)/totalWidth);
+  assignHtml(table.querySelector('colgroup'),(checkable?'<col data-row-selection style="width:8px">':'')+(images?'<col style="width:'+imageWidth+'px">':'')+widths.map(w=>'<col style="width:'+w+'px">').join(''));
+  // table-layout:fixed: genişlik sütunların toplamıdır; rol grupları sıkışmaz.
+  const width=(stretch?viewport:totalWidth+leading)+'px';
+  if(table.style.width!==width)table.style.width=width;
+}
+function updateImageDimensions(key,dims){
+  const context=contexts.get(key),adapter=adapters.get(key);
+  if(!context?.images||!adapter||!isActive(key)||!tabVisible(adapter))return;
+  const table=doc.getElementById('blTableReport-'+key);
+  if(table)sizeColumns(table,sourceWrap(adapter),context,dims);
+}
+function syncRowSelection(table,{rows,shown,checkable},adapter){
+  if(!checkable)return;
+  let count=0;
+  for(const input of table.tBodies[0].querySelectorAll('input[data-tr-check]')){
+    const on=Boolean(adapter.selected?.(shown[Number(input.dataset.trCheck)]));
+    if(on)count++;
+    if(input.checked!==on)input.checked=on;
+    const row=input.closest('tr');
+    if(row.classList.contains('selected')!==on)row.classList.toggle('selected',on);
+  }
+  for(let i=shown.length;i<rows.length;i++)if(adapter.selected?.(rows[i]))count++;
+  const all=table.tHead.querySelector('[data-tr-check="all"]');
+  const checked=rows.length>0&&count===rows.length,mixed=count>0&&count<rows.length;
+  if(all.checked!==checked)all.checked=checked;
+  if(all.indeterminate!==mixed)all.indeterminate=mixed;
+}
 function render(key){
   const adapter=adapters.get(key);if(!adapter)return;
   const el=host(key,adapter,true);if(!el)return;
   const wrap=sourceWrap(adapter);
-  wrap?.classList.add('blTableReportMode');el.hidden=false;
+  if(wrap&&!wrap.classList.contains('blTableReportMode'))wrap.classList.add('blTableReportMode');
+  if(el.hidden)el.hidden=false;
   const moduleId=adapter.moduleId||key;
   let columns=[],rows=[];
   try{columns=adapter.columns()||[];rows=adapter.rows()||[];}catch(err){console.warn('[rapor görünümü] veri alınamadı',err);}
@@ -240,45 +291,44 @@ function render(key){
   if(drafts.get(key)?.id!==id)drafts.delete(key);
   const prefs=drafts.get(key)?.value||saved;
   projected.forEach(col=>{col.lines=orderedLines(col,prefs);});
-  contexts.set(key,{id,saved,sharedId,projected,rows,shown});
   const editing=drafts.has(key),checkable=typeof adapter.selectRows==='function';
   const controls=editing?[['save',L('Kaydet','Save')],['cancel',L('Vazgeç','Cancel')],['reset',L('Varsayılana dön','Reset layout')]]:[['edit',L('Düzeni özelleştir','Customize layout')]];
   if(editing&&root.BLIsModerator?.())controls.push(['save-all',L('Herkes için kaydet','Save for everyone')]);
-  el.querySelector('[data-tr-actions]').innerHTML=controls.map(([action,label])=>'<button type="button" class="tbtn" data-tr-action="'+action+'"'+(action==='save-all'?' title="'+esc(L('Bu tablonun tüm rapor görünümlerini herkes için günceller','Updates every report view of this table for everyone'))+'"':'')+(drafts.get(key)?.saving?' disabled':'')+'>'+esc(label)+'</button>').join('');
+  assignHtml(el.querySelector('[data-tr-actions]'),controls.map(([action,label])=>'<button type="button" class="tbtn" data-tr-action="'+action+'"'+(action==='save-all'?' title="'+esc(L('Bu tablonun tüm rapor görünümlerini herkes için günceller','Updates every report view of this table for everyone'))+'"':'')+(drafts.get(key)?.saving?' disabled':'')+'>'+esc(label)+'</button>').join(''));
 
   const images=Boolean(root.BLDetailImages?.resolve)&&adapter.images?.()!==false;
   const imageIndex=images?root.BLDetailImages.buildIndex():null;
-  contexts.get(key).selectionColumns=images?[{key:'__report_picture',label:L('Görsel','Image'),fields:[{key:adapter.pictureKey||'__picture'}]},...projected]:projected;
+  const selectionColumns=images?[{key:'__report_picture',label:L('Görsel','Image'),fields:[{key:adapter.pictureKey||'__picture'}]},...projected]:projected;
+  const context={id,saved,sharedId,projected,rows,shown,images,checkable,selectionColumns};
+  contexts.set(key,context);
   const span=projected.length+(images?1:0)+(checkable?1:0)||1;
   const table=el.querySelector('table');
-  let widths=projected.map(col=>Number(col.widthPx)||140);
-  const totalWidth=widths.reduce((sum,width)=>sum+width,0),available=(wrap?.clientWidth||0)-(images?74:0)-(checkable?8:0);
-  if(totalWidth>0&&available>totalWidth)widths=widths.map(width=>width*available/totalWidth);
-  assignHtml(table.querySelector('colgroup'),(checkable?'<col data-row-selection style="width:8px">':'')+(images?'<col style="width:74px">':'')+widths.map(w=>'<col style="width:'+w+'px">').join(''));
-  // table-layout:fixed: genişlik sütunların toplamıdır; rol grupları sıkışmaz.
-  table.style.width=(widths.reduce((sum,w)=>sum+w,0)+(images?74:0)+(checkable?8:0))+'px';
-  assignHtml(table.querySelector('thead'),'<tr class="blDetailColumnRow">'+(checkable?'<th><input type="checkbox" data-tr-check="all" aria-label="'+esc(L('Sayfadaki satırları seç','Select rows on this page'))+'"></th>':'')+(images?'<th class="blDetailImageHead">'+esc(L('Görsel','Image'))+'</th>':'')+projected.map(col=>{
+  const imageDims=images?(adapter.imageDimensions?.()||{col:74,w:66,h:40,row:46}):null;
+  sizeColumns(table,wrap,context,imageDims);
+  assignHtml(table.querySelector('thead'),'<tr class="blDetailColumnRow">'+(checkable?'<th><input type="checkbox" data-tr-check="all" aria-label="'+esc(L('Sayfadaki satırları seç','Select rows on this page'))+'"></th>':'')+(images?'<th class="blDetailImageHead"><button type="button" class="tbtn" data-tr-image-size aria-haspopup="dialog" title="'+esc(L('Görsel boyutunu değiştir','Change image size'))+'">'+esc(L('Görsel','Image'))+'</button></th>':'')+projected.map(col=>{
     const filterable=typeof adapter.filter==='function';
     return '<th data-key="'+esc(col.key)+'"'+(col.reportRole==='number'?' class="blDetailNumeric"':'')+'><div class="blDetailReportHeading"><span>'+esc(col.label)+'</span>'+
       (filterable?'<details class="blDetailReportFilter"><summary aria-label="'+esc(L('Alanları filtrele','Filter fields')+': '+col.label)+'">▾</summary><div>'+
         col.fields.map(field=>'<button type="button" data-tr-filter="'+esc(field.key)+'">'+esc(field.label)+'</button>').join('')+'</div></details>':'')+'</div></th>';
   }).join('')+'</tr>');
-  const body=shown.map((row,r)=>'<tr data-id="'+esc(adapter.rowId?.(row)??r)+'"'+(adapter.selected?.(row)?' class="selected"':'')+'>'+
-    (checkable?'<td><input type="checkbox" data-tr-check="'+r+'" aria-label="'+esc(L('Satırı seç','Select row'))+'"'+(adapter.selected?.(row)?' checked':'')+'></td>':'')+
+  const body=shown.map((row,r)=>'<tr data-id="'+esc(adapter.rowId?.(row)??r)+'"'+(row._partialViewIndex!=null?' data-selection-partial-index="'+esc(row._partialViewIndex)+'"':'')+(adapter.dirty?.(row)?' class="rowDirty"':'')+'>'+
+    (checkable?'<td><input type="checkbox" data-tr-check="'+r+'" aria-label="'+esc(L('Satırı seç','Select row'))+'"></td>':'')+
     (images?'<td class="blDetailImageCell" data-key="__report_picture" data-r="'+r+'" data-c="0">'+imageCell(row,moduleId,imageIndex)+'</td>':'')+projected.map((col,c)=>'<td data-key="'+esc(col.key)+'" data-r="'+r+'" data-c="'+(c+(images?1:0))+'"'+(col.reportRole==='number'?' class="blDetailNumeric"':'')+'>'+cellHtml(col,row,moduleId)+'</td>').join('')+'</tr>').join('');
   const editor=editing?'<tr class="blReportLayoutRow">'+(checkable?'<td></td>':'')+(images?'<td></td>':'')+projected.map(editorHtml).join('')+'</tr>':'';
   const bodyChanged=assignHtml(table.querySelector('tbody'),editor+(shown.length?body+(rest>0?'<tr><td class="blDetailMore" colspan="'+span+'"><button type="button" class="tbtn" data-tr-more>'+esc(L('Daha fazla göster','Show more'))+' · '+rest.toLocaleString(isEn()?'en-GB':'tr-TR')+' '+esc(L('satır kaldı','rows left'))+'</button></td></tr>':''):
     '<tr><td class="blDetailEmpty" colspan="'+span+'">'+esc(L('Gösterilecek satır yok.','No rows to display.'))+'</td></tr>'));
   let hint=el.querySelector('[data-tr-hint]');
   if(!hint){hint=doc.createElement('div');hint.dataset.trHint='';hint.className='blReportLayoutHint';el.querySelector('.blTableReportBar').after(hint);}
-  hint.hidden=!editing;hint.textContent=drafts.get(key)?.error||L('Alanları hücre içinde sürükleyin. İlk satır ana bilgidir; düzen tüm kayıtlara uygulanır. Klavye: Alt + yukarı/aşağı ile sırala, Alt + sol/sağ ile satır değiştir.','Drag fields inside each cell. The first line is primary; the layout applies to every record. Keyboard: Alt + up/down to reorder, Alt + left/right to change lines.');
-  const all=el.querySelector('[data-tr-check="all"]');
-  if(all){const count=shown.filter(row=>adapter.selected?.(row)).length;all.checked=shown.length>0&&count===shown.length;all.indeterminate=count>0&&count<shown.length;}
+  if(hint.hidden===editing)hint.hidden=!editing;
+  assignText(hint,drafts.get(key)?.error||L('Alanları hücre içinde sürükleyin. İlk satır ana bilgidir; düzen tüm kayıtlara uygulanır. Klavye: Alt + yukarı/aşağı ile sırala, Alt + sol/sağ ile satır değiştir.','Drag fields inside each cell. The first line is primary; the layout applies to every record. Keyboard: Alt + up/down to reorder, Alt + left/right to change lines.'));
+  syncRowSelection(table,context,adapter);
   if(bodyChanged&&root.BLGridClipboard?.state('blTableReport-'+key))root.BLGridClipboard.afterRender('blTableReport-'+key);
-  el.querySelector('[data-tr-title]').textContent=L('Rapor görünümü','Report view');
+  assignText(el.querySelector('[data-tr-title]'),L('Rapor görünümü','Report view'));
   const locale=isEn()?'en-GB':'tr-TR';let total=rows.length;try{total=Number(adapter.total?.())||rows.length;}catch(_){}
-  el.querySelector('[data-tr-count]').textContent=rows.length.toLocaleString(locale)+' / '+total.toLocaleString(locale)+' '+L('satır · geçerli filtre, sıralama ve sayfa','rows · current filters, sorting and page');
-  const exit=el.querySelector('[data-table-report-exit]');exit.disabled=Boolean(drafts.get(key)?.saving);exit.textContent=L('Tablo görünümüne dön','Back to table view');
+  assignText(el.querySelector('[data-tr-count]'),rows.length.toLocaleString(locale)+' / '+total.toLocaleString(locale)+' '+L('satır · geçerli filtre, sıralama ve sayfa','rows · current filters, sorting and page'));
+  const exit=el.querySelector('[data-table-report-exit]'),disabled=Boolean(drafts.get(key)?.saving);
+  if(exit.disabled!==disabled)exit.disabled=disabled;
+  assignText(exit,L('Tablo görünümüne dön','Back to table view'));
 }
 function flush(){
   frame=0;
@@ -313,5 +363,5 @@ doc.addEventListener('pointerdown',event=>{
   if(context&&!drafts.has(key)&&!root.BLGridClipboard?.state(table.id))registerSelection(key,adapters.get(key));
 },true);
 doc.addEventListener('copy',event=>{if(event.defaultPrevented||event.target.closest?.('input,textarea,select,[contenteditable="true"]'))return;copySelection(doc.body?.dataset.activeTab,event,{includeHeaders:false});},true);
-root.BLTableReportInline=Object.freeze({register,schedule,setMode,toggle,isActive,copySelection,refreshShared});
+root.BLTableReportInline=Object.freeze({register,schedule,setMode,toggle,isActive,copySelection,refreshShared,updateImageDimensions});
 })(typeof window!=='undefined'?window:globalThis);

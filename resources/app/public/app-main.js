@@ -3433,6 +3433,7 @@ function persistTableImageSize(tableKey,value){
 function applyTableImageSizeDom(tableKey){
   const table=tableImageSizeTable(tableKey);if(!table)return;
   const dims=tableImageSizeDimensions(tableKey,tableImageSizeCurrentValue(tableKey));
+  window.BLTableReportInline?.updateImageDimensions?.(tableKey,dims);
   const isCollection=tableKey==='koleksiyon';
   if(isCollection){
     table.style.setProperty('--kol-row-h',`${dims.row}px`);
@@ -3550,7 +3551,7 @@ function openTableImageSizePopover(anchor,tableKey){
   range.addEventListener('input',()=>{const next=setTableImageSize(tableKey,range.value);rangeDirty=true;output.value=`${next.w}px`;output.textContent=`${next.w}px`;});
   range.addEventListener('change',()=>{persistTableImageSize(tableKey,range.value);rangeDirty=false;});
   const outside=e=>{if(!pop.contains(e.target)&&e.target!==anchor)closeTableImageSizePopover();};
-  const escape=e=>{if(e.key==='Escape'){e.preventDefault();closeTableImageSizePopover();}};
+  const escape=e=>{if(e.key==='Escape'){e.preventDefault();closeTableImageSizePopover();if(anchor.isConnected)anchor.focus({preventScroll:true});}};
   const reposition=()=>position();
   document.addEventListener('pointerdown',outside,true);document.addEventListener('keydown',escape,true);
   window.addEventListener('resize',reposition);window.addEventListener('scroll',reposition,true);
@@ -5384,16 +5385,20 @@ function tableReportKolColumns(){
 function tableReportInteraction(key){
   const collection=key==='koleksiyon';
   const selected=()=>collection?kolSelected:(key==='orders'?state.ordersSelected:state.cpSelected);
+  const rowId=row=>collection?row.id:row._id;
   return {
+    imageDimensions:()=>tableImageSizeDimensions(key,tableImageSizeCurrentValue(key)),
+    resizeImages:anchor=>openTableImageSizePopover(anchor,key),
     pictureKey:collection?'__picture__':'__picture',
     view:()=>tableViewPresetState(key),
     selectable:()=>!blOverlayOpen()&&!window.BLDetailDrawer?.isOpen?.(),
-    rowId:row=>collection?row.id:row._id,
-    selected:row=>selectionHasId(selected(),collection?row.id:row._id),
+    rowId,
+    selected:row=>selectionHasId(selected(),rowId(row)),
+    dirty:row=>key==='cp'&&selectionHasId(state.cpDirty,row._id),
     checked:()=>selected().size>0,
     selectRows:(rows,on)=>{
       const set=selected();
-      rows.forEach(row=>{const id=collection?row.id:row._id;for(const value of set)if(String(value)===String(id))set.delete(value);if(on)set.add(id);});
+      for(const row of rows)selectionSetId(set,rowId(row),on);
       if(set.size>0)window.BLGridClipboard?.clear('blTableReport-'+key);
       if(collection)renderKol();else if(key==='orders')renderOrders();else renderCP();
       window.BLSelectionBar?.refresh();
@@ -7825,8 +7830,11 @@ function selectionFooterCellHtml(count){
 }
 function updateSelectionFooterCount(table,rows,selectedSet,getId){
   const cell=table&&table.tFoot&&table.tFoot.querySelector('.selectionTotalCell');
-  if(!cell)return;
+  const selectAll=['cpTable','ordersTable','kolTable'].includes(table?.id)?table.tHead?.querySelector('.chkTh > input[type="checkbox"]'):null;
+  if(!cell&&!selectAll)return;
   const count=tableVisibleSelectedCount(rows,selectedSet,getId);
+  syncTableSelectAll(selectAll,rows,selectedSet,getId,count);
+  if(!cell)return;
   const includeTotal=cell.dataset.includeTotal==='1';
   const selectedTitle=appLang==='en'?`${count} selected row${count===1?'':'s'}`:`${count} seçili satır`;
   const totalLabel=appLang==='en'?'Total':'Toplam';
@@ -7836,6 +7844,14 @@ function updateSelectionFooterCount(table,rows,selectedSet,getId){
   const number=cell.querySelector('.selectionFooterNumber');
   if(pill&&number){pill.setAttribute('aria-label',aria);number.textContent=String(count);return;}
   cell.innerHTML=selectionFooterCellHtml(count,includeTotal).replace(/^<td[^>]*>|<\/td>$/g,'');
+}
+function syncTableSelectAll(input,rows,selectedSet,getId=row=>row._id,count){
+  if(!input)return;
+  const selected=row=>selectionHasId(selectedSet,getId(row));
+  const checked=Boolean(selectedSet?.size&&rows.length&&rows.every(selected));
+  const mixed=!checked&&(count===undefined?Boolean(selectedSet?.size&&rows.some(selected)):count>0);
+  if(input.checked!==checked)input.checked=checked;
+  if(input.indeterminate!==mixed)input.indeterminate=mixed;
 }
 function renderQuantityTotalsFooter(table,rows,cols,options={}){
   if(!table)return;
@@ -8343,15 +8359,18 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
   });
   if(withChk){
     const selAll = document.getElementById(`${tableId}_selAll`);
-    const allChecked = fullRows.length>0 && fullRows.every(r=>selectionHasId(selSet,r._id));
-    selAll.checked = allChecked;
+    const rangeSelection=tableKey==='cp'||tableKey==='orders';
+    if(rangeSelection)syncTableSelectAll(selAll,fullRows,selSet);
+    else selAll.checked=fullRows.length>0&&fullRows.every(r=>selectionHasId(selSet,r._id));
     selAll.setAttribute('aria-label',appLang==='en'?'Select all matching rows':'Tüm eşleşen satırları seç');
     selAll.addEventListener('change', ()=>{
+      const restoreFocus=rangeSelection&&document.activeElement===selAll;
       fullRows.forEach(r=>selectionSetId(selSet,r._id,selAll.checked));
       // Satır seçimi elle işaretlenince eski hücre/aralık seçimi otomatik geçersiz
       // sayılır: aksi halde Kopyala hâlâ bayat tek hücreyi kopyalar (bkz. clear()).
       if(selSet.size>0) window.BLGridClipboard?.clear?.(tableId);
       renderFullTable(tableId, tableKey, fullRows, sortState, onSort, opts);
+      if(restoreFocus)document.getElementById(selAll.id)?.focus({preventScroll:true});
       notifySelectionChange();
     });
     const chkFilterBtn = thead.querySelector('.chkFilterBtn');
@@ -10352,6 +10371,7 @@ function renderOrdersNow(){
 function markDirty(id){
   if(cpBulkPreparing)return;
   state.cpDirty.add(id);
+  window.BLTableReportInline?.schedule('cp');
   const tr=document.querySelector(`#cpTable tbody tr[data-id="${id}"]`);
   if(tr)tr.classList.add('rowDirty');
   updateSavebar('cp');
@@ -10704,6 +10724,7 @@ async function discardAllChangesAsync(){
   // undo() her satırı yeniden dirty olarak işaretler; toplu geri alma tamamlandığında
   // bildirim ve satır vurguları kesin olarak temizlenmelidir.
   state.cpDirty.clear();
+  window.BLTableReportInline?.schedule('cp');
   redoStack.length = 0;
   document.querySelectorAll('#cpTable tr.rowDirty').forEach(tr=>tr.classList.remove('rowDirty'));
   updateUndoRedoButtons();
@@ -30015,7 +30036,8 @@ function renderKol(){
     e.stopPropagation();openKolHeaderFilter(btn.dataset.kolFilter,e.currentTarget);
   }));
   const selAll=document.getElementById('kolSelAll');
-  selAll.checked=logicalRows.length>0&&logicalRows.every(r=>selectionHasId(kolSelected,r.id));
+  selAll.setAttribute('aria-label',appLang==='en'?'Select all matching rows':'Tüm eşleşen satırları seç');
+  syncTableSelectAll(selAll,logicalRows,kolSelected,row=>row.id);
   selAll.addEventListener('change',()=>{
     logicalRows.forEach(r=>selectionSetId(kolSelected,r.id,selAll.checked));
     tbody.querySelectorAll('.rowChk').forEach(chk=>{chk.checked=selAll.checked;});

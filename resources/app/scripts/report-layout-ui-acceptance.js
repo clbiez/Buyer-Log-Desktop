@@ -2,12 +2,12 @@
 // Real Buyer Log, isolated synthetic account and data; no production data is read.
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),{spawn}=require('node:child_process');
 const {chromium}=require('playwright'),XLSX=require('xlsx'),{execFileSync}=require('node:child_process');
-const app=path.resolve(__dirname,'..'),root=path.resolve(app,'../../work/report-layout-acceptance');fs.mkdirSync(root,{recursive:true});
-const port=6497,base=`http://127.0.0.1:${port}`,env={...process.env,BUYER_LOG_CONFIG_PATH:path.join(root,'config.json')};
+const app=path.resolve(__dirname,'..'),root=process.env.REPORT_ACCEPTANCE_ROOT||path.resolve(app,'../../work/report-layout-acceptance');fs.mkdirSync(root,{recursive:true});
+const port=Number(process.env.REPORT_ACCEPTANCE_PORT)||6497,base=`http://127.0.0.1:${port}`,env={...process.env,BUYER_LOG_CONFIG_PATH:path.join(root,'config.json')};
 for(const [key,dir] of Object.entries({BUYER_LOG_DATA_ROOT:'app',BUYER_LOG_SERVER_DATA_ROOT:'server',BUYER_LOG_LOCAL_DATA_ROOT:'local',BUYER_LOG_TEMP_ROOT:'temp'})){env[key]=path.join(root,dir);fs.mkdirSync(env[key],{recursive:true});}
 env.BUYER_LOG_AUTH_DATA_ROOT=env.BUYER_LOG_SERVER_DATA_ROOT;env.BL_DATA_DIR=env.BUYER_LOG_SERVER_DATA_ROOT;
 fs.writeFileSync(env.BUYER_LOG_CONFIG_PATH,JSON.stringify({port,host:'127.0.0.1',updates:{enabled:false}}));
-const assets=path.join(app,'public/release-notes/next-assets');fs.mkdirSync(assets,{recursive:true});
+const assets=process.env.REPORT_CAPTURE_DIR||path.join(app,'public/release-notes/next-assets');fs.mkdirSync(assets,{recursive:true});
 const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.execPath,['server/server.js'],{cwd:app,env,stdio:['ignore',log,log]});let browser;
 (async()=>{
  let ready=false;for(let i=0;i<120;i++){try{ready=(await fetch(base+'/api/health')).status<500;if(ready)break;}catch{}await new Promise(r=>setTimeout(r,250));}assert.ok(ready,'isolated server ready');
@@ -18,10 +18,13 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
  await context.addCookies([{name:cookie.slice(0,split),value:cookie.slice(split+1),domain:'127.0.0.1',path:'/',httpOnly:true}]);
  await context.addInitScript(()=>localStorage.setItem('bl.releaseNotes.lastSeenStable.v1','99.0.0'));
  const page=await context.newPage(),errors=[];page.setDefaultTimeout(10000);page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.dismiss());
- await page.goto(base,{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.BLPerf&&typeof switchTab==='function',{timeout:60000});
- await page.getByText(/Buyer Log'a devam et|Continue to Buyer Log/).click({timeout:4000}).catch(()=>{});await page.waitForFunction(()=>!document.getElementById('blBootGuard'),{timeout:60000});
- await page.evaluate(()=>{applyLanguage('en');switchTab('cp');});
- await page.waitForTimeout(800);
+ async function openCP(target){
+   await target.goto(base,{waitUntil:'domcontentloaded'});await target.waitForFunction(()=>window.BLPerf&&typeof switchTab==='function',{timeout:60000});
+   await target.getByText(/Buyer Log'a devam et|Continue to Buyer Log/).click({timeout:4000}).catch(()=>{});await target.waitForFunction(()=>!document.getElementById('blBootGuard'),{timeout:60000});
+   await target.evaluate(()=>{applyLanguage('en');switchTab('cp');});
+   await target.waitForTimeout(800);
+ }
+ await openCP(page);
  const seedCp=()=>{
    const rows=Array.from({length:4},(_,i)=>({_id:i+1,'PLM ID':990001+i,'Model Name':'DEMO MODEL '+(i+1),'Product Main Description':i%2?'T-Shirt':'Sweat','C.Code':'DEMO-C'+i,Colour:'NAVY','Order Code':880001+i,Season:'S7',Country:'DEMO','Order Quantity':100+i,Manufacturer:'DEMO FACTORY','Ex-factory':'2027-03-10','Retail Date':'2027-04-10','Del. Type':'Regular',STATUS:'Order Placed'}));
    state.cp={...(state.cp||{}),rows};state.orders={...(state.orders||{}),rows:rows.map(r=>({...r}))};state.cpSelected.clear();state.ordersSelected.clear();
@@ -32,31 +35,269 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
    renderCP();BLFlushTableRenders();ensureTableReportAdapters();BLTableReportInline.setMode('cp',true);
  };
  await page.evaluate(seedCp);await page.evaluate(()=>BLTableReportInline.refreshShared());
- if(process.env.REPORT_PERF_ONLY==='1'){
-   const baseline='e6794e78fc4ec8c841f664dde7b65ba60c3cf454';
-   const original=name=>execFileSync('git',['show',baseline+':resources/app/public/'+name],{cwd:app,encoding:'utf8',maxBuffer:8*1024*1024});
-   const sources={main:original('table-report-inline.js'),candidate:fs.readFileSync(path.join(app,'public/table-report-inline.js'),'utf8')};
-   const styles={main:original('ui-tokens.css')+'\n'+original('ui-components.css'),candidate:fs.readFileSync(path.join(app,'public/ui-tokens.css'),'utf8')+'\n'+fs.readFileSync(path.join(app,'public/ui-components.css'),'utf8')};
+ if(process.env.REPORT_SELECTION_ONLY==='1'){
+   const feedback=[];
+   for(const key of ['cp','orders','koleksiyon']){
+     if(key==='orders')await page.evaluate(()=>{switchTab('orders');colmgr.orders.hidden=new Set(colmgr.cp.hidden);renderOrders();BLFlushTableRenders();});
+     if(key==='koleksiyon'){
+       await page.evaluate(async()=>{switchTab('koleksiyon');await BLPerf.ensureFeature('collectionTools');});
+       await page.evaluate(()=>{kolRows=Array.from({length:4},(_,i)=>({id:91001+i,plmId:String(990001+i),modelKod:'DEMO COLLECTION '+i,season:'S7',country:'DEMO',pricing:{},colour:'NAVY'}));kolColOrder=kolDefaultDisplayOrder();kolHiddenCols=new Set(kolColDefs().map(c=>c.k).filter(k=>!['modelKod','season','quantity'].includes(k)));kolColFilters={};kolSelected.clear();renderKol();});
+     }
+     for(const report of [false,true]){
+       await page.evaluate(({key,report})=>{BLTableReportInline.setMode(key,report);BLFlushTableRenders();},{key,report});
+       const table=page.locator('#'+(report?'blTableReport-'+key:{cp:'cpTable',orders:'ordersTable',koleksiyon:'kolTable'}[key]));
+       const rows=table.locator(report?'tbody input[data-tr-check]':'tbody input.rowChk'),all=table.locator('thead input[type="checkbox"]');
+       assert.equal(await rows.count(),4);
+       const changes=[];
+       const eventKey=`reportAcceptanceChange${key}${Number(report)}`;
+       await page.exposeFunction(eventKey,change=>changes.push(change));
+       await table.evaluate((node,name)=>node.addEventListener('change',event=>{
+         if(!event.target.matches('input[type="checkbox"]'))return;
+         const sample={checked:event.target.checked,trusted:event.isTrusted};
+         if(event.isTrusted)requestAnimationFrame(()=>window[name]({...sample,frameMs:performance.now()-event.timeStamp}));
+         else window[name](sample);
+       }),eventKey);
+       if(report){
+         for(const theme of ['dark','light']){
+           await page.evaluate(theme=>applyTheme(theme),theme);
+           const divider=await table.locator('tbody tr[data-id]').first().evaluate(row=>[...row.cells].map(cell=>{
+             const s=getComputedStyle(cell);return [s.borderBottomWidth,s.borderBottomStyle,s.borderBottomColor];
+           }));
+           const normal=await page.locator('#'+{cp:'cpTable',orders:'ordersTable',koleksiyon:'kolTable'}[key]+' tbody tr[data-id] td').first().evaluate(cell=>getComputedStyle(cell).borderBottomColor);
+           assert.ok(divider.every(([width,style,color])=>width==='1px'&&style==='solid'&&color===normal),key+' '+theme+' report uses the table divider across every cell');
+         }
+       }
+       await rows.nth(0).focus();await page.keyboard.press('Space');
+       assert.ok(await rows.nth(0).isChecked());
+       assert.ok(await all.evaluate(input=>input.indeterminate),key+' mixed select-all');
+       await page.waitForTimeout(70);
+       assert.ok(await rows.nth(0).evaluate(input=>input===document.activeElement),key+' keeps keyboard focus');
+       await rows.nth(2).click({modifiers:['Shift']});
+       assert.deepEqual(await rows.evaluateAll(inputs=>inputs.map(input=>input.checked)),[true,true,true,false],key+' Shift-click range');
+       await rows.nth(3).focus();await page.keyboard.press('Shift+Space');
+       assert.deepEqual(await rows.evaluateAll(inputs=>inputs.map(input=>input.checked)),[true,true,true,true],key+' Shift+Space range');
+       assert.ok(await all.isChecked());
+       await all.focus();await page.keyboard.press('Space');
+       assert.deepEqual(await rows.evaluateAll(inputs=>inputs.map(input=>input.checked)),[false,false,false,false]);
+       assert.ok(await all.evaluate(input=>input===document.activeElement),key+' keeps header focus');
+       const expected=[[true,true],[true,true],[true,true],[false,true]];
+       if(!report)expected.splice(1,0,[true,false]);
+       await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+       assert.deepEqual(changes.map(change=>[change.checked,change.trusted]),expected,key+' keeps the native events and existing normal-table range notifications');
+       const frameMs=changes.filter(change=>change.trusted).map(change=>change.frameMs);
+       assert.ok(frameMs.every(ms=>ms<=200),key+' selection reaches the next frame within 200 ms');
+       feedback.push({key,report,frameMs});
+       console.log('PASS keyboard, range and mixed selection: '+key+' '+(report?'report':'table'));
+     }
+   }
+   await page.evaluate(()=>{
+     switchTab('cp');BLTableReportInline.setMode('cp',false);
+     const [first,second,third]=state.cp.rows;
+     state.cp.rows=[{...first,_partialViewIndex:0},second,third,{...first,_partialViewIndex:1}];
+     renderCP();BLFlushTableRenders();
+   });
+   const normalAll=page.locator('#cpTable_selAll');
+   await normalAll.check();assert.ok(await normalAll.isChecked());await normalAll.uncheck();
+   await page.evaluate(()=>BLTableReportInline.setMode('cp',true));
+   const reportTable=page.locator('#blTableReport-cp'),reportRows=reportTable.locator('tbody input[data-tr-check]'),reportAll=reportTable.locator('thead input[type="checkbox"]');
+   assert.equal(await reportRows.count(),4);
+   await reportRows.nth(3).click();
+   await reportRows.nth(2).click({modifiers:['Shift']});
+   assert.deepEqual(await reportRows.evaluateAll(inputs=>inputs.map(input=>input.checked)),[true,false,true,true],'range starts from the specific recurring source row');
+   await reportRows.nth(1).click();assert.ok(await reportAll.isChecked(),'all source records selected even when one spans two report rows');
+   await reportAll.click();assert.deepEqual(await reportRows.evaluateAll(inputs=>inputs.map(input=>input.checked)),[false,false,false,false]);
+   console.log('PASS repeated source IDs keep the displayed range anchor and correct bulk state');
+   fs.writeFileSync(path.join(root,'selection-feedback.json'),JSON.stringify(feedback,null,2));
+   assert.deepEqual(errors,[]);return;
+ }
+ if(process.env.REPORT_FLOW_ONLY==='1'){
+   await page.emulateMedia({reducedMotion:'no-preference'});await page.evaluate(()=>BLMotionPlus.setEnabled(true));await page.waitForTimeout(650);
+   const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=200;c.height=120;const x=c.getContext('2d');x.fillStyle='#ebeff3';x.fillRect(0,0,200,120);for(const offset of [0,100]){x.fillStyle=offset?'#7b263a':'#96354a';x.beginPath();for(const [i,[a,b]] of [[0,[30,10]],[1,[5,25]],[2,[0,50]],[3,[24,60]],[4,[28,45]],[5,[28,110]],[6,[78,110]],[7,[78,45]],[8,[84,60]],[9,[100,50]],[10,[95,25]],[11,[70,10]]]){if(i===0)x.moveTo(a+offset,b);else x.lineTo(a+offset,b);}x.closePath();x.fill();}return c.toDataURL('image/png');});
+   await page.route('**/api/*-images/flow-demo',route=>route.fulfill({contentType:'image/png',body:Buffer.from(png.split(',')[1],'base64')}));
+   await page.evaluate(()=>{BLDetailImages.resolve=(_index,identity)=>({...identity,source:'/api/collection-images/flow-demo'});colmgr.cp.hidden.delete('__picture');renderCP();BLFlushTableRenders();BLTableReportInline.setMode('cp',true);});
+   const evidence=[];
+   async function checkFlow(key,report){
+     await page.evaluate(({key,report})=>BLTableReportInline.setMode(key,report),{key,report});await page.waitForTimeout(100);
+     const tableId=report?'blTableReport-'+key:key==='koleksiyon'?'kolTable':key==='orders'?'ordersTable':'cpTable';
+     const input=page.locator('#'+tableId+(report?' [data-tr-check="0"]':' tbody input.rowChk')).first();
+     const idle=await input.evaluate(i=>({background:getComputedStyle(i).backgroundColor,border:getComputedStyle(i).borderColor,borderWidth:getComputedStyle(i).borderTopWidth,width:i.getBoundingClientRect().width,checked:i.checked}));
+     assert.equal(idle.checked,false);assert.equal(idle.width,8);assert.equal(idle.borderWidth,'1px');assert.equal(idle.background,'rgba(0, 0, 0, 0)');
+     await input.check();await page.waitForFunction(tableId=>document.getAnimations().some(a=>a.id==='bl-row-selection'&&a.effect?.target?.closest('table')?.id===tableId),tableId);
+     const motion=await page.evaluate(()=>{const a=document.getAnimations().find(a=>a.id==='bl-row-selection');return {frames:a.effect.getKeyframes().map(f=>({transform:f.transform,opacity:f.opacity})),duration:a.effect.getTiming().duration};});assert.equal(motion.duration,360);assert.equal(motion.frames[0].transform,'scaleY(0)');
+     await page.waitForTimeout(440);assert.equal(await input.isChecked(),true);assert.equal(await input.evaluate(i=>getComputedStyle(i,'::before').transform),'matrix(1, 0, 0, 1, 0, 0)');
+     if(key==='cp'){
+       await page.evaluate(()=>markDirty(1));await page.waitForTimeout(100);
+       const dirty=await input.evaluate(i=>({row:i.closest('tr').classList.contains('rowDirty'),blue:getComputedStyle(i,'::before').backgroundColor,orange:getComputedStyle(i,'::after').backgroundColor,stripe:getComputedStyle(i,'::after').width,display:getComputedStyle(i,'::after').display}));
+       assert.equal(dirty.row,true);assert.equal(dirty.stripe,'3px');assert.equal(dirty.display,'block');assert.notEqual(dirty.blue,dirty.orange);assert.notEqual(dirty.orange,'rgba(0, 0, 0, 0)');
+     }
+     const row=input.locator('xpath=ancestor::tr'),box=await row.boundingBox();await page.mouse.move(1000,box.y+box.height/2);await page.waitForTimeout(650);
+     const hover=await row.evaluate(r=>{const s=getComputedStyle(r,'::after');return {opacity:s.opacity,background:s.backgroundColor,width:parseFloat(s.width),rowWidth:r.getBoundingClientRect().width,pointerEvents:s.pointerEvents};});assert.equal(hover.opacity,'1');assert.ok(Math.abs(hover.width-hover.rowWidth)<1);assert.equal(hover.pointerEvents,'none');
+     const second=row.locator('xpath=following-sibling::tr').first();const next=await second.boundingBox();if(next){await page.mouse.move(1000,next.y+next.height/2);await page.waitForTimeout(120);const fading=Number(await row.evaluate(r=>getComputedStyle(r,'::after').opacity));assert.ok(fading>0&&fading<1);await page.waitForTimeout(550);assert.equal(await row.evaluate(r=>r.classList.contains('blSoftRowHover')),false,'faded row releases its light layer');}
+     if(key==='cp'&&report){
+       await page.waitForFunction(()=>document.querySelector('#blTableReport-cp img')?.dataset.blImageLoaded==='1');
+       for(const theme of ['dark','light']){await page.evaluate(theme=>applyTheme(theme),theme);await page.waitForTimeout(650);await page.screenshot({path:path.join(assets,'flow-selection-'+theme+'.png')});}
+       await page.evaluate(()=>applyTheme('dark'));
+       await page.evaluate(()=>{renderCP();BLFlushTableRenders();});await page.waitForTimeout(130);assert.equal(await page.evaluate(()=>document.getAnimations().filter(a=>a.id==='bl-row-selection').length),0,'refresh does not replay selection motion');
+     }
+     if(key==='cp'&&!report)await page.screenshot({path:path.join(root,'cp-table-selection.png')});
+     await input.uncheck();await page.waitForTimeout(500);assert.equal(await input.isChecked(),false);
+     evidence.push({key,report,idle,motion,hover});console.log('PASS visible rail, native selection, Akış fill and full-row fade: '+key+' '+(report?'report':'table'));
+   }
+   for(const key of ['cp','orders','koleksiyon']){
+     if(key==='orders')await page.evaluate(()=>{switchTab('orders');colmgr.orders.hidden=new Set(colmgr.cp.hidden);renderOrders();BLFlushTableRenders();});
+     if(key==='koleksiyon'){
+       await page.evaluate(async()=>{switchTab('koleksiyon');await BLPerf.ensureFeature('collectionTools');});
+       await page.evaluate(()=>{kolRows=Array.from({length:3},(_,i)=>({id:91001+i,plmId:String(990001+i),modelKod:'DEMO COLLECTION '+i,season:'S7',mag:'DEMO',urunTipi:'DEMO',country:'DEMO',quantity:'200',targetPrice:'14',pricing:{},durum:'',colour:'NAVY'}));kolColOrder=kolDefaultDisplayOrder();kolHiddenCols=new Set(kolColDefs().map(c=>c.k).filter(k=>!['modelKod','season','quantity','targetPrice'].includes(k)));kolPictureHidden=false;kolColFilters={};kolSelected.clear();renderKol();});
+     }
+     await checkFlow(key,true);await checkFlow(key,false);
+   }
+   await page.evaluate(async()=>{switchTab('cp');await discardAllChangesAsync();BLTableReportInline.setMode('cp',true);});await page.waitForTimeout(100);assert.equal(await page.locator('#blTableReport-cp tr.rowDirty').count(),0,'discard removes dirty stripe in report');
+   await page.evaluate(()=>{switchTab('cp');BLMotionPlus.setEnabled(false);BLTableReportInline.setMode('cp',true);});await page.locator('#blTableReport-cp [data-tr-check="0"]').check();await page.waitForTimeout(80);assert.equal(await page.evaluate(()=>document.getAnimations().filter(a=>a.id==='bl-row-selection').length),0);
+   await page.emulateMedia({reducedMotion:'reduce'});await page.evaluate(()=>BLMotionPlus.setEnabled(true));await page.locator('#blTableReport-cp [data-tr-check="0"]').uncheck();await page.waitForTimeout(80);assert.equal(await page.evaluate(()=>document.getAnimations().filter(a=>a.id==='bl-row-selection').length),0);
+   assert.deepEqual(errors,[]);fs.writeFileSync(path.join(root,'flow-results.json'),JSON.stringify({ok:true,evidence,errors},null,2));return;
+ }
+ if(process.env.REPORT_STICKY_ONLY==='1'){
+   const results=[];
+   async function checkPin(selector,label){
+     const target=page.locator(selector).first();await target.waitFor();
+     const before=await target.evaluate(input=>{const cell=input.closest('td,th'),wrap=cell.closest('.tablewrap');wrap.scrollLeft=0;return {left:cell.getBoundingClientRect().left,wrap:wrap.getBoundingClientRect().left,width:cell.getBoundingClientRect().width};});
+     await target.evaluate(input=>{input.closest('.tablewrap').scrollLeft=260;});await page.waitForTimeout(80);
+     const after=await target.evaluate(input=>{const cell=input.closest('td,th'),wrap=cell.closest('.tablewrap'),r=input.getBoundingClientRect();return {left:cell.getBoundingClientRect().left,scroll:wrap.scrollLeft,position:getComputedStyle(cell).position,z:getComputedStyle(cell).zIndex,hit:document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)===input,hitHtml:document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)?.outerHTML.slice(0,500),rect:{left:r.left,top:r.top,width:r.width,height:r.height}};});
+     assert.ok(after.scroll>100,label+' actually scrolled');assert.ok(Math.abs(before.left-after.left)<2,label+' stays fixed: '+JSON.stringify({before,after}));assert.equal(after.position,'sticky');if(!after.hit){await page.screenshot({path:path.join(root,'sticky-failure.png')});console.log(await target.evaluate(input=>{const td=input.closest('td,th'),r=input.getBoundingClientRect();return {input:input.outerHTML,td:td.outerHTML.slice(0,600),pe:getComputedStyle(input).pointerEvents,tdPe:getComputedStyle(td).pointerEvents,stack:document.elementsFromPoint(r.left+r.width/2,r.top+r.height/2).slice(0,8).map(el=>({tag:el.tagName,cls:el.className,z:getComputedStyle(el).zIndex,pe:getComputedStyle(el).pointerEvents}))};}));}assert.ok(after.hit,label+' remains clickable '+JSON.stringify(after));results.push({label,before,after});
+   }
+   for(const key of ['cp','orders','koleksiyon']){
+     if(key==='orders')await page.evaluate(()=>{switchTab('orders');colmgr.orders.hidden=new Set(colmgr.cp.hidden);renderOrders();BLFlushTableRenders();});
+     if(key==='koleksiyon'){
+       await page.evaluate(async()=>{switchTab('koleksiyon');await BLPerf.ensureFeature('collectionTools');});
+       await page.evaluate(()=>{kolRows=[{id:91001,plmId:'990001',modelKod:'DEMO COLLECTION',season:'S7',mag:'DEMO',urunTipi:'DEMO',country:'DEMO',quantity:'200',targetPrice:'14',pricing:{},durum:'',colour:'NAVY'}];kolColOrder=kolDefaultDisplayOrder();kolHiddenCols=new Set(kolColDefs().map(c=>c.k).filter(k=>!['modelKod','season','quantity','targetPrice'].includes(k)));kolPictureHidden=true;kolColFilters={};kolSelected.clear();renderKol();});
+     }
+     await page.evaluate(key=>{BLTableReportInline.setMode(key,false);const table=tableImageSizeTable(key),wrap=table.closest('.tablewrap');wrap.style.width='620px';wrap.style.maxWidth='620px';table.style.minWidth='1500px';BLTableFreeze.clear(table);},key);
+     const tableId=key==='koleksiyon'?'kolTable':key==='orders'?'ordersTable':'cpTable';
+     await checkPin('#'+tableId+' tbody input.rowChk',key+' normal body');
+     await checkPin('#'+tableId+' thead input[type="checkbox"]',key+' normal header');
+     await page.evaluate(key=>{const table=tableImageSizeTable(key);BLTableFreeze.apply(table,{count:3,pane:100});},key);
+     await page.waitForTimeout(120);
+     await page.evaluate(key=>BLTableFreeze.scrollPane(tableImageSizeTable(key),180),key);
+     await checkPin('#'+tableId+' tbody input.rowChk',key+' inner frozen pane');
+     await page.evaluate(key=>{BLTableFreeze.clear(tableImageSizeTable(key));BLTableReportInline.setMode(key,true);document.querySelector('#blTableReport-'+key).style.minWidth='1500px';},key);
+     await checkPin('#blTableReport-'+key+' [data-tr-check="0"]',key+' report body');
+     await checkPin('#blTableReport-'+key+' [data-tr-check="all"]',key+' report header');
+     await page.locator('#blTableReport-'+key+' [data-tr-check="0"]').check();
+     if(key==='cp')await page.screenshot({path:path.join(assets,'selection-rail-sticky.png')});
+     console.log('PASS selection pin: '+key+' normal/report/header/inner pane');
+   }
+   const matrix=await page.evaluate(()=>{
+     const attrs=['class="rowChk"','class="shipCompareChk"','class="shipRowChk"','data-tr-check="0"','data-ship-chk-all','data-fabric-pick="0"','data-bin-id="demo"','data-cpa-queue-check="demo"','data-dc-item="demo"','data-dc-toggle-all','data-ta-pick="demo"','data-ta-all','data-act="selectRow"','data-act="selectAll"','id="fixture_selAll"'];
+     const wrap=document.createElement('div');wrap.style.cssText='position:fixed;left:900px;top:100px;width:300px;overflow:auto';
+     wrap.innerHTML='<table style="width:1500px"><tbody>'+attrs.map(attr=>'<tr><td><input type="checkbox" '+attr+'></td><td>Demo</td></tr>').join('')+'<tr><td><label><input type="checkbox" data-xim="include">Source row</label></td><td>Demo</td></tr><tr><td><input type="checkbox" data-um-rolecell="read"></td><td>Permission</td></tr><tr><td>Value</td><td><input type="checkbox" class="rowChk"></td></tr></tbody></table>';document.body.append(wrap);
+     wrap.scrollLeft=260;const result=[...wrap.querySelectorAll('input')].map(input=>({position:getComputedStyle(input.closest('td')).position,left:input.closest('td').getBoundingClientRect().left}));wrap.remove();return result;
+   });
+   for(const result of matrix.slice(0,-2)){assert.equal(result.position,'sticky');assert.ok(Math.abs(result.left-900)<2);}for(const result of matrix.slice(-2))assert.notEqual(result.position,'sticky');
+   await page.evaluate(()=>{switchTab('cp');const seed=state.cp.rows[0],rows=Array.from({length:300},(_,i)=>({...seed,_id:i+1,'Model Name':'DEMO MODEL '+i}));BLTableReportInline.register('cp',{tab:'cp',table:()=>document.getElementById('cpTable'),rows:()=>rows,columns:()=>tableReportCoreColumns('cp'),images:()=>false,...tableReportInteraction('cp')});BLTableReportInline.setMode('cp',true);document.getElementById('blTableReport-cp').style.minWidth='2200px';});
    const samples=[];
-   for(let pair=0;pair<3;pair++)for(const variant of ['main','candidate']){
-     await page.evaluate(({source,css})=>{
-       for(const sheet of document.querySelectorAll('link[href^="ui-tokens.css"],link[href^="ui-components.css"]'))sheet.disabled=true;
-       let style=document.getElementById('reportPerfStyles');if(!style){style=document.createElement('style');style.id='reportPerfStyles';document.head.append(style);}style.textContent=css;
-       BLTableReportInline.setMode('cp',false);document.querySelector('[data-table-report-inline="cp"]')?.remove();
-       (0,eval)(source);
-       const seed=state.cp.rows[0],rows=Array.from({length:300},(_,i)=>({...seed,_id:i+1,'PLM ID':990001+i,'Model Name':'DEMO MODEL '+i}));
+   for(let pair=0;pair<3;pair++)for(const candidate of [false,true]){
+     const raw=await page.evaluate(candidate=>{
+       const sheet=document.getElementById('blRowSelectionPinStyle').sheet;sheet.disabled=!candidate;
+       const table=document.getElementById('blTableReport-cp'),wrap=table.closest('.tablewrap'),rail=table.querySelector('[data-tr-check="0"]');wrap.scrollLeft=0;rail.getBoundingClientRect();
+       const values=[];for(let i=0;i<30;i++){const start=performance.now();wrap.scrollLeft=i%2?220:560;rail.getBoundingClientRect();values.push(performance.now()-start);}sheet.disabled=false;return values;
+     },candidate);samples.push({pair,variant:candidate?'pinned':'baseline',raw,mean:raw.reduce((a,b)=>a+b,0)/raw.length});
+   }
+   fs.writeFileSync(path.join(root,'sticky-performance.json'),JSON.stringify({scenario:'L2: synchronous horizontal scroll plus rail geometry; 300 actual report rows, three alternating pairs, 30 samples each; baseline disables only the new pin stylesheet',samples},null,2));
+   assert.deepEqual(errors,[]);fs.writeFileSync(path.join(root,'sticky-results.json'),JSON.stringify({ok:true,results,matrix,errors},null,2));return;
+ }
+ if(process.env.REPORT_IMAGES_ONLY==='1'){
+   const svg='<svg xmlns="http://www.w3.org/2000/svg" width="200" height="120" viewBox="0 0 200 120"><rect width="200" height="120" fill="#edf2f5"/><path d="M35 12L9 29L3 53L27 61L32 46V108H89V46L94 61L117 53L111 29L85 12Q60 32 35 12Z" fill="#58747e"/><path d="M140 12L120 27V108H193V27L175 12Z" fill="#506b75"/></svg>';
+   const png=await page.evaluate(svg=>new Promise(resolve=>{const image=new Image();image.onload=()=>{const canvas=document.createElement('canvas');canvas.width=200;canvas.height=120;canvas.getContext('2d').drawImage(image,0,0);resolve(canvas.toDataURL('image/png'));};image.src='data:image/svg+xml;base64,'+btoa(svg);}),svg);
+   await page.route('**/api/*-images/report-size-demo*',route=>route.fulfill({contentType:'image/png',body:Buffer.from(png.split(',')[1],'base64')}));
+   await page.evaluate(()=>{BLDetailImages.resolve=(_index,identity)=>({...identity,source:'/api/cp-images/report-size-demo'});colmgr.cp.hidden.delete('__picture');renderCP();BLFlushTableRenders();BLTableReportInline.setMode('cp',true);});
+   const evidence=[];
+   for(const key of ['cp','orders','koleksiyon']){
+     if(key==='orders')await page.evaluate(()=>{switchTab('orders');colmgr.orders.hidden=new Set(colmgr.cp.hidden);renderOrders();BLFlushTableRenders();BLTableReportInline.setMode('orders',true);});
+     if(key==='koleksiyon'){
+       await page.evaluate(async()=>{switchTab('koleksiyon');await BLPerf.ensureFeature('collectionTools');});
+       await page.evaluate(()=>{kolRows=[{id:91001,plmId:'990001',modelKod:'DEMO COLLECTION',season:'S7',mag:'DEMO',urunTipi:'DEMO',country:'DEMO',quantity:'200',targetPrice:'14',pricing:{},durum:'',colour:'NAVY'}];kolColOrder=kolDefaultDisplayOrder();kolHiddenCols=new Set(kolColDefs().map(c=>c.k).filter(k=>!['modelKod','season','quantity','targetPrice'].includes(k)));kolPictureHidden=false;kolColFilters={};kolSelected.clear();renderKol();BLTableReportInline.setMode('koleksiyon',true);});
+     }
+     const header=page.locator('#blTableReport-'+key+' [data-tr-image-size]');
+     await page.waitForFunction(key=>{const img=document.querySelector('#blTableReport-'+key+' .blDetailImageCell img');return img?.dataset.blImageLoaded==='1'&&img.complete&&img.naturalWidth>0;},key).catch(async error=>{console.log(await page.locator('#blTableReport-'+key+' .blDetailImageCell img').first().evaluate(img=>({html:img.outerHTML,src:img.currentSrc})));throw error;});
+     await header.click();
+     const range=page.locator('#tableImageSizeRange');await range.waitFor();
+     const maximum=Number(await range.getAttribute('max')),minimum=Number(await range.getAttribute('min'));
+     const sizes=[],frameMs=[];
+     for(const value of [minimum,maximum]){
+       await range.evaluate(input=>{
+         delete input.dataset.feedbackMs;
+         input.addEventListener('input',event=>requestAnimationFrame(()=>{input.dataset.feedbackMs=performance.now()-event.timeStamp;}),{once:true});
+       });
+       await range.fill(String(value));await range.dispatchEvent('input');await range.dispatchEvent('change');
+       await page.waitForFunction(({key,value})=>parseInt(getComputedStyle(document.querySelector('#blTableReport-'+key)).getPropertyValue('--bl-report-image-width'))===value,{key,value});
+       await page.waitForFunction(()=>document.querySelector('#tableImageSizeRange')?.dataset.feedbackMs);
+       frameMs.push(Number(await range.getAttribute('data-feedback-ms')));
+       sizes.push(await page.locator('#blTableReport-'+key+' .blDetailImageCell img').first().evaluate(img=>({width:img.getBoundingClientRect().width,height:img.getBoundingClientRect().height,col:img.closest('td').getBoundingClientRect().width,row:img.closest('tr').getBoundingClientRect().height,loaded:img.complete&&img.naturalWidth>0})));
+     }
+     assert.equal(sizes[0].width,minimum);assert.equal(sizes[1].width,maximum);assert.ok(sizes[1].height>sizes[0].height);assert.ok(sizes[1].row>sizes[0].row);assert.ok(sizes[1].col>sizes[0].col);
+     assert.ok(frameMs.every(ms=>ms<=200),key+' image size responds within 200 ms');
+     const persisted=await page.evaluate(key=>BLStorage.getItem(TABLE_IMAGE_SIZE_CONFIG[key].preferenceKey),key);assert.equal(Number(persisted),maximum);
+     // Same underlying preference and renderer, including resize while the report is hidden.
+     await page.keyboard.press('Escape');
+     assert.ok(await header.evaluate(button=>button===document.activeElement),'Escape returns focus to report image heading');
+     if(key==='cp'){
+       await header.click();await page.screenshot({path:path.join(assets,'report-image-size.png')});await page.keyboard.press('Escape');
+       await page.evaluate(()=>applyLanguage('tr'));assert.equal(await header.textContent(),'Görsel');assert.equal(await header.getAttribute('title'),'Görsel boyutunu değiştir');await page.evaluate(()=>applyLanguage('en'));
+     }
+     await page.evaluate(key=>{BLTableReportInline.setMode(key,false);setTableImageSize(key,tableImageSizeBounds(key).min,{persist:true});BLTableReportInline.setMode(key,true);},key);
+     await page.waitForFunction(({key,minimum})=>parseInt(getComputedStyle(document.querySelector('#blTableReport-'+key)).getPropertyValue('--bl-report-image-width'))===minimum,{key,minimum});
+     evidence.push({key,minimum,maximum,sizes,frameMs});console.log('PASS report/table shared image sizing, persistence, geometry and hidden-view update: '+key);
+   }
+   assert.deepEqual(errors,[]);fs.writeFileSync(path.join(root,'image-results.json'),JSON.stringify({ok:true,evidence,errors},null,2));return;
+ }
+ if(process.env.REPORT_PERF_ONLY==='1'){
+   const baseline=process.env.REPORT_PERF_BASE||'ea201142';
+   const changedAssets=['app-main.js','detail-drawer.css','grid-range-select.js','motion-plus.js','table-freeze.js','table-report-inline.js','ui-components.css','ui-motion.css'];
+   const originals=new Map(changedAssets.map(name=>[name,execFileSync('git',['show',baseline+':resources/app/public/'+name],{cwd:app,maxBuffer:8*1024*1024})]));
+   const baselinePage=await context.newPage();baselinePage.on('pageerror',error=>errors.push(error.message));
+   await baselinePage.route(url=>url.origin===base&&originals.has(url.pathname.slice(1)),route=>{
+     const name=new URL(route.request().url()).pathname.slice(1);
+     return route.fulfill({contentType:name.endsWith('.css')?'text/css':'application/javascript',body:originals.get(name)});
+   });
+   await openCP(baselinePage);await baselinePage.evaluate(seedCp);await baselinePage.evaluate(()=>BLTableReportInline.refreshShared());
+   const pages={baseline:baselinePage,candidate:page};
+   const samples=[];
+   for(const size of [4,300])for(let pair=0;pair<3;pair++)for(const variant of (pair%2?['candidate','baseline']:['baseline','candidate'])){
+     const target=pages[variant];await target.bringToFront();
+     await target.evaluate(size=>{
+       const seed=state.cp.rows[0],rows=Array.from({length:size},(_,i)=>({...seed,_id:i+1,'PLM ID':990001+i,'Model Name':'DEMO MODEL '+i}));
        BLTableReportInline.register('cp',{tab:'cp',table:()=>document.getElementById('cpTable'),rows:()=>rows,columns:()=>tableReportCoreColumns('cp'),images:()=>false,...tableReportInteraction('cp')});
        BLTableReportInline.setMode('cp',true);
-     },{source:sources[variant],css:styles[variant]});
-     await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
-     const measurement=await page.evaluate(()=>{
-       const raw=[];
-       for(let i=0;i<10;i++){const start=performance.now();BLTableReportInline.setMode('cp',true);document.querySelector('#blTableReport-cp').getBoundingClientRect();raw.push(performance.now()-start);}
-       return {raw,mean:raw.reduce((a,b)=>a+b,0)/raw.length,rows:document.querySelectorAll('#blTableReport-cp tbody tr[data-id]').length||300};
-     });samples.push({pair,variant,...measurement});
+       document.getElementById('blTableReport-cp').style.minWidth='2200px';
+     },size);
+     const measurement=await target.evaluate(async()=>{
+       const report=document.getElementById('blTableReport-cp'),wrap=report.closest('.tablewrap');
+       const rail=report.querySelector('[data-tr-check="0"]'),frame=()=>new Promise(r=>requestAnimationFrame(r));
+       const refresh=[],scroll=[];
+       await frame();await frame();
+       for(let i=0;i<12;i++){
+         await frame();
+         const start=performance.now();BLTableReportInline.setMode('cp',true);report.getBoundingClientRect();refresh.push(performance.now()-start);
+       }
+       for(let i=0;i<30;i++){
+         const start=performance.now();wrap.scrollLeft=i%2?220:560;rail.getBoundingClientRect();scroll.push(performance.now()-start);
+       }
+       wrap.scrollLeft=0;
+       return {refresh,scroll,rows:report.querySelectorAll('tbody tr[data-id]').length};
+     });assert.equal(measurement.rows,size);samples.push({pair,variant,...measurement});
    }
-   const evidence={base:'e6794e78fc4ec8c841f664dde7b65ba60c3cf454',scenario:'Actual Buyer Log unchanged report refresh and layout; baseline/candidate report JS and canonical CSS, same final app shell; 300 synthetic rows, 12 fields; 3 alternating pairs, 10 renders per sample',budget:'Existing report rendering: no reproducible regression; new edit and selection interactions <=200ms',samples};
-   fs.writeFileSync(path.join(root,'performance.json'),JSON.stringify(evidence,null,2));console.log(JSON.stringify(evidence,null,2));return;
+   const median=values=>{const ordered=values.slice().sort((a,b)=>a-b),middle=Math.floor(ordered.length/2);return ordered.length%2?ordered[middle]:(ordered[middle-1]+ordered[middle])/2;};
+   const summary={};
+   for(const size of [4,300]){
+     summary[size]={};
+     for(const variant of Object.keys(pages)){
+       const runs=samples.filter(sample=>sample.rows===size&&sample.variant===variant);
+       summary[size][variant]={refreshMs:median(runs.map(run=>median(run.refresh))),scrollMs:median(runs.map(run=>run.scroll.reduce((a,b)=>a+b,0)/run.scroll.length))};
+     }
+   }
+   assert.deepEqual(errors,[]);
+   const evidence={base:baseline,chromium:browser.version(),node:process.version,scenario:'Actual Buyer Log report refresh and synchronous horizontal scroll. Same isolated server, 4 and 300 synthetic rows, 3 alternating pairs per size, 12 refreshes and 30 scrolls per sample.',budget:'Existing refresh: no reproducible regression. Sticky scroll overhead <0.1 ms/sample.',summary,samples};
+   fs.writeFileSync(path.join(root,'performance.json'),JSON.stringify(evidence,null,2));console.log(summary);return;
  }
  console.log('Report rows',await page.locator('#blTableReport-cp tbody tr[data-id]').count());
  await page.screenshot({path:path.join(root,'initial.png')});
@@ -113,7 +354,7 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
 
  // Native checkbox semantics, full-height rail and mixed header state.
  await page.locator('#blTableReport-cp [data-tr-check="1"]').check();
- const rail=await page.locator('#blTableReport-cp [data-tr-check="1"]').evaluate(input=>({appearance:getComputedStyle(input).appearance,width:input.getBoundingClientRect().width,height:input.getBoundingClientRect().height,cellHeight:input.closest('td').getBoundingClientRect().height,color:getComputedStyle(input).backgroundColor,cellWidth:input.closest('td').getBoundingClientRect().width}));
+ const rail=await page.locator('#blTableReport-cp [data-tr-check="1"]').evaluate(input=>({appearance:getComputedStyle(input).appearance,width:input.getBoundingClientRect().width,height:input.getBoundingClientRect().height,cellHeight:input.closest('td').getBoundingClientRect().height,color:getComputedStyle(input,'::before').backgroundColor,cellWidth:input.closest('td').getBoundingClientRect().width}));
  assert.equal(rail.appearance,'none');assert.equal(rail.width,8);assert.equal(rail.cellWidth,8);assert.ok(Math.abs(rail.height-rail.cellHeight)<2);assert.notEqual(rail.color,'rgba(0, 0, 0, 0)');
  assert.ok(await page.locator('#blTableReport-cp [data-tr-check="all"]').evaluate(input=>input.indeterminate));
  await page.evaluate(()=>applyTheme('dark'));await page.screenshot({path:path.join(assets,'row-selection-rails.png')});await page.evaluate(()=>applyTheme('light'));
