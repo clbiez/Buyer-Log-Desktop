@@ -2,7 +2,7 @@
 // Real isolated Buyer Log UI. Playwright emulates only the desktop bitmap bridge;
 // the host's one-shot capture store has separate Node tests.
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),assert=require('node:assert/strict'),{spawn}=require('node:child_process');
-const {chromium}=require('playwright');
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const app=path.resolve(__dirname,'..'),root=fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-startup-fx-'));
 const port=Number(process.env.BUYER_LOG_STARTUP_FX_PORT||6495),base=`http://127.0.0.1:${port}`,env={...process.env,BUYER_LOG_CONFIG_PATH:path.join(root,'config.json')};
 for(const [key,dir] of Object.entries({BUYER_LOG_DATA_ROOT:'app',BUYER_LOG_SERVER_DATA_ROOT:'server',BUYER_LOG_LOCAL_DATA_ROOT:'local',BUYER_LOG_TEMP_ROOT:'temp',BUYER_LOG_AUTH_DATA_ROOT:'server/auth'})){
@@ -83,22 +83,26 @@ let browser,page,loginFrame=null,preparedPng=null,prepared=0,taken=0;
   await page.route('**/selection-action-bar.js*',async route=>{
     await new Promise(resolve=>setTimeout(resolve,1000));await route.continue();
   });
-  await page.locator('#loginBtn').click();
-  await page.waitForURL(base+'/',{waitUntil:'domcontentloaded'});
+  let releaseInitialData;
+  const initialDataHold=new Promise(resolve=>{releaseInitialData=resolve;});
+  await page.route('**/api/data?mode=initial',async route=>{
+    await initialDataHold;await route.continue();
+  });
+  await page.locator('#loginBtn').click({noWaitAfter:true});
+  await page.waitForURL(base+'/',{waitUntil:'commit'});
   console.log('Handoff:',{prepared,taken,frame:!!loginFrame});
-  await page.waitForSelector('.blThemeFxLayer',{timeout:15000});
-  await page.waitForTimeout(650);
-  const assets=path.join(app,'public/release-notes/next-assets');fs.mkdirSync(assets,{recursive:true});
-  await page.screenshot({path:path.join(assets,'startup-login-no-flash.png')});
+  // The arrival may finish while the intentionally held document is still parsing.
+  await page.waitForFunction(()=>window.startupPaints.includes('login'),null,{timeout:15000});
+  if(await page.locator('.blThemeFxLayer').isVisible())await page.screenshot({path:path.join(root,'startup-login-no-flash.png')});
+  await page.waitForLoadState('domcontentloaded');
   await page.waitForSelector('.blThemeFxLayer',{state:'detached',timeout:20000});
   const paints=await page.evaluate(()=>window.startupPaints);
   console.log('First-paint sequence:',paints);
   assert.deepEqual(paints.filter(p=>p!=='held'),['login','trivia'],'trivia must first appear through the login transition, without a flash or replay');
   assert.equal(prepared,1);assert.equal(taken,1);assert.equal(loginFrame,null);
-  await page.waitForSelector('[data-boot-continue]',{timeout:60000});
-  assert.ok(await page.locator('#blBootGuard').isVisible(),'trivia waits for explicit Continue');
-  await page.evaluate(()=>BLMotionPlusTheme.save({effect:'circle',speed:1,size:100}));
-  await page.locator('[data-boot-continue]').focus();await page.keyboard.press('Enter');
+  assert.ok(await page.locator('#blBootGuard').isVisible(),'trivia waits for the authenticated app shell');
+  assert.equal(await page.locator('[data-boot-continue]').count(),0);
+  releaseInitialData();
   await page.waitForSelector('.blThemeFxLayer');
   await page.waitForTimeout(1000);
   await page.screenshot({path:path.join(root,'startup-trivia-folding.png')});
@@ -126,7 +130,7 @@ let browser,page,loginFrame=null,preparedPng=null,prepared=0,taken=0;
   // after the hold deadline. None may cover trivia after it has become visible.
   for(const scenario of ['missing','rejected','late']){
     const fallback=await context.newPage();fallback.on('pageerror',e=>errors.push(e.message));
-    await fallback.goto(base+'/?arrivalCase='+scenario,{waitUntil:'domcontentloaded'});
+    await fallback.goto(base+'/?module=overview&arrivalCase='+scenario,{waitUntil:'domcontentloaded'});
     await fallback.waitForSelector('#blBootGuard');
     await fallback.waitForFunction(()=>!document.documentElement.dataset.blStartupArrival);
     await fallback.waitForTimeout(1500);
@@ -135,8 +139,8 @@ let browser,page,loginFrame=null,preparedPng=null,prepared=0,taken=0;
     await fallback.close();
   }
   assert.deepEqual(errors,[],'browser errors');
-  console.log('PASS login → trivia → shell: real bitmap folding, empty password, one-shot handoff, explicit Continue, keyboard focus, preference preserved; TR/EN × 2 themes × 4 sizes; reduced/off/software/browser guards');
-})().catch(async e=>{console.error(e);if(page){console.error('UI:',await page.evaluate(()=>({url:location.href,error:document.getElementById('error')?.textContent,boot:document.getElementById('blBootGuard')?.textContent.slice(-400),js:document.getElementById('blErrBox')?.textContent})));await page.screenshot({path:path.join(root,'failure.png')});}process.exitCode=1;}).finally(async()=>{
+  console.log('PASS login → trivia → shell: real bitmap folding, empty password, one-shot handoff, automatic opening, keyboard focus, preference preserved; TR/EN × 2 themes × 4 sizes; reduced/off/software/browser guards');
+})().catch(async e=>{console.error(e);if(page){console.error('UI:',await page.evaluate(()=>({url:location.href,paints:window.startupPaints,error:document.getElementById('error')?.textContent,boot:document.getElementById('blBootGuard')?.textContent.slice(-400),js:document.getElementById('blErrBox')?.textContent})));await page.screenshot({path:path.join(root,'failure.png')});}process.exitCode=1;}).finally(async()=>{
   if(browser)await browser.close();
   if(server.exitCode===null){const stopped=new Promise(r=>server.once('exit',r));server.kill('SIGTERM');const timer=setTimeout(()=>server.kill('SIGKILL'),5000);await stopped;clearTimeout(timer);}
   fs.closeSync(log);

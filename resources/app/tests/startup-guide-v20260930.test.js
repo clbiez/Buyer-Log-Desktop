@@ -10,7 +10,7 @@ const INDEX=read('index.html'),APP=read('app-main.js'),GUIDE=read('buyerlog-guid
 const DATA=require('../public/buyerlog-guide-data.js');
 // Without the desktop capture bridge, Continue reveals the app immediately.
 function finishDismissal(h){assert.equal(h.nodes.has('blBootGuard'),false);}
-function guardHarness(search=''){
+function guardHarness(search='',desktop=false){
   const listeners={},nodes=new Map(),timers=new Map(),metrics=new Map();let tick=0,stops=0,reloads=0,clock=0;
   function node(id=''){
     const n={id,textContent:'',dataset:{},style:{},isConnected:true,children:[],classList:{add(){},contains(){return false;}},setAttribute(){},removeAttribute(){},getClientRects(){return [{}];},focus(){doc.activeElement=n;},contains(o){return o===n||n.children.includes(o);},appendChild(c){n.children.push(c);},remove(){n.isConnected=false;nodes.delete(n.id);}};
@@ -21,6 +21,7 @@ function guardHarness(search=''){
   const doc={readyState:'loading',activeElement:null,body:node(),documentElement:node(),getElementById:id=>nodes.get(id)||null,createElement:()=>node(),addEventListener:(name,fn)=>{(listeners['doc:'+name]??=[]).push(fn);}};
   doc.body.appendChild=el=>{nodes.set(el.id,el);};
   const win={addEventListener:(name,fn)=>{(listeners[name]??=[]).push(fn);},dispatchEvent:ev=>{for(const fn of listeners[ev.type]||[])fn(ev);},BLThinkingOrbBreathing:{attach:()=>({stop(){stops++;}})},BLGuide:{mountStartup(){},stage(){}}};
+  if(desktop)win.buyerLogDesktop={};
   win.BLPerf={origin:()=>0,record:(name,value)=>metrics.set(name,value)};
   const context=vm.createContext({window:win,document:doc,URLSearchParams,performance:{now:()=>clock},console:{error(){}},sessionStorage:{removeItem(){},getItem(){return null;},setItem(){}},location:{search,replace(){reloads++;}},fetch:async()=>({ok:true,json:async()=>({app:'Buyer Log'})}),AbortSignal:{timeout(){}},CustomEvent:class {constructor(type,options){this.type=type;this.detail=options?.detail;}},setTimeout:(fn,ms)=>{const id=++tick;timers.set(id,{fn,ms});return id;},clearTimeout:id=>timers.delete(id)});
   const script=INDEX.slice(INDEX.indexOf('<script>\n(function(){')+8,INDEX.indexOf('</script>',INDEX.indexOf('<script>\n(function(){')));
@@ -28,6 +29,27 @@ function guardHarness(search=''){
   win.BLBootGuard.mount();
   return {win,doc,nodes,timers,listeners,metrics,setClock(value){clock=value;},get stops(){return stops;},get reloads(){return reloads;},profile(){nodes.set('currentUserInitials',{textContent:'AB'});nodes.set('accessModeBadge',{textContent:'Buyer'});win.dispatchEvent({type:'bl:user-access-applied',detail:{id:'sample',displayName:'Example User'}});}};
 }
+test('desktop landing automatically opens after the authenticated workspace is ready',()=>{
+  const h=guardHarness('',true),motion=[];
+  h.win.BLMotionPlus={startup:reveal=>{motion.push(reveal);return true;}};
+  h.setClock(100);readyAll(h,['core','data','ui']);
+  assert.ok(h.nodes.has('blBootGuard'),'the profile is still required');
+  assert.deepEqual(motion,[]);
+  h.profile();
+  assert.equal(Boolean(h.nodes.get('blBootGuard').card?.children.some(c=>c.dataset.bootContinue)),false);
+  assert.equal(motion.length,1,'no click is needed to start the transition');
+  h.setClock(140);motion[0]();finishDismissal(h);
+  assert.equal(h.metrics.get('startupUserWaitMs'),0);
+  assert.equal(h.metrics.get('firstUsableInteractionMs'),140);
+});
+test('an explicit desktop module keeps its existing primary-screen and Continue behavior',()=>{
+  const h=guardHarness('?module=cp',true);
+  readyAll(h,['core','data']);h.profile();
+  const guard=h.nodes.get('blBootGuard');
+  assert.equal(guard.dataset.ready,undefined);
+  h.win.BLBootGuard.ready('ui');
+  assert.ok(guard.card.children.some(c=>c.dataset.bootContinue));
+});
 test('Continue keeps the trivia screen until capture, then completes exactly once and restores visible keyboard focus',()=>{
   const h=guardHarness(),pending=[];let completed=0;
   h.win.BLMotionPlus={startup:update=>{pending.push(update);return true;}};
