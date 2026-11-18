@@ -26,8 +26,13 @@ function createInstalledManager({bootstrapCore,trustRoot=bootstrapCore,portableR
   return path.resolve(core);
  }
  function verifyCore(core,m){
-  for(const expected of m.files){const actual=F.metadata(core,expected.path);if(actual.size!==expected.size||actual.sha256!==expected.sha256)mismatch('PATCH_FILE_MISMATCH');}
-  if(F.inventory(core,{exclude:relative=>relative===F.RECEIPT}).length!==m.files.length)mismatch('PATCH_FILE_MISMATCH');
+  const expectedFiles=new Map(m.files.map(file=>[file.path,file]));
+  const actualFiles=F.inventory(core,{exclude:relative=>relative===F.RECEIPT});
+  if(actualFiles.length!==expectedFiles.size)mismatch('PATCH_FILE_MISMATCH');
+  for(const actual of actualFiles){
+   const expected=expectedFiles.get(actual.path);
+   if(!expected||actual.size!==expected.size||actual.sha256!==expected.sha256)mismatch('PATCH_FILE_MISMATCH');
+  }
  }
  function verifyStaged(pending){
   const core=managedCore(pending.appCoreRoot),receipt=F.readJsonStrict(F.regularFile(core,F.RECEIPT)),m=receipt.manifest;

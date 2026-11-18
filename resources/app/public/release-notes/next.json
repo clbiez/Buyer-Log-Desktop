@@ -12,6 +12,20 @@
   },
   "changes": [
     {
+      "id": "launcher-faster-file-verification",
+      "type": "improvement",
+      "module": {"tr": "Açılış", "en": "Startup"},
+      "title": {"tr": "Açılışta daha az disk işlemi", "en": "Less disk work at startup"},
+      "body": {
+        "tr": "Buyer Log başlatıcısı program dosyalarını doğrularken klasör sorgularını azaltır. İmzalı yama kurulumlarında her dosya bir doğrulama turunda bir kez okunur. Her açılışta dosya listesi ve SHA-256 özetleri denetlenir.",
+        "en": "The Buyer Log launcher makes fewer directory checks when verifying program files. With a signed patch installed, each file is read once per verification pass. Startup still verifies the file list and SHA-256 hashes."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {"tr": "İyileştirme açılış penceresinin arkasında çalışan dosya doğrulamasıyla ilgilidir.", "en": "The improvement is in file verification behind the startup window."}
+      }
+    },
+    {
       "id": "collection-price-drawer-direct-offer",
       "type": "fix",
       "module": {
