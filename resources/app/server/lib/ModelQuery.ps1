@@ -40,6 +40,85 @@ param(
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
+# --- Hızlı CSV yazıcısı (derlenmiş C#) ----------------------------------------
+# Sonuç satırlarını CSV'ye çeviren sıcak döngü PowerShell'de hücre başına
+# ~20 µs harcıyordu: 139 bin satırlık ASAS sonucunda aktarım ~115-160 sn.
+# Aynı biçimlendirme kuralları (Write-Row csv dalı) derlenmiş C# ile ~6-9 sn.
+# Saha kabulü (kaynak doğrulama aracı, 2026-11-18): 70,7 MB ASAS ve 14 MB IAS
+# sonuç dosyaları iki yolda bayt bayt (SHA-256) aynı, 3 tur.
+# Derleme başarısız olursa (ör. kurumsal kısıtlama) PowerShell döngüsü aynen
+# çalışır; hangi yolun kullanıldığı özetteki csvWriter alanında görünür.
+$script:fastCsv = $false
+try {
+  Add-Type -Language CSharp -ReferencedAssemblies System.Data -ErrorAction Stop -TypeDefinition @'
+using System;
+using System.Data;
+using System.Globalization;
+using System.IO;
+using System.Text;
+
+public static class BLFastCsv
+{
+    static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
+
+    // ModelQuery.ps1 Write-Row (csv) ile birebir aynı kurallar.
+    public static void AppendCell(StringBuilder sb, object cell)
+    {
+        if (cell == null || cell is DBNull) return;
+        string text;
+        if (cell is string) text = (string)cell;
+        else if (cell is DateTime) { sb.Append(((DateTime)cell).ToString("yyyy-MM-dd")); return; }
+        else if (cell is double || cell is decimal || cell is float || cell is int || cell is long) { sb.Append(string.Format(Inv, "{0}", cell)); return; }
+        else text = Convert.ToString(cell, Inv);
+        if (text == null || text.Length == 0) return;
+        if (text.IndexOf('\n') >= 0 || text.IndexOf('\r') >= 0) text = text.Replace("\r\n", " ").Replace("\n", " ").Replace("\r", " ");
+        if (text.IndexOf('"') >= 0 || text.IndexOf(';') >= 0) sb.Append('"').Append(text.Replace("\"", "\"\"")).Append('"');
+        else sb.Append(text);
+    }
+
+    // ADODB GetRows(...) dizisi: [alan, satır]. Yazılan satır sayısını döndürür.
+    public static int WriteBatch(TextWriter writer, object[,] batch, int rows, int fields, int remaining)
+    {
+        StringBuilder sb = new StringBuilder(16384);
+        int written = 0;
+        for (int r = 0; r < rows; r++)
+        {
+            if (written >= remaining) break;
+            sb.Length = 0;
+            for (int c = 0; c < fields; c++) { if (c > 0) sb.Append(';'); AppendCell(sb, batch[c, r]); }
+            writer.WriteLine(sb.ToString());
+            written++;
+        }
+        return written;
+    }
+
+    public static bool Truncated;
+
+    // ADOMD.NET okuyucusu (IDataReader).
+    public static int WriteReader(TextWriter writer, IDataReader reader, int fields, int remaining)
+    {
+        Truncated = false;
+        StringBuilder sb = new StringBuilder(16384);
+        object[] values = new object[fields];
+        int written = 0;
+        while (reader.Read())
+        {
+            if (written >= remaining) { Truncated = true; break; }
+            reader.GetValues(values);
+            sb.Length = 0;
+            for (int c = 0; c < fields; c++) { if (c > 0) sb.Append(';'); AppendCell(sb, values[c]); }
+            writer.WriteLine(sb.ToString());
+            written++;
+        }
+        return written;
+    }
+}
+'@
+  $script:fastCsv = $true
+} catch {
+  if ('BLFastCsv' -as [type]) { $script:fastCsv = $true }
+}
+
 # Konsol çıktısını UTF-8'e sabitle. Windows'ta PowerShell varsayılan olarak OEM kod
 # sayfasıyla (cp857 vb.) yazar; Node stdout'u UTF-8 okuduğu için Türkçe karakterler
 # bozuk görünüyordu ("sözdizimi" → "s??zdizimi"). Bu satır o bozulmayı engeller.
@@ -255,11 +334,16 @@ try {
         for ($i = 0; $i -lt $fieldCount; $i++) { $columns += (Translate-Header $reader.GetName($i)) }
         Open-Writer $target $Format
         Write-Header $columns $Format
-        while ($reader.Read()) {
-          if ($script:rowsWritten -ge $MaxRows) { $truncated = $true; break }
-          $values = New-Object object[] $fieldCount
-          [void]$reader.GetValues($values)
-          Write-Row $columns $values $Format
+        if ($script:fastCsv -and $Format -eq "csv" -and $PreviewRows -le 0) {
+          $script:rowsWritten += [BLFastCsv]::WriteReader($script:writer, $reader, $fieldCount, $MaxRows - $script:rowsWritten)
+          if ([BLFastCsv]::Truncated) { $truncated = $true }
+        } else {
+          while ($reader.Read()) {
+            if ($script:rowsWritten -ge $MaxRows) { $truncated = $true; break }
+            $values = New-Object object[] $fieldCount
+            [void]$reader.GetValues($values)
+            Write-Row $columns $values $Format
+          }
         }
       } finally { $reader.Close() }
       Close-Writer $Format
@@ -289,11 +373,18 @@ try {
         while (-not $recordset.EOF) {
           $batch = $recordset.GetRows(2000)
           $batchRows = $batch.GetLength(1)
-          for ($r = 0; $r -lt $batchRows; $r++) {
-            if ($script:rowsWritten -ge $MaxRows) { $truncated = $true; break }
-            $values = New-Object object[] $fieldCount
-            for ($c = 0; $c -lt $fieldCount; $c++) { $values[$c] = $batch[$c, $r] }
-            Write-Row $columns $values $Format
+          if ($script:fastCsv -and $Format -eq "csv" -and $PreviewRows -le 0) {
+            $remaining = $MaxRows - $script:rowsWritten
+            $written = [BLFastCsv]::WriteBatch($script:writer, $batch, $batchRows, $fieldCount, $remaining)
+            $script:rowsWritten += $written
+            if ($written -lt $batchRows) { $truncated = $true }
+          } else {
+            for ($r = 0; $r -lt $batchRows; $r++) {
+              if ($script:rowsWritten -ge $MaxRows) { $truncated = $true; break }
+              $values = New-Object object[] $fieldCount
+              for ($c = 0; $c -lt $fieldCount; $c++) { $values[$c] = $batch[$c, $r] }
+              Write-Row $columns $values $Format
+            }
           }
           if ($truncated) { break }
         }
@@ -318,6 +409,7 @@ try {
   Write-Summary ([ordered]@{
     ok          = $true
     provider    = $provider
+    csvWriter   = $(if ($script:fastCsv) { "csharp" } else { "powershell" })
     server      = $Server
     catalog     = $Catalog
     rowCount    = $script:rowsWritten
@@ -350,6 +442,7 @@ catch {
   Write-Summary ([ordered]@{
     ok        = $false
     provider  = $provider
+    csvWriter = $(if ($script:fastCsv) { "csharp" } else { "powershell" })
     server    = $Server
     catalog   = $Catalog
     error     = $message

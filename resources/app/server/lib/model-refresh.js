@@ -1022,6 +1022,8 @@ async function queryConnectionRows(item, options = {}) {
       normalization: databaseNormalization ? databaseNormalization.stats : null,
       elapsedMs: Number(result.elapsedMs) || 0,
       provider: String(result.provider || ''),
+      // ModelQuery.ps1: 'csharp' (derlenmiş hızlı yazıcı) | 'powershell' (geri dönüş)
+      csvWriter: String(result.csvWriter || ''),
       outFile: '',
       error: '',
     },
