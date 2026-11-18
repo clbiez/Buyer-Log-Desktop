@@ -5,8 +5,8 @@ const source=fs.readFileSync(path.join(__dirname,'../electron/launcher-core.js')
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 const until=async check=>{for(let i=0;i<400&&!check();i++)await new Promise(resolve=>setTimeout(resolve,5));};
 
-function fixture({pending=false,locked=true,corrupt=false}={}){
-  const calls=[],notices=[];
+function fixture({pending=false,locked=true,corrupt=false,rollback=false}={}){
+  const calls=[],notices=[];let activated=null;
   const pointer={appCoreRoot:'/portable/.buyerlog-versions/current/app',version:'7.0.313'};
   const app=Object.assign(new EventEmitter(),{isPackaged:true,setPath:name=>calls.push(name),requestSingleInstanceLock:()=>locked,
     whenReady:()=>Promise.resolve(),exit:code=>calls.push('exit:'+code),quit(){},relaunch(){}});
@@ -17,8 +17,8 @@ function fixture({pending=false,locked=true,corrupt=false}={}){
     isDestroyed(){return Boolean(this.destroyed);}
     destroy(){this.destroyed=true;this.emit('closed');}
   }
-  const lifecycle={rollbackExistingTrial:()=>calls.push('rollback')&&null,readState:()=>({pending:pending?{ready:true,appCoreRoot:'/pending',version:'7.0.314'}:null}),
-    currentPointer:()=>pointer,activatePending:()=>{calls.push('activate');return null;}};
+  const lifecycle={rollbackExistingTrial:()=>{calls.push('rollback');return rollback?{failed:{version:'7.0.314'},restored:pointer}:null;},readState:()=>({pending:pending?{ready:true,appCoreRoot:'/pending',version:'7.0.314'}:null}),
+    currentPointer:()=>activated||pointer,activatePending:()=>{calls.push('activate');if(pending)activated={appCoreRoot:'/pending',version:'7.0.314'};return null;}};
   const context={__dirname:'/trusted/electron',module:{exports:{}},global:{},setTimeout,clearTimeout,setImmediate,
     process:{env:{},execPath:'/portable/BuyerLog.exe',pid:1},require:name=>{
       if(name==='fs')return {readFileSync:()=>'{"launcherVersion":"1.2.0"}',mkdirSync(){},appendFileSync(){}};
@@ -29,7 +29,7 @@ function fixture({pending=false,locked=true,corrupt=false}={}){
       if(name==='./update/semver')return {compareSemver:()=>0};
       if(name==='./manual-patch/manager')return {createInstalledManager:()=>({})};
       if(name==='./manual-patch/core-verification')return {verifyPackagedCore:core=>{calls.push('verify:'+core);if(corrupt)throw Object.assign(new Error('changed'),{code:'UPDATE_CORE_INTEGRITY'});}};
-      if(name===path.join(pointer.appCoreRoot,'electron/main.js')){calls.push('main');return;}
+      if(name===path.join(pointer.appCoreRoot,'electron/main.js')||name===path.join('/pending','electron/main.js')){calls.push('main');return;}
       throw new Error('Unexpected require: '+name);
     }};
   vm.runInNewContext(source,context);context.module.exports.start();
@@ -46,17 +46,26 @@ test('notice paints before rollback/verification; ordinary launch hashes its cor
   assert.equal(f.calls.filter(call=>call.startsWith('verify:')).length,1);
   assert.equal(f.calls.at(-1),'main');
 });
-test('a pending activation still validates the rollback target before activation',async()=>{
+test('a pending activation hashes only the new core; the rollback target is hashed when it is used',async()=>{
   const f=fixture({pending:true});await tick();f.notices[0].emit('ready-to-show');await until(()=>f.calls.includes('main'));
-  assert.ok(f.calls.indexOf('verify:/portable/.buyerlog-versions/current/app')<f.calls.indexOf('activate'));
-  assert.ok(f.calls.includes('verify:/pending'));
-  // Each core is scanned once per launch: the selected core is not re-hashed.
-  assert.deepEqual(f.calls.filter(call=>call.startsWith('verify:')),['verify:/portable/.buyerlog-versions/current/app','verify:/pending']);
+  // The current core is not re-hashed before activation: a rollback launch
+  // verifies the restored core before main.js (see the rollback test below).
+  assert.deepEqual(f.calls.filter(call=>call.startsWith('verify:')),['verify:/pending']);
+  assert.ok(f.calls.indexOf('verify:/pending')<f.calls.indexOf('activate'));
   // The notice reports every launcher step of the update, in order.
   const steps=f.calls.filter(call=>call.startsWith('step:'));
-  assert.deepEqual(steps.slice(0,4),['step:verify-current','step:verify-new','step:backup','step:verify']);
+  assert.deepEqual(steps.slice(0,3),['step:verify-new','step:backup','step:verify']);
   assert.equal(steps.at(-1),'step:start');
   assert.ok(f.calls.indexOf('step:backup')<f.calls.indexOf('activate'),'the backup step is shown before the synchronous checkpoint');
+});
+test('a rollback launch verifies the restored core before loading it',async()=>{
+  const f=fixture({rollback:true});await tick();f.notices[0].emit('ready-to-show');await until(()=>f.calls.includes('main'));
+  assert.ok(f.calls.indexOf('rollback')<f.calls.indexOf('verify:/portable/.buyerlog-versions/current/app'));
+  assert.ok(f.calls.indexOf('verify:/portable/.buyerlog-versions/current/app')<f.calls.indexOf('main'));
+});
+test('a corrupt restored core stays blocked after rollback',async()=>{
+  const f=fixture({rollback:true,corrupt:true});await tick();f.notices[0].emit('ready-to-show');await tick();await tick();await tick();
+  assert.equal(f.calls.includes('main'),false);assert.ok(f.calls.includes('exit:1'));
 });
 test('a corrupt core remains blocked after the early notice',async()=>{
   const f=fixture({corrupt:true});await tick();f.notices[0].emit('ready-to-show');await tick();await tick();

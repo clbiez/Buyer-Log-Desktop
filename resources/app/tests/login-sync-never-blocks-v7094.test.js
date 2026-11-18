@@ -42,7 +42,7 @@ test('login controls remain enabled while sync is starting, retrying or failed',
 });
 
 test('successful credentials navigate immediately and sync bootstrap is background-only', () => {
-  const submit = block(LOGIN, "$('loginForm').addEventListener('submit'", 'async function restoreLastUser()');
+  const submit = block(LOGIN, "$('loginForm').addEventListener('submit'", 'function restoreLastUser()');
   assert.match(submit, /void runUserBootstrap\(\)/);
   assert.match(submit, /location\.replace\('\/'\)/);
   assert.ok(submit.indexOf('void runUserBootstrap();') < submit.indexOf("location.replace('/');"));

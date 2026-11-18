@@ -172,7 +172,10 @@ test('modül sekmesi Genel Bakış’ı ve onun CP bağımlılığını açılı
   const initialLoad=startup.indexOf('await loadInitialBuyerLogData(');
   assert.ok(bootModule>=0&&initialLoad>bootModule,'boot module must be selected before initial data hydration');
   assert.match(extractFunction(APP, 'renderStartupActiveModule'), /if\(activeTab==='overview'&&!window\.BL_BOOT_MODULE\)renderOverview\(\);/);
-  assert.match(APP, /if\(state\.overviewDeferred&&currentActiveTab\(\)==='overview'\)void ensureOverviewLoaded\(\);/);
+  // Desktop automatic landing loads the Overview projection through the primary
+  // screen wait; browser and explicit module tabs keep the post-reveal load.
+  assert.match(APP, /if\(!window\.BLBootGuard\?\.autoContinue&&state\.overviewDeferred&&currentActiveTab\(\)==='overview'\)void ensureOverviewLoaded\(\);/);
+  assert.match(extractFunction(APP, 'waitForStartupPrimaryScreen'), /if\(tab==='overview'&&state\.overviewDeferred\)return ensureOverviewLoaded\(\);/);
   assert.match(extractFunction(APP, 'switchTab'), /if\(tab==='overview'&&state\.overviewDeferred\)void ensureOverviewLoaded\(\);/);
 });
 

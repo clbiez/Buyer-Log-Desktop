@@ -26,23 +26,42 @@ function createInstalledManager({bootstrapCore,trustRoot=bootstrapCore,portableR
   return path.resolve(core);
  }
  function verifyCore(core,m){
-  for(const expected of m.files){const actual=F.metadata(core,expected.path);if(actual.size!==expected.size||actual.sha256!==expected.sha256)mismatch('PATCH_FILE_MISMATCH');}
-  if(F.inventory(core,{exclude:relative=>relative===F.RECEIPT}).length!==m.files.length)mismatch('PATCH_FILE_MISMATCH');
+  const expectedFiles=new Map(m.files.map(file=>[file.path,file]));
+  const actualFiles=F.inventory(core,{exclude:relative=>relative===F.RECEIPT});
+  if(actualFiles.length!==expectedFiles.size)mismatch('PATCH_FILE_MISMATCH');
+  for(const actual of actualFiles){
+   const expected=expectedFiles.get(actual.path);
+   if(!expected||actual.size!==expected.size||actual.sha256!==expected.sha256)mismatch('PATCH_FILE_MISMATCH');
+  }
  }
- function verifyStaged(pending){
+ // İmzalı yama çekirdeği de aynı denetimlerle, içerik işçi hatlarında taranır.
+ async function verifyCoreAsync(core,m){
+  const expectedFiles=new Map(m.files.map(file=>[file.path,file]));
+  const actualFiles=await F.inventoryParallel(core,{exclude:relative=>relative===F.RECEIPT});
+  if(actualFiles.length!==expectedFiles.size)mismatch('PATCH_FILE_MISMATCH');
+  for(const actual of actualFiles){
+   const expected=expectedFiles.get(actual.path);
+   if(!expected||actual.size!==expected.size||actual.sha256!==expected.sha256)mismatch('PATCH_FILE_MISMATCH');
+  }
+ }
+ function stagedReceipt(pending){
   const core=managedCore(pending.appCoreRoot),receipt=F.readJsonStrict(F.regularFile(core,F.RECEIPT)),m=receipt.manifest;
   authenticate(m);
   if(pending.version!==m.baseVersion||pending.sha256!==m.artifact.sha256||pending.manualPatch?.sequence!==m.sequence||pending.manualPatch.manifestSha256!==manifestHash(m))mismatch('PATCH_STAGED_INVALID');
   const state=readState(),key=m.baseVersion+':'+m.baseSourceCommit;
   if(state?.manualPatchWatermarks?.[key]!==m.sequence)mismatch('PATCH_REPLAY');
-  verifyCore(core,m);return {manifest:m,core};
+  return {manifest:m,core};
  }
- function verifyInstalled(selected){
+ function installedReceipt(selected){
   const core=managedCore(selected.appCoreRoot),receipt=F.readJsonStrict(F.regularFile(core,F.RECEIPT)),m=receipt.manifest;
   authenticate(m);
   if(selected.version!==m.baseVersion||(readState()?.manualPatchWatermarks?.[m.baseVersion+':'+m.baseSourceCommit]||0)<m.sequence)mismatch('PATCH_REPLAY');
-  verifyCore(core,m);return {manifest:m,core};
+  return {manifest:m,core};
  }
+ function verifyStaged(pending){const r=stagedReceipt(pending);verifyCore(r.core,r.manifest);return r;}
+ function verifyInstalled(selected){const r=installedReceipt(selected);verifyCore(r.core,r.manifest);return r;}
+ async function verifyStagedAsync(pending){const r=stagedReceipt(pending);await verifyCoreAsync(r.core,r.manifest);return r;}
+ async function verifyInstalledAsync(selected){const r=installedReceipt(selected);await verifyCoreAsync(r.core,r.manifest);return r;}
  function context(m){
   authenticate(m);const saved=readState(),lifecycle=createLauncherState({bootstrapCore,portableRoot}),current=lifecycle.currentPointer(),anchor=F.readBootstrap(current.appCoreRoot);
   if(current.version!==m.baseVersion||anchor.sourceCommit!==m.baseSourceCommit)mismatch();
@@ -99,6 +118,6 @@ function createInstalledManager({bootstrapCore,trustRoot=bootstrapCore,portableR
    }
   });
  }
- return {preview,apply,verifyStaged,verifyInstalled};
+ return {preview,apply,verifyStaged,verifyInstalled,verifyStagedAsync,verifyInstalledAsync};
 }
 module.exports={createInstalledManager,manifestHash};

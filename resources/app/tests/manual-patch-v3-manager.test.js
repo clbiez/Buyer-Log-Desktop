@@ -25,6 +25,20 @@ test('damaged archive and changed target files cannot be activated',t=>{
  fs.writeFileSync(path.join(prepared.pending.appCoreRoot,'electron/main.js'),'throw Error("must not execute");');
  assert.throws(()=>f.manager().verifyStaged(prepared.pending),{code:'PATCH_FILE_MISMATCH'});
 });
+test('installed signed patches read each program file once and reject an unexpected replacement path',t=>{
+ const f=fixture(t),p=f.build(),manager=f.manager();
+ const selected=manager.apply(p.manifest,p.archiveFile).pending;
+ const file=path.join(selected.appCoreRoot,'public/index.html'),open=fs.openSync;
+ let reads=0;
+ t.mock.method(fs,'openSync',(name,...args)=>{
+  if(name===file)reads++;
+  return open(name,...args);
+ });
+ assert.equal(manager.verifyInstalled(selected).core,selected.appCoreRoot);
+ assert.equal(reads,1);
+ fs.renameSync(file,path.join(path.dirname(file),'unexpected.html'));
+ assert.throws(()=>manager.verifyInstalled(selected),{code:'PATCH_FILE_MISMATCH'});
+});
 test('a modified installed kernel is rejected before its code can execute',t=>{
  const f=fixture(t),p=f.build(),sentinel=path.join(f.root,'kernel-executed');
  fs.writeFileSync(path.join(f.base,'electron/manual-patch/kernel/shared-file-transaction.js'),`require('fs').writeFileSync(${JSON.stringify(sentinel)},'bad');`);
@@ -93,4 +107,24 @@ test('verified predecessor history carries all supported prior file hashes and r
  const changed=structuredClone(first.manifest);changed.sourceCommit='d'.repeat(40);
  assert.throws(()=>f.build({sequence:2,previousManifest:changed}),{code:'PATCH_SIGNATURE_INVALID'});
  assert.throws(()=>require('../scripts/signed-manual-patch').historyFrom(first.manifest,f.base,3),{code:'PATCH_HISTORY_INVALID'});
+});
+test('the launcher\'s parallel patch verification keeps the receipt, replay and file checks of the sequential path',async t=>{
+ const f=fixture(t),p=f.build(),manager=f.manager();
+ const pending=manager.apply(p.manifest,p.archiveFile).pending;
+ assert.equal((await manager.verifyStagedAsync(pending)).core,pending.appCoreRoot);
+ assert.equal((await manager.verifyInstalledAsync(pending)).core,pending.appCoreRoot);
+ fs.writeFileSync(path.join(pending.appCoreRoot,'electron/main.js'),'throw Error("must not execute");');
+ await assert.rejects(manager.verifyStagedAsync(pending),{code:'PATCH_FILE_MISMATCH'});
+ await assert.rejects(manager.verifyInstalledAsync(pending),{code:'PATCH_FILE_MISMATCH'});
+ await assert.rejects(manager.verifyStagedAsync({...pending,sha256:'0'.repeat(64)}),{code:'PATCH_STAGED_INVALID'});
+ await assert.rejects(manager.verifyInstalledAsync({...pending,version:'7.0.293'}),{code:'PATCH_REPLAY'});
+});
+test('a staged patch older than the accepted watermark is rejected as a replay on both verification paths',async t=>{
+ const f=fixture(t),p=f.build(),manager=f.manager();
+ const pending=manager.apply(p.manifest,p.archiveFile).pending,key='7.0.294:'+'a'.repeat(40);
+ const state=JSON.parse(fs.readFileSync(f.stateFile,'utf8'));
+ assert.equal(state.manualPatchWatermarks[key],1);
+ state.manualPatchWatermarks[key]=2;fs.writeFileSync(f.stateFile,JSON.stringify(state));
+ assert.throws(()=>manager.verifyStaged(pending),{code:'PATCH_REPLAY'});
+ await assert.rejects(manager.verifyStagedAsync(pending),{code:'PATCH_REPLAY'});
 });

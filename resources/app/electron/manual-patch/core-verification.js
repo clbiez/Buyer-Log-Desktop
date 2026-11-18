@@ -17,15 +17,19 @@ function readHostReceipt(core){
 
 // The integrity manifest itself is installed inside protected electron/ code.
 // Every application byte is checked before main.js or the backend is required.
-function verifyPackagedCore(core,version){
- const m=F.readJsonStrict(F.regularFile(core,'electron/app-integrity.json'));
+const MANIFEST='electron/app-integrity.json';
+function readExpected(core,version){
+ const m=F.readJsonStrict(F.regularFile(core,MANIFEST));
  if(m?.schemaVersion!==1||m.version!==version||!m.files||typeof m.files!=='object'||Array.isArray(m.files)||m.fileCount!==Object.keys(m.files).length||m.fileCount<4)S.fail('UPDATE_CORE_INTEGRITY','Kurulum bütünlük kaydı geçersiz.','The installation integrity record is invalid.');
  const host=readHostReceipt(core),expected={...m.files};
  if(host){
   if(m.files[HOST_ENTRY]!==host.legacySha256||Object.hasOwn(m.files,HOST_LEGACY))S.fail('UPDATE_CORE_INTEGRITY','Başlatıcı geçiş kaydı bu kuruluma ait değil.','The launcher migration record does not belong to this installation.');
   expected[HOST_LEGACY]=host.legacySha256;expected[HOST_ENTRY]=host.stage0Sha256;
  }
- const actual=F.inventory(core,{exclude:rel=>rel==='electron/app-integrity.json'||rel===F.RECEIPT||rel===HOST_RECEIPT});
+ return {host,expected};
+}
+const excludeIntegrityRecords=rel=>rel===MANIFEST||rel===F.RECEIPT||rel===HOST_RECEIPT;
+function compare(core,{host,expected},actual){
  if(actual.length!==Object.keys(expected).length)S.fail('UPDATE_CORE_INTEGRITY','Kurulum dosya listesi değişmiş; imzalı tam paketi yeniden kurun.','Installation file inventory changed; reinstall the signed full package.');
  for(const file of actual){
   // Kesintiye uğramış geçişte giriş dosyası henüz özgün ya da önceki stage-0 hâlinde olabilir.
@@ -34,4 +38,14 @@ function verifyPackagedCore(core,version){
  }
  return {verified:true,fileCount:actual.length,core:path.resolve(core),launcherHost:Boolean(host)};
 }
-module.exports={verifyPackagedCore,readHostReceipt,HOST_RECEIPT,HOST_ENTRY,HOST_LEGACY};
+function verifyPackagedCore(core,version){
+ const expected=readExpected(core,version);
+ return compare(core,expected,F.inventory(core,{exclude:excludeIntegrityRecords}));
+}
+// Aynı sözleşme; dosyalar eşzamanlı okunur. Sonuç ve hata kodları aynıdır.
+async function verifyPackagedCoreParallel(core,version,{concurrency='auto',Worker}={}){
+ const expected=readExpected(core,version),profile={};
+ const result=compare(core,expected,await F.inventoryParallel(core,{exclude:excludeIntegrityRecords,concurrency,profile,Worker}));
+ return {...result,profile};
+}
+module.exports={verifyPackagedCore,verifyPackagedCoreParallel,readHostReceipt,HOST_RECEIPT,HOST_ENTRY,HOST_LEGACY};
