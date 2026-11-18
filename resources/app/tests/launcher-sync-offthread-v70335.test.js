@@ -12,6 +12,7 @@ const {verifyPackagedCore}=require('../electron/manual-patch/core-verification')
 const {createLauncherHost}=require('../electron/update/launcher-host');
 const {verifyPackagedCoreAsync}=require('../electron/update/core-verify-async');
 const {createLauncherState}=require('../electron/update/launcher-state');
+const {launcherVersion}=require('../electron/update/launcher-version.json');
 
 function setup(t){
   const f=fixture(t);f.legacy10Bootstrap();
@@ -23,10 +24,10 @@ test('installAsync runs every preflight scan through the supplied verifier and i
   const {f,core}=setup(t),seen=[];
   const host=createLauncherHost({bootstrapCore:f.base,portableRoot:f.portable,runningVersion:'1.0.0'});
   const result=await host.installAsync({sourceCore:core,sourceVersion:'7.0.301'},{verifyCore:async(root,version)=>{seen.push([path.resolve(root),version]);return verifyPackagedCore(root,version);}});
-  assert.equal(result.changed,true);assert.equal(result.version,'1.2.0');
+  assert.equal(result.changed,true);assert.equal(result.version,launcherVersion);
   assert.deepEqual(seen.map(item=>item[0]),[path.resolve(core),path.resolve(f.base)],'source and installation are both verified');
   assert.equal(f.pointer().current.sourceVersion,'7.0.301');
-  const next=f.launch();assert.equal(next.status,0,next.stderr);assert.equal(next.record.updater,'1.2.0');
+  const next=f.launch();assert.equal(next.status,0,next.stderr);assert.equal(next.record.updater,launcherVersion);
 });
 
 test('a sync from the running core does not scan the same folder twice',async t=>{
