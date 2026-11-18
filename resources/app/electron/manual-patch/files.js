@@ -57,9 +57,14 @@ function excluded(relative){return relative===RECEIPT||relative==='.release-pend
 function inventory(root,{exclude=excluded}={}){
  // The same buffer serves every file in a scan, including multi-megabyte assets.
  const out=[],buffer=Buffer.allocUnsafe(SCAN_BUFFER_BYTES);
+ walkRegularFiles(root,{exclude,onFile:(rel,file,stat)=>out.push(hashFile(rel,file,stat,buffer))});
+ return sortByPath(out);
+}
+const sortByPath=list=>list.sort((a,b)=>a.path<b.path?-1:a.path>b.path?1:0);
+function walkRegularFiles(root,{exclude=excluded,onFile}){
  const visit=(folder,relative='')=>{
   // Check the tree as we descend, then confirm that the directory is still
-  // in place. Each leaf is checked and hashed before the scan can pass.
+  // in place. Each leaf is checked before the scan can pass.
   const opened=fs.lstatSync(folder,{bigint:true});
   assertDirectory(opened);
   for(const entry of fs.readdirSync(folder,{withFileTypes:true})){
@@ -71,12 +76,89 @@ function inventory(root,{exclude=excluded}={}){
    filePath(rel);
    const stat=fs.lstatSync(file);
    if(!entry.isFile()||!stat.isFile()||stat.isSymbolicLink())fail('PATCH_PATH_UNSAFE','Yama kaynağı normal dosya olmalı.','The patch source must contain regular files.');
-   out.push(hashFile(rel,file,stat,buffer));
+   assertFileSize(stat.size);
+   onFile(rel,file,stat);
   }
   const closed=fs.lstatSync(folder,{bigint:true});
   assertDirectory(closed);
   if(closed.dev!==opened.dev||closed.ino!==opened.ino)fail('PATCH_PATH_UNSAFE','Doğrulama sırasında kurulum yolu değişti.','The installation path changed during verification.');
- };visit(path.resolve(root));return out.sort((a,b)=>a.path<b.path?-1:a.path>b.path?1:0);
+ };visit(path.resolve(root));
+}
+/* Aynı denetimler, eşzamanlı okuma: soğuk diskte ve dosya başına virüs
+ * taramasında süre dosya sayısıyla ölçeklenir. Liste bu iş parçacığında
+ * yürünür ve denetlenir; içerik birkaç işçi iş parçacığında, her biri
+ * senkron okuyarak, ortak bir sayaçtan sıradaki dosyayı alarak özetlenir.
+ * Her dosya açılan tanıtıcının dev/ino kimliği yürüyüşteki lstat ile eşleşerek,
+ * boyut sınırıyla ve tam SHA-256 ile denetlenir. İşçi açılamaz ya da güvenlik
+ * dışı bir nedenle düşerse tarama bu iş parçacığında baştan yapılır; asla
+ * atlanmaz. Profil yalnız tanılama içindir ve yalnız göreli yollar içerir. */
+const PARALLEL_MIN_FILES_PER_LANE=48;
+const LANE_SOURCE=`const {parentPort,workerData}=require('worker_threads');
+const F=require(workerData.module),counter=new Int32Array(workerData.counter),list=workerData.list,results=[];
+const buffer=Buffer.allocUnsafe(workerData.bufferBytes);
+try{
+ for(let index;(index=Atomics.add(counter,0,1))<list.length;){
+  const item=list[index],t0=Date.now(),hashed=F.hashFileWithIdentity(item.rel,item.file,item,buffer);
+  results.push([index,hashed.size,hashed.sha256,Date.now()-t0]);
+ }
+ parentPort.postMessage({ok:true,results});
+}catch(error){Atomics.store(counter,0,list.length);parentPort.postMessage({ok:false,code:String(error&&error.code||''),message:String(error&&error.message||error)});}`;
+const SECURITY_CODE=/^(UPDATE|PATCH)_/;
+function hashFileWithIdentity(relative,file,identity,buffer){
+ return hashFile(relative,file,{size:Number(identity.size),dev:identity.dev,ino:identity.ino},buffer);
+}
+function runLanes(list,lanes,Worker){
+ const counter=new SharedArrayBuffer(4);
+ return new Promise((resolve,reject)=>{
+  const workers=[],collected=[];let pending=lanes,settled=false;
+  const stop=()=>{for(const worker of workers){try{void worker.terminate();}catch(_){}}};
+  const finish=(fn,value)=>{if(settled)return;settled=true;stop();fn(value);};
+  const fault=error=>finish(reject,Object.assign(error instanceof Error?error:new Error(String(error)),{laneFault:true}));
+  for(let i=0;i<lanes;i++){
+   let worker;
+   try{worker=new Worker(LANE_SOURCE,{eval:true,workerData:{module:__filename,counter,list,bufferBytes:SCAN_BUFFER_BYTES}});}
+   catch(error){fault(error);return;}
+   workers.push(worker);
+   worker.once('message',message=>{
+    if(message&&message.ok===true){collected.push(...message.results);if(--pending===0)finish(resolve,collected);}
+    else if(SECURITY_CODE.test(String(message&&message.code||'')))finish(reject,Object.assign(new Error(String(message.message||'')),{code:message.code}));
+    else fault(new Error(String(message&&message.message||'lane failed')));
+   });
+   worker.once('error',fault);
+   worker.once('exit',code=>{if(!settled&&pending>0&&code!==0)fault(new Error('lane exited '+code));});
+  }
+ });
+}
+async function inventoryParallel(root,{exclude=excluded,concurrency=4,profile=null,Worker}={}){
+ const startedAt=Date.now(),listed=[];
+ walkRegularFiles(root,{exclude,onFile:(rel,file,stat)=>listed.push({rel,file,dev:stat.dev,ino:stat.ino,size:stat.size})});
+ const walkMs=Date.now()-startedAt;
+ let lanes=Math.max(1,Math.min(16,Math.floor(Number(concurrency))||1,Math.floor(listed.length/PARALLEL_MIN_FILES_PER_LANE)||1));
+ if(lanes>1&&!Worker){try{({Worker}=require('node:worker_threads'));}catch(_){Worker=null;}}
+ let rows=null;
+ if(lanes>1&&typeof Worker==='function'){
+  try{rows=await runLanes(listed,lanes,Worker);}
+  catch(error){if(!error.laneFault)throw error;rows=null;}
+ }
+ if(!rows){
+  // Sıralı yedek yol: aynı denetimler, aynı iş parçacığında.
+  lanes=1;rows=[];const buffer=Buffer.allocUnsafe(SCAN_BUFFER_BYTES);
+  listed.forEach((item,index)=>{const t0=Date.now(),hashed=hashFileWithIdentity(item.rel,item.file,item,buffer);rows.push([index,hashed.size,hashed.sha256,Date.now()-t0]);});
+ }
+ if(rows.length!==listed.length)fail('PATCH_PATH_UNSAFE','Doğrulama tamamlanamadı.','Verification did not complete.');
+ const out=new Array(listed.length),timings=new Array(listed.length);
+ for(const [index,size,sha256,ms] of rows){
+  if(out[index])fail('PATCH_PATH_UNSAFE','Doğrulama tamamlanamadı.','Verification did not complete.');
+  out[index]={path:listed[index].rel,size,sha256};timings[index]=ms;
+ }
+ if(out.some(item=>!item))fail('PATCH_PATH_UNSAFE','Doğrulama tamamlanamadı.','Verification did not complete.');
+ if(profile){
+  const ms=timings.slice().sort((x,y)=>x-y),pick=q=>ms.length?ms[Math.min(ms.length-1,Math.floor((ms.length-1)*q))]:0;
+  Object.assign(profile,{files:listed.length,bytes:out.reduce((sum,file)=>sum+file.size,0),lanes,walkMs,hashMs:Date.now()-startedAt-walkMs,
+   fileMsP50:pick(.5),fileMsP95:pick(.95),fileMsMax:pick(1),
+   slowest:timings.map((value,index)=>[value,listed[index].rel]).sort((x,y)=>y[0]-x[0]).slice(0,5).map(([value,rel])=>({path:rel,ms:value}))});
+ }
+ return sortByPath(out);
 }
 function readBootstrap(root){
  let value;try{value=JSON.parse(bytes(root,ANCHOR));}catch(error){fail('PATCH_BOOTSTRAP_REQUIRED','Güncel imzalı tam kurulum gerekli.','A current signed full installation is required.');}
@@ -98,4 +180,4 @@ function readJsonStrict(file,maxBytes=16*1024*1024){
  try{return JSON.parse(fs.readFileSync(file,'utf8'));}catch(_){fail('PATCH_MANIFEST_INVALID','Yama tanımı geçersiz.','The patch manifest is invalid.');}
 }
 function integrityBytes(files,version){const list=files.filter(file=>file.path!=='electron/app-integrity.json');return Buffer.from(JSON.stringify({schemaVersion:1,version,fileCount:list.length,files:Object.fromEntries(list.map(file=>[file.path,file.sha256]))})+'\n');}
-module.exports={ANCHOR,RECEIPT,BOOTSTRAP_FILES,sha,regularFile,bytes,metadata,inventory,excluded,readBootstrap,bootstrapHash,stampBootstrap,readJsonStrict,integrityBytes};
+module.exports={ANCHOR,RECEIPT,BOOTSTRAP_FILES,sha,regularFile,bytes,metadata,inventory,inventoryParallel,hashFileWithIdentity,excluded,readBootstrap,bootstrapHash,stampBootstrap,readJsonStrict,integrityBytes};

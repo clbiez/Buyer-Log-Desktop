@@ -25,7 +25,7 @@ const { compareSemver }=require('./update/semver');
 const BOOTSTRAP_CORE=path.resolve(host.bootstrapCore||LAUNCHER_ROOT);
 const PORTABLE_ROOT=resolvePortableRoot({packaged:app.isPackaged,execPath:process.execPath,appPath:BOOTSTRAP_CORE});
 const LOG_FILE=path.join(PORTABLE_ROOT,'data','local','updater','updater.log');
-function log(event,meta={}){try{fs.mkdirSync(path.dirname(LOG_FILE),{recursive:true});fs.appendFileSync(LOG_FILE,JSON.stringify({at:new Date().toISOString(),event,...meta})+'\n','utf8');}catch(_){} }
+function log(event,meta={}){try{fs.mkdirSync(path.dirname(LOG_FILE),{recursive:true});fs.appendFileSync(LOG_FILE,JSON.stringify({at:new Date().toISOString(),event,pid:process.pid,...meta})+'\n','utf8');}catch(_){} }
 // Saha ölçümü: EXE başlangıcından itibaren geçen süre. Ölçüm hiçbir koşulda açılışı durdurmaz.
 const sinceProcessStartMs=()=>{try{return Math.round(process.uptime()*1000);}catch(_){return null;}};
 const confirmLauncher=()=>{try{if(typeof host.confirm==='function')host.confirm();}catch(_){} };
@@ -134,21 +134,34 @@ async function showLaunchNotice(){
   });
   // Animasyon derleyicide çalışır: ana süreç senkron işteyken de çubuk ilerler.
   const html=launchNoticeHtml(launchNoticeKindValue,lang);
-  let timer;
+  let timer,painted=false;
+  // Soğuk diskte ilk boyama 3 sn'yi aşabilir. Pencere yok edilmez: hemen
+  // gösterilir, içerik gelince boyanır ve açılış beklemeden sürer. Eskiden
+  // bildirim kapanıyor, doğrulama dakikalarca görünmez yürüyordu; kullanıcı
+  // programı yeniden başlatıyordu.
+  notice.webContents.on('did-finish-load',()=>{
+    if(launchNoticeStep)notice.webContents.executeJavaScript('window.BLNotice&&window.BLNotice.step('+JSON.stringify(launchNoticeStep)+')',false).catch(()=>{});
+  });
   try{await new Promise((resolve,reject)=>{
-    timer=setTimeout(()=>reject(new Error('Launch notice timeout')),3000);
-    notice.once('ready-to-show',()=>{notice.show();setImmediate(resolve);});
+    timer=setTimeout(()=>{
+      log('launch-notice-slow',{sinceProcessStartMs:sinceProcessStartMs()});
+      try{if(!notice.isDestroyed())notice.show();}catch(_){}
+      resolve();
+    },3000);
+    notice.once('ready-to-show',()=>{painted=true;notice.show();setImmediate(resolve);});
     notice.once('closed',()=>reject(new Error('Launch notice closed')));
     notice.webContents.once('did-fail-load',(_event,code,description)=>reject(new Error('Launch notice: '+code+' '+description)));
     notice.loadURL('data:text/html;charset=utf-8,'+encodeURIComponent(html)).catch(reject);
   });}catch(error){if(!notice.isDestroyed())notice.destroy();throw error;}
   finally{clearTimeout(timer);}
-  log('launch-notice-visible',{kind:launchNoticeKindValue,sinceProcessStartMs:sinceProcessStartMs()});
+  log('launch-notice-visible',{kind:launchNoticeKindValue,painted,sinceProcessStartMs:sinceProcessStartMs()});
 }
 /* Bildirimdeki etkin adımı ilerletir. Senkron bir adımdan (veri yedeği,
  * etkinleştirme) önce çağrıldığında boyamanın tamamlanması kısa süre beklenir;
  * bildirim yoksa ya da yanıt vermezse açılış hiçbir koşulda beklemede kalmaz. */
+let launchNoticeStep='';
 async function launchStep(id,{paint=false}={}){
+  launchNoticeStep=id;
   log('launch-step',{step:id,sinceProcessStartMs:sinceProcessStartMs()});
   const notice=global.__buyerLogLaunchNotice;
   if(!notice||notice.isDestroyed()||typeof notice.webContents?.executeJavaScript!=='function')return;
@@ -170,18 +183,24 @@ async function launchStep(id,{paint=false}={}){
  * aynen yapılır: tarama hiçbir koşulda atlanmaz. Kod satır içidir; böylece
  * imzalı launcher dosya listesi değişmez. */
 const OFF_THREAD_VERIFIER=`const {parentPort,workerData}=require('worker_threads');
-try{require(workerData.module).verifyPackagedCore(workerData.core,workerData.version);parentPort.postMessage({ok:true});}
-catch(error){parentPort.postMessage({ok:false,code:String(error&&error.code||''),message:String(error&&error.message||error)});}`;
+const failed=error=>parentPort.postMessage({ok:false,code:String(error&&error.code||''),message:String(error&&error.message||error)});
+try{const verifier=require(workerData.module);
+if(typeof verifier.verifyPackagedCoreParallel==='function')verifier.verifyPackagedCoreParallel(workerData.core,workerData.version,{concurrency:workerData.concurrency}).then(result=>parentPort.postMessage({ok:true,profile:result&&result.profile||null}),failed);
+else{verifier.verifyPackagedCore(workerData.core,workerData.version);parentPort.postMessage({ok:true,profile:null});}}
+catch(error){failed(error);}`;
+// Soğuk disk ve dosya başına virüs taraması dosya sayısıyla ölçeklenir; okuma
+// işlemci sayısına göre 4-8 hattan yapılır. SHA-256 ve dosya listesi değişmez.
+const VERIFY_CONCURRENCY='auto';
 function verifyPackagedCoreOffThread(core,version){
   let Worker;
   try{({Worker}=require('worker_threads'));}catch(_){return Promise.resolve(false);}
   return new Promise((resolve,reject)=>{
     let settled=false,worker;
     const settle=(fn,value)=>{if(settled)return;settled=true;fn(value);try{worker&&worker.terminate();}catch(_){}};
-    try{worker=new Worker(OFF_THREAD_VERIFIER,{eval:true,workerData:{module:path.join(__dirname,'manual-patch','core-verification.js'),core,version}});}
+    try{worker=new Worker(OFF_THREAD_VERIFIER,{eval:true,workerData:{module:path.join(__dirname,'manual-patch','core-verification.js'),core,version,concurrency:VERIFY_CONCURRENCY}});}
     catch(_){resolve(false);return;}
     worker.once('message',message=>{
-      if(message&&message.ok===true)settle(resolve,true);
+      if(message&&message.ok===true)settle(resolve,{profile:message.profile||null});
       else if(/^(UPDATE|PATCH)_/.test(String(message&&message.code||'')))settle(reject,Object.assign(new Error(String(message.message)),{code:message.code}));
       else settle(resolve,false);
     });
@@ -203,7 +222,20 @@ function holdLaunch(){
   let released=false;
   return ()=>{if(released)return;released=true;unlisten('window-all-closed',keepRunning);unlisten('second-instance',focusNotice);};
 }
+/* Saha tanılaması: kurulumun ağ/OneDrive/yerel konumda olup olmadığı. Tam yol
+ * (kullanıcı adı içerebilir) yazılmaz; yalnız tür ve sürücü harfi. */
+function installLocation(root){
+  const resolved=path.resolve(root);
+  if(/^[\\/]{2}/.test(String(root)))return {kind:'network',drive:''};
+  for(const name of ['OneDriveCommercial','OneDriveConsumer','OneDrive']){
+    const base=process.env&&process.env[name];
+    if(base&&(resolved.toLowerCase()+path.sep).startsWith(path.resolve(base).toLowerCase()+path.sep))return {kind:'onedrive',drive:''};
+  }
+  const drive=/^[A-Za-z]:/.exec(resolved);
+  return {kind:'local',drive:drive?drive[0].toUpperCase():''};
+}
 async function launchCore(){
+try{log('launch-environment',{ppid:process.ppid,launcherVersion:UPDATER_VERSION,install:installLocation(PORTABLE_ROOT),sinceProcessStartMs:sinceProcessStartMs()});}catch(_){}
 const release=holdLaunch();
 let selected,activation,lifecycle;
 try{
@@ -226,10 +258,11 @@ async function verifyCore(target){
   const started=Date.now();
   if(isManualCore(target.appCoreRoot)){patchManager.verifyInstalled(target);log('core-verified',{version:target.version,durationMs:Date.now()-started,sinceProcessStartMs:sinceProcessStartMs(),manualPatch:true});return;}
   // Tarama işçi iş parçacığında yürür; ana süreç ve bildirim yanıt vermeye devam eder.
-  const offThread=await verifyPackagedCoreOffThread(target.appCoreRoot,target.version);
+  const worker=await verifyPackagedCoreOffThread(target.appCoreRoot,target.version),offThread=Boolean(worker);
   if(!offThread)require('./manual-patch/core-verification').verifyPackagedCore(target.appCoreRoot,target.version);
   verifiedCores.add(key);
   log('core-verified',{version:target.version,durationMs:Date.now()-started,sinceProcessStartMs:sinceProcessStartMs(),offThread});
+  if(worker&&worker.profile)log('core-verify-profile',{version:target.version,...worker.profile});
 }
 /* Bekleyen çekirdek bu launcher'dan daha yeni bir etkinleştirme protokolü
  * isterse deneme başlatılmaz; updater önce uygun launcher'ı kurar. */
