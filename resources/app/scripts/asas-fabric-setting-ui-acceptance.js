@@ -102,17 +102,18 @@ let browser;
   const row = control.locator('xpath=ancestor::div[contains(@class,"dmModeRow")]');
   assert.match(await row.innerText(), /ASAS Kumaş Bilgileri/);
   assert.deepEqual(await control.locator('[data-asas-fabric-mode]').allInnerTexts(), ['Açık', 'Kapalı']);
-  assert.equal(await control.locator('[data-asas-fabric-mode="separate"]').getAttribute('aria-pressed'), 'true', 'kayıt yoksa açık');
-  assert.equal(await page.locator('#asasFabricState').innerText(), 'Ayrı kumaş sorgusu');
-
-  // Kapat → kaydedilir, durum değişir
-  const put = page.waitForResponse(response => response.url().endsWith('/api/asas-fabric') && response.request().method() === 'PUT');
-  await control.locator('[data-asas-fabric-mode="off"]').click();
-  assert.equal((await put).status(), 200);
-  await page.waitForFunction(() => document.querySelector('#asasFabricControl [data-asas-fabric-mode="off"]')?.getAttribute('aria-pressed') === 'true');
+  // Kullanıcı kararı: güncellemeden sonra (kayıt yoksa) kumaş KAPALI gelir.
+  assert.equal(await control.locator('[data-asas-fabric-mode="off"]').getAttribute('aria-pressed'), 'true', 'kayıt yoksa kapalı');
   assert.equal(await page.locator('#asasFabricState').innerText(), 'Kumaş çekilmez');
-  const stored = await (await fetch(base + '/api/asas-fabric', { headers: { cookie } })).json();
-  assert.equal(stored.mode, 'off');
+  assert.equal((await (await fetch(base + '/api/asas-fabric', { headers: { cookie } })).json()).mode, 'off');
+
+  // Aç → kaydedilir, durum değişir
+  const put = page.waitForResponse(response => response.url().endsWith('/api/asas-fabric') && response.request().method() === 'PUT');
+  await control.locator('[data-asas-fabric-mode="separate"]').click();
+  assert.equal((await put).status(), 200);
+  await page.waitForFunction(() => document.querySelector('#asasFabricControl [data-asas-fabric-mode="separate"]')?.getAttribute('aria-pressed') === 'true');
+  assert.equal(await page.locator('#asasFabricState').innerText(), 'Ayrı kumaş sorgusu');
+  assert.equal((await (await fetch(base + '/api/asas-fabric', { headers: { cookie } })).json()).mode, 'separate');
 
   // İngilizce
   await page.evaluate(() => applyLanguage('en'));
@@ -123,17 +124,18 @@ let browser;
     const enRow = await page.locator('#asasFabricControl').locator('xpath=ancestor::div[contains(@class,"dmModeRow")]').innerText();
     assert.match(enRow, /ASAS Fabric Details/);
     assert.deepEqual(await page.locator('#asasFabricControl [data-asas-fabric-mode]').allInnerTexts(), ['On', 'Off']);
-    assert.equal(await page.locator('#asasFabricState').innerText(), 'Fabric is not fetched');
+    assert.equal(await page.locator('#asasFabricState').innerText(), 'Separate fabric query');
     await page.evaluate(() => applyLanguage('tr'));
     await page.evaluate(() => switchTab('source'));
     await openModes();
     await page.waitForTimeout(500);
   }
 
-  // Aç → ayrı sorgu
-  await page.locator('#asasFabricControl [data-asas-fabric-mode="separate"]').click();
-  await page.waitForFunction(() => document.querySelector('#asasFabricControl [data-asas-fabric-mode="separate"]')?.getAttribute('aria-pressed') === 'true');
-  assert.equal((await (await fetch(base + '/api/asas-fabric', { headers: { cookie } })).json()).mode, 'separate');
+  // Kapat → varsayılana dönüş
+  await page.locator('#asasFabricControl [data-asas-fabric-mode="off"]').click();
+  await page.waitForFunction(() => document.querySelector('#asasFabricControl [data-asas-fabric-mode="off"]')?.getAttribute('aria-pressed') === 'true');
+  assert.equal(await page.locator('#asasFabricState').innerText(), 'Kumaş çekilmez');
+  assert.equal((await (await fetch(base + '/api/asas-fabric', { headers: { cookie } })).json()).mode, 'off');
 
   if (shot) {
     await page.waitForTimeout(1500); // bildirim kaybolsun

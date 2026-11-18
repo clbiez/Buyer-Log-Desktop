@@ -16110,11 +16110,11 @@ async function setAsasSourceMode(mode){
    yalnız ana kumaş satırlarıyla çekilir (satır çoğaltmaz, kumaş kaydı olmayan
    siparişi düşürmez). Kapalı: kumaş hiç çekilmez (ör. PLM SYNC'e bırakıldığında).
    Database yenilemesine bir sonraki yenilemede uygulanır. */
-let asasFabricMode='separate';
+let asasFabricMode='off';
 let asasFabricRevision=0;
 function renderAsasFabricControl(data){
   if(data){
-    asasFabricMode=data.asasFabricMode==='off'?'off':'separate';
+    asasFabricMode=data.asasFabricMode==='separate'?'separate':'off';
     asasFabricRevision=Number(data.storeRevisions&&data.storeRevisions.asasFabricMode)||asasFabricRevision||0;
   }
   document.querySelectorAll('#asasFabricControl [data-asas-fabric-mode]').forEach(btn=>{
@@ -16131,7 +16131,7 @@ async function setAsasFabricMode(mode){
   const buttons=[...document.querySelectorAll('#asasFabricControl [data-asas-fabric-mode]')];buttons.forEach(btn=>btn.disabled=true);
   try{
     const saved=await fetchJSON('/api/asas-fabric',{method:'PUT',headers:{'Content-Type':'application/json'},expectedRevision:asasFabricRevision,body:JSON.stringify({mode})});
-    asasFabricMode=saved.mode==='off'?'off':'separate';asasFabricRevision=Number(saved.revision)||0;
+    asasFabricMode=saved.mode==='separate'?'separate':'off';asasFabricRevision=Number(saved.revision)||0;
     renderAsasFabricControl();
     const msg=asasFabricMode==='off'
       ?(appLang==='en'?'ASAS fabric details turned off. Fabric fields stay empty from the next Database refresh.':'ASAS kumaş bilgileri kapatıldı. Bir sonraki Veritabanı yenilemesinden itibaren kumaş alanları boş kalır.')

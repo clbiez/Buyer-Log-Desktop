@@ -61,7 +61,7 @@ app.get('/api/asas-fabric', userAccess.requireArea('source'), (req, res) => {
   const ov = loadOverrides();
   const revision = Number(ov._revisions && ov._revisions.asasFabricMode) || 0;
   res.set('ETag', `"${revision}"`);
-  res.json({ mode: ov.asasFabricMode === 'off' ? 'off' : 'separate', revision });
+  res.json({ mode: ov.asasFabricMode === 'separate' ? 'separate' : 'off', revision });
 });
 app.put('/api/asas-fabric', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), (req, res) => {
   try {

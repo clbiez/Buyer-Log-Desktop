@@ -7764,7 +7764,7 @@ async function loadFromModels(value, targets = null, options = {}) {
     includeAsas: asasMode === 'database',
     includeLfl: lflMode === 'database',
     // Kaynak Veri › ASAS Kumaş Bilgileri: kumaş ayrı sorgudan (separate) ya da hiç (off).
-    asasFabricMode: overrides.asasFabricMode === 'off' ? 'off' : 'separate',
+    asasFabricMode: overrides.asasFabricMode === 'separate' ? 'separate' : 'off',
     // IASv2'nin kendisi işlenmemiş bir calculated column yüzünden geçici olarak
     // sorgulanamazsa bütün Buyer Log yenilemesini bloke etme. Yalnız daha önce
     // başarıyla yayınlanmış IAS snapshot'ı varsa onu koru; yeni/eksik veri üretme.
@@ -8550,7 +8550,7 @@ async function buildResponse(currentUser = null, options = {}) {
     antrepoHeaderInfo: active.antrepoHeaderInfo || null,
     antrepoSourceMode: ['database', 'dashboard'].includes(overrides.antrepoSourceMode) ? overrides.antrepoSourceMode : 'excel',
     asasSourceMode: overrides.asasSourceMode === 'database' ? 'database' : 'excel',
-    asasFabricMode: overrides.asasFabricMode === 'off' ? 'off' : 'separate',
+    asasFabricMode: overrides.asasFabricMode === 'separate' ? 'separate' : 'off',
     lflSourceMode: overrides.lflSourceMode === 'database' ? 'database' : 'excel',
     warnings: Array.isArray(active.refreshWarnings) ? active.refreshWarnings : [],
     warningDetails: [...new Map([

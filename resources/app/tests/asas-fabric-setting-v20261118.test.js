@@ -20,19 +20,19 @@ Object.assign(process.env, {
 const db = require('../server/db');
 const read = rel => fs.readFileSync(path.join(__dirname, '..', rel), 'utf8');
 
-test('kayıt yoksa kumaş açık (separate); yalnız off kapatır; revizyon çakışması korunur', () => {
-  assert.equal(db.loadOverrides().asasFabricMode, 'separate');
-  const off = db.replaceAsasFabricMode('off', 0);
-  assert.deepEqual(off, { mode: 'off', revision: 1 });
+test('kayıt yoksa kumaş KAPALI (off); yalnız separate açar; revizyon çakışması korunur', () => {
   assert.equal(db.loadOverrides().asasFabricMode, 'off');
-  assert.throws(() => db.replaceAsasFabricMode('separate', 0), err => err.code === 'REVISION_CONFLICT');
-  assert.equal(db.replaceAsasFabricMode('inline', 1).mode, 'separate', 'eski tek sorgu ayardan seçilemez');
+  const on = db.replaceAsasFabricMode('separate', 0);
+  assert.deepEqual(on, { mode: 'separate', revision: 1 });
+  assert.equal(db.loadOverrides().asasFabricMode, 'separate');
+  assert.throws(() => db.replaceAsasFabricMode('off', 0), err => err.code === 'REVISION_CONFLICT');
+  assert.equal(db.replaceAsasFabricMode('inline', 1).mode, 'off', 'eski tek sorgu ayardan seçilemez');
 });
 
 test('sunucu ayarı Database yenilemesine iletir ve ekrana yayımlar', () => {
   const server = read('server/server.js');
-  assert.match(server, /includeLfl: lflMode === 'database',\n\s+\/\/ Kaynak Veri › ASAS Kumaş Bilgileri[^\n]*\n\s+asasFabricMode: overrides\.asasFabricMode === 'off' \? 'off' : 'separate',/);
-  assert.match(server, /asasFabricMode: overrides\.asasFabricMode === 'off' \? 'off' : 'separate',\n\s+lflSourceMode:/);
+  assert.match(server, /includeLfl: lflMode === 'database',\n\s+\/\/ Kaynak Veri › ASAS Kumaş Bilgileri[^\n]*\n\s+asasFabricMode: overrides\.asasFabricMode === 'separate' \? 'separate' : 'off',/);
+  assert.match(server, /asasFabricMode: overrides\.asasFabricMode === 'separate' \? 'separate' : 'off',\n\s+lflSourceMode:/);
   assert.match(server, /asasFabricMode: Number\(overrides\._revisions&&overrides\._revisions\.asasFabricMode\)\|\|0/);
   const routes = read('server/routes/asas-source-routes.js');
   assert.match(routes, /app\.put\('\/api\/asas-fabric', userAccess\.requireArea\('source'\), userAccess\.requirePermission\('manageModelConnections'\)/);

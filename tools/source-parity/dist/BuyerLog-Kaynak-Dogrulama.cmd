@@ -831,7 +831,7 @@ function loadContext(bl, args) {
       lfl: overrides.lflSourceMode === 'database' ? 'database' : 'excel',
     },
     connections: active.map(item => ({ id: item.id, name: item.name, role: item.role, server: item.server, catalog: item.catalog })),
-    asasFabricMode: overrides.asasFabricMode === 'off' ? 'off' : 'separate',
+    asasFabricMode: overrides.asasFabricMode === 'separate' ? 'separate' : 'off',
   };
 }
 

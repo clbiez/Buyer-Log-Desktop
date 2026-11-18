@@ -365,16 +365,16 @@
         "en": "ASAS fabric details can be turned on or off"
       },
       "body": {
-        "tr": "Kaynak modu bölümüne \"ASAS Kumaş Bilgileri\" ayarı geldi. Açıkken kumaş, ana ASAS sorgusundan ayrı ve yalnız ana kumaş satırlarıyla çekilir; sipariş satırları artık kumaş bileşeni kadar çoğalmaz ve kumaş kaydı olmayan siparişler listeden düşmez. Kapalıyken kumaş çekilmez ve ASAS yenilemesi kısalır. Ayar Veritabanı yenilemesine uygulanır.",
-        "en": "The Source mode section has a new \"ASAS Fabric Details\" setting. When on, fabric is fetched separately from the main ASAS query, main-fabric rows only; order rows are no longer multiplied per fabric component and orders without a fabric record are no longer dropped. When off, fabric is not fetched and the ASAS refresh is shorter. The setting applies to Database refresh."
+        "tr": "Kaynak modu bölümüne \"ASAS Kumaş Bilgileri\" ayarı geldi; güncellemeden sonra Kapalı gelir. Kapalıyken kumaş çekilmez, kumaş alanları boş kalır ve ASAS yenilemesi kısalır. Açılırsa kumaş, ana ASAS sorgusundan ayrı ve yalnız ana kumaş satırlarıyla çekilir; sipariş satırları kumaş bileşeni kadar çoğalmaz ve kumaş kaydı olmayan siparişler listeden düşmez. Ayar Veritabanı yenilemesine uygulanır.",
+        "en": "The Source mode section has a new \"ASAS Fabric Details\" setting; it is Off after the update. When off, fabric is not fetched, fabric fields stay empty and the ASAS refresh is shorter. When turned on, fabric is fetched separately from the main ASAS query, main-fabric rows only; order rows are not multiplied per fabric component and orders without a fabric record are not dropped. The setting applies to Database refresh."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
         "src": "asas-fabric-setting.png",
         "alt": {
-          "tr": "Kaynak modu bölümünde ASAS Kumaş Bilgileri ayarı Açık",
-          "en": "ASAS Fabric Details set to On in the Source mode section"
+          "tr": "Kaynak modu bölümünde ASAS Kumaş Bilgileri ayarı varsayılan Kapalı durumda",
+          "en": "ASAS Fabric Details at its default Off state in the Source mode section"
         },
         "caption": {
           "tr": "Gerçek Buyer Log, izole demo verisi.",

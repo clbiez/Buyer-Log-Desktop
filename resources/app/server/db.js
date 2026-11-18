@@ -392,9 +392,10 @@ function loadOverrides({ projectManufacturers = true } = {}) {
   merged.lflSourceMode = String(parsed && parsed.lflSourceMode || 'excel').toLowerCase() === 'database'
     ? 'database' : 'excel';
   // ASAS kumaş bilgileri: 'separate' (açık; kumaş ayrı sorgudan) | 'off' (kapalı).
-  // Kayıt yoksa açık. Eski tek sorgu (inline) bilerek seçilemez: kumaş kaydı
-  // olmayan siparişleri düşürüyor ve satırları çoğaltıyordu.
-  merged.asasFabricMode = String(parsed && parsed.asasFabricMode || '').toLowerCase() === 'off' ? 'off' : 'separate';
+  // Kayıt yoksa KAPALI (kullanıcı kararı 2026-11-18: kumaş PLM SYNC'e
+  // bırakılabilir; açmak Moderatör kararıdır). Eski tek sorgu (inline) bilerek
+  // seçilemez: kumaş kaydı olmayan siparişleri düşürüyor, satırları çoğaltıyordu.
+  merged.asasFabricMode = String(parsed && parsed.asasFabricMode || '').toLowerCase() === 'separate' ? 'separate' : 'off';
   merged.landedMultipliers = normalizeLandedMultipliers(parsed && parsed.landedMultipliers);
   merged.freightRates = BLFreight.normalizeSettings(parsed && parsed.freightRates);
   merged.transitAnalysis = BLTransitAnalysis.normalizeAnalysis(parsed && parsed.transitAnalysis);
@@ -555,7 +556,7 @@ function replaceAsasFabricMode(mode, expectedRevision = null) {
   const current = Number(ov._revisions.asasFabricMode) || 0;
   const wanted = expectedNumber(expectedRevision);
   if (wanted != null && wanted !== current) throw new RevisionConflictError('ASAS kumaş bilgileri', wanted, current, 'asasFabricMode');
-  ov.asasFabricMode = String(mode || '').toLowerCase() === 'off' ? 'off' : 'separate';
+  ov.asasFabricMode = String(mode || '').toLowerCase() === 'separate' ? 'separate' : 'off';
   ov._revisions.asasFabricMode = current + 1;
   const saved = saveOverrides(ov);
   return { mode: saved.asasFabricMode, revision: saved._revisions.asasFabricMode };
