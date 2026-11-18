@@ -279,6 +279,18 @@ test('v6.61 birden fazla parsiyelin durumları farklıysa Status filtresi tüm f
   assert.strictEqual(cp._logisticAllPartialsInWarehouse, false);
 });
 
+test('v7.0 parsiyel yanında üretim bakiyesi varsa Status filtresi Üretimde değerini de taşır', () => {
+  const rows = build([asas({ 'Net Alım Sipariş Miktarı': 12889 })], [
+    ias({ 'Yükleme Toplam Adet': 9912, 'Supplier Portal Statü': 'Yol Operasyonları' }),
+  ]);
+  const cp = rows[0];
+  assert.strictEqual(cp._logisticProductionQty, 2977);
+  assert.deepStrictEqual(new Set(cp._logisticStatusValues), new Set(['Üretimde', 'Yol Operasyonları']));
+  const js = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
+  assert.match(js, /const statusSource=segments\.filter\(s=>s&&s\.kind!=='shortage'\);/, 'istemci yeniden hesaplaması da üretim bakiyesini Status filtresine katmalı');
+  assert.match(js, /scope\.status\.forEach\(row=>\{\n    const values=partialViewEnabled\('orders'\)\?partialViewStatusGroups\(row\)\.map\(group=>group\.status\):\(cpLogisticHasDetails\(row\)\?\(row\._logisticStatusValues/, 'Siparişler hızlı Status sayacı filtreyle aynı lojistik değerleri saymalı');
+});
+
 test('v6.61 tüm parsiyellerin durumu aynıysa Status değeri tekilleştirilir', () => {
   const rows = build([asas({ 'Net Alım Sipariş Miktarı': 2000 })], [
     ias({ 'Yükleme Toplam Adet': 1000, 'Supplier Portal Statü': 'Depoda' }),
