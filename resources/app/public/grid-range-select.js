@@ -7,7 +7,8 @@
    kolSelected kümesi. Aralık mantığını üç kez yazmak bu defterleri de
    çoğaltırdı. Bunun yerine aralıktaki kutuların durumu değiştirilir ve her
    birine 'change' gönderilir: hangi tablo olursa olsun kendi mevcut
-   defterini kendisi günceller. Yeni bir seçim yolu üretilmiyor.
+   defterini kendisi günceller. Rapor tek yerel change olayıyla aralığın
+   tamamını mevcut seçim sahibine iletir.
 
    Davranış Excel/Gmail ile aynı: tık = çıpa; shift+tık = çıpadan tıklanan
    satıra kadar olan aralığı TIKLANAN kutunun yeni durumuna eşitler. Yani
@@ -16,38 +17,37 @@
   'use strict';
 
   const BOX = 'input.rowChk';
+  const REPORT_BOX = 'input[data-tr-check]:not([data-tr-check="all"])';
 
   /* Çıpa, element olarak değil data-id olarak saklanır. Tablolar tbody'yi
      innerHTML ile yeniden kuruyor; element referansı ilk çizimde kopardı,
      id ise filtre/sıralama sonrasında bile doğru satırı bulur. */
   const anchorByBody = new WeakMap();
+  const reportRanges = new WeakMap();
 
-  function boxesIn(tbody) {
-    return Array.prototype.slice.call(tbody.querySelectorAll(BOX));
+  function boxKey(box) {
+    if (box.dataset.id != null) return box.dataset.id;
+    const row = box.closest('tr');
+    const id = row?.dataset.id;
+    const partial = row?.dataset.selectionPartialIndex;
+    return partial == null ? id : JSON.stringify([id, partial]);
   }
 
-  function indexOfId(boxes, id) {
-    for (let i = 0; i < boxes.length; i++) {
-      if (boxes[i].dataset.id === id) return i;
-    }
-    return -1;
+  function rangeBoxes(tbody, anchorId, target, selector) {
+    const boxes = Array.from(tbody.querySelectorAll(selector));
+    const from = boxes.findIndex(box => boxKey(box) === anchorId);
+    const to = boxes.indexOf(target);
+    if (from < 0 || to < 0 || from === to) return [];
+    return boxes.slice(Math.min(from, to), Math.max(from, to) + 1);
   }
 
   /* Aralığı hedef duruma eşitler. Tıklanan kutuya dokunulmaz: tarayıcı onu
      zaten çevirdi ve kendi 'change' olayını gönderdi. */
   function applyRange(tbody, anchorId, target) {
-    const boxes = boxesIn(tbody);
-    const from = indexOfId(boxes, anchorId);
-    const to = boxes.indexOf(target);
-    if (from < 0 || to < 0 || from === to) return 0;
-
-    const lo = Math.min(from, to);
-    const hi = Math.max(from, to);
     const checked = target.checked;
     let changed = 0;
 
-    for (let i = lo; i <= hi; i++) {
-      const box = boxes[i];
+    for (const box of rangeBoxes(tbody, anchorId, target, BOX)) {
       if (box === target || box.disabled || box.checked === checked) continue;
       box.checked = checked;
       box.dispatchEvent(new Event('change', { bubbles: true }));
@@ -59,7 +59,7 @@
   function rowBox(node) {
     if (!node || node.nodeType !== 1) return null;
     if (node.tagName !== 'INPUT' || node.type !== 'checkbox') return null;
-    return node.classList.contains('rowChk') ? node : null;
+    return node.classList.contains('rowChk') || node.matches?.(REPORT_BOX) ? node : null;
   }
 
   function onMouseDown(event) {
@@ -75,14 +75,24 @@
     const tbody = box.closest('tbody');
     if (!tbody) return;
 
-    const anchorId = anchorByBody.get(tbody);
-    if (event.shiftKey && anchorId != null && anchorId !== box.dataset.id) {
-      applyRange(tbody, anchorId, box);
+    const anchorId = anchorByBody.get(tbody), key = boxKey(box);
+    if (event.shiftKey && anchorId != null && anchorId !== key) {
+      if (box.matches?.(REPORT_BOX)) {
+        const range = rangeBoxes(tbody, anchorId, box, REPORT_BOX);
+        reportRanges.set(box, range.filter(input => !input.disabled).map(input => Number(input.dataset.trCheck)));
+      } else applyRange(tbody, anchorId, box);
       /* Çıpa korunur: Excel'de olduğu gibi aynı çıpadan farklı aralıklar
          denenebilsin. */
       return;
     }
-    anchorByBody.set(tbody, box.dataset.id);
+    reportRanges.delete(box);
+    anchorByBody.set(tbody, key);
+  }
+
+  function takeReportRange(box) {
+    const range = reportRanges.get(box);
+    reportRanges.delete(box);
+    return range?.length ? range : null;
   }
 
   /* Tarayıcıda kendini bağlar; node'da (test) yalnız saf işlevler kalır. */
@@ -91,7 +101,7 @@
     document.addEventListener('click', onClick);
   }
 
-  const api = { applyRange: applyRange, onClick: onClick, onMouseDown: onMouseDown };
+  const api = { applyRange, onClick, onMouseDown, takeReportRange };
   if (typeof module === 'object' && module.exports) module.exports = api;
   global.BLGridRangeSelect = api;
 })(typeof window !== 'undefined' ? window : globalThis);

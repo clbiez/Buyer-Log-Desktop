@@ -46,6 +46,20 @@
   var registry = new WeakMap();         // table -> kayıt
   var pick = null;                      // etkin seçim kipi
 
+
+  // Satır seçimi her zaman görünürdür; count=0 ve rapor tabloları da kapsanır.
+  // Yalnız ilk hücredeki açık satır seçicileri: veri/izin checkbox'ları hariç.
+  var selectionControls = 'input[type="checkbox"]:is(.rowChk,.shipCompareChk,.shipRowChk,[data-tr-check],[data-ship-chk-all],[data-fabric-pick],[data-bin-id],[data-cpa-queue-check],[data-dc-item],[data-dc-toggle-all],[data-ta-pick],[data-ta-all],[data-act="selectRow"],[data-act="selectAll"],[data-xim="include"],#kolSelAll,#shipChkAll,[id$="_selAll"])';
+  var selectionCell = 'html[data-ui-system="manifest"] body[data-ui-migrated] table>:is(thead,tbody,tfoot)>tr>:is(th,td):first-child:is(:has(>'+selectionControls+'),:has(>label>'+selectionControls+'))';
+  var selectionStyle = document.createElement('style');
+  selectionStyle.id = 'blRowSelectionPinStyle';
+  selectionStyle.textContent = selectionCell+'{position:sticky!important;left:0!important;clip-path:none!important;pointer-events:auto!important;z-index:calc(var(--ui-z-frozen-cell) + 1)!important}\n'+
+    selectionCell+':is(th){z-index:calc(var(--ui-z-sticky-column) + 1)!important}\n'+
+    ':where('+selectionCell+'){background-color:var(--ui-surface)}';
+  var selectionRows = 'html[data-ui-system="manifest"] body[data-ui-migrated] table>tbody>tr:is(:has(>td:first-child>'+selectionControls+'),:has(>td:first-child>label>'+selectionControls+'))';
+  selectionStyle.textContent += '\n'+selectionRows+'::after{z-index:var(--ui-z-frozen-cell)}';
+  document.head.appendChild(selectionStyle);
+
   function cssId(id) {
     return global.CSS && typeof global.CSS.escape === 'function' ? global.CSS.escape(id) : String(id).replace(/[^\w-]/g, '\\$&');
   }

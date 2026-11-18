@@ -1,14 +1,160 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-17",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Rapor görünümü ve Akış seçimi",
+    "en": "Report view and Flow selection"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Raporlar tablonun görsel boyutunu paylaşır ve satırları ince çizgilerle ayırır. Sabit seçim alanları klavye ve Shift aralıklarını destekler.",
+    "en": "Reports share the table's image size and separate rows with subtle rules. Pinned selectors support keyboard and Shift-range selection."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "report-image-size",
+      "type": "improvement",
+      "module": {
+        "tr": "Rapor görünümü",
+        "en": "Report view"
+      },
+      "title": {
+        "tr": "Raporda görsel boyutunu ayarlayın",
+        "en": "Adjust image size in report view"
+      },
+      "body": {
+        "tr": "CP, Siparişler ve Koleksiyon raporlarında Görsel başlığına tıklayarak normal tablonun boyut kaydırıcısını açabilirsiniz. Görseller, sütun genişliği ve satır yüksekliği birlikte ayarlanır. Boyut tercihi aynı tablonun iki görünümü arasında paylaşılır ve kaydedilir.",
+        "en": "Click the Image heading in CP, Orders and Collection reports to open the normal table image-size slider. Images, column width and row height adjust together. The size preference is shared and saved between both views of the same table."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "report-image-size.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log raporunda büyütülmüş model görselleri ve 198 px değerindeki görsel boyutu kaydırıcısı.",
+          "en": "Actual Buyer Log report showing enlarged model images and the image-size slider at 198 px."
+        },
+        "caption": {
+          "tr": "İzole demo verisiyle gerçek uygulama; tabloyla aynı görsel boyutu ayarı.",
+          "en": "Actual application with isolated demo data; the same image-size setting as the table."
+        }
+      }
+    },
+    {
+      "id": "row-selection-pinned",
+      "type": "improvement",
+      "module": {
+        "tr": "Tablolar",
+        "en": "Tables"
+      },
+      "title": {
+        "tr": "Satır seçim alanı yatay kaydırmada sabit",
+        "en": "Row selection stays pinned during horizontal scrolling"
+      },
+      "body": {
+        "tr": "Tabloların sol başındaki dar seçim alanı ve başlıktaki toplu seçim, sağa sola kaydırırken görünür ve tıklanabilir kalır. Normal tablo ve rapor görünümü aynı davranır. Donmuş sütunların iç kaydırması seçim alanını gizlemez.",
+        "en": "The narrow row selector on the left and the select-all heading remain visible and clickable while scrolling horizontally. Normal tables and report views behave alike. Scrolling within frozen columns does not hide row selection."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "selection-rail-sticky.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log raporunda tablo sağa kaydırılmışken seçili satırın şeridi sol kenarda görünür.",
+          "en": "Actual Buyer Log report with the table scrolled horizontally and the selected row rail visible at the left edge."
+        },
+        "caption": {
+          "tr": "İzole demo verisi: yatay kaydırmada seçim solda kalır.",
+          "en": "Isolated demo data: selection stays on the left during horizontal scrolling."
+        }
+      }
+    },
+    {
+      "id": "flow-selection-soft-row-light",
+      "type": "improvement",
+      "module": {
+        "tr": "Tablolar ve rapor",
+        "en": "Tables and reports"
+      },
+      "title": {
+        "tr": "Akış seçimi ve tüm satırda yumuşak geçiş",
+        "en": "Flow selection and a soft fade across the whole row"
+      },
+      "body": {
+        "tr": "Boş satır seçicileri mevcut sade kontur görünümünü korur. Seçim dolgusu merkezden açılır; fareyle girilen satırın tamamı yumuşakça aydınlanır ve ayrılınca söner. Normal tablo ve rapor aynı davranır; hareket kapatma ve azaltılmış hareket tercihleri korunur.",
+        "en": "Empty row selectors retain the existing subtle outline. The selection fill opens from the center; hovering softly lights the whole row and leaving fades it out. Normal tables and reports behave alike and respect motion-off and reduced-motion preferences."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "flow-selection-light.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log raporunda sade seçim konturları, seçili satır ve tüm satır boyunca aydınlatma.",
+          "en": "Actual Buyer Log report with subtle selection outlines, a selected row and full-row illumination."
+        },
+        "caption": {
+          "tr": "İzole demo verisiyle açık temada Akış seçimi ve yumuşak satır aydınlatması.",
+          "en": "Flow selection and soft row illumination in the light theme with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "report-selected-dirty-overlay",
+      "type": "fix",
+      "module": {
+        "tr": "CP ve rapor",
+        "en": "CP and reports"
+      },
+      "title": {
+        "tr": "Seçili satırda turuncu değişiklik işareti",
+        "en": "Orange edit marker on selected rows"
+      },
+      "body": {
+        "tr": "Düzenlenen CP satırının turuncu işareti artık mavi seçim dolgusunun üzerinde ayrı bir çizgi olarak görünür. Rapor görünümü mevcut değişiklik durumunu izler; değişiklikler geri alındığında işaret de temizlenir.",
+        "en": "The orange marker on an edited CP row now appears as a separate stripe above its blue selection fill. Report view follows the existing dirty state and clears the marker when changes are discarded."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "flow-selection-dark.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log raporunda seçili ve düzenlenmiş satırın turuncu çizgisi ile mavi seçimi birlikte görünür.",
+          "en": "Actual Buyer Log report showing the orange edit stripe together with blue selection on the same row."
+        },
+        "caption": {
+          "tr": "İzole demo verisiyle koyu temada seçili ve düzenlenen ilk satır.",
+          "en": "The first row is both selected and edited in the dark theme, using isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "report-row-dividers",
+      "type": "improvement",
+      "module": {
+        "tr": "CP, Siparişler ve Koleksiyon",
+        "en": "CP, Orders and Collection"
+      },
+      "title": {
+        "tr": "Raporlarda satır çizgileri ve klavyeyle seçim",
+        "en": "Report row dividers and keyboard selection"
+      },
+      "body": {
+        "tr": "Rapor satırları normal tablodaki gibi ince bir çizgiyle ayrılır. Shift ile satır aralığı seçilebilir ve Boşluk ile seçim değiştirildiğinde odak korunur. Başlıktaki kısa çizgi kısmi seçimi gösterir.",
+        "en": "Report rows use the same subtle divider as the normal table. Use Shift to select a range and Space to toggle selection while keeping focus. A dash in the heading indicates partial selection."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "flow-selection-light.png",
+        "alt": {
+          "tr": "CP raporunda ince yatay satır çizgileri ve toplu seçim başlığında kısmi seçim işareti.",
+          "en": "CP report with thin horizontal row dividers and the mixed-selection mark in the select-all heading."
+        },
+        "caption": {
+          "tr": "Açık temada satır sınırları ve kısmi seçim. İzole demo verisi.",
+          "en": "Row boundaries and partial selection in the light theme. Isolated demo data."
+        }
+      }
+    }
+  ]
 }
