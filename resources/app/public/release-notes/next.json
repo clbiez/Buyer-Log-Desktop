@@ -236,6 +236,35 @@
           "en": "The first row shows a manual revision arrow. Following rows show loading approvals and dots for recalculated values."
         }
       }
+    },
+    {
+      "id": "status-filter-production-balance",
+      "type": "fix",
+      "module": {
+        "tr": "Siparişler ve CP Tracker",
+        "en": "Orders and CP Tracker"
+      },
+      "title": {
+        "tr": "Status süzgeci üretimdeki bakiyeyi de bulur",
+        "en": "Status filter also finds the in-production balance"
+      },
+      "body": {
+        "tr": "Bir kısmı yüklenmiş siparişlerde üretimde kalan bakiye artık Status süzgecinde Üretimde seçildiğinde listelenir. Status sayaçları da aynı siparişi hem Üretimde hem parsiyelin durumunda sayar.",
+        "en": "For partly loaded orders, the balance still in production is now listed when In Production is selected in the Status filter. Status counters also count the same order under both In Production and its partial's status."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "status-filter-production-balance.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Siparişler ekranında Durum: Üretimde süzgeciyle listelenen, 2.977 adet üretimde ve 9.912 adet yolda olan parsiyelli sipariş.",
+          "en": "Actual Buyer Log Orders screen filtered by Status: In Production, listing a partly loaded order with 2,977 units in production and 9,912 units in transit."
+        },
+        "caption": {
+          "tr": "İzole demo verisiyle gerçek uygulama; üretim bakiyesi olan parsiyelli sipariş Üretimde süzgecinde görünür.",
+          "en": "Actual application with isolated demo data; a partly loaded order with a production balance appears under In Production."
+        }
+      }
     }
   ]
 }

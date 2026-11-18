@@ -6566,7 +6566,7 @@ function cpLogisticDetailRowHtml(row,cols,withChk,tableKey='cp'){
 function rebuildCpLogisticCaches(row){
   const segments=cpLogisticSegments(row); if(!segments.length) return;
   const partials=segments.filter(s=>s&&s.kind==='partial');
-  const statusSource=partials.length?partials:segments.filter(s=>s&&s.kind!=='shortage');
+  const statusSource=segments.filter(s=>s&&s.kind!=='shortage');
   row._logisticStatusValues=[...new Set(statusSource.map(s=>norm(s.status)).filter(Boolean))];
   row._logisticDelTypeValues=[...new Set(segments.map(s=>normalizeTransitDelType(s.delType)||norm(s.delType)).filter(Boolean))];
   row._logisticArrivalValues=segments.map(s=>coerceDateLoose(s.arrival)).filter(Boolean);
@@ -10313,7 +10313,7 @@ function renderOrdersNow(){
   const seasonCounts={},statusCounts={},delCounts={};
   scope.season.forEach(row=>{const v=norm(row.Season)||'—';seasonCounts[v]=(seasonCounts[v]||0)+1;});
   scope.status.forEach(row=>{
-    const values=partialViewEnabled('orders')?partialViewStatusGroups(row).map(group=>group.status):[row.STATUS];
+    const values=partialViewEnabled('orders')?partialViewStatusGroups(row).map(group=>group.status):(cpLogisticHasDetails(row)?(row._logisticStatusValues||cpLogisticSegments(row).map(s=>s.status)):[row.STATUS]);
     [...new Set(values.map(value=>norm(value)||'—'))].forEach(v=>{statusCounts[v]=(statusCounts[v]||0)+1;});
   });
   scope.del.forEach(row=>{const v=normalizeTransitDelType(row['Del. Type'])||norm(row['Del. Type'])||'—';delCounts[v]=(delCounts[v]||0)+1;});
