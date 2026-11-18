@@ -14724,12 +14724,18 @@ const TABLE_META = {
    yazılır ve her hücre, tek hücre düzenlemesiyle AYNI commitCpEditor yolundan
    geçer (override, yetki, revizyon ve formül davranışı aynı kalır). Hesaplanan,
    salt-okunur ve yetkisiz hücreler atlanır. Notlar metin ve HTML birlikte
-   güncellenerek aynı toplu kayıt/geri alma yolundan geçer. */
-function cpPasteTarget(row,column){
-  if(!row||!column||row._canEdit===false) return null;
+   güncellenerek aynı toplu kayıt/geri alma yolundan geçer. Kişisel not
+   sütunları ortak satıra değil yalnız kullanıcının kendi deposuna yazılır.
+   options.permissions:false yalnız hedef türünü çözer (Orders, CP yüklenmeden);
+   yetki yazmadan önce asıl CP satırıyla yeniden doğrulanır. */
+function cpPasteTarget(row,column,options={}){
+  if(!row||!column) return null;
+  if(column.personalNote) return window.BLPersonalNoteColumns&&String(window.BL_USER_CONTEXT?.id||'')&&lineKeyOfRow(row)?'personalNote':null;
+  const checkPermissions=options.permissions!==false;
+  if(checkPermissions&&row._canEdit===false) return null;
   if(column.k==='Ex-factory'&&BLRevision.isAutomaticExFactory(row))return null;
   const shared=['exfactory','retailEdit','instoreEdit','submfr','importance'].includes(column.type)||(column.type==='moneyEdit'&&column.k==='Supp. FOB');
-  if(shared&&row._canEditShared===false) return null;
+  if(shared&&checkPermissions&&row._canEditShared===false) return null;
   switch(column.type){
     case 'moneyEdit': return 'suppfob';
     case 'exfactory': return 'exfactory';
@@ -14774,10 +14780,12 @@ function cpPasteValue(raw,kind){
 }
 const CP_PASTE_ROW_REFRESH_LIMIT=40;
 function ordersPasteTarget(row,column){
-  if(!row||!['Notes','Ek Not'].includes(column?.k))return null;
-  // Orders görünümü normal alanları salt okunur işaretler. Not yetkisi asıl CP
-  // satırından alınır; CP henüz yüklenmediyse yapıştırma anında yüklenir.
-  if(!state.cp)return 'note';
+  if(!row||!column)return null;
+  // Orders satırları salt okunur bir aynadır (_canEdit:false). CP'de elle
+  // girilebilen her sütun Orders'ta da yapıştırılabilir; hedef ve yetki asıl
+  // CP satırından okunur. CP henüz yüklenmediyse yalnız hedef türü çözülür,
+  // yetki yapıştırma anında CP yüklenip asıl satırla yeniden doğrulanır.
+  if(column.personalNote||!state.cp)return cpPasteTarget(row,column,{permissions:false});
   const canonical=orderLinePeerRows('cp',row)[0];
   return canonical?cpPasteTarget(canonical,column):null;
 }
@@ -14785,20 +14793,56 @@ async function applyOrdersGridPaste(plan,range){
   // Orders görünüm kimlikleri CP'den bağımsızdır. Mevcut revizyonlu işleme
   // girmeden asıl sipariş satırını çöz; görünüm sırasıyla kayıt yapılmaz.
   if(isAreaFrozen('orders'))return {ok:false};
-  if(!state.cp&&!(await ensureCpLoaded({deferRender:true,reason:'orders-note-paste'})))return {ok:false};
+  const personal=plan.ops.filter(op=>op.target==='personalNote'),shared=plan.ops.filter(op=>op.target!=='personalNote');
+  if(shared.length&&!state.cp&&!(await ensureCpLoaded({deferRender:true,reason:'orders-grid-paste'})))return {ok:false};
   if(isAreaFrozen('orders'))return {ok:false};
-  const ops=[];
-  for(const op of plan.ops){
+  const ops=[...personal];let readonly=Number(plan.readonly)||0;
+  for(const op of shared){
+    // Kullanıcının CP'sinde olmayan veya yetkisi değişen satır atlanır ve sayılır.
     const row=orderLinePeerRows('cp',op.row)[0];
-    if(!row||ordersPasteTarget(op.row,op.column)!=='note')return {ok:false};
+    if(!row||cpPasteTarget(row,op.column)!==op.target){readonly++;continue;}
     ops.push({...op,row});
   }
-  return applyCpGridPaste({...plan,ops,clipboardModule:'orders'},range);
+  if(!ops.length){
+    showToast((appLang==='en'?'Nothing editable to paste.':'Yapıştırılabilecek düzenlenebilir hücre yok.')+(readonly?(appLang==='en'?` (${readonly} read-only/calculated skipped)`:` (${readonly} salt-okunur/hesaplanan atlandı)`):''));
+    return {ok:false};
+  }
+  return applyCpGridPaste({...plan,ops,readonly,clipboardModule:'orders'},range);
+}
+/* Kişisel not yapıştırması yalnız kullanıcının kendi deposuna yazar: ortak
+   sipariş satırına, sunucuya veya CP toplu kayıt hattına hiç girmez. */
+function applyPersonalNotePaste(ops){
+  const notes=window.BLPersonalNoteColumns;let changed=0,failed=0;
+  for(const op of ops){
+    const line=lineKeyOfRow(op.row);
+    try{const before=notes.readValue(op.column.k,line);if(notes.writeValue(op.column.k,line,op.value)!==before)changed++;}catch(_){failed++;}
+  }
+  if(changed){if(state.cp)renderCP();if(state.orders)renderOrders();}
+  return {changed,failed};
+}
+function cpGridBulkTitle(plan){
+  const orders=plan.clipboardModule==='orders',en=appLang==='en';
+  if(plan.kind==='clear')return orders?(en?'Orders clear preview':'Siparişler temizleme önizlemesi'):(en?'CP clear preview':'CP temizleme önizlemesi');
+  if(plan.kind==='fill')return orders?(en?'Orders fill-down preview':'Siparişler aşağı doldurma önizlemesi'):(en?'CP fill-down preview':'CP aşağı doldurma önizlemesi');
+  return orders?(en?'Orders paste preview':'Siparişler yapıştırma önizlemesi'):(en?'CP paste preview':'CP yapıştırma önizlemesi');
 }
 function cpBulkUniqueOperations(operations){
   const seen=new Set();return operations.filter(op=>{const key=lineKeyOfRow(op.row)+'|'+op.column.k;if(seen.has(key))return false;seen.add(key);return true;});
 }
 async function applyCpGridPaste(plan,range){
+  const personal=(plan.ops||[]).filter(op=>op.target==='personalNote');
+  if(personal.length){
+    // Ortak alanlar önce kendi önizleme/onay yolundan geçer; vazgeçilirse
+    // kişisel notlara da yazılmaz.
+    const shared=plan.ops.filter(op=>op.target!=='personalNote');
+    const result=shared.length?await applyCpGridPaste({...plan,ops:shared},range):{ok:true,changed:0};
+    if(!result?.ok)return result;
+    const own=applyPersonalNotePaste(personal);
+    if(!shared.length||own.failed)showToast(own.failed
+      ?(appLang==='en'?`${own.failed} private note(s) could not be saved.`:`${own.failed} kişisel not kaydedilemedi.`)
+      :(appLang==='en'?`${own.changed} private note(s) updated. Only you can see them.`:`${own.changed} kişisel not güncellendi. Yalnız siz görürsünüz.`),own.failed?{kind:'error'}:undefined);
+    return {...result,ok:result.ok&&(own.changed>0||own.failed===0),changed:(Number(result.changed)||0)+own.changed};
+  }
   if(!plan._bulkConfirmed&&plan.ops?.length){
     const unique=cpBulkUniqueOperations(plan.ops);plan={...plan,ops:unique,skipped:(Number(plan.skipped)||0)+plan.ops.length-unique.length};
     const editorSnap=managedEditorSnapshot(document.activeElement);
@@ -14811,7 +14855,7 @@ async function applyCpGridPaste(plan,range){
       return current&&lineKeyOfRow(current)===key&&current._canEdit!==false&&JSON.stringify(current)===before&&cpPasteTarget(current,op.column)===op.target;
     });
     const items=snapshots.map(({op,key,value})=>({key:key+'|'+op.column.k,label:String(op.row['Order Code'])+' · '+op.column.k,before:value,after:op.value}));
-    const receipt=await window.BLBulkOperations.run({module:plan.clipboardModule||'cp',owner,expected:{orders:revision,suppFob},title:plan.clipboardModule==='orders'?(appLang==='en'?'Orders paste preview':'Siparişler yapıştırma önizlemesi'):(appLang==='en'?'CP paste preview':'CP yapıştırma önizlemesi'),counts:plan,items,guard,
+    const receipt=await window.BLBulkOperations.run({module:plan.clipboardModule||'cp',owner,expected:{orders:revision,suppFob},title:cpGridBulkTitle(plan),counts:plan,items,guard,
       hint:appLang==='en'?'Date dependencies follow the same rules as cell editing.':'Tarih bağımlılıkları hücre düzenlemeyle aynı kuralları izler.',
       async send(){
         cpBulkInFlight=true;

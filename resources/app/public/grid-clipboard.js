@@ -268,7 +268,9 @@
     const rows=Array.isArray(options?.rows)?options.rows:[];
     const columns=Array.isArray(options?.columns)?options.columns:[];
     const range=options?.range;
-    const matrix=parseClipboardText(options?.text);
+    // Delete/Ctrl+D hücre değerini metne çevirmeden doğrudan matris verir:
+    // sekme/satır sonu içeren not değeri hücre sınırına bölünmez.
+    const matrix=Array.isArray(options?.matrix)?options.matrix:parseClipboardText(options?.text);
     const height=matrix.length,width=matrix.reduce((max,line)=>Math.max(max,line.length),0);
     const plan={ops:[],readonly:0,invalid:0,skipped:0,mode:'',source:{rows:height,columns:width},target:null};
     if(!range||!height||!width)return plan;
@@ -299,14 +301,35 @@
     return plan;
   }
 
-  async function pasteEntry(entry,event,text){
+  // Excel/Koleksiyon ile aynı Ctrl+D: seçimin ilk satırı alttaki satırlara
+  // yazılır; ilk satır yeniden yazılmaz. Değer, kopyalamadaki hücre metniyle
+  // aynıdır ve yapıştırma gibi pasteValue ile doğrulanır.
+  function fillDownSource(entry,data){
+    const range=data.range;
+    if(!range||range.endRow<=range.startRow)return null;
+    const top=data.rows[range.startRow];
+    const valueOf=typeof entry.config.value==='function'?entry.config.value:()=> '';
+    return {
+      matrix:[data.columns.slice(range.startColumn,range.endColumn+1).map(column=>identity(valueOf(top,column,range.startRow)))],
+      range:{...range,startRow:range.startRow+1},
+    };
+  }
+
+  // kind: 'paste' (Ctrl+V), 'clear' (Delete) veya 'fill' (Ctrl+D). Üçü de
+  // aynı hedef, doğrulama, önizleme ve tek-adım geri alma yolundan geçer.
+  async function pasteEntry(entry,event,text,options={}){
     if(typeof entry.config.applyPaste!=='function')return false;
     const data=currentRange(entry);
     if(!data.range)return false;
+    const kind=options.kind==='clear'||options.kind==='fill'?options.kind:'paste';
+    let matrix=null,range=data.range;
+    if(kind==='clear')matrix=[['']];
+    if(kind==='fill'){const source=fillDownSource(entry,data);if(!source)return false;({matrix,range}=source);}
     const plan=planPaste({
-      text,rows:data.rows,columns:data.columns,range:data.range,
+      text,matrix,rows:data.rows,columns:data.columns,range,
       target:entry.config.pasteTarget,parse:entry.config.pasteValue,
     });
+    plan.kind=kind;
     // Düzenlenecek hücre yoksa panodaki görsel, görsel hücresine yapıştırma
     // akışına (ör. CP görsel sütunu) bırakılır.
     if(!plan.ops.length&&clipboardHasImage(event))return false;
@@ -329,7 +352,8 @@
     const target=plan.target;
     const first=target&&cellAt(entry,target.startRow,target.startColumn);
     const last=target&&cellAt(entry,target.endRow,target.endColumn);
-    if(selectionStillCurrent&&first&&last){entry.state.selectionAnchor=entry.state.activeCell=first;entry.state.selectionFocus=last;}
+    // Temizleme/doldurma kullanıcının seçtiği aralığı olduğu gibi bırakır.
+    if(kind==='paste'&&selectionStillCurrent&&first&&last){entry.state.selectionAnchor=entry.state.activeCell=first;entry.state.selectionFocus=last;}
     afterRender(entry.tableId);
     const table=root.document?.getElementById?.(entry.tableId);
     const focused=root.document?.activeElement;
@@ -604,6 +628,14 @@
         if(selectAll(entry.tableId))event.preventDefault();return;
       }
       if(event.key==='Escape'){event.preventDefault();clear(entry.tableId);return;}
+      // Delete aralığı temizler, Ctrl+D aşağı doldurur (Koleksiyon ile aynı).
+      // Yalnız yapıştırma kabul eden tablolarda; hücre düzenleyicisi açıkken
+      // yukarıdaki yerel düzenleme dalı tuşu editöre bırakır.
+      if(typeof entry.config.applyPaste==='function'&&entry.state.activeCell){
+        const plain=!event.ctrlKey&&!event.metaKey&&!event.altKey&&!event.shiftKey;
+        if(event.key==='Delete'&&plain){event.preventDefault();void pasteEntry(entry,event,'',{kind:'clear'});return;}
+        if((event.ctrlKey||event.metaKey)&&!event.altKey&&!event.shiftKey&&key==='d'){event.preventDefault();void pasteEntry(entry,event,'',{kind:'fill'});return;}
+      }
       const editMode=Boolean(entry.config.editOnDoubleClick);
       const arrows={ArrowDown:[1,0],ArrowUp:[-1,0],ArrowRight:[0,1],ArrowLeft:[0,-1]};
       if(arrows[event.key]){

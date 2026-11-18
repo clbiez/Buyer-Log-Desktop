@@ -10,14 +10,29 @@ test('CP accepts both note fields and keeps view-only rows protected',()=>{
     assert.equal(cpPasteTarget({_id:1,_canEdit:false},{k,type:'text'}),null);
   }
 });
-test('Orders paste accepts notes through canonical CP identities and skips other fields',()=>{
+test('Orders paste resolves every CP-editable column through canonical CP identities',()=>{
   const cp={_id:5,canonical:'a'},display={_id:99,canonical:'a',_canEdit:false};
   const {ordersPasteTarget}=loadAppMainFunctions(['ordersPasteTarget','cpPasteTarget'],{
     state:{cp:{rows:[cp]}},
     orderLinePeerRows:(_table,row)=>row.canonical==='a'?[cp]:[],
+    BLRevision:{isAutomaticExFactory:()=>false},
+    window:{BLOrderImportanceUI:{pasteResolve:()=>({ok:true,value:''})}},
   });
   assert.equal(ordersPasteTarget(display,{k:'Notes',type:'text'}),'note');
+  assert.equal(ordersPasteTarget(display,{k:'Supp. FOB',type:'moneyEdit'}),'suppfob');
+  assert.equal(ordersPasteTarget(display,{k:'Ex-factory',type:'exfactory'}),'exfactory');
+  assert.equal(ordersPasteTarget(display,{k:'Retail Date',type:'retailEdit'}),'retail');
+  assert.equal(ordersPasteTarget(display,{k:'Del. Type',type:'deltype'}),'deltype');
+  assert.equal(ordersPasteTarget(display,{k:'Importance',type:'importance'}),'importance');
+  assert.equal(ordersPasteTarget(display,{k:'note_x',type:'text',noteCustom:true}),'text');
+  // Hesaplanan/kaynak alanlar ve Orders'a özel durum sütunu yazılmaz.
   assert.equal(ordersPasteTarget(display,{k:'Order Qty',type:'int'}),null);
+  assert.equal(ordersPasteTarget(display,{k:'Active/Inactive',type:'active'}),null);
+  // Ortak alan yetkisi asıl CP satırından gelir.
+  cp._canEditShared=false;
+  assert.equal(ordersPasteTarget(display,{k:'Supp. FOB',type:'moneyEdit'}),null);
+  assert.equal(ordersPasteTarget(display,{k:'Notes',type:'text'}),'note');
+  delete cp._canEditShared;
   assert.equal(ordersPasteTarget({...display,canonical:'missing'},{k:'Notes',type:'text'}),null);
   cp._canEdit=false;
   assert.equal(ordersPasteTarget(display,{k:'Notes',type:'text'}),null);
@@ -49,25 +64,60 @@ test('Orders routes the note transaction by canonical line, never by its display
   const canonical={_id:5},display={_id:99},calls=[];
   const {applyOrdersGridPaste}=loadAppMainFunctions(['applyOrdersGridPaste'],{
     state:{cp:{rows:[canonical]}},
-    isAreaFrozen:()=>false,orderLinePeerRows:()=>[canonical],ordersPasteTarget:()=> 'note',
+    isAreaFrozen:()=>false,orderLinePeerRows:()=>[canonical],cpPasteTarget:()=> 'note',
     applyCpGridPaste:(plan,range)=>{calls.push({plan,range});return {ok:true};},
   });
   const range={startRow:0,endRow:0,startColumn:0,endColumn:0};
-  const result=await applyOrdersGridPaste({ops:[{row:display,column:{k:'Notes'},value:'new'}]},range);
+  const result=await applyOrdersGridPaste({ops:[{row:display,column:{k:'Notes'},target:'note',value:'new'}]},range);
   assert.equal(result.ok,true);assert.equal(calls[0].plan.ops[0].row,canonical);
   assert.equal(calls[0].plan.clipboardModule,'orders');assert.equal(calls[0].range,range);
 });
 test('Orders cannot paste when its canonical target disappears or its area is frozen',async()=>{
   for(const frozen of [false,true]){
-    let writes=0;
+    let writes=0;const toasts=[];
     const {applyOrdersGridPaste}=loadAppMainFunctions(['applyOrdersGridPaste'],{
-      state:{cp:{rows:[]}},
+      state:{cp:{rows:[]}},appLang:'tr',showToast:message=>toasts.push(message),
       isAreaFrozen:()=>frozen,orderLinePeerRows:()=>[],
       applyCpGridPaste:()=>{writes++;},
     });
-    assert.equal((await applyOrdersGridPaste({ops:[{row:{_id:99},column:{k:'Notes'},value:'draft'}]},{})).ok,false);
+    assert.equal((await applyOrdersGridPaste({ops:[{row:{_id:99},column:{k:'Notes'},target:'note',value:'draft'}]},{})).ok,false);
     assert.equal(writes,0);
+    if(!frozen)assert.match(toasts[0],/1 salt-okunur/);
   }
+});
+test('Orders skips rows missing from CP or whose permission changed, and writes the rest',async()=>{
+  const a={_id:5,canonical:'a'},b={_id:6,canonical:'b',_canEditShared:false},calls=[];
+  const fns=loadAppMainFunctions(['applyOrdersGridPaste','cpPasteTarget'],{
+    state:{cp:{rows:[a,b]}},isAreaFrozen:()=>false,
+    BLRevision:{isAutomaticExFactory:()=>false},
+    orderLinePeerRows:(_t,row)=>row.canonical==='a'?[a]:row.canonical==='b'?[b]:[],
+    applyCpGridPaste:plan=>{calls.push(plan);return {ok:true};},
+  });
+  const column={k:'Supp. FOB',type:'moneyEdit'};
+  const ops=[{canonical:'a'},{canonical:'b'},{canonical:'gone'}].map((row,i)=>({row:{_id:90+i,...row},column,target:'suppfob',value:'2'}));
+  assert.equal((await fns.applyOrdersGridPaste({ops,readonly:1},{})).ok,true);
+  assert.equal(calls[0].ops.length,1);assert.equal(calls[0].ops[0].row,a);
+  assert.equal(calls[0].readonly,3);assert.equal(calls[0].clipboardModule,'orders');
+});
+test('personal note columns paste into the private store, never the shared order row',async()=>{
+  const store=new Map(),renders=[],commits=[],toasts=[];
+  const notes={readValue:(id,line)=>store.get(id+'|'+line)||'',writeValue:(id,line,value)=>{store.set(id+'|'+line,String(value));return String(value);}};
+  const row={_id:1,_canEdit:false,'Order Code':'OC1'};
+  const fns=loadAppMainFunctions(['cpPasteTarget','applyCpGridPaste','applyPersonalNotePaste'],{
+    window:{BLPersonalNoteColumns:notes,BL_USER_CONTEXT:{id:'u1'}},appLang:'tr',
+    state:{cp:{rows:[row]},orders:null},lineKeyOfRow:r=>'1|'+r['Order Code'],
+    renderCP:()=>renders.push('cp'),renderOrders:()=>renders.push('orders'),
+    showToast:message=>toasts.push(message),commitCpEditor:()=>{commits.push(1);return true;},
+  });
+  const column={k:'personal_note_x',type:'text',personalNote:true};
+  // Görüntüleme yetkili satırda da kişisel not yazılabilir (hücre düzenlemesiyle aynı).
+  assert.equal(fns.cpPasteTarget(row,column),'personalNote');
+  const result=await fns.applyCpGridPaste({ops:[{row,column,target:'personalNote',value:'benim notum'}]},{});
+  assert.equal(result.ok,true);assert.equal(result.changed,1);
+  assert.equal(store.get('personal_note_x|1|OC1'),'benim notum');
+  assert.equal(row.personal_note_x,undefined,'ortak satır nesnesine kopyalanmamalı');
+  assert.equal(commits.length,0);assert.deepEqual(renders,['cp']);
+  assert.match(toasts[0],/1 kişisel not güncellendi/);
 });
 test('Orders loads canonical permissions on demand when CP has not been opened',async()=>{
   const state={cp:null},canonical={_id:5,canonical:'a'},display={_id:99,canonical:'a',_canEdit:false};

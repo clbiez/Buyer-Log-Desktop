@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "orders-grid-paste-all-columns",
+      "type": "feature",
+      "module": {
+        "tr": "Siparişler ve CP",
+        "en": "Orders and CP"
+      },
+      "title": {
+        "tr": "Siparişler'de her sütuna çoklu yapıştırma; Delete ve Ctrl+D",
+        "en": "Multi-cell paste into every Orders column; Delete and Ctrl+D"
+      },
+      "body": {
+        "tr": "Siparişler tablosunda yalnız notlara değil, CP'de elle girilebilen her sütuna (Supp. FOB, tarihler, Del. Type, Sub-Mfr, lisansör, önem, not sütunları) çoklu hücre yapıştırabilirsiniz. Değer, sipariş satırının CP kaydına aynı yetki ve önizlemeyle yazılır; yetkiniz olmayan veya hesaplanan hücreler atlanır ve sayılır. CP ve Siparişler'de Delete seçili alanı temizler, Ctrl+D ilk satırı aşağı doldurur; ikisi de tek adımda geri alınır. Kişisel not sütunlarına yapıştırılan değer yalnız sizin deponuza kaydedilir.",
+        "en": "In the Orders table you can now paste multiple cells into every column that is editable in CP (Supp. FOB, dates, Del. Type, Sub-Mfr, licensor, importance, note columns), not just notes. Values are written to the order's CP record with the same permissions and preview; cells you cannot edit or that are calculated are skipped and counted. In CP and Orders, Delete clears the selected range and Ctrl+D fills the first row down; both undo in one step. Values pasted into private note columns are saved only to your own storage."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-grid-paste.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Siparişler ekranında Supp. FOB ve Notes sütunlarına iki satırlık yapıştırmanın önizlemesi.",
+          "en": "Actual Buyer Log Orders screen showing the preview of a two-row paste into the Supp. FOB and Notes columns."
+        },
+        "caption": {
+          "tr": "İzole demo verisiyle gerçek uygulama; Siparişler yapıştırma önizlemesi.",
+          "en": "Actual application with isolated demo data; Orders paste preview."
+        }
+      }
+    },
+    {
       "id": "report-image-size",
       "type": "improvement",
       "module": {

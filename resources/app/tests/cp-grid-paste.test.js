@@ -8,7 +8,7 @@
  *     gelen çoklu hücre o hücreden başlayarak dağıtılır.
  *  3) CP yalnız elle girilen alanlara, tek hücre düzenlemesiyle aynı
  *     commitCpEditor yolundan yazar ve tüm yapıştırma tek geri alma adımıdır.
- *     Orders yalnız not alanlarına yapıştırır.
+ *     Orders, CP'de elle girilebilen her sütuna asıl CP satırı üzerinden yapıştırır.
  */
 
 const test = require('node:test');
