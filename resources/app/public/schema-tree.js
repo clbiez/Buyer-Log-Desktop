@@ -38,6 +38,26 @@
 
   /* Arama: ad, tablo ve klasör birlikte aranır; tablo adıyla arama o
      tablonun bütün alanlarını getirir (Excel alan listesi davranışı). */
+  /* Aranan metin ve ada göre sıralı kopya, girdi dizisi başına BİR KEZ
+     hesaplanır. Arama her tuşta yeniden kurulduğu için katlama ve Collator
+     sıralamasını tekrarlamak binlerce alanda belirgin gecikmeydi; ön-sıralı
+     girdiyle düğüm içi sıralama neredeyse doğrusal çalışır. */
+  const prepared = new WeakMap();
+  function prepare(entries) {
+    let hit = prepared.get(entries);
+    if (!hit) {
+      const list = entries.filter(entry => entry && String(entry.name || '').trim())
+        .map(entry => {
+          const path = entryPath(entry);
+          return { entry, path, keys: path.map(part => part.toLocaleLowerCase('tr-TR')), text: fold(`${path.join(' ')} ${entry.name || ''}`) };
+        });
+      list.sort((a, b) => compare(a.entry.name, b.entry.name));
+      hit = list;
+      prepared.set(entries, hit);
+    }
+    return hit;
+  }
+
   function matches(entry, query, folded) {
     const q = folded != null ? folded : fold(query);
     if (!q) return true;
@@ -53,11 +73,11 @@
   function build(entries, options = {}) {
     const q = fold(options.query || '');
     const rootNode = { children: [], groups: new Map(), id: '', depth: -1 };
-    for (const entry of Array.isArray(entries) ? entries : []) {
-      if (!entry || !String(entry.name || '').trim() || (q && !matches(entry, '', q))) continue;
+    for (const { entry, text, path, keys } of Array.isArray(entries) ? prepare(entries) : []) {
+      if (q && !text.includes(q)) continue;
       let node = rootNode;
-      for (const part of entryPath(entry)) {
-        const key = part.toLocaleLowerCase('tr-TR');
+      for (let i = 0; i < path.length; i += 1) {
+        const part = path[i], key = keys[i];
         let child = node.groups.get(key);
         if (!child) {
           child = { type: 'group', id: `${node.id}/${part}`, name: part, depth: node.depth + 1, count: 0, children: [], groups: new Map() };
@@ -72,8 +92,12 @@
       let count = 0;
       /* Excel düzeni: önce sütunlar, sonra ölçüler, en sonda klasörler. */
       const rank = child => (child.type === 'group' ? 2 : child.entry.kind === 'measure' ? 1 : 0);
-      node.children.sort((a, b) => rank(a) - rank(b)
-        || compare(a.type === 'group' ? a.name : a.entry.name, b.type === 'group' ? b.name : b.entry.name));
+      /* Yapraklar girdinin ad sırasıyla geldi; yalnız türe göre bölünür
+         (doğrusal). Collator yalnız az sayıdaki klasör adını sıralar. */
+      const buckets = [[], [], []];
+      for (const child of node.children) buckets[rank(child)].push(child);
+      buckets[2].sort((a, b) => compare(a.name, b.name));
+      node.children = buckets[0].concat(buckets[1], buckets[2]);
       for (const child of node.children) {
         if (child.type === 'group') { finish(child); count += child.count; } else count += 1;
       }

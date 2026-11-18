@@ -6260,13 +6260,19 @@ async function openCpModelColumnModal(editId,rerenderFn){
     const q=search.value.trim();
     const tree=BLSchemaTree.build(schemaEntries,{query:q});
     const isOpen=node=>q?!closedWhileSearching.has(node.id):openGroups.has(node.id);
-    const rows=BLSchemaTree.flatten(tree,isOpen);
+    /* Geniş bir arama bütün grupları açar; binlerce satırı DOM'a basmak
+       tuş başına yüzlerce ms'ydi. Ortak seçicideki gibi liste KESİLİR ve
+       bu SÖYLENİR (sessizce kesmek alanı "yok" sandırırdı). */
+    const ROW_LIMIT=300;
+    const allRows=BLSchemaTree.flatten(tree,isOpen),rows=allRows.slice(0,ROW_LIMIT);
+    const hiddenLeaves=allRows.length>ROW_LIMIT?allRows.slice(ROW_LIMIT).filter(node=>node.type==='leaf').length:0;
     visibleLeaves=[];
-    list.innerHTML=rows.length?rows.map(node=>{
+    list.innerHTML=(rows.length?rows.map(node=>{
       if(node.type==='group'){const open=isOpen(node);return `<button type="button" class="cpModelTreeGroup${node.depth?' isFolder':''}" style="--tree-depth:${node.depth}" data-tree-group="${escapeHtml(node.id)}" aria-expanded="${open}"><svg class="ic" aria-hidden="true"><use href="#${open?'i-chevron-down':'i-chevron-right'}"/></svg><b data-no-i18n>${escapeHtml(node.name)}</b><span class="cpModelTreeCount">${node.count}</span></button>`;}
       const e=node.entry,measure=e.kind==='measure',idx=visibleLeaves.push(e)-1;
       return `<button type="button" class="cpModelColumnOption cpModelTreeLeaf${sameField(selectedField,e)?' active':''}" style="--tree-depth:${node.depth}" data-tree-leaf="${idx}"><strong>${measure?'<span class="cpModelTreeFx" aria-hidden="true">fx</span>':''}<span data-no-i18n>${escapeHtml(e.name)}</span></strong><span>${measure?escapeHtml(appLang==='en'?'Measure':'Ölçü'):''}</span></button>`;
-    }).join(''):`<div class="modelConnHint">${escapeHtml(appLang==='en'?'No matching column.':'Eşleşen sütun bulunamadı.')}</div>`;
+    }).join(''):`<div class="modelConnHint">${escapeHtml(appLang==='en'?'No matching column.':'Eşleşen sütun bulunamadı.')}</div>`)
+      +(hiddenLeaves?`<div class="modelConnHint">${escapeHtml(appLang==='en'?`${hiddenLeaves} more fields — narrow your search or collapse a group.`:`${hiddenLeaves} alan daha var — aramayı daraltın veya bir grubu kapatın.`)}</div>`:'');
   };
   list.addEventListener('click',event=>{
     const group=event.target.closest('[data-tree-group]');
