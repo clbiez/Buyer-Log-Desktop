@@ -11,8 +11,8 @@
 <link rel="stylesheet" href="/giris.css">
 <script src="/i18n-dictionary.js"></script>
 <script src="/i18n-runtime.js"></script>
-<script src="/motion-plus-theme.js"></script>
-<script src="/motion-plus.js"></script>
+<script defer src="/motion-plus-theme.js"></script>
+<script defer src="/motion-plus.js"></script>
 <link rel="icon" type="image/png" sizes="128x128" href="/icons/icon-mark.png">
 </head>
 <body data-ui-migrated="login">
@@ -444,7 +444,7 @@
       });
       if (!response.ok) throw new Error('SUGGEST_FAILED');
       const data = await response.json();
-      if (seq !== requestSeq) return [];
+      if (seq !== requestSeq || normalize($('username').value) !== normalize(query) || loginBusy) return [];
       suggestionItems = Array.isArray(data.users) ? data.users : [];
       activeIndex = suggestionItems.length ? 0 : -1;
       if (options.selectExact) {
@@ -843,7 +843,7 @@
     }
   });
 
-  async function restoreLastUser() {
+  function restoreLastUser() {
     let last = '';
     try { last = localStorage.getItem(LAST_USER_KEY) || ''; } catch (_) {}
     if (!last) {
@@ -852,9 +852,8 @@
     }
     $('username').value = last;
     renderLoginButton();
-    await searchUsers({ selectExact:true });
-    if (selected) $('password').focus();
-    else { $('username').focus(); $('username').select(); }
+    $('password').focus();
+    void searchUsers({ selectExact:true });
   }
 
   $('hubSettingsBtn').addEventListener('click', () => setHubDetailsOpen(!hubDetailsOpen, { focus:true }));
@@ -868,12 +867,8 @@
   renderLoginButton();
   initStartupUpdateStatus();
   setHubDetailsOpen(false);
-  loadHubStatus().then(() => {
-    // Sync status never decides whether the user may type/search/sign in.
-    // Shared Sync ayrıntıları da ilk açılışta kapalı kalır; kullanıcı yalnız
-    // Ayarlar düğmesine basarsa durum ve klasör ayarları gösterilir.
-    restoreLastUser();
-  });
+  restoreLastUser();
+  void loadHubStatus();
 })();
 </script>
 </body>

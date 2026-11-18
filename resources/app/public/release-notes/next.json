@@ -12,6 +12,23 @@
   },
   "changes": [
     {
+      "id": "desktop-direct-startup",
+      "type": "improvement",
+      "module": {"tr": "Açılış", "en": "Startup"},
+      "title": {"tr": "Girişten doğrudan çalışma alanına geçin", "en": "Go straight from sign-in to the workspace"},
+      "body": {
+        "tr": "Giriş ekranı son kullanılan hesabı Shared Sync durumu gelmeden doldurur. Başarılı masaüstü girişinden sonra çalışma alanı kendiliğinden açılır. Genel Bakış verisi hâlâ yükleniyorsa menüyü kullanabilir, yükleme hata verirse ekranın içinden yeniden deneyebilirsiniz.",
+        "en": "The sign-in screen fills in the last account while the Shared Sync status is loading. After successful desktop sign-in, the workspace opens automatically. You can use the menu while Overview data loads and retry from Overview if the load fails."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-direct-overview-loading.png",
+        "alt": {"tr": "Genel Bakış verisi yüklenirken Buyer Log menüsü açık ve kullanılabilir.", "en": "The Buyer Log workspace menu is available while Overview data loads."},
+        "caption": {"tr": "Başarılı girişten sonra açılan çalışma alanı, izole demo verisiyle.", "en": "The workspace after successful sign-in, with isolated demo data."}
+      }
+    },
+    {
       "id": "collection-price-drawer-direct-offer",
       "type": "fix",
       "module": {

@@ -13,7 +13,9 @@ test('the first screen awaits its prepared projection before secondary tasks can
   const start=app.indexOf("window.addEventListener('DOMContentLoaded', async ()");
   const boot=app.slice(start,app.indexOf('async function refreshFolderLabel()',start));
   assert.ok(boot.indexOf('await waitForStartupPrimaryScreen()')<boot.indexOf('schedulePostUiStartupTasks()'));
-  assert.ok(boot.indexOf("mark?.('UI_READY')")<boot.indexOf("new CustomEvent('bl:primary-screen-ready')"));
+  assert.match(boot,/mark\?\.\('UI_READY'\)[\s\S]*if\(primaryScreenReady\)signalStartupPrimaryScreenReady\(\)/);
+  const signal=app.slice(app.indexOf('function signalStartupPrimaryScreenReady()'),start);
+  assert.match(signal,/new CustomEvent\('bl:primary-screen-ready'\)/);
   assert.match(app,/if\(mode!=='error'&&startupReadySignaled\)void ensureOverviewCpDependency\(\)/);
   assert.match(clocks,/if\(!primaryScreenReady\)return;/);
   assert.match(clocks,/addEventListener\('bl:primary-screen-ready'/);
