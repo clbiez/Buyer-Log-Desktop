@@ -17444,21 +17444,11 @@ document.addEventListener('pointerdown',e=>closeOtherToolbarAndColumnPopups(e.ta
     setTimeout(()=>{menu.hidden=true;document.getElementById(btnId)?.setAttribute('aria-expanded','false');},0);
   });
 });
-// v20260930 — Sayfa düğmeleri yalnız KENDİ sayfalarını ister; loadFromServer
-// bağlı gruptaki sayfayı grupla (tek sorgu) genişletir, gruptan ayrı sayfa
-// (ör. CP) tek başına yenilenir. LFL düğmesi BLRunLinkedRefresh'i çağırır.
+// LFL düğmesi LFL kapsamını ister; loadFromServer bağlı kapsamı çözümler.
 window.BLRunLinkedRefresh=function(){
   if(isRefreshRunning()){openRefreshStagesModal();return Promise.resolve(false);}
   return loadFromServer(true,['lfl']);
 };
-document.getElementById('ordersRefreshBtn')?.addEventListener('click',()=>{
-  if(isRefreshRunning()){openRefreshStagesModal();return;}
-  void loadFromServer(true,['orders']);
-});
-document.getElementById('cpRefreshBtn')?.addEventListener('click',()=>{
-  if(isRefreshRunning()){openRefreshStagesModal();return;}
-  void loadFromServer(true,['cp']);
-});
 // İlk çizim bilerek ertelendi: bu satır betiğin ortasında çalışır ve
 // renderSourceTargets() dil değişkenini okur; o değişken çok daha aşağıda
 // tanımlanıyor. Doğrudan çağırmak betiği çökertirdi (bkz. v3.57 notu).

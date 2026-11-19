@@ -29,6 +29,64 @@
       }
     },
     {
+      "id": "orders-toolbar-refresh-removal",
+      "type": "improvement",
+      "module": {
+        "tr": "Siparişler",
+        "en": "Orders"
+      },
+      "title": {
+        "tr": "Tablo araç çubuğu sadeleşti",
+        "en": "The table toolbar is simpler"
+      },
+      "body": {
+        "tr": "Arama kutusunun yanındaki Yenile düğmesi kaldırıldı. Veri yenilemek için uygulamanın üst çubuğundaki Yenile menüsünü kullanın.",
+        "en": "The Refresh button next to the search box has been removed. To refresh data, use the Refresh menu in the app’s top bar."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-toolbar-without-refresh.png",
+        "alt": {
+          "tr": "Tablo üzerinde arama kutusu ve hemen ardından tablo eylemleri.",
+          "en": "The search box followed by table actions above the table."
+        },
+        "caption": {
+          "tr": "Siparişler araç çubuğu, demo verisiyle.",
+          "en": "The Orders toolbar with demo data."
+        }
+      }
+    },
+    {
+      "id": "cp-toolbar-refresh-removal",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Tablo araç çubuğu sadeleşti",
+        "en": "The table toolbar is simpler"
+      },
+      "body": {
+        "tr": "Arama kutusunun yanındaki Yenile düğmesi kaldırıldı. Veri yenilemek için uygulamanın üst çubuğundaki Yenile menüsünü kullanın.",
+        "en": "The Refresh button next to the search box has been removed. To refresh data, use the Refresh menu in the app’s top bar."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-toolbar-without-refresh.png",
+        "alt": {
+          "tr": "Tablo üzerinde arama kutusu ve hemen ardından tablo eylemleri.",
+          "en": "The search box followed by table actions above the table."
+        },
+        "caption": {
+          "tr": "CP Tracker araç çubuğu, demo verisiyle.",
+          "en": "The CP Tracker toolbar with demo data."
+        }
+      }
+    },
+    {
       "id": "desktop-direct-startup",
       "type": "improvement",
       "module": {"tr": "Açılış", "en": "Startup"},
