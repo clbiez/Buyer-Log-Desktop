@@ -10725,6 +10725,9 @@ function ordersRMScheduleRepaint(){
 }
 function ordersRMPaintTable(){
   const rows=ordersRM.rows||[];
+  // Eski yolla aynı: formül sütun tanımları güncel; tam satırlar bellekteyse Priority işçide hesaplanır.
+  applyFormulaColumns('orders');
+  if(state.orders)void scheduleOrdersPriorities();
   updateOrdersDimBtnLabels();
   document.getElementById('ordersEmpty').style.display='none';
   document.getElementById('ordersContent').style.display='block';
