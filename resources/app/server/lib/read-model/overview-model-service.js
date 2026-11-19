@@ -117,14 +117,16 @@ function createOverviewModelService({guard,loadProjection,runCompute,loadContext
       const options={signal,estimatedBytes:96*1024*1024,ownerKey:'read-model',generation:'1'};
       let value=await run(base,options);
       if(value&&Array.isArray(value.missing)&&value.missing.length){
-        const retry={...base},transferList=[];let extra=0;
+        // inputBytes = aktarılan sıkıştırılmış bayt (havuz kuyruk sınırı); bellek tahmini ayrıca büyür.
+        const retry={...base},transferList=[];let extra=0,input=0;
         for(const name of value.missing){
           if(name==='context'){counters.contextLoads++;retry.context=context.value;continue;}
           const lease=leases[name];if(!lease)continue;
           counters.datasetLoads++;
-          const attached=attach(base[name],lease);retry[name]=attached.spec;transferList.push(attached.bytes.buffer);extra+=attached.uncompressed*6+attached.bytes.byteLength;
+          const attached=attach(base[name],lease);retry[name]=attached.spec;transferList.push(attached.bytes.buffer);
+          extra+=attached.uncompressed*6+attached.bytes.byteLength;input+=attached.bytes.byteLength;
         }
-        value=await run(retry,{...options,estimatedBytes:options.estimatedBytes+extra,inputBytes:extra,transferList});
+        value=await run(retry,{...options,estimatedBytes:options.estimatedBytes+extra,inputBytes:input,transferList});
       }
       if(!value||typeof value.body!=='string')throw failure('COMPUTE_WORKER_FAILED',500,'Hesaplama işçisi tamamlanamadı.','Compute worker failed.');
       captured.assertResponse();leases.overview.assertResponse?.();leases.cp?.assertResponse?.();

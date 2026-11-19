@@ -55,8 +55,8 @@ function harness(){
     roleEntries:()=>({}),managedRules:()=>null,transitRules:()=>[{id:'t',seasons:[],countries:[],delType:'',days:30}],plmPayload:()=>null,
     checklistPayload:()=>({answers:{},tombstones:{}}),revision:()=>{state.contextLoads++;return state.contextRevision;},merge:(own,shared)=>Merge.merge(own,shared)});
   const calls=[];
-  const runCompute=async(name,payload)=>{
-    calls.push({cpBuffer:Boolean(payload.cp&&payload.cp.buffer),overviewBuffer:Boolean(payload.overview&&payload.overview.buffer),context:Boolean(payload.context)});
+  const runCompute=async(name,payload,options)=>{
+    calls.push({cpBuffer:Boolean(payload.cp&&payload.cp.buffer),overviewBuffer:Boolean(payload.overview&&payload.overview.buffer),context:Boolean(payload.context),options});
     return {value:await task.execute(structuredClone(payload),{cache:worker.cache,engine}),release(){}};
   };
   const service=createOverviewModelService({guard,loadProjection,runCompute,loadContext,canAccessCp:req=>req.currentUser.areas.includes('cp')});
@@ -157,4 +157,34 @@ test('stale generation during the read is a 409 that the route retries',async()=
     const invalid=await post('moderator',{version:1,filters:{main:{nope:['x']}}});
     assert.equal(invalid.status,400);assert.equal((await invalid.json()).code,'READ_MODEL_QUERY_INVALID');
   }finally{server.close();}
+});
+
+test('worker admission: inputBytes is the transferred compressed size, not the memory estimate (30k COMPUTE_QUEUE_BUSY regression)',async()=>{
+  worker.cache.clear();task.clearHosts();
+  const {service,calls}=harness();
+  await service.model(req(users.moderator),body());
+  const retry=calls.find(call=>call.cpBuffer);
+  assert.ok(retry,'veri kümesi gönderildi');
+  const transferred=retry.options.transferList.reduce((sum,buffer)=>sum+buffer.byteLength,0);
+  assert.equal(retry.options.inputBytes,transferred);
+  assert.ok(retry.options.estimatedBytes>transferred*6,'bellek tahmini çözülmüş boyutu kapsar');
+  // Gerçek havuz kabulü: 30k CP projeksiyonu (~60 MB çözülmüş, ~5 MB gzip) varsayılan bütçeye sığar.
+  const {createComputePool}=require('../server/lib/compute-pool');
+  const pool=createComputePool({memoryBudgetBytes:1024*1024*1024,maxWorkers:1,workerFile:require.resolve('../server/lib/read-model/read-model-worker.js')});
+  try{
+    const {createOverviewModelService}=require('../server/lib/read-model/overview-model-service');
+    const big=Buffer.alloc(5*1024*1024,1);
+    const lease={value:{buffer:big,uncompressedBytes:60*1024*1024},manifest:{activeGeneration:'g',modules:{}},assertResponse(){},release(){}};
+    let admitted=null;
+    const svc=createOverviewModelService({guard:{capture:()=>({profile:users.moderator,key:'k',assertResponse(){}})},loadProjection:async()=>lease,
+      loadContext:()=>({key:'c',value:{}}),canAccessCp:()=>true,
+      runCompute:async(name,payload,options)=>{
+        if(!payload.cp.buffer)return {value:{missing:['cp','overview']},release(){}};
+        // Havuz kabul kontrolü gerçek; iş çalıştırılmadan reddedilirse hata fırlar.
+        const job=pool.run('health',{},options);admitted=await job.then(()=>true,error=>error.code);
+        return {value:{body:'{}',timing:{}},release(){}};
+      }});
+    await svc.model({currentUser:users.moderator},body());
+    assert.equal(admitted,true);
+  }finally{await pool.close();}
 });
