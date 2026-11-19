@@ -10805,9 +10805,10 @@ function renderOrdersFromReadModel(){
     ordersRMRequestFacets(spec,signature);
   }).catch(error=>{
     if(seq!==ordersRM.seq)return;
-    if(error&&error.code==='READ_MODEL_FILTER_UNSUPPORTED'){
-      // Sunucu doğrulaması istemci ön kontrolünden sıkı: bu sorgu için eski yol.
-      ordersRM.legacyReason='server:'+error.code;ordersRM.signature='';ordersRM.unsupportedSignature=signature;
+    if(error&&error.status===400){
+      // Sunucu bu sorguyu değerlendiremiyor (desteklenmeyen filtre ya da sınır aşımı,
+      // ör. 20.000'den fazla işaretli satır): bu sorgu için eski yol.
+      ordersRM.legacyReason='server:'+(error.code||'400');ordersRM.signature='';ordersRM.unsupportedSignature=signature;
       if(!state.orders)void ensureOrdersLoaded();else renderOrdersNowLegacyOnly();
       return;
     }
@@ -10893,9 +10894,17 @@ async function ordersPrepareAllRows(){
   }catch(error){showToast((appLang==='en'?'Rows could not be loaded: ':'Satırlar yüklenemedi: ')+(error&&error.message||error));return false;}
 }
 // Hücre aralığı kopyası (Ctrl+C / Ctrl+A): seçili aralıktaki boş satırlar önce doldurulur.
-async function ordersRMPrepareRange(range){
+// Sayfalı görünümde tablo satırları deponun dilimidir: boş satırların depo indeksi
+// (_rmIndex) yüklenir ve kopyanın okuyacağı dizi yerinde güncellenir.
+async function ordersRMPrepareRange(range,rows){
   if(!ordersRMWindowedActive()||!range)return true;
-  return ordersRMEnsureRange(range.startRow,range.endRow+1);
+  const list=Array.isArray(rows)?rows:ordersRM.rows,pending=[];
+  for(let i=Math.max(0,range.startRow);i<=range.endRow&&i<list.length;i++)if(list[i]&&list[i]._rmPending)pending.push(i);
+  if(!pending.length)return true;
+  const indexes=pending.map(i=>list[i]._rmIndex);
+  if(!await ordersRMEnsureRange(Math.min(...indexes),Math.max(...indexes)+1))return false;
+  pending.forEach(i=>{const row=ordersRM.rows[list[i]._rmIndex];if(row&&!row._rmPending)list[i]=row;});
+  return true;
 }
 // filteredOrders() eşzamanlı tüketicileri: akışla tamamlanmış küme ya da (bellekteyse) eski hesap.
 function ordersRMMaterializedRows(){
@@ -15537,7 +15546,7 @@ function registerManagedGridClipboard(tableId,tableKey){
     editTriggerSelector:'.delTypeTrigger,.impTrigger,.clStatusTrigger,.exfDisplay,.noteCellTrigger',
     selectionChanged:size=>updateGridSelectionStatus(tableKey,size),
     // #1076: pencereli Siparişler'de kopyalanacak aralıktaki boş satırlar önce doldurulur.
-    ...(tableKey==='orders'?{prepareRange:range=>ordersRMPrepareRange(range)}:{}),
+    ...(tableKey==='orders'?{prepareRange:(range,rows)=>ordersRMPrepareRange(range,rows)}:{}),
     pasteTarget:tableKey==='cp'?cpPasteTarget:ordersPasteTarget,
     pasteValue:cpPasteValue,
     applyPaste:tableKey==='cp'?applyCpGridPaste:applyOrdersGridPaste,
