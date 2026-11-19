@@ -21,12 +21,17 @@ const STALE_ATTEMPTS=3;
 function sendError(res,status,code,tr,en,detail){
   return res.status(status).set('Cache-Control','no-store').json({ok:false,code,error:tr,errorEn:en,...(detail?{detail}:{})});
 }
-module.exports=function registerReadModelRoutes(app,deps){
-  const {userAccess,apiError}=deps;
+module.exports = function registerReadModelRoutes(app, deps) {
+  const {
+    userAccess,
+    computeReadGuard,
+    ensureComputedProjection,
+    apiError,
+  } = deps;
   let service=deps.readModelService||null;
   const getService=()=>service||(service=require('../lib/read-model/read-model-service').createReadModelService({
-    guard:deps.computeReadGuard,
-    loadProjection:(req,module)=>deps.ensureComputedProjection(req,module),
+    guard:computeReadGuard,
+    loadProjection:(req,module)=>ensureComputedProjection(req,module),
     runCompute:(task,payload,options)=>(deps.runReadModelCompute||require('../lib/read-model/read-model-pool').getReadModelPool().run)(task,payload,options),
     calendar:()=>require('../lib/merch-calendar-store').publicProjection(),
   }));
