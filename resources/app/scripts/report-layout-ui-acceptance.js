@@ -239,6 +239,14 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
      }
      const header=page.locator('#blTableReport-'+key+' [data-tr-image-size]');
      await page.waitForFunction(key=>{const img=document.querySelector('#blTableReport-'+key+' .blDetailImageCell img');return img?.dataset.blImageLoaded==='1'&&img.complete&&img.naturalWidth>0;},key).catch(async error=>{console.log(await page.locator('#blTableReport-'+key+' .blDetailImageCell img').first().evaluate(img=>({html:img.outerHTML,src:img.currentSrc})));throw error;});
+     for(const theme of ['light','dark']){
+       await page.evaluate(theme=>applyTheme(theme),theme);
+       const borders=await header.evaluate(button=>{
+         const style=getComputedStyle(button);
+         return [style.borderTopColor,style.borderRightColor,style.borderBottomColor,style.borderLeftColor];
+       });
+       assert.ok(borders.every(color=>color==='rgba(0, 0, 0, 0)'),key+' '+theme+' image heading has no visible border');
+     }
      await header.click();
      const range=page.locator('#tableImageSizeRange');await range.waitFor();
      const maximum=Number(await range.getAttribute('max')),minimum=Number(await range.getAttribute('min'));
@@ -261,6 +269,9 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
      await page.keyboard.press('Escape');
      assert.ok(await header.evaluate(button=>button===document.activeElement),'Escape returns focus to report image heading');
      if(key==='cp'){
+       await header.press('Enter');await range.waitFor();await page.keyboard.press('Escape');
+       await header.blur();await page.mouse.move(1000,20);
+       await page.screenshot({path:path.join(assets,'report-image-heading.png')});
        await header.click();await page.screenshot({path:path.join(assets,'report-image-size.png')});await page.keyboard.press('Escape');
        await page.evaluate(()=>applyLanguage('tr'));assert.equal(await header.textContent(),'Görsel');assert.equal(await header.getAttribute('title'),'Görsel boyutunu değiştir');await page.evaluate(()=>applyLanguage('en'));
      }

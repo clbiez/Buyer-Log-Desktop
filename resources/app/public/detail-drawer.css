@@ -105,5 +105,5 @@
 .blTableReportInline .blDetailImageHead,.blTableReportInline .blDetailImageCell{width:var(--bl-report-image-col,74px);min-width:var(--bl-report-image-col,74px);padding-left:4px!important;padding-right:4px!important}
 .blTableReportInline .blDetailImageCell img:not(.isPlaceholder){width:var(--bl-report-image-width,66px);height:var(--bl-report-image-height,40px);max-width:var(--bl-report-image-width,66px);max-height:var(--bl-report-image-height,40px);object-fit:contain}
 .blTableReportInline .blDetailImageCell img.isPlaceholder{max-width:22px;max-height:22px}
-.blTableReportInline .blDetailImageHead button{max-width:100%;padding-left:0;padding-right:0;white-space:normal}
+.blTableReportInline .blDetailImageHead button[data-tr-image-size]{max-width:100%;padding-left:0;padding-right:0;white-space:normal;border-color:transparent!important}
 .blTableReportInline:has(.blDetailImageCell) tbody tr[data-id]{height:max(var(--ui-table-row-height),var(--bl-report-image-row,46px))}
