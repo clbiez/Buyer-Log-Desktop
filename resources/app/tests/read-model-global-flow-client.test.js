@@ -12,7 +12,7 @@ function fn(name){
   const start=SOURCE.search(new RegExp(`\\n(async )?function ${name}\\(`));assert.ok(start>=0,name);
   const end=SOURCE.indexOf('\n}\n',start);return SOURCE.slice(start+1,end+3);
 }
-function harness({flag,stored}={}){
+function harness({flag,stored,lang='tr'}={}){
   const calls={fetch:[],hydrate:0,legacy:0,engine:0};
   let priority='r1';
   const storage=new Map(stored?[['buyerlog.readModel.globalFlow',stored]]:[]);
@@ -20,7 +20,7 @@ function harness({flag,stored}={}){
     window:{BL_READ_MODEL_GLOBAL_FLOW:flag,BLBacklogRows:{loadData:async()=>{calls.legacy++;return {rows:[{a:1}],sourceRevision:'s'};},invalidate(){}}},
     localStorage:{getItem:key=>storage.has(key)?storage.get(key):null},
     state:{readModelBase:null,lastBacklogRows:null,lastBacklogSignature:''},
-    READ_MODEL_VERSION:1,JSON,Promise,Error,Array,String,
+    READ_MODEL_VERSION:1,JSON,Promise,Error,Array,String,L:(tr,en)=>lang==='en'?en:tr,
     backlogExportQueryParams:()=>({format:'json',lazyDimensions:'1',includeSourceDetails:'1',groupBy:'season'}),
     cpPriorityIndexApi:()=>({revision:()=>priority}),
     ensureDecisionEngine:async()=>{calls.engine++;return true;},
@@ -63,10 +63,13 @@ test('anahtar kapalı (localStorage veya window): eski istemci normalleştirmesi
   }
 });
 
-test('arka uç hatası kullanıcıya iletilir (sessizce boş harita çizilmez)',async()=>{
+test('arka uç hatası kullanıcıya TR/EN iletilir (sessizce boş harita çizilmez)',async()=>{
   const h=harness();
-  h.context.fetch=async()=>({ok:false,status:409,json:async()=>({error:'Kaynak filtresi gerekli.'})});
-  await assert.rejects(h.run(false),/Kaynak filtresi gerekli/);
+  h.context.fetch=async()=>({ok:false,status:409,json:async()=>({error:'Kaynak filtresi gerekli.',code:'SOURCE_FILTER_REQUIRED'})});
+  await assert.rejects(h.run(false),/Kaynak filtresi gerekli\. \(HTTP 409 · SOURCE_FILTER_REQUIRED\)/);
+  const en=harness({lang:'en'});
+  en.context.fetch=async()=>({ok:false,status:500,json:async()=>({error:'Harita okuma modeli hazırlanamadı.'})});
+  await assert.rejects(en.run(false),/Map data could not be prepared\. \(HTTP 500\)/);
 });
 
 test('refresh: girdiler aynıysa harita modeli yeniden kurulmaz; gün değişimi ve elle yenileme yeniden kurar',()=>{
