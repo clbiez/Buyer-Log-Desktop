@@ -8787,6 +8787,7 @@ app.get('/api/page-projection/:module', async (req, res) => {
   }
 });
 
+require('./routes/read-model-routes')(app, { userAccess, computeReadGuard, ensureComputedProjection, apiError }); // ERP okuma modeli (#1073): POST /api/read-model/:module/query
 // Hazır CP önbelleğiyle gelen satırlar için paylaşılan alan düzenleme yetkisi
 // (/api/data/cp'deki sharedAccessRows ile aynı karar). Yazma uçları yetkiyi
 // ayrıca denetler; bu yalnız arayüzün doğru kilitlenmesi içindir.
