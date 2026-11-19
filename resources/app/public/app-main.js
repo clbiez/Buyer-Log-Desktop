@@ -8303,8 +8303,10 @@ function redrawTableModule(tableKey){
   const tableId=tableKey==='koleksiyon'?'kolTable':`${tableKey}Table`;
   const host=document.getElementById(tableId)?.closest('.tablewrap');
   const top=host?host.scrollTop:0,left=host?host.scrollLeft:0;
-  if(tableKey==='cp')renderCPNow();
-  else if(tableKey==='orders')renderOrdersRoute();
+  // #1076: pencereli Siparişler'de yeniden çiz, sorguyu baştan kurar (önbellek/pencere atılır).
+  if(tableKey==='orders'&&ordersRMWindowedActive()){ordersRMInvalidate('redraw');renderOrdersRoute();}
+  else if(tableKey==='cp')renderCPNow();
+  else if(tableKey==='orders')renderOrdersNow();
   else if(tableKey==='koleksiyon')renderKol();
   else return;
   if(host){host.scrollTop=top;host.scrollLeft=left;const tb=host.querySelector('tbody');tb?._virtualState?.paint?.();}
@@ -10523,7 +10525,8 @@ function ordersRecordRowsVisible(path,started,detail={}){
      - parsiyel görünüm, açık lojistik detay, "işaretsizler" filtresi
      - kullanıcının eklediği hızlı filtre grupları
    Anahtar kapalıyken (varsayılan) eski yol aynen çalışır.
-   Açma: BLOrdersReadModel.setEnabled(true) ya da localStorage 'bl.ordersReadModel.v1'='1'. */
+   Açma: BLOrdersReadModel.setEnabled(true) (kullanıcı başına BLStorage 'bl.ordersReadModel.v1')
+   ya da ölçüm/test için sayfa betiklerinden önce window.BL_ORDERS_READ_MODEL=true. */
 const ORDERS_RM_STORAGE_KEY='bl.ordersReadModel.v1';
 const ORDERS_RM_WINDOW=200;
 const ORDERS_RM_PREFETCH=2;
