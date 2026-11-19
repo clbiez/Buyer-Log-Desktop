@@ -243,9 +243,9 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
        await page.evaluate(theme=>applyTheme(theme),theme);
        const borders=await header.evaluate(button=>{
          const style=getComputedStyle(button);
-         return [style.borderTopColor,style.borderRightColor,style.borderBottomColor,style.borderLeftColor];
+         return [style.borderTopWidth,style.borderRightWidth,style.borderBottomWidth,style.borderLeftWidth];
        });
-       assert.ok(borders.every(color=>color==='rgba(0, 0, 0, 0)'),key+' '+theme+' image heading has no visible border');
+       assert.ok(borders.every(width=>width==='0px'),key+' '+theme+' image heading has no border');
      }
      await header.click();
      const range=page.locator('#tableImageSizeRange');await range.waitFor();
