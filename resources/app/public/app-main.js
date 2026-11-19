@@ -2584,7 +2584,7 @@ async function ensureOrdersLoaded(options={}){
       applyPricingRulesToLoadedRows({render:false});
       if(data.collectionCatalogs&&typeof data.collectionCatalogs==='object')state.collectionCatalogs=data.collectionCatalogs;
       else void ensureCollectionCatalogLoaded();
-      buildOrdersFilters();applyCoreAutoFilterState();ordersRMAdoptFullRows();if(!options.deferRender||currentActiveTab()==='orders')renderOrders();
+      buildOrdersFilters();applyCoreAutoFilterState();ordersRMAdoptFullRows();ordersRMWarmDataset();if(!options.deferRender||currentActiveTab()==='orders')renderOrders();
       window.BLModulePreparation?.setStatus('orders','ready');
       return true;
     }catch(err){
@@ -10966,6 +10966,15 @@ function ordersRMAdoptFullRows(){
     const full=ordersRMFullRow(row);if(full&&full!==row){ordersRM.rows[i]=full;changed=true;}
   }
   if(changed){ordersRM.materialized=null;ordersRMScheduleRepaint();}
+}
+/* İşçideki veri kümesi ilk sorguda çözülür (30k satırda ~1,2 sn, ana iş parçacığı dışında).
+   Anahtar açıkken Siparişler verisi zaten hazırlanırken (arka plan hazırlığı / eski yükleme)
+   limit:0 sorgusuyla bir kez ısıtılır; ilk açılış bu bekleyişi ödemez. Ölçüm: #1076 L2. */
+function ordersRMWarmDataset(){
+  if(!ordersReadModelEnabled()||ordersRM.warmedEpoch===ordersRM.epoch)return;
+  ordersRM.warmedEpoch=ordersRM.epoch;
+  window.BLPerf?.mark?.('ORDERS_READ_MODEL_WARM');
+  void ordersRMPost('/api/read-model/orders/query',{version:1,limit:0}).catch(()=>{ordersRM.warmedEpoch=null;});
 }
 function ordersRMInvalidate(reason){
   ordersRM.epoch++;ordersRM.signature='';ordersRM.facets=null;ordersRM.facetsKey='';ordersRM.columnFacets.clear();ordersRM.materialized=null;
