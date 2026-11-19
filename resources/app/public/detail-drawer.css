@@ -99,7 +99,7 @@
 .blReportField:active{cursor:grabbing}
 .blReportLayoutRow td{vertical-align:top}
 
-/* Rapor, ana tablonun kayıtlı görsel ölçülerini ve ortak kaydırıcısını kullanır. */
+/* Rapor, kendi görsel boyutu tercihini ortak ölçülendirme kurallarıyla uygular. */
 .blTableReportTable{--bl-report-image-col:74px;--bl-report-image-height:40px;--bl-report-image-row:46px}
 .blTableReportInline .blDetailImageHead,.blTableReportInline .blDetailImageCell{width:var(--bl-report-image-col,74px);min-width:var(--bl-report-image-col,74px);padding-left:4px!important;padding-right:4px!important}
 .blTableReportInline .blDetailImageCell img:not(.isPlaceholder){position:absolute;inset:3px 4px;width:calc(100% - 8px);height:calc(100% - 6px);max-width:none;max-height:none;object-fit:contain}
