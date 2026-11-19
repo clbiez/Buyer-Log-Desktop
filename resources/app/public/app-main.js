@@ -10970,8 +10970,13 @@ function ordersRMAdoptFullRows(){
 /* İşçideki veri kümesi ilk sorguda çözülür (30k satırda ~1,2 sn, ana iş parçacığı dışında).
    Anahtar açıkken Siparişler verisi zaten hazırlanırken (arka plan hazırlığı / eski yükleme)
    limit:0 sorgusuyla bir kez ısıtılır; ilk açılış bu bekleyişi ödemez. Ölçüm: #1076 L2. */
+// Isıtma arka plan hazırlığıyla yarışmaz (aynı makinede CPU paylaşılır: #1076 L2'de açılış
+// sonrası uzun görev toplamı +1,5 sn ölçüldü). Hazırlık sürüyorsa bitişi beklenir.
+let ordersRMWarmupDone=false;
+window.addEventListener('bl:background-warmup-done',()=>{ordersRMWarmupDone=true;if(ordersRM.warmPending){ordersRM.warmPending=false;ordersRMWarmDataset();}});
 function ordersRMWarmDataset(){
   if(!ordersReadModelEnabled()||ordersRM.warmedEpoch===ordersRM.epoch)return;
+  if(backgroundWarmupStarted&&!ordersRMWarmupDone){ordersRM.warmPending=true;return;}
   ordersRM.warmedEpoch=ordersRM.epoch;
   window.BLPerf?.mark?.('ORDERS_READ_MODEL_WARM');
   void ordersRMPost('/api/read-model/orders/query',{version:1,limit:0}).catch(()=>{ordersRM.warmedEpoch=null;});
