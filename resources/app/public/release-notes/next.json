@@ -12,6 +12,23 @@
   },
   "changes": [
     {
+      "id": "table-selection-scroll-layer",
+      "type": "fix",
+      "module": {"tr": "CP, Siparişler ve Koleksiyon", "en": "CP, Orders and Collection"},
+      "title": {"tr": "Kaydırırken başlık ve toplamlar görünür kalır", "en": "Headers and totals stay visible while scrolling"},
+      "body": {
+        "tr": "CP, Siparişler ve Koleksiyon tablolarında satır işaretleme kutuları, kaydırma sırasında sabit başlıkların ve alt toplam satırının arkasından geçer. Satır seçimi soldaki sütundan yapılabilir.",
+        "en": "In CP, Orders and Collection, row checkboxes scroll behind the sticky headers and bottom totals row. The left column remains available for selecting rows."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-selection-scroll-layer.png",
+        "alt": {"tr": "Aşağı kaydırılmış CP tablosunda başlık ve alt toplam satırı", "en": "Header and bottom totals in the CP grid after scrolling down"},
+        "caption": {"tr": "Demo verisiyle CP tablosu aşağı kaydırıldığında seçim kutuları başlık ile toplam satırı arasında kalır.", "en": "With demo data scrolled down in CP, row checkboxes stay between the header and totals row."}
+      }
+    },
+    {
       "id": "cp-orders-stable-column-hover",
       "type": "fix",
       "module": {"tr": "CP ve Siparişler", "en": "CP and Orders"},
