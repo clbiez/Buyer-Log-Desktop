@@ -25,8 +25,8 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
    await target.waitForTimeout(800);
  }
  await openCP(page);
- const seedCp=()=>{
-   const rows=Array.from({length:4},(_,i)=>({_id:i+1,'PLM ID':990001+i,'Model Name':'DEMO MODEL '+(i+1),'Product Main Description':i%2?'T-Shirt':'Sweat','C.Code':'DEMO-C'+i,Colour:'NAVY','Order Code':880001+i,Season:'S7',Country:'DEMO','Order Quantity':100+i,Manufacturer:'DEMO FACTORY','Ex-factory':'2027-03-10','Retail Date':'2027-04-10','Del. Type':'Regular',STATUS:'Order Placed'}));
+ const seedCp=rowCount=>{
+   const rows=Array.from({length:rowCount},(_,i)=>({_id:i+1,'PLM ID':990001+i,'Model Name':'DEMO MODEL '+(i+1),'Product Main Description':i%2?'T-Shirt':'Sweat','C.Code':'DEMO-C'+i,Colour:'NAVY','Order Code':880001+i,Season:'S7',Country:'DEMO','Order Quantity':100+i,Manufacturer:'DEMO FACTORY','Ex-factory':'2027-03-10','Retail Date':'2027-04-10','Del. Type':'Regular',STATUS:'Order Placed'}));
    state.cp={...(state.cp||{}),rows};state.orders={...(state.orders||{}),rows:rows.map(r=>({...r}))};state.cpSelected.clear();state.ordersSelected.clear();
    state.cpSort={key:null,dir:1};state.ordersSort={key:null,dir:1};
    colmgr.cp.order=CP_COLS.map(c=>c.k);colmgr.cp.hidden=new Set(CP_COLS.filter(c=>!['PLM ID','Model Name','Product Main Description','C.Code','Colour','Season','Country','Order Code','Order Quantity','Manufacturer','Ex-factory','Retail Date'].includes(c.k)).map(c=>c.k));
@@ -34,7 +34,7 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
    for(const key of ['custom','focus','extended','all'])BLStorage.removeItem('buyerlog.tableReportMode.v1.layout.cp.'+key);
    renderCP();BLFlushTableRenders();ensureTableReportAdapters();BLTableReportInline.setMode('cp',true);
  };
- await page.evaluate(seedCp);await page.evaluate(()=>BLTableReportInline.refreshShared());
+ await page.evaluate(seedCp,process.env.REPORT_STICKY_ONLY==='1'?50:4);await page.evaluate(()=>BLTableReportInline.refreshShared());
  if(process.env.REPORT_SELECTION_ONLY==='1'){
    const feedback=[];
    for(const key of ['cp','orders','koleksiyon']){
@@ -178,6 +178,31 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
  }
  if(process.env.REPORT_STICKY_ONLY==='1'){
    const results=[];
+   async function checkVerticalLayers(tableId, label){
+     const samples=await page.locator('#'+tableId).evaluate(table=>{
+       const wrap=table.closest('.tablewrap');
+       const selectionCell=table.querySelector('tbody input.rowChk').closest('td');
+       const group=table.tHead.querySelector('.groupRow');
+       const footer=table.tFoot.rows[0];
+       const scrollPositions=[0,260].flatMap(left=>[110,275,401].map(top=>({left,top})));
+       const samples=scrollPositions.map(({left,top})=>{
+         wrap.scrollLeft=left;
+         wrap.scrollTop=top;
+         const rail=selectionCell.getBoundingClientRect(),x=rail.left+rail.width/2;
+         const sectionAt=row=>{
+           const {top,bottom}=row.cells[0].getBoundingClientRect();
+           return document.elementFromPoint(x,(top+bottom)/2)?.closest('thead,tbody,tfoot')?.tagName;
+         };
+         return {left:wrap.scrollLeft,top:wrap.scrollTop,header:sectionAt(group),footer:sectionAt(footer)};
+       });
+       wrap.scrollTop=0;
+       return samples;
+     });
+     assert.ok(samples.every(sample=>sample.top>0),label+' has vertically scrolled body rows');
+     assert.ok(samples.some(sample=>sample.left>0),label+' also scrolls horizontally');
+     assert.ok(samples.every(sample=>sample.header==='THEAD'&&sample.footer==='TFOOT'),label+' keeps the header and totals over the checkbox column: '+JSON.stringify(samples));
+     results.push({label,samples});
+   }
    async function checkPin(selector,label){
      const target=page.locator(selector).first();await target.waitFor();
      const before=await target.evaluate(input=>{const cell=input.closest('td,th'),wrap=cell.closest('.tablewrap');wrap.scrollLeft=0;return {left:cell.getBoundingClientRect().left,wrap:wrap.getBoundingClientRect().left,width:cell.getBoundingClientRect().width};});
@@ -189,15 +214,17 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
      if(key==='orders')await page.evaluate(()=>{switchTab('orders');colmgr.orders.hidden=new Set(colmgr.cp.hidden);renderOrders();BLFlushTableRenders();});
      if(key==='koleksiyon'){
        await page.evaluate(async()=>{switchTab('koleksiyon');await BLPerf.ensureFeature('collectionTools');});
-       await page.evaluate(()=>{kolRows=[{id:91001,plmId:'990001',modelKod:'DEMO COLLECTION',season:'S7',mag:'DEMO',urunTipi:'DEMO',country:'DEMO',quantity:'200',targetPrice:'14',pricing:{},durum:'',colour:'NAVY'}];kolColOrder=kolDefaultDisplayOrder();kolHiddenCols=new Set(kolColDefs().map(c=>c.k).filter(k=>!['modelKod','season','quantity','targetPrice'].includes(k)));kolPictureHidden=true;kolColFilters={};kolSelected.clear();renderKol();});
+       await page.evaluate(()=>{kolRows=Array.from({length:50},(_,i)=>({id:91001+i,plmId:String(990001+i),modelKod:'DEMO COLLECTION '+i,season:'S7',mag:'DEMO',urunTipi:'DEMO',country:'DEMO',quantity:'200',targetPrice:'14',pricing:{},durum:'',colour:'NAVY'}));kolColOrder=kolDefaultDisplayOrder();kolHiddenCols=new Set(kolColDefs().map(c=>c.k).filter(k=>!['modelKod','season','quantity','targetPrice'].includes(k)));kolPictureHidden=true;kolColFilters={};kolSelected.clear();renderKol();});
      }
      await page.evaluate(key=>{BLTableReportInline.setMode(key,false);const table=tableImageSizeTable(key),wrap=table.closest('.tablewrap');wrap.style.width='620px';wrap.style.maxWidth='620px';table.style.minWidth='1500px';BLTableFreeze.clear(table);},key);
      const tableId=key==='koleksiyon'?'kolTable':key==='orders'?'ordersTable':'cpTable';
+     await checkVerticalLayers(tableId,key+' normal');
      await checkPin('#'+tableId+' tbody input.rowChk',key+' normal body');
      await checkPin('#'+tableId+' thead input[type="checkbox"]',key+' normal header');
      await page.evaluate(key=>{const table=tableImageSizeTable(key);BLTableFreeze.apply(table,{count:3,pane:100});},key);
      await page.waitForTimeout(120);
      await page.evaluate(key=>BLTableFreeze.scrollPane(tableImageSizeTable(key),180),key);
+     await checkVerticalLayers(tableId,key+' inner frozen pane');
      await checkPin('#'+tableId+' tbody input.rowChk',key+' inner frozen pane');
      await page.evaluate(key=>{BLTableFreeze.clear(tableImageSizeTable(key));BLTableReportInline.setMode(key,true);document.querySelector('#blTableReport-'+key).style.minWidth='1500px';},key);
      await checkPin('#blTableReport-'+key+' [data-tr-check="0"]',key+' report body');
