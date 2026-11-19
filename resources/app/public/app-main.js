@@ -10531,9 +10531,14 @@ const ordersRM={
   facets:null,facetsKey:'',facetsSeq:0,optionsGeneration:'',
   columnFacets:new Map(),materialized:null,legacyReason:'',firstStarted:0,
 };
+// Depolama bir kez okunur: filteredOrders / sütun paneli gibi sık yollar her çağrıda okumaz.
+let ordersRMEnabledCache=null;
 function ordersReadModelEnabled(){
   if(typeof window.BL_ORDERS_READ_MODEL==='boolean')return window.BL_ORDERS_READ_MODEL;
-  try{return (window.BLStorage||localStorage).getItem(ORDERS_RM_STORAGE_KEY)==='1';}catch(_){return false;}
+  if(ordersRMEnabledCache===null){
+    try{ordersRMEnabledCache=(window.BLStorage||localStorage).getItem(ORDERS_RM_STORAGE_KEY)==='1';}catch(_){ordersRMEnabledCache=false;}
+  }
+  return ordersRMEnabledCache;
 }
 function ordersRMColumns(){
   return ORDERS_COLS.map(c=>({k:c.k,type:String(c.type||''),...(c.personalNote?{personalNote:true}:{}),...(c.modelCustom?{modelCustom:true}:{})}));
@@ -10989,6 +10994,7 @@ window.BLOrdersReadModel={
   isEnabled:ordersReadModelEnabled,
   setEnabled(value){
     try{(window.BLStorage||localStorage).setItem(ORDERS_RM_STORAGE_KEY,value?'1':'0');}catch(_){}
+    ordersRMEnabledCache=Boolean(value);
     ordersRMInvalidate('toggle');renderOrders();return ordersReadModelEnabled();
   },
   status:()=>({enabled:ordersReadModelEnabled(),windowed:ordersRMWindowedActive(),legacyReason:ordersRM.legacyReason,total:ordersRM.total,

@@ -46,7 +46,7 @@ test('grid-clipboard awaits the windowed provider before building the matrix and
 test('flag off by default: renderOrdersNow takes the legacy path unless the read model is enabled',()=>{
   const flag=extractFunction(SOURCE,'ordersReadModelEnabled');
   const key=/^const ORDERS_RM_STORAGE_KEY=.*$/m.exec(SOURCE)[0];
-  const run=(storage,override)=>vm.runInNewContext(`${key}\n${flag};ordersReadModelEnabled()`,{window:{...(override===undefined?{}:{BL_ORDERS_READ_MODEL:override}),BLStorage:{getItem:key=>storage[key]??null}},localStorage:{getItem:()=>null}});
+  const run=(storage,override)=>vm.runInNewContext(`${key}\nlet ordersRMEnabledCache=null;\n${flag};ordersReadModelEnabled()`,{window:{...(override===undefined?{}:{BL_ORDERS_READ_MODEL:override}),BLStorage:{getItem:key=>storage[key]??null}},localStorage:{getItem:()=>null}});
   assert.equal(run({}),false);
   assert.equal(run({'bl.ordersReadModel.v1':'1'}),true);
   assert.equal(run({'bl.ordersReadModel.v1':'1'},false),false);
