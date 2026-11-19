@@ -98,5 +98,7 @@ test('CP assistant overview card: one summary object feeds both paths; row-bound
   assert.match(bindSummary,/Promise\.resolve\(summaryMaterialize\(\)\)\.then\(ready =>/);
   // CP sayfasından açılan İş Listesi Genel Bakış kartını filtresiz modele çevirmez.
   assert.match(VIEW,/preferSummary = Boolean\(modelSummary\);/);
-  assert.match(VIEW,/function onOverviewRendered\(rows, context = \{\}\) \{\n    preferSummary = false;/);
+  // supplier-sync de onOverviewRendered(tüm CP) çağırır: bu, model özetini bırakmaz.
+  assert.doesNotMatch(VIEW.slice(VIEW.indexOf('function onOverviewRendered('),VIEW.indexOf('loadPrefs();',VIEW.indexOf('function onOverviewRendered('))),/preferSummary = false/);
+  assert.match(APP,/OVERVIEW_MODEL_MATERIALIZE'\);\n  \/\/[^\n]*\n  window\.BLCpAssistant\?\.showOverviewSummary\?\.\(null\);/);
 });

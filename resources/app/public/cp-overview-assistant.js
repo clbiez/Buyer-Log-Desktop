@@ -1112,8 +1112,10 @@
      isteyen tıklamalar önce materialize() ile eski yolu (CP + kararlar) hazırlar. */
   let modelSummary = null;
   let summaryMaterialize = null;
-  // Özet gösterilirken CP sayfasından açılan İş Listesi state.model'i (tüm CP
-  // satırları) doldurabilir; Genel Bakış kartı yine Genel Bakış özetini gösterir.
+  // Özet gösterilirken CP sayfasından açılan İş Listesi veya supplier-sync'in
+  // onOverviewRendered(tüm CP satırları) çağrısı state.model'i doldurabilir; Genel
+  // Bakış kartı yine Genel Bakış özetini gösterir. Eski yola dönüş yalnız
+  // showOverviewSummary(null) ile (materializeOverview) olur.
   let preferSummary = false;
   function render() {
     const container = host();
@@ -4895,7 +4897,6 @@
   }
 
   function onOverviewRendered(rows, context = {}) {
-    preferSummary = false;
     const list = Array.isArray(rows) ? rows : [];
     const dataRevision = Number(context && context.dataRevision) || 0;
     const filterRevision = String(context && context.filterRevision || '');

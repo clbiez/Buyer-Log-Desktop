@@ -12186,6 +12186,8 @@ async function materializeOverview(){
   if(overviewReadModel.materialized&&state.cp&&window.BLCpAssistant?._state?.model)return true;
   overviewReadModel.materialized=true;
   window.BLPerf?.mark?.('OVERVIEW_MODEL_MATERIALIZE');
+  // Asistan kartı model özetini bırakır; eski yol kendi kararlarını çizer.
+  window.BLCpAssistant?.showOverviewSummary?.(null);
   const loaded=await ensureCpLoaded({deferRender:true,reason:'overview'});
   if(!loaded||!state.cp){overviewReadModel.materialized=false;scheduleOverviewRender('overview-materialize-failed');return false;}
   await (window.BLPerf?.ensureFeature?.('cpAssistant')||Promise.resolve());
