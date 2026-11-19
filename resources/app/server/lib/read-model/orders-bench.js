@@ -27,7 +27,7 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 function parseArgs(argv){
   const value=(name,fallback)=>{const i=argv.indexOf(name);return i<0?fallback:argv[i+1];};
   return {rows:Number(value('--rows',30000)),samples:Number(value('--samples',24)),sourceFixture:value('--source-fixture',''),
-    screenshots:value('--screenshots',''),out:value('--out',''),keepFixture:argv.includes('--keep-fixture')};
+    screenshots:value('--screenshots',''),out:value('--out',''),keepFixture:argv.includes('--keep-fixture'),profile:argv.includes('--profile')};
 }
 function percentile(values,p){
   const sorted=[...values].sort((a,b)=>a-b);if(!sorted.length)return null;
@@ -50,6 +50,7 @@ function sampleInPage(args){
     const select=document.getElementById('ordersFCountry');
     if(![...select.options].some(o=>o.value===country)){const o=document.createElement('option');o.value=country;o.textContent=country;select.appendChild(o);}
     select.value=country;
+    if(window.__ordersBenchAcc)Object.keys(window.__ordersBenchAcc).forEach(k=>delete window.__ordersBenchAcc[k]);
     const countBefore=document.getElementById('ordersCount').textContent;
     const t0=performance.now();
     const timer=setTimeout(()=>{window.removeEventListener('bl:orders-rows-visible',done);resolve({timedOut:true});},60000);
@@ -57,7 +58,7 @@ function sampleInPage(args){
       if(event.detail.path!==wanted)return;
       window.removeEventListener('bl:orders-rows-visible',done);clearTimeout(timer);
       requestAnimationFrame(()=>{
-        const out={ms:performance.now()-t0,renderMs:event.detail.ms,rows:event.detail.rows,queryMs:event.detail.queryMs??null,
+        const out={profile:window.__ordersBenchAcc?Object.fromEntries(Object.entries(window.__ordersBenchAcc).map(([k,v])=>[k,Math.round(v*10)/10])):undefined,frameMs:null,ms:performance.now()-t0,renderMs:event.detail.ms,rows:event.detail.rows,queryMs:event.detail.queryMs??null,
           domRows:document.querySelectorAll('#ordersTable tbody tr[data-id]').length};
         // Sayım satırı (pencereli yolda sayaçlar satırlardan sonra gelir): yerleşene kadar bekle.
         const settle=performance.now(),poll=()=>{
@@ -135,6 +136,16 @@ function sampleInPage(args){
     const results={};
     for(const [label,enabled] of [['legacy',false],['readModel',true]]){
       await page.evaluate(value=>{window.BLOrdersReadModel.setEnabled(value);},enabled);
+      // --profile: üst düzey fonksiyonların örnek başına süre dökümü (global fonksiyon sarmalama).
+      if(opts.profile)await page.evaluate(()=>{
+        if(window.__ordersBenchAcc)return;const acc=window.__ordersBenchAcc={};
+        ['renderOrdersNow','renderFullTable','resolveTableColumnSchemas','renderTableRangeControls','buildColgroup','setupVirtualizedBody','renderOrdersSummary',
+          'ordersEvaluateAll','sortRows','ordersRMDecorate','ordersRMPaintTable','ordersReadModelSpec','applyFormulaColumns','bindOrdersImageHover',
+          'bindStatusBacklogDrilldown','renderActiveFilterContext','renderTableViewContext','renderTableEmptyHint','cpPlmDetailsSync'].forEach(name=>{
+          const fn=window[name];if(typeof fn!=='function')return;
+          window[name]=function(){const s=performance.now();try{return fn.apply(this,arguments);}finally{acc[name]=(acc[name]||0)+performance.now()-s;}};
+        });
+      });
       await delay(2000);
       const samples=[];
       for(const step of plan){samples.push({...step,...await page.evaluate(`(${sampleInPage})(${JSON.stringify({...step,path:label})})`)});await delay(150);}

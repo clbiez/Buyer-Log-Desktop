@@ -78,7 +78,9 @@ function loadClient(){
 }
 
 const TODAY=(()=>{const d=new Date();const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;})();
-function projection(rows=2000){
+// CI 2k satır; 30k parite koşusu: BL_ORDERS_PARITY_ROWS=30000 npm test -- read-model-orders-parity
+const PARITY_ROWS=Math.max(500,Number(process.env.BL_ORDERS_PARITY_ROWS)||2000);
+function projection(rows=PARITY_ROWS){
   // Demo verisinin "bugün"ü gerçek gün: Ex-factory dönem sayaçları boş kalmasın.
   const fx=parity.makeFixture({rows,today:TODAY});
   const asas=parse.parseASASRows(fx.asas),antrepo=parse.parseAntrepoRows(fx.antrepo);
@@ -154,7 +156,7 @@ test('ordersReadModelSpec + sunucu sorgusu eski Siparişler sonucunu (sıra, top
   const client=loadClient(),serverRows=projection();
   const dataset=engine.prepareDataset(JSON.parse(JSON.stringify(serverRows)));
   client.state.orders={rows:clientRowsFrom(serverRows,client)};
-  assert.ok(serverRows.length>=1900,String(serverRows.length));
+  assert.ok(serverRows.length>=PARITY_ROWS*0.95,String(serverRows.length));
   const summary=[];
   for(const scenario of SCENARIOS){
     applyScenario(client,scenario);
