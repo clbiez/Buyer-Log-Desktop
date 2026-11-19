@@ -29,6 +29,8 @@ const cache=createDatasetCache();
 
 function execute(task,payload){
   if(task==='health')return {ok:true};
+  // Akış Haritası kayıt modeli (#1075): tembel yüklenir, sorgu yolunu etkilemez.
+  if(task==='global-flow-records')return require('./global-flow-model').execute(payload);
   if(task!=='read-model-query')throw Object.assign(Error('Invalid compute request'),{code:'COMPUTE_JOB_INVALID'});
   const started=performance.now();
   let dataset=cache.get(payload.datasetKey),loadMs=0;
@@ -58,7 +60,7 @@ if(parentPort)parentPort.on('message',message=>{
   const start=performance.now();
   try{
     const value=execute(message.task,message.payload||{});
-    const memory=process.memoryUsage(),outputBytes=(value.body?Buffer.byteLength(value.body):0)+4096;
+    const memory=process.memoryUsage(),outputBytes=(value.body?Buffer.byteLength(value.body):value.buffer?value.buffer.byteLength:0)+4096;
     parentPort.postMessage({type:'result',id:message.id,ok:true,value,metrics:{threadId,executionMs:performance.now()-start,retainedBytes:memory.heapUsed+memory.arrayBuffers,outputBytes}});
   }catch(error){parentPort.postMessage({type:'result',id:message.id,ok:false,error:{code:error?.code||'COMPUTE_WORKER_FAILED'}});}
 });
