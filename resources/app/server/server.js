@@ -6364,6 +6364,14 @@ app.post('/api/backups/restore/inspect', userAccess.requireArea('source'), userA
   } catch (error) { return fullRestoreApiError(res, error, 'Full System Backup incelenemedi.'); }
   finally { if (upload) fs.rmSync(upload.root, { recursive: true, force: true }); }
 });
+// ERP okuma modeli (#1073): POST /api/read-model/:module/query. Global 100 MB JSON
+// ayrıştırıcısından ÖNCE kaydolur: yetki gövdeden önce, rota kendi 2 MB sınırını uygular.
+require('./routes/read-model-routes')(app, {
+  userAccess,
+  apiError,
+  ensureComputedProjection,
+  getComputeReadGuard: () => computeReadGuard,
+});
 app.use(express.json({ limit: '100mb' }));
 app.use((err, req, res, next) => {
   if (!err) return next();
