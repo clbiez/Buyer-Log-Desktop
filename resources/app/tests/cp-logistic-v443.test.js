@@ -3,6 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
+const { loadAppMainFunctions } = require('./helpers/app-main-functions');
 
 const ROOT = path.join(__dirname, '..');
 const parse = require(path.join(ROOT, 'server', 'lib', 'parse.js'));
@@ -300,10 +301,27 @@ test('v6.61 tüm parsiyellerin durumu aynıysa Status değeri tekilleştirilir',
   assert.strictEqual(rows[0]._logisticAllPartialsInWarehouse, true);
 });
 
-test('v6.61 CP/Orders Status hücresi parsiyel detaylarında çoklu durum özetini kullanır', () => {
+test('CP ve Siparişler Status özeti üretim bakiyesini ve parsiyelleri birlikte gösterir', () => {
   const js = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
   assert.match(js, /case 'status': return r&&r\._partialViewActive \? partialViewStatusCellHtml\(r\) : cpLogisticHasDetails\(r\) \? cpLogisticStatusCellHtml\(r,tableKey\)/);
-  assert.match(js, /const partials=all\.filter\(segment=>segment&&segment\.kind==='partial'\)/);
+  const { cpLogisticStatusGroups } = loadAppMainFunctions(['norm', 'toNum', 'turknorm', 'cpLogisticSegments', 'cpLogisticStatusGroups']);
+  const [cp] = build([asas()], [
+    ias({ 'Yükleme Toplam Adet': 3000, 'Supplier Portal Statü': 'Depoda' }),
+    ias({ 'Yükleme Toplam Adet': 4000, 'Supplier Portal Statü': 'Yol Operasyonları' }),
+  ]);
+
+  assert.deepStrictEqual(structuredClone(cpLogisticStatusGroups(cp)), [
+    {status: 'Üretimde', quantity: 3000, priority: 1},
+    {status: 'Yol Operasyonları', quantity: 4000, priority: 2},
+    {status: 'Depoda', quantity: 3000, priority: 3},
+  ]);
+
+  const [shortage] = build([asas({ 'Net Alım Sipariş Miktarı': 2000 })], [
+    ias({ 'Yükleme Toplam Adet': 900 }),
+    ias({ 'Yükleme Toplam Adet': 900, 'Tahmini Antrepo Giriş Tarihi': '2026-03-10' }),
+  ]);
+  assert.strictEqual(shortage._logisticShortageQty, 200);
+  assert.deepStrictEqual(structuredClone(cpLogisticStatusGroups(shortage)), [{status: 'Depoda', quantity: 1800, priority: 3}]);
 });
 
 test('v6.61 ana tablolar ve Collection sütun başlıklarında Excel-benzeri sağ-tık gizle/göster menüsü bulunur', () => {
