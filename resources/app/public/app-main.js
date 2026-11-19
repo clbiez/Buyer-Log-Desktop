@@ -7455,7 +7455,7 @@ function rowsForFilterUniverse(tableKey, excludeKey){
   let rows;
   try{
     if(tableKey==='cp') rows = filteredCP();
-    else if(tableKey==='orders') rows = (!state.orders&&ordersRMWindowedActive()) ? ordersRMLoadedRows() : filteredOrders();
+    else if(tableKey==='orders') rows = filteredOrders();
     else if(GENERIC_TABLE_SOURCES[tableKey]) rows = (GENERIC_TABLE_SOURCES[tableKey]()||[]).filter(row=>passesColFilters(tableKey,row));
   }catch(e){ rows = null; }
   if(rows==null){
@@ -10654,10 +10654,9 @@ function ordersRMDecorate(serverRows){
   if(fresh.length){
     reviveServerDates(fresh);
     // ensureOrdersLoaded + applyPricingRulesToLoadedRows + buildOrdersFilters ile aynı sıra.
-    fresh.forEach(row=>{
-      delete row.Priority;delete row._actionPriorityReasons;delete row._actionPrioritySignals;delete row._calculationStatus;
-      try{applyLicensorRuleToRow(row);recalcSuppFobForRow(row);}catch(_){}
-    });
+    fresh.forEach(row=>{delete row.Priority;delete row._actionPriorityReasons;delete row._actionPrioritySignals;delete row._calculationStatus;});
+    try{applyLicensorRulesToLoadedRows([fresh]);}catch(_){}
+    fresh.forEach(row=>{try{recalcSuppFobForRow(row);}catch(_){}});
     try{window.BLFormulaColumns?.applyToRows?.('orders',fresh);}catch(_){}
     fresh.forEach(row=>{try{applyFormulas(row);}catch(_){}});
   }
@@ -10955,13 +10954,15 @@ function ordersRMOpenHeaderFilter(key,anchorEl,rerenderOuter){
   const col=ORDERS_COLS.find(c=>c.k===key)||{k:key,type:'ro'};
   const isDate=isDateColumnDefinition(col,ordersRMLoadedRows());
   const signature=ordersRM.signature;
-  const requests=isDate?['year','month','week','day'].map(granularity=>({key,granularity})):[{key}];
+  // Değer listesi her zaman; tarih kovaları sütun tarih görünüyorsa. Panelin kendi tarih
+  // çıkarımı tam satırlar bellekte değilken farklı olabilir: iki biçim de hazır olur.
+  const requests=[{key},...(isDate?['year','month','week','day'].map(granularity=>({key,granularity})):[])];
   anchorEl?.setAttribute?.('aria-busy','true');
   Promise.all(requests.map(column=>ordersRMPost('/api/read-model/orders/facets',ordersRMFacetsBody(spec,{column})).then(payload=>payload.result.column)))
     .then(columns=>{
       if(signature!==ordersRM.signature)return;
       if(columns.some(column=>!column||column.truncated)){if(!legacy())reopen();return;}
-      const entry=isDate?{buckets:Object.fromEntries(columns.map(column=>[column.granularity,column.values]))}:{values:columns[0].values};
+      const entry={values:columns[0].values,...(isDate?{buckets:Object.fromEntries(columns.slice(1).map(column=>[column.granularity,column.values]))}:{})};
       ordersRM.columnFacets.set(cacheKey,entry);reopen();
     })
     .catch(error=>{
@@ -13125,34 +13126,34 @@ function recalcSuppFobForRow(row){
   return !editableValuesEqual(prev,next);
 }
 function applyLicensorRulesToLoadedRows(){
+  // İsteğe bağlı ilk argüman: satır dizileri listesi. Pencereli Siparişler (#1076) yalnız
+  // yeni gelen pencere satırlarını verir; imza sözleşme testleri için parametresiz kalır.
+  const rowLists=arguments.length&&Array.isArray(arguments[0])?arguments[0]:[state.cp&&state.cp.rows,state.orders&&state.orders.rows,state.orderSummary&&state.orderSummary.rows];
   let changed=0;
-  [state.cp&&state.cp.rows,state.orders&&state.orders.rows,state.orderSummary&&state.orderSummary.rows].forEach(rows=>{
-    (rows||[]).forEach(row=>{if(applyLicensorRuleToRow(row))changed++;});
+  rowLists.forEach(rows=>{
+    (rows||[]).forEach(row=>{
+      const license=norm(row.License);
+      // License silinince eski otomatik veya manuel değer taşınamaz. Bu
+      // normalizasyon yalnız bağlı alanı temizler; License dolu eski kayıtların
+      // tarihçesine dokunmaz.
+      if(!license){
+        const cleared=!editableValuesEqual(row.Licensor,'');
+        if(cleared){row.Licensor='';changed++;}
+        row._licensorManual=false; row._licensorAuto=false; delete row._licensorAutoLicense;
+        return;
+      }
+      if(row._licensorManual===true)return;
+      if(row._licensorSource){
+        const next=norm(row._licensorSource);
+        if(!editableValuesEqual(row.Licensor,next)){row.Licensor=next;changed++;}
+        return;
+      }
+      const auto=licenseLicensorStateForRow(row);
+      const next=norm(auto.displayValue)||'';
+      if(!editableValuesEqual(row.Licensor,next)){row.Licensor=next;changed++;}
+    });
   });
   return changed;
-}
-// Tek satırın lisansör kuralı; değiştiyse true. Pencereli Siparişler (#1076) de kullanır.
-function applyLicensorRuleToRow(row){
-  const license=norm(row.License);
-  // License silinince eski otomatik veya manuel değer taşınamaz. Bu
-  // normalizasyon yalnız bağlı alanı temizler; License dolu eski kayıtların
-  // tarihçesine dokunmaz.
-  if(!license){
-    const cleared=!editableValuesEqual(row.Licensor,'');
-    if(cleared)row.Licensor='';
-    row._licensorManual=false; row._licensorAuto=false; delete row._licensorAutoLicense;
-    return cleared;
-  }
-  if(row._licensorManual===true)return false;
-  if(row._licensorSource){
-    const next=norm(row._licensorSource);
-    if(!editableValuesEqual(row.Licensor,next)){row.Licensor=next;return true;}
-    return false;
-  }
-  const auto=licenseLicensorStateForRow(row);
-  const next=norm(auto.displayValue)||'';
-  if(!editableValuesEqual(row.Licensor,next)){row.Licensor=next;return true;}
-  return false;
 }
 function applyPricingRulesToLoadedRows({render=true}={}){
   let changed=applyLicensorRulesToLoadedRows();
