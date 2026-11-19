@@ -22,18 +22,26 @@ const MODULES = {
     rows: () => document.querySelectorAll('#kolTable tbody tr[data-id]').length,
   },
   backlog: {
-    ready: () => Boolean(document.querySelector('#backlogTreeBody tr') || document.getElementById('backlogEmpty')?.offsetParent),
+    // #backlogEmpty yükleme ve hata yer tutucusu olarak da kullanılır (showBacklogLoadingState);
+    // yalnız BLUI durum işareti taşımayan, görünür boş durum "hazır" sayılır.
+    ready: () => {
+      if (document.querySelector('#backlogTreeBody tr')) return true;
+      const empty = document.getElementById('backlogEmpty');
+      return Boolean(empty?.offsetParent && !empty.dataset.uiState && empty.getAttribute('aria-busy') !== 'true');
+    },
+    failed: () => document.getElementById('backlogEmpty')?.dataset.uiState === 'error',
     rows: () => document.querySelectorAll('#backlogTreeBody tr').length,
   },
 };
 // Tarayıcıda çalışır (kaynak metni olarak gönderilir).
-function openModuleInPage(module, isReady, countRows, timeoutMs) {
+function openModuleInPage(module, isReady, countRows, timeoutMs, isFailed) {
   return new Promise(resolve => {
     const button = document.querySelector(`#railModules button[data-tab="${module}"]`) || document.querySelector(`button[data-tab="${module}"]`);
     if (!button) { resolve({ module, error: 'tab button missing' }); return; }
     const t0 = performance.now();
     button.click();
     const tick = () => {
+      if (document.body.dataset.activeTab === module && isFailed && isFailed()) { resolve({ module, t0, t1: performance.now(), error: 'module error state' }); return; }
       if (document.body.dataset.activeTab === module && isReady()) {
         requestAnimationFrame(() => requestAnimationFrame(() => resolve({ module, t0, t1: performance.now(), rows: countRows() })));
         return;
@@ -222,7 +230,7 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
       phase = 'module:' + module;
       const spec = MODULES[module];
       // Kaynak metin olarak gömülür: sayfa CSP'si new Function/eval'e izin vermeyebilir.
-      const measured = await page.evaluate(`(${openModuleInPage})(${JSON.stringify(module)}, ${spec.ready}, ${spec.rows}, ${Number(options.moduleTimeoutMs)})`);
+      const measured = await page.evaluate(`(${openModuleInPage})(${JSON.stringify(module)}, ${spec.ready}, ${spec.rows}, ${Number(options.moduleTimeoutMs)}, ${spec.failed || 'null'})`);
       moduleResults.push(measured);
       log(`  ${label} ${module}: ${measured.timedOut ? 'TIMEOUT' : P.round(measured.t1 - measured.t0) + ' ms'}`);
       await delay(options.settleMs);

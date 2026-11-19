@@ -147,3 +147,37 @@ test('uzun görev ve olay döngüsü gecikmesi pencereye kırpılır; timeline o
   assert.equal(probe.median([4, 1, 2, 3]), 2.5);
   assert.ok(probe.isTrackedPayload('/api/page-projection/cp') && probe.isTrackedPayload('/api/data') && !probe.isTrackedPayload('/api/status'));
 });
+
+test('başka realm (vm) Map/Set/Date değerleri de kanonikleşir: farklı içerik FAIL verir', async () => {
+  const vm = require('node:vm');
+  const realm = vm.createContext({});
+  const make = qty => vm.runInContext(`({ m: new Map([['qty', ${qty}]]), s: new Set([${qty}]), d: new Date(Date.UTC(2026, 0, ${qty % 28 + 1})) })`, realm);
+  assert.equal(parity.canonicalJson(make(1)), parity.canonicalJson({ m: new Map([['qty', 1]]), s: new Set([1]), d: new Date(Date.UTC(2026, 0, 2)) }));
+  const result = await parity.compareParity({ name: 'vm-map', legacy: () => make(1), candidate: () => make(999) });
+  assert.equal(result.equal, false);
+  assert.equal(result.divergence.path, '$.d');
+  const mapOnly = await parity.compareParity({ name: 'vm-map-only', legacy: () => make(1).m, candidate: () => make(999).m });
+  assert.equal(mapOnly.equal, false, 'VM Map {} olarak düzleşip sahte PASS vermez');
+  assert.match(mapOnly.divergence.path, /^\$\.\$map\[0\]\[1\]$/);
+});
+
+test('benchmark Backlog hazır koşulu yükleme/hata yer tutucusunu kabul etmez', () => {
+  const { MODULES } = require('../scripts/lib/erp-readmodel-run.js');
+  const empty = { offsetParent: {}, dataset: {}, getAttribute: name => (name === 'aria-busy' ? empty.busy : null), busy: null };
+  const previous = globalThis.document;
+  let rows = null;
+  globalThis.document = { querySelector: () => rows, getElementById: id => (id === 'backlogEmpty' ? empty : null) };
+  try {
+    empty.dataset.uiState = 'loading'; empty.busy = 'true';
+    assert.equal(MODULES.backlog.ready(), false, 'yükleme durumu hazır değildir');
+    empty.dataset.uiState = 'error'; empty.busy = null;
+    assert.equal(MODULES.backlog.ready(), false);
+    assert.equal(MODULES.backlog.failed(), true, 'hata durumu başarısız sayılır');
+    delete empty.dataset.uiState;
+    assert.equal(MODULES.backlog.ready(), true, 'tamamlanmış boş sonuç hazırdır');
+    empty.offsetParent = null; rows = {};
+    assert.equal(MODULES.backlog.ready(), true, 'rapor satırı hazırdır');
+  } finally {
+    globalThis.document = previous;
+  }
+});

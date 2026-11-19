@@ -57,7 +57,10 @@ function normalize(value, options = {}, seen = new Set(), at = '$') {
       throw new TypeError(`read-model-parity: ${at} serileştirilemez (${typeof value})`);
     default: break;
   }
-  if (value instanceof Date) return Number.isNaN(value.getTime()) ? { $date: 'Invalid' } : value.toISOString();
+  // vm.createContext ile yüklenen betiklerin Date/Map/Set değerleri başka bir realm'dendir;
+  // instanceof yerine realm'den bağımsız etiket kullanılır.
+  const tag = Object.prototype.toString.call(value);
+  if (tag === '[object Date]') return Number.isNaN(Date.prototype.getTime.call(value)) ? { $date: 'Invalid' } : Date.prototype.toISOString.call(value);
   if (seen.has(value)) throw new TypeError(`read-model-parity: ${at} döngüsel referans`);
   seen.add(value);
   try {
@@ -67,12 +70,12 @@ function normalize(value, options = {}, seen = new Set(), at = '$') {
         return out === undefined ? null : out;
       });
     }
-    if (value instanceof Map) {
+    if (tag === '[object Map]') {
       const entries = [...value].map(([key, item], index) => [normalize(key, options, seen, `${at}<key ${index}>`), normalize(item, options, seen, `${at}<${String(key)}>`)]);
       entries.sort((a, b) => compareText(JSON.stringify(a[0]), JSON.stringify(b[0])));
       return { $map: entries.map(([key, item]) => [key, item === undefined ? null : item]) };
     }
-    if (value instanceof Set) {
+    if (tag === '[object Set]') {
       const items = [...value].map((item, index) => normalize(item, options, seen, `${at}{${index}}`)).map(item => (item === undefined ? null : item));
       items.sort((a, b) => compareText(JSON.stringify(a), JSON.stringify(b)));
       return { $set: items };
