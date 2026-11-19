@@ -20,7 +20,7 @@ function harness({flag,stored,lang='tr'}={}){
     window:{BL_READ_MODEL_GLOBAL_FLOW:flag,BLBacklogRows:{loadData:async()=>{calls.legacy++;return {rows:[{a:1}],sourceRevision:'s'};},invalidate(){}}},
     localStorage:{getItem:key=>storage.has(key)?storage.get(key):null},
     state:{readModelBase:null,lastBacklogRows:null,lastBacklogSignature:''},
-    READ_MODEL_VERSION:1,JSON,Promise,Error,Array,String,L:(tr,en)=>lang==='en'?en:tr,
+    READ_MODEL_VERSION:1,JSON,Promise,Error,Array,String,L:(tr,en)=>lang==='en'?en:tr,isEn:()=>lang==='en',
     backlogExportQueryParams:()=>({format:'json',lazyDimensions:'1',includeSourceDetails:'1',groupBy:'season'}),
     cpPriorityIndexApi:()=>({revision:()=>priority}),
     ensureDecisionEngine:async()=>{calls.engine++;return true;},

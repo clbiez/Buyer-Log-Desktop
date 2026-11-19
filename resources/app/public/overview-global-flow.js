@@ -1117,7 +1117,10 @@ function readModelEnabled(){
 async function fetchReadModelRecords(query){
   const response=await fetch('/api/read-model/global-flow/model',{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:READ_MODEL_VERSION,source:'backlog',query})});
   const data=await response.json().catch(()=>({}));
-  if(!response.ok)throw new Error(L(data.error||'Harita verisi hazırlanamadı.',data.errorEn||'Map data could not be prepared.')+' (HTTP '+response.status+(data.code?' · '+data.code:'')+')');
+  if(!response.ok){
+    const fallback=L('Harita verisi hazırlanamadı.','Map data could not be prepared.');
+    throw new Error((isEn()?(data.errorEn||fallback):(data.error||fallback))+' (HTTP '+response.status+(data.code?' · '+data.code:'')+')');
+  }
   return data;
 }
 /* Arka uç Backlog satırlarını normalleştirir; istemci yalnız ortak CP öncelik
