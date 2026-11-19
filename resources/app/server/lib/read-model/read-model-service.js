@@ -20,6 +20,12 @@ const crypto=require('node:crypto');
 const engine=require('./query-engine');
 // server/routes/read-model-routes.js AREAS ile aynı tutulur (test: read-model-service).
 const AREAS=Object.freeze({cp:'cp',orders:'orders',overview:'overview'});
+// İşçi görevi → doğrulayıcı. Varsayılan 'read-model-query'; Siparişler yüzeyleri (#1076)
+// yalnız orders modülünde geçerlidir.
+const TASKS=Object.freeze({
+  'read-model-query':{modules:null,validate:raw=>engine.validateQuery(raw),signature:raw=>engine.signature(raw)},
+  'read-model-orders-facets':{modules:new Set(['orders']),validate:raw=>require('./orders-facets').validateFacetsRequest(raw),signature:raw=>engine.signature(raw)},
+});
 const hash=value=>crypto.createHash('sha256').update(value).digest('hex');
 
 function failure(code,statusCode,tr,en,extra={}){return Object.assign(new Error(`${tr} / ${en}`),{code,statusCode,error:tr,errorEn:en,...extra});}
@@ -41,35 +47,36 @@ function createReadModelService({guard,loadProjection,runCompute,calendar=()=>({
     const manifest=lease.manifest||{},meta=manifest.modules&&manifest.modules[module];
     return `${manifest.activeGeneration||''}:${String(meta&&meta.checksum||'').slice(0,16)}`;
   }
-  async function compute(payload,options){
-    const result=await runCompute('read-model-query',payload,options);
+  async function compute(payload,options,task='read-model-query'){
+    const result=await runCompute(task,payload,options);
     try{return result.value;}finally{result.release?.();}
   }
-  async function query(req,module,rawQuery,{signal}={}){
-    const area=AREAS[module];
-    if(!area)throw unknownModule();
+  async function query(req,module,rawQuery,{signal,task='read-model-query'}={}){
+    const area=AREAS[module],taskSpec=Object.hasOwn(TASKS,task)?TASKS[task]:null;
+    if(!area||!taskSpec||(taskSpec.modules&&!taskSpec.modules.has(module)))throw unknownModule();
     // Yetki önce: yetkisiz kullanıcı sorgunun geçerliliğini de öğrenmez (403 > 400).
     const captured=guard.capture(req,area);
-    const query=engine.validateQuery(rawQuery);
+    taskSpec.validate(rawQuery);
     counters.queries++;
     const lease=await loadProjection(req,module);
     try{
       captured.assertResponse();lease.assertResponse?.();
       const generation=generationOf(lease,module),scope=JSON.stringify([captured.key,module]);
-      const key=JSON.stringify([captured.key,module,generation,engine.signature(rawQuery)]);
+      // Görev adı yalnız varsayılan dışı görevlerde anahtara girer (mevcut anahtarlar değişmez).
+      const key=JSON.stringify([captured.key,module,generation,taskSpec.signature(rawQuery),...(task==='read-model-query'?[]:[task])]);
       const cached=get(key);
       if(cached){counters.hits++;captured.assertResponse();return {module,generation,cached:true,body:cached.body,timing:{...cached.timing,cached:true}};}
       counters.misses++;
       const datasetKey=hash(JSON.stringify([captured.key,module,generation])),scopeKey=hash(scope);
       const base={datasetKey,scopeKey,query:rawQuery,calendar:calendar()};
       const options={signal,estimatedBytes:64*1024*1024,ownerKey:'read-model',generation:'1'};
-      let value=await compute(base,options);
+      let value=await compute(base,options,task);
       if(value&&value.missing){
         counters.datasetLoads++;
         // Sayfa önbelleğinin LRU Buffer'ı paylaşılır: aktarım için kopyalanır.
         const source=lease.value&&lease.value.buffer,bytes=Uint8Array.from(Buffer.isBuffer(source)?source:Buffer.from(source||[]));
         const uncompressed=Number(lease.value&&lease.value.uncompressedBytes)||bytes.byteLength*8;
-        value=await compute({...base,buffer:bytes.buffer},{...options,estimatedBytes:64*1024*1024+uncompressed*6+bytes.byteLength,inputBytes:bytes.byteLength,transferList:[bytes.buffer]});
+        value=await compute({...base,buffer:bytes.buffer},{...options,estimatedBytes:64*1024*1024+uncompressed*6+bytes.byteLength,inputBytes:bytes.byteLength,transferList:[bytes.buffer]},task);
       }
       if(value&&value.error)throw failure(value.error.code||'READ_MODEL_QUERY_INVALID',400,'Geçersiz okuma modeli sorgusu.','Invalid read model query.',{detail:value.error.detail||null});
       if(!value||typeof value.body!=='string')throw failure('COMPUTE_WORKER_FAILED',500,'Hesaplama işçisi tamamlanamadı.','Compute worker failed.');
@@ -82,4 +89,4 @@ function createReadModelService({guard,loadProjection,runCompute,calendar=()=>({
   function stats(){return {...counters,entries:cache.size,bytes:cachedBytes,maxEntries,maxBytes};}
   return {query,clear,stats};
 }
-module.exports={createReadModelService,AREAS};
+module.exports={createReadModelService,AREAS,TASKS:Object.keys(TASKS)};

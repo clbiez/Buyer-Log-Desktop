@@ -8,6 +8,12 @@ const {performance}=require('node:perf_hooks');
 globalThis.BLCanonicalFields=require('../canonical-fields');
 const dates=require('../../../public/date-dimension');
 const engine=require('./query-engine');
+// Görev → aynı veri kümesi üzerinde çalışan saf işleyici. Siparişler yüzeyleri (#1076)
+// ilk kullanımda yüklenir.
+const HANDLERS={
+  'read-model-query':(dataset,query)=>engine.executeQuery(dataset,query),
+  'read-model-orders-facets':(dataset,query)=>require('./orders-facets').runOrdersFacets(dataset,query),
+};
 const MiB=1024*1024;
 
 function createDatasetCache({maxEntries=4,maxBytes=768*MiB}={}){
@@ -29,7 +35,8 @@ const cache=createDatasetCache();
 
 function execute(task,payload){
   if(task==='health')return {ok:true};
-  if(task!=='read-model-query')throw Object.assign(Error('Invalid compute request'),{code:'COMPUTE_JOB_INVALID'});
+  const handler=Object.hasOwn(HANDLERS,task)?HANDLERS[task]:null;
+  if(!handler)throw Object.assign(Error('Invalid compute request'),{code:'COMPUTE_JOB_INVALID'});
   const started=performance.now();
   let dataset=cache.get(payload.datasetKey),loadMs=0;
   if(!dataset){
@@ -43,7 +50,7 @@ function execute(task,payload){
   if(payload.calendar&&payload.calendar.configured)dates.setMerchCalendar(payload.calendar.calendar);else dates.clearMerchCalendar();
   const queryStarted=performance.now();
   let body;
-  try{body=engine.serializeResult(engine.executeQuery(dataset,payload.query));}
+  try{body=engine.serializeResult(handler(dataset,payload.query));}
   catch(error){
     // Doğrulama hatası işçiyi emekli etmemeli (önbellek korunur): değer olarak döner.
     if(error&&error.statusCode===400)return {error:{code:error.code,detail:error.detail||null}};

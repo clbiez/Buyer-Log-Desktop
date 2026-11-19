@@ -7,6 +7,7 @@
  *     result:{ rows:[{_rowIndex,...fields,_canEdit?,_canEditShared?}], total, offset, limit,
  *              aggregates:{count,sums,groups} } }
  *   Tarihler projeksiyonla aynı 'YYYY-MM-DD' yerel gün metnidir.
+ * POST /api/read-model/orders/facets — aynı zarf; result şeması orders-facets.js başında (#1076).
  * Hatalar: { ok:false, code, error(TR), errorEn, detail? }
  *   400 READ_MODEL_QUERY_INVALID / READ_MODEL_FILTER_UNSUPPORTED / READ_MODEL_BODY_INVALID
  *   401 SESSION_REQUIRED · 403 AREA_FORBIDDEN · 404 READ_MODEL_MODULE_UNKNOWN
@@ -37,8 +38,9 @@ module.exports = function registerReadModelRoutes(app, deps) {
     calendar:()=>require('../lib/merch-calendar-store').publicProjection(),
   }));
   const json=express.json({limit:'2mb'});
-  app.post('/api/read-model/:module/query',async(req,res)=>{
-    const module=String(req.params.module||''),area=AREAS[module];
+  // /query ve /orders/facets aynı yetki, gövde sınırı, 409 yeniden deneme ve hata sözleşmesini paylaşır.
+  const handle=(task,moduleOf)=>async(req,res)=>{
+    const module=moduleOf(req),area=AREAS[module];
     if(!Object.hasOwn(AREAS,module))return sendError(res,404,'READ_MODEL_MODULE_UNKNOWN','Bilinmeyen okuma modeli modülü.','Unknown read model module.');
     try{
       // compute-access-middleware ile aynı: yetki dizini hazır, oturum profili canlı.
@@ -60,7 +62,7 @@ module.exports = function registerReadModelRoutes(app, deps) {
       try{
         for(let attempt=1;;attempt++){
           try{
-            const out=await getService().query(req,module,req.body,{signal:controller.signal});
+            const out=await getService().query(req,module,req.body,{signal:controller.signal,...(task?{task}:{})});
             res.status(200).set('Cache-Control','no-store').set('X-Read-Model-Generation',out.generation).type('application/json');
             return res.send(`{"ok":true,"version":1,"module":${JSON.stringify(out.module)},"generation":${JSON.stringify(out.generation)},"cached":${out.cached?'true':'false'},"timing":${JSON.stringify(out.timing||{})},"result":${out.body}}`);
           }catch(err){
@@ -73,7 +75,10 @@ module.exports = function registerReadModelRoutes(app, deps) {
         return apiError(res,err,'Okuma modeli sorgusu tamamlanamadı.');
       }finally{res.off('close',onClose);}
     });
-  });
+  };
+  app.post('/api/read-model/:module/query',handle(null,req=>String(req.params.module||'')));
+  // Siparişler hızlı filtre sayaçları + sütun paneli değer listesi (#1076; şema: server/lib/read-model/orders-facets.js).
+  app.post('/api/read-model/orders/facets',handle('read-model-orders-facets',()=>'orders'));
   return getService;
 };
 module.exports.AREAS=AREAS;

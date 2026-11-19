@@ -236,6 +236,16 @@
   }
 
   async function copyEntry(entry,event,options={}){
+    // Pencereli veri sağlayıcı (#1076 / CP için #1078): tablo tüm satırları bellekte
+    // tutmuyorsa config.prepareRange(range, rows) aralıktaki satırları önce yükler.
+    // Varsayılan tarayıcı kopyası beklemeden önce durdurulur.
+    if(typeof entry.config.prepareRange==='function'){
+      const pending=currentRange(entry);
+      if(!pending.range)return false;
+      event?.preventDefault?.();
+      event?.stopImmediatePropagation?.();
+      if(await entry.config.prepareRange(pending.range,pending.rows)===false)return false;
+    }
     const data=currentRange(entry);
     if(!data.range)return false;
     const matrix=buildMatrix({
