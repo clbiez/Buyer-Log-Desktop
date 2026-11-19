@@ -11,6 +11,7 @@ const doc=root.document;if(!doc)return;
 const STORE_PREFIX='buyerlog.tableReportMode.v1.';
 const CHUNK=300;
 const adapters=new Map(),dirty=new Set(),limits=new Map(),drafts=new Map(),contexts=new Map();
+const pendingImageFits=new Set();
 let drag=null;
 let frame=0,sharedLayouts=readLayout(STORE_PREFIX+'shared.v1'),sharedRequest=null,sharedLoaded=false,sharedGeneration=0,sharedAgain=false;
 function sharedSlot(key,adapter){return key+'.'+(adapter.view?.()||'custom');}
@@ -44,6 +45,11 @@ function host(key,adapter,create){
   el.innerHTML='<div class="blTableReportBar"><b data-tr-title></b><span data-tr-count></span><span data-tr-actions></span><button type="button" class="tbtn" data-table-report-exit></button></div>'+
     '<table class="blDetailTable blTableReportTable" id="blTableReport-'+key+'"><colgroup></colgroup><thead></thead><tbody></tbody></table>';
   wrap.appendChild(el);
+  const table=el.querySelector('table');
+  if(root.ResizeObserver)new root.ResizeObserver(()=>scheduleImageFit(key,table)).observe(table.tBodies[0]);
+  el.addEventListener('load',event=>{
+    if(event.target.matches?.('.blDetailImageCell img[data-src]'))scheduleImageFit(key,table);
+  },true);
   bindLayoutEvents(el,key,adapter);
   el.addEventListener('click',event=>{
     if(event.target.closest('[data-table-report-exit]')){setMode(key,false);return;}
@@ -234,28 +240,51 @@ function imageCell(row,moduleId,index){
   return helper.thumbHtml(id.source,{...id,modelId:id.plmId||id.modelName},
     {title:L('Büyük önizleme için üzerine gelin','Hover for large preview'),allowEmpty:true});
 }
-function sizeColumns(table,wrap,{projected,images,checkable},imageDims){
-  if(images){
-    for(const [name,value] of Object.entries({col:imageDims.col,width:imageDims.w,height:imageDims.h,row:imageDims.row})){
+function sizeColumns(table,wrap,{projected,checkable,imageDims,imageFitWidth}){
+  const imageWidth=imageDims?Math.max(imageDims.col,imageFitWidth):0;
+  if(imageDims){
+    for(const [name,value] of Object.entries({col:imageWidth,height:imageDims.h,row:imageDims.row})){
       const property='--bl-report-image-'+name,px=value+'px';
       if(table.style.getPropertyValue(property)!==px)table.style.setProperty(property,px);
     }
   }
-  const imageWidth=images?imageDims.col:0,leading=imageWidth+(checkable?8:0);
+  const leading=imageWidth+(checkable?8:0);
   let widths=projected.map(col=>Number(col.widthPx)||140);
   const totalWidth=widths.reduce((sum,width)=>sum+width,0),viewport=wrap?.clientWidth||0;
   const stretch=totalWidth>0&&viewport>totalWidth+leading;
   if(stretch)widths=widths.map(width=>width*(viewport-leading)/totalWidth);
-  assignHtml(table.querySelector('colgroup'),(checkable?'<col data-row-selection style="width:8px">':'')+(images?'<col style="width:'+imageWidth+'px">':'')+widths.map(w=>'<col style="width:'+w+'px">').join(''));
+  assignHtml(table.querySelector('colgroup'),(checkable?'<col data-row-selection style="width:8px">':'')+(imageDims?'<col style="width:'+imageWidth+'px">':'')+widths.map(w=>'<col style="width:'+w+'px">').join(''));
   // table-layout:fixed: genişlik sütunların toplamıdır; rol grupları sıkışmaz.
   const width=(stretch?viewport:totalWidth+leading)+'px';
   if(table.style.width!==width)table.style.width=width;
 }
+function scheduleImageFit(key,table){
+  if(!contexts.get(key)?.imageDims||pendingImageFits.has(key))return;
+  pendingImageFits.add(key);
+  root.requestAnimationFrame(()=>{
+    pendingImageFits.delete(key);
+    const context=contexts.get(key),adapter=adapters.get(key),dims=context?.imageDims;
+    if(!dims||!adapter||!isActive(key)||!tabVisible(adapter)||!table.isConnected)return;
+    // Satır metinle uzadığında görselin en-boy oranını koruyacak genişliği ayır.
+    let width=0;
+    for(const img of table.tBodies[0].querySelectorAll('.blDetailImageCell img[data-src]:not(.isPlaceholder)')){
+      const ratio=img.dataset.blImageLoaded==='1'&&img.naturalHeight?img.naturalWidth/img.naturalHeight:dims.w/dims.h;
+      width=Math.max(width,Math.ceil(img.offsetHeight*ratio)+8);
+    }
+    if(width===context.imageFitWidth)return;
+    context.imageFitWidth=width;
+    sizeColumns(table,sourceWrap(adapter),context);
+  });
+}
 function updateImageDimensions(key,dims){
   const context=contexts.get(key),adapter=adapters.get(key);
-  if(!context?.images||!adapter||!isActive(key)||!tabVisible(adapter))return;
+  if(!context?.imageDims||!adapter||!isActive(key)||!tabVisible(adapter))return;
   const table=doc.getElementById('blTableReport-'+key);
-  if(table)sizeColumns(table,sourceWrap(adapter),context,dims);
+  if(table){
+    context.imageDims=dims;
+    sizeColumns(table,sourceWrap(adapter),context);
+    scheduleImageFit(key,table);
+  }
 }
 function syncRowSelection(table,{rows,shown,checkable},adapter){
   if(!checkable)return;
@@ -299,12 +328,13 @@ function render(key){
   const images=Boolean(root.BLDetailImages?.resolve)&&adapter.images?.()!==false;
   const imageIndex=images?root.BLDetailImages.buildIndex():null;
   const selectionColumns=images?[{key:'__report_picture',label:L('Görsel','Image'),fields:[{key:adapter.pictureKey||'__picture'}]},...projected]:projected;
-  const context={id,saved,sharedId,projected,rows,shown,images,checkable,selectionColumns};
+  const imageDims=images?(adapter.imageDimensions?.()||{col:74,w:66,h:40,row:46}):null;
+  const imageFitWidth=imageDims?(contexts.get(key)?.imageFitWidth||0):0;
+  const context={id,saved,sharedId,projected,rows,shown,checkable,selectionColumns,imageDims,imageFitWidth};
   contexts.set(key,context);
   const span=projected.length+(images?1:0)+(checkable?1:0)||1;
   const table=el.querySelector('table');
-  const imageDims=images?(adapter.imageDimensions?.()||{col:74,w:66,h:40,row:46}):null;
-  sizeColumns(table,wrap,context,imageDims);
+  sizeColumns(table,wrap,context);
   assignHtml(table.querySelector('thead'),'<tr class="blDetailColumnRow">'+(checkable?'<th><input type="checkbox" data-tr-check="all" aria-label="'+esc(L('Sayfadaki satırları seç','Select rows on this page'))+'"></th>':'')+(images?'<th class="blDetailImageHead"><button type="button" class="tbtn" data-tr-image-size aria-haspopup="dialog" title="'+esc(L('Görsel boyutunu değiştir','Change image size'))+'">'+esc(L('Görsel','Image'))+'</button></th>':'')+projected.map(col=>{
     const filterable=typeof adapter.filter==='function';
     return '<th data-key="'+esc(col.key)+'"'+(col.reportRole==='number'?' class="blDetailNumeric"':'')+'><div class="blDetailReportHeading"><span>'+esc(col.label)+'</span>'+
@@ -317,6 +347,7 @@ function render(key){
   const editor=editing?'<tr class="blReportLayoutRow">'+(checkable?'<td></td>':'')+(images?'<td></td>':'')+projected.map(editorHtml).join('')+'</tr>':'';
   const bodyChanged=assignHtml(table.querySelector('tbody'),editor+(shown.length?body+(rest>0?'<tr><td class="blDetailMore" colspan="'+span+'"><button type="button" class="tbtn" data-tr-more>'+esc(L('Daha fazla göster','Show more'))+' · '+rest.toLocaleString(isEn()?'en-GB':'tr-TR')+' '+esc(L('satır kaldı','rows left'))+'</button></td></tr>':''):
     '<tr><td class="blDetailEmpty" colspan="'+span+'">'+esc(L('Gösterilecek satır yok.','No rows to display.'))+'</td></tr>'));
+  if(bodyChanged)scheduleImageFit(key,table);
   let hint=el.querySelector('[data-tr-hint]');
   if(!hint){hint=doc.createElement('div');hint.dataset.trHint='';hint.className='blReportLayoutHint';el.querySelector('.blTableReportBar').after(hint);}
   if(hint.hidden===editing)hint.hidden=!editing;
