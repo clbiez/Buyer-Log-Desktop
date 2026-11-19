@@ -10387,6 +10387,41 @@ function bindOrdersImageHover(){
 function ordersCycleImageSize(){
   openTableImageSizePopover(document.querySelector('#ordersTable th[data-k="__picture"]'),'orders');
 }
+function renderOrdersNow(){
+  // #1076: anahtar açıkken ve sorgu sunucuda değerlendirilebiliyorsa pencereli yol.
+  if(ordersReadModelEnabled()&&renderOrdersFromReadModel())return;
+  if(!state.orders){
+    // Pencereli yoldan eski yola düşüldü (desteklenmeyen filtre): tam satırlar gerekir.
+    if(ordersReadModelEnabled())void ensureOrdersLoaded();
+    return;
+  }
+  const legacyStarted=performance.now();
+  cpPlmDetailsSync();
+  applyFormulaColumns('orders');
+  migrateLegacyOrdersQuickFilters();updateOrdersDimBtnLabels();
+  // Priority arka planda (worker) hesaplanır; hazır olunca tablo yeniden çizilir.
+  void scheduleOrdersPriorities();
+  document.getElementById('ordersEmpty').style.display='none';
+  document.getElementById('ordersContent').style.display='block';
+  const scope=ordersEvaluateAll();
+  const rows=partialViewEnabled('orders')?filteredOrders():window.BLTableSearch.orderRows(state.ordersSort.key?sortRows(scope.all,state.ordersSort.key,state.ordersSort.dir):scope.all,parseTableSearchTerms(document.getElementById('ordersSearch')?.value),cpSearchHaystack,{plainMode:'contains'});
+  window.BLTableSearchFeedback?.render('ordersSearch',rows,cpSearchHaystack,appLang==='en');
+  const metricRows=partialViewEnabled('orders')?partialViewUniqueSourceRows(rows):rows;
+  const totalRowCount=partialViewEnabled('orders')?partialViewRows('orders',state.orders.rows).length:state.orders.rows.length;
+  const qty=metricRows.reduce((sum,row)=>sum+(toNum(row['Order Quantity'])||0),0);
+  const ordersStats=pageModelOptionStats(metricRows);
+  renderOrdersSummary({stats:ordersStats,rowCount:rows.length,totalRowCount,qty,...ordersScopeCounts(scope),
+    extraHtml:qfgExtra('orders',scope.all,()=>ordersEvaluateAll().all)});
+  renderFullTable('ordersTable','orders',rows,state.ordersSort,ordersSortClick,{withGroups:true,computeFn:computeFlags,selectedSet:state.ordersSelected,rerenderOuter:renderOrders,cellHtmlFn:ordersCellHtml,rowClassFn:row=>norm(row['Active/Inactive'])==='Inactive'?'ordersPassiveRow':'',
+    // Lojistik detay satırı CP ile aynı kanonik render zincirini kullanır; yalnız
+    // açık satır kümesi Siparişler tablosuna aittir.
+    detailRowHtmlFn:(r,cols,withChk)=>cpLogisticDetailRowHtml(r,cols,withChk,'orders'), detailRowClass:'cpLogisticDetailRow',
+    virtualize:true, hasExpandedRows:!partialViewEnabled('orders')&&state.ordersLogisticExpanded.size>0});
+  bindOrdersImageHover();
+  bindStatusBacklogDrilldown('ordersTable','orders');
+  const ordersTableEl=document.getElementById('ordersTable');if(ordersTableEl)ordersTableEl._blRenderedRowsSource=rows;
+  ordersRecordRowsVisible('legacy',legacyStarted,{rows:rows.length,reason:ordersRM.legacyReason});
+}
 // Siparişler sayım satırı + hızlı filtre çipleri. Eski yol sayaçları satırlardan,
 // pencereli yol (#1076) /api/read-model/orders/facets'ten verir; HTML ve bağlama tek yerde.
 const ORDERS_EXF_QUICK_KEYS=['past','thisWeek','nextWeek','thisMonth','nextMonth'];
@@ -10452,41 +10487,6 @@ function renderOrdersSummary(model){
     else if(el.dataset.exf!=null)el.addEventListener('click',()=>toggleOrdersQuickExFactory(el.dataset.exf,renderOrders));
   });
   scheduleCoreAutoFilterSave();
-}
-function renderOrdersNow(){
-  // #1076: anahtar açıkken ve sorgu sunucuda değerlendirilebiliyorsa pencereli yol.
-  if(ordersReadModelEnabled()&&renderOrdersFromReadModel())return;
-  if(!state.orders){
-    // Pencereli yoldan eski yola düşüldü (desteklenmeyen filtre): tam satırlar gerekir.
-    if(ordersReadModelEnabled())void ensureOrdersLoaded();
-    return;
-  }
-  const legacyStarted=performance.now();
-  cpPlmDetailsSync();
-  applyFormulaColumns('orders');
-  migrateLegacyOrdersQuickFilters();updateOrdersDimBtnLabels();
-  // Priority arka planda (worker) hesaplanır; hazır olunca tablo yeniden çizilir.
-  void scheduleOrdersPriorities();
-  document.getElementById('ordersEmpty').style.display='none';
-  document.getElementById('ordersContent').style.display='block';
-  const scope=ordersEvaluateAll();
-  const rows=partialViewEnabled('orders')?filteredOrders():window.BLTableSearch.orderRows(state.ordersSort.key?sortRows(scope.all,state.ordersSort.key,state.ordersSort.dir):scope.all,parseTableSearchTerms(document.getElementById('ordersSearch')?.value),cpSearchHaystack,{plainMode:'contains'});
-  window.BLTableSearchFeedback?.render('ordersSearch',rows,cpSearchHaystack,appLang==='en');
-  const metricRows=partialViewEnabled('orders')?partialViewUniqueSourceRows(rows):rows;
-  const totalRowCount=partialViewEnabled('orders')?partialViewRows('orders',state.orders.rows).length:state.orders.rows.length;
-  const qty=metricRows.reduce((sum,row)=>sum+(toNum(row['Order Quantity'])||0),0);
-  const ordersStats=pageModelOptionStats(metricRows);
-  renderOrdersSummary({stats:ordersStats,rowCount:rows.length,totalRowCount,qty,...ordersScopeCounts(scope),
-    extraHtml:qfgExtra('orders',scope.all,()=>ordersEvaluateAll().all)});
-  renderFullTable('ordersTable','orders',rows,state.ordersSort,ordersSortClick,{withGroups:true,computeFn:computeFlags,selectedSet:state.ordersSelected,rerenderOuter:renderOrders,cellHtmlFn:ordersCellHtml,rowClassFn:row=>norm(row['Active/Inactive'])==='Inactive'?'ordersPassiveRow':'',
-    // Lojistik detay satırı CP ile aynı kanonik render zincirini kullanır; yalnız
-    // açık satır kümesi Siparişler tablosuna aittir.
-    detailRowHtmlFn:(r,cols,withChk)=>cpLogisticDetailRowHtml(r,cols,withChk,'orders'), detailRowClass:'cpLogisticDetailRow',
-    virtualize:true, hasExpandedRows:!partialViewEnabled('orders')&&state.ordersLogisticExpanded.size>0});
-  bindOrdersImageHover();
-  bindStatusBacklogDrilldown('ordersTable','orders');
-  const ordersTableEl=document.getElementById('ordersTable');if(ordersTableEl)ordersTableEl._blRenderedRowsSource=rows;
-  ordersRecordRowsVisible('legacy',legacyStarted,{rows:rows.length,reason:ordersRM.legacyReason});
 }
 function ordersSortClick(key){
   if(key==='__picture'){ordersCycleImageSize();return;}
