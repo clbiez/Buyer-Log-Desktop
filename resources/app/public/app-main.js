@@ -2584,7 +2584,7 @@ async function ensureOrdersLoaded(options={}){
       applyPricingRulesToLoadedRows({render:false});
       if(data.collectionCatalogs&&typeof data.collectionCatalogs==='object')state.collectionCatalogs=data.collectionCatalogs;
       else void ensureCollectionCatalogLoaded();
-      buildOrdersFilters();applyCoreAutoFilterState();ordersRMAdoptFullRows();ordersRMWarmDataset();if(!options.deferRender||currentActiveTab()==='orders')renderOrders();
+      buildOrdersFilters();applyCoreAutoFilterState();if(!options.deferRender||currentActiveTab()==='orders')renderOrders();
       window.BLModulePreparation?.setStatus('orders','ready');
       return true;
     }catch(err){
@@ -10998,6 +10998,11 @@ function ordersRMWarmDataset(){
   window.BLPerf?.mark?.('ORDERS_READ_MODEL_WARM');
   void ordersRMPost('/api/read-model/orders/query',{version:1,limit:0}).catch(()=>{ordersRM.warmedEpoch=null;});
 }
+// Tam Siparişler satırları yüklenince (ensureOrdersLoaded → invalidateUnifiedPriorityDecisions
+// 'orders-projection-loaded') pencereler aynı nesnelere bağlanır ve işçi veri kümesi ısıtılır.
+window.addEventListener('bl:global-flow-data-changed',event=>{
+  if(event&&event.detail&&event.detail.reason==='orders-projection-loaded'){ordersRMAdoptFullRows();ordersRMWarmDataset();}
+});
 function ordersRMInvalidate(reason){
   ordersRM.epoch++;ordersRM.signature='';ordersRM.facets=null;ordersRM.facetsKey='';ordersRM.columnFacets.clear();ordersRM.materialized=null;
   window.BLPerf?.mark?.('ORDERS_READ_MODEL_INVALIDATED',{reason:reason||'data'});
