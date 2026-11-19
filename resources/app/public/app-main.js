@@ -1936,7 +1936,7 @@ function syncActivePageTitle(){
 var _deferredTabRenders=new Set();
 // Arka planda yüklenmiş, henüz çizilmemiş CP/Siparişler (switchTab betik yüklenirken de çağrılabilir).
 var backgroundWarmupUnrendered=new Set();
-var DEFERRED_TAB_RENDERERS={cp:'renderCPNow',orders:'renderOrdersNow',overview:'renderOverviewNow'};
+var DEFERRED_TAB_RENDERERS={cp:'renderCPNow',orders:'renderOrdersRoute',overview:'renderOverviewNow'};
 function currentActiveTab(){
   return document.body.dataset.activeTab||document.querySelector('nav.tabs button.active')?.dataset.tab||'';
 }
@@ -3125,11 +3125,7 @@ document.getElementById('navCopy').addEventListener('click', event=>{
   // dondurulmuş sütun katmanı, normalize edilmemiş hücre metni) Excel'de
   // satırı ikiye bölüp komşu sütunları dikey birleştiriyordu.
   if(info.tableKey==='cp'||info.tableKey==='orders'){
-    // #1076: pencereli Siparişler'de eşleşen tüm satırlar önce arka uçtan akar.
-    if(info.tableKey==='orders'&&ordersRMWindowedActive()){
-      void ordersPrepareAllRows().then(ok=>ok?copyManagedTableLikeExcel(info.tableKey, info.rowsFn(), info.selSet(), 'navCopy'):window.BLTableToolbarActionCleanup?.finish?.('navCopy',false));
-      return;
-    }
+    if(info.tableKey==='orders'&&ordersRMWindowedActive()){void ordersRMCopyAll(info);return;} // #1076
     void copyManagedTableLikeExcel(info.tableKey, info.rowsFn(), info.selSet(), 'navCopy');
     return;
   }
@@ -8308,7 +8304,7 @@ function redrawTableModule(tableKey){
   const host=document.getElementById(tableId)?.closest('.tablewrap');
   const top=host?host.scrollTop:0,left=host?host.scrollLeft:0;
   if(tableKey==='cp')renderCPNow();
-  else if(tableKey==='orders')renderOrdersNow();
+  else if(tableKey==='orders')renderOrdersRoute();
   else if(tableKey==='koleksiyon')renderKol();
   else return;
   if(host){host.scrollTop=top;host.scrollLeft=left;const tb=host.querySelector('tbody');tb?._virtualState?.paint?.();}
@@ -10388,15 +10384,9 @@ function ordersCycleImageSize(){
   openTableImageSizePopover(document.querySelector('#ordersTable th[data-k="__picture"]'),'orders');
 }
 function renderOrdersNow(){
-  // #1076: anahtar açıkken ve sorgu sunucuda değerlendirilebiliyorsa pencereli yol.
-  if(ordersReadModelEnabled()&&renderOrdersFromReadModel())return;
-  if(!state.orders){
-    // Pencereli yoldan eski yola düşüldü (desteklenmeyen filtre): tam satırlar gerekir.
-    if(ordersReadModelEnabled())void ensureOrdersLoaded();
-    return;
-  }
-  const legacyStarted=performance.now();
+  if(!state.orders)return;
   cpPlmDetailsSync();
+  const legacyStarted=performance.now();
   applyFormulaColumns('orders');
   migrateLegacyOrdersQuickFilters();updateOrdersDimBtnLabels();
   // Priority arka planda (worker) hesaplanır; hazır olunca tablo yeniden çizilir.
@@ -10410,8 +10400,15 @@ function renderOrdersNow(){
   const totalRowCount=partialViewEnabled('orders')?partialViewRows('orders',state.orders.rows).length:state.orders.rows.length;
   const qty=metricRows.reduce((sum,row)=>sum+(toNum(row['Order Quantity'])||0),0);
   const ordersStats=pageModelOptionStats(metricRows);
-  renderOrdersSummary({stats:ordersStats,rowCount:rows.length,totalRowCount,qty,...ordersScopeCounts(scope),
-    extraHtml:qfgExtra('orders',scope.all,()=>ordersEvaluateAll().all)});
+  const ordersLabel=appLang==='en'?`${ordersStats.modelCount} Model${ordersStats.modelCount===1?'':'s'} · ${ordersStats.optionCount} Option${ordersStats.optionCount===1?'':'s'} · ${ordersStats.orderCount} Order${ordersStats.orderCount===1?'':'s'}`:`${ordersStats.modelCount} Model · ${ordersStats.optionCount} Opsiyon · ${ordersStats.orderCount} Sipariş`;
+  const ordersScopeText=`${ordersLabel} · ${rows.length} / ${totalRowCount} ${appLang==='en'?'rows':'satır'} · Order Qty: ${qty.toLocaleString('tr-TR')}`;
+  document.getElementById('ordersCount').textContent=ordersScopeText;
+  renderTableEmptyHint('orders',rows.length,totalRowCount);
+  const ordersWorkspaceMeta=document.getElementById('ordersWorkspaceMeta');
+  if(ordersWorkspaceMeta)ordersWorkspaceMeta.textContent=ordersScopeText;
+  renderTableViewContext('orders');
+  renderActiveFilterContext('orders');
+  renderOrdersKpiBar({...ordersScopeCounts(scope),extraHtml:qfgExtra('orders',scope.all,()=>ordersEvaluateAll().all)});
   renderFullTable('ordersTable','orders',rows,state.ordersSort,ordersSortClick,{withGroups:true,computeFn:computeFlags,selectedSet:state.ordersSelected,rerenderOuter:renderOrders,cellHtmlFn:ordersCellHtml,rowClassFn:row=>norm(row['Active/Inactive'])==='Inactive'?'ordersPassiveRow':'',
     // Lojistik detay satırı CP ile aynı kanonik render zincirini kullanır; yalnız
     // açık satır kümesi Siparişler tablosuna aittir.
@@ -10422,8 +10419,8 @@ function renderOrdersNow(){
   const ordersTableEl=document.getElementById('ordersTable');if(ordersTableEl)ordersTableEl._blRenderedRowsSource=rows;
   ordersRecordRowsVisible('legacy',legacyStarted,{rows:rows.length,reason:ordersRM.legacyReason});
 }
-// Siparişler sayım satırı + hızlı filtre çipleri. Eski yol sayaçları satırlardan,
-// pencereli yol (#1076) /api/read-model/orders/facets'ten verir; HTML ve bağlama tek yerde.
+// Siparişler hızlı filtre çipleri. Eski yol sayaçları satırlardan, pencereli yol (#1076)
+// /api/read-model/orders/facets'ten verir; HTML ve bağlama tek yerde.
 const ORDERS_EXF_QUICK_KEYS=['past','thisWeek','nextWeek','thisMonth','nextMonth'];
 // Hızlı filtre çip sayaçları (eski yol). Sunucu karşılığı: server/lib/read-model/orders-facets.js (parite testi).
 function ordersScopeCounts(scope){
@@ -10441,8 +10438,8 @@ function ordersScopeCounts(scope){
   scope.exf.forEach(row=>ORDERS_EXF_QUICK_KEYS.forEach(key=>{if(matchesQuickExFactory(row,key))exfCounts[key]++;}));
   return {activeCount,inactiveCount,noneCount:scope.none.length,seasonCounts,statusCounts,delCounts,exfCounts};
 }
-function renderOrdersSummary(model){
-  const {stats,rowCount,totalRowCount,qty,activeCount,inactiveCount,noneCount,seasonCounts,statusCounts,delCounts,exfCounts,extraHtml}=model;
+// Pencereli yolun sayım satırı (#1076): eski yolun renderOrdersNow içindeki satırıyla aynı metin.
+function renderOrdersReadModelCountLine({stats,rowCount,totalRowCount,qty}){
   const ordersLabel=appLang==='en'?`${stats.modelCount} Model${stats.modelCount===1?'':'s'} · ${stats.optionCount} Option${stats.optionCount===1?'':'s'} · ${stats.orderCount} Order${stats.orderCount===1?'':'s'}`:`${stats.modelCount} Model · ${stats.optionCount} Opsiyon · ${stats.orderCount} Sipariş`;
   const ordersScopeText=`${ordersLabel} · ${rowCount} / ${totalRowCount} ${appLang==='en'?'rows':'satır'} · Order Qty: ${qty.toLocaleString('tr-TR')}`;
   document.getElementById('ordersCount').textContent=ordersScopeText;
@@ -10451,6 +10448,9 @@ function renderOrdersSummary(model){
   if(ordersWorkspaceMeta)ordersWorkspaceMeta.textContent=ordersScopeText;
   renderTableViewContext('orders');
   renderActiveFilterContext('orders');
+}
+function renderOrdersKpiBar(model){
+  const {activeCount,inactiveCount,noneCount,seasonCounts,statusCounts,delCounts,exfCounts,extraHtml}=model;
   const exfDefs=[['past',appLang==='en'?'Past':'Geçmiş','red'],['thisWeek',appLang==='en'?'This Week':'Bu Hafta','yellow'],['nextWeek',appLang==='en'?'Next Week':'Önümüzdeki Hafta','blue'],['thisMonth',appLang==='en'?'This Month':'Bu Ay','orange'],['nextMonth',appLang==='en'?'Next Month':'Önümüzdeki Ay','purple']];
   const selectedActive=state.ordersQuickActive||new Set();
   const mirrored=['STATUS','Del. Type','Season','Ex-factory'];
@@ -10488,6 +10488,15 @@ function renderOrdersSummary(model){
   });
   scheduleCoreAutoFilterSave();
 }
+/* Siparişler çizim yönlendiricisi (#1076): anahtar açıkken ve sorgu sunucuda
+   değerlendirilebiliyorsa pencereli yol; değilse eski renderOrdersNow (tam satır gerekir). */
+function renderOrdersRoute(){
+  if(!ordersReadModelEnabled())return renderOrdersNow();
+  if(renderOrdersFromReadModel())return;
+  if(!state.orders){void ensureOrdersLoaded();return;}
+  renderOrdersNow();
+}
+window.renderOrdersRoute=renderOrdersRoute;
 function ordersSortClick(key){
   if(key==='__picture'){ordersCycleImageSize();return;}
   state.ordersSort={key,dir:state.ordersSort.key===key?-state.ordersSort.dir:1};renderOrders();
@@ -10758,8 +10767,9 @@ function ordersRMFacetsBody(spec,extra={}){
 function ordersRMRenderFacets(facets){
   if(!facets)return;
   const kpi=facets.kpi||{active:{},season:{},status:{},del:{},exf:{}};
-  renderOrdersSummary({stats:facets.stats||{modelCount:0,optionCount:0,orderCount:0},rowCount:facets.total,totalRowCount:facets.datasetRows,
-    qty:Number(facets.sums&&facets.sums['Order Quantity'])||0,activeCount:kpi.active.Active||0,inactiveCount:kpi.active.Inactive||0,noneCount:facets.none,
+  renderOrdersReadModelCountLine({stats:facets.stats||{modelCount:0,optionCount:0,orderCount:0},rowCount:facets.total,totalRowCount:facets.datasetRows,
+    qty:Number(facets.sums&&facets.sums['Order Quantity'])||0});
+  renderOrdersKpiBar({activeCount:kpi.active.Active||0,inactiveCount:kpi.active.Inactive||0,noneCount:facets.none,
     seasonCounts:kpi.season,statusCounts:kpi.status,delCounts:kpi.del,exfCounts:kpi.exf,extraHtml:''});
   // Seçim kutuları (uniqueVals) tam veri kümesinden; nesil başına bir kez.
   if(facets.distinct&&ordersRM.optionsGeneration!==ordersRM.generation){
@@ -10824,11 +10834,7 @@ function renderOrdersFromReadModel(){
   return true;
 }
 // Sunucunun reddettiği imza tekrar denenmez; aynı sorgu eski yolla çizilir.
-function renderOrdersNowLegacyOnly(){
-  const previous=window.BL_ORDERS_READ_MODEL;
-  window.BL_ORDERS_READ_MODEL=false;
-  try{renderOrdersNow();}finally{window.BL_ORDERS_READ_MODEL=previous;}
-}
+function renderOrdersNowLegacyOnly(){renderOrdersNow();}
 /* D2 (#1071): tümünü seç / kopyala / Excel için eşleşen TÜM satırlar arka uçtan
    sayfa sayfa (1000) akar; eksik aralıklar yerinde doldurulur. Tam satırlar zaten
    bellekteyse yalnız sıralı kimlikler istenir. */
@@ -10897,6 +10903,11 @@ async function ordersPrepareAllRows(){
     if(state.ordersSelected&&state.ordersSelected.size){return Boolean(state.orders||await ensureOrdersLoaded({deferRender:true}));}
     await ordersRMLoadAllRows();return true;
   }catch(error){showToast((appLang==='en'?'Rows could not be loaded: ':'Satırlar yüklenemedi: ')+(error&&error.message||error));return false;}
+}
+// Araç çubuğu Kopyala: eşleşen tüm satırlar önce akar, sonra aynı kayıt yolu.
+async function ordersRMCopyAll(info){
+  if(!await ordersPrepareAllRows()){window.BLTableToolbarActionCleanup?.finish?.('navCopy',false);return;}
+  await copyManagedTableLikeExcel(info.tableKey,info.rowsFn(),info.selSet(),'navCopy');
 }
 // Hücre aralığı kopyası (Ctrl+C / Ctrl+A): seçili aralıktaki boş satırlar önce doldurulur.
 // Sayfalı görünümde tablo satırları deponun dilimidir: boş satırların depo indeksi
@@ -13113,6 +13124,13 @@ function recalcSuppFobForRow(row){
   row._suppFobOverride=false; row._suppFobManual=false;
   return !editableValuesEqual(prev,next);
 }
+function applyLicensorRulesToLoadedRows(){
+  let changed=0;
+  [state.cp&&state.cp.rows,state.orders&&state.orders.rows,state.orderSummary&&state.orderSummary.rows].forEach(rows=>{
+    (rows||[]).forEach(row=>{if(applyLicensorRuleToRow(row))changed++;});
+  });
+  return changed;
+}
 // Tek satırın lisansör kuralı; değiştiyse true. Pencereli Siparişler (#1076) de kullanır.
 function applyLicensorRuleToRow(row){
   const license=norm(row.License);
@@ -13135,13 +13153,6 @@ function applyLicensorRuleToRow(row){
   const next=norm(auto.displayValue)||'';
   if(!editableValuesEqual(row.Licensor,next)){row.Licensor=next;return true;}
   return false;
-}
-function applyLicensorRulesToLoadedRows(){
-  let changed=0;
-  [state.cp&&state.cp.rows,state.orders&&state.orders.rows,state.orderSummary&&state.orderSummary.rows].forEach(rows=>{
-    (rows||[]).forEach(row=>{if(applyLicensorRuleToRow(row))changed++;});
-  });
-  return changed;
 }
 function applyPricingRulesToLoadedRows({render=true}={}){
   let changed=applyLicensorRulesToLoadedRows();

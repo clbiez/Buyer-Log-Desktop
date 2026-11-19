@@ -50,8 +50,12 @@ test('flag off by default: renderOrdersNow takes the legacy path unless the read
   assert.equal(run({}),false);
   assert.equal(run({'bl.ordersReadModel.v1':'1'}),true);
   assert.equal(run({'bl.ordersReadModel.v1':'1'},false),false);
-  const render=extractFunction(SOURCE,'renderOrdersNow');
-  assert.match(render,/^function renderOrdersNow\(\)\{\n\s*\/\/[^\n]*\n\s*if\(ordersReadModelEnabled\(\)&&renderOrdersFromReadModel\(\)\)return;/);
+  // Yönlendirici: anahtar kapalıyken doğrudan eski renderOrdersNow.
+  const route=extractFunction(SOURCE,'renderOrdersRoute');
+  assert.match(route,/if\(!ordersReadModelEnabled\(\)\)return renderOrdersNow\(\);/);
+  assert.match(SOURCE,/DEFERRED_TAB_RENDERERS=\{cp:'renderCPNow',orders:'renderOrdersRoute'/);
   // Eski yolun gövdesi korunur: kapsam hesabı + tam tablo.
+  const render=extractFunction(SOURCE,'renderOrdersNow');
+  assert.match(render,/^function renderOrdersNow\(\)\{\s*if\(!state.orders\)return;/);
   assert.match(render,/const scope=ordersEvaluateAll\(\);/);
 });

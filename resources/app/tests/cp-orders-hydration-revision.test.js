@@ -38,6 +38,8 @@ function load() {
     scheduleOverviewRender: reason => renders.push(reason),
     reviveServerDates() {}, applyPricingRulesToLoadedRows() {}, applyOrdersImportanceEditAccess() {},
     buildOrdersFilters() {}, applyCoreAutoFilterState() {},
+    // Pencereli Siparişler (#1076): tam satırlar yüklenince pencerelere bağlanır / işçi ısıtılır.
+    ordersRMAdoptFullRows() {}, ordersRMWarmDataset() {},
     setOrdersLoadingState() {},
     showToast(message) {assert.fail('unexpected error path: ' + message);},
     ensureCollectionCatalogLoaded: async () => assert.fail('fixture already supplies catalogs'),

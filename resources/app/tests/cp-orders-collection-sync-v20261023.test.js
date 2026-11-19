@@ -244,6 +244,7 @@ test('B3 · ensureOrdersLoaded force:true ile yüklü state.orders varlığında
     ensureCollectionCatalogLoaded: () => Promise.resolve(true),
     buildOrdersFilters: () => {},
     applyCoreAutoFilterState: () => {},
+    ordersRMAdoptFullRows: () => {}, ordersRMWarmDataset: () => {},
     renderOrders: () => {},
     showToast: () => {},
     Array,
