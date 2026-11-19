@@ -12,6 +12,23 @@
   },
   "changes": [
     {
+      "id": "report-images-fit-row-height",
+      "type": "fix",
+      "module": {"tr": "Rapor görünümü", "en": "Report view"},
+      "title": {"tr": "Görseller rapor satırının yüksekliğine uyum sağlar", "en": "Images scale with report row height"},
+      "body": {
+        "tr": "CP, Siparişler ve Koleksiyon raporlarında metin sarıldığında veya arayüz büyütüldüğünde görseller en küçük ayarda bile satır yüksekliğine uyum sağlar. Görsellerin en-boy oranı korunur.",
+        "en": "Images in CP, Orders and Collection reports scale with the row when text wraps or the interface is enlarged, even at the smallest setting. Images keep their aspect ratio."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "report-image-fits-row.png",
+        "alt": {"tr": "CP raporunda farklı yükseklikteki satırlara uyum sağlayan demo görselleri", "en": "Demo images fitting rows of different heights in the CP report"},
+        "caption": {"tr": "En küçük görsel ayarında, metni sarılan satırın görseli de satırla birlikte büyür.", "en": "At the smallest image setting, the image grows with the row where the text wraps."}
+      }
+    },
+    {
       "id": "table-selection-scroll-layer",
       "type": "fix",
       "module": {"tr": "CP, Siparişler ve Koleksiyon", "en": "CP, Orders and Collection"},

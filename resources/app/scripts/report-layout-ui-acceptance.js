@@ -255,8 +255,14 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
  if(process.env.REPORT_IMAGES_ONLY==='1'){
    const svg='<svg xmlns="http://www.w3.org/2000/svg" width="200" height="120" viewBox="0 0 200 120"><rect width="200" height="120" fill="#edf2f5"/><path d="M35 12L9 29L3 53L27 61L32 46V108H89V46L94 61L117 53L111 29L85 12Q60 32 35 12Z" fill="#58747e"/><path d="M140 12L120 27V108H193V27L175 12Z" fill="#506b75"/></svg>';
    const png=await page.evaluate(svg=>new Promise(resolve=>{const image=new Image();image.onload=()=>{const canvas=document.createElement('canvas');canvas.width=200;canvas.height=120;canvas.getContext('2d').drawImage(image,0,0);resolve(canvas.toDataURL('image/png'));};image.src='data:image/svg+xml;base64,'+btoa(svg);}),svg);
+   const widePng=await page.evaluate(png=>new Promise(resolve=>{const image=new Image();image.onload=()=>{const canvas=document.createElement('canvas');canvas.width=360;canvas.height=120;canvas.getContext('2d').drawImage(image,80,0);resolve(canvas.toDataURL('image/png'));};image.src=png;}),png);
    await page.route('**/api/*-images/report-size-demo*',route=>route.fulfill({contentType:'image/png',body:Buffer.from(png.split(',')[1],'base64')}));
-   await page.evaluate(()=>{BLDetailImages.resolve=(_index,identity)=>({...identity,source:'/api/cp-images/report-size-demo'});colmgr.cp.hidden.delete('__picture');renderCP();BLFlushTableRenders();BLTableReportInline.setMode('cp',true);});
+   await page.route('**/api/*-images/report-size-wide-demo*',route=>route.fulfill({contentType:'image/png',body:Buffer.from(widePng.split(',')[1],'base64')}));
+   await page.evaluate(()=>{
+     BLDetailImages.resolve=(_index,identity)=>({...identity,source:document.body.dataset.activeTab==='orders'?'/api/cp-images/report-size-wide-demo':'/api/cp-images/report-size-demo'});
+     state.cp.rows[0]['Model Name']='DEMO COTTON JERSEY WITH A RIBBED CREW NECK, LONG SLEEVES AND CONTRAST STITCHING';
+     colmgr.cp.hidden.delete('__picture');renderCP();BLFlushTableRenders();BLTableReportInline.setMode('cp',true);
+   });
    const evidence=[];
    for(const key of ['cp','orders','koleksiyon']){
      if(key==='orders')await page.evaluate(()=>{switchTab('orders');colmgr.orders.hidden=new Set(colmgr.cp.hidden);renderOrders();BLFlushTableRenders();BLTableReportInline.setMode('orders',true);});
@@ -277,6 +283,17 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
      await header.click();
      const range=page.locator('#tableImageSizeRange');await range.waitFor();
      const maximum=Number(await range.getAttribute('max')),minimum=Number(await range.getAttribute('min'));
+     const thumbnail=page.locator('#blTableReport-'+key+' .blDetailImageCell img').first();
+     const measure=()=>thumbnail.evaluate(img=>{
+       const {width,height}=img.getBoundingClientRect();
+       return {width,height,row:img.closest('tr').getBoundingClientRect().height,
+         visibleHeight:Math.min(height,width*img.naturalHeight/img.naturalWidth)};
+     });
+     const waitForFit=()=>page.waitForFunction(key=>{
+       const img=document.querySelector('#blTableReport-'+key+' .blDetailImageCell img');
+       const {width,height}=img.getBoundingClientRect(),row=img.closest('tr').getBoundingClientRect().height;
+       return Math.min(height,width*img.naturalHeight/img.naturalWidth)>=row-8;
+     },key,{timeout:3000});
      const sizes=[],frameMs=[];
      for(const value of [minimum,maximum]){
        await range.evaluate(input=>{
@@ -284,12 +301,33 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
          input.addEventListener('input',event=>requestAnimationFrame(()=>{input.dataset.feedbackMs=performance.now()-event.timeStamp;}),{once:true});
        });
        await range.fill(String(value));await range.dispatchEvent('input');await range.dispatchEvent('change');
-       await page.waitForFunction(({key,value})=>parseInt(getComputedStyle(document.querySelector('#blTableReport-'+key)).getPropertyValue('--bl-report-image-width'))===value,{key,value});
+       await page.waitForFunction(({key,value})=>parseInt(getComputedStyle(document.querySelector('#blTableReport-'+key)).getPropertyValue('--bl-report-image-height'))===tableImageSizeDimensions(key,value).h,{key,value});
        await page.waitForFunction(()=>document.querySelector('#tableImageSizeRange')?.dataset.feedbackMs);
        frameMs.push(Number(await range.getAttribute('data-feedback-ms')));
-       sizes.push(await page.locator('#blTableReport-'+key+' .blDetailImageCell img').first().evaluate(img=>({width:img.getBoundingClientRect().width,height:img.getBoundingClientRect().height,col:img.closest('td').getBoundingClientRect().width,row:img.closest('tr').getBoundingClientRect().height,loaded:img.complete&&img.naturalWidth>0})));
+       if(value===minimum){
+         await waitForFit();
+         if(key==='cp'){
+           await page.keyboard.press('Escape');await header.blur();await page.mouse.move(1000,20);
+           const normal=await measure();
+           await page.evaluate(()=>applyUiFontStep(2,{persist:false}));
+           await page.waitForFunction(normal=>{
+             const [wrapped,short]=document.querySelectorAll('#blTableReport-cp tr[data-id]');
+             return wrapped.offsetHeight>normal&&wrapped.offsetHeight>short.offsetHeight;
+           },normal.row);
+           await waitForFit();
+           await page.screenshot({path:path.join(assets,'report-image-fits-row.png')});
+           await page.evaluate(()=>applyUiFontStep(0,{persist:false}));
+           await header.click();await range.waitFor();
+         }
+         await thumbnail.evaluate(img=>{img.closest('tr').style.height='76px';});
+         await waitForFit();
+         assert.ok((await measure()).row>=76,key+' minimum fits the taller row');
+         await thumbnail.evaluate(img=>{img.closest('tr').style.removeProperty('height');});
+         await waitForFit();
+       }
+       sizes.push(await measure());
      }
-     assert.equal(sizes[0].width,minimum);assert.equal(sizes[1].width,maximum);assert.ok(sizes[1].height>sizes[0].height);assert.ok(sizes[1].row>sizes[0].row);assert.ok(sizes[1].col>sizes[0].col);
+     assert.ok(sizes[1].width>sizes[0].width);assert.ok(sizes[1].height>sizes[0].height);assert.ok(sizes[1].row>sizes[0].row);
      assert.ok(frameMs.every(ms=>ms<=200),key+' image size responds within 200 ms');
      const persisted=await page.evaluate(key=>BLStorage.getItem(TABLE_IMAGE_SIZE_CONFIG[key].preferenceKey),key);assert.equal(Number(persisted),maximum);
      // Same underlying preference and renderer, including resize while the report is hidden.
@@ -303,7 +341,7 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
        await page.evaluate(()=>applyLanguage('tr'));assert.equal(await header.textContent(),'Görsel');assert.equal(await header.getAttribute('title'),'Görsel boyutunu değiştir');await page.evaluate(()=>applyLanguage('en'));
      }
      await page.evaluate(key=>{BLTableReportInline.setMode(key,false);setTableImageSize(key,tableImageSizeBounds(key).min,{persist:true});BLTableReportInline.setMode(key,true);},key);
-     await page.waitForFunction(({key,minimum})=>parseInt(getComputedStyle(document.querySelector('#blTableReport-'+key)).getPropertyValue('--bl-report-image-width'))===minimum,{key,minimum});
+     await page.waitForFunction(({key,minimum})=>parseInt(getComputedStyle(document.querySelector('#blTableReport-'+key)).getPropertyValue('--bl-report-image-height'))===tableImageSizeDimensions(key,minimum).h,{key,minimum});
      evidence.push({key,minimum,maximum,sizes,frameMs});console.log('PASS report/table shared image sizing, persistence, geometry and hidden-view update: '+key);
    }
    assert.deepEqual(errors,[]);fs.writeFileSync(path.join(root,'image-results.json'),JSON.stringify({ok:true,evidence,errors},null,2));return;
