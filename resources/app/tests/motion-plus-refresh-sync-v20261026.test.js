@@ -23,7 +23,7 @@ function harness({reduced=false,hidden=false,off=false}={}){
     },querySelector:()=>icon,icon};
   }
   const controls=Object.fromEntries(
-    ['topRefreshBtn','serverRefreshBtn','syncStatusBadge','cpRefreshBtn','ordersRefreshBtn','cpPlmSyncBtn'].map(id=>[id,el(id)])
+    ['topRefreshBtn','serverRefreshBtn','syncStatusBadge','lflRefreshBtn','intakeRefreshBtn','cpPlmSyncBtn'].map(id=>[id,el(id)])
   );
   const doc={
     documentElement:{dataset:{blMotion:off?'off':'on'}},
@@ -58,21 +58,21 @@ function harness({reduced=false,hidden=false,off=false}={}){
 
 test('one-shot refresh feedback and sync pulse retain finite Motion+ durations',()=>{
   const h=harness();
-  h.click('cpRefreshBtn');
+  h.click('lflRefreshBtn');
   h.click('cpPlmSyncBtn');
   assert.equal(h.animations.length,2);
-  assert.equal(h.animations[0].id,'cpRefreshBtn');
+  assert.equal(h.animations[0].id,'lflRefreshBtn');
   assert.equal(h.animations[0].frames.at(-1).transform,'rotate(360deg)');
   assert.equal(h.animations[1].id,'cpPlmSyncBtn');
   assert.equal(h.animations[1].frames[1].opacity,.48);
   assert.ok(h.animations.every(a=>Number.isFinite(a.options.iterations)&&a.options.iterations<=8));
 });
 test('active refresh rotates indefinitely and stops only when busy state clears',()=>{
-  const h=harness(),{topRefreshBtn,serverRefreshBtn,cpRefreshBtn,ordersRefreshBtn,syncStatusBadge}=h.controls;
+  const h=harness(),{topRefreshBtn,serverRefreshBtn,lflRefreshBtn,intakeRefreshBtn,syncStatusBadge}=h.controls;
   topRefreshBtn.setClass('spinning',true);
   serverRefreshBtn.setClass('spinning',true);
-  cpRefreshBtn.setClass('spinning',true);
-  ordersRefreshBtn.setClass('spinning',true);
+  lflRefreshBtn.setClass('spinning',true);
+  intakeRefreshBtn.setClass('spinning',true);
   syncStatusBadge.setClass('is-syncing',true);
   assert.equal(h.animations.length,5);
   assert.ok(h.animations.slice(0,4).every(a=>a.options.iterations===Infinity));
@@ -81,8 +81,8 @@ test('active refresh rotates indefinitely and stops only when busy state clears'
   assert.equal(h.animations[0].cancelled,true);
   assert.equal(h.animations[1].cancelled,false);
   serverRefreshBtn.setClass('spinning',false);
-  cpRefreshBtn.setClass('spinning',false);
-  ordersRefreshBtn.setClass('spinning',false);
+  lflRefreshBtn.setClass('spinning',false);
+  intakeRefreshBtn.setClass('spinning',false);
   syncStatusBadge.setClass('is-syncing',false);
   assert.ok(h.animations.every(x=>x.cancelled));
 });
@@ -107,7 +107,7 @@ test('busy refresh resumes after a tab change and visibility restoration',()=>{
 test('no action animation with reduced motion, hidden tab, or opt-out',()=>{
   for(const opt of [{reduced:true},{hidden:true},{off:true}]){
     const h=harness(opt);
-    h.click('cpRefreshBtn');
+    h.click('lflRefreshBtn');
     h.click('cpPlmSyncBtn');
     h.controls.syncStatusBadge.setClass('is-syncing',true);
     h.controls.topRefreshBtn.setClass('spinning',true);

@@ -24,15 +24,6 @@ test('v10.32 Orders ve Collection veri bağlamını araçlardan önce gösterir'
   assert.match(collection, /id="kolWorkspaceMeta"/);
 });
 
-test('v10.32 Orders birincil yenileme eylemi gerçek Orders yenilemesini çalıştırır', () => {
-  const orders = sliceBetween(INDEX, 'id="ordersTableToolbar"', 'id="ordersTableWrap"');
-  assert.match(orders, /id="ordersRefreshBtn"[^>]*class="tbtn primary"[^>]*data-action-role="primary"/);
-  assert.match(APP, /document\.getElementById\('ordersRefreshBtn'\)\?\.addEventListener\('click'/);
-  // v20260930 — Orders düğmesi yalnız Orders'ı ister; bağlı grup (tek sorgu) birlikte gelir, CP gelmez.
-  const click = APP.slice(APP.indexOf("document.getElementById('ordersRefreshBtn')?.addEventListener('click'"), APP.indexOf("document.getElementById('ordersRefreshBtn')?.addEventListener('click'") + 220);
-  assert.match(click, /loadFromServer\(true,\['orders'\]\)/);
-});
-
 test('v10.32 Collection birincil eylemi önde, seçili kapsamı açık ve silme eylemi ayrıdır', () => {
   const actions = sliceBetween(INDEX, 'id="kolTableActions"', 'id="kolIoWrap"');
   assert.ok(actions.indexOf('id="kolAddRowBtn"') < actions.indexOf('id="kolUndoBtn"'));

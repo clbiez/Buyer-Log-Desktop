@@ -23,7 +23,7 @@
   const OVERLAYS='dialog[open],[role="dialog"][aria-hidden="false"],.colPanel.show,.vfMenu.show,.vfMenu.open,.toolbarMoreMenu:not([hidden]),.userMenu:not([hidden])';
   // Controls follow their real busy states; only an active refresh keeps rotating.
   // One-shot click feedback and other Motion+ effects remain finite.
-  const REFRESH_IDS=['topRefreshBtn','serverRefreshBtn','cpRefreshBtn','ordersRefreshBtn','lflRefreshBtn','intakeRefreshBtn','backlogOverviewRefresh'];
+  const REFRESH_IDS=['topRefreshBtn','serverRefreshBtn','lflRefreshBtn','intakeRefreshBtn','backlogOverviewRefresh'];
   const REFRESH_CONTROLS=REFRESH_IDS.map(id=>'#'+id).join(',');
   const ACTIVITY_CONTROLS=REFRESH_IDS.map(id=>[id,'spinning','refresh']).concat([['syncStatusBadge','is-syncing','sync']]);
   const SYNC_CONTROLS='#syncStatusBtn,#cpPlmSyncBtn,#ordersPlmSyncBtn,#kolPlmSyncBtn,[data-plm-sync-category]';
