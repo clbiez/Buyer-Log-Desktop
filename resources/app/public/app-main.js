@@ -12176,6 +12176,8 @@ function requestOverviewModel(){
       // Model verilemedi (eski sunucu, işçi hatası…): bu oturumda eski yol sürer.
       console.warn('Genel Bakış okuma modeli kullanılamadı, istemci hesabına dönülüyor:',error);
       overviewReadModel.error=String(error&&error.message||error);overviewReadModel.materialized=true;
+      // Önceki başarılı özetin kartta kalmaması için asistan istemci modeline bırakılır.
+      window.BLCpAssistant?.showOverviewSummary?.(null);
       scheduleOverviewRender('overview-model-fallback');
       return null;
     })

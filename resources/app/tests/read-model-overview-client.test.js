@@ -30,6 +30,8 @@ test('fallback: any model error switches this session to the client path; tıkla
   const request=fn('requestOverviewModel');
   assert.match(request,/fetch\('\/api\/read-model\/overview\/model',\{method:'POST'/);
   assert.match(request,/\.catch\(error=>\{[\s\S]*overviewReadModel\.materialized=true;[\s\S]*scheduleOverviewRender\('overview-model-fallback'\)/);
+  // Codex #1085: geri dönüşte asistan kartı bayat sunucu özetini bırakır (aksi halde eski yol çizimi görünmez).
+  assert.match(request,/overviewReadModel\.materialized=true;\s*\/\/[^\n]*\n\s*window\.BLCpAssistant\?\.showOverviewSummary\?\.\(null\);/);
   // Eski yanıt yeni filtrenin sonucunu ezmez.
   assert.match(request,/if\(serial!==overviewReadModel\.serial\)return/);
   const materialize=fn('materializeOverview');
