@@ -130,9 +130,29 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
        const dirty=await input.evaluate(i=>({row:i.closest('tr').classList.contains('rowDirty'),blue:getComputedStyle(i,'::before').backgroundColor,orange:getComputedStyle(i,'::after').backgroundColor,stripe:getComputedStyle(i,'::after').width,display:getComputedStyle(i,'::after').display}));
        assert.equal(dirty.row,true);assert.equal(dirty.stripe,'3px');assert.equal(dirty.display,'block');assert.notEqual(dirty.blue,dirty.orange);assert.notEqual(dirty.orange,'rgba(0, 0, 0, 0)');
      }
-     const row=input.locator('xpath=ancestor::tr'),box=await row.boundingBox();await page.mouse.move(1000,box.y+box.height/2);await page.waitForTimeout(650);
-     const hover=await row.evaluate(r=>{const s=getComputedStyle(r,'::after');return {opacity:s.opacity,background:s.backgroundColor,width:parseFloat(s.width),rowWidth:r.getBoundingClientRect().width,pointerEvents:s.pointerEvents};});assert.equal(hover.opacity,'1');assert.ok(Math.abs(hover.width-hover.rowWidth)<1);assert.equal(hover.pointerEvents,'none');
-     const second=row.locator('xpath=following-sibling::tr').first();const next=await second.boundingBox();if(next){await page.mouse.move(1000,next.y+next.height/2);await page.waitForTimeout(120);const fading=Number(await row.evaluate(r=>getComputedStyle(r,'::after').opacity));assert.ok(fading>0&&fading<1);await page.waitForTimeout(550);assert.equal(await row.evaluate(r=>r.classList.contains('blSoftRowHover')),false,'faded row releases its light layer');}
+     const row=input.locator('xpath=ancestor::tr'),box=await row.boundingBox();
+     const classicManagedTable=!report&&key!=='koleksiyon';
+     const geometry=()=>row.evaluate(r=>{
+       const table=r.closest('table'),cells=[...table.tHead.rows[table.tHead.rows.length-1].cells,...r.cells];
+       return cells.map(cell=>{const {x,width}=cell.getBoundingClientRect();return [x,width];});
+     });
+     if(classicManagedTable){
+       await page.mouse.move(1000,20);
+       await page.waitForTimeout(650);
+     }
+     const before=classicManagedTable?await geometry():null;
+     await page.mouse.move(1000,box.y+box.height/2);await page.waitForTimeout(650);
+     const hover=await row.evaluate(r=>{const s=getComputedStyle(r,'::after');return {active:r.matches(':hover'),opacity:s.opacity,background:s.backgroundColor,width:parseFloat(s.width),rowWidth:r.getBoundingClientRect().width,pointerEvents:s.pointerEvents};});
+     assert.equal(hover.active,true,key+' test pointer is over the row');
+     if(classicManagedTable){
+       assert.deepEqual(await geometry(),before,key+' keeps column positions and widths under the pointer');
+       await page.mouse.move(1000,20);
+       assert.deepEqual(await geometry(),before,key+' keeps column positions and widths after pointer exit');
+       await page.mouse.move(1000,box.y+box.height/2);
+     }else{
+       assert.equal(hover.opacity,'1');assert.ok(Math.abs(hover.width-hover.rowWidth)<1);assert.equal(hover.pointerEvents,'none');
+       const second=row.locator('xpath=following-sibling::tr').first();const next=await second.boundingBox();if(next){await page.mouse.move(1000,next.y+next.height/2);await page.waitForTimeout(120);const fading=Number(await row.evaluate(r=>getComputedStyle(r,'::after').opacity));assert.ok(fading>0&&fading<1);await page.waitForTimeout(550);assert.equal(await row.evaluate(r=>r.classList.contains('blSoftRowHover')),false,'faded row releases its light layer');}
+     }
      if(key==='cp'&&report){
        await page.waitForFunction(()=>document.querySelector('#blTableReport-cp img')?.dataset.blImageLoaded==='1');
        for(const theme of ['dark','light']){await page.evaluate(theme=>applyTheme(theme),theme);await page.waitForTimeout(650);await page.screenshot({path:path.join(assets,'flow-selection-'+theme+'.png')});}
@@ -141,7 +161,7 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
      }
      if(key==='cp'&&!report)await page.screenshot({path:path.join(root,'cp-table-selection.png')});
      await input.uncheck();await page.waitForTimeout(500);assert.equal(await input.isChecked(),false);
-     evidence.push({key,report,idle,motion,hover});console.log('PASS visible rail, native selection, Akış fill and full-row fade: '+key+' '+(report?'report':'table'));
+     evidence.push({key,report,idle,motion,hover});console.log('PASS visible rail, native selection, Akış fill and '+(classicManagedTable?'stable hover geometry':'full-row fade')+': '+key+' '+(report?'report':'table'));
    }
    for(const key of ['cp','orders','koleksiyon']){
      if(key==='orders')await page.evaluate(()=>{switchTab('orders');colmgr.orders.hidden=new Set(colmgr.cp.hidden);renderOrders();BLFlushTableRenders();});

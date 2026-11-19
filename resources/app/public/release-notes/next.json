@@ -12,6 +12,23 @@
   },
   "changes": [
     {
+      "id": "cp-orders-stable-column-hover",
+      "type": "fix",
+      "module": {"tr": "CP ve Siparişler", "en": "CP and Orders"},
+      "title": {"tr": "Satır vurgusunda sütunlar sabit kalır", "en": "Columns stay in place while rows are highlighted"},
+      "body": {
+        "tr": "CP ve Siparişler'in klasik tablo görünümünde fare bir satırın üzerine geldiğinde veya tablodan ayrıldığında sütunların konumu ve genişliği sabit kalır. Fare altındaki satır vurgulanmaya devam eder.",
+        "en": "In the classic CP and Orders grids, column positions and widths stay fixed when the pointer enters a row or leaves the table. The row under the pointer stays highlighted."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-orders-stable-column-hover.png",
+        "alt": {"tr": "CP tablosunda vurgulanan satır ve sütun başlıkları", "en": "Highlighted row and column headers in the CP table"},
+        "caption": {"tr": "Demo verileriyle CP tablosunda satır vurgusu açıkken sütunlar yerini koruyor.", "en": "The CP grid keeps its columns in place while highlighting a row of demo data."}
+      }
+    },
+    {
       "id": "orders-toolbar-refresh-removal",
       "type": "improvement",
       "module": {
