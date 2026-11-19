@@ -12,6 +12,23 @@
   },
   "changes": [
     {
+      "id": "cp-orders-status-production-balance",
+      "type": "fix",
+      "module": {"tr": "CP ve Siparişler", "en": "CP and Orders"},
+      "title": {"tr": "Üretimde kalan adet Durum sütununda görünüyor", "en": "Status shows the remaining quantity in production"},
+      "body": {
+        "tr": "Buyer Log’un hesapladığı üretim bakiyesi, sevkiyat durumlarıyla birlikte Durum hücresinde kendi etiketi ve adediyle gösterilir.",
+        "en": "The Status cell shows the production balance calculated by Buyer Log with its own badge and quantity alongside the shipment statuses."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-orders-status-production-balance.png",
+        "alt": {"tr": "Demo CP siparişinde üç durum etiketi ve adetleri", "en": "Three status badges with quantities on a demo CP order"},
+        "caption": {"tr": "Demo siparişte Üretimde, Yol Operasyonları ve Depoda etiketleri aynı Durum hücresinde yer alır.", "en": "The demo order shows In Production, In Transit and In Warehouse in the same Status cell."}
+      }
+    },
+    {
       "id": "report-images-fit-row-height",
       "type": "fix",
       "module": {"tr": "Rapor görünümü", "en": "Report view"},

@@ -5607,14 +5607,18 @@ function defaultMinPx(c, tableKey){
   // Böylece sütun başlığı hiçbir dilde okunamaz hâle gelecek kadar daraltılamaz.
   const readableHeaderPx=tableHeaderTextWidth(label)+54;
   const typeMin=tableKey==='ship'?44:(byType[c.type]||44);
+  // Üretim, yoldaki ve depodaki adetler aynı durum hücresinde yan yana durur.
+  if(c.type==='status'&&(tableKey==='cp'||tableKey==='orders'))return Math.max(400,readableHeaderPx);
   if(c.k==='Notes' || c.k==='Ek Not' || c.k==='__personalOrderNote') return Math.max(220,readableHeaderPx);
   return Math.max(typeMin,readableHeaderPx);
 }
 function colWidthPx(tableKey, c){
   const cs = colmgr[tableKey];
-  if(cs.widthPx[c.k]!=null) return Math.max(Number(cs.widthPx[c.k])||0, defaultMinPx(c, tableKey));
-  if(c.type==='priority') return Math.max(300,Math.round(defaultMinPx(c,tableKey)*1.35));
-  return Math.round(defaultMinPx(c, tableKey) * 1.35);
+  const min=defaultMinPx(c,tableKey);
+  if(cs.widthPx[c.k]!=null) return Math.max(Number(cs.widthPx[c.k])||0,min);
+  if(c.type==='status'&&(tableKey==='cp'||tableKey==='orders'))return min;
+  if(c.type==='priority') return Math.max(300,Math.round(min*1.35));
+  return Math.round(min*1.35);
 }
 function computeWidths(tableKey){
   const cols = visibleCols(tableKey);
@@ -6497,20 +6501,16 @@ function partialViewStatusCellHtml(row){
   return `<td class="cpLogisticStatusTd partialViewStatusTd" title="${escapeHtml(statusDisplay(status))}: ${fmtInt(quantity)}"><div class="cpLogisticSummaryStack"><span class="cpLogisticSummaryItem">${badge(escapeHtml(statusDisplay(status)),statusTone(status))}<b>${fmtInt(quantity)}</b></span></div></td>`;
 }
 function cpLogisticStatusGroups(row){
-  const all=cpLogisticSegments(row);
-  const partials=all.filter(segment=>segment&&segment.kind==='partial');
-  // Gerçek parsiyel varsa STATUS özetinde yalnız parsiyeller gösterilir. Üretimde
-  // kalan / Eksik Yükleme gibi sentetik segmentler status hücresine karışmaz.
-  const source=partials.length?partials:all.filter(segment=>segment&&segment.kind!=='shortage');
   const groups=[]; const byKey=new Map();
-  source.forEach(segment=>{
+  for(const segment of cpLogisticSegments(row)){
+    if(!segment||segment.kind==='shortage')continue;
     const status=norm(segment.status)||'Durum Belirsiz';
     const key=turknorm(status);
     let group=byKey.get(key);
     if(!group){group={status,quantity:0,priority:Number(segment.priority)||2};byKey.set(key,group);groups.push(group);}
     group.quantity+=Math.max(0,toNum(segment.quantity)||0);
     group.priority=Math.min(group.priority,Number(segment.priority)||2);
-  });
+  }
   return groups.sort((a,b)=>a.priority-b.priority);
 }
 function cpLogisticStatusPlainText(row){
@@ -6529,9 +6529,14 @@ function cpLogisticStatusCellHtml(row,tableKey='cp'){
   const segments=cpLogisticSegments(row), groups=cpLogisticStatusGroups(row);
   if(!segments.length) return `<td>${badge(escapeHtml(statusDisplay(row.STATUS)||'—'),statusTone(row.STATUS))}</td>`;
   const expanded=cpLogisticExpandedSet(tableKey).has(row._id);
-  const summary=groups.map(group=>`<span class="cpLogisticSummaryItem">${badge(escapeHtml(statusDisplay(group.status)),statusTone(group.status))}<b>${fmtInt(group.quantity)}</b></span>`).join('');
-  const title=groups.map(group=>`${statusDisplay(group.status)}: ${fmtInt(group.quantity)}`).join(' · ');
-  return `<td class="cpLogisticStatusTd" title="${escapeHtml(title)}"><div class="cpLogisticMainCell"><button type="button" class="cpLogisticToggle" data-id="${row._id}" aria-expanded="${expanded?'true':'false'}" title="${escapeHtml(appLang==='en'?(expanded?'Hide logistics details':'Show logistics details'):(expanded?'Lojistik detaylarını kapat':'Lojistik detaylarını göster'))}"><span aria-hidden="true">${expanded?'▾':'▸'}</span></button><div class="cpLogisticSummaryStack">${summary}</div></div></td>`;
+  let summary='';
+  const titles=[];
+  for(const group of groups){
+    const label=statusDisplay(group.status), quantity=fmtInt(group.quantity);
+    summary+=`<span class="cpLogisticSummaryItem">${badge(escapeHtml(label),statusTone(group.status))}<b>${quantity}</b></span>`;
+    titles.push(`${label}: ${quantity}`);
+  }
+  return `<td class="cpLogisticStatusTd" title="${escapeHtml(titles.join(' · '))}"><div class="cpLogisticMainCell"><button type="button" class="cpLogisticToggle" data-id="${row._id}" aria-expanded="${expanded?'true':'false'}" title="${escapeHtml(appLang==='en'?(expanded?'Hide logistics details':'Show logistics details'):(expanded?'Lojistik detaylarını kapat':'Lojistik detaylarını göster'))}"><span aria-hidden="true">${expanded?'▾':'▸'}</span></button><div class="cpLogisticSummaryStack">${summary}</div></div></td>`;
 }
 function cpLogisticDelTypeCellHtml(row,canEdit){
   const segments=cpLogisticSegments(row);

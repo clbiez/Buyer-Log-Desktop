@@ -2077,7 +2077,6 @@ function cpLogisticSummary(segments, orderQty) {
     totalQty: Math.max(0, Number(orderQty) || 0),
     remainingQty: Math.max(0, Math.max(0, Number(orderQty) || 0) - loadedQty),
     // Filtre/sayaç değerleri: farklı durumlar ayrı ayrı, aynı durumlar tek kez.
-    // STATUS hücresi ise istemcide yalnız gerçek parsiyelleri özetler.
     statuses: unique(statusSource.map(item => item.status)),
     allPartialsInWarehouse: partials.length > 0 && partials.every(item => turknorm(item.status) === 'DEPODA'),
     delTypes: unique(list.map(item => item.delType)),
