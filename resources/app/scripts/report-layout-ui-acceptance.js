@@ -17,6 +17,12 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
  const context=await browser.newContext({viewport:{width:1600,height:960},reducedMotion:'reduce',permissions:['clipboard-read','clipboard-write']});
  await context.addCookies([{name:cookie.slice(0,split),value:cookie.slice(split+1),domain:'127.0.0.1',path:'/',httpOnly:true}]);
  await context.addInitScript(()=>localStorage.setItem('bl.releaseNotes.lastSeenStable.v1','99.0.0'));
+ if(process.env.REPORT_IMAGES_ONLY==='1')await context.addInitScript(()=>{
+   for(const [table,value] of Object.entries({cp:'84',orders:'90',koleksiyon:'82'})){
+     const key='bl.user.moderator.lcw.'+table+'.imageSize.v2';
+     if(localStorage.getItem(key)===null)localStorage.setItem(key,value);
+   }
+ });
  const page=await context.newPage(),errors=[];page.setDefaultTimeout(10000);page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.dismiss());
  async function openCP(target){
    await target.goto(base,{waitUntil:'domcontentloaded'});await target.waitForFunction(()=>window.BLPerf&&typeof switchTab==='function',{timeout:60000});
@@ -282,6 +288,10 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
      }
      await header.click();
      const range=page.locator('#tableImageSizeRange');await range.waitFor();
+     const classicBefore=await page.evaluate(key=>({
+       value:tableImageSizeCurrentValue(key),stored:BLStorage.getItem(TABLE_IMAGE_SIZE_CONFIG[key].preferenceKey)
+     }),key);
+     assert.equal(Number(await range.inputValue()),classicBefore.value,key+' report starts at the previous shared size');
      const maximum=Number(await range.getAttribute('max')),minimum=Number(await range.getAttribute('min'));
      const thumbnail=page.locator('#blTableReport-'+key+' .blDetailImageCell img').first();
      const measure=()=>thumbnail.evaluate(img=>{
@@ -329,21 +339,37 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
      }
      assert.ok(sizes[1].width>sizes[0].width);assert.ok(sizes[1].height>sizes[0].height);assert.ok(sizes[1].row>sizes[0].row);
      assert.ok(frameMs.every(ms=>ms<=200),key+' image size responds within 200 ms');
-     const persisted=await page.evaluate(key=>BLStorage.getItem(TABLE_IMAGE_SIZE_CONFIG[key].preferenceKey),key);assert.equal(Number(persisted),maximum);
-     // Same underlying preference and renderer, including resize while the report is hidden.
+     const classicAfter=await page.evaluate(key=>({
+       value:tableImageSizeCurrentValue(key),stored:BLStorage.getItem(TABLE_IMAGE_SIZE_CONFIG[key].preferenceKey)
+     }),key);
+     assert.deepEqual(classicAfter,classicBefore,key+' resizing the report preserves the classic table size and preference');
      await page.keyboard.press('Escape');
      assert.ok(await header.evaluate(button=>button===document.activeElement),'Escape returns focus to report image heading');
      if(key==='cp'){
        await header.press('Enter');await range.waitFor();await page.keyboard.press('Escape');
        await header.blur();await page.mouse.move(1000,20);
        await page.screenshot({path:path.join(assets,'report-image-heading.png')});
-       await header.click();await page.screenshot({path:path.join(assets,'report-image-size.png')});await page.keyboard.press('Escape');
        await page.evaluate(()=>applyLanguage('tr'));assert.equal(await header.textContent(),'Görsel');assert.equal(await header.getAttribute('title'),'Görsel boyutunu değiştir');await page.evaluate(()=>applyLanguage('en'));
      }
-     await page.evaluate(key=>{BLTableReportInline.setMode(key,false);setTableImageSize(key,tableImageSizeBounds(key).min,{persist:true});BLTableReportInline.setMode(key,true);},key);
-     await page.waitForFunction(({key,minimum})=>parseInt(getComputedStyle(document.querySelector('#blTableReport-'+key)).getPropertyValue('--bl-report-image-height'))===tableImageSizeDimensions(key,minimum).h,{key,minimum});
-     evidence.push({key,minimum,maximum,sizes,frameMs});console.log('PASS report/table shared image sizing, persistence, geometry and hidden-view update: '+key);
+     await page.evaluate(key=>BLTableReportInline.setMode(key,false),key);
+     const classicHeader=page.locator(key==='koleksiyon'?'#kolPicTh':`#${key}Table th[data-k="__picture"] .thLabel`);
+     await classicHeader.click();await range.waitFor();
+     assert.equal(Number(await range.inputValue()),classicBefore.value,key+' classic slider keeps its size');
+     await range.fill(String(minimum));await range.dispatchEvent('change');await page.keyboard.press('Escape');
+     assert.equal(await page.evaluate(key=>tableImageSizeCurrentValue(key),key),minimum);
+     await page.evaluate(key=>BLTableReportInline.setMode(key,true),key);
+     await header.click();await range.waitFor();
+     assert.equal(Number(await range.inputValue()),maximum,key+' resizing the classic table preserves the report size');
+     await page.waitForFunction(({key,maximum})=>parseInt(getComputedStyle(document.querySelector('#blTableReport-'+key)).getPropertyValue('--bl-report-image-height'))===tableImageSizeDimensions(key,maximum).h,{key,maximum});
+     if(key==='cp')await page.screenshot({path:path.join(assets,'report-image-size.png')});
+     await page.keyboard.press('Escape');
+     evidence.push({key,minimum,maximum,sizes,frameMs});console.log('PASS independent report and classic image sizes, persistence and row fitting: '+key);
    }
+   await openCP(page);await page.evaluate(seedCp);
+   await page.evaluate(()=>{colmgr.cp.hidden.delete('__picture');renderCP();BLFlushTableRenders();});
+   await page.locator('#blTableReport-cp [data-tr-image-size]').click();
+   assert.equal(Number(await page.locator('#tableImageSizeRange').inputValue()),evidence[0].maximum,'report size survives reload');
+   assert.equal(await page.evaluate(()=>tableImageSizeCurrentValue('cp')),evidence[0].minimum,'classic size survives reload separately');
    assert.deepEqual(errors,[]);fs.writeFileSync(path.join(root,'image-results.json'),JSON.stringify({ok:true,evidence,errors},null,2));return;
  }
  if(process.env.REPORT_PERF_ONLY==='1'){

@@ -3400,8 +3400,23 @@ function readTableImageSizePreference(tableKey){
   }catch(_){ }
   return cfg.max.w;
 }
+function reportImageSizePreferenceKey(tableKey){return 'buyerlog.tableReportMode.imageSize.v1.'+tableKey;}
+function persistReportImageSize(tableKey,value){
+  try{BLStorage.setItem(reportImageSizePreferenceKey(tableKey),String(value));}catch(_){ }
+}
+function readReportImageSizePreference(tableKey){
+  try{
+    const stored=BLStorage.getItem(reportImageSizePreferenceKey(tableKey));
+    if(stored!=null&&stored!=='')return normalizeTableImageSizeValue(tableKey,stored);
+  }catch(_){ }
+  // İlk açılışta önceki ortak boyutu koru. Sonraki tablo değişiklikleri bu kopyayı etkilemez.
+  const previous=readTableImageSizePreference(tableKey);
+  persistReportImageSize(tableKey,previous);
+  return previous;
+}
 let cpImageSize=readTableImageSizePreference('cp');
 let ordersImageSize=readTableImageSizePreference('orders');
+const reportImageSizes=Object.fromEntries(Object.keys(TABLE_IMAGE_SIZE_CONFIG).map(key=>[key,readReportImageSizePreference(key)]));
 let cpActiveImageRowId=null;
 function cpImageDims(){return tableImageSizeDimensions('cp',cpImageSize);}
 function ordersImageDims(){return tableImageSizeDimensions('orders',ordersImageSize);}
@@ -3431,6 +3446,13 @@ cpApplyImageSizeVars();
 function tableImageSizeCurrentValue(tableKey){
   return tableKey==='cp'?cpImageSize:tableKey==='orders'?ordersImageSize:kolImgSize;
 }
+function reportImageDimensions(tableKey){return tableImageSizeDimensions(tableKey,reportImageSizes[tableKey]);}
+function setReportImageSize(tableKey,value){
+  reportImageSizes[tableKey]=normalizeTableImageSizeValue(tableKey,value);
+  const dims=reportImageDimensions(tableKey);
+  window.BLTableReportInline?.updateImageDimensions?.(tableKey,dims);
+  return dims;
+}
 function tableImageSizeTable(tableKey){
   return document.getElementById(tableKey==='cp'?'cpTable':tableKey==='orders'?'ordersTable':'kolTable');
 }
@@ -3443,7 +3465,6 @@ function persistTableImageSize(tableKey,value){
 function applyTableImageSizeDom(tableKey){
   const table=tableImageSizeTable(tableKey);if(!table)return;
   const dims=tableImageSizeDimensions(tableKey,tableImageSizeCurrentValue(tableKey));
-  window.BLTableReportInline?.updateImageDimensions?.(tableKey,dims);
   const isCollection=tableKey==='koleksiyon';
   if(isCollection){
     table.style.setProperty('--kol-row-h',`${dims.row}px`);
@@ -3507,6 +3528,7 @@ function applyTableDensityDom(tableKey){
   table.dataset.tableDensity=BLTableDensity.get(tableKey);
   if(tableKey==='cp'||tableKey==='orders')cpApplyImageSizeVars();
   applyTableImageSizeDom(tableKey);
+  window.BLTableReportInline?.updateImageDimensions?.(tableKey,reportImageDimensions(tableKey));
   const dims=tableImageSizeDimensions(tableKey,tableImageSizeCurrentValue(tableKey));
   syncVirtualizedTableRowHeight(tableKey,dims.row,{preserveAnchor:true});
   renderTableViewContext(tableKey);
@@ -3540,10 +3562,12 @@ function closeTableImageSizePopover(){
   if(_tableImageSizePopover)_tableImageSizePopover.remove();
   _tableImageSizePopover=null;_tableImageSizeReposition=null;
 }
-function openTableImageSizePopover(anchor,tableKey){
+function openTableImageSizePopover(anchor,tableKey,{report=false}={}){
   closeTableImageSizePopover();
   if(!anchor||!anchor.isConnected||!TABLE_IMAGE_SIZE_CONFIG[tableKey])return;
-  const dims=tableImageSizeDimensions(tableKey,tableImageSizeCurrentValue(tableKey));
+  const dims=report?reportImageDimensions(tableKey):tableImageSizeDimensions(tableKey,tableImageSizeCurrentValue(tableKey));
+  const setSize=report?setReportImageSize:setTableImageSize;
+  const persistSize=report?persistReportImageSize:persistTableImageSize;
   const pop=document.createElement('div');
   pop.className='tableImageSizePopover';pop.setAttribute('role','dialog');
   pop.setAttribute('aria-label',appLang==='en'?'Image size':'Görsel boyutu');
@@ -3558,14 +3582,14 @@ function openTableImageSizePopover(anchor,tableKey){
   };
   _tableImageSizeReposition=position;position();
   const range=pop.querySelector('#tableImageSizeRange'),output=pop.querySelector('#tableImageSizeValue');let rangeDirty=false;
-  range.addEventListener('input',()=>{const next=setTableImageSize(tableKey,range.value);rangeDirty=true;output.value=`${next.w}px`;output.textContent=`${next.w}px`;});
-  range.addEventListener('change',()=>{persistTableImageSize(tableKey,range.value);rangeDirty=false;});
+  range.addEventListener('input',()=>{const next=setSize(tableKey,range.value);rangeDirty=true;output.value=`${next.w}px`;output.textContent=`${next.w}px`;});
+  range.addEventListener('change',()=>{persistSize(tableKey,range.value);rangeDirty=false;});
   const outside=e=>{if(!pop.contains(e.target)&&e.target!==anchor)closeTableImageSizePopover();};
   const escape=e=>{if(e.key==='Escape'){e.preventDefault();closeTableImageSizePopover();if(anchor.isConnected)anchor.focus({preventScroll:true});}};
   const reposition=()=>position();
   document.addEventListener('pointerdown',outside,true);document.addEventListener('keydown',escape,true);
   window.addEventListener('resize',reposition);window.addEventListener('scroll',reposition,true);
-  _tableImageSizeCleanup=()=>{if(rangeDirty)persistTableImageSize(tableKey,range.value);document.removeEventListener('pointerdown',outside,true);document.removeEventListener('keydown',escape,true);window.removeEventListener('resize',reposition);window.removeEventListener('scroll',reposition,true);};
+  _tableImageSizeCleanup=()=>{if(rangeDirty)persistSize(tableKey,range.value);document.removeEventListener('pointerdown',outside,true);document.removeEventListener('keydown',escape,true);window.removeEventListener('resize',reposition);window.removeEventListener('scroll',reposition,true);};
   range.focus();
 }
 function cpNormalizePlmImageId(value){
@@ -5397,8 +5421,8 @@ function tableReportInteraction(key){
   const selected=()=>collection?kolSelected:(key==='orders'?state.ordersSelected:state.cpSelected);
   const rowId=row=>collection?row.id:row._id;
   return {
-    imageDimensions:()=>tableImageSizeDimensions(key,tableImageSizeCurrentValue(key)),
-    resizeImages:anchor=>openTableImageSizePopover(anchor,key),
+    imageDimensions:()=>reportImageDimensions(key),
+    resizeImages:anchor=>openTableImageSizePopover(anchor,key,{report:true}),
     pictureKey:collection?'__picture__':'__picture',
     view:()=>tableViewPresetState(key),
     selectable:()=>!blOverlayOpen()&&!window.BLDetailDrawer?.isOpen?.(),
