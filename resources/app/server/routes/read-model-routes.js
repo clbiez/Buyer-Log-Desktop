@@ -24,13 +24,14 @@ function sendError(res,status,code,tr,en,detail){
 module.exports = function registerReadModelRoutes(app, deps) {
   const {
     userAccess,
-    computeReadGuard,
     ensureComputedProjection,
     apiError,
   } = deps;
+  // Kayıt global JSON ayrıştırıcısından önce yapılır; guard o noktada henüz kurulmamıştır.
+  const getComputeReadGuard = deps.getComputeReadGuard;
   let service=deps.readModelService||null;
   const getService=()=>service||(service=require('../lib/read-model/read-model-service').createReadModelService({
-    guard:computeReadGuard,
+    guard:{capture:(req,area)=>getComputeReadGuard().capture(req,area)},
     loadProjection:(req,module)=>ensureComputedProjection(req,module),
     runCompute:(task,payload,options)=>(deps.runReadModelCompute||require('../lib/read-model/read-model-pool').getReadModelPool().run)(task,payload,options),
     calendar:()=>require('../lib/merch-calendar-store').publicProjection(),

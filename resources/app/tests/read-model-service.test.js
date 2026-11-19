@@ -80,7 +80,12 @@ test('invalid queries and unsupported client-only filters are rejected with 400 
   for(const query of bad)assert.throws(()=>engine.validateQuery(query),error=>error.code==='READ_MODEL_QUERY_INVALID'&&error.statusCode===400,JSON.stringify(query));
   const unsupported=[{version:1,filters:[{key:'Priority',op:'in',values:['A']}]},{version:1,sort:{key:'Priority',dir:1}},
     {version:1,columns:[{k:'STATUS',type:'status'}],filters:[{key:'STATUS',op:'display-in',values:['x']}]},
-    {version:1,columns:[{k:'F',type:'formula'}],filters:[{key:'F',op:'display-in',values:['x']}]}];
+    {version:1,columns:[{k:'F',type:'formula'}],filters:[{key:'F',op:'display-in',values:['x']}]},
+    // Formül/görsel/kişisel not değerleri projeksiyonda yoktur: her op ve sıralamada reddedilir.
+    ...['range','numeric','eq','in','blank','not-blank'].flatMap(op=>[{key:'__f_fc_a'},{key:'F'}].map(({key})=>({version:1,columns:[{k:'F',type:'formula'}],
+      filters:[{key,op,...(op==='numeric'?{rule:{op:'gt',a:1}}:op==='eq'?{value:'1'}:op==='in'?{values:['1']}:{})}]}))),
+    {version:1,columns:[{k:'N',type:'text',personalNote:true}],filters:[{key:'N',op:'blank'}]},
+    {version:1,sort:{key:'__f_fc_a',dir:1}},{version:1,sort:{key:'__picture',dir:1}}];
   for(const query of unsupported)assert.throws(()=>engine.validateQuery(query),error=>error.code==='READ_MODEL_FILTER_UNSUPPORTED'&&error.statusCode===400,JSON.stringify(query));
 });
 
@@ -144,6 +149,8 @@ async function withServer(deps,fn){
   const app=express();
   app.use((request,_res,next)=>{request.currentUser=users[request.headers['x-test-user']]||null;next();});
   const service=registerRoutes(app,deps);
+  // server.js sırası: rota global 100 MB JSON ayrıştırıcısından ÖNCE kaydolur.
+  app.use(express.json({limit:'100mb'}));
   const server=await new Promise(resolve=>{const s=app.listen(0,'127.0.0.1',()=>resolve(s));});
   const base=`http://127.0.0.1:${server.address().port}`;
   const post=(module,body,user='moderator',raw)=>fetch(`${base}/api/read-model/${module}/query`,{method:'POST',headers:{'content-type':'application/json','x-test-user':user},body:raw??JSON.stringify(body)});
@@ -152,7 +159,7 @@ async function withServer(deps,fn){
 function routeDeps(h){
   return {userAccess:{prepareComputeAccessContext:async()=>{},sessionProfile:request=>request.currentUser,hasArea:(profile,area)=>profile.areas.includes(area)},
     apiError:(res,err,message)=>res.status(err?.statusCode||500).json({error:message,code:err?.code||'INTERNAL_ERROR'}),
-    computeReadGuard:h.guard,ensureComputedProjection:h.loadProjection,runReadModelCompute:h.runCompute};
+    getComputeReadGuard:()=>h.guard,ensureComputedProjection:h.loadProjection,runReadModelCompute:h.runCompute};
 }
 
 test('HTTP contract: 200 shape, 400 invalid, 403 forbidden, 404 unknown, 401 no session',async()=>{
@@ -172,6 +179,8 @@ test('HTTP contract: 200 shape, 400 invalid, 403 forbidden, 404 unknown, 401 no 
     const forbidden=await post('cp',{version:99},'viewer');
     assert.equal(forbidden.status,403);assert.equal((await forbidden.json()).code,'AREA_FORBIDDEN');
     assert.equal((await post('cp',null,'viewer','{nope')).status,403,'403 precedes body parsing');
+    const oversized=await post('cp',null,'moderator',JSON.stringify({version:1,filters:[{key:'Buyer',op:'in',values:['x'.repeat(3*1024*1024)]}]}));
+    assert.equal(oversized.status,413);assert.equal((await oversized.json()).code,'READ_MODEL_BODY_TOO_LARGE');
     assert.equal((await post('backlog',{version:1})).status,404);
     assert.equal((await post('cp',{version:1},'nobody')).status,401);
   });
@@ -190,4 +199,10 @@ test('HTTP contract: stale generation is retried, then surfaces as 409',async()=
 
 test('route module and service expose the same module → area map',()=>{
   assert.deepEqual(registerRoutes.AREAS,require('../server/lib/read-model/read-model-service').AREAS);
+});
+
+test('server.js registers the read model route before the global 100 MB JSON parser',()=>{
+  const source=require('node:fs').readFileSync(require('node:path').join(__dirname,'..','server','server.js'),'utf8');
+  const route=source.indexOf("require('./routes/read-model-routes')(app,"),parser=source.indexOf("app.use(express.json({ limit: '100mb' }));");
+  assert.ok(route>0&&parser>0&&route<parser,'route must be registered before the global JSON parser');
 });

@@ -309,6 +309,14 @@
     throw invalid(where);
   }
   function columnFor(columns,key){return columns.get(key)||{k:key,type:'ro'};}
+  // Değeri sunucu projeksiyonunda hiç bulunmayan, tarayıcıda üretilen sütunlar
+  // (formül __f_…, görsel __picture, kişisel not): hiçbir filtre/sıralama yolunda
+  // kabul edilmez; aksi halde sessizce 0 sonuç/0 toplam dönerdi.
+  const CLIENT_ONLY_TYPES=new Set(['formula','cpImage','privateNote']);
+  function assertServerValue(columns,key,where){
+    const col=columns.get(key);
+    if(key.startsWith('__')||(col&&(CLIENT_ONLY_TYPES.has(col.type)||col.personalNote)))throw unsupported(`${where}: ${key}`);
+  }
   function assertSupportedColumn(col,where){
     if(UNSUPPORTED_KEYS.has(col.k))throw unsupported(`${where}: ${col.k}`);
     if(UNSUPPORTED_TYPES.has(col.type)||col.personalNote||col.modelCustom)throw unsupported(`${where}: type ${col.type}`);
@@ -339,6 +347,7 @@
         const key=cleanKey(f.key,where),op=f.op;
         if(!OPS.includes(op))throw invalid(`${where}.op`);
         if(key==='Priority')throw unsupported(`${where}: Priority`);
+        assertServerValue(columns,key,where);
         if(op==='eq'){
           if(typeof f.value!=='string'&&typeof f.value!=='number')throw invalid(`${where}.value`);
           filters.push({key,op,value:String(f.value)});
@@ -378,7 +387,8 @@
       const key=cleanKey(raw.sort.key,'sort'),dir=raw.sort.dir==null?1:raw.sort.dir;
       if(dir!==1&&dir!==-1)throw invalid('sort.dir');
       const col=columns.get(key);
-      if(key==='Priority'||(col&&col.personalNote))throw unsupported(`sort: ${key}`);
+      if(key==='Priority')throw unsupported(`sort: ${key}`);
+      assertServerValue(columns,key,'sort');
       sort={key,dir,column:col||null};
     }
     const offset=raw.offset==null?0:raw.offset,limit=raw.limit==null?LIMITS.defaultLimit:raw.limit;
