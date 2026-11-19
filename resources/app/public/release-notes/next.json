@@ -12,6 +12,23 @@
   },
   "changes": [
     {
+      "id": "report-image-heading-border",
+      "type": "fix",
+      "module": {"tr": "Rapor görünümü", "en": "Report view"},
+      "title": {"tr": "Görsel sütun başlığı sadeleşti", "en": "Simpler Image column heading"},
+      "body": {
+        "tr": "CP, Siparişler ve Koleksiyon raporlarında Görsel sütununun başlığındaki çerçeve kaldırıldı. Görsel boyutunu ayarlamak için başlığı seçebilirsiniz.",
+        "en": "The Image column heading in CP, Orders and Collection reports is now borderless. Select the heading to adjust the image size."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "report-image-heading.png",
+        "alt": {"tr": "CP raporunda çerçevesiz Görsel sütun başlığı", "en": "Borderless Image column heading in the CP report"},
+        "caption": {"tr": "CP rapor görünümünde demo görselleri ve çerçevesiz sütun başlığı.", "en": "Demo images and their borderless column heading in the CP report view."}
+      }
+    },
+    {
       "id": "cp-orders-stable-column-hover",
       "type": "fix",
       "module": {"tr": "CP ve Siparişler", "en": "CP and Orders"},
