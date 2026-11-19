@@ -2312,8 +2312,12 @@ let collectionCatalogLoadPromise=null;
 let overviewCpLoadState='idle';
 let overviewCpLoadError='';
 let overviewRenderFrame=0;
+// Genel Bakış okuma modeli durumu (#1074); ayrıntı renderOverviewFromModel üstünde.
+const overviewReadModel={key:'',data:null,pending:null,dirty:true,error:'',materialized:false,serial:0,inboxData:null};
 function scheduleOverviewRender(reason='data'){
   window.BLPerf?.mark?.('OVERVIEW_INVALIDATED',{reason});
+  // Okuma modeli (#1074): kendi sonucu dışındaki her geçersizleşmede model yeniden istenir (sunucu önbelleği ucuz).
+  if(!String(reason).startsWith('overview-model'))overviewReadModel.dirty=true;
   if(currentActiveTab()!=='overview'){_deferredTabRenders.add('overview');return;}
   if(overviewRenderFrame)return;
   const raf=window.requestAnimationFrame||((fn)=>setTimeout(fn,0));
@@ -11938,7 +11942,7 @@ async function openOverviewNoteGroupInCp(group){
     },
   });
 }
-function renderOverviewPriorityReminder(rows){
+function renderOverviewPriorityReminder(rows,options={}){
   const root=document.getElementById('ovPriorityReminder');
   const intro=document.getElementById('ovPriorityIntro');
   const stats=document.getElementById('ovPriorityStats');
@@ -11947,7 +11951,7 @@ function renderOverviewPriorityReminder(rows){
   if(!root||!intro||!stats||!list||!method)return;
   root.style.display='';
   updateOverviewNotesSortButton();
-  if(!state.cp){
+  if(!(options.ready??state.cp)){
     const loading=overviewCpLoadState!=='error';
     intro.textContent=loading
       ?(appLang==='en'?'CP Tracker data is loading in the background.':'CP Tracker verisi arka planda yükleniyor.')
@@ -11983,11 +11987,21 @@ function renderOverviewPriorityReminder(rows){
         </div>
       </article>`;
     }).join('');
+    // Okuma modeli (#1074): not satırları modelden gelir; düzenleme/açma CP satırına
+    // yazdığı için önce eski yol hazırlanır, güncel grup aynı not metniyle bulunur.
+    const act=(fn,group)=>{
+      if(typeof options.materialize!=='function'){fn(group);return;}
+      void options.materialize().then(ready=>{
+        if(!ready)return;
+        const fresh=overviewNoteGroups(ovFilteredCpRows()).find(item=>overviewNoteCanonical(item.note)===overviewNoteCanonical(group.note));
+        if(fresh)fn(fresh);
+      }).catch(error=>showToast(error.message));
+    };
     list.querySelectorAll('[data-note-edit]').forEach(node=>node.addEventListener('click',event=>{
-      event.preventDefault();event.stopPropagation();openOverviewNoteEditor(groups[Number(node.dataset.noteEdit)]);
+      event.preventDefault();event.stopPropagation();act(openOverviewNoteEditor,groups[Number(node.dataset.noteEdit)]);
     }));
     list.querySelectorAll('[data-note-group-count]').forEach(node=>node.addEventListener('click',event=>{
-      event.preventDefault();event.stopPropagation();openOverviewNoteGroupInCp(groups[Number(node.dataset.noteGroupCount)]);
+      event.preventDefault();event.stopPropagation();act(openOverviewNoteGroupInCp,groups[Number(node.dataset.noteGroupCount)]);
     }));
   }
   /* Kullanım açıklaması her zaman görünen uzun paragraf değil; tek tıkla açılan
@@ -12047,6 +12061,15 @@ window.BLExceptionInboxBridge={
  filter:row=>passesOvDimFilters(row,true,'main'),
  analyze:row=>window.BLCpReadinessEngine.analyzeOrder(row,{transitRules:state.overrides?.transitRules||[]}),
  async read(signal){
+  // Okuma modeli (#1074): İstisna Kutusu öğeleri Genel Bakış modelinden gelir; satır inmez.
+  if(overviewReadModelEnabled()){
+    const model=overviewModelCurrent()||await requestOverviewModel();
+    if(signal?.aborted)throw new DOMException('Aborted','AbortError');
+    if(model&&model.exceptionInbox&&overviewReadModelEnabled())return window.BLExceptionInbox.precomputed(model.exceptionInbox);
+  }
+  return window.BLExceptionInboxBridge.readRows(signal);
+ },
+ async readRows(signal){
   // Aynı kayıtlı sunucu verisi; hazırsa sıkıştırılmış sayfa önbelleğinden okunur,
   // yoksa /api/data/cp onu üretir. Ayrı bir tam yeniden üretim tetiklenmez.
   let response=await fetch('/api/page-projection/cp',{cache:'no-store',signal});
@@ -12056,7 +12079,7 @@ window.BLExceptionInboxBridge={
  },
  async open(item){
   const bridge=window.BLExceptionInboxBridge,owner=String(window.BL_USER_CONTEXT?.id||''),scope=bridge.scope();if(!bridge.allowed())return;
-  const rows=await bridge.read();if(!bridge.allowed()||String(window.BL_USER_CONTEXT?.id||'')!==owner||bridge.scope()!==scope)return;
+  const rows=await bridge.readRows();if(!bridge.allowed()||String(window.BL_USER_CONTEXT?.id||'')!==owner||bridge.scope()!==scope)return;
   const matching=rows.filter(row=>window.BLCanonicalFields.keyFor(row,'cp',window.BLExceptionInbox.IDENTITY)===item.key&&bridge.filter(row)&&bridge.analyze(row).riskReasons.includes(item.type));
   if(!matching.length){showToast(appLang==='en'?'This exception is no longer in the current confirmed scope.':'Bu istisna güncel kayıtlı kapsamda artık bulunmuyor.');void window.BLExceptionInboxView?.refresh();return;}
   if(!window.BLDetailDrawer)await window.BLPerf.ensureFeature('deferredUi');
@@ -12064,6 +12087,162 @@ window.BLExceptionInboxBridge={
   window.BLDetailDrawer?.open({storageKey:'overview.exception-inbox',moduleId:'cp',source:'cp',tableSetup:'cp',title:appLang==='en'?'Exception · CP record':'İstisna · CP kaydı',rows:matching,columns:[],images:true});
  },
 };
+/* Genel Bakış tablo/KPI çizimi: eski yol (istemci hesabı) ve okuma modeli (#1074)
+   aynı değer nesnelerinden aynı HTML'i üretir. */
+function renderOverviewKpis(kpi){
+  document.getElementById('kpiOrders').innerHTML = `
+      <div class="kpi tone-navy"><div class="n">${kpi.total}</div><div class="l">${appLang==='en'?'Total Orders':'Toplam Sipariş Sayısı'}</div></div>
+      <div class="kpi tone-green"><div class="n">${kpi.active}</div><div class="l">${appLang==='en'?'Active':'Aktif'}</div></div>
+      <div class="kpi tone-purple"><div class="n">$${Math.round(kpi.fobUsd).toLocaleString('tr-TR')}</div><div class="l">${appLang==='en'?'Active Total FOB':'Aktif Toplam FOB'}</div></div>
+      ${kpi.fobTry ? `<div class="kpi tone-purple"><div class="n">${Math.round(kpi.fobTry).toLocaleString('tr-TR')} ₺</div><div class="l">${appLang==='en'?'Active Total FOB (TL)':'Aktif Toplam FOB (TL)'}</div></div>` : ''}`;
+}
+function renderOverviewBuyingGroups(rows){
+  const tblBG = document.getElementById('tblBuyingGroup');
+  const bgRemainingTotal=rows.reduce((sum,d)=>sum+(Number(d.remaining)||0),0),bgQtyTotal=rows.reduce((sum,d)=>sum+(Number(d.totalQty)||0),0);
+  tblBG.innerHTML = `<tr><th>${appLang==='en'?'Buying Group':'Buying Grup'}</th><th style="text-align:right">${appLang==='en'?'Active':'Aktif'}</th><th style="text-align:right">${appLang==='en'?'Total Orders':'Toplam Sipariş Sayısı'}</th><th style="text-align:right">${appLang==='en'?'Remaining Quantity':'Kalan Adet'}</th><th style="text-align:right">${appLang==='en'?'Total Quantity':'Toplam Adet Sayısı'}</th><th style="text-align:right">${appLang==='en'?'Active Total FOB':'Aktif Toplam FOB'}</th><th style="text-align:right">${appLang==='en'?'Total FOB':'Toplam FOB'}</th></tr>` +
+    rows.map(d=>`<tr>
+        <td>${escapeHtml(d.label)}</td>
+        <td style="text-align:right;font-family:var(--ui-font-mono);color:var(--ui-success)">${d.active}</td>
+        <td style="text-align:right;font-family:var(--ui-font-mono)">${d.total}</td>
+        <td style="text-align:right;font-family:var(--ui-font-mono)">${d.remaining.toLocaleString('tr-TR')}</td>
+        <td style="text-align:right;font-family:var(--ui-font-mono)">${d.totalQty.toLocaleString('tr-TR')}</td>
+        <td style="text-align:right;font-family:var(--ui-font-mono)">$${Math.round(d.fobUsd).toLocaleString('tr-TR')}${d.fobTry?` + ${Math.round(d.fobTry).toLocaleString('tr-TR')} ₺`:''}</td>
+        <td style="text-align:right;font-family:var(--ui-font-mono)">$${Math.round(d.totalFobUsd).toLocaleString('tr-TR')}${d.totalFobTry?` + ${Math.round(d.totalFobTry).toLocaleString('tr-TR')} ₺`:''}</td>
+      </tr>`).join('')+`<tr><td class="quantityTotalLabel">${appLang==='en'?'Total':'Toplam'}</td><td></td><td></td><td class="quantityTotalValue">${formatQuantityTotal(bgRemainingTotal)}</td><td class="quantityTotalValue">${formatQuantityTotal(bgQtyTotal)}</td><td></td><td></td></tr>`;
+}
+// season: {codes, labels:{code:metin}, rows:[{label,count,qty,priorities}]}
+function renderOverviewSeasonTable(season){
+  const tblSeason = document.getElementById('tblSeason');
+  const codes=season.codes,label=code=>season.labels[code]||'';
+  const seasonQtyTotal=season.rows.reduce((sum,d)=>sum+(Number(d.qty)||0),0);
+  const priorityHeaders=codes.map(code=>`<th style="text-align:right">${escapeHtml(label(code))}</th>`).join('');
+  tblSeason.innerHTML = `<tr><th>${appLang==='en'?'SEASON':'Sezon'}</th><th style="text-align:right">${appLang==='en'?'ORDER':'Sipariş'}</th>${priorityHeaders}<th style="text-align:right">${appLang==='en'?'TOTAL QUANTITY':'Toplam Adet'}</th></tr>` +
+    season.rows.map(data=>{
+      const seasonLabel=data.label;
+      const cell = (val, pri, color) => `<td class="ovDrill" data-ov-season="${escapeHtml(seasonLabel)}"${pri?` data-ov-pri="${pri}"`:''} style="text-align:right;font-family:var(--ui-font-mono);${color?`color:${color};`:''}cursor:pointer;" title="${appLang==='en'?'Show in CP':'CP\'de göster'}">${val}</td>`;
+      const priorityCells=codes.map(code=>cell(data.priorities[code]||0,code,'')).join('');
+      return `<tr><td>${escapeHtml(seasonLabel)}</td>${cell(data.count,'','')}${priorityCells}${cell(data.qty.toLocaleString('tr-TR'),'','')}</tr>`;
+    }).join('')+`<tr><td class="quantityTotalLabel">${appLang==='en'?'Total':'Toplam'}</td><td colspan="${1+codes.length}"></td><td class="quantityTotalValue">${formatQuantityTotal(seasonQtyTotal)}</td></tr>`;
+  tblSeason.querySelectorAll('.ovDrill').forEach(td=>{
+    td.addEventListener('click', ()=>{
+      clearCpQuickFilters();
+      setSelectValue('cpFSeason', td.dataset.ovSeason);
+      if(td.dataset.ovPri) setSelectValue('cpFPriority', td.dataset.ovPri);
+      switchTab('cp'); renderCP();
+    });
+  });
+}
+
+/* ================= GENEL BAKIŞ OKUMA MODELİ (#1074) =================
+   Anahtar açıkken (window.BL_READ_MODEL_OVERVIEW!==false) Genel Bakış tam CP /
+   Sipariş satır listesi indirmez: KPI, kırılımlar, Buying Group, İstisna Kutusu,
+   CP Kontrol Listesi ve Kurallar özeti ile not hatırlatıcısının satırları yerel
+   arka ucun işçisinde hesaplanır (POST /api/read-model/overview/model). Kişisel
+   karar bağlamı sunucu tercihlerinden okunur; yerel değişiklik önce sunucuya
+   yazılır, sonra model yenilenir. Tam satır isteyen bir tıklama (İş Listesi,
+   aksiyon gerekenler, not düzenleme…) materializeOverview ile bu oturumda eski
+   yola geçer: CP yüklenir, kararlar istemcide hesaplanır, tıklama yinelenir.
+   Sunucu modeli veremezse (eski sunucu, hata) aynı şekilde eski yola dönülür. */
+function overviewReadModelEnabled(){return window.BL_READ_MODEL_OVERVIEW!==false&&!overviewReadModel.materialized;}
+function overviewModelFilters(scope){
+  return Object.fromEntries(Object.entries(ovStateFor(scope)).filter(([,set])=>set&&set.size).map(([dim,set])=>[dim,[...set].map(String)]));
+}
+function overviewModelBody(){return {version:1,lang:appLang==='en'?'en':'tr',filters:{main:overviewModelFilters('main'),bg:overviewModelFilters('bg')}};}
+function overviewModelKey(body=overviewModelBody()){return `${String(window.BL_USER_CONTEXT?.id||'')}|${JSON.stringify(body)}`;}
+function overviewModelCurrent(){const key=overviewModelKey();return overviewReadModel.key===key?overviewReadModel.data:null;}
+function requestOverviewModel(){
+  const body=overviewModelBody(),key=overviewModelKey(body);
+  if(overviewReadModel.pending&&overviewReadModel.pending.key===key)return overviewReadModel.pending.promise;
+  if(!overviewReadModel.dirty&&overviewReadModel.key===key&&overviewReadModel.data)return Promise.resolve(overviewReadModel.data);
+  const serial=++overviewReadModel.serial,job={key};overviewReadModel.dirty=false;overviewReadModel.pending=job;
+  window.BLPerf?.mark?.('OVERVIEW_MODEL_REQUEST');
+  job.promise=fetch('/api/read-model/overview/model',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(async res=>{
+      const payload=await res.json().catch(()=>({}));
+      if(!res.ok||!payload||payload.ok!==true){const error=new Error((appLang==='en'?payload?.errorEn:payload?.error)||res.statusText||'HTTP '+res.status);error.status=res.status;error.code=payload?.code||'';throw error;}
+      return payload;
+    })
+    .then(payload=>{
+      if(serial!==overviewReadModel.serial)return overviewReadModel.data;
+      const model=payload.model&&typeof payload.model==='object'?payload.model:{};
+      if(model.cp&&Array.isArray(model.cp.notes))reviveServerDates(model.cp.notes);
+      overviewReadModel.key=key;overviewReadModel.data=model;overviewReadModel.error='';
+      window.BLPerf?.mark?.('OVERVIEW_MODEL_READY',{cached:payload.cached===true,serverMs:Number(payload.timing?.totalMs)||0});
+      scheduleOverviewRender('overview-model-ready');
+      return model;
+    })
+    .catch(error=>{
+      if(serial!==overviewReadModel.serial)return null;
+      // Model verilemedi (eski sunucu, işçi hatası…): bu oturumda eski yol sürer.
+      console.warn('Genel Bakış okuma modeli kullanılamadı, istemci hesabına dönülüyor:',error);
+      overviewReadModel.error=String(error&&error.message||error);overviewReadModel.materialized=true;
+      scheduleOverviewRender('overview-model-fallback');
+      return null;
+    })
+    .finally(()=>{if(overviewReadModel.pending===job)overviewReadModel.pending=null;});
+  return job.promise;
+}
+async function materializeOverview(){
+  if(overviewReadModel.materialized&&state.cp&&window.BLCpAssistant?._state?.model)return true;
+  overviewReadModel.materialized=true;
+  window.BLPerf?.mark?.('OVERVIEW_MODEL_MATERIALIZE');
+  const loaded=await ensureCpLoaded({deferRender:true,reason:'overview'});
+  if(!loaded||!state.cp){overviewReadModel.materialized=false;scheduleOverviewRender('overview-materialize-failed');return false;}
+  await (window.BLPerf?.ensureFeature?.('cpAssistant')||Promise.resolve());
+  if(currentActiveTab()==='overview')renderOverviewNow();
+  return Boolean(window.BLCpAssistant?._state?.model);
+}
+window.BLOverviewReadModel={enabled:overviewReadModelEnabled,current:overviewModelCurrent,request:requestOverviewModel,materialize:materializeOverview};
+// Kişisel karar bağlamı (checklist cevabı, kural, tercih) değişince sunucu kaydı
+// tamamlandıktan sonra model yeniden istenir.
+window.addEventListener('bl:cp-decision-context-changed',()=>{
+  if(!overviewReadModelEnabled())return;
+  void Promise.resolve(window.BLStorage?.flushPending?.()).catch(()=>{}).then(()=>{overviewReadModel.dirty=true;scheduleOverviewRender('overview-decision-context');});
+});
+function renderOverviewFromModel(){
+  const data=overviewModelCurrent(),key=overviewModelKey();
+  void requestOverviewModel();
+  const cp=data&&data.cp,orders=data&&data.orders;
+  renderOverviewPriorityReminder(cp?cp.notes:[],{ready:Boolean(cp),materialize:materializeOverview});
+  const breakdown={country:[],subManufacturer:[],season:{codes:[],labels:{},rows:[]},buyingGroup:[],drill:{
+    country:v=>{clearCpQuickFilters();setSelectValue('cpFCountry',v);switchTab('cp');renderCP();},
+    subManufacturer:v=>{clearCpQuickFilters();state.colFilters.cp['Sub-Manufacturer']={values:new Set([v])};switchTab('cp');renderCP();},
+    season:(v,pri)=>{clearCpQuickFilters();setSelectValue('cpFSeason',v);if(pri)setSelectValue('cpFPriority',pri);switchTab('cp');renderCP();},
+  }};
+  if(cp){
+    overviewCpLoadState='ready';overviewCpLoadError='';
+    const summary=cp.summary;
+    const show=()=>{if(overviewModelKey()===key&&overviewReadModelEnabled())window.BLCpAssistant?.showOverviewSummary?.(summary,{materialize:materializeOverview});};
+    if(window.BLCpAssistant?.showOverviewSummary)show();
+    else{renderOverviewCpDependencyState('loading');void (window.BLPerf?.ensureFeature?.('cpAssistant')||Promise.resolve()).then(show).catch(()=>{});}
+    breakdown.country=cp.country;breakdown.subManufacturer=cp.subManufacturer;
+    fillMiniTable('tblCountry', breakdown.country);
+    fillMiniTable('tblLicense', breakdown.subManufacturer);
+    bindMiniDrill('tblCountry', v=>{ clearCpQuickFilters(); setSelectValue('cpFCountry', v); });
+    bindMiniDrill('tblLicense', v=>{ clearCpQuickFilters(); state.colFilters.cp['Sub-Manufacturer'] = {values:new Set([v])}; });
+    const season=cp.season||{codes:[],labels:{},rows:[]},lang=appLang==='en'?'en':'tr';
+    breakdown.season={codes:season.codes,labels:Object.fromEntries(season.codes.map(code=>[code,season.labels[code]?.[lang]||''])),rows:season.rows};
+    renderOverviewSeasonTable(breakdown.season);
+  }else{
+    renderOverviewCpDependencyState(data?'error':'loading',data?(appLang==='en'?'CP data is not available for your account.':'Hesabınız için CP verisi yok.'):'');
+    document.getElementById('tblCountry').innerHTML=''; document.getElementById('tblLicense').innerHTML='';
+    document.getElementById('tblSeason').innerHTML='';
+  }
+  if(orders){
+    renderOverviewKpis(orders.kpi);
+    breakdown.buyingGroup=orders.buyingGroup.map(d=>({label:d.label,active:d.active,total:d.total,remaining:d.remaining,totalQty:d.totalQty,fobUsd:d.fobUsd,fobTry:d.fobTry}));
+    renderOverviewBuyingGroups(orders.buyingGroup);
+  }else{
+    document.getElementById('kpiOrders').innerHTML='';
+    document.getElementById('tblBuyingGroup').innerHTML='';
+  }
+  // İstisna Kutusu aynı modelden beslenir; yeni model gelince görünüm yenilenir.
+  if(data&&data.exceptionInbox&&overviewReadModel.inboxData!==data.exceptionInbox){
+    overviewReadModel.inboxData=data.exceptionInbox;
+    void window.BLExceptionInboxView?.refresh?.();
+  }
+  window.BLOverviewBreakdown?.update?.(breakdown);
+}
 function renderOverviewNow(){
   const empty=document.getElementById('ovEmpty');
   if(startupOverviewPending&&state.overviewDeferred){
@@ -12099,6 +12278,7 @@ function renderOverviewNow(){
   updateOvFilterBadge('main');
   updateOvFilterBadge('bg');
   window.BLINTAKE?.onOverviewFiltersChanged?.();
+  if(overviewReadModelEnabled()){renderOverviewFromModel();return;}
   const cpRows = ovFilteredCpRows();
   const orderRowsF = ovFilteredOrderRows();
   renderOverviewPriorityReminder(cpRows);
@@ -12153,23 +12333,7 @@ function renderOverviewNow(){
     });
     const seasonRows = Object.entries(seasonMap).sort((a,b)=>compareSeasonValues(a[0],b[0]));
     breakdown.season={codes:actionPriorityCodes(),labels:Object.fromEntries(actionPriorityCodes().map(code=>[code,priorityDisplay(code)])),rows:seasonRows.map(([label,data])=>({label,count:data.count,qty:data.qty,priorities:data.priorities}))};
-    const tblSeason = document.getElementById('tblSeason');
-    const seasonQtyTotal=seasonRows.reduce((sum,[,d])=>sum+(Number(d.qty)||0),0);
-    const priorityHeaders=actionPriorityCodes().map(code=>`<th style="text-align:right">${escapeHtml(priorityDisplay(code))}</th>`).join('');
-    tblSeason.innerHTML = `<tr><th>${appLang==='en'?'SEASON':'Sezon'}</th><th style="text-align:right">${appLang==='en'?'ORDER':'Sipariş'}</th>${priorityHeaders}<th style="text-align:right">${appLang==='en'?'TOTAL QUANTITY':'Toplam Adet'}</th></tr>` +
-      seasonRows.map(([season,data])=>{
-        const cell = (val, pri, color) => `<td class="ovDrill" data-ov-season="${escapeHtml(season)}"${pri?` data-ov-pri="${pri}"`:''} style="text-align:right;font-family:var(--ui-font-mono);${color?`color:${color};`:''}cursor:pointer;" title="CP'de göster">${val}</td>`;
-        const priorityCells=actionPriorityCodes().map(code=>cell(data.priorities[code]||0,code,'')).join('');
-        return `<tr><td>${escapeHtml(season)}</td>${cell(data.count,'','')}${priorityCells}${cell(data.qty.toLocaleString('tr-TR'),'','')}</tr>`;
-      }).join('')+`<tr><td class="quantityTotalLabel">${appLang==='en'?'Total':'Toplam'}</td><td colspan="${1+actionPriorityCodes().length}"></td><td class="quantityTotalValue">${formatQuantityTotal(seasonQtyTotal)}</td></tr>`;
-    tblSeason.querySelectorAll('.ovDrill').forEach(td=>{
-      td.addEventListener('click', ()=>{
-        clearCpQuickFilters();
-        setSelectValue('cpFSeason', td.dataset.ovSeason);
-        if(td.dataset.ovPri) setSelectValue('cpFPriority', td.dataset.ovPri);
-        switchTab('cp'); renderCP();
-      });
-    });
+    renderOverviewSeasonTable(breakdown.season);
   } else {
     document.getElementById('tblCountry').innerHTML=''; document.getElementById('tblLicense').innerHTML='';
     document.getElementById('tblSeason').innerHTML='';
@@ -12179,11 +12343,7 @@ function renderOverviewNow(){
     const active = orderRowsF.filter(r=>norm(r['Active/Inactive'])==='Active');
     const totalFobUsd = active.filter(r=>!isTurkeyCountry(r.Country)).reduce((s,r)=>s+(toNum(r['FOB ($)'])*toNum(r['Order Quantity'])||0),0);
     const totalFobTry = active.filter(r=>isTurkeyCountry(r.Country)).reduce((s,r)=>s+(toNum(r['FOB ($)'])*toNum(r['Order Quantity'])||0),0);
-    document.getElementById('kpiOrders').innerHTML = `
-      <div class="kpi tone-navy"><div class="n">${orderRowsF.length}</div><div class="l">${appLang==='en'?'Total Orders':'Toplam Sipariş Sayısı'}</div></div>
-      <div class="kpi tone-green"><div class="n">${active.length}</div><div class="l">${appLang==='en'?'Active':'Aktif'}</div></div>
-      <div class="kpi tone-purple"><div class="n">$${Math.round(totalFobUsd).toLocaleString('tr-TR')}</div><div class="l">${appLang==='en'?'Active Total FOB':'Aktif Toplam FOB'}</div></div>
-      ${totalFobTry ? `<div class="kpi tone-purple"><div class="n">${Math.round(totalFobTry).toLocaleString('tr-TR')} ₺</div><div class="l">${appLang==='en'?'Active Total FOB (TL)':'Aktif Toplam FOB (TL)'}</div></div>` : ''}`;
+    renderOverviewKpis({total:orderRowsF.length,active:active.length,fobUsd:totalFobUsd,fobTry:totalFobTry});
 
     // Buying Group bazlı özet — Genel Bakış filtresi uygulanmış sipariş özetinden.
     // "Toplam" sütunları, filtrenizin kapsadığı TÜM satırları (aktif+inaktif) sayar;
@@ -12205,18 +12365,7 @@ function renderOverviewNow(){
     });
     const bgRows = Object.entries(bgMap).sort((a,b)=>b[1].active-a[1].active);
     breakdown.buyingGroup=bgRows.map(([label,d])=>({label,active:d.active,total:d.total,remaining:d.remaining,totalQty:d.totalQty,fobUsd:d.fobValueUsd,fobTry:d.fobValueTry}));
-    const tblBG = document.getElementById('tblBuyingGroup');
-    const bgRemainingTotal=bgRows.reduce((sum,[,d])=>sum+(Number(d.remaining)||0),0),bgQtyTotal=bgRows.reduce((sum,[,d])=>sum+(Number(d.totalQty)||0),0);
-    tblBG.innerHTML = `<tr><th>${appLang==='en'?'Buying Group':'Buying Grup'}</th><th style="text-align:right">${appLang==='en'?'Active':'Aktif'}</th><th style="text-align:right">${appLang==='en'?'Total Orders':'Toplam Sipariş Sayısı'}</th><th style="text-align:right">${appLang==='en'?'Remaining Quantity':'Kalan Adet'}</th><th style="text-align:right">${appLang==='en'?'Total Quantity':'Toplam Adet Sayısı'}</th><th style="text-align:right">${appLang==='en'?'Active Total FOB':'Aktif Toplam FOB'}</th><th style="text-align:right">${appLang==='en'?'Total FOB':'Toplam FOB'}</th></tr>` +
-      bgRows.map(([bg,d])=>`<tr>
-        <td>${escapeHtml(bg)}</td>
-        <td style="text-align:right;font-family:var(--ui-font-mono);color:var(--ui-success)">${d.active}</td>
-        <td style="text-align:right;font-family:var(--ui-font-mono)">${d.total}</td>
-        <td style="text-align:right;font-family:var(--ui-font-mono)">${d.remaining.toLocaleString('tr-TR')}</td>
-        <td style="text-align:right;font-family:var(--ui-font-mono)">${d.totalQty.toLocaleString('tr-TR')}</td>
-        <td style="text-align:right;font-family:var(--ui-font-mono)">$${Math.round(d.fobValueUsd).toLocaleString('tr-TR')}${d.fobValueTry?` + ${Math.round(d.fobValueTry).toLocaleString('tr-TR')} ₺`:''}</td>
-        <td style="text-align:right;font-family:var(--ui-font-mono)">$${Math.round(d.totalFobValueUsd).toLocaleString('tr-TR')}${d.totalFobValueTry?` + ${Math.round(d.totalFobValueTry).toLocaleString('tr-TR')} ₺`:''}</td>
-      </tr>`).join('')+`<tr><td class="quantityTotalLabel">${appLang==='en'?'Total':'Toplam'}</td><td></td><td></td><td class="quantityTotalValue">${formatQuantityTotal(bgRemainingTotal)}</td><td class="quantityTotalValue">${formatQuantityTotal(bgQtyTotal)}</td><td></td><td></td></tr>`;
+    renderOverviewBuyingGroups(bgRows.map(([label,d])=>({label,active:d.active,total:d.total,remaining:d.remaining,totalQty:d.totalQty,fobUsd:d.fobValueUsd,fobTry:d.fobValueTry,totalFobUsd:d.totalFobValueUsd,totalFobTry:d.totalFobValueTry})));
   } else {
     document.getElementById('kpiOrders').innerHTML='';
     document.getElementById('tblBuyingGroup').innerHTML='';

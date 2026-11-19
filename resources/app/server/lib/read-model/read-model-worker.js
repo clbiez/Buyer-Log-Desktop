@@ -54,7 +54,7 @@ function execute(task,payload){
 }
 
 if(parentPort)parentPort.on('message',message=>{
-  if(message?.type!=='run')return;
+  if(message?.type!=='run'||message.task==='read-model-overview')return;
   const start=performance.now();
   try{
     const value=execute(message.task,message.payload||{});
@@ -62,4 +62,13 @@ if(parentPort)parentPort.on('message',message=>{
     parentPort.postMessage({type:'result',id:message.id,ok:true,value,metrics:{threadId,executionMs:performance.now()-start,retainedBytes:memory.heapUsed+memory.arrayBuffers,outputBytes}});
   }catch(error){parentPort.postMessage({type:'result',id:message.id,ok:false,error:{code:error?.code||'COMPUTE_WORKER_FAILED'}});}
 });
-module.exports={execute,createDatasetCache};
+// Genel Bakış modeli (#1074): asenkron görev; aynı veri kümesi önbelleğini paylaşır.
+if(parentPort)parentPort.on('message',message=>{
+  if(message?.type!=='run'||message.task!=='read-model-overview')return;
+  const start=performance.now();
+  Promise.resolve().then(()=>require('./overview-model-task').execute(message.payload||{},{cache,engine})).then(value=>{
+    const memory=process.memoryUsage(),outputBytes=(value.body?Buffer.byteLength(value.body):0)+4096;
+    parentPort.postMessage({type:'result',id:message.id,ok:true,value,metrics:{threadId,executionMs:performance.now()-start,retainedBytes:memory.heapUsed+memory.arrayBuffers,outputBytes}});
+  }).catch(error=>{parentPort.postMessage({type:'result',id:message.id,ok:false,error:{code:error?.code||'COMPUTE_WORKER_FAILED'}});});
+});
+module.exports={execute,createDatasetCache,cache};
