@@ -2742,7 +2742,7 @@
       "id": "refresh",
       "module": "general",
       "visual": "menu",
-      "selector": "#cpRefreshBtn",
+      "selector": "#topRefreshBtn",
       "title": {
         "tr": "Yenileme ve ilk açılış aynı şey değildir",
         "en": "Refresh and startup are different"
@@ -2752,8 +2752,8 @@
         "en": "Startup prepares local data for the screen. Refresh updates data sources; volume and scope affect its duration."
       },
       "path": {
-        "tr": "Üst çubuk / tablo → Yenile",
-        "en": "Top bar / table → Refresh"
+        "tr": "Üst çubuk → Yenile",
+        "en": "Top bar → Refresh"
       },
       "steps": {
         "tr": [

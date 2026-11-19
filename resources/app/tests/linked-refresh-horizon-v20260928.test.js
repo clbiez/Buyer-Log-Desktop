@@ -191,7 +191,7 @@ test('yalnız LFL\'e ait kişisel ufuk yalnız LFL\'e uygulanır; grubun geri ka
   assert.deepEqual(valuesOf(orders), ['S7'], 'LFL\'e ait kişisel ufuk Siparişler\'e sızmamalı');
 });
 
-test('istemci: sayfa düğmeleri yalnız kendi sayfasını ister; menü filtre bağına göre satır üretir', () => {
+test('istemci: üst yenileme menüsü filtre bağına göre satır üretir, LFL kendi kapsamını ister', () => {
   assert.match(APP, /const ALL_REFRESH_TARGETS=Object\.freeze\(\['cp','orders','backlog','lfl','priceanalysis'\]\);/);
   assert.match(APP, /const DEFAULT_LINKED_REFRESH_TARGETS=Object\.freeze\(\['orders','backlog','lfl','priceanalysis'\]\);/);
   // Menü üyeliği son yenileme snapshot'ından değil güncel ASAS kaydından okunur.
@@ -213,12 +213,6 @@ test('istemci: sayfa düğmeleri yalnız kendi sayfasını ister; menü filtre b
   assert.match(chain, /LINKED_REFRESH_CHAIN\.forEach/);
   assert.match(APP, /const LINKED_REFRESH_CHAIN=Object\.freeze\(\['cp'\]\);/);
   assert.match(menu, /if\(option\)return loadFromServer\(true,option\[2\]\.slice\(\)\);/);
-  // CP düğmesi yalnız CP'yi, Siparişler düğmesi Siparişler'i ister (grup sunucuda eklenir).
-  for (const [id, target] of [['cpRefreshBtn', 'cp'], ['ordersRefreshBtn', 'orders']]) {
-    const at = APP.indexOf(`document.getElementById('${id}')?.addEventListener('click'`);
-    assert.ok(at > 0, id);
-    assert.match(APP.slice(at, at + 220), new RegExp(`void loadFromServer\\(true,\\['${target}'\\]\\);`));
-  }
   assert.match(APP, /window\.BLRunLinkedRefresh=function\(\)\{[\s\S]{0,160}loadFromServer\(true,\['lfl'\]\)/);
   assert.match(LFL, /lflRefreshBtn'\)\?\.addEventListener\('click',\(\)=>\{void refreshLinked\(\);\}\)/);
   assert.doesNotMatch(HTML, /tek yenileme|single refresh/);
