@@ -4,7 +4,7 @@
    işçide çalışır, fazlası sırada bekler. page-projection-cache bir yeniden yazımın modüllerini
    boyuta göre bu işçilere böler: modüller birbirinden bağımsızdır, sonuç aynıdır, duvar süresi en
    büyük modülün süresine iner. İşçiler ilk işte kurulur, boşta BL_PROJECTION_REWRITE_IDLE_MS
-   (varsayılan 20 sn) sonra kapanır: boşta bellek tutmaz. Zaman aşımı veya işçi hatası işi
+   (varsayılan 5 sn) sonra kapanır: boşta bellek tutmaz (kayıt akışında yazımlar 2–3 sn arayla gelir, işçiler canlı kalır). Zaman aşımı veya işçi hatası işi
    reddeder; çağıran aynı isteği ana iş parçacığında eski yolla tamamlar (page-projection-cache).
    Geri dönüş anahtarları: BL_PROJECTION_REWRITE_WORKER=0 (işçi yok), BL_PROJECTION_REWRITE_WORKERS=1
    (paralel bölme yok). */
@@ -17,7 +17,7 @@ function poolOptions(env = process.env) {
   const idle = Number(env.BL_PROJECTION_REWRITE_IDLE_MS), timeout = Number(env.BL_PROJECTION_REWRITE_TIMEOUT_MS), count = Number(env.BL_PROJECTION_REWRITE_WORKERS);
   const cores = typeof os.availableParallelism === 'function' ? os.availableParallelism() : os.cpus().length;
   return {
-    idleMs: Number.isFinite(idle) && idle >= 0 ? idle : 20000,
+    idleMs: Number.isFinite(idle) && idle >= 0 ? idle : 5000,
     timeoutMs: Number.isFinite(timeout) && timeout > 0 ? timeout : 180000,
     workers: Number.isSafeInteger(count) && count >= 1 && count <= 8 ? count : Math.max(1, Math.min(3, cores - 1)),
     // En büyük modül (30k satırda ~75 MB JSON) tek başına ayrıştırılır; makine belleğinin yarısını aşmaz.
