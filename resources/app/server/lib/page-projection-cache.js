@@ -332,11 +332,36 @@ const ROW_REWRITE_MAX_BATCH = 64;
 const rowRewriteQueues = new Map();
 let rowRewriteRunner = null;
 function setRowRewriteRunnerForTests(fn) { rowRewriteRunner = fn; }
-async function runRowRewriteSteps(modules, steps) {
-  const runner = rowRewriteRunner || (require('./projection-rewrite-pool').workerEnabled() ? input => require('./projection-rewrite-pool').getProjectionRewritePool().run(input) : null);
+/* Modülleri en çok `parts` gruba böler (büyükten küçüğe, en hafif gruba): her grup ayrı işçide
+   çalışır; duvar süresi yaklaşık en büyük modülün süresidir. Modüller birbirinden bağımsızdır
+   (adımlar modül başına uygulanır), sonuç bölmeden bağımsızdır. */
+function splitRewriteModules(modules, parts, sizeOf) {
+  const groups = Array.from({ length: Math.max(1, Math.min(parts, modules.length)) }, () => ({ bytes: 0, modules: [] }));
+  for (const entry of modules.slice().sort((a, b) => sizeOf(b) - sizeOf(a))) {
+    const target = groups.reduce((min, group) => (group.bytes < min.bytes ? group : min), groups[0]);
+    target.modules.push(entry); target.bytes += sizeOf(entry);
+  }
+  return groups.filter(group => group.modules.length).map(group => group.modules);
+}
+function mergeRewriteParts(parts, stepCount) {
+  const out = { modules: [], cpRowsBySteps: Array.from({ length: stepCount }, () => null), timings: { parts: parts.length, perPart: [] } };
+  for (const part of parts) {
+    out.modules.push(...part.modules);
+    (part.cpRowsBySteps || []).forEach((rows, index) => { if (rows) out.cpRowsBySteps[index] = rows; });
+    out.timings.perPart.push(part.timings || null);
+  }
+  return out;
+}
+async function runRowRewriteSteps(modules, steps, sizeOf = entry => entry.buffer.length) {
+  const pool = require('./projection-rewrite-pool');
+  const shared = !rowRewriteRunner && pool.workerEnabled() ? pool.getProjectionRewritePool() : null;
+  const runner = rowRewriteRunner || (shared ? input => shared.run(input) : null);
   if (runner) {
-    try { return { ...(await runner({ modules, steps })), via: 'worker' }; }
-    catch (error) { console.warn('[page-cache] projection rewrite worker failed; main-thread fallback:', error && (error.code || error.message)); }
+    try {
+      const groups = splitRewriteModules(modules, rowRewriteRunner ? (rowRewriteRunner.parallelism || 1) : shared.parallelism, sizeOf);
+      const parts = await Promise.all(groups.map(group => runner({ modules: group, steps })));
+      return { ...mergeRewriteParts(parts, steps.length), via: 'worker' };
+    } catch (error) { console.warn('[page-cache] projection rewrite worker failed; main-thread fallback:', error && (error.code || error.message)); }
   }
   const core = require('./projection-rewrite'), out = [], cpRowsBySteps = steps.map(() => null);
   for (const { module, buffer } of modules) {
@@ -379,7 +404,7 @@ async function runRowRewriteBatch(userId, request) {
     }
     if (!modules.length) return finish(batch, null);
     const steps = batch.map(item => ({ items: item.items, context: item.context, collectCpRows: item.collectCpRows }));
-    const rewritten = await runRowRewriteSteps(modules, steps);
+    const rewritten = await runRowRewriteSteps(modules, steps, entry => Number(metas[entry.module].uncompressedBytes) || entry.buffer.length);
     const reused = {};
     for (const entry of rewritten.modules) {
       const original = modules.find(item => item.module === entry.module);
@@ -520,5 +545,5 @@ function listSnapshotUserIds(snapshotRoot) {
 module.exports = {
   ROOT, CACHE_SCHEMA_VERSION, BACKLOG_MAX_VARIANTS, safeUserId, manifestPath, loadManifest,
   MEMORY_MAX_ENTRIES, MEMORY_MAX_BYTES,
-  readProjection, readProjectionCompressed, decodeProjection, readReusableProjections, reuseGeneration, writeProjection, writeGeneration, writeCompressedGeneration, rewriteGeneration, rewriteRowPatches, setRowRewriteRunnerForTests, readBacklog, writeBacklog, invalidate, invalidateAll, listCachedUserIds, listSnapshotUserIds,
+  readProjection, readProjectionCompressed, decodeProjection, readReusableProjections, reuseGeneration, writeProjection, writeGeneration, writeCompressedGeneration, rewriteGeneration, rewriteRowPatches, setRowRewriteRunnerForTests, splitRewriteModules, readBacklog, writeBacklog, invalidate, invalidateAll, listCachedUserIds, listSnapshotUserIds,
 };

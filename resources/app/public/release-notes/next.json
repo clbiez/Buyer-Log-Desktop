@@ -976,6 +976,40 @@
           "en": "Nothing on screen changes; the change only shortens the calculation."
         }
       }
+    },
+    {
+      "id": "overview-collection-summary-keytext-cache",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış · Koleksiyon özeti",
+        "en": "Overview · Collection summary"
+      },
+      "title": {
+        "tr": "CP açıldıktan sonra Koleksiyon özeti daha hızlı çizilir",
+        "en": "Collection summary draws faster after CP has been opened"
+      },
+      "body": {
+        "tr": "Model ve renk metinlerinin ortak önbelleği büyütüldü. CP Tracker açıldıktan sonra Koleksiyon özeti bu metinleri yeniden hesaplamaz; çok sayıda modeli olan koleksiyonlarda özet her çizimde baştan hesaplanmaz. Sayılar ve sonuçlar aynıdır.",
+        "en": "The shared cache for model and colour texts is larger. After CP Tracker has been opened, the Collection summary no longer recalculates these texts, and in collections with many models the summary is not recalculated from scratch on every draw. Figures and results are unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; özet aynı sayıları daha az hesaplamayla gösterir.",
+          "en": "There is no change on screen; the summary shows the same figures with less calculation."
+        }
+      }
+    },
+    {
+      "id": "cp-save-other-screens-no-wait",
+      "type": "improvement",
+      "module": {"tr": "CP Tracker", "en": "CP Tracker"},
+      "title": {"tr": "CP'de art arda kayıt yapılırken diğer ekranlar neredeyse beklemeden açılır", "en": "Other screens open almost without waiting while CP saves follow one another"},
+      "body": {"tr": "CP kaydından sonra hazır ekran önbelleğinin modülleri artık aynı anda güncellenir. Kayıtlar art arda yapılırken açılan Siparişler gibi ekranlar eskisine göre çok daha kısa bekler. Kayıt eskisi gibi hemen yapılır ve diğer kullanıcılara aynı anda ulaşır.", "en": "After a CP save, the modules of the prepared screen cache are now updated at the same time. Screens such as Orders opened while saves follow one another wait much less than before. Saving still happens immediately and reaches other users at the same time."},
+      "visual": {
+        "kind": "none",
+        "reason": {"tr": "Ekranda değişen bir şey yok; aynı değerler kayıttan sonra daha erken hazırlanır.", "en": "Nothing changes on screen; the same values are prepared sooner after a save."}
+      }
     }
   ]
 }
