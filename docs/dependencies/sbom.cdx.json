@@ -6,7 +6,7 @@
     "component": {
       "type": "application",
       "name": "buyer-log-desktop",
-      "version": "7.0.363"
+      "version": "7.0.364"
     },
     "properties": [
       {
