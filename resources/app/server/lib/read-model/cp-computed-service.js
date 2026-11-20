@@ -119,7 +119,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
   rowPatchLog=null,onRowPatchMismatch=()=>{}}){
   if(!guard||typeof loadProjection!=='function'||typeof runCompute!=='function'||typeof loadContext!=='function'||typeof loadTasks!=='function')
     throw TypeError('Invalid CP computed service dependencies');
-  const cache=new Map(),latest=new Map(),bases=new Map();let cachedBytes=0;
+  const cache=new Map(),latest=new Map(),bases=new Map(),building=new Map();let cachedBytes=0;
   const counters={requests:0,hits:0,misses:0,emptyDeltas:0,datasetLoads:0,rowPatchReads:0,rowPatchBuilds:0,rowPatchVerified:0,rowPatchMismatches:0,rowPatchFallbacks:0};
   function remove(key){const entry=cache.get(key);if(!entry)return;cache.delete(key);cachedBytes-=entry.bytes;}
   function put(key,scope,entry){
@@ -162,6 +162,9 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
      (önbellek isabeti; işçiye gidilmedi). Dönen: {out|short, generation, leaseMs, rowPatch?}. */
   async function withDataset(req,captured,signal,exec){
     const scope=datasetScopeOf(captured);
+    // Aynı kapsamda süren sanal kurulum bitmeden plan yapılmaz: ikisi aynı temelden kurulursa ilki temeli
+    // işçiden düşürür ve ikincisi gereksiz yere gerçek nesle (kira) döner.
+    for(let guard=0;building.has(scope)&&guard<8;guard++)await building.get(scope).catch(()=>{});
     const plan=rowPatchPlan(captured,scope);
     if(plan){
       const verification=verificationOf(plan.lineage);
@@ -169,8 +172,10 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
       else{
         const generation='rp:'+plan.datasetKey.slice(0,24);
         const dataset={datasetKey:plan.datasetKey,scopeKey:scope,...(plan.steps?{virtual:{baseKey:plan.base.datasetKey,steps:plan.steps}}:{})};
-        const out=await exec({dataset,extra:verification?{verify:{rowsJson:verification.rowsJson}}:{},generation,verifying:Boolean(verification),
+        const running=exec({dataset,extra:verification?{verify:{rowsJson:verification.rowsJson}}:{},generation,verifying:Boolean(verification),
           options:workerOptions({signal,estimatedBytes:96*1024*1024+Math.ceil(plan.base.uncompressed*DECISION_FACTOR),ownerKey:'read-model',generation:'1'})});
+        if(plan.steps){building.set(scope,running);running.catch(()=>{}).finally(()=>{if(building.get(scope)===running)building.delete(scope);});}
+        const out=await running;
         if(out&&out.short)return {short:out.short,generation,leaseMs:0};
         const missing=!out||Array.isArray(out.missing);
         const mismatch=!missing&&out.verify&&out.verify.mismatched>0;
@@ -178,6 +183,8 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
           counters.rowPatchReads++;if(plan.steps)counters.rowPatchBuilds++;
           const verified=Boolean(verification&&out.verify);
           if(verified)counters.rowPatchVerified++;
+          // Temel yanıt kapısından (çağıranın assertResponse'u) ÖNCE güncellenir: araya kayıt girerse (409) işçideki veri
+          // kümesi bu bağlam için yine geçerlidir; eski temel işçiden düştüğünden güncellenmezse sonraki okuma kira bekler.
           bases.set(scope,{...plan.base,contextHash:plan.contextHash,datasetKey:plan.datasetKey,virtual:true,lineage:verified?[]:plan.lineage});
           return {out,generation,leaseMs:0,rowPatch:{steps:plan.steps?plan.steps.length:0,pending:verified?0:plan.lineage.length,verified}};
         }
@@ -205,8 +212,8 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
         out=await exec({dataset:{datasetKey,scopeKey:scope,buffer:bytes.buffer},extra:{},generation,verifying:false,
           options:workerOptions({...options,estimatedBytes:datasetLoadEstimate(out,options,uncompressed,bytes.byteLength),inputBytes:bytes.byteLength,transferList:[bytes.buffer]})});
       }
-      captured.assertResponse();lease.assertResponse?.();
       if(out&&!out.missing&&!out.short)bases.set(scope,{stamp:stampOf(captured),contextHash:String(captured.contextHash),datasetKey,virtual:false,lineage:[],uncompressed});
+      captured.assertResponse();lease.assertResponse?.();
       return {out,generation,leaseMs};
     }finally{lease.release?.();}
   }

@@ -216,7 +216,9 @@ function serviceHarness(){
   const runCompute=async(name,payload,options)=>{
     state.payloads.push({name,virtual:Boolean(payload.dataset.virtual),buffer:Boolean(payload.dataset.buffer),verify:Boolean(payload.verify),datasetKey:payload.dataset.datasetKey,baseKey:payload.dataset.virtual&&payload.dataset.virtual.baseKey});
     const run=name==='read-model-cp-query'?queryTask:task;
-    return {value:await run.execute(structuredClone(payload),{cache:worker.cache,engine}),release(){}};
+    const value=await run.execute(structuredClone(payload),{cache:worker.cache,engine});
+    if(state.onRun){const hook=state.onRun;state.onRun=null;hook();}
+    return {value,release(){}};
   };
   const log=createCpRowPatchLog();
   const service=createCpComputedService({guard,loadProjection,runCompute,loadContext:()=>({key:'ctx',value:contextFor('moderator')}),
@@ -303,4 +305,33 @@ test('servis: zincir yoksa, damga (kaynak/yetki) değiştiyse ya da temel işçi
   await h.service.computed(moderator,computedBody);
   assert.equal(h.state.leases,4);assert.equal(h.service.stats().rowPatchFallbacks,1);
   assert.equal(h.state.payloads.filter(p=>p.virtual).length,1);
+});
+
+test('servis: eşzamanlı okumalar tek sanal kurulumu paylaşır; okuma sırasında kayıt gelirse sonraki okuma yine kira beklemez',{timeout:120000},async()=>{
+  worker.cache.clear();task.clearHosts();
+  const h=serviceHarness();
+  await h.service.computed(moderator,computedBody);
+  h.save(0);
+  const spec={version:1,query:{version:1,columns:[{k:'Order Code',type:'ro'}],today:iso(TODAY),limit:5}};
+  await Promise.all([h.service.computed(moderator,computedBody),h.service.query(moderator,spec),h.service.facets(moderator,{version:1,facets:{version:1,columns:[{k:'Order Code',type:'ro'}],today:iso(TODAY)}})]);
+  assert.equal(h.state.leases,1,'hiçbiri kira beklemedi');
+  assert.equal(h.state.payloads.filter(p=>p.virtual).length,1,'tek sanal kurulum');
+  assert.equal(h.service.stats().rowPatchFallbacks,0);
+  // Okuma işçide sürerken yeni kayıt: yanıt 409 (rota yeniden dener), temel güncel kalır.
+  h.state.onRun=()=>h.save(1);
+  await assert.rejects(h.service.computed(moderator,{...computedBody,lang:'en'}),error=>error.code==='COMPUTE_STALE_GENERATION');
+  await h.service.computed(moderator,computedBody);
+  assert.equal(h.state.leases,1,'sonraki okuma da kira beklemedi');
+  assert.equal(h.service.stats().rowPatchFallbacks,0);
+});
+
+test('servis: gerçek nesil okuması sırasında kayıt gelirse temel yine kaydedilir; sonraki okuma zincirle (kira yok)',{timeout:120000},async()=>{
+  worker.cache.clear();task.clearHosts();
+  const h=serviceHarness();
+  h.state.onRun=()=>h.save(0);
+  await assert.rejects(h.service.computed(moderator,computedBody),error=>error.code==='COMPUTE_STALE_GENERATION');
+  assert.equal(h.state.leases,1);
+  await h.service.computed(moderator,computedBody);
+  assert.equal(h.state.leases,1,'işçideki veri kümesi temel olarak kullanıldı');
+  assert.equal(h.state.payloads.at(-1).virtual,true);
 });
