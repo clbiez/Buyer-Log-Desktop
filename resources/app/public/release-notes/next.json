@@ -755,6 +755,23 @@
       }
     },
     {
+      "id": "cp-read-model-windowed",
+      "type": "improvement",
+      "module": {"tr": "CP Tracker", "en": "CP Tracker"},
+      "title": {"tr": "CP filtreleri yerel arka uçta çalışabilir (pilot)", "en": "CP filters can run on the local backend (pilot)"},
+      "body": {
+        "tr": "Pilot ayarı açıkken CP tüm satırları tarayıcıda süzmez ve sıralamaz. Filtre, arama, öncelik sıralaması, hızlı filtre sayaçları ve alt toplamlar bilgisayardaki yerel arka uçta çalışır; tablo yalnız ekrandaki satırları ister. Tümünü seç, Kopyala ve Excel tüm eşleşen satırları arka uçtan alır. Henüz desteklenmeyen filtrelerde ve kaydedilmemiş bir düzenleme varken mevcut yol kullanılır. Ayar varsayılan olarak kapalıdır.",
+        "en": "With the pilot setting on, CP no longer filters and sorts every row in the browser. Filtering, search, priority sorting, quick filter counts and totals run on the local backend on this computer, and the table requests only the rows on screen. Select all, Copy and Excel fetch all matching rows from the backend. Filters that are not supported yet, and unsaved edits, use the existing path. The setting is off by default."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-read-model-windowed.png",
+        "alt": {"tr": "Pilot ayarı açık CP Tracker: 2.077 demo satırından Kritik öncelik çipiyle süzülen 42 satır", "en": "CP Tracker with the pilot setting on: 42 of 2,077 demo rows filtered by the Critical priority chip"},
+        "caption": {"tr": "Demo veride Kritik çipi seçili; satırlar, sayaçlar ve sayım arka uçtan gelir ve mevcut yolla aynıdır.", "en": "The Critical chip is selected on demo data; rows, counts and totals come from the backend and match the existing path."}
+      }
+    },
+    {
       "id": "read-model-backend-prewarm",
       "type": "improvement",
       "module": {"tr": "Genel Bakış", "en": "Overview"},

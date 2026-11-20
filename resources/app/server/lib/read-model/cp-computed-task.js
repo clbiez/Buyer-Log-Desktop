@@ -54,9 +54,15 @@ function datasetFor(spec,{cache,engine},loads){
 }
 
 /* Cevap dışındaki bağlam: değişirse barındırıcı yeniden kurulur. */
+/* Barındırıcıda çalışan betiklerin (SCRIPTS + checklist-supplier-sync.js) HİÇ okumadığı arayüz
+   durumu: boyut filtreleri, görsel boyutu, BOM kontrol işaretleri. Anahtara girerse her filtre
+   kaydı 30k satırın kararlarını baştan hesaplatır (#1078 alt PR 2 ölçümü: 13,7 sn). Bekçi:
+   read-model-cp-window-route.test.js (betik taraması). */
+const UI_ONLY_ENTRY=/^lcw\.cp\.(?:dimFilters|imageSize|bomControl)\./;
 function hostKeyOf(payload){
   const context=payload.context||{},entries={...(context.entries||{})};
   delete entries[ANSWER_KEY];
+  for(const key of Object.keys(entries))if(UI_ONLY_ENTRY.test(key))delete entries[key];
   return hash(JSON.stringify([payload.scopeKey||'',payload.lang==='en'?'en':'tr',String(context.userId||''),entries,
     context.managedRules||null,context.plm||null,context.transitRules||[]]));
 }
@@ -71,7 +77,7 @@ async function createEntry(payload){
   supplierScript.runInContext(win);
   const sync=win.BLChecklistSupplierSync;
   if(!sync||typeof sync.refreshColumns!=='function')throw Object.assign(new Error('CP computed host failed to start'),{code:'CP_COMPUTED_HOST_FAILED'});
-  return {host,sync,answersJson:new Map(),tasksSignature:'',history:[]};
+  return {host,sync,answersJson:new Map(),answersVersion:0,tasksSignature:'',history:[],current:null};
 }
 
 /* Değişmeyen cevap kayıtlarının nesne kimliği korunur (delta mekanizmaları
@@ -85,6 +91,9 @@ function syncAnswers(entry,answers){
   }
   // Barındırıcının kendi yükselttiği opsiyon onayları (promoteReusableChecklistAnswers)
   // kaynakta yoksa düşer; karar katmanı aynı geçişte yeniden üretir (istemciyle aynı).
+  let changed=seen.size!==entry.answersJson.size;
+  if(!changed)for(const [key,json] of seen)if(entry.answersJson.get(key)!==json){changed=true;break;}
+  if(changed)entry.answersVersion=(entry.answersVersion||0)+1;
   entry.answersJson=seen;
   state.answers=next;
 }
@@ -167,8 +176,13 @@ function computeRows(entry,rows,transitRules){
   return {out,columns,phases};
 }
 
-async function execute(payload,deps){
-  const started=performance.now(),loads={};
+/* Hesaplanmış sütunlar: barındırıcı + satır değerleri. Aynı veri kümesi, aynı cevap/görev
+   sürümü ve aynı yerel gün için önceki sonuç yeniden kullanılır (pencere/yüzey sorguları
+   her filtrede yeniden hesap yapmaz). Dönen: {dataset, entry, current, hostMs, loads, reused}
+   ya da {missing:[...]}. current: {rows, out:Map(row→değerler), serialized:Map(id→demet JSON),
+   digests:Map(id→özet), phases}. */
+async function ensureComputed(payload,deps){
+  const loads={};
   if(!payload||!payload.dataset)throw Object.assign(new Error('Invalid compute request'),{code:'COMPUTE_JOB_INVALID'});
   const dataset=datasetFor(payload.dataset,deps,loads);
   if(!dataset)return {missing:['cp']};
@@ -186,6 +200,8 @@ async function execute(payload,deps){
   syncAnswers(entry,payload.context.answers);
   syncTasks(entry,payload.tasks);
   const rows=dataset.rows;
+  const signature=JSON.stringify([entry.answersVersion,entry.tasksSignature,new Date().toDateString()]);
+  if(entry.current&&entry.current.rows===rows&&entry.current.signature===signature)return {dataset,entry,current:entry.current,hostMs,loads,reused:true};
   const {out,phases}=computeRows(entry,rows,payload.context.transitRules||[]);
   const serialized=new Map(),digests=new Map();
   for(const row of rows){
@@ -195,6 +211,15 @@ async function execute(payload,deps){
     const json=JSON.stringify([id,v.priority,v.calculationStatus,v.trackingTags,v.priorityTags,v.actionReasons,v.signals,v.basePriority,v.checklist,v.orderKey,v.optionId]);
     serialized.set(id,json);digests.set(id,crypto.createHash('sha1').update(json).digest('base64'));
   }
+  entry.current={rows,signature,out,serialized,digests,phases};
+  return {dataset,entry,current:entry.current,hostMs,loads,reused:false};
+}
+
+async function execute(payload,deps){
+  const started=performance.now();
+  const computed=await ensureComputed(payload,deps);
+  if(computed.missing)return {missing:computed.missing};
+  const {entry,current,hostMs,loads}=computed,rows=current.rows,serialized=current.serialized,digests=current.digests;
   // Delta, aynı barındırıcının aynı veri kümesi üzerindeki son HISTORY sonucundan birine göre
   // (istemci araya giren bağlam olayıyla bir sonucu atmış olabilir). Satır başına yalnız özet tutulur.
   const previous=payload.since?entry.history.find(item=>item.token===payload.since&&item.rows===rows):null,delta=Boolean(previous);
@@ -206,10 +231,10 @@ async function execute(payload,deps){
   const lang=payload.lang==='en'?'en':'tr';
   const body=`{"version":1,"lang":${JSON.stringify(lang)},"token":${JSON.stringify(token)},"delta":${delta?'true':'false'},"total":${serialized.size},"fields":${JSON.stringify(FIELDS)},"rows":[${parts.join(',')}],"removed":${JSON.stringify(removed)}}`;
   return {body,timing:{loadMs:loads.cp||0,queryMs:performance.now()-started-(loads.cp||0),totalMs:performance.now()-started,rows:rows.length,
-    changed:parts.length,delta,phases:{hostMs,...phases},
+    changed:parts.length,delta,reused:computed.reused,phases:{hostMs,...(computed.reused?{}:current.phases)},
     // Tanı: veri kümesi yeniden çözüldüyse (önbellekten düştüyse) kararlar baştan hesaplanır.
     datasetReloaded:Boolean(loads.cp),datasetCache:typeof deps.cache.stats==='function'?deps.cache.stats():null}};
 }
 function clearHosts(){hosts.clear();}
 function hostCount(){return hosts.size;}
-module.exports={execute,clearHosts,hostCount,FIELDS,MAX_HOSTS};
+module.exports={execute,ensureComputed,clearHosts,hostCount,hostKeyOf,UI_ONLY_ENTRY,FIELDS,MAX_HOSTS};
