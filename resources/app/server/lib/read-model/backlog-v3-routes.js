@@ -76,8 +76,11 @@ function registerBacklogV3Routes(app,deps){
     // Bellek tahmini ölçümden (30k: 8,8–9,8 MB açık yük → çözülmüş veri kümesi GC öncesi 110–138 MB,
     // sonrası ~75 MB; model/drill-down geçici nesneleri < 64 MB). Havuz, tutulan bellek tahmini
     // aşarsa işçiyi emekli eder ve işi COMPUTE_ESTIMATE_EXCEEDED ile düşürür.
+    // Önbellekten istek de veri kümesi boyutunda geçici nesne üretir (Teslimat Riski analizi, model):
+    // 30k'da +131 MB ölçüldü; tahmin yük boyutuyla ölçeklenir.
+    const uncompressedBytes=Number(lease.value.uncompressedBytes)||0;
     const send=async withBuffer=>{
-      if(!withBuffer)return runCompute('read-model-backlog-v3',{datasetKey,request},{...options,estimatedBytes:96*1024*1024});
+      if(!withBuffer)return runCompute('read-model-backlog-v3',{datasetKey,request},{...options,estimatedBytes:96*1024*1024+uncompressedBytes*16});
       // Buffer compute okuma önbelleğiyle paylaşılır: aktarım için kopyalanır.
       const bytes=Uint8Array.from(Buffer.isBuffer(source)?source:Buffer.from(source));
       const uncompressed=Number(lease.value.uncompressedBytes)||bytes.byteLength*8;

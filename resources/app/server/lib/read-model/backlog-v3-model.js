@@ -28,11 +28,21 @@ const Insights=require('../../../public/backlog-delivery-insights.js');
 const OD=require('../../../public/order-decision-engine.js');
 
 const ROW_LIMIT=500;
-const MAX_DATASETS=2;
+/* Bellek (#1079 WS6c kabulü: Backlog açıldıktan sonra kalıcı artış ≤ +150 MB): tür başına
+   tek veri kümesi (Genel Bakış 1 + Teslimat Riski 1; yeni sorgu eskisini hemen düşürür) ve
+   son istekten IDLE_MS sonra hepsi bırakılır. Sonraki istek yükü yeniden gönderir (rota
+   'missing' yanıtında yükü tekrar yollar) ya da hesap okuma önbelleği düştüyse yeniden hesaplar. */
+const IDLE_MS=60000;
 const datasets=new Map();
+let idleTimer=null;
+function releaseAll(){datasets.clear();if(idleTimer){clearTimeout(idleTimer);idleTimer=null;}}
+function touch(){
+  if(idleTimer)clearTimeout(idleTimer);
+  idleTimer=setTimeout(releaseAll,IDLE_MS);idleTimer.unref?.();
+}
 function remember(key,dataset){
+  for(const [other,value] of datasets)if(other!==key&&value.kind===dataset.kind)datasets.delete(other);
   datasets.delete(key);datasets.set(key,dataset);
-  while(datasets.size>MAX_DATASETS)datasets.delete(datasets.keys().next().value);
 }
 function decode(buffer){
   const bytes=Buffer.isBuffer(buffer)?buffer:Buffer.from(buffer instanceof ArrayBuffer?new Uint8Array(buffer):buffer);
@@ -152,7 +162,7 @@ function execute(payload){
     if(!p.buffer)return {missing:true};
     const at=performance.now();dataset=decode(p.buffer);p.buffer=null;decodeMs=performance.now()-at;
   }
-  remember(key,dataset);
+  remember(key,dataset);touch();
   // Zaman çizelgesi kovaları iş takvimine bağlıdır; veri kümesiyle gelen takvim kurulur.
   if(dataset.calendar&&dataset.calendar.configured)dates.setMerchCalendar(dataset.calendar.calendar);else dates.clearMerchCalendar();
   const request=p.request&&typeof p.request==='object'?p.request:{};
@@ -177,4 +187,4 @@ function execute(payload){
   return {buffer:new Uint8Array(gzip.buffer,gzip.byteOffset,gzip.byteLength),uncompressedBytes:json.length,
     timing:{decodeMs,computeMs,totalMs:performance.now()-started,rows:(dataset.items||dataset.delivery).length}};
 }
-module.exports={execute,decode,applyPriority,viewOptions,drillPayload,deliveryDateKeys,deliveryBody,ROW_LIMIT,_datasets:datasets};
+module.exports={execute,decode,applyPriority,viewOptions,drillPayload,deliveryDateKeys,deliveryBody,ROW_LIMIT,IDLE_MS,_datasets:datasets,_releaseAll:releaseAll};
