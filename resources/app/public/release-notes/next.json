@@ -899,6 +899,29 @@
         "kind": "none",
         "reason": {"tr": "Ekranda yeni bir öğe yok; aynı değerler kayıttan sonra daha erken gelir ve geçici hata uyarısı gösterilmez.", "en": "Nothing new appears on screen; the same values arrive sooner after a save and no temporary error warning is shown."}
       }
+    },
+    {
+      "id": "royalty-apply-row-index",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans Kartları · Royalty",
+        "en": "License Cards · Royalty"
+      },
+      "title": {
+        "tr": "Royalty kuralını uygulamak ekranı dakikalarca kilitlemez",
+        "en": "Applying a royalty rule no longer locks the screen for minutes"
+      },
+      "body": {
+        "tr": "Bir royalty kuralı ya da tüm kurallar siparişlere uygulandığında Supp. FOB değerleri, her güncelleme için bütün CP satırları yeniden taranmadan yazılır. On binlerce satırda bir kuralı uygulamak bir dakikaya yakın sürebiliyordu; artık birkaç saniyede tamamlanır. Kural kaydından sonraki yeniden hesap da kısalır. Hesaplanan değerler, kaydedilen veriler ve sunucuya gönderilen güncellemeler değişmez.",
+        "en": "When a royalty rule or all rules are applied to orders, Supp. FOB values are written without rescanning every CP row for each update. On tens of thousands of rows applying one rule could take close to a minute; it now finishes in a few seconds. Recalculation after saving rules is also shorter. Calculated values, saved data and the updates sent to the server stay the same."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişen bir öğe yok; değişiklik yalnız hesabın süresini kısaltır.",
+          "en": "Nothing on screen changes; the change only shortens the calculation."
+        }
+      }
     }
   ]
 }
