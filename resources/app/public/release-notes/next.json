@@ -755,6 +755,23 @@
       }
     },
     {
+      "id": "cp-read-model-windowed",
+      "type": "improvement",
+      "module": {"tr": "CP Tracker", "en": "CP Tracker"},
+      "title": {"tr": "CP filtreleri yerel arka uçta çalışabilir (pilot)", "en": "CP filters can run on the local backend (pilot)"},
+      "body": {
+        "tr": "Pilot ayarı açıkken CP tüm satırları tarayıcıda süzmez ve sıralamaz. Filtre, arama, öncelik sıralaması, hızlı filtre sayaçları ve alt toplamlar bilgisayardaki yerel arka uçta çalışır; tablo yalnız ekrandaki satırları ister. Tümünü seç, Kopyala ve Excel tüm eşleşen satırları arka uçtan alır. Henüz desteklenmeyen filtrelerde ve kaydedilmemiş bir düzenleme varken mevcut yol kullanılır. Ayar varsayılan olarak kapalıdır.",
+        "en": "With the pilot setting on, CP no longer filters and sorts every row in the browser. Filtering, search, priority sorting, quick filter counts and totals run on the local backend on this computer, and the table requests only the rows on screen. Select all, Copy and Excel fetch all matching rows from the backend. Filters that are not supported yet, and unsaved edits, use the existing path. The setting is off by default."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-read-model-windowed.png",
+        "alt": {"tr": "Pilot ayarı açık CP Tracker: 30.000 demo satırında öncelik çipiyle filtrelenmiş tablo", "en": "CP Tracker with the pilot setting on: table filtered by a priority chip on 30,000 demo rows"},
+        "caption": {"tr": "30.000 satırlık demo veride filtrelenen satırlar ve sayaçlar arka uçtan gelir; sonuç mevcut yolla aynıdır.", "en": "On 30,000 demo rows, the filtered rows and counts come from the backend; the result matches the existing path."}
+      }
+    },
+    {
       "id": "read-model-backend-prewarm",
       "type": "improvement",
       "module": {"tr": "Genel Bakış", "en": "Overview"},
