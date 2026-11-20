@@ -53,6 +53,24 @@ function openModuleInPage(module, isReady, countRows, timeoutMs, isFailed) {
     tick();
   });
 }
+// Backlog V3 Genel Bakış paneli (#1079 WS6b): ağaç satırı görününce "hazır" sayılan
+// modül, tam satırları (/api/backlog-export?format=json) ondan SONRA indirip normalleştirir.
+// --backlog-settle verilirse panel kutucukları (veya hata) görünene kadar beklenir.
+function waitBacklogOverviewInPage(t0, timeoutMs) {
+  return new Promise(resolve => {
+    const tick = () => {
+      const host = document.getElementById('backlogOverviewBody'), now = performance.now();
+      if (!host || !host.childElementCount && !host.textContent.trim()) { resolve({ t2: now, state: 'absent' }); return; }
+      if (!host.querySelector('.bpaLoading') && host.querySelector('.bpaTile, .bpaError')) {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve({ t2: performance.now(), state: host.querySelector('.bpaError') ? 'error' : 'ready' })));
+        return;
+      }
+      if (now - t0 > timeoutMs) { resolve({ t2: now, state: 'timeout' }); return; }
+      setTimeout(tick, 16);
+    };
+    tick();
+  });
+}
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 // İlk görünme anı izlenen bölgeler (#1077): Genel Bakış CP özet kartı (eski ve model yolu aynı kap).
 const WATCH = { cpCards: '#cpAssistant .cpaOverviewMetrics', flowMap: '#globalFlowMeta[data-tone="normal"], #globalFlowMeta[data-tone="warn"]' };
@@ -198,7 +216,7 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
     await cdp.send('Network.setBlockedURLs', { urls: ['https://*'] });
     cdp.on('Network.requestWillBeSent', ({ requestId, request }) => {
       const url = new URL(request.url);
-      if (url.origin === base && P.isTrackedPayload(url.pathname)) requests.set(requestId, { path: url.pathname, query: url.search, phase, decodedBytes: 0 });
+      if (url.origin === base && (P.isTrackedPayload(url.pathname) || (options.backlogSettle && url.pathname.startsWith('/api/backlog')))) requests.set(requestId, { path: url.pathname, query: url.search, phase, decodedBytes: 0 });
     });
     cdp.on('Network.responseReceived', ({ requestId, response }) => { const r = requests.get(requestId); if (r) r.status = response.status; });
     cdp.on('Network.dataReceived', ({ requestId, dataLength }) => { const r = requests.get(requestId); if (r) r.decodedBytes += dataLength; });
@@ -258,6 +276,10 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
       const spec = MODULES[module];
       // Kaynak metin olarak gömülür: sayfa CSP'si new Function/eval'e izin vermeyebilir.
       const measured = await page.evaluate(`(${openModuleInPage})(${JSON.stringify(module)}, ${spec.ready}, ${spec.rows}, ${Number(options.moduleTimeoutMs)}, ${spec.failed || 'null'})`);
+      if (module === 'backlog' && options.backlogSettle && Number.isFinite(measured.t0) && !measured.timedOut && !measured.error) {
+        measured.settle = await page.evaluate(`(${waitBacklogOverviewInPage})(${Number(measured.t0)}, ${Number(options.moduleTimeoutMs)})`);
+        log(`  ${label} backlog overview: ${measured.settle.state} ${P.round(measured.settle.t2 - measured.t0)} ms`);
+      }
       moduleResults.push(measured);
       log(`  ${label} ${module}: ${measured.timedOut ? 'TIMEOUT' : P.round(measured.t1 - measured.t0) + ' ms'}`);
       await delay(options.settleMs);
@@ -277,6 +299,7 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
       { name: 'startup', startMs: 0, endMs: openMs },
       { name: 'post-open', startMs: openMs, endMs: postEnd },
       ...moduleResults.filter(m => Number.isFinite(m.t0)).map(m => ({ name: 'module:' + m.module, startMs: m.t0, endMs: m.t1 })),
+      ...moduleResults.filter(m => m.settle && Number.isFinite(m.settle.t2)).map(m => ({ name: 'module:' + m.module + ':settle', startMs: m.t0, endMs: m.settle.t2 })),
     ];
     result.events = Object.fromEntries(Object.entries(post.events).map(([k, v]) => [k, P.round(v)]));
     result.postOpen = {
@@ -292,6 +315,8 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
       ...m, t0: P.round(m.t0), t1: P.round(m.t1), openMs: Number.isFinite(m.t0) ? P.round(m.t1 - m.t0) : null,
       longTasks: Number.isFinite(m.t0) ? P.longTaskStats(final.longTasks, m.t0, m.t1) : null,
       eventLoopLag: Number.isFinite(m.t0) ? P.lagStats(final.lag, m.t0, m.t1) : null,
+      ...(m.settle ? { settle: { state: m.settle.state, t2: P.round(m.settle.t2), settledMs: P.round(m.settle.t2 - m.t0),
+        longTasks: P.longTaskStats(final.longTasks, m.t0, m.settle.t2), eventLoopLag: P.lagStats(final.lag, m.t0, m.settle.t2) } } : {}),
     }));
     result.cpu = P.analyzeProfile(profile, { anchorPerfMs: final.anchor?.startMs, windows, topN: options.topN });
     if (!result.cpu.aligned) result.cpu.warning = 'Profile anchor not found; CPU windows unavailable';
@@ -299,7 +324,7 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
     result.payloads = { entries: payloads.map(p => ({ ...p })), byPath: P.summarizePayloads(payloads) };
     result.raw = { longTasks: final.longTasks.map(t => [P.round(t.startTime), P.round(t.duration)]), eventLoopLag: final.lag.map(([a, l]) => [P.round(a), P.round(l)]), longTaskUnsupported: final.longTaskUnsupported };
     result.errors = errors;
-    result.status = moduleResults.some(m => m.timedOut || m.error) || early?.timedOut || early?.error ? 'partial' : 'passed';
+    result.status = moduleResults.some(m => m.timedOut || m.error || m.settle?.state === 'timeout' || m.settle?.state === 'error') || early?.timedOut || early?.error ? 'partial' : 'passed';
     await cdp.detach().catch(() => {});
   } catch (error) {
     result.status = 'failed';

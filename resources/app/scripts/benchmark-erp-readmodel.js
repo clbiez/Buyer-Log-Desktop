@@ -15,6 +15,8 @@
  *   --post-open-window-ms N (iki kol için sabit açılış sonrası pencere)  --flag NAME=JSON (window anahtarı, tekrarlanabilir)
  *   --early-module orders [--early-delay-ms N] (açılıştan hemen sonra modül ilk açılışı)
  *   --collection-rows N (sentetik Koleksiyon çalışma alanı; varsayılan 0 = WS0 ile aynı boş Koleksiyon)
+ *   --backlog-settle (Backlog açılışında V3 Genel Bakış paneli dolana kadar da ölç; /api/backlog* yüklerini izle.
+ *                     Varsayılan kapalı = WS0 ile aynı ölçüm)
  * Ortam: CHROMIUM_PATH (Chromium yolu), PLAYWRIGHT_MODULE.
  *
  * Senaryolar: (1) açılış sonrası pencere — bl:startup-complete → BACKGROUND_WARMUP_DONE
@@ -57,6 +59,7 @@ function parseArgs(argv) {
     earlyModule: value('--early-module', ''),
     earlyDelayMs: int('--early-delay-ms', 0, 0),
     collectionRows: int('--collection-rows', 0, 0),
+    backlogSettle: argv.includes('--backlog-settle'),
     flags: Object.fromEntries(argv.flatMap((arg, i) => (arg === '--flag' ? [argv[i + 1]] : [])).map(pair => {
       const at = String(pair || '').indexOf('=');
       if (at < 1) throw Error('Invalid --flag (NAME=JSON): ' + pair);
@@ -93,6 +96,9 @@ function flatMetrics(run) {
   for (const m of run.modules || []) {
     out[`module.${m.module}.openMs`] = m.timedOut ? null : m.openMs;
     out[`module.${m.module}.longTaskMaxMs`] = m.longTasks?.maxMs;
+    if (m.settle) Object.assign(out, { [`module.${m.module}.settledMs`]: m.settle.state === 'ready' ? m.settle.settledMs : null,
+      [`module.${m.module}.settleLongTaskTotalMs`]: m.settle.longTasks?.totalMs, [`module.${m.module}.settleLongTaskMaxMs`]: m.settle.longTasks?.maxMs,
+      [`module.${m.module}.settleLongTaskCount`]: m.settle.longTasks?.count, [`module.${m.module}.settleLagOver200`]: m.settle.eventLoopLag?.over200Count });
   }
   const bytes = (run.payloads?.byPath || []).reduce((sum, p) => sum + p.decodedBytes, 0);
   out['payload.totalMB'] = round(bytes / 1048576, 2);
