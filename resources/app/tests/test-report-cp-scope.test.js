@@ -8,7 +8,7 @@ const order=(ocode,extra={})=>({ocode,model:'DEMO',ccode:'01',colour:'BLUE',qty:
 test('review uses active page CP with Horizon and user scope; closed orders remain in authority',async()=>{
   const parse=require('../server/lib/parse'),canonicalFields=require('../public/canonical-fields');
   const rows=[order('4100001'),order('4100002',{kalan:0}),order('4100003',{outsideHorizon:true}),order('4100004',{outsideScope:true}),order('4100005',{readOnly:true}),order('4100006',{forgedSource:true}),order('4100007',{unknownSource:true})];
-  const c={require:serverRequire,Map,Set,canonicalFields,
+  const c={require:serverRequire,Map,Set,canonicalFields,process,
     ensureDataLoaded:async()=>{},cacheForUser:()=>({asasOrders:rows}),effectiveOverridesForUser:()=>({}),
     ordersForTarget:(cache,target)=>{assert.equal(target,'cp');return cache.asasOrders;},antrepoForTarget:()=>({}),
     filterRowsByEffectiveHorizon:(_p,target,input)=>{assert.equal(target,'cp');return input.filter(r=>!r.outsideHorizon);},
@@ -16,7 +16,7 @@ test('review uses active page CP with Horizon and user scope; closed orders rema
     canUserEditOrderCode:(_p,code)=>String(code)!=='4100005',
     buildCPRowsFromASAS:parse.buildCPRowsFromASAS,buildOrdersRowsFromASAS:parse.buildOrdersRowsFromASAS,
     cpAgentData:async(p,{loadCpRows})=>({cpRows:await loadCpRows(p),checklist:{answers:{}},personalRules:[],settings:{},checklistEnabled:{},customStatuses:[]})};
-  vm.createContext(c);vm.runInContext([fn('agentQualityLiveProfile'),fn('agentQualityOrderRowsNow'),fn('agentQualityOrderRows'),fn('checklistAuthorizedOrdersNow'),fn('agentQualityAuthorizedOrders'),fn('agentQualityAuthorizedOrdersNow'),fn('agentQualityReviewContext')].join('\n'),c);
+  vm.createContext(c);vm.runInContext([fn('checklistIdentityRowsEnabled'),fn('orderIdentityRowsFromASAS'),fn('agentQualityLiveProfile'),fn('agentQualityOrderRowsNow'),fn('agentQualityOrderRows'),fn('checklistAuthorizedOrdersNow'),fn('agentQualityAuthorizedOrders'),fn('agentQualityAuthorizedOrdersNow'),fn('agentQualityReviewContext')].join('\n'),c);
   const context=await c.agentQualityReviewContext(profile),allowed=await c.agentQualityAuthorizedOrders(profile),write=await c.agentQualityAuthorizedOrders(profile,{write:true});
   assert.deepEqual(Array.from(context.cp.rows,r=>r.orderCode),['4100001','4100005']);
   assert.deepEqual(Array.from(allowed.values(),r=>r.orderCode),['4100001','4100002','4100005']);
