@@ -859,14 +859,14 @@
       }
     },
     {
-      "id": "quotations-cp-lookup-open-costing-suggest-fast",
+      "id": "quotations-cp-lookup-fast",
       "type": "improvement",
-      "module": {"tr": "CP · Fiyat Çalışmaları · Açık Maliyet", "en": "CP · Quotations · Open Costing"},
+      "module": {"tr": "CP · Fiyat Çalışmaları", "en": "CP · Quotations"},
       "title": {"tr": "Büyük CP fiyat çalışmaları donmadan açılır", "en": "Large CP quotations open without freezing"},
-      "body": {"tr": "CP Fiyat Çalışmaları penceresi, her satırın hedef fiyatı, kategorisi ve kumaşı için tüm CP listesini yeniden taramaz; sipariş, PLM ve model eşleşmesi bir kez kurulur. On binlerce CP satırında yüzlerce satırlık bir çalışma, artık neredeyse bir dakika takılmadan açılır; Excel dışa aktarımı da aynı şekilde hızlanır. Açık Maliyet ekranında model, üretici, ülke, sezon, lisans ve kategori alanlarına yazarken öneri listesi her tuşta baştan kurulmaz. Gösterilen değerler ve öneriler değişmez.", "en": "The CP Quotations window no longer rescans the whole CP list for the target price, category and fabric of every line; the order, PLM and model match is built once. With tens of thousands of CP rows, a quotation with hundreds of lines now opens without stalling for close to a minute, and Excel export speeds up the same way. In Open Costing, typing in the model, manufacturer, country, season, licence and category fields no longer rebuilds the suggestion list on every key. The displayed values and suggestions do not change."},
+      "body": {"tr": "CP Fiyat Çalışmaları penceresi, her satırın hedef fiyatı, kategorisi ve kumaşı için tüm CP listesini yeniden taramaz; sipariş, PLM ve model eşleşmesi bir kez kurulur. On binlerce CP satırında yüzlerce satırlık bir çalışma, artık neredeyse bir dakika takılmadan açılır; Excel dışa aktarımı da aynı şekilde hızlanır. Gösterilen değerler değişmez.", "en": "The CP Quotations window no longer rescans the whole CP list for the target price, category and fabric of every line; the order, PLM and model match is built once. With tens of thousands of CP rows, a quotation with hundreds of lines now opens without stalling for close to a minute, and Excel export speeds up the same way. The displayed values do not change."},
       "visual": {
         "kind": "none",
-        "reason": {"tr": "Ekranda değişen bir şey yok; aynı değerler ve öneriler yalnız daha hızlı hazırlanır.", "en": "Nothing changes on screen; the same values and suggestions are only prepared faster."}
+        "reason": {"tr": "Ekranda değişen bir şey yok; aynı değerler yalnız daha hızlı hazırlanır.", "en": "Nothing changes on screen; the same values are only prepared faster."}
       }
     }
   ]

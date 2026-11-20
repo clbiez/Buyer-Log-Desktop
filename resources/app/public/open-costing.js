@@ -70,22 +70,6 @@ function collectionEffectiveValue(row,key){
 function collectionModel(value){
   try{if(typeof kolRows==='undefined')return null;const key=normalizeText(value);return kolRows.find(r=>normalizeText(r.modelKod)===key)||null;}catch(e){return null;}
 }
-/* #1079 WS6d — BL_READ_MODEL_OPEN_COSTING (varsayılan AÇIK). Eski yolda meta alanına
-   yazılan her tuş buildSuggestions ile tüm CP ve Koleksiyon satırlarını tarar, ~25k
-   <option> yazar ve showOcMetaSuggest onları DOM'dan geri okur (30k'da tuş başına
-   ~55 ms). Yeni yolda havuz alan odaklanınca (ve editör çiziminde) eski kodla aynı
-   biçimde kurulur; yazarken aynı sıralı kalemler bellekten süzülür. Değişmeyen
-   liste DOM'a yeniden yazılmaz. Geri dönüş: window.BL_READ_MODEL_OPEN_COSTING=false
-   ya da yerel tercih buyerlog.readModel.openCosting.v1='0'. */
-const OC_SUGGEST_POOL_STORAGE_KEY='buyerlog.readModel.openCosting.v1'; // i18n-ignore
-const OC_SUGGEST_POOL_LISTS=new Set(['ocModelOptions','ocManufacturerOptions','ocCountryOptions','ocSeasonOptions','ocLicenseOptions','ocCategoryOptions']);
-const ocSuggestItemsCache=new Map(),ocSuggestFilled=new Map();
-let ocSuggestPoolEnabledCache=null;
-function ocSuggestPoolEnabled(){
-  if(typeof window.BL_READ_MODEL_OPEN_COSTING==='boolean')return window.BL_READ_MODEL_OPEN_COSTING;
-  if(ocSuggestPoolEnabledCache===null){try{ocSuggestPoolEnabledCache=localStorage.getItem(OC_SUGGEST_POOL_STORAGE_KEY)!=='0';}catch(_){ocSuggestPoolEnabledCache=true;}}
-  return ocSuggestPoolEnabledCache;
-}
 function buildSuggestions(){
   const models=new Map(),mfrs=new Set(),countries=new Set(),seasons=new Set(),licenses=new Set(),categories=new Set();
   const add=(set,value)=>{const text=String(value||'').trim();if(text)set.add(text);};
@@ -94,24 +78,13 @@ function buildSuggestions(){
   try{if(typeof refreshSubmfrList==='function')refreshSubmfrList();if(typeof _submfrValsCache!=='undefined')_submfrValsCache.forEach(v=>add(mfrs,v));}catch(e){}
   try{if(typeof kolManufacturers!=='undefined')kolManufacturers.forEach(v=>add(mfrs,v.name));}catch(e){}
   (records||[]).forEach(r=>{add(mfrs,r.meta?.manufacturer);add(countries,r.meta?.country);add(seasons,r.meta?.season);add(licenses,r.meta?.license);add(categories,r.meta?.category);});
-  const fill=(id,values)=>{const el=$(id);if(!el)return;const html=[...values].filter(Boolean).sort(BLBusinessRules.compareChronologicalValues).map(v=>`<option value="${safe(v)}"></option>`).join('');
-    // #1079 WS6d: aynı içerik yeniden yazılmaz; öneri kalemleri bellekte tutulur (bkz. ocSuggestPoolEnabled).
-    if(ocSuggestPoolEnabled()){const last=ocSuggestFilled.get(id);if(last&&last.el===el&&last.html===html)return;ocSuggestItemsCache.delete(id);el.innerHTML=html;ocSuggestFilled.set(id,{el,html});return;}
-    el.innerHTML=html;};
+  const fill=(id,values)=>{const el=$(id);if(el)el.innerHTML=[...values].filter(Boolean).sort(BLBusinessRules.compareChronologicalValues).map(v=>`<option value="${safe(v)}"></option>`).join('');};
   fill('ocModelOptions',models.keys());fill('ocManufacturerOptions',mfrs);fill('ocCountryOptions',countries);fill('ocSeasonOptions',seasons);fill('ocLicenseOptions',licenses);fill('ocCategoryOptions',categories);
 }
 let ocMetaSuggestDrop=null,ocMetaSuggestInput=null,ocMetaSuggestIndex=-1;
 function ocMetaSuggestionItems(input){
   const listId=input?.dataset?.options;if(!listId)return [];
   const list=$(listId);if(!list)return [];
-  // Bu altı listeyi yalnız buildSuggestions/fill yazar; aynı öğe ve içerik için kalemler bellekten gelir.
-  const cacheable=ocSuggestPoolEnabled()&&OC_SUGGEST_POOL_LISTS.has(listId)&&ocSuggestFilled.get(listId)?.el===list;
-  if(cacheable&&ocSuggestItemsCache.has(listId))return ocSuggestItemsCache.get(listId).slice();
-  const items=ocMetaSuggestionItemsFromList(list);
-  if(cacheable)ocSuggestItemsCache.set(listId,items.slice());
-  return items;
-}
-function ocMetaSuggestionItemsFromList(list){
   const seen=new Set(),items=[];
   [...list.querySelectorAll('option')].forEach(option=>{
     const value=String(option.value||option.textContent||'').trim();
@@ -157,9 +130,7 @@ function selectOcMetaSuggestion(value){
 function showOcMetaSuggest(input,showAll=false){
   if(!input||input.dataset.kind!=='oc-meta-suggest'){closeOcMetaSuggest();return;}
   try{if(typeof closeSubmfrDrop==='function')closeSubmfrDrop();}catch(e){}
-  // #1079 WS6d: yazarken (showAll=false) havuz odakta kurulmuş haliyle kullanılır.
-  if(!ocSuggestPoolEnabled()||showAll||!ocSuggestFilled.size)buildSuggestions();
-  populateFxControls();
+  buildSuggestions();populateFxControls();
   const query=showAll?'':String(input.value||'').trim().toLocaleLowerCase('tr-TR');
   const matches=ocMetaSuggestionItems(input)
     .filter(item=>!query||item.value.toLocaleLowerCase('tr-TR').includes(query)||item.label.toLocaleLowerCase('tr-TR').includes(query))
