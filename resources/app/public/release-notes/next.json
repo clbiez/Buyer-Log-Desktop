@@ -933,6 +933,17 @@
         "kind": "none",
         "reason": {"tr": "Ekranda değişen bir şey yok; aynı değerler kayıttan sonra program takılmadan ve daha erken hazırlanır.", "en": "Nothing changes on screen; the same values are prepared sooner after a save, without the app stalling."}
       }
+    },
+    {
+      "id": "cp-save-other-screens-no-wait",
+      "type": "improvement",
+      "module": {"tr": "CP Tracker", "en": "CP Tracker"},
+      "title": {"tr": "CP'de art arda kayıt yapılırken diğer ekranlar neredeyse beklemeden açılır", "en": "Other screens open almost without waiting while CP saves follow one another"},
+      "body": {"tr": "CP kaydından sonra hazır ekran önbelleğinin modülleri artık aynı anda güncellenir. Kayıtlar art arda yapılırken açılan Siparişler gibi ekranlar eskisine göre çok daha kısa bekler. Kayıt eskisi gibi hemen yapılır ve diğer kullanıcılara aynı anda ulaşır.", "en": "After a CP save, the modules of the prepared screen cache are now updated at the same time. Screens such as Orders opened while saves follow one another wait much less than before. Saving still happens immediately and reaches other users at the same time."},
+      "visual": {
+        "kind": "none",
+        "reason": {"tr": "Ekranda değişen bir şey yok; aynı değerler kayıttan sonra daha erken hazırlanır.", "en": "Nothing changes on screen; the same values are prepared sooner after a save."}
+      }
     }
   ]
 }

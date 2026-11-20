@@ -19,7 +19,9 @@ function poolOptions(env = process.env) {
   return {
     idleMs: Number.isFinite(idle) && idle >= 0 ? idle : 5000,
     timeoutMs: Number.isFinite(timeout) && timeout > 0 ? timeout : 180000,
-    workers: Number.isSafeInteger(count) && count >= 1 && count <= 8 ? count : Math.max(1, Math.min(3, cores - 1)),
+    // Varsayılan: en çok 3, çekirdek−1 ve 4 GB bellek başına bir işçi (paralel heap'ler tepe belleği artırır;
+    // 30k'da 3 işçiyle tepe RSS ~+650 MB ölçüldü). 8 GB makinede 2, 16 GB'ta 3.
+    workers: Number.isSafeInteger(count) && count >= 1 && count <= 8 ? count : Math.max(1, Math.min(3, cores - 1, Math.floor(os.totalmem() / (4 * 1024 * 1024 * 1024)))),
     // En büyük modül (30k satırda ~75 MB JSON) tek başına ayrıştırılır; makine belleğinin yarısını aşmaz.
     maxOldGenerationSizeMb: Math.max(512, Math.min(4096, Math.floor(os.totalmem() / 1024 / 1024 / 2))),
   };

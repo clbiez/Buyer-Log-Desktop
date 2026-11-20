@@ -268,3 +268,13 @@ test('paralel bölmede bir parça hata verirse bütün yeniden yazım ana iş pa
     assert.ok(incremental.results.every(result => result.info.via === 'main'));
   } finally { pageCache.setRowRewriteRunnerForTests(null); console.warn = warn; await pool.close(); }
 });
+
+test('işçi sayısı: anahtar 1–8 arası; varsayılan en çok 3, çekirdek−1 ve 4 GB başına bir', () => {
+  const { poolOptions } = require('../server/lib/projection-rewrite-pool');
+  assert.equal(poolOptions({ BL_PROJECTION_REWRITE_WORKERS: '1' }).workers, 1);
+  assert.equal(poolOptions({ BL_PROJECTION_REWRITE_WORKERS: '2' }).workers, 2);
+  const expected = Math.max(1, Math.min(3, os.availableParallelism() - 1, Math.floor(os.totalmem() / (4 * 1024 ** 3))));
+  assert.equal(poolOptions({}).workers, expected);
+  assert.equal(poolOptions({ BL_PROJECTION_REWRITE_WORKERS: '99' }).workers, expected);
+  assert.equal(poolOptions({}).idleMs, 5000);
+});
