@@ -16,6 +16,7 @@
  * satırları alır; nesil ve bağlam aynıysa işçiye gidilmeden boş delta döner.
  */
 const crypto=require('node:crypto');
+const {performance}=require('node:perf_hooks');
 const hash=value=>crypto.createHash('sha256').update(value).digest('hex');
 const DECISION_FACTOR=3;
 const TOKEN=/^[A-Za-z0-9_-]{1,64}$/;
@@ -23,15 +24,41 @@ const TOKEN=/^[A-Za-z0-9_-]{1,64}$/;
 function failure(code,statusCode,tr,en,extra={}){return Object.assign(new Error(`${tr} / ${en}`),{code,statusCode,error:tr,errorEn:en,...extra});}
 const invalid=detail=>failure('READ_MODEL_QUERY_INVALID',400,'Geçersiz CP hesaplanmış sütun isteği.','Invalid CP computed columns request.',{detail});
 
-/* Gövde: { version:1, lang:'tr'|'en', since?:<önceki yanıtın token'ı> } */
+const MAX_OVERLAY=5000,MAX_KEY=512,MAX_ANSWER_BYTES=16*1024;
+/* Gövde: { version:1, lang:'tr'|'en', since?:<önceki yanıtın token'ı>,
+     answers?:{ "<sipariş|opsiyon>::<kalem>": cevap | null } }
+   answers: istemcinin henüz sunucuya ulaşmamış (checklist senkron kuyruğundaki)
+   KENDİ cevapları. Yalnız bu kullanıcının bu hesabında sunucu cevaplarının üstüne
+   konur; diske yazılmaz, başka kullanıcıya ya da önbellekteki başka anahtara geçmez.
+   Senkron tamamlanınca istemci göndermeyi bırakır (kuyruk boşalır). */
 function validateRequest(raw){
   if(!raw||typeof raw!=='object'||Array.isArray(raw))throw invalid('body');
   if(raw.version!==1)throw invalid('version');
   const lang=raw.lang==='en'?'en':raw.lang==null||raw.lang==='tr'?'tr':null;
   if(!lang)throw invalid('lang');
   if(raw.since!=null&&(typeof raw.since!=='string'||!TOKEN.test(raw.since)))throw invalid('since');
-  for(const key of Object.keys(raw))if(!['version','lang','since'].includes(key))throw invalid(key);
-  return {lang,since:raw.since||null};
+  for(const key of Object.keys(raw))if(!['version','lang','since','answers'].includes(key))throw invalid(key);
+  let answers=null;
+  if(raw.answers!=null){
+    if(typeof raw.answers!=='object'||Array.isArray(raw.answers))throw invalid('answers');
+    const keys=Object.keys(raw.answers);
+    if(keys.length>MAX_OVERLAY)throw invalid('answers');
+    answers={};
+    for(const key of keys.sort()){
+      const value=raw.answers[key];
+      if(!key||key.length>MAX_KEY||key.lastIndexOf('::')<=0)throw invalid('answers.key');
+      if(value!==null&&(typeof value!=='object'||Array.isArray(value)||typeof value.state!=='string'||value.state.length>64||JSON.stringify(value).length>MAX_ANSWER_BYTES))throw invalid('answers.value');
+      answers[key]=value;
+    }
+    if(!keys.length)answers=null;
+  }
+  return {lang,since:raw.since||null,answers};
+}
+function overlayAnswers(base,overlay){
+  if(!overlay)return base;
+  const out={...(base||{})};
+  for(const [key,value] of Object.entries(overlay)){if(value===null)delete out[key];else out[key]=value;}
+  return out;
 }
 
 const localDay=()=>{const d=new Date();return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;};
@@ -70,33 +97,39 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
     const captured=guard.capture(req,'cp');
     const request=validateRequest(rawBody);
     counters.requests++;
+    const t0=performance.now();
     const lease=await loadProjection(req,'cp');
     try{
+      const t1=performance.now();
       const profile=captured.profile||req.currentUser;
       const context=loadContext(profile);
+      const t2=performance.now();
       const tasks=await loadTasks(profile);
+      const service={leaseMs:Math.round(t1-t0),contextMs:Math.round(t2-t1),tasksMs:Math.round(performance.now()-t2)};
       captured.assertResponse();lease.assertResponse?.();
       const generation=generationOf(lease);
       // Veri kümesi WS2a Genel Bakış ile aynı anahtardadır (tarayıcı biçiminde CP satırları).
       const datasetKey=hash(JSON.stringify([captured.key,'cp-overview',generation])),datasetScope=hash(JSON.stringify([captured.key,'cp-overview']));
-      const contextKey=hash(JSON.stringify([String(context.key),tasks]));
+      const contextKey=hash(JSON.stringify([String(context.key),tasks,request.answers]));
       const scope=JSON.stringify([captured.key,'cp-computed']);
       // Kararlar yerel güne bağlıdır (istemcide de önbellek gün değişince düşer).
       const key=JSON.stringify([captured.key,'cp-computed',generation,contextKey,request.lang,today()]);
       const last=latest.get(scope);
       if(request.since&&last&&last.token===request.since&&last.key===key){
         counters.emptyDeltas++;captured.assertResponse();
-        return {generation,cached:true,body:`{"version":1,"lang":${JSON.stringify(request.lang)},"token":${JSON.stringify(last.token)},"delta":true,"total":${last.total},"fields":null,"rows":[],"removed":[]}`,timing:{cached:true,delta:true,changed:0}};
+        return {generation,cached:true,body:`{"version":1,"lang":${JSON.stringify(request.lang)},"token":${JSON.stringify(last.token)},"delta":true,"total":${last.total},"fields":null,"rows":[],"removed":[]}`,timing:{cached:true,delta:true,changed:0,service}};
       }
       if(!request.since){
         const cached=get(key);
         if(cached){counters.hits++;captured.assertResponse();latest.set(scope,{key,token:cached.token,total:cached.total});return {generation,cached:true,body:cached.body,timing:{...cached.timing,cached:true}};}
       }
       counters.misses++;
-      const base={dataset:{datasetKey,scopeKey:datasetScope},scopeKey:hash(scope),lang:request.lang,since:request.since,context:context.value,tasks};
+      const contextValue=request.answers?{...context.value,answers:overlayAnswers(context.value&&context.value.answers,request.answers)}:context.value;
+      const base={dataset:{datasetKey,scopeKey:datasetScope},scopeKey:hash(scope),lang:request.lang,since:request.since,context:contextValue,tasks};
       const value=lease.value||{},compressed=Buffer.isBuffer(value.buffer)?value.buffer.length:Number(value.buffer&&value.buffer.byteLength)||0;
       const uncompressed=Number(value.uncompressedBytes)||compressed*8;
       const options={signal,estimatedBytes:96*1024*1024+Math.ceil(uncompressed*DECISION_FACTOR),ownerKey:'read-model',generation:'1'};
+      const t3=performance.now();
       let out=await run(base,options);
       if(out&&Array.isArray(out.missing)&&out.missing.includes('cp')){
         counters.datasetLoads++;
@@ -109,7 +142,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
       const head=JSON.parse(out.body.slice(0,out.body.indexOf(',"fields"'))+'}');
       latest.set(scope,{key,token:head.token,total:head.total});
       if(!head.delta)put(key,scope,{body:out.body,timing:out.timing,token:head.token,total:head.total,bytes:Buffer.byteLength(out.body)});
-      return {generation,cached:false,body:out.body,timing:out.timing};
+      return {generation,cached:false,body:out.body,timing:{...out.timing,service:{...service,computeMs:Math.round(performance.now()-t3)}}};
     }finally{lease.release?.();}
   }
   function clear(){cache.clear();latest.clear();cachedBytes=0;}

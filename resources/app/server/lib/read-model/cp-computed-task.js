@@ -32,10 +32,11 @@ const {performance}=require('node:perf_hooks');
 const {createDecisionHost}=require('./overview-decision-host');
 const {prepareCpRows}=require('./overview-row-prep');
 const PUBLIC=path.resolve(__dirname,'..','..','..','public');
-const MAX_HOSTS=2;
+const MAX_HOSTS=2,HISTORY=4;
 const ANSWER_KEY='lcw.cp.checklist.v1';
 // Satır demeti alanları; istemci (app-main.js applyCpComputedRow) aynı sırayı okur.
-const FIELDS=Object.freeze(['id','priority','calculationStatus','trackingTags','priorityTags','actionReasons','signals','basePriority','checklist']);
+// orderKey/optionId: checklist cevap anahtarının satıra eşlenmesi (istemcinin iyimser yerel güncellemesi).
+const FIELDS=Object.freeze(['id','priority','calculationStatus','trackingTags','priorityTags','actionReasons','signals','basePriority','checklist','orderKey','optionId']);
 const hosts=new Map();
 let supplierScript=null;
 const hash=value=>crypto.createHash('sha256').update(value).digest('hex');
@@ -70,7 +71,7 @@ async function createEntry(payload){
   supplierScript.runInContext(win);
   const sync=win.BLChecklistSupplierSync;
   if(!sync||typeof sync.refreshColumns!=='function')throw Object.assign(new Error('CP computed host failed to start'),{code:'CP_COMPUTED_HOST_FAILED'});
-  return {host,sync,answersJson:new Map(),tasksSignature:'',last:null};
+  return {host,sync,answersJson:new Map(),tasksSignature:'',history:[]};
 }
 
 /* Değişmeyen cevap kayıtlarının nesne kimliği korunur (delta mekanizmaları
@@ -119,7 +120,7 @@ function shadowFormulas(win,transitRules){
 }
 
 function computeRows(entry,rows,transitRules){
-  const {host,sync}=entry,win=host.window,OD=win.BLOrderDecisionEngine,Model=win.BLOverviewModel,Rev=win.BLRevision;
+  const {host,sync}=entry,win=host.window,OD=win.BLOrderDecisionEngine,Model=win.BLOverviewModel,Rev=win.BLRevision,Checklist=win.BLCpChecklistEngine;
   const phases={};let started=performance.now();
   const decision=host.decide(rows.slice());
   phases.decisionMs=performance.now()-started;started=performance.now();
@@ -135,6 +136,8 @@ function computeRows(entry,rows,transitRules){
       actionReasons:analysis&&Array.isArray(analysis.actionReasons)?analysis.actionReasons.slice():[],
       signals:analysis&&Array.isArray(analysis.signals)?analysis.signals.slice():[],
       basePriority:null,
+      orderKey:analysis&&analysis.orderKey||'',
+      optionId:analysis&&Checklist&&typeof Checklist.optionIdentity==='function'?Checklist.optionIdentity(analysis)||'':'',
     });
     let revised=[];try{revised=Rev.revisedDateKeys(row)||[];}catch(_){revised=[];}
     if(revised.length)bases.push(row);
@@ -184,24 +187,28 @@ async function execute(payload,deps){
   syncTasks(entry,payload.tasks);
   const rows=dataset.rows;
   const {out,phases}=computeRows(entry,rows,payload.context.transitRules||[]);
-  const serialized=new Map();
+  const serialized=new Map(),digests=new Map();
   for(const row of rows){
     const id=String(row&&row._id!=null?row._id:'');
     if(!id)continue;
     const v=out.get(row);
-    serialized.set(id,JSON.stringify([id,v.priority,v.calculationStatus,v.trackingTags,v.priorityTags,v.actionReasons,v.signals,v.basePriority,v.checklist]));
+    const json=JSON.stringify([id,v.priority,v.calculationStatus,v.trackingTags,v.priorityTags,v.actionReasons,v.signals,v.basePriority,v.checklist,v.orderKey,v.optionId]);
+    serialized.set(id,json);digests.set(id,crypto.createHash('sha1').update(json).digest('base64'));
   }
-  // Delta yalnız aynı barındırıcının aynı veri kümesi üzerindeki son sonucuna göre.
-  const previous=entry.last,delta=Boolean(payload.since&&previous&&previous.token===payload.since&&previous.rows===rows);
+  // Delta, aynı barındırıcının aynı veri kümesi üzerindeki son HISTORY sonucundan birine göre
+  // (istemci araya giren bağlam olayıyla bir sonucu atmış olabilir). Satır başına yalnız özet tutulur.
+  const previous=payload.since?entry.history.find(item=>item.token===payload.since&&item.rows===rows):null,delta=Boolean(previous);
   const parts=[],removed=[];
-  for(const [id,json] of serialized)if(!delta||previous.values.get(id)!==json)parts.push(json);
-  if(delta)for(const id of previous.values.keys())if(!serialized.has(id))removed.push(id);
+  for(const [id,json] of serialized)if(!delta||previous.digests.get(id)!==digests.get(id))parts.push(json);
+  if(delta)for(const id of previous.digests.keys())if(!serialized.has(id))removed.push(id);
   const token=crypto.randomBytes(9).toString('base64url');
-  entry.last={token,rows,values:serialized};
+  entry.history.unshift({token,rows,digests});entry.history.length=Math.min(entry.history.length,HISTORY);
   const lang=payload.lang==='en'?'en':'tr';
   const body=`{"version":1,"lang":${JSON.stringify(lang)},"token":${JSON.stringify(token)},"delta":${delta?'true':'false'},"total":${serialized.size},"fields":${JSON.stringify(FIELDS)},"rows":[${parts.join(',')}],"removed":${JSON.stringify(removed)}}`;
   return {body,timing:{loadMs:loads.cp||0,queryMs:performance.now()-started-(loads.cp||0),totalMs:performance.now()-started,rows:rows.length,
-    changed:parts.length,delta,phases:{hostMs,...phases}}};
+    changed:parts.length,delta,phases:{hostMs,...phases},
+    // Tanı: veri kümesi yeniden çözüldüyse (önbellekten düştüyse) kararlar baştan hesaplanır.
+    datasetReloaded:Boolean(loads.cp),datasetCache:typeof deps.cache.stats==='function'?deps.cache.stats():null}};
 }
 function clearHosts(){hosts.clear();}
 function hostCount(){return hosts.size;}

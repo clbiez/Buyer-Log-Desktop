@@ -77,8 +77,13 @@ const columns=out=>JSON.parse(out.body);
 test('request validation: version, lang, since token and unknown keys',()=>{
   for(const bad of [null,[],{},{version:2},{version:1,lang:'de'},{version:1,since:5},{version:1,since:'x'.repeat(65)},{version:1,since:'a b'},{version:1,rows:[]}])
     assert.throws(()=>validateRequest(bad),error=>error.code==='READ_MODEL_QUERY_INVALID'&&error.statusCode===400,JSON.stringify(bad));
-  assert.deepEqual(validateRequest({version:1}),{lang:'tr',since:null});
-  assert.deepEqual(validateRequest({version:1,lang:'en',since:'abc_-9'}),{lang:'en',since:'abc_-9'});
+  assert.deepEqual(validateRequest({version:1}),{lang:'tr',since:null,answers:null});
+  assert.deepEqual(validateRequest({version:1,lang:'en',since:'abc_-9'}),{lang:'en',since:'abc_-9',answers:null});
+  for(const answers of [[],'x',{nokey:{state:'open'}},{'a::b':{state:5}},{'a::b':[]},{'a::b':{state:'x'.repeat(65)}},{'a::b':{state:'open',note:'x'.repeat(17000)}},
+    Object.fromEntries(Array.from({length:5001},(_,i)=>[`o${i}::pps`,null]))])
+    assert.throws(()=>validateRequest({version:1,answers}),error=>error.statusCode===400,JSON.stringify(answers).slice(0,80));
+  assert.deepEqual(validateRequest({version:1,answers:{'b::x':null,'a::y':{state:'open'}}}).answers,{'a::y':{state:'open'},'b::x':null});
+  assert.equal(validateRequest({version:1,answers:{}}).answers,null);
 });
 
 test('authorization: CP area is required; scoped user gets only rows in scope; cache never crosses users',async()=>{
@@ -175,7 +180,7 @@ test('stale generation during the read is a 409 that the route retries; body, si
     state.stale=0;
     assert.equal((await post('overviewOnly',{version:1})).status,403);
     assert.equal((await post('moderator','{bad')).status,400);
-    assert.equal((await post('moderator',JSON.stringify({version:1,since:'x'.repeat(5000)}))).status,413);
+    assert.equal((await post('moderator',JSON.stringify({version:1,since:'x'.repeat(1100*1024)}))).status,413);
     const invalid=await post('moderator',{version:1,lang:'de'});
     assert.equal(invalid.status,400);assert.equal((await invalid.json()).code,'READ_MODEL_QUERY_INVALID');
     // Yetki okuma sırasında düşerse yanıt verilmez (409).
@@ -215,4 +220,30 @@ test('real compute-pool worker: async task runs once, shares the dataset cache a
     // Sorgu görevi aynı işçide hâlâ çalışır (eşzamanlı dinleyici bu görevi yanıtlamaz).
     assert.deepEqual((await pool.run('health',{},{estimatedBytes:MiB,ownerKey:'read-model',generation:'1'})).value,{ok:true});
   }finally{await pool.close();}
+});
+
+test('pending-answer overlay: applies only to this request and user, is part of the cache key, never persisted',async()=>{
+  worker.cache.clear();task.clearHosts();
+  const {service,state}=harness();
+  const base=columns(await service.computed(req(users.moderator),{version:1}));
+  const pick=base.rows.find(row=>row[8]&&Object.keys(row[8].status).length),item=Object.keys(pick[8].status)[0];
+  const target=projection(users.moderator).rows.find(row=>String(row._id)===pick[0]),key=`${Readiness.analyzeOrder(target).orderKey}::${item}`;
+  const overlay={[key]:{state:'rejected',at:'2026-11-20T12:00:00.000Z',by:'moderator',note:'Renk'}};
+  const delta=columns(await service.computed(req(users.moderator),{version:1,since:base.token,answers:overlay}));
+  assert.equal(delta.delta,true);
+  assert.equal(delta.rows.find(row=>row[0]===pick[0])[8].status[item],'rejected','katman uygulandı');
+  assert.deepEqual(state.own,{},'sunucu kaydı değişmedi');
+  // Katmansız aynı istek önbellekteki katmanlı sonucu almaz.
+  const plain=columns(await service.computed(req(users.moderator),{version:1}));
+  assert.equal(plain.rows.find(row=>row[0]===pick[0])[8].status[item],pick[8].status[item]);
+  // Başka kullanıcı etkilenmez.
+  const other=columns(await service.computed(req(users.buyerA),{version:1}));
+  assert.ok(!JSON.stringify(other).includes('rejected'));
+  // Katman kaldırılınca (senkron tamamlandı, sunucu cevabı yok) önceki değere döner.
+  const back=columns(await service.computed(req(users.moderator),{version:1,since:delta.token}));
+  assert.equal(back.rows.find(row=>row[0]===pick[0])[8].status[item],pick[8].status[item]);
+  // İstemci araya giren bir sonucu atmış olabilir: daha eski (geçmişteki) token da delta alır.
+  const older=columns(await service.computed(req(users.moderator),{version:1,since:base.token,answers:overlay}));
+  assert.equal(older.delta,true,'geçmişteki token ile delta');
+  assert.deepEqual(older.rows.map(row=>row[0]),[pick[0]],'yalnız tabana göre değişen satır');
 });

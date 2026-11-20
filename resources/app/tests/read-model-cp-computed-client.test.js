@@ -17,9 +17,9 @@ const SOURCE=fs.readFileSync(path.join(__dirname,'..','public','app-main.js'),'u
 const SYNC_SOURCE=fs.readFileSync(path.join(__dirname,'..','public','checklist-supplier-sync.js'),'utf8');
 function block(start,end){const i=SOURCE.indexOf(start);if(i<0)throw new Error(start);return SOURCE.slice(i,SOURCE.indexOf(end,i)+end.length);}
 const FUNCTIONS=['norm','actionPriorityCode','unifiedPriorityRowActive','applyUnifiedPriorityAnalysis','syncUnifiedPrioritiesForTable','scheduleUnifiedPrioritiesForTable',
-  'ensureUnifiedPrioritiesForTable','cpComputedEnabled','cpComputedEligible','applyCpComputedRow','applyCpComputedColumns','prepareCpComputedContext','scheduleCpComputedColumns'];
+  'ensureUnifiedPrioritiesForTable','cpComputedEnabled','cpComputedEligible','applyCpComputedRow','applyCpComputedColumns','cpComputedAnswerOverlay','prepareCpComputedContext','scheduleCpComputedColumns','cpComputedSignature','cpComputedOptimisticAnswer'];
 
-function load({flag=true,rows=4,server}={}){
+function load({flag=true,rows=4,server,deltaRow=0}={}){
   const calls={fetch:[],decide:0,decideAsync:0,render:0,overview:0,flush:0,sync:0,marks:[]};
   const cpRows=Array.from({length:rows},(_,i)=>({_id:'r'+i,'Order Code':'O'+i,Priority:''}));
   const assistant={
@@ -28,8 +28,8 @@ function load({flag=true,rows=4,server}={}){
     decisionContextRevision:()=>ctx.__contextRevision,
   };
   const reply=server||((body)=>({status:200,json:{ok:true,columns:{version:1,lang:'tr',token:'t'+calls.fetch.length,delta:Boolean(body.since),total:rows,
-    rows:(body.since?cpRows.slice(0,1):cpRows).map(row=>[row._id,'ACTION_TODAY','KNOWN',['TAG'],[],[{code:'R1'}],[{code:'S'}],null,
-      {cells:{__checklist__pps:'Bekliyor'},status:{pps:'open'},parts:{},elements:{},single:false,tasks:{}}]),removed:[]}}}));
+    rows:(body.since?cpRows.slice(deltaRow,deltaRow+1):cpRows).map(row=>[row._id,'ACTION_TODAY','KNOWN',['TAG'],[],[{code:'R1'}],[{code:'S'}],null,
+      {cells:{__checklist__pps:'Bekliyor'},status:{pps:'open'},parts:{},elements:{},single:false,tasks:{}},row['Order Code'],'']),removed:[]}}}));
   const ctx={
     console,Map,Set,WeakMap,Promise,JSON,Object,Array,String,Number,Boolean,Error,Math,Date,
     performance:{now:()=>0},
@@ -39,7 +39,7 @@ function load({flag=true,rows=4,server}={}){
     renderCP:()=>{calls.render++;},scheduleOverviewRender:()=>{calls.overview++;},showToast:()=>{},renderOrders:()=>{},
     showUnifiedPriorityLoading:()=>{calls.loading=(calls.loading||0)+1;},currentActiveTab:()=>'cp',
     CustomEvent:class{constructor(type,init){this.type=type;this.detail=init&&init.detail;}},
-    fetch:async(url,init)=>{const body=JSON.parse(init.body);calls.fetch.push({url,body});const r=reply(body,calls);return {ok:r.status===200,status:r.status,json:async()=>r.json};},
+    fetch:async(url,init)=>{const body=JSON.parse(init.body);calls.fetch.push({url,body});const r=reply(body,calls,cpRows);return {ok:r.status===200,status:r.status,json:async()=>r.json};},
   };
   ctx.window=ctx;
   Object.assign(ctx,{BLCpAssistant:assistant,BL_READ_MODEL_CP_COMPUTED:flag,
@@ -51,7 +51,7 @@ function load({flag=true,rows=4,server}={}){
   vm.runInContext([
     'const _unifiedPriorityCache={cp:null,orders:null};const _unifiedPriorityTableRevision={cp:1,orders:1};',
     'let _cpPriorityIndex=null,_cpPriorityIndexRevision=0;let cpPriorityJob=null;',
-    block('const CP_COMPUTED_STORAGE_KEY=',';'),block('const cpComputed={','};'),block('const CP_COMPUTED_HIDDEN=[','];'),
+    block('const CP_COMPUTED_STORAGE_KEY=',';'),block('const cpComputed={','};'),block('const CP_COMPUTED_HIDDEN=[','];'),block('const CP_COMPUTED_OVERLAY_MAX_BYTES=',';'),block('const CP_COMPUTED_OPTIMISTIC_MAX_ROWS=',';'),
     ...FUNCTIONS.map(name=>extractFunction(SOURCE,name)),
     block('window.BLCpComputedColumns={','\n};'),
     `globalThis.__api={${FUNCTIONS.join(',')},cache:()=>_unifiedPriorityCache,computed:()=>cpComputed};`,
@@ -77,7 +77,7 @@ test('flag on: values come from the back end by _id; no client decision engine; 
   assert.equal(calls.decide+calls.decideAsync,0,'istemci karar motoru çalışmadı');
   assert.equal(calls.fetch.length,1);assert.equal(calls.fetch[0].url,'/api/read-model/cp/computed');
   assert.deepEqual(calls.fetch[0].body,{version:1,lang:'tr'});
-  assert.ok(calls.flush===1&&calls.sync===1,'kişisel bağlam önce sunucuya yazıldı');
+  assert.equal(calls.flush,1,'kişisel bağlam önce sunucuya yazıldı');
   for(const row of rows){
     assert.equal(row.Priority,'ACTION_TODAY');assert.deepEqual(row._trackingTags,['TAG']);assert.equal(row._actionPriorityReasons[0].code,'R1');
     assert.equal(row.__checklist__pps,'Bekliyor');assert.equal(row._checklistStatus.pps,'open');
@@ -135,16 +135,39 @@ test('server error falls back to the legacy path for the session; row mismatch o
   assert.equal(partial.api.computed().disabled,false,'oturum kapatılmadı');
   assert.equal(partial.rows[3].Priority,'CRITICAL');
 
-  const pending=load();
-  pending.ctx.BLChecklistSupplierSync._state.pendingAnswers={'a::pps':{}};
-  assert.equal(await pending.api.scheduleUnifiedPrioritiesForTable('cp'),true);
-  assert.equal(pending.calls.fetch.length,0,'gönderilemeyen cevap varken sunucu sonucu istenmez');
-  assert.equal(pending.calls.decideAsync,1);
+});
+
+test('answers still in the checklist sync queue travel as an overlay; only non-answer context changes wait for the preference flush',async()=>{
+  const {api,ctx,calls}=load();
+  ctx.BLCpAssistant._state={answers:{'O1::pps':{state:'approved',at:'2026-11-20T10:00:00.000Z'},'O2::soff':{state:'open'}}};
+  ctx.BLChecklistSupplierSync._state.pendingAnswers={'O1::pps':{},'O9::tests':{}};
+  assert.equal(await api.scheduleUnifiedPrioritiesForTable('cp'),true);
+  assert.equal(calls.sync,0,'senkron turu beklenmedi');assert.equal(calls.flush,1,'ilk hesapta tercihler yazıldı');
+  assert.deepEqual(calls.fetch[0].body.answers,{'O1::pps':{state:'approved',at:'2026-11-20T10:00:00.000Z'},'O9::tests':null},'kuyruktaki kendi cevapları (silinen: null)');
+  // Yalnız cevap değişti: tercih yazımı beklenmez.
+  ctx.__contextRevision=2;
+  await api.scheduleUnifiedPrioritiesForTable('cp');
+  assert.equal(calls.flush,1);
+  // Cevap dışı bağlam (kural/ayar): yazım beklenir.
+  api.computed().answersOnly=false;ctx.__contextRevision=3;
+  await api.scheduleUnifiedPrioritiesForTable('cp');
+  assert.equal(calls.flush,2);
+  // Kuyruk boş: katman gönderilmez.
+  ctx.BLChecklistSupplierSync._state.pendingAnswers={};ctx.__contextRevision=4;
+  await api.scheduleUnifiedPrioritiesForTable('cp');
+  assert.equal(calls.fetch.at(-1).body.answers,undefined);
+  // Çok büyük katman: önce senkron beklenir; yine sığmazsa bu hesap eski yolla.
+  const big=load();
+  big.ctx.BLCpAssistant._state={answers:Object.fromEntries(Array.from({length:3000},(_,i)=>[`O${i}::pps`,{state:'approved',note:'x'.repeat(200)}]))};
+  big.ctx.BLChecklistSupplierSync._state.pendingAnswers=Object.fromEntries(Object.keys(big.ctx.BLCpAssistant._state.answers).map(key=>[key,{}]));
+  assert.equal(await big.api.scheduleUnifiedPrioritiesForTable('cp'),true);
+  assert.equal(big.calls.sync,1);assert.equal(big.calls.fetch.length,0);assert.equal(big.calls.decideAsync,1);
+  assert.equal(big.api.computed().disabled,false);
 });
 
 test('checklist-supplier-sync: provider skips the row pass and the Overview assistant recompute; legacy code stays when inactive',()=>{
   // Satır geçişi yalnız karar nesnesiyle ya da sağlayıcı yokken.
-  assert.match(SYNC_SOURCE,/const provider = !opts\.decision \? computedProvider\(\) : null;\s*if \(provider\) \{\s*if \(!opts\.columnsOnly && typeof provider\.refresh === 'function'\) void Promise\.resolve\(provider\.refresh\(\)\)/);
+  assert.match(SYNC_SOURCE,/const provider = !opts\.decision \? computedProvider\(\) : null;\s*if \(provider\) \{[\s\S]{0,200}const refreshing = !opts\.columnsOnly && typeof provider\.refresh === 'function';\s*if \(refreshing\) void Promise\.resolve\(provider\.refresh\(\)\)[\s\S]{0,120}refreshing \? \{ render: false \} : \{\}\);/);
   assert.match(SYNC_SOURCE,/if \(opts\.columnsOnly\) \{[\s\S]{0,600}state\.appliedColumns = null; state\.columnDelta = null;[\s\S]{0,120}return true;\s*\}/);
   // Sütun tanımı kodu columnsOnly dönüşünden önce kurulur.
   assert.ok(SYNC_SOURCE.indexOf("cols.splice.apply(cols")<SYNC_SOURCE.indexOf('if (opts.columnsOnly) {'));
@@ -177,4 +200,29 @@ test('checklist-supplier-sync behaviour: active provider → refreshColumns writ
   root.BLCpComputedColumns.active=()=>false;
   factoryApi.refreshColumns({render:false});
   assert.equal(decisions,1);assert.equal(rows[0].__checklist__pps,'Bekliyor');
+});
+
+test('optimistic checklist answer: only the affected order rows are recomputed locally; an equal back-end result does not redraw',async()=>{
+  const {api,ctx,calls,rows}=load({deltaRow:1});
+  await api.scheduleUnifiedPrioritiesForTable('cp');
+  assert.equal(rows[1]._cpOrderKey,'O1');assert.equal(Object.keys(rows[1]).includes('_cpOrderKey'),false,'eşleme alanı sayılmaz');
+  const refreshed=[];
+  ctx.BLChecklistSupplierSync.refreshColumns=opts=>{refreshed.push(opts);for(const row of opts.rows)row.__checklist__pps='Bekliyor';return true;};
+  ctx.BLChecklistSupplierSync._state.pendingAnswers={'O1::pps':{}};
+  const decided=[];ctx.BLCpAssistant.computeDecisionsForRows=list=>{decided.push(list.slice());return {byRow:new Map(list.map(row=>[row,{priority:'ACTION_TODAY',trackingTags:['TAG'],actionReasons:[{code:'R1'}],signals:[{code:'S'}]}]))};};
+  const renders=calls.render;
+  assert.equal(api.cpComputedOptimisticAnswer(),true);
+  assert.equal(decided.length,1);assert.deepEqual(decided[0],[rows[1]],'yalnız cevabı değişen siparişin satırı');
+  assert.deepEqual(refreshed[0].rows,[rows[1]]);assert.equal(refreshed[0].decision.byRow.get(rows[1]).priority,'ACTION_TODAY');
+  assert.equal(calls.render,renders+1,'hemen çizildi');
+  // Arka uç aynı değeri döndürür (delta: 1 satır): ikinci çizim yok.
+  ctx.__contextRevision=2;
+  await api.scheduleUnifiedPrioritiesForTable('cp');
+  assert.equal(calls.render,renders+1,'aynı sonuç yeniden çizilmedi');
+  // Satır sınırı ve eşleşmeyen anahtar: iyimser yol yok, arka uç beklenir.
+  ctx.BLChecklistSupplierSync._state.pendingAnswers={'NOPE::pps':{}};
+  assert.equal(api.cpComputedOptimisticAnswer(),false);
+  ctx.state.cpDirty.add('r0');
+  ctx.BLChecklistSupplierSync._state.pendingAnswers={'O1::pps':{}};
+  assert.equal(api.cpComputedOptimisticAnswer(),false,'kaydedilmemiş düzenleme varken eski yol');
 });

@@ -1,7 +1,8 @@
 'use strict';
 /* POST /api/read-model/cp/computed — CP hesaplanmış sütunlar (#1078, WS5 alt PR 1).
  *
- * İstek gövdesi: { version:1, lang:'tr'|'en', since?:<önceki yanıtın token'ı> }
+ * İstek gövdesi: { version:1, lang:'tr'|'en', since?:<önceki yanıtın token'ı>,
+ *   answers?:{<cevap anahtarı>:cevap|null} (senkronu bekleyen kendi cevapları; cp-computed-service.js) }
  * Yanıt (200): { ok:true, version:1, generation, cached, timing,
  *   columns:{ version:1, lang, token, delta, total, fields:[...]|null, rows:[[id, priority,
  *     calculationStatus, trackingTags, priorityTags, actionReasons, signals, basePriority,
@@ -11,7 +12,7 @@
  *   400 READ_MODEL_QUERY_INVALID / READ_MODEL_BODY_INVALID · 401 SESSION_REQUIRED
  *   403 AREA_FORBIDDEN · 409 COMPUTE_STALE_GENERATION (3 denemeden sonra) /
  *   SOURCE_FILTER_REQUIRED · 413 READ_MODEL_BODY_TOO_LARGE · 503 COMPUTE_QUEUE_BUSY
- * Global 100 MB JSON ayrıştırıcısından ÖNCE kaydolur; kendi 4 KB sınırını uygular.
+ * Global 100 MB JSON ayrıştırıcısından ÖNCE kaydolur; kendi 1 MB sınırını uygular.
  */
 const express=require('express');
 const STALE_ATTEMPTS=3;
@@ -33,7 +34,7 @@ module.exports=function registerCpComputedRoutes(app,deps){
       loadTasks:deps.testTasks?createTaskLoader(deps.testTasks):async()=>[],
     });
   })());
-  const json=express.json({limit:'4kb'});
+  const json=express.json({limit:'1mb'});
   app.post('/api/read-model/cp/computed',async(req,res)=>{
     try{
       if(typeof userAccess.prepareComputeAccessContext==='function')await userAccess.prepareComputeAccessContext();

@@ -683,10 +683,13 @@
     let opts = options || {};
     const provider = !opts.decision ? computedProvider() : null;
     if (provider) {
-      if (!opts.columnsOnly && typeof provider.refresh === 'function') void Promise.resolve(provider.refresh()).catch(function () {});
-      opts = Object.assign({}, opts, { columnsOnly: true });
+      // Yenileme sağlayıcıya gider; sonuç gelince sağlayıcı CP'yi çizer (eski değerle ara çizim yok).
+      const refreshing = !opts.columnsOnly && typeof provider.refresh === 'function';
+      if (refreshing) void Promise.resolve(provider.refresh()).catch(function () {});
+      opts = Object.assign({}, opts, { columnsOnly: true }, refreshing ? { render: false } : {});
     }
-    const rows = currentRows(), items = itemCatalog();
+    // opts.rows: yalnız bu satırlar (CP hesaplanmış sütun sağlayıcısının iyimser yerel güncellemesi).
+    const allRows = currentRows(), rows = Array.isArray(opts.rows) ? opts.rows : allRows, items = itemCatalog();
     const cols = root.COLS_BY_TABLE && root.COLS_BY_TABLE.cp;
     if (!Array.isArray(cols)) return false;
 
@@ -808,11 +811,14 @@
       });
       // Bileşenli sütun, adlar okunabilsin diye genişler (kullanıcı genişliği korunur).
       const withElements = new Set();
-      rows.forEach(function (row) { Object.keys(row._checklistElements || {}).forEach(function (id) { withElements.add(id); }); });
+      allRows.forEach(function (row) { Object.keys(row._checklistElements || {}).forEach(function (id) { withElements.add(id); }); });
       dynamic.forEach(function (col) { col.weight = withElements.has(col.checklistItemId) ? 26 : 12; });
-      state.appliedColumns = { rows: rows, decision: decision, items: itemsSignature, tasks: state.testTasks };
-      state.columnDelta = { rows: rows, signature: deltaSignature, tasks: state.testTasks, rules: sNow && sNow.rules,
-        snapshot: new Map(Object.entries(answersNow)), analyses: appliedAnalyses };
+      if (rows !== allRows) { state.appliedColumns = null; state.columnDelta = null; }
+      else {
+        state.appliedColumns = { rows: rows, decision: decision, items: itemsSignature, tasks: state.testTasks };
+        state.columnDelta = { rows: rows, signature: deltaSignature, tasks: state.testTasks, rules: sNow && sNow.rules,
+          snapshot: new Map(Object.entries(answersNow)), analyses: appliedAnalyses };
+      }
     }
     if (opts.render && typeof root.renderCP === 'function') root.renderCP();
     return true;
