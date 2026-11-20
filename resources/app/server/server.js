@@ -10311,6 +10311,16 @@ app.patch('/api/overrides/:orderCode', async (req, res) => {
   } catch (err) { apiError(res, err, 'Sipariş düzenlemesi kaydedilemedi.'); }
 });
 
+// CP satır kaydı (#1078 WS5 alt PR 3): alan bazlı karşılaştırmalı yazma; yetki ve yan etkiler yukarıdaki rotalarla aynı.
+require('./lib/read-model/cp-row-save').registerCpRowSaveRoute(app,{
+  patchRows:(items,options)=>require('./db').patchOrderOverrideRows(items,options),
+  rejectUnauthorizedOrders,rejectSharedOwnerWrites,assertAutomaticDatesReadOnly,pageProjectionContext,queueProjectionCacheRowPatches,liveRowPatchesFor,noteActorOf,apiError,
+  ensureAutomaticDateSource:async(req,items)=>{if(items.some(item=>Object.prototype.hasOwnProperty.call(item.patch.dates||{},'exFactory'))&&!Array.isArray(cacheForUser(req.currentUser).asasOrders))await ensureDataLoaded(req.currentUser);},
+  notifyShared:user=>{void sharedRevisionStore.update('cpOverrides',{actorId:user.id}).catch(error=>logRuntimeFailure('sharedRevision',error));},
+  appendAudit:(user,action,target,detail)=>userAccess.appendAudit(user,action,target,detail),
+  notifyLive:(req,rowPatches)=>liveEvents.notifyChange('orders',requestClientId(req),{rowPatches}),
+});
+
 async function rewriteProjectionCacheForImageItems(currentUser,beforeContext,items){
   const exact=new Map(),byPlm=new Map();
   for(const item of Array.isArray(items)?items:[]){
