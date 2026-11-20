@@ -21,6 +21,51 @@
   function pct(value){return value==null?'—':Number(value).toLocaleString('tr-TR',{maximumFractionDigits:3})+'%';}
   function money(value){return value==null?'—':Number(value).toLocaleString('tr-TR',{minimumFractionDigits:0,maximumFractionDigits:3});}
 
+  /* ERP okuma modeli (#1079 WS6): royalty yazma ve eşleşme maliyeti.
+     Ölçüm (30k fixture): tek kural "Uygula" 923 satırda 68,7 sn tek uzun görev.
+     Sebep: her güncelleme için tüm CP satırları yeniden taranıp lineKeyOfRow
+     hesaplanıyordu (güncelleme × satır). Açıkken satırlar anahtara göre bir kez
+     dizinlenir ve licensor/license normalleştirmesi bellekte tutulur. Sonuç ve
+     yazma sırası aynıdır. Geri dönüş: window.BL_READ_MODEL_ROYALTY=false ya da
+     localStorage 'buyerlog.readModel.royalty.v1'='0' ve sayfayı yenileme. Anahtar
+     ilk kullanımda bir kez okunur: satır başına window okuması ölçümde 130–265 ms
+     tutuyordu. */
+  const ROYALTY_FAST_STORAGE_KEY='buyerlog.readModel.royalty.v1';
+  let royaltyFastCache=null;
+  function royaltyFastEnabled(){
+    if(royaltyFastCache===null){
+      if(typeof window.BL_READ_MODEL_ROYALTY==='boolean')royaltyFastCache=window.BL_READ_MODEL_ROYALTY;
+      else{try{royaltyFastCache=window.localStorage.getItem(ROYALTY_FAST_STORAGE_KEY)!=='0';}catch(_){royaltyFastCache=true;}}
+    }
+    return royaltyFastCache;
+  }
+  // turknorm saf bir dönüşümdür; aynı licensor/license metni her satırda ve kuralda tekrarlanır.
+  const TURKNORM_CACHE_MAX=4096,turknormCache=new Map();
+  function turknormFast(value){
+    if(typeof value!=='string'||!royaltyFastEnabled())return turknorm(value);
+    let out=turknormCache.get(value);
+    if(out===undefined){if(turknormCache.size>=TURKNORM_CACHE_MAX)turknormCache.clear();out=turknorm(value);turknormCache.set(value,out);}
+    return out;
+  }
+  // Supp. FOB güncellemelerini satırlara yazar. Kapalıyken eski yol: her güncelleme
+  // için CP + Order Summary satırlarının tamamı taranır.
+  function writeSuppFobUpdates(updates){
+    const lists=[state.cp&&state.cp.rows,state.orderSummary&&state.orderSummary.rows];
+    const keyOf=r=>lineKeyOfRow(r)||String(r['Order Code']);
+    let index=null;
+    if(royaltyFastEnabled()){
+      index=new Map();
+      lists.forEach(rows=>(rows||[]).forEach(r=>{const k=keyOf(r),list=index.get(k);if(list)list.push(r);else index.set(k,[r]);}));
+    }
+    updates.forEach(({orderCode,lineKey,suppFob,suppFobMeta})=>{
+      const meta=normalizeSuppFobMeta(suppFobMeta)||{source:'rule',applied:true},key=lineKey||orderCode;
+      state.overrides.suppfobmap[key]=suppFob;state.overrides.suppfobmetamap=state.overrides.suppfobmetamap||{};state.overrides.suppfobmetamap[key]=meta;
+      const write=r=>{r['Supp. FOB']=suppFob;r._suppFobMeta=meta;r._suppFobOverride=true;r._suppFobManual=false;r._suppFobRule=meta.ruleId||true;};
+      if(index)(index.get(key)||[]).forEach(write);
+      else lists.forEach(rows=>(rows||[]).forEach(r=>{if(keyOf(r)===key)write(r);}));
+    });
+  }
+
   normalizePricingRules=function(rules){
     const migrated=api.migrateLicenseRoyaltyRules(Array.isArray(rules)?rules:[]);
     const out=[],seen=new Set();
@@ -52,9 +97,13 @@
   };
 
   pricingRuleMatchesValues=function(rule,opd,country,season,licensor,license,category){
+    // #1079 WS6: koşulların hepsi saf; açıkken ucuz ve seçici olanlar (licensor/license,
+    // ülke tarafı) önce denenir. Eşleşmeyen kural için satır tarihi, sezon ve kategori
+    // normalleştirmesi yapılmaz. Sonuç aynıdır (ölçüm: satır × kural başına tarih ayrıştırma).
+    if(typeof royaltyRecomputeFastEnabled==='function'&&royaltyRecomputeFastEnabled()&&(turknormFast(license)!==turknormFast(rule&&rule.license)||turknormFast(licensor)!==turknormFast(rule&&rule.licensor)||!hasSide(rule,country)))return false;
     const day=dateOrdinal(opd),start=dateOrdinal(rule&&rule.opdStart),end=dateOrdinal(rule&&rule.opdEnd);
     const dateMatches=(start==null&&end==null)||(day!=null&&(start==null||day>=start)&&(end==null||day<=end));
-    return dateMatches&&api.pricingRuleCategoryMatches(rule,category)&&pricingRuleSeasonMatches(rule,season)&&hasSide(rule,country)&&turknorm(licensor)===turknorm(rule&&rule.licensor)&&turknorm(license)===turknorm(rule&&rule.license);
+    return dateMatches&&api.pricingRuleCategoryMatches(rule,category)&&pricingRuleSeasonMatches(rule,season)&&hasSide(rule,country)&&turknormFast(licensor)===turknormFast(rule&&rule.licensor)&&turknormFast(license)===turknormFast(rule&&rule.license);
   };
   pricingRuleMatchesRow=function(rule,row){return !!row&&pricingRuleMatchesValues(rule,row.OPD,row.Country,row.Season,row.Licensor,row.License,window.BLCanonicalFields.canonicalValue(row,'cp','category'));};
   // Exact licensor first; a merged licensor name (ERMODA UK LTD → ERMODA) is the fallback.
@@ -98,7 +147,7 @@
   recalcSuppFobForRow=function(row){
     if(!row||hasManualSuppFob(row))return false;
     const prev=row['Supp. FOB'],priced=calculateSuppFobFromRule(row['FOB ($)'],row.OPD,row.Country,row.Season,row.Licensor,row.License,window.BLCanonicalFields.canonicalValue(row,'cp','category'));
-    const next=priced.value!=null?priced.value:(turknorm(row.Licensor)==='DTR'?(toNum(row['FOB ($)'])??null):null);
+    const next=priced.value!=null?priced.value:(turknormFast(row.Licensor)==='DTR'?(toNum(row['FOB ($)'])??null):null);
     row['Supp. FOB']=next;row._suppFobRule=priced.rule?(priced.rule.id||true):null;row._suppFobMeta=automaticSuppFobRuleMeta(priced.rule,false,row.Country);row._suppFobOverride=false;row._suppFobManual=false;
     return !editableValuesEqual(prev,next);
   };
@@ -127,11 +176,7 @@
     });
     if(!updates.length){showToast('Bu kuralla eşleşen ve geçerli FOB değeri bulunan sipariş yok.');return 0;}
     if(window.SERVER_BACKED)await enqueueOverrideMutation('suppFob','/api/overrides/batch-suppfob',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:updates})});
-    updates.forEach(({orderCode,lineKey,suppFob,suppFobMeta})=>{
-      const meta=normalizeSuppFobMeta(suppFobMeta)||{source:'rule',applied:true},key=lineKey||orderCode;
-      state.overrides.suppfobmap[key]=suppFob;state.overrides.suppfobmetamap=state.overrides.suppfobmetamap||{};state.overrides.suppfobmetamap[key]=meta;
-      [state.cp&&state.cp.rows,state.orderSummary&&state.orderSummary.rows].forEach(rows=>(rows||[]).forEach(r=>{if((lineKeyOfRow(r)||String(r['Order Code']))===key){r['Supp. FOB']=suppFob;r._suppFobMeta=meta;r._suppFobOverride=true;r._suppFobManual=false;r._suppFobRule=meta.ruleId||true;}}));
-    });
+    writeSuppFobUpdates(updates);
     if(!window.SERVER_BACKED)matches.forEach(r=>markDirty(r._id));
     if(state.cp)renderCP();if(state.orderSummary)renderOverview();return updates.length;
   };
@@ -146,11 +191,7 @@
     });
     if(!updates.length){showToast('Kurallarla eşleşen ve geçerli FOB değeri bulunan sipariş yok.');return 0;}
     if(window.SERVER_BACKED)await enqueueOverrideMutation('suppFob','/api/overrides/batch-suppfob',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:updates})});
-    updates.forEach(({orderCode,lineKey,suppFob,suppFobMeta})=>{
-      const meta=normalizeSuppFobMeta(suppFobMeta)||{source:'rule',applied:true},key=lineKey||orderCode;
-      state.overrides.suppfobmap[key]=suppFob;state.overrides.suppfobmetamap=state.overrides.suppfobmetamap||{};state.overrides.suppfobmetamap[key]=meta;
-      [state.cp&&state.cp.rows,state.orderSummary&&state.orderSummary.rows].forEach(rows=>(rows||[]).forEach(r=>{if((lineKeyOfRow(r)||String(r['Order Code']))===key){r['Supp. FOB']=suppFob;r._suppFobMeta=meta;r._suppFobOverride=true;r._suppFobManual=false;r._suppFobRule=meta.ruleId||true;}}));
-    });
+    writeSuppFobUpdates(updates);
     if(!window.SERVER_BACKED)(state.cp&&state.cp.rows||[]).forEach(r=>{if(seen.has(lineKeyOfRow(r)||String(r['Order Code'])))markDirty(r._id);});
     if(state.cp)renderCP();if(state.orderSummary)renderOverview();return updates.length;
   };
