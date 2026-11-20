@@ -60,13 +60,15 @@ const ROWS_MEMO_TTL_MS=20000,ROWS_MEMO_MAX_MS=120000;
 const memoSources=new WeakMap();let memoSourceSeq=0,rowsMemo=null;
 function memoSourceId(source){let id=memoSources.get(source);if(!id){id=++memoSourceSeq;memoSources.set(source,id);}return id;}
 function clearRowsMemo(){if(rowsMemo&&rowsMemo.timer)clearTimeout(rowsMemo.timer);rowsMemo=null;}
+// Süre dolunca bırakılan satırlar (30k'da ~50 MB) boştaki işçide hemen toplanır (idle-gc).
+function releaseRowsMemo(){const had=!!rowsMemo;clearRowsMemo();if(had)require('./idle-gc').collectGarbage();}
 function rowsMemoKey(source,data){
   if(!source||typeof source!=='object'||!data.sourceRevision||(data.previewLimit||0)>0||data.includeSourceDetails||data.mapProjection)return null;
   return JSON.stringify([memoSourceId(source),data.sourceRevision,data.access?data.access.accessHash||null:null,data.target||'backlog',data.options||{},data.sourceColumns||[],!!data.mergeSourceOverrides,!!data.preferSourceAppliedHorizons]);
 }
 function armRowsMemo(memo){
   if(memo.timer)clearTimeout(memo.timer);
-  const timer=setTimeout(clearRowsMemo,Math.max(0,Math.min(ROWS_MEMO_TTL_MS,memo.createdAt+ROWS_MEMO_MAX_MS-Date.now())));timer.unref?.();
+  const timer=setTimeout(releaseRowsMemo,Math.max(0,Math.min(ROWS_MEMO_TTL_MS,memo.createdAt+ROWS_MEMO_MAX_MS-Date.now())));timer.unref?.();
   memo.timer=timer;
 }
 function takeRowsMemo(key){

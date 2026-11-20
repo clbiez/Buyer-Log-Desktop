@@ -52,3 +52,19 @@ test('rota: önbellekten istek de veri kümesi boyutuyla ölçeklenen bellek tah
   for (const call of calls) assert.equal(call.estimated, 96 * MiB + uncompressed * 16, 'ölçüm: 30k tamponsuz istek +131 MB tuttu (tahmin 96 MB idi)');
   model._releaseAll();
 });
+
+test('satır belleği süresi dolunca bırakılır ve işçide hemen toplanır; zamanlayıcı yoksa GC yok', () => {
+  const tasks = require('../server/lib/compute-tasks');
+  const timers = [], original = global.setTimeout;
+  global.setTimeout = (fn, ms) => { const t = original(() => {}, 0); timers.push({ fn, ms }); return t; };
+  try {
+    tasks._clearRowsMemo();
+    const source = { loadedAt: 'r1', asasOrders: [], asasOrdersByTarget: { backlog: [] }, antrepoMap: {}, antrepoMapByTarget: { backlog: {} }, lflRows: [] };
+    tasks.buildBacklog('v3-items', source, { access: null, overrides: {}, horizons: {}, headers: [], sourceRevision: 'rev', rowsRevision: 'r', calendar: { configured: false }, options: {}, sourceColumns: [], today: '2026-01-15' });
+    const before = collections;
+    timers.at(-1).fn();
+    assert.equal(collections, before + 1);
+    timers.at(-1).fn();
+    assert.equal(collections, before + 1, 'bellek boşken tekrar GC yok');
+  } finally { global.setTimeout = original; tasks._clearRowsMemo(); }
+});
