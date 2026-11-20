@@ -171,3 +171,24 @@ test('transient 409/503: window and counts retry silently (bounded); the first w
   assert.ok(first.indexOf('cpRMTransientError(error)')<first.indexOf('showToast(message)'),'geçici hata uyarıdan önce ele alınır');
   assert.match(slice('function cpRMRequestFacets(','// D1 ölçümü'),/if\(cpRMTransientError\(error\)&&attempt<CP_RM_TRANSIENT_RETRIES\)\{\s*setTimeout\(\(\)=>\{if\(seq===cpRM\.facetsSeq&&signature===cpRM\.signature\)cpRMRequestFacets\(spec,signature,attempt\+1\);\}/);
 });
+
+/* #1078 satır yaması: pencereli ilk çizim sunucu hesaplanmış sütunlarını (soğuk barındırıcı, 30k ~15 sn) beklemez.
+   İlk sonuç gelene kadar eski yol (#1094 (A): yer tutucu / yükleniyor); ilk sonuç uygulanınca pencereli yol. */
+test('windowed path waits for the first server computed result of the session; until then the legacy table opens CP',()=>{
+  const fn=extractFunction(SOURCE,'renderCPFromReadModel');
+  const marks=[];
+  const ctx=vm.createContext({window:{BLPerf:{mark:(n,d)=>marks.push([n,d])}},
+    applyCoreAutoFilterState(){},cpReadModelSpec:()=>({ok:true}),cpRMSignature:()=>'sig',
+    document:{getElementById:()=>null},performance:{now:()=>0},__posts:0});
+  vm.runInContext(`var cpRM={seq:0,facetsSeq:0,legacyReason:'',signature:'',rows:null,unsupportedSignature:''};var cpComputed={readyOnce:false};
+    function cpRMPost(){__posts++;return new Promise(()=>{});}function renderCorePageLoadingState(){}function cpRMQueryBody(){return {};}const CP_RM_WINDOW=200;
+    ${fn};globalThis.r=renderCPFromReadModel;globalThis.s={cpRM,cpComputed};`,ctx);
+  assert.equal(ctx.r(),false,'eski yol');
+  assert.equal(ctx.s.cpRM.legacyReason,'computed-warming');assert.equal(ctx.__posts,0,'soğuk hesabı bekleyen sorgu yok');
+  ctx.s.cpComputed.readyOnce=true;
+  assert.equal(ctx.r(),true,'ilk sonuçtan sonra pencereli yol');assert.equal(ctx.__posts,1);
+  // readyOnce yalnız başarılı uygulamada (scheduleCpComputedColumns) set edilir.
+  const sched=extractFunction(SOURCE,'scheduleCpComputedColumns');
+  assert.match(sched,/cpComputed\.applied=\{rows,token:payload\.columns\.token,lang\};cpComputed\.transient=0;cpComputed\.readyOnce=true;/);
+  assert.ok(sched.indexOf('cpComputed.readyOnce=true')<sched.indexOf('renderCP();'),'ilk sonuç tabloyu yeniden çizer → pencereli yol');
+});

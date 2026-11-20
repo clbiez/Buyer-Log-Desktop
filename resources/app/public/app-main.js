@@ -1431,7 +1431,7 @@ function scheduleUnifiedPrioritiesForTable(tableKey,options={}){
    Anahtar: window.BL_READ_MODEL_CP_COMPUTED (boolean) ya da kullanıcı tercihi
    'bl.cpComputed.v1'; varsayılan AÇIK ('0' ile kapanır; #1078 alt PR 3). */
 const CP_COMPUTED_STORAGE_KEY='bl.cpComputed.v1';
-const cpComputed={disabled:false,applied:null,job:null,enabled:null,answersOnly:false,optimistic:null,pendingView:false,transient:0};
+const cpComputed={disabled:false,applied:null,job:null,enabled:null,answersOnly:false,optimistic:null,pendingView:false,transient:0,readyOnce:false};
 function cpComputedEnabled(){
   if(cpComputed.disabled)return false;
   if(typeof window.BL_READ_MODEL_CP_COMPUTED==='boolean')return window.BL_READ_MODEL_CP_COMPUTED;
@@ -1615,7 +1615,8 @@ function scheduleCpComputedColumns(rows,revision,contextRevision,day){
     const fetched=performance.now();
     cpComputed.applied=null;
     const count=applyCpComputedColumns(rows,payload.columns,since);
-    cpComputed.applied={rows,token:payload.columns.token,lang};cpComputed.transient=0;
+    // readyOnce: sunucu barındırıcısı bu oturumda sıcak; pencereli CP yolu bundan sonra kullanılır (renderCPFromReadModel).
+    cpComputed.applied={rows,token:payload.columns.token,lang};cpComputed.transient=0;cpComputed.readyOnce=true;
     _unifiedPriorityCache.cp={rows,dataRevision:revision,contextRevision,day,source:'read-model'};
     _cpPriorityIndex=null;_cpPriorityIndexRevision+=1;
     try{window.dispatchEvent(new CustomEvent('bl:cp-priority-index-changed'));}catch(_){}
@@ -10915,6 +10916,11 @@ function renderCPFromReadModel(){
   applyCoreAutoFilterState();
   const spec=cpReadModelSpec();
   const supersede=()=>{cpRM.seq++;cpRM.facetsSeq++;};
+  /* Sunucu hesaplanmış sütunları bu oturumda henüz gelmedi (soğuk barındırıcı; 30k'da tam karar hesabı ~15 sn): pencereli
+     ilk pencere bu hesabı beklerdi (L2: CP açılışı 1,7 → 19 sn). İlk çizim eski yoldan, #1094 (A) ile aynı: öncelik/checklist
+     hücreleri "Hesaplanıyor…", öncelik filtresi/sıralaması açıksa yükleniyor durumu; yanıltıcı sonuç yok. İlk sonuç uygulanınca
+     (scheduleCpComputedColumns → renderCP) pencereli yol başlar; barındırıcı artık sıcaktır. */
+  if(!cpComputed.readyOnce){supersede();cpRM.legacyReason='computed-warming';return false;}
   if(!spec.ok){supersede();cpRM.legacyReason=spec.reason;window.BLPerf?.mark?.('CP_READ_MODEL_LEGACY',{reason:spec.reason});return false;}
   cpRM.legacyReason='';
   const feedback=document.getElementById('cpSearchFeedback');if(feedback){feedback.hidden=true;feedback.replaceChildren();}
