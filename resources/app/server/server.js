@@ -6368,7 +6368,10 @@ app.post('/api/backups/restore/inspect', userAccess.requireArea('source'), userA
 // /api/data?mode=initial) yerel arka uç Genel Bakış modelini ve modül projeksiyonlarını
 // kendi işçisinde boşta ısıtır. Diğer API çağrıları ön ısıtma başlatmaz (yan etkisiz).
 // Bağımlılıklar ilk kullanımda okunur (rota kayıtları aşağıdadır).
+// CP hesaplanmış sütun servisi (rota kaydı aşağıda); ön ısıtma ilk kullanımda okur.
+let cpComputedServiceGetter = null;
 const readModelPrewarm = require('./lib/read-model/prewarm-scheduler').createReadModelPrewarm({
+  getCpComputedService: () => cpComputedServiceGetter ? cpComputedServiceGetter() : null,
   getPool: () => require('./lib/read-model/read-model-pool').getReadModelPool(),
   userAccess,
   preferenceValue: (profile, key) => {
@@ -6423,7 +6426,7 @@ require('./lib/read-model/overview-model-routes')(app, {
 });
 // CP hesaplanmış sütunlar (#1078): POST /api/read-model/cp/computed. Test raporu görevleri
 // GET /api/test-reports/tasks ile aynı süzmeyle (yetkili siparişler) gelir.
-require('./lib/read-model/cp-computed-routes')(app, {
+cpComputedServiceGetter = require('./lib/read-model/cp-computed-routes')(app, {
   userAccess, apiError, ensureComputedProjection, getComputeReadGuard: () => computeReadGuard,
   contextSources: cpDecisionContextSources,
   testTasks: { list: () => require('./lib/test-reports/store').tasks(), authorizedOrders: profile => agentQualityAuthorizedOrders(profile) },

@@ -21,7 +21,7 @@ const FUNCTIONS=['norm','actionPriorityCode','unifiedPriorityRowActive','applyUn
   'cpComputedPending','cpComputedDependentKey','cpViewNeedsComputed','cpComputedPendingCell'];
 
 function load({flag=true,rows=4,server,deltaRow=0}={}){
-  const calls={fetch:[],decide:0,decideAsync:0,render:0,overview:0,flush:0,sync:0,marks:[]};
+  const calls={fetch:[],decide:0,decideAsync:0,render:0,overview:0,flush:0,sync:0,marks:[],timers:[]};
   const cpRows=Array.from({length:rows},(_,i)=>({_id:'r'+i,'Order Code':'O'+i,Priority:''}));
   const assistant={
     computeDecisionsForRows:list=>{calls.decide++;return {byRow:new Map(list.map(row=>[row,{priority:'CRITICAL'}]))};},
@@ -33,6 +33,7 @@ function load({flag=true,rows=4,server,deltaRow=0}={}){
       {cells:{__checklist__pps:'Bekliyor'},status:{pps:'open'},parts:{},elements:{},single:false,tasks:{}},row['Order Code'],'']),removed:[]}}}));
   const ctx={
     console,Map,Set,WeakMap,Promise,JSON,Object,Array,String,Number,Boolean,Error,Math,Date,queueMicrotask,AbortController,
+    setTimeout:(fn,ms)=>{calls.timers.push({fn,ms});return calls.timers.length;},
     performance:{now:()=>0},
     window:null,state:{cp:{rows:cpRows},cpDirty:new Set(),cpSort:{key:null,dir:1},colFilters:{cp:{}}},appLang:'tr',
     COLS_BY_TABLE:{cp:[{k:'Priority'},{k:'__checklist__pps',checklistSupplierColumn:true},{k:'f1',formulaCustom:true},{k:'Season'}]},
@@ -126,8 +127,38 @@ test('unsaved or in-flight CP edits keep the legacy client path; afterwards a fu
   assert.equal(calls.fetch.length,2);assert.equal(calls.fetch[1].body.since,undefined,'tam istek');
 });
 
+/* #1078 satır yaması: kayıt sürerken okuma bayatlarsa (409) ya da kuyruk doluysa (503) kullanıcıya hata yok:
+   önceki değerler satırlarda kalır, oturum kapanmaz, sınırlı sayıda yeniden istenir; yenisi gelince uygulanır. */
+test('transient 409 stale / 503 busy: previous result kept, no session fallback, bounded retry then job-only legacy',async()=>{
+  let mode='ok';
+  const t=load({server:(body)=>mode==='ok'?{status:200,json:{ok:true,columns:{version:1,lang:'tr',token:'t1',delta:false,total:4,
+    rows:['r0','r1','r2','r3'].map(id=>[id,'ACTION_TODAY','KNOWN',[],[],[],[],null,null,'O','']),removed:[]}}}
+    :mode==='stale'?{status:409,json:{ok:false,code:'COMPUTE_STALE_GENERATION'}}:{status:503,json:{ok:false,code:'COMPUTE_QUEUE_BUSY'}}});
+  assert.equal(await t.api.scheduleUnifiedPrioritiesForTable('cp'),true);
+  assert.equal(t.rows[0].Priority,'ACTION_TODAY');
+  mode='stale';t.ctx.__contextRevision=2;
+  assert.equal(await t.api.scheduleUnifiedPrioritiesForTable('cp'),false);
+  assert.equal(t.api.computed().disabled,false,'oturum kapanmadı');
+  assert.equal(t.calls.decideAsync,0,'eski yol çalışmadı');
+  assert.equal(t.rows[0].Priority,'ACTION_TODAY','önceki değer satırda kaldı');
+  assert.equal(t.calls.timers.length,1,'yeniden deneme planlandı');
+  // Yeniden deneme yeni değeri getirir; sayaç sıfırlanır.
+  mode='ok';t.calls.timers.shift().fn();
+  for(let i=0;i<20;i++)await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(t.calls.fetch.length,3);assert.equal(t.api.computed().transient,0);
+  // Sürekli geçici hata: sınırlı deneme, sonra yalnız bu hesap eski yolla; oturum yine açık.
+  mode='busy';t.ctx.__contextRevision=3;
+  await t.api.scheduleUnifiedPrioritiesForTable('cp');
+  for(let attempt=0;attempt<10&&t.calls.timers.length;attempt++){
+    t.calls.timers.shift().fn();for(let i=0;i<20;i++)await new Promise(resolve=>setImmediate(resolve));
+  }
+  assert.equal(t.calls.fetch.length,3+5,'ilk istek + 4 yeniden deneme');
+  assert.equal(t.calls.decideAsync,1,'tükenince bu hesap eski yolla');
+  assert.equal(t.api.computed().disabled,false,'oturum açık kaldı');
+});
+
 test('server error falls back to the legacy path for the session; row mismatch only for that job',async()=>{
-  const failing=load({server:()=>({status:503,json:{ok:false,code:'COMPUTE_QUEUE_BUSY'}})});
+  const failing=load({server:()=>({status:500,json:{ok:false,code:'COMPUTE_WORKER_FAILED'}})});
   assert.equal(await failing.api.scheduleUnifiedPrioritiesForTable('cp'),true);
   assert.equal(failing.calls.decideAsync,1,'eski yol hesapladı');
   assert.equal(failing.api.computed().disabled,true);

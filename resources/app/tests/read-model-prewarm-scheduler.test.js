@@ -44,11 +44,14 @@ function fakePool(){
       });
     }};
 }
-function setup({areas,session,quietMs=0}={}){
+function setup({areas,session,quietMs=0,cp=false,prefs={}}={}){
   const pool=fakePool(),userAccess=access({areas,session}),calls=[],projections=[];let prewarm;
   // Gerçek servis gibi: önce oturum/alan yakalanır (geçersiz oturum hesap başlatmaz).
   const service={async model(r,body,options){fakeGuard(userAccess).capture(r,'overview');calls.push({body,cookie:r.headers.cookie});const out=await prewarm.runCompute('read-model-overview',{parts:body.parts},{...options,ownerKey:'read-model',generation:'1',estimatedBytes:1});return {generation:'g',cached:false,body:JSON.stringify(out.value),timing:{}};}};
-  prewarm=createReadModelPrewarm({getPool:()=>pool,userAccess,guard:fakeGuard(userAccess),preferenceValue:()=>null,getOverviewService:()=>service,quietMs,
+  // CP hesaplanmış sütun servisi (#1078): gerçek servis gibi önce oturum/alan, sonra havuz.
+  const cpService={async computed(r,body,options){fakeGuard(userAccess).capture(r,'cp');calls.push({cp:body});const out=await prewarm.runCompute('read-model-cp-computed',{lang:body.lang},{...options,ownerKey:'read-model',generation:'1',estimatedBytes:1});return {generation:'g',cached:false,body:JSON.stringify(out.value),timing:{}};}};
+  prewarm=createReadModelPrewarm({getPool:()=>pool,userAccess,guard:fakeGuard(userAccess),preferenceValue:(_profile,key)=>prefs[key]??null,getOverviewService:()=>service,
+    getCpComputedService:cp?()=>cpService:null,quietMs,
     loadProjection:async(r,module)=>{projections.push(module);return {release(){}};},defer:fn=>fn(),wait:()=>tick()});
   return {pool,userAccess,calls,projections,prewarm,proxy:prewarm.overviewServiceProxy()};
 }
@@ -169,4 +172,36 @@ test('with the real single-worker pool a user query does not wait behind a specu
     const after=await prewarm.runCompute('read-model-query',{busyMs:1},opts);after.release();
     (await kept).release();
   }finally{await pool.close();}
+});
+
+/* #1078 satır yaması: CP hesabı oturum açılınca ısıtılır (ilk CP açılışı/filtre soğuk hesap beklemez).
+   Kullanıcının CP okuması süren CP ısıtmasını kesmez (kesmek işçiyi emekli eder; aynı hesap soğuk baştan). */
+test('CP computed columns are warmed after Overview with the saved language; CP reads join a running CP warm',async()=>{
+  const h=setup({cp:true,prefs:{'lcw.lang.v1':'en'}});h.prewarm.noteSession(req());
+  await until(()=>h.pool.jobs.length===1);h.pool.jobs[0].resolve({});
+  await until(()=>h.pool.jobs.length===2);h.pool.jobs[1].resolve({});
+  await until(()=>h.pool.jobs.length===3);
+  const warm=h.pool.jobs[2];
+  assert.equal(warm.task,'read-model-cp-computed');assert.equal(warm.options.priority,'background');
+  assert.deepEqual(h.calls.at(-1),{cp:{version:1,lang:'en'}},'istemcinin ilk gövdesi (kayıtlı dil)');
+  // Kullanıcının CP okuması ısıtmayı kesmez; Siparişler sorgusu keserdi.
+  const read=h.prewarm.runCompute('read-model-cp-query',{},{ownerKey:'read-model',generation:'1',estimatedBytes:1});
+  await tick();
+  assert.equal(warm.done,false,'CP ısıtması iptal edilmedi');assert.equal(h.prewarm.stats().preempted,0);
+  warm.resolve({});h.pool.jobs.at(-1).resolve({});await read;
+  await until(()=>h.prewarm.statusFor(req()).state==='done');
+  assert.equal(h.prewarm.statusFor(req()).cp,'ready');
+  assert.deepEqual(h.projections,['cp','orders','collection-catalog']);
+});
+test('CP warm is skipped without the CP area or when the user turned server computed columns off',async()=>{
+  const noArea=setup({cp:true,areas:['overview']});noArea.prewarm.noteSession(req());
+  await until(()=>noArea.pool.jobs.length===1);noArea.pool.jobs[0].resolve({});
+  await until(()=>noArea.pool.jobs.length===2);noArea.pool.jobs[1].resolve({});
+  await until(()=>noArea.prewarm.statusFor(req()).state==='done');
+  assert.equal(noArea.prewarm.statusFor(req()).cp,'skipped');assert.equal(noArea.pool.jobs.length,2);
+  const optOut=setup({cp:true,prefs:{'bl.cpComputed.v1':'0'}});optOut.prewarm.noteSession(req());
+  await until(()=>optOut.pool.jobs.length===1);optOut.pool.jobs[0].resolve({});
+  await until(()=>optOut.pool.jobs.length===2);optOut.pool.jobs[1].resolve({});
+  await until(()=>optOut.prewarm.statusFor(req()).state==='done');
+  assert.equal(optOut.prewarm.statusFor(req()).cp,'disabled');assert.equal(optOut.pool.jobs.length,2);
 });

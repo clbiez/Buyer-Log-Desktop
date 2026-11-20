@@ -134,3 +134,40 @@ test('Codex #1090 P2: selection actions wait for full CP rows when the windowed 
   assert.match(SOURCE,/selectionNeedsRows:cpRMSelectionNeedsRows,\s*loadRowsForSelection:cpRMLoadRowsForSelection,/);
   assert.match(slice('function cpRMPaintTable(){','function cpRMFooterSpec(){'),/onSelectionChange:\(\)=>\{if\(cpRMSelectionNeedsRows\(\)\)cpRMLoadRowsForSelection\(\);updateShippingBtnVisibility\(\);\}/);
 });
+
+/* #1078 satır yaması: kayıt sürerken pencere/sayaç okuması bayatlarsa (409) ya da kuyruk doluysa (503)
+   kullanıcı hata görmez; önceki sonuç kalır ve sınırlı sayıda yeniden istenir. */
+test('transient 409/503: window and counts retry silently (bounded); the first window keeps the previous table without a toast',async()=>{
+  const timers=[],warnings=[];let failures=2;
+  const stale=()=>Object.assign(new Error('stale'),{code:'COMPUTE_STALE_GENERATION',status:409});
+  const ctx=vm.createContext({Math,Map,Set,Promise,Error,Object,console:{warn:(...a)=>warnings.push(a)},
+    setTimeout:(fn,ms)=>{timers.push({fn,ms});return timers.length;},__stale:stale,
+    __fetch:async()=>{if(failures-->0)throw stale();return {offset:100,rows:[{_id:'x'}],computed:[]};}});
+  vm.runInContext(`${slice('const CP_RM_TRANSIENT_RETRIES=','/* Kayıt anında yalnız')}
+    const CP_RM_WINDOW=100;var cpRM={total:1000,windows:new Set(),pending:new Map(),signature:'s1',rows:new Array(1000)};
+    function cpRMFetchRange(){return __fetch();}
+    function cpRMPlace(offset,rows){for(let i=0;i<rows.length;i++)cpRM.rows[offset+i]=rows[i];}
+    function cpRMDecorate(rows){return rows;}let repaints=0;function cpRMScheduleRepaint(){repaints++;}
+    ${extractFunction(SOURCE,'cpRMEnsureWindow')}
+    globalThis.api={ensure:cpRMEnsureWindow,state:()=>cpRM,repaints:()=>repaints,transient:cpRMTransientError};`,ctx);
+  assert.equal(ctx.api.transient({code:'COMPUTE_STALE_GENERATION',status:409}),true);
+  assert.equal(ctx.api.transient({code:'SOURCE_FILTER_REQUIRED',status:409}),false,'kaynak filtresi gereksinimi geçici değildir');
+  assert.equal(ctx.api.transient({status:503}),true);assert.equal(ctx.api.transient({status:400}),false);
+  assert.equal(await ctx.api.ensure(1),false);
+  assert.equal(warnings.length,0,'kullanıcıya/konsola hata yok');
+  assert.equal(timers.length,1);
+  timers.shift().fn();await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(timers.length,1,'ikinci geçici hata da sessizce yeniden denendi');
+  timers.shift().fn();for(let i=0;i<5;i++)await new Promise(resolve=>setImmediate(resolve));
+  assert.ok(ctx.api.state().windows.has(1),'pencere yeni sonuçla yerleşti');assert.equal(ctx.api.repaints(),1);
+  // Sürekli geçici hata: sınırlı deneme sonra uyarı (sonsuz döngü yok).
+  failures=100;ctx.api.state().windows.delete(1);
+  await ctx.api.ensure(1);
+  for(let n=0;n<10&&timers.length;n++){timers.shift().fn();for(let i=0;i<5;i++)await new Promise(resolve=>setImmediate(resolve));}
+  assert.equal(timers.length,0);assert.equal(warnings.length,1);
+  // İlk pencere ve sayaçlar: geçici hata önceki tabloyu korur, uyarı göstermez, yeniden çizer.
+  const first=slice('function renderCPFromReadModel(){','/* Tümünü seç');
+  assert.match(first,/if\(cpRMTransientError\(error\)&&\(cpRM\.transient=\(cpRM\.transient\|\|0\)\+1\)<=CP_RM_TRANSIENT_RETRIES\)\{\s*setTimeout\(\(\)=>\{if\(seq!==cpRM\.seq\)return;if\(currentActiveTab\(\)==='cp'\)renderCP\(\);else _deferredTabRenders\.add\('cp'\);\},cpRMRetryDelay\(cpRM\.transient\)\);\s*return;\s*\}/);
+  assert.ok(first.indexOf('cpRMTransientError(error)')<first.indexOf('showToast(message)'),'geçici hata uyarıdan önce ele alınır');
+  assert.match(slice('function cpRMRequestFacets(','// D1 ölçümü'),/if\(cpRMTransientError\(error\)&&attempt<CP_RM_TRANSIENT_RETRIES\)\{\s*setTimeout\(\(\)=>\{if\(seq===cpRM\.facetsSeq&&signature===cpRM\.signature\)cpRMRequestFacets\(spec,signature,attempt\+1\);\}/);
+});
