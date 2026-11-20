@@ -31,7 +31,7 @@ function load({flag=true,rows=4,server,deltaRow=0}={}){
     rows:(body.since?cpRows.slice(deltaRow,deltaRow+1):cpRows).map(row=>[row._id,'ACTION_TODAY','KNOWN',['TAG'],[],[{code:'R1'}],[{code:'S'}],null,
       {cells:{__checklist__pps:'Bekliyor'},status:{pps:'open'},parts:{},elements:{},single:false,tasks:{}},row['Order Code'],'']),removed:[]}}}));
   const ctx={
-    console,Map,Set,WeakMap,Promise,JSON,Object,Array,String,Number,Boolean,Error,Math,Date,
+    console,Map,Set,WeakMap,Promise,JSON,Object,Array,String,Number,Boolean,Error,Math,Date,queueMicrotask,
     performance:{now:()=>0},
     window:null,state:{cp:{rows:cpRows},cpDirty:new Set()},appLang:'tr',
     __contextRevision:1,
