@@ -772,6 +772,23 @@
       }
     },
     {
+      "id": "cp-row-save-conflict",
+      "type": "improvement",
+      "module": {"tr": "CP Tracker", "en": "CP Tracker"},
+      "title": {"tr": "CP düzenlemeleri satır bazında kaydedilir (pilot)", "en": "CP edits are saved per row (pilot)"},
+      "body": {
+        "tr": "Pilot ayarı açıkken CP'de bir hücre düzenlemesi yalnız değiştirdiğiniz alanı kaydeder. Başka bir kullanıcının başka satıra ya da aynı satırın başka alanına yaptığı kayıt artık sizin kaydınızı reddettirmez; sizin kaydınız da onlarınkini ezmez. Aynı alanı biri sizden önce değiştirdiyse onun değeri satırda gösterilir ve bir bildirimle haber verilir; düzenleme sessizce kaybolmaz. Kayıttan sonra yalnız etkilenen satırların öncelik ve checklist değerleri yeniden hesaplanır. Toplu yapıştırma, Licensor ve Supp. FOB mevcut yolla kaydedilir. Ayar varsayılan olarak kapalıdır.",
+        "en": "With the pilot setting on, a CP cell edit saves only the field you changed. A save by another user to another row, or to another field of the same row, no longer rejects your save, and your save does not overwrite theirs. If someone changed the same field before you, their value is shown in the row and a notice tells you; the edit is not lost silently. After a save, priority and checklist values are recalculated only for the affected rows. Bulk paste, Licensor and Supp. FOB are saved through the existing path. The setting is off by default."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-row-save-conflict.png",
+        "alt": {"tr": "Pilot ayarı açık CP Tracker: aynı notu başka sekme önce kaydettiği için gösterilen çakışma bildirimi", "en": "CP Tracker with the pilot setting on: the conflict notice shown because another tab saved the same note first"},
+        "caption": {"tr": "Demo veride iki sekme aynı notu aynı anda yazdı; kazanan değer satırda gösterilir, diğer sekmeye bildirim çıkar.", "en": "On demo data two tabs wrote the same note at once; the winning value is shown in the row and the other tab gets a notice."}
+      }
+    },
+    {
       "id": "read-model-backend-prewarm",
       "type": "improvement",
       "module": {"tr": "Genel Bakış", "en": "Overview"},
