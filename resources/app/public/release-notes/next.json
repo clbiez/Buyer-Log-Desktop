@@ -12,6 +12,26 @@
   },
   "changes": [
     {
+      "id": "collection-hidden-tab-render-deferred",
+      "type": "improvement",
+      "module": {"tr": "Koleksiyon", "en": "Collection"},
+      "title": {
+        "tr": "Koleksiyon, sekmesi açılmadan çizilmez",
+        "en": "Collection is not drawn until its tab is opened"
+      },
+      "body": {
+        "tr": "Açılışta ve başka bir sayfadayken gelen güncellemelerde Koleksiyon tablosu arka planda çizilmez. Çizim, Koleksiyon sekmesine geçtiğinizde yapılır. Royalty, Hologram, FOB, PLM, OPD ve Licensor hesapları ile kayıt eskisi gibi hemen yapılır ve diğer kullanıcılara aynı anda ulaşır.",
+        "en": "At startup and when updates arrive while you are on another page, the Collection table is no longer drawn in the background. It is drawn when you switch to the Collection tab. Royalty, Hologram, FOB, PLM, OPD and Licensor calculations and saving still happen immediately and reach other users at the same time."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; Koleksiyon aynı tabloyu gösterir, yalnız çizim sekme açılınca yapılır.",
+          "en": "There is no change on screen; Collection shows the same table and is only drawn when its tab is opened."
+        }
+      }
+    },
+    {
       "id": "backlog-overview-delivery-read-model",
       "type": "improvement",
       "module": {
