@@ -60,6 +60,10 @@ function parseArgs(argv) {
     earlyDelayMs: int('--early-delay-ms', 0, 0),
     collectionRows: int('--collection-rows', 0, 0),
     backlogSettle: argv.includes('--backlog-settle'),
+    // #1079 WS6d (opt-in): CP Fiyat Çalışması satır sayısı (× 2 üretici), Açık Maliyet kaydı ve yazma metni.
+    quotationCpRows: int('--quotation-cp-rows', 0, 0),
+    openCostingRecords: int('--opencosting-records', 0, 0),
+    openCostingType: value('--opencosting-type', ''),
     flags: Object.fromEntries(argv.flatMap((arg, i) => (arg === '--flag' ? [argv[i + 1]] : [])).map(pair => {
       const at = String(pair || '').indexOf('=');
       if (at < 1) throw Error('Invalid --flag (NAME=JSON): ' + pair);
@@ -96,6 +100,7 @@ function flatMetrics(run) {
   for (const m of run.modules || []) {
     out[`module.${m.module}.openMs`] = m.timedOut ? null : m.openMs;
     out[`module.${m.module}.longTaskMaxMs`] = m.longTasks?.maxMs;
+    if (['cpquotations', 'opencosting', 'opencosting-type'].includes(m.module)) out[`module.${m.module}.longTaskTotalMs`] = m.longTasks?.totalMs;
     if (m.settle) Object.assign(out, { [`module.${m.module}.settledMs`]: m.settle.state === 'ready' ? m.settle.settledMs : null,
       [`module.${m.module}.settleLongTaskTotalMs`]: m.settle.longTasks?.totalMs, [`module.${m.module}.settleLongTaskMaxMs`]: m.settle.longTasks?.maxMs,
       [`module.${m.module}.settleLongTaskCount`]: m.settle.longTasks?.count, [`module.${m.module}.settleLagOver200`]: m.settle.eventLoopLag?.over200Count });
