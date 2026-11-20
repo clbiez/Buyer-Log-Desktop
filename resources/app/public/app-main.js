@@ -11454,9 +11454,10 @@ function ordersRecordRowsVisible(path,started,detail={}){
      - revizyon filtresi, hızlı Ex-factory dönemi
      - parsiyel görünüm, açık lojistik detay, "işaretsizler" filtresi
      - kullanıcının eklediği hızlı filtre grupları
-   Anahtar kapalıyken (varsayılan) eski yol aynen çalışır.
-   Açma: BLOrdersReadModel.setEnabled(true) (kullanıcı başına BLStorage 'bl.ordersReadModel.v1')
-   ya da ölçüm/test için sayfa betiklerinden önce window.BL_ORDERS_READ_MODEL=true. */
+   Varsayılan AÇIK (#1071 WS7: Siparişler sorguları kısa sorgu şeridinde, CP hesabının arkasında
+   beklemez). Geri dönüş: BLOrdersReadModel.setEnabled(false) (kullanıcı başına BLStorage
+   'bl.ordersReadModel.v1'='0') ya da sayfa betiklerinden önce window.BL_ORDERS_READ_MODEL=false;
+   kapalıyken eski yol aynen çalışır. */
 const ORDERS_RM_STORAGE_KEY='bl.ordersReadModel.v1';
 const ORDERS_RM_WINDOW=200;
 const ORDERS_RM_PREFETCH=2;
@@ -11478,7 +11479,7 @@ let ordersRMEnabledCache=null;
 function ordersReadModelEnabled(){
   if(typeof window.BL_ORDERS_READ_MODEL==='boolean')return window.BL_ORDERS_READ_MODEL;
   if(ordersRMEnabledCache===null){
-    try{ordersRMEnabledCache=(window.BLStorage||localStorage).getItem(ORDERS_RM_STORAGE_KEY)==='1';}catch(_){ordersRMEnabledCache=false;}
+    try{ordersRMEnabledCache=(window.BLStorage||localStorage).getItem(ORDERS_RM_STORAGE_KEY)!=='0';}catch(_){ordersRMEnabledCache=true;}
   }
   return ordersRMEnabledCache;
 }

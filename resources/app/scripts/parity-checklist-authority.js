@@ -1,7 +1,7 @@
 'use strict';
 
 /*
- * #1079 WS6 — checklist yetki çözümü paritesi. Yalnız sentetik demo verisi.
+ * #1079 WS6 — checklist ve test raporu yetki çözümü paritesi. Yalnız sentetik demo verisi.
  *
  *   node scripts/parity-checklist-authority.js DIR [DIR...]
  *     DIR: scripts/generate-demo-data.js çıktısı (ASAS - Demo.xlsx, Antrepo - Demo.xlsx)
@@ -72,7 +72,7 @@ function context({ orders, antrepo }, scope) {
     canUserEditOrderCode: (_p, code) => scope === 'moderator' || ((byCode.get(String(code)) || []).every(inScope) && Number(crypto.createHash('md5').update(String(code)).digest()[0]) % 3 !== 0),
   };
   vm.createContext(c);
-  vm.runInContext(['checklistIdentityRowsEnabled', 'orderIdentityRowsFromASAS', 'agentQualityLiveProfile', 'agentQualityOrderRowsNow', 'checklistAuthorizedOrdersNow'].map(fn).join('\n'), c);
+  vm.runInContext(['checklistIdentityRowsEnabled', 'orderIdentityRowsFromASAS', 'agentQualityLiveProfile', 'agentQualityOrderRowsNow', 'checklistAuthorizedOrdersNow', 'agentQualityAuthorizedOrdersNow'].map(fn).join('\n'), c);
   return { c, profile };
 }
 
@@ -83,7 +83,11 @@ function run(fixture, scope, identity) {
     const { c, profile } = context(fixture, scope);
     const t0 = performance.now(), read = c.checklistAuthorizedOrdersNow(profile), t1 = performance.now();
     const write = c.checklistAuthorizedOrdersNow(profile, { write: true }), t2 = performance.now();
-    return { read: mapDigest(read), write: mapDigest(write), readSize: read.size, writeSize: write.size, readMs: Math.round(t1 - t0), writeMs: Math.round(t2 - t1) };
+    // Test raporu: servis authorityHash'i Map sırasıyla hash'ler (digest([...current])); sıra da korunmalı.
+    const reportRead = c.agentQualityAuthorizedOrdersNow(profile), t3 = performance.now();
+    const reportWrite = c.agentQualityAuthorizedOrdersNow(profile, { write: true }), t4 = performance.now();
+    return { read: mapDigest(read), write: mapDigest(write), readSize: read.size, writeSize: write.size, readMs: Math.round(t1 - t0), writeMs: Math.round(t2 - t1),
+      reportRead: sha([...reportRead]), reportWrite: sha([...reportWrite]), reportReadSize: reportRead.size, reportWriteSize: reportWrite.size, reportReadMs: Math.round(t3 - t2), reportWriteMs: Math.round(t4 - t3) };
   } finally {
     if (previous === undefined) delete process.env.BUYER_LOG_CHECKLIST_AUTH_IDENTITY_ROWS; else process.env.BUYER_LOG_CHECKLIST_AUTH_IDENTITY_ROWS = previous;
   }
@@ -96,10 +100,13 @@ for (const dir of dirs) {
   const fixture = loadFixture(dir);
   for (const scope of ['moderator', 'buyer']) {
     const legacy = run(fixture, scope, false), identity = run(fixture, scope, true);
-    const ok = legacy.read === identity.read && legacy.write === identity.write && legacy.readSize > 0;
+    const ok = legacy.read === identity.read && legacy.write === identity.write && legacy.readSize > 0
+      && legacy.reportRead === identity.reportRead && legacy.reportWrite === identity.reportWrite && legacy.reportReadSize > 0;
     failed ||= !ok;
     console.log(JSON.stringify({ rows: fixture.orders.length, scope, ok, readSize: identity.readSize, writeSize: identity.writeSize,
-      readHash: identity.read.slice(0, 16), writeHash: identity.write.slice(0, 16), legacyMs: { read: legacy.readMs, write: legacy.writeMs }, identityMs: { read: identity.readMs, write: identity.writeMs } }));
+      readHash: identity.read.slice(0, 16), writeHash: identity.write.slice(0, 16), legacyMs: { read: legacy.readMs, write: legacy.writeMs }, identityMs: { read: identity.readMs, write: identity.writeMs },
+      report: { readSize: identity.reportReadSize, writeSize: identity.reportWriteSize, readHash: identity.reportRead.slice(0, 16), writeHash: identity.reportWrite.slice(0, 16),
+        legacyMs: { read: legacy.reportReadMs, write: legacy.reportWriteMs }, identityMs: { read: identity.reportReadMs, write: identity.reportWriteMs } } }));
   }
 }
 process.exit(failed ? 1 : 0);
