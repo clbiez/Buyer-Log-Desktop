@@ -82,6 +82,12 @@ function hostScopeOf(captured,context){
   if(captured.userId==null||captured.accessHash==null||!context||!Object.hasOwn(context,'revision'))return hash(JSON.stringify([captured.key,'cp-computed']));
   return hash(JSON.stringify([String(captured.userId),String(captured.accessHash),context.revision,'cp-computed']));
 }
+/* Veri kümesi önbelleği kapsamı: aynı kapsamın eski nesilleri işçide anında düşer. Veri sürümüne bağlı olursa
+   her düzenleme yeni kapsam açar, eski 30k veri kümeleri birikir ve işçi bellek bütçesini aşıp yeniden başlar. */
+function datasetScopeOf(captured){
+  if(captured.userId==null||captured.accessHash==null)return hash(JSON.stringify([captured.key,'cp-overview']));
+  return hash(JSON.stringify([String(captured.userId),String(captured.accessHash),'cp-overview']));
+}
 function createCpComputedService({guard,loadProjection,runCompute,loadContext,loadTasks=async()=>[],today=localDay,maxEntries=8,maxBytes=96*1024*1024}){
   if(!guard||typeof loadProjection!=='function'||typeof runCompute!=='function'||typeof loadContext!=='function'||typeof loadTasks!=='function')
     throw TypeError('Invalid CP computed service dependencies');
@@ -119,7 +125,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
       captured.assertResponse();lease.assertResponse?.();
       const generation=generationOf(lease);
       // Veri kümesi WS2a Genel Bakış ile aynı anahtardadır (tarayıcı biçiminde CP satırları).
-      const datasetKey=hash(JSON.stringify([captured.key,'cp-overview',generation])),datasetScope=hash(JSON.stringify([captured.key,'cp-overview']));
+      const datasetKey=hash(JSON.stringify([captured.key,'cp-overview',generation])),datasetScope=datasetScopeOf(captured);
       const contextKey=hash(JSON.stringify([String(context.key),tasks,request.answers]));
       const scope=JSON.stringify([captured.key,'cp-computed']);
       // Kararlar yerel güne bağlıdır (istemcide de önbellek gün değişince düşer).
@@ -177,7 +183,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
       const service={leaseMs:Math.round(t1-t0),contextMs:Math.round(performance.now()-t1)};
       captured.assertResponse();lease.assertResponse?.();
       const generation=generationOf(lease);
-      const datasetKey=hash(JSON.stringify([captured.key,'cp-overview',generation])),datasetScope=hash(JSON.stringify([captured.key,'cp-overview']));
+      const datasetKey=hash(JSON.stringify([captured.key,'cp-overview',generation])),datasetScope=datasetScopeOf(captured);
       const contextValue=request.answers?{...context.value,answers:overlayAnswers(context.value&&context.value.answers,request.answers)}:context.value;
       const base={dataset:{datasetKey,scopeKey:datasetScope},scopeKey:hostScopeOf(captured,context),lang:request.lang,context:contextValue,tasks,kind,request:spec};
       const value=lease.value||{},compressed=Buffer.isBuffer(value.buffer)?value.buffer.length:Number(value.buffer&&value.buffer.byteLength)||0;

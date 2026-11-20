@@ -290,12 +290,13 @@ async function execute(payload,deps){
   // (istemci araya giren bağlam olayıyla bir sonucu atmış olabilir). Satır başına yalnız özet tutulur.
   // Delta: aynı barındırıcının son HISTORY sonucuna göre. Yeni nesilde (düzenleme sonrası) kimlik eşlemesi
   // (_id → satır) aynıysa delta geçerlidir; istemci yalnız değişen satırları alır.
-  const previous=payload.since?entry.history.find(item=>item.token===payload.since&&(item.rows===rows||(item.identity&&item.identity===current.identity))):null,delta=Boolean(previous);
+  const previous=payload.since?entry.history.find(item=>item.token===payload.since&&item.identity===current.identity):null,delta=Boolean(previous);
   const parts=[],removed=[];
   for(const [id,json] of serialized)if(!delta||previous.digests.get(id)!==digests.get(id))parts.push(json);
   if(delta)for(const id of previous.digests.keys())if(!serialized.has(id))removed.push(id);
   const token=crypto.randomBytes(9).toString('base64url');
-  entry.history.unshift({token,rows,digests,identity:current.identity});entry.history.length=Math.min(entry.history.length,HISTORY);
+  // Eski neslin satırları tutulmaz (barındırıcı nesiller boyu yaşar; bellek bütçesi): kimlik parmak izi yeterli.
+  entry.history.unshift({token,digests,identity:current.identity});entry.history.length=Math.min(entry.history.length,HISTORY);
   const lang=payload.lang==='en'?'en':'tr';
   const body=`{"version":1,"lang":${JSON.stringify(lang)},"token":${JSON.stringify(token)},"delta":${delta?'true':'false'},"total":${serialized.size},"fields":${JSON.stringify(FIELDS)},"rows":[${parts.join(',')}],"removed":${JSON.stringify(removed)}}`;
   return {body,timing:{loadMs:loads.cp||0,queryMs:performance.now()-started-(loads.cp||0),totalMs:performance.now()-started,rows:rows.length,

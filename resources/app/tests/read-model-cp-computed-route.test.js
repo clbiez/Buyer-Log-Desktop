@@ -264,6 +264,11 @@ test('an edit (new generation, new data version) keeps the decision host and rec
   assert.ok(!(second.timing.phases.hostMs>0),'barındırıcı yeniden kurulmadı');
   assert.equal(second.timing.phases.incremental.changed,1,JSON.stringify(second.timing.phases.incremental));
   assert.ok(second.timing.phases.incremental.targets<before.size,'yalnız etkilenen satırlar');
+  // Eski neslin veri kümesi işçide birikmez (veri sürümü kapsamı açmaz; bellek bütçesi aşılıp işçi yeniden başlamaz).
+  assert.equal(worker.cache.stats().entries,1,'aynı kullanıcı/yetki kapsamının eski nesli düştü');
+  // Delta düzenlemeden sonra da çalışır (geçmiş eski satırları tutmaz; kimlik parmak izi yeter).
+  const delta=columns(await service.computed(req(users.moderator),{version:1,since:columns(first).token}));
+  assert.equal(delta.delta,true);assert.ok(delta.rows.length<before.size,`delta ${delta.rows.length}`); // not hesaplanmış sütunlara girmez: boş delta doğru
   // Tam hesapla aynı sonuç.
   worker.cache.clear();task.clearHosts();
   const fresh=harness({realGuard:true});fresh.state.mutate=state.mutate;
