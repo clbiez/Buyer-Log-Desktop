@@ -10318,7 +10318,7 @@ require('./lib/read-model/cp-row-save').registerCpRowSaveRoute(app,{
   ensureAutomaticDateSource:async(req,items)=>{if(items.some(item=>Object.prototype.hasOwnProperty.call(item.patch.dates||{},'exFactory'))&&!Array.isArray(cacheForUser(req.currentUser).asasOrders))await ensureDataLoaded(req.currentUser);},
   notifyShared:user=>{void sharedRevisionStore.update('cpOverrides',{actorId:user.id}).catch(error=>logRuntimeFailure('sharedRevision',error));},
   appendAudit:(user,action,target,detail)=>userAccess.appendAudit(user,action,target,detail),
-  notifyLive:(req,rowPatches)=>liveEvents.notifyChange('orders',requestClientId(req),{rowPatches}),
+  notifyLive:(req,patches)=>liveEvents.notifyChange('orders',requestClientId(req),{rowPatches:patches}),
 });
 
 async function rewriteProjectionCacheForImageItems(currentUser,beforeContext,items){

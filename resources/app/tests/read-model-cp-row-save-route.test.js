@@ -106,7 +106,7 @@ test('server.js registers the route with the same gates and side effects as the 
   for(const name of ['rejectUnauthorizedOrders','rejectSharedOwnerWrites','assertAutomaticDatesReadOnly','pageProjectionContext','queueProjectionCacheRowPatches','liveRowPatchesFor','noteActorOf'])
     assert.match(block,new RegExp(`\\b${name}\\b`),name);
   assert.match(block,/sharedRevisionStore\.update\('cpOverrides'/);
-  assert.match(block,/liveEvents\.notifyChange\('orders',requestClientId\(req\),\{rowPatches\}\)/);
+  assert.match(block,/liveEvents\.notifyChange\('orders',requestClientId\(req\),\{rowPatches:patches\}\)/);
   assert.match(block,/patchOrderOverrideRows/);
   // Oturum kapısı (requireSelection) /api altındaki rotalardan önce kurulur.
   const gate=src.indexOf('app.use(userAccess.requireSelection);');
