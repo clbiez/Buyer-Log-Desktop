@@ -144,6 +144,8 @@ test('BLStorage ile okunan her ön ek ya kullanıcıya ayrılır ya da bilinçli
     'bl.trivia.',
     // Koleksiyon SAHİBİNİN kimliğiyle anahtarlanan ortak iş verisi önbelleği.
     'bl.collection.workspace.', 'bl.collection.pending.',
+    // #1075: okuma modeli geri dönüş anahtarı cihaz düzeyindedir (kullanıcı tercihi değil).
+    'buyerlog.readModel.',
   ];
   const storage = boot(nativeStore(), 'ayse');
   const files = fs.readdirSync(PUBLIC).filter(name => name.endsWith('.js'));

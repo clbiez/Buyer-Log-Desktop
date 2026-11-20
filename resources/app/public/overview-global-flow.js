@@ -294,11 +294,13 @@ function cpPriorityFor(rec){
   if(!index||typeof index.lookup!=='function')return null;
   try{return index.lookup(rec.orderCode,rec.model,rec.colourCode);}catch(_){return null;}
 }
-function backlogActionPriority(row){
+// Ham motor çıktısı; koda çevirme (kullanıcı kataloğu) istemcide yapılır.
+function backlogEnginePriority(row){
   const engine=(typeof globalThis!=='undefined'&&globalThis.BLBacklogDeliveryEngine)||null;
   if(!engine||typeof engine.analyzeOrder!=='function'||!row||!row._backlogExcel)return '';
-  try{const result=engine.analyzeOrder(row);return actionPriorityCode(result&&(result.actionPriority||result.priority));}catch(_){return '';}
+  try{const result=engine.analyzeOrder(row);return result&&(result.actionPriority||result.priority)||'';}catch(_){return '';}
 }
+function backlogActionPriority(row){return actionPriorityCode(backlogEnginePriority(row));}
 function vesselKey(value){return norm(value);}
 function orderKeyOf(rec){
   const order=norm(rec&&rec.orderCode);if(!order)return '';
@@ -312,7 +314,7 @@ function partialIdentity(rec,segmentIndex){
   if(rec&&rec.partialKind)return prefix+rec.partialKind+'@'+(segmentIndex!=null?segmentIndex:(rec.rowIndex||0));
   return prefix+'row#'+String(rec&&rec.rowIndex!=null?rec.rowIndex:0);
 }
-function normalizeRecord(row,source,index,resolver){
+function normalizeRecord(row,source,index,resolver,deferPriority){
   const get=typeof resolver==='function'?resolver:createFieldResolver(source);
   const src=row||{},meta=src._backlogExcel&&typeof src._backlogExcel==='object'?src._backlogExcel:null,partial=src._partial&&typeof src._partial==='object'?src._partial:null;
   const modeRaw=clean(get(src,'mode')),mode=detectMode(modeRaw);
@@ -353,32 +355,46 @@ function normalizeRecord(row,source,index,resolver){
     exFactory:dateText(get(src,'exFactory')),
     transitDays:Math.max(0,meta&&Number(meta.transitDays)>0?Number(meta.transitDays):toNumber(get(src,'transitDays'))),
     priority,
-    actionPriority:actionPriorityCode(priority),
+    actionPriority:'',
     trackingTags:[],
     origin:countryCoordinate(country),
     raw:src
   };
-  const shared=source==='cp'?null:cpPriorityFor(rec);
-  if(!rec.actionPriority&&shared&&shared.priority)rec.actionPriority=shared.priority;
-  if(!rec.actionPriority)rec.actionPriority=backlogActionPriority(src);
-  const ownTags=Array.isArray(src._trackingTags)?src._trackingTags:(shared&&Array.isArray(shared.trackingTags)?shared.trackingTags:[]);
-  rec.trackingTags=[...new Set(ownTags.map(clean).filter(Boolean))].filter(code=>code!==rec.actionPriority);
-  const matchedTags=Array.isArray(src._priorityTags)?src._priorityTags:(shared?.priorityTags||[]);
-  const OD=globalThis.BLOrderDecisionEngine;
-  rec.priorityTags=OD?.resolvePriorityTags?OD.resolvePriorityTags(rec.actionPriority,matchedTags,rec.trackingTags).visible:[...new Set([rec.actionPriority,...matchedTags,...rec.trackingTags].filter(Boolean))];
+  const input={own:priority,trackingTags:Array.isArray(src._trackingTags)?src._trackingTags:null,priorityTags:Array.isArray(src._priorityTags)?src._priorityTags:null};
+  /* Okuma modeli (#1075): arka uç kaydı CP öncelik dizini olmadan normalleştirir;
+     öncelik girdisi kayıtla taşınır ve istemcide applyRecordPriority ile aynı
+     sırayla çözülür (kendi öncelik → CP ortak dizin → Backlog motoru). */
+  if(deferPriority){input.backlog=backlogEnginePriority(src);rec._priorityInput=input;}
+  else applyRecordPriority(rec,input,()=>backlogActionPriority(src));
   rec.vesselKey=vesselKey(rec.vesselName);
   rec.orderKey=orderKeyOf(rec);
-  rec.critical=rec.actionPriority==='CRITICAL';
   rec.state=classifyState(rec.status,rec.mode,null,toNumber(get(src,'receivedQty'))+toNumber(get(src,'warehouseReadyQty')));
   rec.id=partialIdentity(rec);
+  return rec;
+}
+/* Öncelik çözümü tek yerde: eski yol (normalizeRecord) ve arka uç kaydının
+   istemci hidrasyonu aynı fonksiyonu çağırır. `backlog` ham motor çıktısıdır
+   veya tembel hesaplayan fonksiyondur. */
+function applyRecordPriority(rec,input,backlog){
+  const own=input&&input.own||'';
+  rec.actionPriority=actionPriorityCode(own);
+  const shared=rec.source==='cp'?null:cpPriorityFor(rec);
+  if(!rec.actionPriority&&shared&&shared.priority)rec.actionPriority=shared.priority;
+  if(!rec.actionPriority)rec.actionPriority=typeof backlog==='function'?backlog():actionPriorityCode(backlog);
+  const ownTags=input&&Array.isArray(input.trackingTags)?input.trackingTags:(shared&&Array.isArray(shared.trackingTags)?shared.trackingTags:[]);
+  rec.trackingTags=[...new Set(ownTags.map(clean).filter(Boolean))].filter(code=>code!==rec.actionPriority);
+  const matchedTags=input&&Array.isArray(input.priorityTags)?input.priorityTags:(shared?.priorityTags||[]);
+  const OD=globalThis.BLOrderDecisionEngine;
+  rec.priorityTags=OD?.resolvePriorityTags?OD.resolvePriorityTags(rec.actionPriority,matchedTags,rec.trackingTags).visible:[...new Set([rec.actionPriority,...matchedTags,...rec.trackingTags].filter(Boolean))];
+  rec.critical=rec.actionPriority==='CRITICAL';
   return rec;
 }
 /* CP/Orders satırı sipariş seviyesindedir; gerçek sevkiyat birimleri
    `_logisticSegments` içindeki IAS parsiyelleri + üretim/eksik yükleme
    bakiyeleridir. Her segment kendi statü, miktar, yükleme tipi, handover ve
    parsiyel kimliğiyle ayrı kayıt olur; sipariş alanları paylaşılır. */
-function expandSourceRow(row,source,index,resolver){
-  const base=normalizeRecord(row,source,index,resolver);
+function expandSourceRow(row,source,index,resolver,deferPriority){
+  const base=normalizeRecord(row,source,index,resolver,deferPriority);
   const segments=Array.isArray(row&&row._logisticSegments)?row._logisticSegments.filter(Boolean):[];
   if(!segments.length)return [base];
   return segments.map((segment,segmentIndex)=>{
@@ -407,6 +423,46 @@ function shipmentPartialsFromRows(rows,source){
     expandSourceRow(row,source,index,resolver).forEach(rec=>{if(rec.orderCode||rec.model||rec.country||rec.status)out.push(rec);});
   });
   return out;
+}
+/* Okuma modeli (#1075) kayıt sözleşmesi. Arka uç (server/lib/read-model/
+   global-flow-model.js) satırları BU fonksiyonla normalleştirir ve sütunlu
+   biçimde gönderir; istemci hydrateReadModelRecords ile aynı kayıtları kurar.
+   `origin` ülke metninden, `raw` ince Backlog işaretinden yeniden kurulur;
+   öncelik alanları istemcideki ortak CP öncelik dizinine bağlı olduğu için
+   applyRecordPriority ile istemcide çözülür. */
+const READ_MODEL_VERSION=1;
+const READ_MODEL_RECORD_FIELDS=Object.freeze(['id','rowIndex','source','orderCode','shipmentFile','containerNo','vesselName','partialKind','partialNo','sourceRow',
+  'model','plmId','colourCode','colour','season','mag','mmyg','line','category','license','buyer','buyingGroup','manufacturer','country','status','operationalStage',
+  'mode','modeRaw','qty','eta','handover','exFactory','transitDays','priority','vesselKey','orderKey','state']);
+const READ_MODEL_PRIORITY_FIELDS=Object.freeze(['trackingTags','priorityTags','backlog']);
+function encodeReadModelRecords(rows,source,meta){
+  const resolver=createFieldResolver(source),out=[];
+  (Array.isArray(rows)?rows:[]).forEach((row,index)=>{
+    if(!row||typeof row!=='object')return;
+    expandSourceRow(row,source,index,resolver,true).forEach(rec=>{
+      if(!(rec.orderCode||rec.model||rec.country||rec.status))return;
+      const input=rec._priorityInput||{};
+      out.push(READ_MODEL_RECORD_FIELDS.map(field=>rec[field]).concat(READ_MODEL_PRIORITY_FIELDS.map(field=>input[field]==null?null:input[field])));
+    });
+  });
+  return {version:READ_MODEL_VERSION,source:String(source||''),...(meta||{}),fields:READ_MODEL_RECORD_FIELDS.slice(),priorityFields:READ_MODEL_PRIORITY_FIELDS.slice(),count:out.length,rows:out};
+}
+function readModelPayloadValid(payload){
+  return Boolean(payload&&payload.version===READ_MODEL_VERSION&&Array.isArray(payload.rows)&&Array.isArray(payload.fields)&&Array.isArray(payload.priorityFields)
+    &&payload.fields.join('|')===READ_MODEL_RECORD_FIELDS.join('|')&&payload.priorityFields.join('|')===READ_MODEL_PRIORITY_FIELDS.join('|'));
+}
+function hydrateReadModelRecords(payload){
+  if(!readModelPayloadValid(payload))throw new Error('Harita okuma modeli sözleşmesi uyumsuz. / Map read model contract mismatch.');
+  const width=READ_MODEL_RECORD_FIELDS.length,origins=new Map(),revision=payload.sourceRevision,thin=payload.source==='backlog';
+  return payload.rows.map(values=>{
+    const rec={};
+    for(let i=0;i<width;i++)rec[READ_MODEL_RECORD_FIELDS[i]]=values[i];
+    let origin=origins.get(rec.country);if(origin===undefined){origin=countryCoordinate(rec.country);origins.set(rec.country,origin);}
+    rec.origin=origin?{...origin}:null;
+    rec.raw=thin?{_flowThin:1,_flowSourceRevision:revision}:{};
+    rec.actionPriority='';rec.trackingTags=[];
+    return applyRecordPriority(rec,{own:rec.priority,trackingTags:values[width],priorityTags:values[width+1]},values[width+2]||'');
+  });
 }
 // Harita ve karar motorunun gerçekten okuduğu alanlar aynı sözleşmeden gelir.
 // Salt detay sütunları ancak kullanıcı çekmeceyi açınca istenir.
@@ -959,7 +1015,7 @@ function routeTransportModes(edge){
 if(typeof document==='undefined'){
   return {ISTANBUL,COLOMBO,ROUTING,referenceHubs,FIELD_CANDIDATES,WORLD_ASPECT_2D,MIN_ZOOM,MAX_ZOOM_2D,MAX_ZOOM_3D,fitWorld2dViewport,mapSurfacePalette,QUICK_FILTERS,DEFAULT_QUICK_FILTERS,SEA_AIR_AIR_LEG_DAYS,PROGRESS_BUCKET,SYMBOL_MIN_DISTANCE,VEHICLE_CLUSTER_DISTANCE,
     clean,norm,toNumber,pick,createFieldResolver,countryCoordinate,detectMode,operationalStage,classifyState,actionPriorityCode,
-    normalizeRecord,expandSourceRow,shipmentPartialsFromRows,projectBacklogMapRows,resolveMapDetailRecords,partialIdentity,recordKey,dedupeRecords,aggregateRecords,uniqueValues,
+    normalizeRecord,applyRecordPriority,expandSourceRow,shipmentPartialsFromRows,encodeReadModelRecords,hydrateReadModelRecords,readModelPayloadValid,READ_MODEL_RECORD_FIELDS,READ_MODEL_VERSION,projectBacklogMapRows,resolveMapDetailRecords,partialIdentity,recordKey,dedupeRecords,aggregateRecords,uniqueValues,
     parseDateMs,resolveRecordTransitDays,recordRouteProgress,distancePointToSegment,distanceToPolyline,decodeWorldTopology,
     seaRouteCoordinates,seaAirRouteCoordinates,colomboSeaCoordinates,usesColomboTransit,routeLegsFor,routeEdges,routeCorridorKey,pointAlongLeg,
     transitPlacement,groupTransitPlacements,buildFlowModel,resolveSymbolCollisions,clusterVehicleSymbols,vehicleClusterDistanceForZoom,routeRecordGroups,routeTransportModes,globeDragDelta,pickHit,routeHighlightEdges,
@@ -982,7 +1038,7 @@ const state={
   frame:0,lastFrame:0,observers:[],inView:true,dirty:false,refreshTimer:0,savePrefsTimer:0,searchTimer:0,
   worldPolygons:[],worldLoading:true,worldError:'',worldRevision:0,transitRules:[],transitRulesLoaded:false,
   expandedNodeKey:'',lastDragMoved:false,orbHandle:null,paletteCache:null,paletteRevision:0,
-  base:null,scene:null,sourceCache:new Map(),sourceIncomplete:false,lastBacklogRows:null,lastBacklogSignature:'',refreshSeq:0,
+  base:null,scene:null,sourceCache:new Map(),sourceIncomplete:false,lastBacklogRows:null,lastBacklogSignature:'',refreshSeq:0,readModelBase:null,modelRules:null,modelDay:'',
   engine:'buyerlog',earth:normalizeEarthPrefs(),selection:'',earthCtl:null,earthStarting:null,earthLoading:false,earthError:'',earthIdleTimer:0,earthPendingViewport:null,earthVisibilityKnown:false,
   workspaceActive:true
 };
@@ -1049,7 +1105,48 @@ async function ensureDecisionEngine(){
   try{await window.BLPerf?.ensureFeature?.('cpAssistant');}catch(_){}
   return Boolean(window.BLBacklogDeliveryEngine);
 }
+/* Okuma modeli anahtarı (#1075). Varsayılan açık; geri dönüş için
+   localStorage 'buyerlog.readModel.globalFlow' = 'off' veya
+   window.BL_READ_MODEL_GLOBAL_FLOW=false eski istemci normalleştirmesine döner. */
+const READ_MODEL_FLAG_KEY='buyerlog.readModel.globalFlow';
+function readModelEnabled(){
+  if(window.BL_READ_MODEL_GLOBAL_FLOW===false)return false;
+  try{const value=localStorage.getItem(READ_MODEL_FLAG_KEY);if(value==='off'||value==='0'||value==='false')return false;}catch(_){}
+  return true;
+}
+async function fetchReadModelRecords(query,etag){
+  const headers={'Content-Type':'application/json'};if(etag)headers['If-None-Match']=etag;
+  const response=await fetch('/api/read-model/global-flow/model',{method:'POST',credentials:'same-origin',cache:'no-store',headers,body:JSON.stringify({version:READ_MODEL_VERSION,source:'backlog',query})});
+  if(response.status===304&&etag)return {notModified:true};
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok){
+    const fallback=L('Harita verisi hazırlanamadı.','Map data could not be prepared.');
+    throw new Error((isEn()?(data.errorEn||fallback):(data.error||fallback))+' (HTTP '+response.status+(data.code?' · '+data.code:'')+')');
+  }
+  return {payload:data,etag:response.headers&&typeof response.headers.get==='function'?response.headers.get('ETag')||'':''};
+}
+/* Arka uç Backlog satırlarını normalleştirir; istemci yalnız ortak CP öncelik
+   dizinini bindirir. Eski yol gibi dizin değişiminde de veri yeniden istenir
+   (filtre değişmeden yapılan veri yenilemesi böyle yakalanır), ama koşullu:
+   arka uç aynı projeksiyonu tutuyorsa gövdesiz 304 gelir ve yalnız hidrasyon
+   tekrarlanır. */
+async function readModelBacklogPartials(query,force){
+  const key=JSON.stringify(query),api=cpPriorityIndexApi(),priority=api&&typeof api.revision==='function'?String(api.revision()):'';
+  let base=state.readModelBase;
+  if(force||!base||base.key!==key||base.priority!==priority){
+    const etag=!force&&base&&base.key===key?base.etag:'';
+    const [result]=await Promise.all([fetchReadModelRecords(query,etag),ensureDecisionEngine()]);
+    if(!result.notModified)base={key,payload:result.payload,etag:result.etag,priority:null,records:null};
+    state.readModelBase=base;
+  }else await ensureDecisionEngine();
+  if(!base.records||base.priority!==priority){base.records=hydrateReadModelRecords(base.payload);base.priority=priority;}
+  return base.records;
+}
 async function backlogPartials(force){
+  if(typeof backlogExportQueryParams==='function'&&readModelEnabled()){
+    const query={...(backlogExportQueryParams()||{}),projection:'global-flow'};delete query.includeSourceDetails;
+    return readModelBacklogPartials(query,force);
+  }
   const signature=backlogSignature();
   if(!force&&state.lastBacklogRows&&signature===state.lastBacklogSignature)return state.lastBacklogRows;
   if(typeof backlogExportQueryParams!=='function')return [];
@@ -1105,12 +1202,16 @@ async function refresh(force){
   try{
     const results=await Promise.all([sourceRecords(state.source,Boolean(force)),loadTransitRules(Boolean(force)),loadWorldTopology()]);
     if(seq!==state.refreshSeq)return;
-    state.records=results[0];hydrateFilterValidity();
+    /* Girdiler (kayıt dizisi, yol süresi kuralları, gün) aynıysa harita modeli
+       yeniden kurulmaz ve sahne yeniden hazırlanmaz (#1075). */
+    const day=new Date().toDateString(),unchanged=!force&&Boolean(state.model)&&results[0]===state.records&&results[1]===state.modelRules&&day===state.modelDay;
+    state.modelRules=results[1];state.modelDay=day;
+    state.records=results[0];if(!unchanged)hydrateFilterValidity();
     const unknown=state.records.filter(r=>!r.origin&&r.state!=='arrived').length;
     if(unknown)state.warning=L(unknown+' parsiyelde üretim ülkesi haritada eşleşmedi.',unknown+' partials have an origin country that could not be mapped.');
     if(state.worldError)state.warning=(state.warning?state.warning+' · ':'')+L('Detaylı dünya sınırı yüklenemedi; yedek harita kullanılıyor.','Detailed world outline could not be loaded; fallback map is in use.');
     if(!state.records.length)state.warning=L('Seçili kaynakta haritada gösterilebilir parsiyel yok. Kaynak verisinin yüklenmiş olduğundan emin olun.','No mappable partials are available in the selected source. Make sure the source data has loaded.');
-    applyFilters();
+    if(!unchanged)applyFilters();
   }catch(error){if(seq!==state.refreshSeq)return;state.records=[];state.panelFiltered=[];state.filtered=[];state.model=null;state.modelRevision++;state.error=String(error&&error.message||error);notifyEarth('model');}
   finally{if(seq===state.refreshSeq){state.loading=false;renderControls();renderKpis();renderMeta();syncLoadingOverlay();scheduleDraw();}}
 }
