@@ -363,7 +363,22 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
         log(`  ${label} opencosting-type: ${typed.error || P.round(typed.t1 - typed.t0) + ' ms / ' + typed.keys + ' keys'}`);
         await delay(options.settleMs);
       }
-      if (module === 'cpquotations') await page.evaluate(() => document.querySelector('#quotationModal [data-close-quotation]')?.click());
+      if (module === 'cpquotations') {
+        await page.evaluate(() => document.querySelector('#quotationModal [data-close-quotation]')?.click());
+        // #1079 WS6d: --quotation-cycles N — modal N kez yeniden açılıp kapatılır; her döngüde süre, sunucu RSS ve renderer heap.
+        const memory = () => { try { const st = fs.readFileSync(`/proc/${server.pid}/status`, 'utf8'), kb = k => Number((st.match(new RegExp(k + ':\\s+(\\d+)')) || [])[1]); return { rssMB: P.round(kb('VmRSS') / 1024), peakMB: P.round(kb('VmHWM') / 1024) }; } catch (_) { return null; } };
+        if (options.quotationCycles > 0) {
+          result.quotationCycles = [{ cycle: 0, server: memory(), heapMB: P.round(((await readRendererMetrics(context, page, 30000)).jsHeapUsedBytes || 0) / 1048576) }];
+          for (let c = 1; c <= options.quotationCycles; c++) {
+            await delay(options.settleMs);
+            const again = await page.evaluate(openModuleExpression(module, spec, options.moduleTimeoutMs));
+            await page.evaluate(() => document.querySelector('#quotationModal [data-close-quotation]')?.click());
+            await delay(options.settleMs);
+            result.quotationCycles.push({ cycle: c, openMs: again.timedOut ? null : P.round(again.t1 - again.t0), server: memory(), heapMB: P.round(((await readRendererMetrics(context, page, 30000)).jsHeapUsedBytes || 0) / 1048576) });
+          }
+          log(`  ${label} cpquotations cycles: ${result.quotationCycles.map(c => `${c.openMs ?? '-'}ms/${c.server?.rssMB}MB/${c.heapMB}MB`).join(' · ')}`);
+        }
+      }
     }
     phase = 'done';
     // Sunucu süreci belleği (Linux /proc; işçi iş parçacıkları aynı süreçte): anlık RSS ve tepe.

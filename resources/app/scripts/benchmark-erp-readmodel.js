@@ -64,6 +64,7 @@ function parseArgs(argv) {
     quotationCpRows: int('--quotation-cp-rows', 0, 0),
     openCostingRecords: int('--opencosting-records', 0, 0),
     openCostingType: value('--opencosting-type', ''),
+    quotationCycles: int('--quotation-cycles', 0, 0),
     flags: Object.fromEntries(argv.flatMap((arg, i) => (arg === '--flag' ? [argv[i + 1]] : [])).map(pair => {
       const at = String(pair || '').indexOf('=');
       if (at < 1) throw Error('Invalid --flag (NAME=JSON): ' + pair);
@@ -105,6 +106,7 @@ function flatMetrics(run) {
       [`module.${m.module}.settleLongTaskTotalMs`]: m.settle.longTasks?.totalMs, [`module.${m.module}.settleLongTaskMaxMs`]: m.settle.longTasks?.maxMs,
       [`module.${m.module}.settleLongTaskCount`]: m.settle.longTasks?.count, [`module.${m.module}.settleLagOver200`]: m.settle.eventLoopLag?.over200Count });
   }
+  for (const c of run.quotationCycles || []) Object.assign(out, { [`cycle${c.cycle}.cpquotations.openMs`]: c.openMs, [`cycle${c.cycle}.server.rssMB`]: c.server?.rssMB, [`cycle${c.cycle}.renderer.heapMB`]: c.heapMB });
   const bytes = (run.payloads?.byPath || []).reduce((sum, p) => sum + p.decodedBytes, 0);
   out['payload.totalMB'] = round(bytes / 1048576, 2);
   for (const p of run.payloads?.byPath || []) out[`payload.${p.path}.KB`] = round(p.decodedBytes / 1024);
