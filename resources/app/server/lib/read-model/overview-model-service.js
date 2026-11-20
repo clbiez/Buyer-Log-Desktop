@@ -75,7 +75,8 @@ function createContextLoader({preferences,roleEntries,managedRules,transitRules,
     try{const parsed=JSON.parse(entries['lcw.cp.checklist.v1']||'{}');own=parsed&&typeof parsed==='object'&&!Array.isArray(parsed)?parsed:{};}catch(_){own={};}
     const value={userId:String(profile.id),entries,answers:merge(own,checklistPayload()||{}),managedRules:managedRules()||null,
       plm:plmPayload()||null,transitRules:transitRules(profile)||[]};
-    return {key:hash(JSON.stringify([revision(profile),value])),value};
+    const rev=revision(profile);
+    return {key:hash(JSON.stringify([rev,value])),value,revision:rev};
   };
 }
 

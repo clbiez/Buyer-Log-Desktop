@@ -73,6 +73,15 @@ function createTaskLoader({list,authorizedOrders}){
     return all.filter(task=>task&&allowed&&typeof allowed.has==='function'&&allowed.has(task.orderKey));
   };
 }
+/* İşçideki karar barındırıcısının kapsamı (#1078 alt PR 3): kullanıcı + yetki kapsamı + karar girdisinde
+   olmayan bağımlılıklar (iş takvimi; createContextLoader revision). Veri sürümü (override/kaynak, guard
+   contextHash/sourceToken) BURAYA GİRMEZ: veri değişimini işçi satır kaynak özetiyle bulur ve yalnız etkilenen
+   satırları yeniden hesaplar; diğer karar girdileri (tercihler, kurallar, PLM, transit, dil) barındırıcı
+   anahtarında, cevaplar/görevler/gün barındırıcı içinde izlenir. Kimlik bilinmiyorsa eski (dar) kapsam. */
+function hostScopeOf(captured,context){
+  if(captured.userId==null||captured.accessHash==null||!context||!Object.hasOwn(context,'revision'))return hash(JSON.stringify([captured.key,'cp-computed']));
+  return hash(JSON.stringify([String(captured.userId),String(captured.accessHash),context.revision,'cp-computed']));
+}
 function createCpComputedService({guard,loadProjection,runCompute,loadContext,loadTasks=async()=>[],today=localDay,maxEntries=8,maxBytes=96*1024*1024}){
   if(!guard||typeof loadProjection!=='function'||typeof runCompute!=='function'||typeof loadContext!=='function'||typeof loadTasks!=='function')
     throw TypeError('Invalid CP computed service dependencies');
@@ -126,7 +135,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
       }
       counters.misses++;
       const contextValue=request.answers?{...context.value,answers:overlayAnswers(context.value&&context.value.answers,request.answers)}:context.value;
-      const base={dataset:{datasetKey,scopeKey:datasetScope},scopeKey:hash(scope),lang:request.lang,since:request.since,context:contextValue,tasks};
+      const base={dataset:{datasetKey,scopeKey:datasetScope},scopeKey:hostScopeOf(captured,context),lang:request.lang,since:request.since,context:contextValue,tasks};
       const value=lease.value||{},compressed=Buffer.isBuffer(value.buffer)?value.buffer.length:Number(value.buffer&&value.buffer.byteLength)||0;
       const uncompressed=Number(value.uncompressedBytes)||compressed*8;
       const options={signal,estimatedBytes:96*1024*1024+Math.ceil(uncompressed*DECISION_FACTOR),ownerKey:'read-model',generation:'1'};
@@ -169,9 +178,8 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
       captured.assertResponse();lease.assertResponse?.();
       const generation=generationOf(lease);
       const datasetKey=hash(JSON.stringify([captured.key,'cp-overview',generation])),datasetScope=hash(JSON.stringify([captured.key,'cp-overview']));
-      const scope=JSON.stringify([captured.key,'cp-computed']);
       const contextValue=request.answers?{...context.value,answers:overlayAnswers(context.value&&context.value.answers,request.answers)}:context.value;
-      const base={dataset:{datasetKey,scopeKey:datasetScope},scopeKey:hash(scope),lang:request.lang,context:contextValue,tasks,kind,request:spec};
+      const base={dataset:{datasetKey,scopeKey:datasetScope},scopeKey:hostScopeOf(captured,context),lang:request.lang,context:contextValue,tasks,kind,request:spec};
       const value=lease.value||{},compressed=Buffer.isBuffer(value.buffer)?value.buffer.length:Number(value.buffer&&value.buffer.byteLength)||0;
       const uncompressed=Number(value.uncompressedBytes)||compressed*8;
       const options={signal,estimatedBytes:96*1024*1024+Math.ceil(uncompressed*DECISION_FACTOR),ownerKey:'read-model',generation:'1'};
