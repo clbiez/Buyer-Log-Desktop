@@ -10178,6 +10178,18 @@ async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, i
   const afterContext=pageProjectionContext(currentUser);
   if (!beforeContext || String(beforeContext.contextHash)===String(afterContext.contextHash)) return false;
   const overrides=effectiveOverridesForUser(afterContext.id);
+  /* #1078 takip (WS7b): ağır JSON işi projection-rewrite işçisinde, yalnız değişen modül yazılır,
+     kuyrukta ardışık bekleyen yeniden yazımlar birleşir; sonuç aşağıdaki eski yolla birebir aynıdır
+     (parite: tests/projection-rewrite-incremental.test.js, scripts/parity-projection-rewrite.js).
+     Override bağlamı kayıt anında alınır (eski yoldaki gibi). Geri dönüş: BL_PROJECTION_REWRITE_INCREMENTAL=0. */
+  if (String(process.env.BL_PROJECTION_REWRITE_INCREMENTAL ?? '') !== '0') {
+    const result=await pageProjectionCache.rewriteRowPatches(afterContext.id,{
+      fromContextHash:beforeContext.contextHash,toContextHash:afterContext.contextHash,
+      items:clean,context:require('./lib/projection-rewrite').rowPatchContext(overrides,clean),collectCpRows:Boolean(cpRows),
+    });
+    if (result && cpRows) { cpRows.push(...(result.cpRows||[])); cpRows.json=require('./lib/compute-tasks').serialize(cpRows,'projection'); }
+    return Boolean(result && result.manifest);
+  }
   const manifest=await pageProjectionCache.rewriteGeneration(afterContext.id,{
     fromContextHash:beforeContext.contextHash,toContextHash:afterContext.contextHash,
     transform:(_module,payload)=>{

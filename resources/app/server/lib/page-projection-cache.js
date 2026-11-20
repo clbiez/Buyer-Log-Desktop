@@ -73,8 +73,12 @@ async function singleFlight(key, task) {
   singleFlights.set(key, promise);
   return promise;
 }
+// Kullanıcı başına mutasyon sıra numarası: satır yaması yeniden yazımları yalnız kuyrukta
+// ARDIŞIK oldukları (araya başka mutasyon girmediği) sürece birleştirilir (rewriteRowPatches).
+const userMutationSeq = new Map();
 function enqueueUserMutation(userId, task) {
   const key = safeUserId(userId), previous = userMutationTails.get(key) || Promise.resolve();
+  userMutationSeq.set(key, (userMutationSeq.get(key) || 0) + 1);
   const next = previous.catch(() => {}).then(task);
   userMutationTails.set(key, next);
   return next.finally(() => { if (userMutationTails.get(key) === next) userMutationTails.delete(key); });
@@ -313,6 +317,112 @@ async function rewriteGeneration(userId, { fromContextHash, toContextHash, trans
   promise.catch(() => {}).finally(() => { pending.delete(promise); if (!pending.size && pendingRewrites.get(key) === pending) pendingRewrites.delete(key); });
   return promise;
 }
+/* Satır yaması yeniden yazımı (#1078 takip / WS7b). rewriteGeneration(transform) ile aynı sonucu
+   üretir; farkları:
+   - Ağır iş (gunzip → parse → yama → stringify → gzip) projection-rewrite işçisinde çalışır. Ana
+     iş parçacığında yalnız dosya okuma, atomik yazım ve manifest değişimi kalır. İşçi kapalıysa
+     (BL_PROJECTION_REWRITE_WORKER=0) veya hata verirse aynı çekirdek ana iş parçacığında çalışır.
+   - Hiç satırı eşleşmeyen modülün önceki baytları aynen taşınır.
+   - Aynı kullanıcının kuyrukta ARDIŞIK bekleyen satır yaması yeniden yazımları, bağlam zinciri
+     kesintisizse (sonraki.from === önceki.to) tek okuma/yazımda sırayla uygulanır. Araya giren her
+     mutasyon (yenileme, görsel yaması, modül/backlog yazımı) zinciri keser.
+   step: { items:[{orderCode,patch}], context:rowPatchContext(...), collectCpRows }
+   Dönen: { manifest, cpRows } | null (bağlam eşleşmedi / modül yok). */
+const ROW_REWRITE_MAX_BATCH = 64;
+const rowRewriteQueues = new Map();
+let rowRewriteRunner = null;
+function setRowRewriteRunnerForTests(fn) { rowRewriteRunner = fn; }
+async function runRowRewriteSteps(modules, steps) {
+  const runner = rowRewriteRunner || (require('./projection-rewrite-pool').workerEnabled() ? input => require('./projection-rewrite-pool').getProjectionRewritePool().run(input) : null);
+  if (runner) {
+    try { return { ...(await runner({ modules, steps })), via: 'worker' }; }
+    catch (error) { console.warn('[page-cache] projection rewrite worker failed; main-thread fallback:', error && (error.code || error.message)); }
+  }
+  const core = require('./projection-rewrite'), out = [], cpRowsBySteps = steps.map(() => null);
+  for (const { module, buffer } of modules) {
+    const data = JSON.parse((await gunzip(buffer)).toString('utf8'));
+    const applied = core.applySteps(module, data, steps);
+    applied.cpRowsBySteps.forEach((rows, index) => { if (rows) cpRowsBySteps[index] = rows; });
+    if (!applied.changed) { out.push({ module, changed: false }); continue; }
+    const json = Buffer.from(core.serializeProjection(data), 'utf8');
+    out.push({ module, changed: true, buffer: await gzip(json, { level: 4 }), uncompressedBytes: json.length });
+  }
+  return { modules: out, cpRowsBySteps, via: 'main' };
+}
+async function runRowRewriteBatch(userId, request) {
+  if (request.done) return;
+  const key = safeUserId(userId), queue = rowRewriteQueues.get(key) || [];
+  const finish = (batch, values, error) => {
+    batch.forEach((item, index) => {
+      item.done = true;
+      const at = queue.indexOf(item); if (at >= 0) queue.splice(at, 1);
+      if (error) item.reject(error); else item.resolve(values ? values[index] : null);
+    });
+    if (!queue.length && rowRewriteQueues.get(key) === queue) rowRewriteQueues.delete(key);
+  };
+  const batch = [request];
+  try {
+    const previous = loadManifest(userId);
+    if (!previous || String(previous.contextHash || '') !== String(request.fromContextHash || '')) return finish(batch, null);
+    for (const next of queue) {
+      if (next === request || next.done || !(next.seq > request.seq)) continue;
+      const last = batch[batch.length - 1];
+      if (batch.length >= ROW_REWRITE_MAX_BATCH || next.seq !== last.seq + 1 || String(next.fromContextHash || '') !== String(last.toContextHash || '')) break;
+      batch.push(next);
+    }
+    const modules = [], metas = {};
+    for (const module of MODULES) {
+      const meta = previous.modules && previous.modules[module];
+      if (!meta) continue;
+      const { buffer } = await readCompressed(modulePath(userId, previous.activeGeneration, module), meta.checksum || '');
+      modules.push({ module, buffer }); metas[module] = meta;
+    }
+    if (!modules.length) return finish(batch, null);
+    const steps = batch.map(item => ({ items: item.items, context: item.context, collectCpRows: item.collectCpRows }));
+    const rewritten = await runRowRewriteSteps(modules, steps);
+    const reused = {};
+    for (const entry of rewritten.modules) {
+      const original = modules.find(item => item.module === entry.module);
+      reused[entry.module] = entry.changed
+        ? { buffer: entry.buffer, uncompressedBytes: entry.uncompressedBytes }
+        : { buffer: original.buffer, uncompressedBytes: metas[entry.module].uncompressedBytes };
+    }
+    const manifest = await writeGenerationUnlocked(userId, {
+      contextHash: batch[batch.length - 1].toContextHash,
+      sourceLoadedAt: previous.sourceLoadedAt || null,
+      reused,
+      extra: { runtimeMeta: previous.runtimeMeta || {}, sourceRevisionKey: previous.sourceRevisionKey || null },
+      previous,
+    });
+    const info = { batchSize: batch.length, via: rewritten.via, changedModules: rewritten.modules.filter(item => item.changed).map(item => item.module), timings: rewritten.timings || null };
+    finish(batch, batch.map((_, index) => ({ manifest, cpRows: rewritten.cpRowsBySteps[index] || null, info })));
+  } catch (error) { finish(batch, null, error); }
+}
+function rewriteRowPatches(userId, { fromContextHash, toContextHash, items, context = {}, collectCpRows = false } = {}) {
+  const key = safeUserId(userId), flightKey = `rewrite:${key}:${fromContextHash}:${toContextHash}`;
+  // Eski yoldaki singleFlight ile aynı: aynı bağlam geçişi için ikinci istek ilkini paylaşır.
+  if (singleFlights.has(flightKey)) return singleFlights.get(flightKey);
+  const request = { fromContextHash, toContextHash, items: Array.isArray(items) ? items : [], context, collectCpRows: Boolean(collectCpRows), done: false };
+  const promise = new Promise((resolve, reject) => { request.resolve = resolve; request.reject = reject; });
+  const queue = rowRewriteQueues.get(key) || [];
+  rowRewriteQueues.set(key, queue);
+  queue.push(request);
+  // Kuyruğa giriş eski yoldaki gibi bir mikro görev sonra (singleFlight → enqueueUserMutation):
+  // aynı anda çağrılan diğer mutasyonlarla göreli sıra eski yolla aynı kalır.
+  Promise.resolve().then(() => {
+    enqueueUserMutation(userId, () => runRowRewriteBatch(userId, request)).catch(() => {});
+    request.seq = userMutationSeq.get(key);
+  });
+  singleFlights.set(flightKey, promise);
+  const pending = pendingRewrites.get(key) || new Set();
+  pendingRewrites.set(key, pending);
+  pending.add(promise);
+  promise.catch(() => {}).finally(() => {
+    if (singleFlights.get(flightKey) === promise) singleFlights.delete(flightKey);
+    pending.delete(promise); if (!pending.size && pendingRewrites.get(key) === pending) pendingRewrites.delete(key);
+  });
+  return promise;
+}
 async function cleanupGenerations(userId, keep) {
   const dir = userRoot(userId);
   let entries = [];
@@ -410,5 +520,5 @@ function listSnapshotUserIds(snapshotRoot) {
 module.exports = {
   ROOT, CACHE_SCHEMA_VERSION, BACKLOG_MAX_VARIANTS, safeUserId, manifestPath, loadManifest,
   MEMORY_MAX_ENTRIES, MEMORY_MAX_BYTES,
-  readProjection, readProjectionCompressed, decodeProjection, readReusableProjections, reuseGeneration, writeProjection, writeGeneration, writeCompressedGeneration, rewriteGeneration, readBacklog, writeBacklog, invalidate, invalidateAll, listCachedUserIds, listSnapshotUserIds,
+  readProjection, readProjectionCompressed, decodeProjection, readReusableProjections, reuseGeneration, writeProjection, writeGeneration, writeCompressedGeneration, rewriteGeneration, rewriteRowPatches, setRowRewriteRunnerForTests, readBacklog, writeBacklog, invalidate, invalidateAll, listCachedUserIds, listSnapshotUserIds,
 };
