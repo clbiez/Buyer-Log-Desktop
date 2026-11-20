@@ -795,6 +795,17 @@
         "kind": "none",
         "reason": {"tr": "Ekranda değişen bir şey yok; yalnız arka uç hesaplarının sayısı ve zamanlaması değişir.", "en": "Nothing changes on screen; only the number and timing of backend calculations change."}
       }
+    },
+    {
+      "id": "collection-status-lookup-linear",
+      "type": "improvement",
+      "module": {"tr": "Koleksiyon · Genel Bakış", "en": "Collection · Overview"},
+      "title": {"tr": "Büyük Koleksiyon sayfaları açılışta donmaz", "en": "Large Collection pages no longer freeze at startup"},
+      "body": {"tr": "Koleksiyon statü etiketleri, renkleri ve filtre değerleri her satır için tüm sayfayı yeniden taramaz. Binlerce satırlık bir Koleksiyon sayfasında Genel Bakış Koleksiyon özeti ve Koleksiyon filtreleri açılışta saniyelerce takılmaz. Gösterilen değerler değişmez.", "en": "Collection status labels, colours and filter values no longer rescan the whole page for every row. On a Collection page with thousands of rows, the Overview Collection summary and the Collection filters no longer stall for seconds at startup. The displayed values do not change."},
+      "visual": {
+        "kind": "none",
+        "reason": {"tr": "Ekranda değişen bir şey yok; yalnız aynı değerlerin hesaplanma süresi kısalır.", "en": "Nothing changes on screen; the same values are only calculated faster."}
+      }
     }
   ]
 }

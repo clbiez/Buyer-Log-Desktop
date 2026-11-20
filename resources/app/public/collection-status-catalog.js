@@ -81,8 +81,15 @@
       const seeded=SEED.find(function(entry){return key(entry.name)===lookup;});
       out.push({name:seeded?seeded.name:name,color:normalizeColor(raw&&raw.color,seeded&&seeded.color||DEFAULT_COLOR),builtin:seeded?true:(raw&&Object.prototype.hasOwnProperty.call(raw,'builtin')?Boolean(raw.builtin):false)});
     });
+    // Satırlarda yalnız birkaç farklı statü olur; aynı ham metin aynı sonucu verir.
+    // Tekrarı atlamak çıktıyı değiştirmez, satır başına üç yerel ayarlı küçük harf
+    // dönüşümünü (N=30.000'de ~1 sn) kaldırır (#1079 WS6a).
+    const rawSeen=new Set();
     (Array.isArray(opts.rowStatuses)?opts.rowStatuses:[]).forEach(function(value){
-      const inputName=String(value==null?'':value).trim(),name=canonicalName(inputName),lookup=key(name);
+      const inputName=String(value==null?'':value).trim();
+      if(rawSeen.has(inputName))return;
+      rawSeen.add(inputName);
+      const name=canonicalName(inputName),lookup=key(name);
       if(!name||seen.has(lookup))return;
       seen.add(lookup);
       const seeded=SEED.find(function(entry){return key(entry.name)===lookup;});

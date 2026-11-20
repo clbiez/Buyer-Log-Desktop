@@ -14,6 +14,7 @@
  *   --source-fixture DIR (aynı kaynak baytlarını yeniden kullan)  --keep-fixture  --out FILE
  *   --post-open-window-ms N (iki kol için sabit açılış sonrası pencere)  --flag NAME=JSON (window anahtarı, tekrarlanabilir)
  *   --early-module orders [--early-delay-ms N] (açılıştan hemen sonra modül ilk açılışı)
+ *   --collection-rows N (sentetik Koleksiyon çalışma alanı; varsayılan 0 = WS0 ile aynı boş Koleksiyon)
  * Ortam: CHROMIUM_PATH (Chromium yolu), PLAYWRIGHT_MODULE.
  *
  * Senaryolar: (1) açılış sonrası pencere — bl:startup-complete → BACKGROUND_WARMUP_DONE
@@ -55,6 +56,7 @@ function parseArgs(argv) {
     postOpenWindowMs: argv.includes('--post-open-window-ms') ? int('--post-open-window-ms', 25000, 1000) : 0,
     earlyModule: value('--early-module', ''),
     earlyDelayMs: int('--early-delay-ms', 0, 0),
+    collectionRows: int('--collection-rows', 0, 0),
     flags: Object.fromEntries(argv.flatMap((arg, i) => (arg === '--flag' ? [argv[i + 1]] : [])).map(pair => {
       const at = String(pair || '').indexOf('=');
       if (at < 1) throw Error('Invalid --flag (NAME=JSON): ' + pair);

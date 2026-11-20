@@ -21,6 +21,9 @@ function collectionContext(){
     turknorm:value=>String(value==null?'':value).toUpperCase().replace(/[İŞÇÖÜĞ]/g,x=>({'İ':'I','Ş':'S','Ç':'C','Ö':'O','Ü':'U','Ğ':'G'}[x])).replace(/\s+/g,' ').trim(),
     kolColDefs:()=>[{k:'inStoreMonth'}],
     columnSchemaFor:()=>null,
+    // #1079 WS6a anahtarı: bu test eski yolu doğrular; yeni yolun paritesi read-model-collection-status-parity'de.
+    kolStatusSnapshotEnabled:()=>false,
+    queueMicrotask,
     kolRows:[],
     kolEffectiveValue:(row,key)=>row[key],
     kolSort:{key:'inStoreMonth',dir:1},
