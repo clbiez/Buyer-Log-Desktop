@@ -5520,7 +5520,7 @@ function checklistAuthorizedOrdersNow(profile,{write=false}={}) {
     // Source folders are user-managed. Visibility must also be supported by
     // the Moderator's authoritative ownership snapshot, never a claimed buyer.
     if(!manageAllOrders && !userAccess.filterRowsByScope(profile,userAccess.authoritativeOrderRows(code)).length)continue;
-    if(write && !canUserEditOrderCode(profile,canonicalFields.value(row,source,'orderCode')))continue;
+    if(write && !canUserEditOrderCode(profile,canonicalFields.value(row,source,'orderCode'),{manageAll:manageAllOrders}))continue;
     const analysis=CP.analyzeOrder(row), identity={orderCode:String(analysis.orderCode||canonicalFields.value(row,source,'orderCode')||''),modelName:String(analysis.modelName||''),colourCode:String(analysis.colourCode||'')};
     allowed.set(analysis.orderKey,identity);
     // Option approvals are deliberately reusable across POs for the same

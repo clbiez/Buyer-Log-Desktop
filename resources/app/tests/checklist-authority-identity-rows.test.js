@@ -54,6 +54,8 @@ test('switch defaults on; BUYER_LOG_CHECKLIST_AUTH_IDENTITY_ROWS=0 restores the 
   // Kimlik yolu yalnız yetki/Horizon süzgecinden SONRA ve anahtar açıkken devreye girer.
   assert.match(rowsFn, /const businessRows=[\s\S]*if\(identityOnly&&checklistIdentityRowsEnabled\(\)\)return orderIdentityRowsFromASAS\(businessRows,\{includeInactive\}\);[\s\S]*build\(businessRows,/);
   assert.match(fn('checklistAuthorizedOrdersNow'), /agentQualityOrderRowsNow\(profile,\{source,includeInactive:true,identityOnly:true\}\)/);
+  // Yazma yolu: çağrı genelindeki manageAllOrders kararı satır başına yeniden hesaplanmaz.
+  assert.match(fn('checklistAuthorizedOrdersNow'), /canUserEditOrderCode\(profile,canonicalFields\.value\(row,source,'orderCode'\),\{manageAll:manageAllOrders\}\)/);
   // Test raporu değerlendirmesi tam satırı kullanmaya devam eder.
   assert.doesNotMatch(fn('agentQualityAuthorizedOrdersNow'), /identityOnly/);
 });
