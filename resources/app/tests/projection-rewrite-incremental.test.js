@@ -223,3 +223,58 @@ test('server.js: satır yaması yeniden yazımı varsayılan olarak artımlı yo
   assert.match(body, /pageProjectionCache\.rewriteGeneration\(afterContext\.id,\{/);
   assert.ok(body.indexOf('rewriteRowPatches') < body.indexOf('rewriteGeneration'));
 });
+
+test('paralel bölme: modüller boyuta göre en hafif gruba (büyükten küçüğe), grup sayısı ≤ işçi', () => {
+  const sizes = { cp: 63, orders: 75, 'order-summary': 42, overview: 12, 'collection-catalog': 1 };
+  const modules = Object.keys(sizes).map(module => ({ module }));
+  const groups = pageCache.splitRewriteModules(modules, 3, entry => sizes[entry.module]).map(group => group.map(entry => entry.module));
+  assert.deepEqual(groups, [['orders'], ['cp'], ['order-summary', 'overview', 'collection-catalog']]);
+  assert.equal(pageCache.splitRewriteModules(modules, 1, entry => sizes[entry.module]).length, 1);
+  assert.equal(pageCache.splitRewriteModules(modules.slice(0, 2), 3, entry => sizes[entry.module]).length, 2);
+});
+
+test('parite (3 paralel işçi): ardışık 16 kayıt ve iki sekme — son nesil ve her kaydın CP satırları eski yolla aynı', async () => {
+  const { createProjectionRewritePool } = require('../server/lib/projection-rewrite-pool');
+  const pool = createProjectionRewritePool({ workers: 3 });
+  const runner = input => { calls.push(input.modules.map(entry => entry.module)); return pool.run(input); };
+  const calls = [];
+  runner.parallelism = 3;
+  pageCache.setRowRewriteRunnerForTests(runner);
+  try {
+    for (const twoTabs of [false, true]) {
+      const fixture = buildFixture({ rows: 300, seed: 23 }), steps = buildSteps(fixture, { count: 16, twoTabs });
+      const legacy = await runLegacy(`par-legacy-${twoTabs}`, fixture, steps);
+      const incremental = await runIncremental(`par-new-${twoTabs}`, fixture, steps);
+      assert.deepEqual(incremental.hashes, legacy.hashes);
+      assert.deepEqual(incremental.cpJson, legacy.cpJson);
+    }
+    assert.ok(calls.length >= 3 && calls.some(group => group.length < 5), 'modüller birden çok işçiye bölünür');
+    assert.equal(pool.stats().failed, 0);
+  } finally { pageCache.setRowRewriteRunnerForTests(null); await pool.close(); }
+});
+
+test('paralel bölmede bir parça hata verirse bütün yeniden yazım ana iş parçacığında aynı sonuçla tamamlanır', async () => {
+  const fixture = buildFixture({ rows: 90, seed: 29 }), steps = buildSteps(fixture, { count: 3 });
+  const legacy = await runLegacy('part-fail-legacy', fixture, steps);
+  const { createProjectionRewritePool } = require('../server/lib/projection-rewrite-pool');
+  const pool = createProjectionRewritePool({ workers: 3 });
+  const runner = input => (input.modules.some(entry => entry.module === 'orders') ? Promise.reject(Object.assign(new Error('boom'), { code: 'PROJECTION_REWRITE_WORKER_FAILED' })) : pool.run(input));
+  runner.parallelism = 3;
+  pageCache.setRowRewriteRunnerForTests(runner);
+  const warn = console.warn; console.warn = () => {};
+  try {
+    const incremental = await runIncremental('part-fail-new', fixture, steps);
+    assert.deepEqual(incremental.hashes, legacy.hashes);
+    assert.ok(incremental.results.every(result => result.info.via === 'main'));
+  } finally { pageCache.setRowRewriteRunnerForTests(null); console.warn = warn; await pool.close(); }
+});
+
+test('işçi sayısı: anahtar 1–8 arası; varsayılan en çok 3, çekirdek−1 ve 4 GB başına bir', () => {
+  const { poolOptions } = require('../server/lib/projection-rewrite-pool');
+  assert.equal(poolOptions({ BL_PROJECTION_REWRITE_WORKERS: '1' }).workers, 1);
+  assert.equal(poolOptions({ BL_PROJECTION_REWRITE_WORKERS: '2' }).workers, 2);
+  const expected = Math.max(1, Math.min(3, os.availableParallelism() - 1, Math.floor(os.totalmem() / (4 * 1024 ** 3))));
+  assert.equal(poolOptions({}).workers, expected);
+  assert.equal(poolOptions({ BL_PROJECTION_REWRITE_WORKERS: '99' }).workers, expected);
+  assert.equal(poolOptions({}).idleMs, 5000);
+});
