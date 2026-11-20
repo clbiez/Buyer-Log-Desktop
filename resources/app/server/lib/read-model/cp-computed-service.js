@@ -17,6 +17,7 @@
  */
 const crypto=require('node:crypto');
 const {performance}=require('node:perf_hooks');
+const cpQuery=require('./cp-query');
 const hash=value=>crypto.createHash('sha256').update(value).digest('hex');
 const DECISION_FACTOR=3;
 const TOKEN=/^[A-Za-z0-9_-]{1,64}$/;
@@ -31,13 +32,13 @@ const MAX_OVERLAY=5000,MAX_KEY=512,MAX_ANSWER_BYTES=16*1024;
    KENDİ cevapları. Yalnız bu kullanıcının bu hesabında sunucu cevaplarının üstüne
    konur; diske yazılmaz, başka kullanıcıya ya da önbellekteki başka anahtara geçmez.
    Senkron tamamlanınca istemci göndermeyi bırakır (kuyruk boşalır). */
-function validateRequest(raw){
+function validateRequest(raw,{extra=null}={}){
   if(!raw||typeof raw!=='object'||Array.isArray(raw))throw invalid('body');
   if(raw.version!==1)throw invalid('version');
   const lang=raw.lang==='en'?'en':raw.lang==null||raw.lang==='tr'?'tr':null;
   if(!lang)throw invalid('lang');
-  if(raw.since!=null&&(typeof raw.since!=='string'||!TOKEN.test(raw.since)))throw invalid('since');
-  for(const key of Object.keys(raw))if(!['version','lang','since','answers'].includes(key))throw invalid(key);
+  if(raw.since!=null&&(extra||typeof raw.since!=='string'||!TOKEN.test(raw.since)))throw invalid('since');
+  for(const key of Object.keys(raw))if(!['version','lang','since','answers'].includes(key)&&key!==extra)throw invalid(key);
   let answers=null;
   if(raw.answers!=null){
     if(typeof raw.answers!=='object'||Array.isArray(raw.answers))throw invalid('answers');
@@ -145,8 +146,51 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
       return {generation,cached:false,body:out.body,timing:{...out.timing,service:{...service,computeMs:Math.round(performance.now()-t3)}}};
     }finally{lease.release?.();}
   }
+  /* Alt PR 2 (pencereli okuma): POST /api/read-model/cp/query ve /facets.
+     Gövde: { version:1, lang?, answers?, query|facets:<cp-query.js sürüm 1> }.
+     Aynı yetki kapısı, projeksiyon kirası, kişisel bağlam ve görev süzmesi; hesaplanmış
+     değerler işçide ensureComputed önbelleğinden (bağlam/cevap/gün aynıysa yeniden hesap yok). */
+  async function read(kind,req,rawBody,{signal}={}){
+    const captured=guard.capture(req,'cp');
+    const field=kind==='facets'?'facets':'query';
+    const request=validateRequest(rawBody,{extra:field});
+    const spec=rawBody[field];
+    // Erken 400: işçi kuyruğuna girmeden (işçi de aynı doğrulamayı yapar).
+    if(kind==='facets')cpQuery.validateCpFacets(spec);else cpQuery.validateCpQuery(spec);
+    counters.requests++;
+    const t0=performance.now();
+    const lease=await loadProjection(req,'cp');
+    try{
+      const t1=performance.now();
+      const profile=captured.profile||req.currentUser;
+      const context=loadContext(profile);
+      const tasks=await loadTasks(profile);
+      const service={leaseMs:Math.round(t1-t0),contextMs:Math.round(performance.now()-t1)};
+      captured.assertResponse();lease.assertResponse?.();
+      const generation=generationOf(lease);
+      const datasetKey=hash(JSON.stringify([captured.key,'cp-overview',generation])),datasetScope=hash(JSON.stringify([captured.key,'cp-overview']));
+      const scope=JSON.stringify([captured.key,'cp-computed']);
+      const contextValue=request.answers?{...context.value,answers:overlayAnswers(context.value&&context.value.answers,request.answers)}:context.value;
+      const base={dataset:{datasetKey,scopeKey:datasetScope},scopeKey:hash(scope),lang:request.lang,context:contextValue,tasks,kind,request:spec};
+      const value=lease.value||{},compressed=Buffer.isBuffer(value.buffer)?value.buffer.length:Number(value.buffer&&value.buffer.byteLength)||0;
+      const uncompressed=Number(value.uncompressedBytes)||compressed*8;
+      const options={signal,estimatedBytes:96*1024*1024+Math.ceil(uncompressed*DECISION_FACTOR),ownerKey:'read-model',generation:'1'};
+      const runQuery=async(payload,opts)=>{const result=await runCompute('read-model-cp-query',payload,opts);try{return result.value;}finally{result.release?.();}};
+      const t2=performance.now();
+      let out=await runQuery(base,options);
+      if(out&&Array.isArray(out.missing)&&out.missing.includes('cp')){
+        counters.datasetLoads++;
+        const source=value.buffer,bytes=Uint8Array.from(Buffer.isBuffer(source)?source:Buffer.from(source||[]));
+        out=await runQuery({...base,dataset:{...base.dataset,buffer:bytes.buffer}},
+          {...options,estimatedBytes:options.estimatedBytes+uncompressed*6+bytes.byteLength,inputBytes:bytes.byteLength,transferList:[bytes.buffer]});
+      }
+      if(!out||!out.result)throw failure('COMPUTE_WORKER_FAILED',500,'Hesaplama işçisi tamamlanamadı.','Compute worker failed.');
+      captured.assertResponse();lease.assertResponse?.();
+      return {generation,result:out.result,timing:{...out.timing,service:{...service,computeMs:Math.round(performance.now()-t2)}}};
+    }finally{lease.release?.();}
+  }
   function clear(){cache.clear();latest.clear();cachedBytes=0;}
   function stats(){return {...counters,entries:cache.size,bytes:cachedBytes,maxEntries,maxBytes};}
-  return {computed,clear,stats};
+  return {computed,query:(req,body,opts)=>read('query',req,body,opts),facets:(req,body,opts)=>read('facets',req,body,opts),clear,stats};
 }
 module.exports={createCpComputedService,createTaskLoader,validateRequest};
