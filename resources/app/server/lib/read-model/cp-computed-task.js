@@ -203,14 +203,22 @@ async function ensureComputed(payload,deps){
   const signature=JSON.stringify([entry.answersVersion,entry.tasksSignature,new Date().toDateString()]);
   if(entry.current&&entry.current.rows===rows&&entry.current.signature===signature)return {dataset,entry,current:entry.current,hostMs,loads,reused:true};
   const transitRules=payload.context.transitRules||[];
-  // Kaynak özetleri barındırıcı satırlara checklist hücresi yazmadan ÖNCE alınır.
-  const sourceStarted=performance.now();
-  const source=sourceDigests(rows);
-  const sourceMs=performance.now()-sourceStarted;
-  const previous=entry.current&&entry.current.signature===signature&&entry.current.source&&!payload.forceFull?entry.current:null;
+  /* Satır kaynak özetleri yalnız yeni bir nesil geldiğinde (düzenleme) alınır; soğuk/tam hesap ödemez.
+     Önceki neslin özeti hesaptan SONRA alınabilir: hesap satırlara yalnız COMPUTED_KEY alanlarını yazar
+     ve özet onları dışarıda bırakır (parite testi değişen satır sayısının birebir eşitliğiyle bekçiler;
+     varsayım bozulursa her satır değişmiş görünür ve tam hesaba düşülür — yanlış sonuç değil). */
+  const identity=sourceIdentity(rows);
+  const previous=entry.current&&entry.current.signature===signature&&entry.current.identity===identity&&!payload.forceFull?entry.current:null;
+  let source=null,sourceMs=0;
+  if(previous){
+    const sourceStarted=performance.now();
+    if(!previous.source)previous.source=sourceDigests(previous.rows);
+    source=sourceDigests(rows);
+    sourceMs=performance.now()-sourceStarted;
+  }
   const incremental=previous?incrementalPlan(previous,rows,source):null;
   const {out,phases}=incremental?(incremental.targets.length?computeRows(entry,rows,transitRules,incremental.targets):{out:new Map(),phases:{}}):computeRows(entry,rows,transitRules);
-  phases.sourceMs=sourceMs;
+  if(source)phases.sourceMs=sourceMs;
   const serialized=new Map(),digests=new Map();
   for(const row of rows){
     const id=String(row&&row._id!=null?row._id:'');
@@ -227,30 +235,37 @@ async function ensureComputed(payload,deps){
     serialized.set(id,json);digests.set(id,crypto.createHash('sha1').update(json).digest('base64'));
   }
   if(incremental){phases.incremental={changed:incremental.changed,targets:incremental.targets.length};}
-  entry.current={rows,signature,out,serialized,digests,phases,source:source.digests,identity:source.identity};
+  entry.current={rows,signature,out,serialized,digests,phases,source,identity};
   return {dataset,entry,current:entry.current,hostMs,loads,reused:false,incremental:Boolean(incremental)};
 }
 /* Satırın kaynak özeti (hesaplanmış/checklist alanları hariç) ve kimlik parmak izi (_id → satır kimliği). */
 const COMPUTED_KEY=/^(?:__checklist__|_checklist|_cp(?:OrderKey|OptionId)$)/;
 function sourceDigests(rows){
-  const digests=new Map(),identity=crypto.createHash('sha1');
+  const digests=new Map();
   const replacer=(key,value)=>key&&COMPUTED_KEY.test(key)?undefined:value;
   for(const row of rows){
     const id=String(row&&row._id!=null?row._id:'');
     if(!id)continue;
     digests.set(id,crypto.createHash('sha1').update(JSON.stringify(row,replacer)).digest('base64'));
+  }
+  return digests;
+}
+function sourceIdentity(rows){
+  const identity=crypto.createHash('sha1');
+  for(const row of rows){
+    const id=String(row&&row._id!=null?row._id:'');
+    if(!id)continue;
     identity.update(id+'\u0001'+String(row._matchOcode??'')+'\u0001'+String(row['Order Code']??'')+'\u0001'+String(row['C.Code']??'')+'\u0001'+String(row['Model']??'')+'\u0002');
   }
-  return {digests,identity:identity.digest('base64')};
+  return identity.digest('base64');
 }
 /* Artımlı plan: kaynağı değişen satırlar + aynı sipariş/opsiyon grubundaki satırlar (karar ve
    opsiyon kapsamlı checklist satırlar arası etkiler). Kimlik eşlemesi değiştiyse ya da değişim
    büyükse null (tam hesap). */
 const INCREMENTAL_MAX=Number(process.env.BUYER_LOG_CP_INCREMENTAL_MAX)||2000;
 function incrementalPlan(previous,rows,source){
-  if(previous.identity!==source.identity)return null;
   const changed=[];
-  for(const [id,digest] of source.digests)if(previous.source.get(id)!==digest)changed.push(id);
+  for(const [id,digest] of source)if(previous.source.get(id)!==digest)changed.push(id);
   if(changed.length>INCREMENTAL_MAX)return null;
   const oldById=new Map(),groups=new Map();
   const groupKeys=values=>[values&&values.orderKey?'o:'+values.orderKey:null,values&&values.optionId?'p:'+values.optionId:null].filter(Boolean);
