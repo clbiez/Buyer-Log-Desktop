@@ -946,14 +946,14 @@
         "en": "Calculation after saving royalty rules takes less time"
       },
       "body": {
-        "tr": "Royalty kuralları kaydedildiğinde siparişler artık her kural için önce lisans ve licensor eşleşmesine bakılarak hesaplanır; eşleşmeyen kurallar için tarih ve sezon tekrar okunmaz. Sunucu kural setini değiştirmediyse ikinci tam yeniden hesap yapılmaz. Kayıt sonrası bildirimdeki güncellenen CP ve Koleksiyon sayıları, ilk uygulamada gerçekten değişen kayıtları gösterir. Hesaplanan Supp. FOB değerleri değişmez.",
-        "en": "When royalty rules are saved, each order now checks the license and licensor match of a rule first; dates and seasons are not read again for rules that do not match. If the server did not change the rule set, a second full recalculation is skipped. The updated CP and Collection counts in the notification after saving now show the records that actually changed on the first application. Calculated Supp. FOB values stay the same."
+        "tr": "Royalty kuralları Lisans Kartları'nda kaydedildiğinde siparişler, her kural için önce lisans, licensor ve ülke eşleşmesine bakılarak yeniden hesaplanır; eşleşmeyen kurallar için tarih ve sezon tekrar okunmaz. On binlerce satırda kayıttan sonraki yeniden hesap belirgin biçimde kısalır. Hesaplanan Supp. FOB değerleri değişmez.",
+        "en": "When royalty rules are saved in License Cards, orders are recalculated by checking the license, licensor and country match of each rule first; dates and seasons are not read again for rules that do not match. On tens of thousands of rows the recalculation after saving is noticeably shorter. Calculated Supp. FOB values stay the same."
       },
       "visual": {
         "kind": "none",
         "reason": {
-          "tr": "Ekranda yalnız bildirimdeki sayılar değişir; yeni bir ekran öğesi yok.",
-          "en": "Only the numbers in the notification change; there is no new screen element."
+          "tr": "Ekranda değişen bir öğe yok; değişiklik yalnız hesabın süresini kısaltır.",
+          "en": "Nothing on screen changes; the change only shortens the calculation."
         }
       }
     }

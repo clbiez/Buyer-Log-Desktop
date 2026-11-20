@@ -147,15 +147,13 @@ test('mutasyon kontrolü: yazıcı dizini yanlış anahtarla kurulursa parite bo
   assert.notEqual(digest(snapshot(b)), digest(snapshot(ctx)), 'satır yazımı farklı olmalı');
 });
 
-test('yeniden hesap anahtarı varsayılan açık; kayıt sonrası ikinci senkron yalnız sunucu kural seti farklıysa çalışır', () => {
+test('yeniden hesap anahtarı varsayılan açık; geri dönüş window=false ya da localStorage "0"', () => {
   const fn = extractFunction(APP_MAIN, 'royaltyRecomputeFastEnabled');
   assert.match(fn, /typeof window\.BL_READ_MODEL_ROYALTY_RECOMPUTE==='boolean'/);
   assert.match(fn, /getItem\('buyerlog\.readModel\.royaltyRecompute\.v1'\)!=='0'/);
-  const persist = extractFunction(APP_MAIN, 'persistPricingRules');
-  // İlk senkron koşulsuz; ikincisi geri dönüş kapalıyken ya da sunucu sonucu farklıysa.
-  assert.match(persist, /let syncResult=syncPricingRulesToAllLoadedViews\(\{saveCollection:true,renderCollection:true\}\);/);
-  assert.match(persist, /if\(typeof royaltyRecomputeFastEnabled!=='function'\|\|!royaltyRecomputeFastEnabled\(\)\|\|JSON\.stringify\(state\.overrides\.pricingRules\|\|\[\]\)!==JSON\.stringify\(clean\)\)\s*syncResult=syncPricingRulesToAllLoadedViews/);
   assert.match(ROYALTY, /royaltyRecomputeFastEnabled\(\)&&\(turknormFast\(license\)!==turknormFast\(rule&&rule\.license\)/);
+  // Tek fonksiyon çıkaran mevcut testlerde (anahtar tanımsız) eski yol çalışır.
+  assert.match(extractFunction(APP_MAIN, 'hasManualSuppFob'), /typeof royaltyRecomputeFastEnabled==='function'&&royaltyRecomputeFastEnabled\(\)/);
 });
 
 test('mutasyon kontrolü: koşul sırası kısa devresi yanlış alanı karşılaştırırsa parite bozulur', async () => {

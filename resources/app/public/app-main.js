@@ -14356,11 +14356,7 @@ async function persistPricingRules(rules,{expectedRevision=state.storeRevisions.
       applyIncomingPricingRules(data.rules||clean,data.revision);
       // Sunucunun normalize ettiği son kural setini de tekrar uygula. Böylece client/server
       // normalizasyon farkı yüzünden Koleksiyon eski Royalty/Hologram/FOB ile kalmaz.
-      // #1079 WS6: sunucu kural setini değiştirmediyse ikinci tam yeniden hesap aynı
-      // sonucu üretir (30k satırda ~2,5 sn); yalnız fark varsa çalışır. Sayaçlar artık
-      // ilk uygulamanın gerçek değişimini gösterir (önceden ikinci geçişin 0'ı dönerdi).
-      if(typeof royaltyRecomputeFastEnabled!=='function'||!royaltyRecomputeFastEnabled()||JSON.stringify(state.overrides.pricingRules||[])!==JSON.stringify(clean))
-        syncResult=syncPricingRulesToAllLoadedViews({saveCollection:true,renderCollection:true});
+      syncResult=syncPricingRulesToAllLoadedViews({saveCollection:true,renderCollection:true});
     }
     window.BLLicenseCardsPage?.invalidate?.();
     return syncResult;
