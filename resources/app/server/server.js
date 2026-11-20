@@ -5481,18 +5481,18 @@ function agentQualityLiveProfile(profile,{write=false}={}) {
     }
     return current;
 }
-/* #1079 WS6: checklist yetki çözümü satırdan yalnız sipariş kimliğini okur
-   (orderKey, opsiyon kimliği, sipariş kodu). Tam CP/Orders kurulumu (Antrepo,
+/* #1079 WS6: checklist ve test raporu yetki çözümü satırdan yalnız sipariş
+   kimliğini okur (orderKey, opsiyon kimliği, sipariş kodu/PLM/model/renk). Tam CP/Orders kurulumu (Antrepo,
    formül, backlog operasyon satırları) 30k satırda çağrı başına ~2,7 sn sunucu
    olay döngüsünü kilitliyordu. buildOrderRowsFromASAS her girdi için tek satır
-   üretir ve bu dört alanı ham satırdan override'sız aynı ifadeyle yazar; burada
+   üretir ve bu beş alanı ham satırdan override'sız aynı ifadeyle yazar; burada
    aynı ifade kullanılır. Yetki süzgeci ve çağrı başına taze çözüm değişmez.
    BUYER_LOG_CHECKLIST_AUTH_IDENTITY_ROWS=0 → eski tam kurulum. */
 function checklistIdentityRowsEnabled(){return process.env.BUYER_LOG_CHECKLIST_AUTH_IDENTITY_ROWS!=='0';}
 function orderIdentityRowsFromASAS(rows,{includeInactive=false}={}){
     return rows.filter(o=>includeInactive||Number(o&&o.kalan)>0).map(o=>({
       'PLM ID':(o.plm!=null&&!isNaN(Number(o.plm)))?Math.trunc(Number(o.plm)):'',
-      'Model Name':o.model,'C.Code':o.ccode,'Order Code':o.ocode,
+      'Model Name':o.model,'C.Code':o.ccode,Colour:o.colour,'Order Code':o.ocode,
     }));
 }
 function agentQualityOrderRowsNow(profile,{source='cp',includeInactive=false,identityOnly=false}={}) {
@@ -5537,7 +5537,9 @@ async function agentQualityAuthorizedOrders(profile,{write=false}={}) {
 function agentQualityAuthorizedOrdersNow(profile,{write=false}={}) {
     profile=agentQualityLiveProfile(profile,{write});
     const source=userAccess.hasArea(profile,'cp')?'cp':'orders';
-    const rows=agentQualityOrderRowsNow(profile,{source,includeInactive:true}).filter(row=>!write || canUserEditOrderCode(profile,canonicalFields.value(row,source,'orderCode')));
+    // Kimlik satırı yeterli (#1079): değer haritası authorityHash'e girer; alanlar tam satırla aynıdır.
+    const manageAll=write&&userAccess.hasPermission(profile,'manageAllOrders');
+    const rows=agentQualityOrderRowsNow(profile,{source,includeInactive:true,identityOnly:true}).filter(row=>!write || canUserEditOrderCode(profile,canonicalFields.value(row,source,'orderCode'),{manageAll}));
     const CP=require('../public/cp-readiness-engine');
     return new Map(rows.map(row=>[CP.analyzeOrder(row).orderKey,{orderCode:String(canonicalFields.value(row,source,'orderCode') || ''),
       plmId:String(canonicalFields.value(row,source,'plmId') || ''),modelName:String(canonicalFields.value(row,source,'modelName') || ''),colourCode:String(canonicalFields.value(row,source,'colourCode') || ''),colour:String(canonicalFields.value(row,source,'colour')||'')}]));
