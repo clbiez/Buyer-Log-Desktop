@@ -211,3 +211,15 @@ test('işçi istemcisi: boşta kapanır, zaman aşımı ve işçi çökmesi işi
   await pool.close();
   clearInterval(keepAlive);
 });
+
+test('server.js: satır yaması yeniden yazımı varsayılan olarak artımlı yoldan; BL_PROJECTION_REWRITE_INCREMENTAL=0 eski yolu korur', () => {
+  const server = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
+  const body = server.slice(server.indexOf('async function rewriteProjectionCacheForRowPatches('), server.indexOf('function queueProjectionCacheRowPatches('));
+  assert.match(body, /if \(String\(process\.env\.BL_PROJECTION_REWRITE_INCREMENTAL \?\? ''\) !== '0'\) \{/);
+  assert.match(body, /pageProjectionCache\.rewriteRowPatches\(afterContext\.id,\{[\s\S]*?context:require\('\.\/lib\/projection-rewrite'\)\.rowPatchContext\(overrides,clean\)/);
+  // CP okuma modeli doğrulaması (cp-row-patch-log) her kaydın CP satırlarını aynı serileştirmeyle alır.
+  assert.match(body, /cpRows\.json=require\('\.\/lib\/compute-tasks'\)\.serialize\(cpRows,'projection'\)/);
+  // Eski yol (geri dönüş) aynen durur.
+  assert.match(body, /pageProjectionCache\.rewriteGeneration\(afterContext\.id,\{/);
+  assert.ok(body.indexOf('rewriteRowPatches') < body.indexOf('rewriteGeneration'));
+});
