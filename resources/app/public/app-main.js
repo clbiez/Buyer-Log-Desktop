@@ -10551,9 +10551,9 @@ function renderCpKpiBar({buckets,statusCounts,delCounts,seasonCounts,exfCounts,n
      - parsiyel görünüm, açık lojistik detay, "işaretsizler", eklenen hızlı filtre grupları
      - revizyon filtresi, kumaş kartı, istemcide türetilen sütunlar (formül, Ex→Retail, LT,
        Supp. FOB, Licensor, PLM Numune, checklist sütunları, kişisel not) filtre/sıralaması
-   Anahtar kapalıyken (varsayılan) eski yol aynen çalışır.
-   Açma: BLCpReadModel.setEnabled(true) (kullanıcı başına BLStorage 'bl.cpReadModel.v1')
-   ya da ölçüm/test için sayfa betiklerinden önce window.BL_CP_READ_MODEL=true. */
+   Varsayılan AÇIK (#1078 satır yaması). Kapatma: BLCpReadModel.setEnabled(false) (kullanıcı başına BLStorage
+   'bl.cpReadModel.v1'='0') ya da ölçüm/test için sayfa betiklerinden önce window.BL_CP_READ_MODEL=false;
+   kapalıyken eski yol aynen çalışır. */
 const CP_RM_STORAGE_KEY='bl.cpReadModel.v1';
 const CP_RM_WINDOW=200;
 const CP_RM_PREFETCH=2;
@@ -10574,7 +10574,8 @@ function cpReadModelEnabled(){
   if(cpRM.disabled)return false;
   if(typeof window.BL_CP_READ_MODEL==='boolean')return window.BL_CP_READ_MODEL;
   if(cpRMEnabledCache===null){
-    try{cpRMEnabledCache=(window.BLStorage||localStorage).getItem(CP_RM_STORAGE_KEY)==='1';}catch(_){cpRMEnabledCache=false;}
+    // Varsayılan AÇIK (#1078 satır yaması, koordinatör kararı): geri dönüş tercih '0' ya da window.BL_CP_READ_MODEL=false.
+    try{cpRMEnabledCache=(window.BLStorage||localStorage).getItem(CP_RM_STORAGE_KEY)!=='0';}catch(_){cpRMEnabledCache=true;}
   }
   return cpRMEnabledCache;
 }

@@ -12,11 +12,17 @@ const {extractFunction}=require('./helpers/app-main-functions');
 const SOURCE=fs.readFileSync(path.join(__dirname,'..','public','app-main.js'),'utf8');
 const slice=(start,end)=>{const i=SOURCE.indexOf(start);assert.ok(i>=0,start);return SOURCE.slice(i,SOURCE.indexOf(end,i));};
 
-test('flag off by default; renderCPNow tries the windowed path first only when enabled',()=>{
+test('flag ON by default (#1078 satır yaması); preference "0" or window flag false opts out; renderCPNow tries the windowed path first when enabled',()=>{
   const enabled=extractFunction(SOURCE,'cpReadModelEnabled');
+  const make=(win,stored)=>{const ctx=vm.createContext({window:win,localStorage:{getItem:()=>stored}});
+    vm.runInContext(`const cpRM={disabled:false};let cpRMEnabledCache=null;const CP_RM_STORAGE_KEY='bl.cpReadModel.v1';${enabled};globalThis.f=cpReadModelEnabled;`,ctx);return ctx.f();};
+  assert.equal(make({},null),true,'varsayılan AÇIK');
+  assert.equal(make({},'1'),true);
+  assert.equal(make({},'0'),false,'geri dönüş: kullanıcı tercihi "0"');
+  assert.equal(make({BL_CP_READ_MODEL:false},null),false,'geri dönüş: sayfa anahtarı');
   const ctx=vm.createContext({window:{},localStorage:{getItem:()=>null}});
   vm.runInContext(`const cpRM={disabled:false};let cpRMEnabledCache=null;const CP_RM_STORAGE_KEY='bl.cpReadModel.v1';${enabled};globalThis.f=cpReadModelEnabled;`,ctx);
-  assert.equal(ctx.f(),false);
+  assert.equal(ctx.f(),true);
   const on=vm.createContext({window:{BL_CP_READ_MODEL:true},localStorage:{getItem:()=>null}});
   vm.runInContext(`const cpRM={disabled:false};let cpRMEnabledCache=null;const CP_RM_STORAGE_KEY='bl.cpReadModel.v1';${enabled};globalThis.f=cpReadModelEnabled;`,on);
   assert.equal(on.f(),true);
