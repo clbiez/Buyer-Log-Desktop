@@ -33,17 +33,31 @@ const MODULES = {
     failed: () => document.getElementById('backlogEmpty')?.dataset.uiState === 'error',
     rows: () => document.querySelectorAll('#backlogTreeBody tr').length,
   },
+  // #1079 WS6d: CP Fiyat Çalışmaları modalı (CP sekmesi açıkken araç çubuğundan). --quotation-cp-rows ile tohumlanır.
+  cpquotations: {
+    tab: 'cp',
+    open: () => document.getElementById('cpQuotationsBtn'),
+    ready: () => Boolean(document.querySelector('#quotationModal table.quotationTable tbody tr') || document.querySelector('#quotationModal #quotationDetail')?.textContent.trim()),
+    rows: () => document.querySelectorAll('#quotationModal table.quotationTable tbody tr').length,
+  },
+  // #1079 WS6d: Açık Maliyet editörü. --opencosting-records ile tohumlanır.
+  opencosting: {
+    ready: () => Boolean(document.getElementById('ocEditor') && !document.getElementById('ocEditor').hidden && document.querySelector('#ocEditor .ocCostSection')) || Boolean(document.getElementById('ocWorkspaceEmpty')?.offsetParent),
+    rows: () => document.querySelectorAll('#ocRecordList [data-id], #ocRecordList .ocRecordItem').length,
+  },
 };
 // Tarayıcıda çalışır (kaynak metni olarak gönderilir).
-function openModuleInPage(module, isReady, countRows, timeoutMs, isFailed) {
+// openButton/tab (isteğe bağlı): sekme düğmesi yerine bir modül içi düğme (ör. CP Fiyat Çalışmaları) tıklanır.
+function openModuleInPage(module, isReady, countRows, timeoutMs, isFailed, openButton, tab) {
   return new Promise(resolve => {
-    const button = document.querySelector(`#railModules button[data-tab="${module}"]`) || document.querySelector(`button[data-tab="${module}"]`);
+    const activeTab = tab || module;
+    const button = openButton ? openButton() : (document.querySelector(`#railModules button[data-tab="${module}"]`) || document.querySelector(`button[data-tab="${module}"]`));
     if (!button) { resolve({ module, error: 'tab button missing' }); return; }
     const t0 = performance.now();
     button.click();
     const tick = () => {
-      if (document.body.dataset.activeTab === module && isFailed && isFailed()) { resolve({ module, t0, t1: performance.now(), error: 'module error state' }); return; }
-      if (document.body.dataset.activeTab === module && isReady()) {
+      if (document.body.dataset.activeTab === activeTab && isFailed && isFailed()) { resolve({ module, t0, t1: performance.now(), error: 'module error state' }); return; }
+      if (document.body.dataset.activeTab === activeTab && isReady()) {
         requestAnimationFrame(() => requestAnimationFrame(() => resolve({ module, t0, t1: performance.now(), rows: countRows() })));
         return;
       }
@@ -69,6 +83,27 @@ function waitBacklogOverviewInPage(t0, timeoutMs) {
       setTimeout(tick, 16);
     };
     tick();
+  });
+}
+function openModuleExpression(module, spec, timeoutMs) {
+  return `(${openModuleInPage})(${JSON.stringify(module)}, ${spec.ready}, ${spec.rows}, ${Number(timeoutMs)}, ${spec.failed || 'null'}, ${spec.open || 'null'}, ${JSON.stringify(spec.tab || '')})`;
+}
+// #1079 WS6d: Açık Maliyet meta alanına yazma (her tuş öneri listesini yeniden kurar). Tarayıcıda çalışır.
+function typeOpenCostingInPage(text, settleMs) {
+  return new Promise(resolve => {
+    const input = document.querySelector('#ocEditor input[data-oc-meta="modelCode"]');
+    if (!input) { resolve({ error: 'model input missing' }); return; }
+    input.focus();
+    input.value = '';
+    const t0 = performance.now(), chars = [...String(text)];
+    let i = 0;
+    const step = () => {
+      if (i >= chars.length) { setTimeout(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve({ t0, t1: performance.now(), keys: chars.length, options: document.querySelectorAll('.ocMetaSuggestDrop .submfrDropItem').length }))), settleMs); return; }
+      input.value += chars[i++];
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      setTimeout(step, 0);
+    };
+    step();
   });
 }
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -192,6 +227,33 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
       if (!saved || !saved.ok || saved.workspace?.rowCount !== options.collectionRows) throw Error('Collection seed failed: ' + JSON.stringify(saved).slice(0, 200));
       result.collectionRows = options.collectionRows;
     }
+    // 1c) İsteğe bağlı CP Fiyat Çalışması ve Açık Maliyet kaydı (#1079 WS6d). Satırlar gerçek CP
+    // projeksiyonundan alınır; kalem biçimi BL_QUOTATIONS.recordRequest ile aynıdır.
+    if (options.quotationCpRows > 0 || options.openCostingRecords > 0) {
+      const cp = await api('/api/data/cp');
+      const cpRows = Array.isArray(cp && cp.rows) ? cp.rows : [];
+      if (cpRows.length < options.quotationCpRows) throw Error('CP rows missing for quotation seed');
+      const s = v => String(v == null ? '' : v).trim();
+      if (options.quotationCpRows > 0) {
+        const step = Math.max(1, Math.floor(cpRows.length / options.quotationCpRows)), picked = [];
+        for (let i = 0; i < options.quotationCpRows; i++) picked.push(cpRows[(i * step) % cpRows.length]);
+        const mfrs = [{ name: 'Synthetic Supplier A', email: '' }, { name: 'Synthetic Supplier B', email: '' }], now = new Date().toISOString();
+        const items = [];
+        picked.forEach((row, ri) => mfrs.forEach((m, mi) => items.push({ id: `quote-${ri}-${mi}-seed`, modelKey: `cp:${s(row._sourceOrderCode) || s(row.plmId) || s(row.modelKod) || ri}`, rowId: null,
+          orderCode: s(row._sourceOrderCode || row['Order Code']), plmId: s(row.plmId || row['PLM ID']), modelCode: s(row.modelKod || row['Model Name']), license: s(row.lisans || row.License),
+          category: s(row.urunTipi || row.Category), colour: s(row.colour || row.Colour), colourCode: s(row.colourCode || row['C.Code'] || row['Colour Code']), fabric: '', season: s(row.season || row.Season),
+          picture: '', inStoreMonth: s(row.inStoreMonth || row['In Store Month']), quantity: Number(row['Order Quantity']) || null, manufacturer: m.name, manufacturerEmail: '', price: mi ? '' : '4,25', approved: false, dropped: false })));
+        const created = await api('/api/quotations', { method: 'POST', body: JSON.stringify({ id: 'quotation-ws6d-seed', source: 'cp', createdAt: now, updatedAt: now, status: 'active', closedAt: '', editorIds: [], note: '', capacityConfirmed: false, manufacturers: mfrs, items }) });
+        if (!created || !created.ok || created.request?.items?.length !== items.length) throw Error('Quotation seed failed: ' + JSON.stringify(created).slice(0, 200));
+        result.quotationCpLines = items.length;
+      }
+      for (let i = 0; i < options.openCostingRecords; i++) {
+        const row = cpRows[(i * 997) % cpRows.length];
+        const saved = await api('/api/open-costing', { method: 'POST', body: JSON.stringify({ title: 'Synthetic costing ' + (i + 1), meta: { modelCode: s(row['Model Name']), manufacturer: s(row['Sub-Manufacturer'] || row.Manufacturer), season: s(row.Season), currency: 'USD' }, sections: {}, rates: {} }) });
+        if (!saved || !saved.item) throw Error('Open costing seed failed: ' + JSON.stringify(saved).slice(0, 200));
+      }
+      result.openCostingRecords = options.openCostingRecords;
+    }
     // 2) Sıcak olmayan yeniden başlatma: ölçülen açılış önbellekten gelir.
     await stop();
     result.backendStartupMs = P.round(await start());
@@ -259,7 +321,7 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
       phase = 'early:' + options.earlyModule;
       await delay(options.earlyDelayMs || 0);
       const spec = MODULES[options.earlyModule];
-      early = await page.evaluate(`(${openModuleInPage})(${JSON.stringify(options.earlyModule)}, ${spec.ready}, ${spec.rows}, ${Number(options.moduleTimeoutMs)}, ${spec.failed || 'null'})`);
+      early = await page.evaluate(openModuleExpression(options.earlyModule, spec, options.moduleTimeoutMs));
       log(`  ${label} early ${options.earlyModule}: ${early.timedOut ? 'TIMEOUT' : P.round(early.t1 - early.t0) + ' ms'}`);
     }
     // 5) Açılış sonrası pencere: BACKGROUND_WARMUP_DONE veya süre sınırı. --post-open-window-ms
@@ -285,7 +347,7 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
       phase = 'module:' + module;
       const spec = MODULES[module];
       // Kaynak metin olarak gömülür: sayfa CSP'si new Function/eval'e izin vermeyebilir.
-      const measured = await page.evaluate(`(${openModuleInPage})(${JSON.stringify(module)}, ${spec.ready}, ${spec.rows}, ${Number(options.moduleTimeoutMs)}, ${spec.failed || 'null'})`);
+      const measured = await page.evaluate(openModuleExpression(module, spec, options.moduleTimeoutMs));
       if (module === 'backlog' && options.backlogSettle && Number.isFinite(measured.t0) && !measured.timedOut && !measured.error) {
         measured.settle = await page.evaluate(`(${waitBacklogOverviewInPage})(${Number(measured.t0)}, ${Number(options.moduleTimeoutMs)})`);
         log(`  ${label} backlog overview: ${measured.settle.state} ${P.round(measured.settle.t2 - measured.t0)} ms`);
@@ -293,6 +355,43 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
       moduleResults.push(measured);
       log(`  ${label} ${module}: ${measured.timedOut ? 'TIMEOUT' : P.round(measured.t1 - measured.t0) + ' ms'}`);
       await delay(options.settleMs);
+      // #1079 WS6d: --opencosting-type TEXT ile modül açıldıktan sonra model alanına tuş tuş yazılır.
+      if (module === 'opencosting' && options.openCostingType && !measured.timedOut && !measured.error) {
+        phase = 'module:opencosting-type';
+        const typed = await page.evaluate(`(${typeOpenCostingInPage})(${JSON.stringify(options.openCostingType)}, 0)`);
+        moduleResults.push({ module: 'opencosting-type', ...typed });
+        log(`  ${label} opencosting-type: ${typed.error || P.round(typed.t1 - typed.t0) + ' ms / ' + typed.keys + ' keys'}`);
+        await delay(options.settleMs);
+      }
+      if (module === 'cpquotations') {
+        await page.evaluate(() => document.querySelector('#quotationModal [data-close-quotation]')?.click());
+        // #1079 WS6d: --quotation-cycles N — modal N kez yeniden açılıp kapatılır; her döngüde süre, sunucu RSS ve renderer heap.
+        const memory = () => { try { const st = fs.readFileSync(`/proc/${server.pid}/status`, 'utf8'), kb = k => Number((st.match(new RegExp(k + ':\\s+(\\d+)')) || [])[1]); return { rssMB: P.round(kb('VmRSS') / 1024), peakMB: P.round(kb('VmHWM') / 1024) }; } catch (_) { return null; } };
+        if (options.quotationCycles > 0) {
+          result.quotationCycles = [{ cycle: 0, server: memory(), heapMB: P.round(((await readRendererMetrics(context, page, 30000)).jsHeapUsedBytes || 0) / 1048576) }];
+          for (let c = 1; c <= options.quotationCycles; c++) {
+            await delay(options.settleMs);
+            const again = await page.evaluate(openModuleExpression(module, spec, options.moduleTimeoutMs));
+            await page.evaluate(() => document.querySelector('#quotationModal [data-close-quotation]')?.click());
+            await delay(options.settleMs);
+            result.quotationCycles.push({ cycle: c, openMs: again.timedOut ? null : P.round(again.t1 - again.t0), server: memory(), heapMB: P.round(((await readRendererMetrics(context, page, 30000)).jsHeapUsedBytes || 0) / 1048576) });
+          }
+          log(`  ${label} cpquotations cycles: ${result.quotationCycles.map(c => `${c.openMs ?? '-'}ms/${c.server?.rssMB}MB/${c.heapMB}MB`).join(' · ')}`);
+        }
+      }
+    }
+    // #1079 WS6d: --final-idle-ms N — modüllerden sonra iki kolda eşit boşta süre; ardından sunucu RSS ve
+    // (ölçüm bittikten sonra, iş yükünü etkilemeden) zorunlu GC sonrası renderer heap'i.
+    if (options.finalIdleMs > 0) {
+      phase = 'final-idle';
+      await delay(options.finalIdleMs);
+      const st = fs.readFileSync(`/proc/${server.pid}/status`, 'utf8'), kb = k => Number((st.match(new RegExp(k + ':\\s+(\\d+)')) || [])[1]);
+      const gcSession = await context.newCDPSession(page);
+      await gcSession.send('HeapProfiler.collectGarbage').catch(() => {});
+      const { usedSize } = await gcSession.send('Runtime.getHeapUsage').catch(() => ({}));
+      await gcSession.detach().catch(() => {});
+      result.finalIdle = { idleMs: options.finalIdleMs, server: { rssMB: P.round(kb('VmRSS') / 1024), peakMB: P.round(kb('VmHWM') / 1024) }, rendererHeapAfterGcMB: Number.isFinite(usedSize) ? P.round(usedSize / 1048576) : null };
+      log(`  ${label} final idle ${options.finalIdleMs} ms: server ${result.finalIdle.server.rssMB} MB (peak ${result.finalIdle.server.peakMB}), renderer heap after GC ${result.finalIdle.rendererHeapAfterGcMB} MB`);
     }
     phase = 'done';
     // Sunucu süreci belleği (Linux /proc; işçi iş parçacıkları aynı süreçte): anlık RSS ve tepe.
