@@ -129,7 +129,7 @@ test('unsaved or in-flight CP edits keep the legacy client path; afterwards a fu
 
 /* #1078 satır yaması: kayıt sürerken okuma bayatlarsa (409) ya da kuyruk doluysa (503) kullanıcıya hata yok:
    önceki değerler satırlarda kalır, oturum kapanmaz, sınırlı sayıda yeniden istenir; yenisi gelince uygulanır. */
-test('transient 409 stale / 503 busy: previous result kept, no session fallback, bounded retry then job-only legacy',async()=>{
+test('transient 409 stale / 503 busy: previous result kept, no session fallback, bounded retry; exhausted keeps previous values (one slow retry), first load falls back to legacy for the job',async()=>{
   let mode='ok';
   const t=load({server:(body)=>mode==='ok'?{status:200,json:{ok:true,columns:{version:1,lang:'tr',token:'t1',delta:false,total:4,
     rows:['r0','r1','r2','r3'].map(id=>[id,'ACTION_TODAY','KNOWN',[],[],[],[],null,null,'O','']),removed:[]}}}
@@ -149,12 +149,24 @@ test('transient 409 stale / 503 busy: previous result kept, no session fallback,
   // Sürekli geçici hata: sınırlı deneme, sonra yalnız bu hesap eski yolla; oturum yine açık.
   mode='busy';t.ctx.__contextRevision=3;
   await t.api.scheduleUnifiedPrioritiesForTable('cp');
-  for(let attempt=0;attempt<10&&t.calls.timers.length;attempt++){
+  for(let attempt=0;attempt<10&&t.calls.timers.length&&t.calls.timers[0].ms<10000;attempt++){
     t.calls.timers.shift().fn();for(let i=0;i<20;i++)await new Promise(resolve=>setImmediate(resolve));
   }
   assert.equal(t.calls.fetch.length,3+5,'ilk istek + 4 yeniden deneme');
-  assert.equal(t.calls.decideAsync,1,'tükenince bu hesap eski yolla');
+  // Önceki sunucu değerleri satırlarda: 30k istemci hesabına düşülmez, değerler kalır; tek geç deneme planlanır.
+  assert.equal(t.calls.decideAsync,0,'eski yol çalışmadı');
+  assert.equal(t.rows[0].Priority,'ACTION_TODAY','önceki değerler kaldı');
+  assert.equal(t.calls.timers.length,1);assert.equal(t.calls.timers[0].ms,10000,'tek geç deneme');
+  t.calls.timers.shift().fn();for(let i=0;i<20;i++)await new Promise(resolve=>setImmediate(resolve));
+  for(let attempt=0;attempt<10&&t.calls.timers.length;attempt++){t.calls.timers.shift().fn();for(let i=0;i<20;i++)await new Promise(resolve=>setImmediate(resolve));}
+  assert.equal(t.calls.fetch.length,8+5,'geç deneme tek sınırlı tur');
+  assert.equal(t.calls.timers.length,0,'ikinci geç deneme yok (yoklama döngüsü yok)');assert.equal(t.calls.decideAsync,0);
   assert.equal(t.api.computed().disabled,false,'oturum açık kaldı');
+  // Önceki değer yokken (ilk yükleme) tükenince bu hesap eski yolla.
+  const fresh=load({server:()=>({status:503,json:{ok:false,code:'COMPUTE_QUEUE_BUSY'}})});
+  await fresh.api.scheduleUnifiedPrioritiesForTable('cp');
+  for(let attempt=0;attempt<10&&fresh.calls.timers.length;attempt++){fresh.calls.timers.shift().fn();for(let i=0;i<20;i++)await new Promise(resolve=>setImmediate(resolve));}
+  assert.equal(fresh.calls.decideAsync,1,'ilk yüklemede tükenince eski yol');assert.equal(fresh.api.computed().disabled,false);
 });
 
 test('server error falls back to the legacy path for the session; row mismatch only for that job',async()=>{

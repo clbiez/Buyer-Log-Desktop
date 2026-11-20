@@ -318,9 +318,10 @@ test('servis: eşzamanlı okumalar tek sanal kurulumu paylaşır; okuma sırası
   assert.equal(h.state.leases,1,'hiçbiri kira beklemedi');
   assert.equal(h.state.payloads.filter(p=>p.virtual).length,1,'tek sanal kurulum');
   assert.equal(h.service.stats().rowPatchFallbacks,0);
-  // Okuma işçide sürerken yeni kayıt: yanıt 409 (rota yeniden dener), temel güncel kalır.
+  // Okuma işçide sürerken yalnız bu kullanıcının satır kaydı: yanıt yakalanan bağlamın anlık görüntüsü olarak döner (409 yok).
   h.state.onRun=()=>h.save(1);
-  await assert.rejects(h.service.computed(moderator,{...computedBody,lang:'en'}),error=>error.code==='COMPUTE_STALE_GENERATION');
+  const during=await h.service.computed(moderator,{...computedBody,lang:'en'});
+  assert.ok(during.body);assert.equal(h.service.stats().rowPatchStaleAccepted,1);
   await h.service.computed(moderator,computedBody);
   assert.equal(h.state.leases,1,'sonraki okuma da kira beklemedi');
   assert.equal(h.service.stats().rowPatchFallbacks,0);
@@ -330,7 +331,7 @@ test('servis: gerçek nesil okuması sırasında kayıt gelirse temel yine kayde
   worker.cache.clear();task.clearHosts();
   const h=serviceHarness();
   h.state.onRun=()=>h.save(0);
-  await assert.rejects(h.service.computed(moderator,computedBody),error=>error.code==='COMPUTE_STALE_GENERATION');
+  await h.service.computed(moderator,computedBody);
   assert.equal(h.state.leases,1);
   await h.service.computed(moderator,computedBody);
   assert.equal(h.state.leases,1,'işçideki veri kümesi temel olarak kullanıldı');
@@ -358,4 +359,15 @@ test('servis: sıcak barındırıcıda yama okuması sıcak tahminle tek işte; 
   assert.ok(cold[1].estimated>cold[0].estimated,'soğuk tahmin');
   assert.equal(h.state.leases,1,'kira yok');assert.equal(h.service.stats().coldRetries,1);
   assert.ok(out.timing.service.rowPatch.steps>=1);
+});
+
+test('servis: okuma sırasında günlükte olmayan değişim (başka yazım / kaynak) yine 409; satır kaydı zinciri yalnız aynı damgada kabul',{timeout:120000},async()=>{
+  worker.cache.clear();task.clearHosts();
+  const h=serviceHarness();
+  await h.service.computed(moderator,computedBody);
+  h.state.onRun=()=>{h.state.contextHash='baskasi';};
+  await assert.rejects(h.service.computed(moderator,{...computedBody,lang:'en'}),error=>error.code==='COMPUTE_STALE_GENERATION');
+  h.save(0);h.state.onRun=()=>{h.save(1);h.state.sourceToken='s9';};
+  await assert.rejects(h.service.computed(moderator,computedBody),error=>error.code==='COMPUTE_STALE_GENERATION','zincir var ama kaynak damgası değişti');
+  assert.equal(h.service.stats().rowPatchStaleAccepted,0);
 });

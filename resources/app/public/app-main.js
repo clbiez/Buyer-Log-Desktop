@@ -1431,7 +1431,7 @@ function scheduleUnifiedPrioritiesForTable(tableKey,options={}){
    Anahtar: window.BL_READ_MODEL_CP_COMPUTED (boolean) ya da kullanıcı tercihi
    'bl.cpComputed.v1'; varsayılan AÇIK ('0' ile kapanır; #1078 alt PR 3). */
 const CP_COMPUTED_STORAGE_KEY='bl.cpComputed.v1';
-const cpComputed={disabled:false,applied:null,job:null,enabled:null,answersOnly:false,optimistic:null,pendingView:false,transient:0,readyOnce:false};
+const cpComputed={disabled:false,applied:null,job:null,enabled:null,answersOnly:false,optimistic:null,pendingView:false,transient:0,readyOnce:false,slowRetry:false};
 function cpComputedEnabled(){
   if(cpComputed.disabled)return false;
   if(typeof window.BL_READ_MODEL_CP_COMPUTED==='boolean')return window.BL_READ_MODEL_CP_COMPUTED;
@@ -1616,7 +1616,7 @@ function scheduleCpComputedColumns(rows,revision,contextRevision,day){
     cpComputed.applied=null;
     const count=applyCpComputedColumns(rows,payload.columns,since);
     // readyOnce: sunucu barındırıcısı bu oturumda sıcak; pencereli CP yolu bundan sonra kullanılır (renderCPFromReadModel).
-    cpComputed.applied={rows,token:payload.columns.token,lang};cpComputed.transient=0;cpComputed.readyOnce=true;
+    cpComputed.applied={rows,token:payload.columns.token,lang};cpComputed.transient=0;cpComputed.readyOnce=true;cpComputed.slowRetry=false;
     _unifiedPriorityCache.cp={rows,dataRevision:revision,contextRevision,day,source:'read-model'};
     _cpPriorityIndex=null;_cpPriorityIndexRevision+=1;
     try{window.dispatchEvent(new CustomEvent('bl:cp-priority-index-changed'));}catch(_){}
@@ -1636,6 +1636,13 @@ function scheduleCpComputedColumns(rows,revision,contextRevision,day){
     if(transient&&(cpComputed.transient=(cpComputed.transient||0)+1)<=CP_RM_TRANSIENT_RETRIES){
       cpComputed.job=null;
       setTimeout(()=>{if(cpComputedEligible())void scheduleUnifiedPrioritiesForTable('cp');},cpRMRetryDelay(cpComputed.transient));
+      return false;
+    }
+    // Geçici hata tükendi ama satırlarda önceki sunucu değerleri var: onlar kalır (30k istemci hesabı sayfayı dondurur);
+    // tek bir geç deneme son kaydın değerlerini getirir, sonraki tetikleyici (kayıt onayı, canlı olay) zaten yeniden ister.
+    if(transient&&cpComputed.applied&&cpComputed.applied.rows===rows){
+      cpComputed.transient=0;cpComputed.job=null;
+      if(!cpComputed.slowRetry){cpComputed.slowRetry=true;setTimeout(()=>{if(cpComputedEligible())void scheduleUnifiedPrioritiesForTable('cp');},10000);}
       return false;
     }
     cpComputed.applied=null;

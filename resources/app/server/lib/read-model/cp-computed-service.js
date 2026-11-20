@@ -120,7 +120,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
   if(!guard||typeof loadProjection!=='function'||typeof runCompute!=='function'||typeof loadContext!=='function'||typeof loadTasks!=='function')
     throw TypeError('Invalid CP computed service dependencies');
   const cache=new Map(),latest=new Map(),bases=new Map(),building=new Map();let cachedBytes=0;
-  const counters={requests:0,hits:0,misses:0,emptyDeltas:0,datasetLoads:0,rowPatchReads:0,rowPatchBuilds:0,rowPatchVerified:0,rowPatchMismatches:0,rowPatchFallbacks:0,coldRetries:0};
+  const counters={requests:0,hits:0,misses:0,emptyDeltas:0,datasetLoads:0,rowPatchReads:0,rowPatchBuilds:0,rowPatchVerified:0,rowPatchMismatches:0,rowPatchFallbacks:0,coldRetries:0,rowPatchStaleAccepted:0};
   function remove(key){const entry=cache.get(key);if(!entry)return;cache.delete(key);cachedBytes-=entry.bytes;}
   function put(key,scope,entry){
     for(const [other,value] of cache)if(value.scope===scope)remove(other);
@@ -134,6 +134,20 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
     return `${manifest.activeGeneration||''}:${String(meta&&meta.checksum||'').slice(0,16)}`;
   };
   const stampOf=captured=>JSON.stringify([String(captured.userId),String(captured.accessHash),String(captured.sourceToken)]);
+  /* Yanıt kapısı. Okuma sürerken yalnız bu kullanıcının satır kayıtları olduysa (kullanıcı/yetki/kaynak damgası aynı ve
+     günlükte yakalanan bağlamdan güncel bağlama zincir var) yanıt, yakalanan bağlamın tutarlı ve yetkili anlık görüntüsüdür:
+     409 yerine döner (istemci kayıt onayından sonra zaten yeniden ister). Oturum/alan guard.capture ile yeniden doğrulanır;
+     başka her değişim (yetki, kaynak, başka kullanıcının yazımı) 409 COMPUTE_STALE_GENERATION kalır. Soğuk başlangıçta
+     uzun bekleyen okumalar kayıt akışı sürerken her denemede bayatlayıp istemciye 409 olarak düşüyordu. */
+  function assertFresh(req,captured,lease=null){
+    try{captured.assertResponse();lease?.assertResponse?.();}
+    catch(error){
+      if(error?.code!=='COMPUTE_STALE_GENERATION'||!rowPatchLog||captured.userId==null||captured.contextHash==null)throw error;
+      const now=guard.capture(req,'cp');
+      if(stampOf(now)!==stampOf(captured)||!rowPatchLog.chain(captured.userId,captured.contextHash,now.contextHash))throw error;
+      counters.rowPatchStaleAccepted++;
+    }
+  }
   /* Plan ya da {miss:<neden>} (tanı: yanıt timing.service.rowPatch.miss). */
   function rowPatchPlan(captured,scope){
     if(!rowPatchLog||captured.userId==null||captured.contextHash==null)return {miss:'off'};
@@ -223,7 +237,8 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
           options:workerOptions({...options,estimatedBytes:datasetLoadEstimate(out,options,uncompressed,bytes.byteLength),inputBytes:bytes.byteLength,transferList:[bytes.buffer]})});
       }
       if(out&&!out.missing&&!out.short)bases.set(scope,{stamp:stampOf(captured),contextHash:String(captured.contextHash),datasetKey,virtual:false,lineage:[],uncompressed});
-      captured.assertResponse();lease.assertResponse?.();
+      // Kira verisi yakalanan bağlamındır (kira alınır alınmaz denetlendi); arada yalnız satır kaydı olduysa tutarlı anlık görüntü.
+      assertFresh(req,captured,lease);
       return {out,generation,leaseMs,rowPatch:{miss}};
     }finally{lease.release?.();}
   }
@@ -242,7 +257,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
     const t2=performance.now();
     const tasks=await loadTasks(profile);
     const service={captureMs:Math.round(t1-t0),contextMs:Math.round(t2-t1),tasksMs:Math.round(performance.now()-t2)};
-    captured.assertResponse();
+    assertFresh(req,captured);
     const contextKey=hash(JSON.stringify([String(context.key),tasks,request.answers]));
     const scope=JSON.stringify([captured.key,'cp-computed']);
     const contextValue=request.answers?{...context.value,answers:overlayAnswers(context.value&&context.value.answers,request.answers)}:context.value;
@@ -252,12 +267,12 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
     const loaded=await withDataset(req,captured,signal,async({dataset,extra,options,generation,verifying})=>{
       const key=keyOf(generation),last=latest.get(scope);
       if(!verifying&&!dataset.buffer&&request.since&&last&&last.token===request.since&&last.key===key){
-        counters.emptyDeltas++;captured.assertResponse();
+        counters.emptyDeltas++;assertFresh(req,captured);
         return {short:{generation,cached:true,body:`{"version":1,"lang":${JSON.stringify(request.lang)},"token":${JSON.stringify(last.token)},"delta":true,"total":${last.total},"fields":null,"rows":[],"removed":[]}`,timing:{cached:true,delta:true,changed:0,service}}};
       }
       if(!verifying&&!dataset.buffer&&!request.since){
         const cached=get(key);
-        if(cached){counters.hits++;captured.assertResponse();latest.set(scope,{key,token:cached.token,total:cached.total});return {short:{generation,cached:true,body:cached.body,timing:{...cached.timing,cached:true}}};}
+        if(cached){counters.hits++;assertFresh(req,captured);latest.set(scope,{key,token:cached.token,total:cached.total});return {short:{generation,cached:true,body:cached.body,timing:{...cached.timing,cached:true}}};}
       }
       return run('read-model-cp-computed',{dataset,scopeKey:hostScopeOf(captured,context),lang:request.lang,since:request.since,context:contextValue,tasks,...extra},options);
     });
@@ -265,7 +280,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
     counters.misses++;
     const {out,generation}=loaded;
     if(!out||typeof out.body!=='string')throw failure('COMPUTE_WORKER_FAILED',500,'Hesaplama işçisi tamamlanamadı.','Compute worker failed.');
-    captured.assertResponse();
+    assertFresh(req,captured);
     const key=keyOf(generation),head=JSON.parse(out.body.slice(0,out.body.indexOf(',"fields"'))+'}');
     latest.set(scope,{key,token:head.token,total:head.total});
     if(!head.delta)put(key,scope,{body:out.body,timing:out.timing,token:head.token,total:head.total,bytes:Buffer.byteLength(out.body)});
@@ -289,14 +304,14 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
     const context=loadContext(profile);
     const tasks=await loadTasks(profile);
     const service={captureMs:Math.round(t1-t0),contextMs:Math.round(performance.now()-t1)};
-    captured.assertResponse();
+    assertFresh(req,captured);
     const contextValue=request.answers?{...context.value,answers:overlayAnswers(context.value&&context.value.answers,request.answers)}:context.value;
     const t2=performance.now();
     const loaded=await withDataset(req,captured,signal,({dataset,extra,options})=>
       run('read-model-cp-query',{dataset,scopeKey:hostScopeOf(captured,context),lang:request.lang,context:contextValue,tasks,kind,request:spec,...extra},options));
     const {out,generation}=loaded;
     if(!out||!out.result)throw failure('COMPUTE_WORKER_FAILED',500,'Hesaplama işçisi tamamlanamadı.','Compute worker failed.');
-    captured.assertResponse();
+    assertFresh(req,captured);
     return {generation,result:out.result,timing:{...out.timing,service:{...service,leaseMs:loaded.leaseMs,...(loaded.rowPatch?{rowPatch:loaded.rowPatch}:{}),computeMs:Math.round(performance.now()-t2)}}};
   }
   function clear(){cache.clear();latest.clear();bases.clear();cachedBytes=0;}
