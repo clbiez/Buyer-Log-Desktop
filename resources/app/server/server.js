@@ -10189,9 +10189,9 @@ const { applyIncrementalProjectionPatch, projectionPatchMatches } = require('./l
 // cpRows (isteğe bağlı): CP modülünde yamalanan satırlar yazımdan sonra buraya (okuma modeli doğrulaması, cp-row-patch-log).
 async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, items, cpRows=null) {
   const clean=(Array.isArray(items)?items:[]).filter(item=>item&&Number.isFinite(Number(item.orderCode))&&rowPatchIncrementalSafe(item.patch));
-  if (!clean.length || clean.length !== (Array.isArray(items)?items.length:0)) return false;
+  if (!beforeContext || !clean.length || clean.length !== (Array.isArray(items)?items.length:0)) return false;
   const afterContext=pageProjectionContext(currentUser);
-  if (!beforeContext || String(beforeContext.contextHash)===String(afterContext.contextHash)) return false;
+  if (String(beforeContext.contextHash)===String(afterContext.contextHash)) return false;
   const overrides=effectiveOverridesForUser(afterContext.id);
   /* #1078 takip (WS7b): ağır JSON işi projection-rewrite işçisinde, yalnız değişen modül yazılır,
      kuyrukta ardışık bekleyen yeniden yazımlar birleşir; sonuç aşağıdaki eski yolla birebir aynıdır
@@ -10225,6 +10225,14 @@ async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, i
   return Boolean(manifest);
 }
 
+/* #1071: Kayıt rotaları yazımdan önceki projeksiyon bağlamını yalnız önbellek yamalamak için alır.
+   Bağlam yetki özetini (computeAccessContext) okur; özet compute havuzunda hazırlanırken
+   (kuyruk/işçi hatası) COMPUTE_ACCESS_NOT_READY atar. Bu, kullanıcı kaydını reddettirmez:
+   bağlam yoksa önbellek yaması atlanır, sonraki okuma yeni bağlamla yeniden kurar. */
+function writeProjectionContext(currentUser){
+  try{return pageProjectionContext(currentUser);}
+  catch(error){logRuntimeFailure('writeProjectionContext',error);return null;}
+}
 // The override write is already durable; rewriting every cached module
 // (gunzip → patch → gzip) took seconds on large data and delayed the save
 // acknowledgement. It starts now, serialized per user, and cache reads wait
@@ -10280,7 +10288,7 @@ app.post('/api/overrides/batch', async (req, res) => {
     if (rejectSharedOwnerWrites(req, res, items)) return;
     if(items.some(item=>Object.prototype.hasOwnProperty.call(item?.patch?.dates||{},'exFactory'))&&!Array.isArray(cacheForUser(req.currentUser).asasOrders))await ensureDataLoaded(req.currentUser);
     assertAutomaticDatesReadOnly(req.currentUser,items);
-    const beforeContext=pageProjectionContext(req.currentUser);
+    const beforeContext=writeProjectionContext(req.currentUser);
     const saved = patchOrderOverrides(items, requestRevision(req), requestSuppFobRevision(req), { actor: noteActorOf(req.currentUser) });
     void sharedRevisionStore.update('cpOverrides',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
     const pageCachePatchQueued=queueProjectionCacheRowPatches(req.currentUser,beforeContext,items,'rowProjectionCachePatch');
@@ -10301,7 +10309,7 @@ app.patch('/api/overrides/:orderCode', async (req, res) => {
     if (rejectSharedOwnerWrites(req, res, [{ orderCode, patch:req.body || {} }])) return;
     if(Object.prototype.hasOwnProperty.call(req.body?.dates||{},'exFactory')&&!Array.isArray(cacheForUser(req.currentUser).asasOrders))await ensureDataLoaded(req.currentUser);
     assertAutomaticDatesReadOnly(req.currentUser,[{orderCode,patch:req.body||{}}]);
-    const beforeContext=pageProjectionContext(req.currentUser);
+    const beforeContext=writeProjectionContext(req.currentUser);
     /* İstemci kaynaklı "origin" alanı veri değildir; yama gövdesinden ayıklanır —
        yoksa sipariş kaydına anlamsız bir alan sızar ve canlı yayınla bütün
        cihazlara dağılırdı. */
@@ -10321,7 +10329,7 @@ app.patch('/api/overrides/:orderCode', async (req, res) => {
 // CP satır kaydı (#1078 WS5 alt PR 3): alan bazlı karşılaştırmalı yazma; yetki ve yan etkiler yukarıdaki rotalarla aynı.
 require('./lib/read-model/cp-row-save').registerCpRowSaveRoute(app,{
   patchRows:(items,options)=>require('./db').patchOrderOverrideRows(items,options),
-  rejectUnauthorizedOrders,rejectSharedOwnerWrites,assertAutomaticDatesReadOnly,pageProjectionContext,queueProjectionCacheRowPatches,liveRowPatchesFor,noteActorOf,apiError,
+  rejectUnauthorizedOrders,rejectSharedOwnerWrites,assertAutomaticDatesReadOnly,pageProjectionContext:writeProjectionContext,queueProjectionCacheRowPatches,liveRowPatchesFor,noteActorOf,apiError,
   readContextHashOf:context=>computeReadContext(null,context).contextHash,recordRowPatches:recordCpRowPatches,
   ensureAutomaticDateSource:async(req,items)=>{if(items.some(item=>Object.prototype.hasOwnProperty.call(item.patch.dates||{},'exFactory'))&&!Array.isArray(cacheForUser(req.currentUser).asasOrders))await ensureDataLoaded(req.currentUser);},
   notifyShared:user=>{void sharedRevisionStore.update('cpOverrides',{actorId:user.id}).catch(error=>logRuntimeFailure('sharedRevision',error));},
@@ -10335,9 +10343,9 @@ async function rewriteProjectionCacheForImageItems(currentUser,beforeContext,ite
     const plm=parseLib.normalizePlmImageId(item&&item.plmId),colour=parseLib.normalizeCpImageColourCode(item&&item.colourCode),ref=item&&item.imageRef!=null?String(item.imageRef).trim():'';
     if(!plm)continue;if(colour)exact.set(`${plm}\u0000${colour}`,ref);else byPlm.set(plm,ref);
   }
-  if(!exact.size&&!byPlm.size)return false;
+  if(!beforeContext||(!exact.size&&!byPlm.size))return false;
   const afterContext=pageProjectionContext(currentUser);
-  if(!beforeContext||String(beforeContext.contextHash)===String(afterContext.contextHash))return false;
+  if(String(beforeContext.contextHash)===String(afterContext.contextHash))return false;
   const manifest=await pageProjectionCache.rewriteGeneration(afterContext.id,{
     fromContextHash:beforeContext.contextHash,toContextHash:afterContext.contextHash,
     transform:(_module,payload)=>{
@@ -10359,7 +10367,7 @@ app.post('/api/plm-image-links', userAccess.requireArea('koleksiyon'), async (re
     assertModelImageMutable();
     const items = (req.body || {}).items;
     if (!Array.isArray(items)) return res.status(400).json({ error: 'items (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
-    const beforeContext=pageProjectionContext(req.currentUser);
+    const beforeContext=writeProjectionContext(req.currentUser);
     const saved = patchPlmImageLinks(items, requestRevision(req));
     /* MANUEL SAHİPLİK. Bu uç kullanıcının ELLE yaptığı görsel bağlama/
        kaldırma işidir. Otomatik sahiplik kaydı burada DÜŞER; aksi hâlde
@@ -10428,7 +10436,7 @@ app.post('/api/model-images/delete-selected', userAccess.requireAnyArea('cp','or
     }
     if (!identities.size && !rowPlmIds.size && !rowRecordIds.size) return res.status(400).json({ error:'Seçili satırlarda silinecek model görseli kimliği bulunamadı.', code:'MODEL_IMAGE_IDENTITY_REQUIRED' });
 
-    const beforeContext = pageProjectionContext(req.currentUser);
+    const beforeContext = writeProjectionContext(req.currentUser);
     const imagemap = loadOverrides().imagemap || {};
     const candidates = new Set(rowRefs);
     const linkItems = [];
@@ -10522,7 +10530,7 @@ app.post('/api/overrides/batch-suppfob', async (req, res) => {
     if (!Array.isArray(items)) return res.status(400).json({ error: 'items (dizi) zorunlu.' });
     if (rejectUnauthorizedOrders(req, res, items.map(item => item && item.orderCode))) return;
     if (rejectSharedOwnerWrites(req, res, items)) return;
-    const beforeContext=pageProjectionContext(req.currentUser);
+    const beforeContext=writeProjectionContext(req.currentUser);
     const clean = items.map(item => ({
       orderCode: Number(item && item.orderCode),
       // Satır kimliği: sipariş + model + renk kodu. Gelmezse eski sipariş bazlı anahtar.
