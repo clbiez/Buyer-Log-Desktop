@@ -182,3 +182,32 @@ test('rowPatchContext yalnız yamalanan siparişlerin anahtarlarını taşır (s
   assert.equal(context.importanceSettings, overrides.importanceSettings);
   assert.equal(context.other, undefined);
 });
+
+test('işçi istemcisi: boşta kapanır, zaman aşımı ve işçi çökmesi işi reddeder, sonraki iş yeni işçiyle çalışır', async () => {
+  const { EventEmitter } = require('node:events');
+  const { createProjectionRewritePool } = require('../server/lib/projection-rewrite-pool');
+  const created = [];
+  class FakeWorker extends EventEmitter {
+    constructor() { super(); this.terminated = false; created.push(this); }
+    postMessage(message) {
+      const mode = message.payload.steps[0].mode;
+      if (mode === 'ok') setImmediate(() => this.emit('message', { type: 'result', id: message.id, ok: true, value: { modules: [], cpRowsBySteps: [null] } }));
+      if (mode === 'crash') setImmediate(() => this.emit('exit', 1));
+    }
+    terminate() { this.terminated = true; return Promise.resolve(0); }
+    ref() {} unref() {}
+  }
+  // Gerçek işçi iş sürerken ref'lidir; sahte işçi döngüyü tutmaz, test döngüyü açık tutar.
+  const keepAlive = setInterval(() => {}, 10);
+  const pool = createProjectionRewritePool({ WorkerClass: FakeWorker, idleMs: 20, timeoutMs: 50 });
+  const job = mode => pool.run({ modules: [{ module: 'cp', buffer: Buffer.from('x') }], steps: [{ mode }] });
+  assert.deepEqual(await job('ok'), { modules: [], cpRowsBySteps: [null] });
+  await new Promise(resolve => setTimeout(resolve, 60));
+  assert.equal(created[0].terminated, true, 'boşta işçi kapanır');
+  await assert.rejects(job('hang'), { code: 'PROJECTION_REWRITE_TIMEOUT' });
+  await assert.rejects(job('crash'), { code: 'PROJECTION_REWRITE_WORKER_FAILED' });
+  assert.deepEqual(await job('ok'), { modules: [], cpRowsBySteps: [null] });
+  assert.equal(created.length, 4);
+  await pool.close();
+  clearInterval(keepAlive);
+});
