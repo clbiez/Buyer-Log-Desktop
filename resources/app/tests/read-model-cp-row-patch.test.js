@@ -275,7 +275,7 @@ test('servis: uyuşmazlık ya da başarısız yeniden yazımda istek gerçek nes
   h.log.settle(first.entry,{ok:true,rowsJson:JSON.stringify(tampered)});
   const out=await h.service.computed(moderator,computedBody);
   assert.equal(h.state.leases,2,'gerçek nesil kirası alındı');
-  assert.equal(h.state.payloads.at(-1).virtual,false);assert.ok(!out.timing.service.rowPatch);
+  assert.equal(h.state.payloads.at(-1).virtual,false);assert.deepEqual(out.timing.service.rowPatch,{miss:'mismatch'},'neden yanıtta');
   assert.equal(h.state.mismatches.length,1);assert.equal(h.state.mismatches[0].reason,'row-mismatch');assert.equal(h.state.mismatches[0].mismatched,1);
   // Başarısız yeniden yazım: doğrulanamaz → gerçek nesil.
   const second=h.save(1);

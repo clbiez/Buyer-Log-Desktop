@@ -134,16 +134,18 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
     return `${manifest.activeGeneration||''}:${String(meta&&meta.checksum||'').slice(0,16)}`;
   };
   const stampOf=captured=>JSON.stringify([String(captured.userId),String(captured.accessHash),String(captured.sourceToken)]);
+  /* Plan ya da {miss:<neden>} (tanı: yanıt timing.service.rowPatch.miss). */
   function rowPatchPlan(captured,scope){
-    if(!rowPatchLog||captured.userId==null||captured.contextHash==null)return null;
+    if(!rowPatchLog||captured.userId==null||captured.contextHash==null)return {miss:'off'};
     const base=bases.get(scope);
-    if(!base||base.stamp!==stampOf(captured))return null;
+    if(!base)return {miss:'no-base'};
+    if(base.stamp!==stampOf(captured))return {miss:'stamp'};
     const to=String(captured.contextHash);
-    if(base.contextHash===to)return base.virtual?{base,datasetKey:base.datasetKey,steps:null,lineage:base.lineage,contextHash:to}:null;
+    if(base.contextHash===to)return base.virtual?{base,datasetKey:base.datasetKey,steps:null,lineage:base.lineage,contextHash:to}:{miss:'current'};
     const chain=rowPatchLog.chain(captured.userId,base.contextHash,to);
-    if(!chain||!chain.entries.length)return null;
+    if(!chain||!chain.entries.length)return {miss:'no-chain'};
     const lineage=base.lineage.concat(chain.entries);
-    if(lineage.length>MAX_LINEAGE)return null;
+    if(lineage.length>MAX_LINEAGE)return {miss:'lineage'};
     return {base,datasetKey:hash(JSON.stringify([base.datasetKey,to,'cp-rowpatch'])),steps:chain.entries.map(entry=>({items:entry.items,context:entry.context})),lineage,contextHash:to};
   }
   /* Zincirin tüm yeniden yazımları bittiyse doğrulama satırları (aynı _id için en son yazım); başarısız yazım → fail. */
@@ -165,10 +167,11 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
     // Aynı kapsamda süren sanal kurulum bitmeden plan yapılmaz: ikisi aynı temelden kurulursa ilki temeli
     // işçiden düşürür ve ikincisi gereksiz yere gerçek nesle (kira) döner.
     for(let guard=0;building.has(scope)&&guard<8;guard++)await building.get(scope).catch(()=>{});
-    const plan=rowPatchPlan(captured,scope);
+    let plan=rowPatchPlan(captured,scope),miss=plan.miss||null;
+    if(miss)plan=null;
     if(plan){
       const verification=verificationOf(plan.lineage);
-      if(verification&&verification.fail){bases.delete(scope);counters.rowPatchMismatches++;onRowPatchMismatch({reason:'rewrite-failed',userId:captured.userId});}
+      if(verification&&verification.fail){bases.delete(scope);miss='rewrite-failed';counters.rowPatchMismatches++;onRowPatchMismatch({reason:'rewrite-failed',userId:captured.userId});}
       else{
         const generation='rp:'+plan.datasetKey.slice(0,24);
         const dataset={datasetKey:plan.datasetKey,scopeKey:scope,...(plan.steps?{virtual:{baseKey:plan.base.datasetKey,steps:plan.steps}}:{})};
@@ -188,7 +191,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
           bases.set(scope,{...plan.base,contextHash:plan.contextHash,datasetKey:plan.datasetKey,virtual:true,lineage:verified?[]:plan.lineage});
           return {out,generation,leaseMs:0,rowPatch:{steps:plan.steps?plan.steps.length:0,pending:verified?0:plan.lineage.length,verified}};
         }
-        bases.delete(scope);
+        bases.delete(scope);miss=mismatch?'mismatch':'missing';
         if(mismatch){counters.rowPatchMismatches++;onRowPatchMismatch({reason:'row-mismatch',userId:captured.userId,ids:out.verify.ids,checked:out.verify.checked,mismatched:out.verify.mismatched});}
         else counters.rowPatchFallbacks++;
       }
@@ -205,7 +208,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
       const uncompressed=Number(value.uncompressedBytes)||compressed*8;
       const options={signal,estimatedBytes:96*1024*1024+Math.ceil(uncompressed*DECISION_FACTOR),ownerKey:'read-model',generation:'1'};
       let out=await exec({dataset:{datasetKey,scopeKey:scope},extra:{},generation,verifying:false,options:workerOptions(options)});
-      if(out&&out.short)return {short:out.short,generation,leaseMs};
+      if(out&&out.short)return {short:out.short,generation,leaseMs,rowPatch:{miss}};
       if(out&&Array.isArray(out.missing)&&out.missing.includes('cp')){
         counters.datasetLoads++;
         const source=value.buffer,bytes=Uint8Array.from(Buffer.isBuffer(source)?source:Buffer.from(source||[]));
@@ -214,7 +217,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
       }
       if(out&&!out.missing&&!out.short)bases.set(scope,{stamp:stampOf(captured),contextHash:String(captured.contextHash),datasetKey,virtual:false,lineage:[],uncompressed});
       captured.assertResponse();lease.assertResponse?.();
-      return {out,generation,leaseMs};
+      return {out,generation,leaseMs,rowPatch:{miss}};
     }finally{lease.release?.();}
   }
   async function run(task,payload,options){
@@ -222,6 +225,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
     try{return result.value;}finally{result.release?.();}
   }
   async function computed(req,rawBody,{signal}={}){
+    const t0=performance.now();
     const captured=guard.capture(req,'cp');
     const request=validateRequest(rawBody);
     counters.requests++;
@@ -230,7 +234,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
     const context=loadContext(profile);
     const t2=performance.now();
     const tasks=await loadTasks(profile);
-    const service={contextMs:Math.round(t2-t1),tasksMs:Math.round(performance.now()-t2)};
+    const service={captureMs:Math.round(t1-t0),contextMs:Math.round(t2-t1),tasksMs:Math.round(performance.now()-t2)};
     captured.assertResponse();
     const contextKey=hash(JSON.stringify([String(context.key),tasks,request.answers]));
     const scope=JSON.stringify([captured.key,'cp-computed']);
@@ -265,6 +269,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
      Aynı yetki kapısı, satır kaynağı (bekleyen yama zinciri ya da projeksiyon kirası), kişisel bağlam ve
      görev süzmesi; hesaplanmış değerler işçide ensureComputed önbelleğinden (bağlam/cevap/gün aynıysa yeniden hesap yok). */
   async function read(kind,req,rawBody,{signal}={}){
+    const t0=performance.now();
     const captured=guard.capture(req,'cp');
     const field=kind==='facets'?'facets':'query';
     const request=validateRequest(rawBody,{extra:field});
@@ -276,7 +281,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
     const profile=captured.profile||req.currentUser;
     const context=loadContext(profile);
     const tasks=await loadTasks(profile);
-    const service={contextMs:Math.round(performance.now()-t1)};
+    const service={captureMs:Math.round(t1-t0),contextMs:Math.round(performance.now()-t1)};
     captured.assertResponse();
     const contextValue=request.answers?{...context.value,answers:overlayAnswers(context.value&&context.value.answers,request.answers)}:context.value;
     const t2=performance.now();
