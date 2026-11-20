@@ -54,11 +54,9 @@ function datasetFor(spec,{cache,engine},loads){
 }
 
 /* Cevap dışındaki bağlam: değişirse barındırıcı yeniden kurulur. */
-/* Barındırıcıda çalışan betiklerin (SCRIPTS + checklist-supplier-sync.js) HİÇ okumadığı arayüz
-   durumu: boyut filtreleri, görsel boyutu, BOM kontrol işaretleri. Anahtara girerse her filtre
-   kaydı 30k satırın kararlarını baştan hesaplatır (#1078 alt PR 2 ölçümü: 13,7 sn). Bekçi:
-   read-model-cp-window-route.test.js (betik taraması). */
-const UI_ONLY_ENTRY=/^lcw\.cp\.(?:dimFilters|imageSize|bomControl)\./;
+// Barındırıcının okumadığı arayüz tercihleri (tek tanım: overview-model-service createContextLoader).
+// Bağlam yükleyicisi bunları zaten çıkarır; burada eski/doğrudan yüklerde de anahtara girmez.
+const {UI_ONLY_ENTRY}=require('./overview-model-service');
 function hostKeyOf(payload){
   const context=payload.context||{},entries={...(context.entries||{})};
   delete entries[ANSWER_KEY];
@@ -128,14 +126,16 @@ function shadowFormulas(win,transitRules){
   };
 }
 
-function computeRows(entry,rows,transitRules){
+/* targets: yalnız bu satırlar hesaplanır (artımlı yol); checklist ağırlıkları yine tüm satırlardan. */
+function computeRows(entry,rows,transitRules,targets=null){
   const {host,sync}=entry,win=host.window,OD=win.BLOrderDecisionEngine,Model=win.BLOverviewModel,Rev=win.BLRevision,Checklist=win.BLCpChecklistEngine;
   const phases={};let started=performance.now();
-  const decision=host.decide(rows.slice());
+  const list=targets||rows;
+  const decision=host.decide(list.slice());
   phases.decisionMs=performance.now()-started;started=performance.now();
   const code=value=>Model.actionPriorityCode(value,OD);
   const out=new Map(),bases=[];
-  for(const row of rows){
+  for(const row of list){
     const analysis=decision&&decision.byRow?decision.byRow.get(row):null;
     out.set(row,{
       priority:code(analysis&&analysis.priority)||'ON_TRACK',
@@ -163,9 +163,9 @@ function computeRows(entry,rows,transitRules){
   }
   phases.priorityMs=performance.now()-started;started=performance.now();
   win.__cpComputedRows=rows;
-  sync.refreshColumns({render:false,decision,reuse:true});
+  sync.refreshColumns(targets?{render:false,decision,reuse:true,rows:targets}:{render:false,decision,reuse:true});
   const columns=(win.COLS_BY_TABLE.cp||[]).filter(col=>col&&col.checklistSupplierColumn).map(col=>col.k);
-  for(const row of rows){
+  for(const row of list){
     const values=out.get(row);
     if(!columns.length){values.checklist=null;continue;}
     const cells={};for(const key of columns)cells[key]=row[key]==null?'':row[key];
@@ -185,7 +185,9 @@ async function ensureComputed(payload,deps){
   const loads={};
   if(!payload||!payload.dataset)throw Object.assign(new Error('Invalid compute request'),{code:'COMPUTE_JOB_INVALID'});
   const dataset=datasetFor(payload.dataset,deps,loads);
-  if(!dataset)return {missing:['cp']};
+  // warm: bu bağlamın barındırıcısı ve önceki sonucu işçide hazır (yeni nesil artımlı hesaplanır; servis bellek
+  // tahminini buna göre verir — soğuk karar payı istenirse havuz boştaki işçiyi kapatıp barındırıcıyı düşürür).
+  if(!dataset)return {missing:['cp'],warm:Boolean(payload.context&&hosts.get(hostKeyOf(payload))?.current)};
   if(!payload.context)return {missing:['context']};
   const key=hostKeyOf(payload);
   let entry=hosts.get(key),hostMs=0;
@@ -202,32 +204,101 @@ async function ensureComputed(payload,deps){
   const rows=dataset.rows;
   const signature=JSON.stringify([entry.answersVersion,entry.tasksSignature,new Date().toDateString()]);
   if(entry.current&&entry.current.rows===rows&&entry.current.signature===signature)return {dataset,entry,current:entry.current,hostMs,loads,reused:true};
-  const {out,phases}=computeRows(entry,rows,payload.context.transitRules||[]);
+  const transitRules=payload.context.transitRules||[];
+  /* Satır kaynak özetleri yalnız yeni bir nesil geldiğinde (düzenleme) alınır; soğuk/tam hesap ödemez.
+     Önceki neslin özeti hesaptan SONRA alınabilir: hesap satırlara yalnız COMPUTED_KEY alanlarını yazar
+     ve özet onları dışarıda bırakır (parite testi değişen satır sayısının birebir eşitliğiyle bekçiler;
+     varsayım bozulursa her satır değişmiş görünür ve tam hesaba düşülür — yanlış sonuç değil). */
+  const identity=sourceIdentity(rows);
+  const previous=entry.current&&entry.current.signature===signature&&entry.current.identity===identity&&!payload.forceFull?entry.current:null;
+  let source=null,sourceMs=0;
+  if(previous){
+    const sourceStarted=performance.now();
+    if(!previous.source)previous.source=sourceDigests(previous.rows);
+    source=sourceDigests(rows);
+    sourceMs=performance.now()-sourceStarted;
+  }
+  const incremental=previous?incrementalPlan(previous,rows,source):null;
+  const {out,phases}=incremental?(incremental.targets.length?computeRows(entry,rows,transitRules,incremental.targets):{out:new Map(),phases:{}}):computeRows(entry,rows,transitRules);
+  if(source)phases.sourceMs=sourceMs;
   const serialized=new Map(),digests=new Map();
   for(const row of rows){
     const id=String(row&&row._id!=null?row._id:'');
     if(!id)continue;
-    const v=out.get(row);
+    let v=out.get(row);
+    if(!v&&incremental){
+      // Etkilenmeyen satır: önceki değerler aynı kimlikle taşınır.
+      const oldRow=incremental.oldById.get(id);
+      v=previous.out.get(oldRow);out.set(row,v);
+      serialized.set(id,previous.serialized.get(id));digests.set(id,previous.digests.get(id));
+      continue;
+    }
     const json=JSON.stringify([id,v.priority,v.calculationStatus,v.trackingTags,v.priorityTags,v.actionReasons,v.signals,v.basePriority,v.checklist,v.orderKey,v.optionId]);
     serialized.set(id,json);digests.set(id,crypto.createHash('sha1').update(json).digest('base64'));
   }
-  entry.current={rows,signature,out,serialized,digests,phases};
-  return {dataset,entry,current:entry.current,hostMs,loads,reused:false};
+  if(incremental){phases.incremental={changed:incremental.changed,targets:incremental.targets.length};}
+  entry.current={rows,signature,out,serialized,digests,phases,source,identity};
+  return {dataset,entry,current:entry.current,hostMs,loads,reused:false,incremental:Boolean(incremental)};
+}
+/* Satırın kaynak özeti (hesaplanmış/checklist alanları hariç) ve kimlik parmak izi (_id → satır kimliği). */
+const COMPUTED_KEY=/^(?:__checklist__|_checklist|_cp(?:OrderKey|OptionId)$)/;
+function sourceDigests(rows){
+  const digests=new Map();
+  const replacer=(key,value)=>key&&COMPUTED_KEY.test(key)?undefined:value;
+  for(const row of rows){
+    const id=String(row&&row._id!=null?row._id:'');
+    if(!id)continue;
+    digests.set(id,crypto.createHash('sha1').update(JSON.stringify(row,replacer)).digest('base64'));
+  }
+  return digests;
+}
+function sourceIdentity(rows){
+  const identity=crypto.createHash('sha1');
+  for(const row of rows){
+    const id=String(row&&row._id!=null?row._id:'');
+    if(!id)continue;
+    identity.update(id+'\u0001'+String(row._matchOcode??'')+'\u0001'+String(row['Order Code']??'')+'\u0001'+String(row['C.Code']??'')+'\u0001'+String(row['Model']??'')+'\u0002');
+  }
+  return identity.digest('base64');
+}
+/* Artımlı plan: kaynağı değişen satırlar + aynı sipariş/opsiyon grubundaki satırlar (karar ve
+   opsiyon kapsamlı checklist satırlar arası etkiler). Kimlik eşlemesi değiştiyse ya da değişim
+   büyükse null (tam hesap). */
+const INCREMENTAL_MAX=Number(process.env.BUYER_LOG_CP_INCREMENTAL_MAX)||2000;
+function incrementalPlan(previous,rows,source){
+  const changed=[];
+  for(const [id,digest] of source)if(previous.source.get(id)!==digest)changed.push(id);
+  if(changed.length>INCREMENTAL_MAX)return null;
+  const oldById=new Map(),groups=new Map();
+  const groupKeys=values=>[values&&values.orderKey?'o:'+values.orderKey:null,values&&values.optionId?'p:'+values.optionId:null].filter(Boolean);
+  for(const row of previous.rows){
+    const id=String(row&&row._id!=null?row._id:'');if(!id)continue;
+    oldById.set(id,row);
+    for(const key of groupKeys(previous.out.get(row))){if(!groups.has(key))groups.set(key,new Set());groups.get(key).add(id);}
+  }
+  const affected=new Set(changed);
+  for(const id of changed)for(const key of groupKeys(previous.out.get(oldById.get(id))))for(const other of groups.get(key)||[])affected.add(other);
+  if(affected.size>INCREMENTAL_MAX)return null;
+  const targets=rows.filter(row=>affected.has(String(row&&row._id!=null?row._id:'')));
+  return {targets,oldById,changed:changed.length};
 }
 
 async function execute(payload,deps){
   const started=performance.now();
   const computed=await ensureComputed(payload,deps);
-  if(computed.missing)return {missing:computed.missing};
+  if(computed.missing)return {missing:computed.missing,warm:computed.warm};
   const {entry,current,hostMs,loads}=computed,rows=current.rows,serialized=current.serialized,digests=current.digests;
   // Delta, aynı barındırıcının aynı veri kümesi üzerindeki son HISTORY sonucundan birine göre
   // (istemci araya giren bağlam olayıyla bir sonucu atmış olabilir). Satır başına yalnız özet tutulur.
-  const previous=payload.since?entry.history.find(item=>item.token===payload.since&&item.rows===rows):null,delta=Boolean(previous);
+  // Delta: aynı barındırıcının son HISTORY sonucuna göre. Yeni nesilde (düzenleme sonrası) kimlik eşlemesi
+  // (_id → satır) aynıysa delta geçerlidir; istemci yalnız değişen satırları alır.
+  const previous=payload.since?entry.history.find(item=>item.token===payload.since&&item.identity===current.identity):null,delta=Boolean(previous);
   const parts=[],removed=[];
   for(const [id,json] of serialized)if(!delta||previous.digests.get(id)!==digests.get(id))parts.push(json);
   if(delta)for(const id of previous.digests.keys())if(!serialized.has(id))removed.push(id);
   const token=crypto.randomBytes(9).toString('base64url');
-  entry.history.unshift({token,rows,digests});entry.history.length=Math.min(entry.history.length,HISTORY);
+  // Eski neslin satırları tutulmaz (barındırıcı nesiller boyu yaşar; bellek bütçesi): kimlik parmak izi yeterli.
+  entry.history.unshift({token,digests,identity:current.identity});entry.history.length=Math.min(entry.history.length,HISTORY);
   const lang=payload.lang==='en'?'en':'tr';
   const body=`{"version":1,"lang":${JSON.stringify(lang)},"token":${JSON.stringify(token)},"delta":${delta?'true':'false'},"total":${serialized.size},"fields":${JSON.stringify(FIELDS)},"rows":[${parts.join(',')}],"removed":${JSON.stringify(removed)}}`;
   return {body,timing:{loadMs:loads.cp||0,queryMs:performance.now()-started-(loads.cp||0),totalMs:performance.now()-started,rows:rows.length,

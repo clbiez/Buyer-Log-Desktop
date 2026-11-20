@@ -37,18 +37,21 @@ const users={
   overviewOnly:{id:'overviewOnly',all:true,areas:['overview'],status:'ACTIVE',enabled:true},
 };
 let harnessId=0;
-function harness({day='2026-11-20'}={}){
-  const state={generation:`g${++harnessId}-${process.pid}`,stale:0,revoked:new Set(),own:{},contextRevision:'c1',day,tasks:[],authorizedCalls:0};
+function harness({day='2026-11-20',realGuard=false}={}){
+  const state={generation:`g${++harnessId}-${process.pid}`,stale:0,revoked:new Set(),own:{},contextRevision:'c1',day,tasks:[],authorizedCalls:0,contextHash:'h1',mutate:null};
   const guard={capture(req,area){
     const profile=req.currentUser;
     if(!profile.areas.includes(area))throw Object.assign(Error('Bu alana erişim yetkiniz yok. / You do not have access to this area.'),{code:'AREA_FORBIDDEN',statusCode:403,errorEn:'You do not have access to this area.'});
     const check=()=>{if(state.revoked.has(profile.id))throw Object.assign(Error('stale / stale'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});};
+    // compute-read-guard ile aynı biçim: veri sürümü (contextHash/sourceToken) her yazmada değişir.
+    if(realGuard){const initial={userId:profile.id,contextHash:state.contextHash,accessHash:profile.all?'all':'scoped',sourceToken:state.generation};return {profile,key:JSON.stringify(initial),...initial,assertResponse:check};}
     return {profile,key:JSON.stringify({userId:profile.id,scope:profile.all?'all':'scoped'}),assertResponse:check};
   }};
   const loadProjection=async req=>{
     if(state.stale>0){state.stale--;throw Object.assign(Error('stale'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});}
     if(!req.currentUser.areas.includes('cp'))throw Object.assign(Error('forbidden'),{code:'AREA_FORBIDDEN',statusCode:403});
-    const built=projection(req.currentUser);
+    let built=projection(req.currentUser);
+    if(state.mutate){const rows=structuredClone(built.rows);state.mutate(rows);const buffer=zlib.gzipSync(Buffer.from(tasks.serialize({rows},'projection')));built={rows,buffer,checksum:crypto.createHash('sha256').update(buffer).digest('hex')};}
     return {value:{buffer:built.buffer,uncompressedBytes:built.buffer.length*10},manifest:{activeGeneration:state.generation,modules:{cp:{checksum:built.checksum}}},assertResponse(){},release(){}};
   };
   const loadContext=createContextLoader({
@@ -246,4 +249,53 @@ test('pending-answer overlay: applies only to this request and user, is part of 
   const older=columns(await service.computed(req(users.moderator),{version:1,since:base.token,answers:overlay}));
   assert.equal(older.delta,true,'geçmişteki token ile delta');
   assert.deepEqual(older.rows.map(row=>row[0]),[pick[0]],'yalnız tabana göre değişen satır');
+});
+
+test('an edit (new generation, new data version) keeps the decision host and recomputes only the affected rows (#1078 alt PR 3)',async()=>{
+  worker.cache.clear();task.clearHosts();
+  const {service,state,calls}=harness({realGuard:true});
+  const first=await service.computed(req(users.moderator),{version:1});
+  const coldLoad=calls.filter(call=>call.buffer).at(-1).options.estimatedBytes;
+  assert.equal(first.timing.phases.incremental,undefined);
+  const before=new Map(columns(first).rows.map(row=>[row[0],JSON.stringify(row)]));
+  // Düzenleme: yeni projeksiyon nesli + guard veri sürümü değişir (override yazımı); bir satırın notu.
+  state.generation+='-e1';state.contextHash='h2';state.mutate=rows=>{rows[5].Notes='düzenlendi';};
+  const second=await service.computed(req(users.moderator),{version:1});
+  assert.equal(second.cached,false);
+  assert.ok(!(second.timing.phases.hostMs>0),'barındırıcı yeniden kurulmadı');
+  // Sıcak barındırıcıda yeni nesil yüklemesi soğuk karar payını istemez (havuz boştaki işçiyi kapatmasın).
+  const warmLoad=calls.filter(call=>call.buffer).at(-1).options.estimatedBytes;
+  assert.ok(warmLoad<coldLoad,`sıcak tahmin ${warmLoad} < soğuk ${coldLoad}`);
+  assert.equal(second.timing.phases.incremental.changed,1,JSON.stringify(second.timing.phases.incremental));
+  assert.ok(second.timing.phases.incremental.targets<before.size,'yalnız etkilenen satırlar');
+  // Eski neslin veri kümesi işçide birikmez (veri sürümü kapsamı açmaz; bellek bütçesi aşılıp işçi yeniden başlamaz).
+  assert.equal(worker.cache.stats().entries,1,'aynı kullanıcı/yetki kapsamının eski nesli düştü');
+  // Delta düzenlemeden sonra da çalışır (geçmiş eski satırları tutmaz; kimlik parmak izi yeter).
+  const delta=columns(await service.computed(req(users.moderator),{version:1,since:columns(first).token}));
+  assert.equal(delta.delta,true);assert.ok(delta.rows.length<before.size,`delta ${delta.rows.length}`); // not hesaplanmış sütunlara girmez: boş delta doğru
+  // Tam hesapla aynı sonuç.
+  worker.cache.clear();task.clearHosts();
+  const fresh=harness({realGuard:true});fresh.state.mutate=state.mutate;
+  const full=await fresh.service.computed(req(users.moderator),{version:1});
+  assert.equal(full.timing.phases.incremental,undefined);
+  assert.deepEqual(columns(second).rows,columns(full).rows);
+  // Takvim/gün bağımlılığı (revision) ya da yetki kapsamı değişince barındırıcı paylaşılmaz.
+  state.contextRevision='c2';state.generation+='-e2';
+  const third=await service.computed(req(users.moderator),{version:1});
+  assert.equal(third.timing.phases.incremental,undefined,'revision değişti → tam hesap');
+  const scoped=await service.computed(req(users.buyerA),{version:1});
+  assert.equal(scoped.timing.phases.incremental,undefined,'başka yetki kapsamı → ayrı barındırıcı');
+});
+
+test('client abort is not forwarded to the worker job (the pool would terminate the worker and drop the decision host); a closed request never starts one',async()=>{
+  worker.cache.clear();task.clearHosts();
+  const {service,calls}=harness();
+  const live=new AbortController();
+  const out=await service.computed(req(users.moderator),{version:1},{signal:live.signal});
+  assert.equal(out.cached,false);
+  assert.ok(calls.length>=1&&calls.every(call=>call.options.signal===undefined),'işçi işine iptal sinyali gitmedi');
+  const closed=new AbortController();closed.abort();
+  const before=calls.length;
+  await assert.rejects(service.computed(req(users.moderator),{version:1,lang:'en'},{signal:closed.signal}),error=>error.code==='COMPUTE_ABORTED'&&error.statusCode===499);
+  assert.equal(calls.length,before,'kapanmış istek işçiye verilmedi');
 });

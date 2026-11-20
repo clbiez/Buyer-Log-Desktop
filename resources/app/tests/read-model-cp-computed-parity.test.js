@@ -251,3 +251,54 @@ test('CP hesaplanmış sütunlar paylaşılan cp-overview veri kümesinde Genel 
   assert.equal(computed.timing.loadMs,0);
   assert.equal(await overview(),before);
 });
+
+/* WS5 alt PR 3: düzenleme sonrası yeni nesilde yalnız etkilenen satırlar (kaynağı değişenler + aynı
+   sipariş/opsiyon grubu) yeniden hesaplanır. Artımlı sonuç, aynı veri üzerinde sıfırdan tam hesapla
+   hash-eşit olmalı; aksi halde artımlı yol kullanılamaz. */
+async function incrementalParity(rows,user){
+  const {scoped}=projections(rows),projection=scoped(user);
+  const ctx=decisionContext(user.id,projection.keys),context=contextFor(ctx).value;
+  const deps={cache:worker.cache,engine};
+  const run=(json,key,extra={})=>task.ensureComputed({dataset:{datasetKey:key,scopeKey:'cp-overview',buffer:Uint8Array.from(zlib.gzipSync(Buffer.from(json))).buffer},
+    scopeKey:'s-'+user.id,lang:'tr',context,tasks:ctx.tasks||[],...extra},deps);
+  worker.cache.clear();task.clearHosts();
+  const first=await run(projection.cpJson,'gen-1');
+  assert.equal(first.incremental,false);
+  // Düzenleme: birkaç satırın tarih revizyonu ve notu (kullanıcı düzenlemesinin projeksiyondaki izi;
+  // lojistik parsiyelden türetilen Del. Type ve onaydan gelen Ex-factory işçide yeniden türetilir).
+  const doc=JSON.parse(projection.cpJson),edited=[];
+  doc.rows.forEach((row,i)=>{
+    if(i%331!==3)return;
+    for(const key of ['Retail Date','In-Store (Model Budget)']){
+      const d=row[key]?new Date(row[key]):null;
+      if(d&&!Number.isNaN(d.getTime())){d.setDate(d.getDate()-120);row[key]=d.toISOString().slice(0,10);}
+    }
+    row['Notes']='düzenlendi '+i;edited.push(String(row._id));
+  });
+  assert.ok(edited.length>=2);
+  const json=tasks.serialize(doc,'projection');
+  const incremental=await run(json,'gen-2');
+  assert.equal(incremental.incremental,true,'artımlı yol kullanıldı');
+  const info=incremental.current.phases.incremental;
+  assert.equal(info.changed,edited.length,'yalnız düzenlenen satırlar değişmiş sayıldı: '+JSON.stringify(info));
+  assert.ok(info.targets>=edited.length&&info.targets<incremental.current.rows.length/4,`yeniden hesaplanan satır ${info.targets}/${incremental.current.rows.length}`);
+  const incrementalTuples=[...incremental.current.serialized.values()];
+  // Sıfırdan tam hesap (yeni barındırıcı) ile karşılaştır.
+  worker.cache.clear();task.clearHosts();
+  const full=await run(json,'gen-2-full');
+  assert.equal(full.incremental,false);
+  const result=await parity.assertParity({name:`cp-computed artımlı ${rows} ${user.id}`,rows:[],context:{},
+    legacy:()=>[...full.current.serialized.values()].map(value=>JSON.parse(value)),candidate:()=>incrementalTuples.map(value=>JSON.parse(value))});
+  assert.ok(result.equal);
+  // Düzenleme gerçekten bir şeyi değiştirdi (boş parite değil).
+  const before=new Map([...first.current.serialized].map(([id,v])=>[id,v]));
+  assert.ok(edited.some(id=>before.get(id)!==full.current.serialized.get(id)),'düzenlenen satırların hesaplanmış değeri değişti');
+}
+test('CP hesaplanmış sütunlar: düzenleme sonrası artımlı yeniden hesap tam hesapla hash-eşit (2k, iki kapsam)',{timeout:600000},async()=>{
+  const {buyers}=projections(2000);
+  for(const user of twoScopes(buyers))await incrementalParity(2000,user);
+});
+test('CP hesaplanmış sütunlar: artımlı yeniden hesap 30k (BUYER_LOG_PARITY_30K=1)',{skip:process.env.BUYER_LOG_PARITY_30K!=='1',timeout:1800000},async()=>{
+  const {buyers}=projections(30000);
+  for(const user of twoScopes(buyers))await incrementalParity(30000,user);
+});

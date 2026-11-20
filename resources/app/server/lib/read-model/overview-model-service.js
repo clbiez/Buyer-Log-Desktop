@@ -57,12 +57,17 @@ function validateRequest(raw){
    revision(profile) (takvim/gün gibi girdide olmayan bağımlılıklar). Kullanıcının
    CP kararına girmeyen bir tercihi (tablo sütun durumu, tema, yerleşim…) değişince
    anahtar değişmez; Genel Bakış tam modeli ve barındırıcı yeniden hesaplanmaz. */
+/* Karar barındırıcısında çalışan betiklerin (overview-decision-host SCRIPTS + checklist-supplier-sync)
+   HİÇ okumadığı lcw.cp.* arayüz durumu: boyut filtreleri, görsel boyutu, BOM işaretleri. Girdiye ve
+   anahtara alınmaz; aksi halde bir filtre kaydı Genel Bakış tam modelini ve CP kararlarını baştan
+   hesaplatır (#1078 alt PR 2/3). Bekçi: read-model-cp-window-route.test.js (betik taraması). */
+const UI_ONLY_ENTRY=/^lcw\.cp\.(?:dimFilters|imageSize|bomControl)\./;
 function createContextLoader({preferences,roleEntries,managedRules,transitRules,plmPayload,checklistPayload,revision,merge}){
   return function loadContext(profile){
     const entries={},roles=roleEntries(profile)||{},personal=(preferences.load(profile.id)||{}).entries||{};
     for(const source of [roles,personal]){
       for(const [name,entry] of Object.entries(source)){
-        if(!name.startsWith('lcw.cp.')||!entry||entry.value==null)continue;
+        if(!name.startsWith('lcw.cp.')||UI_ONLY_ENTRY.test(name)||!entry||entry.value==null)continue;
         entries[name]=String(entry.value);
       }
     }
@@ -70,7 +75,8 @@ function createContextLoader({preferences,roleEntries,managedRules,transitRules,
     try{const parsed=JSON.parse(entries['lcw.cp.checklist.v1']||'{}');own=parsed&&typeof parsed==='object'&&!Array.isArray(parsed)?parsed:{};}catch(_){own={};}
     const value={userId:String(profile.id),entries,answers:merge(own,checklistPayload()||{}),managedRules:managedRules()||null,
       plm:plmPayload()||null,transitRules:transitRules(profile)||[]};
-    return {key:hash(JSON.stringify([revision(profile),value])),value};
+    const rev=revision(profile);
+    return {key:hash(JSON.stringify([rev,value])),value,revision:rev};
   };
 }
 
@@ -160,4 +166,4 @@ function createOverviewModelService({guard,loadProjection,runCompute,loadContext
   function stats(){return {...counters,entries:cache.size,bytes:cachedBytes,maxEntries,maxBytes};}
   return {model,clear,stats};
 }
-module.exports={createOverviewModelService,createContextLoader,validateRequest};
+module.exports={createOverviewModelService,createContextLoader,validateRequest,UI_ONLY_ENTRY};

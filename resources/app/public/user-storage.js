@@ -28,7 +28,9 @@
     // v2026-11-20 — CP hesaplanmış sütunlar pilot anahtarı kullanıcı başınadır (#1078).
     'bl.cpComputed.',
     // v2026-11-20 — CP pencereli okuma modeli pilot anahtarı kullanıcı başınadır (#1078 alt PR 2).
-    'bl.cpReadModel.'
+    'bl.cpReadModel.',
+    // v2026-11-20 — CP satır kaydı pilot anahtarı kullanıcı başınadır (#1078 alt PR 3).
+    'bl.cpRowSave.'
   ];
   /* AYNI BİLGİSAYARDA BİRDEN FAZLA KULLANICI.
      Aşağıdaki kişisel filtre/görünüm anahtarları eskiden kullanıcı önekine

@@ -1429,20 +1429,65 @@ function scheduleUnifiedPrioritiesForTable(tableKey,options={}){
      bugünkü istemci yolu kullanılır (satır bazlı düzenleme alt PR 3).
    - Herhangi bir hata oturumu eski yola döndürür.
    Anahtar: window.BL_READ_MODEL_CP_COMPUTED (boolean) ya da kullanıcı tercihi
-   'bl.cpComputed.v1'='1' (Siparişler okuma modeliyle aynı kalıp); varsayılan kapalı. */
+   'bl.cpComputed.v1'; varsayılan AÇIK ('0' ile kapanır; #1078 alt PR 3). */
 const CP_COMPUTED_STORAGE_KEY='bl.cpComputed.v1';
-const cpComputed={disabled:false,applied:null,job:null,enabled:null,answersOnly:false,optimistic:null};
+const cpComputed={disabled:false,applied:null,job:null,enabled:null,answersOnly:false,optimistic:null,pendingView:false};
 function cpComputedEnabled(){
   if(cpComputed.disabled)return false;
   if(typeof window.BL_READ_MODEL_CP_COMPUTED==='boolean')return window.BL_READ_MODEL_CP_COMPUTED;
   if(cpComputed.enabled===null){
-    try{cpComputed.enabled=(window.BLStorage||localStorage).getItem(CP_COMPUTED_STORAGE_KEY)==='1';}catch(_){cpComputed.enabled=false;}
+    // Varsayılan AÇIK (kullanıcı kararı, #1078): geri dönüş window.BL_READ_MODEL_CP_COMPUTED=false ya da tercih '0'.
+    try{cpComputed.enabled=(window.BLStorage||localStorage).getItem(CP_COMPUTED_STORAGE_KEY)!=='0';}catch(_){cpComputed.enabled=true;}
   }
   return cpComputed.enabled;
 }
 function cpComputedEligible(){
   if(!cpComputedEnabled()||!state.cp||!Array.isArray(state.cp.rows))return false;
-  return !(state.cpDirty&&state.cpDirty.size>0)&&pendingOverrideWriteCount()===0;
+  return !(typeof cpEditsBlockServerPaths==='function'?cpEditsBlockServerPaths(true):Boolean(state.cpDirty&&state.cpDirty.size>0)||pendingOverrideWriteCount()>0);
+}
+/* #1078 alt PR 3 (A): CP tablosu hesaplanmış sütunları BEKLEMEDEN çizilir — ama sessiz eksik sonuç yok.
+   Bekleyen: arka uç sütunları bu satırlara henüz uygulanmadı (soğuk ilk açılış / yeni projeksiyon).
+   - Görünüm hesaplanmış değere bağlıysa (Priority/checklist/formül sütununa filtre ya da sıralama, Priority
+     seçimi, arama) bugünkü "hesaplanıyor" yükleme durumu kalır; sonuç gelince filtre/sıralama kendiliğinden
+     uygulanır (CP_PRIORITY_READY → renderCP). Boş sonuç ya da yanıltıcı sayım gösterilmez.
+   - Bağlı değilse satırlar hemen çizilir; Priority/checklist/formül hücreleri ve bunlara dayalı hızlı filtre
+     çipleri "Hesaplanıyor…" gösterir, tıklanınca açık bildirim verir. */
+function cpComputedPending(){
+  if(!cpComputedEligible())return false;
+  const rows=state.cp&&state.cp.rows;
+  if(cpComputed.applied&&cpComputed.applied.rows===rows)return false;
+  const cached=_unifiedPriorityCache.cp;
+  return !(cached&&cached.rows===rows);
+}
+function cpComputedDependentKey(key){
+  if(!key)return false;
+  const text=String(key);
+  if(text==='Priority'||text.startsWith('__checklist__')||/^_(?:calculationStatus|trackingTags|priorityTags|actionPriority|unifiedBasePriority|checklist)/.test(text))return true;
+  const col=(typeof COLS_BY_TABLE!=='undefined'&&COLS_BY_TABLE.cp||[]).find(c=>c&&c.k===text);
+  return Boolean(col&&(col.checklistSupplierColumn||col.formulaCustom));
+}
+function cpViewNeedsComputed(){
+  if(cpComputedDependentKey(state.cpSort&&state.cpSort.key))return true;
+  for(const key of Object.keys(state.colFilters&&state.colFilters.cp||{}))if(state.colFilters.cp[key]&&cpComputedDependentKey(key))return true;
+  if(document.getElementById('cpFPriority')?.value)return true;
+  return Boolean(String(document.getElementById('cpSearch')?.value||'').trim());
+}
+const cpComputedPendingText=()=>appLang==='en'?'Calculating…':'Hesaplanıyor…';
+function cpComputedPendingNotice(){
+  showToast(appLang==='en'?'Priorities and checklist are still being calculated. They appear in a few seconds; filters and sorting on them apply automatically.'
+    :'Öncelik ve checklist hâlâ hesaplanıyor. Birkaç saniye içinde görünür; bunlara dayalı filtre ve sıralama kendiliğinden uygulanır.');
+}
+// renderCPNow: hesaplanmış sütunlar beklenirken görünüm onlara bağlı değilse satırlar hemen çizilir (true);
+// bağlıysa bugünkü yükleme durumu (ensureUnifiedPrioritiesForTable) — sonuç gelince renderCP yeniden çağrılır.
+function cpPrioritiesReadyForRender(){
+  cpComputed.pendingView=cpComputedPending()&&!cpViewNeedsComputed();
+  if(cpComputed.pendingView){void scheduleUnifiedPrioritiesForTable('cp');return true;}
+  return ensureUnifiedPrioritiesForTable('cp');
+}
+// cellHtml kancası: bekleyen görünümde hesaplanmış değere bağlı hücre.
+function cpComputedPendingCell(c,tableKey){
+  if(tableKey!=='cp'||!cpComputed.pendingView||!c||!cpComputedDependentKey(c.k))return '';
+  return `<td class="cpComputedPending" title="${escapeHtml(cpComputedPendingText())}"><span class="muted">${escapeHtml(cpComputedPendingText())}</span></td>`;
 }
 const CP_COMPUTED_HIDDEN=['_checklistStatus','_checklistParts','_checklistElements','_checklistTasks'];
 function applyCpComputedRow(row,tuple){
@@ -1562,9 +1607,9 @@ function scheduleCpComputedColumns(rows,revision,contextRevision,day){
     if(!isCurrent())return false;
     const applied=cpComputed.applied;
     const since=applied&&applied.rows===rows&&applied.lang===lang?applied.token:null;
-    const response=await fetch('/api/read-model/cp/computed',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({version:1,lang,...(since?{since}:{}),...(overlay?{answers:overlay}:{})})});
-    const payload=await response.json().catch(()=>null);
+    // Okuma modeli sınırlayıcısından geçer; satır kaydı başlarken iptal edilir (kayıt bağlantı beklemez).
+    const {response,payload}=await cpRMLimitedFetch('/api/read-model/cp/computed',{version:1,lang,...(since?{since}:{}),...(overlay?{answers:overlay}:{})},
+      async res=>({response:res,payload:await res.json().catch(()=>null)}));
     if(!response.ok||!payload||payload.ok!==true||!payload.columns)throw Object.assign(new Error(payload?.code||('HTTP '+response.status)),{code:payload?.code||'CP_COMPUTED_HTTP'});
     if(!isCurrent()){window.BLPerf?.mark?.('CP_COMPUTED_STALE_RESULT',{ms:Math.round(performance.now()-started),server:payload.timing||null});return false;}
     const fetched=performance.now();
@@ -1582,6 +1627,8 @@ function scheduleCpComputedColumns(rows,revision,contextRevision,day){
     return true;
   })().catch(error=>{
     if(cpComputed.job!==job)return false;
+    // Satır kaydı için iptal: hata değil; kayıt bitince yeniden planlanır (cpRowSaveSettled). Oturum kapatılmaz.
+    if(error&&error.aborted){if(typeof cpRowSave!=='undefined')cpRowSave.computedAborted=true;return false;}
     cpComputed.applied=null;
     // Satır uyuşmazlığı ve gönderilemeyen cevap yalnız bu hesabı eski yola alır; diğer hatalar oturumu.
     if(error?.fallback!=='job'){cpComputed.disabled=true;console.warn('CP hesaplanmış sütunları arka uçtan alınamadı; eski yol kullanılıyor:',error?.code||error);}
@@ -6926,6 +6973,7 @@ function cpSubManufacturerValue(r){
    satır durumunu tablo bazında okur; diğer dallar bu parametreden etkilenmez. */
 function cellHtml(c,r,cf,tableKey='cp'){
   if(c.type==='privateNote')return window.BLPrivateOrderNotes.cellHtml(r,lineKeyOfRow(r),appLang);
+  const pendingCell=typeof cpComputedPendingCell==='function'?cpComputedPendingCell(c,tableKey):'';if(pendingCell)return pendingCell;
   const v = r[c.k];
   const oc = r['Order Code'];
   const id = r._id;
@@ -10334,7 +10382,7 @@ function renderCPNow(){
   if(!state.cp) return;
   cpPlmDetailsSync();
   const legacyStarted=performance.now();
-  if(!ensureUnifiedPrioritiesForTable('cp'))return;
+  if(!cpPrioritiesReadyForRender())return;
   applyFormulaColumns('cp'); // sıralama ve sayfa filtreleri hesaplanan değeri görsün
   migrateLegacyCpQuickFilters();
   updateCpDimBtnLabels();
@@ -10362,9 +10410,9 @@ function renderCPNow(){
   const seasonCounts = {}; scope.season.forEach(r=>{ const s=norm(r['Season'])||'—'; seasonCounts[s]=(seasonCounts[s]||0)+1; });
   const exfCounts = Object.fromEntries(CP_EXF_PERIODS.map(k=>[k,0]));
   scope.exf.forEach(r=>{ CP_EXF_PERIODS.forEach(k=>{ if(matchesQuickExFactory(r,k)) exfCounts[k]++; }); });
-  renderCpKpiBar({buckets,statusCounts,delCounts,seasonCounts,exfCounts,noneCount:scope.none.length,
+  renderCpKpiBar({buckets,statusCounts,delCounts,seasonCounts,exfCounts,noneCount:scope.none.length,computedPending:cpComputed.pendingView,
     // Eklenen başlıkların sayımı, KENDİ filtresi hariç tüm filtrelerle yapılır.
-    extraHtml:()=>qfgExtra('cp',scope.all,()=>cpEvaluateAll().all)});
+    extraHtml:()=>cpComputed.pendingView?cpPendingQuickGroups(scope.all,()=>cpEvaluateAll().all):qfgExtra('cp',scope.all,()=>cpEvaluateAll().all)});
   scheduleCoreAutoFilterSave();
   renderFullTable('cpTable','cp', rows, state.cpSort, (key)=>{
     if(key==='__picture'){cpCycleImageSize();return;}
@@ -10412,7 +10460,14 @@ function renderCpCountLine({stats,rowCount,totalRowCount,qty}){
   renderTableViewContext('cp');
   renderActiveFilterContext('cp');
 }
-function renderCpKpiBar({buckets,statusCounts,delCounts,seasonCounts,exfCounts,noneCount,extraHtml}){
+// Bekleyen görünümde ek hızlı filtre grupları: hesaplanmış değere bağlı sütunun sayımı yerine "hesaplanıyor" çipi.
+function cpPendingQuickGroups(rows,scopeFor){
+  const Q=window.BLQuickFilterGroups;if(!Q)return '';
+  return (Q.config('cp').extra||[]).map(key=>cpComputedDependentKey(key)
+    ?`<div class="kpi tone-gray cpComputedPending" data-computed-pending="1"><span class="n">…</span><span class="l">${escapeHtml(Q.columnLabel?Q.columnLabel('cp',key):key)} · ${escapeHtml(cpComputedPendingText())}</span></div>`
+    :Q.groupHtml('cp',key,rows,scopeFor)).join('');
+}
+function renderCpKpiBar({buckets,statusCounts,delCounts,seasonCounts,exfCounts,noneCount,extraHtml,computedPending=false}){
   const exfDefs = [
     ['past',appLang==='en'?'Past':'Geçmiş','red'],
     ['thisWeek',appLang==='en'?'This Week':'Bu Hafta','yellow'],
@@ -10433,8 +10488,9 @@ function renderCpKpiBar({buckets,statusCounts,delCounts,seasonCounts,exfCounts,n
   let html = `
     <div class="kpi tone-navy${noMirroredFilter?' active':''}" data-act="clearAll"><span class="n">${noneCount}</span><span class="l">${appLang==="en"?"All":"Tümü"}</span></div>`
     + qfgSeg('cp','season','Season',quickSeasonEntries(seasonCounts).map(([s,n])=>`<div class="kpi tone-blue" data-season="${escapeHtml(s)}"><span class="n">${n}</span><span class="l">${escapeHtml(s)}</span></div>`).join(''))
-    + qfgSeg('cp','pri','Priority',
-        actionPriorityCodes().map(code=>chip(priorityTone(code),buckets[code],priorityDisplay(code),code)).join(''))
+    + qfgSeg('cp','pri','Priority',computedPending
+        ?`<div class="kpi tone-gray cpComputedPending" data-computed-pending="1"><span class="n">…</span><span class="l">${escapeHtml(cpComputedPendingText())}</span></div>`
+        :actionPriorityCodes().map(code=>chip(priorityTone(code),buckets[code],priorityDisplay(code),code)).join(''))
     + qfgSeg('cp','status','Status',quickCountEntries(statusCounts).map(([s,n])=>`<div class="kpi tone-${statusTones[s]||'blue'}" data-status="${escapeHtml(s)}"><span class="n">${n}</span><span class="l">${escapeHtml(statusDisplay(s))}</span></div>`).join(''))
     + qfgSeg('cp','exf','Ex-Factory',exfDefs.filter(([k])=>exfCounts[k]>0).map(([k,l,t])=>`<div class="kpi tone-${t}" data-exf="${k}"><span class="n">${exfCounts[k]}</span><span class="l">${l}</span></div>`).join(''))
     + qfgSeg('cp','del','Del. Type',quickCountEntries(delCounts).map(([d,n])=>`<div class="kpi tone-purple" data-deltype="${escapeHtml(d)}"><span class="n">${n}</span><span class="l">${escapeHtml(transitDelTypeDisplay(d))}</span></div>`).join(''))
@@ -10447,6 +10503,7 @@ function renderCpKpiBar({buckets,statusCounts,delCounts,seasonCounts,exfCounts,n
   document.querySelectorAll('#cpKpi .kpi[data-season]').forEach(el=>{ if(mirroredQuickValueActive('cp','Season',curSeason,el.dataset.season)) el.classList.add('active'); });
   document.querySelectorAll('#cpKpi .kpi[data-exf]').forEach(el=>{if([...curExf].some(v=>norm(v)===norm(el.dataset.exf)))el.classList.add('active');});
   document.querySelectorAll('#cpKpi .kpi:not([data-qfg-col])').forEach(el=>{
+    if(el.dataset.computedPending){el.addEventListener('click',cpComputedPendingNotice);return;}
     if(el.dataset.act==='clearAll'){
       el.addEventListener('click', ()=>{
         document.getElementById('cpFPriority').value='';
@@ -10550,7 +10607,7 @@ function cpRMColFilter(key,entry){
 /* cpBuildFilterContext + cpPassesBase / cpPassesGroup'un sunucu sorgusu karşılığı; kümeler
    cpEvaluateAll kapsamlarıyla aynıdır (base + pri/status/del/season/exf). */
 function cpReadModelSpec(options={}){
-  if(state.cpDirty&&state.cpDirty.size)return {ok:false,reason:'dirty'};
+  if(typeof cpEditsBlockServerPaths==='function'?cpEditsBlockServerPaths():Boolean(state.cpDirty&&state.cpDirty.size))return {ok:false,reason:'dirty'};
   if(pendingOverrideWriteCount()>0)return {ok:false,reason:'pending-writes'};
   if(partialViewEnabled('cp'))return {ok:false,reason:'partial-view'};
   if(state.cpLogisticExpanded&&state.cpLogisticExpanded.size)return {ok:false,reason:'logistic-detail'};
@@ -10595,7 +10652,49 @@ async function cpRMEnvelope(field,body){
   catch(error){if(error&&error.code==='CP_COMPUTED_PREFERENCES_UNSAVED')throw error;answers=null;}
   return {version:1,lang:cpRMLang(),...(answers?{answers}:{}),[field]:body};
 }
-async function cpRMPost(path,field,body){return ordersRMPost(path,await cpRMEnvelope(field,body));}
+/* #1078 alt PR 3: CP okuma modeli istekleri sekme başına en fazla CP_RM_MAX_ACTIVE eşzamanlı gider ve satır kaydı
+   başlarken bekleyen/yoldaki okumalar iptal edilir (kayıt bittiğinde tablo yeniden ister). Tarayıcı aynı adrese
+   en fazla 6 bağlantı açar; uzun süren pencere/sayaç istekleri (yeni nesil kirası + hesap) kayıt POST'unu
+   sıraya sokmasın. Sunucu iptali işçiye iletmez (hesap biter, önbelleğe girer). */
+const CP_RM_MAX_ACTIVE=2;
+const cpRMNet={active:0,queue:[],controllers:new Set()};
+function cpRMAbortError(){return Object.assign(new Error('CP read aborted'),{code:'CP_RM_ABORTED',aborted:true});}
+function cpRMNetPump(){while(cpRMNet.active<CP_RM_MAX_ACTIVE&&cpRMNet.queue.length)cpRMNet.queue.shift().run();}
+// Sınırlı ve iptal edilebilir CP okuması: read(res) yanıt gövdesini okur (bağlantı gövde bitene kadar tutulur).
+function cpRMLimitedFetch(path,body,read){
+  return new Promise((resolve,reject)=>{
+    const controller=new AbortController();
+    const run=()=>{
+      cpRMNet.active++;cpRMNet.controllers.add(controller);
+      fetch(path,{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:controller.signal}).then(read)
+        .then(resolve,error=>reject(controller.signal.aborted?cpRMAbortError():error))
+        .finally(()=>{cpRMNet.active--;cpRMNet.controllers.delete(controller);cpRMNetPump();});
+    };
+    cpRMNet.queue.push({run,reject});
+    cpRMNetPump();
+  });
+}
+function cpRMRequest(path,body){
+  return cpRMLimitedFetch(path,body,async res=>{
+    const payload=await res.json().catch(()=>({}));
+    if(!res.ok||!payload||payload.ok!==true){
+      if(payload&&payload.code==='USER_SELECTION_REQUIRED'){location.href='/select-user.html';}
+      const error=new Error((appLang==='en'?payload&&payload.errorEn:payload&&payload.error)||res.statusText);
+      error.code=payload&&payload.code||'';error.status=res.status;throw error;
+    }
+    return payload;
+  });
+}
+/* Kayıt anında yalnız henüz başlamamış (kuyruktaki) okumalar düşer. Yoldakiler biter ve sunucu önbelleğine girer:
+   iptal edilen okuma sunucuda yine de hesaplanır (işçi kapatılmasın diye iptal iletilmez), her kayıtta iptal
+   edilirse kira + hesap (30k: ~7 sn) hiç tamamlanmaz ve işçi kuyruğu dolar. Sekme başına ≤ CP_RM_MAX_ACTIVE
+   olduğundan iki sekme + canlı olay bağlantısı tarayıcının 6 bağlantısını doldurmaz; kayıt POST'u beklemez. */
+function cpRMAbortReads(){
+  const queued=cpRMNet.queue.splice(0);
+  for(const job of queued)job.reject(cpRMAbortError());
+  return queued.length;
+}
+async function cpRMPost(path,field,body){return cpRMRequest(path,await cpRMEnvelope(field,body));}
 function cpRMQueryBody(spec,offset,limit,extra={}){
   return {version:1,columns:spec.columns,base:spec.base,groups:spec.groups,today:cpRMToday(),...(spec.search?{search:spec.search}:{}),...(spec.sort?{sort:spec.sort}:{}),offset,limit,...extra};
 }
@@ -10670,7 +10769,7 @@ function cpRMEnsureWindow(index){
     cpRM.windows.add(index);
     cpRMScheduleRepaint();
     return true;
-  }).catch(error=>{console.warn('CP penceresi alınamadı:',error);return false;})
+  }).catch(error=>{if(!(error&&error.aborted))console.warn('CP penceresi alınamadı:',error);return false;})
     .finally(()=>{if(signature===cpRM.signature)cpRM.pending.delete(index);});
   cpRM.pending.set(index,job);
   return job;
@@ -10772,7 +10871,7 @@ function cpRMRequestFacets(spec,signature){
     if(seq!==cpRM.facetsSeq||signature!==cpRM.signature||!cpRMCheckGeneration(payload))return;
     cpRM.facets=payload.result;cpRM.facetsKey=key;
     if(currentActiveTab()==='cp')cpRMRenderFacets(payload.result);
-  }).catch(error=>console.warn('CP sayaçları alınamadı:',error));
+  }).catch(error=>{if(!(error&&error.aborted))console.warn('CP sayaçları alınamadı:',error);});
 }
 // D1 ölçümü (#1071/#1078): filtre/sıralama/arama değişimi → satırlar tabloda (Siparişler ile aynı).
 function cpRecordRowsVisible(path,started,detail={}){
@@ -10815,6 +10914,8 @@ function renderCPFromReadModel(){
     cpRMRequestFacets(spec,signature);
   }).catch(error=>{
     if(seq!==cpRM.seq)return;
+    // Satır kaydı için iptal edildi: kayıt bitince tablo yeniden ister (cpRowSaveSettled).
+    if(error&&error.aborted){cpRM.signature='';return;}
     // Sunucu bu sorguyu değerlendiremiyor (desteklenmeyen filtre ya da sınır aşımı): bu sorgu
     // için eski yol. Tercih yazılamadıysa (alt PR 1) oturum boyunca eski yol.
     if(error&&(error.status===400||error.code==='CP_COMPUTED_PREFERENCES_UNSAVED')){
@@ -11905,7 +12006,7 @@ function refreshRowsEverywhere(ids){
   // Priority hücresi artık türetilmiş legacy warning metni değildir. Kararı
   // değiştirebilen bir edit sonrası tek satırı çizmeden önce aynı unified
   // decision context'i senkronla; aksi halde hücre bir render boyunca stale kalır.
-  if(state.cp&&window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('cp');
+  if(state.cp&&window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')cpEditPriorities();
   const uniqueIds=new Set(ids),rowIndex=buildIndex();
   uniqueIds.forEach(id=>refreshCpRowOnly(id,rowIndex));
   refreshOverviewNotesLive();
@@ -11957,6 +12058,7 @@ function applyAcknowledgedCpDraft(prepared,data){
 }
 function pushUndo(action){
   bindCpHistoryIdentity(action);
+  if(!_cpPasteUndoBatch&&typeof cpRowTouchAction==='function')cpRowTouchAction(action); // #1078: dokunulan sütunlar
   if(_cpPasteUndoBatch){ _cpPasteUndoBatch.push(action); return; }
   const last=undoStack[undoStack.length-1];
   if(!bulkCpHistoryBusy&&action&&action.mergeKey&&last&&last.mergeKey===action.mergeKey&&last.kind===action.kind&&last.id===action.id&&last.shipId===action.shipId&&last.lineKey===action.lineKey&&last.ownerId===action.ownerId){
@@ -12134,6 +12236,7 @@ function applyHistoryAction(action, direction, options={}){
   if(dateHistoryKeys.length||historyKeys.has('Del. Type'))invalidateUnifiedPriorityDecisions('cp-history-edit');
   updateOrderLinePeerIdentity(row);
   markDirty(row._id);
+  if(typeof cpRowTouch==='function')cpRowTouch(row,[...historyKeys]); // #1078: geri al / yinele dokunduğu sütunlar
   if(typeof syncOrderLinePeersFromCpRow==='function')syncOrderLinePeersFromCpRow(row,[...historyKeys],{batch:options.batch});
   if(options.batch)options.batch.ids.add(row._id);else refreshRowEverywhere(row._id);
   if(!cpBulkPreparing&&action.refreshSubmfrList) refreshSubmfrList();
@@ -15449,6 +15552,8 @@ function flushPendingOverrideWrites(){
 async function settleOverrideWrites(){
   flushPendingOverrideWrites();
   try{ await overrideMutationsSettled(); }catch(_){ }
+  // #1078: CP satır kaydı ayrı sırada gider; yenileme / toplu işlem onu da bekler.
+  try{ await window.BLCpRowSave?.settled?.(); }catch(_){ }
 }
 const _pendingDateOverrideKeys = new Map();
 function saveDateOverrides(row, touchedKeys){
@@ -15463,6 +15568,7 @@ function saveDateOverrides(row, touchedKeys){
     : allKeys;
   if(BLRevision.isAutomaticExFactory(row))nextKeys.splice(0,nextKeys.length,...nextKeys.filter(key=>key!=='Ex-factory'));
   if(!nextKeys.length) return;
+  if(typeof cpRowTouch==='function')cpRowTouch(row,nextKeys,true); // #1078: tarih haritası aşağıda değişmeden önce
   const syncKey = overrideSyncKey(row, orderCode);
   const bucket = _pendingDateOverrideKeys.get(syncKey) || new Set();
   nextKeys.forEach(key => bucket.add(key));
@@ -15490,11 +15596,19 @@ function saveDateOverrides(row, touchedKeys){
     return dates;
   };
   computeDates(bucket);
-  schedulePendingOverrideWrite(`date:${overrideSyncKey(row, orderCode)}`, 400, ()=>{
+  schedulePendingOverrideWrite(`date:${overrideSyncKey(row, orderCode)}`, typeof cpRowSaveDebounce==='function'?cpRowSaveDebounce(400):400, ()=>{
     const keysToSend = [...(_pendingDateOverrideKeys.get(syncKey) || nextKeys)];
     _pendingDateOverrideKeys.delete(syncKey);
     const dates = computeDates(keysToSend);
     if(!Object.keys(dates).length) return;
+    const rowPlan=typeof cpRowSaveDatePlan==='function'?cpRowSaveDatePlan(row,orderCode,dates):null;
+    if(rowPlan){
+      if(!rowPlan.skip)cpRowSaveSend(row,orderCode,rowPlan.patch,rowPlan.units).catch(err=>{
+        console.warn('Tarih revizyonu kaydedilemedi:',err.message);
+        notifyOverrideSaveError(appLang==='en'?'The date revision could not be saved to the server.':'Tarih revizyonu sunucuya kaydedilemedi.');
+      });
+      return;
+    }
     enqueueOverrideMutation('orders',`/api/overrides/${orderCode}`, {
       method:'PATCH', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({...lineIdentity(row), dates}),
@@ -15505,13 +15619,322 @@ function saveDateOverrides(row, touchedKeys){
   });
 }
 
+/* ---- CP satır kaydı (#1078, WS5 alt PR 3) ----
+   Anahtar varsayılan AÇIK (kapatmak: window.BL_CP_ROW_SAVE===false ya da kullanıcı tercihi 'bl.cpRowSave.v1'='0');
+   CP satır düzenlemesi POST /api/overrides/rows ile gider: yalnız değişen alanlar ve her alanın
+   düzenleme öncesi KAYITLI değeri (base). Sunucu global revizyonu değil alanı karşılaştırır:
+   başka satıra ya da aynı satırın başka alanına yapılan yazma bu kaydı reddettirmez, bu kayıt
+   onları ezmez. Aynı alan başkası tarafından değiştirildiyse çakışma döner: sunucu değeri satıra
+   yazılır, kullanıcı bilgilendirilir (düzenleme sessizce kaybolmaz / ekranda yanlış kalmaz).
+   - base, satırın ilk bekleyen düzenlemesinden ÖNCE istemcinin kayıt haritalarından (state.overrides)
+     alınır; her onayda sunucunun döndürdüğü güncel değere taşınır. Uzak canlı yamalar haritaları
+     da günceller (sahte çakışma olmaz).
+   - Kayıtlar tek sırada gider (aynı satırın ardışık kayıtları kendi önceki kaydıyla çakışmaz).
+   - Toplu yapıştırma / toplu geri al ve Supp. FOB / fiyat geri yükleme bugünkü (atomik, revizyonlu)
+     yolda kalır. Satır kimliği (model + renk kodu) olmayan satır da bugünkü yolda.
+   - Kirli işaretleri ve geri al aynen çalışır; pencereli/hesaplanmış yol yalnız onaylanmamış
+     (bekleyen ya da yolda) yazma varken eski yola düşer.
+   Anahtar kapalıyken (varsayılan) bugünkü yol aynen çalışır. */
+const CP_ROW_SAVE_STORAGE_KEY='bl.cpRowSave.v1';
+/* units: satır anahtarı → (birim → {base, dirty, sent}). Birim = sunucunun ayrı karşılaştırdığı en küçük parça
+   ('notes:Notes', 'notes:EkNot', 'delType', 'subManufacturer', 'noteColumns:<id>', 'dates:<alan>').
+   base o birimin düzenleme öncesi KAYITLI değeridir; yalnız o birimin onayı onu sunucu değerine taşır.
+   pre: markDirty anında (haritalar değişmeden) alınan satır görüntüsü; dokunulan birimin base'i buradan.
+   cycle: bu düzenleme döngüsünde dokunulan sütunu bilinen satırlar; legacy: bugünkü yola gidecek satırlar. */
+const cpRowSave={enabled:null,pre:new Map(),units:new Map(),cycle:new Set(),legacy:new Set(),inFlight:new Map(),queue:Promise.resolve(),computedAborted:false};
+/* refreshRowsEverywhere: satır kaydı açıkken tek satır düzenlemesi 30k satırın kararını EŞZAMANLI hesaplatmaz
+   (~3 sn ana iş parçacığı; kayıt zamanlayıcısı ve canlı yama o kadar gecikir). Hesap arka planda (işçi) yapılır,
+   sonuç gelince tablo kendini çizer; öncelik hücresi o ana kadar son değerini korur. Kapalıyken bugünkü yol. */
+function cpEditPriorities(){
+  if(cpRowSaveEnabled())void scheduleUnifiedPrioritiesForTable('cp');
+  else syncUnifiedPrioritiesForTable('cp');
+}
+// Satır kaydında gecikmeli yazma kısa: yalnız dokunulan birimler gider (birleştirme ihtiyacı az); kayıt anlık.
+function cpRowSaveDebounce(fallback){return cpRowSaveEnabled()?250:fallback;}
+function cpRowSaveEnabled(){
+  if(typeof window.BL_CP_ROW_SAVE==='boolean')return window.BL_CP_ROW_SAVE;
+  if(cpRowSave.enabled===null){
+    // Varsayılan AÇIK (kullanıcı kararı, #1078): geri dönüş window.BL_CP_ROW_SAVE=false ya da tercih '0'.
+    try{cpRowSave.enabled=(window.BLStorage||localStorage).getItem(CP_ROW_SAVE_STORAGE_KEY)!=='0';}catch(_){cpRowSave.enabled=true;}
+  }
+  return cpRowSave.enabled;
+}
+// Onaylanmamış CP yazması var mı? (anahtar kapalıyken bugünkü kural: herhangi bir kirli satır)
+function cpUnsavedRowEdits(){
+  if(!cpRowSaveEnabled())return Boolean(state.cpDirty&&state.cpDirty.size);
+  let total=0;for(const count of cpRowSave.inFlight.values())total+=count;
+  return total>0;
+}
+/* Düzenleme sunucu yollarını (pencereli tablo, hesaplanmış sütunlar) kapatır mı? Satır kaydı açıkken HAYIR:
+   düzenlenen değer yerel tam satırdan görünür, kayıt ve canlı senkron hiçbir hesabı beklemez; hesaplanmış
+   sütunlar yeni nesille arkadan gelir. Aksi halde tek satır düzenlemesi 30k satırın kararını istemcide
+   eşzamanlı yeniden hesaplatır (refreshRowEverywhere → syncUnifiedPrioritiesForTable, ~3 sn) ve kayıt
+   zamanlayıcısı o kadar gecikir. Anahtar kapalıyken bugünkü kural: kirli satır ya da bekleyen yazma. */
+function cpEditsBlockServerPaths(includePending=false){
+  if(cpRowSaveEnabled())return false;
+  return Boolean(state.cpDirty&&state.cpDirty.size)||(includePending&&pendingOverrideWriteCount()>0);
+}
+const cpRowIsObject=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
+function cpRowStoredRecord(mapName,key,orderCode){
+  const map=state.overrides&&state.overrides[mapName]||{},oc=String(orderCode);
+  return {...(key!==oc&&cpRowIsObject(map[oc])?map[oc]:{}),...(cpRowIsObject(map[key])?map[key]:{})};
+}
+function cpRowStoredValue(mapName,key,orderCode){
+  const map=state.overrides&&state.overrides[mapName]||{},oc=String(orderCode);
+  if(Object.hasOwn(map,key))return map[key];
+  return key!==oc&&Object.hasOwn(map,oc)?map[oc]:undefined;
+}
+const CP_ROW_DATE_FIELDS={exFactory:'ex',retailDate:'retail',inStoreDate:'mb'};
+const CP_ROW_NOTE_PAIRS={Notes:['Notes','NotesHtml'],EkNot:['EkNot','EkNotHtml']};
+const CP_ROW_SCALARS={delType:'delmap',subManufacturer:'submap',licensor:'licensormap'};
+const CP_ROW_COLUMN_UNITS={'Notes':'notes:Notes','NotesHtml':'notes:Notes','Ek Not':'notes:EkNot','Ek NotHtml':'notes:EkNot','Del. Type':'delType','Sub-Manufacturer':'subManufacturer',
+  'Ex-factory':'dates:exFactory','Retail Date':'dates:retailDate','In-Store (Model Budget)':'dates:inStoreDate'};
+// Fiyatla bağlı alanlar (Licensor haritası markDirty'den önce değişir, Supp. FOB) bugünkü atomik yolda kalır.
+const CP_ROW_LEGACY_COLUMNS=new Set(['Licensor','Supp. FOB']);
+// Satırın kayıtlı değerleri (sunucunun karşılaştırdığı biçimde).
+function cpRowSnapshot(key,orderCode){
+  const notes=cpRowStoredRecord('notesmap',key,orderCode),dates=cpRowStoredRecord('datemap',key,orderCode);
+  return {
+    notes:Object.fromEntries(['Notes','NotesHtml','EkNot','EkNotHtml'].map(name=>[name,notes[name]==null?'':String(notes[name])])),
+    delType:cpRowStoredValue('delmap',key,orderCode),subManufacturer:cpRowStoredValue('submap',key,orderCode),licensor:cpRowStoredValue('licensormap',key,orderCode),
+    noteColumns:cpRowStoredRecord('noteColumnValues',key,orderCode),
+    dates:Object.fromEntries(Object.entries(CP_ROW_DATE_FIELDS).map(([field,stored])=>[field,dates[stored]||null])),
+  };
+}
+function cpRowUnitParts(unit){const at=unit.indexOf(':');return at<0?[unit,'']:[unit.slice(0,at),unit.slice(at+1)];}
+// Birimin değeri (cpRowSnapshot / sunucu `current` biçimindeki kayıttan).
+function cpRowUnitValue(source,unit){
+  const [group,name]=cpRowUnitParts(unit),record=source||{};
+  if(group==='notes'){const notes=record.notes||{};return CP_ROW_NOTE_PAIRS[name].map(field=>notes[field]==null?'':String(notes[field]));}
+  if(group==='noteColumns'){const value=(record.noteColumns||{})[name];return value==null?'':String(value);}
+  if(group==='dates')return (record.dates||{})[name]||null;
+  return record[group]==null?undefined:record[group];
+}
+// Birimin değerini istek gövdesi biçiminde (patch ya da base) yazar.
+function cpRowUnitAssign(target,unit,value){
+  const [group,name]=cpRowUnitParts(unit);
+  if(group==='notes'){target.notes=target.notes||{};CP_ROW_NOTE_PAIRS[name].forEach((field,i)=>{target.notes[field]=value?value[i]:'';});}
+  else if(group==='noteColumns'){target.noteColumns=target.noteColumns||{};target.noteColumns[name]=value==null?'':value;}
+  else if(group==='dates'){target.dates=target.dates||{};target.dates[name]=value||null;}
+  else target[group]=value==null?'':value;
+  return target;
+}
+function cpRowColumnUnit(column){
+  if(Object.hasOwn(CP_ROW_COLUMN_UNITS,column))return CP_ROW_COLUMN_UNITS[column];
+  return (typeof CP_NOTE_COLUMN_DEFS!=='undefined'&&CP_NOTE_COLUMN_DEFS||[]).some(def=>def.id===column)?`noteColumns:${column}`:null;
+}
+// markDirty: satırın ilk düzenlemesinden önce (haritalar değişmeden) görüntü alınır.
+function cpRowCaptureBase(row){
+  if(!cpRowSaveEnabled()||!row)return;
+  const orderCode=row['Order Code'];if(orderCode==null)return;
+  const key=overrideSyncKey(row,orderCode);
+  if(!cpRowSave.pre.has(key))cpRowSave.pre.set(key,cpRowSnapshot(key,orderCode));
+}
+/* Kullanıcının bu satırda dokunduğu sütunlar (geri al kaydı / geri al-yinele / tarih kaydı). Yalnız bunlar gider:
+   ekranda kaynak değeriyle ya da bayat duran dokunulmamış alan asla yazılmaz. dates=true: tarih birimleri
+   (tarih haritası henüz değişmeden saveDateOverrides içinden); aksi halde tarih dışı birimler. */
+function cpRowTouch(row,columns,dates=false){
+  if(!cpRowSaveEnabled()||!row)return;
+  const orderCode=row['Order Code'];if(orderCode==null)return;
+  const key=overrideSyncKey(row,orderCode),units=new Set();
+  cpRowSave.cycle.add(key);
+  for(const column of columns||[]){
+    if(!dates&&CP_ROW_LEGACY_COLUMNS.has(column))cpRowSave.legacy.add(key);
+    const unit=cpRowColumnUnit(column);
+    if(unit&&unit.startsWith('dates:')===dates)units.add(unit);
+  }
+  if(!units.size)return;
+  const pre=cpRowSave.pre.get(key)||cpRowSnapshot(key,orderCode);
+  if(!dates)cpRowSave.pre.delete(key);
+  let entries=cpRowSave.units.get(key);if(!entries)cpRowSave.units.set(key,entries=new Map());
+  for(const unit of units){const entry=entries.get(unit);if(entry)entry.dirty++;else entries.set(unit,{base:cpRowUnitValue(pre,unit),dirty:1,sent:0});}
+}
+// pushUndo kancası: CP satır eylemleri (toplu eylem içindekiler dahil); sevkiyat / önem eylemleri hariç.
+function cpRowTouchAction(action){
+  if(!cpRowSaveEnabled()||!action||window.isCapturingOverrideBatch?.())return;
+  const list=action.kind==='batch'?(action.actions||[]):[action];
+  const rows=state.cp&&state.cp.rows||[];
+  const byId=list.length>1?new Map(rows.map(row=>[row._id,row])):null;
+  for(const item of list){
+    if(!item||item.kind)continue;
+    const row=byId?byId.get(item.id):rows.find(candidate=>candidate._id===item.id);
+    cpRowTouch(row,(item.fields||[]).map(field=>field.key));
+  }
+}
+// Bugünkü yola giden satırın gönderilmemiş birimleri bırakılır (yoldaki kaydın birimi onayını bekler).
+function cpRowSaveForget(key,dates){
+  const entries=cpRowSave.units.get(key);if(!entries)return;
+  for(const [unit,entry] of entries){
+    if(unit.startsWith('dates:')!==dates||entry.dirty<=entry.sent)continue;
+    if(entry.sent)entry.dirty=entry.sent;else entries.delete(unit);
+  }
+  if(!entries.size)cpRowSave.units.delete(key);
+}
+function cpRowPending(key,dates){
+  return [...(cpRowSave.units.get(key)||new Map())].filter(([unit,entry])=>unit.startsWith('dates:')===dates&&entry.dirty>entry.sent).map(([unit])=>unit);
+}
+// Bu yazma satır kaydıyla gidebilir mi? (anahtar, toplu yakalama, satır kimliği, alan kümesi)
+function cpRowSaveEligible(row,body){
+  if(!cpRowSaveEnabled()||window.isCapturingOverrideBatch?.())return false;
+  const identity=lineIdentity(row);if(!identity.model||!identity.ccode)return false;
+  return !['suppFob','suppFobMeta','pricingRestore','imageRef','importance','shortage'].some(field=>Object.hasOwn(body,field));
+}
+/* syncOverrideToServer planı: null → bugünkü yol; {skip:true} → gönderilecek dokunulmuş alan yok;
+   {patch,units} → satır kaydı. Dokunulan sütunu bilinmeyen düzenleme (ör. otomatik işaretleme) bugünkü yolda. */
+function cpRowSavePlan(row,orderCode,body){
+  if(!cpRowSaveEnabled())return null;
+  const key=overrideSyncKey(row,orderCode);
+  const known=cpRowSave.cycle.delete(key),legacy=cpRowSave.legacy.delete(key);
+  cpRowSave.pre.delete(key);
+  if(legacy||!known||!cpRowSaveEligible(row,body)){cpRowSaveForget(key,false);return null;}
+  const entries=cpRowSave.units.get(key),patch={},units=[];
+  for(const unit of cpRowPending(key,false)){
+    const [group,name]=cpRowUnitParts(unit);
+    const value=group==='notes'?(body.notes?CP_ROW_NOTE_PAIRS[name].map(field=>body.notes[field]==null?'':String(body.notes[field])):undefined)
+      :group==='noteColumns'?(body.noteColumns?body.noteColumns[name]:undefined)
+      :body[group];
+    if(value===undefined){entries.delete(unit);continue;}
+    cpRowUnitAssign(patch,unit,value);units.push(unit);
+  }
+  if(entries&&!entries.size)cpRowSave.units.delete(key);
+  return units.length?{patch,units}:{skip:true};
+}
+// saveDateOverrides planı (aynı sözleşme): yalnız dokunulmuş tarih alanları.
+function cpRowSaveDatePlan(row,orderCode,dates){
+  if(!cpRowSaveEnabled())return null;
+  const key=overrideSyncKey(row,orderCode);
+  const pending=new Set(cpRowPending(key,true));
+  if(!cpRowSaveEligible(row,{dates})||Object.keys(dates).some(field=>!pending.has(`dates:${field}`))){cpRowSaveForget(key,true);return null;}
+  const patch={},units=[];
+  for(const field of Object.keys(dates)){cpRowUnitAssign(patch,`dates:${field}`,dates[field]);units.push(`dates:${field}`);}
+  return units.length?{patch,units}:{skip:true};
+}
+// Sunucunun kayıtlı değerlerini istemci haritalarına yazar (yalnız gönderilen birimler; bekleyen yerel düzenlemeye dokunmaz).
+function cpRowApplyStored(key,current,units){
+  if(!current||!state.overrides)return;
+  const ov=state.overrides;
+  for(const unit of units){
+    const [group,name]=cpRowUnitParts(unit),value=cpRowUnitValue(current,unit);
+    if(group==='notes'){ov.notesmap=ov.notesmap||{};const record={...(ov.notesmap[key]||{})};CP_ROW_NOTE_PAIRS[name].forEach((field,i)=>{record[field]=value[i];});ov.notesmap[key]=record;}
+    else if(group==='noteColumns'){ov.noteColumnValues=ov.noteColumnValues||{};ov.noteColumnValues[key]={...(ov.noteColumnValues[key]||{}),[name]:value};}
+    else if(group==='dates'){
+      ov.datemap=ov.datemap||{};const record={...(ov.datemap[key]||{})},stored=CP_ROW_DATE_FIELDS[name];
+      if(value)record[stored]=value;else delete record[stored];
+      if(Object.keys(record).length)ov.datemap[key]=record;else delete ov.datemap[key];
+    }else{
+      const mapName=CP_ROW_SCALARS[group];ov[mapName]=ov[mapName]||{};
+      if(value===undefined)delete ov[mapName][key];else ov[mapName][key]=value;
+    }
+  }
+}
+// Çakışma: kayıt reddedildi; gönderilen birimlerin sunucu değeri satıra yazılır. Kayıtlı değeri olmayan
+// alan (kaynak değerine dönmüş) için yeniden yükleme gerekir.
+function cpRowApplyConflict(row,current,units){
+  let needsReload=false;
+  const columns={Notes:['Notes','NotesHtml'],EkNot:['Ek Not','Ek NotHtml']},dateColumns={exFactory:'Ex-factory',retailDate:'Retail Date',inStoreDate:'In-Store (Model Budget)'};
+  for(const unit of units){
+    const [group,name]=cpRowUnitParts(unit),value=cpRowUnitValue(current,unit);
+    if(group==='notes')columns[name].forEach((column,i)=>{row[column]=value[i];});
+    // Paylaşılan not sütunu (kişisel not değil; applyRemoteRowPatch ile aynı alanlar).
+    else if(group==='noteColumns')row[name]=value;
+    else if(group==='dates'){if(value)row[dateColumns[name]]=coerceDateLoose(value);else needsReload=true;}
+    else if(value===undefined)needsReload=true;
+    else if(group==='delType'){row['Del. Type']=value;syncCpProductionLogisticSegment(row,value);}
+    else if(group==='subManufacturer')row['Sub-Manufacturer']=value;
+  }
+  try{applyFormulas(row);}catch(_){}
+  return needsReload;
+}
+function cpRowSaveSend(row,orderCode,patch,units){
+  const key=overrideSyncKey(row,orderCode);
+  // Bu kaydın taşıdığı düzenleme sayısı: onaydan sonra aynı birime yeni düzenleme geldiyse birim bekler.
+  const sent=units.map(unit=>{const entry=cpRowSave.units.get(key)?.get(unit);if(entry)entry.sent=entry.dirty;return {unit,dirty:entry?entry.dirty:0};});
+  /* Onay: birimde yeni düzenleme yoksa kayıt biter; varsa base onaylanan sunucu değerine taşınır.
+     Çakışma / hata: base taşınmaz — sıradaki yeni düzenleme de başkasının değerini sessizce ezemez. */
+  const settle=(current,acked)=>{
+    const entries=cpRowSave.units.get(key);if(!entries)return;
+    for(const {unit,dirty} of sent){
+      const entry=entries.get(unit);if(!entry)continue;
+      if(entry.dirty<=dirty)entries.delete(unit);else if(acked&&cpRowIsObject(current))entry.base=cpRowUnitValue(current,unit);
+    }
+    if(!entries.size)cpRowSave.units.delete(key);
+  };
+  cpRowSave.inFlight.set(key,(cpRowSave.inFlight.get(key)||0)+1);
+  const run=async()=>{
+    // base gönderim anında okunur: aynı birimin önceki kaydının onayı onu sunucu değerine taşımış olur.
+    const entries=cpRowSave.units.get(key),base={};
+    for(const unit of units)cpRowUnitAssign(base,unit,entries?.get(unit)?.base);
+    const item={orderCode:Number(orderCode),patch:{...lineIdentity(row),...patch},base};
+    const headers={'Content-Type':'application/json'};if(window.BL_CLIENT_ID)headers['X-Client-Id']=window.BL_CLIENT_ID;
+    // Kayıt hiçbir okuma modeli isteğinin arkasında beklemez (tarayıcı bağlantı sınırı).
+    if(typeof cpRMAbortReads==='function')cpRMAbortReads();
+    let data;
+    try{data=await fetchJSON('/api/overrides/rows',{method:'POST',headers,body:JSON.stringify({items:[item]})});}
+    catch(err){settle(null,false);throw err;}
+    if(data.revisions&&typeof data.revisions==='object')Object.entries(data.revisions).forEach(([name,value])=>{if(Number.isInteger(Number(value)))state.storeRevisions[name]=Number(value);});
+    // Onay: yalnız yeni düzenlemesi beklemeyen birimler haritaya yazılır; bekleyen yerel değer (sonraki kaydın
+    // gövdesi buradan kurulur, ör. not sütunları) eski onaylı değerle ezilmez.
+    const settledUnits=()=>{const entries=cpRowSave.units.get(key);return sent.filter(({unit,dirty})=>!entries?.get(unit)||entries.get(unit).dirty<=dirty).map(({unit})=>unit);};
+    for(const applied of data.applied||[]){cpRowApplyStored(key,applied.current,settledUnits());settle(applied.current,true);}
+    let reload=false;
+    for(const conflict of data.conflicts||[]){
+      cpRowApplyStored(key,conflict.current,units);settle(conflict.current,false);
+      reload=cpRowApplyConflict(row,conflict.current||{},units)||reload;
+      invalidateUnifiedPriorityDecisions('cp-row-conflict',['cp']);
+      showToast(appLang==='en'
+        ?'Another user changed this row in the meantime. Their value is shown; your change was not saved.'
+        :'Bu satır bu arada başka bir kullanıcı tarafından değiştirildi. Onun değeri gösteriliyor; değişikliğiniz kaydedilmedi.');
+      window.BLPerf?.mark?.('CP_ROW_SAVE_CONFLICT',{fields:conflict.fields});
+    }
+    if((data.conflicts||[]).length){refreshRowEverywhere(row._id);if(reload)try{await loadFromServer(false);}catch(_){}}
+    try{window.dispatchEvent(new CustomEvent('buyerlog:cp-write-ack'));}catch(_){}
+    return data;
+  };
+  const job=cpRowSave.queue.then(run,run);
+  cpRowSave.queue=job.catch(()=>{});
+  return job.finally(()=>{
+    const left=(cpRowSave.inFlight.get(key)||1)-1;
+    if(left>0)cpRowSave.inFlight.set(key,left);else cpRowSave.inFlight.delete(key);
+    cpRowSaveSettled();
+  });
+}
+// Bütün satır kayıtları onaylanınca pencereli CP sunucu sonucuna döner (yeni nesil; yalnız etkilenen satırlar yeniden hesaplanır).
+function cpRowSaveSettled(){
+  if(cpUnsavedRowEdits()||pendingOverrideWriteCount()>0)return;
+  window.BLPerf?.mark?.('CP_ROW_SAVE_SETTLED');
+  if(typeof cpReadModelEnabled==='function'&&cpReadModelEnabled()&&currentActiveTab()==='cp'){cpRMInvalidate('row-save');renderCP();}
+  // Kayıt için iptal edilen hesaplanmış sütun isteği yeniden (sonuç gelince tablo kendini çizer).
+  if(cpRowSave.computedAborted){cpRowSave.computedAborted=false;_unifiedPriorityCache.cp=null;void scheduleUnifiedPrioritiesForTable('cp');}
+}
+// Uzak canlı yama: istemci kayıt haritaları da güncellenir. Bekleyen yerel düzenlemenin base'i DEĞİŞMEZ:
+// aynı birimi başkası değiştirdiyse bizim kaydımız çakışma alır (sessiz ezme yok).
+function cpRowSaveRemoteApplied(row,patch){
+  if(!cpRowSaveEnabled()||!row||!patch)return;
+  const orderCode=row['Order Code'];if(orderCode==null)return;
+  const key=overrideSyncKey(row,orderCode),current={},units=[];
+  if(cpRowIsObject(patch.notes)){
+    current.notes=patch.notes;
+    for(const [name,pair] of Object.entries(CP_ROW_NOTE_PAIRS))if(pair.some(field=>Object.hasOwn(patch.notes,field)))units.push(`notes:${name}`);
+  }
+  if(patch.delType!=null){current.delType=String(patch.delType);units.push('delType');}
+  if(Object.hasOwn(patch,'subManufacturer')){current.subManufacturer=patch.subManufacturer;units.push('subManufacturer');}
+  if(Object.hasOwn(patch,'licensor')){current.licensor=patch.licensor;units.push('licensor');}
+  if(cpRowIsObject(patch.noteColumns)){current.noteColumns=patch.noteColumns;Object.keys(patch.noteColumns).forEach(id=>units.push(`noteColumns:${id}`));}
+  if(cpRowIsObject(patch.dates)){current.dates=patch.dates;Object.keys(patch.dates).filter(field=>Object.hasOwn(CP_ROW_DATE_FIELDS,field)).forEach(field=>units.push(`dates:${field}`));}
+  cpRowApplyStored(key,current,units);
+}
+window.BLCpRowSave={
+  isEnabled:()=>cpRowSaveEnabled(),
+  setEnabled(value){try{(window.BLStorage||localStorage).setItem(CP_ROW_SAVE_STORAGE_KEY,value?'1':'0');}catch(_){}cpRowSave.enabled=Boolean(value);return cpRowSaveEnabled();},
+  status:()=>({enabled:cpRowSaveEnabled(),pendingRows:cpRowSave.inFlight.size,unitRows:cpRowSave.units.size}),
+  settled:()=>cpRowSave.queue,
+};
+
 function syncOverrideToServer(orderCode,notes,row){
   if(!window.SERVER_BACKED)return;
-  schedulePendingOverrideWrite(`notes:${overrideSyncKey(row, orderCode)}`, 500, ()=>{
+  schedulePendingOverrideWrite(`notes:${overrideSyncKey(row, orderCode)}`, typeof cpRowSaveDebounce==='function'?cpRowSaveDebounce(500):500, ()=>{
     const restore=row._pricingHistoryRestore,manualWrite=row._pricingManualWrite,subWrite=row._subManufacturerWrite;
-    enqueueOverrideMutation('orders',`/api/overrides/${orderCode}`,{
-      method:'PATCH',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify((()=>{
+    const body=(()=>{
         const body={...lineIdentity(row),notes,delType:row['Del. Type']||undefined};
         if(turknorm(row.Licensor)!=='DTR'&&(!restore?.licensor||subWrite))body.subManufacturer=norm(row['Sub-Manufacturer']);
         if(row._licensorManual===true&&Object.hasOwn(state.overrides.licensormap||{},overrideSyncKey(row,orderCode)))body.licensor=norm(row.Licensor);
@@ -15534,8 +15957,13 @@ function syncOverrideToServer(orderCode,notes,row){
           if(noteBucket)body.noteColumns=noteBucket;
         }
         return body;
-      })())
-    }).then(()=>{
+      })();
+    // #1078 alt PR 3: anahtar açıkken satır kaydı — yalnız dokunulan alanlar, alan bazlı karşılaştırma; fiyat alanları bugünkü yolda.
+    const rowPlan=typeof cpRowSavePlan==='function'?cpRowSavePlan(row,orderCode,body):null;
+    const sent=rowPlan
+      ?(rowPlan.skip?Promise.resolve():cpRowSaveSend(row,orderCode,rowPlan.patch,rowPlan.units))
+      :enqueueOverrideMutation('orders',`/api/overrides/${orderCode}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    sent.then(()=>{
       if(restore&&row._pricingHistoryRestore===restore)delete row._pricingHistoryRestore;
       if(manualWrite&&row._pricingManualWrite===manualWrite)delete row._pricingManualWrite;
       if(subWrite&&row._subManufacturerWrite===subWrite)delete row._subManufacturerWrite;
@@ -15678,6 +16106,7 @@ const _origMarkDirty = markDirty;
 markDirty = function(id){
   _origMarkDirty(id);
   const row = state.cp.rows.find(r=>r._id===id);
+  if(typeof cpRowCaptureBase==='function')cpRowCaptureBase(row); // #1078 satır kaydı: düzenleme öncesi kayıtlı değer (haritalar değişmeden)
   if(row) syncOverridesFromRow(row);
 };
 
@@ -41830,6 +42259,7 @@ function applyRemoteRowPatch(row,patch){
   if(patch.delType!=null)syncCpProductionLogisticSegment(row,patch.delType);
   else if(patch.dates&&typeof patch.dates==='object'&&Object.prototype.hasOwnProperty.call(patch.dates,'exFactory'))syncCpProductionLogisticSegment(row);
   if(patch.delType!=null||patch.dates){applyFormulas(row);invalidateUnifiedPriorityDecisions('remote-cp-decision-patch');scheduleOverviewRender('remote-cp-decision-patch');}
+  if(typeof cpRowSaveRemoteApplied==='function')cpRowSaveRemoteApplied(row,patch); // #1078
   return row;
 }
 // Kullanıcı şu an hangi satırı düzenliyor? O satır uzaktan EZİLMEZ.
@@ -41881,7 +42311,9 @@ function applyRemoteRowPatches(rowPatches){
   }
   remoteDeferredPatches=deferred;
   if(applied){
-    if(state.cp)renderCP();
+    // #1078: satır kaydı açıkken yalnız değişen satırlar hemen çizilir; karar alanı değiştiyse öncelikler arka
+    // planda hesaplanır ve tablo sonuçla kendini çizer (tam eski yol çizimi 30k'da ana iş parçacığını ~8 sn kilitler).
+    if(state.cp)typeof cpRowSaveEnabled==='function'&&cpRowSaveEnabled()?refreshRowsEverywhere([...touched]):renderCP();
     if(state.orders)renderOrders();
     renderOverview();
     highlightRemoteRows(touched);
