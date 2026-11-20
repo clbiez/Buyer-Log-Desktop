@@ -14160,10 +14160,10 @@ function automaticSuppFobRuleMeta(rule,applied){
   if(!rule) return null;
   return {source:'rule',ruleId:String(rule.id||''),opdStart:rule.opdStart||'',opdEnd:rule.opdEnd||'',seasons:normalizePricingRuleSeasons(rule.seasons!=null?rule.seasons:rule.season),countryGroup:rule.countryGroup,licensor:rule.licensor,license:rule.license,royalty:Number(rule.royalty),hologramCost:Number(rule.hologramCost),applied:applied===true};
 }
-function suppFobMetaForRow(row){
+function suppFobMetaForRow(row,knownLineKey){
   if(!row) return null;
   const oc=row['Order Code'];
-  const lineKey=lineKeyOfRow(row)||oc;
+  const lineKey=knownLineKey!==undefined?knownLineKey:(lineKeyOfRow(row)||oc);
   return normalizeSuppFobMeta(row._suppFobMeta || (state.overrides.suppfobmetamap||{})[lineKey] || (state.overrides.suppfobmetamap||{})[oc]);
 }
 function isSuppFobAutoCalculated(row){
@@ -14211,12 +14211,13 @@ function calculateSuppFobFromRule(fob,opd,country,season,licensor,license){
 }
 function hasManualSuppFob(row){
   if(!row) return false;
-  const meta=suppFobMetaForRow(row);
+  // #1079 WS6: satır anahtarı (iki turknorm) satır başına bir kez hesaplanır; aynı değer.
+  const fast=typeof royaltyRecomputeFastEnabled==='function'&&royaltyRecomputeFastEnabled(),oc=row['Order Code'],knownKey=fast?(lineKeyOfRow(row)||oc):undefined;
+  const meta=suppFobMetaForRow(row,knownKey);
   if(meta&&meta.source==='rule')return false;
   if(meta&&meta.source==='manual')return true;
   if(row._suppFobOverride===true || row._suppFobManual===true) return true;
-  const oc=row['Order Code'];
-  const lineKey=lineKeyOfRow(row)||oc;
+  const lineKey=fast?knownKey:(lineKeyOfRow(row)||oc);
   return oc!=null && (Object.prototype.hasOwnProperty.call(state.overrides.suppfobmap||{},lineKey)||Object.prototype.hasOwnProperty.call(state.overrides.suppfobmap||{},oc));
 }
 function sameOrderCode(a,b){
@@ -14327,6 +14328,19 @@ function syncPricingRulesToAllLoadedViews({saveCollection=true,renderCollection=
   }
   return {cpChanged,collectionChanged};
 }
+/* #1079 WS6 royalty yeniden hesap anahtarı (varsayılan açık). Geri dönüş:
+   window.BL_READ_MODEL_ROYALTY_RECOMPUTE=false ya da localStorage
+   'buyerlog.readModel.royaltyRecompute.v1'='0' ve sayfayı yenileme. İlk kullanımda bir
+   kez okunur; license-royalty-commissions.js de aynı anahtarı kullanır. */
+let royaltyRecomputeFastCache=null;
+function royaltyRecomputeFastEnabled(){
+  if(royaltyRecomputeFastCache===null){
+    if(typeof window.BL_READ_MODEL_ROYALTY_RECOMPUTE==='boolean')royaltyRecomputeFastCache=window.BL_READ_MODEL_ROYALTY_RECOMPUTE;
+    else{try{royaltyRecomputeFastCache=localStorage.getItem('buyerlog.readModel.royaltyRecompute.v1')!=='0';}catch(_){royaltyRecomputeFastCache=true;}}
+  }
+  return royaltyRecomputeFastCache;
+}
+window.royaltyRecomputeFastEnabled=royaltyRecomputeFastEnabled;
 async function persistPricingRules(rules,{expectedRevision=state.storeRevisions.pricingRules||0}={}){
   const clean=normalizePricingRules(rules);
   const previous=normalizePricingRules(state.overrides.pricingRules||[]);

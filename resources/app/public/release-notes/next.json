@@ -901,6 +901,86 @@
       }
     },
     {
+      "id": "royalty-apply-row-index",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans Kartları · Royalty",
+        "en": "License Cards · Royalty"
+      },
+      "title": {
+        "tr": "Royalty kuralını uygulamak ekranı dakikalarca kilitlemez",
+        "en": "Applying a royalty rule no longer locks the screen for minutes"
+      },
+      "body": {
+        "tr": "Bir royalty kuralı ya da tüm kurallar siparişlere uygulandığında Supp. FOB değerleri, her güncelleme için bütün CP satırları yeniden taranmadan yazılır. On binlerce satırda bir kuralı uygulamak bir dakikaya yakın sürebiliyordu; artık birkaç saniyede tamamlanır. Kural kaydından sonraki yeniden hesap da kısalır. Hesaplanan değerler, kaydedilen veriler ve sunucuya gönderilen güncellemeler değişmez.",
+        "en": "When a royalty rule or all rules are applied to orders, Supp. FOB values are written without rescanning every CP row for each update. On tens of thousands of rows applying one rule could take close to a minute; it now finishes in a few seconds. Recalculation after saving rules is also shorter. Calculated values, saved data and the updates sent to the server stay the same."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişen bir öğe yok; değişiklik yalnız hesabın süresini kısaltır.",
+          "en": "Nothing on screen changes; the change only shortens the calculation."
+        }
+      }
+    },
+    {
+      "id": "cp-save-projection-rewrite-background",
+      "type": "improvement",
+      "module": {"tr": "CP Tracker", "en": "CP Tracker"},
+      "title": {"tr": "CP kaydından sonra program takılmaz, diğer ekranlar beklemez", "en": "The app no longer stalls after a CP save and other screens do not wait"},
+      "body": {"tr": "CP'de bir değişiklik kaydedildiğinde hazır ekran önbelleği arka planda güncellenir; yalnız değişen satırlar ve modüller yazılır. Art arda yapılan kayıtlar tek seferde işlenir. Kayıt eskisi gibi hemen yapılır ve diğer kullanıcılara aynı anda ulaşır. Bu sırada açılan Siparişler gibi diğer ekranlar artık uzun süre beklemez.", "en": "When a change is saved in CP, the prepared screen cache is updated in the background; only the changed rows and modules are written. Back-to-back saves are processed together. Saving still happens immediately and reaches other users at the same time. Other screens such as Orders, opened meanwhile, no longer wait a long time."},
+      "visual": {
+        "kind": "none",
+        "reason": {"tr": "Ekranda değişen bir şey yok; aynı değerler kayıttan sonra program takılmadan ve daha erken hazırlanır.", "en": "Nothing changes on screen; the same values are prepared sooner after a save, without the app stalling."}
+      }
+    },
+    {
+      "id": "royalty-recompute-fast",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans Kartları · Royalty",
+        "en": "License Cards · Royalty"
+      },
+      "title": {
+        "tr": "Royalty kuralları kaydedildikten sonra hesap daha kısa sürer",
+        "en": "Calculation after saving royalty rules takes less time"
+      },
+      "body": {
+        "tr": "Royalty kuralları Lisans Kartları'nda kaydedildiğinde siparişler, her kural için önce lisans, licensor ve ülke eşleşmesine bakılarak yeniden hesaplanır; eşleşmeyen kurallar için tarih ve sezon tekrar okunmaz. On binlerce satırda kayıttan sonraki yeniden hesap belirgin biçimde kısalır. Hesaplanan Supp. FOB değerleri değişmez.",
+        "en": "When royalty rules are saved in License Cards, orders are recalculated by checking the license, licensor and country match of each rule first; dates and seasons are not read again for rules that do not match. On tens of thousands of rows the recalculation after saving is noticeably shorter. Calculated Supp. FOB values stay the same."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişen bir öğe yok; değişiklik yalnız hesabın süresini kısaltır.",
+          "en": "Nothing on screen changes; the change only shortens the calculation."
+        }
+      }
+    },
+    {
+      "id": "overview-collection-summary-keytext-cache",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış · Koleksiyon özeti",
+        "en": "Overview · Collection summary"
+      },
+      "title": {
+        "tr": "CP açıldıktan sonra Koleksiyon özeti daha hızlı çizilir",
+        "en": "Collection summary draws faster after CP has been opened"
+      },
+      "body": {
+        "tr": "Model ve renk metinlerinin ortak önbelleği büyütüldü. CP Tracker açıldıktan sonra Koleksiyon özeti bu metinleri yeniden hesaplamaz; çok sayıda modeli olan koleksiyonlarda özet her çizimde baştan hesaplanmaz. Sayılar ve sonuçlar aynıdır.",
+        "en": "The shared cache for model and colour texts is larger. After CP Tracker has been opened, the Collection summary no longer recalculates these texts, and in collections with many models the summary is not recalculated from scratch on every draw. Figures and results are unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; özet aynı sayıları daha az hesaplamayla gösterir.",
+          "en": "There is no change on screen; the summary shows the same figures with less calculation."
+        }
+      }
+    },
+    {
       "id": "checklist-save-server-wait",
       "type": "fix",
       "module": {"tr": "CP Tracker", "en": "CP Tracker"},
