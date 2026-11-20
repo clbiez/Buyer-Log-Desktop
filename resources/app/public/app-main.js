@@ -1404,6 +1404,9 @@ function scheduleUnifiedPrioritiesForTable(tableKey,options={}){
   job.promise=assistant.computeDecisionsForRowsAsync(rows).then(result=>{
     if(!result||state.cp?.rows!==rows||revision!==_unifiedPriorityTableRevision.cp||contextRevision!==assistant.decisionContextRevision()||day!==new Date().toDateString())return false;
     syncUnifiedPrioritiesForTable('cp',result);
+    // Arka uç sütunlarından bu hesap için dönüldü (#1078): sağlayıcı etkin kalsa da checklist
+    // hücreleri aynı karar nesnesiyle yerelde yazılır (karar verilince sağlayıcı devreye girmez).
+    if(options.legacy)window.BLChecklistSupplierSync?.refreshColumns?.({render:false,decision:result,reuse:true});
     window.BLModulePreparation?.setStatus('cp','ready');
     window.BLPerf?.mark?.('CP_PRIORITY_READY',{rows:rows.length,mode:'background'});
     // Görünmüyorsa wrapper çizimi ilk dönüşe erteler; yükleme kartı takılı kalmaz.
@@ -1525,7 +1528,15 @@ async function prepareCpComputedContext(){
   // Aynı olayın diğer dinleyicileri (supplier-sync cevap günlüğü) önce çalışır.
   await Promise.resolve();
   const answersOnly=cpComputed.answersOnly;cpComputed.answersOnly=true;
-  if(!answersOnly)await Promise.resolve(window.BLStorage?.flushPending?.()).catch(()=>{});
+  if(!answersOnly){
+    try{await window.BLStorage?.flushPending?.();}
+    catch(error){
+      // Tercih yazılamadı: sunucu eski kural/ayarla hesaplardı. Başarısız yazım kuyruğa geri
+      // dönmediği için sonraki boş yazım da başarılı görünür; oturum eski (yerel) yola geçer.
+      cpComputed.answersOnly=false;
+      throw Object.assign(new Error('CP_COMPUTED_PREFERENCES_UNSAVED'),{code:'CP_COMPUTED_PREFERENCES_UNSAVED',cause:error});
+    }
+  }
   let overlay=cpComputedAnswerOverlay();
   if(overlay&&JSON.stringify(overlay).length>CP_COMPUTED_OVERLAY_MAX_BYTES){
     // Toplu değişiklik: katman yerine senkron beklenir.

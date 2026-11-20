@@ -46,7 +46,7 @@ function load({flag=true,rows=4,server,deltaRow=0}={}){
     BLOrderDecisionEngine:{ACTION_PRIORITY:{CRITICAL:{},ACTION_TODAY:{},ACTION_THIS_WEEK:{},ON_TRACK:{}}},
     BLModulePreparation:{setStatus(){}},BLPerf:{mark:(name,detail)=>calls.marks.push({name,detail})},dispatchEvent:()=>true,
     BLStorage:{flushPending:async()=>{calls.flush++;},getItem:key=>ctx.__stored?.[key]??null,setItem(){}},
-    BLChecklistSupplierSync:{syncAnswerChanges:async()=>{calls.sync++;},_state:{pendingAnswers:{}}}});
+    BLChecklistSupplierSync:{syncAnswerChanges:async()=>{calls.sync++;},_state:{pendingAnswers:{}},refreshColumns:opts=>{(calls.columns=calls.columns||[]).push(opts);return true;}}});
   vm.createContext(ctx);
   vm.runInContext([
     'const _unifiedPriorityCache={cp:null,orders:null};const _unifiedPriorityTableRevision={cp:1,orders:1};',
@@ -134,6 +134,18 @@ test('server error falls back to the legacy path for the session; row mismatch o
   assert.equal(partial.calls.decideAsync,1,'uyuşmazlıkta bu hesap eski yolla');
   assert.equal(partial.api.computed().disabled,false,'oturum kapatılmadı');
   assert.equal(partial.rows[3].Priority,'CRITICAL');
+  // Sağlayıcı etkin kalsa da checklist hücreleri eski yolun karar nesnesiyle yazılır (Codex P2).
+  assert.equal(partial.calls.columns.length,1);
+  assert.ok(partial.calls.columns[0].decision&&partial.calls.columns[0].decision.byRow.get(partial.rows[3]),'karar nesnesiyle tam checklist geçişi');
+  assert.equal(partial.calls.columns[0].render,false);
+
+  // Tercih yazımı başarısız: sunucu eski kural/ayarla hesaplamaz; oturum eski yola geçer (Codex P2).
+  const unsaved=load();
+  unsaved.ctx.BLStorage.flushPending=async()=>{throw new Error('PREFERENCE_SAVE_FAILED');};
+  assert.equal(await unsaved.api.scheduleUnifiedPrioritiesForTable('cp'),true);
+  assert.equal(unsaved.calls.fetch.length,0,'eski tercihle sunucu sonucu istenmedi');
+  assert.equal(unsaved.calls.decideAsync,1);assert.equal(unsaved.api.computed().disabled,true);
+  assert.equal(unsaved.calls.columns.length,1,'checklist yerelde yazıldı');
 
 });
 
