@@ -12205,7 +12205,9 @@ async function materializeOverview(){
   if(currentActiveTab()==='overview')renderOverviewNow();
   return Boolean(window.BLCpAssistant?._state?.model);
 }
-window.BLOverviewReadModel={enabled:overviewReadModelEnabled,current:overviewModelCurrent,request:requestOverviewModel,materialize:materializeOverview};
+window.BLOverviewReadModel={enabled:overviewReadModelEnabled,current:overviewModelCurrent,request:requestOverviewModel,materialize:materializeOverview,
+  // Arka plan CP hazırlığı Genel Bakış açıkken önce tam modeli bekler (aynı karar işi yerel sunucuda).
+  beforeWarmup:()=>currentActiveTab()==='overview'&&overviewReadModelEnabled()?requestOverviewModelParts().catch(()=>null):null};
 // Kişisel karar bağlamı (checklist cevabı, kural, tercih) değişince sunucu kaydı
 // tamamlandıktan sonra model yeniden istenir.
 window.addEventListener('bl:cp-decision-context-changed',()=>{
@@ -17883,6 +17885,9 @@ function backgroundWarmupSteps(){
     }},
     // CP tablosu ortak öncelikler hazır olmadan çizilmez; karar motoru da burada hazırlanır.
     {module:'cp',enabled:modelData,ready:()=>Boolean(state.cp&&_unifiedPriorityCache.cp?.rows===state.cp.rows),load:async()=>{
+      // Genel Bakış okuma modeli açıksa (#1074) aynı karar işi yerel sunucuda koşar;
+      // tarayıcı hazırlığı onunla CPU için yarışmasın diye önce birincil ekran tamamlanır.
+      await window.BLOverviewReadModel?.beforeWarmup?.();
       const ok=await ensureCpLoaded({deferRender:true,reason:'warmup'});
       if(ok!==true)return ok;
       await window.BLPerf?.ensureFeature?.('cpAssistant');
@@ -18002,7 +18007,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     if(primaryScreenReady)void window.BLPerf._loadScript('user-access-ui.js?rev=APP-UPDATE-V3')
       .then(scheduleBackgroundModuleWarmup).catch(error=>{console.warn('Arka plan ön yükleme başlatılamadı:',error);finishStartupModules();});
     schedulePostUiStartupTasks();
-    if(currentActiveTab()==='overview')void ensureOverviewCpDependency();
+    // Okuma modeli açıkken Genel Bakış CP satırı istemez (#1074); CP ilk kullanımda yüklenir.
+    if(currentActiveTab()==='overview'&&!overviewReadModelEnabled())void ensureOverviewCpDependency();
     if(!window.BLBootGuard?.autoContinue&&state.overviewDeferred&&currentActiveTab()==='overview')void ensureOverviewLoaded();
     const idle=window.requestIdleCallback||((fn)=>setTimeout(()=>fn({timeRemaining:()=>8}),40));
     idle(()=>{

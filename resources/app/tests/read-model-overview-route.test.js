@@ -168,15 +168,16 @@ test('worker admission: inputBytes is the transferred compressed size, not the m
   const transferred=retry.options.transferList.reduce((sum,buffer)=>sum+buffer.byteLength,0);
   assert.equal(retry.options.inputBytes,transferred);
   assert.ok(retry.options.estimatedBytes>transferred*6,'bellek tahmini çözülmüş boyutu kapsar');
-  // Gerçek havuz kabulü: 30k CP projeksiyonu (~60 MB çözülmüş, ~5 MB gzip) varsayılan bütçeye sığar.
+  // Gerçek havuz kabulü: 30k CP projeksiyonu (~60 MB çözülmüş, ~5 MB gzip) ve karar payıyla soğuk tam aşama varsayılan bütçeye sığar.
   const {createComputePool}=require('../server/lib/compute-pool');
   const pool=createComputePool({memoryBudgetBytes:1024*1024*1024,maxWorkers:1,workerFile:require.resolve('../server/lib/read-model/read-model-worker.js')});
   try{
     const {createOverviewModelService}=require('../server/lib/read-model/overview-model-service');
     const big=Buffer.alloc(5*1024*1024,1);
-    const lease={value:{buffer:big,uncompressedBytes:60*1024*1024},manifest:{activeGeneration:'g',modules:{}},assertResponse(){},release(){}};
+    // 30k ölçümü: CP ~60 MB, Genel Bakış özeti ~17 MB çözülmüş (havuz tahmini 560 MB ile tutarlı).
+    const leaseOf=mb=>({value:{buffer:big,uncompressedBytes:mb*1024*1024},manifest:{activeGeneration:'g',modules:{}},assertResponse(){},release(){}});
     let admitted=null;
-    const svc=createOverviewModelService({guard:{capture:()=>({profile:users.moderator,key:'k',assertResponse(){}})},loadProjection:async()=>lease,
+    const svc=createOverviewModelService({guard:{capture:()=>({profile:users.moderator,key:'k',assertResponse(){}})},loadProjection:async(r,module)=>leaseOf(module==='cp'?60:17),
       loadContext:()=>({key:'c',value:{}}),canAccessCp:()=>true,
       runCompute:async(name,payload,options)=>{
         if(!payload.cp.buffer)return {value:{missing:['cp','overview']},release(){}};
@@ -187,6 +188,34 @@ test('worker admission: inputBytes is the transferred compressed size, not the m
     await svc.model({currentUser:users.moderator},body());
     assert.equal(admitted,true);
   }finally{await pool.close();}
+});
+
+test('worker admission: full part reserves decision-layer memory even when datasets are cached (30k COMPUTE_ESTIMATE_EXCEEDED regression)',async()=>{
+  worker.cache.clear();task.clearHosts();
+  const {service,calls}=harness();
+  await service.model(req(users.moderator),{...body(),parts:'fast'});
+  const fastCalls=calls.length;
+  await service.model(req(users.moderator),body());
+  const full=calls.slice(fastCalls);
+  // Hızlı aşama veri kümelerini yükledi; tam aşama yalnız bağlamı gönderir, yine de karar payı ayrılır.
+  assert.ok(full.length>=1&&full.every(call=>!call.cpBuffer&&!call.overviewBuffer),'veri kümeleri önbellekte');
+  const MiB=1024*1024;
+  for(const call of full)assert.ok(call.options.estimatedBytes>96*MiB,'karar katmanı payı: '+call.options.estimatedBytes);
+  assert.ok(calls.slice(0,fastCalls).every(call=>!call.context));
+  const fastBase=calls[0].options.estimatedBytes;
+  assert.equal(fastBase,96*MiB,'hızlı aşama karar payı ayırmaz');
+  // Gerçek havuz: 30k ölçümündeki gibi 137 MB yerleşik + 114 MB karar artışı kabul edilir.
+  const {createComputePool}=require('../server/lib/compute-pool');
+  const lease={value:{buffer:Buffer.alloc(5*MiB,1),uncompressedBytes:60*MiB},manifest:{activeGeneration:'g',modules:{}},assertResponse(){},release(){}};
+  let estimate=0;
+  const svc=createOverviewModelService({guard:{capture:()=>({profile:users.moderator,key:'k',assertResponse(){}})},loadProjection:async()=>lease,
+    loadContext:()=>({key:'c',value:{}}),canAccessCp:()=>true,
+    runCompute:async(name,payload,options)=>{estimate=options.estimatedBytes;return {value:{body:'{}',timing:{}},release(){}};}});
+  await svc.model({currentUser:users.moderator},body());
+  assert.ok(137*MiB+estimate>=137*MiB+96*MiB+114*MiB,'tahmin ölçülen artışı kapsar: '+Math.round(estimate/MiB)+' MB');
+  const pool=createComputePool({memoryBudgetBytes:1024*MiB,maxWorkers:1,workerFile:require.resolve('../server/lib/read-model/read-model-worker.js')});
+  try{assert.equal(await pool.run('health',{},{estimatedBytes:estimate,ownerKey:'read-model',generation:'1'}).then(()=>true,error=>error.code),true);}
+  finally{await pool.close();}
 });
 
 test('fast part: no decision context, no decision layer; breakdowns and notes are ready, cached separately from full',async()=>{

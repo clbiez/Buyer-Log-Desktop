@@ -62,6 +62,12 @@ test('first paint: KPI and Buying Group draw from overview summary rows without 
   assert.match(fromModel,/if\(full&&full\.exceptionInbox&&/);
   // Model istek anahtarı aşamadan bağımsızdır (aynı filtre = aynı anahtar).
   assert.match(fn('overviewModelKey'),/const \{parts,\.\.\.rest\}=body;/);
+  // Açılış sonrası CP arka plan yüklemesi yalnız eski yolda (model yolunda tarayıcı karar katmanı sunucuyla yarışmaz).
+  assert.match(APP,/if\(currentActiveTab\(\)==='overview'&&!overviewReadModelEnabled\(\)\)void ensureOverviewCpDependency\(\);/);
+  assert.doesNotMatch(APP,/if\(currentActiveTab\(\)==='overview'\)void ensureOverviewCpDependency\(\);/);
+  // Arka plan CP hazırlığı, Genel Bakış model yolundayken önce tam modeli bekler.
+  assert.match(APP,/await window\.BLOverviewReadModel\?\.beforeWarmup\?\.\(\);\n      const ok=await ensureCpLoaded\(\{deferRender:true,reason:'warmup'\}\);/);
+  assert.match(APP,/beforeWarmup:\(\)=>currentActiveTab\(\)==='overview'&&overviewReadModelEnabled\(\)\?requestOverviewModelParts\(\)\.catch\(\(\)=>null\):null/);
   // Kendi model yenilemesi kirli işaretlemez (sonsuz istek döngüsü yok).
   assert.match(fn('scheduleOverviewRender'),/if\(!String\(reason\)\.startsWith\('overview-model'\)\)markOverviewModelDirty\(\);/);
 });

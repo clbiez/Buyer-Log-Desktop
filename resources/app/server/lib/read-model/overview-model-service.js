@@ -20,6 +20,7 @@ const Model=require('../../../public/overview-model');
 const hash=value=>crypto.createHash('sha256').update(value).digest('hex');
 const MAX_VALUES=500,MAX_TEXT=200;
 
+const DECISION_FACTOR=3;
 function failure(code,statusCode,tr,en,extra={}){return Object.assign(new Error(`${tr} / ${en}`),{code,statusCode,error:tr,errorEn:en,...extra});}
 const invalid=detail=>failure('READ_MODEL_QUERY_INVALID',400,'Geçersiz Genel Bakış modeli isteği.','Invalid Overview model request.',{detail});
 
@@ -98,6 +99,10 @@ function createOverviewModelService({guard,loadProjection,runCompute,loadContext
     const source=lease.value&&lease.value.buffer,bytes=Uint8Array.from(Buffer.isBuffer(source)?source:Buffer.from(source||[]));
     return {spec:{...spec,buffer:bytes.buffer},bytes,uncompressed:Number(lease.value&&lease.value.uncompressedBytes)||bytes.byteLength*8};
   }
+  function decisionAllowance(lease){
+    const value=lease.value||{},bytes=Buffer.isBuffer(value.buffer)?value.buffer.length:Number(value.buffer&&value.buffer.byteLength)||0;
+    return Math.ceil((Number(value.uncompressedBytes)||bytes*8)*DECISION_FACTOR);
+  }
   async function model(req,rawBody,{signal}={}){
     const captured=guard.capture(req,'overview');
     const request=validateRequest(rawBody);
@@ -119,7 +124,11 @@ function createOverviewModelService({guard,loadProjection,runCompute,loadContext
       counters.misses++;
       const base={overview:{datasetKey:ov.datasetKey,scopeKey:ov.scopeKey},cp:cp?{datasetKey:cp.datasetKey,scopeKey:cp.scopeKey}:null,
         contextKey:context?hash(String(context.key)):'',filters:request.filters,lang:request.lang,parts:request.parts};
-      const options={signal,estimatedBytes:96*1024*1024,ownerKey:'read-model',generation:'1'};
+      // Tam aşama işçide karar barındırıcısını kurar ve CP satırlarının kararlarını
+      // tutar (30k'da ~114 MB kalıcı artış, veri kümeleri önbellekte olsa bile).
+      // Tahmin bunu kapsamazsa havuz işi COMPUTE_ESTIMATE_EXCEEDED ile düşürür.
+      const decisionBytes=request.parts==='full'&&leases.cp?decisionAllowance(leases.cp):0;
+      const options={signal,estimatedBytes:96*1024*1024+decisionBytes,ownerKey:'read-model',generation:'1'};
       let value=await run(base,options);
       if(value&&Array.isArray(value.missing)&&value.missing.length){
         // inputBytes = aktarılan sıkıştırılmış bayt (havuz kuyruk sınırı); bellek tahmini ayrıca büyür.
