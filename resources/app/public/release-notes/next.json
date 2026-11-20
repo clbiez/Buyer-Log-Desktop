@@ -956,6 +956,29 @@
           "en": "Nothing on screen changes; the change only shortens the calculation."
         }
       }
+    },
+    {
+      "id": "overview-collection-summary-keytext-cache",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış · Koleksiyon özeti",
+        "en": "Overview · Collection summary"
+      },
+      "title": {
+        "tr": "CP açıldıktan sonra Koleksiyon özeti daha hızlı çizilir",
+        "en": "Collection summary draws faster after CP has been opened"
+      },
+      "body": {
+        "tr": "Model ve renk metinlerinin ortak önbelleği büyütüldü. CP Tracker açıldıktan sonra Koleksiyon özeti bu metinleri yeniden hesaplamaz; çok sayıda modeli olan koleksiyonlarda özet her çizimde baştan hesaplanmaz. Sayılar ve sonuçlar aynıdır.",
+        "en": "The shared cache for model and colour texts is larger. After CP Tracker has been opened, the Collection summary no longer recalculates these texts, and in collections with many models the summary is not recalculated from scratch on every draw. Figures and results are unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; özet aynı sayıları daha az hesaplamayla gösterir.",
+          "en": "There is no change on screen; the summary shows the same figures with less calculation."
+        }
+      }
     }
   ]
 }
