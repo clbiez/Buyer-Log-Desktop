@@ -11,6 +11,7 @@ const fs = require('node:fs'), os = require('node:os'), path = require('node:pat
 const { spawn, spawnSync } = require('node:child_process');
 const { requestJson, readRendererMetrics, initializeBenchmarkState, compactRefreshStatus } = require('./startup-benchmark');
 const P = require('./erp-readmodel-probe');
+const { buildCollectionWorkspace } = require('./erp-collection-fixture');
 
 const PASSWORD = 'synthetic-startup-only-123';
 const TEMP_PREFIX = 'buyerlog-startup-';
@@ -163,6 +164,16 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
     }
     if (!refresh || refresh.running) throw Error('Synthetic refresh timed out');
     result.refreshWallMs = P.round(performance.now() - refreshStarted);
+    // 1b) İsteğe bağlı sentetik Koleksiyon çalışma alanı (#1079): WS0 fixture'ında Koleksiyon boştur.
+    if (options.collectionRows > 0) {
+      const list = await api('/api/collection-workspaces');
+      const ownerId = list && list.currentOwnerId;
+      if (!ownerId) throw Error('Collection owner missing');
+      const workspace = buildCollectionWorkspace(options.collectionRows, 7);
+      const saved = await api('/api/collection-workspaces/' + encodeURIComponent(ownerId), { method: 'PUT', body: JSON.stringify(workspace) });
+      if (!saved || !saved.ok || saved.workspace?.rowCount !== options.collectionRows) throw Error('Collection seed failed: ' + JSON.stringify(saved).slice(0, 200));
+      result.collectionRows = options.collectionRows;
+    }
     // 2) Sıcak olmayan yeniden başlatma: ölçülen açılış önbellekten gelir.
     await stop();
     result.backendStartupMs = P.round(await start());
