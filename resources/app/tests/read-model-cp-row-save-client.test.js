@@ -305,3 +305,15 @@ test('row save uses a short write debounce (250 ms); flag off keeps 500 / 400 ms
   assert.match(extractFunction(SOURCE,'syncOverrideToServer'),/typeof cpRowSaveDebounce==='function'\?cpRowSaveDebounce\(500\):500/);
   assert.match(extractFunction(SOURCE,'saveDateOverrides'),/typeof cpRowSaveDebounce==='function'\?cpRowSaveDebounce\(400\):400/);
 });
+
+test('a row edit never recomputes 30k decisions synchronously when row save is on (background job instead; save timer is not delayed)',()=>{
+  assert.match(extractFunction(SOURCE,'refreshRowsEverywhere'),/computeDecisionsForRows==='function'\)cpEditPriorities\(\);/);
+  const calls=[];const ctx=vm.createContext({cpRowSaveEnabled:()=>ctx.on,scheduleUnifiedPrioritiesForTable:key=>calls.push('async:'+key),syncUnifiedPrioritiesForTable:key=>calls.push('sync:'+key)});
+  vm.runInContext(extractFunction(SOURCE,'cpEditPriorities')+';globalThis.run=cpEditPriorities;',ctx);
+  ctx.on=true;ctx.run();ctx.on=false;ctx.run();
+  assert.deepEqual(calls,['async:cp','sync:cp'],'açık: arka plan · kapalı: bugünkü eşzamanlı yol');
+});
+
+test('remote row patches repaint only the changed rows when row save is on (no full legacy render that recomputes 30k decisions)',()=>{
+  assert.match(extractFunction(SOURCE,'applyRemoteRowPatches'),/if\(state\.cp\)typeof cpRowSaveEnabled==='function'&&cpRowSaveEnabled\(\)\?refreshRowsEverywhere\(\[\.\.\.touched\]\):renderCP\(\);/);
+});

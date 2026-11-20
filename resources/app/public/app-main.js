@@ -11951,7 +11951,7 @@ function refreshRowsEverywhere(ids){
   // Priority hücresi artık türetilmiş legacy warning metni değildir. Kararı
   // değiştirebilen bir edit sonrası tek satırı çizmeden önce aynı unified
   // decision context'i senkronla; aksi halde hücre bir render boyunca stale kalır.
-  if(state.cp&&window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('cp');
+  if(state.cp&&window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')cpEditPriorities();
   const uniqueIds=new Set(ids),rowIndex=buildIndex();
   uniqueIds.forEach(id=>refreshCpRowOnly(id,rowIndex));
   refreshOverviewNotesLive();
@@ -15587,6 +15587,13 @@ const CP_ROW_SAVE_STORAGE_KEY='bl.cpRowSave.v1';
    pre: markDirty anında (haritalar değişmeden) alınan satır görüntüsü; dokunulan birimin base'i buradan.
    cycle: bu düzenleme döngüsünde dokunulan sütunu bilinen satırlar; legacy: bugünkü yola gidecek satırlar. */
 const cpRowSave={enabled:null,pre:new Map(),units:new Map(),cycle:new Set(),legacy:new Set(),inFlight:new Map(),queue:Promise.resolve(),computedAborted:false};
+/* refreshRowsEverywhere: satır kaydı açıkken tek satır düzenlemesi 30k satırın kararını EŞZAMANLI hesaplatmaz
+   (~3 sn ana iş parçacığı; kayıt zamanlayıcısı ve canlı yama o kadar gecikir). Hesap arka planda (işçi) yapılır,
+   sonuç gelince tablo kendini çizer; öncelik hücresi o ana kadar son değerini korur. Kapalıyken bugünkü yol. */
+function cpEditPriorities(){
+  if(cpRowSaveEnabled())void scheduleUnifiedPrioritiesForTable('cp');
+  else syncUnifiedPrioritiesForTable('cp');
+}
 // Satır kaydında gecikmeli yazma kısa: yalnız dokunulan birimler gider (birleştirme ihtiyacı az); kayıt anlık.
 function cpRowSaveDebounce(fallback){return cpRowSaveEnabled()?250:fallback;}
 function cpRowSaveEnabled(){
@@ -42249,7 +42256,9 @@ function applyRemoteRowPatches(rowPatches){
   }
   remoteDeferredPatches=deferred;
   if(applied){
-    if(state.cp)renderCP();
+    // #1078: satır kaydı açıkken yalnız değişen satırlar hemen çizilir; karar alanı değiştiyse öncelikler arka
+    // planda hesaplanır ve tablo sonuçla kendini çizer (tam eski yol çizimi 30k'da ana iş parçacığını ~8 sn kilitler).
+    if(state.cp)typeof cpRowSaveEnabled==='function'&&cpRowSaveEnabled()?refreshRowsEverywhere([...touched]):renderCP();
     if(state.orders)renderOrders();
     renderOverview();
     highlightRemoteRows(touched);
