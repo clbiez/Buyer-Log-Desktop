@@ -17,7 +17,8 @@ const SOURCE=fs.readFileSync(path.join(__dirname,'..','public','app-main.js'),'u
 const SYNC_SOURCE=fs.readFileSync(path.join(__dirname,'..','public','checklist-supplier-sync.js'),'utf8');
 function block(start,end){const i=SOURCE.indexOf(start);if(i<0)throw new Error(start);return SOURCE.slice(i,SOURCE.indexOf(end,i)+end.length);}
 const FUNCTIONS=['norm','actionPriorityCode','unifiedPriorityRowActive','applyUnifiedPriorityAnalysis','syncUnifiedPrioritiesForTable','scheduleUnifiedPrioritiesForTable',
-  'ensureUnifiedPrioritiesForTable','cpComputedEnabled','cpComputedEligible','applyCpComputedRow','applyCpComputedColumns','cpComputedAnswerOverlay','prepareCpComputedContext','scheduleCpComputedColumns','cpComputedSignature','cpComputedOptimisticAnswer'];
+  'ensureUnifiedPrioritiesForTable','cpComputedEnabled','cpComputedEligible','applyCpComputedRow','applyCpComputedColumns','cpComputedAnswerOverlay','prepareCpComputedContext','scheduleCpComputedColumns','cpComputedSignature','cpComputedOptimisticAnswer',
+  'cpComputedPending','cpComputedDependentKey','cpViewNeedsComputed','cpComputedPendingCell'];
 
 function load({flag=true,rows=4,server,deltaRow=0}={}){
   const calls={fetch:[],decide:0,decideAsync:0,render:0,overview:0,flush:0,sync:0,marks:[]};
@@ -33,7 +34,9 @@ function load({flag=true,rows=4,server,deltaRow=0}={}){
   const ctx={
     console,Map,Set,WeakMap,Promise,JSON,Object,Array,String,Number,Boolean,Error,Math,Date,queueMicrotask,AbortController,
     performance:{now:()=>0},
-    window:null,state:{cp:{rows:cpRows},cpDirty:new Set()},appLang:'tr',
+    window:null,state:{cp:{rows:cpRows},cpDirty:new Set(),cpSort:{key:null,dir:1},colFilters:{cp:{}}},appLang:'tr',
+    COLS_BY_TABLE:{cp:[{k:'Priority'},{k:'__checklist__pps',checklistSupplierColumn:true},{k:'f1',formulaCustom:true},{k:'Season'}]},
+    document:{getElementById:id=>ctx.__dom?.[id]||null},escapeHtml:value=>String(value),
     __contextRevision:1,
     pendingOverrideWriteCount:()=>ctx.__pending||0,
     renderCP:()=>{calls.render++;},scheduleOverviewRender:()=>{calls.overview++;},showToast:()=>{},renderOrders:()=>{},
@@ -51,7 +54,7 @@ function load({flag=true,rows=4,server,deltaRow=0}={}){
   vm.runInContext([
     'const _unifiedPriorityCache={cp:null,orders:null};const _unifiedPriorityTableRevision={cp:1,orders:1};',
     'let _cpPriorityIndex=null,_cpPriorityIndexRevision=0;let cpPriorityJob=null;',
-    block('const CP_COMPUTED_STORAGE_KEY=',';'),block('const cpComputed={','};'),block('const CP_COMPUTED_HIDDEN=[','];'),block('const CP_COMPUTED_OVERLAY_MAX_BYTES=',';'),block('const CP_COMPUTED_OPTIMISTIC_MAX_ROWS=',';'),
+    block('const CP_COMPUTED_STORAGE_KEY=',';'),block('const cpComputedPendingText=',';'),block('const cpComputed={','};'),block('const CP_COMPUTED_HIDDEN=[','];'),block('const CP_COMPUTED_OVERLAY_MAX_BYTES=',';'),block('const CP_COMPUTED_OPTIMISTIC_MAX_ROWS=',';'),
     // #1078 alt PR 3: hesaplanmış sütun isteği okuma modeli sınırlayıcısından geçer (gerçek kaynak).
     SOURCE.slice(SOURCE.indexOf('const CP_RM_MAX_ACTIVE=2;'),SOURCE.indexOf('async function cpRMPost(')),
     ...FUNCTIONS.map(name=>extractFunction(SOURCE,name)),
@@ -263,4 +266,42 @@ test('decision-context listener hook: legacy render unless back-end columns are 
   // Kaynaktan çıkarılan eski testler için: sağlayıcı yoksa dinleyici eski yolu izler.
   // Alt PR 2: pencereli CP de bağlam değişiminde arka uçtan yeniden sorgular; ikisi de işlemezse eski çizim.
     assert.match(SOURCE,/const computed=window\.BLCpComputedColumns\?\.onDecisionContextChanged\?\.\(event\),windowed=window\.BLCpReadModel\?\.onDecisionContextChanged\?\.\(\);\s*if\(!computed&&!windowed&&currentActiveTab\(\)==='cp'\)renderCP\(\);/);
+});
+
+test('(A) pending computed columns: the table is drawn without waiting unless the view depends on them; no silent partial result',async()=>{
+  let release;const gate=new Promise(resolve=>{release=resolve;});
+  const {api,ctx,rows}=load({server:(body)=>({status:200,json:{ok:true,columns:{version:1,lang:'tr',token:'t1',delta:false,total:4,
+    rows:rows.map((row,i)=>[row._id,i%2?'CRITICAL':'ON_TRACK','KNOWN',[],[],[],[],null,null,row['Order Code'],'']),removed:[]}}})});
+  assert.equal(api.cpComputedPending(),true,'soğuk: bu satırlara arka uç sütunları uygulanmadı');
+  // Bağımlı anahtarlar: Priority, checklist ve formül sütunları; Season değil.
+  for(const key of ['Priority','__checklist__pps','f1','_trackingTags'])assert.equal(api.cpComputedDependentKey(key),true,key);
+  assert.equal(api.cpComputedDependentKey('Season'),false);
+  assert.equal(api.cpViewNeedsComputed(),false,'filtre/sıralama/arama yok → satırlar hemen çizilir');
+  ctx.state.colFilters.cp.Season={values:new Set(['S6'])};assert.equal(api.cpViewNeedsComputed(),false,'hesaplanmayan sütun filtresi bağlı değil');
+  // Hesap yokken Kritik filtresi seçilir → görünüm hesaplanmış değere bağlı: tablo yükleme durumunda bekler (boş sonuç yok).
+  ctx.state.colFilters.cp.Priority={values:new Set(['CRITICAL'])};
+  assert.equal(api.cpViewNeedsComputed(),true);
+  ctx.state.colFilters.cp={};ctx.state.cpSort={key:'Priority',dir:1};assert.equal(api.cpViewNeedsComputed(),true,'Priority sıralaması');
+  ctx.state.cpSort={key:null,dir:1};ctx.__dom={cpSearch:{value:'kritik'}};assert.equal(api.cpViewNeedsComputed(),true,'arama');ctx.__dom={};
+  // Bekleyen görünüm hücresi: Priority/checklist "Hesaplanıyor…", diğer sütun normal yol.
+  api.computed().pendingView=true;
+  assert.match(api.cpComputedPendingCell({k:'Priority'},'cp'),/Hesaplanıyor…/);
+  assert.equal(api.cpComputedPendingCell({k:'Season'},'cp'),'');
+  assert.equal(api.cpComputedPendingCell({k:'Priority'},'orders'),'');
+  // Sonuç gelince bekleme biter ve değerler satırlarda: Kritik filtresi doğru satırları görür.
+  await api.scheduleUnifiedPrioritiesForTable('cp');
+  assert.equal(api.cpComputedPending(),false);
+  assert.deepEqual(rows.filter(row=>row.Priority==='CRITICAL').map(row=>row._id),['r1','r3']);
+  release();
+});
+
+test('(A) render path: renderCPNow draws immediately in the pending view, keeps the loading state otherwise; KPI and extra groups show "calculating" chips with a notice',()=>{
+  const render=SOURCE.slice(SOURCE.indexOf('function renderCPNow(){'),SOURCE.indexOf('const CP_IMAGE_WARMUP_ROWS'));
+  assert.match(render,/cpComputed\.pendingView=cpComputedPending\(\)&&!cpViewNeedsComputed\(\);\s*if\(cpComputed\.pendingView\)void scheduleUnifiedPrioritiesForTable\('cp'\);\s*else if\(!ensureUnifiedPrioritiesForTable\('cp'\)\)return;/);
+  assert.match(render,/computedPending:cpComputed\.pendingView/);
+  assert.match(render,/cpComputed\.pendingView\?cpPendingQuickGroups\(/);
+  const kpi=SOURCE.slice(SOURCE.indexOf('function renderCpKpiBar('),SOURCE.indexOf("document.querySelectorAll('#cpKpi .kpi:not([data-qfg-col])')")+400);
+  assert.match(kpi,/computedPending\s*\?`<div class="kpi tone-gray cpComputedPending" data-computed-pending="1">/);
+  assert.match(kpi,/if\(el\.dataset\.computedPending\)\{el\.addEventListener\('click',cpComputedPendingNotice\);return;\}/);
+  assert.match(SOURCE,/function cellHtml\(c,r,cf,tableKey='cp'\)\{\n[^\n]*\n  const pendingCell=typeof cpComputedPendingCell==='function'\?cpComputedPendingCell\(c,tableKey\):'';if\(pendingCell\)return pendingCell;/);
 });

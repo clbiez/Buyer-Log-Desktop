@@ -1431,7 +1431,7 @@ function scheduleUnifiedPrioritiesForTable(tableKey,options={}){
    Anahtar: window.BL_READ_MODEL_CP_COMPUTED (boolean) ya da kullanıcı tercihi
    'bl.cpComputed.v1'; varsayılan AÇIK ('0' ile kapanır; #1078 alt PR 3). */
 const CP_COMPUTED_STORAGE_KEY='bl.cpComputed.v1';
-const cpComputed={disabled:false,applied:null,job:null,enabled:null,answersOnly:false,optimistic:null};
+const cpComputed={disabled:false,applied:null,job:null,enabled:null,answersOnly:false,optimistic:null,pendingView:false};
 function cpComputedEnabled(){
   if(cpComputed.disabled)return false;
   if(typeof window.BL_READ_MODEL_CP_COMPUTED==='boolean')return window.BL_READ_MODEL_CP_COMPUTED;
@@ -1444,6 +1444,43 @@ function cpComputedEnabled(){
 function cpComputedEligible(){
   if(!cpComputedEnabled()||!state.cp||!Array.isArray(state.cp.rows))return false;
   return !(typeof cpEditsBlockServerPaths==='function'?cpEditsBlockServerPaths(true):Boolean(state.cpDirty&&state.cpDirty.size>0)||pendingOverrideWriteCount()>0);
+}
+/* #1078 alt PR 3 (A): CP tablosu hesaplanmış sütunları BEKLEMEDEN çizilir — ama sessiz eksik sonuç yok.
+   Bekleyen: arka uç sütunları bu satırlara henüz uygulanmadı (soğuk ilk açılış / yeni projeksiyon).
+   - Görünüm hesaplanmış değere bağlıysa (Priority/checklist/formül sütununa filtre ya da sıralama, Priority
+     seçimi, arama) bugünkü "hesaplanıyor" yükleme durumu kalır; sonuç gelince filtre/sıralama kendiliğinden
+     uygulanır (CP_PRIORITY_READY → renderCP). Boş sonuç ya da yanıltıcı sayım gösterilmez.
+   - Bağlı değilse satırlar hemen çizilir; Priority/checklist/formül hücreleri ve bunlara dayalı hızlı filtre
+     çipleri "Hesaplanıyor…" gösterir, tıklanınca açık bildirim verir. */
+function cpComputedPending(){
+  if(!cpComputedEligible())return false;
+  const rows=state.cp&&state.cp.rows;
+  if(cpComputed.applied&&cpComputed.applied.rows===rows)return false;
+  const cached=_unifiedPriorityCache.cp;
+  return !(cached&&cached.rows===rows);
+}
+function cpComputedDependentKey(key){
+  if(!key)return false;
+  const text=String(key);
+  if(text==='Priority'||text.startsWith('__checklist__')||/^_(?:calculationStatus|trackingTags|priorityTags|actionPriority|unifiedBasePriority|checklist)/.test(text))return true;
+  const col=(typeof COLS_BY_TABLE!=='undefined'&&COLS_BY_TABLE.cp||[]).find(c=>c&&c.k===text);
+  return Boolean(col&&(col.checklistSupplierColumn||col.formulaCustom));
+}
+function cpViewNeedsComputed(){
+  if(cpComputedDependentKey(state.cpSort&&state.cpSort.key))return true;
+  for(const key of Object.keys(state.colFilters&&state.colFilters.cp||{}))if(state.colFilters.cp[key]&&cpComputedDependentKey(key))return true;
+  if(document.getElementById('cpFPriority')?.value)return true;
+  return Boolean(String(document.getElementById('cpSearch')?.value||'').trim());
+}
+const cpComputedPendingText=()=>appLang==='en'?'Calculating…':'Hesaplanıyor…';
+function cpComputedPendingNotice(){
+  showToast(appLang==='en'?'Priorities and checklist are still being calculated. They appear in a few seconds; filters and sorting on them apply automatically.'
+    :'Öncelik ve checklist hâlâ hesaplanıyor. Birkaç saniye içinde görünür; bunlara dayalı filtre ve sıralama kendiliğinden uygulanır.');
+}
+// cellHtml kancası: bekleyen görünümde hesaplanmış değere bağlı hücre.
+function cpComputedPendingCell(c,tableKey){
+  if(tableKey!=='cp'||!cpComputed.pendingView||!c||!cpComputedDependentKey(c.k))return '';
+  return `<td class="cpComputedPending" title="${escapeHtml(cpComputedPendingText())}"><span class="muted">${escapeHtml(cpComputedPendingText())}</span></td>`;
 }
 const CP_COMPUTED_HIDDEN=['_checklistStatus','_checklistParts','_checklistElements','_checklistTasks'];
 function applyCpComputedRow(row,tuple){
@@ -6929,6 +6966,7 @@ function cpSubManufacturerValue(r){
    satır durumunu tablo bazında okur; diğer dallar bu parametreden etkilenmez. */
 function cellHtml(c,r,cf,tableKey='cp'){
   if(c.type==='privateNote')return window.BLPrivateOrderNotes.cellHtml(r,lineKeyOfRow(r),appLang);
+  const pendingCell=typeof cpComputedPendingCell==='function'?cpComputedPendingCell(c,tableKey):'';if(pendingCell)return pendingCell;
   const v = r[c.k];
   const oc = r['Order Code'];
   const id = r._id;
@@ -10337,7 +10375,10 @@ function renderCPNow(){
   if(!state.cp) return;
   cpPlmDetailsSync();
   const legacyStarted=performance.now();
-  if(!ensureUnifiedPrioritiesForTable('cp'))return;
+  // #1078 (A): hesaplanmış sütunlar beklenirken görünüm onlara bağlı değilse satırlar hemen çizilir.
+  cpComputed.pendingView=cpComputedPending()&&!cpViewNeedsComputed();
+  if(cpComputed.pendingView)void scheduleUnifiedPrioritiesForTable('cp');
+  else if(!ensureUnifiedPrioritiesForTable('cp'))return;
   applyFormulaColumns('cp'); // sıralama ve sayfa filtreleri hesaplanan değeri görsün
   migrateLegacyCpQuickFilters();
   updateCpDimBtnLabels();
@@ -10365,9 +10406,9 @@ function renderCPNow(){
   const seasonCounts = {}; scope.season.forEach(r=>{ const s=norm(r['Season'])||'—'; seasonCounts[s]=(seasonCounts[s]||0)+1; });
   const exfCounts = Object.fromEntries(CP_EXF_PERIODS.map(k=>[k,0]));
   scope.exf.forEach(r=>{ CP_EXF_PERIODS.forEach(k=>{ if(matchesQuickExFactory(r,k)) exfCounts[k]++; }); });
-  renderCpKpiBar({buckets,statusCounts,delCounts,seasonCounts,exfCounts,noneCount:scope.none.length,
+  renderCpKpiBar({buckets,statusCounts,delCounts,seasonCounts,exfCounts,noneCount:scope.none.length,computedPending:cpComputed.pendingView,
     // Eklenen başlıkların sayımı, KENDİ filtresi hariç tüm filtrelerle yapılır.
-    extraHtml:()=>qfgExtra('cp',scope.all,()=>cpEvaluateAll().all)});
+    extraHtml:()=>cpComputed.pendingView?cpPendingQuickGroups(scope.all,()=>cpEvaluateAll().all):qfgExtra('cp',scope.all,()=>cpEvaluateAll().all)});
   scheduleCoreAutoFilterSave();
   renderFullTable('cpTable','cp', rows, state.cpSort, (key)=>{
     if(key==='__picture'){cpCycleImageSize();return;}
@@ -10415,7 +10456,14 @@ function renderCpCountLine({stats,rowCount,totalRowCount,qty}){
   renderTableViewContext('cp');
   renderActiveFilterContext('cp');
 }
-function renderCpKpiBar({buckets,statusCounts,delCounts,seasonCounts,exfCounts,noneCount,extraHtml}){
+// Bekleyen görünümde ek hızlı filtre grupları: hesaplanmış değere bağlı sütunun sayımı yerine "hesaplanıyor" çipi.
+function cpPendingQuickGroups(rows,scopeFor){
+  const Q=window.BLQuickFilterGroups;if(!Q)return '';
+  return (Q.config('cp').extra||[]).map(key=>cpComputedDependentKey(key)
+    ?`<div class="kpi tone-gray cpComputedPending" data-computed-pending="1"><span class="n">…</span><span class="l">${escapeHtml(Q.columnLabel?Q.columnLabel('cp',key):key)} · ${escapeHtml(cpComputedPendingText())}</span></div>`
+    :Q.groupHtml('cp',key,rows,scopeFor)).join('');
+}
+function renderCpKpiBar({buckets,statusCounts,delCounts,seasonCounts,exfCounts,noneCount,extraHtml,computedPending=false}){
   const exfDefs = [
     ['past',appLang==='en'?'Past':'Geçmiş','red'],
     ['thisWeek',appLang==='en'?'This Week':'Bu Hafta','yellow'],
@@ -10436,8 +10484,9 @@ function renderCpKpiBar({buckets,statusCounts,delCounts,seasonCounts,exfCounts,n
   let html = `
     <div class="kpi tone-navy${noMirroredFilter?' active':''}" data-act="clearAll"><span class="n">${noneCount}</span><span class="l">${appLang==="en"?"All":"Tümü"}</span></div>`
     + qfgSeg('cp','season','Season',quickSeasonEntries(seasonCounts).map(([s,n])=>`<div class="kpi tone-blue" data-season="${escapeHtml(s)}"><span class="n">${n}</span><span class="l">${escapeHtml(s)}</span></div>`).join(''))
-    + qfgSeg('cp','pri','Priority',
-        actionPriorityCodes().map(code=>chip(priorityTone(code),buckets[code],priorityDisplay(code),code)).join(''))
+    + qfgSeg('cp','pri','Priority',computedPending
+        ?`<div class="kpi tone-gray cpComputedPending" data-computed-pending="1"><span class="n">…</span><span class="l">${escapeHtml(cpComputedPendingText())}</span></div>`
+        :actionPriorityCodes().map(code=>chip(priorityTone(code),buckets[code],priorityDisplay(code),code)).join(''))
     + qfgSeg('cp','status','Status',quickCountEntries(statusCounts).map(([s,n])=>`<div class="kpi tone-${statusTones[s]||'blue'}" data-status="${escapeHtml(s)}"><span class="n">${n}</span><span class="l">${escapeHtml(statusDisplay(s))}</span></div>`).join(''))
     + qfgSeg('cp','exf','Ex-Factory',exfDefs.filter(([k])=>exfCounts[k]>0).map(([k,l,t])=>`<div class="kpi tone-${t}" data-exf="${k}"><span class="n">${exfCounts[k]}</span><span class="l">${l}</span></div>`).join(''))
     + qfgSeg('cp','del','Del. Type',quickCountEntries(delCounts).map(([d,n])=>`<div class="kpi tone-purple" data-deltype="${escapeHtml(d)}"><span class="n">${n}</span><span class="l">${escapeHtml(transitDelTypeDisplay(d))}</span></div>`).join(''))
@@ -10450,6 +10499,7 @@ function renderCpKpiBar({buckets,statusCounts,delCounts,seasonCounts,exfCounts,n
   document.querySelectorAll('#cpKpi .kpi[data-season]').forEach(el=>{ if(mirroredQuickValueActive('cp','Season',curSeason,el.dataset.season)) el.classList.add('active'); });
   document.querySelectorAll('#cpKpi .kpi[data-exf]').forEach(el=>{if([...curExf].some(v=>norm(v)===norm(el.dataset.exf)))el.classList.add('active');});
   document.querySelectorAll('#cpKpi .kpi:not([data-qfg-col])').forEach(el=>{
+    if(el.dataset.computedPending){el.addEventListener('click',cpComputedPendingNotice);return;}
     if(el.dataset.act==='clearAll'){
       el.addEventListener('click', ()=>{
         document.getElementById('cpFPriority').value='';
