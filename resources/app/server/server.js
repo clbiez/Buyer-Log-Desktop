@@ -2330,6 +2330,22 @@ app.use(userAccess.requireSelection);
 app.use(require('./lib/compute-access-middleware').createComputeAccessMiddleware({
   prepare:()=>userAccess.prepareComputeAccessContext(),profileFor:req=>userAccess.sessionProfile(req),
 }));
+// Okuma modeli ön ısıtması (#1077): oturumun ilk kimlikli isteğinde yerel arka uç
+// Genel Bakış modelini ve modül projeksiyonlarını kendi işçisinde boşta ısıtır.
+// Bağımlılıklar ilk kullanımda okunur (rota kayıtları aşağıdadır).
+const readModelPrewarm = require('./lib/read-model/prewarm-scheduler').createReadModelPrewarm({
+  getPool: () => require('./lib/read-model/read-model-pool').getReadModelPool(),
+  userAccess,
+  preferenceValue: (profile, key) => {
+    const personal = (userPreferences.load(profile.id) || {}).entries || {}, roles = userAccess.roleWorkspaceEntries(profile) || {};
+    const entry = personal[key] || roles[key];
+    return entry && entry.value != null ? String(entry.value) : null;
+  },
+  loadProjection: (req, module) => ensureComputedProjection(req, module),
+  getOverviewService: () => overviewModelServiceForPrewarm(),
+  onFailure: (stage, error) => logRuntimeFailure('readModelPrewarm:' + stage, error),
+});
+app.use(readModelPrewarm.middleware);
 // Master yayım yetkisi: bu bilgisayarda Moderatör oturumu görüldü mü?
 app.use((req, res, next) => {
   noteModeratorSession(req.currentUser);
@@ -6366,17 +6382,35 @@ app.post('/api/backups/restore/inspect', userAccess.requireArea('source'), userA
 });
 // Genel Bakış okuma modeli (#1074): POST /api/read-model/overview/model. Kişisel karar
 // bağlamı istemciyle aynı sunucu kayıtlarından okunur; revizyonu CP ajan revizyonudur.
+const overviewModelContextSources = {
+  preferences: userPreferences, roleEntries: profile => userAccess.roleWorkspaceEntries(profile),
+  managedRules: () => { const ov = loadOverrides(); return { ...require('./db').normalizeCpManagedRules(ov.cpManagedRules), revision: Number(ov._revisions && ov._revisions.cpManagedRules) || 0 }; },
+  transitRules: profile => effectiveOverridesForUser(profile.id).transitRules || [],
+  plmPayload: () => sampleRequestStore.publicPayload(),
+  checklistPayload: () => require('./lib/checklist-supplier-store').publicPayload(),
+  revision: profile => cpAgentRevision(profile, { ignoreRefresh: true }),
+  merge: (own, shared) => require('../public/checklist-answer-merge-engine').merge(own, shared),
+};
+// Ön ısıtma (#1077) ile rota aynı servis örneğini paylaşır: ön ısıtmanın sonucu rotanın
+// önbelleğine girer; aynı gövdeyi isteyen istemci süren ön ısıtmaya katılır.
+let overviewModelServiceInstance = null;
+function overviewModelServiceForPrewarm() {
+  if (overviewModelServiceInstance) return overviewModelServiceInstance;
+  const { createOverviewModelService, createContextLoader } = require('./lib/read-model/overview-model-service');
+  overviewModelServiceInstance = createOverviewModelService({
+    guard: { capture: (req, area) => computeReadGuard.capture(req, area) },
+    loadProjection: (req, module) => ensureComputedProjection(req, module),
+    runCompute: readModelPrewarm.runCompute,
+    loadContext: createContextLoader(overviewModelContextSources),
+    canAccessCp: req => userAccess.hasArea(req.currentUser, 'cp'),
+  });
+  return overviewModelServiceInstance;
+}
 require('./lib/read-model/overview-model-routes')(app, {
   userAccess, apiError, ensureComputedProjection, getComputeReadGuard: () => computeReadGuard,
-  contextSources: {
-    preferences: userPreferences, roleEntries: profile => userAccess.roleWorkspaceEntries(profile),
-    managedRules: () => { const ov = loadOverrides(); return { ...require('./db').normalizeCpManagedRules(ov.cpManagedRules), revision: Number(ov._revisions && ov._revisions.cpManagedRules) || 0 }; },
-    transitRules: profile => effectiveOverridesForUser(profile.id).transitRules || [],
-    plmPayload: () => sampleRequestStore.publicPayload(),
-    checklistPayload: () => require('./lib/checklist-supplier-store').publicPayload(),
-    revision: profile => cpAgentRevision(profile, { ignoreRefresh: true }),
-    merge: (own, shared) => require('../public/checklist-answer-merge-engine').merge(own, shared),
-  },
+  contextSources: overviewModelContextSources,
+  overviewModelService: readModelPrewarm.overviewServiceProxy(),
+  runReadModelCompute: readModelPrewarm.runCompute,
 });
 // ERP okuma modeli (#1073): POST /api/read-model/:module/query. Global 100 MB JSON
 // ayrıştırıcısından ÖNCE kaydolur: yetki gövdeden önce, rota kendi 2 MB sınırını uygular.
@@ -6385,11 +6419,13 @@ require('./routes/read-model-routes')(app, {
   apiError,
   ensureComputedProjection,
   getComputeReadGuard: () => computeReadGuard,
+  runReadModelCompute: readModelPrewarm.runCompute,
 });
 // Küresel Akış Haritası okuma modeli (#1075): POST /api/read-model/global-flow/model.
 require('./lib/read-model/global-flow-routes')(app, {
   userAccess, assertSourceFilters, prepareComputeBacklog, backlogReadConsumer, apiError, sendComputedResponse,
   getComputeReads: () => computeReads,
+  runReadModelCompute: readModelPrewarm.runCompute,
 });
 app.use(express.json({ limit: '100mb' }));
 app.use((err, req, res, next) => {

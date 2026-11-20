@@ -1,0 +1,143 @@
+'use strict';
+// #1077 — arka uç ön ısıtması: oturum tetikleyicisi, tercihlerden Genel Bakış gövdesi,
+// 'background' önceliği, tek uçuş (istemci süren ön ısıtmaya katılır) ve tek işçide
+// kullanıcı sorgusunun spekülatif ön ısıtmanın arkasında beklememesi (gerçek compute-pool).
+const test=require('node:test'),assert=require('node:assert/strict');
+const {Worker}=require('node:worker_threads');
+const {createComputePool}=require('../server/lib/compute-pool');
+const {createReadModelPrewarm,overviewBodyFor,prewarmEnabled}=require('../server/lib/read-model/prewarm-scheduler');
+
+const tick=()=>new Promise(resolve=>setImmediate(resolve));
+async function until(check,ms=5000){const end=Date.now()+ms;while(!check()){if(Date.now()>end)throw Error('timeout');await new Promise(r=>setTimeout(r,5));}}
+function access({areas=['overview','cp','orders','koleksiyon'],session=true}={}){
+  const state={session,prepared:0};
+  return {state,prepareComputeAccessContext:async()=>{state.prepared++;},
+    sessionProfile:req=>state.session&&/bl=/.test(req.headers.cookie||'')?{id:'u1',enabled:true,status:'ACTIVE'}:null,
+    hasArea:(profile,area)=>areas.includes(area)};
+}
+const req=(cookie='bl=abc')=>({headers:{cookie},currentUser:{id:'u1'},socket:{remoteAddress:'127.0.0.1'}});
+
+test('overview body mirrors the client body from saved language and filters',()=>{
+  const prefs={'lcw.lang.v1':'en','lcw.overview.dimFilters.v1':JSON.stringify({season:['SS26',7],bogus:['x'],buyer:[]}),'lcw.overview.bgDimFilters.v1':'{bad json'};
+  assert.deepEqual(overviewBodyFor(key=>prefs[key]??null,'full'),{version:1,lang:'en',parts:'full',filters:{main:{season:['SS26','7']},bg:{}}});
+  assert.deepEqual(overviewBodyFor(()=>null,'fast'),{version:1,lang:'tr',parts:'fast',filters:{main:{},bg:{}}});
+  assert.equal(prewarmEnabled({}),true);assert.equal(prewarmEnabled({BL_READ_MODEL_PREWARM:'0'}),false);
+});
+
+function fakePool(){
+  const jobs=[];
+  return {jobs,stats:()=>({pending:jobs.filter(j=>!j.done).length,activeWorkers:0}),
+    run(task,payload,options){
+      return new Promise((resolve,reject)=>{
+        const job={task,payload,options,done:false,resolve:value=>{job.done=true;resolve({value,release(){}});}};
+        options.signal?.addEventListener('abort',()=>{if(!job.done){job.done=true;reject(Object.assign(Error('aborted'),{code:'COMPUTE_ABORTED'}));}},{once:true});
+        jobs.push(job);
+      });
+    }};
+}
+function setup({areas,session,quietMs=0}={}){
+  const pool=fakePool(),userAccess=access({areas,session}),calls=[],projections=[];let prewarm;
+  const service={async model(r,body,options){calls.push({body,cookie:r.headers.cookie});const out=await prewarm.runCompute('read-model-overview',{parts:body.parts},{...options,ownerKey:'read-model',generation:'1',estimatedBytes:1});return {generation:'g',cached:false,body:JSON.stringify(out.value),timing:{}};}};
+  prewarm=createReadModelPrewarm({getPool:()=>pool,userAccess,preferenceValue:()=>null,getOverviewService:()=>service,quietMs,
+    loadProjection:async(r,module)=>{projections.push(module);return {release(){}};},defer:fn=>fn(),wait:()=>tick()});
+  return {pool,userAccess,calls,projections,prewarm,proxy:prewarm.overviewServiceProxy()};
+}
+
+test('first authenticated request starts one prewarm per session with background priority',async()=>{
+  const h=setup();
+  assert.equal(h.prewarm.noteSession({headers:{},currentUser:{id:'u1'}}),false,'no session cookie');
+  assert.equal(h.prewarm.noteSession({headers:{cookie:'bl=abc'}}),false,'no authenticated user');
+  assert.equal(h.prewarm.noteSession(req()),true);assert.equal(h.prewarm.noteSession(req()),false,'same session runs once');
+  await until(()=>h.pool.jobs.length===1);
+  assert.equal(h.pool.jobs[0].options.priority,'background');assert.equal(h.pool.jobs[0].payload.parts,'fast');
+  h.pool.jobs[0].resolve({});await until(()=>h.pool.jobs.length===2);
+  assert.equal(h.pool.jobs[1].payload.parts,'full');assert.equal(h.pool.jobs[1].options.priority,'background');
+  h.pool.jobs[1].resolve({});
+  await until(()=>h.prewarm.statusFor(req()).state==='done');
+  assert.deepEqual(h.projections,['cp','orders','collection-catalog']);
+  assert.deepEqual(h.prewarm.statusFor(req()).overview,{fast:'ready',full:'ready'});
+  // Yeni oturum (yeniden giriş) tekrar ısıtır.
+  assert.equal(h.prewarm.noteSession(req('bl=def')),true);
+});
+
+test('areas, logged-out sessions and the server switch gate the prewarm',async()=>{
+  const none=setup({areas:['orders']});none.prewarm.noteSession(req());
+  await until(()=>none.prewarm.statusFor(req()).state==='done');
+  assert.equal(none.pool.jobs.length,0,'no overview area → no overview model');
+  assert.deepEqual(none.projections,['orders']);
+  const out=setup({session:false});out.prewarm.noteSession(req());
+  await until(()=>out.prewarm.statusFor(req()).state==='skipped');
+  assert.equal(out.pool.jobs.length,0);assert.deepEqual(out.projections,[]);
+  const off=createReadModelPrewarm({getPool:fakePool,userAccess:access(),enabled:()=>false,defer:fn=>fn()});
+  assert.equal(off.noteSession(req()),false);assert.deepEqual(off.statusFor(req()),{state:'disabled'});
+});
+
+test('a client asking for the same Overview body joins the running prewarm instead of computing twice',async()=>{
+  const h=setup();h.prewarm.noteSession(req());
+  await until(()=>h.pool.jobs.length===1);
+  const client=h.proxy.model(req(),{version:1,lang:'tr',parts:'fast',filters:{main:{},bg:{}}},{});
+  await tick();
+  assert.equal(h.calls.length,1,'joined, no second service call');
+  // Katılınan koşu artık spekülatif değil: Siparişler sorgusu onu iptal etmez.
+  const orders=h.prewarm.runCompute('read-model-query',{},{ownerKey:'read-model',generation:'1',estimatedBytes:1});
+  await tick();assert.equal(h.pool.jobs[0].done,false,'joined prewarm keeps running');
+  h.pool.jobs[0].resolve({fast:true});
+  assert.equal((await client).body,'{"fast":true}');
+  await until(()=>h.pool.jobs.length===3);
+  assert.equal(h.pool.jobs[2].payload.parts,'full');assert.equal(h.pool.jobs[2].options.priority,'interactive','joined run continues as interactive');
+  h.pool.jobs[1].resolve({});h.pool.jobs[2].resolve({});await orders;
+  // Farklı gövde katılmaz; servis doğrudan çağrılır.
+  const other=h.proxy.model(req(),{version:1,lang:'en',parts:'fast',filters:{}},{});await tick();
+  assert.equal(h.calls.length,3);h.pool.jobs.at(-1).resolve({});await other;
+  assert.ok(h.prewarm.stats().joined>=1);
+});
+
+test('an interactive read model job preempts a speculative prewarm; a different Overview body does not',async()=>{
+  const h=setup();h.prewarm.noteSession(req());
+  await until(()=>h.pool.jobs.length===1);
+  const overview=h.prewarm.runCompute('read-model-overview',{},{ownerKey:'read-model',generation:'1',estimatedBytes:1});
+  await tick();assert.equal(h.pool.jobs[0].done,false,'same-screen Overview work does not reset the worker');
+  h.pool.jobs.at(-1).resolve({});await overview;
+  const orders=h.prewarm.runCompute('read-model-query',{},{ownerKey:'read-model',generation:'1',estimatedBytes:1});
+  await tick();
+  assert.equal(h.pool.jobs[0].done,true,'speculative prewarm aborted');
+  assert.equal(h.pool.jobs.at(-1).options.priority,undefined,'user job keeps the pool default (interactive)');
+  h.pool.jobs.at(-1).resolve({rows:1});await orders;
+  // Okuma modeli sessizleşince ön ısıtma yeniden dener ve tamamlanır.
+  await until(()=>h.pool.jobs.filter(j=>!j.done).length===1);
+  assert.equal(h.pool.jobs.at(-1).payload.parts,'fast');h.pool.jobs.at(-1).resolve({});
+  await until(()=>h.pool.jobs.filter(j=>!j.done).length===1);h.pool.jobs.at(-1).resolve({});
+  await until(()=>h.prewarm.statusFor(req()).state==='done');
+  assert.equal(h.prewarm.stats().preempted,1);
+});
+
+// Gerçek compute-pool, tek işçi: ön ısıtma işi işçiyi ~4 sn meşgul tutar.
+const BUSY_WORKER=`const {parentPort}=require('node:worker_threads');
+parentPort.on('message',m=>{if(m.type!=='run')return;const end=Date.now()+(m.payload.busyMs||0);while(Date.now()<end){}
+  parentPort.postMessage({type:'result',id:m.id,ok:true,value:{task:m.task},metrics:{retainedBytes:0,outputBytes:0}});});`;
+class BusyWorker extends Worker{constructor(_file,options){super(BUSY_WORKER,{...options,eval:true});}}
+
+test('with the real single-worker pool a user query does not wait behind a speculative prewarm',async()=>{
+  const pool=createComputePool({maxWorkers:1,memoryBudgetBytes:256*1024*1024,WorkerClass:BusyWorker,timeoutMs:20000});
+  try{
+    const prewarm=createReadModelPrewarm({getPool:()=>pool,userAccess:access(),defer:fn=>fn()});
+    const opts={ownerKey:'read-model',generation:'1',estimatedBytes:1024};
+    // Sıcak işçi (ilk kurulum ölçümü bozmasın).
+    (await pool.run('warm',{},opts)).release();
+    const run={controller:new AbortController(),speculative:true,jobs:0};
+    // Ön ısıtma koşusu bağlamında bir iş (scheduler'ın test kancası).
+    const speculative=prewarm._runInPrewarm(run,()=>prewarm.runCompute('read-model-overview',{busyMs:4000},{...opts,signal:run.controller.signal})).then(()=>null,error=>error);
+    await new Promise(r=>setTimeout(r,150));
+    const started=Date.now();
+    const user=await prewarm.runCompute('read-model-query',{busyMs:20},opts);user.release();
+    const waited=Date.now()-started;
+    assert.equal((await speculative)?.code,'COMPUTE_ABORTED');
+    assert.ok(waited<2500,`user query waited ${waited} ms behind the prewarm`);
+    // Katılınmış (spekülatif olmayan) ön ısıtma kesilmez: kullanıcı işi sırasını bekler.
+    const joined={controller:new AbortController(),speculative:false,jobs:0};
+    const kept=prewarm._runInPrewarm(joined,()=>prewarm.runCompute('read-model-overview',{busyMs:600},{...opts,signal:joined.controller.signal}));
+    await new Promise(r=>setTimeout(r,50));
+    const after=await prewarm.runCompute('read-model-query',{busyMs:1},opts);after.release();
+    (await kept).release();
+  }finally{await pool.close();}
+});

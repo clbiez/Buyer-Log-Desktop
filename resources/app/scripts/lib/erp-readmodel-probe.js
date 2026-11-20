@@ -8,8 +8,10 @@
  */
 
 // ---- Tarayıcı init betiği (serileştirilir) ----
-function installErpProbe({ lagIntervalMs = 50, anchorBusyMs = 4, bridge = true } = {}) {
+function installErpProbe({ lagIntervalMs = 50, anchorBusyMs = 4, bridge = true, flags = {}, watch = {} } = {}) {
   const probe = window.__erpProbe = { longTasks: [], lag: [], anchor: null, events: {}, lagIntervalMs };
+  // Özellik anahtarları (ör. BL_READ_MODEL_PREWARM=false) uygulama betiklerinden önce kurulur.
+  for (const [name, value] of Object.entries(flags || {})) window[name] = value;
   // CPU profili ↔ performance.now eşlemesi: bu adlandırılmış fonksiyon profilde
   // ayırt edilebilir bir örnek kümesi bırakır; başlangıç zamanı kaydedilir.
   (function __blErpProfileAnchor() {
@@ -35,10 +37,15 @@ function installErpProbe({ lagIntervalMs = 50, anchorBusyMs = 4, bridge = true }
     }).observe({ type: 'longtask', buffered: true });
   } catch (_) { probe.longTaskUnsupported = true; }
   let last = performance.now();
+  // İzlenen seçiciler (ör. CP özet kartı) ilk görüldüğü an 'dom:<ad>' olayı olarak kaydedilir.
+  const pending = Object.entries(watch || {});
   setInterval(() => {
     const now = performance.now();
     probe.lag.push([now, Math.max(0, now - last - lagIntervalMs)]);
     last = now;
+    for (let i = pending.length - 1; i >= 0; i--) {
+      if (document.querySelector(pending[i][1])) { probe.events['dom:' + pending[i][0]] = now; pending.splice(i, 1); }
+    }
   }, lagIntervalMs);
 }
 

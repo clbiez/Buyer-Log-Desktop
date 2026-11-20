@@ -736,6 +736,17 @@
         "alt": {"tr": "Pilot ayarı açık Siparişler tablosu: 30.000 demo satırında ülke, sezon ve arama filtresi", "en": "Orders table with the pilot setting on: country, season and search filters on 30,000 demo rows"},
         "caption": {"tr": "30.000 satırlık demo veride filtrelenen 4.974 satır arka uçtan gelir; sayaçlar ve sayım satırı aynı kalır.", "en": "On 30,000 demo rows, the 4,974 filtered rows come from the backend; counts and the count line stay the same."}
       }
+    },
+    {
+      "id": "read-model-backend-prewarm",
+      "type": "improvement",
+      "module": {"tr": "Genel Bakış", "en": "Overview"},
+      "title": {"tr": "Genel Bakış verisi oturum açılınca arka planda hazırlanır", "en": "Overview data is prepared in the background at sign-in"},
+      "body": {"tr": "Oturum açılınca bilgisayarınızdaki yerel Buyer Log arka ucu Genel Bakış modelini ve modül verilerini ayrı bir işçide hazırlamaya başlar. Genel Bakış açılırken aynı hesap ikinci kez yapılmaz. Siparişler gibi bir modül açılırsa arka plan hazırlığı onu bekletmez, kendisi sonraya kalır. Pilot ayarı açıkken arayüz açılıştan sonra modülleri toplu hazırlamaz, her modül ilk açılışında yüklenir.", "en": "At sign-in, the local Buyer Log backend on your computer starts preparing the Overview model and module data in a separate worker. Opening the Overview does not repeat the same calculation. If you open a module such as Orders, the background preparation does not hold it up and waits instead. With the pilot setting on, the interface no longer prepares all modules after startup; each module loads when you first open it."},
+      "visual": {
+        "kind": "none",
+        "reason": {"tr": "Varsayılan yolda ekranda değişen bir şey yok; yalnız arka planda hazırlık zamanlaması değişir.", "en": "Nothing changes on screen on the default path; only the timing of background preparation changes."}
+      }
     }
   ]
 }
