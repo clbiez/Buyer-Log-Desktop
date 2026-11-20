@@ -88,6 +88,15 @@ function datasetScopeOf(captured){
   if(captured.userId==null||captured.accessHash==null)return hash(JSON.stringify([captured.key,'cp-overview']));
   return hash(JSON.stringify([String(captured.userId),String(captured.accessHash),'cp-overview']));
 }
+/* İstemci iptali (pencereli CP yeni çizimde eski sorguyu iptal eder) işçiye İLETİLMEZ: havuz çalışan işi
+   iptal edince işçiyi kapatır; barındırıcı ve veri kümesi kaybolur, sonraki sorgu soğuk tam hesap yapar
+   (30k: ~15 sn; düzenleme sonrası art arda sorgularda kısır döngü). Başlamış hesap biter ve önbelleğe girer;
+   iş zaman aşımı (havuz timeoutMs) geçerlidir. Kapanmış istek işçiye hiç verilmez. */
+function workerOptions(options){
+  const {signal,...rest}=options;
+  if(signal&&signal.aborted)throw failure('COMPUTE_ABORTED',499,'Hesaplama iptal edildi.','Compute operation cancelled.');
+  return rest;
+}
 function createCpComputedService({guard,loadProjection,runCompute,loadContext,loadTasks=async()=>[],today=localDay,maxEntries=8,maxBytes=96*1024*1024}){
   if(!guard||typeof loadProjection!=='function'||typeof runCompute!=='function'||typeof loadContext!=='function'||typeof loadTasks!=='function')
     throw TypeError('Invalid CP computed service dependencies');
@@ -146,12 +155,12 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
       const uncompressed=Number(value.uncompressedBytes)||compressed*8;
       const options={signal,estimatedBytes:96*1024*1024+Math.ceil(uncompressed*DECISION_FACTOR),ownerKey:'read-model',generation:'1'};
       const t3=performance.now();
-      let out=await run(base,options);
+      let out=await run(base,workerOptions(options));
       if(out&&Array.isArray(out.missing)&&out.missing.includes('cp')){
         counters.datasetLoads++;
         const source=value.buffer,bytes=Uint8Array.from(Buffer.isBuffer(source)?source:Buffer.from(source||[]));
         out=await run({...base,dataset:{...base.dataset,buffer:bytes.buffer}},
-          {...options,estimatedBytes:options.estimatedBytes+uncompressed*6+bytes.byteLength,inputBytes:bytes.byteLength,transferList:[bytes.buffer]});
+          workerOptions({...options,estimatedBytes:options.estimatedBytes+uncompressed*6+bytes.byteLength,inputBytes:bytes.byteLength,transferList:[bytes.buffer]}));
       }
       if(!out||typeof out.body!=='string')throw failure('COMPUTE_WORKER_FAILED',500,'Hesaplama işçisi tamamlanamadı.','Compute worker failed.');
       captured.assertResponse();lease.assertResponse?.();
@@ -191,12 +200,12 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
       const options={signal,estimatedBytes:96*1024*1024+Math.ceil(uncompressed*DECISION_FACTOR),ownerKey:'read-model',generation:'1'};
       const runQuery=async(payload,opts)=>{const result=await runCompute('read-model-cp-query',payload,opts);try{return result.value;}finally{result.release?.();}};
       const t2=performance.now();
-      let out=await runQuery(base,options);
+      let out=await runQuery(base,workerOptions(options));
       if(out&&Array.isArray(out.missing)&&out.missing.includes('cp')){
         counters.datasetLoads++;
         const source=value.buffer,bytes=Uint8Array.from(Buffer.isBuffer(source)?source:Buffer.from(source||[]));
         out=await runQuery({...base,dataset:{...base.dataset,buffer:bytes.buffer}},
-          {...options,estimatedBytes:options.estimatedBytes+uncompressed*6+bytes.byteLength,inputBytes:bytes.byteLength,transferList:[bytes.buffer]});
+          workerOptions({...options,estimatedBytes:options.estimatedBytes+uncompressed*6+bytes.byteLength,inputBytes:bytes.byteLength,transferList:[bytes.buffer]}));
       }
       if(!out||!out.result)throw failure('COMPUTE_WORKER_FAILED',500,'Hesaplama işçisi tamamlanamadı.','Compute worker failed.');
       captured.assertResponse();lease.assertResponse?.();

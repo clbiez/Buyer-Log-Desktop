@@ -282,3 +282,16 @@ test('an edit (new generation, new data version) keeps the decision host and rec
   const scoped=await service.computed(req(users.buyerA),{version:1});
   assert.equal(scoped.timing.phases.incremental,undefined,'başka yetki kapsamı → ayrı barındırıcı');
 });
+
+test('client abort is not forwarded to the worker job (the pool would terminate the worker and drop the decision host); a closed request never starts one',async()=>{
+  worker.cache.clear();task.clearHosts();
+  const {service,calls}=harness();
+  const live=new AbortController();
+  const out=await service.computed(req(users.moderator),{version:1},{signal:live.signal});
+  assert.equal(out.cached,false);
+  assert.ok(calls.length>=1&&calls.every(call=>call.options.signal===undefined),'işçi işine iptal sinyali gitmedi');
+  const closed=new AbortController();closed.abort();
+  const before=calls.length;
+  await assert.rejects(service.computed(req(users.moderator),{version:1,lang:'en'},{signal:closed.signal}),error=>error.code==='COMPUTE_ABORTED'&&error.statusCode===499);
+  assert.equal(calls.length,before,'kapanmış istek işçiye verilmedi');
+});
