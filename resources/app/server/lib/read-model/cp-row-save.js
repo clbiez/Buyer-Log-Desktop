@@ -55,6 +55,7 @@ function validateItems(raw){
      notifyLive(req,rowPatches), liveRowPatchesFor(items), noteActorOf(user), apiError(res,err,fallback) } */
 function registerCpRowSaveRoute(app,deps){
   app.post('/api/overrides/rows',async(req,res)=>{
+    const started=process.hrtime.bigint();
     try{
       const items=validateItems(req.body);
       if(deps.rejectUnauthorizedOrders(req,res,items.map(item=>item.orderCode)))return;
@@ -74,6 +75,8 @@ function registerCpRowSaveRoute(app,deps){
         deps.appendAudit(req.currentUser,'ORDER_ROW_CONFLICT','orders',{orderCodes:[...new Set(saved.conflicts.map(item=>item.orderCode))].slice(0,200),count:saved.conflicts.length});
       }
       res.set('Cache-Control','no-store');
+      // Kayıt süresi sunucu tarafında (tarayıcıdaki toplamla karşılaştırılır: bağlantı/kuyruk beklemesi ayrışır).
+      res.set('Server-Timing',`rowsave;dur=${(Number(process.hrtime.bigint()-started)/1e6).toFixed(1)}`);
       res.json({ok:true,applied:saved.applied.map(({orderCode,key,noop,current})=>({orderCode,key,noop,current})),conflicts:saved.conflicts,
         revision:saved.revision,revisions:saved.revisions,pageCachePatchQueued});
     }catch(err){

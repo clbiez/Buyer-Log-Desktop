@@ -31,7 +31,7 @@ function load({flag=true,rows=4,server,deltaRow=0}={}){
     rows:(body.since?cpRows.slice(deltaRow,deltaRow+1):cpRows).map(row=>[row._id,'ACTION_TODAY','KNOWN',['TAG'],[],[{code:'R1'}],[{code:'S'}],null,
       {cells:{__checklist__pps:'Bekliyor'},status:{pps:'open'},parts:{},elements:{},single:false,tasks:{}},row['Order Code'],'']),removed:[]}}}));
   const ctx={
-    console,Map,Set,WeakMap,Promise,JSON,Object,Array,String,Number,Boolean,Error,Math,Date,queueMicrotask,
+    console,Map,Set,WeakMap,Promise,JSON,Object,Array,String,Number,Boolean,Error,Math,Date,queueMicrotask,AbortController,
     performance:{now:()=>0},
     window:null,state:{cp:{rows:cpRows},cpDirty:new Set()},appLang:'tr',
     __contextRevision:1,
@@ -52,6 +52,8 @@ function load({flag=true,rows=4,server,deltaRow=0}={}){
     'const _unifiedPriorityCache={cp:null,orders:null};const _unifiedPriorityTableRevision={cp:1,orders:1};',
     'let _cpPriorityIndex=null,_cpPriorityIndexRevision=0;let cpPriorityJob=null;',
     block('const CP_COMPUTED_STORAGE_KEY=',';'),block('const cpComputed={','};'),block('const CP_COMPUTED_HIDDEN=[','];'),block('const CP_COMPUTED_OVERLAY_MAX_BYTES=',';'),block('const CP_COMPUTED_OPTIMISTIC_MAX_ROWS=',';'),
+    // #1078 alt PR 3: hesaplanmış sütun isteği okuma modeli sınırlayıcısından geçer (gerçek kaynak).
+    SOURCE.slice(SOURCE.indexOf('const CP_RM_MAX_ACTIVE=2;'),SOURCE.indexOf('async function cpRMPost(')),
     ...FUNCTIONS.map(name=>extractFunction(SOURCE,name)),
     block('window.BLCpComputedColumns={','\n};'),
     `globalThis.__api={${FUNCTIONS.join(',')},cache:()=>_unifiedPriorityCache,computed:()=>cpComputed};`,

@@ -1442,7 +1442,7 @@ function cpComputedEnabled(){
 }
 function cpComputedEligible(){
   if(!cpComputedEnabled()||!state.cp||!Array.isArray(state.cp.rows))return false;
-  return !(typeof cpUnsavedRowEdits==='function'?cpUnsavedRowEdits():Boolean(state.cpDirty&&state.cpDirty.size>0))&&pendingOverrideWriteCount()===0;
+  return !(typeof cpEditsBlockServerPaths==='function'?cpEditsBlockServerPaths(true):Boolean(state.cpDirty&&state.cpDirty.size>0)||pendingOverrideWriteCount()>0);
 }
 const CP_COMPUTED_HIDDEN=['_checklistStatus','_checklistParts','_checklistElements','_checklistTasks'];
 function applyCpComputedRow(row,tuple){
@@ -1562,9 +1562,9 @@ function scheduleCpComputedColumns(rows,revision,contextRevision,day){
     if(!isCurrent())return false;
     const applied=cpComputed.applied;
     const since=applied&&applied.rows===rows&&applied.lang===lang?applied.token:null;
-    const response=await fetch('/api/read-model/cp/computed',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({version:1,lang,...(since?{since}:{}),...(overlay?{answers:overlay}:{})})});
-    const payload=await response.json().catch(()=>null);
+    // Okuma modeli sınırlayıcısından geçer; satır kaydı başlarken iptal edilir (kayıt bağlantı beklemez).
+    const {response,payload}=await cpRMLimitedFetch('/api/read-model/cp/computed',{version:1,lang,...(since?{since}:{}),...(overlay?{answers:overlay}:{})},
+      async res=>({response:res,payload:await res.json().catch(()=>null)}));
     if(!response.ok||!payload||payload.ok!==true||!payload.columns)throw Object.assign(new Error(payload?.code||('HTTP '+response.status)),{code:payload?.code||'CP_COMPUTED_HTTP'});
     if(!isCurrent()){window.BLPerf?.mark?.('CP_COMPUTED_STALE_RESULT',{ms:Math.round(performance.now()-started),server:payload.timing||null});return false;}
     const fetched=performance.now();
@@ -1582,6 +1582,8 @@ function scheduleCpComputedColumns(rows,revision,contextRevision,day){
     return true;
   })().catch(error=>{
     if(cpComputed.job!==job)return false;
+    // Satır kaydı için iptal: hata değil; kayıt bitince yeniden planlanır (cpRowSaveSettled). Oturum kapatılmaz.
+    if(error&&error.aborted){if(typeof cpRowSave!=='undefined')cpRowSave.computedAborted=true;return false;}
     cpComputed.applied=null;
     // Satır uyuşmazlığı ve gönderilemeyen cevap yalnız bu hesabı eski yola alır; diğer hatalar oturumu.
     if(error?.fallback!=='job'){cpComputed.disabled=true;console.warn('CP hesaplanmış sütunları arka uçtan alınamadı; eski yol kullanılıyor:',error?.code||error);}
@@ -10550,7 +10552,7 @@ function cpRMColFilter(key,entry){
 /* cpBuildFilterContext + cpPassesBase / cpPassesGroup'un sunucu sorgusu karşılığı; kümeler
    cpEvaluateAll kapsamlarıyla aynıdır (base + pri/status/del/season/exf). */
 function cpReadModelSpec(options={}){
-  if(typeof cpUnsavedRowEdits==='function'?cpUnsavedRowEdits():Boolean(state.cpDirty&&state.cpDirty.size))return {ok:false,reason:'dirty'};
+  if(typeof cpEditsBlockServerPaths==='function'?cpEditsBlockServerPaths():Boolean(state.cpDirty&&state.cpDirty.size))return {ok:false,reason:'dirty'};
   if(pendingOverrideWriteCount()>0)return {ok:false,reason:'pending-writes'};
   if(partialViewEnabled('cp'))return {ok:false,reason:'partial-view'};
   if(state.cpLogisticExpanded&&state.cpLogisticExpanded.size)return {ok:false,reason:'logistic-detail'};
@@ -10595,7 +10597,49 @@ async function cpRMEnvelope(field,body){
   catch(error){if(error&&error.code==='CP_COMPUTED_PREFERENCES_UNSAVED')throw error;answers=null;}
   return {version:1,lang:cpRMLang(),...(answers?{answers}:{}),[field]:body};
 }
-async function cpRMPost(path,field,body){return ordersRMPost(path,await cpRMEnvelope(field,body));}
+/* #1078 alt PR 3: CP okuma modeli istekleri sekme başına en fazla CP_RM_MAX_ACTIVE eşzamanlı gider ve satır kaydı
+   başlarken bekleyen/yoldaki okumalar iptal edilir (kayıt bittiğinde tablo yeniden ister). Tarayıcı aynı adrese
+   en fazla 6 bağlantı açar; uzun süren pencere/sayaç istekleri (yeni nesil kirası + hesap) kayıt POST'unu
+   sıraya sokmasın. Sunucu iptali işçiye iletmez (hesap biter, önbelleğe girer). */
+const CP_RM_MAX_ACTIVE=2;
+const cpRMNet={active:0,queue:[],controllers:new Set()};
+function cpRMAbortError(){return Object.assign(new Error('CP read aborted'),{code:'CP_RM_ABORTED',aborted:true});}
+function cpRMNetPump(){while(cpRMNet.active<CP_RM_MAX_ACTIVE&&cpRMNet.queue.length)cpRMNet.queue.shift().run();}
+// Sınırlı ve iptal edilebilir CP okuması: read(res) yanıt gövdesini okur (bağlantı gövde bitene kadar tutulur).
+function cpRMLimitedFetch(path,body,read){
+  return new Promise((resolve,reject)=>{
+    const controller=new AbortController();
+    const run=()=>{
+      cpRMNet.active++;cpRMNet.controllers.add(controller);
+      fetch(path,{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:controller.signal}).then(read)
+        .then(resolve,error=>reject(controller.signal.aborted?cpRMAbortError():error))
+        .finally(()=>{cpRMNet.active--;cpRMNet.controllers.delete(controller);cpRMNetPump();});
+    };
+    cpRMNet.queue.push({run,reject});
+    cpRMNetPump();
+  });
+}
+function cpRMRequest(path,body){
+  return cpRMLimitedFetch(path,body,async res=>{
+    const payload=await res.json().catch(()=>({}));
+    if(!res.ok||!payload||payload.ok!==true){
+      if(payload&&payload.code==='USER_SELECTION_REQUIRED'){location.href='/select-user.html';}
+      const error=new Error((appLang==='en'?payload&&payload.errorEn:payload&&payload.error)||res.statusText);
+      error.code=payload&&payload.code||'';error.status=res.status;throw error;
+    }
+    return payload;
+  });
+}
+/* Kayıt anında yalnız henüz başlamamış (kuyruktaki) okumalar düşer. Yoldakiler biter ve sunucu önbelleğine girer:
+   iptal edilen okuma sunucuda yine de hesaplanır (işçi kapatılmasın diye iptal iletilmez), her kayıtta iptal
+   edilirse kira + hesap (30k: ~7 sn) hiç tamamlanmaz ve işçi kuyruğu dolar. Sekme başına ≤ CP_RM_MAX_ACTIVE
+   olduğundan iki sekme + canlı olay bağlantısı tarayıcının 6 bağlantısını doldurmaz; kayıt POST'u beklemez. */
+function cpRMAbortReads(){
+  const queued=cpRMNet.queue.splice(0);
+  for(const job of queued)job.reject(cpRMAbortError());
+  return queued.length;
+}
+async function cpRMPost(path,field,body){return cpRMRequest(path,await cpRMEnvelope(field,body));}
 function cpRMQueryBody(spec,offset,limit,extra={}){
   return {version:1,columns:spec.columns,base:spec.base,groups:spec.groups,today:cpRMToday(),...(spec.search?{search:spec.search}:{}),...(spec.sort?{sort:spec.sort}:{}),offset,limit,...extra};
 }
@@ -10670,7 +10714,7 @@ function cpRMEnsureWindow(index){
     cpRM.windows.add(index);
     cpRMScheduleRepaint();
     return true;
-  }).catch(error=>{console.warn('CP penceresi alınamadı:',error);return false;})
+  }).catch(error=>{if(!(error&&error.aborted))console.warn('CP penceresi alınamadı:',error);return false;})
     .finally(()=>{if(signature===cpRM.signature)cpRM.pending.delete(index);});
   cpRM.pending.set(index,job);
   return job;
@@ -10772,7 +10816,7 @@ function cpRMRequestFacets(spec,signature){
     if(seq!==cpRM.facetsSeq||signature!==cpRM.signature||!cpRMCheckGeneration(payload))return;
     cpRM.facets=payload.result;cpRM.facetsKey=key;
     if(currentActiveTab()==='cp')cpRMRenderFacets(payload.result);
-  }).catch(error=>console.warn('CP sayaçları alınamadı:',error));
+  }).catch(error=>{if(!(error&&error.aborted))console.warn('CP sayaçları alınamadı:',error);});
 }
 // D1 ölçümü (#1071/#1078): filtre/sıralama/arama değişimi → satırlar tabloda (Siparişler ile aynı).
 function cpRecordRowsVisible(path,started,detail={}){
@@ -10815,6 +10859,8 @@ function renderCPFromReadModel(){
     cpRMRequestFacets(spec,signature);
   }).catch(error=>{
     if(seq!==cpRM.seq)return;
+    // Satır kaydı için iptal edildi: kayıt bitince tablo yeniden ister (cpRowSaveSettled).
+    if(error&&error.aborted){cpRM.signature='';return;}
     // Sunucu bu sorguyu değerlendiremiyor (desteklenmeyen filtre ya da sınır aşımı): bu sorgu
     // için eski yol. Tercih yazılamadıysa (alt PR 1) oturum boyunca eski yol.
     if(error&&(error.status===400||error.code==='CP_COMPUTED_PREFERENCES_UNSAVED')){
@@ -15495,7 +15541,7 @@ function saveDateOverrides(row, touchedKeys){
     return dates;
   };
   computeDates(bucket);
-  schedulePendingOverrideWrite(`date:${overrideSyncKey(row, orderCode)}`, 400, ()=>{
+  schedulePendingOverrideWrite(`date:${overrideSyncKey(row, orderCode)}`, typeof cpRowSaveDebounce==='function'?cpRowSaveDebounce(400):400, ()=>{
     const keysToSend = [...(_pendingDateOverrideKeys.get(syncKey) || nextKeys)];
     _pendingDateOverrideKeys.delete(syncKey);
     const dates = computeDates(keysToSend);
@@ -15519,7 +15565,7 @@ function saveDateOverrides(row, touchedKeys){
 }
 
 /* ---- CP satır kaydı (#1078, WS5 alt PR 3) ----
-   Anahtar açıkken (window.BL_CP_ROW_SAVE===true ya da kullanıcı tercihi 'bl.cpRowSave.v1'='1')
+   Anahtar varsayılan AÇIK (kapatmak: window.BL_CP_ROW_SAVE===false ya da kullanıcı tercihi 'bl.cpRowSave.v1'='0');
    CP satır düzenlemesi POST /api/overrides/rows ile gider: yalnız değişen alanlar ve her alanın
    düzenleme öncesi KAYITLI değeri (base). Sunucu global revizyonu değil alanı karşılaştırır:
    başka satıra ya da aynı satırın başka alanına yapılan yazma bu kaydı reddettirmez, bu kayıt
@@ -15540,11 +15586,14 @@ const CP_ROW_SAVE_STORAGE_KEY='bl.cpRowSave.v1';
    base o birimin düzenleme öncesi KAYITLI değeridir; yalnız o birimin onayı onu sunucu değerine taşır.
    pre: markDirty anında (haritalar değişmeden) alınan satır görüntüsü; dokunulan birimin base'i buradan.
    cycle: bu düzenleme döngüsünde dokunulan sütunu bilinen satırlar; legacy: bugünkü yola gidecek satırlar. */
-const cpRowSave={enabled:null,pre:new Map(),units:new Map(),cycle:new Set(),legacy:new Set(),inFlight:new Map(),queue:Promise.resolve()};
+const cpRowSave={enabled:null,pre:new Map(),units:new Map(),cycle:new Set(),legacy:new Set(),inFlight:new Map(),queue:Promise.resolve(),computedAborted:false};
+// Satır kaydında gecikmeli yazma kısa: yalnız dokunulan birimler gider (birleştirme ihtiyacı az); kayıt anlık.
+function cpRowSaveDebounce(fallback){return cpRowSaveEnabled()?250:fallback;}
 function cpRowSaveEnabled(){
   if(typeof window.BL_CP_ROW_SAVE==='boolean')return window.BL_CP_ROW_SAVE;
   if(cpRowSave.enabled===null){
-    try{cpRowSave.enabled=(window.BLStorage||localStorage).getItem(CP_ROW_SAVE_STORAGE_KEY)==='1';}catch(_){cpRowSave.enabled=false;}
+    // Varsayılan AÇIK (kullanıcı kararı, #1078): geri dönüş window.BL_CP_ROW_SAVE=false ya da tercih '0'.
+    try{cpRowSave.enabled=(window.BLStorage||localStorage).getItem(CP_ROW_SAVE_STORAGE_KEY)!=='0';}catch(_){cpRowSave.enabled=true;}
   }
   return cpRowSave.enabled;
 }
@@ -15553,6 +15602,15 @@ function cpUnsavedRowEdits(){
   if(!cpRowSaveEnabled())return Boolean(state.cpDirty&&state.cpDirty.size);
   let total=0;for(const count of cpRowSave.inFlight.values())total+=count;
   return total>0;
+}
+/* Düzenleme sunucu yollarını (pencereli tablo, hesaplanmış sütunlar) kapatır mı? Satır kaydı açıkken HAYIR:
+   düzenlenen değer yerel tam satırdan görünür, kayıt ve canlı senkron hiçbir hesabı beklemez; hesaplanmış
+   sütunlar yeni nesille arkadan gelir. Aksi halde tek satır düzenlemesi 30k satırın kararını istemcide
+   eşzamanlı yeniden hesaplatır (refreshRowEverywhere → syncUnifiedPrioritiesForTable, ~3 sn) ve kayıt
+   zamanlayıcısı o kadar gecikir. Anahtar kapalıyken bugünkü kural: kirli satır ya da bekleyen yazma. */
+function cpEditsBlockServerPaths(includePending=false){
+  if(cpRowSaveEnabled())return false;
+  return Boolean(state.cpDirty&&state.cpDirty.size)||(includePending&&pendingOverrideWriteCount()>0);
 }
 const cpRowIsObject=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 function cpRowStoredRecord(mapName,key,orderCode){
@@ -15746,6 +15804,8 @@ function cpRowSaveSend(row,orderCode,patch,units){
     for(const unit of units)cpRowUnitAssign(base,unit,entries?.get(unit)?.base);
     const item={orderCode:Number(orderCode),patch:{...lineIdentity(row),...patch},base};
     const headers={'Content-Type':'application/json'};if(window.BL_CLIENT_ID)headers['X-Client-Id']=window.BL_CLIENT_ID;
+    // Kayıt hiçbir okuma modeli isteğinin arkasında beklemez (tarayıcı bağlantı sınırı).
+    if(typeof cpRMAbortReads==='function')cpRMAbortReads();
     let data;
     try{data=await fetchJSON('/api/overrides/rows',{method:'POST',headers,body:JSON.stringify({items:[item]})});}
     catch(err){settle(null,false);throw err;}
@@ -15781,6 +15841,8 @@ function cpRowSaveSettled(){
   if(cpUnsavedRowEdits()||pendingOverrideWriteCount()>0)return;
   window.BLPerf?.mark?.('CP_ROW_SAVE_SETTLED');
   if(typeof cpReadModelEnabled==='function'&&cpReadModelEnabled()&&currentActiveTab()==='cp'){cpRMInvalidate('row-save');renderCP();}
+  // Kayıt için iptal edilen hesaplanmış sütun isteği yeniden (sonuç gelince tablo kendini çizer).
+  if(cpRowSave.computedAborted){cpRowSave.computedAborted=false;_unifiedPriorityCache.cp=null;void scheduleUnifiedPrioritiesForTable('cp');}
 }
 // Uzak canlı yama: istemci kayıt haritaları da güncellenir. Bekleyen yerel düzenlemenin base'i DEĞİŞMEZ:
 // aynı birimi başkası değiştirdiyse bizim kaydımız çakışma alır (sessiz ezme yok).
@@ -15808,7 +15870,7 @@ window.BLCpRowSave={
 
 function syncOverrideToServer(orderCode,notes,row){
   if(!window.SERVER_BACKED)return;
-  schedulePendingOverrideWrite(`notes:${overrideSyncKey(row, orderCode)}`, 500, ()=>{
+  schedulePendingOverrideWrite(`notes:${overrideSyncKey(row, orderCode)}`, typeof cpRowSaveDebounce==='function'?cpRowSaveDebounce(500):500, ()=>{
     const restore=row._pricingHistoryRestore,manualWrite=row._pricingManualWrite,subWrite=row._subManufacturerWrite;
     const body=(()=>{
         const body={...lineIdentity(row),notes,delType:row['Del. Type']||undefined};

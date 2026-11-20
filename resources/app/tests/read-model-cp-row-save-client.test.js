@@ -29,7 +29,7 @@ function load({responses=[],enabled=true,capturing=false,rows=[]}={}){
     pendingOverrideWriteCount:()=>0,currentActiveTab:()=>'overview',notifyOverrideSaveError(){}});
   vm.runInContext(`function overrideSyncKey(row,orderCode){return lineKeyOfRow(row)||String(orderCode==null?'':orderCode);}
     ${BLOCK}
-    globalThis.api={cpRowSaveEnabled,cpUnsavedRowEdits,cpRowSnapshot,cpRowCaptureBase,cpRowTouch,cpRowTouchAction,cpRowSaveEligible,cpRowSavePlan,cpRowSaveDatePlan,
+    globalThis.api={cpRowSaveEnabled,cpRowSaveDebounce,cpUnsavedRowEdits,cpEditsBlockServerPaths,cpRowSnapshot,cpRowCaptureBase,cpRowTouch,cpRowTouchAction,cpRowSaveEligible,cpRowSavePlan,cpRowSaveDatePlan,
       cpRowApplyStored,cpRowApplyConflict,cpRowSaveSend,cpRowSaveRemoteApplied,rowSave:cpRowSave};`,ctx);
   return {ctx,api:ctx.api,requests,toasts,refreshed};
 }
@@ -188,6 +188,15 @@ test('a failed request keeps a newer pending edit of the same unit; a finished u
   assert.equal(api.rowSave.units.size,0);
 });
 
+test('edits never block the server paths with row save on (no 30k client recompute on a single edit); flag off keeps today\'s rule',()=>{
+  const on=load();on.ctx.state.cpDirty=new Set([7]);on.ctx.pendingOverrideWriteCount=()=>2;on.api.rowSave.inFlight.set(key,1);
+  assert.equal(on.api.cpEditsBlockServerPaths(),false);assert.equal(on.api.cpEditsBlockServerPaths(true),false,'bekleyen/yoldaki kayıt hesaplanmış yolu kapatmaz');
+  const off=load({enabled:false});off.ctx.state.cpDirty=new Set();off.ctx.pendingOverrideWriteCount=()=>1;
+  assert.equal(off.api.cpEditsBlockServerPaths(),false,'pencereli tablo: bugün yalnız kirli satır');
+  assert.equal(off.api.cpEditsBlockServerPaths(true),true,'hesaplanmış sütunlar: bugün bekleyen yazma da');
+  off.ctx.state.cpDirty=new Set([7]);assert.equal(off.api.cpEditsBlockServerPaths(),true);
+});
+
 test('unsaved-edit rule: flag on → only unacknowledged writes; flag off → any dirty row (today)',()=>{
   const on=load();on.ctx.state.cpDirty=new Set([7]);
   assert.equal(on.api.cpUnsavedRowEdits(),false,'onaylanmış kirli satır pencereli yolu kapatmaz');
@@ -208,8 +217,8 @@ test('hooks: markDirty captures before maps change; pushUndo / history / date sa
   assert.match(sync,/const rowPlan=typeof cpRowSavePlan==='function'\?cpRowSavePlan\(row,orderCode,body\):null;/);
   assert.match(sync,/\(rowPlan\.skip\?Promise\.resolve\(\):cpRowSaveSend\(row,orderCode,rowPlan\.patch,rowPlan\.units\)\)\s*:enqueueOverrideMutation\('orders',`\/api\/overrides\/\$\{orderCode\}`,\{method:'PATCH'/);
   assert.match(extractFunction(SOURCE,'applyRemoteRowPatch'),/cpRowSaveRemoteApplied\(row,patch\); \/\/ #1078\s*return row;/);
-  assert.match(extractFunction(SOURCE,'cpReadModelSpec'),/if\(typeof cpUnsavedRowEdits==='function'\?cpUnsavedRowEdits\(\):Boolean\(state\.cpDirty&&state\.cpDirty\.size\)\)return \{ok:false,reason:'dirty'\};/);
-  assert.match(extractFunction(SOURCE,'cpComputedEligible'),/return !\(typeof cpUnsavedRowEdits==='function'\?cpUnsavedRowEdits\(\):Boolean\(state\.cpDirty&&state\.cpDirty\.size>0\)\)&&pendingOverrideWriteCount\(\)===0;/);
+  assert.match(extractFunction(SOURCE,'cpReadModelSpec'),/if\(typeof cpEditsBlockServerPaths==='function'\?cpEditsBlockServerPaths\(\):Boolean\(state\.cpDirty&&state\.cpDirty\.size\)\)return \{ok:false,reason:'dirty'\};/);
+  assert.match(extractFunction(SOURCE,'cpComputedEligible'),/return !\(typeof cpEditsBlockServerPaths==='function'\?cpEditsBlockServerPaths\(true\):Boolean\(state\.cpDirty&&state\.cpDirty\.size>0\)\|\|pendingOverrideWriteCount\(\)>0\);/);
   assert.match(fs.readFileSync(path.join(__dirname,'..','public','user-storage.js'),'utf8'),/'bl\.cpRowSave\.'/);
 });
 
@@ -252,4 +261,47 @@ test('settleOverrideWrites also waits for row saves (refresh / bulk operations n
   await new Promise(resolve=>setTimeout(resolve,20));
   assert.equal(ctx.flushed,true);assert.equal(done,false,'satır kaydı bitmeden bariyer açılmadı');
   release();await waiting;assert.equal(done,true);
+});
+
+test('row save is ON by default; the preference "0" or window.BL_CP_ROW_SAVE=false turns it off (rollback)',()=>{
+  const fresh=pref=>{const ctx=vm.createContext({window:{},localStorage:{getItem:()=>pref},state:{}});
+    vm.runInContext(`${BLOCK};globalThis.on=cpRowSaveEnabled();`,ctx);return ctx.on;};
+  assert.equal(fresh(null),true,'tercih yok → açık');
+  assert.equal(fresh('1'),true);
+  assert.equal(fresh('0'),false,'geri dönüş');
+  assert.equal(load({enabled:false}).api.cpRowSaveEnabled(),false,'window.BL_CP_ROW_SAVE=false');
+});
+
+test('CP read-model requests: at most 2 in flight per tab; a row save drops queued reads (in-flight ones finish and are cached server-side)',async()=>{
+  const LIMITER=SOURCE.slice(SOURCE.indexOf('const CP_RM_MAX_ACTIVE=2;'),SOURCE.indexOf('async function cpRMPost('));
+  const started=[],signals=[];
+  const ctx=vm.createContext({Promise,Error,Object,Set,JSON,AbortController,appLang:'tr',location:{},
+    fetch:(url,opts)=>{started.push(url);signals.push(opts.signal);return new Promise((resolve,reject)=>{opts.signal.addEventListener('abort',()=>reject(new Error('AbortError')));});}});
+  vm.runInContext(`${LIMITER};globalThis.api={cpRMRequest,cpRMAbortReads,net:cpRMNet};`,ctx);
+  const results=[1,2,3,4].map(i=>ctx.api.cpRMRequest('/api/read-model/cp/query',{i}).then(()=>'ok',error=>error));
+  await Promise.resolve();
+  assert.equal(started.length,2,'en fazla 2 eşzamanlı');
+  assert.equal(ctx.api.cpRMAbortReads(),2,'yalnız kuyruktaki 2 okuma düşer');
+  const dropped=await Promise.all(results.slice(2));
+  assert.ok(dropped.every(error=>error&&error.aborted===true&&error.code==='CP_RM_ABORTED'));
+  assert.ok(signals.every(signal=>!signal.aborted),'yoldaki okumalar iptal edilmez');
+  assert.equal(started.length,2,'düşen kuyruk işi hiç başlamadı');
+  assert.equal(ctx.api.net.active,2);
+  assert.match(extractFunction(SOURCE,'cpRowSaveSend'),/if\(typeof cpRMAbortReads==='function'\)cpRMAbortReads\(\);\s*let data;/);
+  assert.match(SOURCE,/async function cpRMPost\(path,field,body\)\{return cpRMRequest\(path,await cpRMEnvelope\(field,body\)\);\}/);
+});
+
+test('computed-columns request goes through the limiter; a save abort is not an error (no session-wide fallback to the 30k client path) and is rescheduled after the save',()=>{
+  const schedule=SOURCE.slice(SOURCE.indexOf("job.promise=(async()=>{"),SOURCE.indexOf("/* checklist-supplier-sync.js için sağlayıcı"));
+  assert.match(schedule,/await cpRMLimitedFetch\('\/api\/read-model\/cp\/computed'/);
+  assert.doesNotMatch(schedule,/await fetch\('\/api\/read-model\/cp\/computed'/);
+  const abort=schedule.indexOf('if(error&&error.aborted)'),disable=schedule.indexOf('cpComputed.disabled=true');
+  assert.ok(abort>0&&abort<disable,'iptal, oturum kapatmadan önce ele alınır');
+  assert.match(extractFunction(SOURCE,'cpRowSaveSettled'),/if\(cpRowSave\.computedAborted\)\{cpRowSave\.computedAborted=false;_unifiedPriorityCache\.cp=null;void scheduleUnifiedPrioritiesForTable\('cp'\);\}/);
+});
+
+test('row save uses a short write debounce (250 ms); flag off keeps 500 / 400 ms',()=>{
+  assert.equal(load().api.cpRowSaveDebounce(500),250);assert.equal(load({enabled:false}).api.cpRowSaveDebounce(500),500);
+  assert.match(extractFunction(SOURCE,'syncOverrideToServer'),/typeof cpRowSaveDebounce==='function'\?cpRowSaveDebounce\(500\):500/);
+  assert.match(extractFunction(SOURCE,'saveDateOverrides'),/typeof cpRowSaveDebounce==='function'\?cpRowSaveDebounce\(400\):400/);
 });

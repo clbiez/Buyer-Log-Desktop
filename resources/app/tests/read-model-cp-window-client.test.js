@@ -75,7 +75,7 @@ test('shared paths are wired: copy, export, grid clipboard, redraw, header filte
 test('unsaved edits and pending writes keep the legacy path (row-level editing is sub-PR 3)',()=>{
   const spec=slice('function cpReadModelSpec(options={}){','migrateLegacyCpQuickFilters();');
   // Alt PR 3: satır kaydı anahtarı açıkken yalnız onaylanmamış yazma; kapalıyken bugünkü kural (kirli satır).
-  assert.match(spec,/if\(typeof cpUnsavedRowEdits==='function'\?cpUnsavedRowEdits\(\):Boolean\(state\.cpDirty&&state\.cpDirty\.size\)\)return \{ok:false,reason:'dirty'\}/);
+  assert.match(spec,/if\(typeof cpEditsBlockServerPaths==='function'\?cpEditsBlockServerPaths\(\):Boolean\(state\.cpDirty&&state\.cpDirty\.size\)\)return \{ok:false,reason:'dirty'\}/);
   assert.match(spec,/pendingOverrideWriteCount\(\)>0\)return \{ok:false,reason:'pending-writes'\}/);
 });
 
