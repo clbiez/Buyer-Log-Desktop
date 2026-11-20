@@ -1680,7 +1680,7 @@ window.addEventListener('bl:cp-decision-context-changed',event=>{
   // CP hesaplanmış sütunlar (#1078) etkinse yenilemeyi kendisi yapar (eski değerlerle ara çizim yok).
   const computedHandled=window.BLCpComputedColumns?.onDecisionContextChanged?.(event);
   // Pencereli CP (#1078 alt PR 2): sorgu ve sayaçlar arka uçta yeni bağlamla yeniden kurulur.
-  if(!cpRMOnDecisionContextChanged()&&!computedHandled&&currentActiveTab()==='cp')renderCP();
+  if(!window.BLCpReadModel?.onDecisionContextChanged?.()&&!computedHandled&&currentActiveTab()==='cp')renderCP();
   scheduleOverviewRender('personal-decision-context');
   // Siparişler önceliği checklist cevabına değil kural/katalog anahtarına bağlıdır;
   // anahtar bir sonraki okumada yeniden kurulur, yalnız gerçekten değiştiyse hesaplanır.
@@ -10332,11 +10332,6 @@ function renderTableEmptyHint(tableKey,visibleCount,totalCount){
   else hint.textContent=opts.title;
 }
 function renderCPNow(){
-  // #1078 alt PR 2: anahtar açıkken ve sorgu arka uçta değerlendirilebiliyorsa pencereli yol.
-  if(cpReadModelEnabled()){
-    if(renderCPFromReadModel())return;
-    if(!state.cp){void ensureCpLoaded();return;}
-  }
   if(!state.cp) return;
   cpPlmDetailsSync();
   const legacyStarted=performance.now();
@@ -10354,6 +10349,7 @@ function renderCPNow(){
   const totalRowCount=partialViewEnabled('cp')?partialViewRows('cp',state.cp.rows).length:state.cp.rows.length;
   const qtySumCP = metricRows.reduce((s,r)=>s+(toNum(r['Order Quantity'])||0),0);
   renderCpCountLine({stats:pageModelOptionStats(metricRows),rowCount:rows.length,totalRowCount,qty:qtySumCP});
+  renderTableEmptyHint('cp',rows.length,totalRowCount);
   const buckets = actionPriorityCounts(scope.pri);
   const statusCounts = {}; scope.status.forEach(r=>{
     const values=partialViewEnabled('cp')?partialViewStatusGroups(r).map(group=>group.status):(cpLogisticHasDetails(r)?(r._logisticStatusValues||cpLogisticSegments(r).map(s=>s.status)):[r.STATUS]);
@@ -10411,7 +10407,6 @@ function renderCpCountLine({stats,rowCount,totalRowCount,qty}){
   const cpLabel=appLang==='en'?`${cpStats.modelCount} Model${cpStats.modelCount===1?'':'s'} · ${cpStats.optionCount} Option${cpStats.optionCount===1?'':'s'} · ${cpStats.orderCount} Order${cpStats.orderCount===1?'':'s'}`:`${cpStats.modelCount} Model · ${cpStats.optionCount} Opsiyon · ${cpStats.orderCount} Sipariş`;
   const cpScopeText=`${cpLabel} · ${rowCount} / ${totalRowCount} ${appLang==='en'?'rows':'satır'} · Order Qty: ${(Number(qty)||0).toLocaleString('tr-TR')}`;
   document.getElementById('cpCount').textContent = cpScopeText;
-  renderTableEmptyHint('cp',rowCount,totalRowCount);
   const cpWorkspaceMeta=document.getElementById('cpWorkspaceMeta');
   if(cpWorkspaceMeta)cpWorkspaceMeta.textContent=cpScopeText;
   renderTableViewContext('cp');
@@ -10756,6 +10751,7 @@ function cpRMRenderFacets(facets){
   cpRMRenderFooter();
   const kpi=facets.kpi||{pri:{},season:{},status:{},del:{},exf:{}};
   renderCpCountLine({stats:facets.stats,rowCount:facets.total,totalRowCount:facets.datasetRows,qty:Number(facets.sums&&facets.sums['Order Quantity'])||0});
+  renderTableEmptyHint('cp',facets.total,facets.datasetRows);
   renderCpKpiBar({buckets:kpi.pri,statusCounts:kpi.status,delCounts:kpi.del,seasonCounts:kpi.season,exfCounts:kpi.exf,noneCount:facets.none,extraHtml:null});
   // Seçim kutuları (buildCPFilters / uniqueVals) tam veri kümesinden; nesil başına bir kez.
   if(facets.distinct&&cpRM.optionsGeneration!==cpRM.generation){
@@ -10823,7 +10819,7 @@ function renderCPFromReadModel(){
     if(error&&(error.status===400||error.code==='CP_COMPUTED_PREFERENCES_UNSAVED')){
       cpRM.legacyReason='server:'+(error.code||'400');cpRM.signature='';
       if(error.status===400)cpRM.unsupportedSignature=signature;else cpRM.disabled=true;
-      if(!state.cp)void ensureCpLoaded();else renderCPNow();
+      if(!state.cp)void ensureCpLoaded();else renderCPNowLegacy();
       return;
     }
     const message=(appLang==='en'?'CP could not be loaded: ':'CP yüklenemedi: ')+(error&&error.message||error);
@@ -10966,6 +10962,18 @@ window.BLCpReadModel={
   },
   status:()=>({enabled:cpReadModelEnabled(),windowed:cpRMWindowedActive(),legacyReason:cpRM.legacyReason,total:cpRM.total,
     loadedWindows:cpRM.windows.size,generation:cpRM.generation,fullRows:Boolean(state.cp)}),
+  onDecisionContextChanged:cpRMOnDecisionContextChanged,
+};
+/* CP çizim yönlendiricisi: renderCPNow (DEFERRED_TAB_RENDERERS, renderCP, checklist-supplier-sync
+   sarmalayıcısı aynı adı kullanır) önce pencereli yolu dener; anahtar kapalıyken ya da sorgu
+   desteklenmiyorsa eski gövde (renderCPNowLegacy) aynen çalışır. Tam satırlar yoksa önce yüklenir. */
+const renderCPNowLegacy=renderCPNow;
+renderCPNow=function renderCPNowRoute(){
+  if(cpReadModelEnabled()){
+    if(renderCPFromReadModel())return;
+    if(!state.cp){void ensureCpLoaded();return;}
+  }
+  return renderCPNowLegacy.apply(this,arguments);
 };
 
 // ================= ORDERS / SİPARİŞLER =================

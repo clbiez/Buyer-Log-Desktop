@@ -20,8 +20,12 @@ test('flag off by default; renderCPNow tries the windowed path first only when e
   const on=vm.createContext({window:{BL_CP_READ_MODEL:true},localStorage:{getItem:()=>null}});
   vm.runInContext(`const cpRM={disabled:false};let cpRMEnabledCache=null;const CP_RM_STORAGE_KEY='bl.cpReadModel.v1';${enabled};globalThis.f=cpReadModelEnabled;`,on);
   assert.equal(on.f(),true);
-  const render=slice('function renderCPNow(){','cpPlmDetailsSync();');
-  assert.match(render,/if\(cpReadModelEnabled\(\)\)\{\s*if\(renderCPFromReadModel\(\)\)return;\s*if\(!state\.cp\)\{void ensureCpLoaded\(\);return;\}/);
+  // Yönlendirici renderCPNow adını devralır (eski gövde renderCPNowLegacy olarak aynen kalır).
+  const route=slice('const renderCPNowLegacy=renderCPNow;','return renderCPNowLegacy.apply(this,arguments);');
+  assert.match(route,/renderCPNow=function renderCPNowRoute\(\)\{\s*if\(cpReadModelEnabled\(\)\)\{\s*if\(renderCPFromReadModel\(\)\)return;\s*if\(!state\.cp\)\{void ensureCpLoaded\(\);return;\}/);
+  assert.match(SOURCE,/function renderCPNow\(\)\{\s*if\(!state\.cp\) return;\s*cpPlmDetailsSync\(\);/,'eski gövde değişmedi');
+  // Eski yola düşüş yönlendiriciye geri girmez.
+  assert.match(slice('function renderCPFromReadModel(){','/* Tümünü seç'),/else renderCPNowLegacy\(\);/);
   // Kullanıcı başına tercih (user-storage kapsamlı önek).
   assert.match(fs.readFileSync(path.join(__dirname,'..','public','user-storage.js'),'utf8'),/'bl\.cpReadModel\.'/);
 });
@@ -83,7 +87,7 @@ test('every query transition supersedes in-flight window and count requests; dat
   // Sunucu/eş senkronu ve transit kuralı → yeniden sorgu; tam satır yüklemesi → aynı nesnelere bağlanır.
   for(const reason of ['cp-projection-loaded','server-cp-deferred','cp-peer-sync','remote-cp-decision-patch','transit-rules-server'])
     assert.ok(SOURCE.includes(`'${reason}'`)&&slice('const CP_RM_DATA_REASONS=','const cpRM=').includes(`'${reason}'`),reason);
-  assert.match(SOURCE,/if\(!cpRMOnDecisionContextChanged\(\)&&!computedHandled&&currentActiveTab\(\)==='cp'\)renderCP\(\);/);
+  assert.match(SOURCE,/if\(!window\.BLCpReadModel\?\.onDecisionContextChanged\?\.\(\)&&!computedHandled&&currentActiveTab\(\)==='cp'\)renderCP\(\);/);
   // İmza gün ve dile bağlı: gün değişimi ve dil değişimi yeni sorgu.
   assert.match(extractFunction(SOURCE,'cpRMSignature'),/cpRMLang\(\),cpRMToday\(\)/);
 });
