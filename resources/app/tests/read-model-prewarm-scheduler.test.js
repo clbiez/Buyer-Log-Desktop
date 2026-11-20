@@ -49,7 +49,8 @@ function setup({areas,session,quietMs=0,cp=false,prefs={}}={}){
   // Gerçek servis gibi: önce oturum/alan yakalanır (geçersiz oturum hesap başlatmaz).
   const service={async model(r,body,options){fakeGuard(userAccess).capture(r,'overview');calls.push({body,cookie:r.headers.cookie});const out=await prewarm.runCompute('read-model-overview',{parts:body.parts},{...options,ownerKey:'read-model',generation:'1',estimatedBytes:1});return {generation:'g',cached:false,body:JSON.stringify(out.value),timing:{}};}};
   // CP hesaplanmış sütun servisi (#1078): gerçek servis gibi önce oturum/alan, sonra havuz.
-  const cpService={async computed(r,body,options){fakeGuard(userAccess).capture(r,'cp');calls.push({cp:body});const out=await prewarm.runCompute('read-model-cp-computed',{lang:body.lang},{...options,ownerKey:'read-model',generation:'1',estimatedBytes:1});return {generation:'g',cached:false,body:JSON.stringify(out.value),timing:{}};}};
+  // Gerçek servis gibi istemci sinyalini işçi işine iletmez (cp-computed-service workerOptions).
+  const cpService={async computed(r,body,options){fakeGuard(userAccess).capture(r,'cp');calls.push({cp:body});const {signal,...rest}=options||{};void signal;const out=await prewarm.runCompute('read-model-cp-computed',{lang:body.lang},{...rest,ownerKey:'read-model',generation:'1',estimatedBytes:1});return {generation:'g',cached:false,body:JSON.stringify(out.value),timing:{}};}};
   prewarm=createReadModelPrewarm({getPool:()=>pool,userAccess,guard:fakeGuard(userAccess),preferenceValue:(_profile,key)=>prefs[key]??null,getOverviewService:()=>service,
     getCpComputedService:cp?()=>cpService:null,quietMs,
     loadProjection:async(r,module)=>{projections.push(module);return {release(){}};},defer:fn=>fn(),wait:()=>tick()});
@@ -204,4 +205,19 @@ test('CP warm is skipped without the CP area or when the user turned server comp
   await until(()=>optOut.pool.jobs.length===2);optOut.pool.jobs[1].resolve({});
   await until(()=>optOut.prewarm.statusFor(req()).state==='done');
   assert.equal(optOut.prewarm.statusFor(req()).cp,'disabled');assert.equal(optOut.pool.jobs.length,2);
+});
+
+/* Codex #1096 P2: CP servisi istemci sinyalini işçiye iletmez; spekülatif CP ısıtmasının iptali zamanlayıcının kendi
+   sinyaliyle havuza ulaşmalı. Aksi halde Siparişler gibi bir kullanıcı işi soğuk CP hesabının arkasında bekler. */
+test('a speculative CP warm job carries the scheduler signal: a non-CP user job preempts it',async()=>{
+  const h=setup({cp:true});h.prewarm.noteSession(req());
+  await until(()=>h.pool.jobs.length===1);h.pool.jobs[0].resolve({});
+  await until(()=>h.pool.jobs.length===2);h.pool.jobs[1].resolve({});
+  await until(()=>h.pool.jobs.length===3);
+  const warm=h.pool.jobs[2];
+  assert.equal(warm.task,'read-model-cp-computed');assert.ok(warm.options.signal,'işçi işinde iptal sinyali var');
+  const orders=h.prewarm.runCompute('read-model-query',{},{ownerKey:'read-model',generation:'1',estimatedBytes:1});
+  await tick();
+  assert.equal(warm.done,true,'spekülatif CP ısıtması iptal edildi');assert.equal(h.prewarm.stats().preempted,1);
+  h.pool.jobs.at(-1).resolve({rows:1});await orders;
 });

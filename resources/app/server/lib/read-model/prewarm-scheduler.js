@@ -99,7 +99,10 @@ function createReadModelPrewarm({getPool,userAccess,preferenceValue=()=>null,loa
       const run=store.run;
       if(run.controller.signal.aborted)return Promise.reject(abortedError());
       counters.backgroundJobs++;run.jobs++;
-      return pool.run(task,payload,{...options,priority:run.speculative?'background':'interactive'}).finally(()=>{run.jobs--;});
+      // Koşunun iptali havuza zamanlayıcının sinyaliyle ulaşır: CP servisi istemci sinyalini işçiye iletmez
+      // (workerOptions), yoksa preemptSpeculative spekülatif CP ısıtmasını kesemez (Codex #1096). Katılınan
+      // (spekülatif olmayan) koşunun denetleyicisi iptal edilmez; sinyal o durumda zararsızdır.
+      return pool.run(task,payload,{...options,signal:options.signal||run.controller.signal,priority:run.speculative?'background':'interactive'}).finally(()=>{run.jobs--;});
     }
     counters.interactiveJobs++;interactiveActive++;lastInteractiveAt=now();
     // Bekleyen kullanıcı işi ön ısıtmanın arkasında kalmaz. Farklı gövdeli bir Genel Bakış
