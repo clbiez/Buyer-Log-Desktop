@@ -54,11 +54,9 @@ function datasetFor(spec,{cache,engine},loads){
 }
 
 /* Cevap dışındaki bağlam: değişirse barındırıcı yeniden kurulur. */
-/* Barındırıcıda çalışan betiklerin (SCRIPTS + checklist-supplier-sync.js) HİÇ okumadığı arayüz
-   durumu: boyut filtreleri, görsel boyutu, BOM kontrol işaretleri. Anahtara girerse her filtre
-   kaydı 30k satırın kararlarını baştan hesaplatır (#1078 alt PR 2 ölçümü: 13,7 sn). Bekçi:
-   read-model-cp-window-route.test.js (betik taraması). */
-const UI_ONLY_ENTRY=/^lcw\.cp\.(?:dimFilters|imageSize|bomControl)\./;
+// Barındırıcının okumadığı arayüz tercihleri (tek tanım: overview-model-service createContextLoader).
+// Bağlam yükleyicisi bunları zaten çıkarır; burada eski/doğrudan yüklerde de anahtara girmez.
+const {UI_ONLY_ENTRY}=require('./overview-model-service');
 function hostKeyOf(payload){
   const context=payload.context||{},entries={...(context.entries||{})};
   delete entries[ANSWER_KEY];
