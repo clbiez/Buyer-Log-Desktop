@@ -63,14 +63,17 @@ function loadPanel(mode, data, opts) {
     } };
   const today = V3.dayIso(new Date());
   const buffer = zlib.gzipSync(Buffer.from(tasks.serialize(tasks.buildBacklog('v3-items', data.source, { ...data.data, today }), 'api')));
-  let datasetSeq = 0; const datasetKey = 'render-' + (++datasetSeq) + '-' + Math.random();
+  let datasetKey = 'render-' + Math.random(), sendBuffer = true;
+  const deferred = [];
   async function fetch(url, init = {}) {
     requests.push(String(url) + (init.body && JSON.parse(init.body).drill ? '#drill' : ''));
     if (String(url).startsWith('/api/backlog-export')) return { ok: true, status: 200, json: async () => JSON.parse(JSON.stringify({ rows: data.rows })) };
     if (String(url) === '/api/read-model/backlog/v3') {
       const body = JSON.parse(init.body);
       assert.equal(body.view.today, today);
-      const out = model.execute({ datasetKey, buffer: requests.filter(u => u.startsWith(url)).length === 1 ? buffer : null, request: { view: body.view, priority: body.priority, drill: body.drill } });
+      if (body.drill && opts.deferDrill) await new Promise(resolve => deferred.push(resolve));
+      const out = model.execute({ datasetKey, buffer: sendBuffer ? buffer : null, request: { view: body.view, priority: body.priority, drill: body.drill } });
+      sendBuffer = false;
       return { ok: true, status: 200, json: async () => JSON.parse(zlib.gunzipSync(Buffer.from(out.buffer)).toString('utf8')) };
     }
     throw new Error('unexpected fetch ' + url);
@@ -87,7 +90,10 @@ function loadPanel(mode, data, opts) {
   const host = $('backlogOverviewBody');
   const click = dataset => { const target = { dataset, closest: () => target }; for (const fn of host.listeners.click || []) fn({ target }); };
   const drawer = () => (ids.get('blvDrawer')?.aside?.innerHTML) || '';
-  return { mode, context, host, click, drawer, requests, html };
+  // rotate: hesap önbelleği yenilenmiş gibi yeni veri kümesi belirteci (yük yeniden gönderilir).
+  const rotate = () => { datasetKey = 'render-' + Math.random(); sendBuffer = true; };
+  const drawerRoot = () => ids.get('blvDrawer');
+  return { mode, context, host, click, drawer, requests, html, rotate, deferred, drawerRoot };
 }
 // tip/opener kimlikleri çizim sayısına bağlıdır; görünüş sırasıyla yeniden numaralanır.
 function canonicalHtml(text) {
@@ -176,4 +182,35 @@ test('drawerModelIdentity okuduğu satır anahtarları okuma modelinin taşıdı
   assert.ok(keys.length > 20);
   for (const key of keys) assert.ok(DRAWER_ROW_KEYS.includes(key), 'taşınmayan çekmece anahtarı: ' + key);
   assert.match(body, /identityFromRow\?\.\(row,'backlog'\)/, 'kanonik kimlik backlog bağlamasıyla okunur (IDENTITY_FIELDS)');
+});
+
+test('kapatılan çekmece, gecikmiş drill-down yanıtıyla yeniden açılmaz', { timeout: 120000 }, async () => {
+  const data = fixtureData(200);
+  const panel = loadPanel('backend', data, { priority: false, deferDrill: true });
+  panel.context.BLBacklogOverview.onBacklogRendered({ rowsInputRevision: 'r1' });
+  await settle(panel, () => /bpaHero/.test(panel.host.innerHTML));
+  panel.click({ blvOpen: openIds(panel.host.innerHTML)[0] });
+  await new Promise(resolve => setTimeout(resolve, 20));
+  assert.match(panel.drawer(), /bpaLoading/);
+  // Kapat düğmesi (data-blv-close) → closeDrawer.
+  const root = panel.drawerRoot();
+  for (const fn of root.listeners.click || []) fn({ target: { closest: sel => (sel === '[data-blv-close]' ? {} : null) } });
+  assert.equal(root.hidden, true);
+  panel.deferred.splice(0).forEach(resolve => resolve());
+  await new Promise(resolve => setTimeout(resolve, 50));
+  assert.equal(root.hidden, true, 'çekmece kapalı kalır');
+  assert.match(panel.drawer(), /bpaLoading/, 'iptal edilen yanıt içeriği yazmaz');
+});
+
+test('hesap önbelleği yenilenince öncelik drill-down\'ı anahtarları yeniden kurar (boş çekmece yok)', { timeout: 120000 }, async () => {
+  const data = fixtureData(500);
+  const panels = { old: loadPanel('old', data, { priority: true }), backend: loadPanel('backend', data, { priority: true }) };
+  for (const panel of Object.values(panels)) { panel.context.BLBacklogOverview.onBacklogRendered({ rowsInputRevision: 'r1' }); await settle(panel, () => /blvPriorityTile[^>]*data-priority-code="(?!__rest)[^"]+"/.test(panel.host.innerHTML)); }
+  panels.backend.rotate();
+  const tileIndex = html => openIds(html).indexOf((html.match(/class="bpaTile blvTile blvPriorityTile"[^>]*data-blv-open="(o\d+)"/) || [])[1]);
+  const index = tileIndex(panels.old.host.innerHTML);
+  assert.ok(index >= 0, 'öncelik kutucuğu var');
+  for (const panel of Object.values(panels)) { panel.click({ blvOpen: openIds(panel.host.innerHTML)[index] }); await settle(panel, () => /bpaDrawerStats|bpaError/.test(panel.drawer())); }
+  assert.match(panels.old.drawer(), /<tbody><tr>/, 'eski yolda kutucuk satırları var');
+  assert.equal(panels.backend.drawer(), panels.old.drawer());
 });

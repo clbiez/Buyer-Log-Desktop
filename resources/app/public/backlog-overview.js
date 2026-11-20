@@ -938,7 +938,8 @@ function drawerEl(){
   }
   return el;
 }
-function closeDrawer(){const el=$('blvDrawer');if(el&&!el.hidden){el.hidden=true;el.classList.remove('is-open');}}
+// Kapanan çekmecenin bekleyen drill-down isteği iptal edilir: yanıtı çekmeceyi yeniden açamaz.
+function closeDrawer(){drawerRequest?.abort();drawerRequest=null;const el=$('blvDrawer');if(el&&!el.hidden){el.hidden=true;el.classList.remove('is-open');}}
 /* Çekmece içeriği: { summary, count, rows (ilk ROW_LIMIT, sıralı), identities:[[sıra,kayıt]] }.
    Dış liste ve geri dönüş yolu yerelde, arka uç modelinde drill-down tıklanınca yüklenir. */
 function localDrawerPayload(list){
@@ -957,7 +958,14 @@ function openDrawer(spec){
   const params=remote&&remote.sig?JSON.parse(remote.sig):overviewQueryParams();if(!params)return;
   const request=new AbortController();drawerRequest=request;
   showDrawerState(spec,`<div class="bpaLoading"><span class="bpaSpinner"></span>${esc(L('Satırlar yükleniyor…','Loading rows…'))}</div>`);
-  void postModel({version:1,query:params,view:viewState(),priority:priorityRequest(),drill:spec.spec},request.signal).then(data=>{
+  const drill=()=>postModel({version:1,query:params,view:viewState(),priority:priorityRequest(),drill:spec.spec},request.signal);
+  // Hesap önbelleği yenilendiyse (yeni veri kümesi) öncelik tablosu yeniden kurulur ve drill-down tekrarlanır.
+  void drill().then(async data=>{
+    if(!data.needKeys||!Array.isArray(data.keys))return data;
+    priorityTable=await buildPriorityTable(data.keys,data.dataset,request.signal);
+    if(remote)remote={...remote,dataset:data.dataset};
+    return drill();
+  }).then(data=>{
     if(drawerRequest!==request)return;
     showDrawer(spec,{summary:data.summary,count:data.count,rows:data.rows||[],identities:data.identities||[]});
   }).catch(err=>{

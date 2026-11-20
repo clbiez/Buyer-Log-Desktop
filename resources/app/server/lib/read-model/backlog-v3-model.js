@@ -164,7 +164,10 @@ function execute(payload){
   else{
   const priority=applyPriority(dataset,request.priority,key);
   const opts=viewOptions(request.view,request.priority,priority.ready);
-  if(request.drill&&typeof request.drill==='object')body={kind:'drill',dataset:key,...drillPayload(V3.selectItems(dataset.items,request.drill,opts))};
+  // Öncelik tablosu bu veri kümesine ait değilse (hesap önbelleği yenilendi) etiketli seçim boş kalırdı:
+  // anahtarlar döner, istemci tabloyu yeniden kurup drill-down'ı tekrarlar.
+  if(request.drill&&typeof request.drill==='object')body=priority.needKeys?{kind:'drill',dataset:key,needKeys:true,keys:dataset.keys}
+    :{kind:'drill',dataset:key,...drillPayload(V3.selectItems(dataset.items,request.drill,opts))};
   else body={kind:'model',dataset:key,priority:{ready:priority.ready,needKeys:priority.needKeys},model:V3.panelModel(dataset.items,opts),
     ...(priority.needKeys?{keys:dataset.keys}:{}),sourceRevision:dataset.sourceRevision};
   }
