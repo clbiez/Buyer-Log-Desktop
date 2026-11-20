@@ -578,14 +578,6 @@
     });
   }
 
-  /* CP hesaplanmış sütunlar sağlayıcısı (#1078, app-main.js BLCpComputedColumns).
-     Etkinken checklist hücreleri yerel arka uçta aynı kodla hesaplanır; bu modül
-     30k satırlık hücre geçişini çalıştırmaz, yalnız sütun tanımlarını kurar. */
-  function computedProvider() {
-    const provider = root.BLCpComputedColumns;
-    return provider && typeof provider.active === 'function' && provider.active() ? provider : null;
-  }
-
   function currentRows() {
     try {
       if (root.BLFormulaRows && typeof root.BLFormulaRows.cp === 'function') {
@@ -681,7 +673,10 @@
   }
   function refreshColumnsNow(options) {
     let opts = options || {};
-    const provider = !opts.decision ? computedProvider() : null;
+    /* CP hesaplanmış sütunlar sağlayıcısı (#1078, app-main.js BLCpComputedColumns).
+       Etkinken checklist hücreleri yerel arka uçta aynı kodla hesaplanır; bu modül
+       satır geçişini çalıştırmaz, yalnız sütun tanımlarını kurar. */
+    const provider = !opts.decision ? (root.BLCpComputedColumns && typeof root.BLCpComputedColumns.active === 'function' && root.BLCpComputedColumns.active() ? root.BLCpComputedColumns : null) : null;
     if (provider) {
       // Yenileme sağlayıcıya gider; sonuç gelince sağlayıcı CP'yi çizer (eski değerle ara çizim yok).
       const refreshing = !opts.columnsOnly && typeof provider.refresh === 'function';
@@ -829,7 +824,7 @@
     const assistant = root.BLCpAssistant, s = assistantState();
     if (!assistant || !s) return;
     // Sağlayıcı etkinken CP kararları arka uçtan gelir; Genel Bakış kendi yolunu çizer.
-    const provider = computedProvider();
+    const provider = (root.BLCpComputedColumns && typeof root.BLCpComputedColumns.active === 'function' && root.BLCpComputedColumns.active() ? root.BLCpComputedColumns : null);
     if (provider) { if (typeof provider.refresh === 'function') void Promise.resolve(provider.refresh()).catch(function () {}); return; }
     try {
       const rows = currentRows();
@@ -2926,7 +2921,7 @@
     if (state.renderWrapped || typeof root[renderKey] !== 'function') return;
     const original = root[renderKey];
     root[renderKey] = function () {
-      const provider = computedProvider();
+      const provider = (root.BLCpComputedColumns && typeof root.BLCpComputedColumns.active === 'function' && root.BLCpComputedColumns.active() ? root.BLCpComputedColumns : null);
       if (provider) {
         if (typeof provider.covers === 'function' && provider.covers(currentRows())) { try { refreshColumns({ render: false, columnsOnly: true }); } catch (_) {} }
         return original.apply(this, arguments);

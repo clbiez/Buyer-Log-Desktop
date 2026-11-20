@@ -167,12 +167,12 @@ test('answers still in the checklist sync queue travel as an overlay; only non-a
 
 test('checklist-supplier-sync: provider skips the row pass and the Overview assistant recompute; legacy code stays when inactive',()=>{
   // Satır geçişi yalnız karar nesnesiyle ya da sağlayıcı yokken.
-  assert.match(SYNC_SOURCE,/const provider = !opts\.decision \? computedProvider\(\) : null;\s*if \(provider\) \{[\s\S]{0,200}const refreshing = !opts\.columnsOnly && typeof provider\.refresh === 'function';\s*if \(refreshing\) void Promise\.resolve\(provider\.refresh\(\)\)[\s\S]{0,120}refreshing \? \{ render: false \} : \{\}\);/);
+  assert.match(SYNC_SOURCE,/const provider = !opts\.decision \? \(root\.BLCpComputedColumns && typeof root\.BLCpComputedColumns\.active === 'function' && root\.BLCpComputedColumns\.active\(\) \? root\.BLCpComputedColumns : null\) : null;\s*if \(provider\) \{[\s\S]{0,200}const refreshing = !opts\.columnsOnly && typeof provider\.refresh === 'function';\s*if \(refreshing\) void Promise\.resolve\(provider\.refresh\(\)\)[\s\S]{0,120}refreshing \? \{ render: false \} : \{\}\);/);
   assert.match(SYNC_SOURCE,/if \(opts\.columnsOnly\) \{[\s\S]{0,600}state\.appliedColumns = null; state\.columnDelta = null;[\s\S]{0,120}return true;\s*\}/);
   // Sütun tanımı kodu columnsOnly dönüşünden önce kurulur.
   assert.ok(SYNC_SOURCE.indexOf("cols.splice.apply(cols")<SYNC_SOURCE.indexOf('if (opts.columnsOnly) {'));
-  assert.match(SYNC_SOURCE,/function refreshAssistantView\(\) \{[\s\S]{0,260}const provider = computedProvider\(\);\s*if \(provider\) \{ if \(typeof provider\.refresh === 'function'\) void Promise\.resolve\(provider\.refresh\(\)\)\.catch\(function \(\) \{\}\); return; \}/);
-  assert.match(SYNC_SOURCE,/root\[renderKey\] = function \(\) \{\s*const provider = computedProvider\(\);\s*if \(provider\) \{[\s\S]{0,200}columnsOnly: true[\s\S]{0,80}return original\.apply\(this, arguments\);/);
+  assert.match(SYNC_SOURCE,/function refreshAssistantView\(\) \{[\s\S]{0,260}const provider = \(root\.BLCpComputedColumns && typeof root\.BLCpComputedColumns\.active === 'function' && root\.BLCpComputedColumns\.active\(\) \? root\.BLCpComputedColumns : null\);\s*if \(provider\) \{ if \(typeof provider\.refresh === 'function'\) void Promise\.resolve\(provider\.refresh\(\)\)\.catch\(function \(\) \{\}\); return; \}/);
+  assert.match(SYNC_SOURCE,/root\[renderKey\] = function \(\) \{\s*const provider = \(root\.BLCpComputedColumns && typeof root\.BLCpComputedColumns\.active === 'function' && root\.BLCpComputedColumns\.active\(\) \? root\.BLCpComputedColumns : null\);\s*if \(provider\) \{[\s\S]{0,200}columnsOnly: true[\s\S]{0,80}return original\.apply\(this, arguments\);/);
   // Sunucu barındırıcısı refreshColumns'u karar nesnesiyle çağırır: sağlayıcı devreye girmez.
   assert.match(SOURCE,/window\.BLCpComputedColumns=\{\s*active:\(\)=>cpComputedEligible\(\),/);
 });
