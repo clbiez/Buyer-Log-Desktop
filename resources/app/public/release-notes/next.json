@@ -1023,6 +1023,17 @@
       }
     },
     {
+      "id": "orders-query-lane",
+      "type": "improvement",
+      "module": {"tr": "Siparişler", "en": "Orders"},
+      "title": {"tr": "Siparişler, CP hesabı sürerken de hemen açılır", "en": "Orders opens right away even while CP is being calculated"},
+      "body": {"tr": "Siparişler'in filtre, sıralama ve sayaç sorguları bilgisayarınızdaki yerel Buyer Log arka ucunda ayrı bir işçide çalışır. CP öncelik ve checklist hesabı ya da Genel Bakış hazırlığı sürerken Siparişler satırları bu hesabın bitmesini beklemez. Gösterilen satırlar, toplamlar ve kayıt davranışı değişmez.", "en": "Orders filter, sort and counter queries run in a separate worker in your local Buyer Log backend. While CP priority and checklist calculation or Overview preparation is running, Orders rows no longer wait for it to finish. The rows, totals and save behaviour stay the same."},
+      "visual": {
+        "kind": "none",
+        "reason": {"tr": "Ekranda değişen bir öğe yok; yalnız Siparişler verisinin arka uçta hazırlanma sırası ve süresi değişir.", "en": "Nothing on screen changes; only the order and time in which the backend prepares Orders data change."}
+      }
+    },
+    {
       "id": "test-report-import-server-wait",
       "type": "fix",
       "module": {"tr": "Test Raporu Aktarımı", "en": "Test Report Import"},

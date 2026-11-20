@@ -31,10 +31,20 @@ module.exports = function registerReadModelRoutes(app, deps) {
   // Kayıt global JSON ayrıştırıcısından önce yapılır; guard o noktada henüz kurulmamıştır.
   const getComputeReadGuard = deps.getComputeReadGuard;
   let service=deps.readModelService||null;
+  // Kısa sorgu şeridi (#1071 WS7): Siparişler veri kümesi sorguları ana okuma modeli
+  // işçisindeki uzun hesabın (CP hesaplanmış sütunlar, Genel Bakış…) arkasında beklemez.
+  // Şerit işleri ön ısıtmayı kesmez: ana işçinin sıcak önbelleği korunur.
+  const pools=()=>require('../lib/read-model/read-model-pool');
+  const laneOn=()=>typeof deps.queryLaneEnabled==='function'?deps.queryLaneEnabled()!==false:pools().queryLaneEnabled();
+  const route=(task,options)=>{
+    if(laneOn()&&pools().usesQueryLane(task,options&&options.module))
+      return deps.runQueryLaneCompute||((t,p,o)=>pools().getReadModelQueryLanePool().run(t,p,o));
+    return deps.runReadModelCompute||((t,p,o)=>pools().getReadModelPool().run(t,p,o));
+  };
   const getService=()=>service||(service=require('../lib/read-model/read-model-service').createReadModelService({
     guard:{capture:(req,area)=>getComputeReadGuard().capture(req,area)},
     loadProjection:(req,module)=>ensureComputedProjection(req,module),
-    runCompute:(task,payload,options)=>(deps.runReadModelCompute||require('../lib/read-model/read-model-pool').getReadModelPool().run)(task,payload,options),
+    runCompute:(task,payload,options)=>route(task,options)(task,payload,options),
     calendar:()=>require('../lib/merch-calendar-store').publicProjection(),
   }));
   const json=express.json({limit:'2mb'});
