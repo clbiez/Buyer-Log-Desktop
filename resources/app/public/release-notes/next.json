@@ -12,6 +12,29 @@
   },
   "changes": [
     {
+      "id": "backlog-overview-delivery-read-model",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog · Genel Bakış ve Teslimat Riski",
+        "en": "Backlog · Overview and Delivery Risk"
+      },
+      "title": {
+        "tr": "Backlog Genel Bakış ve Teslimat Riski arka planda hesaplanır",
+        "en": "Backlog Overview and Delivery Risk are calculated in the background"
+      },
+      "body": {
+        "tr": "İki panelin hesabı bilgisayarınızdaki yerel Buyer Log arka ucunda yapılır; arayüze yalnız sonuç gelir. Backlog açılırken tüm satır listesi indirilmez, ekran kilitlenmez ve paneller daha erken dolar. Ayrıntı satırları, bir kutucuğa ya da kırılıma tıkladığınızda yüklenir.",
+        "en": "Both panels are calculated in the local Buyer Log backend on your computer and only the result reaches the interface. Opening Backlog no longer downloads the full row list, the screen does not freeze and the panels fill sooner. Detail rows load when you click a tile or a breakdown."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; paneller aynı sayıları ve aynı ayrıntı satırlarını daha az arayüz yüküyle gösterir.",
+          "en": "There is no change on screen; the panels show the same figures and detail rows with less interface work."
+        }
+      }
+    },
+    {
       "id": "global-flow-backlog-read-model",
       "type": "improvement",
       "module": {"tr": "Genel Bakış · Küresel Akış Haritası", "en": "Overview · Global Flow Map"},

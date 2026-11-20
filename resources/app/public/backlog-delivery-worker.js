@@ -3,7 +3,7 @@
 importScripts('chronological-values.js', 'business-rules.js', 'order-decision-engine.js', 'backlog-delivery-engine.js');
 
 const dataset = [], ordinals = new Map();
-const dateKey = value => typeof value + ':' + String(value);
+const dateKey = value => globalThis.BLBacklogDeliveryEngine.dateKey(value);
 onmessage = ({ data }) => {
   if (data.kind === 'rows') {
     for (const row of data.rows) dataset.push(row);
@@ -14,16 +14,8 @@ onmessage = ({ data }) => {
   try {
     const Engine = globalThis.BLBacklogDeliveryEngine;
     const ordinal = value => ordinals.get(dateKey(value)) ?? null;
-    const field = data.settings.targetType === 'inStore' ? Engine.FIELDS.inStore : Engine.FIELDS.retail;
-    const rows = [], rowIndices = [];
-    dataset.forEach((row, index) => {
-      if (data.bounds) {
-        const day = ordinal(row[field]);
-        if (day == null || (data.bounds.from != null && day < data.bounds.from) || (data.bounds.to != null && day > data.bounds.to)) return;
-      }
-      rows.push(row); rowIndices.push(index);
-    });
-    const model = Engine.analyze(rows, { settings: data.settings, today: data.today, dateOrdinal: ordinal });
+    // Dönem süzmesi + analiz motordadır; yerel arka uç okuma modeli de aynısını çağırır (#1079 WS6c).
+    const { model, rowIndices, periodRowCount } = Engine.analyzeDataset(dataset, { settings: data.settings, bounds: data.bounds, today: data.today, dateOrdinal: ordinal });
     const computedAt = performance.timeOrigin + performance.now();
     const orderIndex = new Map(model.orders.map((order, index) => [order, index]));
     const topRiskIndices = model.topRiskOrders.map(order => orderIndex.get(order));
@@ -35,7 +27,7 @@ onmessage = ({ data }) => {
     }
     model.orders = []; model.topRiskOrders = [];
     postMessage({ kind: 'result', generation: data.generation, model, topRiskIndices,
-      periodRowCount: rows.length, totalRowCount: dataset.length,
+      periodRowCount, totalRowCount: dataset.length,
       timing: { receivedAt, computedAt, sentAt: performance.timeOrigin + performance.now() } });
   } catch (error) {
     postMessage({ generation: data.generation, error: error.message || String(error) });

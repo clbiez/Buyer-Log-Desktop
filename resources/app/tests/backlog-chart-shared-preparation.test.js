@@ -10,7 +10,7 @@ function setup(){
     fetchJSON:()=>new Promise(resolve=>grouped.push(resolve)),fetchBacklogSourceColumns:()=>Promise.resolve([]),backlogQueryString:()=>'',showBacklogLoadingState(){},
     backlogExportQueryParams:()=>({...query}),backlogExportSourceCatalog:()=>[],normalizeHeaders:headers=>headers,showToast(){},appLang:'tr',cache:{signature:'',headers:[],rows:[]},
     sourceRevision:'',catalogGeneration:0,filterCatalog:null,filterCatalogPromise:null,signature:'',filterOpen:false,filterFacets:new Map(),
-    $:()=>({classList:{add(){}}}),setTimeout:()=>0,clearTimeout(){},visible:()=>false,backlogPrefetch:null,
+    $:()=>({classList:{add(){}}}),setTimeout:()=>0,clearTimeout(){},visible:()=>false,backlogPrefetch:null,backendModelEnabled:()=>false,
     applyBacklogData:data=>{applied.push(data.rowsInputRevision);c.onBacklogRendered(data);}};
   vm.createContext(c);
   const providerStart=main.indexOf('window.BLBacklogChartContext={'),provider=main.slice(providerStart,main.indexOf('\n};',providerStart)+4);

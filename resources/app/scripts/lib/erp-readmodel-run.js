@@ -214,15 +214,25 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
     const requests = new Map(), payloads = [];
     await cdp.send('Network.enable');
     await cdp.send('Network.setBlockedURLs', { urls: ['https://*'] });
-    cdp.on('Network.requestWillBeSent', ({ requestId, request }) => {
+    cdp.on('Network.requestWillBeSent', ({ requestId, request, timestamp }) => {
       const url = new URL(request.url);
-      if (url.origin === base && (P.isTrackedPayload(url.pathname) || (options.backlogSettle && url.pathname.startsWith('/api/backlog')))) requests.set(requestId, { path: url.pathname, query: url.search, phase, decodedBytes: 0 });
+      // --backlog-settle: Backlog yükleri ve V3 okuma modeli (#1079 WS6c) istekleri, süre ve sunucu zamanlamasıyla.
+      const backlogRead = options.backlogSettle && (url.pathname.startsWith('/api/backlog') || url.pathname.startsWith('/api/read-model/backlog/'));
+      if (url.origin === base && (P.isTrackedPayload(url.pathname) || backlogRead)) requests.set(requestId, { path: url.pathname, query: url.search, phase, decodedBytes: 0, ...(backlogRead ? { startedAt: timestamp } : {}) });
     });
-    cdp.on('Network.responseReceived', ({ requestId, response }) => { const r = requests.get(requestId); if (r) r.status = response.status; });
+    cdp.on('Network.responseReceived', ({ requestId, response, timestamp }) => {
+      const r = requests.get(requestId); if (!r) return;
+      r.status = response.status;
+      if (r.startedAt !== undefined) {
+        r.responseMs = P.round((timestamp - r.startedAt) * 1000);
+        const timing = Object.entries(response.headers || {}).find(([key]) => key.toLowerCase() === 'x-read-model-timing');
+        if (timing) try { r.serverTiming = JSON.parse(timing[1]); } catch (_) { /* biçimsiz başlık */ }
+      }
+    });
     cdp.on('Network.dataReceived', ({ requestId, dataLength }) => { const r = requests.get(requestId); if (r) r.decodedBytes += dataLength; });
-    cdp.on('Network.loadingFinished', ({ requestId, encodedDataLength }) => {
+    cdp.on('Network.loadingFinished', ({ requestId, encodedDataLength, timestamp }) => {
       const r = requests.get(requestId);
-      if (r) { r.encodedBytes = encodedDataLength; payloads.push(r); requests.delete(requestId); }
+      if (r) { r.encodedBytes = encodedDataLength; if (r.startedAt !== undefined) { r.totalMs = P.round((timestamp - r.startedAt) * 1000); delete r.startedAt; } payloads.push(r); requests.delete(requestId); }
     });
     await cdp.send('Profiler.enable');
     await cdp.send('Profiler.setSamplingInterval', { interval: 500 });
