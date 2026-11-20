@@ -587,10 +587,82 @@
     return groups;
   }
 
+  /* =================================================================
+     VERİ KÜMESİ (#1079 WS6c)
+     Tarayıcı işçisi (backlog-delivery-worker.js) ve yerel arka ucun okuma
+     modeli işçisi aynı satır izdüşümünü, tarih anahtarlarını, dönem süzmesini
+     ve drill-down seçimini buradan kullanır; mantık iki kez yazılmaz.
+     Tarih sırası çağıranın kanonik dateOrdinal'ından gelir: tarayıcı farklı
+     tarih değerleri için app-main.js dateOrdinal'ını bir kez çalıştırır ve
+     (tür:değer) anahtarıyla taşır.
+     ================================================================= */
+  // İşçiye yalnız motorun alanları gider; ilgisiz büyük Excel metası kalır.
+  function projectRow(row) {
+    const projected = {};
+    Object.values(F).forEach(field => { projected[field] = row[field]; });
+    const meta = row._backlogExcel || {};
+    projected._backlogExcel = { mag: meta.mag, mmyg: meta.mmyg, handoverDate: meta.handoverDate,
+      actualAntrepoDate: meta.actualAntrepoDate, transitDays: meta.transitDays, transitRule: !!meta.transitRule,
+      transitOverdue: meta.transitOverdue, signals: meta.signals };
+    return projected;
+  }
+  const DATE_FIELDS = Object.freeze([F.retail, F.inStore, F.plannedLoad, F.revisedLoad, F.antrepo]);
+  const dateKey = value => typeof value + ':' + String(value);
+  // Satırın motorun tarih olarak okuduğu bütün değerleri (dateOrdinal girdileri).
+  function rowDateValues(row) {
+    const meta = (row && row._backlogExcel) || {};
+    return [...DATE_FIELDS.map(field => row[field]), meta.handoverDate, meta.actualAntrepoDate];
+  }
+  // dateKey → değer (tarayıcı sözlüğü bu değerlerle dateOrdinal'ı çalıştırır).
+  function valueOfDateKey(key) {
+    const text = String(key), at = text.indexOf(':'), type = text.slice(0, at), raw = text.slice(at + 1);
+    if (type === 'string') return raw;
+    if (type === 'number') return Number(raw);
+    if (type === 'boolean') return raw === 'true';
+    if (type === 'undefined') return undefined;
+    return null;
+  }
+  /* Dönem süzmesi + analiz. bounds: { from, to } hedef tarih sırası (dahil). */
+  function analyzeDataset(dataset, options) {
+    const opts = options || {}, ordinal = typeof opts.dateOrdinal === 'function' ? opts.dateOrdinal : defaultOrdinal;
+    const field = opts.settings && opts.settings.targetType === 'inStore' ? F.inStore : F.retail;
+    const rows = [], rowIndices = [];
+    (dataset || []).forEach((row, index) => {
+      if (opts.bounds) {
+        const day = ordinal(row[field]);
+        if (day == null || (opts.bounds.from != null && day < opts.bounds.from) || (opts.bounds.to != null && day > opts.bounds.to)) return;
+      }
+      rows.push(row); rowIndices.push(index);
+    });
+    const model = analyze(rows, { settings: opts.settings, today: opts.today, dateOrdinal: ordinal });
+    return { model, rowIndices, periodRowCount: rows.length, totalRowCount: (dataset || []).length };
+  }
+  /* §63 filtre eşitliği: analiz kümesinin tamamının adedi ve sipariş·model·renk sayısı. */
+  function parityTotals(rows) {
+    const list = rows || [];
+    const qty = list.reduce((total, row) => total + (Number(row[F.qty]) || 0), 0);
+    const orders = new Set(list.map(row => `${row[F.orderCode]}|${dimKey(row[F.model])}|${dimKey(row[F.colourCode])}`)).size;
+    return { qty, orders };
+  }
+  /* Drill-down tanımı → sipariş analizleri (görünümdeki tıklamaların aynısı).
+     spec.k: outcome | cause | attention | stageOutcome | dimOutcome */
+  function selectOrders(model, spec) {
+    const s = spec && typeof spec === 'object' ? spec : {}, orders = model && model.orders ? model.orders : [];
+    switch (s.k) {
+      case 'outcome': return orders.filter(order => order.deliveryOutcome === s.key);
+      case 'cause': return orders.filter(order => order.riskReasons.includes(s.key));
+      case 'attention': return needsAttention(model, { limit: 500 })[s.key] || [];
+      case 'stageOutcome': return orders.filter(order => order.stage === s.stage && order.deliveryOutcome === s.outcome);
+      case 'dimOutcome': return DIMENSIONS.includes(s.dim) ? orders.filter(order => order.dims[s.dim] === s.value && order.deliveryOutcome === s.outcome) : [];
+      default: return [];
+    }
+  }
+
   return {
     FIELDS: F, STAGES, STAGE_LABELS, OUTCOMES, OUTCOME_LABELS, RISK_CAUSES, RISK_CAUSE_LABELS,
     LOADING_OUTCOMES, LOADING_LABELS, DIMENSIONS, DIMENSION_LABELS, DEFAULT_SETTINGS,
     PRE_LOAD_STAGES, ARRIVED_STAGES,
     stageOf, analyzeOrder, analyze, needsAttention, defaultOrdinal, dimKey,
+    DATE_FIELDS, projectRow, dateKey, rowDateValues, valueOfDateKey, analyzeDataset, parityTotals, selectOrders,
   };
 });

@@ -20,9 +20,10 @@
  * birebir uygular; eşitlik tests/read-model-backlog-v3-parity.test.js ile sabitlenir.
  */
 const V3=require('../../../public/backlog-v3-report.js');
+const Delivery=require('../../../public/backlog-delivery-engine.js');
 const canonical=require('../canonical-fields');
 
-const FORMAT_VERSION=1;
+const FORMAT_VERSION=2;
 // Çekmece kimliği (public/backlog-overview.js drawerModelIdentity + BLDetailImages
 // identityFromRow) ve görsel eşleşmesinin okuduğu kanonik alanlar.
 const IDENTITY_FIELDS=Object.freeze(['plmId','modelName','colourCode','specialCode','season','colour','orderCode']);
@@ -117,20 +118,36 @@ function filterRowKeys(analysisFilters){
   return (Array.isArray(list)?list:[]).map(filter=>filter&&filter.rowKey).filter(key=>typeof key==='string'&&key);
 }
 
-/* Kayıtlar → sütunlu yük. Metin sütunları sözlüklüdür (lineId sözlüğü aynı zamanda
-   öncelik anahtarı listesidir); satır projeksiyonu şema + değer dizisi olarak taşınır. */
-function encodeItems(items,project){
-  const fields=items.length?Object.keys(items[0]).filter(key=>key!=='row'):[];
+/* Nesne dizisi → sütunlar. Hep metin olan sütun sözlüklüdür; undefined değerler (yapılandırılmış
+   klonda korunur, JSON'da korunmaz) ayrı indeks listesiyle taşınır. */
+function encodeColumns(objects,fields,valueOf=(object,field)=>object[field]){
   const cols={};
   for(const field of fields){
-    let allText=true;
-    for(const item of items){const v=item[field];if(typeof v!=='string'){allText=false;break;}}
+    let allText=true;const undef=[];
+    for(let i=0;i<objects.length;i++){const v=valueOf(objects[i],field);if(v===undefined)undef.push(i);else if(typeof v!=='string')allText=false;}
+    const col={};
     if(allText){
-      const dict=[],index=new Map(),values=new Array(items.length);
-      for(let i=0;i<items.length;i++){const v=items[i][field];let at=index.get(v);if(at===undefined){at=dict.length;dict.push(v);index.set(v,at);}values[i]=at;}
-      cols[field]={d:dict,v:values};
-    }else cols[field]={v:items.map(item=>item[field]===undefined?null:item[field])};
+      const dict=[],index=new Map(),values=new Array(objects.length);
+      for(let i=0;i<objects.length;i++){const v=valueOf(objects[i],field);if(v===undefined){values[i]=-1;continue;}let at=index.get(v);if(at===undefined){at=dict.length;dict.push(v);index.set(v,at);}values[i]=at;}
+      col.d=dict;col.v=values;
+    }else col.v=objects.map(object=>{const v=valueOf(object,field);return v===undefined?null:v;});
+    if(undef.length)col.u=undef;
+    cols[field]=col;
   }
+  return cols;
+}
+function decodeColumn(col,count){
+  const out=new Array(count);
+  if(col.d){const dict=col.d,v=col.v;for(let i=0;i<count;i++)out[i]=v[i]<0?undefined:dict[v[i]];}
+  else{const v=col.v;for(let i=0;i<count;i++)out[i]=v[i];}
+  if(col.u)for(const i of col.u)out[i]=undefined;
+  return out;
+}
+/* Kayıtlar → sütunlu yük. lineId sözlüğü aynı zamanda öncelik anahtarı listesidir;
+   satır projeksiyonu şema + değer dizisi olarak taşınır. */
+function encodeItems(items,project){
+  const fields=items.length?Object.keys(items[0]).filter(key=>key!=='row'):[];
+  const cols=encodeColumns(items,fields);
   const schemas=[],schemaIndex=new Map(),rowSchema=new Array(items.length),rowValues=new Array(items.length);
   for(let i=0;i<items.length;i++){
     const row=project(items[i].row);
@@ -142,6 +159,45 @@ function encodeItems(items,project){
   return {fields,cols,rows:{schemas,schema:rowSchema,values:rowValues}};
 }
 
+/* Teslimat Riski paneli: motorun satır izdüşümü (Engine.projectRow; tarayıcı işçisine
+   yüklenenle aynı), alanlar + meta sütunları. */
+const DELIVERY_FIELDS=Object.freeze(Object.values(Delivery.FIELDS));
+let deliveryMetaKeys=null;
+function metaKeys(){return deliveryMetaKeys||(deliveryMetaKeys=Object.keys(Delivery.projectRow({})._backlogExcel));}
+function encodeDelivery(rows){
+  const projected=rows.map(row=>Delivery.projectRow(row&&typeof row==='object'?row:{}));
+  return encodeProjected(projected);
+}
+function encodeProjected(projected){
+  return {fields:DELIVERY_FIELDS,meta:metaKeys(),cols:encodeColumns(projected,DELIVERY_FIELDS),metaCols:encodeColumns(projected,metaKeys(),(row,key)=>row._backlogExcel[key])};
+}
+function decodeDelivery(value,count){
+  if(!value||!Array.isArray(value.fields))return [];
+  const cols=value.fields.map(field=>[field,decodeColumn(value.cols[field],count)]),meta=value.meta.map(key=>[key,decodeColumn(value.metaCols[key],count)]);
+  const rows=new Array(count);
+  for(let i=0;i<count;i++){
+    const row={};for(const [field,values] of cols)row[field]=values[i];
+    const m={};for(const [key,values] of meta)m[key]=values[i];
+    row._backlogExcel=m;rows[i]=row;
+  }
+  return rows;
+}
+
+/* Teslimat Riski kayıtları (compute-tasks 'delivery-items'): motorun okuduğu alanlar ve meta
+   yalnız kendileri JSON eşdeğerine çevrilir; projectRow yalnız bu anahtarları okuduğundan
+   sonuç, tam satırın JSON klonunun izdüşümüyle aynıdır (parite testi). */
+function buildDelivery(rows,data,dateFn){
+  const list=Array.isArray(rows)?rows:[];
+  const projected=new Array(list.length);
+  for(let i=0;i<list.length;i++){
+    const row=list[i]&&typeof list[i]==='object'?list[i]:{},partial={};
+    for(const field of DELIVERY_FIELDS){const v=jsonValue(row[field],dateFn,field);if(v!==undefined)partial[field]=v;}
+    const meta=jsonValue(row._backlogExcel,dateFn,'_backlogExcel');if(meta!==undefined)partial._backlogExcel=meta;
+    projected[i]=Delivery.projectRow(partial);
+  }
+  return {version:FORMAT_VERSION,kind:'delivery',count:list.length,sourceRevision:data?.sourceRevision||null,delivery:encodeProjected(projected)};
+}
+
 /* rows: buildBacklogTemplateRows çıktısı; data: compute parametreleri (options.analysisFilters, today, calendar). */
 function build(rows,data,dateFn){
   const list=Array.isArray(rows)?rows:[];
@@ -150,7 +206,7 @@ function build(rows,data,dateFn){
   const today=typeof data?.today==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(data.today)?data.today:undefined;
   const items=V3.normalizeRows(json,today?{today}:{});
   const encoded=encodeItems(items,createRowProjector(filterRowKeys(data?.options?.analysisFilters)));
-  return {version:FORMAT_VERSION,count:items.length,today:today||null,calendar:data?.calendar||null,sourceRevision:data?.sourceRevision||null,rowsRevision:data?.rowsRevision||null,...encoded};
+  return {version:FORMAT_VERSION,kind:'v3',count:items.length,today:today||null,calendar:data?.calendar||null,sourceRevision:data?.sourceRevision||null,rowsRevision:data?.rowsRevision||null,...encoded};
 }
 
 /* Okuma modeli işçisinde: sütunlu yük → kayıt dizisi (normalizeRows çıktısının aynısı). */
@@ -158,6 +214,7 @@ function decodeItems(payload){
   const value=payload&&typeof payload==='object'?payload:{};
   if(value.version!==FORMAT_VERSION)throw Object.assign(new Error('Backlog V3 kayıt biçimi desteklenmiyor. / Unsupported Backlog V3 item format.'),{code:'COMPUTE_WORKER_FAILED',statusCode:500});
   const count=Number(value.count)||0,fields=Array.isArray(value.fields)?value.fields:[],items=new Array(count);
+  if(value.kind==='delivery')return {delivery:decodeDelivery(value.delivery,count),items:null};
   const schemas=value.rows?.schemas||[],schemaOf=value.rows?.schema||[],rowValues=value.rows?.values||[];
   for(let i=0;i<count;i++){
     const at=schemaOf[i];let row;
@@ -165,13 +222,9 @@ function decodeItems(payload){
     else row=rowValues[i];
     items[i]={row};
   }
-  for(const field of fields){
-    const col=value.cols[field];
-    if(col.d){const dict=col.d,v=col.v;for(let i=0;i<count;i++)items[i][field]=dict[v[i]];}
-    else{const v=col.v;for(let i=0;i<count;i++)items[i][field]=v[i];}
-  }
+  for(const field of fields){const values=decodeColumn(value.cols[field],count);for(let i=0;i<count;i++)items[i][field]=values[i];}
   const lineCol=value.cols&&value.cols.lineId;
   return {items,keys:lineCol&&lineCol.d?lineCol.d:[],keyIndex:lineCol&&lineCol.d?lineCol.v:null};
 }
 
-module.exports={build,decodeItems,jsonValue,createRowCloner,createRowProjector,filterRowKeys,encodeItems,IDENTITY_FIELDS,DRAWER_ROW_KEYS,FORMAT_VERSION};
+module.exports={build,buildDelivery,decodeItems,jsonValue,createRowCloner,createRowProjector,filterRowKeys,encodeItems,encodeColumns,decodeColumn,encodeDelivery,decodeDelivery,IDENTITY_FIELDS,DRAWER_ROW_KEYS,FORMAT_VERSION};

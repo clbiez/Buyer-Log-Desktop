@@ -320,6 +320,11 @@ async function buildPriorityTable(keys,dataset,signal){
   }
   return {dataset,stamp,table,index:index.join(','),codes:[...codes]};
 }
+/* Teslimat Riski paneli aynı Backlog satırlarını kullanır: hesap işçisi satırları bir kez
+   üretir (satır belleği). Genel Bakış isteği önce kuyruğa girer, panel ilk yanıtı bekler. */
+let modelGate=null;
+function openModelGate(){const gate={};gate.promise=new Promise(resolve=>{gate.resolve=resolve;});modelGate=gate;return gate;}
+function closeModelGate(gate){gate.resolve();if(modelGate===gate)modelGate=null;}
 async function refreshRemote(force){
   const host=$('backlogOverviewBody');if(!host||!state.open)return;
   const params=overviewQueryParams();if(!params){return;}
@@ -329,11 +334,13 @@ async function refreshRemote(force){
   const request=new AbortController();overviewRequest=request;
   // Görünüm değişiminde (gruplama, zaman alanı, dil …) mevcut model yanıt gelene kadar görünür kalır.
   if(!(remote&&remote.sig===sig)||force){loading=true;error='';render();}
+  const gate=openModelGate();
   try{
-    if(window.BLPerf?.ensureFeature)await window.BLPerf.ensureFeature('backlogAnalysis').catch(()=>null);
-    assertRequest(request.signal);if(force)window.BLBacklogRows.invalidate();
+    // Model sunucuda hesaplanır: analiz özelliklerinin yüklenmesi beklenmez (paralel başlar).
+    if(window.BLPerf?.ensureFeature)void window.BLPerf.ensureFeature('backlogAnalysis').catch(()=>null);
+    if(force)window.BLBacklogRows.invalidate();
     const body=()=>({version:1,query:params,view:viewState(),priority:priorityRequest()});
-    let data=await postModel(body(),request.signal);
+    let data=await postModel(body(),request.signal).finally(()=>closeModelGate(gate));
     if(generation!==refreshGeneration)return;
     remote={sig,viewKey,model:data.model,dataset:data.dataset};model=data.model;signature=sig;
     if(data.priority&&data.priority.needKeys&&Array.isArray(data.keys)){
@@ -346,7 +353,7 @@ async function refreshRemote(force){
       remote={sig,viewKey,model:data.model,dataset:data.dataset};model=data.model;
     }
   }catch(err){if(generation!==refreshGeneration)return;error=String(err&&err.message||err);remote=null;model=null;}
-  finally{if(overviewRequest===request)overviewRequest=null;if(generation===refreshGeneration){loading=false;render();}}
+  finally{closeModelGate(gate);if(overviewRequest===request)overviewRequest=null;if(generation===refreshGeneration){loading=false;render();}}
 }
 // Görünüm seçimi değişti: yerel modelde yeniden çizim, arka uç modelinde yeni sonuç.
 function updateView(){if(backendModelEnabled())void refresh(false);else render();}
@@ -366,6 +373,8 @@ function onBacklogRendered(data){
     if(filterOpen){void ensureFilterCatalog().then(()=>ensureFilterValues(overviewFilters().find(f=>f.id===filterEditorId))).catch(()=>{});renderFilterPanel();}
   }
   clearTimeout(pendingTimer);
+  // Okuma modeli: istek hemen gider (sunucu hesabı Teslimat Riski panelinden önce kuyruğa girer).
+  if(backendModelEnabled()){if(visible())void refresh(false);return;}
   pendingTimer=setTimeout(()=>{if(visible())void refresh(false);},60);
 }
 
@@ -1084,6 +1093,8 @@ window.BLBacklogOverview={
   sourceColumnIds:filterSourceColumnIds,
   queryFilters:()=>overviewFilters().filter(filterHasCriteria).map(f=>({...f,values:[...(f.values||[])]})),
   onBacklogRendered,refresh:()=>refresh(true),openItems:openExternalItems,
+  // Okuma modeli: Genel Bakış isteği sürüyorsa ilk yanıtına kadar bekleyen söz (yoksa null).
+  modelGate:()=>modelGate?modelGate.promise:null,
   exportOptions:()=>({includePlanActual:state.exportPlanActual!==false,includeLegacy:state.exportLegacy!==false,groupBy:state.groupBy}),
   setExportOption:(key,value)=>{if(key==='includePlanActual')state.exportPlanActual=!!value;if(key==='includeLegacy')state.exportLegacy=!!value;saveState();},
 };

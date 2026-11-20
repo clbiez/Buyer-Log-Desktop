@@ -28,6 +28,7 @@
     rowsSignature: '',
     model: null,
     insights: [],
+    attention: null,
     dim: 'buyer',
     measure: 'qty',            // 'qty' | 'orders'
     insightLimit: 3,
@@ -170,23 +171,18 @@
     const upload = async () => {
       if (workerRows !== rows) {
         const ordinal = typeof dateOrdinal === 'function' ? dateOrdinal : Engine.defaultOrdinal;
-        const seenDates = new Set(), fields = Object.values(Engine.FIELDS);
-        const dateFields = [Engine.FIELDS.retail, Engine.FIELDS.inStore, Engine.FIELDS.plannedLoad, Engine.FIELDS.revisedLoad, Engine.FIELDS.antrepo];
+        const seenDates = new Set();
         for (let start = 0; start < rows.length; start += 500) {
           if (generation !== refreshGeneration || worker !== analysisWorker) return;
           const ordinals = [];
           const remember = value => {
-            const key = typeof value + ':' + String(value);
+            const key = Engine.dateKey(value);
             if (!seenDates.has(key)) { seenDates.add(key); ordinals.push([key, ordinal(value)]); }
           };
+          // İzdüşüm ve tarih anahtarları motordadır (okuma modeli de aynısını kullanır).
           const chunk = rows.slice(start, start + 500).map(row => {
-            const projected = {}; fields.forEach(field => { projected[field] = row[field]; });
-            const meta = row._backlogExcel || {};
-            projected._backlogExcel = { mag: meta.mag, mmyg: meta.mmyg, handoverDate: meta.handoverDate,
-              actualAntrepoDate: meta.actualAntrepoDate, transitDays: meta.transitDays, transitRule: !!meta.transitRule,
-              transitOverdue: meta.transitOverdue, signals: meta.signals };
-            dateFields.forEach(field => remember(row[field])); remember(meta.handoverDate); remember(meta.actualAntrepoDate);
-            return projected;
+            Engine.rowDateValues(row).forEach(remember);
+            return Engine.projectRow(row);
           });
           worker.postMessage({ kind: 'rows', rows: chunk, ordinals });
           await new Promise(resolve => setTimeout(resolve, 0));
@@ -229,23 +225,87 @@
        görmelidir; sapma varsa gizlenmez, kullanıcıya söylenir. Dönem filtresi
        açıkken karşılaştırma DAR küme üzerinden yapılamaz: bu durumda tüm
        satırların toplamı kullanılır. */
+    state.parity = parityWith(Engine.parityTotals(allRows));
+  }
+  function parityWith(totals) {
     const backlog = backlogSnapshot();
-    if (!backlog) { state.parity = null; return; }
-    const allQty = allRows.reduce((total, row) => total + (Number(row[Engine.FIELDS.qty]) || 0), 0);
-    const allOrders = new Set(allRows.map(row =>
-      `${row[Engine.FIELDS.orderCode]}|${Engine.dimKey(row[Engine.FIELDS.model])}|${Engine.dimKey(row[Engine.FIELDS.colourCode])}`)).size;
-    state.parity = {
+    if (!backlog) return null;
+    return {
       backlogQty: Number(backlog.totalQty) || 0,
       backlogOrders: Number(backlog.totalOrders) || 0,
-      analysisQty: allQty,
-      analysisOrders: allOrders,
-      match: (Number(backlog.totalQty) || 0) === allQty && (Number(backlog.totalOrders) || 0) === allOrders,
+      analysisQty: totals.qty,
+      analysisOrders: totals.orders,
+      match: (Number(backlog.totalQty) || 0) === totals.qty && (Number(backlog.totalOrders) || 0) === totals.orders,
     };
+  }
+
+  /* #1079 WS6c — Backlog okuma modeli (Genel Bakış V3 ile aynı anahtar, varsayılan AÇIK).
+     Açıkken satır listesi (/api/backlog-export) indirilmez: analiz yerel arka ucun okuma
+     modeli işçisinde AYNI motorla (analyzeDataset, needsAttention, Insights.build) yapılır.
+     Tarih sırası bu tarayıcının dateOrdinal'ıdır: sunucu farklı tarih anahtarlarını bir
+     kez gönderir, sıralar burada hesaplanıp geri gider (eski işçi yüklemesinin aynısı).
+     Drill-down satırları tıklanınca yüklenir. Geri dönüş: window.BL_READ_MODEL_BACKLOG_V3=false
+     ya da yerel tercih buyerlog.readModel.backlogV3.v1='0'. */
+  function backendModelEnabled() {
+    if (typeof window.BL_READ_MODEL_BACKLOG_V3 === 'boolean') return window.BL_READ_MODEL_BACKLOG_V3;
+    try { return localStorage.getItem('buyerlog.readModel.backlogV3.v1') !== '0'; } catch (_) { return true; }
+  }
+  let remoteOrdinals = null, remoteRequest = null;
+  async function postDelivery(body, signal) {
+    const response = await fetch('/api/read-model/backlog/delivery', { method: 'POST', credentials: 'same-origin', cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(isEn() && data.errorEn ? data.errorEn : (data.error || `HTTP ${response.status}`));
+    return data;
+  }
+  function deliveryBody(extra) {
+    const ordinal = typeof dateOrdinal === 'function' ? dateOrdinal : Engine.defaultOrdinal;
+    return { version: 1, query: backlogExportQueryParams(), view: { today: window.BLBacklogV3Report ? window.BLBacklogV3Report.dayIso(new Date()) : undefined },
+      delivery: { settings: state.settings, bounds: periodBounds(), today: ordinal(new Date()), lang: lang(), preferences: state.preferences,
+        customRules: state.customRules, catalog: window.BLOrderDecisionEngine?.getPriorityCatalog?.() || null, ordinals: remoteOrdinals }, ...extra };
+  }
+  async function loadRemote(extra, signal) {
+    let data = await postDelivery(deliveryBody(extra), signal);
+    if (data.needDates && Array.isArray(data.dateKeys)) {
+      const ordinal = typeof dateOrdinal === 'function' ? dateOrdinal : Engine.defaultOrdinal;
+      remoteOrdinals = { token: data.dataset, values: data.dateKeys.map(key => { const value = ordinal(Engine.valueOfDateKey(key)); return Number.isFinite(value) ? value : null; }) };
+      data = await postDelivery(deliveryBody(extra), signal);
+    }
+    if (data.needDates) throw new Error(L('Analiz tarihleri hazırlanamadı. Yenilemeyi deneyin.', 'Analysis dates could not be prepared. Try refreshing.'));
+    return data;
+  }
+  async function refreshRemote(force) {
+    const generation = ++refreshGeneration;
+    cancelAnalysis(); remoteRequest?.abort();
+    const request = new AbortController(); remoteRequest = request;
+    state.loading = true; state.error = ''; render();
+    try {
+      if (force) window.BLBacklogRows?.invalidate?.();
+      // Genel Bakış (V3) isteği önce gider; satırlar onun hesabında bir kez üretilir ve paylaşılır.
+      const gate = window.BLBacklogOverview?.modelGate?.();
+      if (gate) await gate;
+      if (generation !== refreshGeneration) return;
+      const data = await loadRemote({}, request.signal);
+      if (generation !== refreshGeneration) return;
+      state.rows = null; state.rowsSignature = '';
+      state.model = data.model; state.attention = data.attention; state.insights = data.insights || [];
+      state.periodRowCount = data.periodRowCount; state.totalRowCount = data.totalRowCount;
+      state.parity = parityWith(data.parity);
+    } catch (error) {
+      if (generation !== refreshGeneration) return;
+      state.error = error && error.message ? error.message : String(error);
+      state.model = null; state.attention = null;
+    } finally {
+      if (remoteRequest === request) remoteRequest = null;
+      if (generation === refreshGeneration) { state.loading = false; render(); }
+    }
   }
 
   let refreshGeneration=0,sourceRevision='';
   async function refresh(force) {
     if (!state.open) return;
+    if (backendModelEnabled()) return refreshRemote(force);
+    state.attention = null;
     const generation=++refreshGeneration;
     cancelAnalysis();
     const signature = currentSignature();
@@ -267,8 +327,15 @@
   }
 
   /* -------------------------------------------------------------- drilldown */
-  function openOrders(title, orders) {
-    const rows = (orders || []).map(order => order.sourceRow).filter(Boolean);
+  function openOrders(title, orders) { openRows(title, (orders || []).map(order => order.sourceRow).filter(Boolean)); }
+  /* Okuma modelinde tıklanan kırılımın tam satırları o an yüklenir (export ile aynı satırlar). */
+  function openDrill(title, spec, local) {
+    if (!backendModelEnabled()) { openOrders(title, local()); return; }
+    if (typeof showToast === 'function') showToast(L('Satırlar yükleniyor…', 'Loading rows…'));
+    void loadRemote({ drill: spec }).then(data => openRows(title, Array.isArray(data.rows) ? data.rows : []))
+      .catch(error => { if (typeof showToast === 'function') showToast(error && error.message ? error.message : String(error)); });
+  }
+  function openRows(title, rows) {
     if (!rows.length) { if (typeof showToast === 'function') showToast(L('Gösterilecek sipariş bulunamadı.', 'No orders to show.')); return; }
     const headers = Object.keys(rows[0]).filter(key => !key.startsWith('_'));
     if (window.BLDetailDrawer?.open) {
@@ -364,8 +431,8 @@
   }
 
   function renderNeedsAttention(model) {
-    // Sayılar tam kümeden (groups.counts); liste görüntüsü kısıtlanır.
-    const groups = Engine.needsAttention(model, { limit: 500 });
+    // Sayılar tam kümeden (groups.counts); liste görüntüsü kısıtlanır. Okuma modeli sayıları sunucudan gelir.
+    const groups = state.attention || Engine.needsAttention(model, { limit: 500 });
     const labels = {
       CRITICAL: L('Kritik', 'Critical'), ACTION_TODAY: L('Bugün Aksiyon', 'Action Today'),
       ACTION_THIS_WEEK: L('Bu Hafta', 'Action This Week'), WATCH: L('İzle', 'Watch'), ON_TRACK: L('Yolunda', 'On Track'),
@@ -511,7 +578,7 @@
     if (state.loading) { host.innerHTML = `${renderHeader()}<div class="bdaMuted bdaPad">${esc(L('Analiz hesaplanıyor…', 'Calculating analysis…'))}</div>`; bind(host); return; }
     if (state.error) { host.innerHTML = `${renderHeader()}<div class="bdaError">${esc(state.error)}</div>`; bind(host); return; }
     const model = state.model;
-    if (!model || !model.orders.length) {
+    if (!model || !(model.orderCount ?? model.orders.length)) {
       host.innerHTML = `${renderHeader()}<div class="bdaMuted bdaPad">${esc(L('Seçili filtrede analiz edilecek sipariş yok.', 'No orders to analyse in the current filter.'))}</div>`;
       bind(host); return;
     }
@@ -583,7 +650,7 @@
     });
     host.querySelectorAll('[data-outcome]').forEach(button => button.addEventListener('click', () => {
       const key = button.dataset.outcome;
-      openOrders(outcomeLabel(key), ordersWhere(order => order.deliveryOutcome === key));
+      openDrill(outcomeLabel(key), { k: 'outcome', key }, () => ordersWhere(order => order.deliveryOutcome === key));
     }));
     /* v9.51 — Analizden doğrudan otomasyon. Ekrandaki kırılım koşula BİREBİR
        aynı alan adıyla taşınır; alan adları server/lib/backlog-automation.js
@@ -610,11 +677,11 @@
     }));
     host.querySelectorAll('[data-cause]').forEach(button => button.addEventListener('click', () => {
       const key = button.dataset.cause;
-      openOrders(causeLabel(key), ordersWhere(order => order.riskReasons.includes(key)));
+      openDrill(causeLabel(key), { k: 'cause', key }, () => ordersWhere(order => order.riskReasons.includes(key)));
     }));
     host.querySelectorAll('[data-attention]').forEach(button => button.addEventListener('click', () => {
-      const groups = Engine.needsAttention(state.model, { limit: 500 });
-      openOrders(button.querySelector('.bdaAttentionLabel').textContent, groups[button.dataset.attention] || []);
+      const key = button.dataset.attention;
+      openDrill(button.querySelector('.bdaAttentionLabel').textContent, { k: 'attention', key }, () => Engine.needsAttention(state.model, { limit: 500 })[key] || []);
     }));
     host.querySelectorAll('[data-dim]').forEach(button => button.addEventListener('click', () => {
       state.dim = button.dataset.dim; save(); render();
@@ -622,8 +689,8 @@
     host.querySelectorAll('[data-outcome-cell]').forEach(button => button.addEventListener('click', () => {
       const outcome = button.dataset.outcomeCell;
       const stage = button.dataset.stage, dimValue = button.dataset.dimValue;
-      if (stage) openOrders(`${stageLabel(stage)} · ${outcomeLabel(outcome)}`, ordersWhere(order => order.stage === stage && order.deliveryOutcome === outcome));
-      else if (dimValue) openOrders(`${dimValue} · ${outcomeLabel(outcome)}`, ordersWhere(order => order.dims[state.dim] === dimValue && order.deliveryOutcome === outcome));
+      if (stage) openDrill(`${stageLabel(stage)} · ${outcomeLabel(outcome)}`, { k: 'stageOutcome', stage, outcome }, () => ordersWhere(order => order.stage === stage && order.deliveryOutcome === outcome));
+      else if (dimValue) openDrill(`${dimValue} · ${outcomeLabel(outcome)}`, { k: 'dimOutcome', dim: state.dim, value: dimValue, outcome }, () => ordersWhere(order => order.dims[state.dim] === dimValue && order.deliveryOutcome === outcome));
     }));
   }
 

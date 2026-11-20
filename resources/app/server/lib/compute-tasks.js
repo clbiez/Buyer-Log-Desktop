@@ -47,16 +47,16 @@ function buildProjections(source,data){
   return out;
 }
 /* #1079 WS6c — Backlog satır belleği (işçi başına, tek giriş, kısa ömür).
-   Backlog açılınca Teslimat Riski paneli 'export', Genel Bakış (V3) okuma modeli
-   'v3-items' ister; ikisi aynı sorgu için aynı şablon satırlarını üretir ve havuz
-   ikisini aynı işçide sırayla çalıştırır (30k: sorgu hazırlığı + satırlar ~3,1 sn,
-   iki kez). İkinci görev ilkinin satırlarını kullanır. Anahtar, istemcinin satır
-   yeniden kullanımıyla aynı kimliktir (sourceRevision: kaynak nesli + kullanıcı
-   bağlamı/yetki/ufuk + ortak override revizyonları + takvim + gün; computeParamsFor)
-   + işçideki kaynak nesnesi + yetki hash'i + sorgu. Önizleme, kaynak ayrıntısı ve
-   harita projeksiyonu belleğe girmez. Satırlar salt okunur kullanılır. İki tüketiciden
-   sonra ya da 20 sn içinde bırakılır. */
-const ROWS_MEMO_TTL_MS=20000;
+   Backlog okuma modeli 'v3-items' (Genel Bakış) ve 'delivery-items' (Teslimat Riski), drill-down
+   'rows' (tıklanan siparişlerin tam satırları) ve geri dönüş yolundaki 'export' aynı
+   sorgu için aynı şablon satırlarını üretir; havuz Backlog işlerini aynı işçide sırayla
+   çalıştırır (30k: sorgu hazırlığı + satırlar ~3,1 sn). Sonraki görev satırları
+   yeniden kullanır. Anahtar, istemcinin satır yeniden kullanımıyla aynı kimliktir
+   (sourceRevision: kaynak nesli + kullanıcı bağlamı/yetki/ufuk + ortak override
+   revizyonları + takvim + gün; computeParamsFor) + işçideki kaynak nesnesi + yetki
+   hash'i + sorgu. Önizleme, kaynak ayrıntısı ve harita projeksiyonu belleğe girmez.
+   Satırlar salt okunur kullanılır. Son kullanımdan 20 sn sonra, en geç 120 sn'de bırakılır. */
+const ROWS_MEMO_TTL_MS=20000,ROWS_MEMO_MAX_MS=120000;
 const memoSources=new WeakMap();let memoSourceSeq=0,rowsMemo=null;
 function memoSourceId(source){let id=memoSources.get(source);if(!id){id=++memoSourceSeq;memoSources.set(source,id);}return id;}
 function clearRowsMemo(){if(rowsMemo&&rowsMemo.timer)clearTimeout(rowsMemo.timer);rowsMemo=null;}
@@ -64,20 +64,30 @@ function rowsMemoKey(source,data){
   if(!source||typeof source!=='object'||!data.sourceRevision||(data.previewLimit||0)>0||data.includeSourceDetails||data.mapProjection)return null;
   return JSON.stringify([memoSourceId(source),data.sourceRevision,data.access?data.access.accessHash||null:null,data.target||'backlog',data.options||{},data.sourceColumns||[],!!data.mergeSourceOverrides,!!data.preferSourceAppliedHorizons]);
 }
-function takeRowsMemo(key,kind){
-  if(!rowsMemo||rowsMemo.key!==key||rowsMemo.used.has(kind))return null;
-  const hit=rowsMemo;hit.used.add(kind);
-  if(hit.used.has('export')&&hit.used.has('v3-items'))clearRowsMemo();
-  return hit;
+function armRowsMemo(memo){
+  if(memo.timer)clearTimeout(memo.timer);
+  const timer=setTimeout(clearRowsMemo,Math.max(0,Math.min(ROWS_MEMO_TTL_MS,memo.createdAt+ROWS_MEMO_MAX_MS-Date.now())));timer.unref?.();
+  memo.timer=timer;
 }
-function keepRowsMemo(key,kind,value){
+function takeRowsMemo(key){
+  if(!rowsMemo||rowsMemo.key!==key)return null;
+  if(Date.now()-rowsMemo.createdAt>=ROWS_MEMO_MAX_MS){clearRowsMemo();return null;}
+  armRowsMemo(rowsMemo);
+  return rowsMemo;
+}
+function keepRowsMemo(key,value){
   clearRowsMemo();
-  const timer=setTimeout(clearRowsMemo,ROWS_MEMO_TTL_MS);timer.unref?.();
-  rowsMemo={key,...value,used:new Set([kind]),timer};
+  rowsMemo={key,...value,createdAt:Date.now(),timer:null};armRowsMemo(rowsMemo);
 }
 function backlogRowsResult(kind,data,rows,columns,customDimensions,mapDetails){
+  // Teslimat Riski drill-down: okuma modelinin seçtiği satır sıraları, export ile aynı tam satırlar.
+  if(kind==='rows'){
+    const indices=Array.isArray(data.rowIndices)?data.rowIndices:[];
+    return {rows:indices.map(index=>Number.isInteger(index)&&index>=0&&index<rows.length?rows[index]:null).filter(Boolean),totalRows:rows.length};
+  }
   // Backlog V3 Genel Bakış okuma modeli (#1079 WS6c): aynı satırlar, işçide V3 kaydına çevrilir.
   if(kind==='v3-items')return require('./read-model/backlog-v3-items').build(rows,data,apiDate);
+  if(kind==='delivery-items')return require('./read-model/backlog-v3-items').buildDelivery(rows,data,apiDate);
   const mapRows=data.mapProjection?require('../../public/overview-global-flow').projectBacklogMapRows(rows):rows;
   return {headers:[...data.headers,...columns.map(column=>column.label)],rows:mapRows,totalRows:rows.totalRows||rows.length,sourceColumns:data.mapProjection?[]:columns,sourceCatalog:data.mapProjection?[]:customDimensions,rowsRevision:data.rowsRevision,merchCalendar:data.calendar,...(data.mapProjection||mapDetails?{sourceRevision:data.sourceRevision}:{})};
 }
@@ -92,8 +102,8 @@ function buildBacklog(kind,source,data){
     orders=orders.filter(row=>wanted.has(parse.orderLineKeyOf(row)));kind='export';
   }
   if(kind==='detail')return {headers:data.headers,rows:parse.buildBacklogDetailRows(orders,antrepo,overrides,data.selector,{includeInternalMeta:true})};
-  const memoKey=!mapDetails&&(kind==='export'||kind==='v3-items')?rowsMemoKey(source,data):null;
-  const memo=memoKey?takeRowsMemo(memoKey,kind):null;
+  const memoKey=!mapDetails&&['export','v3-items','delivery-items','rows'].includes(kind)?rowsMemoKey(source,data):null;
+  const memo=memoKey?takeRowsMemo(memoKey):null;
   if(memo)return backlogRowsResult(kind,data,memo.rows,memo.columns,memo.customDimensions,false);
   const custom=parse.backlogCustomDimensionContext(orders,antrepo);
   if(kind==='source-columns')return {columns:custom.customDimensions,defaultHeaders:data.headers};
@@ -104,10 +114,10 @@ function buildBacklog(kind,source,data){
     if(!data.headers.some(header=>'cp:'+header===id)&&!custom.customDimensions.some(column=>column.id===id))throw Object.assign(Error('Unknown Backlog filter field'),{code:'BACKLOG_FILTER_FIELD_INVALID',statusCode:400});
     return {...parse.buildBacklogFilterValues(orders,antrepo,overrides,options,id,query),rowsInputRevision:data.sourceRevision};
   }
-  if(kind!=='export'&&kind!=='v3-items')throw Error('Unknown Backlog computation');
+  if(!['export','v3-items','delivery-items','rows'].includes(kind))throw Error('Unknown Backlog computation');
   const byId=new Map(custom.customDimensions.map(column=>[column.id,column])),columns=(data.sourceColumns||[]).map(id=>byId.get(id)).filter(Boolean);
   const rows=parse.buildBacklogTemplateRows(orders,antrepo,overrides,options,columns,{limit:data.previewLimit||0,includeSourceDetails:Boolean(data.includeSourceDetails)&&!data.mapProjection,queryContext:query});
-  if(memoKey)keepRowsMemo(memoKey,kind,{rows,columns,customDimensions:custom.customDimensions});
+  if(memoKey)keepRowsMemo(memoKey,{rows,columns,customDimensions:custom.customDimensions});
   return backlogRowsResult(kind,data,rows,columns,custom.customDimensions,mapDetails);
 }
 module.exports={buildProjections,buildBacklog,serialize,scopedOrders,antrepoFor,withSourceOverrides,_clearRowsMemo:clearRowsMemo};

@@ -23,6 +23,9 @@ globalThis.BLCanonicalFields=globalThis.BLCanonicalFields||require('../canonical
 const V3=require('../../../public/backlog-v3-report.js');
 const dates=require('../../../public/date-dimension');
 const codec=require('./backlog-v3-items');
+const Delivery=require('../../../public/backlog-delivery-engine.js');
+const Insights=require('../../../public/backlog-delivery-insights.js');
+const OD=require('../../../public/order-decision-engine.js');
 
 const ROW_LIMIT=500;
 const MAX_DATASETS=2;
@@ -34,7 +37,7 @@ function remember(key,dataset){
 function decode(buffer){
   const bytes=Buffer.isBuffer(buffer)?buffer:Buffer.from(buffer instanceof ArrayBuffer?new Uint8Array(buffer):buffer);
   const value=JSON.parse(zlib.gunzipSync(bytes).toString('utf8'));
-  return {...codec.decodeItems(value),calendar:value.calendar||null,today:value.today||null,sourceRevision:value.sourceRevision||null};
+  return {...codec.decodeItems(value),kind:value.kind==='delivery'?'delivery':'v3',calendar:value.calendar||null,today:value.today||null,sourceRevision:value.sourceRevision||null,deliveryCache:null};
 }
 function invalid(detail){return Object.assign(new Error('Geçersiz Backlog V3 isteği. / Invalid Backlog V3 request.'),{code:'READ_MODEL_QUERY_INVALID',statusCode:400,detail});}
 
@@ -83,6 +86,64 @@ function drillPayload(list){
   return {summary:payload.summary,count:payload.count,rows:payload.rows,identities};
 }
 
+/* ---------------------------------------------------- Teslimat Riski paneli
+   Tarayıcıdaki akışın aynısı: tarih sırası istemcinin dateOrdinal'ından (farklı değer
+   başına bir kez; anahtar Engine.dateKey), analiz varsayılan öncelik kataloğuyla
+   (tarayıcıda taze Web Worker), aksiyon grupları ve yorumlar kullanıcının kataloğuyla
+   (tarayıcıda ana iş parçacığı). Sipariş listeleri tarayıcıya gitmez; drill-down
+   satır sırası (export sırası) olarak döner, satırlar rota tarafından yüklenir. */
+function deliveryDateKeys(dataset){
+  if(dataset.dateKeys)return dataset.dateKeys;
+  const seen=new Set(),keys=[];
+  for(const row of dataset.delivery)for(const value of Delivery.rowDateValues(row)){const key=Delivery.dateKey(value);if(!seen.has(key)){seen.add(key);keys.push(key);}}
+  return dataset.dateKeys=keys;
+}
+function withCatalog(catalog,fn){
+  const previous=OD.getPriorityCatalog();
+  try{OD.setPriorityCatalog(catalog);return fn();}
+  finally{OD.setPriorityCatalog(previous);}
+}
+const plainObject=value=>value&&typeof value==='object'&&!Array.isArray(value)?value:null;
+function deliveryInputs(raw){
+  const r=plainObject(raw)||{};
+  const bounds=plainObject(r.bounds);
+  const num=value=>value==null?null:Number.isFinite(Number(value))?Number(value):null;
+  return {settings:{...(plainObject(r.settings)||{})},bounds:bounds?{from:num(bounds.from),to:num(bounds.to)}:null,today:num(r.today),
+    lang:r.lang==='en'?'en':'tr',preferences:plainObject(r.preferences)||undefined,customRules:Array.isArray(r.customRules)?r.customRules:[],
+    catalog:Array.isArray(r.catalog)&&r.catalog.length?r.catalog:null,ordinals:plainObject(r.ordinals)};
+}
+function deliveryAnalysis(dataset,key,inputs){
+  const keys=deliveryDateKeys(dataset),o=inputs.ordinals;
+  const values=o&&o.token===key&&Array.isArray(o.values)&&o.values.length===keys.length&&o.values.every(v=>v===null||Number.isFinite(v))?o.values:null;
+  if(!values)return null;
+  const cacheKey=JSON.stringify([inputs.settings,inputs.bounds,inputs.today,values]);
+  if(dataset.deliveryCache&&dataset.deliveryCache.key===cacheKey)return dataset.deliveryCache;
+  const map=new Map(keys.map((dateKey,index)=>[dateKey,values[index]]));
+  const ordinal=value=>{const hit=map.get(Delivery.dateKey(value));return hit===undefined?null:hit;};
+  // Tarayıcı işçisi kataloğu ayarlanmamış (varsayılan) bir motorla analiz eder.
+  const result=withCatalog(null,()=>Delivery.analyzeDataset(dataset.delivery,{settings:inputs.settings,bounds:inputs.bounds,today:inputs.today,dateOrdinal:ordinal}));
+  const orderIndex=new Map(result.model.orders.map((order,index)=>[order,result.rowIndices[index]]));
+  return dataset.deliveryCache={key:cacheKey,...result,orderIndex};
+}
+function deliveryBody(dataset,key,request){
+  const inputs=deliveryInputs(request.delivery);
+  const analysis=deliveryAnalysis(dataset,key,inputs);
+  if(!analysis)return {kind:'delivery',dataset:key,needDates:true,dateKeys:deliveryDateKeys(dataset)};
+  if(request.drill){
+    const orders=withCatalog(inputs.catalog,()=>Delivery.selectOrders(analysis.model,request.drill));
+    return {kind:'deliveryDrill',dataset:key,indices:orders.map(order=>analysis.orderIndex.get(order))};
+  }
+  return withCatalog(inputs.catalog,()=>{
+    const groups=Delivery.needsAttention(analysis.model,{limit:500});
+    const insights=Insights.build(analysis.model,{lang:inputs.lang,preferences:inputs.preferences,customRules:inputs.customRules});
+    const {orders,topRiskOrders,...model}=analysis.model;
+    dataset.parity=dataset.parity||Delivery.parityTotals(dataset.delivery);
+    return {kind:'delivery',dataset:key,model:{...model,orders:[],topRiskOrders:[],orderCount:orders.length},
+      attention:{counts:groups.counts,quantities:groups.quantities},insights:insights.map(({orders:_,...insight})=>insight),
+      periodRowCount:analysis.periodRowCount,totalRowCount:analysis.totalRowCount,parity:dataset.parity};
+  });
+}
+
 function execute(payload){
   const started=performance.now(),p=payload&&typeof payload==='object'?payload:{};
   const key=String(p.datasetKey||'');if(!key)throw invalid('datasetKey');
@@ -96,16 +157,21 @@ function execute(payload){
   if(dataset.calendar&&dataset.calendar.configured)dates.setMerchCalendar(dataset.calendar.calendar);else dates.clearMerchCalendar();
   const request=p.request&&typeof p.request==='object'?p.request:{};
   const computeAt=performance.now();
+  let body;
+  // Veri kümesi türü panelle eşleşmeli (anahtarlar yükten üretilir; yine de savunma).
+  if((request.panel==='delivery')!==(dataset.kind==='delivery'))throw invalid('panel');
+  if(request.panel==='delivery')body=deliveryBody(dataset,key,request);
+  else{
   const priority=applyPriority(dataset,request.priority,key);
   const opts=viewOptions(request.view,request.priority,priority.ready);
-  let body;
   if(request.drill&&typeof request.drill==='object')body={kind:'drill',dataset:key,...drillPayload(V3.selectItems(dataset.items,request.drill,opts))};
   else body={kind:'model',dataset:key,priority:{ready:priority.ready,needKeys:priority.needKeys},model:V3.panelModel(dataset.items,opts),
     ...(priority.needKeys?{keys:dataset.keys}:{}),sourceRevision:dataset.sourceRevision};
+  }
   const computeMs=performance.now()-computeAt;
   const json=Buffer.from(JSON.stringify(body));
   const gzip=zlib.gzipSync(json,{level:1});
   return {buffer:new Uint8Array(gzip.buffer,gzip.byteOffset,gzip.byteLength),uncompressedBytes:json.length,
-    timing:{decodeMs,computeMs,totalMs:performance.now()-started,rows:dataset.items.length}};
+    timing:{decodeMs,computeMs,totalMs:performance.now()-started,rows:(dataset.items||dataset.delivery).length}};
 }
-module.exports={execute,decode,applyPriority,viewOptions,drillPayload,ROW_LIMIT,_datasets:datasets};
+module.exports={execute,decode,applyPriority,viewOptions,drillPayload,deliveryDateKeys,deliveryBody,ROW_LIMIT,_datasets:datasets};
