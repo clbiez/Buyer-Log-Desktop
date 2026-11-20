@@ -119,9 +119,13 @@ function registerBacklogV3Routes(app,deps){
             const result=await modelFor(lease,workerRequest,consumer.signal);
             if(consumer.signal.aborted){result.release?.();return;}
             lease.assertResponse?.();
-            if(panel==='delivery'&&request.drill){
+            const drillBody=panel==='delivery'&&request.drill?readJson(result.value):null;
+            // Veri kümesi değiştiyse (kaynak yenilendi) işçi tarih sözlüğünü yeniden ister: yanıt olduğu gibi
+            // istemciye gider, istemci sözlüğü yenileyip drill-down'ı tekrarlar.
+            if(drillBody&&drillBody.kind==='deliveryDrill'){
               // Tıklanan siparişlerin tam satırları: export ile aynı satırlar, aynı sıra (satır belleğinden).
-              let indices;try{indices=readJson(result.value).indices;}finally{result.release?.();}
+              result.release?.();
+              const indices=drillBody.indices;
               if(!Array.isArray(indices))throw Object.assign(new Error('Hesaplama işçisi tamamlanamadı. / Compute worker failed.'),{code:'COMPUTE_WORKER_FAILED',statusCode:500});
               const rowsLease=await computeReads().run(req,'backlog','backlog-rows',{...params,rowIndices:indices},{cache:false,signal:consumer.signal});
               if(consumer.signal.aborted){rowsLease.release();return;}

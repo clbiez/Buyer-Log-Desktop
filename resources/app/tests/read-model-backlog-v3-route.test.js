@@ -154,6 +154,13 @@ test('Teslimat Riski: tarih sözlüğü, analiz ve drill-down tam satırları (s
   assert.ok(drill.rows.length > 0 && drill.rows.every(item => item.Extra === 'tam satır'), 'drill-down tam export satırlarını döner');
   const rowsCall = calls.find(call => call.task === 'backlog-rows');
   assert.equal(rowsCall.cache, false); assert.deepEqual(rowsCall.indices, drill.rows.map(item => rows.findIndex(r => r['Sipariş Kod'] === item['Sipariş Kod'])));
+  // Eski tarih sözlüğüyle drill-down (veri kümesi değişti): işçinin sözlük isteği istemciye geçer, satır hesabı başlamaz.
+  const before = calls.length;
+  const stale = await post({ version: 1, query: {}, view: { today: '2026-01-20' }, delivery: { ...delivery, ordinals: { ...ordinals, token: 'eski' } }, drill: { k: 'outcome', key: outcome } });
+  assert.equal(stale.status, 200);
+  const staleBody = await stale.json();
+  assert.equal(staleBody.needDates, true); assert.ok(staleBody.dateKeys.length > 0);
+  assert.equal(calls.slice(before).some(call => call.task === 'backlog-rows'), false);
   // Genel Bakış drill türleri Teslimat Riski rotasında geçersizdir (ve tersi).
   assert.equal((await post({ version: 1, query: {}, view: { today: '2026-01-20' }, delivery, drill: { k: 'all' } })).status, 400);
   assert.equal((await fetch(url.replace('/delivery', '/v3'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ version: 1, drill: { k: 'outcome', key: 'AT_RISK' } }) })).status, 400);
