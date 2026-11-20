@@ -103,11 +103,11 @@ test('Backlog V3 normalizeRows: karışık şema, token eşleşmesi, boş değer
   await check('normalize adversarial', rows);
 });
 
-test('Backlog V3 anahtarı varsayılan kapalı; bağlam ve window bayrağı açar/kapatır', () => {
+test('Backlog V3 anahtarı varsayılan açık; bağlam ve window bayrağı açar/kapatır', () => {
   const previous = globalThis.BL_READ_MODEL_BACKLOG;
   try {
     delete globalThis.BL_READ_MODEL_BACKLOG;
-    assert.equal(V3.readModelEnabled({}), false, 'varsayılan kapalı (Node: localStorage okunmaz)');
+    assert.equal(V3.readModelEnabled({}), true, 'varsayılan açık (kullanıcı kararı; Node: localStorage okunmaz)');
     globalThis.BL_READ_MODEL_BACKLOG = true;
     assert.equal(V3.readModelEnabled({}), true);
     assert.equal(V3.readModelEnabled({ compiledCanonical: false }), false, 'bağlam bayrağı window bayrağından önce gelir');
@@ -117,5 +117,5 @@ test('Backlog V3 anahtarı varsayılan kapalı; bağlam ve window bayrağı aça
     if (previous === undefined) delete globalThis.BL_READ_MODEL_BACKLOG; else globalThis.BL_READ_MODEL_BACKLOG = previous;
   }
   const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'public', 'backlog-v3-report.js'), 'utf8');
-  assert.match(src, /getItem\(BACKLOG_READ_MODEL_STORAGE_KEY\) === '1'/, 'tarayıcı yerel tercihi yalnız açıkça "1" ise açar');
+  assert.match(src, /getItem\(BACKLOG_READ_MODEL_STORAGE_KEY\) === '0'/, 'tarayıcı yerel tercihi yalnız açıkça "0" ise kapatır');
 });

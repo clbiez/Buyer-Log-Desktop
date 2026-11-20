@@ -128,8 +128,9 @@
   function compiledCanonEnabled(ctx) {
     if (ctx && typeof ctx.compiledCanonical === 'boolean') return ctx.compiledCanonical;
     if (root && typeof root.BL_READ_MODEL_BACKLOG === 'boolean') return root.BL_READ_MODEL_BACKLOG;
-    // Varsayılan kapalı; yalnız tarayıcıda yerel tercih açabilir.
-    try { return !!(root && root.document && root.localStorage && root.localStorage.getItem(BACKLOG_READ_MODEL_STORAGE_KEY) === '1'); } catch (_) { return false; }
+    // Varsayılan AÇIK (kullanıcı kararı; parite 2k/30k, iki kapsam eşit). Geri dönüş:
+    // window.BL_READ_MODEL_BACKLOG=false ya da tarayıcıda yerel tercih '0'.
+    try { return !(root && root.document && root.localStorage && root.localStorage.getItem(BACKLOG_READ_MODEL_STORAGE_KEY) === '0'); } catch (_) { return true; }
   }
   function createCanonReader(c) {
     if (!c || typeof c.field !== 'function' || typeof c.bindingFor !== 'function' || typeof c.token !== 'function') return null;
