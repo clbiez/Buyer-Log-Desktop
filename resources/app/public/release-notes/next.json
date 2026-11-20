@@ -910,6 +910,17 @@
         "kind": "none",
         "reason": {"tr": "Ekranda yeni bir öğe yok; aynı checklist durumları daha kısa sürede kaydedilir ve yüklenir.", "en": "Nothing new appears on screen; the same checklist statuses save and load sooner."}
       }
+    },
+    {
+      "id": "test-report-import-server-wait",
+      "type": "fix",
+      "module": {"tr": "Test Raporu Aktarımı", "en": "Test Report Import"},
+      "title": {"tr": "Test raporu aktarımı sunucuyu bekletmez", "en": "Test report import no longer stalls the server"},
+      "body": {"tr": "Büyük veride test raporu listesini açmak ya da rapor dosyası okumak, sipariş yetkisi kontrolü sırasında sunucuyu saniyelerce meşgul ediyordu. Bu sırada diğer kullanıcıların ekranları da bekliyordu. Kontrol artık yalnız sipariş kimliklerini okuyor. Yetki kuralları ve eşleşmeler değişmedi.", "en": "With large data, opening the test report list or reading a report file kept the server busy for several seconds during the order permission check. Other users' screens waited during that time too. The check now reads only order identities. Permission rules and matches are unchanged."},
+      "visual": {
+        "kind": "none",
+        "reason": {"tr": "Ekranda yeni bir öğe yok; aynı liste ve eşleşmeler daha kısa sürede gelir.", "en": "Nothing new appears on screen; the same list and matches arrive sooner."}
+      }
     }
   ]
 }
