@@ -87,7 +87,7 @@ test('every query transition supersedes in-flight window and count requests; dat
   // Sunucu/eş senkronu ve transit kuralı → yeniden sorgu; tam satır yüklemesi → aynı nesnelere bağlanır.
   for(const reason of ['cp-projection-loaded','server-cp-deferred','cp-peer-sync','remote-cp-decision-patch','transit-rules-server'])
     assert.ok(SOURCE.includes(`'${reason}'`)&&slice('const CP_RM_DATA_REASONS=','const cpRM=').includes(`'${reason}'`),reason);
-  assert.match(SOURCE,/if\(!window\.BLCpReadModel\?\.onDecisionContextChanged\?\.\(\)&&!computedHandled&&currentActiveTab\(\)==='cp'\)renderCP\(\);/);
+  assert.match(SOURCE,/const computed=window\.BLCpComputedColumns\?\.onDecisionContextChanged\?\.\(event\),windowed=window\.BLCpReadModel\?\.onDecisionContextChanged\?\.\(\);\s*if\(!computed&&!windowed&&currentActiveTab\(\)==='cp'\)renderCP\(\);/);
   // İmza gün ve dile bağlı: gün değişimi ve dil değişimi yeni sorgu.
   assert.match(extractFunction(SOURCE,'cpRMSignature'),/cpRMLang\(\),cpRMToday\(\)/);
 });

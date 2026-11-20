@@ -1677,10 +1677,9 @@ function ensureUnifiedPrioritiesForTable(tableKey){
 }
 window.addEventListener('bl:cp-decision-context-changed',event=>{
   invalidateUnifiedPriorityDecisions('personal-decision-context',['cp']);
-  // CP hesaplanmış sütunlar (#1078) etkinse yenilemeyi kendisi yapar (eski değerlerle ara çizim yok).
-  const computedHandled=window.BLCpComputedColumns?.onDecisionContextChanged?.(event);
-  // Pencereli CP (#1078 alt PR 2): sorgu ve sayaçlar arka uçta yeni bağlamla yeniden kurulur.
-  if(!window.BLCpReadModel?.onDecisionContextChanged?.()&&!computedHandled&&currentActiveTab()==='cp')renderCP();
+  // Hesaplanmış sütunlar / pencereli CP (#1078) yenilemeyi kendileri yapar.
+  const computed=window.BLCpComputedColumns?.onDecisionContextChanged?.(event),windowed=window.BLCpReadModel?.onDecisionContextChanged?.();
+  if(!computed&&!windowed&&currentActiveTab()==='cp')renderCP();
   scheduleOverviewRender('personal-decision-context');
   // Siparişler önceliği checklist cevabına değil kural/katalog anahtarına bağlıdır;
   // anahtar bir sonraki okumada yeniden kurulur, yalnız gerçekten değiştiyse hesaplanır.
@@ -10348,7 +10347,8 @@ function renderCPNow(){
   const metricRows=partialViewEnabled('cp')?partialViewUniqueSourceRows(rows):rows;
   const totalRowCount=partialViewEnabled('cp')?partialViewRows('cp',state.cp.rows).length:state.cp.rows.length;
   const qtySumCP = metricRows.reduce((s,r)=>s+(toNum(r['Order Quantity'])||0),0);
-  renderCpCountLine({stats:pageModelOptionStats(metricRows),rowCount:rows.length,totalRowCount,qty:qtySumCP});
+  const cpStats=pageModelOptionStats(metricRows);
+  renderCpCountLine({stats:cpStats,rowCount:rows.length,totalRowCount,qty:qtySumCP});
   renderTableEmptyHint('cp',rows.length,totalRowCount);
   const buckets = actionPriorityCounts(scope.pri);
   const statusCounts = {}; scope.status.forEach(r=>{
