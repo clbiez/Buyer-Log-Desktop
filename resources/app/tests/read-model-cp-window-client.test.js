@@ -15,10 +15,10 @@ const slice=(start,end)=>{const i=SOURCE.indexOf(start);assert.ok(i>=0,start);re
 test('flag off by default; renderCPNow tries the windowed path first only when enabled',()=>{
   const enabled=extractFunction(SOURCE,'cpReadModelEnabled');
   const ctx=vm.createContext({window:{},localStorage:{getItem:()=>null}});
-  vm.runInContext(`let cpRMEnabledCache=null;const CP_RM_STORAGE_KEY='bl.cpReadModel.v1';${enabled};globalThis.f=cpReadModelEnabled;`,ctx);
+  vm.runInContext(`const cpRM={disabled:false};let cpRMEnabledCache=null;const CP_RM_STORAGE_KEY='bl.cpReadModel.v1';${enabled};globalThis.f=cpReadModelEnabled;`,ctx);
   assert.equal(ctx.f(),false);
   const on=vm.createContext({window:{BL_CP_READ_MODEL:true},localStorage:{getItem:()=>null}});
-  vm.runInContext(`let cpRMEnabledCache=null;const CP_RM_STORAGE_KEY='bl.cpReadModel.v1';${enabled};globalThis.f=cpReadModelEnabled;`,on);
+  vm.runInContext(`const cpRM={disabled:false};let cpRMEnabledCache=null;const CP_RM_STORAGE_KEY='bl.cpReadModel.v1';${enabled};globalThis.f=cpReadModelEnabled;`,on);
   assert.equal(on.f(),true);
   const render=slice('function renderCPNow(){','cpPlmDetailsSync();');
   assert.match(render,/if\(cpReadModelEnabled\(\)\)\{\s*if\(renderCPFromReadModel\(\)\)return;\s*if\(!state\.cp\)\{void ensureCpLoaded\(\);return;\}/);
@@ -86,4 +86,13 @@ test('every query transition supersedes in-flight window and count requests; dat
   assert.match(SOURCE,/if\(!cpRMOnDecisionContextChanged\(\)&&!computedHandled&&currentActiveTab\(\)==='cp'\)renderCP\(\);/);
   // İmza gün ve dile bağlı: gün değişimi ve dil değişimi yeni sorgu.
   assert.match(extractFunction(SOURCE,'cpRMSignature'),/cpRMLang\(\),cpRMToday\(\)/);
+});
+
+test('preference flush failure disables the windowed path for the session even when the flag is forced (no request loop)',()=>{
+  const enabled=extractFunction(SOURCE,'cpReadModelEnabled');
+  const ctx=vm.createContext({window:{BL_CP_READ_MODEL:true},localStorage:{getItem:()=>'1'}});
+  vm.runInContext(`const cpRM={disabled:false};let cpRMEnabledCache=null;const CP_RM_STORAGE_KEY='bl.cpReadModel.v1';${enabled};globalThis.f=cpReadModelEnabled;globalThis.rm=cpRM;`,ctx);
+  assert.equal(ctx.f(),true);ctx.rm.disabled=true;assert.equal(ctx.f(),false);
+  const render=slice('function renderCPFromReadModel(){','/* Tümünü seç / kopyala / Excel');
+  assert.match(render,/if\(error\.status===400\)cpRM\.unsupportedSignature=signature;else cpRM\.disabled=true;/);
 });

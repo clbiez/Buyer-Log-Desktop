@@ -10504,10 +10504,12 @@ const CP_RM_DATA_REASONS=new Set(['cp-projection-loaded','server-cp-deferred','c
 const cpRM={
   epoch:0,seq:0,signature:'',spec:null,rows:null,total:0,generation:'',
   windows:new Set(),pending:new Map(),wanted:new Set(),flushQueued:false,repaintFrame:0,
-  facets:null,facetsKey:'',facetsSeq:0,optionsGeneration:'',materialized:null,legacyReason:'',unsupportedSignature:'',
+  facets:null,facetsKey:'',facetsSeq:0,optionsGeneration:'',materialized:null,legacyReason:'',unsupportedSignature:'',disabled:false,
 };
 let cpRMEnabledCache=null;
 function cpReadModelEnabled(){
+  // Tercih yazılamadı (alt PR 1 ile aynı kural): oturum boyunca eski yol; anahtar zorlansa da.
+  if(cpRM.disabled)return false;
   if(typeof window.BL_CP_READ_MODEL==='boolean')return window.BL_CP_READ_MODEL;
   if(cpRMEnabledCache===null){
     try{cpRMEnabledCache=(window.BLStorage||localStorage).getItem(CP_RM_STORAGE_KEY)==='1';}catch(_){cpRMEnabledCache=false;}
@@ -10820,7 +10822,7 @@ function renderCPFromReadModel(){
     // için eski yol. Tercih yazılamadıysa (alt PR 1) oturum boyunca eski yol.
     if(error&&(error.status===400||error.code==='CP_COMPUTED_PREFERENCES_UNSAVED')){
       cpRM.legacyReason='server:'+(error.code||'400');cpRM.signature='';
-      if(error.status===400)cpRM.unsupportedSignature=signature;else cpRMEnabledCache=false;
+      if(error.status===400)cpRM.unsupportedSignature=signature;else cpRM.disabled=true;
       if(!state.cp)void ensureCpLoaded();else renderCPNow();
       return;
     }
@@ -10959,7 +10961,7 @@ window.BLCpReadModel={
   isEnabled:cpReadModelEnabled,
   setEnabled(value){
     try{(window.BLStorage||localStorage).setItem(CP_RM_STORAGE_KEY,value?'1':'0');}catch(_){}
-    cpRMEnabledCache=Boolean(value);
+    cpRMEnabledCache=Boolean(value);cpRM.disabled=false;
     cpRMInvalidate('toggle');cpRM.rows=null;cpRM.legacyReason='';renderCP();return cpReadModelEnabled();
   },
   status:()=>({enabled:cpReadModelEnabled(),windowed:cpRMWindowedActive(),legacyReason:cpRM.legacyReason,total:cpRM.total,
