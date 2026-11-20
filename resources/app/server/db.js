@@ -1042,6 +1042,112 @@ function patchOrderOverrides(items, expectedRevision = null, expectedSuppFobRevi
   return { overrides: saved, revision: saved._revisions.orders, revisions: { orders: saved._revisions.orders, suppFob: saved._revisions.suppFob }, updated, skipped };
 }
 
+/* CP satır kaydı (#1078 WS5 alt PR 3): alan bazlı karşılaştırmalı yazma.
+   Global `_revisions.orders` yerine her alanın düzenleme öncesi kayıtlı değeri (base)
+   karşılaştırılır; başka satıra ya da aynı satırın başka alanına yapılmış yazma bu
+   kaydı reddettirmez ve bu kayıt onları ezmez.
+     next == base                      → alana dokunulmaz (bu istemci değiştirmedi)
+     kayıtlı == base || kayıtlı == next → yazılır
+     aksi halde                        → satır çakışması (current döner, hiçbir alan yazılmaz)
+   Okuma/karşılaştırma/uygulama tek yüklenen belgede yapılır; kayıt belge revizyonuyla
+   dosya kilidi altında doğrulanır (saveRevisioned). Başka süreç araya girerse yeniden
+   denenir: karşılaştırma her denemede güncel belgeyle yapılır. Supp. FOB, fiyat geri
+   yükleme, görsel, önem ve eksik adet bu yola girmez (kendi revizyon/kural zincirleri). */
+const CP_ROW_SAVE_FIELDS=Object.freeze(['notes','delType','subManufacturer','licensor','noteColumns','dates']);
+const CP_ROW_NOTE_PAIRS=Object.freeze([['Notes','NotesHtml'],['EkNot','EkNotHtml']]);
+const cpRowText=value=>value==null?'':String(value);
+function cpRowStored(ov,orderCode,key,mapName){
+  const map=ov[mapName]||{};
+  if(Object.hasOwn(map,key))return map[key];
+  return key!==orderCode&&Object.hasOwn(map,orderCode)?map[orderCode]:undefined;
+}
+function cpRowRecord(ov,orderCode,key,mapName){
+  const map=ov[mapName]||{};
+  return {...(key!==orderCode&&map[orderCode]&&typeof map[orderCode]==='object'?map[orderCode]:{}),...(map[key]&&typeof map[key]==='object'?map[key]:{})};
+}
+/* Alanları karşılaştırma birimlerine böler: [{field, unit, base, next, current, apply(patch)}]. */
+function cpRowUnits(ov,orderCode,key,patch,base){
+  const units=[];
+  const add=(field,unit,baseValue,nextValue,currentValue,apply,normalize=cpRowText)=>units.push({field,unit,base:normalize(baseValue),next:normalize(nextValue),current:normalize(currentValue),apply});
+  if(patch.notes&&typeof patch.notes==='object'){
+    const record=cpRowRecord(ov,orderCode,key,'notesmap'),b=base.notes&&typeof base.notes==='object'?base.notes:{};
+    for(const pair of CP_ROW_NOTE_PAIRS){
+      if(!pair.some(name=>Object.hasOwn(patch.notes,name)))continue;
+      const pack=source=>JSON.stringify(pair.map(name=>cpRowText(source[name])));
+      add('notes',pair[0],pack(b),pack(patch.notes),pack(record),out=>{out.notes=out.notes||{};for(const name of pair)out.notes[name]=cpRowText(patch.notes[name]);},v=>v);
+    }
+  }
+  if(Object.hasOwn(patch,'delType')&&patch.delType!=null)add('delType','delType',base.delType,patch.delType,cpRowStored(ov,orderCode,key,'delmap'),out=>{out.delType=patch.delType;});
+  if(Object.hasOwn(patch,'subManufacturer')&&patch.subManufacturer!=null)add('subManufacturer','subManufacturer',base.subManufacturer,patch.subManufacturer,cpRowStored(ov,orderCode,key,'submap'),out=>{out.subManufacturer=patch.subManufacturer;});
+  if(Object.hasOwn(patch,'licensor')){
+    const trim=value=>cpRowText(value).trim();
+    add('licensor','licensor',base.licensor,patch.licensor,cpRowStored(ov,orderCode,key,'licensormap'),out=>{out.licensor=patch.licensor;},trim);
+  }
+  if(patch.noteColumns&&typeof patch.noteColumns==='object'){
+    const bucket=cpRowRecord(ov,orderCode,key,'noteColumnValues'),b=base.noteColumns&&typeof base.noteColumns==='object'?base.noteColumns:{};
+    for(const [id,value]of Object.entries(patch.noteColumns))add('noteColumns',id,b[id],value,bucket[id],out=>{out.noteColumns=out.noteColumns||{};out.noteColumns[id]=value;});
+  }
+  if(patch.dates&&typeof patch.dates==='object'){
+    const record=cpRowRecord(ov,orderCode,key,'datemap'),b=base.dates&&typeof base.dates==='object'?base.dates:{};
+    for(const [field,stored]of Object.entries(DATE_OVERRIDE_FIELDS)){
+      if(!Object.hasOwn(patch.dates,field))continue;
+      add('dates',field,b[field],patch.dates[field],record[stored],out=>{out.dates=out.dates||{};out.dates[field]=patch.dates[field]==null||patch.dates[field]===''?null:patch.dates[field];});
+    }
+  }
+  return units;
+}
+function patchOrderOverrideRows(items, options = null) {
+  const list=Array.isArray(items)?items:[];
+  for(let attempt=1;;attempt++){
+    const ov=loadOverrides(),current=Number(ov._revisions.orders)||0;
+    const applied=[],conflicts=[];
+    for(const item of list){
+      const orderCode=Number(item&&item.orderCode),patch=item&&item.patch||{},base=item&&item.base||{};
+      const key=overrideWriteKey(orderCode,patch);
+      const units=cpRowUnits(ov,orderCode,key,patch,base).filter(unit=>unit.next!==unit.base);
+      const losing=units.filter(unit=>unit.current!==unit.base&&unit.current!==unit.next);
+      if(losing.length){
+        conflicts.push({orderCode,model:patch.model,ccode:patch.ccode,key:String(key),fields:[...new Set(losing.map(unit=>unit.field))],
+          current:currentOrderLineValues(ov,orderCode,key)});
+        continue;
+      }
+      const write={model:patch.model,ccode:patch.ccode};
+      const changes=units.filter(unit=>unit.current!==unit.next);
+      for(const unit of changes)unit.apply(write);
+      applied.push({orderCode,key:String(key),patch:write,noop:!changes.length});
+    }
+    const writes=applied.filter(item=>!item.noop);
+    if(!writes.length){
+      // Hiçbir şey yazılmadı (değer zaten kayıtlı): istemci bekleyen düzenlemenin base'ini yine kayıtlı değere taşır.
+      for(const item of applied)item.current=currentOrderLineValues(ov,item.orderCode,item.key);
+      return {applied,conflicts,revision:current,revisions:{orders:current,suppFob:Number(ov._revisions.suppFob)||0},updated:0};
+    }
+    for(const item of writes)applyOrderPatch(ov,item.orderCode,item.patch,options);
+    ov._revisions.orders=current+1;
+    let saved;
+    try{saved=saveOverrides(ov,ov._revision);}
+    catch(error){
+      // Başka süreç/istek belgeyi araya girip değiştirdi: güncel belgeyle yeniden karşılaştır.
+      if(error&&error.code==='REVISION_CONFLICT'&&attempt<8)continue;
+      throw error;
+    }
+    for(const item of writes)cpSharedStore.mirrorPatchDetached(item.key,cpSharedStore.patchFromOrderPatch(saved,item.key,item.patch),{actor:options&&options.actor,subfields:cpSharedStore.subfieldsFromOrderPatch(item.patch)});
+    for(const item of applied)item.current=currentOrderLineValues(saved,item.orderCode,item.key);
+    return {applied,conflicts,revision:saved._revisions.orders,revisions:{orders:saved._revisions.orders,suppFob:saved._revisions.suppFob},updated:writes.length};
+  }
+}
+/* Satırın kayıtlı (geçersiz kılınmış) değerleri; çakışmada istemciye döner. Kayıt yoksa alan yazılmaz. */
+function currentOrderLineValues(ov,orderCode,key){
+  const out={};
+  const notes=cpRowRecord(ov,orderCode,key,'notesmap');
+  if(Object.keys(notes).length)out.notes=Object.fromEntries(CP_ROW_NOTE_PAIRS.flat().map(name=>[name,cpRowText(notes[name])]));
+  for(const [field,map]of [['delType','delmap'],['subManufacturer','submap'],['licensor','licensormap']]){const value=cpRowStored(ov,orderCode,key,map);if(value!==undefined)out[field]=value;}
+  const columns=cpRowRecord(ov,orderCode,key,'noteColumnValues');if(Object.keys(columns).length)out.noteColumns=columns;
+  const dates=cpRowRecord(ov,orderCode,key,'datemap');
+  out.dates=Object.fromEntries(Object.entries(DATE_OVERRIDE_FIELDS).map(([field,stored])=>[field,dates[stored]||null]));
+  return out;
+}
+
 function patchPlmImageLinks(items, expectedRevision = null) {
   const ov = loadOverrides();
   const current = Number(ov._revisions.orders) || 0;
@@ -2089,7 +2195,7 @@ module.exports = {
   mutateSharedResource,mutateSettings,mutateModelConnections,attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores, cpExFactoryRevisionSnapshot, restoreCpExFactoryRevisions,
   RevisionConflictError, revisionOf, expectedNumber, applyDatePatch, overrideWriteKey, normalizeLandedMultipliers,
   NOTE_AUTHOR_FIELDS, LEGACY_NOTE_AUTHOR_ID, LEGACY_NOTE_AUTHOR_NAME, backfillLegacyNoteAuthors,
-  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceCpManagedRules, normalizeCpManagedRules, replaceTableReportLayout, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceAsasFabricMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, replaceImportanceSettings, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
+  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceCpManagedRules, normalizeCpManagedRules, replaceTableReportLayout, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceAsasFabricMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, replaceImportanceSettings, patchOrderOverride, patchOrderOverrides, patchOrderOverrideRows, CP_ROW_SAVE_FIELDS, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
   normalizeMapping, normalizeCustomFields, normalizeCpModelColumns, normalizeModelConnection, normalizeModelConnections, loadModelConnections, replaceModelConnections, recordModelConnectionRun, MODEL_CONNECTION_LIMIT, MODEL_CONNECTION_DEFAULT_SEASONS,
   loadRefreshGroups, replaceRefreshGroups,
   loadHorizonFieldPairs, upsertHorizonFieldPairs,

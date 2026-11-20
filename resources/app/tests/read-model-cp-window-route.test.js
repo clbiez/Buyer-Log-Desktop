@@ -229,3 +229,17 @@ test('decision host key ignores UI-only preferences the host never reads (a filt
   const view=structuredClone(base);view.context.entries['lcw.cp.assistant.queue-view.v1']='{}';
   assert.notEqual(task.hostKeyOf(view),key,'barındırıcının okuduğu anahtar dışarıda bırakılmaz');
 });
+
+test('decision context key (createContextLoader) also ignores UI-only preferences; host input omits them (Overview full model is not recomputed by a filter save)',()=>{
+  const prefs={entries:{'lcw.cp.rules.priority.v1':{value:'{"rules":[]}'},'lcw.cp.assistant.v1':{value:'{}'}}};
+  const load=createContextLoader({preferences:{load:()=>prefs},roleEntries:()=>({}),managedRules:()=>null,transitRules:()=>[],plmPayload:()=>null,
+    checklistPayload:()=>({answers:{},tombstones:{}}),revision:()=>'r1',merge:(own,shared)=>Merge.merge(own,shared)});
+  const base=load({id:'u'});
+  Object.assign(prefs.entries,{'lcw.cp.dimFilters.v1':{value:'{"country":["TR"]}'},'lcw.cp.imageSize.v2':{value:'{"col":60}'},'lcw.cp.bomControl.v1':{value:'{}'}});
+  const withUi=load({id:'u'});
+  assert.equal(withUi.key,base.key,'arayüz durumu bağlam anahtarını değiştirmez');
+  assert.ok(Object.keys(withUi.value.entries).every(key=>!task.UI_ONLY_ENTRY.test(key)),'barındırıcıya gitmez');
+  prefs.entries['lcw.cp.rules.priority.v1']={value:'{"rules":[{"id":"x"}]}'};
+  assert.notEqual(load({id:'u'}).key,base.key,'karar girdisi değişince anahtar değişir');
+  assert.equal(require('../server/lib/read-model/overview-model-service').UI_ONLY_ENTRY,task.UI_ONLY_ENTRY,'tek tanım');
+});

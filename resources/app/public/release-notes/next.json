@@ -764,16 +764,16 @@
       "id": "cp-computed-columns",
       "type": "improvement",
       "module": {"tr": "CP Tracker", "en": "CP Tracker"},
-      "title": {"tr": "CP öncelik ve checklist sütunları yerel arka uçta hesaplanabilir (pilot)", "en": "CP priority and checklist columns can be computed on the local backend (pilot)"},
+      "title": {"tr": "CP öncelik ve checklist sütunları yerel arka uçta hesaplanır", "en": "CP priority and checklist columns are computed on the local backend"},
       "body": {
-        "tr": "Pilot ayarı açıkken CP'deki öncelik, neden, etiket ve checklist durumları bilgisayardaki Buyer Log arka ucunda, aynı kurallarla hesaplanır. Tarayıcı tüm satırlar için karar motorunu çalıştırmaz; CP daha hızlı açılır ve ekran daha az donar. Bir checklist cevabı verdiğinizde ilgili sipariş hemen güncellenir. Kaydedilmemiş bir CP düzenlemesi varken mevcut yol kullanılır. Ayar varsayılan olarak kapalıdır.",
-        "en": "With the pilot setting on, CP priorities, reasons, tags and checklist statuses are computed on the Buyer Log backend on this computer with the same rules. The browser no longer runs the decision engine for every row, so CP opens faster and the screen freezes less. When you answer a checklist item, that order updates right away. While a CP edit is unsaved, the existing path is used. The setting is off by default."
+        "tr": "CP'deki öncelik, neden, etiket ve checklist durumları bilgisayardaki Buyer Log arka ucunda, aynı kurallarla hesaplanır. Tarayıcı tüm satırlar için karar motorunu çalıştırmaz; CP daha hızlı açılır ve ekran daha az donar. Bir checklist cevabı verdiğinizde ilgili sipariş hemen güncellenir. Bir hücre düzenlemesinden sonra öncelik ve checklist değerleri arka planda güncellenir; düzenleme ve kayıt bu hesabı beklemez.",
+        "en": "CP priorities, reasons, tags and checklist statuses are computed on the Buyer Log backend on this computer with the same rules. The browser no longer runs the decision engine for every row, so CP opens faster and the screen freezes less. When you answer a checklist item, that order updates right away. After a cell edit, priority and checklist values update in the background; editing and saving do not wait for this calculation."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
         "src": "cp-computed-columns.png",
-        "alt": {"tr": "Pilot ayarı açık CP Tracker: 30.000 demo satırında checklist sütunları ve onaylanan bir kontrol", "en": "CP Tracker with the pilot setting on: checklist columns and an approved check on 30,000 demo rows"},
+        "alt": {"tr": "CP Tracker: 30.000 demo satırında checklist sütunları ve onaylanan bir kontrol", "en": "CP Tracker: checklist columns and an approved check on 30,000 demo rows"},
         "caption": {"tr": "30.000 satırlık demo veride checklist durumları arka uçtan gelir; değerler mevcut hesapla aynıdır.", "en": "On 30,000 demo rows, checklist statuses come from the backend; the values match the existing calculation."}
       }
     },
@@ -792,6 +792,23 @@
         "src": "cp-read-model-windowed.png",
         "alt": {"tr": "Pilot ayarı açık CP Tracker: 2.077 demo satırından Kritik öncelik çipiyle süzülen 42 satır", "en": "CP Tracker with the pilot setting on: 42 of 2,077 demo rows filtered by the Critical priority chip"},
         "caption": {"tr": "Demo veride Kritik çipi seçili; satırlar, sayaçlar ve sayım arka uçtan gelir ve mevcut yolla aynıdır.", "en": "The Critical chip is selected on demo data; rows, counts and totals come from the backend and match the existing path."}
+      }
+    },
+    {
+      "id": "cp-row-save-conflict",
+      "type": "improvement",
+      "module": {"tr": "CP Tracker", "en": "CP Tracker"},
+      "title": {"tr": "CP düzenlemeleri satır bazında anında kaydedilir", "en": "CP edits are saved instantly per row"},
+      "body": {
+        "tr": "CP'de bir hücre düzenlemesi yalnız değiştirdiğiniz alanı hemen kaydeder ve diğer sekme ile kullanıcılara yalnız o satır gider. Başka bir kullanıcının başka satıra ya da aynı satırın başka alanına yaptığı kayıt artık sizin kaydınızı reddettirmez; sizin kaydınız da onlarınkini ezmez. Aynı alanı biri sizden önce değiştirdiyse onun değeri satırda gösterilir ve bir bildirimle haber verilir; düzenleme sessizce kaybolmaz. Öncelik ve checklist değerleri arkadan güncellenir ve yalnız etkilenen satırlar yeniden hesaplanır. Toplu yapıştırma, Licensor ve Supp. FOB mevcut yolla kaydedilir.",
+        "en": "A CP cell edit now saves only the field you changed, right away, and only that row is sent to other tabs and users. A save by another user to another row, or to another field of the same row, no longer rejects your save, and your save does not overwrite theirs. If someone changed the same field before you, their value is shown in the row and a notice tells you; the edit is not lost silently. Priority and checklist values update in the background, and only the affected rows are recalculated. Bulk paste, Licensor and Supp. FOB are saved through the existing path."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-row-save-conflict.png",
+        "alt": {"tr": "CP Tracker: aynı notu başka sekme önce kaydettiği için gösterilen çakışma bildirimi", "en": "CP Tracker: the conflict notice shown because another tab saved the same note first"},
+        "caption": {"tr": "Demo veride iki sekme aynı notu aynı anda yazdı; kazanan değer satırda gösterilir, diğer sekmeye bildirim çıkar.", "en": "On demo data two tabs wrote the same note at once; the winning value is shown in the row and the other tab gets a notice."}
       }
     },
     {
