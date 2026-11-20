@@ -834,6 +834,17 @@
         "kind": "none",
         "reason": {"tr": "Ekranda değişen bir şey yok; yalnız aynı değerlerin hesaplanma süresi kısalır.", "en": "Nothing changes on screen; the same values are only calculated faster."}
       }
+    },
+    {
+      "id": "cp-row-patch-no-wait",
+      "type": "improvement",
+      "module": {"tr": "CP Tracker", "en": "CP Tracker"},
+      "title": {"tr": "CP'de kayıttan sonra öncelikler ve filtreler beklemeden güncellenir", "en": "CP priorities and filters update without waiting after a save"},
+      "body": {"tr": "CP'de bir notu, teslimat tipini ya da tarihi kaydettiğinizde öncelik ve checklist sütunları ile filtre sonuçları, sayfa önbelleğinin yeniden yazılmasını beklemeden yalnız değişen satırlar üzerinden hesaplanır. Kayıt sürerken açılan filtre ya da kaydırma hata uyarısı göstermez; önceki sonuç ekranda kalır ve yenisi hazır olunca tablo kendini günceller. CP hesabı çalışma alanı açılırken arka planda hazırlanır. Hesaplanan değerler değişmez; yeni sayfa önbelleği hazır olunca sonuçlar onunla karşılaştırılır.", "en": "When you save a note, delivery type or date in CP, the priority and checklist columns and filter results are calculated from the changed rows only, without waiting for the page cache to be rewritten. A filter or scroll during a save no longer shows an error; the previous result stays on screen and the table updates itself when the new one is ready. CP calculations are prepared in the background when the workspace opens. Calculated values do not change; once the new page cache is ready, the results are checked against it."},
+      "visual": {
+        "kind": "none",
+        "reason": {"tr": "Ekranda yeni bir öğe yok; aynı değerler kayıttan sonra daha erken gelir ve geçici hata uyarısı gösterilmez.", "en": "Nothing new appears on screen; the same values arrive sooner after a save and no temporary error warning is shown."}
+      }
     }
   ]
 }
