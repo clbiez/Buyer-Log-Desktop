@@ -43,13 +43,15 @@ test('grid-clipboard awaits the windowed provider before building the matrix and
   assert.match(SOURCE,/prepareRange:\(range,rows\)=>ordersRMPrepareRange\(range,rows\)/);
 });
 
-test('flag off by default: renderOrdersNow takes the legacy path unless the read model is enabled',()=>{
+test('flag on by default (#1071 WS7); \'0\' / window=false roll back to the legacy renderOrdersNow path',()=>{
   const flag=extractFunction(SOURCE,'ordersReadModelEnabled');
   const key=/^const ORDERS_RM_STORAGE_KEY=.*$/m.exec(SOURCE)[0];
   const run=(storage,override)=>vm.runInNewContext(`${key}\nlet ordersRMEnabledCache=null;\n${flag};ordersReadModelEnabled()`,{window:{...(override===undefined?{}:{BL_ORDERS_READ_MODEL:override}),BLStorage:{getItem:key=>storage[key]??null}},localStorage:{getItem:()=>null}});
-  assert.equal(run({}),false);
+  assert.equal(run({}),true,'default ON');
   assert.equal(run({'bl.ordersReadModel.v1':'1'}),true);
-  assert.equal(run({'bl.ordersReadModel.v1':'1'},false),false);
+  assert.equal(run({'bl.ordersReadModel.v1':'0'}),false,'per-user rollback');
+  assert.equal(run({'bl.ordersReadModel.v1':'1'},false),false,'window rollback');
+  assert.equal(run({},false),false);
   // Yönlendirici: anahtar kapalıyken doğrudan eski renderOrdersNow.
   const route=extractFunction(SOURCE,'renderOrdersRoute');
   assert.match(route,/if\(!ordersReadModelEnabled\(\)\)return renderOrdersNow\(\);/);

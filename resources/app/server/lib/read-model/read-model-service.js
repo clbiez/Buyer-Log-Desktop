@@ -69,7 +69,8 @@ function createReadModelService({guard,loadProjection,runCompute,calendar=()=>({
       counters.misses++;
       const datasetKey=hash(JSON.stringify([captured.key,module,generation])),scopeKey=hash(scope);
       const base={datasetKey,scopeKey,query:rawQuery,calendar:calendar()};
-      const options={signal,estimatedBytes:64*1024*1024,ownerKey:'read-model',generation:'1'};
+      // module: yalnız yönlendirme ipucu (kısa sorgu şeridi, #1071 WS7); havuz bu alanı okumaz.
+      const options={signal,estimatedBytes:64*1024*1024,ownerKey:'read-model',generation:'1',module};
       let value=await compute(base,options,task);
       if(value&&value.missing){
         counters.datasetLoads++;
