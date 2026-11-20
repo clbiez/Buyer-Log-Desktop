@@ -20,6 +20,7 @@ const {performance}=require('node:perf_hooks');
 const cpQuery=require('./cp-query');
 const hash=value=>crypto.createHash('sha256').update(value).digest('hex');
 const DECISION_FACTOR=3;
+const WARM_BASE_BYTES=96*1024*1024;
 const TOKEN=/^[A-Za-z0-9_-]{1,64}$/;
 
 function failure(code,statusCode,tr,en,extra={}){return Object.assign(new Error(`${tr} / ${en}`),{code,statusCode,error:tr,errorEn:en,...extra});}
@@ -92,6 +93,13 @@ function datasetScopeOf(captured){
    iptal edince işçiyi kapatır; barındırıcı ve veri kümesi kaybolur, sonraki sorgu soğuk tam hesap yapar
    (30k: ~15 sn; düzenleme sonrası art arda sorgularda kısır döngü). Başlamış hesap biter ve önbelleğe girer;
    iş zaman aşımı (havuz timeoutMs) geçerlidir. Kapanmış istek işçiye hiç verilmez. */
+/* Veri kümesi yükleyen denemenin bellek tahmini. Barındırıcı sıcaksa (işçi `warm` bildirdi) yeni nesil artımlı
+   hesaplanır: soğuk karar payı (DECISION_FACTOR) istenmez. İstenirse yerleşik barındırıcı + veri kümesiyle
+   bütçe aşılır ve havuz boştaki işçiyi "yer açmak için" kapatır; her düzenleme soğuk tam hesaba döner
+   (30k: ~15 sn). Tahmin yanlış çıkarsa havuz işi COMPUTE_ESTIMATE_EXCEEDED ile reddeder (sessiz aşım yok). */
+function datasetLoadEstimate(out,options,uncompressed,inputBytes){
+  return (out&&out.warm===true?WARM_BASE_BYTES:options.estimatedBytes)+uncompressed*6+inputBytes;
+}
 function workerOptions(options){
   const {signal,...rest}=options;
   if(signal&&signal.aborted)throw failure('COMPUTE_ABORTED',499,'Hesaplama iptal edildi.','Compute operation cancelled.');
@@ -160,7 +168,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
         counters.datasetLoads++;
         const source=value.buffer,bytes=Uint8Array.from(Buffer.isBuffer(source)?source:Buffer.from(source||[]));
         out=await run({...base,dataset:{...base.dataset,buffer:bytes.buffer}},
-          workerOptions({...options,estimatedBytes:options.estimatedBytes+uncompressed*6+bytes.byteLength,inputBytes:bytes.byteLength,transferList:[bytes.buffer]}));
+          workerOptions({...options,estimatedBytes:datasetLoadEstimate(out,options,uncompressed,bytes.byteLength),inputBytes:bytes.byteLength,transferList:[bytes.buffer]}));
       }
       if(!out||typeof out.body!=='string')throw failure('COMPUTE_WORKER_FAILED',500,'Hesaplama işçisi tamamlanamadı.','Compute worker failed.');
       captured.assertResponse();lease.assertResponse?.();
@@ -205,7 +213,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
         counters.datasetLoads++;
         const source=value.buffer,bytes=Uint8Array.from(Buffer.isBuffer(source)?source:Buffer.from(source||[]));
         out=await runQuery({...base,dataset:{...base.dataset,buffer:bytes.buffer}},
-          workerOptions({...options,estimatedBytes:options.estimatedBytes+uncompressed*6+bytes.byteLength,inputBytes:bytes.byteLength,transferList:[bytes.buffer]}));
+          workerOptions({...options,estimatedBytes:datasetLoadEstimate(out,options,uncompressed,bytes.byteLength),inputBytes:bytes.byteLength,transferList:[bytes.buffer]}));
       }
       if(!out||!out.result)throw failure('COMPUTE_WORKER_FAILED',500,'Hesaplama işçisi tamamlanamadı.','Compute worker failed.');
       captured.assertResponse();lease.assertResponse?.();

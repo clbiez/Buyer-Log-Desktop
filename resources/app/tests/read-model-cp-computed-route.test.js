@@ -253,8 +253,9 @@ test('pending-answer overlay: applies only to this request and user, is part of 
 
 test('an edit (new generation, new data version) keeps the decision host and recomputes only the affected rows (#1078 alt PR 3)',async()=>{
   worker.cache.clear();task.clearHosts();
-  const {service,state}=harness({realGuard:true});
+  const {service,state,calls}=harness({realGuard:true});
   const first=await service.computed(req(users.moderator),{version:1});
+  const coldLoad=calls.filter(call=>call.buffer).at(-1).options.estimatedBytes;
   assert.equal(first.timing.phases.incremental,undefined);
   const before=new Map(columns(first).rows.map(row=>[row[0],JSON.stringify(row)]));
   // Düzenleme: yeni projeksiyon nesli + guard veri sürümü değişir (override yazımı); bir satırın notu.
@@ -262,6 +263,9 @@ test('an edit (new generation, new data version) keeps the decision host and rec
   const second=await service.computed(req(users.moderator),{version:1});
   assert.equal(second.cached,false);
   assert.ok(!(second.timing.phases.hostMs>0),'barındırıcı yeniden kurulmadı');
+  // Sıcak barındırıcıda yeni nesil yüklemesi soğuk karar payını istemez (havuz boştaki işçiyi kapatmasın).
+  const warmLoad=calls.filter(call=>call.buffer).at(-1).options.estimatedBytes;
+  assert.ok(warmLoad<coldLoad,`sıcak tahmin ${warmLoad} < soğuk ${coldLoad}`);
   assert.equal(second.timing.phases.incremental.changed,1,JSON.stringify(second.timing.phases.incremental));
   assert.ok(second.timing.phases.incremental.targets<before.size,'yalnız etkilenen satırlar');
   // Eski neslin veri kümesi işçide birikmez (veri sürümü kapsamı açmaz; bellek bütçesi aşılıp işçi yeniden başlamaz).

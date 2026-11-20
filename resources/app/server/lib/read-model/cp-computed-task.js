@@ -185,7 +185,9 @@ async function ensureComputed(payload,deps){
   const loads={};
   if(!payload||!payload.dataset)throw Object.assign(new Error('Invalid compute request'),{code:'COMPUTE_JOB_INVALID'});
   const dataset=datasetFor(payload.dataset,deps,loads);
-  if(!dataset)return {missing:['cp']};
+  // warm: bu bağlamın barındırıcısı ve önceki sonucu işçide hazır (yeni nesil artımlı hesaplanır; servis bellek
+  // tahminini buna göre verir — soğuk karar payı istenirse havuz boştaki işçiyi kapatıp barındırıcıyı düşürür).
+  if(!dataset)return {missing:['cp'],warm:Boolean(payload.context&&hosts.get(hostKeyOf(payload))?.current)};
   if(!payload.context)return {missing:['context']};
   const key=hostKeyOf(payload);
   let entry=hosts.get(key),hostMs=0;
@@ -284,7 +286,7 @@ function incrementalPlan(previous,rows,source){
 async function execute(payload,deps){
   const started=performance.now();
   const computed=await ensureComputed(payload,deps);
-  if(computed.missing)return {missing:computed.missing};
+  if(computed.missing)return {missing:computed.missing,warm:computed.warm};
   const {entry,current,hostMs,loads}=computed,rows=current.rows,serialized=current.serialized,digests=current.digests;
   // Delta, aynı barındırıcının aynı veri kümesi üzerindeki son HISTORY sonucundan birine göre
   // (istemci araya giren bağlam olayıyla bir sonucu atmış olabilir). Satır başına yalnız özet tutulur.
