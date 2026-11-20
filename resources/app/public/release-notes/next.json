@@ -823,6 +823,17 @@
         "kind": "none",
         "reason": {"tr": "Ekranda değişen bir şey yok; yalnız aynı değerlerin hesaplanma süresi kısalır.", "en": "Nothing changes on screen; the same values are only calculated faster."}
       }
+    },
+    {
+      "id": "backlog-overview-normalize-fast",
+      "type": "improvement",
+      "module": {"tr": "Backlog · Genel Bakış", "en": "Backlog · Overview"},
+      "title": {"tr": "Backlog Genel Bakış paneli daha hızlı hazırlanır", "en": "The Backlog Overview panel is prepared faster"},
+      "body": {"tr": "Backlog açıldığında Genel Bakış paneli, satırların alanlarını her satır için yeniden aramaz; aynı başlık düzenindeki satırlar için alan eşleşmesi bir kez çözülür. On binlerce Backlog satırında panel hazırlanırken ekranın takıldığı süre kısalır. Gösterilen sayılar ve gruplar değişmez.", "en": "When Backlog opens, the Overview panel no longer searches for each field again on every row; field matching is resolved once for rows that share the same header layout. With tens of thousands of Backlog rows, the time the screen stalls while the panel is prepared is shorter. The displayed numbers and groups do not change."},
+      "visual": {
+        "kind": "none",
+        "reason": {"tr": "Ekranda değişen bir şey yok; yalnız aynı değerlerin hesaplanma süresi kısalır.", "en": "Nothing changes on screen; the same values are only calculated faster."}
+      }
     }
   ]
 }
