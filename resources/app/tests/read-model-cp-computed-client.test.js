@@ -297,7 +297,8 @@ test('(A) pending computed columns: the table is drawn without waiting unless th
 
 test('(A) render path: renderCPNow draws immediately in the pending view, keeps the loading state otherwise; KPI and extra groups show "calculating" chips with a notice',()=>{
   const render=SOURCE.slice(SOURCE.indexOf('function renderCPNow(){'),SOURCE.indexOf('const CP_IMAGE_WARMUP_ROWS'));
-  assert.match(render,/cpComputed\.pendingView=cpComputedPending\(\)&&!cpViewNeedsComputed\(\);\s*if\(cpComputed\.pendingView\)void scheduleUnifiedPrioritiesForTable\('cp'\);\s*else if\(!ensureUnifiedPrioritiesForTable\('cp'\)\)return;/);
+  assert.match(render,/if\(!cpPrioritiesReadyForRender\(\)\)return;/);
+  assert.match(extractFunction(SOURCE,'cpPrioritiesReadyForRender'),/cpComputed\.pendingView=cpComputedPending\(\)&&!cpViewNeedsComputed\(\);\s*if\(cpComputed\.pendingView\)\{void scheduleUnifiedPrioritiesForTable\('cp'\);return true;\}\s*return ensureUnifiedPrioritiesForTable\('cp'\);/);
   assert.match(render,/computedPending:cpComputed\.pendingView/);
   assert.match(render,/cpComputed\.pendingView\?cpPendingQuickGroups\(/);
   const kpi=SOURCE.slice(SOURCE.indexOf('function renderCpKpiBar('),SOURCE.indexOf("document.querySelectorAll('#cpKpi .kpi:not([data-qfg-col])')")+400);

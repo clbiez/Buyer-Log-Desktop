@@ -1477,6 +1477,13 @@ function cpComputedPendingNotice(){
   showToast(appLang==='en'?'Priorities and checklist are still being calculated. They appear in a few seconds; filters and sorting on them apply automatically.'
     :'Öncelik ve checklist hâlâ hesaplanıyor. Birkaç saniye içinde görünür; bunlara dayalı filtre ve sıralama kendiliğinden uygulanır.');
 }
+// renderCPNow: hesaplanmış sütunlar beklenirken görünüm onlara bağlı değilse satırlar hemen çizilir (true);
+// bağlıysa bugünkü yükleme durumu (ensureUnifiedPrioritiesForTable) — sonuç gelince renderCP yeniden çağrılır.
+function cpPrioritiesReadyForRender(){
+  cpComputed.pendingView=cpComputedPending()&&!cpViewNeedsComputed();
+  if(cpComputed.pendingView){void scheduleUnifiedPrioritiesForTable('cp');return true;}
+  return ensureUnifiedPrioritiesForTable('cp');
+}
 // cellHtml kancası: bekleyen görünümde hesaplanmış değere bağlı hücre.
 function cpComputedPendingCell(c,tableKey){
   if(tableKey!=='cp'||!cpComputed.pendingView||!c||!cpComputedDependentKey(c.k))return '';
@@ -10375,10 +10382,7 @@ function renderCPNow(){
   if(!state.cp) return;
   cpPlmDetailsSync();
   const legacyStarted=performance.now();
-  // #1078 (A): hesaplanmış sütunlar beklenirken görünüm onlara bağlı değilse satırlar hemen çizilir.
-  cpComputed.pendingView=cpComputedPending()&&!cpViewNeedsComputed();
-  if(cpComputed.pendingView)void scheduleUnifiedPrioritiesForTable('cp');
-  else if(!ensureUnifiedPrioritiesForTable('cp'))return;
+  if(!cpPrioritiesReadyForRender())return;
   applyFormulaColumns('cp'); // sıralama ve sayfa filtreleri hesaplanan değeri görsün
   migrateLegacyCpQuickFilters();
   updateCpDimBtnLabels();
