@@ -71,7 +71,7 @@ test('server wires one prewarm scheduler into every read model route; only works
   assert.ok(index.indexOf('noteWorkspaceOpened(req, profile);')>index.indexOf("redirect(302, '/select-user')"),'only a valid session opens the workspace');
   assert.match(SERVER,/if \(String\(req\.query\.mode \|\| ''\) === 'initial'\) noteWorkspaceOpened\(req\);/);
   const routes=SERVER.slice(SERVER.indexOf("require('./lib/read-model/overview-model-routes')(app, {"),SERVER.indexOf("app.use(express.json({ limit: '100mb' }));"));
-  assert.equal((routes.match(/runReadModelCompute: readModelPrewarm\.runCompute,/g)||[]).length,3,'overview, query and global flow share the priority-aware pool entry');
+  assert.equal((routes.match(/runReadModelCompute: readModelPrewarm\.runCompute,/g)||[]).length,4,'overview, CP computed, query and global flow share the priority-aware pool entry');
   assert.match(routes,/overviewModelService: readModelPrewarm\.overviewServiceProxy\(\),/);
   assert.match(SERVER,/runCompute: readModelPrewarm\.runCompute,\n    loadContext: createContextLoader\(cpDecisionContextSources\),/);
 });

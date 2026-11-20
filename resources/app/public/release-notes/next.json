@@ -767,6 +767,17 @@
         "alt": {"tr": "Pilot ayarı açık Buyer Log: yalnız açılan CP Tracker modülünde Hazır rozeti var, diğer modüllerde Bekliyor yazmıyor", "en": "Buyer Log with the pilot setting on: only the opened CP Tracker module shows a Ready badge; the other modules show no Pending label"},
         "caption": {"tr": "Pilot açıkken modüller açılınca yüklenir; hazırlık rozeti yalnız gerçekten yüklenen modülde görünür.", "en": "With the pilot on, modules load when opened; the preparation badge appears only on a module that has actually loaded."}
       }
+    },
+    {
+      "id": "read-model-integration-context-key",
+      "type": "improvement",
+      "module": {"tr": "Genel Bakış · CP Tracker", "en": "Overview · CP Tracker"},
+      "title": {"tr": "Genel Bakış ve CP önceliği gereksiz yere yeniden hesaplanmaz", "en": "Overview and CP priorities are no longer recalculated needlessly"},
+      "body": {"tr": "Tablo sütunları gibi CP kararına girmeyen bir ayar değiştiğinde Genel Bakış'ın CP özeti yerel arka uçta yeniden hesaplanmaz. CP öncelikleri arka uçta hesaplanırken açılıştan sonraki modül hazırlığı bu hesabı beklemez. CP açılırken arka plan hazırlığı CP hesabını bekletmez.", "en": "When a setting outside the CP decision changes, such as table columns, the local backend does not recalculate the Overview CP summary. When CP priorities are calculated on the backend, module preparation after startup no longer waits for that calculation. Opening CP is not held up by background preparation."},
+      "visual": {
+        "kind": "none",
+        "reason": {"tr": "Ekranda değişen bir şey yok; yalnız arka uç hesaplarının sayısı ve zamanlaması değişir.", "en": "Nothing changes on screen; only the number and timing of backend calculations change."}
+      }
     }
   ]
 }

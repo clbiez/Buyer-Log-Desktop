@@ -20,7 +20,8 @@
  *  - Ön ısıtma işleri havuza 'background' önceliğiyle girer; kuyrukta bekleyen
  *    kullanıcı isteği her zaman önce başlar.
  *  - Kimsenin beklemediği (spekülatif) bir ön ısıtma işi çalışırken ya da kuyruktayken
- *    kullanıcıdan yeni bir okuma modeli işi (Siparişler sorgusu, Akış Haritası…)
+ *    kullanıcıdan yeni bir okuma modeli işi (Siparişler sorgusu, CP hesaplanmış sütunlar,
+ *    Akış Haritası…)
  *    gelirse ön ısıtma iptal edilir
  *    (havuz çalışan işi işçiyi emekli ederek keser). Kullanıcı sorgusu ön ısıtmanın
  *    arkasında beklemez; ön ısıtma okuma modeli sessizleşince yeniden dener.
