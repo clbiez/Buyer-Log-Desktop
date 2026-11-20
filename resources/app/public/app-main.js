@@ -1429,14 +1429,15 @@ function scheduleUnifiedPrioritiesForTable(tableKey,options={}){
      bugünkü istemci yolu kullanılır (satır bazlı düzenleme alt PR 3).
    - Herhangi bir hata oturumu eski yola döndürür.
    Anahtar: window.BL_READ_MODEL_CP_COMPUTED (boolean) ya da kullanıcı tercihi
-   'bl.cpComputed.v1'='1' (Siparişler okuma modeliyle aynı kalıp); varsayılan kapalı. */
+   'bl.cpComputed.v1'; varsayılan AÇIK ('0' ile kapanır; #1078 alt PR 3). */
 const CP_COMPUTED_STORAGE_KEY='bl.cpComputed.v1';
 const cpComputed={disabled:false,applied:null,job:null,enabled:null,answersOnly:false,optimistic:null};
 function cpComputedEnabled(){
   if(cpComputed.disabled)return false;
   if(typeof window.BL_READ_MODEL_CP_COMPUTED==='boolean')return window.BL_READ_MODEL_CP_COMPUTED;
   if(cpComputed.enabled===null){
-    try{cpComputed.enabled=(window.BLStorage||localStorage).getItem(CP_COMPUTED_STORAGE_KEY)==='1';}catch(_){cpComputed.enabled=false;}
+    // Varsayılan AÇIK (kullanıcı kararı, #1078): geri dönüş window.BL_READ_MODEL_CP_COMPUTED=false ya da tercih '0'.
+    try{cpComputed.enabled=(window.BLStorage||localStorage).getItem(CP_COMPUTED_STORAGE_KEY)!=='0';}catch(_){cpComputed.enabled=true;}
   }
   return cpComputed.enabled;
 }

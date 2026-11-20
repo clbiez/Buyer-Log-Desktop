@@ -61,11 +61,13 @@ function load({flag=true,rows=4,server,deltaRow=0}={}){
   return {api:ctx.__api,ctx,calls,rows:cpRows};
 }
 
-test('flag off: legacy client path, no request to the read model; preference key turns it on',async()=>{
+test('flag off: legacy client path, no request to the read model; default is ON, preference "0" turns it off',async()=>{
   const stored=load({flag:null});stored.ctx.__stored={'bl.cpComputed.v1':'1'};
   assert.equal(stored.api.cpComputedEnabled(),true,'kullanıcı tercihi');
   const unset=load({flag:null});
-  assert.equal(unset.api.cpComputedEnabled(),false,'varsayılan kapalı');
+  assert.equal(unset.api.cpComputedEnabled(),true,'varsayılan AÇIK (#1078 alt PR 3, kullanıcı kararı)');
+  const optOut=load({flag:null});optOut.ctx.__stored={'bl.cpComputed.v1':'0'};
+  assert.equal(optOut.api.cpComputedEnabled(),false,'geri dönüş: tercih "0"');
   const {api,calls,rows}=load({flag:false});
   assert.equal(await api.scheduleUnifiedPrioritiesForTable('cp'),true);
   assert.equal(calls.fetch.length,0);assert.equal(calls.decideAsync,1);
