@@ -26595,6 +26595,43 @@ const KOL_STATUS_API=window.BLCollectionStatusCatalog;
 let kolStatusCatalog=KOL_STATUS_API?KOL_STATUS_API.seed():[];
 function kolNormalizeStatusCatalog(value,rows){return KOL_STATUS_API?KOL_STATUS_API.normalize(value,{rowStatuses:(Array.isArray(rows)?rows:[]).map(row=>row&&row.durum)}):(Array.isArray(value)?value:[]);}
 function kolStatusEntries(){return KOL_STATUS_API?KOL_STATUS_API.normalize(kolStatusCatalog,{rowStatuses:(Array.isArray(kolRows)?kolRows:[]).map(row=>row&&row.durum)}):[];}
+/* #1079 WS6a — Koleksiyon statü araması. Satır başına statü etiketi/rengi (Genel Bakış
+   Koleksiyon özeti, kolon filtresi, grup özeti, Excel) her çağrıda kolStatusEntries()
+   ile TÜM satırları yeniden tarıyordu: N satırda O(N²). 2.000 satırda açılış sonrası
+   ~4 sn ana iş parçacığı (CDP: rawKey), 30.000 satırda pratikte donma.
+   Anahtar açıkken arama, tek eşzamanlı tur boyunca tek normalleştirilmiş anlık
+   görüntüyü paylaşır; görüntü bir mikro görevde düşer. Kalıcı kayıt ve statü yönetimi
+   tam yolu (kolStatusEntries) kullanmaya devam eder.
+   Varsayılan AÇIK (kullanıcı kararı, parite 2k/30k eşit). Geri dönüş:
+   window.BL_READ_MODEL_COLLECTION=false ya da bu tarayıcıda
+   'buyerlog.readModel.collection.v1'='0' eski yolu çalıştırır. */
+const KOL_STATUS_SNAPSHOT_STORAGE_KEY='buyerlog.readModel.collection.v1';
+let kolStatusSnapshotEnabledCache=null,kolStatusLookupCache=null;
+function kolStatusSnapshotEnabled(){
+  if(typeof window.BL_READ_MODEL_COLLECTION==='boolean')return window.BL_READ_MODEL_COLLECTION;
+  if(kolStatusSnapshotEnabledCache===null){try{kolStatusSnapshotEnabledCache=localStorage.getItem(KOL_STATUS_SNAPSHOT_STORAGE_KEY)!=='0';}catch(_){kolStatusSnapshotEnabledCache=true;}}
+  return kolStatusSnapshotEnabledCache;
+}
+function kolStatusLookup(force){
+  const catalog=kolStatusCatalog,rows=kolRows,length=Array.isArray(rows)?rows.length:0,cached=kolStatusLookupCache;
+  if(!force&&cached&&cached.catalog===catalog&&cached.rows===rows&&cached.length===length)return cached;
+  const entries=kolStatusEntries(),byKey=new Map();
+  for(const entry of entries){const lookup=KOL_STATUS_API.key(entry.name);if(!byKey.has(lookup))byKey.set(lookup,entry);}
+  const next={catalog,rows,length,entries,byKey,absent:cached&&force&&cached.catalog===catalog&&cached.rows===rows?cached.absent:new Set()};
+  kolStatusLookupCache=next;
+  // Görüntü yalnız bu eşzamanlı tur içindir; sonraki tur yerinde değişen satırları yeniden okur.
+  queueMicrotask(()=>{if(kolStatusLookupCache===next)kolStatusLookupCache=null;});
+  return next;
+}
+function kolStatusLookupEntry(name){
+  const lookup=KOL_STATUS_API.key(name);if(!lookup)return null;
+  let snapshot=kolStatusLookup(false),entry=snapshot.byKey.get(lookup);
+  if(entry||snapshot.absent.has(lookup))return entry||null;
+  // Aynı turda yeni görünen statü (yapıştırma/içe aktarma) için bir kez tam okuma.
+  snapshot=kolStatusLookup(true);entry=snapshot.byKey.get(lookup);
+  if(!entry)snapshot.absent.add(lookup);
+  return entry||null;
+}
 // A paint shares one normalized catalog. Looking it up for every option used
 // to rescan every workspace row and normalize the catalog again.
 function kolStatusRenderSnapshot(){
@@ -26612,8 +26649,8 @@ function kolStatusRenderSnapshot(){
   };
 }
 function kolStatusCanonicalName(name){return KOL_STATUS_API?.canonicalName?KOL_STATUS_API.canonicalName(name):String(name||'').trim();}
-function kolStatusEntry(name){return KOL_STATUS_API?KOL_STATUS_API.find(kolStatusEntries(),kolStatusCanonicalName(name)):null;}
-function kolStatusColor(name){return KOL_STATUS_API?KOL_STATUS_API.color(kolStatusEntries(),kolStatusCanonicalName(name)):'#667085';}
+function kolStatusEntry(name){if(KOL_STATUS_API&&kolStatusSnapshotEnabled())return kolStatusLookupEntry(kolStatusCanonicalName(name));return KOL_STATUS_API?KOL_STATUS_API.find(kolStatusEntries(),kolStatusCanonicalName(name)):null;}
+function kolStatusColor(name){if(KOL_STATUS_API&&kolStatusSnapshotEnabled()){const entry=kolStatusLookupEntry(kolStatusCanonicalName(name));return entry?entry.color:KOL_STATUS_API.DEFAULT_COLOR;}return KOL_STATUS_API?KOL_STATUS_API.color(kolStatusEntries(),kolStatusCanonicalName(name)):'#667085';}
 function kolApplyStatusCellAppearance(el,name){
   if(!el)return;
   const color=kolStatusColor(kolStatusCanonicalName(name));
@@ -26622,7 +26659,7 @@ function kolApplyStatusCellAppearance(el,name){
   td?.style?.setProperty?.('--kol-status-color',color);
 }
 function kolStatusDisplayLabel(name){const entry=kolStatusEntry(name);return entry&&entry.builtin?(KOL_STATUS_API?.label?KOL_STATUS_API.label(entry.name,appLang):L(entry.name)):String(name||'');}
-function kolStatusDefaultName(){return kolStatusEntries()[0]?.name||'Pending File';}
+function kolStatusDefaultName(){return (KOL_STATUS_API&&kolStatusSnapshotEnabled()?kolStatusLookup(false).entries:kolStatusEntries())[0]?.name||'Pending File';}
 function kolStatusExcelArgb(name){return KOL_STATUS_API?KOL_STATUS_API.toArgb(kolStatusColor(name)):'FF667085';}
 function kolStatusExcelTextArgb(name){return KOL_STATUS_API?KOL_STATUS_API.textArgb(kolStatusColor(name)):'FFFFFFFF';}
 function kolStatusUsageCount(name){const lookup=KOL_STATUS_API?KOL_STATUS_API.key(name):String(name||'');return kolRows.reduce((count,row)=>count+((KOL_STATUS_API?KOL_STATUS_API.key(row&&row.durum):String(row&&row.durum||''))===lookup?1:0),0);}
@@ -29211,13 +29248,28 @@ function kolCanonicalFilterSelection(key,values){
 }
 const KOL_CONFIRMED_NAME_FILTER_KEY = '__confirmedName__';
 const KOL_CONFIRMATION_FILTER_KEY = '__confirmation__';
+/* #1079 WS6a — Filtre değeri satır başına çağrılır. Eski yol her çağrıda sütun şemasını
+   tüm satırlardan yeniden çıkarıyordu (O(N²); 30.000 satırda ~22 sn), oysa şema
+   yalnız özel sütunda kullanılır. Anahtar açıkken şema yalnız özel sütunda ve tek
+   eşzamanlı tur içinde bir kez çözülür (kolStatusLookup ile aynı ömür). */
+let kolFilterSchemaCache=null;
+function kolFilterSchemaFor(col){
+  const rows=kolRows,length=Array.isArray(rows)?rows.length:0;
+  let cache=kolFilterSchemaCache;
+  if(!cache||cache.rows!==rows||cache.length!==length){
+    cache=kolFilterSchemaCache={rows,length,byColumn:new Map()};
+    queueMicrotask(()=>{if(kolFilterSchemaCache===cache)kolFilterSchemaCache=null;});
+  }
+  if(!cache.byColumn.has(col))cache.byColumn.set(col,columnSchemaFor(col,rows));
+  return cache.byColumn.get(col);
+}
 function kolFilterValue(row,key){
   if(key===KOL_CONFIRMATION_FILTER_KEY)return kolConfirmedPricing(row)?'confirmed':'notConfirmed';
   if(key===KOL_CONFIRMED_NAME_FILTER_KEY){
     const display=kolConfirmedDisplay(row);
     return display?norm(display.name):'';
   }
-  const col=kolColDefs().find(c=>c.k===key),schema=col&&columnSchemaFor(col,kolRows);
+  const col=kolColDefs().find(c=>c.k===key),schema=col&&(kolStatusSnapshotEnabled()?(col.custom?kolFilterSchemaFor(col):null):columnSchemaFor(col,kolRows));
   const effective=kolEffectiveValue(row,key);
   if(col?.checklist)return kolChecklistDisplay(effective,row);
   if(col?.custom&&schema){ const value=schema.filterValue(effective); return value==null?'':String(value); }
