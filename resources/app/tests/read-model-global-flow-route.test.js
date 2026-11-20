@@ -64,12 +64,12 @@ function exportBuffer(){
   ];
   return zlib.gzipSync(JSON.stringify({rows,sourceRevision:'src-1'}));
 }
-async function serve(t,{stale=0}={}){
-  const app=express(),buffer=exportBuffer(),state={runs:0,computes:0,releases:0,leases:0,stale};
+async function serve(t,{stale=0,acquireStale=0}={}){
+  const app=express(),buffer=exportBuffer(),state={runs:0,computes:0,releases:0,leases:0,stale,acquireStale};
   const routes=register(app,{userAccess:{requireArea:area=>(req,res,next)=>{assert.equal(area,'backlog');return req.headers['x-deny']?res.status(403).json({code:'ACCESS_AREA_REQUIRED'}):next();}},
     assertSourceFilters(){},prepareComputeBacklog:async()=>{},backlogReadConsumer:()=>({signal:new AbortController().signal,dispose(){}}),
     apiError:(res,error)=>res.status(error.statusCode||500).json({code:error.code}),sendComputedResponse,
-    getComputeReads:()=>({run:async()=>{state.runs++;state.leases++;let staleNow=state.stale>0;if(staleNow)state.stale--;
+    getComputeReads:()=>({run:async()=>{state.runs++;if(state.acquireStale>0){state.acquireStale--;throw Object.assign(new Error('stale build'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});}state.leases++;let staleNow=state.stale>0;if(staleNow)state.stale--;
       return {value:{buffer,uncompressedBytes:1},release(){state.releases++;},assertResponse(){if(staleNow)throw Object.assign(new Error('stale'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});}};}}),
     runReadModelCompute:async(task,payload)=>{assert.equal(task,'global-flow-records');state.computes++;return {value:model.execute(payload),release(){}};}});
   const server=await new Promise(resolve=>{const s=app.listen(0,'127.0.0.1',()=>resolve(s));});
@@ -103,4 +103,28 @@ test('gerçek HTTP: yetki gövdeden önce, geçersiz gövde 400/413, eski nesil 
   const ok=await post({version:1,source:'backlog',query:{format:'json'}});assert.equal(ok.status,200);await ok.arrayBuffer();
   assert.equal(state.runs,2,'ilk deneme eski nesil → bir kez yeniden');
   await new Promise(resolve=>setTimeout(resolve,20));assert.equal(state.releases,state.leases);
+});
+
+test('gerçek HTTP: projeksiyon edinimi sırasında eski nesil de yeniden denenir (Codex #1087)',async t=>{
+  const {post,state}=await serve(t,{acquireStale:2});
+  const ok=await post({version:1,source:'backlog',query:{format:'json'}});
+  assert.equal(ok.status,200);await ok.arrayBuffer();
+  assert.equal(state.runs,3,'iki eski nesil edinimi + bir başarılı deneme');
+  await new Promise(resolve=>setTimeout(resolve,20));assert.equal(state.releases,state.leases);
+  const {post:post2}=await serve(t,{acquireStale:3});
+  const fail=await post2({version:1,source:'backlog',query:{format:'json'}});
+  assert.equal(fail.status,409);assert.equal((await fail.json()).code,'COMPUTE_STALE_GENERATION');
+});
+
+test('gerçek HTTP: aynı projeksiyon için If-None-Match → gövdesiz 304; farklı ETag → tam yük',async t=>{
+  const {post,state}=await serve(t);
+  const body={version:1,source:'backlog',query:{format:'json'}};
+  const first=await post(body),etag=first.headers.get('etag');await first.arrayBuffer();
+  assert.match(etag,/^"gf-[0-9a-f-]{36}"$/);
+  const same=await post(body,{'If-None-Match':etag});
+  assert.equal(same.status,304);assert.equal(same.headers.get('etag'),etag);assert.equal((await same.text()).length,0);
+  const other=await post(body,{'If-None-Match':'"gf-eski"'});
+  assert.equal(other.status,200);assert.equal(other.headers.get('etag'),etag);await other.arrayBuffer();
+  assert.equal(state.computes,1);
+  await new Promise(resolve=>setTimeout(resolve,20));assert.equal(state.releases,state.leases,'304 yolunda da kira bırakılır');
 });

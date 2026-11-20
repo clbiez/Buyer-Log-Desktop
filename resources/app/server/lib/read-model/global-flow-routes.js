@@ -10,7 +10,7 @@
  *   yetki gövdeden önce, rota kendi küçük gövde sınırını uygular.
  * Yanıt (200, gzip JSON): public/overview-global-flow.js encodeReadModelRecords
  *   { version, source, sourceRevision, fields, priorityFields, count, rows:[[…]] }
- *   + X-Read-Model-Timing başlığı.
+ *   + ETag ve X-Read-Model-Timing başlıkları. If-None-Match aynı ETag'i taşırsa 304.
  * Yetki: Backlog alanı (requireArea) + assertSourceFilters; satır kapsamı
  *   projeksiyonun kendisinden gelir (kapsam dışı satır projeksiyona girmez).
  * Hatalar: 400 READ_MODEL_QUERY_INVALID · 409 COMPUTE_STALE_GENERATION (3 denemeden sonra) /
@@ -66,7 +66,9 @@ function registerGlobalFlowRoutes(app,deps){
     try{
       const value=result.value;
       if(!value||!value.buffer)throw Object.assign(new Error('Hesaplama işçisi tamamlanamadı. / Compute worker failed.'),{code:'COMPUTE_WORKER_FAILED',statusCode:500});
-      const out={buffer:Buffer.from(value.buffer.buffer?value.buffer.buffer:value.buffer,value.buffer.byteOffset||0,value.buffer.byteLength),uncompressedBytes:value.uncompressedBytes,count:value.count,timing:value.timing};
+      // ETag: aynı projeksiyon baytları + aynı gün için sabit; istemci öncelik
+      // değişiminde koşullu ister, veri aynıysa gövdesiz 304 alır.
+      const out={buffer:Buffer.from(value.buffer.buffer?value.buffer.buffer:value.buffer,value.buffer.byteOffset||0,value.buffer.byteLength),uncompressedBytes:value.uncompressedBytes,count:value.count,timing:value.timing,etag:`"gf-${require('node:crypto').randomUUID()}"`};
       results.set(source,{day,value:out});counters.computed++;return out;
     }finally{result.release?.();}
   }
@@ -84,18 +86,22 @@ function registerGlobalFlowRoutes(app,deps){
       if(consumer.signal.aborted)return;
       const params={options:backlogExportOptions(q),sourceColumns:String(q.sourceColumns||'').split(',').map(value=>value.trim()).filter(Boolean),previewLimit:Math.min(500,Math.max(0,Number(q.previewLimit)||0)),includeSourceDetails:false,mapProjection:true};
       for(let attempt=1;;attempt++){
-        const lease=await computeReads().run(req,'backlog','backlog-export',params,{cache:true,signal:consumer.signal});
-        let handed=false;
+        // Projeksiyon edinimi de denemenin içindedir: compute okuma servisi
+        // hazırlık sırasında nesil değişirse COMPUTE_STALE_GENERATION fırlatır.
+        let lease=null,handed=false;
         try{
+          lease=await computeReads().run(req,'backlog','backlog-export',params,{cache:true,signal:consumer.signal});
           const out=await recordsFor(lease,consumer.signal);
           if(consumer.signal.aborted)return;
           lease.assertResponse?.();
+          if(String(req.headers?.['if-none-match']||'')===out.etag)
+            return res.status(304).set('Cache-Control','no-store').set('ETag',out.etag).end();
           handed=true;
           return sendComputedResponse(req,res,{value:out,assertResponse:()=>lease.assertResponse?.(),release:()=>lease.release()},
-            {headers:{'X-Read-Model-Timing':JSON.stringify({count:out.count,...(out.timing||{})})}});
+            {headers:{'ETag':out.etag,'X-Read-Model-Timing':JSON.stringify({count:out.count,...(out.timing||{})})}});
         }catch(err){
           if(err?.code!=='COMPUTE_STALE_GENERATION'||attempt>=STALE_ATTEMPTS||res.headersSent||consumer.signal.aborted)throw err;
-        }finally{if(!handed)lease.release();}
+        }finally{if(!handed)lease?.release();}
       }
     }catch(err){if(!consumer.signal.aborted)apiError(res,err,'Harita okuma modeli hazırlanamadı.');}
     finally{consumer.dispose();}

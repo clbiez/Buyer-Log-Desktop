@@ -17,8 +17,8 @@
       "module": {"tr": "Genel Bakış · Küresel Akış Haritası", "en": "Overview · Global Flow Map"},
       "title": {"tr": "Akış Haritası Backlog verisini arka planda hazırlar", "en": "The Flow Map prepares Backlog data in the background"},
       "body": {
-        "tr": "Backlog parsiyelleri bilgisayarınızdaki yerel Buyer Log arka ucunda ayrı bir işçide hazırlanır. Arayüz daha küçük bir veri alır. Öncelikler değiştiğinde harita veriyi yeniden indirmez; girdiler aynıysa harita modelini yeniden kurmaz.",
-        "en": "Backlog partials are prepared in a separate worker of the local Buyer Log backend on your computer. The interface receives less data. When priorities change, the map does not download the data again, and it does not rebuild its model when the inputs are unchanged."
+        "tr": "Backlog parsiyelleri bilgisayarınızdaki yerel Buyer Log arka ucunda ayrı bir işçide hazırlanır. Arayüz daha küçük bir veri alır. Öncelikler değiştiğinde veri yalnız gerçekten yenilendiyse yeniden indirilir; girdiler aynıysa harita modeli yeniden kurulmaz.",
+        "en": "Backlog partials are prepared in a separate worker of the local Buyer Log backend on your computer. The interface receives less data. When priorities change, the data is downloaded again only if it was actually refreshed, and the map does not rebuild its model when the inputs are unchanged."
       },
       "visual": {
         "kind": "none",

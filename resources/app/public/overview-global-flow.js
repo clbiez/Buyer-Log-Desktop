@@ -1114,24 +1114,30 @@ function readModelEnabled(){
   try{const value=localStorage.getItem(READ_MODEL_FLAG_KEY);if(value==='off'||value==='0'||value==='false')return false;}catch(_){}
   return true;
 }
-async function fetchReadModelRecords(query){
-  const response=await fetch('/api/read-model/global-flow/model',{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:READ_MODEL_VERSION,source:'backlog',query})});
+async function fetchReadModelRecords(query,etag){
+  const headers={'Content-Type':'application/json'};if(etag)headers['If-None-Match']=etag;
+  const response=await fetch('/api/read-model/global-flow/model',{method:'POST',credentials:'same-origin',cache:'no-store',headers,body:JSON.stringify({version:READ_MODEL_VERSION,source:'backlog',query})});
+  if(response.status===304&&etag)return {notModified:true};
   const data=await response.json().catch(()=>({}));
   if(!response.ok){
     const fallback=L('Harita verisi hazırlanamadı.','Map data could not be prepared.');
     throw new Error((isEn()?(data.errorEn||fallback):(data.error||fallback))+' (HTTP '+response.status+(data.code?' · '+data.code:'')+')');
   }
-  return data;
+  return {payload:data,etag:response.headers&&typeof response.headers.get==='function'?response.headers.get('ETag')||'':''};
 }
 /* Arka uç Backlog satırlarını normalleştirir; istemci yalnız ortak CP öncelik
-   dizinini bindirir. Dizin değişince veri yeniden indirilmez ve normalleştirilmez,
-   yalnız hidrasyon tekrarlanır. */
+   dizinini bindirir. Eski yol gibi dizin değişiminde de veri yeniden istenir
+   (filtre değişmeden yapılan veri yenilemesi böyle yakalanır), ama koşullu:
+   arka uç aynı projeksiyonu tutuyorsa gövdesiz 304 gelir ve yalnız hidrasyon
+   tekrarlanır. */
 async function readModelBacklogPartials(query,force){
   const key=JSON.stringify(query),api=cpPriorityIndexApi(),priority=api&&typeof api.revision==='function'?String(api.revision()):'';
   let base=state.readModelBase;
-  if(force||!base||base.key!==key){
-    const [payload]=await Promise.all([fetchReadModelRecords(query),ensureDecisionEngine()]);
-    base={key,payload,priority:null,records:null};state.readModelBase=base;
+  if(force||!base||base.key!==key||base.priority!==priority){
+    const etag=!force&&base&&base.key===key?base.etag:'';
+    const [result]=await Promise.all([fetchReadModelRecords(query,etag),ensureDecisionEngine()]);
+    if(!result.notModified)base={key,payload:result.payload,etag:result.etag,priority:null,records:null};
+    state.readModelBase=base;
   }else await ensureDecisionEngine();
   if(!base.records||base.priority!==priority){base.records=hydrateReadModelRecords(base.payload);base.priority=priority;}
   return base.records;
