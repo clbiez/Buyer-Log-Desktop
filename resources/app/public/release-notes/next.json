@@ -12,6 +12,23 @@
   },
   "changes": [
     {
+      "id": "global-flow-backlog-read-model",
+      "type": "improvement",
+      "module": {"tr": "Genel Bakış · Küresel Akış Haritası", "en": "Overview · Global Flow Map"},
+      "title": {"tr": "Akış Haritası Backlog verisini arka planda hazırlar", "en": "The Flow Map prepares Backlog data in the background"},
+      "body": {
+        "tr": "Backlog parsiyelleri bilgisayarınızdaki yerel Buyer Log arka ucunda ayrı bir işçide hazırlanır. Arayüz daha küçük bir veri alır. Öncelikler değiştiğinde veri yalnız gerçekten yenilendiyse yeniden indirilir; girdiler aynıysa harita modeli yeniden kurulmaz.",
+        "en": "Backlog partials are prepared in a separate worker of the local Buyer Log backend on your computer. The interface receives less data. When priorities change, the data is downloaded again only if it was actually refreshed, and the map does not rebuild its model when the inputs are unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; harita aynı sonucu daha az arayüz yüküyle çizer.",
+          "en": "There is no change on screen; the map draws the same result with less interface work."
+        }
+      }
+    },
+    {
       "id": "cp-orders-status-production-balance",
       "type": "fix",
       "module": {"tr": "CP ve Siparişler", "en": "CP and Orders"},
@@ -701,6 +718,23 @@
           "tr": "Ekranda değişiklik yok; aynı Genel Bakış kartları daha az bekleme ve takılmayla çizilir.",
           "en": "There is no change on screen; the same Overview cards are drawn with less waiting and stutter."
         }
+      }
+    },
+    {
+      "id": "orders-read-model-windowed",
+      "type": "improvement",
+      "module": {"tr": "Siparişler", "en": "Orders"},
+      "title": {"tr": "Siparişler filtreleri yerel arka uçta çalışabilir (pilot)", "en": "Orders filters can run on the local backend (pilot)"},
+      "body": {
+        "tr": "Pilot ayarı açıkken Siparişler tüm satırları indirmez. Filtre, arama ve sıralama bilgisayardaki yerel arka uçta çalışır ve tablo yalnız görünen satırları ister. Hızlı filtre sayaçları ve sütun filtresi değerleri de arka uçtan gelir. Tümünü seç, Kopyala ve Excel tüm eşleşen satırları arka uçtan alır. Henüz desteklenmeyen filtreler mevcut yolla çalışır. Ayar varsayılan olarak kapalıdır.",
+        "en": "With the pilot setting on, Orders does not download every row. Filtering, search and sorting run on the local backend on this computer, and the table requests only the rows on screen. Quick filter counts and column filter values also come from the backend. Select all, Copy and Excel fetch all matching rows from the backend. Filters that are not supported yet use the existing path. The setting is off by default."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-read-model-windowed.png",
+        "alt": {"tr": "Pilot ayarı açık Siparişler tablosu: 30.000 demo satırında ülke, sezon ve arama filtresi", "en": "Orders table with the pilot setting on: country, season and search filters on 30,000 demo rows"},
+        "caption": {"tr": "30.000 satırlık demo veride filtrelenen 4.974 satır arka uçtan gelir; sayaçlar ve sayım satırı aynı kalır.", "en": "On 30,000 demo rows, the 4,974 filtered rows come from the backend; counts and the count line stay the same."}
       }
     }
   ]

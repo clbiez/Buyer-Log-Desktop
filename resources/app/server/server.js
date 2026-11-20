@@ -6386,6 +6386,11 @@ require('./routes/read-model-routes')(app, {
   ensureComputedProjection,
   getComputeReadGuard: () => computeReadGuard,
 });
+// Küresel Akış Haritası okuma modeli (#1075): POST /api/read-model/global-flow/model.
+require('./lib/read-model/global-flow-routes')(app, {
+  userAccess, assertSourceFilters, prepareComputeBacklog, backlogReadConsumer, apiError, sendComputedResponse,
+  getComputeReads: () => computeReads,
+});
 app.use(express.json({ limit: '100mb' }));
 app.use((err, req, res, next) => {
   if (!err) return next();
