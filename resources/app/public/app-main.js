@@ -10704,12 +10704,13 @@ function cpRMRequest(path,body){
   });
 }
 /* Geçici okuma hatası (#1078 satır yaması): kayıt sürerken okuma bayatladı (409 COMPUTE_STALE_GENERATION; sunucu
-   zaten 3 kez denedi) ya da işçi kuyruğu dolu (503). Kullanıcıya gösterilmez: önceki sonuç ekranda kalır, sınırlı
+   zaten 3 kez denedi), işçi kuyruğu dolu / hesap hazırlanıyor (503) ya da bellek tahmini aşıldı (işçi yeniden başlar). Kullanıcıya gösterilmez: önceki sonuç ekranda kalır, sınırlı
    sayıda artan beklemeyle yeniden istenir; yenisi gelince tablo kendini günceller. */
 const CP_RM_TRANSIENT_RETRIES=4;
 function cpRMTransientError(error){
   const code=error&&error.code;
-  return code==='COMPUTE_STALE_GENERATION'||code==='COMPUTE_QUEUE_BUSY'||Boolean(error&&error.status===503);
+  // Bellek tahmini aşımı: havuz işçiyi yeniden başlatır; aynı iş bir sonraki denemede genelde sığar (sınırlı deneme).
+  return code==='COMPUTE_STALE_GENERATION'||code==='COMPUTE_QUEUE_BUSY'||code==='COMPUTE_ESTIMATE_EXCEEDED'||Boolean(error&&error.status===503);
 }
 function cpRMRetryDelay(attempt){return Math.min(2000,250*attempt*attempt);}
 /* Kayıt anında yalnız henüz başlamamış (kuyruktaki) okumalar düşer. Yoldakiler biter ve sunucu önbelleğine girer:

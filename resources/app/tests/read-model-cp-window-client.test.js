@@ -159,6 +159,8 @@ test('transient 409/503: window and counts retry silently (bounded); the first w
   assert.equal(ctx.api.transient({code:'COMPUTE_STALE_GENERATION',status:409}),true);
   assert.equal(ctx.api.transient({code:'SOURCE_FILTER_REQUIRED',status:409}),false,'kaynak filtresi gereksinimi geçici değildir');
   assert.equal(ctx.api.transient({status:503}),true);assert.equal(ctx.api.transient({status:400}),false);
+  assert.equal(ctx.api.transient({code:'COMPUTE_ESTIMATE_EXCEEDED',status:500}),true,'işçi yeniden başlar; sınırlı deneme');
+  assert.equal(ctx.api.transient({code:'COMPUTE_WORKER_FAILED',status:500}),false);
   assert.equal(await ctx.api.ensure(1),false);
   assert.equal(warnings.length,0,'kullanıcıya/konsola hata yok');
   assert.equal(timers.length,1);

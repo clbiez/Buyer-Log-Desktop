@@ -371,3 +371,12 @@ test('servis: okuma sırasında günlükte olmayan değişim (başka yazım / ka
   await assert.rejects(h.service.computed(moderator,computedBody),error=>error.code==='COMPUTE_STALE_GENERATION','zincir var ama kaynak damgası değişti');
   assert.equal(h.service.stats().rowPatchStaleAccepted,0);
 });
+
+test('servis: işçi sonucu hâlâ eksikse (işçi bu arada emekli edildi) geçici 503, biçimsiz sonuç 500',async()=>{
+  const make=value=>createCpComputedService({guard:{capture:()=>({userId:'u',contextHash:'h',accessHash:'a',sourceToken:'s',key:'k',assertResponse(){}})},
+    loadProjection:async()=>({value:{buffer:Buffer.from('x'),uncompressedBytes:10},manifest:{activeGeneration:'g',modules:{cp:{checksum:'c'}}},assertResponse(){},release(){}}),
+    runCompute:async()=>({value,release(){}}),loadContext:()=>({key:'c',value:{},revision:'r'})});
+  await assert.rejects(make({missing:['cp'],warm:false}).computed(moderator,computedBody),error=>error.statusCode===503&&error.code==='COMPUTE_QUEUE_BUSY'&&error.detail.missing[0]==='cp');
+  await assert.rejects(make({missing:['cp']}).query(moderator,{version:1,query:{version:1,columns:[{k:'Order Code',type:'ro'}],today:iso(TODAY)}}),error=>error.statusCode===503);
+  await assert.rejects(make({nope:true}).computed(moderator,computedBody),error=>error.statusCode===500&&error.code==='COMPUTE_WORKER_FAILED');
+});

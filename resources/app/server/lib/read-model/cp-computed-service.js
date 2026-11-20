@@ -25,6 +25,12 @@ const TOKEN=/^[A-Za-z0-9_-]{1,64}$/;
 
 function failure(code,statusCode,tr,en,extra={}){return Object.assign(new Error(`${tr} / ${en}`),{code,statusCode,error:tr,errorEn:en,...extra});}
 const invalid=detail=>failure('READ_MODEL_QUERY_INVALID',400,'Geçersiz CP hesaplanmış sütun isteği.','Invalid CP computed columns request.',{detail});
+/* İşçi sonucu eksik. Veri kümesi/barındırıcı hâlâ yoksa (işçi bu arada emekli edildi: bellek tahmini aşımı, iptal) geçici
+   503: istemci önceki sonucu tutup yeniden ister (oturumu eski yola almaz). Başka biçimsiz sonuç 500 kalır. */
+function incomplete(out){
+  if(out&&Array.isArray(out.missing))return failure('COMPUTE_QUEUE_BUSY',503,'Hesaplama hazırlanıyor; yeniden denenecek.','Compute is being prepared; it will be retried.',{detail:{missing:out.missing,cold:Boolean(out.cold)}});
+  return failure('COMPUTE_WORKER_FAILED',500,'Hesaplama işçisi tamamlanamadı.','Compute worker failed.');
+}
 
 const MAX_OVERLAY=5000,MAX_KEY=512,MAX_ANSWER_BYTES=16*1024;
 /* Gövde: { version:1, lang:'tr'|'en', since?:<önceki yanıtın token'ı>,
@@ -279,7 +285,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
     if(loaded.short)return loaded.short;
     counters.misses++;
     const {out,generation}=loaded;
-    if(!out||typeof out.body!=='string')throw failure('COMPUTE_WORKER_FAILED',500,'Hesaplama işçisi tamamlanamadı.','Compute worker failed.');
+    if(!out||typeof out.body!=='string')throw incomplete(out);
     assertFresh(req,captured);
     const key=keyOf(generation),head=JSON.parse(out.body.slice(0,out.body.indexOf(',"fields"'))+'}');
     latest.set(scope,{key,token:head.token,total:head.total});
@@ -310,7 +316,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
     const loaded=await withDataset(req,captured,signal,({dataset,extra,options})=>
       run('read-model-cp-query',{dataset,scopeKey:hostScopeOf(captured,context),lang:request.lang,context:contextValue,tasks,kind,request:spec,...extra},options));
     const {out,generation}=loaded;
-    if(!out||!out.result)throw failure('COMPUTE_WORKER_FAILED',500,'Hesaplama işçisi tamamlanamadı.','Compute worker failed.');
+    if(!out||!out.result)throw incomplete(out);
     assertFresh(req,captured);
     return {generation,result:out.result,timing:{...out.timing,service:{...service,leaseMs:loaded.leaseMs,...(loaded.rowPatch?{rowPatch:loaded.rowPatch}:{}),computeMs:Math.round(performance.now()-t2)}}};
   }
