@@ -2330,22 +2330,6 @@ app.use(userAccess.requireSelection);
 app.use(require('./lib/compute-access-middleware').createComputeAccessMiddleware({
   prepare:()=>userAccess.prepareComputeAccessContext(),profileFor:req=>userAccess.sessionProfile(req),
 }));
-// Okuma modeli ön ısıtması (#1077): oturumun ilk kimlikli isteğinde yerel arka uç
-// Genel Bakış modelini ve modül projeksiyonlarını kendi işçisinde boşta ısıtır.
-// Bağımlılıklar ilk kullanımda okunur (rota kayıtları aşağıdadır).
-const readModelPrewarm = require('./lib/read-model/prewarm-scheduler').createReadModelPrewarm({
-  getPool: () => require('./lib/read-model/read-model-pool').getReadModelPool(),
-  userAccess,
-  preferenceValue: (profile, key) => {
-    const personal = (userPreferences.load(profile.id) || {}).entries || {}, roles = userAccess.roleWorkspaceEntries(profile) || {};
-    const entry = personal[key] || roles[key];
-    return entry && entry.value != null ? String(entry.value) : null;
-  },
-  loadProjection: (req, module) => ensureComputedProjection(req, module),
-  getOverviewService: () => overviewModelServiceForPrewarm(),
-  onFailure: (stage, error) => logRuntimeFailure('readModelPrewarm:' + stage, error),
-});
-app.use(readModelPrewarm.middleware);
 // Master yayım yetkisi: bu bilgisayarda Moderatör oturumu görüldü mü?
 app.use((req, res, next) => {
   noteModeratorSession(req.currentUser);
@@ -6380,6 +6364,26 @@ app.post('/api/backups/restore/inspect', userAccess.requireArea('source'), userA
   } catch (error) { return fullRestoreApiError(res, error, 'Full System Backup incelenemedi.'); }
   finally { if (upload) fs.rmSync(upload.root, { recursive: true, force: true }); }
 });
+// Okuma modeli ön ısıtması (#1077): çalışma alanı açılınca (GET / ya da ilk
+// /api/data?mode=initial) yerel arka uç Genel Bakış modelini ve modül projeksiyonlarını
+// kendi işçisinde boşta ısıtır. Diğer API çağrıları ön ısıtma başlatmaz (yan etkisiz).
+// Bağımlılıklar ilk kullanımda okunur (rota kayıtları aşağıdadır).
+const readModelPrewarm = require('./lib/read-model/prewarm-scheduler').createReadModelPrewarm({
+  getPool: () => require('./lib/read-model/read-model-pool').getReadModelPool(),
+  userAccess,
+  preferenceValue: (profile, key) => {
+    const personal = (userPreferences.load(profile.id) || {}).entries || {}, roles = userAccess.roleWorkspaceEntries(profile) || {};
+    const entry = personal[key] || roles[key];
+    return entry && entry.value != null ? String(entry.value) : null;
+  },
+  loadProjection: (req, module) => ensureComputedProjection(req, module),
+  getOverviewService: () => overviewModelServiceForPrewarm(),
+  onFailure: (stage, error) => logRuntimeFailure('readModelPrewarm:' + stage, error),
+});
+function noteWorkspaceOpened(req, profile = req.currentUser) {
+  try { readModelPrewarm.noteSession({ headers: req.headers, currentUser: profile, socket: req.socket }); }
+  catch (error) { logRuntimeFailure('readModelPrewarm:trigger', error); }
+}
 // Genel Bakış okuma modeli (#1074): POST /api/read-model/overview/model. Kişisel karar
 // bağlamı istemciyle aynı sunucu kayıtlarından okunur; revizyonu CP ajan revizyonudur.
 const overviewModelContextSources = {
@@ -6849,6 +6853,7 @@ app.get('/', (req, res) => {
   // Once credentials/session are valid, synchronization continues in background.
   res.set('Cache-Control', 'no-store');
   res.type('html').send(renderIndexTemplate());
+  noteWorkspaceOpened(req, profile);
 });
 
 // express.static gövdeyi akışla yazdığı için yukarıdaki res.send sarmalayıcısı ona
@@ -8763,6 +8768,7 @@ app.get('/api/data', async (req, res) => {
   try {
     await startupDataGate;
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    if (String(req.query.mode || '') === 'initial') noteWorkspaceOpened(req);
     const response = await buildResponse(req.currentUser, { startup: String(req.query.mode || '') === 'initial' });
     if (process.env.NODE_ENV !== 'production') {
       const totalMs = Number(process.hrtime.bigint() - started) / 1e6;

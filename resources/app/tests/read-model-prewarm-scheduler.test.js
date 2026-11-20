@@ -43,7 +43,7 @@ function setup({areas,session,quietMs=0}={}){
   return {pool,userAccess,calls,projections,prewarm,proxy:prewarm.overviewServiceProxy()};
 }
 
-test('first authenticated request starts one prewarm per session with background priority',async()=>{
+test('workspace opening starts one prewarm per session with background priority',async()=>{
   const h=setup();
   assert.equal(h.prewarm.noteSession({headers:{},currentUser:{id:'u1'}}),false,'no session cookie');
   assert.equal(h.prewarm.noteSession({headers:{cookie:'bl=abc'}}),false,'no authenticated user');

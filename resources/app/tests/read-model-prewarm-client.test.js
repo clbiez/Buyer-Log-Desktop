@@ -13,7 +13,7 @@ function harness({flags={},stored=null,curtain=false}={}){
     dispatchEvent:event=>events.push(event),BLBootGuard:{ready:gate=>gates.push(gate)},BLModulePreparation:{setStatus:(...args)=>calls.push(['status',...args])},...flags};
   const load=name=>async()=>{calls.push([name]);return true;};
   const context={window,state:{},console:{warn(){}},navigator:{deviceMemory:8},performance:{},curtain,
-    localStorage:{getItem:key=>key==='bl.readModelPrewarm.v1'?stored:null},
+    localStorage:{getItem:key=>key==='buyerlog.readModel.prewarm.v1'?stored:null},
     CustomEvent:class{constructor(type,options){this.type=type;this.detail=options&&options.detail;}},
     document:{getElementById:id=>id==='blBootGuard'&&context.curtain?{}:null},
     setTimeout:fn=>{timers.push(fn);return timers.length;},afterStartupReveal:fn=>{reveals.push(fn);return Promise.resolve();},
@@ -59,12 +59,17 @@ test('module preparation badge hides the pending state of lazy modules when the 
   const pending=render.indexOf("status==='pending'&&backendPrewarmEnabled()"),create=render.indexOf("badge=document.createElement('span')");
   assert.ok(pending>0&&pending<create,'pending check runs before a badge is created');
   // Anahtar adı TDZ'ye düşmeyecek şekilde fonksiyon içinde literaldir.
-  assert.match(source,/function backendPrewarmEnabled\(\)\{\n  if\(typeof window\.BL_READ_MODEL_PREWARM==='boolean'\)return window\.BL_READ_MODEL_PREWARM;\n  try\{return localStorage\.getItem\('bl\.readModelPrewarm\.v1'\)==='1';\}/);
+  assert.match(source,/function backendPrewarmEnabled\(\)\{\n  if\(typeof window\.BL_READ_MODEL_PREWARM==='boolean'\)return window\.BL_READ_MODEL_PREWARM;\n  try\{return localStorage\.getItem\('buyerlog\.readModel\.prewarm\.v1'\)==='1';\}/);
 });
 
-test('server wires one prewarm scheduler into every read model route and the session trigger',()=>{
-  const access=SERVER.indexOf("createComputeAccessMiddleware({"),created=SERVER.indexOf("require('./lib/read-model/prewarm-scheduler').createReadModelPrewarm({"),used=SERVER.indexOf('app.use(readModelPrewarm.middleware);');
-  assert.ok(access>0&&created>access&&used>created,'trigger runs after session + compute access middleware');
+test('server wires one prewarm scheduler into every read model route; only workspace opening triggers it',()=>{
+  const access=SERVER.indexOf("createComputeAccessMiddleware({"),created=SERVER.indexOf("require('./lib/read-model/prewarm-scheduler').createReadModelPrewarm({");
+  assert.ok(access>0&&created>access);
+  assert.doesNotMatch(SERVER,/readModelPrewarm\.middleware/,'arbitrary API calls must not start background compute');
+  assert.equal((SERVER.match(/ noteWorkspaceOpened\(req(, profile)?\);/g)||[]).length,2,"GET / and /api/data?mode=initial");
+  const index=SERVER.slice(SERVER.indexOf("app.get('/', (req, res) => {"),SERVER.indexOf('// express.static gövdeyi akışla'));
+  assert.ok(index.indexOf('noteWorkspaceOpened(req, profile);')>index.indexOf("redirect(302, '/select-user')"),'only a valid session opens the workspace');
+  assert.match(SERVER,/if \(String\(req\.query\.mode \|\| ''\) === 'initial'\) noteWorkspaceOpened\(req\);/);
   const routes=SERVER.slice(SERVER.indexOf("require('./lib/read-model/overview-model-routes')(app, {"),SERVER.indexOf("app.use(express.json({ limit: '100mb' }));"));
   assert.equal((routes.match(/runReadModelCompute: readModelPrewarm\.runCompute,/g)||[]).length,3,'overview, query and global flow share the priority-aware pool entry');
   assert.match(routes,/overviewModelService: readModelPrewarm\.overviewServiceProxy\(\),/);

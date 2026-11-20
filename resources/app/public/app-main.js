@@ -18551,13 +18551,13 @@ function finishStartupModules(){
    (server/lib/read-model/prewarm-scheduler.js). Koleksiyon, CP, Siparişler ve Backlog
    yalnız açılınca yüklenir; hazırlık rozeti de yalnız gerçek yükleme durumunu gösterir.
    Varsayılan kapalı (CP/Siparişler tam satır yolu WS5/WS6'ya kadar ilk açılışta pahalı):
-   window.BL_READ_MODEL_PREWARM=true ya da bu tarayıcıda 'bl.readModelPrewarm.v1'='1'.
+   window.BL_READ_MODEL_PREWARM=true ya da bu tarayıcıda 'buyerlog.readModel.prewarm.v1'='1'.
    Anahtar kapalıyken aşağıdaki eski sıralı hazırlık aynen çalışır; arka uç ön ısıtması
    her iki durumda da çalışır (BL_READ_MODEL_PREWARM=0 ortam değişkeni kapatır). */
 // Rozet çizimi bu satırdan önce çalışabilir: anahtar adı sabit değil literal (TDZ yok).
 function backendPrewarmEnabled(){
   if(typeof window.BL_READ_MODEL_PREWARM==='boolean')return window.BL_READ_MODEL_PREWARM;
-  try{return localStorage.getItem('bl.readModelPrewarm.v1')==='1';}catch(_){return false;}
+  try{return localStorage.getItem('buyerlog.readModel.prewarm.v1')==='1';}catch(_){return false;}
 }
 function finishBackendPrewarmStartup(){
   window.BLPerf?.mark?.('BACKGROUND_WARMUP_DONE',{mode:'backend'});

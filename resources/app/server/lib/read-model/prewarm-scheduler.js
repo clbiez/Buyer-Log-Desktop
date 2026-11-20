@@ -5,6 +5,8 @@
  * Backlog'u tam veriyle hazırlıyordu (scheduleBackgroundModuleWarmup). Anahtar
  * açıkken bu iş yerel arka uca taşınır: oturumun ilk kimlikli isteğinde arka uç
  * kullanıcının erişebildiği okuma modeli önbelleğini kendi işçisinde ısıtır.
+ * Tetikleyici yalnız çalışma alanı açılışıdır (server.js: GET / ve /api/data?mode=initial);
+ * diğer API çağrıları ön ısıtma başlatmaz.
  *
  * Sıra (oturum başına bir kez, kullanıcı başına tek koşu):
  *  1. Genel Bakış modeli 'fast' ve 'full' aşamaları: kullanıcının sunucudaki dil
@@ -184,7 +186,7 @@ function createReadModelPrewarm({getPool,userAccess,preferenceValue=()=>null,loa
     finally{status.finishedAt=now();session.running=false;}
   }
 
-  /* Oturum tetikleyicisi: kimlikli her istekte O(1) denetim. Aynı oturum için bir kez. */
+  /* Çalışma alanı açılışı tetikleyicisi: O(1) denetim, aynı oturum için bir kez. */
   function noteSession(req){
     if(!enabled()||!req||!req.currentUser||req.currentUser.id==null)return false;
     const cookie=String(req.headers&&req.headers.cookie||'');if(!cookie)return false;
@@ -198,10 +200,6 @@ function createReadModelPrewarm({getPool,userAccess,preferenceValue=()=>null,loa
     defer(()=>{void runSession(session);});
     return true;
   }
-  function middleware(req,res,next){
-    try{noteSession(req);}catch(error){onFailure('trigger',error);}
-    next();
-  }
   function statusFor(req){
     const id=req&&req.currentUser&&String(req.currentUser.id),session=id&&users.get(id);
     if(!enabled())return {state:'disabled'};
@@ -212,6 +210,6 @@ function createReadModelPrewarm({getPool,userAccess,preferenceValue=()=>null,loa
   function stats(){return {...counters,activeRuns:runs.size,flights:flights.size,users:users.size,interactiveActive};}
   // Test kancası: fn'i verilen ön ısıtma koşusunun bağlamında çalıştırır.
   function runInPrewarm(run,fn){runs.add(run);return Promise.resolve().then(()=>als.run({run},fn)).finally(()=>runs.delete(run));}
-  return {runCompute,overviewServiceProxy,middleware,noteSession,statusFor,stats,_runInPrewarm:runInPrewarm};
+  return {runCompute,overviewServiceProxy,noteSession,statusFor,stats,_runInPrewarm:runInPrewarm};
 }
 module.exports={createReadModelPrewarm,prewarmEnabled,overviewBodyFor,PROJECTIONS};
