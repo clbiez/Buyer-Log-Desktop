@@ -153,3 +153,30 @@ test(`parity (${ROWS} rows, moderator + scoped buyer): lane path == single-pool 
     assert.equal(threads.lane.size,1);
   }finally{await Promise.all([single.close(),main.close(),lane.close()]);}
 });
+
+test('lane idle release: the lane worker drops its dataset after idleMs; the next query reloads and returns the same result',{timeout:60000},async()=>{
+  assert.equal(lanes.laneIdleMs({}),60000);
+  assert.equal(lanes.laneIdleMs({BL_READ_MODEL_QUERY_LANE_IDLE_MS:'5000'}),5000);
+  assert.equal(lanes.laneIdleMs({BL_READ_MODEL_QUERY_LANE_IDLE_MS:'10'}),60000,'too small → default');
+  const lane=lanes.createQueryLanePool({poolOptions:lanes.readModelPoolOptions({BL_READ_MODEL_MEMORY_MB:'512'}),idleMs:300});
+  const loads=[];
+  const run=async(task,payload,options)=>{if(payload.buffer)loads.push(task);return lane.run(task,payload,options);};
+  try{
+    const results=[];
+    await withServer({runReadModelCompute:()=>{throw Error('main must not be used');},runQueryLaneCompute:run,queryLaneEnabled:()=>true},async post=>{
+      const ask=async body=>{const res=await post('/api/read-model/orders/query',body);assert.equal(res.status,200);return (await res.json()).result;};
+      results.push(await ask(Q));
+      results.push(await ask({...Q,offset:10}));
+      assert.equal(loads.length,1,'warm lane reuses the dataset');
+      assert.equal(lane.stats().workerCount,1);
+      await new Promise(r=>setTimeout(r,900));
+      assert.equal(lane.stats().workerCount,0,'idle lane released its worker');
+      assert.equal(lane.stats().laneIdleReleases,1);
+      results.push(await ask({...Q,offset:20}));
+      assert.equal(loads.length,2,'dataset reloaded after release');
+    });
+    // Aynı pencere (offset 20) tek havuz yolunda da aynı satırları verir: ilk sonucun 20. satırından itibaren.
+    assert.deepEqual(results[2].rows.slice(0,30),results[0].rows.slice(20,50),'same rows after reload');
+    assert.equal(results[2].total,results[0].total);
+  }finally{await lane.close();}
+});

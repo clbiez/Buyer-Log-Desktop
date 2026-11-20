@@ -31,10 +31,40 @@ function readModelPoolOptions(env=process.env){
     memoryBudgetBytes:Number.isFinite(mb)&&mb>=128&&mb<=4096?Math.floor(mb)*MiB:Math.max(256*MiB,Math.min(1024*MiB,Math.floor(os.totalmem()/4)))};
 }
 function getReadModelPool(){return pool||(pool=createComputePool(readModelPoolOptions()));}
-// Şerit ilk Siparişler sorgusunda kurulur (açılış maliyeti yok); bütçe ana havuzla aynı kuraldır.
-function getReadModelQueryLanePool(){return lanePool||(lanePool=createComputePool(readModelPoolOptions()));}
+/* Şerit ilk Siparişler sorgusunda kurulur (açılış maliyeti yok); bütçe ana havuzla aynı kuraldır.
+   Boşta bırakma: iki havuz ayrı bütçe tuttuğundan tek havuzda yer açmak için emekli edilecek
+   önbellekler ikisinde birden kalabilir (30k ölçümü: şerit ~360 MB veri kümesi). Şerit, son işinden
+   idleMs (varsayılan 60 sn, BL_READ_MODEL_QUERY_LANE_IDLE_MS) sonra hâlâ boşsa işçisini bırakır:
+   şerit işlerinin nesli artırılır, havuz eski nesildeki boş işçiyi emekli eder (setGeneration).
+   Sonraki sorgu veri kümesini yeniden yükler (servisin `missing` yolu). */
+function laneIdleMs(env=process.env){const ms=Number(env.BL_READ_MODEL_QUERY_LANE_IDLE_MS);return Number.isFinite(ms)&&ms>=1000?Math.floor(ms):60000;}
+function createQueryLanePool({poolOptions=readModelPoolOptions(),idleMs=laneIdleMs(),createPool=createComputePool}={}){
+  const inner=createPool(poolOptions);
+  let epoch=1,active=0,timer=null,releases=0;
+  const owners=new Set();
+  function arm(){
+    clearTimeout(timer);
+    timer=setTimeout(()=>{
+      timer=null;const st=inner.stats();
+      if(active||st.pending||st.activeWorkers||!st.workerCount)return;
+      epoch++;releases++;
+      for(const owner of owners)inner.setGeneration(owner,String(epoch));
+    },idleMs);
+    timer.unref?.();
+  }
+  return {
+    run(task,payload,options={}){
+      const owner=String(options.ownerKey??'');owners.add(owner);active++;
+      return inner.run(task,payload,{...options,generation:String(epoch)}).finally(()=>{active--;if(!active)arm();});
+    },
+    stats(){return {...inner.stats(),laneEpoch:epoch,laneIdleReleases:releases,laneIdleMs:idleMs};},
+    setGeneration:(...args)=>inner.setGeneration(...args),
+    close(){clearTimeout(timer);timer=null;return inner.close();},
+  };
+}
+function getReadModelQueryLanePool(){return lanePool||(lanePool=createQueryLanePool());}
 async function closeReadModelPool(){
   const current=[pool,lanePool].filter(Boolean);pool=null;lanePool=null;
   await Promise.all(current.map(p=>p.close()));
 }
-module.exports={getReadModelPool,getReadModelQueryLanePool,closeReadModelPool,readModelPoolOptions,queryLaneEnabled,usesQueryLane,QUERY_LANE_TASKS};
+module.exports={getReadModelPool,getReadModelQueryLanePool,createQueryLanePool,laneIdleMs,closeReadModelPool,readModelPoolOptions,queryLaneEnabled,usesQueryLane,QUERY_LANE_TASKS};
