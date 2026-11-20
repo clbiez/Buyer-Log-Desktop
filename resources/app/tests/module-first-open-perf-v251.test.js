@@ -42,7 +42,8 @@ test('Backlog panels reuse rows of an unchanged server revision instead of re-no
   // Faz 5 (#885): revizyon kaynak nesil + bağlam hash'i ve isteğin tamamından
   // türetilir (süreç başına sayaç yok, bu yüzden süreç nonce'u gerekmez).
   assert.match(server, /data\.sourceRevision=stableHashValue\(\[descriptor\.generation,computeReadContext\(profile\)\.contextHash\]\);\s*data\.rowsRevision=stableHashValue\(\[data\.sourceRevision,parts\]\);/);
-  assert.match(read('server/lib/compute-tasks.js'), /sourceColumns:data\.mapProjection\?\[\]:columns,sourceCatalog:data\.mapProjection\?\[\]:custom\.customDimensions,rowsRevision:data\.rowsRevision,merchCalendar:/);
+  // #1079 WS6c: export yanıtı satır belleğiyle ortak backlogRowsResult'tan gelir; rowsRevision aynen taşınır.
+  assert.match(read('server/lib/compute-tasks.js'), /sourceColumns:data\.mapProjection\?\[\]:columns,sourceCatalog:data\.mapProjection\?\[\]:customDimensions,rowsRevision:data\.rowsRevision,merchCalendar:/);
   const overview = read('public/backlog-overview.js');
   assert.match(overview, /previous=rowsRevisions\.get\(sig\)/);
   assert.match(overview, /if\(revision&&previous\?\.revision===revision\)rows=previous.rows;/);
