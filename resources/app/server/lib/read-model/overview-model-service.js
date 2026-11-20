@@ -53,9 +53,12 @@ function validateRequest(raw){
 /* Sunucu kaynaklarından kişisel karar bağlamı. İstemcideki BLStorage ile aynı
    öncelik: kişisel kayıt, yoksa rol varsayılanı. Checklist cevapları istemcideki
    supplier-sync gibi paylaşılan cevap deposuyla birleştirilir. */
+/* Bağlam anahtarı (#1077): karar barındırıcısına giden girdilerin içerik özeti +
+   revision(profile) (takvim/gün gibi girdide olmayan bağımlılıklar). Kullanıcının
+   CP kararına girmeyen bir tercihi (tablo sütun durumu, tema, yerleşim…) değişince
+   anahtar değişmez; Genel Bakış tam modeli ve barındırıcı yeniden hesaplanmaz. */
 function createContextLoader({preferences,roleEntries,managedRules,transitRules,plmPayload,checklistPayload,revision,merge}){
   return function loadContext(profile){
-    const key=revision(profile);
     const entries={},roles=roleEntries(profile)||{},personal=(preferences.load(profile.id)||{}).entries||{};
     for(const source of [roles,personal]){
       for(const [name,entry] of Object.entries(source)){
@@ -65,8 +68,9 @@ function createContextLoader({preferences,roleEntries,managedRules,transitRules,
     }
     let own={};
     try{const parsed=JSON.parse(entries['lcw.cp.checklist.v1']||'{}');own=parsed&&typeof parsed==='object'&&!Array.isArray(parsed)?parsed:{};}catch(_){own={};}
-    return {key,value:{userId:String(profile.id),entries,answers:merge(own,checklistPayload()||{}),managedRules:managedRules()||null,
-      plm:plmPayload()||null,transitRules:transitRules(profile)||[]}};
+    const value={userId:String(profile.id),entries,answers:merge(own,checklistPayload()||{}),managedRules:managedRules()||null,
+      plm:plmPayload()||null,transitRules:transitRules(profile)||[]};
+    return {key:hash(JSON.stringify([revision(profile),value])),value};
   };
 }
 

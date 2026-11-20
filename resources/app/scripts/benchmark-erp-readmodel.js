@@ -83,6 +83,8 @@ function flatMetrics(run) {
     // Açılıştan (bl:startup-complete) CP özet kartının ilk görünmesine kadar.
     'cpCards.sinceStartupMs': Number.isFinite(run.events?.['dom:cpCards']) && Number.isFinite(run.events?.['bl:startup-complete']) ? round(run.events['dom:cpCards'] - run.events['bl:startup-complete']) : null,
     'cpCards.sinceNavigationMs': run.events?.['dom:cpCards'],
+    // Akış Haritası verisi hazır (meta 'normal'/'warn' tonunda), bl:startup-complete'ten itibaren.
+    'flowMap.sinceStartupMs': Number.isFinite(run.events?.['dom:flowMap']) && Number.isFinite(run.events?.['bl:startup-complete']) ? round(run.events['dom:flowMap'] - run.events['bl:startup-complete']) : null,
   });
   if (run.early) { out[`early.${run.early.module}.openMs`] = run.early.timedOut ? null : run.early.openMs; out[`early.${run.early.module}.longTaskMaxMs`] = run.early.longTasks?.maxMs; }
   for (const m of run.modules || []) {

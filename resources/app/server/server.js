@@ -6395,7 +6395,9 @@ const cpDecisionContextSources = {
   transitRules: profile => effectiveOverridesForUser(profile.id).transitRules || [],
   plmPayload: () => sampleRequestStore.publicPayload(),
   checklistPayload: () => require('./lib/checklist-supplier-store').publicPayload(),
-  revision: profile => cpAgentRevision(profile, { ignoreRefresh: true }),
+  // Karar girdileri anahtara içerikleriyle girer (createContextLoader); burada yalnız girdide
+  // olmayan bağımlılıklar: iş takvimi ve yerel gün (#1077).
+  revision: () => { const d = new Date(); return [require('./lib/merch-calendar-store').fingerprint(), d.getFullYear(), d.getMonth(), d.getDate()]; },
   merge: (own, shared) => require('../public/checklist-answer-merge-engine').merge(own, shared),
 };
 // Ön ısıtma (#1077) ile rota aynı servis örneğini paylaşır: ön ısıtmanın sonucu rotanın

@@ -54,7 +54,7 @@ function openModuleInPage(module, isReady, countRows, timeoutMs, isFailed) {
 }
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 // İlk görünme anı izlenen bölgeler (#1077): Genel Bakış CP özet kartı (eski ve model yolu aynı kap).
-const WATCH = { cpCards: '#cpAssistant .cpaOverviewMetrics' };
+const WATCH = { cpCards: '#cpAssistant .cpaOverviewMetrics', flowMap: '#globalFlowMeta[data-tone="normal"], #globalFlowMeta[data-tone="warn"]' };
 
 function tempDir(label) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), TEMP_PREFIX + label + '-'));
