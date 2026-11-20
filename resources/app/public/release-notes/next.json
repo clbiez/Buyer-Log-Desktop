@@ -12,6 +12,26 @@
   },
   "changes": [
     {
+      "id": "override-save-independent-of-background-compute",
+      "type": "fix",
+      "module": {"tr": "CP · Siparişler · License Royalty", "en": "CP · Orders · License Royalty"},
+      "title": {
+        "tr": "Kayıt, arka plan hesabı hazırlanırken reddedilmez",
+        "en": "Saving is no longer rejected while background calculations are being prepared"
+      },
+      "body": {
+        "tr": "Supp. FOB, Uygula / Tümüne Uygula, CP satır düzenlemeleri ve toplu sipariş düzenlemeleri, arka uçtaki hesap işçisi yetki dizinini hazırlarken ya da yoğunken \"kaydedilemedi\" hatasıyla reddedilebiliyordu. Kayıt artık hemen yapılır ve diğer kullanıcılara aynı anda ulaşır; arka plan hesabı kaydı beklemez ve kaydı etkilemez.",
+        "en": "Supp. FOB, Apply / Apply to All, CP row edits and bulk order edits could be rejected with a \"could not be saved\" error while the backend calculation worker was preparing the access index or was busy. Saving now happens immediately and reaches other users at the same time; background calculations no longer hold up or affect the save."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; düzeltme sunucudaki kayıt yolundadır ve kayıt eskisi gibi görünür.",
+          "en": "There is no change on screen; the fix is in the server save path and saving looks the same as before."
+        }
+      }
+    },
+    {
       "id": "collection-hidden-tab-render-deferred",
       "type": "improvement",
       "module": {"tr": "Koleksiyon", "en": "Collection"},
