@@ -50,7 +50,7 @@ function validateItems(raw){
 }
 
 /* deps: { patchRows(items,{actor}), rejectUnauthorizedOrders(req,res,codes), rejectSharedOwnerWrites(req,res,items),
-     ensureAutomaticDateSource(req,items), assertAutomaticDatesReadOnly(user,items), pageProjectionContext(user),
+     ensureAutomaticDateSource(req,items), assertAutomaticDatesReadOnly(user,items), pageProjectionContext(user) (null olabilir: yalnız önbellek yaması atlanır),
      queueProjectionCacheRowPatches(user,before,items,label,rowPatch), notifyShared(user),
      readContextHashOf(projectionContext)?, recordRowPatches({user,before,items})? (okuma modeli satır yaması günlüğü), appendAudit(user,action,target,detail),
      notifyLive(req,rowPatches), liveRowPatchesFor(items), noteActorOf(user), apiError(res,err,fallback) } */
@@ -64,7 +64,7 @@ function registerCpRowSaveRoute(app,deps){
       await deps.ensureAutomaticDateSource(req,items);
       deps.assertAutomaticDatesReadOnly(req.currentUser,items);
       const before=deps.pageProjectionContext(req.currentUser);
-      const readBefore=typeof deps.readContextHashOf==='function'?deps.readContextHashOf(before):null;
+      const readBefore=before&&typeof deps.readContextHashOf==='function'?deps.readContextHashOf(before):null;
       const saved=deps.patchRows(items,{actor:deps.noteActorOf(req.currentUser)});
       const written=saved.applied.filter(item=>!item.noop).map(item=>({orderCode:item.orderCode,patch:item.patch}));
       // Okuma modeli satır yaması (cp-row-patch-log): yazımın hemen ardından, bağlam başka bir yazımla kaymadan.
