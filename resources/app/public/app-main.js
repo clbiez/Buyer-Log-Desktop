@@ -10713,7 +10713,8 @@ function cpRMPaintTable(){
   document.getElementById('cpContent').style.display='block';
   const pendingCell='<td aria-busy="true"></td>';
   renderFullTable('cpTable','cp',rows,state.cpSort,cpRMSortClick,{withGroups:true,
-    computeFn:row=>row&&row._rmPending?null:computeFlags(row),dirtySet:state.cpDirty,selectedSet:state.cpSelected,rerenderOuter:renderCP,onSelectionChange:updateShippingBtnVisibility,
+    computeFn:row=>row&&row._rmPending?null:computeFlags(row),dirtySet:state.cpDirty,selectedSet:state.cpSelected,rerenderOuter:renderCP,
+    onSelectionChange:()=>{if(cpRMSelectionNeedsRows())cpRMLoadRowsForSelection();updateShippingBtnVisibility();},
     cellHtmlFn:(c,r,cf,tableKey)=>r&&r._rmPending?pendingCell:cellHtml(c,r,cf,tableKey),
     // Sayfalı görünümde rowIdx sayfaya göredir; pencere deponun indeksiyle (_rmIndex) istenir.
     rowClassFn:row=>{if(row&&row._rmPending)cpRMNeedRow(row._rmIndex);return '';},
@@ -10915,35 +10916,34 @@ function cpRMOpenHeaderFilter(key,anchorEl,rerenderOuter){
   }).finally(()=>anchorEl?.removeAttribute?.('aria-busy'));
   return true;
 }
-function cpRMAdoptFullRows(){
-  if(!cpRM.rows)return;
-  let changed=false;
-  for(let i=0;i<cpRM.rows.length;i++){
-    const row=cpRM.rows[i];if(!row||row._rmPending)continue;
-    const full=cpRMFullRow(row);
-    if(full&&full!==row){
-      // Pencerenin arka uç değerleri tam satıra taşınır (ekrandaki öncelik/checklist aynı kalır).
-      for(const key of ['Priority','_calculationStatus','_trackingTags','_priorityTags','_actionPriorityReasons','_actionPrioritySignals','_unifiedBasePriority'])full[key]=row[key];
-      for(const key of Object.keys(row))if(key.startsWith('__checklist__'))full[key]=row[key];
-      for(const key of [...CP_COMPUTED_HIDDEN,'_checklistSingleSet','_cpOrderKey','_cpOptionId'])if(Object.prototype.hasOwnProperty.call(row,key))Object.defineProperty(full,key,{value:row[key],enumerable:false,configurable:true,writable:true});
-      cpRM.rows[i]=full;changed=true;
-    }
-  }
-  if(changed){cpRM.materialized=null;cpRMScheduleRepaint();}
-}
 function cpRMInvalidate(reason){
   cpRM.epoch++;cpRM.seq++;cpRM.facetsSeq++;cpRM.signature='';cpRM.facets=null;cpRM.facetsKey='';cpRM.materialized=null;cpRM.unsupportedSignature='';
   window.BLPerf?.mark?.('CP_READ_MODEL_INVALIDATED',{reason:reason||'data'});
 }
 // Veri değişimi (tam satır yüklemesi, sunucu/eş senkronu, transit kuralı): pencereler ve sayaçlar geçersiz.
-window.addEventListener('bl:global-flow-data-changed',event=>{
-  const detail=event&&event.detail||{},reason=detail.reason;
+// Tam satır yüklemesi de geçersiz kılar (Codex #1090): kaynak yenilemesi (force reload) aynı olayı
+// verir; eski imza/sayaç/pencere korunursa yenilenen satırlar filtreye giremez ya da çıkamazdı.
+// Yeni sorgu pencereyi tam satır nesnelerine bağlar ve güncel hesaplanmış sütunları uygular.
+function cpRMOnDataChanged(reason){
   if(!CP_RM_DATA_REASONS.has(reason)||!cpReadModelEnabled())return;
   const active=cpRMWindowedActive();
-  if(reason==='cp-projection-loaded')cpRMAdoptFullRows();
-  else cpRMInvalidate(reason);
-  if(active&&reason!=='cp-projection-loaded')queueMicrotask(()=>{if(currentActiveTab()==='cp')renderCP();});
-});
+  cpRMInvalidate(reason);
+  if(active)queueMicrotask(()=>{if(currentActiveTab()==='cp')renderCP();});
+}
+window.addEventListener('bl:global-flow-data-changed',event=>cpRMOnDataChanged(event&&event.detail&&event.detail.reason));
+/* Pencereli CP tam satırlar olmadan açıldıysa seçimli eylemler (maliyet, e-posta, nakliye,
+   Koleksiyon'a kopyala, …) tam satırları okur: seçim yapılınca bir kez yüklenir, düğmeler
+   o zamana kadar pasiftir (updateShippingBtnVisibility). Codex #1090. */
+let _cpRMSelectionLoad=null;
+function cpRMSelectionNeedsRows(){
+  return cpReadModelEnabled()&&!state.cp&&Boolean(state.cpSelected&&state.cpSelected.size);
+}
+function cpRMLoadRowsForSelection(){
+  if(_cpRMSelectionLoad)return _cpRMSelectionLoad;
+  _cpRMSelectionLoad=Promise.resolve(ensureCpLoaded({deferRender:true})).then(ok=>{updateShippingBtnVisibility();return ok;})
+    .finally(()=>{_cpRMSelectionLoad=null;});
+  return _cpRMSelectionLoad;
+}
 // Kişisel karar bağlamı (tercih, kural, checklist cevabı): hesaplanmış sütunlar arka uçta yeniden.
 function cpRMOnDecisionContextChanged(){
   if(!cpReadModelEnabled()||!cpRM.rows)return false;
@@ -10963,6 +10963,8 @@ window.BLCpReadModel={
   status:()=>({enabled:cpReadModelEnabled(),windowed:cpRMWindowedActive(),legacyReason:cpRM.legacyReason,total:cpRM.total,
     loadedWindows:cpRM.windows.size,generation:cpRM.generation,fullRows:Boolean(state.cp)}),
   onDecisionContextChanged:cpRMOnDecisionContextChanged,
+  selectionNeedsRows:cpRMSelectionNeedsRows,
+  loadRowsForSelection:cpRMLoadRowsForSelection,
 };
 /* CP çizim yönlendiricisi: renderCPNow (DEFERRED_TAB_RENDERERS, renderCP, checklist-supplier-sync
    sarmalayıcısı aynı adı kullanır) önce pencereli yolu dener; anahtar kapalıyken ya da sorgu
@@ -22694,7 +22696,11 @@ function selectedCpRowsForAction(){
   const onOrders=activeTab==='orders';
   const store=onOrders?state.orders:state.cp;
   const selected=onOrders?state.ordersSelected:state.cpSelected;
-  if(!store || !selected || !selected.size) return [];
+  if(!store || !selected || !selected.size){
+    // #1078: pencereli CP tam satırlar olmadan açıldıysa seçim için satırlar yüklenir.
+    if(!onOrders&&!store&&window.BLCpReadModel?.selectionNeedsRows?.())void window.BLCpReadModel.loadRowsForSelection();
+    return [];
+  }
   // ONCE FILTRE, SONRA SECIM: aktif filtre yuzunden gizlenmis bir satir, isaretli
   // kalmis olsa bile hicbir toplu isleme (e-posta, Excel, durum degisikligi) dahil
   // edilmez. Kullanicinin gormedigi satir islenmemeli.
@@ -22720,7 +22726,8 @@ function updateShippingBtnVisibility(){
   // CP araç çubuğundaki seçime bağlı butonlar: Koleksiyon'daki "Fiyatlamaya Gönder"
   // ile aynı davranış — seçim yokken pasif (karanlık), seçim varken aktif (aydınlık).
   const activeTab=document.querySelector('nav.tabs button.active')?.dataset.tab||document.body.dataset.activeTab||'';
-  const cpCount = (state.cpSelected && state.cpSelected.size) || 0;
+  // #1078: pencereli CP tam satırlar olmadan açıldıysa seçimli eylemler satırlar gelene kadar pasif.
+  const cpCount = (state.cpSelected && !window.BLCpReadModel?.selectionNeedsRows?.() && state.cpSelected.size) || 0;
   const ordersCount = (state.ordersSelected && state.ordersSelected.size) || 0;
   const count = activeTab==='orders' ? ordersCount : cpCount;
   const has = activeTab==='cp' && cpCount>0;
@@ -42923,7 +42930,11 @@ document.getElementById('kolRemoveImagesBtn')?.addEventListener('click',async ev
 // Source orders are read-only inputs. Existing manual Collection rows stay intact.
 function cpKolSelectedSourceRows(){
   const module=document.body.dataset.activeTab;
-  if(!['cp','orders'].includes(module)||!state[module])return [];
+  if(!['cp','orders'].includes(module)||!state[module]){
+    // #1078: pencereli CP tam satırlar olmadan açıldıysa seçim için satırlar yüklenir.
+    if(module==='cp'&&window.BLCpReadModel?.selectionNeedsRows?.())void window.BLCpReadModel.loadRowsForSelection();
+    return [];
+  }
   const selected=module==='orders'?state.ordersSelected:state.cpSelected;
   return (module==='orders'?filteredOrders():filteredCP()).filter(row=>selected?.has(row._id));
 }

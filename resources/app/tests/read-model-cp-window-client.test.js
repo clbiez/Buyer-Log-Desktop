@@ -100,3 +100,36 @@ test('preference flush failure disables the windowed path for the session even w
   const render=slice('function renderCPFromReadModel(){','/* Tümünü seç / kopyala / Excel');
   assert.match(render,/if\(error\.status===400\)cpRM\.unsupportedSignature=signature;else cpRM\.disabled=true;/);
 });
+
+test('Codex #1090 P2: a full CP projection reload invalidates the windowed query and counts (no stale adoption)',()=>{
+  const ctx=vm.createContext({window:{BLPerf:null},queueMicrotask:fn=>fn(),renders:0,
+    cpReadModelEnabled:()=>true,cpRMWindowedActive:()=>true,currentActiveTab:()=>'cp',renderCP(){ctx.renders++;}});
+  vm.runInContext(`const cpRM={epoch:3,seq:1,facetsSeq:1,signature:'sig',facets:{total:5},facetsKey:'k',materialized:{rows:[]},unsupportedSignature:'u',rows:[{_id:1}]};
+    ${slice('const CP_RM_DATA_REASONS=','const cpRM=')}
+    ${extractFunction(SOURCE,'cpRMInvalidate')}${extractFunction(SOURCE,'cpRMOnDataChanged')}globalThis.rm=cpRM;globalThis.on=cpRMOnDataChanged;`,ctx);
+  ctx.on('cp-projection-loaded');
+  assert.equal(ctx.rm.signature,'','sorgu imzası düştü: yenilenen veride sorgu baştan kurulur');
+  assert.equal(ctx.rm.epoch,4);assert.equal(ctx.rm.facets,null);assert.equal(ctx.rm.materialized,null);
+  assert.equal(ctx.renders,1,'açık sekme aynı filtrelerle yeniden sorgular');
+  ctx.on('cp-history-edit');assert.equal(ctx.rm.epoch,4,'yerel düzenleme olayı (kirli → eski yol) sorguyu düşürmez');
+});
+
+test('Codex #1090 P2: selection actions wait for full CP rows when the windowed path opened without them',()=>{
+  // Düğmeler tam satırlar gelene kadar pasif; seçim tam satır yüklemesini başlatır.
+  const visibility=extractFunction(SOURCE,'updateShippingBtnVisibility');
+  assert.match(visibility,/const cpCount = \(state\.cpSelected && !window\.BLCpReadModel\?\.selectionNeedsRows\?\.\(\) && state\.cpSelected\.size\) \|\| 0;/);
+  const loads=[];
+  const ctx=vm.createContext({state:{cp:null,cpSelected:new Set([1,2])},loads,
+    cpReadModelEnabled:()=>true,ensureCpLoaded:opts=>{loads.push(opts);return Promise.resolve(true);},updateShippingBtnVisibility(){}});
+  vm.runInContext(`let _cpRMSelectionLoad=null;${extractFunction(SOURCE,'cpRMSelectionNeedsRows')}${extractFunction(SOURCE,'cpRMLoadRowsForSelection')}
+    globalThis.needs=cpRMSelectionNeedsRows;globalThis.load=cpRMLoadRowsForSelection;`,ctx);
+  assert.equal(ctx.needs(),true);
+  ctx.load();ctx.load();
+  assert.equal(loads.length,1,'tek yükleme');assert.equal(loads[0].deferRender,true);
+  ctx.state.cp={rows:[]};assert.equal(ctx.needs(),false);
+  ctx.state.cp=null;ctx.state.cpSelected=new Set();assert.equal(ctx.needs(),false,'seçim yoksa yükleme gerekmez');
+  // Seçimi okuyan yollar tam satırları ister (boş liste sessizce "seçim yok" sayılmaz).
+  for(const fn of ['selectedCpRowsForAction','cpKolSelectedSourceRows'])assert.match(extractFunction(SOURCE,fn),/window\.BLCpReadModel\?\.selectionNeedsRows\?\.\(\)\)void window\.BLCpReadModel\.loadRowsForSelection\(\);\s*return \[\];/,fn);
+  assert.match(SOURCE,/selectionNeedsRows:cpRMSelectionNeedsRows,\s*loadRowsForSelection:cpRMLoadRowsForSelection,/);
+  assert.match(slice('function cpRMPaintTable(){','function cpRMFooterSpec(){'),/onSelectionChange:\(\)=>\{if\(cpRMSelectionNeedsRows\(\)\)cpRMLoadRowsForSelection\(\);updateShippingBtnVisibility\(\);\}/);
+});
