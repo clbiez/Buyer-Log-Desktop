@@ -115,7 +115,7 @@ test('rotalar tanımlı: GET/PUT /api/note-columns, uygun alan yetkisiyle', () =
 
 test('artımlı proje önbelleği yaması noteColumns alanını da uyguluyor', () => {
   assert.match(SERVER, /'imageRef','noteColumns'\]\);/, 'ROW_PATCH_INCREMENTAL_KEYS noteColumns içermeli');
-  const fn = extractFunction(SERVER, 'applyIncrementalProjectionPatch');
+  const fn = extractFunction(read('server/lib/projection-row-patch.js'), 'applyIncrementalProjectionPatch');
   assert.match(fn, /if \(patch\.noteColumns && typeof patch\.noteColumns === 'object'\) \{/);
   assert.match(fn, /row\[id\] = value == null \? '' : String\(value\);/);
 });
