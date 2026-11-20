@@ -26232,16 +26232,17 @@ function kolStatusEntries(){return KOL_STATUS_API?KOL_STATUS_API.normalize(kolSt
    Koleksiyon özeti, kolon filtresi, grup özeti, Excel) her çağrıda kolStatusEntries()
    ile TÜM satırları yeniden tarıyordu: N satırda O(N²). 2.000 satırda açılış sonrası
    ~4 sn ana iş parçacığı (CDP: rawKey), 30.000 satırda pratikte donma.
-   Anahtar açıkken (window.BL_READ_MODEL_COLLECTION===true ya da bu tarayıcıda
-   'buyerlog.readModel.collection.v1'='1') arama, tek eşzamanlı tur boyunca tek
-   normalleştirilmiş anlık görüntüyü paylaşır; görüntü bir mikro görevde düşer.
-   Kalıcı kayıt ve statü yönetimi tam yolu (kolStatusEntries) kullanmaya devam eder.
-   Varsayılan kapalı: eski yol aynen çalışır. */
+   Anahtar açıkken arama, tek eşzamanlı tur boyunca tek normalleştirilmiş anlık
+   görüntüyü paylaşır; görüntü bir mikro görevde düşer. Kalıcı kayıt ve statü yönetimi
+   tam yolu (kolStatusEntries) kullanmaya devam eder.
+   Varsayılan AÇIK (kullanıcı kararı, parite 2k/30k eşit). Geri dönüş:
+   window.BL_READ_MODEL_COLLECTION=false ya da bu tarayıcıda
+   'buyerlog.readModel.collection.v1'='0' eski yolu çalıştırır. */
 const KOL_STATUS_SNAPSHOT_STORAGE_KEY='buyerlog.readModel.collection.v1';
 let kolStatusSnapshotEnabledCache=null,kolStatusLookupCache=null;
 function kolStatusSnapshotEnabled(){
   if(typeof window.BL_READ_MODEL_COLLECTION==='boolean')return window.BL_READ_MODEL_COLLECTION;
-  if(kolStatusSnapshotEnabledCache===null){try{kolStatusSnapshotEnabledCache=localStorage.getItem(KOL_STATUS_SNAPSHOT_STORAGE_KEY)==='1';}catch(_){kolStatusSnapshotEnabledCache=false;}}
+  if(kolStatusSnapshotEnabledCache===null){try{kolStatusSnapshotEnabledCache=localStorage.getItem(KOL_STATUS_SNAPSHOT_STORAGE_KEY)!=='0';}catch(_){kolStatusSnapshotEnabledCache=true;}}
   return kolStatusSnapshotEnabledCache;
 }
 function kolStatusLookup(force){

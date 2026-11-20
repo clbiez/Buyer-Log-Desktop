@@ -222,3 +222,18 @@ test('Koleksiyon filtre değeri: anahtar açıkken şema yalnız özel sütunda,
   on.fns.kolFilterValue(rows[0], 'custom_score');
   assert.equal(on.calls(), 4);
 });
+
+// Kullanıcı kararı (#1079): anahtar varsayılan AÇIK; yalnız açık geri dönüş eski yolu çalıştırır.
+test('Koleksiyon statü anahtarı varsayılan açık; window=false veya depo "0" eski yola döner', () => {
+  const run = ({ flag, stored, throws } = {}) => loadAppMainFunctions(['kolStatusSnapshotEnabled'], {
+    window: flag === undefined ? {} : { BL_READ_MODEL_COLLECTION: flag },
+    localStorage: { getItem: () => { if (throws) throw new Error('blocked'); return stored ?? null; } },
+    KOL_STATUS_SNAPSHOT_STORAGE_KEY: 'buyerlog.readModel.collection.v1', kolStatusSnapshotEnabledCache: null,
+  }).kolStatusSnapshotEnabled();
+  assert.equal(run(), true, 'ayar yoksa açık');
+  assert.equal(run({ throws: true }), true, 'depo okunamazsa açık');
+  assert.equal(run({ stored: '1' }), true);
+  assert.equal(run({ stored: '0' }), false, 'cihazda kapatma');
+  assert.equal(run({ flag: false, stored: '1' }), false, 'window=false her şeyi ezer');
+  assert.equal(run({ flag: true, stored: '0' }), true);
+});
