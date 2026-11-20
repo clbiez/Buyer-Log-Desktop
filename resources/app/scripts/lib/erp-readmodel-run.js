@@ -380,6 +380,19 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
         }
       }
     }
+    // #1079 WS6d: --final-idle-ms N — modüllerden sonra iki kolda eşit boşta süre; ardından sunucu RSS ve
+    // (ölçüm bittikten sonra, iş yükünü etkilemeden) zorunlu GC sonrası renderer heap'i.
+    if (options.finalIdleMs > 0) {
+      phase = 'final-idle';
+      await delay(options.finalIdleMs);
+      const st = fs.readFileSync(`/proc/${server.pid}/status`, 'utf8'), kb = k => Number((st.match(new RegExp(k + ':\\s+(\\d+)')) || [])[1]);
+      const gcSession = await context.newCDPSession(page);
+      await gcSession.send('HeapProfiler.collectGarbage').catch(() => {});
+      const { usedSize } = await gcSession.send('Runtime.getHeapUsage').catch(() => ({}));
+      await gcSession.detach().catch(() => {});
+      result.finalIdle = { idleMs: options.finalIdleMs, server: { rssMB: P.round(kb('VmRSS') / 1024), peakMB: P.round(kb('VmHWM') / 1024) }, rendererHeapAfterGcMB: Number.isFinite(usedSize) ? P.round(usedSize / 1048576) : null };
+      log(`  ${label} final idle ${options.finalIdleMs} ms: server ${result.finalIdle.server.rssMB} MB (peak ${result.finalIdle.server.peakMB}), renderer heap after GC ${result.finalIdle.rendererHeapAfterGcMB} MB`);
+    }
     phase = 'done';
     // Sunucu süreci belleği (Linux /proc; işçi iş parçacıkları aynı süreçte): anlık RSS ve tepe.
     try {
