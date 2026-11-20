@@ -63,7 +63,13 @@ function sampleInPage(args){
         // Sayım satırı (pencereli yolda sayaçlar satırlardan sonra gelir): yerleşene kadar bekle.
         const settle=performance.now(),poll=()=>{
           const text=document.getElementById('ordersCount').textContent;
-          if(text!==countBefore||performance.now()-settle>5000){out.count=text;out.countSettledMs=performance.now()-t0;resolve(out);return;}
+          const foot=document.querySelector('#ordersTable tfoot');
+          const footerReady=foot&&!foot.querySelector('[aria-busy="true"]');
+          if((text!==countBefore&&footerReady)||performance.now()-settle>5000){
+            out.count=text;out.countSettledMs=performance.now()-t0;
+            // Alt toplam satırı (adet toplamları, FOB ortalamaları, seçili sayısı) iki yolda da aynı olmalı.
+            out.footer=foot?foot.textContent.replace(/\s+/g,' ').trim():'';resolve(out);return;
+          }
           setTimeout(poll,20);
         };poll();
       });
@@ -157,6 +163,8 @@ function sampleInPage(args){
     // Aynı birleşimde iki yolun sayım satırı aynı olmalı (son örnek).
     report.results=results;
     report.countLineEqual=results.legacy.samples.map((s,i)=>s.count===results.readModel.samples[i].count);
+    report.footerEqual=results.legacy.samples.map((s,i)=>s.footer===results.readModel.samples[i].footer);
+    console.log(`count line equal ${report.countLineEqual.filter(Boolean).length}/${plan.length}, footer equal ${report.footerEqual.filter(Boolean).length}/${plan.length}`);
     if(opts.screenshots){
       fs.mkdirSync(opts.screenshots,{recursive:true});
       await page.evaluate(()=>{window.BLOrdersReadModel.setEnabled(true);});await delay(2500);

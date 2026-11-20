@@ -29,18 +29,23 @@
  *   kpi?: boolean,
  *   sums?: string[],
  *   column?: {key, granularity?: 'year'|'month'|'week'|'day'},  // 'all' kapsamında değer listesi
- *   distinct?: string[]                 // filtresiz veri kümesinde dolu değerler (uniqueVals; seçim kutuları)
+ *   distinct?: string[],                // filtresiz veri kümesinde dolu değerler (uniqueVals; seçim kutuları)
+ *   footer?: {sums?: string[], averages?: [{key, qtyKey}], selected?: (string|number)[]}
+ *                                       // tablo alt toplam satırı (renderQuantityTotalsFooter): 'all' kapsamı
  * }
  * filter: read-model-query.js şemasındaki filtre nesnesi.
  * ── YANIT ───────────────────────────────────────────────────────────────
  * { datasetRows, total, none, sums, stats:{rowCount,modelCount,optionCount,orderCount},
  *   kpi?:{active:{Active,Inactive}, season:{v:n}, status:{v:n}, del:{v:n}, exf:{past,...}},
- *   column?:{key, granularity, values:[string], truncated:boolean}, distinct?:{key:[string]} }
+ *   column?:{key, granularity, values:[string], truncated:boolean}, distinct?:{key:[string]},
+ *   footer?:{sums:{key:n}, averages:{key:{weighted,arithmetic}}, selectedCount:number|null} }
  */
 const shared=require('../../../public/read-model-query');
 const rules=require('../../../public/business-rules');
 const dates=require('../../../public/date-dimension');
 const optionStats=require('../../../public/model-option-stats');
+// Alt toplam satırının FOB ortalaması istemcideki kolParseMoneyNum ile aynı ayrıştırıcıyı kullanır.
+const {kolParseMoneyNum}=require('../../../public/collection-model-groups');
 
 const VERSION=1;
 const GROUP_IDS=Object.freeze(['status','del','season','exf']);
@@ -72,7 +77,7 @@ function parseToday(value){
 function validateFacetsRequest(raw){
   if(!isPlainObject(raw))throw invalid('request');
   if(raw.version!==VERSION)throw invalid('version');
-  const known=new Set(['version','columns','search','base','active','groups','today','kpi','sums','column','distinct']);
+  const known=new Set(['version','columns','search','base','active','groups','today','kpi','sums','column','distinct','footer']);
   for(const key of Object.keys(raw))if(!known.has(key))throw invalid(`unknown: ${key}`);
   // Kolon tipleri ve arama WS1 doğrulayıcısından geçer.
   const head=shared.validateQuery({version:1,columns:raw.columns,search:raw.search,limit:0,aggregates:{sums:raw.sums||[]}});
@@ -99,8 +104,26 @@ function validateFacetsRequest(raw){
     if(!Array.isArray(raw.distinct)||raw.distinct.length>shared.LIMITS.maxSums)throw invalid('distinct');
     distinct=[...new Set(raw.distinct.map((key,i)=>{if(typeof key!=='string'||!key||key.length>shared.LIMITS.maxKeyLength||key.startsWith('__'))throw invalid(`distinct[${i}]`);return key;}))];
   }
+  let footer=null;
+  if(raw.footer!=null){
+    if(!isPlainObject(raw.footer))throw invalid('footer');
+    const keyOf=(key,where)=>{if(typeof key!=='string'||!key||key.length>shared.LIMITS.maxKeyLength||key==='__proto__')throw invalid(where);return key;};
+    const list=(value,where,max)=>{if(value==null)return [];if(!Array.isArray(value)||value.length>max)throw invalid(where);return value;};
+    const sums=[...new Set(list(raw.footer.sums,'footer.sums',shared.LIMITS.maxSums).map((key,i)=>keyOf(key,`footer.sums[${i}]`)))];
+    const averages=list(raw.footer.averages,'footer.averages',8).map((item,i)=>{
+      if(!isPlainObject(item))throw invalid(`footer.averages[${i}]`);
+      return {key:keyOf(item.key,`footer.averages[${i}].key`),qtyKey:keyOf(item.qtyKey,`footer.averages[${i}].qtyKey`)};
+    });
+    let selected=null;
+    if(raw.footer.selected!=null){
+      selected=new Set(list(raw.footer.selected,'footer.selected',shared.LIMITS.maxValues).map((id,i)=>{
+        if(typeof id!=='string'&&typeof id!=='number')throw invalid(`footer.selected[${i}]`);return String(id);
+      }));
+    }
+    footer={sums,averages,selected};
+  }
   return {
-    columns:head.columns,search:head.search,sums:head.aggregates.sums,distinct,
+    columns:head.columns,search:head.search,sums:head.aggregates.sums,distinct,footer,
     base:compileSet(columns,raw.base,'base'),active:compileSet(columns,raw.active,'active'),groups,
     today:parseToday(raw.today),kpi:raw.kpi===true,column,
   };
@@ -141,6 +164,47 @@ function columnValues(row,column){
   return [cellPlainText(column.col,row)];
 }
 const bump=(map,key)=>{map[key]=(map[key]||0)+1;};
+/* app-main.js tableNumericValue eşdeğeri (alt toplam satırı; parite testi gerçek fonksiyonla
+   karşılaştırır). normalizeDecimalText read-model-query.js'teki ortak kopyadır. */
+function tableNumericValue(value){
+  if(typeof value==='number')return Number.isFinite(value)?value:0;
+  let text=String(value==null?'':value).trim().replace(/\s/g,'');
+  if(!text)return 0;
+  const hadComma=text.includes(',');
+  text=normalizeDecimalText(text);
+  if(!hadComma&&(text.match(/\./g)||[]).length>1)text=text.replace(/\./g,'');
+  const n=Number(text.replace(/[^0-9+\-.]/g,''));return Number.isFinite(n)?n:0;
+}
+function normalizeDecimalText(text){
+  const comma=text.lastIndexOf(','),dot=text.lastIndexOf('.');
+  if(comma>=0&&dot>=0)return comma>dot?text.replace(/\./g,'').replace(',','.'):text.replace(/,/g,'');
+  if(comma>=0)return text.replace(',','.');
+  return text;
+}
+/* renderQuantityTotalsFooter + kolWeightedAverage / kolArithmeticAverage + tableVisibleSelectedCount. */
+function createFooterAccumulator(spec){
+  if(!spec)return null;
+  const sums=Object.fromEntries(spec.sums.map(key=>[key,0]));
+  const avg=spec.averages.map(item=>({...item,weighted:0,qty:0,total:0,count:0}));
+  const seen=new Set();let selectedCount=0;
+  return {
+    add(row){
+      for(const key of spec.sums)sums[key]+=tableNumericValue(row[key]);
+      for(const a of avg){
+        const price=kolParseMoneyNum(row[a.key]);
+        if(!Number.isFinite(price)||price<=0)continue;
+        a.total+=price;a.count++;
+        const qty=tableNumericValue(row[a.qtyKey]);
+        if(qty>0){a.weighted+=price*qty;a.qty+=qty;}
+      }
+      if(spec.selected){const id=String(row._id);if(!seen.has(id)){seen.add(id);if(spec.selected.has(id))selectedCount++;}}
+    },
+    result(){
+      return {sums,averages:Object.fromEntries(avg.map(a=>[a.key,{weighted:a.qty>0?a.weighted/a.qty:null,arithmetic:a.count?a.total/a.count:null}])),
+        selectedCount:spec.selected?selectedCount:null};
+    },
+  };
+}
 
 function runOrdersFacets(dataset,rawRequest){
   const spec=validateFacetsRequest(rawRequest);
@@ -159,6 +223,7 @@ function runOrdersFacets(dataset,rawRequest){
   const all=[];let none=0;
   const values=spec.column?new Set():null;
   const distinct=spec.distinct.map(key=>[key,new Set()]);
+  const footer=createFooterAccumulator(spec.footer);
   for(let i=0;i<rows.length;i++){
     const row=rows[i];
     if(!row||typeof row!=='object')continue;
@@ -181,6 +246,7 @@ function runOrdersFacets(dataset,rawRequest){
       all.push(row);
       for(const key of spec.sums)sums[key]+=shared.internals.toNum(row[key])||0;
       if(values)for(const value of columnValues(row,spec.column))values.add(value);
+      if(footer)footer.add(row);
     }
     if(!kpi)continue;
     if(!failed||failed==='season')bump(kpi.season,norm(row.Season)||'—');
@@ -192,6 +258,7 @@ function runOrdersFacets(dataset,rawRequest){
   const out={datasetRows:rows.length,total:all.length,none,sums,
     stats:{rowCount:stats.rowCount,modelCount:stats.modelCount,optionCount:stats.optionCount,orderCount:optionStats.getOrderCount(all)}};
   if(kpi)out.kpi=kpi;
+  if(footer)out.footer=footer.result();
   if(distinct.length)out.distinct=Object.fromEntries(distinct.map(([key,set])=>[key,[...set].sort(rules.compareChronologicalValues)]));
   if(values){
     // uniqueColValues: compareChronologicalValues; uniqueDateBuckets: sözlük sırası.

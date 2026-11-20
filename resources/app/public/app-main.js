@@ -7954,10 +7954,18 @@ function renderQuantityTotalsFooter(table,rows,cols,options={}){
   if(!quantityCols.length&&!withCheck&&!(averageCols&&averageCols.size)&&!statusSubtotal){if(foot)foot.remove();return;}
   if(!foot)foot=table.createTFoot();
   const getValue=options.getValue||((row,c)=>row[c.k]);
+  // Pencereli veri sağlayıcı (#1076): tüm satırlar bellekte değilken toplamlar arka uçtan
+  // hazır gelir (options.precomputed); henüz gelmediyse (null) değer hücreleri beklemede gösterilir.
+  const hasPrecomputed=Object.prototype.hasOwnProperty.call(options,'precomputed');
+  const pre=hasPrecomputed?options.precomputed:null,pending=hasPrecomputed&&!pre;
+  const pendingCell=()=>`<td class="quantityTotalValue" aria-busy="true" title="${escapeHtml(appLang==='en'?'Totals are loading':'Toplamlar yükleniyor')}">…</td>`;
   const cells=[];
   if(withCheck){
-    const selectedCount=tableVisibleSelectedCount(rows,options.selectedSet,options.getId);
-    cells.push(selectionFooterCellHtml(selectedCount,quantityCols.length>0));
+    if(pending||(pre&&pre.selectedCount==null))cells.push(pendingCell());
+    else{
+      const selectedCount=pre?pre.selectedCount:tableVisibleSelectedCount(rows,options.selectedSet,options.getId);
+      cells.push(selectionFooterCellHtml(selectedCount,quantityCols.length>0));
+    }
   }
   for(let i=0;i<Number(options.leading||0);i++)cells.push('<td class="quantityTotalSpacer"></td>');
   let labelPlaced=withCheck&&quantityCols.length>0;
@@ -7969,6 +7977,11 @@ function renderQuantityTotalsFooter(table,rows,cols,options={}){
       return;
     }
     const averageSpec=averageCols&&averageCols.get(c.k);
+    if(averageSpec&&hasPrecomputed){
+      const average=pre&&pre.averages&&pre.averages[c.k];
+      cells.push(average?kolAverageFooter(average.weighted,average.arithmetic,averageSpec.label):pendingCell());
+      return;
+    }
     if(averageSpec){
       const price=row=>getValue(row,c);
       const weighted=kolWeightedAverage(rows,price,averageSpec.getQty);
@@ -7976,7 +7989,10 @@ function renderQuantityTotalsFooter(table,rows,cols,options={}){
       cells.push(kolAverageFooter(weighted,arithmetic,averageSpec.label));
       return;
     }
-    if(quantityCols.includes(i)){
+    if(quantityCols.includes(i)&&hasPrecomputed){
+      const total=pre&&pre.sums?pre.sums[c.k]:undefined;
+      cells.push(typeof total==='number'?`<td class="quantityTotalValue">${formatQuantityTotal(total)}</td>`:pendingCell());
+    }else if(quantityCols.includes(i)){
       const total=(rows||[]).reduce((sum,row)=>sum+tableNumericValue(getValue(row,c)),0);
       cells.push(`<td class="quantityTotalValue">${formatQuantityTotal(total)}</td>`);
     }else if(quantityCols.length&&!labelPlaced){cells.push(`<td class="quantityTotalLabel">${appLang==='en'?'Total':'Toplam'}</td>`);labelPlaced=true;}
@@ -8592,7 +8608,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
     // kolAverageFooter): filtreyi yeniden kurmaz, ekrandaki `rows` zaten
     // aktif filtreyi yansıtır (bkz. filteredCP()/filteredOrders()).
     const footerRows=partialViewEnabled(tableKey)?partialViewUniqueSourceRows(fullRows):fullRows;
-    if(!pageOnly||!table.tFoot)renderQuantityTotalsFooter(table,fullRows,cols,{withCheck:true,selectedSet:selSet,getId:row=>row._id,getValue:(row,c)=>row[c.k],averageCols:cpOrdersAverageFooterCols(tableKey),totalRows:footerRows,statusRows:fullRows,statusSubtotal:partialViewEnabled(tableKey)?{key:'STATUS',getQty:row=>row&&row._partialViewStatusQuantity}:null});
+    if(!pageOnly||!table.tFoot)renderQuantityTotalsFooter(table,fullRows,cols,{withCheck:true,selectedSet:selSet,getId:row=>row._id,getValue:(row,c)=>row[c.k],averageCols:cpOrdersAverageFooterCols(tableKey),totalRows:footerRows,statusRows:fullRows,statusSubtotal:partialViewEnabled(tableKey)?{key:'STATUS',getQty:row=>row&&row._partialViewStatusQuantity}:null,...(typeof opts.footerTotals==='function'?{precomputed:opts.footerTotals()}:{})}); // #1076: pencereli sağlayıcı seyrek diziyi toplamaz, arka uç toplamını verir
     if(opts.withGroups&&table.tFoot?.rows?.[0])applyGroupedBoundariesToRow(table.tFoot.rows[0],cols,1);
   }else if(typeof opts.footerHtmlFn==='function'){
     let tfoot=table.querySelector('tfoot');if(!tfoot){tfoot=document.createElement('tfoot');table.appendChild(tfoot);}tfoot.innerHTML=opts.footerHtmlFn(fullRows,cols)||'';
@@ -10751,9 +10767,10 @@ function ordersRMPaintTable(){
   renderFullTable('ordersTable','orders',rows,state.ordersSort,ordersSortClick,{withGroups:true,
     computeFn:row=>row&&row._rmPending?null:computeFlags(row),selectedSet:state.ordersSelected,rerenderOuter:renderOrders,
     cellHtmlFn:(c,r,cf,tableKey)=>r&&r._rmPending?pendingCell:ordersCellHtml(c,r,cf,tableKey),
-    rowClassFn:(row,rowIdx)=>{if(row&&row._rmPending){ordersRMNeedRow(rowIdx);return '';}return norm(row['Active/Inactive'])==='Inactive'?'ordersPassiveRow':'';},
+    // Sayfalı görünümde rowIdx sayfaya göredir; pencere deponun indeksiyle (_rmIndex) istenir.
+    rowClassFn:row=>{if(row&&row._rmPending){ordersRMNeedRow(row._rmIndex);return '';}return norm(row['Active/Inactive'])==='Inactive'?'ordersPassiveRow':'';},
     detailRowHtmlFn:(r,cols,withChk)=>r&&r._rmPending?'':cpLogisticDetailRowHtml(r,cols,withChk,'orders'),detailRowClass:'cpLogisticDetailRow',
-    virtualize:true,hasExpandedRows:false,loadAllRows:ordersRMLoadAllIdRows,selectionRows:ordersRMSelectionRows});
+    virtualize:true,hasExpandedRows:false,loadAllRows:ordersRMLoadAllIdRows,selectionRows:ordersRMSelectionRows,footerTotals:ordersRMFooterTotals});
   const table=document.getElementById('ordersTable');if(table)table._blRenderedRowsSource=rows;
   bindOrdersImageHover();
   bindStatusBacklogDrilldown('ordersTable','orders');
@@ -10766,8 +10783,33 @@ function ordersRMToday(){return toISODate(new Date());}
 function ordersRMFacetsBody(spec,extra={}){
   return {version:1,columns:spec.columns,...(spec.search?{search:spec.search}:{}),base:spec.base,active:spec.active,groups:spec.groups,today:ordersRMToday(),...extra};
 }
+// Alt toplam satırının arka uç karşılığı: görünür adet sütunları, FOB ortalamaları, seçili sayısı.
+function ordersRMFooterSpec(){
+  const sums=visibleCols('orders').filter(isQuantityLikeColumn).map(c=>c.k);
+  const averages=[...(cpOrdersAverageFooterCols('orders')||new Map()).keys()].map(key=>({key,qtyKey:'Order Quantity'}));
+  const selected=state.ordersSelected&&state.ordersSelected.size<=20000?[...state.ordersSelected].map(String):null;
+  return {sums,averages,...(selected?{selected}:{})};
+}
+// renderFullTable footerTotals: sayaçlar bu sorgu ve seçim için geldiyse hazır toplamlar, yoksa null (beklemede).
+function ordersRMFooterTotals(){
+  const facets=ordersRM.facets;
+  if(!facets||!facets.footer||ordersRM.facetsKey!==ordersRMFacetsKey(ordersRM.spec,ordersRM.signature))return null;
+  return facets.footer;
+}
+function ordersRMRenderFooter(){
+  const table=document.getElementById('ordersTable');
+  if(!table||table._blRenderedRowsSource!==ordersRM.rows)return;
+  const cols=visibleCols('orders');
+  renderQuantityTotalsFooter(table,[],cols,{withCheck:true,selectedSet:state.ordersSelected,getId:row=>row._id,getValue:(row,c)=>row[c.k],
+    averageCols:cpOrdersAverageFooterCols('orders'),precomputed:ordersRMFooterTotals()});
+  if(table.tFoot?.rows?.[0])applyGroupedBoundariesToRow(table.tFoot.rows[0],cols,1);
+}
+function ordersRMFacetsKey(spec,signature){
+  return signature+'|'+ordersRMToday()+'|'+JSON.stringify(spec?ordersRMFooterSpec():null);
+}
 function ordersRMRenderFacets(facets){
   if(!facets)return;
+  ordersRMRenderFooter();
   const kpi=facets.kpi||{active:{},season:{},status:{},del:{},exf:{}};
   renderOrdersReadModelCountLine({stats:facets.stats||{modelCount:0,optionCount:0,orderCount:0},rowCount:facets.total,totalRowCount:facets.datasetRows,
     qty:Number(facets.sums&&facets.sums['Order Quantity'])||0});
@@ -10781,11 +10823,11 @@ function ordersRMRenderFacets(facets){
   }
 }
 function ordersRMRequestFacets(spec,signature){
-  const key=signature+'|'+ordersRMToday();
+  const key=ordersRMFacetsKey(spec,signature);
   if(ordersRM.facets&&ordersRM.facetsKey===key){ordersRMRenderFacets(ordersRM.facets);return;}
   const seq=++ordersRM.facetsSeq;
   const distinct=ordersRM.optionsGeneration&&ordersRM.optionsGeneration===ordersRM.generation?undefined:ORDERS_RM_OPTION_SELECTS.map(([,k])=>k);
-  ordersRMPost('/api/read-model/orders/facets',ordersRMFacetsBody(spec,{kpi:true,sums:['Order Quantity'],...(distinct?{distinct}:{})})).then(payload=>{
+  ordersRMPost('/api/read-model/orders/facets',ordersRMFacetsBody(spec,{kpi:true,sums:['Order Quantity'],footer:ordersRMFooterSpec(),...(distinct?{distinct}:{})})).then(payload=>{
     if(seq!==ordersRM.facetsSeq||signature!==ordersRM.signature||!ordersRMCheckGeneration(payload))return;
     ordersRM.facets=payload.result;ordersRM.facetsKey=key;
     if(currentActiveTab()==='orders')ordersRMRenderFacets(payload.result);
@@ -10796,12 +10838,16 @@ function renderOrdersFromReadModel(){
   if(window.BL_CP_SOURCE_FILTER_REQUIRED||window.BL_HAS_CACHED_MODEL_DATA===false)return false;
   applyCoreAutoFilterState();
   const spec=ordersReadModelSpec();
-  if(!spec.ok){ordersRM.legacyReason=spec.reason;window.BLPerf?.mark?.('ORDERS_READ_MODEL_LEGACY',{reason:spec.reason});return false;}
+  // Her sorgu geçişi bekleyen istekleri geçersiz kılar (önbellekten çizim ve eski yola düşüş dahil):
+  // geç gelen yanıt artık ekrandaki filtrelerle uyuşmayan satırları/sayaçları basamaz.
+  const supersede=()=>{ordersRM.seq++;ordersRM.facetsSeq++;};
+  if(!spec.ok){supersede();ordersRM.legacyReason=spec.reason;window.BLPerf?.mark?.('ORDERS_READ_MODEL_LEGACY',{reason:spec.reason});return false;}
   ordersRM.legacyReason='';
   ordersRMHideSearchFeedback();
   const signature=ordersRMSignature(spec);
-  if(signature===ordersRM.unsupportedSignature){ordersRM.legacyReason='server:READ_MODEL_FILTER_UNSUPPORTED';return false;}
+  if(signature===ordersRM.unsupportedSignature){supersede();ordersRM.legacyReason='server:READ_MODEL_FILTER_UNSUPPORTED';return false;}
   if(signature===ordersRM.signature&&ordersRM.rows){
+    supersede();
     ordersRMPaintTable();
     ordersRMRequestFacets(spec,signature);
     return true;
@@ -11003,11 +11049,18 @@ function ordersRMWarmDataset(){
 }
 // Tam Siparişler satırları yüklenince (ensureOrdersLoaded → invalidateUnifiedPriorityDecisions
 // 'orders-projection-loaded') pencereler aynı nesnelere bağlanır ve işçi veri kümesi ısıtılır.
+// Tam satır yüklemesi ve sunucu yenilemesi (hydrate / ertelenmiş) Siparişler verisini değiştirir:
+// pencereli sonuç, sayaçlar ve panel değerleri geçersizdir; açık sekme aynı filtrelerle yeniden sorgular.
+const ORDERS_RM_DATA_REASONS=new Set(['orders-projection-loaded','server-orders-hydrated','server-orders-deferred']);
 window.addEventListener('bl:global-flow-data-changed',event=>{
-  if(event&&event.detail&&event.detail.reason==='orders-projection-loaded'){ordersRMAdoptFullRows();ordersRMWarmDataset();}
+  const reason=event&&event.detail&&event.detail.reason;
+  if(!ORDERS_RM_DATA_REASONS.has(reason))return;
+  ordersRMInvalidate(reason);
+  if(reason!=='server-orders-deferred'){ordersRMAdoptFullRows();ordersRMWarmDataset();}
+  if(ordersReadModelEnabled()&&ordersRM.rows)queueMicrotask(()=>{if(currentActiveTab()==='orders')renderOrders();});
 });
 function ordersRMInvalidate(reason){
-  ordersRM.epoch++;ordersRM.signature='';ordersRM.facets=null;ordersRM.facetsKey='';ordersRM.columnFacets.clear();ordersRM.materialized=null;
+  ordersRM.epoch++;ordersRM.seq++;ordersRM.facetsSeq++;ordersRM.signature='';ordersRM.facets=null;ordersRM.facetsKey='';ordersRM.columnFacets.clear();ordersRM.materialized=null;
   window.BLPerf?.mark?.('ORDERS_READ_MODEL_INVALIDATED',{reason:reason||'data'});
 }
 window.BLOrdersReadModel={

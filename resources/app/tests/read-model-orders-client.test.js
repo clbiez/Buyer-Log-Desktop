@@ -59,3 +59,59 @@ test('flag off by default: renderOrdersNow takes the legacy path unless the read
   assert.match(render,/^function renderOrdersNow\(\)\{\s*if\(!state.orders\)return;/);
   assert.match(render,/const scope=ordersEvaluateAll\(\);/);
 });
+
+/* Codex #1086 bulguları için regresyonlar. */
+test('paged view: a pending row requests the window of its store index, not its page position',()=>{
+  const paint=extractFunction(SOURCE,'ordersRMPaintTable');
+  assert.match(paint,/rowClassFn:row=>\{if\(row&&row\._rmPending\)\{ordersRMNeedRow\(row\._rmIndex\);/);
+  assert.doesNotMatch(paint,/ordersRMNeedRow\(rowIdx\)/);
+  const requested=[];
+  const context=vm.createContext({queueMicrotask:fn=>fn(),Set,Math});
+  vm.runInContext(`${/^const ORDERS_RM_WINDOW=.*$/m.exec(SOURCE)[0]}\n${/^const ORDERS_RM_PREFETCH=.*$/m.exec(SOURCE)[0]}
+    var ordersRM={wanted:new Set(),flushQueued:false};function ordersRMEnsureWindow(i){__requested.push(i);}\n${extractFunction(SOURCE,'ordersRMNeedRow')}`,
+  Object.assign(context,{__requested:requested}));
+  context.ordersRMNeedRow(650); // 50'lik sayfa 14'ün ilk satırı
+  assert.ok(requested.includes(3),JSON.stringify(requested));
+});
+
+test('every query transition supersedes in-flight window and count requests',()=>{
+  const render=extractFunction(SOURCE,'renderOrdersFromReadModel');
+  assert.match(render,/const supersede=\(\)=>\{ordersRM\.seq\+\+;ordersRM\.facetsSeq\+\+;\};/);
+  // eski yola düşüş, sunucunun reddettiği imza ve önbellekten çizim
+  assert.match(render,/if\(!spec\.ok\)\{supersede\(\);/);
+  assert.match(render,/if\(signature===ordersRM\.unsupportedSignature\)\{supersede\(\);/);
+  assert.match(render,/if\(signature===ordersRM\.signature&&ordersRM\.rows\)\{\s*supersede\(\);/);
+  assert.match(extractFunction(SOURCE,'ordersRMInvalidate'),/ordersRM\.seq\+\+;ordersRM\.facetsSeq\+\+;ordersRM\.signature='';/);
+});
+
+test('Orders load, server hydration and deferred refresh invalidate the windowed result and re-query',()=>{
+  const reasons=/const ORDERS_RM_DATA_REASONS=new Set\((\[[^\]]*\])\)/.exec(SOURCE);
+  assert.ok(reasons,'reason set');
+  assert.deepEqual(JSON.parse(reasons[1].replace(/'/g,'"')),['orders-projection-loaded','server-orders-hydrated','server-orders-deferred']);
+  // Bu nedenler gerçekten yayınlanıyor.
+  for(const reason of ['orders-projection-loaded','server-orders-hydrated','server-orders-deferred'])
+    assert.match(SOURCE,new RegExp(`invalidateUnifiedPriorityDecisions\\('${reason}'`));
+  const at=SOURCE.indexOf('const ORDERS_RM_DATA_REASONS'),listener=SOURCE.slice(at,SOURCE.indexOf('\n});',at));
+  assert.match(listener,/ordersRMInvalidate\(reason\);/);
+  assert.match(listener,/renderOrders\(\)/);
+});
+
+test('totals footer: precomputed server totals are used; pending totals are never summed from placeholders',()=>{
+  const fns=['renderQuantityTotalsFooter','isQuantityLikeColumn','formatQuantityTotal','selectionFooterCellHtml','tableVisibleSelectedCount','tableNumericValue','normalizeDecimalText','selectionHasId','selectionIdKey'];
+  const context=vm.createContext({appLang:'tr',escapeHtml:v=>String(v),kolAverageFooter:(w,a,label)=>`<td>${label}:${w}/${a}</td>`,
+    kolWeightedAverage:()=>{throw Error('must not average placeholders');},kolArithmeticAverage:()=>{throw Error('must not average placeholders');}});
+  vm.runInContext(fns.map(name=>extractFunction(SOURCE,name)).join('\n'),context);
+  const table={tFoot:null,createTFoot(){this.tFoot={innerHTML:'',remove(){}};return this.tFoot;}};
+  const cols=[{k:'Order Code'},{k:'Order Quantity'},{k:'FOB ($)'}];
+  // Map vm realm'inde kurulur (renderQuantityTotalsFooter `instanceof Map` denetler).
+  const averageCols=vm.runInContext(`new Map([['FOB ($)',{label:'FOB',getQty:r=>r['Order Quantity']}]])`,context);
+  const placeholders=[{_rmPending:true},{_rmPending:true}];
+  context.renderQuantityTotalsFooter(table,placeholders,cols,{withCheck:true,selectedSet:new Set(['1']),averageCols,precomputed:null});
+  assert.equal((table.tFoot.innerHTML.match(/aria-busy="true"/g)||[]).length,3,'selection + quantity + FOB cells pending');
+  assert.match(table.tFoot.innerHTML,/Toplamlar yükleniyor/);
+  context.renderQuantityTotalsFooter(table,placeholders,cols,{withCheck:true,selectedSet:new Set(['1']),averageCols,
+    precomputed:{sums:{'Order Quantity':10000},averages:{'FOB ($)':{weighted:2.5,arithmetic:3}},selectedCount:7}});
+  assert.match(table.tFoot.innerHTML,/10\.000/);
+  assert.match(table.tFoot.innerHTML,/FOB:2\.5\/3/);
+  assert.match(table.tFoot.innerHTML,/selectionFooterNumber">7</);
+});
