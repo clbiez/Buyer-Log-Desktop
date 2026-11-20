@@ -8742,11 +8742,11 @@ async function computeSourceFor(profile){
   coldComputeSourcesInFlight.set(id,operation);
   try{return await operation;}finally{if(coldComputeSourcesInFlight.get(id)===operation)coldComputeSourcesInFlight.delete(id);}
 }
-function computeReadContextOf(context){
+// context: önceden hesaplanmış pageProjectionContext (satır kaydı aynı anın bağlamını iki kez hesaplamaz).
+function computeReadContext(profile,context=pageProjectionContext(profile)){
   const shared=loadOverrides(),day=new Date();
   return {...context,contextHash:stableHashValue([context.contextHash,shared._revision||0,shared._revisions||null,require('./lib/merch-calendar-store').fingerprint(),day.getFullYear(),day.getMonth(),day.getDate()])};
 }
-function computeReadContext(profile){return computeReadContextOf(pageProjectionContext(profile));}
 const computeReadGuard=createComputeReadGuard({sessionProfile:req=>userAccess.sessionProfile(req),profileById:id=>userAccess.profileById(id),
   hasArea:(profile,area)=>userAccess.hasArea(profile,area),contextFor:computeReadContext,accessFor:profile=>userAccess.computeAccessContext(profile),sourceTokenFor:computeSourceToken});
 function computeParamsFor(profile,descriptor,task,parts={}){
@@ -10289,7 +10289,7 @@ app.patch('/api/overrides/:orderCode', async (req, res) => {
 require('./lib/read-model/cp-row-save').registerCpRowSaveRoute(app,{
   patchRows:(items,options)=>require('./db').patchOrderOverrideRows(items,options),
   rejectUnauthorizedOrders,rejectSharedOwnerWrites,assertAutomaticDatesReadOnly,pageProjectionContext,queueProjectionCacheRowPatches,liveRowPatchesFor,noteActorOf,apiError,
-  readContextHashOf:context=>computeReadContextOf(context).contextHash,recordRowPatches:recordCpRowPatches,
+  readContextHashOf:context=>computeReadContext(null,context).contextHash,recordRowPatches:recordCpRowPatches,
   ensureAutomaticDateSource:async(req,items)=>{if(items.some(item=>Object.prototype.hasOwnProperty.call(item.patch.dates||{},'exFactory'))&&!Array.isArray(cacheForUser(req.currentUser).asasOrders))await ensureDataLoaded(req.currentUser);},
   notifyShared:user=>{void sharedRevisionStore.update('cpOverrides',{actorId:user.id}).catch(error=>logRuntimeFailure('sharedRevision',error));},
   appendAudit:(user,action,target,detail)=>userAccess.appendAudit(user,action,target,detail),
