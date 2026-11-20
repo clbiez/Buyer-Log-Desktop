@@ -110,9 +110,66 @@
     const c = canonicalApi();
     return c && typeof c.label === 'function' ? c.label(id, lang) : id;
   }
-  function canon(row, id) {
+  function canon(row, id, ctx) {
+    if (ctx && ctx.canonReader) return text(ctx.canonReader(row, id));
     const c = canonicalApi();
     return c && typeof c.value === 'function' ? text(c.value(row, 'backlog', id)) : '';
+  }
+  /* #1079 WS6b — şema başına kanonik erişim (BL_READ_MODEL_BACKLOG).
+     canonical-fields value() → rowLookup, satırda birebir bulunmayan her
+     bağlama anahtarı için satırın TÜM anahtarlarını token'laştırıp tarıyordu:
+     37,7k satır × 12 alan × 44 anahtar ≈ 0,56 sn tek blok. Backlog satırları
+     aynı başlık şemasını paylaşır; alan → gerçek anahtar çözümü şema (Object.keys
+     sırası) başına bir kez yapılır. Satır başına okuma value() ile birebir aynı
+     kuraldır: bağlama anahtarları sırayla, önce birebir anahtar, yoksa token'ı eşit
+     ilk anahtar; ilk boş olmayan (undefined/null/'' dışı) değer döner. Şema
+     değişirse (farklı anahtar listesi) çözüm yeniden kurulur. */
+  const BACKLOG_READ_MODEL_STORAGE_KEY = 'buyerlog.readModel.backlog.v1';
+  function compiledCanonEnabled(ctx) {
+    if (ctx && typeof ctx.compiledCanonical === 'boolean') return ctx.compiledCanonical;
+    if (root && typeof root.BL_READ_MODEL_BACKLOG === 'boolean') return root.BL_READ_MODEL_BACKLOG;
+    // Varsayılan kapalı; yalnız tarayıcıda yerel tercih açabilir.
+    try { return !!(root && root.document && root.localStorage && root.localStorage.getItem(BACKLOG_READ_MODEL_STORAGE_KEY) === '1'); } catch (_) { return false; }
+  }
+  function createCanonReader(c) {
+    if (!c || typeof c.field !== 'function' || typeof c.bindingFor !== 'function' || typeof c.token !== 'function') return null;
+    const bindingKeys = new Map();
+    let shapeKeys = null, shapeOwn = null, shapeTokens = null, shapeResolved = null;
+    const keysOf = id => {
+      if (bindingKeys.has(id)) return bindingKeys.get(id);
+      const fieldId = c.field(id) ? id : c.canonicalId('backlog', id);
+      const binding = fieldId ? c.bindingFor('backlog', fieldId) : null;
+      const keys = binding && Array.isArray(binding.keys) ? binding.keys.slice() : null;
+      bindingKeys.set(id, keys);
+      return keys;
+    };
+    const sameShape = keys => {
+      if (!shapeKeys || shapeKeys.length !== keys.length) return false;
+      for (let i = 0; i < keys.length; i += 1) if (shapeKeys[i] !== keys[i]) return false;
+      return true;
+    };
+    return function read(row, id) {
+      if (!row || typeof row !== 'object') return undefined;
+      const keys = Object.keys(row);
+      if (!sameShape(keys)) { shapeKeys = keys; shapeOwn = new Set(keys); shapeTokens = null; shapeResolved = new Map(); }
+      let resolved = shapeResolved.get(id);
+      if (resolved === undefined) {
+        const wanted = keysOf(id);
+        resolved = wanted ? wanted.map(key => {
+          if (shapeOwn.has(key)) return key;
+          if (!shapeTokens) shapeTokens = shapeKeys.map(k => c.token(k));
+          const index = shapeTokens.indexOf(c.token(key));
+          return index < 0 ? null : shapeKeys[index];
+        }).filter(key => key !== null) : null;
+        shapeResolved.set(id, resolved);
+      }
+      if (!resolved) return undefined;
+      for (let i = 0; i < resolved.length; i += 1) {
+        const v = row[resolved[i]];
+        if (v !== undefined && v !== null && v !== '') return v;
+      }
+      return undefined;
+    };
   }
   /* Tarih değeri takvim gününe (YYYY-MM-DD) çevrilir; saat dilimi kaydırmaz. */
   function dayIso(value) {
@@ -150,19 +207,19 @@
     const F = fields(), ctx = context || {};
     const status = text(row && row[F.status]);
     const stage = stageOf(status);
-    const exFactory = dayIso(row && row[F.revisedLoad]) || dayIso(canonicalApi() && canonicalApi().value(row, 'backlog', 'exFactory')) || dayIso(row && row[F.plannedLoad]);
+    const exFactory = dayIso(row && row[F.revisedLoad]) || dayIso(ctx.canonReader ? ctx.canonReader(row, 'exFactory') : canonicalApi() && canonicalApi().value(row, 'backlog', 'exFactory')) || dayIso(row && row[F.plannedLoad]);
     const meta = row && row._backlogExcel && typeof row._backlogExcel === 'object' ? row._backlogExcel : {};
     const item = {
       row, status, stage, qty:Math.max(0, num(row && row[F.qty])),
-      orderCode:canon(row, 'orderCode'), modelName:canon(row, 'modelName'), colourCode:canon(row, 'colourCode'), colour:canon(row, 'colour'),
+      orderCode:canon(row, 'orderCode', ctx), modelName:canon(row, 'modelName', ctx), colourCode:canon(row, 'colourCode', ctx), colour:canon(row, 'colour', ctx),
       exFactory, plannedExFactory:dayIso(row && row[F.plannedLoad]),
       antrepo:dayIso(row && row[F.antrepo]), retail:dayIso(row && row[F.retail]), inStore:dayIso(row && row[F.inStore]),
       risk:turk(row && row[RISK_HEADER]) === 'VAR',
       transitOverdue:meta.transitOverdue === true,
       exInheritedFrom:text(meta.exFactoryInheritedFrom),
     };
-    DIMENSIONS.forEach(id => { item[id] = canon(row, id); });
-    item.season = canon(row, 'season');
+    DIMENSIONS.forEach(id => { item[id] = canon(row, id, ctx); });
+    item.season = canon(row, 'season', ctx);
     // Özel sipariş: Regular dışında bir önem etiketi taşıyan satır (BTS, Bayram …).
     if (!item.importance) item.importance = REGULAR_IMPORTANCE;
     item.special = turk(item.importance) !== turk(REGULAR_IMPORTANCE);
@@ -179,6 +236,8 @@
     // "Bugün" bir kez hesaplanır; eskiden her satırda yeni Date + metin dönüşümü yapılıyordu.
     const ctx = { ...(context || {}) };
     if (ctx.todayOrdinal == null) ctx.todayOrdinal = ordinal(ctx.today || todayIso());
+    // Anahtar açıkken kanonik alan çözümü bu çağrı içinde şema başına bir kez yapılır.
+    if (!ctx.canonReader && compiledCanonEnabled(ctx)) ctx.canonReader = createCanonReader(canonicalApi());
     return (Array.isArray(rows) ? rows : []).map(row => normalizeRow(row, ctx));
   }
 
@@ -608,6 +667,7 @@
     STAGES, DIMENSIONS, TIMELINE_FIELDS, PRE_LOAD,
     stageOf, stageLabel, dimLabel, dayIso, normalizeRow, normalizeRows, summarize, groupBy, timeline, isoWeekNo,
     QUALITY_CHECKS, dataQuality, importanceSummary, REGULAR_IMPORTANCE, PRIORITY_DIMENSION,
+    readModelEnabled:compiledCanonEnabled,
     buildWorkbook, buildXlsx, fileName,
   });
 });
