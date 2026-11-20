@@ -35,7 +35,21 @@ const ROW_LIMIT=500;
 const IDLE_MS=60000;
 const datasets=new Map();
 let idleTimer=null;
-function releaseAll(){datasets.clear();if(idleTimer){clearTimeout(idleTimer);idleTimer=null;}}
+/* Boşta bırakmada tek seferlik tam GC: boştaki işçide V8 kendiliğinden toplamaz; bırakılan
+   veri kümesi (30k'da ~200 MB çöp) aksi hâlde sonraki ayırmaya dek RSS'te kalır (ölçüm:
+   işçi heap'i 324 → 117 MB). gc() yalnız bu işçinin isolate'ini toplar; yalnız veri kümesi
+   tutulurken 60 sn hareketsizlikten sonra çalışır, istek yolunda asla. */
+let collect;
+function collectGarbage(){
+  try{
+    if(collect===undefined){
+      collect=typeof global.gc==='function'?global.gc:null;
+      if(!collect){require('v8').setFlagsFromString('--expose-gc');collect=require('vm').runInNewContext('gc');}
+    }
+    if(collect)collect();
+  }catch(_){collect=null;}
+}
+function releaseAll(){const had=datasets.size>0;datasets.clear();if(idleTimer){clearTimeout(idleTimer);idleTimer=null;}if(had)collectGarbage();}
 function touch(){
   if(idleTimer)clearTimeout(idleTimer);
   idleTimer=setTimeout(releaseAll,IDLE_MS);idleTimer.unref?.();

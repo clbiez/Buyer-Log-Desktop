@@ -12,6 +12,8 @@ const day = d => d.toISOString().slice(0, 10);
 const v3Buffer = rows => zlib.gzipSync(JSON.stringify(items.build(rows, { today: '2026-01-15' }, day)));
 const deliveryBuffer = rows => zlib.gzipSync(JSON.stringify(items.buildDelivery(rows, {}, day)));
 const VIEW = { view: { today: '2026-01-15' } };
+let collections = 0;
+global.gc = () => { collections++; }; // boşta bırakma işçinin gc()'sini çağırır (gerçek yolda --expose-gc ile alınır)
 
 test('tür başına tek veri kümesi; son istekten IDLE_MS sonra hepsi bırakılır', () => {
   const timers = [], original = global.setTimeout;
@@ -24,8 +26,12 @@ test('tür başına tek veri kümesi; son istekten IDLE_MS sonra hepsi bırakıl
     assert.deepEqual([...model._datasets.keys()].sort(), ['del-a', 'v3-b'], 'yeni Genel Bakış sorgusu eskisini düşürür; Teslimat Riski kalır');
     assert.equal(timers.at(-1).ms, model.IDLE_MS);
     assert.equal(model.IDLE_MS, 60000);
+    const before = collections;
     timers.at(-1).fn();
     assert.equal(model._datasets.size, 0, 'boşta bırakılır');
+    assert.equal(collections, before + 1, 'bırakılan veri kümesi beklemeden toplanır (RSS düşer)');
+    model._releaseAll();
+    assert.equal(collections, before + 1, 'boşken tekrar GC yok');
     // Bırakıldıktan sonra yük istenir (rota 'missing' yanıtında yükü yeniden gönderir).
     assert.deepEqual(model.execute({ datasetKey: 'v3-b', request: VIEW }), { missing: true });
   } finally { global.setTimeout = original; model._releaseAll(); }
