@@ -10,10 +10,19 @@ const {createReadModelPrewarm,overviewBodyFor,prewarmEnabled}=require('../server
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 async function until(check,ms=5000){const end=Date.now()+ms;while(!check()){if(Date.now()>end)throw Error('timeout');await new Promise(r=>setTimeout(r,5));}}
 function access({areas=['overview','cp','orders','koleksiyon'],session=true}={}){
-  const state={session,prepared:0};
+  const state={session,prepared:0,revoked:new Set()};
   return {state,prepareComputeAccessContext:async()=>{state.prepared++;},
-    sessionProfile:req=>state.session&&/bl=/.test(req.headers.cookie||'')?{id:'u1',enabled:true,status:'ACTIVE'}:null,
+    sessionProfile:req=>state.session&&/bl=/.test(req.headers.cookie||'')&&!state.revoked.has(req.headers.cookie)?{id:'u1',enabled:true,status:'ACTIVE'}:null,
     hasArea:(profile,area)=>areas.includes(area)};
+}
+// compute-read-guard ile aynı sözleşme: damga kullanıcı/bağlamdır (aynı kullanıcının iki
+// oturumu aynı damgayı taşır); assertResponse canlı oturumu yeniden okur.
+function fakeGuard(userAccess){
+  const fail=()=>Object.assign(Error('session'),{code:'SESSION_REQUIRED',statusCode:401});
+  return {capture(r){
+    const profile=userAccess.sessionProfile(r);if(!profile)throw fail();
+    return {profile,key:JSON.stringify({userId:profile.id}),assertResponse(){if(!userAccess.sessionProfile(r))throw fail();}};
+  }};
 }
 const req=(cookie='bl=abc')=>({headers:{cookie},currentUser:{id:'u1'},socket:{remoteAddress:'127.0.0.1'}});
 
@@ -37,8 +46,9 @@ function fakePool(){
 }
 function setup({areas,session,quietMs=0}={}){
   const pool=fakePool(),userAccess=access({areas,session}),calls=[],projections=[];let prewarm;
-  const service={async model(r,body,options){calls.push({body,cookie:r.headers.cookie});const out=await prewarm.runCompute('read-model-overview',{parts:body.parts},{...options,ownerKey:'read-model',generation:'1',estimatedBytes:1});return {generation:'g',cached:false,body:JSON.stringify(out.value),timing:{}};}};
-  prewarm=createReadModelPrewarm({getPool:()=>pool,userAccess,preferenceValue:()=>null,getOverviewService:()=>service,quietMs,
+  // Gerçek servis gibi: önce oturum/alan yakalanır (geçersiz oturum hesap başlatmaz).
+  const service={async model(r,body,options){fakeGuard(userAccess).capture(r,'overview');calls.push({body,cookie:r.headers.cookie});const out=await prewarm.runCompute('read-model-overview',{parts:body.parts},{...options,ownerKey:'read-model',generation:'1',estimatedBytes:1});return {generation:'g',cached:false,body:JSON.stringify(out.value),timing:{}};}};
+  prewarm=createReadModelPrewarm({getPool:()=>pool,userAccess,guard:fakeGuard(userAccess),preferenceValue:()=>null,getOverviewService:()=>service,quietMs,
     loadProjection:async(r,module)=>{projections.push(module);return {release(){}};},defer:fn=>fn(),wait:()=>tick()});
   return {pool,userAccess,calls,projections,prewarm,proxy:prewarm.overviewServiceProxy()};
 }
@@ -90,6 +100,25 @@ test('a client asking for the same Overview body joins the running prewarm inste
   const other=h.proxy.model(req(),{version:1,lang:'en',parts:'fast',filters:{}},{});await tick();
   assert.equal(h.calls.length,3);h.pool.jobs.at(-1).resolve({});await other;
   assert.ok(h.prewarm.stats().joined>=1);
+});
+
+test('a second session that joins a prewarm is revalidated before it receives the shared model',async()=>{
+  const h=setup();h.prewarm.noteSession(req('bl=first'));
+  await until(()=>h.pool.jobs.length===1);
+  const body={version:1,lang:'tr',parts:'fast',filters:{main:{},bg:{}}};
+  const second=h.proxy.model(req('bl=second'),body,{}).then(value=>({value}),error=>({error}));
+  await tick();assert.equal(h.calls.length,1,'same user and context: the second session joins');
+  h.userAccess.state.revoked.add('bl=second');
+  h.pool.jobs[0].resolve({fast:true});
+  const out=await second;
+  assert.equal(out.error?.code,'SESSION_REQUIRED','revoked joining session must not receive the model');
+  // Ön ısıtmanın kendi oturumu geçerli: koşu tamamlanır.
+  await until(()=>h.pool.jobs.length===2);h.pool.jobs[1].resolve({});
+  await until(()=>h.prewarm.statusFor(req('bl=first')).state==='done');
+  // Geçersiz oturum hiç katılmaz (yakalama başarısız): servis kendi 401'ini verir.
+  h.userAccess.state.revoked.add('bl=third');
+  const before=h.calls.length,third=await h.proxy.model(req('bl=third'),body,{}).then(()=>null,error=>error);
+  assert.equal(third?.code,'SESSION_REQUIRED');assert.equal(h.calls.length,before,'no computation for an invalid session');
 });
 
 test('an interactive read model job preempts a speculative prewarm; a different Overview body does not',async()=>{

@@ -64,7 +64,7 @@ function overviewBodyFor(read,parts){
   return {version:1,lang,parts,filters};
 }
 
-function createReadModelPrewarm({getPool,userAccess,preferenceValue=()=>null,loadProjection=null,getOverviewService=null,
+function createReadModelPrewarm({getPool,userAccess,preferenceValue=()=>null,loadProjection=null,getOverviewService=null,guard=null,
   enabled=()=>prewarmEnabled(),quietMs=1500,maxAttempts=3,maxUsers=64,now=()=>Date.now(),
   defer=fn=>{const timer=setTimeout(fn,0);timer.unref?.();},wait=ms=>new Promise(resolve=>{const timer=setTimeout(resolve,ms);timer.unref?.();}),
   onFailure=()=>{}}={}){
@@ -112,21 +112,30 @@ function createReadModelPrewarm({getPool,userAccess,preferenceValue=()=>null,loa
     catch(_){return false;}
   }
 
-  /* Genel Bakış servisi vekili: aynı kullanıcı + aynı normalize gövde için tek uçuş. */
-  function flightKey(req,body){
+  /* Genel Bakış servisi vekili: aynı yetki damgası (kullanıcı, bağlam, yetki, kaynak;
+     compute-read-guard) + aynı normalize gövde için tek uçuş. Katılan her istek kendi
+     oturumunu yakalar ve paylaşılan sonucu almadan önce yeniden doğrular. */
+  function capture(req){
+    if(!guard||typeof guard.capture!=='function')return null;
+    try{return guard.capture(req,'overview');}catch(_){return null;}
+  }
+  function flightKey(captured,body){
+    if(!captured||!captured.key)return null;
     let request;try{request=validateRequest(body);}catch(_){return null;}
-    const id=req&&req.currentUser&&req.currentUser.id;
-    return id==null?null:JSON.stringify([String(id),request.parts,request.lang,request.filters]);
+    return JSON.stringify([captured.key,request.parts,request.lang,request.filters]);
   }
   function overviewServiceProxy(){
     return {
       async model(req,body,options={}){
-        const service=getOverviewService(),key=flightKey(req,body),flight=key&&flights.get(key);
+        const service=getOverviewService(),captured=capture(req),key=flightKey(captured,body),flight=key&&flights.get(key);
         if(flight&&!flight.run.controller.signal.aborted){
           // İstemci ön ısıtmayı bekliyor: koşu artık iptal edilmez.
           counters.joined++;flight.run.speculative=false;if(flight.run.session)flight.run.session.joined=true;
-          try{return await flight.promise;}
+          let out=null;
+          try{out=await flight.promise;}
           catch(error){if(error?.code!=='COMPUTE_ABORTED'||options.signal?.aborted)throw error;}
+          // Ön ısıtmanın doğrulaması kendi çerez kopyası içindir; katılan oturum ayrıca doğrulanır.
+          if(out){captured.assertResponse();return out;}
         }
         return service.model(req,body,options);
       },
@@ -136,7 +145,7 @@ function createReadModelPrewarm({getPool,userAccess,preferenceValue=()=>null,loa
   }
   function prewarmOverview(session,run,parts){
     const body=overviewBodyFor(key=>preferenceValue(session.req.currentUser,key),parts);
-    const key=flightKey(session.req,body);
+    const key=flightKey(capture(session.req),body);
     const promise=als.run({run},()=>getOverviewService().model(session.req,body,{signal:run.controller.signal}));
     const flight={run,promise};
     if(key)flights.set(key,flight);

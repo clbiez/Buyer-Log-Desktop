@@ -6378,6 +6378,7 @@ const readModelPrewarm = require('./lib/read-model/prewarm-scheduler').createRea
   },
   loadProjection: (req, module) => ensureComputedProjection(req, module),
   getOverviewService: () => overviewModelServiceForPrewarm(),
+  guard: { capture: (req, area) => computeReadGuard.capture(req, area) },
   onFailure: (stage, error) => logRuntimeFailure('readModelPrewarm:' + stage, error),
 });
 function noteWorkspaceOpened(req, profile = req.currentUser) {
