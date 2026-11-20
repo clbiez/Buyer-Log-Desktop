@@ -6366,17 +6366,27 @@ app.post('/api/backups/restore/inspect', userAccess.requireArea('source'), userA
 });
 // Genel Bakış okuma modeli (#1074): POST /api/read-model/overview/model. Kişisel karar
 // bağlamı istemciyle aynı sunucu kayıtlarından okunur; revizyonu CP ajan revizyonudur.
+// CP kişisel karar bağlamının sunucu kaynakları: Genel Bakış modeli (#1074) ve CP
+// hesaplanmış sütunları (#1078) aynı kaynakları ve revizyonu kullanır.
+const cpDecisionContextSources = {
+  preferences: userPreferences, roleEntries: profile => userAccess.roleWorkspaceEntries(profile),
+  managedRules: () => { const ov = loadOverrides(); return { ...require('./db').normalizeCpManagedRules(ov.cpManagedRules), revision: Number(ov._revisions && ov._revisions.cpManagedRules) || 0 }; },
+  transitRules: profile => effectiveOverridesForUser(profile.id).transitRules || [],
+  plmPayload: () => sampleRequestStore.publicPayload(),
+  checklistPayload: () => require('./lib/checklist-supplier-store').publicPayload(),
+  revision: profile => cpAgentRevision(profile, { ignoreRefresh: true }),
+  merge: (own, shared) => require('../public/checklist-answer-merge-engine').merge(own, shared),
+};
 require('./lib/read-model/overview-model-routes')(app, {
   userAccess, apiError, ensureComputedProjection, getComputeReadGuard: () => computeReadGuard,
-  contextSources: {
-    preferences: userPreferences, roleEntries: profile => userAccess.roleWorkspaceEntries(profile),
-    managedRules: () => { const ov = loadOverrides(); return { ...require('./db').normalizeCpManagedRules(ov.cpManagedRules), revision: Number(ov._revisions && ov._revisions.cpManagedRules) || 0 }; },
-    transitRules: profile => effectiveOverridesForUser(profile.id).transitRules || [],
-    plmPayload: () => sampleRequestStore.publicPayload(),
-    checklistPayload: () => require('./lib/checklist-supplier-store').publicPayload(),
-    revision: profile => cpAgentRevision(profile, { ignoreRefresh: true }),
-    merge: (own, shared) => require('../public/checklist-answer-merge-engine').merge(own, shared),
-  },
+  contextSources: cpDecisionContextSources,
+});
+// CP hesaplanmış sütunlar (#1078): POST /api/read-model/cp/computed. Test raporu görevleri
+// GET /api/test-reports/tasks ile aynı süzmeyle (yetkili siparişler) gelir.
+require('./lib/read-model/cp-computed-routes')(app, {
+  userAccess, apiError, ensureComputedProjection, getComputeReadGuard: () => computeReadGuard,
+  contextSources: cpDecisionContextSources,
+  testTasks: { list: () => require('./lib/test-reports/store').tasks(), authorizedOrders: profile => agentQualityAuthorizedOrders(profile) },
 });
 // ERP okuma modeli (#1073): POST /api/read-model/:module/query. Global 100 MB JSON
 // ayrıştırıcısından ÖNCE kaydolur: yetki gövdeden önce, rota kendi 2 MB sınırını uygular.

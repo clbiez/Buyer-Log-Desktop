@@ -578,6 +578,14 @@
     });
   }
 
+  /* CP hesaplanmış sütunlar sağlayıcısı (#1078, app-main.js BLCpComputedColumns).
+     Etkinken checklist hücreleri yerel arka uçta aynı kodla hesaplanır; bu modül
+     30k satırlık hücre geçişini çalıştırmaz, yalnız sütun tanımlarını kurar. */
+  function computedProvider() {
+    const provider = root.BLCpComputedColumns;
+    return provider && typeof provider.active === 'function' && provider.active() ? provider : null;
+  }
+
   function currentRows() {
     try {
       if (root.BLFormulaRows && typeof root.BLFormulaRows.cp === 'function') {
@@ -672,7 +680,12 @@
     return Components.withRowCache(function () { return refreshColumnsNow(options); });
   }
   function refreshColumnsNow(options) {
-    const opts = options || {};
+    let opts = options || {};
+    const provider = !opts.decision ? computedProvider() : null;
+    if (provider) {
+      if (!opts.columnsOnly && typeof provider.refresh === 'function') void Promise.resolve(provider.refresh()).catch(function () {});
+      opts = Object.assign({}, opts, { columnsOnly: true });
+    }
     const rows = currentRows(), items = itemCatalog();
     const cols = root.COLS_BY_TABLE && root.COLS_BY_TABLE.cp;
     if (!Array.isArray(cols)) return false;
@@ -699,6 +712,16 @@
       dynamic.forEach(function (col) { if (!manager.order.includes(col.k)) manager.order.push(col.k); });
     }
     if (typeof root.invalidateColumnIndex === 'function') root.invalidateColumnIndex('cp');
+
+    if (opts.columnsOnly) {
+      // Hücreler satırda (sağlayıcı yazdı); bileşenli sütun genişliği aynı kuralla.
+      const withElementsOnly = new Set();
+      rows.forEach(function (row) { Object.keys(row._checklistElements || {}).forEach(function (id) { withElementsOnly.add(id); }); });
+      dynamic.forEach(function (col) { col.weight = withElementsOnly.has(col.checklistItemId) ? 26 : 12; });
+      state.appliedColumns = null; state.columnDelta = null;
+      if (opts.render && typeof root.renderCP === 'function') root.renderCP();
+      return true;
+    }
 
     /* Her CP çiziminde (sekme dönüşü, filtre) bütün satırların checklist
        hücreleri baştan yazılıyordu (5 bin satırda ~0,7 sn). Aynı satır dizisi,
@@ -799,6 +822,9 @@
   function refreshAssistantView() {
     const assistant = root.BLCpAssistant, s = assistantState();
     if (!assistant || !s) return;
+    // Sağlayıcı etkinken CP kararları arka uçtan gelir; Genel Bakış kendi yolunu çizer.
+    const provider = computedProvider();
+    if (provider) { if (typeof provider.refresh === 'function') void Promise.resolve(provider.refresh()).catch(function () {}); return; }
     try {
       const rows = currentRows();
       if (rows.length && typeof assistant.onOverviewRendered === 'function') {
@@ -2894,6 +2920,11 @@
     if (state.renderWrapped || typeof root[renderKey] !== 'function') return;
     const original = root[renderKey];
     root[renderKey] = function () {
+      const provider = computedProvider();
+      if (provider) {
+        if (typeof provider.covers === 'function' && provider.covers(currentRows())) { try { refreshColumns({ render: false, columnsOnly: true }); } catch (_) {} }
+        return original.apply(this, arguments);
+      }
       if (root.BLCpAssistant) {
         const decision=root.BLCpAssistant.peekDecisionsForRows?.(currentRows());
         if(decision){try{refreshColumns({render:false,decision,reuse:true});}catch(_){}}
