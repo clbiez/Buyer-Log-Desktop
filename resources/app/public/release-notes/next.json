@@ -702,6 +702,23 @@
           "en": "No screen component changed; the existing partial row and status are used, only the data is completed."
         }
       }
+    },
+    {
+      "id": "orders-read-model-windowed",
+      "type": "improvement",
+      "module": {"tr": "Siparişler", "en": "Orders"},
+      "title": {"tr": "Siparişler filtreleri yerel arka uçta çalışabilir (pilot)", "en": "Orders filters can run on the local backend (pilot)"},
+      "body": {
+        "tr": "Pilot ayarı açıkken Siparişler tüm satırları indirmez. Filtre, arama ve sıralama bilgisayardaki yerel arka uçta çalışır ve tablo yalnız görünen satırları ister. Hızlı filtre sayaçları ve sütun filtresi değerleri de arka uçtan gelir. Tümünü seç, Kopyala ve Excel tüm eşleşen satırları arka uçtan alır. Henüz desteklenmeyen filtreler mevcut yolla çalışır. Ayar varsayılan olarak kapalıdır.",
+        "en": "With the pilot setting on, Orders does not download every row. Filtering, search and sorting run on the local backend on this computer, and the table requests only the rows on screen. Quick filter counts and column filter values also come from the backend. Select all, Copy and Excel fetch all matching rows from the backend. Filters that are not supported yet use the existing path. The setting is off by default."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-read-model-windowed.png",
+        "alt": {"tr": "Pilot ayarı açık Siparişler tablosu: 30.000 demo satırında ülke, sezon ve arama filtresi", "en": "Orders table with the pilot setting on: country, season and search filters on 30,000 demo rows"},
+        "caption": {"tr": "30.000 satırlık demo veride filtrelenen 4.974 satır arka uçtan gelir; sayaçlar ve sayım satırı aynı kalır.", "en": "On 30,000 demo rows, the 4,974 filtered rows come from the backend; counts and the count line stay the same."}
+      }
     }
   ]
 }
