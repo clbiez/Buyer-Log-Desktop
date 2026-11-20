@@ -767,8 +767,8 @@
         "kind": "screenshot",
         "capture": "post-change",
         "src": "cp-read-model-windowed.png",
-        "alt": {"tr": "Pilot ayarı açık CP Tracker: 30.000 demo satırında öncelik çipiyle filtrelenmiş tablo", "en": "CP Tracker with the pilot setting on: table filtered by a priority chip on 30,000 demo rows"},
-        "caption": {"tr": "30.000 satırlık demo veride filtrelenen satırlar ve sayaçlar arka uçtan gelir; sonuç mevcut yolla aynıdır.", "en": "On 30,000 demo rows, the filtered rows and counts come from the backend; the result matches the existing path."}
+        "alt": {"tr": "Pilot ayarı açık CP Tracker: 2.077 demo satırından Kritik öncelik çipiyle süzülen 42 satır", "en": "CP Tracker with the pilot setting on: 42 of 2,077 demo rows filtered by the Critical priority chip"},
+        "caption": {"tr": "Demo veride Kritik çipi seçili; satırlar, sayaçlar ve sayım arka uçtan gelir ve mevcut yolla aynıdır.", "en": "The Critical chip is selected on demo data; rows, counts and totals come from the backend and match the existing path."}
       }
     },
     {
