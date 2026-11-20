@@ -54,7 +54,7 @@ function openModuleInPage(module, isReady, countRows, timeoutMs, isFailed) {
 }
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 // İlk görünme anı izlenen bölgeler (#1077): Genel Bakış CP özet kartı (eski ve model yolu aynı kap).
-const WATCH = { cpCards: '#cpAssistant .cpaOverviewMetrics' };
+const WATCH = { cpCards: '#cpAssistant .cpaOverviewMetrics', flowMap: '#globalFlowMeta[data-tone="normal"], #globalFlowMeta[data-tone="warn"]' };
 
 function tempDir(label) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), TEMP_PREFIX + label + '-'));
@@ -252,6 +252,11 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
       await delay(options.settleMs);
     }
     phase = 'done';
+    // Sunucu süreci belleği (Linux /proc; işçi iş parçacıkları aynı süreçte): anlık RSS ve tepe.
+    try {
+      const status = fs.readFileSync(`/proc/${server.pid}/status`, 'utf8'), kb = name => Number((status.match(new RegExp(name + ':\\s+(\\d+)')) || [])[1]);
+      result.serverMemory = { rssMB: P.round(kb('VmRSS') / 1024), peakMB: P.round(kb('VmHWM') / 1024) };
+    } catch (_) { result.serverMemory = null; }
     const { profile } = await cdp.send('Profiler.stop');
     const final = await page.evaluate(() => ({ longTasks: window.__erpProbe.longTasks, lag: window.__erpProbe.lag, longTaskUnsupported: !!window.__erpProbe.longTaskUnsupported,
       timeline: window.BLPerf?.timeline?.() || [], origin: window.BLPerf?.origin?.() ?? 0, anchor: window.__erpProbe.anchor }));

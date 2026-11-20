@@ -6395,7 +6395,9 @@ const cpDecisionContextSources = {
   transitRules: profile => effectiveOverridesForUser(profile.id).transitRules || [],
   plmPayload: () => sampleRequestStore.publicPayload(),
   checklistPayload: () => require('./lib/checklist-supplier-store').publicPayload(),
-  revision: profile => cpAgentRevision(profile, { ignoreRefresh: true }),
+  // Karar girdileri anahtara içerikleriyle girer (createContextLoader); burada yalnız girdide
+  // olmayan bağımlılıklar: iş takvimi ve yerel gün (#1077).
+  revision: () => { const d = new Date(); return [require('./lib/merch-calendar-store').fingerprint(), d.getFullYear(), d.getMonth(), d.getDate()]; },
   merge: (own, shared) => require('../public/checklist-answer-merge-engine').merge(own, shared),
 };
 // Ön ısıtma (#1077) ile rota aynı servis örneğini paylaşır: ön ısıtmanın sonucu rotanın
@@ -6425,6 +6427,8 @@ require('./lib/read-model/cp-computed-routes')(app, {
   userAccess, apiError, ensureComputedProjection, getComputeReadGuard: () => computeReadGuard,
   contextSources: cpDecisionContextSources,
   testTasks: { list: () => require('./lib/test-reports/store').tasks(), authorizedOrders: profile => agentQualityAuthorizedOrders(profile) },
+  // #1077: CP isteği kullanıcı işidir; spekülatif ön ısıtmayı keser (ölçüm: açılışta CP −10,7 sn).
+  runReadModelCompute: readModelPrewarm.runCompute,
 });
 // ERP okuma modeli (#1073): POST /api/read-model/:module/query. Global 100 MB JSON
 // ayrıştırıcısından ÖNCE kaydolur: yetki gövdeden önce, rota kendi 2 MB sınırını uygular.

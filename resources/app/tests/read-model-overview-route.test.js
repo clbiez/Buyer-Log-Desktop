@@ -116,18 +116,24 @@ test('cache: same request hits; filters, language and decision-context revision 
   assert.ok(model(filtered).cp.rows<model(first).cp.rows);
   const en=model(await service.model(req(users.moderator),body(undefined,'en')));
   assert.equal(en.cp.summary.lang,'en');
-  // Kişisel kural değişti → bağlam revizyonu değişir → yeni hesap, yeni sonuç.
+  // #1077: CP kararına girmeyen tercih (tablo sütun durumu) önbelleği bozmaz.
+  state.prefs['lcw.table.columnState.v1']=JSON.stringify({cp:{hidden:['Buyer']}});
+  assert.equal((await service.model(req(users.moderator),body())).cached,true,'karar dışı tercih değişimi önbellekten');
+  // Kişisel kural değişti → bağlam içeriği (anahtar) değişir → yeni hesap, yeni sonuç.
   const OD=require('../public/order-decision-engine'),Rules=require('../public/cp-rules-engine');
   const catalog=OD.normalizePriorityCatalog([{id:'prio:vip',tr:'VIP',en:'VIP',tone:'red',isRisk:true},...OD.DEFAULT_PRIORITY_CATALOG]);
   const rule=Rules.normalizeRule({id:'vip',kind:'priority',target:'prio:vip',name:'VIP',conditions:[{field:'@qty',operator:'gte',value:130}]},{priorityCatalog:catalog});
   state.prefs['lcw.cp.rules.priority.v1']=JSON.stringify({version:1,rules:[rule],deletedRuleIds:[],priorityCatalog:catalog});
-  assert.equal((await service.model(req(users.moderator),body())).cached,true,'revizyon değişmeden önbellek');
-  state.contextRevision='c2';calls.length=0;
+  calls.length=0;
   const changed=await service.model(req(users.moderator),body());
-  assert.equal(changed.cached,false);
+  assert.equal(changed.cached,false,'kural değişimi revizyon beklemeden yeni hesap');
   assert.ok(calls.some(call=>call.context),'yeni bağlam işçiye gönderildi');
   const vip=model(changed).cp.season.rows.reduce((sum,row)=>sum+(row.priorities['prio:vip']||0),0);
   assert.ok(vip>0,'yeni kural sezon × öncelik kırılımına yansıdı');
+  // Girdide olmayan bağımlılık (takvim/gün) revision ile anahtara girer.
+  assert.equal((await service.model(req(users.moderator),body())).cached,true);
+  state.contextRevision='c2';
+  assert.equal((await service.model(req(users.moderator),body())).cached,false,'revizyon değişimi yeni hesap');
 });
 
 test('stale generation during the read is a 409 that the route retries',async()=>{

@@ -19282,13 +19282,19 @@ function backgroundWarmupSteps(){
     }},
     // CP tablosu ortak öncelikler hazır olmadan çizilmez; karar motoru da burada hazırlanır.
     {module:'cp',enabled:modelData,ready:()=>Boolean(state.cp&&_unifiedPriorityCache.cp?.rows===state.cp.rows),load:async()=>{
+      // CP hesaplanmış sütunları arka uçtaysa (#1078) tarayıcı karar hesabı yapmaz: adım
+      // Genel Bakış modelini ve arka uç sonucunu beklemez (sonuç gelince tablo kendini
+      // günceller); Siparişler/Backlog hazırlığı ~9 sn gecikmez (#1077 entegrasyon).
+      const backend=window.BLCpComputedColumns?.isEnabled?.()===true;
       // Genel Bakış okuma modeli açıksa (#1074) aynı karar işi yerel sunucuda koşar;
       // tarayıcı hazırlığı onunla CPU için yarışmasın diye önce birincil ekran tamamlanır.
-      await window.BLOverviewReadModel?.beforeWarmup?.();
+      if(!backend)await window.BLOverviewReadModel?.beforeWarmup?.();
       const ok=await ensureCpLoaded({deferRender:true,reason:'warmup'});
       if(ok!==true)return ok;
       await window.BLPerf?.ensureFeature?.('cpAssistant');
-      return await scheduleUnifiedPrioritiesForTable('cp');
+      const priorities=scheduleUnifiedPrioritiesForTable('cp');
+      if(backend&&window.BLCpComputedColumns?.active?.()){void Promise.resolve(priorities).catch(()=>{});return true;}
+      return await priorities;
     }},
     {module:'orders',enabled:modelData,ready:()=>Boolean(state.orders),load:()=>ensureOrdersLoaded({deferRender:true})},
     {module:'backlog',enabled:modelData,ready:()=>backlogLoadedOnce||Boolean(backlogPrefetch),load:()=>prefetchBacklogForRefresh()},

@@ -71,7 +71,24 @@ test('server wires one prewarm scheduler into every read model route; only works
   assert.ok(index.indexOf('noteWorkspaceOpened(req, profile);')>index.indexOf("redirect(302, '/select-user')"),'only a valid session opens the workspace');
   assert.match(SERVER,/if \(String\(req\.query\.mode \|\| ''\) === 'initial'\) noteWorkspaceOpened\(req\);/);
   const routes=SERVER.slice(SERVER.indexOf("require('./lib/read-model/overview-model-routes')(app, {"),SERVER.indexOf("app.use(express.json({ limit: '100mb' }));"));
-  assert.equal((routes.match(/runReadModelCompute: readModelPrewarm\.runCompute,/g)||[]).length,3,'overview, query and global flow share the priority-aware pool entry');
+  assert.equal((routes.match(/runReadModelCompute: readModelPrewarm\.runCompute,/g)||[]).length,4,'overview, CP computed, query and global flow share the priority-aware pool entry');
   assert.match(routes,/overviewModelService: readModelPrewarm\.overviewServiceProxy\(\),/);
   assert.match(SERVER,/runCompute: readModelPrewarm\.runCompute,\n    loadContext: createContextLoader\(cpDecisionContextSources\),/);
+});
+
+test('legacy warmup with backend CP computed columns does not wait for the Overview model or the backend result',async()=>{
+  const h=harness();let beforeWarmup=0;
+  h.context.window.BLOverviewReadModel={beforeWarmup:()=>{beforeWarmup++;return new Promise(()=>{});}};
+  h.context.window.BLCpComputedColumns={isEnabled:()=>true,active:()=>Boolean(h.context.state.cp)};
+  h.context.scheduleUnifiedPrioritiesForTable=()=>{h.calls.push(['priorities']);return new Promise(()=>{});};
+  h.context.scheduleBackgroundModuleWarmup();await h.flush();
+  assert.equal(beforeWarmup,0,'no wait for the Overview full model');
+  assert.deepEqual(h.calls.filter(c=>['koleksiyon','cp','priorities','orders','backlog'].includes(c[0])).map(c=>c[0]),['koleksiyon','cp','priorities','orders','backlog'],'Orders and Backlog do not wait for the backend CP result');
+  assert.deepEqual(h.gates,['modules']);
+  // Sağlayıcı kapalıysa eski bekleme korunur.
+  const legacy=harness();let waited=0;
+  legacy.context.window.BLOverviewReadModel={beforeWarmup:()=>{waited++;return Promise.resolve();}};
+  legacy.context.window.BLCpComputedColumns={isEnabled:()=>false,active:()=>false};
+  legacy.context.scheduleBackgroundModuleWarmup();await legacy.flush();
+  assert.equal(waited,1);assert.deepEqual(legacy.gates,['modules']);
 });
