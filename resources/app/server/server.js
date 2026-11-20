@@ -5481,7 +5481,21 @@ function agentQualityLiveProfile(profile,{write=false}={}) {
     }
     return current;
 }
-function agentQualityOrderRowsNow(profile,{source='cp',includeInactive=false}={}) {
+/* #1079 WS6: checklist yetki çözümü satırdan yalnız sipariş kimliğini okur
+   (orderKey, opsiyon kimliği, sipariş kodu). Tam CP/Orders kurulumu (Antrepo,
+   formül, backlog operasyon satırları) 30k satırda çağrı başına ~2,7 sn sunucu
+   olay döngüsünü kilitliyordu. buildOrderRowsFromASAS her girdi için tek satır
+   üretir ve bu dört alanı ham satırdan override'sız aynı ifadeyle yazar; burada
+   aynı ifade kullanılır. Yetki süzgeci ve çağrı başına taze çözüm değişmez.
+   BUYER_LOG_CHECKLIST_AUTH_IDENTITY_ROWS=0 → eski tam kurulum. */
+function checklistIdentityRowsEnabled(){return process.env.BUYER_LOG_CHECKLIST_AUTH_IDENTITY_ROWS!=='0';}
+function orderIdentityRowsFromASAS(rows,{includeInactive=false}={}){
+    return rows.filter(o=>includeInactive||Number(o&&o.kalan)>0).map(o=>({
+      'PLM ID':(o.plm!=null&&!isNaN(Number(o.plm)))?Math.trunc(Number(o.plm)):'',
+      'Model Name':o.model,'C.Code':o.ccode,'Order Code':o.ocode,
+    }));
+}
+function agentQualityOrderRowsNow(profile,{source='cp',includeInactive=false,identityOnly=false}={}) {
     profile=agentQualityLiveProfile(profile);
     const active=cacheForUser(profile.id), overrides=effectiveOverridesForUser(profile.id);
     // Use the same source scope and Horizon as the page projection. Read-only
@@ -5490,12 +5504,13 @@ function agentQualityOrderRowsNow(profile,{source='cp',includeInactive=false}={}
     // User-managed source rows are projection inputs, never ownership grants.
     const businessRows=userAccess.hasPermission(profile,'manageAllOrders')?visible:visible.filter(row=>
       userAccess.filterRowsByScope(profile,userAccess.authoritativeOrderRows(canonicalFields.value(row,source,'orderCode'))).length>0);
+    if(identityOnly&&checklistIdentityRowsEnabled())return orderIdentityRowsFromASAS(businessRows,{includeInactive});
     const build=includeInactive?buildOrdersRowsFromASAS:buildCPRowsFromASAS;
     return build(businessRows,antrepoForTarget(active,source),overrides);
 }
 function checklistAuthorizedOrdersNow(profile,{write=false}={}) {
   const source=userAccess.hasArea(profile,'cp')?'cp':'orders';
-  const rows=agentQualityOrderRowsNow(profile,{source,includeInactive:true});
+  const rows=agentQualityOrderRowsNow(profile,{source,includeInactive:true,identityOnly:true});
   const CP=require('../public/cp-readiness-engine'), Checklist=require('../public/cp-checklist-engine'), allowed=new Map();
   // One synchronous resolver invocation has one current permission graph.
   // Keep the canonical ownership check per code; never cache this across requests.

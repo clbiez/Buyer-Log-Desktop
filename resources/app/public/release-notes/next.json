@@ -899,6 +899,17 @@
         "kind": "none",
         "reason": {"tr": "Ekranda yeni bir öğe yok; aynı değerler kayıttan sonra daha erken gelir ve geçici hata uyarısı gösterilmez.", "en": "Nothing new appears on screen; the same values arrive sooner after a save and no temporary error warning is shown."}
       }
+    },
+    {
+      "id": "checklist-save-server-wait",
+      "type": "fix",
+      "module": {"tr": "CP Tracker", "en": "CP Tracker"},
+      "title": {"tr": "Checklist kaydı ve yüklemesi sunucuyu bekletmez", "en": "Checklist saves and loads no longer stall the server"},
+      "body": {"tr": "Büyük veride bir checklist durumunu kaydetmek ya da checklist cevaplarını yüklemek, sunucuyu saniyelerce meşgul ediyordu. Bu sırada diğer kullanıcıların ekranları da bekliyordu. Sunucu artık yetki kontrolü için yalnız sipariş kimliklerini okuyor. Yetki kuralları ve kaydedilen değerler değişmedi.", "en": "With large data, saving a checklist status or loading checklist answers kept the server busy for several seconds. Other users' screens waited during that time too. The server now reads only order identities for the permission check. Permission rules and saved values are unchanged."},
+      "visual": {
+        "kind": "none",
+        "reason": {"tr": "Ekranda yeni bir öğe yok; aynı checklist durumları daha kısa sürede kaydedilir ve yüklenir.", "en": "Nothing new appears on screen; the same checklist statuses save and load sooner."}
+      }
     }
   ]
 }
