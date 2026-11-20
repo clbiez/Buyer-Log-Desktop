@@ -2,7 +2,7 @@
 /* Okuma modeli işçisinde Genel Bakış modeli görevi (#1074).
  *
  * Yük (payload):
- *  { cp:null|{datasetKey,scopeKey,buffer?}, overview:null|{datasetKey,scopeKey,buffer?},
+ *  { parts:'fast'|'full', cp:null|{datasetKey,scopeKey,buffer?}, overview:null|{datasetKey,scopeKey,buffer?},
  *    contextKey, context?:{userId,lang,entries,answers,managedRules,plm,transitRules},
  *    filters:{main,bg}, lang }
  * Veri kümeleri WS1 işçisinin önbelleğinde tutulur. Genel Bakış özet satırları WS1
@@ -42,20 +42,27 @@ async function execute(payload,deps){
   const started=performance.now(),missing=[],loads={};
   const cp=datasetFor(payload.cp,deps,missing,'cp',loads);
   const overview=datasetFor(payload.overview,deps,missing,'overview',loads);
-  const hostKey=payload.cp?`${payload.contextKey}|${payload.lang==='en'?'en':'tr'}`:'';
+  const full=payload.parts!=='fast';
+  const hostKey=payload.cp&&full?`${payload.contextKey}|${payload.lang==='en'?'en':'tr'}`:'';
   let host=hostKey?hostFor(hostKey):null;
   if(hostKey&&!host&&!payload.context)missing.push('context');
   if(missing.length)return {missing};
+  let hostMs=0;
   if(hostKey&&!host){
+    const hostStarted=performance.now();
     host=await createDecisionHost({...payload.context,lang:payload.lang});
+    hostMs=performance.now()-hostStarted;
     rememberHost(hostKey,host);
   }
-  const computeStarted=performance.now();
-  const model=await computeOverviewModel({cpRows:cp?cp.rows:null,summaryRows:overview?overview.rows:null,filters:payload.filters||{},host,
+  const computeStarted=performance.now(),phases={};
+  const model=await computeOverviewModel({cpRows:cp?cp.rows:null,summaryRows:overview?overview.rows:null,filters:payload.filters||{},host,full,phases,
     transitRules:payload.context?payload.context.transitRules:host?.window?.state?.overrides?.transitRules});
   const computeMs=performance.now()-computeStarted;
   return {body:deps.engine.serializeResult(model),timing:{loadMs:(loads.cp||0)+(loads.overview||0),queryMs:computeMs,totalMs:performance.now()-started,
-    rows:(cp?cp.rows.length:0)+(overview?overview.rows.length:0)}};
+    rows:(cp?cp.rows.length:0)+(overview?overview.rows.length:0),parts:full?'full':'fast',
+    // Soğuk hesap dağılımı (#1074): veri kümesi çözme + satır hazırlığı, barındırıcı kurulumu, karar + özet, İstisna Kutusu.
+    phases:{cpLoadMs:loads.cp||0,overviewLoadMs:loads.overview||0,hostMs:hostMs||0,...phases}}};
 }
 function clearHosts(){hosts.clear();}
-module.exports={execute,clearHosts,MAX_HOSTS};
+function hostCount(){return hosts.size;}
+module.exports={execute,clearHosts,hostCount,MAX_HOSTS};

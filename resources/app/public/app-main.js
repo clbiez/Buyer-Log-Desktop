@@ -2313,11 +2313,12 @@ let overviewCpLoadState='idle';
 let overviewCpLoadError='';
 let overviewRenderFrame=0;
 // Genel Bakış okuma modeli durumu (#1074); ayrıntı renderOverviewFromModel üstünde.
-const overviewReadModel={key:'',data:null,pending:null,dirty:true,error:'',materialized:false,serial:0,inboxData:null};
+const overviewReadModel={parts:{fast:{key:'',data:null,pending:null,dirty:true,serial:0},full:{key:'',data:null,pending:null,dirty:true,serial:0}},error:'',materialized:false,inboxData:null};
+function markOverviewModelDirty(){overviewReadModel.parts.fast.dirty=true;overviewReadModel.parts.full.dirty=true;}
 function scheduleOverviewRender(reason='data'){
   window.BLPerf?.mark?.('OVERVIEW_INVALIDATED',{reason});
   // Okuma modeli (#1074): kendi sonucu dışındaki her geçersizleşmede model yeniden istenir (sunucu önbelleği ucuz).
-  if(!String(reason).startsWith('overview-model'))overviewReadModel.dirty=true;
+  if(!String(reason).startsWith('overview-model'))markOverviewModelDirty();
   if(currentActiveTab()!=='overview'){_deferredTabRenders.add('overview');return;}
   if(overviewRenderFrame)return;
   const raf=window.requestAnimationFrame||((fn)=>setTimeout(fn,0));
@@ -12063,7 +12064,7 @@ window.BLExceptionInboxBridge={
  async read(signal){
   // Okuma modeli (#1074): İstisna Kutusu öğeleri Genel Bakış modelinden gelir; satır inmez.
   if(overviewReadModelEnabled()){
-    const model=overviewModelCurrent()||await requestOverviewModel();
+    const model=overviewModelCurrent()||await requestOverviewModelParts();
     if(signal?.aborted)throw new DOMException('Aborted','AbortError');
     if(model&&model.exceptionInbox&&overviewReadModelEnabled())return window.BLExceptionInbox.precomputed(model.exceptionInbox);
   }
@@ -12147,15 +12148,19 @@ function overviewReadModelEnabled(){return window.BL_READ_MODEL_OVERVIEW!==false
 function overviewModelFilters(scope){
   return Object.fromEntries(Object.entries(ovStateFor(scope)).filter(([,set])=>set&&set.size).map(([dim,set])=>[dim,[...set].map(String)]));
 }
-function overviewModelBody(){return {version:1,lang:appLang==='en'?'en':'tr',filters:{main:overviewModelFilters('main'),bg:overviewModelFilters('bg')}};}
-function overviewModelKey(body=overviewModelBody()){return `${String(window.BL_USER_CONTEXT?.id||'')}|${JSON.stringify(body)}`;}
-function overviewModelCurrent(){const key=overviewModelKey();return overviewReadModel.key===key?overviewReadModel.data:null;}
-function requestOverviewModel(){
-  const body=overviewModelBody(),key=overviewModelKey(body);
-  if(overviewReadModel.pending&&overviewReadModel.pending.key===key)return overviewReadModel.pending.promise;
-  if(!overviewReadModel.dirty&&overviewReadModel.key===key&&overviewReadModel.data)return Promise.resolve(overviewReadModel.data);
-  const serial=++overviewReadModel.serial,job={key};overviewReadModel.dirty=false;overviewReadModel.pending=job;
-  window.BLPerf?.mark?.('OVERVIEW_MODEL_REQUEST');
+function overviewModelBody(parts='full'){return {version:1,lang:appLang==='en'?'en':'tr',parts,filters:{main:overviewModelFilters('main'),bg:overviewModelFilters('bg')}};}
+function overviewModelKey(body=overviewModelBody()){const {parts,...rest}=body;return `${String(window.BL_USER_CONTEXT?.id||'')}|${JSON.stringify(rest)}`;}
+/* İki aşama: 'fast' karar katmanı olmadan ülke / alt üretici / not satırlarını
+   hemen getirir; 'full' CP özeti, sezon × öncelik ve İstisna Kutusu'nu ekler.
+   Tam aşama yalnız hızlı aşamadan sonra istenir (tek işçide sıraya girer). */
+function overviewModelPart(part){const slot=overviewReadModel.parts[part],key=overviewModelKey();return slot&&slot.key===key?slot.data:null;}
+function overviewModelCurrent(){return overviewModelPart('full');}
+function requestOverviewModel(part='full'){
+  const slot=overviewReadModel.parts[part],body=overviewModelBody(part),key=overviewModelKey(body);
+  if(slot.pending&&slot.pending.key===key)return slot.pending.promise;
+  if(!slot.dirty&&slot.key===key&&slot.data)return Promise.resolve(slot.data);
+  const serial=++slot.serial,job={key};slot.dirty=false;slot.pending=job;
+  window.BLPerf?.mark?.('OVERVIEW_MODEL_REQUEST',{part});
   job.promise=fetch('/api/read-model/overview/model',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
     .then(async res=>{
       const payload=await res.json().catch(()=>({}));
@@ -12163,16 +12168,16 @@ function requestOverviewModel(){
       return payload;
     })
     .then(payload=>{
-      if(serial!==overviewReadModel.serial)return overviewReadModel.data;
+      if(serial!==slot.serial)return slot.data;
       const model=payload.model&&typeof payload.model==='object'?payload.model:{};
       if(model.cp&&Array.isArray(model.cp.notes))reviveServerDates(model.cp.notes);
-      overviewReadModel.key=key;overviewReadModel.data=model;overviewReadModel.error='';
-      window.BLPerf?.mark?.('OVERVIEW_MODEL_READY',{cached:payload.cached===true,serverMs:Number(payload.timing?.totalMs)||0});
+      slot.key=key;slot.data=model;overviewReadModel.error='';
+      window.BLPerf?.mark?.('OVERVIEW_MODEL_READY',{part,cached:payload.cached===true,serverMs:Number(payload.timing?.totalMs)||0});
       scheduleOverviewRender('overview-model-ready');
       return model;
     })
     .catch(error=>{
-      if(serial!==overviewReadModel.serial)return null;
+      if(serial!==slot.serial)return null;
       // Model verilemedi (eski sunucu, işçi hatası…): bu oturumda eski yol sürer.
       console.warn('Genel Bakış okuma modeli kullanılamadı, istemci hesabına dönülüyor:',error);
       overviewReadModel.error=String(error&&error.message||error);overviewReadModel.materialized=true;
@@ -12181,8 +12186,12 @@ function requestOverviewModel(){
       scheduleOverviewRender('overview-model-fallback');
       return null;
     })
-    .finally(()=>{if(overviewReadModel.pending===job)overviewReadModel.pending=null;});
+    .finally(()=>{if(slot.pending===job)slot.pending=null;});
   return job.promise;
+}
+function requestOverviewModelParts(){
+  // Hızlı aşama bittikten (ya da önbellekten döndükten) sonra tam aşama istenir.
+  return requestOverviewModel('fast').then(fast=>fast&&overviewReadModelEnabled()?requestOverviewModel('full'):null);
 }
 async function materializeOverview(){
   if(overviewReadModel.materialized&&state.cp&&window.BLCpAssistant?._state?.model)return true;
@@ -12201,12 +12210,14 @@ window.BLOverviewReadModel={enabled:overviewReadModelEnabled,current:overviewMod
 // tamamlandıktan sonra model yeniden istenir.
 window.addEventListener('bl:cp-decision-context-changed',()=>{
   if(!overviewReadModelEnabled())return;
-  void Promise.resolve(window.BLStorage?.flushPending?.()).catch(()=>{}).then(()=>{overviewReadModel.dirty=true;scheduleOverviewRender('overview-decision-context');});
+  void Promise.resolve(window.BLStorage?.flushPending?.()).catch(()=>{}).then(()=>{overviewReadModel.parts.full.dirty=true;scheduleOverviewRender('overview-decision-context');});
 });
 function renderOverviewFromModel(){
-  const data=overviewModelCurrent(),key=overviewModelKey();
-  void requestOverviewModel();
-  const cp=data&&data.cp,orders=data&&data.orders;
+  const full=overviewModelPart('full'),fast=overviewModelPart('fast'),key=overviewModelKey();
+  void requestOverviewModelParts();
+  // Ortak alanlar (ülke, alt üretici, notlar) hangi aşama hazırsa ondan; karar
+  // katmanına bağlı kartlar yalnız tam aşamadan.
+  const base=full||fast,cp=base&&base.cp,decided=full&&full.cp;
   renderOverviewPriorityReminder(cp?cp.notes:[],{ready:Boolean(cp),materialize:materializeOverview});
   const breakdown={country:[],subManufacturer:[],season:{codes:[],labels:{},rows:[]},buyingGroup:[],drill:{
     country:v=>{clearCpQuickFilters();setSelectValue('cpFCountry',v);switchTab('cp');renderCP();},
@@ -12215,34 +12226,46 @@ function renderOverviewFromModel(){
   }};
   if(cp){
     overviewCpLoadState='ready';overviewCpLoadError='';
-    const summary=cp.summary;
-    const show=()=>{if(overviewModelKey()===key&&overviewReadModelEnabled())window.BLCpAssistant?.showOverviewSummary?.(summary,{materialize:materializeOverview});};
-    if(window.BLCpAssistant?.showOverviewSummary)show();
-    else{renderOverviewCpDependencyState('loading');void (window.BLPerf?.ensureFeature?.('cpAssistant')||Promise.resolve()).then(show).catch(()=>{});}
     breakdown.country=cp.country;breakdown.subManufacturer=cp.subManufacturer;
     fillMiniTable('tblCountry', breakdown.country);
     fillMiniTable('tblLicense', breakdown.subManufacturer);
     bindMiniDrill('tblCountry', v=>{ clearCpQuickFilters(); setSelectValue('cpFCountry', v); });
     bindMiniDrill('tblLicense', v=>{ clearCpQuickFilters(); state.colFilters.cp['Sub-Manufacturer'] = {values:new Set([v])}; });
-    const season=cp.season||{codes:[],labels:{},rows:[]},lang=appLang==='en'?'en':'tr';
+  }else{
+    document.getElementById('tblCountry').innerHTML=''; document.getElementById('tblLicense').innerHTML='';
+  }
+  if(decided&&decided.summary){
+    const summary=decided.summary;
+    const show=()=>{if(overviewModelKey()===key&&overviewReadModelEnabled())window.BLCpAssistant?.showOverviewSummary?.(summary,{materialize:materializeOverview});};
+    if(window.BLCpAssistant?.showOverviewSummary)show();
+    else{renderOverviewCpDependencyState('loading');void (window.BLPerf?.ensureFeature?.('cpAssistant')||Promise.resolve()).then(show).catch(()=>{});}
+    const season=decided.season||{codes:[],labels:{},rows:[]},lang=appLang==='en'?'en':'tr';
     breakdown.season={codes:season.codes,labels:Object.fromEntries(season.codes.map(code=>[code,season.labels[code]?.[lang]||''])),rows:season.rows};
     renderOverviewSeasonTable(breakdown.season);
   }else{
-    renderOverviewCpDependencyState(data?'error':'loading',data?(appLang==='en'?'CP data is not available for your account.':'Hesabınız için CP verisi yok.'):'');
-    document.getElementById('tblCountry').innerHTML=''; document.getElementById('tblLicense').innerHTML='';
+    // Karar katmanı hesaplanırken bugünkü yükleme durumu; CP alanı yoksa açık hata.
+    const noCp=Boolean(base)&&!cp;
+    renderOverviewCpDependencyState(noCp?'error':'loading',noCp?(appLang==='en'?'CP data is not available for your account.':'Hesabınız için CP verisi yok.'):'');
     document.getElementById('tblSeason').innerHTML='';
   }
-  if(orders){
-    renderOverviewKpis(orders.kpi);
-    breakdown.buyingGroup=orders.buyingGroup.map(d=>({label:d.label,active:d.active,total:d.total,remaining:d.remaining,totalQty:d.totalQty,fobUsd:d.fobUsd,fobTry:d.fobTry}));
-    renderOverviewBuyingGroups(orders.buyingGroup);
+  /* KPI ve Buying Group, açılışta zaten indirilen Genel Bakış özet satırlarından
+     ortak modülle hemen çizilir (eski yolla aynı zamanlama, ucuz toplamlar);
+     sunucu modelini beklemez. */
+  const summaryRows=overviewSummaryRows();
+  if(state.orderSummary||state.overviewSummary){
+    const M=window.BLOverviewModel,main=M.normalizeFilters(overviewModelFilters('main')),bg=M.normalizeFilters(overviewModelFilters('bg'));
+    renderOverviewKpis(M.orderKpis(summaryRows.filter(row=>M.passesDimFilters(row,false,main))));
+    const groups=M.buyingGroups(summaryRows.filter(row=>M.passesDimFilters(row,false,bg))).map(([label,d])=>({label,active:d.active,total:d.total,remaining:d.remaining,totalQty:d.totalQty,
+      fobUsd:d.fobValueUsd,fobTry:d.fobValueTry,totalFobUsd:d.totalFobValueUsd,totalFobTry:d.totalFobValueTry}));
+    breakdown.buyingGroup=groups.map(d=>({label:d.label,active:d.active,total:d.total,remaining:d.remaining,totalQty:d.totalQty,fobUsd:d.fobUsd,fobTry:d.fobTry}));
+    renderOverviewBuyingGroups(groups);
   }else{
     document.getElementById('kpiOrders').innerHTML='';
     document.getElementById('tblBuyingGroup').innerHTML='';
   }
-  // İstisna Kutusu aynı modelden beslenir; yeni model gelince görünüm yenilenir.
-  if(data&&data.exceptionInbox&&overviewReadModel.inboxData!==data.exceptionInbox){
-    overviewReadModel.inboxData=data.exceptionInbox;
+  // İstisna Kutusu tam aşamadan beslenir; yeni model gelince görünüm yenilenir.
+  if(full&&full.exceptionInbox&&overviewReadModel.inboxData!==full.exceptionInbox){
+    overviewReadModel.inboxData=full.exceptionInbox;
     void window.BLExceptionInboxView?.refresh?.();
   }
   window.BLOverviewBreakdown?.update?.(breakdown);

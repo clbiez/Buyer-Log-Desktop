@@ -29,12 +29,16 @@ const INBOX_LIMIT=200;
 // dahil) kurulur; burada yalnız not taşıyan satırlar seçilir.
 const hasNote=row=>Model.norm(row&&row['Notes'])!==''||Model.norm(row&&row['Ek Not'])!=='';
 
-async function computeOverviewModel({cpRows=null,summaryRows=null,filters={},host=null,transitRules=[]}){
+// full=false (hızlı aşama): karar katmanı ve İstisna Kutusu atlanır; season/summary/exceptionInbox null.
+async function computeOverviewModel({cpRows=null,summaryRows=null,filters={},host=null,transitRules=[],full=true,phases={}}){
   const main=Model.normalizeFilters(filters.main),bg=Model.normalizeFilters(filters.bg);
-  const out={version:1,cp:null,exceptionInbox:null,orders:null};
+  const out={version:1,parts:full?'full':'fast',cp:null,exceptionInbox:null,orders:null};
+  const now=()=>Number(process.hrtime.bigint()/1000n)/1000;
   if(Array.isArray(cpRows)){
     const cp=cpRows.filter(row=>Model.passesDimFilters(row,true,main));
-    const decided=host?host.overview(cp):null;
+    let t=now();
+    const decided=full&&host?host.overview(cp):null;
+    if(decided)phases.decisionMs=now()-t;
     out.cp={
       rows:cp.length,
       country:Model.groupCount(cp,'Country'),
@@ -46,8 +50,10 @@ async function computeOverviewModel({cpRows=null,summaryRows=null,filters={},hos
       notes:cp.filter(hasNote),
     };
     const transit=Array.isArray(transitRules)?transitRules:[];
-    out.exceptionInbox=await Inbox.project(cpRows,{fields,limit:INBOX_LIMIT,yield:()=>Promise.resolve(),
+    t=now();
+    if(full)out.exceptionInbox=await Inbox.project(cpRows,{fields,limit:INBOX_LIMIT,yield:()=>Promise.resolve(),
       analyze:row=>Engine.analyzeOrder(row,{transitRules:transit}),filter:row=>Model.passesDimFilters(row,true,main)});
+    if(full)phases.exceptionInboxMs=now()-t;
   }
   if(Array.isArray(summaryRows)){
     const orders=summaryRows.filter(row=>Model.passesDimFilters(row,false,main));

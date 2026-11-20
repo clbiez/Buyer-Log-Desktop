@@ -33,15 +33,37 @@ test('fallback: any model error switches this session to the client path; tıkla
   // Codex #1085: geri dönüşte asistan kartı bayat sunucu özetini bırakır (aksi halde eski yol çizimi görünmez).
   assert.match(request,/overviewReadModel\.materialized=true;\s*\/\/[^\n]*\n\s*window\.BLCpAssistant\?\.showOverviewSummary\?\.\(null\);/);
   // Eski yanıt yeni filtrenin sonucunu ezmez.
-  assert.match(request,/if\(serial!==overviewReadModel\.serial\)return/);
+  assert.match(request,/if\(serial!==slot\.serial\)return slot\.data/);
+  assert.match(request,/if\(serial!==slot\.serial\)return null/);
+  // İki aşama (#1085 koordinasyon): hızlı aşama önce, tam aşama yalnız ondan sonra.
+  assert.match(fn('requestOverviewModelParts'),/requestOverviewModel\('fast'\)\.then\(fast=>fast&&overviewReadModelEnabled\(\)\?requestOverviewModel\('full'\):null\)/);
   const materialize=fn('materializeOverview');
   assert.match(materialize,/overviewReadModel\.materialized=true;[\s\S]*await ensureCpLoaded\(\{deferRender:true,reason:'overview'\}\)/);
   assert.match(materialize,/if\(!loaded\|\|!state\.cp\)\{overviewReadModel\.materialized=false;/);
   // Kişisel bağlam değişince önce sunucu tercih kaydı beklenir, sonra model yenilenir.
-  assert.match(APP,/addEventListener\('bl:cp-decision-context-changed',\(\)=>\{[\s\S]{0,200}flushPending\?\.\(\)[\s\S]{0,160}overviewReadModel\.dirty=true/);
+  assert.match(APP,/addEventListener\('bl:cp-decision-context-changed',\(\)=>\{[\s\S]{0,200}flushPending\?\.\(\)[\s\S]{0,160}overviewReadModel\.parts\.full\.dirty=true/);
   // Durum nesnesi ilk kullanımdan (scheduleOverviewRender) önce tanımlıdır (TDZ yok).
   assert.ok(APP.indexOf('const overviewReadModel=')<APP.indexOf('function scheduleOverviewRender('));
   assert.ok(INDEX.indexOf('overview-model.js')>0&&INDEX.indexOf('overview-model.js')<INDEX.indexOf('app-main.js'),'ortak modül app-main.js öncesi yüklenir');
+});
+
+test('first paint: KPI and Buying Group draw from overview summary rows without waiting for the model; decision cards only from the full part',()=>{
+  const fromModel=fn('renderOverviewFromModel');
+  assert.match(fromModel,/const full=overviewModelPart\('full'\),fast=overviewModelPart\('fast'\)/);
+  assert.match(fromModel,/void requestOverviewModelParts\(\)/);
+  // KPI / BG: model değil, açılışta indirilen özet satırları.
+  assert.match(fromModel,/const summaryRows=overviewSummaryRows\(\);\n  if\(state\.orderSummary\|\|state\.overviewSummary\)\{/);
+  assert.match(fromModel,/renderOverviewKpis\(M\.orderKpis\(summaryRows\.filter\(row=>M\.passesDimFilters\(row,false,main\)\)\)\)/);
+  assert.match(fromModel,/M\.buyingGroups\(summaryRows\.filter\(row=>M\.passesDimFilters\(row,false,bg\)\)\)/);
+  assert.doesNotMatch(fromModel,/\.orders\.kpi|\.orders\.buyingGroup/);
+  // Ülke / alt üretici hangi aşama hazırsa; asistan, sezon ve İstisna Kutusu yalnız tam aşamadan.
+  assert.match(fromModel,/const base=full\|\|fast,cp=base&&base\.cp,decided=full&&full\.cp;/);
+  assert.match(fromModel,/if\(decided&&decided\.summary\)\{/);
+  assert.match(fromModel,/if\(full&&full\.exceptionInbox&&/);
+  // Model istek anahtarı aşamadan bağımsızdır (aynı filtre = aynı anahtar).
+  assert.match(fn('overviewModelKey'),/const \{parts,\.\.\.rest\}=body;/);
+  // Kendi model yenilemesi kirli işaretlemez (sonsuz istek döngüsü yok).
+  assert.match(fn('scheduleOverviewRender'),/if\(!String\(reason\)\.startsWith\('overview-model'\)\)markOverviewModelDirty\(\);/);
 });
 
 test('exception inbox: model result is used without rows; opening a record still reads real CP rows',async()=>{

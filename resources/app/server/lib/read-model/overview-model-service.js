@@ -23,12 +23,16 @@ const MAX_VALUES=500,MAX_TEXT=200;
 function failure(code,statusCode,tr,en,extra={}){return Object.assign(new Error(`${tr} / ${en}`),{code,statusCode,error:tr,errorEn:en,...extra});}
 const invalid=detail=>failure('READ_MODEL_QUERY_INVALID',400,'Geçersiz Genel Bakış modeli isteği.','Invalid Overview model request.',{detail});
 
-/* Gövde: { version:1, lang:'tr'|'en', filters:{ main:{dim:[değer]}, bg:{dim:[değer]} } } */
+/* Gövde: { version:1, lang:'tr'|'en', parts?:'fast'|'full', filters:{ main:{dim:[değer]}, bg:{dim:[değer]} } }
+   parts:'fast' karar katmanını çalıştırmaz (KPI, BG, ülke / alt üretici, notlar);
+   'full' (varsayılan) CP özeti, sezon × öncelik ve İstisna Kutusu'nu da içerir. */
 function validateRequest(raw){
   if(!raw||typeof raw!=='object'||Array.isArray(raw))throw invalid('body');
   if(raw.version!==1)throw invalid('version');
   const lang=raw.lang==='en'?'en':raw.lang==null||raw.lang==='tr'?'tr':null;
   if(!lang)throw invalid('lang');
+  const parts=raw.parts==null||raw.parts==='full'?'full':raw.parts==='fast'?'fast':null;
+  if(!parts)throw invalid('parts');
   const filters={};
   for(const scope of ['main','bg']){
     const source=raw.filters&&raw.filters[scope];
@@ -42,7 +46,7 @@ function validateRequest(raw){
     }
     filters[scope]=Object.fromEntries(Object.keys(clean).sort().map(dim=>[dim,clean[dim]]));
   }
-  return {lang,filters};
+  return {lang,parts,filters};
 }
 
 /* Sunucu kaynaklarından kişisel karar bağlamı. İstemcideki BLStorage ile aynı
@@ -103,17 +107,18 @@ function createOverviewModelService({guard,loadProjection,runCompute,loadContext
       leases.overview=await loadProjection(req,'overview');
       const cpAllowed=canAccessCp(req)===true;
       if(cpAllowed)leases.cp=await loadProjection(req,'cp');
-      const context=cpAllowed?loadContext(captured.profile||req.currentUser):null;
+      // Hızlı aşama karar bağlamını okumaz; yalnız tam aşama kişisel bağlamla hesaplanır.
+      const context=cpAllowed&&request.parts==='full'?loadContext(captured.profile||req.currentUser):null;
       captured.assertResponse();leases.overview.assertResponse?.();leases.cp?.assertResponse?.();
       const ov=dataset(captured,leases.overview,'overview'),cp=dataset(captured,leases.cp,'cp');
       const generation=`${ov.generation}|${cp?cp.generation:'-'}`;
       const scope=JSON.stringify([captured.key,'overview-model']);
-      const key=JSON.stringify([captured.key,'overview-model',generation,context?context.key:'-',request.lang,request.filters]);
+      const key=JSON.stringify([captured.key,'overview-model',request.parts,generation,context?context.key:'-',request.lang,request.filters]);
       const cached=get(key);
       if(cached){counters.hits++;captured.assertResponse();return {generation,cached:true,body:cached.body,timing:{...cached.timing,cached:true}};}
       counters.misses++;
       const base={overview:{datasetKey:ov.datasetKey,scopeKey:ov.scopeKey},cp:cp?{datasetKey:cp.datasetKey,scopeKey:cp.scopeKey}:null,
-        contextKey:context?hash(String(context.key)):'',filters:request.filters,lang:request.lang};
+        contextKey:context?hash(String(context.key)):'',filters:request.filters,lang:request.lang,parts:request.parts};
       const options={signal,estimatedBytes:96*1024*1024,ownerKey:'read-model',generation:'1'};
       let value=await run(base,options);
       if(value&&Array.isArray(value.missing)&&value.missing.length){

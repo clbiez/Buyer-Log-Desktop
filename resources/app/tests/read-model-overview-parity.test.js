@@ -142,7 +142,7 @@ async function candidateOverview(projection,ctx,filters){
   const out=await task.execute(payload,deps);
   assert.ok(out.body,'işçi sonucu döndü');
   const model=JSON.parse(out.body);
-  assert.equal(model.version,1);delete model.version;
+  assert.equal(model.version,1);assert.equal(model.parts,"full");delete model.version;delete model.parts;
   model.cp.notes=model.cp.notes.map(r=>r._id);
   lastCandidate=model;
   return model;

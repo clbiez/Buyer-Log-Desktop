@@ -188,3 +188,23 @@ test('worker admission: inputBytes is the transferred compressed size, not the m
     assert.equal(admitted,true);
   }finally{await pool.close();}
 });
+
+test('fast part: no decision context, no decision layer; breakdowns and notes are ready, cached separately from full',async()=>{
+  worker.cache.clear();task.clearHosts();
+  const {service,state,calls}=harness();
+  const fast=await service.model(req(users.moderator),{...body(),parts:'fast'});
+  const model=JSON.parse(fast.body);
+  assert.equal(model.parts,'fast');
+  assert.equal(state.contextLoads,0,'hızlı aşama karar bağlamını okumaz');
+  assert.ok(calls.every(call=>!call.context),'işçiye bağlam gönderilmedi');
+  assert.equal(model.cp.summary,null);assert.equal(model.cp.season,null);assert.equal(model.exceptionInbox,null);
+  assert.ok(model.cp.country.length>0&&model.cp.rows>0&&model.orders.kpi.total>0);
+  assert.equal(task.hostCount(),0,'karar barındırıcısı kurulmadı');
+  const full=JSON.parse((await service.model(req(users.moderator),body())).body);
+  assert.equal(full.parts,'full');assert.ok(full.cp.summary&&full.cp.season&&full.exceptionInbox);
+  assert.deepEqual(full.cp.country,model.cp.country,'iki aşamanın ortak alanları aynı');
+  assert.deepEqual(full.orders,model.orders);
+  assert.equal((await service.model(req(users.moderator),{...body(),parts:'fast'})).cached,true);
+  assert.equal(fast.timing.parts,'fast');
+  assert.throws(()=>validateRequest({version:1,parts:'slow'}),error=>error.statusCode===400);
+});
