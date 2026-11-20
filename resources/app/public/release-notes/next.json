@@ -12,6 +12,49 @@
   },
   "changes": [
     {
+      "id": "collection-hidden-tab-render-deferred",
+      "type": "improvement",
+      "module": {"tr": "Koleksiyon", "en": "Collection"},
+      "title": {
+        "tr": "Koleksiyon, sekmesi açılmadan çizilmez",
+        "en": "Collection is not drawn until its tab is opened"
+      },
+      "body": {
+        "tr": "Açılışta ve başka bir sayfadayken gelen güncellemelerde Koleksiyon tablosu arka planda çizilmez. Çizim, Koleksiyon sekmesine geçtiğinizde yapılır. Royalty, Hologram, FOB, PLM, OPD ve Licensor hesapları ile kayıt eskisi gibi hemen yapılır ve diğer kullanıcılara aynı anda ulaşır.",
+        "en": "At startup and when updates arrive while you are on another page, the Collection table is no longer drawn in the background. It is drawn when you switch to the Collection tab. Royalty, Hologram, FOB, PLM, OPD and Licensor calculations and saving still happen immediately and reach other users at the same time."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; Koleksiyon aynı tabloyu gösterir, yalnız çizim sekme açılınca yapılır.",
+          "en": "There is no change on screen; Collection shows the same table and is only drawn when its tab is opened."
+        }
+      }
+    },
+    {
+      "id": "backlog-overview-delivery-read-model",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog · Genel Bakış ve Teslimat Riski",
+        "en": "Backlog · Overview and Delivery Risk"
+      },
+      "title": {
+        "tr": "Backlog Genel Bakış ve Teslimat Riski arka planda hesaplanır",
+        "en": "Backlog Overview and Delivery Risk are calculated in the background"
+      },
+      "body": {
+        "tr": "İki panelin hesabı bilgisayarınızdaki yerel Buyer Log arka ucunda yapılır; arayüze yalnız sonuç gelir. Backlog açılırken tüm satır listesi indirilmez, ekran kilitlenmez ve paneller daha erken dolar. Ayrıntı satırları, bir kutucuğa ya da kırılıma tıkladığınızda yüklenir.",
+        "en": "Both panels are calculated in the local Buyer Log backend on your computer and only the result reaches the interface. Opening Backlog no longer downloads the full row list, the screen does not freeze and the panels fill sooner. Detail rows load when you click a tile or a breakdown."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; paneller aynı sayıları ve aynı ayrıntı satırlarını daha az arayüz yüküyle gösterir.",
+          "en": "There is no change on screen; the panels show the same figures and detail rows with less interface work."
+        }
+      }
+    },
+    {
       "id": "global-flow-backlog-read-model",
       "type": "improvement",
       "module": {"tr": "Genel Bakış · Küresel Akış Haritası", "en": "Overview · Global Flow Map"},

@@ -23,7 +23,9 @@ test('Backlog chart detail drawer reuses contextual PLM missing-image action', (
   assert.match(OVERVIEW, /modelImagesButtonHtml\?\.\('blvDrawerPlmSync'\)/);
   assert.match(OVERVIEW, /bindModelImagesButton\?\.\('blvDrawerPlmSync'\)/);
   assert.match(OVERVIEW, /contextType:'backlog-overview-detail'/);
-  assert.match(OVERVIEW, /registerDrawerModelImages\(aside,list,spec,imageIndex\)/);
-  assert.match(OVERVIEW, /repaint:\(\)=>openDrawer\(spec\)/);
+  // #1079 WS6c: çekmece içeriği yerel ya da okuma modeli drill-down yükü; kimlikler listenin tamamı (sıra korunur).
+  assert.match(OVERVIEW, /registerDrawerModelImages\(aside,payload\.identities,spec,imageIndex,payload\)/);
+  assert.match(OVERVIEW, /identities:identities\.map\(\(\[index,it\]\)=>\(\{\.\.\.drawerModelIdentity\(it\),rowId:String\(index\)\}\)\)/);
+  assert.match(OVERVIEW, /repaint:\(\)=>showDrawer\(spec,payload\)/);
   assert.doesNotMatch(OVERVIEW, /api\/model-images\/import-plm/);
 });

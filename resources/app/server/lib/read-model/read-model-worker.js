@@ -37,6 +37,7 @@ function execute(task,payload){
   if(task==='health')return {ok:true};
   // Akış Haritası kayıt modeli (#1075): tembel yüklenir, sorgu yolunu etkilemez.
   if(task==='global-flow-records')return require('./global-flow-model').execute(payload);
+  if(task==='read-model-backlog-v3')return require('./backlog-v3-model').execute(payload);
   const handler=Object.hasOwn(HANDLERS,task)?HANDLERS[task]:null;
   if(!handler)throw Object.assign(Error('Invalid compute request'),{code:'COMPUTE_JOB_INVALID'});
   const started=performance.now();

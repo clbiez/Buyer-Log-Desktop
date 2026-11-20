@@ -100,7 +100,9 @@ test('v9.46 iş mantığı görünümde DEĞİL: eşik ve sınıflandırma motor
   assert.doesNotMatch(VIEW, /EXPECTED_LATE\s*=|deliveryOutcome\s*=\s*['"]/, 'sınıflandırma görünümde üretilmemeli');
   assert.doesNotMatch(VIEW, /Engine\.analyze\(/, 'ağır hesap renderer üzerinde çalışmamalı');
   assert.match(VIEW, /new Worker\(WORKER_URL\)/);
-  assert.match(read('public/backlog-delivery-worker.js'), /Engine\.analyze\(/);
+  // Dönem süzmesi + analiz motordadır (analyzeDataset); tarayıcı işçisi ve okuma modeli işçisi aynısını çağırır (#1079 WS6c).
+  assert.match(read('public/backlog-delivery-worker.js'), /Engine\.analyzeDataset\(/);
+  assert.match(read('server/lib/read-model/backlog-v3-model.js'), /Delivery\.analyzeDataset\(/);
   assert.match(VIEW, /Insights\.build\(/);
 });
 

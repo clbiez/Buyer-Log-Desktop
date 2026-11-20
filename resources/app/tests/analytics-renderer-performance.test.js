@@ -58,7 +58,8 @@ function deliveryView(){
     terminate(){this.terminated=true;}
     reply(data){this.onmessage({data});}
   }
-  const context={window:{BLBacklogDeliveryEngine:Engine,BLBacklogDeliveryInsights:{defaultPreferences:()=>({}),build:()=>[]},BLBacklogRows:{load:async()=>[]}},
+  // Tarayıcı işçisi yolu (Backlog okuma modeli anahtarı kapalı; #1079 WS6c geri dönüş yolu).
+  const context={window:{BL_READ_MODEL_BACKLOG_V3:false,BLBacklogDeliveryEngine:Engine,BLBacklogDeliveryInsights:{defaultPreferences:()=>({}),build:()=>[]},BLBacklogRows:{load:async()=>[]}},
     Worker,URL,document:{readyState:'loading',addEventListener(){},getElementById:()=>null,baseURI:'http://localhost/'},
     BLStorage:{getItem:()=>null},backlogExportQueryParams:()=>({}),setTimeout,clearTimeout,Date,console};
   context.window.window=context.window;vm.createContext(context);vm.runInContext(read('backlog-delivery-analysis.js'),context);
