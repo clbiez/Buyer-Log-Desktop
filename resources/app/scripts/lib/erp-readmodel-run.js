@@ -53,6 +53,8 @@ function openModuleInPage(module, isReady, countRows, timeoutMs, isFailed) {
   });
 }
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+// İlk görünme anı izlenen bölgeler (#1077): Genel Bakış CP özet kartı (eski ve model yolu aynı kap).
+const WATCH = { cpCards: '#cpAssistant .cpaOverviewMetrics' };
 
 function tempDir(label) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), TEMP_PREFIX + label + '-'));
@@ -172,7 +174,7 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
     browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || undefined, args: ['--no-sandbox'] });
     result.chromium = browser.version();
     const context = await browser.newContext({ viewport: { width: 1600, height: 1000 }, locale: 'tr-TR' });
-    await context.addInitScript(P.installErpProbe, { lagIntervalMs: 50, bridge: true });
+    await context.addInitScript(P.installErpProbe, { lagIntervalMs: 50, bridge: true, flags: options.flags || {}, watch: WATCH });
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
@@ -211,16 +213,30 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
     await page.waitForFunction(() => Number.isFinite(window.__erpProbe?.events['bl:startup-ready']), null, { timeout: options.moduleTimeoutMs, polling: 100 });
     await page.evaluate(() => { window.BLBootGuard?.continue?.({ intentAtMs: window.__erpProbe.events['bl:startup-ready'] }); });
     await page.waitForFunction(() => Number.isFinite(window.__erpProbe?.events['bl:startup-complete']), null, { timeout: options.moduleTimeoutMs, polling: 100 });
-    // 5) Açılış sonrası pencere: BACKGROUND_WARMUP_DONE veya süre sınırı.
+    // 4b) İsteğe bağlı erken modül açılışı (#1077): açılıştan hemen sonra, ön ısıtma /
+    // Genel Bakış modeli işçiyi kullanırken bir modül açılır (ör. Siparişler ilk penceresi).
+    let early = null;
+    if (options.earlyModule) {
+      phase = 'early:' + options.earlyModule;
+      await delay(options.earlyDelayMs || 0);
+      const spec = MODULES[options.earlyModule];
+      early = await page.evaluate(`(${openModuleInPage})(${JSON.stringify(options.earlyModule)}, ${spec.ready}, ${spec.rows}, ${Number(options.moduleTimeoutMs)}, ${spec.failed || 'null'})`);
+      log(`  ${label} early ${options.earlyModule}: ${early.timedOut ? 'TIMEOUT' : P.round(early.t1 - early.t0) + ' ms'}`);
+    }
+    // 5) Açılış sonrası pencere: BACKGROUND_WARMUP_DONE veya süre sınırı. --post-open-window-ms
+    // verilirse iki kol için de sabit pencere (bl:startup-complete + N ms) kullanılır.
     phase = 'post-open';
-    const warmupDone = await page.waitForFunction(() => window.BLPerf?.timeline?.().some(m => m.name === 'BACKGROUND_WARMUP_DONE'), null, { timeout: options.postOpenTimeoutMs, polling: 250 }).then(() => true, () => false);
+    const warmupDone = options.postOpenWindowMs
+      ? await page.waitForFunction(ms => performance.now() >= window.__erpProbe.events['bl:startup-complete'] + ms, options.postOpenWindowMs, { timeout: options.postOpenWindowMs + 60000, polling: 250 }).then(() => false, () => false)
+      : await page.waitForFunction(() => window.BLPerf?.timeline?.().some(m => m.name === 'BACKGROUND_WARMUP_DONE'), null, { timeout: options.postOpenTimeoutMs, polling: 250 }).then(() => true, () => false);
     const post = await page.evaluate(() => {
       const p = window.__erpProbe, origin = window.BLPerf?.origin?.() ?? 0;
       const done = (window.BLPerf?.timeline?.() || []).find(m => m.name === 'BACKGROUND_WARMUP_DONE');
       return { events: p.events, anchor: p.anchor, now: performance.now(), warmupDonePerfMs: done ? done.atMs + origin : null };
     });
     const openMs = post.events['bl:startup-complete'];
-    const postEnd = warmupDone && Number.isFinite(post.warmupDonePerfMs) ? post.warmupDonePerfMs : post.now;
+    const postEnd = options.postOpenWindowMs ? Math.min(post.now, openMs + options.postOpenWindowMs)
+      : warmupDone && Number.isFinite(post.warmupDonePerfMs) ? post.warmupDonePerfMs : post.now;
     result.heapAfterPostOpen = await readRendererMetrics(context, page, 30000);
     // Isınma bittikten sonra sakinleşme; modül ölçümü warmup ile karışmaz.
     await delay(options.settleMs);
@@ -249,11 +265,13 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
     result.events = Object.fromEntries(Object.entries(post.events).map(([k, v]) => [k, P.round(v)]));
     result.postOpen = {
       startMs: P.round(openMs), endMs: P.round(postEnd), durationMs: P.round(postEnd - openMs),
-      endReason: warmupDone ? 'BACKGROUND_WARMUP_DONE' : 'timeout', timeoutMs: options.postOpenTimeoutMs,
+      endReason: options.postOpenWindowMs ? 'fixed-window' : warmupDone ? 'BACKGROUND_WARMUP_DONE' : 'timeout', timeoutMs: options.postOpenTimeoutMs,
       longTasks: P.longTaskStats(final.longTasks, openMs, postEnd), eventLoopLag: P.lagStats(final.lag, openMs, postEnd),
       jsHeapUsedBytes: result.heapAfterPostOpen.jsHeapUsedBytes,
     };
     result.startup = { longTasks: P.longTaskStats(final.longTasks, 0, openMs), eventLoopLag: P.lagStats(final.lag, 0, openMs) };
+    if (early) result.early = { ...early, t0: P.round(early.t0), t1: P.round(early.t1), openMs: Number.isFinite(early.t0) ? P.round(early.t1 - early.t0) : null,
+      sinceStartupCompleteMs: Number.isFinite(early.t0) ? P.round(early.t0 - openMs) : null, longTasks: Number.isFinite(early.t0) ? P.longTaskStats(final.longTasks, early.t0, early.t1) : null };
     result.modules = moduleResults.map(m => ({
       ...m, t0: P.round(m.t0), t1: P.round(m.t1), openMs: Number.isFinite(m.t0) ? P.round(m.t1 - m.t0) : null,
       longTasks: Number.isFinite(m.t0) ? P.longTaskStats(final.longTasks, m.t0, m.t1) : null,
@@ -265,7 +283,7 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
     result.payloads = { entries: payloads.map(p => ({ ...p })), byPath: P.summarizePayloads(payloads) };
     result.raw = { longTasks: final.longTasks.map(t => [P.round(t.startTime), P.round(t.duration)]), eventLoopLag: final.lag.map(([a, l]) => [P.round(a), P.round(l)]), longTaskUnsupported: final.longTaskUnsupported };
     result.errors = errors;
-    result.status = moduleResults.some(m => m.timedOut || m.error) ? 'partial' : 'passed';
+    result.status = moduleResults.some(m => m.timedOut || m.error) || early?.timedOut || early?.error ? 'partial' : 'passed';
     await cdp.detach().catch(() => {});
   } catch (error) {
     result.status = 'failed';

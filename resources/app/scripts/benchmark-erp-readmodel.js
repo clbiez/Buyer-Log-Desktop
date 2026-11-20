@@ -12,6 +12,8 @@
  *   --modules cp,orders,koleksiyon,backlog   --post-open-timeout-ms (180000)
  *   --settle-ms (1500)  --module-timeout-ms (300000)  --top N (15)
  *   --source-fixture DIR (aynı kaynak baytlarını yeniden kullan)  --keep-fixture  --out FILE
+ *   --post-open-window-ms N (iki kol için sabit açılış sonrası pencere)  --flag NAME=JSON (window anahtarı, tekrarlanabilir)
+ *   --early-module orders [--early-delay-ms N] (açılıştan hemen sonra modül ilk açılışı)
  * Ortam: CHROMIUM_PATH (Chromium yolu), PLAYWRIGHT_MODULE.
  *
  * Senaryolar: (1) açılış sonrası pencere — bl:startup-complete → BACKGROUND_WARMUP_DONE
@@ -50,7 +52,16 @@ function parseArgs(argv) {
     sourceFixture: value('--source-fixture', ''),
     keepFixture: argv.includes('--keep-fixture'),
     out: value('--out', ''),
+    postOpenWindowMs: argv.includes('--post-open-window-ms') ? int('--post-open-window-ms', 25000, 1000) : 0,
+    earlyModule: value('--early-module', ''),
+    earlyDelayMs: int('--early-delay-ms', 0, 0),
+    flags: Object.fromEntries(argv.flatMap((arg, i) => (arg === '--flag' ? [argv[i + 1]] : [])).map(pair => {
+      const at = String(pair || '').indexOf('=');
+      if (at < 1) throw Error('Invalid --flag (NAME=JSON): ' + pair);
+      return [pair.slice(0, at), JSON.parse(pair.slice(at + 1))];
+    })),
   };
+  if (opts.earlyModule && !MODULES[opts.earlyModule]) throw Error('Unsupported --early-module: ' + opts.earlyModule);
   for (const m of opts.modules) if (!MODULES[m]) throw Error('Unsupported module: ' + m);
   if (opts.pairs && !opts.candidateRoot) throw Error('--pairs requires --candidate-root');
   if (opts.candidateRoot && !opts.pairs) opts.pairs = 3;
@@ -69,7 +80,11 @@ function flatMetrics(run) {
     'postOpen.jsHeapMB': Number.isFinite(po.jsHeapUsedBytes) ? round(po.jsHeapUsedBytes / 1048576) : null,
     'startup.completeMs': run.events?.['bl:startup-complete'], 'startup.longTaskTotalMs': run.startup?.longTasks?.totalMs,
     'final.jsHeapMB': Number.isFinite(run.heapFinal?.jsHeapUsedBytes) ? round(run.heapFinal.jsHeapUsedBytes / 1048576) : null,
+    // Açılıştan (bl:startup-complete) CP özet kartının ilk görünmesine kadar.
+    'cpCards.sinceStartupMs': Number.isFinite(run.events?.['dom:cpCards']) && Number.isFinite(run.events?.['bl:startup-complete']) ? round(run.events['dom:cpCards'] - run.events['bl:startup-complete']) : null,
+    'cpCards.sinceNavigationMs': run.events?.['dom:cpCards'],
   });
+  if (run.early) { out[`early.${run.early.module}.openMs`] = run.early.timedOut ? null : run.early.openMs; out[`early.${run.early.module}.longTaskMaxMs`] = run.early.longTasks?.maxMs; }
   for (const m of run.modules || []) {
     out[`module.${m.module}.openMs`] = m.timedOut ? null : m.openMs;
     out[`module.${m.module}.longTaskMaxMs`] = m.longTasks?.maxMs;

@@ -753,6 +753,20 @@
         "alt": {"tr": "Pilot ayarı açık CP Tracker: 30.000 demo satırında checklist sütunları ve onaylanan bir kontrol", "en": "CP Tracker with the pilot setting on: checklist columns and an approved check on 30,000 demo rows"},
         "caption": {"tr": "30.000 satırlık demo veride checklist durumları arka uçtan gelir; değerler mevcut hesapla aynıdır.", "en": "On 30,000 demo rows, checklist statuses come from the backend; the values match the existing calculation."}
       }
+    },
+    {
+      "id": "read-model-backend-prewarm",
+      "type": "improvement",
+      "module": {"tr": "Genel Bakış", "en": "Overview"},
+      "title": {"tr": "Genel Bakış verisi oturum açılınca arka planda hazırlanır", "en": "Overview data is prepared in the background at sign-in"},
+      "body": {"tr": "Oturum açılınca bilgisayarınızdaki yerel Buyer Log arka ucu Genel Bakış modelini ve modül verilerini ayrı bir işçide hazırlamaya başlar. Genel Bakış açılırken aynı hesap ikinci kez yapılmaz. Siparişler gibi bir modül açılırsa arka plan hazırlığı onu bekletmez, kendisi sonraya kalır. Pilot ayarı açıkken arayüz açılıştan sonra modülleri toplu hazırlamaz, her modül ilk açılışında yüklenir.", "en": "At sign-in, the local Buyer Log backend on your computer starts preparing the Overview model and module data in a separate worker. Opening the Overview does not repeat the same calculation. If you open a module such as Orders, the background preparation does not hold it up and waits instead. With the pilot setting on, the interface no longer prepares all modules after startup; each module loads when you first open it."},
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "read-model-backend-prewarm.png",
+        "alt": {"tr": "Pilot ayarı açık Buyer Log: yalnız açılan CP Tracker modülünde Hazır rozeti var, diğer modüllerde Bekliyor yazmıyor", "en": "Buyer Log with the pilot setting on: only the opened CP Tracker module shows a Ready badge; the other modules show no Pending label"},
+        "caption": {"tr": "Pilot açıkken modüller açılınca yüklenir; hazırlık rozeti yalnız gerçekten yüklenen modülde görünür.", "en": "With the pilot on, modules load when opened; the preparation badge appears only on a module that has actually loaded."}
+      }
     }
   ]
 }
