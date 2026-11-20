@@ -34,6 +34,9 @@ module.exports=function registerCpComputedRoutes(app,deps){
       runCompute:(task,payload,options)=>(deps.runReadModelCompute||require('./read-model-pool').getReadModelPool().run)(task,payload,options),
       loadContext:deps.loadContext||createContextLoader(deps.contextSources),
       loadTasks:deps.testTasks?createTaskLoader(deps.testTasks):async()=>[],
+      // Bekleyen satır yaması zinciri (cp-row-patch-log.js); yoksa her okuma projeksiyon kirasıyla.
+      rowPatchLog:deps.rowPatchLog||null,
+      onRowPatchMismatch:typeof deps.onRowPatchMismatch==='function'?deps.onRowPatchMismatch:()=>{},
     });
   })());
   const json=express.json({limit:'1mb'});

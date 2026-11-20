@@ -207,7 +207,7 @@ test('v7.19 satır yazma uçları incremental yama taşır; tam checkpoint hydra
 });
 
 test('v7.19 tek bir güvensiz öğe bütün turu yeniden yüklemeye düşürür', () => {
-  const block = blockOf(SERVER, 'function liveRowPatchesFor', 'function projectionPatchMatches');
+  const block = blockOf(SERVER, 'function liveRowPatchesFor', '// Satır yaması tek tanımı');
   assert.match(block, /rowPatchIncrementalSafe\(item\.patch\)/);
   assert.match(block, /clean\.length === list\.length \? clean : null/);
 });

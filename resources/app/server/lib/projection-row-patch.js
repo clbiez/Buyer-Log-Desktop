@@ -6,6 +6,16 @@
 const parseLib = require('./parse');
 const BLBusinessRules = require('../../public/business-rules');
 
+/* Yama öğesinin satırı: sipariş kodu + (varsa) model adı ve renk kodu birebir. */
+function projectionPatchMatches(row, item) {
+  const patch=item&&item.patch||{}, orderCode=parseLib.orderCodeKey(item&&item.orderCode);
+  if (!row || parseLib.orderCodeKey(row['Order Code']) !== orderCode) return false;
+  const model=String(patch.modelName??patch.model??'').trim(),ccode=String(patch.ccode??patch.colourCode??patch.colorCode??'').trim();
+  if (model && String(row['Model Name']||'').trim() !== model) return false;
+  if (ccode && String(row['C.Code']||'').trim() !== ccode) return false;
+  return true;
+}
+
 function applyIncrementalProjectionPatch(row, patch, overrides, includePriority = true) {
   if (patch.notes && typeof patch.notes === 'object') {
     if (Object.prototype.hasOwnProperty.call(patch.notes,'Notes')) row.Notes=patch.notes.Notes==null?'':String(patch.notes.Notes);
@@ -56,4 +66,4 @@ function applyIncrementalProjectionPatch(row, patch, overrides, includePriority 
   return row;
 }
 
-module.exports = { applyIncrementalProjectionPatch };
+module.exports = { applyIncrementalProjectionPatch, projectionPatchMatches };

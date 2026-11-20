@@ -43,6 +43,7 @@ async function execute(payload,deps){
     result.computedFields=FIELDS;
   }
   return {result,timing:{loadMs:loads.cp||0,computeMs,queryMs:performance.now()-queryStarted,totalMs:performance.now()-started,
-    rows:current.rows.length,reused:computed.reused,phases:{hostMs,...(computed.reused?{}:current.phases)},datasetReloaded:Boolean(loads.cp)}};
+    rows:current.rows.length,reused:computed.reused,phases:{hostMs,...(computed.reused?{}:current.phases)},datasetReloaded:Boolean(loads.cp),rowPatch:loads.rowPatch||null},
+    verify:computed.verify||null};
 }
 module.exports={execute};

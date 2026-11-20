@@ -31,6 +31,9 @@ const crypto=require('node:crypto'),fs=require('node:fs'),path=require('node:pat
 const {performance}=require('node:perf_hooks');
 const {createDecisionHost}=require('./overview-decision-host');
 const {prepareCpRows}=require('./overview-row-prep');
+const parseLib=require('../parse');
+const {stringifyWithDates}=require('../json-dates');
+const {applyIncrementalProjectionPatch,projectionPatchMatches}=require('../projection-row-patch');
 const PUBLIC=path.resolve(__dirname,'..','..','..','public');
 const MAX_HOSTS=2,HISTORY=4;
 const ANSWER_KEY='lcw.cp.checklist.v1';
@@ -41,9 +44,11 @@ const hosts=new Map();
 let supplierScript=null;
 const hash=value=>crypto.createHash('sha256').update(value).digest('hex');
 
-function datasetFor(spec,{cache,engine},loads){
+function datasetFor(spec,deps,loads){
+  const {cache,engine}=deps;
   let dataset=cache.get(spec.datasetKey);
   if(dataset)return dataset;
+  if(spec.virtual)return virtualDataset(spec,deps,loads);
   if(!spec.buffer)return null;
   const started=performance.now();
   dataset=engine.decodeDataset(spec.buffer);spec.buffer=null;
@@ -51,6 +56,77 @@ function datasetFor(spec,{cache,engine},loads){
   cache.set(spec.datasetKey,spec.scopeKey,dataset);
   loads.cp=performance.now()-started;
   return dataset;
+}
+
+/* Bekleyen satır yaması (#1078 WS5): yeni projeksiyon nesli (sayfa önbelleği yeniden yazımı) beklenmeden
+   işçideki son veri kümesine kaydedilen yamalar uygulanır. Gerçek yolla aynı dönüşüm zinciri:
+   satır diske yazılan biçime (yerel gün tarihleri) serileştirilir → applyIncrementalProjectionPatch
+   (server.js yeniden yazımıyla TEK tanım) → her yama arasında yine disk biçimi → işçi çözümü
+   (normalizeRows) + prepareCpRows. Yalnız eşleşen satırlar kopyalanır; diğerleri aynı nesnedir.
+   Satırlar yalnız temel veri kümesinde (kullanıcının yetki kapsamına süzülmüş projeksiyon) aranır:
+   kapsam dışı sipariş yamada eşleşmez, veri kümesine girmez.
+   spec.virtual: { baseKey, steps:[{ items:[{orderCode,patch}], context:{notesmap,noteColumnDefs,transitRules} }] } */
+const projectionDate=d=>{const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;};
+const diskJson=value=>stringifyWithDates(value,projectionDate);
+function diskRow(row){
+  const raw=JSON.parse(diskJson(row));
+  for(const key of Object.keys(raw))if(COMPUTED_KEY.test(key))delete raw[key];
+  return raw;
+}
+function workerRow(raw,engine){
+  const row=engine.prepareDataset([JSON.parse(diskJson(raw))]).rows[0];
+  prepareCpRows([row]);
+  return row;
+}
+const IDENTITY_FIELDS=['_id','_matchOcode','Order Code','C.Code','Model'];
+function orderIndexOf(dataset){
+  if(dataset.orderIndex)return dataset.orderIndex;
+  const index=new Map();
+  dataset.rows.forEach((row,i)=>{const key=parseLib.orderCodeKey(row&&row['Order Code']);if(!index.has(key))index.set(key,[]);index.get(key).push(i);});
+  return dataset.orderIndex=index;
+}
+function virtualDataset(spec,{cache,engine},loads){
+  const base=cache.get(spec.virtual.baseKey);
+  if(!base)return null;
+  const started=performance.now();
+  const index=orderIndexOf(base),rows=base.rows.slice(),working=new Map();
+  for(const step of Array.isArray(spec.virtual.steps)?spec.virtual.steps:[]){
+    const context=step&&step.context||{};
+    const overrides={notesmap:context.notesmap||{},noteColumnDefs:context.noteColumnDefs||[],transitRules:context.transitRules||[]};
+    for(const item of Array.isArray(step&&step.items)?step.items:[]){
+      for(const i of index.get(parseLib.orderCodeKey(item&&item.orderCode))||[]){
+        const current=working.has(i)?working.get(i):rows[i];
+        if(!projectionPatchMatches(current,item))continue;
+        const raw=working.has(i)?JSON.parse(diskJson(current)):diskRow(current);
+        applyIncrementalProjectionPatch(raw,item.patch,overrides,true);
+        working.set(i,raw);
+      }
+    }
+  }
+  const changedIds=new Set();let identityStable=true;
+  for(const [i,raw] of working){
+    const row=workerRow(raw,engine),before=rows[i];
+    if(IDENTITY_FIELDS.some(key=>String((before&&before[key])??'')!==String(row[key]??'')))identityStable=false;
+    rows[i]=row;changedIds.add(String(row&&row._id!=null?row._id:''));
+  }
+  const dataset={rows,haystacks:base.haystacks,bytes:base.bytes,orderIndex:index,
+    virtual:{baseRows:new WeakRef(base.rows),changedIds,identityStable}};
+  cache.set(spec.datasetKey,spec.scopeKey,dataset);
+  loads.rowPatch={ms:performance.now()-started,rows:changedIds.size};
+  return dataset;
+}
+/* Gerçek nesil doğrulaması: projeksiyon yeniden yazımının yamaladığı ham CP satırları işçi biçimine
+   getirilir ve veri kümesindeki aynı _id satırının kaynak özetiyle karşılaştırılır. */
+function verifyRows(dataset,rowsJson,engine){
+  let list=[];try{list=JSON.parse(rowsJson||'[]');}catch(_){return {checked:0,mismatched:1,ids:['<parse>']};}
+  const byId=new Map();for(const row of dataset.rows)if(row&&row._id!=null)byId.set(String(row._id),row);
+  let checked=0,mismatched=0;const ids=[];
+  for(const raw of Array.isArray(list)?list:[]){
+    if(!raw||raw._id==null)continue;
+    const id=String(raw._id),mine=byId.get(id);checked++;
+    if(!mine||rowDigest(mine)!==rowDigest(workerRow(diskRow(raw),engine))){mismatched++;if(ids.length<10)ids.push(id);}
+  }
+  return {checked,mismatched,ids};
 }
 
 /* Cevap dışındaki bağlam: değişirse barındırıcı yeniden kurulur. */
@@ -189,6 +265,7 @@ async function ensureComputed(payload,deps){
   // tahminini buna göre verir — soğuk karar payı istenirse havuz boştaki işçiyi kapatıp barındırıcıyı düşürür).
   if(!dataset)return {missing:['cp'],warm:Boolean(payload.context&&hosts.get(hostKeyOf(payload))?.current)};
   if(!payload.context)return {missing:['context']};
+  const verify=payload.verify&&typeof payload.verify.rowsJson==='string'?verifyRows(dataset,payload.verify.rowsJson,deps.engine):null;
   const key=hostKeyOf(payload);
   let entry=hosts.get(key),hostMs=0;
   if(entry){hosts.delete(key);hosts.set(key,entry);}
@@ -203,22 +280,31 @@ async function ensureComputed(payload,deps){
   syncTasks(entry,payload.tasks);
   const rows=dataset.rows;
   const signature=JSON.stringify([entry.answersVersion,entry.tasksSignature,new Date().toDateString()]);
-  if(entry.current&&entry.current.rows===rows&&entry.current.signature===signature)return {dataset,entry,current:entry.current,hostMs,loads,reused:true};
+  if(entry.current&&entry.current.rows===rows&&entry.current.signature===signature)return {dataset,entry,current:entry.current,hostMs,loads,reused:true,verify};
   const transitRules=payload.context.transitRules||[];
   /* Satır kaynak özetleri yalnız yeni bir nesil geldiğinde (düzenleme) alınır; soğuk/tam hesap ödemez.
      Önceki neslin özeti hesaptan SONRA alınabilir: hesap satırlara yalnız COMPUTED_KEY alanlarını yazar
      ve özet onları dışarıda bırakır (parite testi değişen satır sayısının birebir eşitliğiyle bekçiler;
      varsayım bozulursa her satır değişmiş görünür ve tam hesaba düşülür — yanlış sonuç değil). */
-  const identity=sourceIdentity(rows);
+  // Bekleyen satır yaması veri kümesi: değişen satırlar bilinir; kimlik ve diğer satırların özetleri önceki sonuçtan.
+  const virtual=dataset.virtual,hinted=Boolean(virtual&&entry.current&&virtual.baseRows.deref()===entry.current.rows);
+  const identity=hinted&&virtual.identityStable?entry.current.identity:sourceIdentity(rows);
   const previous=entry.current&&entry.current.signature===signature&&entry.current.identity===identity&&!payload.forceFull?entry.current:null;
-  let source=null,sourceMs=0;
-  if(previous){
+  let source=null,sourceMs=0,changed=null;
+  if(previous&&hinted){
+    const sourceStarted=performance.now();
+    changed=[...virtual.changedIds].filter(Boolean);
+    if(previous.source){source=new Map(previous.source);for(const row of rows)if(virtual.changedIds.has(String(row&&row._id!=null?row._id:'')))source.set(String(row._id),rowDigest(row));}
+    sourceMs=performance.now()-sourceStarted;
+  }else if(previous){
     const sourceStarted=performance.now();
     if(!previous.source)previous.source=sourceDigests(previous.rows);
     source=sourceDigests(rows);
+    changed=[];for(const [id,digest] of source)if(previous.source.get(id)!==digest)changed.push(id);
     sourceMs=performance.now()-sourceStarted;
   }
-  const incremental=previous?incrementalPlan(previous,rows,source):null;
+  if(virtual)virtual.baseRows=new WeakRef([]);
+  const incremental=previous?incrementalPlan(previous,rows,changed):null;
   const {out,phases}=incremental?(incremental.targets.length?computeRows(entry,rows,transitRules,incremental.targets):{out:new Map(),phases:{}}):computeRows(entry,rows,transitRules);
   if(source)phases.sourceMs=sourceMs;
   const serialized=new Map(),digests=new Map();
@@ -236,19 +322,20 @@ async function ensureComputed(payload,deps){
     const json=JSON.stringify([id,v.priority,v.calculationStatus,v.trackingTags,v.priorityTags,v.actionReasons,v.signals,v.basePriority,v.checklist,v.orderKey,v.optionId]);
     serialized.set(id,json);digests.set(id,crypto.createHash('sha1').update(json).digest('base64'));
   }
-  if(incremental){phases.incremental={changed:incremental.changed,targets:incremental.targets.length};}
+  if(incremental){phases.incremental={changed:incremental.changed,targets:incremental.targets.length,...(hinted?{rowPatch:true}:{})};}
   entry.current={rows,signature,out,serialized,digests,phases,source,identity};
-  return {dataset,entry,current:entry.current,hostMs,loads,reused:false,incremental:Boolean(incremental)};
+  return {dataset,entry,current:entry.current,hostMs,loads,reused:false,incremental:Boolean(incremental),verify};
 }
 /* Satırın kaynak özeti (hesaplanmış/checklist alanları hariç) ve kimlik parmak izi (_id → satır kimliği). */
 const COMPUTED_KEY=/^(?:__checklist__|_checklist|_cp(?:OrderKey|OptionId)$)/;
+const digestReplacer=(key,value)=>key&&COMPUTED_KEY.test(key)?undefined:value;
+function rowDigest(row){return crypto.createHash('sha1').update(JSON.stringify(row,digestReplacer)).digest('base64');}
 function sourceDigests(rows){
   const digests=new Map();
-  const replacer=(key,value)=>key&&COMPUTED_KEY.test(key)?undefined:value;
   for(const row of rows){
     const id=String(row&&row._id!=null?row._id:'');
     if(!id)continue;
-    digests.set(id,crypto.createHash('sha1').update(JSON.stringify(row,replacer)).digest('base64'));
+    digests.set(id,rowDigest(row));
   }
   return digests;
 }
@@ -265,9 +352,7 @@ function sourceIdentity(rows){
    opsiyon kapsamlı checklist satırlar arası etkiler). Kimlik eşlemesi değiştiyse ya da değişim
    büyükse null (tam hesap). */
 const INCREMENTAL_MAX=Number(process.env.BUYER_LOG_CP_INCREMENTAL_MAX)||2000;
-function incrementalPlan(previous,rows,source){
-  const changed=[];
-  for(const [id,digest] of source)if(previous.source.get(id)!==digest)changed.push(id);
+function incrementalPlan(previous,rows,changed){
   if(changed.length>INCREMENTAL_MAX)return null;
   const oldById=new Map(),groups=new Map();
   const groupKeys=values=>[values&&values.orderKey?'o:'+values.orderKey:null,values&&values.optionId?'p:'+values.optionId:null].filter(Boolean);
@@ -304,7 +389,8 @@ async function execute(payload,deps){
   return {body,timing:{loadMs:loads.cp||0,queryMs:performance.now()-started-(loads.cp||0),totalMs:performance.now()-started,rows:rows.length,
     changed:parts.length,delta,reused:computed.reused,phases:{hostMs,...(computed.reused?{}:current.phases)},
     // Tanı: veri kümesi yeniden çözüldüyse (önbellekten düştüyse) kararlar baştan hesaplanır.
-    datasetReloaded:Boolean(loads.cp),datasetCache:typeof deps.cache.stats==='function'?deps.cache.stats():null}};
+    datasetReloaded:Boolean(loads.cp),rowPatch:loads.rowPatch||null,datasetCache:typeof deps.cache.stats==='function'?deps.cache.stats():null},
+    verify:computed.verify||null};
 }
 function clearHosts(){hosts.clear();}
 function hostCount(){return hosts.size;}
