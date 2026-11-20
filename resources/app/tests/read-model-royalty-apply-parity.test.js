@@ -31,7 +31,8 @@ const LOG = process.env.BL_ROYALTY_PARITY_LOG === '1';
 const APP_FUNCTIONS = ['turknorm', 'lineKeyOfRow', 'lineIdentity', 'suppFobMetaForRow', 'hasManualSuppFob', 'importedSuppFob',
   'editableValuesEqual', 'toNum', 'norm', 'dateOrdinal', 'normalizePricingRuleDate', 'normalizePricingRuleSeasons',
   'pricingRuleSeasonMatches', 'pricingRuleSeasonLabel', 'pricingRuleDateRangeLabel', 'pricingRuleSeasonSetsOverlap', 'isSuppFobAutoCalculated', 'toISODate', 'coerceDateLoose', 'makeDateOnly'];
-const APP_SOURCE = APP_FUNCTIONS.map(name => extractFunction(APP_MAIN, name)).join('\n');
+// royaltyRecomputeFastEnabled (#1079 WS6 yeniden hesap anahtarı) kendi önbellek değişkeniyle yüklenir.
+const APP_SOURCE = 'let royaltyRecomputeFastCache=null;\n' + [...APP_FUNCTIONS, 'royaltyRecomputeFastEnabled'].map(name => extractFunction(APP_MAIN, name)).join('\n');
 
 function rng(seed) { let s = seed >>> 0 || 1; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
 const pick = (r, list) => list[Math.floor(r() * list.length)];
@@ -65,11 +66,12 @@ const RULES = [
   { id: 'r4', licensor: 'ŞİRKET A', license: 'Lisans Ç', seasons: [], categories: ['PIJAMA'], royalty: 9, trCommission: 3, ydCommission: 3, hologramCost: 0.02 },
 ];
 
-function makeContext(enabled, data) {
+function makeContext(flags, data) {
+  const enabled = typeof flags === 'object' ? flags.royalty : flags, recompute = typeof flags === 'object' ? flags.recompute : flags;
   const posted = [];
   const ctx = {
     console, Date, Math, JSON, Number, String, Object, Array, Map, Set, RegExp, Promise, Error, Intl,
-    BL_READ_MODEL_ROYALTY: enabled, SERVER_BACKED: true, appLang: 'tr', L: value => value, // etiket çevirisi: iki kolda aynı
+    BL_READ_MODEL_ROYALTY: enabled, BL_READ_MODEL_ROYALTY_RECOMPUTE: recompute, SERVER_BACKED: true, appLang: 'tr', L: value => value, // etiket çevirisi: iki kolda aynı
     localStorage: { getItem: () => null }, BLBusinessRules: BUSINESS, BLCanonicalFields: CANONICAL,
     state: { cp: { rows: data.cp }, orderSummary: { rows: data.orderSummary }, overrides: { pricingRules: [], suppfobmap: {}, suppfobmetamap: {} }, licensorMerges: { split: [] } },
     commitActiveTableEditor() {}, saveLocalPricingRules() {}, showToast() {}, renderCP() {}, renderOverview() {}, markDirty() {},
@@ -78,7 +80,7 @@ function makeContext(enabled, data) {
   };
   ctx.window = ctx; ctx.globalThis = ctx;
   vm.createContext(ctx);
-  vm.runInContext(APP_SOURCE + '\nvar normalizePricingRules,pricingRuleMatchesValues,pricingRuleMatchesRow,findSuppFobRule,pricingRulesOverlap,pricingRulesSameCondition,normalizeSuppFobMeta,automaticSuppFobRuleMeta,calculateSuppFobWithRule,calculateSuppFobFromRule,recalcSuppFobForRow,suppFobHoverText,applySuppFobRuleToMatchingOrders,applyAllSuppFobRules,kolPricingRuleDimensionMatches,kolFindPricingRuleForCountryGroup,kolFindPricingRule,kolTrLicenseRuleMissingText,kolPricingRuleTitle,kolComputeFobFromConfirmed,kolApplyRulePricing,kolLandedPriceWithRule,kolLandedPriceWithCosts,kolLandedCalc,endeksmatikRoyaltyRule;', ctx, { filename: 'app-main.js (seçili)' });
+  vm.runInContext(APP_SOURCE + '\nvar royaltyRecomputeFastEnabled=royaltyRecomputeFastEnabled,normalizePricingRules,pricingRuleMatchesValues,pricingRuleMatchesRow,findSuppFobRule,pricingRulesOverlap,pricingRulesSameCondition,normalizeSuppFobMeta,automaticSuppFobRuleMeta,calculateSuppFobWithRule,calculateSuppFobFromRule,recalcSuppFobForRow,suppFobHoverText,applySuppFobRuleToMatchingOrders,applyAllSuppFobRules,kolPricingRuleDimensionMatches,kolFindPricingRuleForCountryGroup,kolFindPricingRule,kolTrLicenseRuleMissingText,kolPricingRuleTitle,kolComputeFobFromConfirmed,kolApplyRulePricing,kolLandedPriceWithRule,kolLandedPriceWithCosts,kolLandedCalc,endeksmatikRoyaltyRule;', ctx, { filename: 'app-main.js (seçili)' });
   vm.runInContext(ROYALTY, ctx, { filename: 'license-royalty-commissions.js' });
   ctx.state.overrides.pricingRules = ctx.normalizePricingRules(RULES);
   return { ctx, posted };
@@ -109,10 +111,16 @@ async function scenario(enabled, count) {
 
 for (const count of SIZES) {
   test(`royalty Supp. FOB yeniden hesap ve Uygula: anahtar kapalı = açık (${count} satır)`, async () => {
-    const t0 = Date.now(); const legacy = await scenario(false, count); const t1 = Date.now(); const fast = await scenario(true, count); const t2 = Date.now();
-    if (LOG) console.log(`[royalty-parity] ${count}: legacy ${t1 - t0} ms, fast ${t2 - t1} ms`, JSON.stringify({ legacy, fast }));
-    assert.ok(legacy.updates.every(n => n > 0), 'fixture her senaryoda güncelleme üretmeli');
-    assert.deepEqual(fast, legacy);
+    // Anahtar matrisi: yazma dizini (#1100) ve yeniden hesap (koşul sırası, tek satır anahtarı).
+    const arms = { legacy: { royalty: false, recompute: false }, writeOnly: { royalty: true, recompute: false }, recomputeOnly: { royalty: false, recompute: true }, fast: { royalty: true, recompute: true } };
+    const out = {}, ms = {};
+    for (const [name, flags] of Object.entries(arms)) {
+      if (name === 'recomputeOnly' && count > 5000 && process.env.BL_ROYALTY_PARITY_FULL !== '1') continue; // eski yazma yolu 30k'da ~9 dk
+      const t = Date.now(); out[name] = await scenario(flags, count); ms[name] = Date.now() - t;
+    }
+    if (LOG) console.log(`[royalty-parity] ${count}: ${JSON.stringify(ms)}`, JSON.stringify(out));
+    assert.ok(out.legacy.updates.every(n => n > 0), 'fixture her senaryoda güncelleme üretmeli');
+    for (const name of Object.keys(out)) assert.deepEqual(out[name], out.legacy, name);
   });
 }
 
@@ -137,4 +145,26 @@ test('mutasyon kontrolü: yazıcı dizini yanlış anahtarla kurulursa parite bo
   const mutated = await b.ctx.applyAllSuppFobRules(RULES);
   assert.equal(mutated, legacy, 'güncelleme sayısı aynı kalır');
   assert.notEqual(digest(snapshot(b)), digest(snapshot(ctx)), 'satır yazımı farklı olmalı');
+});
+
+test('yeniden hesap anahtarı varsayılan açık; kayıt sonrası ikinci senkron yalnız sunucu kural seti farklıysa çalışır', () => {
+  const fn = extractFunction(APP_MAIN, 'royaltyRecomputeFastEnabled');
+  assert.match(fn, /typeof window\.BL_READ_MODEL_ROYALTY_RECOMPUTE==='boolean'/);
+  assert.match(fn, /getItem\('buyerlog\.readModel\.royaltyRecompute\.v1'\)!=='0'/);
+  const persist = extractFunction(APP_MAIN, 'persistPricingRules');
+  // İlk senkron koşulsuz; ikincisi geri dönüş kapalıyken ya da sunucu sonucu farklıysa.
+  assert.match(persist, /let syncResult=syncPricingRulesToAllLoadedViews\(\{saveCollection:true,renderCollection:true\}\);/);
+  assert.match(persist, /if\(typeof royaltyRecomputeFastEnabled!=='function'\|\|!royaltyRecomputeFastEnabled\(\)\|\|JSON\.stringify\(state\.overrides\.pricingRules\|\|\[\]\)!==JSON\.stringify\(clean\)\)\s*syncResult=syncPricingRulesToAllLoadedViews/);
+  assert.match(ROYALTY, /royaltyRecomputeFastEnabled\(\)&&\(turknormFast\(license\)!==turknormFast\(rule&&rule\.license\)/);
+});
+
+test('mutasyon kontrolü: koşul sırası kısa devresi yanlış alanı karşılaştırırsa parite bozulur', async () => {
+  const broken = ROYALTY.replace('turknormFast(license)!==turknormFast(rule&&rule.license)', 'turknormFast(license)!==turknormFast(rule&&rule.licensor)');
+  assert.notEqual(broken, ROYALTY);
+  const good = await scenario({ royalty: true, recompute: true }, 600);
+  const b = makeContext({ royalty: true, recompute: true }, fixture(600));
+  vm.runInContext(broken, b.ctx, { filename: 'license-royalty-commissions.broken.js' });
+  b.ctx.state.overrides.pricingRules = b.ctx.normalizePricingRules(RULES);
+  let changed = 0; for (const rows of [b.ctx.state.cp.rows, b.ctx.state.orderSummary.rows]) for (const row of rows) if (b.ctx.recalcSuppFobForRow(row)) changed++;
+  assert.notEqual(digest([changed, snapshot(b)]), good.recalc);
 });
