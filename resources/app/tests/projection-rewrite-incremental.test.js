@@ -228,7 +228,7 @@ test('paralel bölme: modüller boyuta göre en hafif gruba (büyükten küçü�
   const sizes = { cp: 63, orders: 75, 'order-summary': 42, overview: 12, 'collection-catalog': 1 };
   const modules = Object.keys(sizes).map(module => ({ module }));
   const groups = pageCache.splitRewriteModules(modules, 3, entry => sizes[entry.module]).map(group => group.map(entry => entry.module));
-  assert.deepEqual(groups, [['orders'], ['cp', 'collection-catalog'], ['order-summary', 'overview']]);
+  assert.deepEqual(groups, [['orders'], ['cp'], ['order-summary', 'overview', 'collection-catalog']]);
   assert.equal(pageCache.splitRewriteModules(modules, 1, entry => sizes[entry.module]).length, 1);
   assert.equal(pageCache.splitRewriteModules(modules.slice(0, 2), 3, entry => sizes[entry.module]).length, 2);
 });
