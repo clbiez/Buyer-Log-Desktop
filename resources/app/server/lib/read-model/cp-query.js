@@ -31,15 +31,17 @@
  *   fields: yalnız bu alanlar (tümünü seç için kimlikler); verilmezse satırın tamamı.
  * ── YÜZEYLER (version 1) ────────────────────────────────────────────────
  * { version:1, columns, search?, base, groups, today, kpi?:true, sums?:[key],
- *   distinct?:[key] }   (CP tablosunun alt toplam satırı yoktur)
+ *   distinct?:[key], footer?:{sums,averages,selected} }   (alt toplam: orders-facets.js ile aynı sözleşme)
  * Sonuç: { datasetRows, total, none, sums, stats:{rowCount,modelCount,optionCount,orderCount},
- *   kpi?:{pri:{kod:n}, status:{v:n}, del:{v:n}, season:{v:n}, exf:{dönem:n}}, distinct? }
+ *   kpi?:{pri:{kod:n}, status:{v:n}, del:{v:n}, season:{v:n}, exf:{dönem:n}}, distinct?,
+ *   footer?:{sums, averages:{key:{weighted,arithmetic}}, selectedCount} }
  */
 const shared=require('../../../public/read-model-query');
 const rules=require('../../../public/business-rules');
 const dates=require('../../../public/date-dimension');
 const optionStats=require('../../../public/model-option-stats');
 const {exfBounds}=require('./orders-facets');
+const {kolParseMoneyNum}=require('../../../public/collection-model-groups');
 
 const VERSION=1;
 const GROUP_IDS=Object.freeze(['pri','status','del','season','exf']);
@@ -128,13 +130,29 @@ function validateCpQuery(raw){
   return {...common,sort,offset,limit,fields};
 }
 function validateCpFacets(raw){
-  const common=validateCommon(raw,new Set(['version','columns','search','base','groups','today','kpi','sums','distinct']));
+  const common=validateCommon(raw,new Set(['version','columns','search','base','groups','today','kpi','sums','distinct','footer']));
   let distinct=[];
   if(raw.distinct!=null){
     if(!Array.isArray(raw.distinct)||raw.distinct.length>shared.LIMITS.maxSums)throw invalid('distinct');
     distinct=[...new Set(raw.distinct.map((key,i)=>{if(typeof key!=='string'||!key||key.length>shared.LIMITS.maxKeyLength||key.startsWith('__'))throw invalid(`distinct[${i}]`);return key;}))];
   }
-  return {...common,kpi:raw.kpi===true,sums:common.head.aggregates.sums,distinct};
+  let footer=null;
+  if(raw.footer!=null){
+    if(!isPlainObject(raw.footer))throw invalid('footer');
+    const keyOf=(key,where)=>{if(typeof key!=='string'||!key||key.length>shared.LIMITS.maxKeyLength||key==='__proto__')throw invalid(where);return key;};
+    const list=(value,where,max)=>{if(value==null)return [];if(!Array.isArray(value)||value.length>max)throw invalid(where);return value;};
+    const sums=[...new Set(list(raw.footer.sums,'footer.sums',shared.LIMITS.maxSums).map((key,i)=>keyOf(key,`footer.sums[${i}]`)))];
+    const averages=list(raw.footer.averages,'footer.averages',8).map((item,i)=>{
+      if(!isPlainObject(item))throw invalid(`footer.averages[${i}]`);
+      return {key:keyOf(item.key,`footer.averages[${i}].key`),qtyKey:keyOf(item.qtyKey,`footer.averages[${i}].qtyKey`)};
+    });
+    let selected=null;
+    if(raw.footer.selected!=null)selected=new Set(list(raw.footer.selected,'footer.selected',MAX_VALUES).map((id,i)=>{
+      if(typeof id!=='string'&&typeof id!=='number')throw invalid(`footer.selected[${i}]`);return String(id);
+    }));
+    footer={sums,averages,selected};
+  }
+  return {...common,kpi:raw.kpi===true,sums:common.head.aggregates.sums,distinct,footer};
 }
 
 /* ---------------- değerlendirme ---------------- */
@@ -228,6 +246,47 @@ function runCpQuery(dataset,rawQuery,helpers){
 }
 
 const bump=(map,key)=>{map[key]=(map[key]||0)+1;};
+/* Alt toplam satırı: orders-facets.js createFooterAccumulator / tableNumericValue'nun kopyası
+   (o dosya WS3'ündür ve bunları dışa açmaz). Eşitlik testi: read-model-cp-window-route.test.js
+   aynı satırlarda iki uygulamayı karşılaştırır. */
+function tableNumericValue(value){
+  if(typeof value==='number')return Number.isFinite(value)?value:0;
+  let text=String(value==null?'':value).trim().replace(/\s/g,'');
+  if(!text)return 0;
+  const hadComma=text.includes(',');
+  text=normalizeDecimalText(text);
+  if(!hadComma&&(text.match(/\./g)||[]).length>1)text=text.replace(/\./g,'');
+  const n=Number(text.replace(/[^0-9+\-.]/g,''));return Number.isFinite(n)?n:0;
+}
+function normalizeDecimalText(text){
+  const comma=text.lastIndexOf(','),dot=text.lastIndexOf('.');
+  if(comma>=0&&dot>=0)return comma>dot?text.replace(/\./g,'').replace(',','.'):text.replace(/,/g,'');
+  if(comma>=0)return text.replace(',','.');
+  return text;
+}
+function createFooterAccumulator(spec){
+  if(!spec)return null;
+  const sums=Object.fromEntries(spec.sums.map(key=>[key,0]));
+  const avg=spec.averages.map(item=>({...item,weighted:0,qty:0,total:0,count:0}));
+  const seen=new Set();let selectedCount=0;
+  return {
+    add(row){
+      for(const key of spec.sums)sums[key]+=tableNumericValue(row[key]);
+      for(const a of avg){
+        const price=kolParseMoneyNum(row[a.key]);
+        if(!Number.isFinite(price)||price<=0)continue;
+        a.total+=price;a.count++;
+        const qty=tableNumericValue(row[a.qtyKey]);
+        if(qty>0){a.weighted+=price*qty;a.qty+=qty;}
+      }
+      if(spec.selected){const id=String(row._id);if(!seen.has(id)){seen.add(id);if(spec.selected.has(id))selectedCount++;}}
+    },
+    result(){
+      return {sums,averages:Object.fromEntries(avg.map(a=>[a.key,{weighted:a.qty>0?a.weighted/a.qty:null,arithmetic:a.count?a.total/a.count:null}])),
+        selectedCount:spec.selected?selectedCount:null};
+    },
+  };
+}
 function runCpFacets(dataset,rawRequest,helpers){
   const spec=validateCpFacets(rawRequest);
   const bounds=exfBounds(spec.today);
@@ -236,6 +295,7 @@ function runCpFacets(dataset,rawRequest,helpers){
   const sums=Object.fromEntries(spec.sums.map(key=>[key,0]));
   const all=[];let none=0;
   const distinct=spec.distinct.map(key=>[key,new Set()]);
+  const footer=createFooterAccumulator(spec.footer);
   if(distinct.length)for(const row of Array.isArray(dataset&&dataset.rows)?dataset.rows:[])for(const [key,set] of distinct){const value=norm(row&&row[key]);if(value)set.add(value);}
   const {rows}=evaluate(dataset,spec,helpers,(row,i,failed,failedId)=>{
     none++;
@@ -243,6 +303,7 @@ function runCpFacets(dataset,rawRequest,helpers){
     if(!failed){
       all.push(row);
       for(const key of spec.sums)sums[key]+=shared.internals.toNum(row[key])||0;
+      if(footer)footer.add(row);
     }
     if(!kpi)return;
     const scope=id=>!failed||failedId===id;
@@ -261,6 +322,7 @@ function runCpFacets(dataset,rawRequest,helpers){
   const out={datasetRows:rows.length,total:all.length,none,sums,
     stats:{rowCount:stats.rowCount,modelCount:stats.modelCount,optionCount:stats.optionCount,orderCount:optionStats.getOrderCount(all)}};
   if(kpi)out.kpi=kpi;
+  if(footer)out.footer=footer.result();
   if(distinct.length)out.distinct=Object.fromEntries(distinct.map(([key,set])=>[key,[...set].sort(rules.compareChronologicalValues)]));
   return out;
 }

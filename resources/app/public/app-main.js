@@ -1678,7 +1678,9 @@ function ensureUnifiedPrioritiesForTable(tableKey){
 window.addEventListener('bl:cp-decision-context-changed',event=>{
   invalidateUnifiedPriorityDecisions('personal-decision-context',['cp']);
   // CP hesaplanmış sütunlar (#1078) etkinse yenilemeyi kendisi yapar (eski değerlerle ara çizim yok).
-  if(!window.BLCpComputedColumns?.onDecisionContextChanged?.(event)&&currentActiveTab()==='cp')renderCP();
+  const computedHandled=window.BLCpComputedColumns?.onDecisionContextChanged?.(event);
+  // Pencereli CP (#1078 alt PR 2): sorgu ve sayaçlar arka uçta yeni bağlamla yeniden kurulur.
+  if(!cpRMOnDecisionContextChanged()&&!computedHandled&&currentActiveTab()==='cp')renderCP();
   scheduleOverviewRender('personal-decision-context');
   // Siparişler önceliği checklist cevabına değil kural/katalog anahtarına bağlıdır;
   // anahtar bir sonraki okumada yeniden kurulur, yalnız gerçekten değiştiyse hesaplanır.
@@ -2898,7 +2900,16 @@ function switchTab(tab){
   const profileReady=profileFirstVisit?applyProfilesForCurrentPage(true):Promise.resolve();
   if(!startupReadySignaled)startupPageProfileReady=profileReady;
   if(profileFirstVisit)void profileReady.then(()=>{if(currentActiveTab()!==tab)_favoritesAppliedPages.delete(tab);});
-  if(tab==='cp'&&(!state.cp||warmedUnrendered)){
+  if(tab==='cp'&&cpReadModelEnabled()){
+    // #1078 alt PR 2: pencereli yol tam satır indirmez; çizim profil uygulandıktan sonra.
+    if(warmedUnrendered)_deferredTabRenders.delete('cp');
+    void profileReady.then(()=>{
+      if(currentActiveTab()!=='cp')return;
+      if(profileFirstVisit)applyStoredProfilesForCurrentPage(true);
+      renderCP();
+    });
+  }
+  else if(tab==='cp'&&(!state.cp||warmedUnrendered)){
     const dataReady=ensureCpLoaded({deferRender:profileFirstVisit||warmedUnrendered});
     void (profileFirstVisit||warmedUnrendered?Promise.all([dataReady,profileReady]).then(()=>{
       if(currentActiveTab()!=='cp'||!state.cp)return;
@@ -3350,6 +3361,7 @@ document.getElementById('navCopy').addEventListener('click', event=>{
   // satırı ikiye bölüp komşu sütunları dikey birleştiriyordu.
   if(info.tableKey==='cp'||info.tableKey==='orders'){
     if(info.tableKey==='orders'&&ordersRMWindowedActive()){void ordersRMCopyAll(info);return;} // #1076
+    if(info.tableKey==='cp'&&cpRMWindowedActive()){void cpRMCopyAll(info);return;} // #1078
     void copyManagedTableLikeExcel(info.tableKey, info.rowsFn(), info.selSet(), 'navCopy');
     return;
   }
@@ -7780,6 +7792,8 @@ function cycleCheckFilter(tableKey, rerenderOuter){
 function openHeaderFilter(tableKey, key, anchorEl, rerenderOuter){
   // #1076: pencereli Siparişler panel değerlerini önce arka uçtan alır, sonra paneli açar.
   if(tableKey==='orders'&&ordersRMOpenHeaderFilter(key,anchorEl,rerenderOuter))return;
+  // #1078: pencereli CP'de değer listesi tam satırlardan; satırlar yoksa önce yüklenir.
+  if(tableKey==='cp'&&cpRMOpenHeaderFilter(key,anchorEl,rerenderOuter))return;
   closeHeaderFilter();
   const cols = COLS_BY_TABLE[tableKey];
   const col = cols.find(c=>c.k===key) || {k:key, type:'ro'};
@@ -8545,6 +8559,7 @@ function redrawTableModule(tableKey){
   const top=host?host.scrollTop:0,left=host?host.scrollLeft:0;
   // #1076: pencereli Siparişler'de yeniden çiz, sorguyu baştan kurar (önbellek/pencere atılır).
   if(tableKey==='orders'&&ordersRMWindowedActive()){ordersRMInvalidate('redraw');renderOrdersRoute();}
+  else if(tableKey==='cp'&&cpRMWindowedActive()){cpRMInvalidate('redraw');renderCPNow();} // #1078
   else if(tableKey==='cp')renderCPNow();
   else if(tableKey==='orders')renderOrdersNow();
   else if(tableKey==='koleksiyon')renderKol();
@@ -10196,6 +10211,8 @@ function cpRowPasses(r,ctx,ids){
   return true;
 }
 function filteredCP(){
+  // #1078: pencereli yolda eşleşen kümenin tamamı arka uçtan akışla alınmışsa o küme.
+  const materialized=cpRMMaterializedRows();if(materialized)return materialized;
   if(!state.cp) return [];
   // Export/copy/filter paths may run without a preceding table render. If the
   // personal decision engine is already available, keep Priority at the same
@@ -10315,8 +10332,14 @@ function renderTableEmptyHint(tableKey,visibleCount,totalCount){
   else hint.textContent=opts.title;
 }
 function renderCPNow(){
+  // #1078 alt PR 2: anahtar açıkken ve sorgu arka uçta değerlendirilebiliyorsa pencereli yol.
+  if(cpReadModelEnabled()){
+    if(renderCPFromReadModel())return;
+    if(!state.cp){void ensureCpLoaded();return;}
+  }
   if(!state.cp) return;
   cpPlmDetailsSync();
+  const legacyStarted=performance.now();
   if(!ensureUnifiedPrioritiesForTable('cp'))return;
   applyFormulaColumns('cp'); // sıralama ve sayfa filtreleri hesaplanan değeri görsün
   migrateLegacyCpQuickFilters();
@@ -10330,15 +10353,7 @@ function renderCPNow(){
   const metricRows=partialViewEnabled('cp')?partialViewUniqueSourceRows(rows):rows;
   const totalRowCount=partialViewEnabled('cp')?partialViewRows('cp',state.cp.rows).length:state.cp.rows.length;
   const qtySumCP = metricRows.reduce((s,r)=>s+(toNum(r['Order Quantity'])||0),0);
-  const cpStats=pageModelOptionStats(metricRows);
-  const cpLabel=appLang==='en'?`${cpStats.modelCount} Model${cpStats.modelCount===1?'':'s'} · ${cpStats.optionCount} Option${cpStats.optionCount===1?'':'s'} · ${cpStats.orderCount} Order${cpStats.orderCount===1?'':'s'}`:`${cpStats.modelCount} Model · ${cpStats.optionCount} Opsiyon · ${cpStats.orderCount} Sipariş`;
-  const cpScopeText=`${cpLabel} · ${rows.length} / ${totalRowCount} ${appLang==='en'?'rows':'satır'} · Order Qty: ${qtySumCP.toLocaleString('tr-TR')}`;
-  document.getElementById('cpCount').textContent = cpScopeText;
-  renderTableEmptyHint('cp',rows.length,totalRowCount);
-  const cpWorkspaceMeta=document.getElementById('cpWorkspaceMeta');
-  if(cpWorkspaceMeta)cpWorkspaceMeta.textContent=cpScopeText;
-  renderTableViewContext('cp');
-  renderActiveFilterContext('cp');
+  renderCpCountLine({stats:pageModelOptionStats(metricRows),rowCount:rows.length,totalRowCount,qty:qtySumCP});
   const buckets = actionPriorityCounts(scope.pri);
   const statusCounts = {}; scope.status.forEach(r=>{
     const values=partialViewEnabled('cp')?partialViewStatusGroups(r).map(group=>group.status):(cpLogisticHasDetails(r)?(r._logisticStatusValues||cpLogisticSegments(r).map(s=>s.status)):[r.STATUS]);
@@ -10349,6 +10364,60 @@ function renderCPNow(){
     [...new Set(values.map(raw=>normalizeTransitDelType(raw)||norm(raw)||'—'))].forEach(d=>{delCounts[d]=(delCounts[d]||0)+1;});
   });
   const seasonCounts = {}; scope.season.forEach(r=>{ const s=norm(r['Season'])||'—'; seasonCounts[s]=(seasonCounts[s]||0)+1; });
+  const exfCounts = Object.fromEntries(CP_EXF_PERIODS.map(k=>[k,0]));
+  scope.exf.forEach(r=>{ CP_EXF_PERIODS.forEach(k=>{ if(matchesQuickExFactory(r,k)) exfCounts[k]++; }); });
+  renderCpKpiBar({buckets,statusCounts,delCounts,seasonCounts,exfCounts,noneCount:scope.none.length,
+    // Eklenen başlıkların sayımı, KENDİ filtresi hariç tüm filtrelerle yapılır.
+    extraHtml:()=>qfgExtra('cp',scope.all,()=>cpEvaluateAll().all)});
+  scheduleCoreAutoFilterSave();
+  renderFullTable('cpTable','cp', rows, state.cpSort, (key)=>{
+    if(key==='__picture'){cpCycleImageSize();return;}
+    state.cpSort = {key, dir: state.cpSort.key===key ? -state.cpSort.dir : 1}; renderCP();
+  }, {withGroups:true, computeFn:computeFlags, dirtySet:state.cpDirty, selectedSet:state.cpSelected, rerenderOuter:renderCP, onSelectionChange:updateShippingBtnVisibility,
+    detailRowHtmlFn:(r,cols,withChk)=>cpLogisticDetailRowHtml(r,cols,withChk,'cp'), detailRowClass:'cpLogisticDetailRow',
+    virtualize:true, hasExpandedRows:!partialViewEnabled('cp')&&state.cpLogisticExpanded.size>0});
+  bindCpImageCells();
+  bindStatusBacklogDrilldown('cpTable','cp');
+  scheduleCpImageWarmup(rows);
+  const cpTableEl=document.getElementById('cpTable');if(cpTableEl)cpTableEl._blRenderedRowsSource=rows;
+  cpRecordRowsVisible('legacy',legacyStarted,{rows:rows.length,reason:cpRM.legacyReason});
+}
+/* Geçerli filtre/sıralamadaki ilk satırların görselleri boşta önceden
+   yüklenir; kaydırınca veya sayfaya dönünce görseller hazırdır. Her yeni
+   CP çizimi (filtre/sıralama değişimi) önceki ısıtmayı iptal eder; sayfadan
+   çıkınca switchTab iptal eder. Yalnız uygulamanın kendi görsel uçları. */
+const CP_IMAGE_WARMUP_ROWS=300;
+let _cpImageWarmupJob=0;
+function scheduleCpImageWarmup(rows){
+  BLImageRuntime.cancelWarmup();
+  const job=++_cpImageWarmupJob;
+  if(currentActiveTab()!=='cp')return;
+  const list=(rows||[]).slice(0,CP_IMAGE_WARMUP_ROWS);
+  // Kaynak listesi de çizimin kritik yolunda hesaplanmaz.
+  const idle=window.requestIdleCallback||(cb=>setTimeout(cb,50));
+  idle(()=>{
+    if(job!==_cpImageWarmupJob||currentActiveTab()!=='cp')return;
+    const sources=[];
+    for(const row of list){const image=tableRowImageSource(row);if(image.has&&image.source)sources.push(image.source);}
+    BLImageRuntime.warmup(sources);
+  },{timeout:1000});
+}
+
+/* CP sayım satırı ve hızlı filtre çipleri: eski yol (tam satırlar) ve pencereli yol
+   (#1078 alt PR 2, arka uç sayaçları) aynı çizimi kullanır. */
+const CP_EXF_PERIODS=['past','thisWeek','nextWeek','thisMonth','nextMonth'];
+function renderCpCountLine({stats,rowCount,totalRowCount,qty}){
+  const cpStats=stats||{modelCount:0,optionCount:0,orderCount:0};
+  const cpLabel=appLang==='en'?`${cpStats.modelCount} Model${cpStats.modelCount===1?'':'s'} · ${cpStats.optionCount} Option${cpStats.optionCount===1?'':'s'} · ${cpStats.orderCount} Order${cpStats.orderCount===1?'':'s'}`:`${cpStats.modelCount} Model · ${cpStats.optionCount} Opsiyon · ${cpStats.orderCount} Sipariş`;
+  const cpScopeText=`${cpLabel} · ${rowCount} / ${totalRowCount} ${appLang==='en'?'rows':'satır'} · Order Qty: ${(Number(qty)||0).toLocaleString('tr-TR')}`;
+  document.getElementById('cpCount').textContent = cpScopeText;
+  renderTableEmptyHint('cp',rowCount,totalRowCount);
+  const cpWorkspaceMeta=document.getElementById('cpWorkspaceMeta');
+  if(cpWorkspaceMeta)cpWorkspaceMeta.textContent=cpScopeText;
+  renderTableViewContext('cp');
+  renderActiveFilterContext('cp');
+}
+function renderCpKpiBar({buckets,statusCounts,delCounts,seasonCounts,exfCounts,noneCount,extraHtml}){
   const exfDefs = [
     ['past',appLang==='en'?'Past':'Geçmiş','red'],
     ['thisWeek',appLang==='en'?'This Week':'Bu Hafta','yellow'],
@@ -10356,8 +10425,6 @@ function renderCPNow(){
     ['thisMonth',appLang==='en'?'This Month':'Bu Ay','orange'],
     ['nextMonth',appLang==='en'?'Next Month':'Önümüzdeki Ay','purple']
   ];
-  const exfCounts = Object.fromEntries(exfDefs.map(([k])=>[k,0]));
-  scope.exf.forEach(r=>{ exfDefs.forEach(([k])=>{ if(matchesQuickExFactory(r,k)) exfCounts[k]++; }); });
   const statusTones = {'Depoda':'green','Üretimde':'gray'};
   function chip(tone,n,l,pri){ return Number(n)>0 ? `<div class="kpi tone-${tone}" data-pri="${pri||''}"><span class="n">${n}</span><span class="l">${l}</span></div>` : ''; }
   const curPri=state.colFilters.cp?.['Priority']?.values||new Set();
@@ -10369,15 +10436,14 @@ function renderCPNow(){
   const noMirroredFilter=!curPri.size&&!curStatus.size&&!curDel.size&&!curSeason.size&&!curExf.size&&!hasMirroredHeaderFilter('cp',mirroredCpColumns);
   // v7.36 — hazır başlıklar aynen; hangisinin çizileceğini kullanıcı seçer.
   let html = `
-    <div class="kpi tone-navy${noMirroredFilter?' active':''}" data-act="clearAll"><span class="n">${scope.none.length}</span><span class="l">${appLang==="en"?"All":"Tümü"}</span></div>`
+    <div class="kpi tone-navy${noMirroredFilter?' active':''}" data-act="clearAll"><span class="n">${noneCount}</span><span class="l">${appLang==="en"?"All":"Tümü"}</span></div>`
     + qfgSeg('cp','season','Season',quickSeasonEntries(seasonCounts).map(([s,n])=>`<div class="kpi tone-blue" data-season="${escapeHtml(s)}"><span class="n">${n}</span><span class="l">${escapeHtml(s)}</span></div>`).join(''))
     + qfgSeg('cp','pri','Priority',
         actionPriorityCodes().map(code=>chip(priorityTone(code),buckets[code],priorityDisplay(code),code)).join(''))
     + qfgSeg('cp','status','Status',quickCountEntries(statusCounts).map(([s,n])=>`<div class="kpi tone-${statusTones[s]||'blue'}" data-status="${escapeHtml(s)}"><span class="n">${n}</span><span class="l">${escapeHtml(statusDisplay(s))}</span></div>`).join(''))
     + qfgSeg('cp','exf','Ex-Factory',exfDefs.filter(([k])=>exfCounts[k]>0).map(([k,l,t])=>`<div class="kpi tone-${t}" data-exf="${k}"><span class="n">${exfCounts[k]}</span><span class="l">${l}</span></div>`).join(''))
     + qfgSeg('cp','del','Del. Type',quickCountEntries(delCounts).map(([d,n])=>`<div class="kpi tone-purple" data-deltype="${escapeHtml(d)}"><span class="n">${n}</span><span class="l">${escapeHtml(transitDelTypeDisplay(d))}</span></div>`).join(''))
-    // Eklenen başlıkların sayımı, KENDİ filtresi hariç tüm filtrelerle yapılır.
-    + qfgExtra('cp',scope.all,()=>cpEvaluateAll().all);
+    + (typeof extraHtml==='function'?extraHtml():'');
   document.getElementById('cpKpi').innerHTML = html;
   qfgFinish('cp','cpKpi',renderCP);
   document.querySelectorAll('#cpKpi .kpi[data-pri]').forEach(el=>{ if(mirroredQuickValueActive('cp','Priority',curPri,el.dataset.pri)) el.classList.add('active'); });
@@ -10408,38 +10474,497 @@ function renderCPNow(){
       el.addEventListener('click', ()=>toggleMirroredQuickFilter('cp','Priority','cpFPriority',el.dataset.pri||'',renderCP));
     }
   });
-  scheduleCoreAutoFilterSave();
-  renderFullTable('cpTable','cp', rows, state.cpSort, (key)=>{
-    if(key==='__picture'){cpCycleImageSize();return;}
-    state.cpSort = {key, dir: state.cpSort.key===key ? -state.cpSort.dir : 1}; renderCP();
-  }, {withGroups:true, computeFn:computeFlags, dirtySet:state.cpDirty, selectedSet:state.cpSelected, rerenderOuter:renderCP, onSelectionChange:updateShippingBtnVisibility,
-    detailRowHtmlFn:(r,cols,withChk)=>cpLogisticDetailRowHtml(r,cols,withChk,'cp'), detailRowClass:'cpLogisticDetailRow',
-    virtualize:true, hasExpandedRows:!partialViewEnabled('cp')&&state.cpLogisticExpanded.size>0});
+}
+/* ================= CP · OKUMA MODELİ PENCERELİ YOL (#1078 / WS5 alt PR 2) =================
+   Anahtar açıkken CP tablosu 30k satırı tarayıcıda süzmez, sıralamaz, saymaz ve karar
+   motorunu çalıştırmaz. Filtre, arama, sıralama, hızlı filtre sayaçları ve sayım satırı
+   yerel arka uçta değerlendirilir (POST /api/read-model/cp/query · /facets). Öncelik,
+   etiketler, nedenler ve checklist hücreleri (alt PR 1 hesaplanmış sütunları) pencere
+   satırlarıyla birlikte gelir. Tablo yalnız görünen 200 satırlık pencereyi ve komşularını
+   ister (Siparişler WS3 kalıbı: yer tutucu satır, ±2 pencere ön yükleme).
+   Tam CP satırları bellekteyse pencere AYNI nesneleri kullanır (düzenleme bugünkü gibi);
+   değilse pencere satırları salt okunurdur (satır bazlı düzenleme alt PR 3).
+   Sunucunun değerlendiremediği durumlar eski yola düşer (sessizce yanlış sonuç yok):
+     - kaydedilmemiş CP düzenlemesi / yolda yazım (sunucu bu değerleri bilmez)
+     - parsiyel görünüm, açık lojistik detay, "işaretsizler", eklenen hızlı filtre grupları
+     - revizyon filtresi, kumaş kartı, istemcide türetilen sütunlar (formül, Ex→Retail, LT,
+       Supp. FOB, Licensor, PLM Numune, checklist sütunları, kişisel not) filtre/sıralaması
+   Anahtar kapalıyken (varsayılan) eski yol aynen çalışır.
+   Açma: BLCpReadModel.setEnabled(true) (kullanıcı başına BLStorage 'bl.cpReadModel.v1')
+   ya da ölçüm/test için sayfa betiklerinden önce window.BL_CP_READ_MODEL=true. */
+const CP_RM_STORAGE_KEY='bl.cpReadModel.v1';
+const CP_RM_WINDOW=200;
+const CP_RM_PREFETCH=2;
+const CP_RM_BULK_PAGE=1000;
+const CP_RM_CLIENT_DERIVED_KEYS=new Set(['Supp. FOB','Licensor','Ex→Retail','LT','PLM Numune','Fabric (PLM)']);
+const CP_RM_CLIENT_TYPES=new Set(['formula','cpImage','privateNote']);
+const CP_RM_OPTION_SELECTS=[['cpFCountry','Country'],['cpFLicense','License'],['cpFDelType','Del. Type'],['cpFStatus','STATUS'],['cpFSeason','Season']];
+const CP_RM_DATA_REASONS=new Set(['cp-projection-loaded','server-cp-deferred','cp-peer-sync','remote-cp-decision-patch','cp-generated-from-asas',
+  'transit-rules-local','transit-rules-server','server-transit-rules-hydrated']);
+const cpRM={
+  epoch:0,seq:0,signature:'',spec:null,rows:null,total:0,generation:'',
+  windows:new Set(),pending:new Map(),wanted:new Set(),flushQueued:false,repaintFrame:0,
+  facets:null,facetsKey:'',facetsSeq:0,optionsGeneration:'',materialized:null,legacyReason:'',unsupportedSignature:'',
+};
+let cpRMEnabledCache=null;
+function cpReadModelEnabled(){
+  if(typeof window.BL_CP_READ_MODEL==='boolean')return window.BL_CP_READ_MODEL;
+  if(cpRMEnabledCache===null){
+    try{cpRMEnabledCache=(window.BLStorage||localStorage).getItem(CP_RM_STORAGE_KEY)==='1';}catch(_){cpRMEnabledCache=false;}
+  }
+  return cpRMEnabledCache;
+}
+function cpRMColumns(){
+  return CP_COLS.map(c=>({k:c.k,type:String(c.type||''),...(c.personalNote?{personalNote:true}:{}),...(c.modelCustom?{modelCustom:true}:{})}));
+}
+function cpRMClientOnlyKey(key){
+  if(CP_RM_CLIENT_DERIVED_KEYS.has(key)||String(key).startsWith('__'))return true;
+  const col=CP_COLS.find(c=>c.k===key);
+  return Boolean(col&&(col.personalNote||col.modelCustom||CP_RM_CLIENT_TYPES.has(col.type)));
+}
+// prepareColFilter / buildPreparedColFilter ile aynı öncelik: range → numericRule → değer listesi
+// (yok: satırı eler). Priority / STATUS / Del. Type / Ant. Arrival / hızlı Ex-factory CP işlemleriyle.
+function cpRMColFilter(key,entry){
+  if(!entry)return {filter:null};
+  // quickPriority yalnız işarettir (normalizeUnifiedPriorityFilter): Priority değerleri kanonik kod.
+  if(revisionFilterMode(entry)||entry.fabricDetails)return {reason:`filter:${key}`};
+  if(cpRMClientOnlyKey(key))return {reason:`filter:${key}`};
+  const special=key==='Priority'||key==='STATUS'||key==='Del. Type'||key==='Ant. Arrival'||(key==='Ex-factory'&&entry.quickExf);
+  if(special&&(entry.range||entry.numericRule))return {reason:`filter:${key}`};
+  if(entry.range){
+    const min=ordersRMNumber(entry.range.min),max=ordersRMNumber(entry.range.max);
+    if(Number.isNaN(min)||Number.isNaN(max))return {reason:`range:${key}`};
+    return {filter:{key,op:'range',min,max}};
+  }
+  if(entry.numericRule){
+    const rule={op:String(entry.numericRule.op||'')};
+    ['a','b','avg'].forEach(name=>{const v=entry.numericRule[name];if(typeof v==='number'||typeof v==='string')rule[name]=v;});
+    return {filter:{key,op:'numeric',rule}};
+  }
+  if(!entry.values)return {filter:{key:'_id',op:'in',values:[]}};
+  const values=[...entry.values].map(String);
+  if(key==='Priority')return {filter:{op:'cp-priority',flags:values}};
+  if(key==='Ex-factory'&&entry.quickExf)return {filter:{op:'cp-exf',periods:values}};
+  if(key==='STATUS')return {filter:{op:'cp-status',values}};
+  if(key==='Del. Type')return {filter:{op:'cp-deltype',values:values.map(v=>comparableColumnFilterValue('Del. Type',v))}};
+  if(key==='Ant. Arrival')return {filter:{op:'cp-arrival',values,...(entry.granularity?{granularity:entry.granularity}:{})}};
+  return {filter:{key,op:'display-in',values,...(entry.granularity?{granularity:entry.granularity}:{})}};
+}
+/* cpBuildFilterContext + cpPassesBase / cpPassesGroup'un sunucu sorgusu karşılığı; kümeler
+   cpEvaluateAll kapsamlarıyla aynıdır (base + pri/status/del/season/exf). */
+function cpReadModelSpec(options={}){
+  if(state.cpDirty&&state.cpDirty.size)return {ok:false,reason:'dirty'};
+  if(pendingOverrideWriteCount()>0)return {ok:false,reason:'pending-writes'};
+  if(partialViewEnabled('cp'))return {ok:false,reason:'partial-view'};
+  if(state.cpLogisticExpanded&&state.cpLogisticExpanded.size)return {ok:false,reason:'logistic-detail'};
+  if((window.BLQuickFilterGroups?.config?.('cp')?.extra||[]).length)return {ok:false,reason:'quick-filter-groups'};
+  migrateLegacyCpQuickFilters();
+  const bucket={...(state.colFilters.cp||{})};
+  if(options.excludeKey)delete bucket[options.excludeKey];
+  const mirror=new Set(CP_MIRROR_COLS);
+  const base=[],groups={pri:[],status:[],del:[],season:[],exf:[]};
+  const add=(list,key)=>{const out=cpRMColFilter(key,bucket[key]);if(out.reason)return out.reason;if(out.filter)list.push(out.filter);return '';};
+  for(const key of Object.keys(bucket)){if(mirror.has(key))continue;const reason=add(base,key);if(reason)return {ok:false,reason};}
+  for(const [dim,set] of Object.entries(cpDimFilters))if(set&&set.size&&CP_DIM_META[dim])base.push({key:CP_DIM_META[dim].col,op:'in',values:[...set].map(String)});
+  const value=id=>document.getElementById(id)?.value||'';
+  const fP=value('cpFPriority'),fC=value('cpFCountry'),fL=value('cpFLicense'),fD=value('cpFDelType'),fS=value('cpFStatus'),fSeason=value('cpFSeason');
+  if(fC)base.push({key:'Country',op:'eq',value:fC});
+  if(fL)base.push({key:'License',op:'eq',value:fL});
+  const check=normalizeCheckFilterMode(state.checkFilter.cp);
+  if(check==='unchecked')return {ok:false,reason:'unchecked-filter'};
+  if(check==='checked')base.push({key:'_id',op:'in',values:[...state.cpSelected].map(String)});
+  if(fP)groups.pri.push({op:'cp-priority',flags:[fP]});
+  if(fS)groups.status.push({op:'cp-status-eq',value:fS});
+  if(fD)groups.del.push({op:'cp-deltype-eq',value:comparableColumnFilterValue('Del. Type',fD)});
+  if(fSeason)groups.season.push({key:'Season',op:'eq',value:fSeason});
+  if(state.cpQuickExf)groups.exf.push({op:'cp-exf',periods:[state.cpQuickExf]});
+  for(const g of CP_MIRROR_GROUPS){const reason=add(groups[g.id],g.col);if(reason)return {ok:false,reason};}
+  const text=value('cpSearch');
+  const search=parseTableSearchTerms(text).length?{text,plainMode:'contains'}:null;
+  const sortKey=state.cpSort&&state.cpSort.key;
+  if(sortKey&&sortKey!=='Priority'&&cpRMClientOnlyKey(sortKey))return {ok:false,reason:`sort:${sortKey}`};
+  const sort=sortKey?{key:sortKey,dir:state.cpSort.dir===-1?-1:1}:null;
+  return {ok:true,columns:cpRMColumns(),base,groups,search,sort};
+}
+function cpRMToday(){return toISODate(new Date());}
+function cpRMLang(){return appLang==='en'?'en':'tr';}
+function cpRMSignature(spec){
+  return JSON.stringify([cpRM.epoch,cpRMLang(),cpRMToday(),spec.columns,spec.base,spec.groups,spec.search,spec.sort]);
+}
+// Henüz sunucuya ulaşmamış kendi checklist cevapları istekle gider (alt PR 1 ile aynı katman).
+async function cpRMEnvelope(field,body){
+  let answers=null;
+  try{answers=await prepareCpComputedContext();}
+  catch(error){if(error&&error.code==='CP_COMPUTED_PREFERENCES_UNSAVED')throw error;answers=null;}
+  return {version:1,lang:cpRMLang(),...(answers?{answers}:{}),[field]:body};
+}
+async function cpRMPost(path,field,body){return ordersRMPost(path,await cpRMEnvelope(field,body));}
+function cpRMQueryBody(spec,offset,limit,extra={}){
+  return {version:1,columns:spec.columns,base:spec.base,groups:spec.groups,today:cpRMToday(),...(spec.search?{search:spec.search}:{}),...(spec.sort?{sort:spec.sort}:{}),offset,limit,...extra};
+}
+const _cpRMFullIndex=new WeakMap();
+function cpRMFullRow(raw){
+  const rows=state.cp&&Array.isArray(state.cp.rows)?state.cp.rows:null;
+  if(!rows||!raw)return null;
+  let index=_cpRMFullIndex.get(rows);
+  if(!index){index=new Map();for(const row of rows)if(row&&row._id!=null&&!index.has(row._id))index.set(row._id,row);_cpRMFullIndex.set(rows,index);}
+  const row=index.get(raw._id);
+  // Farklı nesil projeksiyonunda aynı _id başka satır olabilir: kimlik alanları tutmalı.
+  if(!row||norm(row._matchOcode)!==norm(raw._matchOcode)||norm(row['Order Code'])!==norm(raw['Order Code'])||norm(row['C.Code'])!==norm(raw['C.Code']))return null;
+  return row;
+}
+// Pencere satırları + hesaplanmış sütun kayıtları (cp-computed FIELDS sırası; ids ile hizalı).
+function cpRMDecorate(serverRows,computed){
+  const fresh=[],out=serverRows.map((raw,i)=>{
+    const json=Array.isArray(computed)?computed[i]:null,tuple=json?JSON.parse(json):null;
+    const known=cpRMFullRow(raw);
+    if(known){if(tuple)applyCpComputedRow(known,tuple);return known;}
+    const row={...raw,_canEdit:false};delete row._rowIndex;
+    fresh.push([row,tuple]);return row;
+  });
+  if(fresh.length){
+    const rows=fresh.map(([row])=>row);
+    reviveServerDates(rows);
+    // ensureCpLoaded + applyPricingRulesToLoadedRows + renderCPNow formül sırası.
+    try{applyLicensorRulesToLoadedRows([rows]);}catch(_){}
+    rows.forEach(row=>{try{recalcSuppFobForRow(row);}catch(_){}});
+    try{window.BLFormulaColumns?.applyToRows?.('cp',rows);}catch(_){}
+    rows.forEach(row=>{try{applyFormulas(row);}catch(_){}});
+    ensurePlmSampleAccessors(rows);
+    fresh.forEach(([row,tuple])=>{if(tuple)applyCpComputedRow(row,tuple);});
+  }
+  return out;
+}
+const cpRMPlaceholder=index=>({_rmPending:true,_rmIndex:index});
+function cpRMResetStore(signature,spec,result){
+  const total=Math.max(0,Number(result.total)||0);
+  const rows=new Array(total);
+  for(let i=0;i<total;i++)rows[i]=cpRMPlaceholder(i);
+  cpRM.signature=signature;cpRM.spec=spec;cpRM.rows=rows;cpRM.total=total;
+  cpRM.windows=new Set();cpRM.pending=new Map();cpRM.wanted=new Set();cpRM.materialized=null;
+}
+function cpRMPlace(offset,rows){
+  const store=cpRM.rows;if(!store)return;
+  for(let i=0;i<rows.length&&offset+i<store.length;i++)store[offset+i]=rows[i];
+}
+function cpRMCheckGeneration(payload){
+  const generation=String(payload&&payload.generation||'');
+  if(!cpRM.generation){cpRM.generation=generation;return true;}
+  if(generation===cpRM.generation)return true;
+  cpRM.generation=generation;cpRM.epoch++;cpRM.signature='';
+  renderCP();
+  return false;
+}
+function cpRMFetchRange(offset,limit,extra={}){
+  const signature=cpRM.signature,spec=cpRM.spec;
+  return cpRMPost('/api/read-model/cp/query','query',cpRMQueryBody(spec,offset,limit,extra)).then(payload=>{
+    if(signature!==cpRM.signature)return null;
+    if(!cpRMCheckGeneration(payload))return null;
+    return payload.result;
+  });
+}
+function cpRMEnsureWindow(index){
+  if(index<0||index*CP_RM_WINDOW>=cpRM.total||cpRM.windows.has(index))return Promise.resolve(true);
+  if(cpRM.pending.has(index))return cpRM.pending.get(index);
+  const signature=cpRM.signature;
+  const job=cpRMFetchRange(index*CP_RM_WINDOW,CP_RM_WINDOW).then(result=>{
+    if(!result||signature!==cpRM.signature)return false;
+    cpRMPlace(result.offset,cpRMDecorate(result.rows||[],result.computed));
+    cpRM.windows.add(index);
+    cpRMScheduleRepaint();
+    return true;
+  }).catch(error=>{console.warn('CP penceresi alınamadı:',error);return false;})
+    .finally(()=>{if(signature===cpRM.signature)cpRM.pending.delete(index);});
+  cpRM.pending.set(index,job);
+  return job;
+}
+function cpRMNeedRow(rowIndex){
+  cpRM.wanted.add(Math.floor(rowIndex/CP_RM_WINDOW));
+  if(cpRM.flushQueued)return;
+  cpRM.flushQueued=true;
+  queueMicrotask(()=>{
+    cpRM.flushQueued=false;
+    const wanted=[...cpRM.wanted];cpRM.wanted.clear();
+    const order=new Set();
+    wanted.forEach(index=>order.add(index));
+    for(let d=1;d<=CP_RM_PREFETCH;d++)wanted.forEach(index=>{order.add(index+d);order.add(index-d);});
+    order.forEach(index=>{void cpRMEnsureWindow(index);});
+  });
+}
+function cpRMScheduleRepaint(){
+  if(cpRM.repaintFrame)return;
+  const raf=window.requestAnimationFrame||(fn=>setTimeout(fn,0));
+  cpRM.repaintFrame=raf(()=>{
+    cpRM.repaintFrame=0;
+    if(currentActiveTab()!=='cp')return;
+    const table=document.getElementById('cpTable'),tbody=table&&table.tBodies&&table.tBodies[0];
+    if(!table||table._blRenderedRowsSource!==cpRM.rows)return;
+    const virtual=tbody&&tbody._virtualState;
+    if(virtual&&virtual.rows===cpRM.rows&&typeof virtual.paint==='function'){virtual.renderedStart=-1;virtual.renderedEnd=-1;virtual.paint();return;}
+    _tableRangeViews.get(table)?.rerender?.();
+  });
+}
+function cpRMSortClick(key){
+  if(key==='__picture'){cpCycleImageSize();return;}
+  state.cpSort={key,dir:state.cpSort.key===key?-state.cpSort.dir:1};renderCP();
+}
+function cpRMPaintTable(){
+  const rows=cpRM.rows||[];
+  applyFormulaColumns('cp');
+  updateCpDimBtnLabels();
+  document.getElementById('cpEmpty').style.display='none';
+  document.getElementById('cpContent').style.display='block';
+  const pendingCell='<td aria-busy="true"></td>';
+  renderFullTable('cpTable','cp',rows,state.cpSort,cpRMSortClick,{withGroups:true,
+    computeFn:row=>row&&row._rmPending?null:computeFlags(row),dirtySet:state.cpDirty,selectedSet:state.cpSelected,rerenderOuter:renderCP,onSelectionChange:updateShippingBtnVisibility,
+    cellHtmlFn:(c,r,cf,tableKey)=>r&&r._rmPending?pendingCell:cellHtml(c,r,cf,tableKey),
+    // Sayfalı görünümde rowIdx sayfaya göredir; pencere deponun indeksiyle (_rmIndex) istenir.
+    rowClassFn:row=>{if(row&&row._rmPending)cpRMNeedRow(row._rmIndex);return '';},
+    detailRowHtmlFn:(r,cols,withChk)=>r&&r._rmPending?'':cpLogisticDetailRowHtml(r,cols,withChk,'cp'),detailRowClass:'cpLogisticDetailRow',
+    virtualize:true,hasExpandedRows:false,loadAllRows:cpRMLoadAllIdRows,selectionRows:cpRMSelectionRows,footerTotals:cpRMFooterTotals});
+  const table=document.getElementById('cpTable');if(table)table._blRenderedRowsSource=rows;
   bindCpImageCells();
   bindStatusBacklogDrilldown('cpTable','cp');
-  scheduleCpImageWarmup(rows);
+  scheduleCpImageWarmup(rows.slice(0,CP_IMAGE_WARMUP_ROWS).filter(row=>row&&!row._rmPending));
 }
-/* Geçerli filtre/sıralamadaki ilk satırların görselleri boşta önceden
-   yüklenir; kaydırınca veya sayfaya dönünce görseller hazırdır. Her yeni
-   CP çizimi (filtre/sıralama değişimi) önceki ısıtmayı iptal eder; sayfadan
-   çıkınca switchTab iptal eder. Yalnız uygulamanın kendi görsel uçları. */
-const CP_IMAGE_WARMUP_ROWS=300;
-let _cpImageWarmupJob=0;
-function scheduleCpImageWarmup(rows){
-  BLImageRuntime.cancelWarmup();
-  const job=++_cpImageWarmupJob;
-  if(currentActiveTab()!=='cp')return;
-  const list=(rows||[]).slice(0,CP_IMAGE_WARMUP_ROWS);
-  // Kaynak listesi de çizimin kritik yolunda hesaplanmaz.
-  const idle=window.requestIdleCallback||(cb=>setTimeout(cb,50));
-  idle(()=>{
-    if(job!==_cpImageWarmupJob||currentActiveTab()!=='cp')return;
-    const sources=[];
-    for(const row of list){const image=tableRowImageSource(row);if(image.has&&image.source)sources.push(image.source);}
-    BLImageRuntime.warmup(sources);
-  },{timeout:1000});
+function cpRMFooterSpec(){
+  const sums=visibleCols('cp').filter(isQuantityLikeColumn).map(c=>c.k);
+  const averages=[...(cpOrdersAverageFooterCols('cp')||new Map()).keys()].map(key=>({key,qtyKey:'Order Quantity'}));
+  const selected=state.cpSelected&&state.cpSelected.size<=20000?[...state.cpSelected].map(String):null;
+  return {sums,averages,...(selected?{selected}:{})};
 }
-
+function cpRMFacetsKey(spec,signature){
+  return signature+'|'+JSON.stringify(spec?cpRMFooterSpec():null);
+}
+function cpRMFooterTotals(){
+  const facets=cpRM.facets;
+  if(!facets||!facets.footer||cpRM.facetsKey!==cpRMFacetsKey(cpRM.spec,cpRM.signature))return null;
+  return facets.footer;
+}
+function cpRMRenderFooter(){
+  const table=document.getElementById('cpTable');
+  if(!table||table._blRenderedRowsSource!==cpRM.rows)return;
+  const cols=visibleCols('cp');
+  renderQuantityTotalsFooter(table,[],cols,{withCheck:true,selectedSet:state.cpSelected,getId:row=>row._id,getValue:(row,c)=>row[c.k],
+    averageCols:cpOrdersAverageFooterCols('cp'),precomputed:cpRMFooterTotals()});
+  if(table.tFoot?.rows?.[0])applyGroupedBoundariesToRow(table.tFoot.rows[0],cols,1);
+}
+function cpRMRenderFacets(facets){
+  if(!facets)return;
+  cpRMRenderFooter();
+  const kpi=facets.kpi||{pri:{},season:{},status:{},del:{},exf:{}};
+  renderCpCountLine({stats:facets.stats,rowCount:facets.total,totalRowCount:facets.datasetRows,qty:Number(facets.sums&&facets.sums['Order Quantity'])||0});
+  renderCpKpiBar({buckets:kpi.pri,statusCounts:kpi.status,delCounts:kpi.del,seasonCounts:kpi.season,exfCounts:kpi.exf,noneCount:facets.none,extraHtml:null});
+  // Seçim kutuları (buildCPFilters / uniqueVals) tam veri kümesinden; nesil başına bir kez.
+  if(facets.distinct&&cpRM.optionsGeneration!==cpRM.generation){
+    cpRM.optionsGeneration=cpRM.generation;
+    CP_RM_OPTION_SELECTS.forEach(([id,key])=>{if(Array.isArray(facets.distinct[key]))fillSelect(id,facets.distinct[key]);});
+    localizeDelTypeSelect('cpFDelType');
+  }
+}
+function cpRMRequestFacets(spec,signature){
+  const key=cpRMFacetsKey(spec,signature);
+  if(cpRM.facets&&cpRM.facetsKey===key){cpRMRenderFacets(cpRM.facets);return;}
+  const seq=++cpRM.facetsSeq;
+  const distinct=cpRM.optionsGeneration&&cpRM.optionsGeneration===cpRM.generation?undefined:CP_RM_OPTION_SELECTS.map(([,k])=>k);
+  const body={version:1,columns:spec.columns,base:spec.base,groups:spec.groups,today:cpRMToday(),...(spec.search?{search:spec.search}:{}),
+    kpi:true,sums:['Order Quantity'],footer:cpRMFooterSpec(),...(distinct?{distinct}:{})};
+  cpRMPost('/api/read-model/cp/facets','facets',body).then(payload=>{
+    if(seq!==cpRM.facetsSeq||signature!==cpRM.signature||!cpRMCheckGeneration(payload))return;
+    cpRM.facets=payload.result;cpRM.facetsKey=key;
+    if(currentActiveTab()==='cp')cpRMRenderFacets(payload.result);
+  }).catch(error=>console.warn('CP sayaçları alınamadı:',error));
+}
+// D1 ölçümü (#1071/#1078): filtre/sıralama/arama değişimi → satırlar tabloda (Siparişler ile aynı).
+function cpRecordRowsVisible(path,started,detail={}){
+  const ms=performance.now()-started;
+  window.BLPerf?.record?.(`cp.rowsVisible.${path}Ms`,ms);
+  window.BLPerf?.mark?.('CP_ROWS_VISIBLE',{path,ms:Math.round(ms*10)/10,...detail});
+  try{window.dispatchEvent(new CustomEvent('bl:cp-rows-visible',{detail:{path,ms,...detail}}));}catch(_){}
+}
+/* Pencereli çizim. false → eski yol (desteklenmeyen sorgu). */
+function renderCPFromReadModel(){
+  if(window.BL_CP_SOURCE_FILTER_REQUIRED||window.BL_HAS_CACHED_MODEL_DATA===false)return false;
+  applyCoreAutoFilterState();
+  const spec=cpReadModelSpec();
+  const supersede=()=>{cpRM.seq++;cpRM.facetsSeq++;};
+  if(!spec.ok){supersede();cpRM.legacyReason=spec.reason;window.BLPerf?.mark?.('CP_READ_MODEL_LEGACY',{reason:spec.reason});return false;}
+  cpRM.legacyReason='';
+  const feedback=document.getElementById('cpSearchFeedback');if(feedback){feedback.hidden=true;feedback.replaceChildren();}
+  const signature=cpRMSignature(spec);
+  if(signature===cpRM.unsupportedSignature){supersede();cpRM.legacyReason='server:READ_MODEL_FILTER_UNSUPPORTED';return false;}
+  if(signature===cpRM.signature&&cpRM.rows){
+    supersede();
+    cpRMPaintTable();
+    cpRMRequestFacets(spec,signature);
+    return true;
+  }
+  const seq=++cpRM.seq,started=performance.now();
+  if(!cpRM.rows)renderCorePageLoadingState('cp');
+  // Önce ilk pencere (satırlar görünür), sayaçlar ardından: tek işçide sıraya girer.
+  cpRMPost('/api/read-model/cp/query','query',cpRMQueryBody(spec,0,CP_RM_WINDOW)).then(payload=>{
+    if(seq!==cpRM.seq)return;
+    cpRM.generation=String(payload.generation||'');
+    const result=payload.result||{};
+    cpRMResetStore(signature,spec,result);
+    cpRMPlace(0,cpRMDecorate(result.rows||[],result.computed));
+    cpRM.windows.add(0);
+    window.BLModulePreparation?.setStatus('cp','ready');
+    if(currentActiveTab()!=='cp'){_deferredTabRenders.add('cp');return;}
+    cpRMPaintTable();
+    cpRecordRowsVisible('readModel',started,{rows:cpRM.total,queryMs:payload.timing&&payload.timing.queryMs,computeMs:payload.timing&&payload.timing.computeMs,reused:payload.timing&&payload.timing.reused===true});
+    cpRMRequestFacets(spec,signature);
+  }).catch(error=>{
+    if(seq!==cpRM.seq)return;
+    // Sunucu bu sorguyu değerlendiremiyor (desteklenmeyen filtre ya da sınır aşımı): bu sorgu
+    // için eski yol. Tercih yazılamadıysa (alt PR 1) oturum boyunca eski yol.
+    if(error&&(error.status===400||error.code==='CP_COMPUTED_PREFERENCES_UNSAVED')){
+      cpRM.legacyReason='server:'+(error.code||'400');cpRM.signature='';
+      if(error.status===400)cpRM.unsupportedSignature=signature;else cpRMEnabledCache=false;
+      if(!state.cp)void ensureCpLoaded();else renderCPNow();
+      return;
+    }
+    const message=(appLang==='en'?'CP could not be loaded: ':'CP yüklenemedi: ')+(error&&error.message||error);
+    if(!cpRM.rows)renderCpLoadError('CP_READ_MODEL_FAILED');
+    showToast(message);
+  });
+  return true;
+}
+/* Tümünü seç / kopyala / Excel: eşleşen TÜM satırlar arka uçtan sayfa sayfa (1000) akar;
+   eksik aralıklar yerinde doldurulur. Tam satırlar bellekteyse yalnız kimlikler istenir. */
+async function cpRMEnsureRange(start,end){
+  const signature=cpRM.signature;
+  end=Math.min(end,cpRM.total);
+  const missing=[];
+  for(let i=Math.max(0,start);i<end;i++){
+    const row=cpRM.rows[i];
+    if(row&&row._rmPending){
+      const pageStart=i;let pageEnd=i;
+      while(pageEnd<end&&pageEnd-pageStart<CP_RM_BULK_PAGE&&cpRM.rows[pageEnd]&&cpRM.rows[pageEnd]._rmPending)pageEnd++;
+      missing.push([pageStart,pageEnd]);i=pageEnd-1;
+    }
+  }
+  for(const [from,to] of missing){
+    const result=await cpRMFetchRange(from,to-from);
+    if(!result||signature!==cpRM.signature)return false;
+    cpRMPlace(result.offset,cpRMDecorate(result.rows||[],result.computed));
+  }
+  cpRMScheduleRepaint();
+  return signature===cpRM.signature;
+}
+async function cpRMLoadAllRows(){
+  if(!cpRM.rows)return [];
+  const signature=cpRM.signature;
+  if(cpRM.materialized&&cpRM.materialized.signature===signature)return cpRM.materialized.rows;
+  const ok=await cpRMEnsureRange(0,cpRM.total);
+  if(!ok||signature!==cpRM.signature)throw new Error(appLang==='en'?'The table changed while rows were loading.':'Satırlar yüklenirken tablo değişti.');
+  cpRM.materialized={signature,rows:cpRM.rows.slice()};
+  return cpRM.materialized.rows;
+}
+async function cpRMLoadAllIdRows(){
+  if(!cpRM.rows)return [];
+  const materialized=cpRMMaterializedRows();if(materialized)return materialized;
+  const signature=cpRM.signature,out=[];
+  for(let offset=0;offset<cpRM.total;offset+=CP_RM_BULK_PAGE){
+    const result=await cpRMFetchRange(offset,CP_RM_BULK_PAGE,{fields:['_id']});
+    if(!result||signature!==cpRM.signature)throw new Error(appLang==='en'?'The table changed while rows were loading.':'Satırlar yüklenirken tablo değişti.');
+    (result.rows||[]).forEach(row=>out.push({_id:row._id}));
+  }
+  return out;
+}
+function cpRMSelectionRows(){
+  const materialized=cpRMMaterializedRows();if(materialized)return materialized;
+  return cpRM.rows&&cpRM.rows.every(row=>!row._rmPending)?cpRM.rows:null;
+}
+function cpRMWindowedActive(){
+  return cpReadModelEnabled()&&!cpRM.legacyReason&&Boolean(cpRM.rows)&&currentActiveTab()==='cp'
+    &&document.getElementById('cpTable')?._blRenderedRowsSource===cpRM.rows;
+}
+// Kayıt okuyan eylemlerden (Excel, Kopyala) önce: işaretli satır varsa seçim tam veri
+// kümesinden çözülür (managedSelectionSourceRows); yoksa eşleşen satırlar akışla gelir.
+async function cpPrepareAllRows(){
+  if(!cpRMWindowedActive())return true;
+  try{
+    if(state.cpSelected&&state.cpSelected.size){return Boolean(state.cp||await ensureCpLoaded({deferRender:true}));}
+    await cpRMLoadAllRows();return true;
+  }catch(error){showToast((appLang==='en'?'Rows could not be loaded: ':'Satırlar yüklenemedi: ')+(error&&error.message||error));return false;}
+}
+async function cpRMCopyAll(info){
+  if(!await cpPrepareAllRows()){window.BLTableToolbarActionCleanup?.finish?.('navCopy',false);return;}
+  await copyManagedTableLikeExcel(info.tableKey,info.rowsFn(),info.selSet(),'navCopy');
+}
+async function cpRMPrepareRange(range,rows){
+  if(!cpRMWindowedActive()||!range)return true;
+  const list=Array.isArray(rows)?rows:cpRM.rows,pending=[];
+  for(let i=Math.max(0,range.startRow);i<=range.endRow&&i<list.length;i++)if(list[i]&&list[i]._rmPending)pending.push(i);
+  if(!pending.length)return true;
+  const indexes=pending.map(i=>list[i]._rmIndex);
+  if(!await cpRMEnsureRange(Math.min(...indexes),Math.max(...indexes)+1))return false;
+  pending.forEach(i=>{const row=cpRM.rows[list[i]._rmIndex];if(row&&!row._rmPending)list[i]=row;});
+  return true;
+}
+function cpRMMaterializedRows(){
+  if(!cpRMWindowedActive())return null;
+  const materialized=cpRM.materialized;
+  return materialized&&materialized.signature===cpRM.signature?materialized.rows:null;
+}
+// Sütun paneli değer listesi tam satırlardan (eski evren) hesaplanır: satırlar yoksa önce yüklenir.
+function cpRMOpenHeaderFilter(key,anchorEl,rerenderOuter){
+  if(!cpRMWindowedActive()||state.cp)return false;
+  anchorEl?.setAttribute?.('aria-busy','true');
+  void ensureCpLoaded({deferRender:true}).then(ok=>{
+    if(ok&&anchorEl&&anchorEl.isConnected&&currentActiveTab()==='cp')openHeaderFilter('cp',key,anchorEl,rerenderOuter);
+  }).finally(()=>anchorEl?.removeAttribute?.('aria-busy'));
+  return true;
+}
+function cpRMAdoptFullRows(){
+  if(!cpRM.rows)return;
+  let changed=false;
+  for(let i=0;i<cpRM.rows.length;i++){
+    const row=cpRM.rows[i];if(!row||row._rmPending)continue;
+    const full=cpRMFullRow(row);
+    if(full&&full!==row){
+      // Pencerenin arka uç değerleri tam satıra taşınır (ekrandaki öncelik/checklist aynı kalır).
+      for(const key of ['Priority','_calculationStatus','_trackingTags','_priorityTags','_actionPriorityReasons','_actionPrioritySignals','_unifiedBasePriority'])full[key]=row[key];
+      for(const key of Object.keys(row))if(key.startsWith('__checklist__'))full[key]=row[key];
+      for(const key of [...CP_COMPUTED_HIDDEN,'_checklistSingleSet','_cpOrderKey','_cpOptionId'])if(Object.prototype.hasOwnProperty.call(row,key))Object.defineProperty(full,key,{value:row[key],enumerable:false,configurable:true,writable:true});
+      cpRM.rows[i]=full;changed=true;
+    }
+  }
+  if(changed){cpRM.materialized=null;cpRMScheduleRepaint();}
+}
+function cpRMInvalidate(reason){
+  cpRM.epoch++;cpRM.seq++;cpRM.facetsSeq++;cpRM.signature='';cpRM.facets=null;cpRM.facetsKey='';cpRM.materialized=null;cpRM.unsupportedSignature='';
+  window.BLPerf?.mark?.('CP_READ_MODEL_INVALIDATED',{reason:reason||'data'});
+}
+// Veri değişimi (tam satır yüklemesi, sunucu/eş senkronu, transit kuralı): pencereler ve sayaçlar geçersiz.
+window.addEventListener('bl:global-flow-data-changed',event=>{
+  const detail=event&&event.detail||{},reason=detail.reason;
+  if(!CP_RM_DATA_REASONS.has(reason)||!cpReadModelEnabled())return;
+  const active=cpRMWindowedActive();
+  if(reason==='cp-projection-loaded')cpRMAdoptFullRows();
+  else cpRMInvalidate(reason);
+  if(active&&reason!=='cp-projection-loaded')queueMicrotask(()=>{if(currentActiveTab()==='cp')renderCP();});
+});
+// Kişisel karar bağlamı (tercih, kural, checklist cevabı): hesaplanmış sütunlar arka uçta yeniden.
+function cpRMOnDecisionContextChanged(){
+  if(!cpReadModelEnabled()||!cpRM.rows)return false;
+  const active=cpRMWindowedActive();
+  cpRMInvalidate('personal-decision-context');
+  if(active)queueMicrotask(()=>{if(currentActiveTab()==='cp')renderCP();});
+  return active;
+}
+document.addEventListener('bl:language-changed',()=>{if(cpReadModelEnabled()&&cpRM.rows){cpRMInvalidate('language');if(currentActiveTab()==='cp')renderCP();}});
+window.BLCpReadModel={
+  isEnabled:cpReadModelEnabled,
+  setEnabled(value){
+    try{(window.BLStorage||localStorage).setItem(CP_RM_STORAGE_KEY,value?'1':'0');}catch(_){}
+    cpRMEnabledCache=Boolean(value);
+    cpRMInvalidate('toggle');cpRM.rows=null;cpRM.legacyReason='';renderCP();return cpReadModelEnabled();
+  },
+  status:()=>({enabled:cpReadModelEnabled(),windowed:cpRMWindowedActive(),legacyReason:cpRM.legacyReason,total:cpRM.total,
+    loadedWindows:cpRM.windows.size,generation:cpRM.generation,fullRows:Boolean(state.cp)}),
+};
 
 // ================= ORDERS / SİPARİŞLER =================
 function migrateLegacyOrdersQuickFilters(){
@@ -16037,6 +16562,7 @@ function registerManagedGridClipboard(tableId,tableKey){
     selectionChanged:size=>updateGridSelectionStatus(tableKey,size),
     // #1076: pencereli Siparişler'de kopyalanacak aralıktaki boş satırlar önce doldurulur.
     ...(tableKey==='orders'?{prepareRange:(range,rows)=>ordersRMPrepareRange(range,rows)}:{}),
+    ...(tableKey==='cp'?{prepareRange:(range,rows)=>cpRMPrepareRange(range,rows)}:{}), // #1078
     pasteTarget:tableKey==='cp'?cpPasteTarget:ordersPasteTarget,
     pasteValue:cpPasteValue,
     applyPaste:tableKey==='cp'?applyCpGridPaste:applyOrdersGridPaste,
@@ -24293,6 +24819,7 @@ async function exportActiveTableStyled(){
   if(!cfg){ showToast('Bu sayfada dışa aktarılacak tablo yok.'); return; }
   // #1076: pencereli Siparişler'de eşleşen tüm satırlar önce arka uçtan akar.
   if(tab==='orders'&&!(await ordersPrepareAllRows()))return;
+  if(tab==='cp'&&!(await cpPrepareAllRows()))return; // #1078
   return await exportStyledDomTable(cfg.sel, {
     selectedSet:cfg.set, fileBase:cfg.name, sheetName:cfg.name.replace(/_/g,' ').slice(0,30), idAttr:cfg.idAttr,
     tableKey:cfg.tableKey, records:cfg.rowsFn?(cfg.set?.size?managedSelectionSourceRows(tab):cfg.rowsFn()):null, computeFn:cfg.computeFn||null,

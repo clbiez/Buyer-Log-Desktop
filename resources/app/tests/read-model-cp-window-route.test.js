@@ -193,3 +193,20 @@ test('real compute-pool worker: cp-query task is registered and shares the compu
     assert.deepEqual(names,['read-model-cp-query','read-model-cp-query:buffer','read-model-cp-query']);
   }finally{await pool.close();}
 });
+
+test('footer totals: the cp-query copy of the accumulator equals WS3 orders-facets on the same rows (edge values)',()=>{
+  const ordersFacets=require('../server/lib/read-model/orders-facets');
+  const rows=[
+    {_id:1,'Order Quantity':0,'FOB ($)':5,'Supp. FOB':'4,5','Remaining Units':'1.234',STATUS:'Üretimde'},
+    {_id:2,'Order Quantity':-3,'FOB ($)':7,'Supp. FOB':'','Remaining Units':'1.234,5',STATUS:'Depoda'},
+    {_id:3,'Order Quantity':'1.200','FOB ($)':'1.234,50','Supp. FOB':null,'Remaining Units':null},
+    {_id:4,'Order Quantity':'2,5','FOB ($)':-1,'Supp. FOB':'3.5','Remaining Units':' 12 '},
+    {_id:5,'Order Quantity':10,'FOB ($)':'abc','Supp. FOB':'1.2.3','Remaining Units':'1.000.000'},
+    {_id:5,'Order Quantity':4,'FOB ($)':2,'Supp. FOB':2,'Remaining Units':4},
+  ];
+  const footer={sums:['Order Quantity','Remaining Units'],averages:[{key:'FOB ($)',qtyKey:'Order Quantity'},{key:'Supp. FOB',qtyKey:'Order Quantity'}],selected:['5','2','99']};
+  const expected=ordersFacets.runOrdersFacets(engine.prepareDataset(rows),{version:1,today:'2026-11-20',footer}).footer;
+  const helpers={computedOf:()=>({priority:'ON_TRACK',priorityTags:[],trackingTags:[]}),code:v=>v||'',rank:()=>0,codes:()=>['ON_TRACK']};
+  const actual=cpQuery.runCpFacets({rows},{version:1,today:'2026-11-20',footer},helpers).footer;
+  assert.deepEqual(actual,expected);
+});

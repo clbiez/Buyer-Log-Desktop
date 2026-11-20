@@ -257,5 +257,7 @@ test('decision-context listener hook: legacy render unless back-end columns are 
   await api.computed().job?.promise;
   assert.equal(calls.flush,2);
   // Kaynaktan çıkarılan eski testler için: sağlayıcı yoksa dinleyici eski yolu izler.
-  assert.match(SOURCE,/if\(!window\.BLCpComputedColumns\?\.onDecisionContextChanged\?\.\(event\)&&currentActiveTab\(\)==='cp'\)renderCP\(\);/);
+  // Alt PR 2: pencereli CP de bağlam değişiminde arka uçtan yeniden sorgular; ikisi de işlemezse eski çizim.
+  assert.match(SOURCE,/const computedHandled=window\.BLCpComputedColumns\?\.onDecisionContextChanged\?\.\(event\);/);
+  assert.match(SOURCE,/if\(!cpRMOnDecisionContextChanged\(\)&&!computedHandled&&currentActiveTab\(\)==='cp'\)renderCP\(\);/);
 });
