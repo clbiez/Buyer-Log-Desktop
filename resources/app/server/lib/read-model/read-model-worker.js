@@ -73,7 +73,7 @@ if(parentPort)parentPort.on('message',message=>{
 });
 // Asenkron görevler (karar barındırıcısı kurar); aynı veri kümesi önbelleğini paylaşır.
 // Genel Bakış modeli (#1074), CP hesaplanmış sütunlar (#1078).
-const ASYNC_TASKS={'read-model-overview':'./overview-model-task','read-model-cp-computed':'./cp-computed-task'};
+const ASYNC_TASKS={'read-model-overview':'./overview-model-task','read-model-cp-computed':'./cp-computed-task','read-model-cp-query':'./cp-query-task'};
 if(parentPort)parentPort.on('message',message=>{
   if(message?.type!=='run'||!Object.hasOwn(ASYNC_TASKS,message.task))return;
   const start=performance.now();
