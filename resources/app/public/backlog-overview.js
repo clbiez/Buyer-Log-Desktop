@@ -22,7 +22,7 @@ const n=v=>nf.format(Number(v)||0);
 const pct=v=>v==null||!Number.isFinite(v)?'—':'%'+pf.format(v*100);
 const R=()=>window.BLBacklogV3Report;
 let state=loadState();
-let baseItems=null,items=null,loading=false,error='',signature='',tips=new Map(),openers=new Map(),seq=0,bound=false;
+let baseItems=null,model=null,remote=null,loading=false,error='',signature='',tips=new Map(),openers=new Map(),seq=0,bound=false;
 let filterCatalog=null,filterCatalogPromise=null,filterCatalogError='',filterOpen=false,filterSource='cp',filterSearch='',filterEditorId='',filterValueSearch='';
 const filterFacets=new Map();
 let refreshGeneration=0,sourceRevision='',catalogGeneration=0,overviewRequest=null;
@@ -117,15 +117,9 @@ function renderFavoriteBar(){
 
 /* ------------------------------------------------ Ortak Backlog analiz filtreleri */
 function overviewFilters(){return Array.isArray(state.filters)?state.filters:[]}
-function filterValueKey(value){
-  if(value==null||value==='')return '';
-  if(value instanceof Date&&!Number.isNaN(value.getTime()))return R()?.dayIso(value)||String(value);
-  if(typeof value==='object'){try{return JSON.stringify(value)}catch(_){return String(value)}}
-  return String(value);
-}
-function filterHasCriteria(filter){
-  return !!filter&&(Array.isArray(filter.values)&&filter.values.length>0||!!filter.from||!!filter.to);
-}
+// Filtre kuralı panel ve okuma modeli işçisinde aynıdır: BLBacklogV3Report (#1079 WS6c).
+function filterValueKey(value){return R().filterValueKey(value)}
+function filterHasCriteria(filter){return R().filterHasCriteria(filter)}
 function activeFilterCount(){return overviewFilters().filter(filterHasCriteria).length}
 function updateFilterButton(){
   const btn=$('backlogOverviewFilter'),badge=$('backlogOverviewFilterCount'),count=activeFilterCount();
@@ -164,19 +158,17 @@ async function ensureFilterValues(filter){
   renderFilterPanel();return entry.promise;
 }
 function filterRawValue(item,filter){return item&&item.row?item.row[filter.rowKey]:null}
-function filterDay(value){try{return R()?.dayIso(value)||''}catch(_){return ''}}
+// Faset türü (sunucu) > okuma modelinin çıkardığı tür > yerel satırlardan çıkarım.
+function knownFilterKinds(){
+  const out={};
+  for(const filter of overviewFilters()){const facet=filterFacet(filter);if(facet?.data?.kind)out[filter.id]=facet.data.kind;}
+  return out;
+}
 function filterKind(filter){
   const facet=filterFacet(filter);if(facet?.data)return facet.data.kind;
-  const rows=Array.isArray(baseItems)?baseItems:[],values=[];
-  for(const item of rows){
-    const value=filterRawValue(item,filter);
-    if(value!=null&&value!=='')values.push(value);
-    if(values.length>=160)break;
-  }
-  if(!values.length)return /tarih|date|factory|arrival|depo|store|opd|handover/i.test(String(filter.header||filter.label||''))?'date':'values';
-  let dates=0;
-  for(const value of values)if(filterDay(value))dates++;
-  return dates/values.length>=.8?'date':'values';
+  if(Array.isArray(baseItems))return R().inferFilterKind(baseItems,filter);
+  const inferred=model&&model.filterKinds&&model.filterKinds[filter.id];
+  return inferred||R().inferFilterKind([],filter);
 }
 function distinctFilterValues(filter){
   const facet=filterFacet(filter);
@@ -191,29 +183,6 @@ function distinctFilterValues(filter){
 }
 /* Özel sipariş kapsamı: Tümü · yalnız özel (BTS, Bayram …) · yalnız Regular. */
 function importanceScope(){return ['special','regular'].includes(state.importanceScope)?state.importanceScope:'all'}
-function applyOverviewFilters(rows){
-  let out=Array.isArray(rows)?rows.slice():[];
-  const scope=importanceScope();
-  if(scope==='special')out=out.filter(item=>item.special);
-  else if(scope==='regular')out=out.filter(item=>!item.special);
-  for(const filter of overviewFilters()){
-    if(!filterHasCriteria(filter))continue;
-    const kind=filterKind(filter);
-    if(kind==='date'&&(filter.from||filter.to)){
-      out=out.filter(item=>{
-        const day=filterDay(filterRawValue(item,filter));
-        if(!day)return false;
-        if(filter.from&&day<filter.from)return false;
-        if(filter.to&&day>filter.to)return false;
-        return true;
-      });
-    }else if(Array.isArray(filter.values)&&filter.values.length){
-      const selected=new Set(filter.values.map(String));
-      out=out.filter(item=>selected.has(filterValueKey(filterRawValue(item,filter))));
-    }
-  }
-  return out;
-}
 let sharedFilterTimer=0;
 function reapplyOverviewFilters(){
   cancelOverviewRequest();saveState();loading=true;signature='';render();
@@ -278,12 +247,29 @@ window.BLBacklogRows={load:loadRows,loadData,invalidate:()=>rowsCache.clear()};
 
 function queryParams(){try{return typeof backlogExportQueryParams==='function'?backlogExportQueryParams():null;}catch(_){return null;}}
 function visible(){const c=$('backlogContent');return !!c&&c.style.display!=='none'&&!!c.offsetParent;}
+/* #1079 WS6c — BL_READ_MODEL_BACKLOG_V3 (varsayılan AÇIK). Açıkken panel satır listesi
+   indirmez: görünüm modeli yerel arka ucun okuma modeli işçisinde AYNI BLBacklogV3Report
+   koduyla hesaplanır, tarayıcıya yalnız sonuç gelir; drill-down satırları tıklanınca yüklenir.
+   Kapalıyken (geri dönüş) satırlar /api/backlog-export'tan alınır ve model burada kurulur.
+   Geri dönüş: window.BL_READ_MODEL_BACKLOG_V3=false ya da yerel tercih buyerlog.readModel.backlogV3.v1='0'. */
+function backendModelEnabled(){
+  if(typeof window.BL_READ_MODEL_BACKLOG_V3==='boolean')return window.BL_READ_MODEL_BACKLOG_V3;
+  try{return localStorage.getItem('buyerlog.readModel.backlogV3.v1')!=='0';}catch(_){return true;}
+}
+const V3_MODEL_URL='/api/read-model/backlog/v3';
+function viewState(){
+  return {lang:lang(),groupBy:state.groupBy,timeField:state.timeField,granularity:state.granularity,timelineDimension:state.timelineDimension,
+    importanceScope:importanceScope(),filters:overviewFilters().map(f=>({...f,values:[...(f.values||[])]})),filterKinds:knownFilterKinds(),today:R().dayIso(new Date())};
+}
+function priorityStampKey(){const api=priorityIndex();return priorityStatus()+':'+(api&&typeof api.revision==='function'?String(api.revision()):'');}
+function currentViewKey(){return JSON.stringify([viewState(),priorityStampKey()]);}
 async function refresh(force){
+  if(backendModelEnabled())return refreshRemote(force);
   const host=$('backlogOverviewBody');if(!host||!state.open)return;
   const params=overviewQueryParams();if(!params){return;}
   const sig=JSON.stringify(params);
   cancelOverviewRequest();const generation=refreshGeneration;
-  if(!force&&sig===signature&&baseItems){loading=false;error='';items=applyOverviewFilters(baseItems);return render();}
+  if(!force&&sig===signature&&baseItems){loading=false;error='';return render();}
   const request=new AbortController();overviewRequest=request;
   loading=true;error='';render();
   try{
@@ -294,10 +280,76 @@ async function refresh(force){
     if(!R())throw new Error(L('Backlog V3 rapor motoru yüklenemedi.','Backlog V3 report engine could not be loaded.'));
     // Aynı satır dizisi (aynı sunucu revizyonu) zaten normalleştirildiyse tekrarlanmaz.
     if(!(rows===normalizedRows&&baseItems))baseItems=R().normalizeRows(rows);
-    normalizedRows=rows;items=applyOverviewFilters(baseItems);signature=sig;
-  }catch(err){if(generation!==refreshGeneration)return;error=String(err&&err.message||err);baseItems=null;items=null;}
+    normalizedRows=rows;signature=sig;
+  }catch(err){if(generation!==refreshGeneration)return;error=String(err&&err.message||err);baseItems=null;model=null;}
   finally{if(overviewRequest===request)overviewRequest=null;if(generation===refreshGeneration){loading=false;render();}}
 }
+async function postModel(body,signal){
+  const res=await fetch(V3_MODEL_URL,{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok)throw new Error(lang()==='en'&&data.errorEn?data.errorEn:(data.error||`HTTP ${res.status}`));
+  return data;
+}
+/* Öncelik: CP öncelik dizini yalnız tarayıcıdadır. Sunucu, kayıtların öncelik anahtarlarını
+   (sipariş · model · renk) bir kez gönderir; isabetler burada aynı priorityAnnotation ile
+   hesaplanır ve sözlük + anahtar başına indeks olarak geri gider. Dizin ya da veri kümesi
+   değişince tablo yeniden kurulur. */
+let priorityTable=null;
+function resolveTags(code,tags,tracking){return window.BLOrderDecisionEngine.resolvePriorityTags(code,tags,tracking);}
+function priorityRanks(codes){
+  for(const entry of priorityIndex()?.catalog?.()||[])if(entry&&entry.id)codes.add(entry.id);
+  return Object.fromEntries([...codes].filter(Boolean).map(code=>[code,priorityRank(code)]));
+}
+function priorityRequest(){
+  const ready=priorityStatus()==='ready',out={ready,empty:R().priorityAnnotation(null,resolveTags)};
+  const table=ready&&priorityTable&&remote&&priorityTable.dataset===remote.dataset&&priorityTable.stamp===priorityStampKey()?priorityTable:null;
+  if(table)Object.assign(out,{keysToken:table.dataset,table:table.table,index:table.index});
+  out.ranks=priorityRanks(new Set(table?table.codes:[]));
+  return out;
+}
+async function buildPriorityTable(keys,dataset,signal){
+  const api=priorityIndex(),stamp=priorityStampKey(),table=[],seen=new Map(),index=new Array(keys.length),codes=new Set();
+  for(let i=0;i<keys.length;i++){
+    // Uzun görev oluşturmamak için parçalara bölünür.
+    if(i&&i%2500===0){await new Promise(resolve=>setTimeout(resolve,0));assertRequest(signal);}
+    const [orderCode,modelName,colourCode]=String(keys[i]).split('\u001f');
+    const annotation=R().priorityAnnotation(api.lookup(orderCode,modelName,colourCode),resolveTags),sig=JSON.stringify(annotation);
+    let at=seen.get(sig);
+    if(at===undefined){at=table.length;table.push(annotation);seen.set(sig,at);[annotation.priorityCode,...annotation.priorityTags,...annotation.trackingTags].forEach(code=>code&&codes.add(code));}
+    index[i]=at;
+  }
+  return {dataset,stamp,table,index:index.join(','),codes:[...codes]};
+}
+async function refreshRemote(force){
+  const host=$('backlogOverviewBody');if(!host||!state.open)return;
+  const params=overviewQueryParams();if(!params){return;}
+  const sig=JSON.stringify(params),viewKey=currentViewKey();
+  cancelOverviewRequest();const generation=refreshGeneration;
+  if(!force&&remote&&remote.sig===sig&&remote.viewKey===viewKey){loading=false;error='';model=remote.model;return render();}
+  const request=new AbortController();overviewRequest=request;
+  // Görünüm değişiminde (gruplama, zaman alanı, dil …) mevcut model yanıt gelene kadar görünür kalır.
+  if(!(remote&&remote.sig===sig)||force){loading=true;error='';render();}
+  try{
+    if(window.BLPerf?.ensureFeature)await window.BLPerf.ensureFeature('backlogAnalysis').catch(()=>null);
+    assertRequest(request.signal);if(force)window.BLBacklogRows.invalidate();
+    const body=()=>({version:1,query:params,view:viewState(),priority:priorityRequest()});
+    let data=await postModel(body(),request.signal);
+    if(generation!==refreshGeneration)return;
+    remote={sig,viewKey,model:data.model,dataset:data.dataset};model=data.model;signature=sig;
+    if(data.priority&&data.priority.needKeys&&Array.isArray(data.keys)){
+      // Model öncelik etiketleri hazırlanırken çizilir; etiketler ikinci yanıtla gelir.
+      loading=false;error='';render();
+      priorityTable=await buildPriorityTable(data.keys,data.dataset,request.signal);
+      if(generation!==refreshGeneration)return;
+      data=await postModel(body(),request.signal);
+      if(generation!==refreshGeneration)return;
+      remote={sig,viewKey,model:data.model,dataset:data.dataset};model=data.model;
+    }
+  }catch(err){if(generation!==refreshGeneration)return;error=String(err&&err.message||err);remote=null;model=null;}
+  finally{if(overviewRequest===request)overviewRequest=null;if(generation===refreshGeneration){loading=false;render();}}
+}
+// Görünüm seçimi değişti: yerel modelde yeniden çizim, arka uç modelinde yeni sonuç.
+function updateView(){if(backendModelEnabled())void refresh(false);else render();}
 let pendingTimer=0,lastData=null,normalizedRows=null;
 function onBacklogRendered(data){
   $('backlogContent')?.classList.add('has-blv');
@@ -310,7 +362,7 @@ function onBacklogRendered(data){
       if(sourceRevision){++catalogGeneration;filterCatalog=null;filterCatalogPromise=null;}
       sourceRevision=data?.rowsInputRevision||'';window.BLBacklogRows.invalidate();filterFacets.clear();
     }
-    signature='';
+    signature='';remote=null;
     if(filterOpen){void ensureFilterCatalog().then(()=>ensureFilterValues(overviewFilters().find(f=>f.id===filterEditorId))).catch(()=>{});renderFilterPanel();}
   }
   clearTimeout(pendingTimer);
@@ -352,16 +404,18 @@ function annotatePriorities(list){
   if(list[0]&&list[0]._priorityStamp===stamp&&stamp===priorityStamp)return;
   const ready=!!(api&&api.ready&&api.ready());
   for(const item of list){
-    const hit=ready?api.lookup(item.orderCode,item.modelName,item.colourCode):null;
-    const code=hit&&hit.priority||'';
-    item.priorityCode=code;
     // 'cp' = CP (checklist dahil) · 'orders' = Siparişler (aynı kurallar, checklist hariç)
-    item.prioritySource=hit&&hit.source||'';
-    item.trackingTags=hit&&Array.isArray(hit.trackingTags)?hit.trackingTags.filter(tag=>tag&&tag!==code):[];
-    item.priorityTags=window.BLOrderDecisionEngine.resolvePriorityTags(code,hit?.priorityTags,item.trackingTags).visible;
+    R().applyPriorityAnnotation(item,R().priorityAnnotation(ready?api.lookup(item.orderCode,item.modelName,item.colourCode):null,resolveTags));
     item._priorityStamp=stamp;
   }
   priorityStamp=stamp;
+}
+/* Geri dönüş yolu: tarayıcıdaki satırlardan aynı görünüm modeli. */
+function localModel(){
+  annotatePriorities(baseItems);
+  const codes=new Set();
+  for(const item of baseItems)[item.priorityCode,...(item.priorityTags||[]),...(item.trackingTags||[])].forEach(code=>code&&codes.add(code));
+  return R().panelModel(baseItems,{...viewState(),priorityReady:priorityStatus()==='ready',ranks:priorityRanks(codes)});
 }
 function ensurePriorityIndex(){
   const api=priorityIndex();
@@ -370,39 +424,25 @@ function ensurePriorityIndex(){
     if(!ok){priorityEnsureFailed=true;if(visible())render();}
   }).catch(()=>{priorityEnsureFailed=true;if(visible())render();});
 }
-/* Görünen etiketler: Yolunda dışındaki bütün öncelik ve takip etiketleri,
-   kullanıcının katalogdaki sırasıyla. Bir satır birden çok takip etiketi
-   taşıyabildiği için etiket toplamları toplam adede eşit olmak zorunda değildir. */
-function priorityTagGroups(list){
-  const map=new Map();
-  for(const item of list||[]){
-    for(const code of item.priorityTags||[]){
-      if(code==='ON_TRACK')continue;
-      if(!map.has(code))map.set(code,[]);
-      map.get(code).push(item);
-    }
-  }
-  return [...map.entries()].map(([code,group])=>({code,items:group,qty:group.reduce((t,it)=>t+(Number(it.qty)||0),0),orders:new Set(group.map(it=>it.orderCode||it.lineId)).size}))
-    .filter(g=>g.qty>0)
-    .sort((a,b)=>priorityRank(a.code)-priorityRank(b.code)||a.code.localeCompare(b.code));
-}
 /* Kutucuk ipucu: adedin hangi kaynaktan geldiği. Siparişler kaynağı checklist'e
-   bağlı kuralları içermez; bu fark kullanıcıya açıkça söylenir. */
-function prioritySourceTitle(list){
-  let cp=0,orders=0;
-  for(const it of list||[]){if(it.prioritySource==='orders')orders+=Number(it.qty)||0;else cp+=Number(it.qty)||0;}
+   bağlı kuralları içermez; bu fark kullanıcıya açıkça söylenir. Etiket gruplaması
+   (Yolunda hariç, katalog sırası) BLBacklogV3Report.panelModel'dedir. */
+function prioritySourceTitle(tag){
+  const cp=tag.cpQty,orders=tag.ordersQty;
   const lines=[L(`CP: ${n(cp)} adet`,`CP: ${n(cp)} pcs`)];
   if(orders)lines.push(L(`Siparişler (checklist hariç): ${n(orders)} adet`,`Orders (excluding checklist): ${n(orders)} pcs`));
   return lines.join('\n');
 }
+// Model öncelik taşımıyorsa: dizin hazırsa etiketler hazırlanıyor, değilse dizinin durumu.
+function modelPriorityStatus(m){const status=priorityStatus();return m&&m.priority?'ready':status==='ready'?'pending':status;}
 function priorityTone(code){const meta=priorityMeta(code);return meta&&meta.tone?String(meta.tone):'gray';}
-function priorityTiles(s,tile,by){
-  const status=priorityStatus();
+function priorityTiles(m,tile,by){
+  const s=m.total,status=modelPriorityStatus(m);
   if(status!=='ready'){
     const sub=status==='pending'?L('CP öncelikleri hazırlanıyor…','Preparing CP priorities…'):L('Öncelik etiketleri için CP verisi gerekli','CP data is required for priority tags');
     return `<div class="bpaTile blvTile blvPriorityTile is-muted" data-priority-tone="gray" role="status"><span class="bpaTileValue">—</span><span class="bpaTileLabel">${esc(L('Öncelik etiketleri','Priority tags'))}</span><span class="bpaTileSub">${esc(sub)}</span></div>`;
   }
-  const groups=priorityTagGroups(items);
+  const groups=m.priority.tags;
   if(!groups.length)return `<div class="bpaTile blvTile blvPriorityTile is-muted" data-priority-tone="green" role="status"><span class="bpaTileValue">0</span><span class="bpaTileLabel">${esc(L('Öncelik etiketli adet','Priority-tagged qty'))}</span><span class="bpaTileSub">${esc(L('Bu kapsamda etiketli sipariş yok','No tagged orders in this scope'))}</span></div>`;
   const shown=groups.length>PRIORITY_TILE_LIMIT?groups.slice(0,PRIORITY_TILE_LIMIT-1):groups;
   const rest=groups.slice(shown.length);
@@ -410,41 +450,39 @@ function priorityTiles(s,tile,by){
   const html=shown.map(g=>{
     const label=priorityLabel(g.code),tracking=priorityMeta(g.code)?.usage==='tracking';
     const sub=L(`${n(g.orders)} sipariş · ${share(g.qty)}${tracking?' · takip':''}`,`${n(g.orders)} orders · ${share(g.qty)}${tracking?' · tracking':''}`);
-    return tile(n(g.qty),label,sub,'',by(label,it=>(it.priorityTags||[]).includes(g.code)),g.code,prioritySourceTitle(g.items));
+    return tile(n(g.qty),label,sub,'',by(label,{k:'tags',codes:[g.code]}),g.code,prioritySourceTitle(g));
   });
   if(rest.length){
-    const codes=new Set(rest.map(g=>g.code)),qty=new Set(rest.flatMap(g=>g.items));
-    const restQty=[...qty].reduce((t,it)=>t+(Number(it.qty)||0),0);
     const label=L(`Diğer ${rest.length} etiket`,`${rest.length} more tags`);
-    html.push(tile(n(restQty),label,rest.map(g=>priorityLabel(g.code)).join(' · '),'',by(label,it=>(it.priorityTags||[]).some(code=>codes.has(code))),'__rest'));
+    html.push(tile(n(m.priority.rest.qty),label,rest.map(g=>priorityLabel(g.code)).join(' · '),'',by(label,{k:'tags',codes:rest.map(g=>g.code)}),'__rest'));
   }
   return html.join('');
 }
-function hero(s){
-  const st=s.stages;
+function hero(m){
+  const s=m.total,st=s.stages;
   const tile=(value,label,sub,stage,open,priority,title)=>`<button type="button" class="bpaTile blvTile${priority?' blvPriorityTile':''}"${title?` title="${esc(title)}"`:''}${stage?` data-stage="${stage}"`:''}${priority?` data-priority-tone="${esc(priority==='__rest'?'gray':priorityTone(priority))}" data-priority-code="${esc(priority)}"`:''}${open?` data-blv-open="${open}"`:''}><span class="bpaTileValue">${esc(value)}</span><span class="bpaTileLabel">${esc(label)}</span>${sub?`<span class="bpaTileSub">${esc(sub)}</span>`:''}</button>`;
-  const by=(title,filter)=>opener({title,subtitle:L('Backlog genel bakış','Backlog overview'),items:items.filter(filter)});
+  const by=(title,spec)=>opener({title,subtitle:L('Backlog genel bakış','Backlog overview'),spec});
   const share=v=>pct(s.qty?v/s.qty:null);
   return `<div class="bpaHero">
     <div class="bpaRing blvLoadRing blMotionEnter">${ring(s.loadedPct)}<div class="bpaRingText"><b>${esc(pct(s.loadedPct))}</b><span>${esc(L('yüklendi','loaded'))}</span></div><div class="bpaRingSub">${esc(L(`${n(s.orders)} sipariş · ${n(s.lines)} satır`,`${n(s.orders)} orders · ${n(s.lines)} lines`))}</div></div>
     <div class="bpaTiles">
-      ${tile(n(s.qty),L('Toplam adet','Total qty'),L(`${n(s.rows)} operasyon satırı`,`${n(s.rows)} operational rows`),'',by(L('Tüm Backlog','Entire Backlog'),()=>true))}
-      ${tile(n(st.PRODUCTION),stageLabel('PRODUCTION'),share(st.PRODUCTION),'PRODUCTION',by(stageLabel('PRODUCTION'),it=>it.stage==='PRODUCTION'))}
-      ${tile(n(st.LOADING),stageLabel('LOADING'),share(st.LOADING),'LOADING',by(stageLabel('LOADING'),it=>it.stage==='LOADING'))}
-      ${tile(n(st.IN_TRANSIT+st.CUSTOMS),L('Yolda + Gümrük','In transit + customs'),share(st.IN_TRANSIT+st.CUSTOMS),'IN_TRANSIT',by(L('Yolda + Gümrük','In transit + customs'),it=>it.stage==='IN_TRANSIT'||it.stage==='CUSTOMS'))}
-      ${tile(n(st.IN_WAREHOUSE+st.AWAITING_RETAIL_TRANSFER),L('Depoda + Retail bekleyen','Warehouse + awaiting retail'),share(st.IN_WAREHOUSE+st.AWAITING_RETAIL_TRANSFER),'IN_WAREHOUSE',by(L('Depoda + Retail bekleyen','Warehouse + awaiting retail'),it=>it.stage==='IN_WAREHOUSE'||it.stage==='AWAITING_RETAIL_TRANSFER'))}
-      ${tile(n(s.overdueQty),L('Ex-F geçti · yüklenmedi','Ex-F passed · not loaded'),L(`${n(s.overdueLines)} satır`,`${n(s.overdueLines)} lines`),'SHORTAGE',by(L('Ex-F geçti · yüklenmedi','Ex-F passed · not loaded'),it=>it.overdueNotLoaded))}
-      ${tile(n(s.specialQty),L('Özel siparişler','Special orders'),L(`${n(s.specialOrders)} sipariş · ${n(s.specialRiskOrders)} riskli`,`${n(s.specialOrders)} orders · ${n(s.specialRiskOrders)} at risk`),s.specialRiskOrders?'SHORTAGE':'',by(L('Özel siparişler','Special orders'),it=>it.special))}
-      ${priorityTiles(s,tile,by)}
+      ${tile(n(s.qty),L('Toplam adet','Total qty'),L(`${n(s.rows)} operasyon satırı`,`${n(s.rows)} operational rows`),'',by(L('Tüm Backlog','Entire Backlog'),{k:'all'}))}
+      ${tile(n(st.PRODUCTION),stageLabel('PRODUCTION'),share(st.PRODUCTION),'PRODUCTION',by(stageLabel('PRODUCTION'),{k:'stages',stages:['PRODUCTION']}))}
+      ${tile(n(st.LOADING),stageLabel('LOADING'),share(st.LOADING),'LOADING',by(stageLabel('LOADING'),{k:'stages',stages:['LOADING']}))}
+      ${tile(n(st.IN_TRANSIT+st.CUSTOMS),L('Yolda + Gümrük','In transit + customs'),share(st.IN_TRANSIT+st.CUSTOMS),'IN_TRANSIT',by(L('Yolda + Gümrük','In transit + customs'),{k:'stages',stages:['IN_TRANSIT','CUSTOMS']}))}
+      ${tile(n(st.IN_WAREHOUSE+st.AWAITING_RETAIL_TRANSFER),L('Depoda + Retail bekleyen','Warehouse + awaiting retail'),share(st.IN_WAREHOUSE+st.AWAITING_RETAIL_TRANSFER),'IN_WAREHOUSE',by(L('Depoda + Retail bekleyen','Warehouse + awaiting retail'),{k:'stages',stages:['IN_WAREHOUSE','AWAITING_RETAIL_TRANSFER']}))}
+      ${tile(n(s.overdueQty),L('Ex-F geçti · yüklenmedi','Ex-F passed · not loaded'),L(`${n(s.overdueLines)} satır`,`${n(s.overdueLines)} lines`),'SHORTAGE',by(L('Ex-F geçti · yüklenmedi','Ex-F passed · not loaded'),{k:'overdue'}))}
+      ${tile(n(s.specialQty),L('Özel siparişler','Special orders'),L(`${n(s.specialOrders)} sipariş · ${n(s.specialRiskOrders)} riskli`,`${n(s.specialOrders)} orders · ${n(s.specialRiskOrders)} at risk`),s.specialRiskOrders?'SHORTAGE':'',by(L('Özel siparişler','Special orders'),{k:'special'}))}
+      ${priorityTiles(m,tile,by)}
     </div>
   </div>`;
 }
 /* Veri kalitesi şeridi: hatalı/eksik kaynak verisi rapora sessizce girmesin. */
-function qualityStrip(){
-  const issues=R().dataQuality?R().dataQuality(items):[];
+function qualityStrip(m){
+  const issues=m.quality||[];
   if(!issues.length)return '';
   const chips=issues.map(issue=>{
-    const o=opener({title:lang()==='en'?issue.en:issue.tr,subtitle:L('Veri kalitesi','Data quality'),items:issue.items});
+    const o=opener({title:lang()==='en'?issue.en:issue.tr,subtitle:L('Veri kalitesi','Data quality'),spec:{k:'quality',key:issue.key}});
     return `<button type="button" class="blvQualityChip" data-blv-open="${o}"><b>${n(issue.count)}</b> ${esc(L('satır','lines'))} · ${esc(lang()==='en'?issue.en:issue.tr)}</button>`;
   }).join('');
   return `<div class="blvQuality" role="status"><span class="blvQualityTitle">${esc(L('Veri kalitesi uyarısı','Data quality warning'))}</span>${chips}<span class="blvQualityHint">${esc(L('Satırlar Excel Backlog V3 › Veri Kalitesi sayfasında da listelenir.','Rows are also listed in Excel Backlog V3 › Data Quality.'))}</span></div>`;
@@ -459,14 +497,13 @@ function importanceSelector(){
 function recoveryControls(){
   return `<div class="blvQuality">${importanceSelector()}<span class="bpaSectionSpacer"></span><button type="button" class="tbtn" data-blv-action="filters">${esc(L('Analiz filtrelerini düzenle','Edit analysis filters'))}</button>${activeFilterCount()?`<button type="button" class="tbtn" data-blv-action="clearFilters">${esc(L('Analiz filtrelerini temizle','Clear analysis filters'))}</button>`:''}</div>`;
 }
-function specialStrip(total){
-  const groups=R().importanceSummary?R().importanceSummary(items):[];
+function specialStrip(m){
+  const total=m.total;
   const seg=importanceSelector();
-  const risky=groups.filter(g=>g.riskItems.length);
+  const risky=m.special||[];
   const chips=risky.map(g=>{
-    const orders=new Set(g.riskItems.map(it=>it.orderCode||it.lineId)).size;
-    const o=opener({title:`${g.name} · ${L('riskli','at risk')}`,subtitle:L('Özel sipariş riski','Special order risk'),items:g.riskItems});
-    return `<button type="button" class="blvQualityChip blvSpecialChip" data-blv-open="${o}"><b>${n(orders)}</b> ${esc(L('sipariş','orders'))} · ${esc(g.name)} · ${n(g.riskItems.reduce((t,it)=>t+it.qty,0))} ${esc(L('adet','pcs'))}</button>`;
+    const o=opener({title:`${g.name} · ${L('riskli','at risk')}`,subtitle:L('Özel sipariş riski','Special order risk'),spec:{k:'risk',name:g.name}});
+    return `<button type="button" class="blvQualityChip blvSpecialChip" data-blv-open="${o}"><b>${n(g.riskOrders)}</b> ${esc(L('sipariş','orders'))} · ${esc(g.name)} · ${n(g.riskQty)} ${esc(L('adet','pcs'))}</button>`;
   }).join('');
   const message=total.specialRiskOrders
     ? L(`Riskli ${n(total.riskOrders)} siparişin ${n(total.specialRiskOrders)} tanesi özel sipariş`,`${n(total.specialRiskOrders)} of ${n(total.riskOrders)} at-risk orders are special orders`)
@@ -474,12 +511,12 @@ function specialStrip(total){
   return `<div class="blvQuality blvSpecial${total.specialRiskOrders?' is-alert':''}" role="status"><span class="blvQualityTitle">${esc(message)}</span>${chips}<span class="bpaSectionSpacer"></span>${seg}</div>`;
 }
 function legend(){return `<div class="bpaLegend">${R().STAGES.map(s=>`<span><i class="bpaDot" data-stage="${s.key}"></i>${esc(stageLabel(s.key))}</span>`).join('')}</div>`}
-function bar(name,g,scaleMax,subtitle){
+function bar(name,g,scaleMax,subtitle,specFor){
   const width=state.barScale==='qty'&&scaleMax>0?Math.max(2,g.qty/scaleMax*100):100;
   const segs=R().STAGES.filter(s=>g.stages[s.key]>0).map(s=>{
-    const qty=g.stages[s.key],list=g.items.filter(it=>it.stage===s.key);
+    const qty=g.stages[s.key];
     const t=tip(tipHtml(name,[[subtitle,name],[stageLabel(s.key),n(qty)+' '+L('adet','pcs'),s.key],[L('Grup içindeki payı','Share of group'),pct(g.qty?qty/g.qty:null)],[L('Satır','Lines'),n(g.stageLines[s.key])]],L('Detay için tıklayın','Click for details')));
-    const o=opener({title:name,subtitle:`${subtitle} · ${stageLabel(s.key)}`,items:list,stage:s.key});
+    const o=opener({title:name,subtitle:`${subtitle} · ${stageLabel(s.key)}`,spec:specFor(s.key),stage:s.key});
     return `<span class="bpaSeg" data-stage="${s.key}" style="flex-grow:${qty}" data-blv-tip="${t}" data-blv-open="${o}"></span>`;
   }).join('');
   return `<div class="bpaBarTrack"><div class="bpaBar" style="width:${width.toFixed(2)}%">${segs||'<span class="bpaSeg is-empty"></span>'}</div></div>`;
@@ -487,30 +524,30 @@ function bar(name,g,scaleMax,subtitle){
 function dimensionLabel(key){return key===PRIORITY_DIMENSION?L('Öncelik','Priority'):R().dimLabel(key,lang());}
 /* Operasyon dağılımında her satır yalnız ANA önceliğiyle sayılır (toplam =
    Backlog adedi). Takip etiketleri üst kutucuklarda ayrıca görünür. */
-function priorityGroupsOf(list){
-  const pending=priorityStatus()!=='ready';
-  const blank=pending?L('(öncelik hazırlanıyor)','(priority pending)'):L('(öncelik eşleşmesi yok)','(no priority match)');
-  const byCode=new Map();
-  for(const it of list||[]){const code=it.priorityCode||'';if(!byCode.has(code))byCode.set(code,[]);byCode.get(code).push(it);}
-  return [...byCode.entries()].map(([code,group])=>({code,name:code?priorityLabel(code):blank,items:group,...R().summarize(group)}))
-    .sort((a,b)=>(a.code?priorityRank(a.code):999)-(b.code?priorityRank(b.code):999)||b.qty-a.qty);
+/* Öncelik grubu adı: etiket kataloğu tarayıcıdadır. Kod yoksa: öncelik hazırlanıyor ya da eşleşme yok. */
+function priorityGroupName(code,m){
+  return code?priorityLabel(code):modelPriorityStatus(m)!=='ready'?L('(öncelik hazırlanıyor)','(priority pending)'):L('(öncelik eşleşmesi yok)','(no priority match)');
 }
-function priorityGroups(){return priorityGroupsOf(items);}
+// Model grubu → çizim adı: öncelikte kod, diğer boyutlarda modelin adı.
+function groupName(g,m){return g.code!==undefined?priorityGroupName(g.code,m):g.name;}
+const groupSpecRef=(dim,g)=>dim===PRIORITY_DIMENSION?{code:g.code}:{name:g.name};
 /* Katalog tonu → tasarım token'ı (ui-components.css .blvPriorityTile eşlemesiyle aynı). */
 const PRIORITY_TONE_TOKEN={red:'--ui-danger',copper:'--ui-chart-4',orange:'--ui-warning',yellow:'--ui-warning',blue:'--ui-accent',teal:'--ui-chart-3',green:'--ui-success',gray:'--ui-text-secondary'};
 function priorityToneVar(code){return `var(${code?(PRIORITY_TONE_TOKEN[priorityTone(code)]||'--ui-text-secondary'):'--ui-text-muted'})`;}
-function groupCard(total){
-  const dims=[...R().DIMENSIONS,PRIORITY_DIMENSION],key=dims.includes(state.groupBy)?state.groupBy:'buyer',label=dimensionLabel(key);
-  const groups=key===PRIORITY_DIMENSION?priorityGroups():R().groupBy(items,key,{blank:L('(boş)','(blank)')}),list=state.showAll?groups:groups.slice(0,15),max=groups.reduce((m,g)=>Math.max(m,g.qty),0);
+function groupCard(m){
+  const total=m.total;
+  const dims=[...R().DIMENSIONS,PRIORITY_DIMENSION],key=m.group.key,label=dimensionLabel(key);
+  const groups=m.group.groups.map(g=>({...g,name:groupName(g,m)})),list=state.showAll?groups:groups.slice(0,15),max=groups.reduce((m,g)=>Math.max(m,g.qty),0);
   const row=(name,g,isTotal)=>{
-    const o=opener({title:name,subtitle:label,items:g.items});
-    return `<div class="bpaGRow${isTotal?' is-total':''}"><button type="button" class="bpaGName" data-blv-open="${o}" title="${esc(name)}">${esc(name)}</button>${bar(name,g,isTotal?0:max,label)}<div class="bpaGStats"><b>${esc(pct(g.loadedPct))}</b><span>${n(g.qty)} ${esc(L('adet','pcs'))}${g.overdueQty?` · <i class="blvOver">${n(g.overdueQty)} ${esc(L('gecikmiş','overdue'))}</i>`:''}</span></div></div>`;
+    const ref=isTotal?null:{k:'group',dim:key,...groupSpecRef(key,g)};
+    const o=opener({title:name,subtitle:label,spec:ref||{k:'all'}});
+    return `<div class="bpaGRow${isTotal?' is-total':''}"><button type="button" class="bpaGName" data-blv-open="${o}" title="${esc(name)}">${esc(name)}</button>${bar(name,g,isTotal?0:max,label,stage=>ref?{...ref,stage}:{k:'stages',stages:[stage]})}<div class="bpaGStats"><b>${esc(pct(g.loadedPct))}</b><span>${n(g.qty)} ${esc(L('adet','pcs'))}${g.overdueQty?` · <i class="blvOver">${n(g.overdueQty)} ${esc(L('gecikmiş','overdue'))}</i>`:''}</span></div></div>`;
   };
   return `<div class="bpaCardBox"><div class="bpaSectionHead"><span class="bpaSectionTitle">${esc(L('Operasyon dağılımı','Operational distribution'))}</span><span class="bpaSectionSub">${esc(L('Segmentin üzerine gelin; tıklayınca siparişler sağda açılır. Sağdaki yüzde yüklenen oranıdır.','Hover a segment; click to open its orders. The percentage is the loaded share.'))}</span><span class="bpaSectionSpacer"></span>
     <div class="bpaSeg2" role="group">${dims.map(d=>`<button type="button" class="${d===key?'is-active':''}" data-blv-group="${d}">${esc(dimensionLabel(d))}</button>`).join('')}</div>
     <div class="bpaSeg2" role="group"><button type="button" class="${state.barScale!=='qty'?'is-active':''}" data-blv-scale="pct">%</button><button type="button" class="${state.barScale==='qty'?'is-active':''}" data-blv-scale="qty">${esc(L('Adet','Qty'))}</button></div></div>
     ${legend()}
-    <div class="bpaGroups">${row(L('Tümü','All'),{...total,items},true)}${list.map(g=>row(g.name,g,false)).join('')}</div>
+    <div class="bpaGroups">${row(L('Tümü','All'),total,true)}${list.map(g=>row(g.name,g,false)).join('')}</div>
     ${groups.length>15?`<button type="button" class="bpaMore" data-blv-action="toggleAll">${esc(state.showAll?L('Daha az göster','Show less'):L(`Tümünü göster (${groups.length})`,`Show all (${groups.length})`))}</button>`:''}
   </div>`;
 }
@@ -529,38 +566,35 @@ function timelineGroupColor(index){const colors=chartColors();return colors[Math
 const TIMELINE_DIMENSIONS=['buyingGroup','buyer',PRIORITY_DIMENSION];
 function timelineDimensionKey(value){return TIMELINE_DIMENSIONS.includes(value)?value:'buyingGroup';}
 function timelineDimensionLabel(dimension){return dimension===PRIORITY_DIMENSION?L('Öncelik','Priority'):R().dimLabel(dimension,lang());}
-function timelineDimensionGroups(list,dimension){
-  return dimension===PRIORITY_DIMENSION?priorityGroupsOf(list):R().groupBy(list,dimension,{blank:L('(boş)','(blank)')});
+/* names: [{name,color,ref}] — renk Buyer kırılımlarında grafik paletinden, Öncelikte etiket tonundan. */
+function timelineDimensionNames(m){
+  const dimension=m.timeline.dimension;
+  return m.timeline.names.map((g,index)=>({name:groupName(g,m),color:dimension===PRIORITY_DIMENSION?priorityToneVar(g.code):timelineGroupColor(index),ref:groupSpecRef(dimension,g)}));
 }
-/* names: [{name,color}] — renk Buyer kırılımlarında grafik paletinden, Öncelikte etiket tonundan. */
-function timelineDimensionNames(dimension){
-  return timelineDimensionGroups(items,dimension).map((g,index)=>({name:g.name,color:dimension===PRIORITY_DIMENSION?priorityToneVar(g.code):timelineGroupColor(index)}));
+function timelineTrackingTipRows(tracking){
+  return (tracking||[]).map(e=>`<span><i style="--ui-series-color:${priorityToneVar(e.code)}"></i><b>${esc(L('Takip: ','Tracking: ')+priorityLabel(e.code))}</b><em>${esc(n(e.qty))}</em></span>`).join('');
 }
-function timelineTrackingTipRows(list){
-  const map=new Map();
-  for(const it of list||[])for(const code of it.trackingTags||[]){const e=map.get(code)||{code,qty:0};e.qty+=Number(it.qty)||0;map.set(code,e);}
-  return [...map.values()].sort((a,b)=>priorityRank(a.code)-priorityRank(b.code)).map(e=>`<span><i style="--ui-series-color:${priorityToneVar(e.code)}"></i><b>${esc(L('Takip: ','Tracking: ')+priorityLabel(e.code))}</b><em>${esc(n(e.qty))}</em></span>`).join('');
-}
-function timelineDimensionTipHtml(title,bucket,dimension,names){
-  const grouped=timelineDimensionGroups(bucket&&bucket.items||[],dimension),byName=new Map(grouped.map(g=>[g.name,g]));
+function timelineDimensionTipHtml(title,bucket,grouped,dimension,names){
+  const byName=new Map(grouped.map(g=>[g.name,g]));
   const rows=(names||[]).map(entry=>{
     const g=byName.get(entry.name);if(!g||!g.qty)return '';
     return `<span><i style="--ui-series-color:${entry.color}"></i><b>${esc(entry.name)}</b><em>${esc(n(g.qty))}</em></span>`;
   }).join('');
-  const tracking=dimension===PRIORITY_DIMENSION?timelineTrackingTipRows(bucket&&bucket.items):'';
+  const tracking=dimension===PRIORITY_DIMENSION?timelineTrackingTipRows(bucket&&bucket.tracking):'';
   return `<strong>${esc(title)}</strong>${rows}<span class="backlogChartTooltipTotal"><i></i><b>${esc(L('Dönem toplamı','Period total'))}</b><em>${esc(n(bucket&&bucket.qty||0))}</em></span>${tracking}`;
 }
 function timelineDimensionLegend(names,label){
   return `<div class="blvTimelineLegend blvTimelineLegend--dimension"><span class="blvTimelineLegendLabel">${esc(label)}</span><div class="bpaLegend blvBuyerLegend">${(names||[]).map(entry=>`<span title="${esc(entry.name)}"><i class="bpaDot" style="--ui-series-color:${entry.color}"></i>${esc(entry.name)}</span>`).join('')}</div></div>`;
 }
-function flowCard(){
-  const fields=R().TIMELINE_FIELDS,field=fields.find(f=>f.key===state.timeField)||fields[0];
-  const series=R().timeline(items,field.key,{granularity:state.granularity,lang:lang()}),max=series.reduce((m,b)=>Math.max(m,b.qty),0);
+function flowCard(m){
+  const fields=R().TIMELINE_FIELDS,field=fields.find(f=>f.key===m.timeline.field)||fields[0];
+  const series=m.timeline.buckets,max=series.reduce((m,b)=>Math.max(m,b.qty),0);
   const stageMax=series.reduce((m,b)=>Math.max(m,...R().STAGES.map(s=>Number(b.stages[s.key])||0)),0);
   const chartMode=state.timelineChart==='grouped'?'grouped':'stacked';
-  const dimension=timelineDimensionKey(state.timelineDimension),dimensionLabel=timelineDimensionLabel(dimension);
-  const dimensionNames=timelineDimensionNames(dimension);
-  const dimensionByBucket=new Map(series.map(b=>[b.key,timelineDimensionGroups(b.items,dimension)]));
+  const dimension=m.timeline.dimension,dimensionLabel=timelineDimensionLabel(dimension);
+  const dimensionNames=timelineDimensionNames(m);
+  const dimensionByBucket=new Map(series.map(b=>[b.key,b.dims.map(g=>({...g,name:groupName(g,m)}))]));
+  const bucketSpec=(b,extra)=>({k:'bucket',field:m.timeline.field,granularity:m.timeline.granularity,key:b.key,...extra});
   const dimensionMax=series.reduce((m,b)=>Math.max(m,...((dimensionByBucket.get(b.key)||[]).map(g=>Number(g.qty)||0)),0),0);
   const fLabel=lang()==='en'?field.en:field.tr;
   const today=R().dayIso(new Date()),todayMs=Date.parse(today+'T00:00:00Z');
@@ -582,25 +616,25 @@ function flowCard(){
     let logistics='';
     if(chartMode==='grouped'){
       const bars=R().STAGES.filter(s=>b.stages[s.key]>0).map(s=>{
-        const qty=b.stages[s.key],list=b.items.filter(it=>it.stage===s.key);
-        const o=opener({title:`${fLabel} · ${b.label}`,subtitle:stageLabel(s.key),items:list,stage:s.key});
+        const qty=b.stages[s.key];
+        const o=opener({title:`${fLabel} · ${b.label}`,subtitle:stageLabel(s.key),spec:bucketSpec(b,{stage:s.key}),stage:s.key});
         const height=stageMax?Math.max(2,qty/stageMax*100):0;
         return `<span class="blvGroupBar" data-stage="${s.key}" style="height:${height.toFixed(1)}%" data-blv-open="${o}" title="${esc(stageLabel(s.key)+': '+n(qty))}"></span>`;
       }).join('');
       logistics=`<div class="blvGroupBars">${bars}</div>`;
     }else{
       const segs=R().STAGES.filter(s=>b.stages[s.key]>0).map(s=>{
-        const qty=b.stages[s.key],list=b.items.filter(it=>it.stage===s.key);
-        const o=opener({title:`${fLabel} · ${b.label}`,subtitle:stageLabel(s.key),items:list,stage:s.key});
+        const qty=b.stages[s.key];
+        const o=opener({title:`${fLabel} · ${b.label}`,subtitle:stageLabel(s.key),spec:bucketSpec(b,{stage:s.key}),stage:s.key});
         return `<span class="bpaSeg" data-stage="${s.key}" style="flex-grow:${qty}" data-blv-open="${o}"></span>`;
       }).join('');
       logistics=`<div class="bpaColBar" style="height:${max?Math.max(3,b.qty/max*100).toFixed(1):0}%">${segs}</div>`;
     }
     const bucketGroups=dimensionByBucket.get(b.key)||[],byName=new Map(bucketGroups.map(g=>[g.name,g]));
-    const groupTip=tip(timelineDimensionTipHtml(`${dimensionLabel} · ${b.label}`,b,dimension,dimensionNames));
+    const groupTip=tip(timelineDimensionTipHtml(`${dimensionLabel} · ${b.label}`,b,bucketGroups,dimension,dimensionNames));
     const dimensionEntries=dimensionNames.map(({name,color})=>{
       const g=byName.get(name);if(!g||!g.qty)return null;
-      return {name,color,g,o:opener({title:name,subtitle:`${dimensionLabel} · ${fLabel} · ${b.label}`,items:g.items})};
+      return {name,color,g,o:opener({title:name,subtitle:`${dimensionLabel} · ${fLabel} · ${b.label}`,spec:bucketSpec(b,{dim:dimension,...groupSpecRef(dimension,g)})})};
     }).filter(Boolean);
     let dimensionChart='';
     if(chartMode==='grouped'){
@@ -817,11 +851,15 @@ function render(){
   if(!state.open)return;
   if(loading){host.innerHTML=recoveryControls()+`<div class="bpaLoading"><span class="bpaSpinner"></span>${esc(L('Backlog satırları toplanıyor…','Collecting Backlog rows…'))}</div>`;return;}
   if(error){host.innerHTML=recoveryControls()+`<div class="bpaError">${esc(error)}</div>`;return;}
-  if(!items||!R()){host.innerHTML=recoveryControls()+`<div class="bpaEmpty">${esc(L('Backlog yüklendiğinde genel bakış burada görünür.','The overview appears once Backlog loads.'))}</div>`;return;}
-  if(!items.length){host.innerHTML=recoveryControls()+`<div class="bpaEmpty">${esc(L('Aktif filtrede Backlog satırı yok.','No Backlog rows for the active filter.'))}</div>`;return;}
-  annotatePriorities(baseItems||items);ensurePriorityIndex();
-  const total=R().summarize(items);
-  host.innerHTML=hero(total)+specialStrip(total)+qualityStrip()+groupCard(total)+`<div class="blvGap"></div>`+flowCard();
+  const backend=backendModelEnabled();
+  // Yerel model (geri dönüş yolu) her çizimde aynı panelModel ile kurulur.
+  if(!backend)model=baseItems&&R()?localModel():null;
+  if(!model||!R()){host.innerHTML=recoveryControls()+`<div class="bpaEmpty">${esc(L('Backlog yüklendiğinde genel bakış burada görünür.','The overview appears once Backlog loads.'))}</div>`;return;}
+  // Arka uç modeli eski bir görünüm için hesaplandıysa (dil, öncelik dizini …) yenisi istenir; yanıt gelene kadar mevcut çizim kalır.
+  if(backend&&remote&&!overviewRequest&&remote.viewKey!==currentViewKey())void refresh(false);
+  if(!model.count){host.innerHTML=recoveryControls()+`<div class="bpaEmpty">${esc(L('Aktif filtrede Backlog satırı yok.','No Backlog rows for the active filter.'))}</div>`;return;}
+  ensurePriorityIndex();
+  host.innerHTML=hero(model)+specialStrip(model)+qualityStrip(model)+groupCard(model)+`<div class="blvGap"></div>`+flowCard(model);
   // Yeni DOM sıfır scrollLeft ile başlar; zaman eksenini mevcut döneme otomatik geri odakla.
   requestAnimationFrame(()=>scrollTimelineToToday('auto'));
 }
@@ -869,14 +907,14 @@ function drawerModelImageHtml(it,imageIndex){
     allowEmpty:true
   });
 }
-function registerDrawerModelImages(aside,list,spec,imageIndex){
+function registerDrawerModelImages(aside,identities,spec,imageIndex,payload){
   const api=window.BLDetailImages;if(!api)return;
   api.registerScope?.(aside,{
     contextType:'backlog-overview-detail',
     label:String(spec&&spec.title||L('Backlog detay','Backlog detail')),
     imageIndex,
-    identities:list.map((it,index)=>({...drawerModelIdentity(it),rowId:String(index)})),
-    repaint:()=>openDrawer(spec)
+    identities:identities.map(([index,it])=>({...drawerModelIdentity(it),rowId:String(index)})),
+    repaint:()=>showDrawer(spec,payload)
   });
   api.bindThumbs?.(aside);
   api.bindModelImagesButton?.('blvDrawerPlmSync');
@@ -892,13 +930,47 @@ function drawerEl(){
   return el;
 }
 function closeDrawer(){const el=$('blvDrawer');if(el&&!el.hidden){el.hidden=true;el.classList.remove('is-open');}}
+/* Çekmece içeriği: { summary, count, rows (ilk ROW_LIMIT, sıralı), identities:[[sıra,kayıt]] }.
+   Dış liste ve geri dönüş yolu yerelde, arka uç modelinde drill-down tıklanınca yüklenir. */
+function localDrawerPayload(list){
+  const payload=R().drawerPayload(list,ROW_LIMIT);
+  return {summary:payload.summary,count:payload.count,rows:payload.rows,identities:payload.list.map((it,index)=>[index,it])};
+}
+let drawerRequest=null;
 function openDrawer(spec){
   if(!spec)return;hideTip();
+  drawerRequest?.abort();drawerRequest=null;
+  if(Array.isArray(spec.items))return showDrawer(spec,localDrawerPayload(spec.items));
+  if(!backendModelEnabled()){
+    if(baseItems)annotatePriorities(baseItems);
+    return showDrawer(spec,localDrawerPayload(R().selectItems(baseItems||[],spec.spec,viewState())));
+  }
+  const params=remote&&remote.sig?JSON.parse(remote.sig):overviewQueryParams();if(!params)return;
+  const request=new AbortController();drawerRequest=request;
+  showDrawerState(spec,`<div class="bpaLoading"><span class="bpaSpinner"></span>${esc(L('Satırlar yükleniyor…','Loading rows…'))}</div>`);
+  void postModel({version:1,query:params,view:viewState(),priority:priorityRequest(),drill:spec.spec},request.signal).then(data=>{
+    if(drawerRequest!==request)return;
+    showDrawer(spec,{summary:data.summary,count:data.count,rows:data.rows||[],identities:data.identities||[]});
+  }).catch(err=>{
+    if(drawerRequest!==request||request.signal.aborted)return;
+    showDrawerState(spec,`<div class="bpaError">${esc(String(err&&err.message||err))}</div>`);
+  }).finally(()=>{if(drawerRequest===request)drawerRequest=null;});
+}
+function drawerHead(spec){
+  const plmSyncButton=window.BLDetailImages?.modelImagesButtonHtml?.('blvDrawerPlmSync')||'';
+  return `<header class="bpaDrawerHead"><div><div class="bpaDrawerKicker">${spec.stage?`<i class="bpaDot" data-stage="${spec.stage}"></i>`:''}${esc(spec.subtitle||'')}</div><h3 id="blvDrawerTitle">${esc(spec.title||'')}</h3></div><div class="bpaActions">${plmSyncButton}<button type="button" class="tbtn bpaMoveBtn" data-blv-close title="${esc(L('Kapat','Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></div></header>`;
+}
+function showDrawerState(spec,html){
+  const root=drawerEl(),aside=root.querySelector('.bpaDrawer');
+  aside.innerHTML=drawerHead(spec)+html;
+  root.hidden=false;requestAnimationFrame(()=>root.classList.add('is-open'));
+  aside.querySelector('[data-blv-close]')?.focus();
+}
+function showDrawer(spec,payload){
   const imageIndex=window.BLDetailImages?.buildIndex?.()||null;
   const root=drawerEl(),aside=root.querySelector('.bpaDrawer');
-  const list=(spec.items||[]).slice().sort((a,b)=>(b.overdueDays-a.overdueDays)||(b.qty-a.qty));
-  const s=R().summarize(list);
-  const rows=list.slice(0,ROW_LIMIT).map(it=>`<tr>
+  const s=payload.summary;
+  const rows=payload.rows.map(it=>`<tr>
     <td class="detailImgCell">${drawerModelImageHtml(it,imageIndex)}</td>
     <td><span class="bpaBadge blvBadge" data-stage="${it.stage}">${esc(stageLabel(it.stage))}</span>${it.status&&it.status!==stageLabel(it.stage)?`<small class="bpaSub">${esc(it.status)}</small>`:''}</td>
     <td><div class="bpaIdentity">${esc(it.orderCode||'—')}<small>${esc([it.modelName,it.colourCode,it.colour].filter(Boolean).join(' · '))}</small></div></td>
@@ -910,8 +982,7 @@ function openDrawer(spec){
     <td class="bpaDateCell">${esc(fmtDay(it.retail))}</td>
     <td>${it.special?`<span class="bpaTag">${esc(it.importance)}</span>`:''}${it.risk?`<span class="bpaTag is-alert">${esc(L('risk','risk'))}</span>`:''}${it.transitOverdue?`<span class="bpaTag is-alert">${esc(L('transit gecikti','transit overdue'))}</span>`:''}</td>
   </tr>`).join('');
-  const plmSyncButton=window.BLDetailImages?.modelImagesButtonHtml?.('blvDrawerPlmSync')||'';
-  aside.innerHTML=`<header class="bpaDrawerHead"><div><div class="bpaDrawerKicker">${spec.stage?`<i class="bpaDot" data-stage="${spec.stage}"></i>`:''}${esc(spec.subtitle||'')}</div><h3 id="blvDrawerTitle">${esc(spec.title||'')}</h3></div><div class="bpaActions">${plmSyncButton}<button type="button" class="tbtn bpaMoveBtn" data-blv-close title="${esc(L('Kapat','Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></div></header>
+  aside.innerHTML=`${drawerHead(spec)}
     <div class="bpaDrawerStats">
       <div><b>${n(s.qty)}</b><span>${esc(L('adet','qty'))}</span></div>
       <div><b>${n(s.orders)}</b><span>${esc(L('sipariş','orders'))}</span></div>
@@ -920,8 +991,8 @@ function openDrawer(spec){
       <div><b class="is-overdue">${n(s.overdueQty)}</b><span>${esc(L('Ex-F geçti · yüklenmedi','Ex-F passed · not loaded'))}</span></div>
     </div>
     <div class="bpaBar bpaDrawerBar">${R().STAGES.filter(x=>s.stages[x.key]>0).map(x=>`<span class="bpaSeg" data-stage="${x.key}" style="flex-grow:${s.stages[x.key]}" title="${esc(stageLabel(x.key)+': '+n(s.stages[x.key]))}"></span>`).join('')}</div>
-    <div class="bpaTableWrap bpaDrawerTable"><table class="bpaTable"><thead><tr><th class="detailImgCell">${esc(L('Görsel','Image'))}</th><th>${esc(L('Aşama','Stage'))}</th><th>${esc(L('Sipariş','Order'))}</th><th>Buyer</th><th>${esc(L('Üretici / Sezon','Manufacturer / Season'))}</th><th class="num">${esc(L('Adet','Qty'))}</th><th>Ex-Factory</th><th>${esc(L('Antrepo','Warehouse'))}</th><th>Retail</th><th>${esc(L('Sinyal','Signal'))}</th></tr></thead><tbody>${rows}</tbody></table>${list.length>ROW_LIMIT?`<div class="bpaNote">${esc(L(`İlk ${ROW_LIMIT} satır gösteriliyor; tamamı Excel Backlog V3'te.`,`Showing first ${ROW_LIMIT} rows; Excel Backlog V3 contains all.`))}</div>`:''}</div>`;
-  registerDrawerModelImages(aside,list,spec,imageIndex);
+    <div class="bpaTableWrap bpaDrawerTable"><table class="bpaTable"><thead><tr><th class="detailImgCell">${esc(L('Görsel','Image'))}</th><th>${esc(L('Aşama','Stage'))}</th><th>${esc(L('Sipariş','Order'))}</th><th>Buyer</th><th>${esc(L('Üretici / Sezon','Manufacturer / Season'))}</th><th class="num">${esc(L('Adet','Qty'))}</th><th>Ex-Factory</th><th>${esc(L('Antrepo','Warehouse'))}</th><th>Retail</th><th>${esc(L('Sinyal','Signal'))}</th></tr></thead><tbody>${rows}</tbody></table>${payload.count>ROW_LIMIT?`<div class="bpaNote">${esc(L(`İlk ${ROW_LIMIT} satır gösteriliyor; tamamı Excel Backlog V3'te.`,`Showing first ${ROW_LIMIT} rows; Excel Backlog V3 contains all.`))}</div>`:''}</div>`;
+  registerDrawerModelImages(aside,payload.identities,spec,imageIndex,payload);
   root.hidden=false;requestAnimationFrame(()=>root.classList.add('is-open'));
   aside.querySelector('[data-blv-close]')?.focus();
 }
@@ -945,13 +1016,13 @@ function bind(){
     if(!t||!host.contains(t))return;
     if(t.dataset.blvAction==='filters'){void openFilterPanel();return;}
     if(t.dataset.blvAction==='clearFilters'){state.filters=[];filterEditorId='';filterValueSearch='';reapplyOverviewFilters();return;}
-    if(t.dataset.blvImportance){state.importanceScope=t.dataset.blvImportance;saveState();items=applyOverviewFilters(baseItems||[]);return render();}
-    if(t.dataset.blvGroup){state.groupBy=t.dataset.blvGroup;state.showAll=false;saveState();return render();}
+    if(t.dataset.blvImportance){state.importanceScope=t.dataset.blvImportance;saveState();return updateView();}
+    if(t.dataset.blvGroup){state.groupBy=t.dataset.blvGroup;state.showAll=false;saveState();return updateView();}
     if(t.dataset.blvScale){state.barScale=t.dataset.blvScale;saveState();return render();}
-    if(t.dataset.blvTime){state.timeField=t.dataset.blvTime;saveState();return render();}
+    if(t.dataset.blvTime){state.timeField=t.dataset.blvTime;saveState();return updateView();}
     if(t.dataset.blvChart){state.timelineChart=t.dataset.blvChart==='grouped'?'grouped':'stacked';saveState();return render();}
-    if(t.dataset.blvTimelineDim){state.timelineDimension=timelineDimensionKey(t.dataset.blvTimelineDim);saveState();return render();}
-    if(t.dataset.blvGran){state.granularity=t.dataset.blvGran;saveState();return render();}
+    if(t.dataset.blvTimelineDim){state.timelineDimension=timelineDimensionKey(t.dataset.blvTimelineDim);saveState();return updateView();}
+    if(t.dataset.blvGran){state.granularity=t.dataset.blvGran;saveState();return updateView();}
     if(t.dataset.blvAction==='today'){scrollTimelineToToday();return;}
     if(t.dataset.blvAction==='toggleAll'){state.showAll=!state.showAll;saveState();return render();}
     if(t.dataset.blvOpen)openDrawer(openers.get(t.dataset.blvOpen));
@@ -961,13 +1032,13 @@ function bind(){
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();closeFilterPanel();}});
   document.addEventListener('bl:language-changed',()=>{render();if(filterOpen)renderFilterPanel();});
   // CP öncelikleri/kuralları değişince etiket kutucukları yeniden hesaplanır.
-  window.addEventListener('bl:cp-priority-index-changed',()=>{priorityEnsureFailed=false;if(visible()&&items)render();});
-  window.addEventListener('bl:cp-decision-context-changed',()=>{priorityEnsureFailed=false;if(visible()&&items)render();});
+  window.addEventListener('bl:cp-priority-index-changed',()=>{priorityEnsureFailed=false;if(visible()&&model)render();});
+  window.addEventListener('bl:cp-decision-context-changed',()=>{priorityEnsureFailed=false;if(visible()&&model)render();});
   // applyLanguage bl:language-changed göndermez; kullanıcı etiket adları sözlükte
   // olmadığından dil değişimi <html lang> üzerinden izlenip yeniden çizilir.
   if('MutationObserver' in window){
     let lastLang=lang();
-    new MutationObserver(()=>{const next=lang();if(next===lastLang)return;lastLang=next;if(visible()&&items)render();}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+    new MutationObserver(()=>{const next=lang();if(next===lastLang)return;lastLang=next;if(visible()&&model)render();}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
   }
 }
 function init(){
@@ -986,7 +1057,7 @@ function init(){
   // Görünmeyen modül çizilmez (perf-runtime sözleşmesi): Backlog sekmesi
   // görünür olduğunda bekleyen yenileme burada tetiklenir.
   if(mod&&'IntersectionObserver' in window){
-    new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)&&state.open&&!loading&&(!items||signature!==JSON.stringify(overviewQueryParams()||{})))void refresh(false);}).observe(mod);
+    new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)&&state.open&&!loading&&(!model||signature!==JSON.stringify(overviewQueryParams()||{})))void refresh(false);}).observe(mod);
   }
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();

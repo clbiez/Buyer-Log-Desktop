@@ -6445,6 +6445,12 @@ require('./lib/read-model/global-flow-routes')(app, {
   getComputeReads: () => computeReads,
   runReadModelCompute: readModelPrewarm.runCompute,
 });
+// Backlog Genel Bakış (V3) okuma modeli (#1079 WS6c): POST /api/read-model/backlog/v3.
+require('./lib/read-model/backlog-v3-routes')(app, {
+  userAccess, assertSourceFilters, prepareComputeBacklog, backlogReadConsumer, apiError, sendComputedResponse,
+  getComputeReads: () => computeReads,
+  runReadModelCompute: readModelPrewarm.runCompute,
+});
 app.use(express.json({ limit: '100mb' }));
 app.use((err, req, res, next) => {
   if (!err) return next();

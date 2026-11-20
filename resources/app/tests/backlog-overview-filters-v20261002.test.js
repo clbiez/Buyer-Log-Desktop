@@ -39,8 +39,16 @@ test('overview filters support date ranges and multi-value filters locally',()=>
   assert.match(OVERVIEW,/data-blvf-from/);
   assert.match(OVERVIEW,/data-blvf-to/);
   assert.match(OVERVIEW,/data-blvf-value/);
-  assert.match(OVERVIEW,/function applyOverviewFilters\(rows\)/);
-  assert.match(OVERVIEW,/items=applyOverviewFilters\(baseItems/);
+  // #1079 WS6c: filtre kuralı panel ve okuma modeli işçisinde aynı fonksiyondur (BLBacklogV3Report.applyAnalysisFilters);
+  // panelModel/selectItems onu çağırır, panel bilinen faset türlerini gönderir.
+  const V3=require('../public/backlog-v3-report.js');
+  assert.match(OVERVIEW,/filterKinds:knownFilterKinds\(\)/);
+  assert.match(OVERVIEW,/R\(\)\.panelModel\(baseItems,/);
+  assert.match(OVERVIEW,/R\(\)\.selectItems\(baseItems\|\|\[\],spec\.spec,viewState\(\)\)/);
+  const items=[{special:true,row:{D:'2026-01-05',V:'a'}},{special:false,row:{D:'2026-02-05',V:'b'}},{special:false,row:{D:'',V:'a'}}];
+  const filters=[{id:'d',rowKey:'D',header:'Tarih',values:[],from:'2026-01-01',to:'2026-01-31'},{id:'v',rowKey:'V',header:'V',values:['a'],from:'',to:''}];
+  assert.deepEqual(V3.applyAnalysisFilters(items,{filters,filterKinds:{d:'date',v:'values'}}),[items[0]]);
+  assert.deepEqual(V3.applyAnalysisFilters(items,{filters:[filters[1]],importanceScope:'regular'}),[items[2]]);
 });
 
 test('filter editor is not hidden by the global section display rule',()=>{
