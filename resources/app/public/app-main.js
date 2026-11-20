@@ -43,8 +43,10 @@ function renderModulePreparationStates(){
     const button=document.querySelector('nav.tabs button[data-tab="'+module+'"]');if(!button)continue;
     let badge=button.querySelector('[data-module-preparation]');
     if(window.BLCanAccessArea?.(module)!==true){badge?.remove();button.classList.remove('hasModulePreparation');continue;}
-    if(!badge){badge=document.createElement('span');badge.className='modulePrepState';badge.dataset.modulePreparation=module;badge.setAttribute('role','status');badge.setAttribute('aria-live','polite');button.appendChild(badge);button.classList.add('hasModulePreparation');}
     const status=snapshot[module].status,label=labels[status];
+    // Arka uç ön ısıtmasında (#1077) bekleyen modül tembel yüklenir: "Bekliyor" gösterilmez.
+    if(status==='pending'&&backendPrewarmEnabled()){badge?.remove();button.classList.remove('hasModulePreparation');continue;}
+    if(!badge){badge=document.createElement('span');badge.className='modulePrepState';badge.dataset.modulePreparation=module;badge.setAttribute('role','status');badge.setAttribute('aria-live','polite');button.appendChild(badge);button.classList.add('hasModulePreparation');}
     if(badge.textContent!==label)badge.textContent=label;
     badge.dataset.status=status;badge.title=names[module]+' · '+label;
   }
@@ -18543,9 +18545,30 @@ function backgroundWarmupCurtainVisible(){return Boolean(document.getElementById
 function finishStartupModules(){
   window.BLBootGuard?.ready?.('modules');
 }
+/* Arka uç ön ısıtması (#1077). Anahtar açıkken (window.BL_READ_MODEL_PREWARM!==false)
+   arayüz iş parçacığı açılıştan sonra modül hazırlamaz: Genel Bakış modeli ve modül
+   projeksiyonları oturum açılınca yerel arka ucun okuma modeli işçisinde ısıtılır
+   (server/lib/read-model/prewarm-scheduler.js). Koleksiyon, CP, Siparişler ve Backlog
+   yalnız açılınca yüklenir; hazırlık rozeti de yalnız gerçek yükleme durumunu gösterir.
+   Varsayılan kapalı (CP/Siparişler tam satır yolu WS5/WS6'ya kadar ilk açılışta pahalı):
+   window.BL_READ_MODEL_PREWARM=true ya da bu tarayıcıda 'buyerlog.readModel.prewarm.v1'='1'.
+   Anahtar kapalıyken aşağıdaki eski sıralı hazırlık aynen çalışır; arka uç ön ısıtması
+   her iki durumda da çalışır (BL_READ_MODEL_PREWARM=0 ortam değişkeni kapatır). */
+// Rozet çizimi bu satırdan önce çalışabilir: anahtar adı sabit değil literal (TDZ yok).
+function backendPrewarmEnabled(){
+  if(typeof window.BL_READ_MODEL_PREWARM==='boolean')return window.BL_READ_MODEL_PREWARM;
+  try{return localStorage.getItem('buyerlog.readModel.prewarm.v1')==='1';}catch(_){return false;}
+}
+function finishBackendPrewarmStartup(){
+  window.BLPerf?.mark?.('BACKGROUND_WARMUP_DONE',{mode:'backend'});
+  // Siparişler okuma modeli (#1076) veri kümesi ısınması bu olayı bekler.
+  window.dispatchEvent(new CustomEvent('bl:background-warmup-done',{detail:{mode:'backend'}}));
+  finishStartupModules();
+}
 function scheduleBackgroundModuleWarmup(){
   if(backgroundWarmupCurtainVisible()){void afterStartupReveal(scheduleBackgroundModuleWarmup);return;}
   if(backgroundWarmupStarted)return;backgroundWarmupStarted=true;
+  if(backendPrewarmEnabled()){finishBackendPrewarmStartup();return;}
   const steps=backgroundWarmupSteps();
   // Yetkisiz alan, zorunlu kaynak filtresi veya zaten yüklü veri için istek atılmaz.
   const eligible=step=>step.enabled&&!step.ready()&&window.BLCanAccessArea?.(step.module)===true;
