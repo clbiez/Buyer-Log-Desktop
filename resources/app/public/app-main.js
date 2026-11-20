@@ -2984,6 +2984,8 @@ function switchTab(tab){
     void Promise.all([dataReady,profileReady]).then(()=>{if(currentActiveTab()==='koleksiyon'&&typeof renderKol==='function'){applyStoredProfilesForCurrentPage(true);renderKol();}});
   }
   if(tab==='koleksiyon'&&kolFabricRepaintPending){kolFabricRepaintPending=false;if(typeof renderKol==='function')renderKol();}
+  // #1079 WS6e: gizliyken ertelenen çizim. İlk girişte profil yolu zaten çizer.
+  else if(tab==='koleksiyon'&&kolRenderDeferred&&!profileFirstVisit&&typeof renderKol==='function')renderKol();
   if(tab==='koleksiyon'||tab==='priceanalysis'||tab==='quotations'||tab==='pricinghistory'){
     void window.BLPerf.ensureFeature('collectionTools').then(()=>{
       if(tab==='priceanalysis')return window.initPriceSupplierAnalysis?.();
@@ -32158,6 +32160,30 @@ function renderKolEmptyState(rows){
   target.innerHTML=`<div class="uiState uiState--empty" role="status" aria-live="polite" aria-atomic="true"><div class="uiStateBody"><b>${escapeHtml(title)}</b><span>${escapeHtml(detail)}</span>${actionLabel?`<button type="button" class="navActionBtn uiStateAction" data-kol-empty-action>${escapeHtml(actionLabel)}</button>`:''}</div></div>`;
   target.querySelector('[data-kol-empty-action]')?.addEventListener('click',onAction,{once:true});
 }
+/* #1079 WS6e — Gizli Koleksiyon sekmesi çizilmez (CLAUDE.md §4; CP/Siparişler'deki
+   deferRenderForTab ile aynı ilke). Açılışta kolApplyWorkspace, sekme görünmese de
+   renderKol çağırıyordu: 2k satırda ~445 ms, 10k'da ~1,2 sn tek eşzamanlı blok.
+   renderKol'un KALICI etkisi yalnız çizimden önceki yazma ön adımıdır (PLM/OPD,
+   Licensor, Royalty/Hologram/FOB → saveKolRows). Bu ön adım her çağrıda, aynı yerde,
+   aynı sırayla ve aynı eşzamanlı turda çalışmaya devam eder; kayıt ve senkron sonucu
+   diğer kullanıcılara eskisi gibi hemen ulaşır. Yalnız tablo çizimi sekmeye girişe
+   ertelenir (switchTab → kolRenderDeferred). Geri dönüş:
+   window.BL_READ_MODEL_COLLECTION_STARTUP=false ya da
+   localStorage buyerlog.readModel.collectionStartup.v1='0'.
+   var: switchTab betik değerlendirilirken de çağrılabilir; let/const TDZ hatası verirdi. */
+var KOL_STARTUP_DEFER_STORAGE_KEY='buyerlog.readModel.collectionStartup.v1';
+var kolStartupDeferEnabledCache=null;
+var kolRenderDeferred=false;
+function kolStartupDeferEnabled(){
+  if(typeof window.BL_READ_MODEL_COLLECTION_STARTUP==='boolean')return window.BL_READ_MODEL_COLLECTION_STARTUP;
+  if(kolStartupDeferEnabledCache===null){try{kolStartupDeferEnabledCache=localStorage.getItem(KOL_STARTUP_DEFER_STORAGE_KEY)!=='0';}catch(_){kolStartupDeferEnabledCache=true;}}
+  return kolStartupDeferEnabledCache;
+}
+function kolDeferHiddenRender(){
+  if(currentActiveTab()==='koleksiyon'||!kolStartupDeferEnabled())return false;
+  kolRenderDeferred=true;
+  return true;
+}
 function renderKol(){
   if(!document.getElementById('kolTable')) return;
   kolRenderSaveFeedback();
@@ -32170,6 +32196,9 @@ function renderKol(){
   // Background pricing and source events may render too. Keep the actual editor
   // attached after recalculating the model; refresh its projection on focusout.
   if(kolHasActiveRowEditor()){kolRemoteRenderPendingOwner=kolWorkspaceOwnerId;return;}
+  // #1079 WS6e: yukarıdaki yazma ön adımı her zaman çalışır; sekme gizliyse çizim ertelenir.
+  if(kolDeferHiddenRender())return;
+  kolRenderDeferred=false;
   renderKolQuickFilters();
   renderKolScopeFilters();
   updateKolSendBtnState();
