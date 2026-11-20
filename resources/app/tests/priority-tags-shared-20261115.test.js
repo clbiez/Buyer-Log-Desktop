@@ -78,10 +78,12 @@ test('Ortak öncelik dizini sipariş+model+renk eşler, başka rengin etiketini 
 }));
 
 test('Backlog Genel Bakış: Eksik Yükleme ve Riskli adet kutucukları yerine öncelik etiketleri',()=>{
-  const src=read('backlog-overview.js'),hero=src.slice(src.indexOf('function hero(s){'),src.indexOf('/* Veri kalitesi şeridi'));
+  const src=read('backlog-overview.js'),hero=src.slice(src.indexOf('function hero(m){'),src.indexOf('/* Veri kalitesi şeridi'));
   assert.doesNotMatch(hero,/stageLabel\('SHORTAGE'\)/,'Eksik Yükleme kutucuğu kaldırıldı');
   assert.doesNotMatch(hero,/Riskli adet/,'Riskli adet kutucuğu kaldırıldı');
-  assert.match(hero,/priorityTiles\(s,tile,by\)/);
+  assert.match(hero,/priorityTiles\(m,tile,by\)/);
+  // #1079 WS6c: etiket gruplaması (Yolunda hariç, katalog sırası) ortak görünüm modelindedir.
+  assert.match(read('backlog-v3-report.js'),/if \(code === ON_TRACK\) continue;/);
   assert.match(src,/BLCpPriorityIndex/);
   assert.match(src,/const dims=\[\.\.\.R\(\)\.DIMENSIONS,PRIORITY_DIMENSION\]/,'Operasyon dağılımında Öncelik kırılımı');
   assert.match(src,/bl:cp-priority-index-changed/);
@@ -136,9 +138,12 @@ test('Backlog Zaman Akışı: Öncelik alt kırılımı ana öncelikle yığıl�
   assert.match(src,/const TIMELINE_DIMENSIONS=\['buyingGroup','buyer',PRIORITY_DIMENSION\]/);
   assert.match(src,/data-blv-timeline-dim="\$\{PRIORITY_DIMENSION\}"/,'seçicide Öncelik düğmesi');
   assert.match(src,/state\.timelineDimension=timelineDimensionKey\(t\.dataset\.blvTimelineDim\)/,'bilinmeyen değer Buyer Grup’a düşer');
-  assert.match(src,/dimension===PRIORITY_DIMENSION\?priorityGroupsOf\(list\)/,'ana öncelik gruplaması (toplam = dönem adedi)');
+  // #1079 WS6c: gruplama ortak görünüm modelinde (panelModel), çizim adı/renk/ipucu panelde.
+  const report=read('backlog-v3-report.js');
+  assert.match(report,/dim === PRIORITY_DIMENSION \? priorityGroupsOf\(items, opts\.ranks\)/,'ana öncelik gruplaması (toplam = dönem adedi)');
+  assert.match(report,/if \(dimension === PRIORITY_DIMENSION\) bucket\.tracking = trackingTotals\(b\.items, ranks\);/,'takip etiketleri dönem başına');
   assert.match(src,/dimension===PRIORITY_DIMENSION\?priorityToneVar\(g\.code\):timelineGroupColor\(index\)/,'renk katalog tonundan');
-  assert.match(src,/dimension===PRIORITY_DIMENSION\?timelineTrackingTipRows\(bucket&&bucket\.items\):''/,'takip etiketleri yalnız ipucunda');
+  assert.match(src,/dimension===PRIORITY_DIMENSION\?timelineTrackingTipRows\(bucket&&bucket\.tracking\):''/,'takip etiketleri yalnız ipucunda');
   const tokens=src.match(/const PRIORITY_TONE_TOKEN=\{([^}]*)\}/)[1];
   for(const tone of OD.PRIORITY_TONES)assert.match(tokens,new RegExp(tone+":'--ui-"),`ton eşlemesi eksik: ${tone}`);
 });

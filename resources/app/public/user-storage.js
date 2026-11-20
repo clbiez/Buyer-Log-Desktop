@@ -22,7 +22,15 @@
     // v2026-11-14 — PowerPoint düzenleyici panel/önizleme genişliği kişiseldir (cihazda kalır, eşitlenmez).
     'bl.lcwai.studioSplit',
     // v2026-11-15 — tablo içi Rapor görünümü tercihi tablo ve kullanıcı başınadır.
-    'buyerlog.tableReportMode.'
+    'buyerlog.tableReportMode.',
+    // v2026-11-19 — Siparişler okuma modeli pilot anahtarı kullanıcı başınadır (#1076).
+    'bl.ordersReadModel.',
+    // v2026-11-20 — CP hesaplanmış sütunlar pilot anahtarı kullanıcı başınadır (#1078).
+    'bl.cpComputed.',
+    // v2026-11-20 — CP pencereli okuma modeli pilot anahtarı kullanıcı başınadır (#1078 alt PR 2).
+    'bl.cpReadModel.',
+    // v2026-11-20 — CP satır kaydı pilot anahtarı kullanıcı başınadır (#1078 alt PR 3).
+    'bl.cpRowSave.'
   ];
   /* AYNI BİLGİSAYARDA BİRDEN FAZLA KULLANICI.
      Aşağıdaki kişisel filtre/görünüm anahtarları eskiden kullanıcı önekine

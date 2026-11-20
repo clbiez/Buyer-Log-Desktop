@@ -33,19 +33,6 @@ test('ilerleme hâlâ görünür: düğme spinner/"Durdur" durumuna geçmeye dev
   assert.match(before, /topBtn\.classList\.add\('spinning'\)/);
 });
 
-test('açık ilerleme kontrolüne tıklamak (yenileme zaten çalışıyorken) pencereyi açmaya devam ediyor', () => {
-  // Bu tıklama yolları BİLEREK dokunulmadı: kullanıcı bir yenileme düğmesine/
-  // menüsüne AÇIKÇA tıkladığında, iş zaten çalışıyorsa pencere açılmalı.
-  const guards = [
-    "if(window.BL_REFRESH_BUSY){ openRefreshStagesModal(); return; }",
-    "if(isRefreshRunning()){ openRefreshStagesModal(); return; }",
-    "if(isRefreshRunning()){openRefreshStagesModal();return;}",
-  ];
-  let matches = 0;
-  guards.forEach(pattern => { if (APP.includes(pattern)) matches++; });
-  assert.ok(matches >= 2, 'en az iki açık tıklama koruması korunmalı (CP + Orders + üst menü)');
-});
-
 test('pencereyi kapatmak çalışan yenilemeyi durdurmuyor (yalnız DOM\'dan kaldırıyor)', () => {
   const start = APP.indexOf('function openRefreshStagesModal()');
   const end = APP.indexOf('function showSourceRefreshAdvisory');
@@ -55,9 +42,9 @@ test('pencereyi kapatmak çalışan yenilemeyi durdurmuyor (yalnız DOM\'dan kal
   assert.ok(!block.includes('close=()=>{requestRefreshCancel'), 'kapatma requestRefreshCancel çağırmamalı');
 });
 
-test('düğmeye tekrar tıklamak (çalışırken) pencereyi yeniden açar', () => {
-  const cpStart = APP.indexOf("document.getElementById('cpRefreshBtn')");
-  const ordersStart = APP.indexOf("document.getElementById('ordersRefreshBtn')");
-  assert.match(APP.slice(cpStart, cpStart + 220), /openRefreshStagesModal\(\)/);
-  assert.match(APP.slice(ordersStart, ordersStart + 220), /openRefreshStagesModal\(\)/);
+test('üst çubuktaki yenileme ve LFL düğmeleri çalışırken aşamaları açar', () => {
+  const menu = APP.slice(APP.indexOf('async function openTopRefreshMenu('));
+  const lfl = APP.slice(APP.indexOf('window.BLRunLinkedRefresh=function()'));
+  assert.match(menu, /^async function openTopRefreshMenu[^]*?if\(window\.BL_REFRESH_BUSY\)\{openRefreshStagesModal\(\);return;\}/);
+  assert.match(lfl, /^window\.BLRunLinkedRefresh=function\(\)\{\s*if\(isRefreshRunning\(\)\)\{openRefreshStagesModal\(\);return Promise\.resolve\(false\);\}/);
 });

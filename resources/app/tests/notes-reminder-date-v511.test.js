@@ -106,7 +106,7 @@ test('Overview note count opens order details and preserves guarded per-order no
   current.Notes='Newer note';assert.equal(detail.options.deleteNote({_id:42}),false);assert.equal(deleted.length,1);
   assert.equal(detail.options.deleteNote({_id:999}),false);
   const render=APP.slice(end,APP.indexOf('function ',end+20));
-  assert.match(render,/data-note-group-count/);assert.match(render,/openOverviewNoteGroupInCp\(groups/);
+  assert.match(render,/data-note-group-count/);assert.match(render,/act\(openOverviewNoteGroupInCp,groups/); // #1074: okuma modelinde önce eski yol hazırlanır
   assert.doesNotMatch(render,/class="ovNoteOrderOpen"|class="noteCellDelete ovNoteOrderDelete"/);
   assert.match(APP,/clearRowNote\(Number\(row\._id\),key\)/);
 });

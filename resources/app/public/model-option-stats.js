@@ -12,8 +12,11 @@
   const ORDER_FIELDS=['Order Code','orderCode','ORDER CODE','OrderCode','Sipariş Kod','Sipariş Kodu','ocode'];
   const text=value=>String(value==null?'':value).trim().replace(/\s+/g,' ');
   // Aynı model/renk metni binlerce satırda tekrarlanır; tr-TR büyük harf
-  // dönüşümü sınırlı önbellekle bir kez yapılır.
-  const KEY_TEXT_CACHE_MAX=20000,keyTextCache=new Map();
+  // dönüşümü sınırlı önbellekle bir kez yapılır. Önbellek CP/Siparişler/Koleksiyon
+  // arasında paylaşılır; CP'nin tek geçişi ~20–27k metin üretir. 20k sınırı onu ve
+  // Koleksiyon özetinin model metinlerini her geçişte boşaltıyordu (#1079). 65.536
+  // girdi ≈ 10 MB üst sınır; dolunca tamamen boşalır.
+  const KEY_TEXT_CACHE_MAX=65536,keyTextCache=new Map();
   const keyText=value=>{
     const raw=value==null?'':value;
     if(typeof raw!=='string'&&typeof raw!=='number')return text(raw).toLocaleUpperCase('tr-TR');

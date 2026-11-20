@@ -86,8 +86,7 @@
 .blTableReportInline .blDetailTable thead th{top:36px;padding:9px 8px;vertical-align:middle;word-break:normal;overflow-wrap:normal}
 .blTableReportInline .blDetailTable tbody tr{height:auto}
 .blTableReportInline .blDetailTable td{padding:8px;white-space:normal;overflow:visible;vertical-align:top}
-.blTableReportInline .blDetailImageCell{vertical-align:middle}
-.blTableReportInline .blDetailImageCell img{max-height:48px}
+.blTableReportInline .blDetailImageCell{position:relative;vertical-align:middle}
 /* Kompakt rapor: her hücre en çok iki satır (birincil + ikincil); tam metin başlık ipucunda. */
 .blTableReportInline .blDetailReportPrimary,.blTableReportInline .blDetailReportSub{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .blTableReportInline .blDetailReportPrimary{-webkit-line-clamp:1}
@@ -100,10 +99,10 @@
 .blReportField:active{cursor:grabbing}
 .blReportLayoutRow td{vertical-align:top}
 
-/* Rapor, ana tablonun kayıtlı görsel ölçülerini ve ortak kaydırıcısını kullanır. */
-.blTableReportTable{--bl-report-image-col:74px;--bl-report-image-width:66px;--bl-report-image-height:40px;--bl-report-image-row:46px}
+/* Rapor, kendi görsel boyutu tercihini ortak ölçülendirme kurallarıyla uygular. */
+.blTableReportTable{--bl-report-image-col:74px;--bl-report-image-height:40px;--bl-report-image-row:46px}
 .blTableReportInline .blDetailImageHead,.blTableReportInline .blDetailImageCell{width:var(--bl-report-image-col,74px);min-width:var(--bl-report-image-col,74px);padding-left:4px!important;padding-right:4px!important}
-.blTableReportInline .blDetailImageCell img:not(.isPlaceholder){width:var(--bl-report-image-width,66px);height:var(--bl-report-image-height,40px);max-width:var(--bl-report-image-width,66px);max-height:var(--bl-report-image-height,40px);object-fit:contain}
+.blTableReportInline .blDetailImageCell img:not(.isPlaceholder){position:absolute;inset:3px 4px;width:calc(100% - 8px);height:calc(100% - 6px);max-width:none;max-height:none;object-fit:contain}
 .blTableReportInline .blDetailImageCell img.isPlaceholder{max-width:22px;max-height:22px}
 .blTableReportInline .blDetailImageHead button{max-width:100%;padding-left:0;padding-right:0;white-space:normal}
-.blTableReportInline:has(.blDetailImageCell) tbody tr[data-id]{height:max(var(--ui-table-row-height),var(--bl-report-image-row,46px))}
+.blTableReportTable:has(.blDetailImageCell) tbody tr[data-id]{height:max(var(--ui-table-row-height),var(--bl-report-image-row),calc(var(--bl-report-image-height) + 7px))}

@@ -52,11 +52,18 @@ test('Overview shows the full attention total beyond the displayed list limit', 
  const fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
  const { extractFunction } = require('./helpers/app-main-functions');
  const source = fs.readFileSync(path.join(__dirname, '../public/cp-overview-assistant.js'), 'utf8');
- const render = vm.runInNewContext(`(${extractFunction(source.slice(source.indexOf('function overviewWidgetHtml')), 'overviewWidgetHtml')})`, {
-  state: { model: { orders: Array.from({ length: 6001 }, () => ({ priority: 'CRITICAL', qty: 1 })) } },
+ // #1074: toplam overviewSummaryOf'ta hesaplanır (okuma modeli de aynı fonksiyonu kullanır), kart özetten çizer.
+ const ctx = {
+  state: { priorityCatalog: null, checklistSettings: { enabled: false }, rules: [] },
   Engine: require('../public/cp-readiness-engine'), L: (tr, en) => en, esc: String, int: String,
-  openQueueCount: () => 0, prioritiesOverviewBlock: () => '', checklistCard: () => '',
- });
+  defaultCatalog: () => [], priorityLabel: String, priorityToneOf: () => 'gray', ruleReasonCounts: () => [], itemLabel: String, questionOf: String,
+  sampleRequests: () => null, lang: () => 'en', window: {}, prioritiesOverviewBlock: () => '', checklistCard: () => '',
+ };
+ const summarize = vm.runInNewContext(`(${extractFunction(source.slice(source.indexOf('function overviewSummaryOf')), 'overviewSummaryOf')})`, ctx);
+ const widget = vm.runInNewContext(`(${extractFunction(source.slice(source.indexOf('function overviewWidgetHtml')), 'overviewWidgetHtml')})`, ctx);
+ const summary = summarize({ orders: Array.from({ length: 6001 }, () => ({ priority: 'CRITICAL', qty: 1 })) }, null);
+ assert.equal(summary.attention, 6001);
+ const render = () => widget(summary);
  assert.match(render(), /data-cpa-summary-attention><b>6001<\/b>/);
 });
 

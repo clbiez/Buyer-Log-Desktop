@@ -711,31 +711,68 @@
     </div>`;
   }
 
-  function prioritiesOverviewBlock() {
-    const model = state.model;
-    if (!model) return '';
-    const catalogIds = (state.priorityCatalog || defaultCatalog()).map(entry => entry.id);
-    const order = [...catalogIds, 'UNKNOWN'];
+  /* GENEL BAKIŞ ÖZETİ (#1074). Genel Bakış'ta gösterilen kısım tek bir düz
+     nesnedir. Eski yolda istemci kendi kararlarından kurar; okuma modeli anahtarı
+     açıkken AYNI fonksiyon yerel arka ucun işçisinde çalışır ve özet Genel Bakış
+     modeliyle gelir. Ekran yalnız bu nesneden çizilir (aşağıdaki *Html). */
+  function overviewSummaryOf(model, checklist) {
+    if (!model) return null;
+    const catalog = state.priorityCatalog || defaultCatalog();
+    const catalogIds = catalog.map(entry => entry.id);
     const byKey = new Map((model.priorities || []).map(item => [item.name, item]));
-    const visibleKeys = order.filter(key => {
-      const rows = (byKey.get(key) || { rows: 0 }).rows || 0;
-      return rows > 0 || ['CRITICAL', 'ACTION_TODAY', 'ACTION_THIS_WEEK', 'ON_TRACK'].includes(key);
-    });
-    const chips = visibleKeys.map(key => {
-      const measure = byKey.get(key) || { rows: 0, qty: 0 };
-      const tone = priorityToneOf(key);
-      return `<button type="button" class="cpaChip tone-${esc(tone)} ${state.activePriority === key ? 'is-on' : ''}" data-cpa-priority="${esc(key)}" ${measure.rows ? '' : 'disabled'}>
-        <span class="n">${int(measure.rows)}</span><span class="l">${esc(priorityLabel(key))}</span><span class="q">${int(measure.qty)} ${esc(L('adet', 'units'))}</span></button>`;
-    }).join('');
-    const totalRows = catalogIds.reduce((sum, key) => sum + ((byKey.get(key) || { rows: 0 }).rows || 0), 0);
-    const mix = totalRows ? `<div class="cpaMix" role="img" aria-label="${esc(L('Öncelik dağılımı', 'Priority mix'))}">${catalogIds.map(key => {
-      const rows = (byKey.get(key) || { rows: 0 }).rows || 0;
-      if (!rows) return '';
-      const share = Math.round(rows / totalRows * 1000) / 10;
-      const tone = priorityToneOf(key);
-      return `<button type="button" class="cpaMixSeg tone-${esc(tone)}" style="flex:${rows} 0 0" data-cpa-priority="${esc(key)}" title="${esc(`${priorityLabel(key)} · ${int(rows)} · %${share}`)}" aria-label="${esc(`${priorityLabel(key)} ${int(rows)}`)}"></button>`;
+    const enabled = Boolean(state.checklistSettings.enabled);
+    const items = (checklist && checklist.items) || [];
+    const orders = model.orders || [];
+    const premium = window.BLOverviewPremium;
+    const quality = model.dataQuality || { missing: {}, unavailableDimensions: [] };
+    const plm = sampleRequests();
+    return {
+      version: 1,
+      lang: lang(),
+      checklistEnabled: enabled,
+      openQueue: enabled && checklist ? items.reduce((sum, item) => sum + Math.max(0, Number(item.rows) || 0), 0) : 0,
+      rejected: items.reduce((total, item) => total + (item.rejected || 0), 0),
+      attention: Engine.needsAttention(model, { limit: 1, priorityCatalog: state.priorityCatalog }).total,
+      catalogIds,
+      priorities: [...catalogIds, 'UNKNOWN'].map(key => {
+        const measure = byKey.get(key) || { rows: 0, qty: 0 };
+        return { key, label: priorityLabel(key), tone: priorityToneOf(key), rows: measure.rows || 0, qty: measure.qty || 0 };
+      }),
+      customTagCount: (state.priorityCatalog || []).filter(item => !item.builtIn).length,
+      reasons: ruleReasonCounts(model).slice(0, 5).map(item => ({ name: item.name, label: item.label, count: item.count })),
+      checklist: enabled && checklist ? {
+        items: items.map(item => ({ id: item.id, label: itemLabel(item), question: questionOf(item), rows: item.rows || 0, rejected: item.rejected || 0,
+          reopened: item.reopened || 0, plmOpen: item.plmOpen || 0, plmRejected: item.plmRejected || 0 })),
+        answeredTotal: checklist.answeredTotal || 0,
+        plmAnsweredTotal: checklist.plmAnsweredTotal || 0,
+        disabled: (checklist.disabled || []).map(item => itemLabel(item)),
+      } : null,
+      plm: plm ? { available: true, updatedAt: plm.updatedAt || null } : { available: false, updatedAt: null },
+      coverage: {
+        deliveryEngineMissing: Boolean(quality.deliveryEngineMissing),
+        missing: { ...(quality.missing || {}) },
+        unavailable: (quality.unavailableDimensions || []).map(item => ({ tr: item.tr, en: item.en })),
+        visual: premium && typeof premium.buildCoverage === 'function' ? premium.buildCoverage(orders) : null,
+      },
+      priorityRules: state.rules.filter(rule => rule.kind === 'priority' && rule.enabled !== false).length,
+      premium: premium && typeof premium.summarize === 'function' ? premium.summarize(model, { priorityCatalog: state.priorityCatalog }) : null,
+    };
+  }
+
+  function prioritiesOverviewBlock(summary) {
+    if (!summary) return '';
+    const byKey = new Map(summary.priorities.map(item => [item.key, item]));
+    const visible = summary.priorities.filter(item => item.rows > 0 || ['CRITICAL', 'ACTION_TODAY', 'ACTION_THIS_WEEK', 'ON_TRACK'].includes(item.key));
+    const chips = visible.map(item => `<button type="button" class="cpaChip tone-${esc(item.tone)} ${state.activePriority === item.key ? 'is-on' : ''}" data-cpa-priority="${esc(item.key)}" ${item.rows ? '' : 'disabled'}>
+        <span class="n">${int(item.rows)}</span><span class="l">${esc(item.label)}</span><span class="q">${int(item.qty)} ${esc(L('adet', 'units'))}</span></button>`).join('');
+    const ranked = summary.catalogIds.map(key => byKey.get(key)).filter(Boolean);
+    const totalRows = ranked.reduce((sum, item) => sum + (item.rows || 0), 0);
+    const mix = totalRows ? `<div class="cpaMix" role="img" aria-label="${esc(L('Öncelik dağılımı', 'Priority mix'))}">${ranked.map(item => {
+      if (!item.rows) return '';
+      const share = Math.round(item.rows / totalRows * 1000) / 10;
+      return `<button type="button" class="cpaMixSeg tone-${esc(item.tone)}" style="flex:${item.rows} 0 0" data-cpa-priority="${esc(item.key)}" title="${esc(`${item.label} · ${int(item.rows)} · %${share}`)}" aria-label="${esc(`${item.label} ${int(item.rows)}`)}"></button>`;
     }).join('')}</div>` : '';
-    const reasons = ruleReasonCounts(model).slice(0, 5).map(item => {
+    const reasons = summary.reasons.map(item => {
       const label = item.label;
       const automateLabel = L('Bu konu için e-mail otomasyonu oluştur', 'Create an email automation for this issue');
       return `<li class="cpaReasonRow">
@@ -745,38 +782,35 @@
     }).join('');
     const active = state.activePriority;
     const canAutomate = active !== 'ALL' && !active.startsWith('REASON:');
-    const customTagCount = (state.priorityCatalog || []).filter(item => !item.builtIn).length;
+    const activeItem = byKey.get(active);
     return `<section class="cpaOverviewPriorities" aria-label="${esc(L('Öncelik dağılımı ve aktif kurallar', 'Priority distribution and active rules'))}">
       <div class="cpaOverviewPrioHead">
-        <b>${esc(L('Canlı Öncelik Dağılımı', 'Live Priority Distribution'))}${customTagCount ? ` <small class="cpaNote">· ${int(customTagCount)} ${esc(L('özel etiket', 'custom tags'))}</small>` : ''}</b>
+        <b>${esc(L('Canlı Öncelik Dağılımı', 'Live Priority Distribution'))}${summary.customTagCount ? ` <small class="cpaNote">· ${int(summary.customTagCount)} ${esc(L('özel etiket', 'custom tags'))}</small>` : ''}</b>
         <button type="button" class="cpaBtn sm ghost" data-cpa-rules>+ ${esc(L('Etiket veya kural ekle', 'Add tag or rule'))}</button>
       </div>
       ${mix}
       <div class="cpaChips">${chips}</div>
-      ${canAutomate ? `<div class="cpaRowBetween"><span class="cpaNote">${esc(priorityLabel(active))} · ${int((byKey.get(active) || { rows: 0 }).rows)} ${esc(L('sipariş satırı', 'order rows'))}</span>
+      ${canAutomate ? `<div class="cpaRowBetween"><span class="cpaNote">${esc(activeItem ? activeItem.label : priorityLabel(active))} · ${int(activeItem ? activeItem.rows : 0)} ${esc(L('sipariş satırı', 'order rows'))}</span>
         <button type="button" class="cpaBtn sm" data-cpa-automate-priority="${esc(active)}">✉ ${esc(L('Otomasyon oluştur', 'Create automation'))}</button></div>` : ''}
       ${reasons ? `<ul class="cpaReasons">${reasons}</ul>` : ''}
     </section>`;
   }
 
-  function overviewWidgetHtml() {
-    const items = state.checklist?.items || [];
-    const rejected = items.reduce((total, item) => total + (item.rejected || 0), 0);
-    const attention = Engine.needsAttention(state.model, { limit: 1, priorityCatalog: state.priorityCatalog }).total;
+  function overviewWidgetHtml(summary) {
     return `<div class="cpaOverviewCompact">
       <div class="cpaOverviewMetrics" role="group" aria-label="${esc(L('Takip özeti', 'Follow-up summary'))}">
-        <button type="button" class="cpaOverviewMetric" data-cpa-queue-scope="openRejected"><b>${int(openQueueCount())}</b><span>${esc(L('Açık kontrol', 'Open checks'))}</span></button>
-        <button type="button" class="cpaOverviewMetric" data-cpa-queue-scope="rejected"><b>${int(rejected)}</b><span>${esc(L('Reddedilen', 'Rejected'))}</span></button>
-        <button type="button" class="cpaOverviewMetric" data-cpa-summary-attention><b>${int(attention)}</b><span>${esc(L('Aksiyon gereken sipariş', 'Orders needing action'))}</span></button>
+        <button type="button" class="cpaOverviewMetric" data-cpa-queue-scope="openRejected"><b>${int(summary.openQueue)}</b><span>${esc(L('Açık kontrol', 'Open checks'))}</span></button>
+        <button type="button" class="cpaOverviewMetric" data-cpa-queue-scope="rejected"><b>${int(summary.rejected)}</b><span>${esc(L('Reddedilen', 'Rejected'))}</span></button>
+        <button type="button" class="cpaOverviewMetric" data-cpa-summary-attention><b>${int(summary.attention)}</b><span>${esc(L('Aksiyon gereken sipariş', 'Orders needing action'))}</span></button>
       </div>
       <div class="cpaOverviewActions"><button type="button" class="cpaBtn primary" data-cpa-queue>${esc(L('İş Listesini Aç', 'Open Work Queue'))}</button><button type="button" class="cpaBtn" data-cpa-rules>${esc(L('Kurallar ve Etiketler', 'Rules and Tags'))}</button></div>
-      <details class="cpaOverviewDetails"><summary>${esc(L('Dağılım ve kontrol ayrıntıları', 'Distribution and check details'))}</summary>${prioritiesOverviewBlock()}<div class="cpaChecklistOverview">${checklistCard()}</div></details>
+      <details class="cpaOverviewDetails"><summary>${esc(L('Dağılım ve kontrol ayrıntıları', 'Distribution and check details'))}</summary>${prioritiesOverviewBlock(summary)}<div class="cpaChecklistOverview">${checklistCard(summary)}</div></details>
     </div>`;
   }
 
-  function checklistCard() {
-    const summary = state.checklist;
-    if (!state.checklistSettings.enabled) {
+  function checklistCard(overview) {
+    const summary = overview.checklist;
+    if (!overview.checklistEnabled || !summary) {
       return card('checklist', L('Kontrol Listesi', 'Checklist'),
         `<p class="cpaNote">${esc(L('Kontrol listesi kapalı. Kontrol Soruları sekmesinden açabilirsiniz.', 'The checklist is off. You can turn it on from Checklist Questions.'))}</p>`);
     }
@@ -784,22 +818,22 @@
     const rejected = summary.items.reduce((sum, item) => sum + (item.rejected || 0), 0);
     const approved = summary.answeredTotal || 0, total = pending + rejected + approved;
     const progress = total ? Math.round(100 * approved / total) : 100;
-    const overview = `<div class="cpaCheckSummary"><div class="cpaCheckRing" style="--check-progress:${progress}%" role="img" aria-label="${esc(L('Tamamlanan kontrol', 'Completed checks'))}: ${progress}%"><b>${progress}%</b></div><div><b>${esc(L('Kontrol durumun', 'Your check status'))}</b><span>${int(approved)} ${esc(L('tamamlandı', 'completed'))} · ${int(pending)} ${esc(L('bekliyor', 'pending'))} · ${int(rejected)} ${esc(L('reddedildi', 'rejected'))}</span><small>${esc(L('Toplu yanıt, not ve ekler için bir kontrol seçin ya da İş Listesi’ni açın.', 'Pick a check or open Work Queue for bulk status, notes and attachments.'))}</small></div></div>`;
+    const overviewHtml = `<div class="cpaCheckSummary"><div class="cpaCheckRing" style="--check-progress:${progress}%" role="img" aria-label="${esc(L('Tamamlanan kontrol', 'Completed checks'))}: ${progress}%"><b>${progress}%</b></div><div><b>${esc(L('Kontrol durumun', 'Your check status'))}</b><span>${int(approved)} ${esc(L('tamamlandı', 'completed'))} · ${int(pending)} ${esc(L('bekliyor', 'pending'))} · ${int(rejected)} ${esc(L('reddedildi', 'rejected'))}</span><small>${esc(L('Toplu yanıt, not ve ekler için bir kontrol seçin ya da İş Listesi’ni açın.', 'Pick a check or open Work Queue for bulk status, notes and attachments.'))}</small></div></div>`;
     const items = summary.items.map((item, index) => {
       const waiting = Math.max(0, item.rows - (item.rejected || 0));
       return `<button type="button" class="cpaCheckTile${item.rejected ? ' hasRejected' : ''}" data-cpa-open-checklist="${esc(item.id)}" style="--check-delay:${index * 30}ms">
-        <span class="cpaCheckTileHead"><svg class="ic" aria-hidden="true"><use href="#i-checklist"/></svg><b>${esc(itemLabel(item))}</b><svg class="ic" aria-hidden="true"><use href="#i-chevron-right"/></svg></span>
-        <small>${esc(questionOf(item))}</small><span class="cpaCheckTileCounts"><span><b>${int(waiting)}</b> ${esc(L('Bekliyor', 'Pending'))}</span>${item.rejected ? `<span class="cpaCheckRejected"><b>${int(item.rejected)}</b> ${esc(L('Reddedildi', 'Rejected'))}</span>` : ''}${item.reopened ? `<span><b>${int(item.reopened)}</b> ${esc(L('Yeniden', 'Re-asked'))}</span>` : ''}</span>
+        <span class="cpaCheckTileHead"><svg class="ic" aria-hidden="true"><use href="#i-checklist"/></svg><b>${esc(item.label)}</b><svg class="ic" aria-hidden="true"><use href="#i-chevron-right"/></svg></span>
+        <small>${esc(item.question)}</small><span class="cpaCheckTileCounts"><span><b>${int(waiting)}</b> ${esc(L('Bekliyor', 'Pending'))}</span>${item.rejected ? `<span class="cpaCheckRejected"><b>${int(item.rejected)}</b> ${esc(L('Reddedildi', 'Rejected'))}</span>` : ''}${item.reopened ? `<span><b>${int(item.reopened)}</b> ${esc(L('Yeniden', 'Re-asked'))}</span>` : ''}</span>
         ${item.plmOpen || item.plmRejected ? `<span class="cpaNote">PLM · ${int(item.plmOpen || 0)} ${esc(L('açık', 'open'))} · ${int(item.plmRejected || 0)} ${esc(L('reddedildi', 'rejected'))}</span>` : ''}
       </button>`;
     }).join('');
     const disabled = summary.disabled.length
-      ? `<p class="cpaNote">${esc(L('Takip edilmeyen kontroller', 'Not tracked'))}: ${summary.disabled.map(item => esc(itemLabel(item))).join(', ')}</p>` : '';
+      ? `<p class="cpaNote">${esc(L('Takip edilmeyen kontroller', 'Not tracked'))}: ${summary.disabled.map(label => esc(label)).join(', ')}</p>` : '';
     return card('checklist', L('Kontrol Listesi', 'Checklist'), `
-      ${overview}
+      ${overviewHtml}
       ${items ? `<div class="cpaCheckTiles">${items}</div>` : `<p class="cpaEmpty">${esc(L('Şu an açık kontrol yok.', 'No open checks right now.'))}</p>`}
       ${summary.answeredTotal ? `<p class="cpaNote">${esc(L('Onaylanan / gerekmeyen kontrol', 'Approved / not required checks'))}: <b>${int(summary.answeredTotal)}</b>${summary.plmAnsweredTotal ? ` · ${esc(L('PLM onayı / üretim sonrası ile', 'via PLM approval / post-production'))}: <b>${int(summary.plmAnsweredTotal)}</b>` : ''}</p>` : ''}
-      ${sampleRequests() ? `<div class="cpaRowBetween"><span class="cpaNote">${esc(L('PLM numune senkronu', 'PLM sample sync'))}: ${esc(sampleRequests().updatedAt ? new Date(sampleRequests().updatedAt).toLocaleString(locale()) : L('henüz yapılmadı', 'not run yet'))}</span>
+      ${overview.plm.available ? `<div class="cpaRowBetween"><span class="cpaNote">${esc(L('PLM numune senkronu', 'PLM sample sync'))}: ${esc(overview.plm.updatedAt ? new Date(overview.plm.updatedAt).toLocaleString(locale()) : L('henüz yapılmadı', 'not run yet'))}</span>
         <button type="button" class="cpaBtn sm" data-cpa-plm-requests-sync>${esc(L('PLM numune durumunu güncelle', 'Update PLM sample status'))}</button></div>` : ''}
       ${disabled}`);
   }
@@ -1039,9 +1073,9 @@
       ${!attentionVisual && all.length > shown.length ? `<button type="button" class="cpaBtn" data-cpa-more>${esc(L('Daha fazla göster', 'Show more'))}</button>` : ''}`);
   }
 
-  function coverageCard() {
-    const quality = state.model.dataQuality;
-    const coverage = window.BLOverviewPremium?.buildCoverage(state.model.orders);
+  function coverageCard(summary) {
+    const quality = summary.coverage;
+    const coverage = quality.visual;
     const engineWarning = quality.deliveryEngineMissing
       ? `<p class="cpaWarn">${esc(L('Teslimat motoru yüklenemedi; risk ve ETA hesaplanamıyor. Sayfayı yenileyin, sürerse bildirin.', 'The delivery engine could not be loaded; risk and ETA cannot be calculated. Reload the page and report it if it persists.'))}</p>`
       : '';
@@ -1053,7 +1087,7 @@
       ['transitRule', L('Yol süresi kuralı', 'Transit rule')],
     ].filter(([key]) => quality.missing[key]).map(([key, label]) =>
       `<li><span>${esc(label)}</span><b>${int(quality.missing[key])}</b></li>`).join('');
-    const unavailable = quality.unavailableDimensions.map(item =>
+    const unavailable = quality.unavailable.map(item =>
       `<li><span>${esc(isEn() ? item.en : item.tr)}</span></li>`).join('');
     return card('coverage', L('Veri Kapsamı', 'Data Coverage'), `
       ${coverage ? `<div class="cpaCoverageVisual"><div><b>${coverage.percent == null ? '—' : coverage.percent + '%'}</b><span>${esc(L('Yükleme + hedef tarihi', 'Loading + target dates'))}</span></div><div><b>${int(coverage.unknown)}</b><span>${esc(L('Hesaplanamıyor', 'Uncalculable'))}</span></div><span class="cpaCoverageTrack"><i style="width:${coverage.percent || 0}%"></i></span></div>` : ''}
@@ -1073,30 +1107,78 @@
     </section>`;
   }
 
+  /* Okuma modeli özeti (#1074): anahtar açıkken Genel Bakış bu özetten çizilir;
+     tam CP satırı ve karar modeli yoktur. İş Listesi / drill gibi tam satır
+     isteyen tıklamalar önce materialize() ile eski yolu (CP + kararlar) hazırlar. */
+  let modelSummary = null;
+  let summaryMaterialize = null;
+  // Özet gösterilirken CP sayfasından açılan İş Listesi veya supplier-sync'in
+  // onOverviewRendered(tüm CP satırları) çağrısı state.model'i doldurabilir; Genel
+  // Bakış kartı yine Genel Bakış özetini gösterir. Eski yola dönüş yalnız
+  // showOverviewSummary(null) ile (materializeOverview) olur.
+  let preferSummary = false;
   function render() {
     const container = host();
     const attention = attentionHost();
     const coverage = coverageHost();
     if (!container) return;
-    if (!state.model) {
+    const fromModel = modelSummary && modelSummary.lang === lang() && (preferSummary || !state.model) ? modelSummary : null;
+    const summary = fromModel || (state.model ? overviewSummaryOf(state.model, state.checklist) : null);
+    if (!summary) {
       container.innerHTML = '';
       if (attention) attention.innerHTML = '';
       if (coverage) coverage.innerHTML = '';
       window.BLOverviewPremium?.update?.({ model: null });
       return;
     }
-    container.innerHTML = overviewWidgetHtml();
+    container.innerHTML = overviewWidgetHtml(summary);
     if (attention) attention.innerHTML = '';
-    if (coverage) coverage.innerHTML = coverageCard();
-    window.BLOverviewPremium?.update?.({
+    if (coverage) coverage.innerHTML = coverageCard(summary);
+    window.BLOverviewPremium?.update?.(!fromModel ? {
       model: state.model,
       checklist: state.checklist,
-      priorityRules: state.rules.filter(rule => rule.kind === 'priority' && rule.enabled !== false).length,
+      priorityRules: summary.priorityRules,
       priorityCatalog: state.priorityCatalog,
+    } : {
+      model: null,
+      summary: summary.premium,
+      priorityRules: summary.priorityRules,
+      priorityCatalog: state.priorityCatalog,
+      materialize: summaryMaterialize,
     });
+    if (fromModel) { bindSummary(container); if (coverage) bindSummary(coverage); return; }
     bind(container);
     if (attention) bind(attention);
     if (coverage) bind(coverage);
+  }
+  /* Özet modunda tıklamalar: yalnız görünüm ayarı olanlar (katlama, kural/ayar
+     pencereleri) yerinde çalışır; satır isteyenler eski yolu hazırlayıp aynı
+     düğmeye yeniden tıklar. */
+  function bindSummary(container) {
+    container.querySelectorAll('[data-cpa-settings]').forEach(el => el.onclick = openSettings);
+    container.querySelectorAll('[data-cpa-rules]').forEach(el => el.onclick = openRules);
+    container.querySelectorAll('[data-cpa-collapse]').forEach(el => el.onclick = () => {
+      const key = el.dataset.cpaCollapse; state.hidden[key] = !state.hidden[key]; savePrefs(); render();
+    });
+    const selector = '[data-cpa-queue],[data-cpa-queue-scope],[data-cpa-summary-attention],[data-cpa-priority],[data-cpa-reason],[data-cpa-open-checklist],[data-cpa-automate-reason],[data-cpa-automate-priority],[data-cpa-plm-requests-sync]';
+    container.querySelectorAll(selector).forEach(el => el.onclick = event => {
+      event.preventDefault();
+      if (typeof summaryMaterialize !== 'function') return;
+      const attrs = [...el.attributes].filter(attr => attr.name.startsWith('data-cpa-')).map(attr => `[${attr.name}="${CSS.escape(attr.value)}"]`).join('');
+      el.disabled = true;
+      Promise.resolve(summaryMaterialize()).then(ready => {
+        if (!ready) return;
+        // Eski yol çizildi; aynı kimlikli düğme yeniden bulunur ve tıklanır.
+        const again = attrs && document.querySelector(`#cpAssistant ${attrs},#cpAssistantCoverage ${attrs}`);
+        if (again) again.click();
+      }).catch(() => {}).finally(() => { if (el.isConnected) el.disabled = false; });
+    });
+  }
+  function showOverviewSummary(summary, options = {}) {
+    modelSummary = summary && summary.version === 1 ? summary : null;
+    preferSummary = Boolean(modelSummary);
+    if (typeof options.materialize === 'function') summaryMaterialize = options.materialize;
+    render();
   }
 
   function bind(container) {
@@ -4852,6 +4934,8 @@
   window.BLCpAssistant = {
     onOverviewRendered,
     invalidateOverview,
+    overviewSummaryOf,
+    showOverviewSummary,
     openStudio,
     refreshLanguage: () => { render(); if (managedRulesRedraw) managedRulesRedraw(); },
     openChecklist,

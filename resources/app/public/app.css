@@ -975,9 +975,9 @@ tfoot .collectionWeightedAverage .collectionFooterCaption{display:block;}
 @media(max-width:1000px){
   #ordersTableToolbar{overflow-x:visible;}
   #ordersTableToolbar>input[type=search]{position:static;flex:1 1 150px;width:auto;min-width:130px;}
-  #ordersTableToolbar>#ordersRefreshBtn,#ordersTableToolbar>:is(#ordersPlmSyncWrap,#ordersToolsWrap,#ordersMoreWrap)>.tbtn{width:var(--ui-control-height);min-width:var(--ui-control-height);padding-left:0;padding-right:0;justify-content:center;}
+  #ordersTableToolbar>:is(#ordersPlmSyncWrap,#ordersToolsWrap,#ordersMoreWrap)>.tbtn{width:var(--ui-control-height);min-width:var(--ui-control-height);padding-left:0;padding-right:0;justify-content:center;}
   #ordersTableActions>:is(#undoBtn,#redoBtn,#navCopy,#navCopyMenuBtn,#navExcelBtn){width:var(--ui-control-height);min-width:var(--ui-control-height);padding-left:0;padding-right:0;justify-content:center;}
-  #ordersTableToolbar>#ordersRefreshBtn>span,#ordersTableToolbar>:is(#ordersPlmSyncWrap,#ordersToolsWrap)>.tbtn>span,#ordersTableActions>:is(#undoBtn,#redoBtn,#navCopy,#navExcelBtn)>span{display:none!important;}
+  #ordersTableToolbar>:is(#ordersPlmSyncWrap,#ordersToolsWrap)>.tbtn>span,#ordersTableActions>:is(#undoBtn,#redoBtn,#navCopy,#navExcelBtn)>span{display:none!important;}
 }
 .tableActionIconOnly{
   width:var(--ui-control-height)!important;
@@ -1894,7 +1894,7 @@ input.kolLandedInput::placeholder{opacity:.62;}
 #serverRefreshBtn.spinning{cursor:wait;}
 /* 7.0.294 Refresh + SYNC motion feedback: theme state and SVG pivot.
    Finite action frames are exclusively owned by the shared Motion+ controller. */
-:is(#topRefreshBtn,#serverRefreshBtn,#cpRefreshBtn,#ordersRefreshBtn,
+:is(#topRefreshBtn,#serverRefreshBtn,
   #lflRefreshBtn,#intakeRefreshBtn,#backlogOverviewRefresh,
   #syncStatusBtn,#cpPlmSyncBtn,#ordersPlmSyncBtn,#kolPlmSyncBtn,
   [data-plm-sync-category]) .ic{transform-origin:center;transform-box:fill-box;}

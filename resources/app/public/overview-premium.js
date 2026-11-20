@@ -85,7 +85,22 @@
       {key:'loading',orders:loading},
     ].filter(entry=>entry.orders.length);
   }
-  const api={buildHorizon,buildCoverage,metricSeries,pulseScopes,priorityBand};
+  /* Okuma modeli (#1074): Nabız ve Termin Ufku'nun çizdiği sayılar düz bir
+     özet olarak. Eski yol aynı özeti kendi modelinden kurar; anahtar açıkken
+     özet yerel arka uçtan gelir. Çizim yalnız bu özetten yapılır. */
+  function horizonSummary(h){
+    return {start:h.start,days:h.days.map(d=>({date:d.date,qty:d.qty,riskQty:d.riskQty,unknownRows:d.unknownRows,count:d.rows.length})),overdue:h.overdue.length,missing:h.missing.length};
+  }
+  function summarize(model){
+    const orders=Array.isArray(model?.orders)?model.orders:[];
+    return {
+      priorities:(Array.isArray(model?.priorities)?model.priorities:[]).map(item=>({name:item.name,rows:number(item.rows)})),
+      pulse:pulseScopes(model).map(entry=>({key:entry.key,tone:entry.meta?entry.meta.tone||null:null,tr:entry.meta?entry.meta.tr||'':'',en:entry.meta?entry.meta.en||'':'',
+        count:entry.orders.length,qty:entry.orders.reduce((sum,item)=>sum+number(item.qty),0)})),
+      horizon:{7:horizonSummary(buildHorizon(orders,{days:7})),14:horizonSummary(buildHorizon(orders,{days:14}))},
+    };
+  }
+  const api={buildHorizon,buildCoverage,metricSeries,pulseScopes,priorityBand,summarize};
   if(!root.document)return api;
   const doc=root.document;
   const L=(tr,en)=>String(doc.documentElement.lang||'tr').startsWith('en')?en:tr;
@@ -116,7 +131,7 @@
       if(meta.id==='ON_TRACK'||meta.tone==='green')return 'ok';
       return 'watch';
     };
-    const values=catalog.map(meta=>({meta,count:number(model?.priorities?.find(item=>item.name===meta.id)?.rows)}));
+    const values=catalog.map(meta=>({meta,count:number(view()?.priorities?.find(item=>item.name===meta.id)?.rows)}));
     return `<div class="ovPulseBand" aria-hidden="true">${values.filter(x=>x.count).map(x=>`<i class="ovBdTone--${toneClass(x.meta)}" style="flex:${x.count}"></i>`).join('')}</div>`;
   }
   function animatePulse(node){
@@ -131,13 +146,14 @@
   }
   function renderPulse(){
     const node=doc.getElementById('ovPulse');if(!visible(node))return;
-    if(!model){draw(node,empty(context.message||L('CP özeti hazırlanıyor…','Preparing CP summary…')));return;}
-    const horizon=buildHorizon(model.orders);
+    const summary=view();
+    if(!summary){draw(node,empty(context.message||L('CP özeti hazırlanıyor…','Preparing CP summary…')));return;}
+    const horizon=summary.horizon[7];
     const labels={scope:L('Aktif CP kapsamı','Active CP scope'),critical:L('Kritik aksiyon','Critical action'),today:L('Bugün Aksiyon','Action Today'),week:L('Bu Hafta Aksiyon','Action This Week'),loading:L('Yakın yükleme · 7 gün','Upcoming loading · 7 days')};
-    const records=pulseScopes(model).map(entry=>{
-      const qty=entry.orders.reduce((sum,item)=>sum+number(item.qty),0),loading=entry.key==='loading';
-      const label=labels[entry.key]||(entry.meta?L(entry.meta.tr,entry.meta.en):entry.key);
-      return {...entry,label,value:fmt(loading?qty:entry.orders.length),unit:loading?L('adet','units'):L('satır','rows'),sub:loading?`${fmt(entry.orders.length)} ${L('planlı satır','planned rows')}`:`${fmt(qty)} ${L('adet','units')}`,
+    const records=summary.pulse.map(entry=>{
+      const qty=entry.qty,loading=entry.key==='loading',meta=entry.tone||entry.tr||entry.en?{tone:entry.tone,tr:entry.tr,en:entry.en}:null;
+      const label=labels[entry.key]||(meta?L(meta.tr,meta.en):entry.key);
+      return {...entry,meta,label,value:fmt(loading?qty:entry.count),unit:loading?L('adet','units'):L('satır','rows'),sub:loading?`${fmt(entry.count)} ${L('planlı satır','planned rows')}`:`${fmt(qty)} ${L('adet','units')}`,
         visual:loading?`<div class="ovPulseMini" aria-hidden="true">${horizon.days.map(d=>`<i style="--ov-level:${Math.max(4,100*d.qty/Math.max(1,...horizon.days.map(x=>x.qty)))}%"></i>`).join('')}</div>`:renderPriorityBand()};
     });
     // v7.0.290 — Öncelik yalnız kullanıcının kurallarından gelir: kural yoksa
@@ -151,10 +167,11 @@
   function renderHorizon(){
     const node=doc.getElementById('ovDeadline');if(!visible(node))return;
     const tools=`<div class="ovPremiumSegment">${[7,14].map(n=>`<button type="button" data-ov-days="${n}" data-ov-focus="days-${n}" aria-pressed="${n===horizonDays}">${n} ${L('gün','days')}</button>`).join('')}</div>`;
-    if(!model){draw(node,head(L('Termin Ufku','Delivery Horizon'),tools)+empty(context.message||L('CP tarihleri hazırlanıyor…','Preparing CP dates…')));return;}
-    const h=buildHorizon(model.orders,{days:horizonDays}),max=Math.max(1,...h.days.map(d=>d.qty));
-    const chart=`<div class="ovHorizonChart">${h.days.map((d,i)=>`<button type="button" class="ovHorizonDay" data-ov-day="${i}" data-ov-focus="day-${i}" ${d.rows.length?'':'disabled'} aria-label="${esc(`${dateLabel(d.date)} · ${fmt(d.qty)} ${L('adet','units')} · ${d.rows.length} ${L('satır','rows')} · ${d.unknownRows} ${L('hesaplanamıyor','uncalculable')}`)}" title="${esc(`${dateLabel(d.date)} · ${fmt(d.qty)} ${L('adet','units')} · ${d.rows.length} ${L('satır','rows')}`)}"><b>${fmt(d.rows.length)}</b><span class="ovHorizonTrack"><i style="--ov-level:${Math.max(d.qty>0?3:0,100*d.qty/max)}%;--ov-risk:${d.qty?100*d.riskQty/d.qty:0}%;--ov-delay:${i*25}ms"></i></span><small>${esc(new Date(d.date*DAY).toLocaleDateString(locale(),{day:'numeric',timeZone:'UTC'}))}</small></button>`).join('')}</div>`;
-    draw(node,head(L('Termin Ufku','Delivery Horizon'),tools)+chart+`<div class="ovHorizonFoot"><span>${esc(dateLabel(h.start))} – ${esc(dateLabel(h.start+horizonDays-1))}</span><span><i></i>${L('Riskli adet','At-risk units')}</span><button type="button" data-ov-horizon="overdue" data-ov-focus="overdue">${fmt(h.overdue.length)} ${L('tarihi geçmiş','past date')}</button><button type="button" data-ov-horizon="missing" data-ov-focus="missing">${fmt(h.missing.length)} ${L('tarihsiz','undated')}</button></div>`);
+    const summary=view();
+    if(!summary){draw(node,head(L('Termin Ufku','Delivery Horizon'),tools)+empty(context.message||L('CP tarihleri hazırlanıyor…','Preparing CP dates…')));return;}
+    const h=summary.horizon[horizonDays===14?14:7],max=Math.max(1,...h.days.map(d=>d.qty));
+    const chart=`<div class="ovHorizonChart">${h.days.map((d,i)=>`<button type="button" class="ovHorizonDay" data-ov-day="${i}" data-ov-focus="day-${i}" ${d.count?'':'disabled'} aria-label="${esc(`${dateLabel(d.date)} · ${fmt(d.qty)} ${L('adet','units')} · ${d.count} ${L('satır','rows')} · ${d.unknownRows} ${L('hesaplanamıyor','uncalculable')}`)}" title="${esc(`${dateLabel(d.date)} · ${fmt(d.qty)} ${L('adet','units')} · ${d.count} ${L('satır','rows')}`)}"><b>${fmt(d.count)}</b><span class="ovHorizonTrack"><i style="--ov-level:${Math.max(d.qty>0?3:0,100*d.qty/max)}%;--ov-risk:${d.qty?100*d.riskQty/d.qty:0}%;--ov-delay:${i*25}ms"></i></span><small>${esc(new Date(d.date*DAY).toLocaleDateString(locale(),{day:'numeric',timeZone:'UTC'}))}</small></button>`).join('')}</div>`;
+    draw(node,head(L('Termin Ufku','Delivery Horizon'),tools)+chart+`<div class="ovHorizonFoot"><span>${esc(dateLabel(h.start))} – ${esc(dateLabel(h.start+horizonDays-1))}</span><span><i></i>${L('Riskli adet','At-risk units')}</span><button type="button" data-ov-horizon="overdue" data-ov-focus="overdue">${fmt(h.overdue)} ${L('tarihi geçmiş','past date')}</button><button type="button" data-ov-horizon="missing" data-ov-focus="missing">${fmt(h.missing)} ${L('tarihsiz','undated')}</button></div>`);
   }
   function collectionBuckets(){
     const c=collection;if(!c)return [];
@@ -188,7 +205,9 @@
   function openRows(items,title){if(!model)return;const rows=(items||[]).map(item=>item.sourceRow).filter(Boolean);root.BLCpAssistant?.openOverviewRows?.(rows,title);}
   function render(){if(doc.body.dataset.activeTab!=='overview')return;renderPulse();renderHorizon();renderCollection();for(const [id,input] of metricViews)renderMetricChart(id,input);}
   function schedule(){if(frame)return;frame=requestAnimationFrame(()=>{frame=0;render();});}
-  function update(input={}){model=input.model||null;checklist=input.checklist||null;context={...context,...input,message:input.message||''};schedule();}
+  function update(input={}){model=input.model||null;checklist=input.checklist||null;context={...context,summary:null,materialize:null,...input,message:input.message||''};schedule();}
+  // Çizilecek özet: model varsa ondan, yoksa okuma modelinden gelen özet.
+  function view(){return model?summarize(model):(context.summary||null);}
   function updateCollection(input){collection=input;schedule();}
   function revealWidget(key){
     const home=root.BLOverviewHome,layout=root.BLOverviewLayout,place=home&&layout?.locate(home.state(),key);
@@ -266,7 +285,12 @@
         return;
       }
       const button=event.target.closest('[data-ov-pulse],[data-ov-days],[data-ov-day],[data-ov-horizon],[data-ov-model],[data-ov-status],[data-ov-collection],[data-ov-metric-table],[data-ov-metric-row]');if(!button)return;
-      if(!model&&(button.hasAttribute('data-ov-pulse')||button.hasAttribute('data-ov-day')||button.hasAttribute('data-ov-horizon')))return;
+      if(!model&&(button.hasAttribute('data-ov-pulse')||button.hasAttribute('data-ov-day')||button.hasAttribute('data-ov-horizon'))){
+        // Özet modunda satır listesi yoktur: eski yol hazırlanır, aynı düğme yeniden tıklanır.
+        const focus=button.dataset.ovFocus,materialize=context.materialize;
+        if(typeof materialize==='function'&&focus){button.disabled=true;Promise.resolve(materialize()).then(ready=>{if(ready&&model)doc.querySelector(`[data-ov-focus="${CSS.escape(focus)}"]`)?.click();}).catch(()=>{}).finally(()=>{if(button.isConnected)button.disabled=false;});}
+        return;
+      }
       if(button.dataset.ovPulse){const entry=pulseScopes(model).find(item=>item.key===button.dataset.ovPulse);if(entry)openRows(entry.orders,button.querySelector('span').textContent);}
       else if(button.dataset.ovDays){horizonDays=Number(button.dataset.ovDays);renderHorizon();}
       else if(button.dataset.ovDay!=null){const slot=buildHorizon(model?.orders,{days:horizonDays}).days[Number(button.dataset.ovDay)];openRows(slot.rows,`${L('Planlı yükleme','Planned loading')} · ${dateLabel(slot.date)}`);}

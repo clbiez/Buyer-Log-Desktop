@@ -394,18 +394,18 @@
 <link rel="stylesheet" href="bulk-operations.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="overview-home.css?v=__BL_ASSET_VERSION__&rev=20261116">
 <link rel="stylesheet" href="overview-global-flow.css?v=__BL_ASSET_VERSION__&rev=5">
-<link rel="stylesheet" href="detail-drawer.css?v=__BL_ASSET_VERSION__&rev=8">
+<link rel="stylesheet" href="detail-drawer.css?v=__BL_ASSET_VERSION__&rev=9">
 <link rel="stylesheet" href="command-palette.css?v=__BL_ASSET_VERSION__&rev=1">
 <template data-bl-style="backlog-presentation.css" data-href="backlog-presentation.css?v=__BL_ASSET_VERSION__&rev=2"></template>
 <link rel="stylesheet" href="table-view-drawers.css?v=__BL_ASSET_VERSION__&rev=2">
-<link rel="stylesheet" href="ui-components.css?v=__BL_ASSET_VERSION__&rev=20261117-report-dividers">
+<link rel="stylesheet" href="ui-components.css?v=__BL_ASSET_VERSION__&rev=20261119-table-scroll-layers">
 <link rel="stylesheet" href="ui-motion.css?v=__BL_ASSET_VERSION__&rev=20261117-flow-selection">
 <link rel="stylesheet" href="thinking-orbs.css?v=__BL_ASSET_VERSION__&rev=1">
 <link id="blBootGuardStyle" rel="stylesheet" href="ui-startup.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="table-header-tracking.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="table-freeze.css?v=__BL_ASSET_VERSION__&rev=2">
 <script src="motion-plus-theme.js?v=__BL_ASSET_VERSION__"></script>
-<script src="motion-plus.js?v=__BL_ASSET_VERSION__&rev=20261117-row-feedback"></script>
+<script src="motion-plus.js?v=__BL_ASSET_VERSION__&rev=20261119-stable-row-hover"></script>
 </head>
 <body data-active-tab="overview" data-ui-migrated="manifest">
 <script>window.BLBootGuard?.mount();window.BLMotionPlus?.arrive();</script>
@@ -992,7 +992,6 @@
         </div>
         <div class="toolbar tableActionToolbar" id="cpTableToolbar" data-responsive-toolbar="cp" data-overflow-menu="cpMoreMenu" data-overflow-trigger="cpMoreWrap">
           <input type="search" id="cpSearch" placeholder="PLM ID, model, ürün tanımı, kategori, MAG, Buyer Grup, Buyer, Line, lisans, üretici, alt üretici, özel kod, renk kodu, sipariş kodu ara…" aria-label="CP Tracker'da ara" data-i18n-aria-label-tr="CP Tracker'da ara" data-i18n-aria-label-en="Search CP Tracker">
-          <button type="button" id="cpRefreshBtn" class="tbtn primary" data-action-role="primary" data-i18n-title-tr="CP Tracker verisini yenile (ortak filtreye bağlıysa bağlı sayfalarla birlikte)" data-i18n-title-en="Refresh CP Tracker data (together with linked pages if it uses the shared filter)" title="CP Tracker verisini yenile (ortak filtreye bağlıysa bağlı sayfalarla birlikte)" data-tb-priority="primary" data-tb-compact="icon"><svg class="ic"><use href="#i-refresh"/></svg><span data-i18n-tr="Yenile" data-i18n-en="Refresh">Yenile</span></button>
           <div class="tableToolbarActions" id="cpTableActions" aria-label="CP table actions"></div>
           <!-- "Araçlar": eskiden vfBar'daki "Seçilenler" grubunda duran, seçime bağlı
                işlemler. Düğmeler paylaşılan tekil düğümlerdir; sekmeye göre buraya taşınır. -->
@@ -1083,7 +1082,6 @@
         </div>
         <div class="toolbar tableActionToolbar" id="ordersTableToolbar" data-responsive-toolbar="orders" data-overflow-menu="ordersMoreMenu" data-overflow-trigger="ordersMoreWrap">
           <input type="search" id="ordersSearch" placeholder="PLM ID, model, ürün tanımı, kategori, MAG, Buyer Grup, Buyer, Line, lisans, üretici, alt üretici, özel kod, renk kodu, sipariş kodu ara…" aria-label="Siparişlerde ara" data-i18n-aria-label-tr="Siparişlerde ara" data-i18n-aria-label-en="Search Orders">
-          <button type="button" id="ordersRefreshBtn" class="tbtn primary" data-action-role="primary" data-i18n-title-tr="Siparişleri yenile; ortak filtreyi paylaşan sayfalar birlikte yenilenir" data-i18n-title-en="Refresh Orders; pages sharing the filter refresh together" title="Siparişleri yenile; ortak filtreyi paylaşan sayfalar birlikte yenilenir" data-tb-priority="primary" data-tb-compact="icon"><svg class="ic"><use href="#i-refresh"/></svg><span data-i18n-tr="Yenile" data-i18n-en="Refresh">Yenile</span></button>
           <div class="tableToolbarActions" id="ordersTableActions" aria-label="Orders table actions"></div>
           <!-- PLM Sync: model linki + model görseli. Koleksiyon'dan FARKLI olarak
                burada tablo alanlarına (line/category/fabric…) DOKUNULMAZ. -->
@@ -1635,10 +1633,11 @@
 <script src="overview-launchpad.js?v=__BL_ASSET_VERSION__&rev=20261018"></script>
 <script src="overview-breakdown.js?v=__BL_ASSET_VERSION__&rev=20261018"></script>
 <script src="pivot-chart.js?v=__BL_ASSET_VERSION__&rev=20261115"></script>
-<script src="overview-premium.js?v=__BL_ASSET_VERSION__&rev=20261115"></script>
+<script src="overview-premium.js?v=__BL_ASSET_VERSION__&rev=20261119-ws2a"></script>
+<script src="overview-model.js?v=__BL_ASSET_VERSION__&rev=20261119-ws2a"></script>
 <script src="overview-home.js?v=__BL_ASSET_VERSION__&rev=20261116"></script>
 <script src="detail-report-layout.js?v=__BL_ASSET_VERSION__&rev=1"></script>
-<script src="table-report-inline.js?v=__BL_ASSET_VERSION__&rev=20261118-report-table"></script>
+<script src="table-report-inline.js?v=__BL_ASSET_VERSION__&rev=20261119-image-row-height"></script>
 <script src="detail-drawer.js?v=__BL_ASSET_VERSION__&rev=20261117-strict-detail-images"></script>
 <script src="overview-flow-routes.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="thinking-orb-working.js?v=__BL_ASSET_VERSION__&rev=2"></script>
@@ -1686,7 +1685,7 @@
   // switchTab still checks the authenticated access profile after bootstrap.
 })();
 </script>
-<script src="app-main.js?v=__BL_ASSET_VERSION__&rev=20261118-report-table"></script>
+<script src="app-main.js?v=__BL_ASSET_VERSION__&rev=20261119-report-image-size"></script>
 <script src="table-view-drawers.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="collection-artwork-detail.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="checklist-answer-merge-engine.js?v=__BL_ASSET_VERSION__"></script>
@@ -1730,9 +1729,9 @@
 <script src="license-royalty-commissions.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="collection-price-drawer.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="backlog-chart.js?v=__BL_ASSET_VERSION__&rev=3"></script>
-<script src="backlog-v3-report.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="backlog-v3-report.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="backlog-excel-columns.js?v=__BL_ASSET_VERSION__&rev=1"></script>
-<script src="backlog-overview.js?v=__BL_ASSET_VERSION__&rev=20261117-strict-detail-images"></script>
+<script src="backlog-overview.js?v=__BL_ASSET_VERSION__&rev=20261120-read-model-v3"></script>
 <script src="backlog-radar-layout.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="collection-plm-drag-import.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="table-search-help.js?v=__BL_ASSET_VERSION__&rev=SEARCH-HELP-V2"></script>

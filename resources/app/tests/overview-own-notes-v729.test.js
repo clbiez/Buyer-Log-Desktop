@@ -211,8 +211,9 @@ test('CP satırları not yazarını taşır', () => {
 test('önbellekten güncellenen satır yazarsız kalmaz', () => {
   // Bu satır atlanırsa kullanıcının az önce yazdığı not kendi Genel Bakış
   // listesinde görünmezdi (önbellekteki satırda yazar alanı olmayacaktı).
-  const start = SERVER.indexOf('function applyIncrementalProjectionPatch(');
-  const body = SERVER.slice(start, start + 1400);
+  const ROW_PATCH = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'projection-row-patch.js'), 'utf8');
+  const start = ROW_PATCH.indexOf('function applyIncrementalProjectionPatch(');
+  const body = ROW_PATCH.slice(start, start + 1400);
   assert.match(body, /row\._notesBy\s*=\s*notesRec\.NotesBy/);
   assert.match(body, /row\._ekNotByName\s*=\s*notesRec\.EkNotByName/);
   assert.match(body, /overrides\.notesmap/, 'yazar kayıtlı notesmap’ten okunmalı, patch’ten değil');
@@ -365,7 +366,9 @@ test('Notes Reminder not metnine tıklamak mevcut not düzenleyicisini açar', (
   assert.match(block, /class=\"ovNoteText ovNoteTextEdit\"/);
   assert.match(block, /data-note-edit=\"\$\{groupIndex\}\"/);
   assert.match(block, /querySelectorAll\('\[data-note-edit\]'\)/);
-  assert.match(block, /openOverviewNoteEditor\(groups\[Number\(node\.dataset\.noteEdit\)\]\)/);
+  // #1074: okuma modelinde önce eski yol hazırlanır (act), sonra aynı düzenleyici açılır.
+  assert.match(block, /act\(openOverviewNoteEditor,groups\[Number\(node\.dataset\.noteEdit\)\]\)/);
+  assert.match(block, /if\(typeof options\.materialize!=='function'\)\{fn\(group\);return;\}/);
   // Group editing now passes every matching own-note target, preserving the shared editor.
   assert.match(APP, /function openOverviewNoteEditor\(group\)[\s\S]*openNotesEditor\(Number\(targets\[0\]\.row\._id\),targets\[0\]\.key,\{targets,ownNotes:true,value:group\.note\}\)/);
 });

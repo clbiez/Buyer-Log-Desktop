@@ -110,9 +110,67 @@
     const c = canonicalApi();
     return c && typeof c.label === 'function' ? c.label(id, lang) : id;
   }
-  function canon(row, id) {
+  function canon(row, id, ctx) {
+    if (ctx && ctx.canonReader) return text(ctx.canonReader(row, id));
     const c = canonicalApi();
     return c && typeof c.value === 'function' ? text(c.value(row, 'backlog', id)) : '';
+  }
+  /* #1079 WS6b — şema başına kanonik erişim (BL_READ_MODEL_BACKLOG).
+     canonical-fields value() → rowLookup, satırda birebir bulunmayan her
+     bağlama anahtarı için satırın TÜM anahtarlarını token'laştırıp tarıyordu:
+     37,7k satır × 12 alan × 44 anahtar ≈ 0,56 sn tek blok. Backlog satırları
+     aynı başlık şemasını paylaşır; alan → gerçek anahtar çözümü şema (Object.keys
+     sırası) başına bir kez yapılır. Satır başına okuma value() ile birebir aynı
+     kuraldır: bağlama anahtarları sırayla, önce birebir anahtar, yoksa token'ı eşit
+     ilk anahtar; ilk boş olmayan (undefined/null/'' dışı) değer döner. Şema
+     değişirse (farklı anahtar listesi) çözüm yeniden kurulur. */
+  const BACKLOG_READ_MODEL_STORAGE_KEY = 'buyerlog.readModel.backlog.v1';
+  function compiledCanonEnabled(ctx) {
+    if (ctx && typeof ctx.compiledCanonical === 'boolean') return ctx.compiledCanonical;
+    if (root && typeof root.BL_READ_MODEL_BACKLOG === 'boolean') return root.BL_READ_MODEL_BACKLOG;
+    // Varsayılan AÇIK (kullanıcı kararı; parite 2k/30k, iki kapsam eşit). Geri dönüş:
+    // window.BL_READ_MODEL_BACKLOG=false ya da tarayıcıda yerel tercih '0'.
+    try { return !(root && root.document && root.localStorage && root.localStorage.getItem(BACKLOG_READ_MODEL_STORAGE_KEY) === '0'); } catch (_) { return true; }
+  }
+  function createCanonReader(c) {
+    if (!c || typeof c.field !== 'function' || typeof c.bindingFor !== 'function' || typeof c.token !== 'function') return null;
+    const bindingKeys = new Map();
+    let shapeKeys = null, shapeOwn = null, shapeTokens = null, shapeResolved = null;
+    const keysOf = id => {
+      if (bindingKeys.has(id)) return bindingKeys.get(id);
+      const fieldId = c.field(id) ? id : c.canonicalId('backlog', id);
+      const binding = fieldId ? c.bindingFor('backlog', fieldId) : null;
+      const keys = binding && Array.isArray(binding.keys) ? binding.keys.slice() : null;
+      bindingKeys.set(id, keys);
+      return keys;
+    };
+    const sameShape = keys => {
+      if (!shapeKeys || shapeKeys.length !== keys.length) return false;
+      for (let i = 0; i < keys.length; i += 1) if (shapeKeys[i] !== keys[i]) return false;
+      return true;
+    };
+    return function read(row, id) {
+      if (!row || typeof row !== 'object') return undefined;
+      const keys = Object.keys(row);
+      if (!sameShape(keys)) { shapeKeys = keys; shapeOwn = new Set(keys); shapeTokens = null; shapeResolved = new Map(); }
+      let resolved = shapeResolved.get(id);
+      if (resolved === undefined) {
+        const wanted = keysOf(id);
+        resolved = wanted ? wanted.map(key => {
+          if (shapeOwn.has(key)) return key;
+          if (!shapeTokens) shapeTokens = shapeKeys.map(k => c.token(k));
+          const index = shapeTokens.indexOf(c.token(key));
+          return index < 0 ? null : shapeKeys[index];
+        }).filter(key => key !== null) : null;
+        shapeResolved.set(id, resolved);
+      }
+      if (!resolved) return undefined;
+      for (let i = 0; i < resolved.length; i += 1) {
+        const v = row[resolved[i]];
+        if (v !== undefined && v !== null && v !== '') return v;
+      }
+      return undefined;
+    };
   }
   /* Tarih değeri takvim gününe (YYYY-MM-DD) çevrilir; saat dilimi kaydırmaz. */
   function dayIso(value) {
@@ -150,19 +208,19 @@
     const F = fields(), ctx = context || {};
     const status = text(row && row[F.status]);
     const stage = stageOf(status);
-    const exFactory = dayIso(row && row[F.revisedLoad]) || dayIso(canonicalApi() && canonicalApi().value(row, 'backlog', 'exFactory')) || dayIso(row && row[F.plannedLoad]);
+    const exFactory = dayIso(row && row[F.revisedLoad]) || dayIso(ctx.canonReader ? ctx.canonReader(row, 'exFactory') : canonicalApi() && canonicalApi().value(row, 'backlog', 'exFactory')) || dayIso(row && row[F.plannedLoad]);
     const meta = row && row._backlogExcel && typeof row._backlogExcel === 'object' ? row._backlogExcel : {};
     const item = {
       row, status, stage, qty:Math.max(0, num(row && row[F.qty])),
-      orderCode:canon(row, 'orderCode'), modelName:canon(row, 'modelName'), colourCode:canon(row, 'colourCode'), colour:canon(row, 'colour'),
+      orderCode:canon(row, 'orderCode', ctx), modelName:canon(row, 'modelName', ctx), colourCode:canon(row, 'colourCode', ctx), colour:canon(row, 'colour', ctx),
       exFactory, plannedExFactory:dayIso(row && row[F.plannedLoad]),
       antrepo:dayIso(row && row[F.antrepo]), retail:dayIso(row && row[F.retail]), inStore:dayIso(row && row[F.inStore]),
       risk:turk(row && row[RISK_HEADER]) === 'VAR',
       transitOverdue:meta.transitOverdue === true,
       exInheritedFrom:text(meta.exFactoryInheritedFrom),
     };
-    DIMENSIONS.forEach(id => { item[id] = canon(row, id); });
-    item.season = canon(row, 'season');
+    DIMENSIONS.forEach(id => { item[id] = canon(row, id, ctx); });
+    item.season = canon(row, 'season', ctx);
     // Özel sipariş: Regular dışında bir önem etiketi taşıyan satır (BTS, Bayram …).
     if (!item.importance) item.importance = REGULAR_IMPORTANCE;
     item.special = turk(item.importance) !== turk(REGULAR_IMPORTANCE);
@@ -179,6 +237,8 @@
     // "Bugün" bir kez hesaplanır; eskiden her satırda yeni Date + metin dönüşümü yapılıyordu.
     const ctx = { ...(context || {}) };
     if (ctx.todayOrdinal == null) ctx.todayOrdinal = ordinal(ctx.today || todayIso());
+    // Anahtar açıkken kanonik alan çözümü bu çağrı içinde şema başına bir kez yapılır.
+    if (!ctx.canonReader && compiledCanonEnabled(ctx)) ctx.canonReader = createCanonReader(canonicalApi());
     return (Array.isArray(rows) ? rows : []).map(row => normalizeRow(row, ctx));
   }
 
@@ -298,6 +358,194 @@
       const rows = (items || []).filter(check.test);
       return { key:check.key, tr:check.tr, en:check.en, count:rows.length, qty:round(rows.reduce((t, it) => t + it.qty, 0)), items:rows };
     }).filter(issue => issue.count > 0);
+  }
+
+  /* ------------------------------------------- Genel Bakış görünüm modeli */
+  /* #1079 WS6c — Backlog Genel Bakış (V3) panelinin çizdiği her sayı buradan gelir.
+     Anahtar açıkken (BL_READ_MODEL_BACKLOG_V3) bu fonksiyonlar yerel arka ucun
+     okuma modeli işçisinde çalışır ve tarayıcıya yalnız sonuç gider; kapalıyken
+     panel aynı fonksiyonları tarayıcıdaki satırlarla çağırır. Mantık iki kez
+     yazılmaz: analiz filtresi, öncelik etiketi gruplaması ve drill-down seçimi
+     panelden (backlog-overview.js) buraya taşındı. Kullanıcıya özel öncelik
+     kataloğu (etiket adı, sıra) yalnız tarayıcıda bilinir: sıra `ranks` ile
+     gelir, adlar çizimde verilir. */
+  const PRIORITY_TILE_LIMIT = 8;
+  const ON_TRACK = 'ON_TRACK';
+  function filterValueKey(value) {
+    if (value == null || value === '') return '';
+    if (value instanceof Date && !Number.isNaN(value.getTime())) return dayIso(value) || String(value);
+    if (typeof value === 'object') { try { return JSON.stringify(value); } catch (_) { return String(value); } }
+    return String(value);
+  }
+  function filterHasCriteria(filter) {
+    return !!filter && (Array.isArray(filter.values) && filter.values.length > 0 || !!filter.from || !!filter.to);
+  }
+  function filterRawValue(item, filter) { return item && item.row ? item.row[filter.rowKey] : null; }
+  function filterDay(value) { try { return dayIso(value) || ''; } catch (_) { return ''; } }
+  /* Sütunun tarih mi değer mi olduğu: sunucu faset türü bilinmiyorsa ilk 160 dolu değerden. */
+  function inferFilterKind(baseItems, filter) {
+    const rows = Array.isArray(baseItems) ? baseItems : [], values = [];
+    for (const item of rows) {
+      const value = filterRawValue(item, filter);
+      if (value != null && value !== '') values.push(value);
+      if (values.length >= 160) break;
+    }
+    if (!values.length) return /tarih|date|factory|arrival|depo|store|opd|handover/i.test(String(filter.header || filter.label || '')) ? 'date' : 'values';
+    let dates = 0;
+    for (const value of values) if (filterDay(value)) dates++;
+    return dates / values.length >= 0.8 ? 'date' : 'values';
+  }
+  function importanceScopeOf(value) { return ['special', 'regular'].includes(value) ? value : 'all'; }
+  /* opts: { importanceScope, filters, filterKinds:{id:kind} } — filterKinds tarayıcının
+     /api/backlog-filter-values faset türüdür; yoksa baseItems'tan çıkarılır. */
+  function applyAnalysisFilters(baseItems, options) {
+    const opts = options || {};
+    let out = Array.isArray(baseItems) ? baseItems.slice() : [];
+    const scope = importanceScopeOf(opts.importanceScope);
+    if (scope === 'special') out = out.filter(item => item.special);
+    else if (scope === 'regular') out = out.filter(item => !item.special);
+    const kinds = opts.filterKinds && typeof opts.filterKinds === 'object' ? opts.filterKinds : {};
+    for (const filter of Array.isArray(opts.filters) ? opts.filters : []) {
+      if (!filterHasCriteria(filter)) continue;
+      const kind = Object.prototype.hasOwnProperty.call(kinds, filter.id) ? kinds[filter.id] : inferFilterKind(baseItems, filter);
+      if (kind === 'date' && (filter.from || filter.to)) {
+        out = out.filter(item => {
+          const day = filterDay(filterRawValue(item, filter));
+          if (!day) return false;
+          if (filter.from && day < filter.from) return false;
+          if (filter.to && day > filter.to) return false;
+          return true;
+        });
+      } else if (Array.isArray(filter.values) && filter.values.length) {
+        const selected = new Set(filter.values.map(String));
+        out = out.filter(item => selected.has(filterValueKey(filterRawValue(item, filter))));
+      }
+    }
+    return out;
+  }
+  /* Öncelik dizini isabeti → satır alanları. resolveTags: BLOrderDecisionEngine.resolvePriorityTags. */
+  function priorityAnnotation(hit, resolveTags) {
+    const code = hit && hit.priority || '';
+    const trackingTags = hit && Array.isArray(hit.trackingTags) ? hit.trackingTags.filter(tag => tag && tag !== code) : [];
+    const resolved = typeof resolveTags === 'function' ? resolveTags(code, hit && hit.priorityTags, trackingTags) : null;
+    return { priorityCode:code, prioritySource:hit && hit.source || '', trackingTags, priorityTags:resolved && Array.isArray(resolved.visible) ? resolved.visible : [] };
+  }
+  function applyPriorityAnnotation(item, annotation) {
+    const a = annotation || priorityAnnotation(null);
+    item.priorityCode = a.priorityCode; item.prioritySource = a.prioritySource;
+    item.trackingTags = a.trackingTags.slice(); item.priorityTags = a.priorityTags.slice();
+  }
+  function rankOf(ranks, code) { const r = ranks && Object.prototype.hasOwnProperty.call(ranks, code) ? Number(ranks[code]) : NaN; return Number.isFinite(r) ? r : 99; }
+  const orderKeyOf = item => item.orderCode || item.lineId;
+  const rawQty = list => list.reduce((t, it) => t + (Number(it.qty) || 0), 0);
+  /* Yolunda dışındaki bütün öncelik ve takip etiketleri, kullanıcının katalog sırasıyla. */
+  function priorityTagGroups(items, ranks) {
+    const map = new Map();
+    for (const item of items || []) for (const code of item.priorityTags || []) {
+      if (code === ON_TRACK) continue;
+      if (!map.has(code)) map.set(code, []);
+      map.get(code).push(item);
+    }
+    return [...map.entries()].map(([code, group]) => ({ code, items:group, qty:rawQty(group), orders:new Set(group.map(orderKeyOf)).size }))
+      .filter(g => g.qty > 0)
+      .sort((a, b) => rankOf(ranks, a.code) - rankOf(ranks, b.code) || a.code.localeCompare(b.code));
+  }
+  /* Operasyon dağılımında her satır yalnız ANA önceliğiyle sayılır. */
+  function priorityGroupsOf(items, ranks) {
+    const byCode = new Map();
+    for (const it of items || []) { const code = it.priorityCode || ''; if (!byCode.has(code)) byCode.set(code, []); byCode.get(code).push(it); }
+    return [...byCode.entries()].map(([code, group]) => ({ code, items:group, ...summarize(group) }))
+      .sort((a, b) => (a.code ? rankOf(ranks, a.code) : 999) - (b.code ? rankOf(ranks, b.code) : 999) || b.qty - a.qty);
+  }
+  function trackingTotals(items, ranks) {
+    const map = new Map();
+    for (const it of items || []) for (const code of it.trackingTags || []) { const e = map.get(code) || { code, qty:0 }; e.qty += Number(it.qty) || 0; map.set(code, e); }
+    return [...map.values()].sort((a, b) => rankOf(ranks, a.code) - rankOf(ranks, b.code));
+  }
+  const TIMELINE_DIMENSIONS = Object.freeze(['buyingGroup', 'buyer', PRIORITY_DIMENSION]);
+  const blankLabel = lang => (lang === 'en' ? '(blank)' : '(boş)');
+  const stripItems = group => { const { items:_, riskItems:__, ...rest } = group; return rest; };
+  function dimensionGroups(items, dim, opts) {
+    return dim === PRIORITY_DIMENSION ? priorityGroupsOf(items, opts.ranks) : groupBy(items, dim, { blank:blankLabel(opts.lang) });
+  }
+  const groupRef = (dim, g) => (dim === PRIORITY_DIMENSION ? { code:g.code } : { name:g.name });
+  /* opts: { lang, groupBy, timeField, granularity, timelineDimension, importanceScope,
+     filters, filterKinds, priorityReady, ranks, today }. Satır listesi (items) taşımaz. */
+  function panelModel(baseItems, options) {
+    const opts = options || {}, lang = opts.lang === 'en' ? 'en' : 'tr', ranks = opts.ranks || {};
+    const gopts = { lang, ranks };
+    const items = applyAnalysisFilters(baseItems, opts);
+    const filterKinds = {};
+    for (const filter of Array.isArray(opts.filters) ? opts.filters : []) {
+      if (filter && filter.id) filterKinds[filter.id] = opts.filterKinds && Object.prototype.hasOwnProperty.call(opts.filterKinds, filter.id) ? opts.filterKinds[filter.id] : inferFilterKind(baseItems, filter);
+    }
+    const out = { count:items.length, baseCount:Array.isArray(baseItems) ? baseItems.length : 0, filterKinds };
+    if (!items.length) return out;
+    out.total = summarize(items);
+    if (opts.priorityReady) {
+      const tags = priorityTagGroups(items, ranks);
+      out.priority = { tags:tags.map(g => {
+        let cpQty = 0, ordersQty = 0;
+        for (const it of g.items) { if (it.prioritySource === 'orders') ordersQty += Number(it.qty) || 0; else cpQty += Number(it.qty) || 0; }
+        return { code:g.code, qty:g.qty, orders:g.orders, cpQty, ordersQty };
+      }) };
+      if (tags.length > PRIORITY_TILE_LIMIT) {
+        const rest = tags.slice(PRIORITY_TILE_LIMIT - 1);
+        out.priority.rest = { codes:rest.map(g => g.code), qty:rawQty([...new Set(rest.flatMap(g => g.items))]) };
+      }
+    }
+    out.special = importanceSummary(items).filter(g => g.riskItems.length).map(g => ({ name:g.name, riskOrders:new Set(g.riskItems.map(orderKeyOf)).size, riskQty:rawQty(g.riskItems) }));
+    out.quality = dataQuality(items).map(issue => ({ key:issue.key, tr:issue.tr, en:issue.en, count:issue.count }));
+    const groupKey = [...DIMENSIONS, PRIORITY_DIMENSION].includes(opts.groupBy) ? opts.groupBy : 'buyer';
+    out.group = { key:groupKey, groups:dimensionGroups(items, groupKey, gopts).map(g => ({ ...groupRef(groupKey, g), ...stripItems(g) })) };
+    const field = (TIMELINE_FIELDS.find(f => f.key === opts.timeField) || TIMELINE_FIELDS[0]).key;
+    const granularity = opts.granularity === 'month' ? 'month' : 'week';
+    const dimension = TIMELINE_DIMENSIONS.includes(opts.timelineDimension) ? opts.timelineDimension : 'buyingGroup';
+    const series = timeline(items, field, { granularity, lang, today:opts.today });
+    out.timeline = {
+      field, granularity, dimension,
+      names:dimensionGroups(items, dimension, gopts).map(g => groupRef(dimension, g)),
+      buckets:series.map(b => {
+        const bucket = { ...stripItems(b), dims:dimensionGroups(b.items, dimension, gopts).map(g => ({ ...groupRef(dimension, g), qty:g.qty })) };
+        if (dimension === PRIORITY_DIMENSION) bucket.tracking = trackingTotals(b.items, ranks);
+        return bucket;
+      }),
+    };
+    return out;
+  }
+  /* Drill-down tanımı → satırlar (panelModel ile aynı filtrelenmiş küme üzerinde).
+     spec.k: all | stages | overdue | special | tags | quality | risk | group | bucket */
+  function selectItems(baseItems, spec, options) {
+    const opts = options || {}, s = spec && typeof spec === 'object' ? spec : {}, lang = opts.lang === 'en' ? 'en' : 'tr';
+    const items = applyAnalysisFilters(baseItems, opts), blank = blankLabel(lang);
+    const inGroup = (it, dim, ref) => (dim === PRIORITY_DIMENSION ? (it.priorityCode || '') === String(ref.code || '') : (text(it[dim]) || blank) === String(ref.name));
+    switch (s.k) {
+      case 'all': return items;
+      case 'stages': { const set = new Set(Array.isArray(s.stages) ? s.stages : []); return items.filter(it => set.has(it.stage)); }
+      case 'overdue': return items.filter(it => it.overdueNotLoaded);
+      case 'special': return items.filter(it => it.special);
+      case 'tags': { const set = new Set(Array.isArray(s.codes) ? s.codes : []); return items.filter(it => (it.priorityTags || []).some(code => set.has(code))); }
+      case 'quality': { const check = QUALITY_CHECKS.find(c => c.key === s.key); return check ? items.filter(check.test) : []; }
+      case 'risk': return items.filter(it => it.special && (text(it.importance) || REGULAR_IMPORTANCE) === String(s.name) && it.risk);
+      case 'group': {
+        const dim = [...DIMENSIONS, PRIORITY_DIMENSION].includes(s.dim) ? s.dim : null;
+        if (!dim) return [];
+        return items.filter(it => inGroup(it, dim, s) && (!s.stage || it.stage === s.stage));
+      }
+      case 'bucket': {
+        const field = TIMELINE_FIELDS.some(f => f.key === s.field) ? s.field : null, granularity = s.granularity === 'month' ? 'month' : 'week';
+        const dim = s.dim && TIMELINE_DIMENSIONS.includes(s.dim) ? s.dim : null;
+        if (!field || !s.key) return [];
+        return items.filter(it => { const b = bucketOf(it[field] || '', granularity); return !!b && b.key === s.key && (!s.stage || it.stage === s.stage) && (!dim || inGroup(it, dim, s)); });
+      }
+      default: return [];
+    }
+  }
+  /* Çekmecenin sırası ve özeti: gecikme günü, sonra adet (azalan); ilk `limit` satır çizilir. */
+  function drawerPayload(list, limit) {
+    const sorted = (Array.isArray(list) ? list : []).slice().sort((a, b) => (b.overdueDays - a.overdueDays) || (b.qty - a.qty));
+    const max = Number.isFinite(Number(limit)) && Number(limit) > 0 ? Math.floor(Number(limit)) : sorted.length;
+    return { summary:summarize(sorted), count:sorted.length, rows:sorted.slice(0, max), list:sorted };
   }
 
   /* -------------------------------------------------------------- Excel */
@@ -608,6 +856,9 @@
     STAGES, DIMENSIONS, TIMELINE_FIELDS, PRE_LOAD,
     stageOf, stageLabel, dimLabel, dayIso, normalizeRow, normalizeRows, summarize, groupBy, timeline, isoWeekNo,
     QUALITY_CHECKS, dataQuality, importanceSummary, REGULAR_IMPORTANCE, PRIORITY_DIMENSION,
+    readModelEnabled:compiledCanonEnabled,
+    PRIORITY_TILE_LIMIT, TIMELINE_DIMENSIONS, filterValueKey, filterHasCriteria, inferFilterKind, applyAnalysisFilters,
+    priorityAnnotation, applyPriorityAnnotation, priorityTagGroups, priorityGroupsOf, panelModel, selectItems, drawerPayload,
     buildWorkbook, buildXlsx, fileName,
   });
 });

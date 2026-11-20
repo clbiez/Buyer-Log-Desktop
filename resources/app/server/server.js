@@ -5481,7 +5481,21 @@ function agentQualityLiveProfile(profile,{write=false}={}) {
     }
     return current;
 }
-function agentQualityOrderRowsNow(profile,{source='cp',includeInactive=false}={}) {
+/* #1079 WS6: checklist yetki çözümü satırdan yalnız sipariş kimliğini okur
+   (orderKey, opsiyon kimliği, sipariş kodu). Tam CP/Orders kurulumu (Antrepo,
+   formül, backlog operasyon satırları) 30k satırda çağrı başına ~2,7 sn sunucu
+   olay döngüsünü kilitliyordu. buildOrderRowsFromASAS her girdi için tek satır
+   üretir ve bu dört alanı ham satırdan override'sız aynı ifadeyle yazar; burada
+   aynı ifade kullanılır. Yetki süzgeci ve çağrı başına taze çözüm değişmez.
+   BUYER_LOG_CHECKLIST_AUTH_IDENTITY_ROWS=0 → eski tam kurulum. */
+function checklistIdentityRowsEnabled(){return process.env.BUYER_LOG_CHECKLIST_AUTH_IDENTITY_ROWS!=='0';}
+function orderIdentityRowsFromASAS(rows,{includeInactive=false}={}){
+    return rows.filter(o=>includeInactive||Number(o&&o.kalan)>0).map(o=>({
+      'PLM ID':(o.plm!=null&&!isNaN(Number(o.plm)))?Math.trunc(Number(o.plm)):'',
+      'Model Name':o.model,'C.Code':o.ccode,'Order Code':o.ocode,
+    }));
+}
+function agentQualityOrderRowsNow(profile,{source='cp',includeInactive=false,identityOnly=false}={}) {
     profile=agentQualityLiveProfile(profile);
     const active=cacheForUser(profile.id), overrides=effectiveOverridesForUser(profile.id);
     // Use the same source scope and Horizon as the page projection. Read-only
@@ -5490,12 +5504,13 @@ function agentQualityOrderRowsNow(profile,{source='cp',includeInactive=false}={}
     // User-managed source rows are projection inputs, never ownership grants.
     const businessRows=userAccess.hasPermission(profile,'manageAllOrders')?visible:visible.filter(row=>
       userAccess.filterRowsByScope(profile,userAccess.authoritativeOrderRows(canonicalFields.value(row,source,'orderCode'))).length>0);
+    if(identityOnly&&checklistIdentityRowsEnabled())return orderIdentityRowsFromASAS(businessRows,{includeInactive});
     const build=includeInactive?buildOrdersRowsFromASAS:buildCPRowsFromASAS;
     return build(businessRows,antrepoForTarget(active,source),overrides);
 }
 function checklistAuthorizedOrdersNow(profile,{write=false}={}) {
   const source=userAccess.hasArea(profile,'cp')?'cp':'orders';
-  const rows=agentQualityOrderRowsNow(profile,{source,includeInactive:true});
+  const rows=agentQualityOrderRowsNow(profile,{source,includeInactive:true,identityOnly:true});
   const CP=require('../public/cp-readiness-engine'), Checklist=require('../public/cp-checklist-engine'), allowed=new Map();
   // One synchronous resolver invocation has one current permission graph.
   // Keep the canonical ownership check per code; never cache this across requests.
@@ -5505,7 +5520,7 @@ function checklistAuthorizedOrdersNow(profile,{write=false}={}) {
     // Source folders are user-managed. Visibility must also be supported by
     // the Moderator's authoritative ownership snapshot, never a claimed buyer.
     if(!manageAllOrders && !userAccess.filterRowsByScope(profile,userAccess.authoritativeOrderRows(code)).length)continue;
-    if(write && !canUserEditOrderCode(profile,canonicalFields.value(row,source,'orderCode')))continue;
+    if(write && !canUserEditOrderCode(profile,canonicalFields.value(row,source,'orderCode'),{manageAll:manageAllOrders}))continue;
     const analysis=CP.analyzeOrder(row), identity={orderCode:String(analysis.orderCode||canonicalFields.value(row,source,'orderCode')||''),modelName:String(analysis.modelName||''),colourCode:String(analysis.colourCode||'')};
     allowed.set(analysis.orderKey,identity);
     // Option approvals are deliberately reusable across POs for the same
@@ -6364,6 +6379,98 @@ app.post('/api/backups/restore/inspect', userAccess.requireArea('source'), userA
   } catch (error) { return fullRestoreApiError(res, error, 'Full System Backup incelenemedi.'); }
   finally { if (upload) fs.rmSync(upload.root, { recursive: true, force: true }); }
 });
+// Okuma modeli ön ısıtması (#1077): çalışma alanı açılınca (GET / ya da ilk
+// /api/data?mode=initial) yerel arka uç Genel Bakış modelini ve modül projeksiyonlarını
+// kendi işçisinde boşta ısıtır. Diğer API çağrıları ön ısıtma başlatmaz (yan etkisiz).
+// Bağımlılıklar ilk kullanımda okunur (rota kayıtları aşağıdadır).
+// CP hesaplanmış sütun servisi (rota kaydı aşağıda); ön ısıtma ilk kullanımda okur.
+let cpComputedServiceGetter = null;
+const readModelPrewarm = require('./lib/read-model/prewarm-scheduler').createReadModelPrewarm({
+  getCpComputedService: () => cpComputedServiceGetter ? cpComputedServiceGetter() : null,
+  getPool: () => require('./lib/read-model/read-model-pool').getReadModelPool(),
+  userAccess,
+  preferenceValue: (profile, key) => {
+    const personal = (userPreferences.load(profile.id) || {}).entries || {}, roles = userAccess.roleWorkspaceEntries(profile) || {};
+    const entry = personal[key] || roles[key];
+    return entry && entry.value != null ? String(entry.value) : null;
+  },
+  loadProjection: (req, module) => ensureComputedProjection(req, module),
+  getOverviewService: () => overviewModelServiceForPrewarm(),
+  guard: { capture: (req, area) => computeReadGuard.capture(req, area) },
+  onFailure: (stage, error) => logRuntimeFailure('readModelPrewarm:' + stage, error),
+});
+function noteWorkspaceOpened(req, profile = req.currentUser) {
+  try { readModelPrewarm.noteSession({ headers: req.headers, currentUser: profile, socket: req.socket }); }
+  catch (error) { logRuntimeFailure('readModelPrewarm:trigger', error); }
+}
+// Genel Bakış okuma modeli (#1074): POST /api/read-model/overview/model. Kişisel karar
+// bağlamı istemciyle aynı sunucu kayıtlarından okunur; revizyonu CP ajan revizyonudur.
+// CP kişisel karar bağlamının sunucu kaynakları: Genel Bakış modeli (#1074) ve CP
+// hesaplanmış sütunları (#1078) aynı kaynakları ve revizyonu kullanır.
+const cpDecisionContextSources = {
+  preferences: userPreferences, roleEntries: profile => userAccess.roleWorkspaceEntries(profile),
+  managedRules: () => { const ov = loadOverrides(); return { ...require('./db').normalizeCpManagedRules(ov.cpManagedRules), revision: Number(ov._revisions && ov._revisions.cpManagedRules) || 0 }; },
+  transitRules: profile => effectiveOverridesForUser(profile.id).transitRules || [],
+  plmPayload: () => sampleRequestStore.publicPayload(),
+  checklistPayload: () => require('./lib/checklist-supplier-store').publicPayload(),
+  // Karar girdileri anahtara içerikleriyle girer (createContextLoader); burada yalnız girdide
+  // olmayan bağımlılıklar: iş takvimi ve yerel gün (#1077).
+  revision: () => { const d = new Date(); return [require('./lib/merch-calendar-store').fingerprint(), d.getFullYear(), d.getMonth(), d.getDate()]; },
+  merge: (own, shared) => require('../public/checklist-answer-merge-engine').merge(own, shared),
+};
+// Ön ısıtma (#1077) ile rota aynı servis örneğini paylaşır: ön ısıtmanın sonucu rotanın
+// önbelleğine girer; aynı gövdeyi isteyen istemci süren ön ısıtmaya katılır.
+let overviewModelServiceInstance = null;
+function overviewModelServiceForPrewarm() {
+  if (overviewModelServiceInstance) return overviewModelServiceInstance;
+  const { createOverviewModelService, createContextLoader } = require('./lib/read-model/overview-model-service');
+  overviewModelServiceInstance = createOverviewModelService({
+    guard: { capture: (req, area) => computeReadGuard.capture(req, area) },
+    loadProjection: (req, module) => ensureComputedProjection(req, module),
+    runCompute: readModelPrewarm.runCompute,
+    loadContext: createContextLoader(cpDecisionContextSources),
+    canAccessCp: req => userAccess.hasArea(req.currentUser, 'cp'),
+  });
+  return overviewModelServiceInstance;
+}
+require('./lib/read-model/overview-model-routes')(app, {
+  userAccess, apiError, ensureComputedProjection, getComputeReadGuard: () => computeReadGuard,
+  contextSources: cpDecisionContextSources,
+  overviewModelService: readModelPrewarm.overviewServiceProxy(),
+  runReadModelCompute: readModelPrewarm.runCompute,
+});
+// CP hesaplanmış sütunlar (#1078): POST /api/read-model/cp/computed. Test raporu görevleri
+// GET /api/test-reports/tasks ile aynı süzmeyle (yetkili siparişler) gelir.
+cpComputedServiceGetter = require('./lib/read-model/cp-computed-routes')(app, {
+  userAccess, apiError, ensureComputedProjection, getComputeReadGuard: () => computeReadGuard,
+  contextSources: cpDecisionContextSources,
+  testTasks: { list: () => require('./lib/test-reports/store').tasks(), authorizedOrders: profile => agentQualityAuthorizedOrders(profile) },
+  // #1077: CP isteği kullanıcı işidir; spekülatif ön ısıtmayı keser (ölçüm: açılışta CP −10,7 sn).
+  runReadModelCompute: readModelPrewarm.runCompute,
+  rowPatchLog: { chain: (...args) => cpRowPatchLog().chain(...args) },
+  onRowPatchMismatch: info => logRuntimeFailure('cpRowPatchMismatch', Object.assign(new Error('CP satır yaması gerçek nesille uyuşmadı / CP row patch did not match the real generation'), { detail: info })),
+});
+// ERP okuma modeli (#1073): POST /api/read-model/:module/query. Global 100 MB JSON
+// ayrıştırıcısından ÖNCE kaydolur: yetki gövdeden önce, rota kendi 2 MB sınırını uygular.
+require('./routes/read-model-routes')(app, {
+  userAccess,
+  apiError,
+  ensureComputedProjection,
+  getComputeReadGuard: () => computeReadGuard,
+  runReadModelCompute: readModelPrewarm.runCompute,
+});
+// Küresel Akış Haritası okuma modeli (#1075): POST /api/read-model/global-flow/model.
+require('./lib/read-model/global-flow-routes')(app, {
+  userAccess, assertSourceFilters, prepareComputeBacklog, backlogReadConsumer, apiError, sendComputedResponse,
+  getComputeReads: () => computeReads,
+  runReadModelCompute: readModelPrewarm.runCompute,
+});
+// Backlog Genel Bakış (V3) okuma modeli (#1079 WS6c): POST /api/read-model/backlog/v3.
+require('./lib/read-model/backlog-v3-routes')(app, {
+  userAccess, assertSourceFilters, prepareComputeBacklog, backlogReadConsumer, apiError, sendComputedResponse,
+  getComputeReads: () => computeReads,
+  runReadModelCompute: readModelPrewarm.runCompute,
+});
 app.use(express.json({ limit: '100mb' }));
 app.use((err, req, res, next) => {
   if (!err) return next();
@@ -6786,6 +6893,7 @@ app.get('/', (req, res) => {
   // Once credentials/session are valid, synchronization continues in background.
   res.set('Cache-Control', 'no-store');
   res.type('html').send(renderIndexTemplate());
+  noteWorkspaceOpened(req, profile);
 });
 
 // express.static gövdeyi akışla yazdığı için yukarıdaki res.send sarmalayıcısı ona
@@ -8655,8 +8763,9 @@ async function computeSourceFor(profile){
   coldComputeSourcesInFlight.set(id,operation);
   try{return await operation;}finally{if(coldComputeSourcesInFlight.get(id)===operation)coldComputeSourcesInFlight.delete(id);}
 }
-function computeReadContext(profile){
-  const context=pageProjectionContext(profile),shared=loadOverrides(),day=new Date();
+// context: önceden hesaplanmış pageProjectionContext (satır kaydı aynı anın bağlamını iki kez hesaplamaz).
+function computeReadContext(profile,context=pageProjectionContext(profile)){
+  const shared=loadOverrides(),day=new Date();
   return {...context,contextHash:stableHashValue([context.contextHash,shared._revision||0,shared._revisions||null,require('./lib/merch-calendar-store').fingerprint(),day.getFullYear(),day.getMonth(),day.getDate()])};
 }
 const computeReadGuard=createComputeReadGuard({sessionProfile:req=>userAccess.sessionProfile(req),profileById:id=>userAccess.profileById(id),
@@ -8700,6 +8809,7 @@ app.get('/api/data', async (req, res) => {
   try {
     await startupDataGate;
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    if (String(req.query.mode || '') === 'initial') noteWorkspaceOpened(req);
     const response = await buildResponse(req.currentUser, { startup: String(req.query.mode || '') === 'initial' });
     if (process.env.NODE_ENV !== 'production') {
       const totalMs = Number(process.hrtime.bigint() - started) / 1e6;
@@ -10074,69 +10184,27 @@ function liveRowPatchesFor(items) {
     .map(item => ({ orderCode: Number(item.orderCode), patch: item.patch }));
   return clean.length === list.length ? clean : null;
 }
-function projectionPatchMatches(row, item) {
-  const patch=item&&item.patch||{}, orderCode=parseLib.orderCodeKey(item&&item.orderCode);
-  if (!row || parseLib.orderCodeKey(row['Order Code']) !== orderCode) return false;
-  const model=String(patch.modelName??patch.model??'').trim(),ccode=String(patch.ccode??patch.colourCode??patch.colorCode??'').trim();
-  if (model && String(row['Model Name']||'').trim() !== model) return false;
-  if (ccode && String(row['C.Code']||'').trim() !== ccode) return false;
-  return true;
-}
-function applyIncrementalProjectionPatch(row, patch, overrides, includePriority = true) {
-  if (patch.notes && typeof patch.notes === 'object') {
-    if (Object.prototype.hasOwnProperty.call(patch.notes,'Notes')) row.Notes=patch.notes.Notes==null?'':String(patch.notes.Notes);
-    if (Object.prototype.hasOwnProperty.call(patch.notes,'EkNot')) row['Ek Not']=patch.notes.EkNot==null?'':String(patch.notes.EkNot);
-    /* v7.29 — yazar ve tarih damgaları KAYDEDİLMİŞ notesmap'ten okunur, patch'ten
-       değil: patch istemciden gelir ve yazar taşımaz (taşısa da kabul edilmezdi).
-       Bu satır atlanırsa önbellekten dönen satırlar yazarsız kalır ve kullanıcının
-       az önce yazdığı not kendi Genel Bakış listesinde görünmezdi. */
-    const notesRec = (overrides && overrides.notesmap
-      && (overrides.notesmap[parseLib.rowLineKey(row)] || overrides.notesmap[parseLib.orderCodeKey(row['Order Code'])])) || {};
-    row.NotesHtml=notesRec.NotesHtml||'';row['Ek NotHtml']=notesRec.EkNotHtml||'';
-    row._notesAt=notesRec.NotesAt||''; row._ekNotAt=notesRec.EkNotAt||'';
-    row._notesBy=notesRec.NotesBy||''; row._notesByName=notesRec.NotesByName||'';
-    row._ekNotBy=notesRec.EkNotBy||''; row._ekNotByName=notesRec.EkNotByName||'';
-  }
-  if (Object.prototype.hasOwnProperty.call(patch,'suppFob')) {
-    row['Supp. FOB']=patch.suppFob==null?null:Number(patch.suppFob);
-    const meta=patch.suppFobMeta&&typeof patch.suppFobMeta==='object'?patch.suppFobMeta:{source:'manual'};
-    row._suppFobMeta=meta;
-    row._suppFobManual=meta.source!=='rule';
-    row._suppFobOverride=true;
-    row._suppFobRule=row._suppFobManual?null:(meta.ruleId||true);
-  }
-  if (patch.delType != null) row['Del. Type']=String(patch.delType);
-  if (patch.dates && typeof patch.dates === 'object') {
-    const dateFields={exFactory:'Ex-factory',retailDate:'Retail Date',inStoreDate:'In-Store (Model Budget)'};
-    for (const [incoming,field] of Object.entries(dateFields)) if (Object.prototype.hasOwnProperty.call(patch.dates,incoming)) row[field]=String(patch.dates[incoming]);
-    if(Object.prototype.hasOwnProperty.call(patch.dates,'exFactory')&&row['Buying Son Onay Tarihi']){
-      const planned=parseLib.parseDateOnly(row['Ex-factory']);
-      const effective=BLBusinessRules.resolveExFactoryDate(planned,row['Buying Son Onay Tarihi'],parseLib.dateOrdinal);
-      row._exFactoryRevision=effective.automatic?{source:'loading-approval',previousDate:planned}:null;
-      row['Ex-factory']=effective.value;
-    }
-  }
-  if (Object.prototype.hasOwnProperty.call(patch,'imageRef')) {
-    const ref=patch.imageRef==null?'':String(patch.imageRef).trim();
-    row._imageRef=ref;row._imageUrl=ref?`/api/cp-images/${encodeURIComponent(ref)}`:'';
-  }
-  if (patch.noteColumns && typeof patch.noteColumns === 'object') {
-    const validIds = new Set((overrides.noteColumnDefs || []).map(def => def.id));
-    for (const [id, value] of Object.entries(patch.noteColumns)) {
-      if (!validIds.has(id)) continue;
-      row[id] = value == null ? '' : String(value);
-    }
-  }
-  if (Object.prototype.hasOwnProperty.call(patch,'importance')) parseLib.applyImportanceToRow(row, overrides);
-  if (patch.delType != null || patch.dates) parseLib.applyFormulas(row, overrides.transitRules, includePriority);
-  return row;
-}
-async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, items) {
+// Satır yaması tek tanımı: lib/projection-row-patch.js (okuma modeli işçisi de kullanır).
+const { applyIncrementalProjectionPatch, projectionPatchMatches } = require('./lib/projection-row-patch');
+// cpRows (isteğe bağlı): CP modülünde yamalanan satırlar yazımdan sonra buraya (okuma modeli doğrulaması, cp-row-patch-log).
+async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, items, cpRows=null) {
   const clean=(Array.isArray(items)?items:[]).filter(item=>item&&Number.isFinite(Number(item.orderCode))&&rowPatchIncrementalSafe(item.patch));
-  if (!clean.length || clean.length !== (Array.isArray(items)?items.length:0)) return false;
+  if (!beforeContext || !clean.length || clean.length !== (Array.isArray(items)?items.length:0)) return false;
   const afterContext=pageProjectionContext(currentUser);
-  if (!beforeContext || String(beforeContext.contextHash)===String(afterContext.contextHash)) return false;
+  if (String(beforeContext.contextHash)===String(afterContext.contextHash)) return false;
   const overrides=effectiveOverridesForUser(afterContext.id);
+  /* #1078 takip (WS7b): ağır JSON işi projection-rewrite işçisinde, yalnız değişen modül yazılır,
+     kuyrukta ardışık bekleyen yeniden yazımlar birleşir; sonuç aşağıdaki eski yolla birebir aynıdır
+     (parite: tests/projection-rewrite-incremental.test.js, scripts/parity-projection-rewrite.js).
+     Override bağlamı kayıt anında alınır (eski yoldaki gibi). Geri dönüş: BL_PROJECTION_REWRITE_INCREMENTAL=0. */
+  if (String(process.env.BL_PROJECTION_REWRITE_INCREMENTAL ?? '') !== '0') {
+    const result=await pageProjectionCache.rewriteRowPatches(afterContext.id,{
+      fromContextHash:beforeContext.contextHash,toContextHash:afterContext.contextHash,
+      items:clean,context:require('./lib/projection-rewrite').rowPatchContext(overrides,clean),collectCpRows:Boolean(cpRows),
+    });
+    if (result && cpRows) { cpRows.push(...(result.cpRows||[])); cpRows.json=require('./lib/compute-tasks').serialize(cpRows,'projection'); }
+    return Boolean(result && result.manifest);
+  }
   const manifest=await pageProjectionCache.rewriteGeneration(afterContext.id,{
     fromContextHash:beforeContext.contextHash,toContextHash:afterContext.contextHash,
     transform:(_module,payload)=>{
@@ -10145,21 +10213,51 @@ async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, i
       if (Array.isArray(payload.rows)) lists.push(payload.rows);
       if (Array.isArray(payload.orderSummary)) lists.push(payload.orderSummary);
       for (const rows of lists) for (const row of rows) for (const item of clean) {
-        if (projectionPatchMatches(row,item)) applyIncrementalProjectionPatch(row,item.patch,overrides,_module!=='orders');
+        if (projectionPatchMatches(row,item)) {
+          applyIncrementalProjectionPatch(row,item.patch,overrides,_module!=='orders');
+          if (cpRows && _module==='cp' && rows===payload.rows && !cpRows.includes(row)) cpRows.push(row);
+        }
       }
+      if (cpRows && _module==='cp') cpRows.json=require('./lib/compute-tasks').serialize(cpRows,'projection');
       return payload;
     },
   });
   return Boolean(manifest);
 }
 
+/* #1071: Kayıt rotaları yazımdan önceki projeksiyon bağlamını yalnız önbellek yamalamak için alır.
+   Bağlam yetki özetini (computeAccessContext) okur; özet compute havuzunda hazırlanırken
+   (kuyruk/işçi hatası) COMPUTE_ACCESS_NOT_READY atar. Bu, kullanıcı kaydını reddettirmez:
+   bağlam yoksa önbellek yaması atlanır, sonraki okuma yeni bağlamla yeniden kurar. */
+function writeProjectionContext(currentUser){
+  try{return pageProjectionContext(currentUser);}
+  catch(error){logRuntimeFailure('writeProjectionContext',error);return null;}
+}
 // The override write is already durable; rewriting every cached module
 // (gunzip → patch → gzip) took seconds on large data and delayed the save
 // acknowledgement. It starts now, serialized per user, and cache reads wait
 // for it (page-projection-cache pendingRewrites).
-function queueProjectionCacheRowPatches(currentUser,beforeContext,items,label){
-  rewriteProjectionCacheForRowPatches(currentUser,beforeContext,items).catch(cacheError=>logRuntimeFailure(label,cacheError));
+function queueProjectionCacheRowPatches(currentUser,beforeContext,items,label,rowPatch=null){
+  const cpRows=rowPatch?[]:null;
+  rewriteProjectionCacheForRowPatches(currentUser,beforeContext,items,cpRows)
+    .then(ok=>{if(rowPatch)cpRowPatchLog().settle(rowPatch,{ok:Boolean(ok)&&typeof cpRows.json==='string',rowsJson:cpRows.json});})
+    .catch(cacheError=>{if(rowPatch)cpRowPatchLog().settle(rowPatch,{ok:false});logRuntimeFailure(label,cacheError);});
   return true;
+}
+/* CP satır yaması günlüğü (#1078 WS5): okuma modeli yeni projeksiyon neslini beklemeden bu yamaları uygular.
+   Bağlam damgaları okuma kapısınınkiyle (computeReadContext) aynıdır; yama bağlamı yeniden yazımla aynı kaynaktan. */
+let cpRowPatchLogInstance=null;
+function cpRowPatchLog(){return cpRowPatchLogInstance||(cpRowPatchLogInstance=require('./lib/read-model/cp-row-patch-log').createCpRowPatchLog());}
+function recordCpRowPatches({user,before,items}){
+  try{
+    const read=computeReadContext(user),overrides=effectiveOverridesForUser(read.id),notes=overrides.notesmap||{},notesmap={};
+    for(const item of items){
+      const patch=item.patch||{};
+      for(const key of [parseLib.orderLineKey(item.orderCode,patch.model,patch.ccode),parseLib.orderCodeKey(item.orderCode)])if(notes[key])notesmap[key]=notes[key];
+    }
+    return cpRowPatchLog().record({userId:String(user.id),before,after:read.contextHash,items,safe:rowPatchIncrementalSafe,
+      context:{notesmap,noteColumnDefs:overrides.noteColumnDefs||[],transitRules:overrides.transitRules||[]}});
+  }catch(error){logRuntimeFailure('cpRowPatchLog',error);return null;}
 }
 
 function assertAutomaticDatesReadOnly(currentUser,items){
@@ -10190,7 +10288,7 @@ app.post('/api/overrides/batch', async (req, res) => {
     if (rejectSharedOwnerWrites(req, res, items)) return;
     if(items.some(item=>Object.prototype.hasOwnProperty.call(item?.patch?.dates||{},'exFactory'))&&!Array.isArray(cacheForUser(req.currentUser).asasOrders))await ensureDataLoaded(req.currentUser);
     assertAutomaticDatesReadOnly(req.currentUser,items);
-    const beforeContext=pageProjectionContext(req.currentUser);
+    const beforeContext=writeProjectionContext(req.currentUser);
     const saved = patchOrderOverrides(items, requestRevision(req), requestSuppFobRevision(req), { actor: noteActorOf(req.currentUser) });
     void sharedRevisionStore.update('cpOverrides',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
     const pageCachePatchQueued=queueProjectionCacheRowPatches(req.currentUser,beforeContext,items,'rowProjectionCachePatch');
@@ -10211,7 +10309,7 @@ app.patch('/api/overrides/:orderCode', async (req, res) => {
     if (rejectSharedOwnerWrites(req, res, [{ orderCode, patch:req.body || {} }])) return;
     if(Object.prototype.hasOwnProperty.call(req.body?.dates||{},'exFactory')&&!Array.isArray(cacheForUser(req.currentUser).asasOrders))await ensureDataLoaded(req.currentUser);
     assertAutomaticDatesReadOnly(req.currentUser,[{orderCode,patch:req.body||{}}]);
-    const beforeContext=pageProjectionContext(req.currentUser);
+    const beforeContext=writeProjectionContext(req.currentUser);
     /* İstemci kaynaklı "origin" alanı veri değildir; yama gövdesinden ayıklanır —
        yoksa sipariş kaydına anlamsız bir alan sızar ve canlı yayınla bütün
        cihazlara dağılırdı. */
@@ -10228,15 +10326,26 @@ app.patch('/api/overrides/:orderCode', async (req, res) => {
   } catch (err) { apiError(res, err, 'Sipariş düzenlemesi kaydedilemedi.'); }
 });
 
+// CP satır kaydı (#1078 WS5 alt PR 3): alan bazlı karşılaştırmalı yazma; yetki ve yan etkiler yukarıdaki rotalarla aynı.
+require('./lib/read-model/cp-row-save').registerCpRowSaveRoute(app,{
+  patchRows:(items,options)=>require('./db').patchOrderOverrideRows(items,options),
+  rejectUnauthorizedOrders,rejectSharedOwnerWrites,assertAutomaticDatesReadOnly,pageProjectionContext:writeProjectionContext,queueProjectionCacheRowPatches,liveRowPatchesFor,noteActorOf,apiError,
+  readContextHashOf:context=>computeReadContext(null,context).contextHash,recordRowPatches:recordCpRowPatches,
+  ensureAutomaticDateSource:async(req,items)=>{if(items.some(item=>Object.prototype.hasOwnProperty.call(item.patch.dates||{},'exFactory'))&&!Array.isArray(cacheForUser(req.currentUser).asasOrders))await ensureDataLoaded(req.currentUser);},
+  notifyShared:user=>{void sharedRevisionStore.update('cpOverrides',{actorId:user.id}).catch(error=>logRuntimeFailure('sharedRevision',error));},
+  appendAudit:(user,action,target,detail)=>userAccess.appendAudit(user,action,target,detail),
+  notifyLive:(req,patches)=>liveEvents.notifyChange('orders',requestClientId(req),{rowPatches:patches}),
+});
+
 async function rewriteProjectionCacheForImageItems(currentUser,beforeContext,items){
   const exact=new Map(),byPlm=new Map();
   for(const item of Array.isArray(items)?items:[]){
     const plm=parseLib.normalizePlmImageId(item&&item.plmId),colour=parseLib.normalizeCpImageColourCode(item&&item.colourCode),ref=item&&item.imageRef!=null?String(item.imageRef).trim():'';
     if(!plm)continue;if(colour)exact.set(`${plm}\u0000${colour}`,ref);else byPlm.set(plm,ref);
   }
-  if(!exact.size&&!byPlm.size)return false;
+  if(!beforeContext||(!exact.size&&!byPlm.size))return false;
   const afterContext=pageProjectionContext(currentUser);
-  if(!beforeContext||String(beforeContext.contextHash)===String(afterContext.contextHash))return false;
+  if(String(beforeContext.contextHash)===String(afterContext.contextHash))return false;
   const manifest=await pageProjectionCache.rewriteGeneration(afterContext.id,{
     fromContextHash:beforeContext.contextHash,toContextHash:afterContext.contextHash,
     transform:(_module,payload)=>{
@@ -10258,7 +10367,7 @@ app.post('/api/plm-image-links', userAccess.requireArea('koleksiyon'), async (re
     assertModelImageMutable();
     const items = (req.body || {}).items;
     if (!Array.isArray(items)) return res.status(400).json({ error: 'items (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
-    const beforeContext=pageProjectionContext(req.currentUser);
+    const beforeContext=writeProjectionContext(req.currentUser);
     const saved = patchPlmImageLinks(items, requestRevision(req));
     /* MANUEL SAHİPLİK. Bu uç kullanıcının ELLE yaptığı görsel bağlama/
        kaldırma işidir. Otomatik sahiplik kaydı burada DÜŞER; aksi hâlde
@@ -10327,7 +10436,7 @@ app.post('/api/model-images/delete-selected', userAccess.requireAnyArea('cp','or
     }
     if (!identities.size && !rowPlmIds.size && !rowRecordIds.size) return res.status(400).json({ error:'Seçili satırlarda silinecek model görseli kimliği bulunamadı.', code:'MODEL_IMAGE_IDENTITY_REQUIRED' });
 
-    const beforeContext = pageProjectionContext(req.currentUser);
+    const beforeContext = writeProjectionContext(req.currentUser);
     const imagemap = loadOverrides().imagemap || {};
     const candidates = new Set(rowRefs);
     const linkItems = [];
@@ -10421,7 +10530,7 @@ app.post('/api/overrides/batch-suppfob', async (req, res) => {
     if (!Array.isArray(items)) return res.status(400).json({ error: 'items (dizi) zorunlu.' });
     if (rejectUnauthorizedOrders(req, res, items.map(item => item && item.orderCode))) return;
     if (rejectSharedOwnerWrites(req, res, items)) return;
-    const beforeContext=pageProjectionContext(req.currentUser);
+    const beforeContext=writeProjectionContext(req.currentUser);
     const clean = items.map(item => ({
       orderCode: Number(item && item.orderCode),
       // Satır kimliği: sipariş + model + renk kodu. Gelmezse eski sipariş bazlı anahtar.

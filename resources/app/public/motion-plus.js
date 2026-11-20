@@ -23,7 +23,7 @@
   const OVERLAYS='dialog[open],[role="dialog"][aria-hidden="false"],.colPanel.show,.vfMenu.show,.vfMenu.open,.toolbarMoreMenu:not([hidden]),.userMenu:not([hidden])';
   // Controls follow their real busy states; only an active refresh keeps rotating.
   // One-shot click feedback and other Motion+ effects remain finite.
-  const REFRESH_IDS=['topRefreshBtn','serverRefreshBtn','cpRefreshBtn','ordersRefreshBtn','lflRefreshBtn','intakeRefreshBtn','backlogOverviewRefresh'];
+  const REFRESH_IDS=['topRefreshBtn','serverRefreshBtn','lflRefreshBtn','intakeRefreshBtn','backlogOverviewRefresh'];
   const REFRESH_CONTROLS=REFRESH_IDS.map(id=>'#'+id).join(',');
   const ACTIVITY_CONTROLS=REFRESH_IDS.map(id=>[id,'spinning','refresh']).concat([['syncStatusBadge','is-syncing','sync']]);
   const SYNC_CONTROLS='#syncStatusBtn,#cpPlmSyncBtn,#ordersPlmSyncBtn,#kolPlmSyncBtn,[data-plm-sync-category]';
@@ -307,6 +307,10 @@
   function hoverRow(event){
     const row=event.target.closest?.('tbody tr');
     if(!row||row.parentElement?.tagName!=='TBODY'||row===event.relatedTarget?.closest?.('tr'))return null;
+    // Chromium redistributes fixed column widths when these rows gain a pseudo-element.
+    // The classic grids already paint the hover state on their cells.
+    const tableId=row.parentElement.parentElement?.id;
+    if(tableId==='cpTable'||tableId==='ordersTable')return null;
     return row.firstElementChild?.querySelector?.(':scope > '+ROW_SELECTION_CONTROL+',:scope > label > '+ROW_SELECTION_CONTROL)?row:null;
   }
   function play(kind,element){

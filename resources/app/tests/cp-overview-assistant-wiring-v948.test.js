@@ -320,12 +320,14 @@ test('Production Focus Loading Plan render etmez ve layout kullanıcıya özeldi
 });
 
 test('Overview uses the unified Studio entry points and live priority distribution', () => {
-  assert.match(VIEW, /container\.innerHTML = overviewWidgetHtml\(\)/);
+  // #1074: kart, istemci modelinden ya da okuma modelinden gelen aynı özetten çizilir.
+  assert.match(VIEW, /container\.innerHTML = overviewWidgetHtml\(summary\)/);
+  assert.match(VIEW, /const summary = fromModel \|\| \(state\.model \? overviewSummaryOf\(state\.model, state\.checklist\) : null\)/);
   assert.match(VIEW, /<details class="cpaOverviewDetails"/);
   for (const hook of ['data-cpa-queue', 'data-cpa-settings', 'data-cpa-rules']) {
     assert.ok((VIEW.match(new RegExp(hook, 'g')) || []).length >= 2, `${hook} rendered and bound`);
   }
-  assert.match(VIEW, /function prioritiesOverviewBlock\(\)/);
+  assert.match(VIEW, /function prioritiesOverviewBlock\(summary\)/);
 });
 
 test('Production Focus grid iki görünür modülü tüm genişlikte yarı yarıya, tek modülü tam genişlikte gösterir', () => {

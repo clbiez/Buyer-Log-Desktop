@@ -672,8 +672,19 @@
     return Components.withRowCache(function () { return refreshColumnsNow(options); });
   }
   function refreshColumnsNow(options) {
-    const opts = options || {};
-    const rows = currentRows(), items = itemCatalog();
+    let opts = options || {};
+    /* CP hesaplanmış sütunlar sağlayıcısı (#1078, app-main.js BLCpComputedColumns).
+       Etkinken checklist hücreleri yerel arka uçta aynı kodla hesaplanır; bu modül
+       satır geçişini çalıştırmaz, yalnız sütun tanımlarını kurar. */
+    const provider = !opts.decision ? (root.BLCpComputedColumns && typeof root.BLCpComputedColumns.active === 'function' && root.BLCpComputedColumns.active() ? root.BLCpComputedColumns : null) : null;
+    if (provider) {
+      // Yenileme sağlayıcıya gider; sonuç gelince sağlayıcı CP'yi çizer (eski değerle ara çizim yok).
+      const refreshing = !opts.columnsOnly && typeof provider.refresh === 'function';
+      if (refreshing) void Promise.resolve(provider.refresh()).catch(function () {});
+      opts = Object.assign({}, opts, { columnsOnly: true }, refreshing ? { render: false } : {});
+    }
+    // opts.rows: yalnız bu satırlar (CP hesaplanmış sütun sağlayıcısının iyimser yerel güncellemesi).
+    const allRows = currentRows(), rows = Array.isArray(opts.rows) ? opts.rows : allRows, items = itemCatalog();
     const cols = root.COLS_BY_TABLE && root.COLS_BY_TABLE.cp;
     if (!Array.isArray(cols)) return false;
 
@@ -699,6 +710,16 @@
       dynamic.forEach(function (col) { if (!manager.order.includes(col.k)) manager.order.push(col.k); });
     }
     if (typeof root.invalidateColumnIndex === 'function') root.invalidateColumnIndex('cp');
+
+    if (opts.columnsOnly) {
+      // Hücreler satırda (sağlayıcı yazdı); bileşenli sütun genişliği aynı kuralla.
+      const withElementsOnly = new Set();
+      rows.forEach(function (row) { Object.keys(row._checklistElements || {}).forEach(function (id) { withElementsOnly.add(id); }); });
+      dynamic.forEach(function (col) { col.weight = withElementsOnly.has(col.checklistItemId) ? 26 : 12; });
+      state.appliedColumns = null; state.columnDelta = null;
+      if (opts.render && typeof root.renderCP === 'function') root.renderCP();
+      return true;
+    }
 
     /* Her CP çiziminde (sekme dönüşü, filtre) bütün satırların checklist
        hücreleri baştan yazılıyordu (5 bin satırda ~0,7 sn). Aynı satır dizisi,
@@ -785,11 +806,14 @@
       });
       // Bileşenli sütun, adlar okunabilsin diye genişler (kullanıcı genişliği korunur).
       const withElements = new Set();
-      rows.forEach(function (row) { Object.keys(row._checklistElements || {}).forEach(function (id) { withElements.add(id); }); });
+      allRows.forEach(function (row) { Object.keys(row._checklistElements || {}).forEach(function (id) { withElements.add(id); }); });
       dynamic.forEach(function (col) { col.weight = withElements.has(col.checklistItemId) ? 26 : 12; });
-      state.appliedColumns = { rows: rows, decision: decision, items: itemsSignature, tasks: state.testTasks };
-      state.columnDelta = { rows: rows, signature: deltaSignature, tasks: state.testTasks, rules: sNow && sNow.rules,
-        snapshot: new Map(Object.entries(answersNow)), analyses: appliedAnalyses };
+      if (rows !== allRows) { state.appliedColumns = null; state.columnDelta = null; }
+      else {
+        state.appliedColumns = { rows: rows, decision: decision, items: itemsSignature, tasks: state.testTasks };
+        state.columnDelta = { rows: rows, signature: deltaSignature, tasks: state.testTasks, rules: sNow && sNow.rules,
+          snapshot: new Map(Object.entries(answersNow)), analyses: appliedAnalyses };
+      }
     }
     if (opts.render && typeof root.renderCP === 'function') root.renderCP();
     return true;
@@ -799,6 +823,9 @@
   function refreshAssistantView() {
     const assistant = root.BLCpAssistant, s = assistantState();
     if (!assistant || !s) return;
+    // Sağlayıcı etkinken CP kararları arka uçtan gelir; Genel Bakış kendi yolunu çizer.
+    const provider = (root.BLCpComputedColumns && typeof root.BLCpComputedColumns.active === 'function' && root.BLCpComputedColumns.active() ? root.BLCpComputedColumns : null);
+    if (provider) { if (typeof provider.refresh === 'function') void Promise.resolve(provider.refresh()).catch(function () {}); return; }
     try {
       const rows = currentRows();
       if (rows.length && typeof assistant.onOverviewRendered === 'function') {
@@ -2894,6 +2921,11 @@
     if (state.renderWrapped || typeof root[renderKey] !== 'function') return;
     const original = root[renderKey];
     root[renderKey] = function () {
+      const provider = (root.BLCpComputedColumns && typeof root.BLCpComputedColumns.active === 'function' && root.BLCpComputedColumns.active() ? root.BLCpComputedColumns : null);
+      if (provider) {
+        if (typeof provider.covers === 'function' && provider.covers(currentRows())) { try { refreshColumns({ render: false, columnsOnly: true }); } catch (_) {} }
+        return original.apply(this, arguments);
+      }
       if (root.BLCpAssistant) {
         const decision=root.BLCpAssistant.peekDecisionsForRows?.(currentRows());
         if(decision){try{refreshColumns({render:false,decision,reuse:true});}catch(_){}}

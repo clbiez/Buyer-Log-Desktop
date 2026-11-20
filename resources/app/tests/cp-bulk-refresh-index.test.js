@@ -10,7 +10,9 @@ function harness(rows,beforeSync=()=>{}){
     computeFlags:row=>{events.push(['flags',row.tag]);return {priority:row.Priority};},visibleCols:()=>[{k:'Priority'},{k:'Notes'}],
     cellHtml:(col,row,flags)=>`<td>${col.k}:${row[col.k]||''}:${flags.priority}</td>`,applyGroupedBoundariesToRow(){},cpLogisticDetailRowElement:()=>null,
     document:{querySelector:selector=>{const id=selector.match(/data-id="([^"]*)"/)[1];if(!['1','2'].includes(id))return null;if(!classes.has(id))classes.set(id,new Set());return {set innerHTML(value){rendered.set(id,value);},querySelector:()=>({addEventListener(){}}),children:[],classList:classList(id)};}},
-    refreshOverviewNotesLive:()=>events.push('notes'),scheduleOverviewRender:()=>events.push('schedule')};
+    refreshOverviewNotesLive:()=>events.push('notes'),scheduleOverviewRender:()=>events.push('schedule'),
+    // #1078: düzenleme sonrası öncelik (satır kaydı kapalıyken bugünkü eşzamanlı yol).
+    cpEditPriorities:()=>context.syncUnifiedPrioritiesForTable('cp')};
   vm.createContext(context);vm.runInContext(['escapeHtml','refreshCpRowOnly','refreshRowsEverywhere'].map(name=>extractFunction(source,name)).join('\n'),context);
   return {context,events,rendered,classes,run:ids=>context.refreshRowsEverywhere(ids)};
 }

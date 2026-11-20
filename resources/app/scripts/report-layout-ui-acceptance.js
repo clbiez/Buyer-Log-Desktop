@@ -17,6 +17,12 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
  const context=await browser.newContext({viewport:{width:1600,height:960},reducedMotion:'reduce',permissions:['clipboard-read','clipboard-write']});
  await context.addCookies([{name:cookie.slice(0,split),value:cookie.slice(split+1),domain:'127.0.0.1',path:'/',httpOnly:true}]);
  await context.addInitScript(()=>localStorage.setItem('bl.releaseNotes.lastSeenStable.v1','99.0.0'));
+ if(process.env.REPORT_IMAGES_ONLY==='1')await context.addInitScript(()=>{
+   for(const [table,value] of Object.entries({cp:'84',orders:'90',koleksiyon:'82'})){
+     const key='bl.user.moderator.lcw.'+table+'.imageSize.v2';
+     if(localStorage.getItem(key)===null)localStorage.setItem(key,value);
+   }
+ });
  const page=await context.newPage(),errors=[];page.setDefaultTimeout(10000);page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.dismiss());
  async function openCP(target){
    await target.goto(base,{waitUntil:'domcontentloaded'});await target.waitForFunction(()=>window.BLPerf&&typeof switchTab==='function',{timeout:60000});
@@ -25,8 +31,8 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
    await target.waitForTimeout(800);
  }
  await openCP(page);
- const seedCp=()=>{
-   const rows=Array.from({length:4},(_,i)=>({_id:i+1,'PLM ID':990001+i,'Model Name':'DEMO MODEL '+(i+1),'Product Main Description':i%2?'T-Shirt':'Sweat','C.Code':'DEMO-C'+i,Colour:'NAVY','Order Code':880001+i,Season:'S7',Country:'DEMO','Order Quantity':100+i,Manufacturer:'DEMO FACTORY','Ex-factory':'2027-03-10','Retail Date':'2027-04-10','Del. Type':'Regular',STATUS:'Order Placed'}));
+ const seedCp=rowCount=>{
+   const rows=Array.from({length:rowCount},(_,i)=>({_id:i+1,'PLM ID':990001+i,'Model Name':'DEMO MODEL '+(i+1),'Product Main Description':i%2?'T-Shirt':'Sweat','C.Code':'DEMO-C'+i,Colour:'NAVY','Order Code':880001+i,Season:'S7',Country:'DEMO','Order Quantity':100+i,Manufacturer:'DEMO FACTORY','Ex-factory':'2027-03-10','Retail Date':'2027-04-10','Del. Type':'Regular',STATUS:'Order Placed'}));
    state.cp={...(state.cp||{}),rows};state.orders={...(state.orders||{}),rows:rows.map(r=>({...r}))};state.cpSelected.clear();state.ordersSelected.clear();
    state.cpSort={key:null,dir:1};state.ordersSort={key:null,dir:1};
    colmgr.cp.order=CP_COLS.map(c=>c.k);colmgr.cp.hidden=new Set(CP_COLS.filter(c=>!['PLM ID','Model Name','Product Main Description','C.Code','Colour','Season','Country','Order Code','Order Quantity','Manufacturer','Ex-factory','Retail Date'].includes(c.k)).map(c=>c.k));
@@ -34,7 +40,7 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
    for(const key of ['custom','focus','extended','all'])BLStorage.removeItem('buyerlog.tableReportMode.v1.layout.cp.'+key);
    renderCP();BLFlushTableRenders();ensureTableReportAdapters();BLTableReportInline.setMode('cp',true);
  };
- await page.evaluate(seedCp);await page.evaluate(()=>BLTableReportInline.refreshShared());
+ await page.evaluate(seedCp,process.env.REPORT_STICKY_ONLY==='1'?50:4);await page.evaluate(()=>BLTableReportInline.refreshShared());
  if(process.env.REPORT_SELECTION_ONLY==='1'){
    const feedback=[];
    for(const key of ['cp','orders','koleksiyon']){
@@ -130,9 +136,29 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
        const dirty=await input.evaluate(i=>({row:i.closest('tr').classList.contains('rowDirty'),blue:getComputedStyle(i,'::before').backgroundColor,orange:getComputedStyle(i,'::after').backgroundColor,stripe:getComputedStyle(i,'::after').width,display:getComputedStyle(i,'::after').display}));
        assert.equal(dirty.row,true);assert.equal(dirty.stripe,'3px');assert.equal(dirty.display,'block');assert.notEqual(dirty.blue,dirty.orange);assert.notEqual(dirty.orange,'rgba(0, 0, 0, 0)');
      }
-     const row=input.locator('xpath=ancestor::tr'),box=await row.boundingBox();await page.mouse.move(1000,box.y+box.height/2);await page.waitForTimeout(650);
-     const hover=await row.evaluate(r=>{const s=getComputedStyle(r,'::after');return {opacity:s.opacity,background:s.backgroundColor,width:parseFloat(s.width),rowWidth:r.getBoundingClientRect().width,pointerEvents:s.pointerEvents};});assert.equal(hover.opacity,'1');assert.ok(Math.abs(hover.width-hover.rowWidth)<1);assert.equal(hover.pointerEvents,'none');
-     const second=row.locator('xpath=following-sibling::tr').first();const next=await second.boundingBox();if(next){await page.mouse.move(1000,next.y+next.height/2);await page.waitForTimeout(120);const fading=Number(await row.evaluate(r=>getComputedStyle(r,'::after').opacity));assert.ok(fading>0&&fading<1);await page.waitForTimeout(550);assert.equal(await row.evaluate(r=>r.classList.contains('blSoftRowHover')),false,'faded row releases its light layer');}
+     const row=input.locator('xpath=ancestor::tr'),box=await row.boundingBox();
+     const classicManagedTable=!report&&key!=='koleksiyon';
+     const geometry=()=>row.evaluate(r=>{
+       const table=r.closest('table'),cells=[...table.tHead.rows[table.tHead.rows.length-1].cells,...r.cells];
+       return cells.map(cell=>{const {x,width}=cell.getBoundingClientRect();return [x,width];});
+     });
+     if(classicManagedTable){
+       await page.mouse.move(1000,20);
+       await page.waitForTimeout(650);
+     }
+     const before=classicManagedTable?await geometry():null;
+     await page.mouse.move(1000,box.y+box.height/2);await page.waitForTimeout(650);
+     const hover=await row.evaluate(r=>{const s=getComputedStyle(r,'::after');return {active:r.matches(':hover'),opacity:s.opacity,background:s.backgroundColor,width:parseFloat(s.width),rowWidth:r.getBoundingClientRect().width,pointerEvents:s.pointerEvents};});
+     assert.equal(hover.active,true,key+' test pointer is over the row');
+     if(classicManagedTable){
+       assert.deepEqual(await geometry(),before,key+' keeps column positions and widths under the pointer');
+       await page.mouse.move(1000,20);
+       assert.deepEqual(await geometry(),before,key+' keeps column positions and widths after pointer exit');
+       await page.mouse.move(1000,box.y+box.height/2);
+     }else{
+       assert.equal(hover.opacity,'1');assert.ok(Math.abs(hover.width-hover.rowWidth)<1);assert.equal(hover.pointerEvents,'none');
+       const second=row.locator('xpath=following-sibling::tr').first();const next=await second.boundingBox();if(next){await page.mouse.move(1000,next.y+next.height/2);await page.waitForTimeout(120);const fading=Number(await row.evaluate(r=>getComputedStyle(r,'::after').opacity));assert.ok(fading>0&&fading<1);await page.waitForTimeout(550);assert.equal(await row.evaluate(r=>r.classList.contains('blSoftRowHover')),false,'faded row releases its light layer');}
+     }
      if(key==='cp'&&report){
        await page.waitForFunction(()=>document.querySelector('#blTableReport-cp img')?.dataset.blImageLoaded==='1');
        for(const theme of ['dark','light']){await page.evaluate(theme=>applyTheme(theme),theme);await page.waitForTimeout(650);await page.screenshot({path:path.join(assets,'flow-selection-'+theme+'.png')});}
@@ -141,7 +167,7 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
      }
      if(key==='cp'&&!report)await page.screenshot({path:path.join(root,'cp-table-selection.png')});
      await input.uncheck();await page.waitForTimeout(500);assert.equal(await input.isChecked(),false);
-     evidence.push({key,report,idle,motion,hover});console.log('PASS visible rail, native selection, Akış fill and full-row fade: '+key+' '+(report?'report':'table'));
+     evidence.push({key,report,idle,motion,hover});console.log('PASS visible rail, native selection, Akış fill and '+(classicManagedTable?'stable hover geometry':'full-row fade')+': '+key+' '+(report?'report':'table'));
    }
    for(const key of ['cp','orders','koleksiyon']){
      if(key==='orders')await page.evaluate(()=>{switchTab('orders');colmgr.orders.hidden=new Set(colmgr.cp.hidden);renderOrders();BLFlushTableRenders();});
@@ -158,6 +184,31 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
  }
  if(process.env.REPORT_STICKY_ONLY==='1'){
    const results=[];
+   async function checkVerticalLayers(tableId, label){
+     const samples=await page.locator('#'+tableId).evaluate(table=>{
+       const wrap=table.closest('.tablewrap');
+       const selectionCell=table.querySelector('tbody input.rowChk').closest('td');
+       const group=table.tHead.querySelector('.groupRow');
+       const footer=table.tFoot.rows[0];
+       const scrollPositions=[0,260].flatMap(left=>[110,275,401].map(top=>({left,top})));
+       const samples=scrollPositions.map(({left,top})=>{
+         wrap.scrollLeft=left;
+         wrap.scrollTop=top;
+         const rail=selectionCell.getBoundingClientRect(),x=rail.left+rail.width/2;
+         const sectionAt=row=>{
+           const {top,bottom}=row.cells[0].getBoundingClientRect();
+           return document.elementFromPoint(x,(top+bottom)/2)?.closest('thead,tbody,tfoot')?.tagName;
+         };
+         return {left:wrap.scrollLeft,top:wrap.scrollTop,header:sectionAt(group),footer:sectionAt(footer)};
+       });
+       wrap.scrollTop=0;
+       return samples;
+     });
+     assert.ok(samples.every(sample=>sample.top>0),label+' has vertically scrolled body rows');
+     assert.ok(samples.some(sample=>sample.left>0),label+' also scrolls horizontally');
+     assert.ok(samples.every(sample=>sample.header==='THEAD'&&sample.footer==='TFOOT'),label+' keeps the header and totals over the checkbox column: '+JSON.stringify(samples));
+     results.push({label,samples});
+   }
    async function checkPin(selector,label){
      const target=page.locator(selector).first();await target.waitFor();
      const before=await target.evaluate(input=>{const cell=input.closest('td,th'),wrap=cell.closest('.tablewrap');wrap.scrollLeft=0;return {left:cell.getBoundingClientRect().left,wrap:wrap.getBoundingClientRect().left,width:cell.getBoundingClientRect().width};});
@@ -169,15 +220,17 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
      if(key==='orders')await page.evaluate(()=>{switchTab('orders');colmgr.orders.hidden=new Set(colmgr.cp.hidden);renderOrders();BLFlushTableRenders();});
      if(key==='koleksiyon'){
        await page.evaluate(async()=>{switchTab('koleksiyon');await BLPerf.ensureFeature('collectionTools');});
-       await page.evaluate(()=>{kolRows=[{id:91001,plmId:'990001',modelKod:'DEMO COLLECTION',season:'S7',mag:'DEMO',urunTipi:'DEMO',country:'DEMO',quantity:'200',targetPrice:'14',pricing:{},durum:'',colour:'NAVY'}];kolColOrder=kolDefaultDisplayOrder();kolHiddenCols=new Set(kolColDefs().map(c=>c.k).filter(k=>!['modelKod','season','quantity','targetPrice'].includes(k)));kolPictureHidden=true;kolColFilters={};kolSelected.clear();renderKol();});
+       await page.evaluate(()=>{kolRows=Array.from({length:50},(_,i)=>({id:91001+i,plmId:String(990001+i),modelKod:'DEMO COLLECTION '+i,season:'S7',mag:'DEMO',urunTipi:'DEMO',country:'DEMO',quantity:'200',targetPrice:'14',pricing:{},durum:'',colour:'NAVY'}));kolColOrder=kolDefaultDisplayOrder();kolHiddenCols=new Set(kolColDefs().map(c=>c.k).filter(k=>!['modelKod','season','quantity','targetPrice'].includes(k)));kolPictureHidden=true;kolColFilters={};kolSelected.clear();renderKol();});
      }
      await page.evaluate(key=>{BLTableReportInline.setMode(key,false);const table=tableImageSizeTable(key),wrap=table.closest('.tablewrap');wrap.style.width='620px';wrap.style.maxWidth='620px';table.style.minWidth='1500px';BLTableFreeze.clear(table);},key);
      const tableId=key==='koleksiyon'?'kolTable':key==='orders'?'ordersTable':'cpTable';
+     await checkVerticalLayers(tableId,key+' normal');
      await checkPin('#'+tableId+' tbody input.rowChk',key+' normal body');
      await checkPin('#'+tableId+' thead input[type="checkbox"]',key+' normal header');
      await page.evaluate(key=>{const table=tableImageSizeTable(key);BLTableFreeze.apply(table,{count:3,pane:100});},key);
      await page.waitForTimeout(120);
      await page.evaluate(key=>BLTableFreeze.scrollPane(tableImageSizeTable(key),180),key);
+     await checkVerticalLayers(tableId,key+' inner frozen pane');
      await checkPin('#'+tableId+' tbody input.rowChk',key+' inner frozen pane');
      await page.evaluate(key=>{BLTableFreeze.clear(tableImageSizeTable(key));BLTableReportInline.setMode(key,true);document.querySelector('#blTableReport-'+key).style.minWidth='1500px';},key);
      await checkPin('#blTableReport-'+key+' [data-tr-check="0"]',key+' report body');
@@ -208,8 +261,14 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
  if(process.env.REPORT_IMAGES_ONLY==='1'){
    const svg='<svg xmlns="http://www.w3.org/2000/svg" width="200" height="120" viewBox="0 0 200 120"><rect width="200" height="120" fill="#edf2f5"/><path d="M35 12L9 29L3 53L27 61L32 46V108H89V46L94 61L117 53L111 29L85 12Q60 32 35 12Z" fill="#58747e"/><path d="M140 12L120 27V108H193V27L175 12Z" fill="#506b75"/></svg>';
    const png=await page.evaluate(svg=>new Promise(resolve=>{const image=new Image();image.onload=()=>{const canvas=document.createElement('canvas');canvas.width=200;canvas.height=120;canvas.getContext('2d').drawImage(image,0,0);resolve(canvas.toDataURL('image/png'));};image.src='data:image/svg+xml;base64,'+btoa(svg);}),svg);
+   const widePng=await page.evaluate(png=>new Promise(resolve=>{const image=new Image();image.onload=()=>{const canvas=document.createElement('canvas');canvas.width=360;canvas.height=120;canvas.getContext('2d').drawImage(image,80,0);resolve(canvas.toDataURL('image/png'));};image.src=png;}),png);
    await page.route('**/api/*-images/report-size-demo*',route=>route.fulfill({contentType:'image/png',body:Buffer.from(png.split(',')[1],'base64')}));
-   await page.evaluate(()=>{BLDetailImages.resolve=(_index,identity)=>({...identity,source:'/api/cp-images/report-size-demo'});colmgr.cp.hidden.delete('__picture');renderCP();BLFlushTableRenders();BLTableReportInline.setMode('cp',true);});
+   await page.route('**/api/*-images/report-size-wide-demo*',route=>route.fulfill({contentType:'image/png',body:Buffer.from(widePng.split(',')[1],'base64')}));
+   await page.evaluate(()=>{
+     BLDetailImages.resolve=(_index,identity)=>({...identity,source:document.body.dataset.activeTab==='orders'?'/api/cp-images/report-size-wide-demo':'/api/cp-images/report-size-demo'});
+     state.cp.rows[0]['Model Name']='DEMO COTTON JERSEY WITH A RIBBED CREW NECK, LONG SLEEVES AND CONTRAST STITCHING';
+     colmgr.cp.hidden.delete('__picture');renderCP();BLFlushTableRenders();BLTableReportInline.setMode('cp',true);
+   });
    const evidence=[];
    for(const key of ['cp','orders','koleksiyon']){
      if(key==='orders')await page.evaluate(()=>{switchTab('orders');colmgr.orders.hidden=new Set(colmgr.cp.hidden);renderOrders();BLFlushTableRenders();BLTableReportInline.setMode('orders',true);});
@@ -219,9 +278,32 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
      }
      const header=page.locator('#blTableReport-'+key+' [data-tr-image-size]');
      await page.waitForFunction(key=>{const img=document.querySelector('#blTableReport-'+key+' .blDetailImageCell img');return img?.dataset.blImageLoaded==='1'&&img.complete&&img.naturalWidth>0;},key).catch(async error=>{console.log(await page.locator('#blTableReport-'+key+' .blDetailImageCell img').first().evaluate(img=>({html:img.outerHTML,src:img.currentSrc})));throw error;});
+     for(const theme of ['light','dark']){
+       await page.evaluate(theme=>applyTheme(theme),theme);
+       const borders=await header.evaluate(button=>{
+         const style=getComputedStyle(button);
+         return [style.borderTopWidth,style.borderRightWidth,style.borderBottomWidth,style.borderLeftWidth];
+       });
+       assert.ok(borders.every(width=>width==='0px'),key+' '+theme+' image heading has no border');
+     }
      await header.click();
      const range=page.locator('#tableImageSizeRange');await range.waitFor();
+     const classicBefore=await page.evaluate(key=>({
+       value:tableImageSizeCurrentValue(key),stored:BLStorage.getItem(TABLE_IMAGE_SIZE_CONFIG[key].preferenceKey)
+     }),key);
+     assert.equal(Number(await range.inputValue()),classicBefore.value,key+' report starts at the previous shared size');
      const maximum=Number(await range.getAttribute('max')),minimum=Number(await range.getAttribute('min'));
+     const thumbnail=page.locator('#blTableReport-'+key+' .blDetailImageCell img').first();
+     const measure=()=>thumbnail.evaluate(img=>{
+       const {width,height}=img.getBoundingClientRect();
+       return {width,height,row:img.closest('tr').getBoundingClientRect().height,
+         visibleHeight:Math.min(height,width*img.naturalHeight/img.naturalWidth)};
+     });
+     const waitForFit=()=>page.waitForFunction(key=>{
+       const img=document.querySelector('#blTableReport-'+key+' .blDetailImageCell img');
+       const {width,height}=img.getBoundingClientRect(),row=img.closest('tr').getBoundingClientRect().height;
+       return Math.min(height,width*img.naturalHeight/img.naturalWidth)>=row-8;
+     },key,{timeout:3000});
      const sizes=[],frameMs=[];
      for(const value of [minimum,maximum]){
        await range.evaluate(input=>{
@@ -229,25 +311,65 @@ const log=fs.openSync(path.join(root,'server.log'),'a'),server=spawn(process.exe
          input.addEventListener('input',event=>requestAnimationFrame(()=>{input.dataset.feedbackMs=performance.now()-event.timeStamp;}),{once:true});
        });
        await range.fill(String(value));await range.dispatchEvent('input');await range.dispatchEvent('change');
-       await page.waitForFunction(({key,value})=>parseInt(getComputedStyle(document.querySelector('#blTableReport-'+key)).getPropertyValue('--bl-report-image-width'))===value,{key,value});
+       await page.waitForFunction(({key,value})=>parseInt(getComputedStyle(document.querySelector('#blTableReport-'+key)).getPropertyValue('--bl-report-image-height'))===tableImageSizeDimensions(key,value).h,{key,value});
        await page.waitForFunction(()=>document.querySelector('#tableImageSizeRange')?.dataset.feedbackMs);
        frameMs.push(Number(await range.getAttribute('data-feedback-ms')));
-       sizes.push(await page.locator('#blTableReport-'+key+' .blDetailImageCell img').first().evaluate(img=>({width:img.getBoundingClientRect().width,height:img.getBoundingClientRect().height,col:img.closest('td').getBoundingClientRect().width,row:img.closest('tr').getBoundingClientRect().height,loaded:img.complete&&img.naturalWidth>0})));
+       if(value===minimum){
+         await waitForFit();
+         if(key==='cp'){
+           await page.keyboard.press('Escape');await header.blur();await page.mouse.move(1000,20);
+           const normal=await measure();
+           await page.evaluate(()=>applyUiFontStep(2,{persist:false}));
+           await page.waitForFunction(normal=>{
+             const [wrapped,short]=document.querySelectorAll('#blTableReport-cp tr[data-id]');
+             return wrapped.offsetHeight>normal&&wrapped.offsetHeight>short.offsetHeight;
+           },normal.row);
+           await waitForFit();
+           await page.screenshot({path:path.join(assets,'report-image-fits-row.png')});
+           await page.evaluate(()=>applyUiFontStep(0,{persist:false}));
+           await header.click();await range.waitFor();
+         }
+         await thumbnail.evaluate(img=>{img.closest('tr').style.height='76px';});
+         await waitForFit();
+         assert.ok((await measure()).row>=76,key+' minimum fits the taller row');
+         await thumbnail.evaluate(img=>{img.closest('tr').style.removeProperty('height');});
+         await waitForFit();
+       }
+       sizes.push(await measure());
      }
-     assert.equal(sizes[0].width,minimum);assert.equal(sizes[1].width,maximum);assert.ok(sizes[1].height>sizes[0].height);assert.ok(sizes[1].row>sizes[0].row);assert.ok(sizes[1].col>sizes[0].col);
+     assert.ok(sizes[1].width>sizes[0].width);assert.ok(sizes[1].height>sizes[0].height);assert.ok(sizes[1].row>sizes[0].row);
      assert.ok(frameMs.every(ms=>ms<=200),key+' image size responds within 200 ms');
-     const persisted=await page.evaluate(key=>BLStorage.getItem(TABLE_IMAGE_SIZE_CONFIG[key].preferenceKey),key);assert.equal(Number(persisted),maximum);
-     // Same underlying preference and renderer, including resize while the report is hidden.
+     const classicAfter=await page.evaluate(key=>({
+       value:tableImageSizeCurrentValue(key),stored:BLStorage.getItem(TABLE_IMAGE_SIZE_CONFIG[key].preferenceKey)
+     }),key);
+     assert.deepEqual(classicAfter,classicBefore,key+' resizing the report preserves the classic table size and preference');
      await page.keyboard.press('Escape');
      assert.ok(await header.evaluate(button=>button===document.activeElement),'Escape returns focus to report image heading');
      if(key==='cp'){
-       await header.click();await page.screenshot({path:path.join(assets,'report-image-size.png')});await page.keyboard.press('Escape');
+       await header.press('Enter');await range.waitFor();await page.keyboard.press('Escape');
+       await header.blur();await page.mouse.move(1000,20);
+       await page.screenshot({path:path.join(assets,'report-image-heading.png')});
        await page.evaluate(()=>applyLanguage('tr'));assert.equal(await header.textContent(),'Görsel');assert.equal(await header.getAttribute('title'),'Görsel boyutunu değiştir');await page.evaluate(()=>applyLanguage('en'));
      }
-     await page.evaluate(key=>{BLTableReportInline.setMode(key,false);setTableImageSize(key,tableImageSizeBounds(key).min,{persist:true});BLTableReportInline.setMode(key,true);},key);
-     await page.waitForFunction(({key,minimum})=>parseInt(getComputedStyle(document.querySelector('#blTableReport-'+key)).getPropertyValue('--bl-report-image-width'))===minimum,{key,minimum});
-     evidence.push({key,minimum,maximum,sizes,frameMs});console.log('PASS report/table shared image sizing, persistence, geometry and hidden-view update: '+key);
+     await page.evaluate(key=>BLTableReportInline.setMode(key,false),key);
+     const classicHeader=page.locator(key==='koleksiyon'?'#kolPicTh':`#${key}Table th[data-k="__picture"] .thLabel`);
+     await classicHeader.click();await range.waitFor();
+     assert.equal(Number(await range.inputValue()),classicBefore.value,key+' classic slider keeps its size');
+     await range.fill(String(minimum));await range.dispatchEvent('change');await page.keyboard.press('Escape');
+     assert.equal(await page.evaluate(key=>tableImageSizeCurrentValue(key),key),minimum);
+     await page.evaluate(key=>BLTableReportInline.setMode(key,true),key);
+     await header.click();await range.waitFor();
+     assert.equal(Number(await range.inputValue()),maximum,key+' resizing the classic table preserves the report size');
+     await page.waitForFunction(({key,maximum})=>parseInt(getComputedStyle(document.querySelector('#blTableReport-'+key)).getPropertyValue('--bl-report-image-height'))===tableImageSizeDimensions(key,maximum).h,{key,maximum});
+     if(key==='cp')await page.screenshot({path:path.join(assets,'report-image-size.png')});
+     await page.keyboard.press('Escape');
+     evidence.push({key,minimum,maximum,sizes,frameMs});console.log('PASS independent report and classic image sizes, persistence and row fitting: '+key);
    }
+   await openCP(page);await page.evaluate(seedCp);
+   await page.evaluate(()=>{colmgr.cp.hidden.delete('__picture');renderCP();BLFlushTableRenders();});
+   await page.locator('#blTableReport-cp [data-tr-image-size]').click();
+   assert.equal(Number(await page.locator('#tableImageSizeRange').inputValue()),evidence[0].maximum,'report size survives reload');
+   assert.equal(await page.evaluate(()=>tableImageSizeCurrentValue('cp')),evidence[0].minimum,'classic size survives reload separately');
    assert.deepEqual(errors,[]);fs.writeFileSync(path.join(root,'image-results.json'),JSON.stringify({ok:true,evidence,errors},null,2));return;
  }
  if(process.env.REPORT_PERF_ONLY==='1'){
