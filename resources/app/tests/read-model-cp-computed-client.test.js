@@ -226,3 +226,24 @@ test('optimistic checklist answer: only the affected order rows are recomputed l
   ctx.BLChecklistSupplierSync._state.pendingAnswers={'O1::pps':{}};
   assert.equal(api.cpComputedOptimisticAnswer(),false,'kaydedilmemiş düzenleme varken eski yol');
 });
+
+test('decision-context listener hook: legacy render unless back-end columns are applied; non-answer reasons require the preference flush',async()=>{
+  const {api,ctx,calls}=load();
+  const hook=ctx.BLCpComputedColumns;
+  assert.equal(hook.onDecisionContextChanged({detail:{reason:'preferences'}}),false,'henüz uygulanmadı → çağıran çizer');
+  assert.equal(api.computed().answersOnly,false);
+  await api.scheduleUnifiedPrioritiesForTable('cp');
+  assert.equal(api.computed().answersOnly,true);
+  ctx.__contextRevision=2;
+  assert.equal(hook.onDecisionContextChanged({detail:{reason:'checklist-answer'}}),true,'uygulandı → arka uç yeniler');
+  assert.equal(api.computed().answersOnly,true,'yalnız cevap: yazım beklenmez');
+  await api.computed().job?.promise;
+  assert.equal(calls.fetch.length,2);
+  ctx.__contextRevision=3;
+  assert.equal(hook.onDecisionContextChanged({detail:{reason:'preferences'}}),true);
+  assert.equal(api.computed().answersOnly,false,'kural/ayar: sonraki istek tercih yazımını bekler');
+  await api.computed().job?.promise;
+  assert.equal(calls.flush,2);
+  // Kaynaktan çıkarılan eski testler için: sağlayıcı yoksa dinleyici eski yolu izler.
+  assert.match(SOURCE,/if\(!window\.BLCpComputedColumns\?\.onDecisionContextChanged\?\.\(event\)&&currentActiveTab\(\)==='cp'\)renderCP\(\);/);
+});

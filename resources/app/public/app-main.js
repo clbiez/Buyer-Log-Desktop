@@ -1112,8 +1112,8 @@ function syncUnifiedPrioritiesForTable(tableKey,preparedResult=null){
   if(cached&&cached.rows===rows&&cached.dataRevision===_unifiedPriorityTableRevision[tableKey]&&cached.contextRevision===contextRevision&&cached.day===new Date().toDateString())return true;
   // Hesaplanmış sütunlar arka uçtaysa (#1078) 30k satır burada eşzamanlı hesaplanmaz;
   // sonuç gelene kadar satırlar son değerlerini korur.
-  if(tableKey==='cp'&&!preparedResult&&cpComputedEligible()){void scheduleUnifiedPrioritiesForTable('cp');return false;}
-  if(tableKey==='cp'){cpComputed.applied=null;cpComputed.answersOnly=false;}
+  if(tableKey==='cp'&&!preparedResult&&window.BLCpComputedColumns?.active?.()){void scheduleUnifiedPrioritiesForTable('cp');return false;}
+  if(tableKey==='cp')window.BLCpComputedColumns?.legacyApplied?.();
   const activeRows=rows.filter(row=>unifiedPriorityRowActive(tableKey,row));
   const result=preparedResult||assistant.computeDecisionsForRows(activeRows);
   for(const row of rows){
@@ -1398,7 +1398,7 @@ function scheduleUnifiedPrioritiesForTable(tableKey,options={}){
   const revision=_unifiedPriorityTableRevision.cp,contextRevision=assistant.decisionContextRevision();
   const day=new Date().toDateString(),cached=_unifiedPriorityCache.cp;
   if(cached&&cached.rows===rows&&cached.dataRevision===revision&&cached.contextRevision===contextRevision&&cached.day===day){window.BLModulePreparation?.setStatus('cp','ready');return Promise.resolve(true);}
-  if(!options.legacy&&cpComputedEligible())return scheduleCpComputedColumns(rows,revision,contextRevision,day);
+  if(!options.legacy&&window.BLCpComputedColumns?.active?.())return window.BLCpComputedColumns.schedule(rows,revision,contextRevision,day);
   if(cpPriorityJob&&cpPriorityJob.rows===rows&&cpPriorityJob.revision===revision&&cpPriorityJob.contextRevision===contextRevision)return cpPriorityJob.promise;
   const job={rows,revision,contextRevision};cpPriorityJob=job;
   job.promise=assistant.computeDecisionsForRowsAsync(rows).then(result=>{
@@ -1583,6 +1583,9 @@ window.BLCpComputedColumns={
   active:()=>cpComputedEligible(),
   covers:rows=>cpComputedEligible()&&Boolean(cpComputed.applied)&&cpComputed.applied.rows===rows&&rows===state.cp?.rows,
   refresh:()=>{if(!cpComputedEligible())return Promise.resolve(false);_unifiedPriorityCache.cp=null;return scheduleUnifiedPrioritiesForTable('cp');},
+  schedule:(rows,revision,contextRevision,day)=>scheduleCpComputedColumns(rows,revision,contextRevision,day),
+  // Eski yol satırlara kendi sonucunu yazdı: sonraki arka uç isteği tam (token geçersiz) ve tercih yazımını bekler.
+  legacyApplied:()=>{cpComputed.applied=null;cpComputed.answersOnly=false;},
   isEnabled:()=>cpComputedEnabled(),
   setEnabled(value){
     try{(window.BLStorage||localStorage).setItem(CP_COMPUTED_STORAGE_KEY,value?'1':'0');}catch(_){}
@@ -1590,6 +1593,17 @@ window.BLCpComputedColumns={
     invalidateUnifiedPriorityDecisions('cp-computed-toggle',['cp']);if(state.cp)renderCP();return cpComputedEnabled();
   },
   status:()=>({enabled:cpComputedEnabled(),disabled:cpComputed.disabled,applied:Boolean(cpComputed.applied),token:cpComputed.applied?.token||null}),
+  /* Kişisel karar bağlamı değişti. Cevap dışı bağlamda sonraki istek tercih yazımını bekler.
+     Arka uç sütunları uygulanmışsa cevabı değişen satırlar yerelde hemen (supplier-sync cevap
+     günlüğünden sonra), bütünü arka uçtan gelince çizilir; true → çağıran çizmez. */
+  onDecisionContextChanged(event){
+    const reason=event?.detail?.reason;
+    if(reason!=='checklist-answer')cpComputed.answersOnly=false;
+    if(!(cpComputedEligible()&&cpComputed.applied?.rows===state.cp?.rows))return false;
+    if(reason==='checklist-answer')queueMicrotask(()=>{try{cpComputedOptimisticAnswer();}catch(error){console.warn('CP iyimser checklist güncellemesi:',error);}});
+    void scheduleUnifiedPrioritiesForTable('cp');
+    return true;
+  },
 };
 document.addEventListener('bl:language-changed',()=>{
   // Checklist hücre etiketleri dile bağlıdır.
@@ -1635,7 +1649,7 @@ function ensureUnifiedPrioritiesForTable(tableKey){
   if(cached&&cached.rows===state[tableKey]?.rows&&cached.dataRevision===_unifiedPriorityTableRevision[tableKey]&&cached.contextRevision===assistant?.decisionContextRevision()&&cached.day===new Date().toDateString())return true;
   // Arka uç sütunları bu satırlara uygulanmışsa tablo son değerlerle çizilir; yeni sonuç
   // (bağlam/gün/dil değişimi) gelince yeniden çizilir. Yükleme ekranına dönülmez.
-  if(assistant?.computeDecisionsForRowsAsync&&cpComputedEligible()&&cpComputed.applied?.rows===state.cp?.rows){void scheduleUnifiedPrioritiesForTable(tableKey);return true;}
+  if(assistant?.computeDecisionsForRowsAsync&&window.BLCpComputedColumns?.covers?.(state.cp?.rows)){void scheduleUnifiedPrioritiesForTable(tableKey);return true;}
   if(assistant?.computeDecisionsForRowsAsync){showUnifiedPriorityLoading(tableKey);void scheduleUnifiedPrioritiesForTable(tableKey);return false;}
   showUnifiedPriorityLoading(tableKey);
   if(!_unifiedPriorityFeaturePromise){
@@ -1649,16 +1663,9 @@ function ensureUnifiedPrioritiesForTable(tableKey){
   return false;
 }
 window.addEventListener('bl:cp-decision-context-changed',event=>{
-  // CP hesaplanmış sütunları (#1078): cevap dışı bağlam değişince sonraki istek tercih yazımını bekler.
-  if(event?.detail?.reason!=='checklist-answer')cpComputed.answersOnly=false;
   invalidateUnifiedPriorityDecisions('personal-decision-context',['cp']);
-  // Arka uç sütunları uygulanmışsa eski değerlerle ara çizim yapılmaz: cevabı değişen satırlar
-  // yerelde hemen (supplier-sync cevap günlüğünden sonra), bütünü arka uçtan gelince çizilir.
-  if(cpComputedEligible()&&cpComputed.applied?.rows===state.cp?.rows){
-    if(event?.detail?.reason==='checklist-answer')queueMicrotask(()=>{try{cpComputedOptimisticAnswer();}catch(error){console.warn('CP iyimser checklist güncellemesi:',error);}});
-    void scheduleUnifiedPrioritiesForTable('cp');
-  }
-  else if(currentActiveTab()==='cp')renderCP();
+  // CP hesaplanmış sütunlar (#1078) etkinse yenilemeyi kendisi yapar (eski değerlerle ara çizim yok).
+  if(!window.BLCpComputedColumns?.onDecisionContextChanged?.(event)&&currentActiveTab()==='cp')renderCP();
   scheduleOverviewRender('personal-decision-context');
   // Siparişler önceliği checklist cevabına değil kural/katalog anahtarına bağlıdır;
   // anahtar bir sonraki okumada yeniden kurulur, yalnız gerçekten değiştiyse hesaplanır.
