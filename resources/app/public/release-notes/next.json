@@ -704,6 +704,23 @@
       }
     },
     {
+      "id": "overview-read-model",
+      "type": "improvement",
+      "module": {"tr": "Genel Bakış", "en": "Overview"},
+      "title": {"tr": "Genel Bakış özeti CP verisini beklemeden hazırlanır", "en": "The Overview summary is ready without waiting for CP data"},
+      "body": {
+        "tr": "Sipariş KPI'ları, ülke, alt üretici, sezon × öncelik ve Buying Group kırılımları, İstisna Kutusu ile Kontrol Listesi ve Kurallar özeti bilgisayarınızdaki Buyer Log arka ucunda hesaplanır. Genel Bakış için tarayıcıya tam CP listesi indirilmez ve kurallar orada yeniden hesaplanmaz. Sayılar ve kırılımlar aynıdır. İş Listesi veya aksiyon gerekenler gibi satır isteyen bir tıklamada CP o anda yüklenir.",
+        "en": "Order KPIs, the country, sub-manufacturer, season × priority and Buying Group breakdowns, the Exception Inbox, and the Checklist & Rules summary are calculated in the Buyer Log back end on your computer. Overview no longer downloads the full CP list into the browser or recalculates the rules there. The numbers and breakdowns are unchanged. A click that needs rows, such as Work Queue or orders needing action, loads CP at that moment."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; aynı Genel Bakış kartları daha az bekleme ve takılmayla çizilir.",
+          "en": "There is no change on screen; the same Overview cards are drawn with less waiting and stutter."
+        }
+      }
+    },
+    {
       "id": "orders-read-model-windowed",
       "type": "improvement",
       "module": {"tr": "Siparişler", "en": "Orders"},

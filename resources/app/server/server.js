@@ -6364,6 +6364,20 @@ app.post('/api/backups/restore/inspect', userAccess.requireArea('source'), userA
   } catch (error) { return fullRestoreApiError(res, error, 'Full System Backup incelenemedi.'); }
   finally { if (upload) fs.rmSync(upload.root, { recursive: true, force: true }); }
 });
+// Genel Bakış okuma modeli (#1074): POST /api/read-model/overview/model. Kişisel karar
+// bağlamı istemciyle aynı sunucu kayıtlarından okunur; revizyonu CP ajan revizyonudur.
+require('./lib/read-model/overview-model-routes')(app, {
+  userAccess, apiError, ensureComputedProjection, getComputeReadGuard: () => computeReadGuard,
+  contextSources: {
+    preferences: userPreferences, roleEntries: profile => userAccess.roleWorkspaceEntries(profile),
+    managedRules: () => { const ov = loadOverrides(); return { ...require('./db').normalizeCpManagedRules(ov.cpManagedRules), revision: Number(ov._revisions && ov._revisions.cpManagedRules) || 0 }; },
+    transitRules: profile => effectiveOverridesForUser(profile.id).transitRules || [],
+    plmPayload: () => sampleRequestStore.publicPayload(),
+    checklistPayload: () => require('./lib/checklist-supplier-store').publicPayload(),
+    revision: profile => cpAgentRevision(profile, { ignoreRefresh: true }),
+    merge: (own, shared) => require('../public/checklist-answer-merge-engine').merge(own, shared),
+  },
+});
 // ERP okuma modeli (#1073): POST /api/read-model/:module/query. Global 100 MB JSON
 // ayrıştırıcısından ÖNCE kaydolur: yetki gövdeden önce, rota kendi 2 MB sınırını uygular.
 require('./routes/read-model-routes')(app, {

@@ -46,7 +46,7 @@ test('Kontrol listesi ve Veri Kapsamı bağımsız hostlara çizilir',()=>{
   assert.doesNotMatch(VIEW,/attention\.innerHTML = attentionCard\(\)/);
   assert.match(VIEW,/cpaChecklistOverview/);
   assert.doesNotMatch(VIEW,/state\.perspective === 'manager'/);
-  assert.match(VIEW,/coverage\.innerHTML = coverageCard\(\)/);
+  assert.match(VIEW,/coverage\.innerHTML = coverageCard\(summary\)/);
 });
 
 test('v9.58 Priorities ve Checklist iki eşit sütun, tek kartta tam genişlik kullanır',()=>{
@@ -56,7 +56,7 @@ test('v9.58 Priorities ve Checklist iki eşit sütun, tek kartta tam genişlik k
 
 test('CP Öncelik Radarı yerine Öncelikler kartında tıklanabilir dağılım çubuğu vardır',()=>{
   assert.match(VIEW,/class="cpaMix"/);
-  assert.match(VIEW,/class="cpaMixSeg tone-\$\{esc\(tone\)\}"[^`]*data-cpa-priority="\$\{esc\(key\)\}"/);
+  assert.match(VIEW,/class="cpaMixSeg tone-\$\{esc\(item\.tone\)\}"[^`]*data-cpa-priority="\$\{esc\(item\.key\)\}"/);
   assert.match(CPA_CSS,/\.cpaMix\{/);
   assert.doesNotMatch(INDEX,/id="ovPriorityRadar"/);
 });

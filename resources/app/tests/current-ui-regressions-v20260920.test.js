@@ -26,8 +26,9 @@ test('Kaynak klasör seçiminde eski FolderBrowserDialog yerine Sync ile aynı m
 test('Kontrol özeti kalıcı Buyer görünümünde kalır ve dağılım ayrıntıları açılır bölümde gösterilir', () => {
   assert.match(CP_ASSIST, /perspective: 'buyer'/);
   assert.match(CP_ASSIST, /buyer: \['priorities', 'checklist'\]/);
-  assert.match(CP_ASSIST, /container\.innerHTML = overviewWidgetHtml\(\)/);
-  assert.match(CP_ASSIST, /<details class="cpaOverviewDetails"[\s\S]*?prioritiesOverviewBlock\(\)[\s\S]*?checklistCard\(\)/);
+  // #1074: kart istemci ya da okuma modeli özetinden çizilir.
+  assert.match(CP_ASSIST, /container\.innerHTML = overviewWidgetHtml\(summary\)/);
+  assert.match(CP_ASSIST, /<details class="cpaOverviewDetails"[\s\S]*?prioritiesOverviewBlock\(summary\)[\s\S]*?checklistCard\(summary\)/);
   assert.doesNotMatch(CP_ASSIST, /data-cpa-perspective|cpaPerspective/);
 });
 
