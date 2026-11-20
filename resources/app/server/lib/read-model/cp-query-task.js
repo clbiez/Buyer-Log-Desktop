@@ -29,7 +29,7 @@ async function execute(payload,deps){
   const started=performance.now();
   if(!payload||(payload.kind!=='query'&&payload.kind!=='facets'))throw Object.assign(new Error('Invalid compute request'),{code:'COMPUTE_JOB_INVALID'});
   const computed=await ensureComputed(payload,deps);
-  if(computed.missing)return {missing:computed.missing,warm:computed.warm};
+  if(computed.missing)return {missing:computed.missing,warm:computed.warm,...(computed.cold?{cold:true}:{})};
   const {dataset,entry,current,hostMs,loads}=computed;
   const computeMs=performance.now()-started;
   const helpers=helpersFor(entry,current);
@@ -43,6 +43,7 @@ async function execute(payload,deps){
     result.computedFields=FIELDS;
   }
   return {result,timing:{loadMs:loads.cp||0,computeMs,queryMs:performance.now()-queryStarted,totalMs:performance.now()-started,
-    rows:current.rows.length,reused:computed.reused,phases:{hostMs,...(computed.reused?{}:current.phases)},datasetReloaded:Boolean(loads.cp)}};
+    rows:current.rows.length,reused:computed.reused,phases:{hostMs,...(computed.reused?{}:current.phases)},datasetReloaded:Boolean(loads.cp),rowPatch:loads.rowPatch||null},
+    verify:computed.verify||null};
 }
 module.exports={execute};

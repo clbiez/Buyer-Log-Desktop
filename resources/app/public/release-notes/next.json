@@ -801,16 +801,16 @@
       "id": "cp-read-model-windowed",
       "type": "improvement",
       "module": {"tr": "CP Tracker", "en": "CP Tracker"},
-      "title": {"tr": "CP filtreleri yerel arka uçta çalışabilir (pilot)", "en": "CP filters can run on the local backend (pilot)"},
+      "title": {"tr": "CP filtreleri yerel arka uçta çalışır", "en": "CP filters run on the local backend"},
       "body": {
-        "tr": "Pilot ayarı açıkken CP tüm satırları tarayıcıda süzmez ve sıralamaz. Filtre, arama, öncelik sıralaması, hızlı filtre sayaçları ve alt toplamlar bilgisayardaki yerel arka uçta çalışır; tablo yalnız ekrandaki satırları ister. Tümünü seç, Kopyala ve Excel tüm eşleşen satırları arka uçtan alır. Henüz desteklenmeyen filtrelerde ve kaydedilmemiş bir düzenleme varken mevcut yol kullanılır. Ayar varsayılan olarak kapalıdır.",
-        "en": "With the pilot setting on, CP no longer filters and sorts every row in the browser. Filtering, search, priority sorting, quick filter counts and totals run on the local backend on this computer, and the table requests only the rows on screen. Select all, Copy and Excel fetch all matching rows from the backend. Filters that are not supported yet, and unsaved edits, use the existing path. The setting is off by default."
+        "tr": "CP tüm satırları tarayıcıda süzmez ve sıralamaz. Filtre, arama, öncelik sıralaması, hızlı filtre sayaçları ve alt toplamlar bilgisayardaki yerel arka uçta çalışır; tablo yalnız ekrandaki satırları ister. Tümünü seç, Kopyala ve Excel tüm eşleşen satırları arka uçtan alır. Henüz desteklenmeyen filtrelerde mevcut yol kullanılır.",
+        "en": "CP no longer filters and sorts every row in the browser. Filtering, search, priority sorting, quick filter counts and totals run on the local backend on this computer, and the table requests only the rows on screen. Select all, Copy and Excel fetch all matching rows from the backend. Filters that are not supported yet use the existing path."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
         "src": "cp-read-model-windowed.png",
-        "alt": {"tr": "Pilot ayarı açık CP Tracker: 2.077 demo satırından Kritik öncelik çipiyle süzülen 42 satır", "en": "CP Tracker with the pilot setting on: 42 of 2,077 demo rows filtered by the Critical priority chip"},
+        "alt": {"tr": "CP Tracker: 2.077 demo satırından Kritik öncelik çipiyle süzülen 42 satır", "en": "CP Tracker: 42 of 2,077 demo rows filtered by the Critical priority chip"},
         "caption": {"tr": "Demo veride Kritik çipi seçili; satırlar, sayaçlar ve sayım arka uçtan gelir ve mevcut yolla aynıdır.", "en": "The Critical chip is selected on demo data; rows, counts and totals come from the backend and match the existing path."}
       }
     },
@@ -887,6 +887,17 @@
       "visual": {
         "kind": "none",
         "reason": {"tr": "Ekranda değişen bir şey yok; aynı değerler yalnız daha hızlı hazırlanır.", "en": "Nothing changes on screen; the same values are only prepared faster."}
+      }
+    },
+    {
+      "id": "cp-row-patch-no-wait",
+      "type": "improvement",
+      "module": {"tr": "CP Tracker", "en": "CP Tracker"},
+      "title": {"tr": "CP'de kayıttan sonra öncelikler ve filtreler beklemeden güncellenir", "en": "CP priorities and filters update without waiting after a save"},
+      "body": {"tr": "CP'de bir notu, teslimat tipini ya da tarihi kaydettiğinizde öncelik ve checklist sütunları ile filtre sonuçları, sayfa önbelleğinin yeniden yazılmasını beklemeden yalnız değişen satırlar üzerinden hesaplanır. Kayıt sürerken açılan filtre ya da kaydırma hata uyarısı göstermez; önceki sonuç ekranda kalır ve yenisi hazır olunca tablo kendini günceller. CP hesabı çalışma alanı açılırken arka planda hazırlanır. Hesaplanan değerler değişmez; yeni sayfa önbelleği hazır olunca sonuçlar onunla karşılaştırılır.", "en": "When you save a note, delivery type or date in CP, the priority and checklist columns and filter results are calculated from the changed rows only, without waiting for the page cache to be rewritten. A filter or scroll during a save no longer shows an error; the previous result stays on screen and the table updates itself when the new one is ready. CP calculations are prepared in the background when the workspace opens. Calculated values do not change; once the new page cache is ready, the results are checked against it."},
+      "visual": {
+        "kind": "none",
+        "reason": {"tr": "Ekranda yeni bir öğe yok; aynı değerler kayıttan sonra daha erken gelir ve geçici hata uyarısı gösterilmez.", "en": "Nothing new appears on screen; the same values arrive sooner after a save and no temporary error warning is shown."}
       }
     }
   ]

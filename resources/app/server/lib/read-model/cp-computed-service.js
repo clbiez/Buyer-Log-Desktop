@@ -25,6 +25,12 @@ const TOKEN=/^[A-Za-z0-9_-]{1,64}$/;
 
 function failure(code,statusCode,tr,en,extra={}){return Object.assign(new Error(`${tr} / ${en}`),{code,statusCode,error:tr,errorEn:en,...extra});}
 const invalid=detail=>failure('READ_MODEL_QUERY_INVALID',400,'Geçersiz CP hesaplanmış sütun isteği.','Invalid CP computed columns request.',{detail});
+/* İşçi sonucu eksik. Veri kümesi/barındırıcı hâlâ yoksa (işçi bu arada emekli edildi: bellek tahmini aşımı, iptal) geçici
+   503: istemci önceki sonucu tutup yeniden ister (oturumu eski yola almaz). Başka biçimsiz sonuç 500 kalır. */
+function incomplete(out){
+  if(out&&Array.isArray(out.missing))return failure('COMPUTE_QUEUE_BUSY',503,'Hesaplama hazırlanıyor; yeniden denenecek.','Compute is being prepared; it will be retried.',{detail:{missing:out.missing,cold:Boolean(out.cold)}});
+  return failure('COMPUTE_WORKER_FAILED',500,'Hesaplama işçisi tamamlanamadı.','Compute worker failed.');
+}
 
 const MAX_OVERLAY=5000,MAX_KEY=512,MAX_ANSWER_BYTES=16*1024;
 /* Gövde: { version:1, lang:'tr'|'en', since?:<önceki yanıtın token'ı>,
@@ -105,11 +111,22 @@ function workerOptions(options){
   if(signal&&signal.aborted)throw failure('COMPUTE_ABORTED',499,'Hesaplama iptal edildi.','Compute operation cancelled.');
   return rest;
 }
-function createCpComputedService({guard,loadProjection,runCompute,loadContext,loadTasks=async()=>[],today=localDay,maxEntries=8,maxBytes=96*1024*1024}){
+/* Bekleyen satır yaması zinciri (#1078 WS5 satır yaması). İşçideki son veri kümesinin bağlamından (temel)
+   güncel bağlama satır kaydı günlüğünde zincir varsa projeksiyon kirası ALINMAZ (yeni nesil yazılırken
+   okumalar 30k'da 6–10 sn beklerdi): işçi temel veri kümesine yalnız kaydedilen yamaları uygular ve
+   artımlı hesaplar. Kimlik kapısı aynıdır (guard.capture + assertResponse; kullanıcı, yetki ve kaynak
+   damgası temelinkiyle aynı olmalı); temel veri kümesi kullanıcının yetki kapsamına süzülmüş projeksiyondur
+   ve yama yalnız oradaki satırlara uygulanır (kapsam dışı satır eklenmez).
+   Doğrulama: zincirdeki her geçişin projeksiyon yeniden yazımı bitince gerçek neslin yamalı CP satırları
+   işçideki satırlarla karşılaştırılır. Uyuşmazlıkta ya da yeniden yazım başarısızsa temel düşer ve istek
+   gerçek nesille (kira + artımlı plan; değişen satırlar yeniden hesaplanır) yeniden yürütülür. */
+const MAX_LINEAGE=64;
+function createCpComputedService({guard,loadProjection,runCompute,loadContext,loadTasks=async()=>[],today=localDay,maxEntries=8,maxBytes=96*1024*1024,
+  rowPatchLog=null,onRowPatchMismatch=()=>{}}){
   if(!guard||typeof loadProjection!=='function'||typeof runCompute!=='function'||typeof loadContext!=='function'||typeof loadTasks!=='function')
     throw TypeError('Invalid CP computed service dependencies');
-  const cache=new Map(),latest=new Map();let cachedBytes=0;
-  const counters={requests:0,hits:0,misses:0,emptyDeltas:0,datasetLoads:0};
+  const cache=new Map(),latest=new Map(),bases=new Map(),building=new Map();let cachedBytes=0;
+  const counters={requests:0,hits:0,misses:0,emptyDeltas:0,datasetLoads:0,rowPatchReads:0,rowPatchBuilds:0,rowPatchVerified:0,rowPatchMismatches:0,rowPatchFallbacks:0,coldRetries:0,rowPatchStaleAccepted:0};
   function remove(key){const entry=cache.get(key);if(!entry)return;cache.delete(key);cachedBytes-=entry.bytes;}
   function put(key,scope,entry){
     for(const [other,value] of cache)if(value.scope===scope)remove(other);
@@ -122,67 +139,165 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
     const manifest=lease.manifest||{},meta=manifest.modules&&manifest.modules.cp;
     return `${manifest.activeGeneration||''}:${String(meta&&meta.checksum||'').slice(0,16)}`;
   };
-  async function run(payload,options){
-    const result=await runCompute('read-model-cp-computed',payload,options);
-    try{return result.value;}finally{result.release?.();}
+  const stampOf=captured=>JSON.stringify([String(captured.userId),String(captured.accessHash),String(captured.sourceToken)]);
+  /* Yanıt kapısı. Okuma sürerken yalnız bu kullanıcının satır kayıtları olduysa (kullanıcı/yetki/kaynak damgası aynı ve
+     günlükte yakalanan bağlamdan güncel bağlama zincir var) yanıt, yakalanan bağlamın tutarlı ve yetkili anlık görüntüsüdür:
+     409 yerine döner (istemci kayıt onayından sonra zaten yeniden ister). Oturum/alan guard.capture ile yeniden doğrulanır;
+     başka her değişim (yetki, kaynak, başka kullanıcının yazımı) 409 COMPUTE_STALE_GENERATION kalır. Soğuk başlangıçta
+     uzun bekleyen okumalar kayıt akışı sürerken her denemede bayatlayıp istemciye 409 olarak düşüyordu. */
+  function assertFresh(req,captured,lease=null){
+    try{captured.assertResponse();lease?.assertResponse?.();}
+    catch(error){
+      if(error?.code!=='COMPUTE_STALE_GENERATION'||!rowPatchLog||captured.userId==null||captured.contextHash==null)throw error;
+      const now=guard.capture(req,'cp');
+      if(stampOf(now)!==stampOf(captured)||!rowPatchLog.chain(captured.userId,captured.contextHash,now.contextHash))throw error;
+      counters.rowPatchStaleAccepted++;
+    }
   }
-  async function computed(req,rawBody,{signal}={}){
-    const captured=guard.capture(req,'cp');
-    const request=validateRequest(rawBody);
-    counters.requests++;
+  /* Plan ya da {miss:<neden>} (tanı: yanıt timing.service.rowPatch.miss). */
+  function rowPatchPlan(captured,scope){
+    if(!rowPatchLog||captured.userId==null||captured.contextHash==null)return {miss:'off'};
+    const base=bases.get(scope);
+    if(!base)return {miss:'no-base'};
+    if(base.stamp!==stampOf(captured))return {miss:'stamp'};
+    const to=String(captured.contextHash);
+    if(base.contextHash===to)return base.virtual?{base,datasetKey:base.datasetKey,steps:null,lineage:base.lineage,contextHash:to}:{miss:'current'};
+    const chain=rowPatchLog.chain(captured.userId,base.contextHash,to);
+    if(!chain||!chain.entries.length)return {miss:'no-chain'};
+    const lineage=base.lineage.concat(chain.entries);
+    if(lineage.length>MAX_LINEAGE)return {miss:'lineage'};
+    return {base,datasetKey:hash(JSON.stringify([base.datasetKey,to,'cp-rowpatch'])),steps:chain.entries.map(entry=>({items:entry.items,context:entry.context})),lineage,contextHash:to};
+  }
+  /* Zincirin tüm yeniden yazımları bittiyse doğrulama satırları (aynı _id için en son yazım); başarısız yazım → fail. */
+  function verificationOf(lineage){
+    if(!lineage.length||lineage.some(entry=>!entry.settled))return null;
+    if(lineage.some(entry=>!entry.settled.ok))return {fail:true};
+    const rows=new Map();
+    for(const entry of lineage){
+      let list=[];try{list=JSON.parse(entry.settled.rowsJson);}catch(_){return {fail:true};}
+      for(const row of Array.isArray(list)?list:[])if(row&&row._id!=null)rows.set(String(row._id),row);
+    }
+    return {rowsJson:JSON.stringify([...rows.values()])};
+  }
+  /* Satırları yükleyen ortak yol: önce bekleyen yama zinciri, olmazsa projeksiyon kirası.
+     exec({dataset, extra, options, generation, verifying}) işçi çıktısını ya da {short:<sonuç>} döner
+     (önbellek isabeti; işçiye gidilmedi). Dönen: {out|short, generation, leaseMs, rowPatch?}. */
+  async function withDataset(req,captured,signal,exec){
+    const scope=datasetScopeOf(captured);
+    // Aynı kapsamda süren sanal kurulum bitmeden plan yapılmaz: ikisi aynı temelden kurulursa ilki temeli
+    // işçiden düşürür ve ikincisi gereksiz yere gerçek nesle (kira) döner.
+    for(let guard=0;building.has(scope)&&guard<8;guard++)await building.get(scope).catch(()=>{});
+    let plan=rowPatchPlan(captured,scope),miss=plan.miss||null;
+    if(miss)plan=null;
+    if(plan){
+      const verification=verificationOf(plan.lineage);
+      if(verification&&verification.fail){bases.delete(scope);miss='rewrite-failed';counters.rowPatchMismatches++;onRowPatchMismatch({reason:'rewrite-failed',userId:captured.userId});}
+      else{
+        const generation='rp:'+plan.datasetKey.slice(0,24);
+        const dataset={datasetKey:plan.datasetKey,scopeKey:scope,...(plan.steps?{virtual:{baseKey:plan.base.datasetKey,steps:plan.steps}}:{})};
+        const extra=verification?{verify:{rowsJson:verification.rowsJson}}:{};
+        const running=(async()=>{
+          let result=await exec({dataset,extra:{...extra,warmOnly:true},generation,verifying:Boolean(verification),options:workerOptions({signal,estimatedBytes:WARM_BASE_BYTES,ownerKey:'read-model',generation:'1'})});
+          if(result&&result.cold){counters.coldRetries++;result=await exec({dataset,extra,generation,verifying:Boolean(verification),
+            options:workerOptions({signal,estimatedBytes:96*1024*1024+Math.ceil(plan.base.uncompressed*DECISION_FACTOR),ownerKey:'read-model',generation:'1'})});}
+          return result;
+        })();
+        if(plan.steps){building.set(scope,running);running.catch(()=>{}).finally(()=>{if(building.get(scope)===running)building.delete(scope);});}
+        const out=await running;
+        if(out&&out.short)return {short:out.short,generation,leaseMs:0};
+        const missing=!out||Array.isArray(out.missing);
+        const mismatch=!missing&&out.verify&&out.verify.mismatched>0;
+        if(!missing&&!mismatch){
+          counters.rowPatchReads++;if(plan.steps)counters.rowPatchBuilds++;
+          const verified=Boolean(verification&&out.verify);
+          if(verified)counters.rowPatchVerified++;
+          // Temel yanıt kapısından (çağıranın assertResponse'u) ÖNCE güncellenir: araya kayıt girerse (409) işçideki veri
+          // kümesi bu bağlam için yine geçerlidir; eski temel işçiden düştüğünden güncellenmezse sonraki okuma kira bekler.
+          bases.set(scope,{...plan.base,contextHash:plan.contextHash,datasetKey:plan.datasetKey,virtual:true,lineage:verified?[]:plan.lineage});
+          return {out,generation,leaseMs:0,rowPatch:{steps:plan.steps?plan.steps.length:0,pending:verified?0:plan.lineage.length,verified}};
+        }
+        bases.delete(scope);miss=mismatch?'mismatch':'missing';
+        if(mismatch){counters.rowPatchMismatches++;onRowPatchMismatch({reason:'row-mismatch',userId:captured.userId,ids:out.verify.ids,checked:out.verify.checked,mismatched:out.verify.mismatched});}
+        else counters.rowPatchFallbacks++;
+      }
+    }
     const t0=performance.now();
     const lease=await loadProjection(req,'cp');
     try{
-      const t1=performance.now();
-      const profile=captured.profile||req.currentUser;
-      const context=loadContext(profile);
-      const t2=performance.now();
-      const tasks=await loadTasks(profile);
-      const service={leaseMs:Math.round(t1-t0),contextMs:Math.round(t2-t1),tasksMs:Math.round(performance.now()-t2)};
+      const leaseMs=Math.round(performance.now()-t0);
       captured.assertResponse();lease.assertResponse?.();
       const generation=generationOf(lease);
       // Veri kümesi WS2a Genel Bakış ile aynı anahtardadır (tarayıcı biçiminde CP satırları).
-      const datasetKey=hash(JSON.stringify([captured.key,'cp-overview',generation])),datasetScope=datasetScopeOf(captured);
-      const contextKey=hash(JSON.stringify([String(context.key),tasks,request.answers]));
-      const scope=JSON.stringify([captured.key,'cp-computed']);
-      // Kararlar yerel güne bağlıdır (istemcide de önbellek gün değişince düşer).
-      const key=JSON.stringify([captured.key,'cp-computed',generation,contextKey,request.lang,today()]);
-      const last=latest.get(scope);
-      if(request.since&&last&&last.token===request.since&&last.key===key){
-        counters.emptyDeltas++;captured.assertResponse();
-        return {generation,cached:true,body:`{"version":1,"lang":${JSON.stringify(request.lang)},"token":${JSON.stringify(last.token)},"delta":true,"total":${last.total},"fields":null,"rows":[],"removed":[]}`,timing:{cached:true,delta:true,changed:0,service}};
-      }
-      if(!request.since){
-        const cached=get(key);
-        if(cached){counters.hits++;captured.assertResponse();latest.set(scope,{key,token:cached.token,total:cached.total});return {generation,cached:true,body:cached.body,timing:{...cached.timing,cached:true}};}
-      }
-      counters.misses++;
-      const contextValue=request.answers?{...context.value,answers:overlayAnswers(context.value&&context.value.answers,request.answers)}:context.value;
-      const base={dataset:{datasetKey,scopeKey:datasetScope},scopeKey:hostScopeOf(captured,context),lang:request.lang,since:request.since,context:contextValue,tasks};
+      const datasetKey=hash(JSON.stringify([captured.key,'cp-overview',generation]));
       const value=lease.value||{},compressed=Buffer.isBuffer(value.buffer)?value.buffer.length:Number(value.buffer&&value.buffer.byteLength)||0;
       const uncompressed=Number(value.uncompressedBytes)||compressed*8;
       const options={signal,estimatedBytes:96*1024*1024+Math.ceil(uncompressed*DECISION_FACTOR),ownerKey:'read-model',generation:'1'};
-      const t3=performance.now();
-      let out=await run(base,workerOptions(options));
+      // Önce sıcak tahminle (işçide veri kümesi + sıcak barındırıcı varsa artımlı/yeniden kullanım); soğuksa soğuk tahminle.
+      let out=await exec({dataset:{datasetKey,scopeKey:scope},extra:{warmOnly:true},generation,verifying:false,options:workerOptions({...options,estimatedBytes:WARM_BASE_BYTES})});
+      if(out&&out.short)return {short:out.short,generation,leaseMs,rowPatch:{miss}};
+      if(out&&out.cold){counters.coldRetries++;out=await exec({dataset:{datasetKey,scopeKey:scope},extra:{},generation,verifying:false,options:workerOptions(options)});}
       if(out&&Array.isArray(out.missing)&&out.missing.includes('cp')){
         counters.datasetLoads++;
         const source=value.buffer,bytes=Uint8Array.from(Buffer.isBuffer(source)?source:Buffer.from(source||[]));
-        out=await run({...base,dataset:{...base.dataset,buffer:bytes.buffer}},
-          workerOptions({...options,estimatedBytes:datasetLoadEstimate(out,options,uncompressed,bytes.byteLength),inputBytes:bytes.byteLength,transferList:[bytes.buffer]}));
+        out=await exec({dataset:{datasetKey,scopeKey:scope,buffer:bytes.buffer},extra:{},generation,verifying:false,
+          options:workerOptions({...options,estimatedBytes:datasetLoadEstimate(out,options,uncompressed,bytes.byteLength),inputBytes:bytes.byteLength,transferList:[bytes.buffer]})});
       }
-      if(!out||typeof out.body!=='string')throw failure('COMPUTE_WORKER_FAILED',500,'Hesaplama işçisi tamamlanamadı.','Compute worker failed.');
-      captured.assertResponse();lease.assertResponse?.();
-      const head=JSON.parse(out.body.slice(0,out.body.indexOf(',"fields"'))+'}');
-      latest.set(scope,{key,token:head.token,total:head.total});
-      if(!head.delta)put(key,scope,{body:out.body,timing:out.timing,token:head.token,total:head.total,bytes:Buffer.byteLength(out.body)});
-      return {generation,cached:false,body:out.body,timing:{...out.timing,service:{...service,computeMs:Math.round(performance.now()-t3)}}};
+      if(out&&!out.missing&&!out.short)bases.set(scope,{stamp:stampOf(captured),contextHash:String(captured.contextHash),datasetKey,virtual:false,lineage:[],uncompressed});
+      // Kira verisi yakalanan bağlamındır (kira alınır alınmaz denetlendi); arada yalnız satır kaydı olduysa tutarlı anlık görüntü.
+      assertFresh(req,captured,lease);
+      return {out,generation,leaseMs,rowPatch:{miss}};
     }finally{lease.release?.();}
+  }
+  async function run(task,payload,options){
+    const result=await runCompute(task,payload,options);
+    try{return result.value;}finally{result.release?.();}
+  }
+  async function computed(req,rawBody,{signal}={}){
+    const t0=performance.now();
+    const captured=guard.capture(req,'cp');
+    const request=validateRequest(rawBody);
+    counters.requests++;
+    const t1=performance.now();
+    const profile=captured.profile||req.currentUser;
+    const context=loadContext(profile);
+    const t2=performance.now();
+    const tasks=await loadTasks(profile);
+    const service={captureMs:Math.round(t1-t0),contextMs:Math.round(t2-t1),tasksMs:Math.round(performance.now()-t2)};
+    assertFresh(req,captured);
+    const contextKey=hash(JSON.stringify([String(context.key),tasks,request.answers]));
+    const scope=JSON.stringify([captured.key,'cp-computed']);
+    const contextValue=request.answers?{...context.value,answers:overlayAnswers(context.value&&context.value.answers,request.answers)}:context.value;
+    // Kararlar yerel güne bağlıdır (istemcide de önbellek gün değişince düşer).
+    const keyOf=generation=>JSON.stringify([captured.key,'cp-computed',generation,contextKey,request.lang,today()]);
+    const t3=performance.now();
+    const loaded=await withDataset(req,captured,signal,async({dataset,extra,options,generation,verifying})=>{
+      const key=keyOf(generation),last=latest.get(scope);
+      if(!verifying&&!dataset.buffer&&request.since&&last&&last.token===request.since&&last.key===key){
+        counters.emptyDeltas++;assertFresh(req,captured);
+        return {short:{generation,cached:true,body:`{"version":1,"lang":${JSON.stringify(request.lang)},"token":${JSON.stringify(last.token)},"delta":true,"total":${last.total},"fields":null,"rows":[],"removed":[]}`,timing:{cached:true,delta:true,changed:0,service}}};
+      }
+      if(!verifying&&!dataset.buffer&&!request.since){
+        const cached=get(key);
+        if(cached){counters.hits++;assertFresh(req,captured);latest.set(scope,{key,token:cached.token,total:cached.total});return {short:{generation,cached:true,body:cached.body,timing:{...cached.timing,cached:true}}};}
+      }
+      return run('read-model-cp-computed',{dataset,scopeKey:hostScopeOf(captured,context),lang:request.lang,since:request.since,context:contextValue,tasks,...extra},options);
+    });
+    if(loaded.short)return loaded.short;
+    counters.misses++;
+    const {out,generation}=loaded;
+    if(!out||typeof out.body!=='string')throw incomplete(out);
+    assertFresh(req,captured);
+    const key=keyOf(generation),head=JSON.parse(out.body.slice(0,out.body.indexOf(',"fields"'))+'}');
+    latest.set(scope,{key,token:head.token,total:head.total});
+    if(!head.delta)put(key,scope,{body:out.body,timing:out.timing,token:head.token,total:head.total,bytes:Buffer.byteLength(out.body)});
+    return {generation,cached:false,body:out.body,timing:{...out.timing,service:{...service,leaseMs:loaded.leaseMs,...(loaded.rowPatch?{rowPatch:loaded.rowPatch}:{}),computeMs:Math.round(performance.now()-t3)}}};
   }
   /* Alt PR 2 (pencereli okuma): POST /api/read-model/cp/query ve /facets.
      Gövde: { version:1, lang?, answers?, query|facets:<cp-query.js sürüm 1> }.
-     Aynı yetki kapısı, projeksiyon kirası, kişisel bağlam ve görev süzmesi; hesaplanmış
-     değerler işçide ensureComputed önbelleğinden (bağlam/cevap/gün aynıysa yeniden hesap yok). */
+     Aynı yetki kapısı, satır kaynağı (bekleyen yama zinciri ya da projeksiyon kirası), kişisel bağlam ve
+     görev süzmesi; hesaplanmış değerler işçide ensureComputed önbelleğinden (bağlam/cevap/gün aynıysa yeniden hesap yok). */
   async function read(kind,req,rawBody,{signal}={}){
+    const t0=performance.now();
     const captured=guard.capture(req,'cp');
     const field=kind==='facets'?'facets':'query';
     const request=validateRequest(rawBody,{extra:field});
@@ -190,38 +305,23 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
     // Erken 400: işçi kuyruğuna girmeden (işçi de aynı doğrulamayı yapar).
     if(kind==='facets')cpQuery.validateCpFacets(spec);else cpQuery.validateCpQuery(spec);
     counters.requests++;
-    const t0=performance.now();
-    const lease=await loadProjection(req,'cp');
-    try{
-      const t1=performance.now();
-      const profile=captured.profile||req.currentUser;
-      const context=loadContext(profile);
-      const tasks=await loadTasks(profile);
-      const service={leaseMs:Math.round(t1-t0),contextMs:Math.round(performance.now()-t1)};
-      captured.assertResponse();lease.assertResponse?.();
-      const generation=generationOf(lease);
-      const datasetKey=hash(JSON.stringify([captured.key,'cp-overview',generation])),datasetScope=datasetScopeOf(captured);
-      const contextValue=request.answers?{...context.value,answers:overlayAnswers(context.value&&context.value.answers,request.answers)}:context.value;
-      const base={dataset:{datasetKey,scopeKey:datasetScope},scopeKey:hostScopeOf(captured,context),lang:request.lang,context:contextValue,tasks,kind,request:spec};
-      const value=lease.value||{},compressed=Buffer.isBuffer(value.buffer)?value.buffer.length:Number(value.buffer&&value.buffer.byteLength)||0;
-      const uncompressed=Number(value.uncompressedBytes)||compressed*8;
-      const options={signal,estimatedBytes:96*1024*1024+Math.ceil(uncompressed*DECISION_FACTOR),ownerKey:'read-model',generation:'1'};
-      const runQuery=async(payload,opts)=>{const result=await runCompute('read-model-cp-query',payload,opts);try{return result.value;}finally{result.release?.();}};
-      const t2=performance.now();
-      let out=await runQuery(base,workerOptions(options));
-      if(out&&Array.isArray(out.missing)&&out.missing.includes('cp')){
-        counters.datasetLoads++;
-        const source=value.buffer,bytes=Uint8Array.from(Buffer.isBuffer(source)?source:Buffer.from(source||[]));
-        out=await runQuery({...base,dataset:{...base.dataset,buffer:bytes.buffer}},
-          workerOptions({...options,estimatedBytes:datasetLoadEstimate(out,options,uncompressed,bytes.byteLength),inputBytes:bytes.byteLength,transferList:[bytes.buffer]}));
-      }
-      if(!out||!out.result)throw failure('COMPUTE_WORKER_FAILED',500,'Hesaplama işçisi tamamlanamadı.','Compute worker failed.');
-      captured.assertResponse();lease.assertResponse?.();
-      return {generation,result:out.result,timing:{...out.timing,service:{...service,computeMs:Math.round(performance.now()-t2)}}};
-    }finally{lease.release?.();}
+    const t1=performance.now();
+    const profile=captured.profile||req.currentUser;
+    const context=loadContext(profile);
+    const tasks=await loadTasks(profile);
+    const service={captureMs:Math.round(t1-t0),contextMs:Math.round(performance.now()-t1)};
+    assertFresh(req,captured);
+    const contextValue=request.answers?{...context.value,answers:overlayAnswers(context.value&&context.value.answers,request.answers)}:context.value;
+    const t2=performance.now();
+    const loaded=await withDataset(req,captured,signal,({dataset,extra,options})=>
+      run('read-model-cp-query',{dataset,scopeKey:hostScopeOf(captured,context),lang:request.lang,context:contextValue,tasks,kind,request:spec,...extra},options));
+    const {out,generation}=loaded;
+    if(!out||!out.result)throw incomplete(out);
+    assertFresh(req,captured);
+    return {generation,result:out.result,timing:{...out.timing,service:{...service,leaseMs:loaded.leaseMs,...(loaded.rowPatch?{rowPatch:loaded.rowPatch}:{}),computeMs:Math.round(performance.now()-t2)}}};
   }
-  function clear(){cache.clear();latest.clear();cachedBytes=0;}
-  function stats(){return {...counters,entries:cache.size,bytes:cachedBytes,maxEntries,maxBytes};}
+  function clear(){cache.clear();latest.clear();bases.clear();cachedBytes=0;}
+  function stats(){return {...counters,entries:cache.size,bytes:cachedBytes,maxEntries,maxBytes,rowPatchBases:bases.size};}
   return {computed,query:(req,body,opts)=>read('query',req,body,opts),facets:(req,body,opts)=>read('facets',req,body,opts),clear,stats};
 }
 module.exports={createCpComputedService,createTaskLoader,validateRequest};

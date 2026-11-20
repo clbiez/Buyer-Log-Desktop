@@ -211,8 +211,9 @@ test('CP satırları not yazarını taşır', () => {
 test('önbellekten güncellenen satır yazarsız kalmaz', () => {
   // Bu satır atlanırsa kullanıcının az önce yazdığı not kendi Genel Bakış
   // listesinde görünmezdi (önbellekteki satırda yazar alanı olmayacaktı).
-  const start = SERVER.indexOf('function applyIncrementalProjectionPatch(');
-  const body = SERVER.slice(start, start + 1400);
+  const ROW_PATCH = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'projection-row-patch.js'), 'utf8');
+  const start = ROW_PATCH.indexOf('function applyIncrementalProjectionPatch(');
+  const body = ROW_PATCH.slice(start, start + 1400);
   assert.match(body, /row\._notesBy\s*=\s*notesRec\.NotesBy/);
   assert.match(body, /row\._ekNotByName\s*=\s*notesRec\.EkNotByName/);
   assert.match(body, /overrides\.notesmap/, 'yazar kayıtlı notesmap’ten okunmalı, patch’ten değil');

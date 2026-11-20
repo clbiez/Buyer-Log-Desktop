@@ -1431,7 +1431,7 @@ function scheduleUnifiedPrioritiesForTable(tableKey,options={}){
    Anahtar: window.BL_READ_MODEL_CP_COMPUTED (boolean) ya da kullanıcı tercihi
    'bl.cpComputed.v1'; varsayılan AÇIK ('0' ile kapanır; #1078 alt PR 3). */
 const CP_COMPUTED_STORAGE_KEY='bl.cpComputed.v1';
-const cpComputed={disabled:false,applied:null,job:null,enabled:null,answersOnly:false,optimistic:null,pendingView:false};
+const cpComputed={disabled:false,applied:null,job:null,enabled:null,answersOnly:false,optimistic:null,pendingView:false,transient:0,readyOnce:false,slowRetry:false};
 function cpComputedEnabled(){
   if(cpComputed.disabled)return false;
   if(typeof window.BL_READ_MODEL_CP_COMPUTED==='boolean')return window.BL_READ_MODEL_CP_COMPUTED;
@@ -1610,12 +1610,13 @@ function scheduleCpComputedColumns(rows,revision,contextRevision,day){
     // Okuma modeli sınırlayıcısından geçer; satır kaydı başlarken iptal edilir (kayıt bağlantı beklemez).
     const {response,payload}=await cpRMLimitedFetch('/api/read-model/cp/computed',{version:1,lang,...(since?{since}:{}),...(overlay?{answers:overlay}:{})},
       async res=>({response:res,payload:await res.json().catch(()=>null)}));
-    if(!response.ok||!payload||payload.ok!==true||!payload.columns)throw Object.assign(new Error(payload?.code||('HTTP '+response.status)),{code:payload?.code||'CP_COMPUTED_HTTP'});
+    if(!response.ok||!payload||payload.ok!==true||!payload.columns)throw Object.assign(new Error(payload?.code||('HTTP '+response.status)),{code:payload?.code||'CP_COMPUTED_HTTP',status:response.status});
     if(!isCurrent()){window.BLPerf?.mark?.('CP_COMPUTED_STALE_RESULT',{ms:Math.round(performance.now()-started),server:payload.timing||null});return false;}
     const fetched=performance.now();
     cpComputed.applied=null;
     const count=applyCpComputedColumns(rows,payload.columns,since);
-    cpComputed.applied={rows,token:payload.columns.token,lang};
+    // readyOnce: sunucu barındırıcısı bu oturumda sıcak; pencereli CP yolu bundan sonra kullanılır (renderCPFromReadModel).
+    cpComputed.applied={rows,token:payload.columns.token,lang};cpComputed.transient=0;cpComputed.readyOnce=true;cpComputed.slowRetry=false;
     _unifiedPriorityCache.cp={rows,dataRevision:revision,contextRevision,day,source:'read-model'};
     _cpPriorityIndex=null;_cpPriorityIndexRevision+=1;
     try{window.dispatchEvent(new CustomEvent('bl:cp-priority-index-changed'));}catch(_){}
@@ -1629,9 +1630,25 @@ function scheduleCpComputedColumns(rows,revision,contextRevision,day){
     if(cpComputed.job!==job)return false;
     // Satır kaydı için iptal: hata değil; kayıt bitince yeniden planlanır (cpRowSaveSettled). Oturum kapatılmaz.
     if(error&&error.aborted){if(typeof cpRowSave!=='undefined')cpRowSave.computedAborted=true;return false;}
+    // Kayıt sürerken veri sürümü değişti (409) ya da işçi kuyruğu dolu (503): geçici. Önceki sonuç tabloda kalır,
+    // kısa bekleyip yeniden istenir (sınırlı); tükenirse yalnız bu hesap eski yola gider, oturum kapanmaz.
+    const transient=cpRMTransientError(error);
+    if(transient&&(cpComputed.transient=(cpComputed.transient||0)+1)<=CP_RM_TRANSIENT_RETRIES){
+      cpComputed.job=null;
+      setTimeout(()=>{if(cpComputedEligible())void scheduleUnifiedPrioritiesForTable('cp');},cpRMRetryDelay(cpComputed.transient));
+      return false;
+    }
+    // Geçici hata tükendi ama satırlarda önceki sunucu değerleri var: onlar kalır (30k istemci hesabı sayfayı dondurur);
+    // tek bir geç deneme son kaydın değerlerini getirir, sonraki tetikleyici (kayıt onayı, canlı olay) zaten yeniden ister.
+    if(transient&&cpComputed.applied&&cpComputed.applied.rows===rows){
+      cpComputed.transient=0;cpComputed.job=null;
+      if(!cpComputed.slowRetry){cpComputed.slowRetry=true;setTimeout(()=>{if(cpComputedEligible())void scheduleUnifiedPrioritiesForTable('cp');},10000);}
+      return false;
+    }
     cpComputed.applied=null;
-    // Satır uyuşmazlığı ve gönderilemeyen cevap yalnız bu hesabı eski yola alır; diğer hatalar oturumu.
-    if(error?.fallback!=='job'){cpComputed.disabled=true;console.warn('CP hesaplanmış sütunları arka uçtan alınamadı; eski yol kullanılıyor:',error?.code||error);}
+    if(transient)cpComputed.transient=0;
+    // Satır uyuşmazlığı, gönderilemeyen cevap ve geçici hata yalnız bu hesabı eski yola alır; diğer hatalar oturumu.
+    if(error?.fallback!=='job'&&!transient){cpComputed.disabled=true;console.warn('CP hesaplanmış sütunları arka uçtan alınamadı; eski yol kullanılıyor:',error?.code||error);}
     cpComputed.job=null;
     return scheduleUnifiedPrioritiesForTable('cp',{legacy:true});
   }).finally(()=>{if(cpComputed.job===job)cpComputed.job=null;});
@@ -10543,9 +10560,9 @@ function renderCpKpiBar({buckets,statusCounts,delCounts,seasonCounts,exfCounts,n
      - parsiyel görünüm, açık lojistik detay, "işaretsizler", eklenen hızlı filtre grupları
      - revizyon filtresi, kumaş kartı, istemcide türetilen sütunlar (formül, Ex→Retail, LT,
        Supp. FOB, Licensor, PLM Numune, checklist sütunları, kişisel not) filtre/sıralaması
-   Anahtar kapalıyken (varsayılan) eski yol aynen çalışır.
-   Açma: BLCpReadModel.setEnabled(true) (kullanıcı başına BLStorage 'bl.cpReadModel.v1')
-   ya da ölçüm/test için sayfa betiklerinden önce window.BL_CP_READ_MODEL=true. */
+   Varsayılan AÇIK (#1078 satır yaması). Kapatma: BLCpReadModel.setEnabled(false) (kullanıcı başına BLStorage
+   'bl.cpReadModel.v1'='0') ya da ölçüm/test için sayfa betiklerinden önce window.BL_CP_READ_MODEL=false;
+   kapalıyken eski yol aynen çalışır. */
 const CP_RM_STORAGE_KEY='bl.cpReadModel.v1';
 const CP_RM_WINDOW=200;
 const CP_RM_PREFETCH=2;
@@ -10566,7 +10583,8 @@ function cpReadModelEnabled(){
   if(cpRM.disabled)return false;
   if(typeof window.BL_CP_READ_MODEL==='boolean')return window.BL_CP_READ_MODEL;
   if(cpRMEnabledCache===null){
-    try{cpRMEnabledCache=(window.BLStorage||localStorage).getItem(CP_RM_STORAGE_KEY)==='1';}catch(_){cpRMEnabledCache=false;}
+    // Varsayılan AÇIK (#1078 satır yaması, koordinatör kararı): geri dönüş tercih '0' ya da window.BL_CP_READ_MODEL=false.
+    try{cpRMEnabledCache=(window.BLStorage||localStorage).getItem(CP_RM_STORAGE_KEY)!=='0';}catch(_){cpRMEnabledCache=true;}
   }
   return cpRMEnabledCache;
 }
@@ -10687,6 +10705,16 @@ function cpRMRequest(path,body){
     return payload;
   });
 }
+/* Geçici okuma hatası (#1078 satır yaması): kayıt sürerken okuma bayatladı (409 COMPUTE_STALE_GENERATION; sunucu
+   zaten 3 kez denedi), işçi kuyruğu dolu / hesap hazırlanıyor (503) ya da bellek tahmini aşıldı (işçi yeniden başlar). Kullanıcıya gösterilmez: önceki sonuç ekranda kalır, sınırlı
+   sayıda artan beklemeyle yeniden istenir; yenisi gelince tablo kendini günceller. */
+const CP_RM_TRANSIENT_RETRIES=4;
+function cpRMTransientError(error){
+  const code=error&&error.code;
+  // Bellek tahmini aşımı: havuz işçiyi yeniden başlatır; aynı iş bir sonraki denemede genelde sığar (sınırlı deneme).
+  return code==='COMPUTE_STALE_GENERATION'||code==='COMPUTE_QUEUE_BUSY'||code==='COMPUTE_ESTIMATE_EXCEEDED'||Boolean(error&&error.status===503);
+}
+function cpRMRetryDelay(attempt){return Math.min(2000,250*attempt*attempt);}
 /* Kayıt anında yalnız henüz başlamamış (kuyruktaki) okumalar düşer. Yoldakiler biter ve sunucu önbelleğine girer:
    iptal edilen okuma sunucuda yine de hesaplanır (işçi kapatılmasın diye iptal iletilmez), her kayıtta iptal
    edilirse kira + hesap (30k: ~7 sn) hiç tamamlanmaz ve işçi kuyruğu dolar. Sekme başına ≤ CP_RM_MAX_ACTIVE
@@ -10761,7 +10789,7 @@ function cpRMFetchRange(offset,limit,extra={}){
     return payload.result;
   });
 }
-function cpRMEnsureWindow(index){
+function cpRMEnsureWindow(index,attempt=0){
   if(index<0||index*CP_RM_WINDOW>=cpRM.total||cpRM.windows.has(index))return Promise.resolve(true);
   if(cpRM.pending.has(index))return cpRM.pending.get(index);
   const signature=cpRM.signature;
@@ -10771,8 +10799,13 @@ function cpRMEnsureWindow(index){
     cpRM.windows.add(index);
     cpRMScheduleRepaint();
     return true;
-  }).catch(error=>{if(!(error&&error.aborted))console.warn('CP penceresi alınamadı:',error);return false;})
-    .finally(()=>{if(signature===cpRM.signature)cpRM.pending.delete(index);});
+  }).catch(error=>{
+    if(cpRMTransientError(error)&&attempt<CP_RM_TRANSIENT_RETRIES){
+      setTimeout(()=>{if(signature===cpRM.signature)void cpRMEnsureWindow(index,attempt+1);},cpRMRetryDelay(attempt+1));
+      return false;
+    }
+    if(!(error&&error.aborted))console.warn('CP penceresi alınamadı:',error);return false;
+  }).finally(()=>{if(signature===cpRM.signature)cpRM.pending.delete(index);});
   cpRM.pending.set(index,job);
   return job;
 }
@@ -10862,7 +10895,7 @@ function cpRMRenderFacets(facets){
     localizeDelTypeSelect('cpFDelType');
   }
 }
-function cpRMRequestFacets(spec,signature){
+function cpRMRequestFacets(spec,signature,attempt=0){
   const key=cpRMFacetsKey(spec,signature);
   if(cpRM.facets&&cpRM.facetsKey===key){cpRMRenderFacets(cpRM.facets);return;}
   const seq=++cpRM.facetsSeq;
@@ -10873,7 +10906,13 @@ function cpRMRequestFacets(spec,signature){
     if(seq!==cpRM.facetsSeq||signature!==cpRM.signature||!cpRMCheckGeneration(payload))return;
     cpRM.facets=payload.result;cpRM.facetsKey=key;
     if(currentActiveTab()==='cp')cpRMRenderFacets(payload.result);
-  }).catch(error=>{if(!(error&&error.aborted))console.warn('CP sayaçları alınamadı:',error);});
+  }).catch(error=>{
+    if(cpRMTransientError(error)&&attempt<CP_RM_TRANSIENT_RETRIES){
+      setTimeout(()=>{if(seq===cpRM.facetsSeq&&signature===cpRM.signature)cpRMRequestFacets(spec,signature,attempt+1);},cpRMRetryDelay(attempt+1));
+      return;
+    }
+    if(!(error&&error.aborted))console.warn('CP sayaçları alınamadı:',error);
+  });
 }
 // D1 ölçümü (#1071/#1078): filtre/sıralama/arama değişimi → satırlar tabloda (Siparişler ile aynı).
 function cpRecordRowsVisible(path,started,detail={}){
@@ -10888,6 +10927,11 @@ function renderCPFromReadModel(){
   applyCoreAutoFilterState();
   const spec=cpReadModelSpec();
   const supersede=()=>{cpRM.seq++;cpRM.facetsSeq++;};
+  /* Sunucu hesaplanmış sütunları bu oturumda henüz gelmedi (soğuk barındırıcı; 30k'da tam karar hesabı ~15 sn): pencereli
+     ilk pencere bu hesabı beklerdi (L2: CP açılışı 1,7 → 19 sn). İlk çizim eski yoldan, #1094 (A) ile aynı: öncelik/checklist
+     hücreleri "Hesaplanıyor…", öncelik filtresi/sıralaması açıksa yükleniyor durumu; yanıltıcı sonuç yok. İlk sonuç uygulanınca
+     (scheduleCpComputedColumns → renderCP) pencereli yol başlar; barındırıcı artık sıcaktır. */
+  if(!cpComputed.readyOnce){supersede();cpRM.legacyReason='computed-warming';return false;}
   if(!spec.ok){supersede();cpRM.legacyReason=spec.reason;window.BLPerf?.mark?.('CP_READ_MODEL_LEGACY',{reason:spec.reason});return false;}
   cpRM.legacyReason='';
   const feedback=document.getElementById('cpSearchFeedback');if(feedback){feedback.hidden=true;feedback.replaceChildren();}
@@ -10904,7 +10948,7 @@ function renderCPFromReadModel(){
   // Önce ilk pencere (satırlar görünür), sayaçlar ardından: tek işçide sıraya girer.
   cpRMPost('/api/read-model/cp/query','query',cpRMQueryBody(spec,0,CP_RM_WINDOW)).then(payload=>{
     if(seq!==cpRM.seq)return;
-    cpRM.generation=String(payload.generation||'');
+    cpRM.generation=String(payload.generation||'');cpRM.transient=0;
     const result=payload.result||{};
     cpRMResetStore(signature,spec,result);
     cpRMPlace(0,cpRMDecorate(result.rows||[],result.computed));
@@ -10918,6 +10962,12 @@ function renderCPFromReadModel(){
     if(seq!==cpRM.seq)return;
     // Satır kaydı için iptal edildi: kayıt bitince tablo yeniden ister (cpRowSaveSettled).
     if(error&&error.aborted){cpRM.signature='';return;}
+    // Geçici (kayıt sürerken 409 / kuyruk dolu): önceki tablo kalır, uyarı yok; kısa bekleyip yeniden çizilir.
+    if(cpRMTransientError(error)&&(cpRM.transient=(cpRM.transient||0)+1)<=CP_RM_TRANSIENT_RETRIES){
+      setTimeout(()=>{if(seq!==cpRM.seq)return;if(currentActiveTab()==='cp')renderCP();else _deferredTabRenders.add('cp');},cpRMRetryDelay(cpRM.transient));
+      return;
+    }
+    cpRM.transient=0;
     // Sunucu bu sorguyu değerlendiremiyor (desteklenmeyen filtre ya da sınır aşımı): bu sorgu
     // için eski yol. Tercih yazılamadıysa (alt PR 1) oturum boyunca eski yol.
     if(error&&(error.status===400||error.code==='CP_COMPUTED_PREFERENCES_UNSAVED')){

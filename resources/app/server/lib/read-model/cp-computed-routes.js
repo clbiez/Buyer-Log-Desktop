@@ -34,6 +34,9 @@ module.exports=function registerCpComputedRoutes(app,deps){
       runCompute:(task,payload,options)=>(deps.runReadModelCompute||require('./read-model-pool').getReadModelPool().run)(task,payload,options),
       loadContext:deps.loadContext||createContextLoader(deps.contextSources),
       loadTasks:deps.testTasks?createTaskLoader(deps.testTasks):async()=>[],
+      // Bekleyen satır yaması zinciri (cp-row-patch-log.js); yoksa her okuma projeksiyon kirasıyla.
+      rowPatchLog:deps.rowPatchLog||null,
+      onRowPatchMismatch:typeof deps.onRowPatchMismatch==='function'?deps.onRowPatchMismatch:()=>{},
     });
   })());
   const json=express.json({limit:'1mb'});
@@ -43,8 +46,9 @@ module.exports=function registerCpComputedRoutes(app,deps){
     return res.send(JSON.stringify({ok:true,version:1,generation:out.generation,timing:out.timing||{},result:out.result}));
   };
   const handle=kind=>async(req,res)=>{
+    const received=Date.now();let prepareMs=0;
     try{
-      if(typeof userAccess.prepareComputeAccessContext==='function')await userAccess.prepareComputeAccessContext();
+      if(typeof userAccess.prepareComputeAccessContext==='function'){const started=Date.now();await userAccess.prepareComputeAccessContext();prepareMs=Date.now()-started;}
       const live=userAccess.sessionProfile(req);
       if(!live||(req.currentUser&&String(live.id)!==String(req.currentUser.id))||live.enabled===false||live.status!=='ACTIVE')
         return sendError(res,401,'SESSION_REQUIRED','Oturumunuz artık geçerli değil.','Your session is no longer valid.');
@@ -63,6 +67,8 @@ module.exports=function registerCpComputedRoutes(app,deps){
         for(let attempt=1;;attempt++){
           try{
             const out=await getService()[kind](req,req.body,{signal:controller.signal});
+            // Tanı: rota girişinden yanıta (gövde ayrıştırma + erişim hazırlığı + servis), deneme sayısı.
+            out.timing={...(out.timing||{}),route:{prepareMs,totalMs:Date.now()-received,attempt}};
             return send(res,out,kind);
           }catch(err){
             if(err?.code!=='COMPUTE_STALE_GENERATION'||attempt>=STALE_ATTEMPTS||res.headersSent||controller.signal.aborted)throw err;

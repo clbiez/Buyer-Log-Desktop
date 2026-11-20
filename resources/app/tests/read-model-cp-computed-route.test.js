@@ -68,14 +68,19 @@ function harness({day='2026-11-20',realGuard=false}={}){
   const calls=[];
   const runCompute=async(name,payload,options)=>{
     assert.equal(name,'read-model-cp-computed');
-    calls.push({buffer:Boolean(payload.dataset&&payload.dataset.buffer),since:payload.since,tasks:payload.tasks,options});
-    return {value:await task.execute(structuredClone(payload),{cache:worker.cache,engine}),release(){}};
+    const call={buffer:Boolean(payload.dataset&&payload.dataset.buffer),since:payload.since,tasks:payload.tasks,options,warmOnly:Boolean(payload.warmOnly)};calls.push(call);
+    const value=await task.execute(structuredClone(payload),{cache:worker.cache,engine});
+    // #1078 satır yaması: sıcak tahminli deneme soğuk hesap gerekiyorsa hesap yapmadan `cold` döner (bkz. computing()).
+    call.cold=Boolean(value&&value.cold);
+    return {value,release(){}};
   };
   const service=createCpComputedService({guard,loadProjection,runCompute,loadContext,loadTasks,today:()=>state.day});
   return {state,service,calls,allOrders};
 }
 const req=user=>({currentUser:user});
 const columns=out=>JSON.parse(out.body);
+// Hesap yapan işçi işleri: sıcak tahminli `cold` yoklaması (hesapsız) sayılmaz.
+const computing=calls=>calls.filter(call=>!call.cold);
 
 test('request validation: version, lang, since token and unknown keys',()=>{
   for(const bad of [null,[],{},{version:2},{version:1,lang:'de'},{version:1,since:5},{version:1,since:'x'.repeat(65)},{version:1,since:'a b'},{version:1,rows:[]}])
@@ -118,12 +123,13 @@ test('cache and delta: same request hits; language, context revision and day mis
   assert.deepEqual(columns(empty).rows,[]);assert.equal(columns(empty).delta,true);
   // Dil: hücre etiketleri dile bağlıdır.
   const en=columns(await service.computed(req(users.moderator),{version:1,lang:'en'}));
-  assert.equal(en.lang,'en');assert.equal(calls.length,3);
+  assert.equal(en.lang,'en');assert.equal(computing(calls).length,3);
+  assert.equal(calls.at(-2).cold,true,'yeni dil = yeni barındırıcı: sıcak yoklama hesapsız döndü');assert.equal(calls.at(-1).warmOnly,false);
   assert.ok(JSON.stringify(en.rows).includes('Pending')&&JSON.stringify(head.rows).includes('Bekliyor'),'checklist etiketleri dile göre');
   // Gün değişimi: kararlar yerel güne bağlıdır.
   state.day='2026-11-21';
   assert.equal((await service.computed(req(users.moderator),{version:1})).cached,false);
-  assert.equal(calls.length,4);
+  assert.equal(computing(calls).length,4);
   // Checklist cevabı (bağlam revizyonu) → delta yalnız etkilenen satırları taşır, barındırıcı korunur.
   const latest=columns(await service.computed(req(users.moderator),{version:1}));
   // Satıra uygulanan (hücresi dolu) bir checklist kalemi seçilir.
@@ -209,7 +215,9 @@ test('real compute-pool worker: async task runs once, shares the dataset cache a
     const out=await service.computed(req(users.moderator),{version:1});
     const body=columns(out);
     assert.equal(body.total,projection(users.moderator).rows.length);assert.equal(body.rows.length,body.total);
-    assert.ok(estimates.every(value=>value>96*MiB),'karar katmanı payı ayrıldı');
+    // İlk iş sıcak yoklamadır (warmOnly: soğuk hesap yapamaz, karar payı istemez); veri kümesini yükleyip hesaplayan iş payı ayırır.
+    assert.equal(estimates[0],96*MiB,'sıcak yoklama');
+    assert.ok(estimates.length>=2&&estimates.slice(1).every(value=>value>96*MiB),'karar katmanı payı ayrıldı');
     // Önbellekteki veri kümesiyle ikinci hesap (bağlam değişti): veri kümesi yeniden gönderilmez.
     const second=await createCpComputedService({
       guard:{capture:r=>({profile:r.currentUser,key:'k-'+r.currentUser.id,assertResponse(){}})},
