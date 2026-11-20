@@ -207,7 +207,7 @@ test('v7.19 satır yazma uçları incremental yama taşır; tam checkpoint hydra
 });
 
 test('v7.19 tek bir güvensiz öğe bütün turu yeniden yüklemeye düşürür', () => {
-  const block = blockOf(SERVER, 'function liveRowPatchesFor', 'function projectionPatchMatches');
+  const block = blockOf(SERVER, 'function liveRowPatchesFor', '// Satır yaması tek tanımı');
   assert.match(block, /rowPatchIncrementalSafe\(item\.patch\)/);
   assert.match(block, /clean\.length === list\.length \? clean : null/);
 });
@@ -269,7 +269,9 @@ test('v7.19 uzak yama satırı yerinde günceller ve türevleri korur', () => {
 test('v7.19 istemci yaması sunucudaki artımlı yamayla aynı alanları yazar', () => {
   // İki uygulama ayrışırsa karşı ekran sessizce yanlış değer gösterir.
   const client = blockOf(APP, 'function applyRemoteRowPatch(row,patch)', 'function remoteEditingRowIds()');
-  const server = blockOf(SERVER, 'function applyIncrementalProjectionPatch(row, patch, overrides, includePriority = true)', 'function rewriteProjectionCacheForRowPatches');
+  // #1078: sunucu yaması tek tanımı lib/projection-row-patch.js (server.js require eder).
+  assert.match(SERVER, /require\('\.\/lib\/projection-row-patch'\)/);
+  const server = blockOf(fs.readFileSync(path.join(ROOT,'server','lib','projection-row-patch.js'),'utf8'), 'function applyIncrementalProjectionPatch(row, patch, overrides, includePriority = true)', 'module.exports');
   const fields = ["row.Notes", "row['Ek Not']", "row['Supp. FOB']", "row['Del. Type']", 'row._suppFobManual', 'row._suppFobOverride', 'row._suppFobRule', 'row._suppFobMeta', 'row._imageRef', 'row._imageUrl'];
   fields.forEach(field => {
     assert.ok(client.includes(field), `istemci yaması ${field} alanını yazmalı`);

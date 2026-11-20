@@ -7,7 +7,8 @@ function fn(name){const start=source.indexOf(`function ${name}(`),asyncStart=sou
 test.after(()=>fs.rmSync(root,{recursive:true,force:true}));
 test('incremental date/delivery edits retain logistics without reintroducing Orders priority',()=>{
   const parseLib=require('../server/lib/parse'),c={parseLib};vm.createContext(c);
-  vm.runInContext(fn('applyIncrementalProjectionPatch')+'\nglobalThis.patch=applyIncrementalProjectionPatch;',c);
+  const rowPatch=fs.readFileSync(path.join(__dirname,'../server/lib/projection-row-patch.js'),'utf8'),at=rowPatch.indexOf('function applyIncrementalProjectionPatch(');
+  vm.runInContext(rowPatch.slice(at,rowPatch.indexOf('\n}',at)+2)+'\nglobalThis.patch=applyIncrementalProjectionPatch;',c);
   const row={'Order Code':1000,'Order Quantity':20,'Remaining Units':20,'Ex-factory':'2026-10-06','Retail Date':'2026-10-20',Country:'Turkey',Priority:'old'};
   const cp={...row},orders={...row},patch={dates:{exFactory:'2026-10-07'},delType:'Gemi'};
   c.patch(cp,patch,{});c.patch(orders,patch,{},false);

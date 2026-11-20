@@ -485,9 +485,48 @@
     return `<img class="${qEsc(classes)}" src="${qEsc(src)}" alt="" loading="lazy" decoding="async" fetchpriority="low">`;
   }
 
+  /* #1079 WS6d — BL_READ_MODEL_QUOTATIONS (varsayılan AÇIK). CP kaynaklı satırın
+     her hücresi qFindCpRow çağırır; eski yol tam state.cp.rows listesini sipariş →
+     PLM → model sırasıyla her çağrıda doğrusal tarar (30k satır × 300 kalemde ~53 sn).
+     Okuma kapsamında (qWithCollectionRead) her anahtar türü için ilk eşleşmeyi tutan
+     dizin bir kez ve yalnız gerektiğinde kurulur; find ile aynı satırı döndürür.
+     Kapsam dışında eski doğrusal yol aynen çalışır. Geri dönüş:
+     window.BL_READ_MODEL_QUOTATIONS=false ya da buyerlog.readModel.quotations.v1='0'. */
+  const Q_CP_INDEX_STORAGE_KEY='buyerlog.readModel.quotations.v1'; // i18n-ignore
+  let qCpIndexEnabledCache=null;
+  function qCpIndexEnabled(){
+    if(typeof window!=='undefined'&&typeof window.BL_READ_MODEL_QUOTATIONS==='boolean')return window.BL_READ_MODEL_QUOTATIONS;
+    if(qCpIndexEnabledCache===null){try{qCpIndexEnabledCache=localStorage.getItem(Q_CP_INDEX_STORAGE_KEY)!=='0';}catch(_){qCpIndexEnabledCache=true;}}
+    return qCpIndexEnabledCache;
+  }
+  const Q_CP_KEYS={
+    order:r=>qNorm(r._sourceOrderCode||r['Order Code']).toLocaleLowerCase('tr-TR'),
+    plm:r=>qNorm(r.plmId||r['PLM ID']).toLocaleLowerCase('tr-TR'),
+    model:r=>qNorm(r.modelKod||r['Model Name']).toLocaleLowerCase('tr-TR'),
+  };
+  function qCpIndexLookup(rows,kind,key){
+    let index=qCollectionRead.cp;
+    if(!index||index.rows!==rows)index=qCollectionRead.cp={rows,maps:{}};
+    let map=index.maps[kind];
+    if(!map){
+      map=index.maps[kind]=new Map();
+      const keyOf=Q_CP_KEYS[kind];
+      for(const row of rows){const k=keyOf(row);if(!map.has(k))map.set(k,row);}
+    }
+    return map.get(key)||null;
+  }
   function qFindCpRow(line){
     const rows=(typeof state!=='undefined'&&state.cp&&Array.isArray(state.cp.rows))?state.cp.rows:[];
     if(!rows.length) return null;
+    if(qCollectionRead&&qCpIndexEnabled()){
+      for(const [kind,value] of [['order',line.orderCode],['plm',line.plmId],['model',line.modelCode]]){
+        const key=qNorm(value).toLocaleLowerCase('tr-TR');
+        if(!key)continue;
+        const hit=qCpIndexLookup(rows,kind,key);
+        if(hit)return hit;
+      }
+      return null;
+    }
     const order=qNorm(line.orderCode).toLocaleLowerCase('tr-TR');
     if(order){
       const byOrder=rows.find(r=>qNorm(r._sourceOrderCode||r['Order Code']).toLocaleLowerCase('tr-TR')===order);
@@ -741,7 +780,8 @@
       if(typeof showToast==='function')showToast(qLang('Excel oluşturma modülü hazır değil.','Excel export module is not ready.'));
       return false;
     }
-    const rows=qBuildExportRows(req);
+    // #1079 WS6d: tek senkron okuma; CP/Koleksiyon satır aramaları kapsam dizinini kullanır.
+    const rows=qWithCollectionRead(()=>qBuildExportRows(req));
     if(!rows.length){if(typeof showToast==='function')showToast(qLang('Aktarılacak model yok.','There are no models to export.'));return false;}
     const names=[...new Set([...(req.manufacturers||[]).map(m=>qNorm(m.name)),...(req.items||[]).map(item=>qNorm(item.manufacturer))].filter(Boolean))];
     const extraColumns=names.map(name=>({
@@ -1403,6 +1443,9 @@
   }
   function qUpdateModelPricingCells(req,modelKey,table){
     if(!req||!modelKey||!table||typeof table.querySelectorAll!=='function')return;
+    qWithCollectionRead(()=>qUpdateModelPricingCellsRead(req,modelKey,table));
+  }
+  function qUpdateModelPricingCellsRead(req,modelKey,table){
     const byId=new Map(req.items.map(item=>[item.id,item]));
     table.querySelectorAll('[data-quote-line]').forEach(row=>{
       const item=byId.get(row.dataset.quoteLine);if(!item||item.modelKey!==modelKey)return;

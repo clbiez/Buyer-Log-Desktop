@@ -62,7 +62,9 @@ test('A1 · applyIncrementalProjectionPatch kural kaynaklı Supp. FOB bilgisini 
   const parseLib = require('../server/lib/parse');
   const ctx = { parseLib, Object, Number, String, Set };
   vm.createContext(ctx);
-  vm.runInContext(extractFunction(SERVER, 'applyIncrementalProjectionPatch'), ctx);
+  // #1078: satır yaması tek tanımı lib/projection-row-patch.js; server.js onu kullanır.
+  assert.match(SERVER, /require\('\.\/lib\/projection-row-patch'\)/);
+  vm.runInContext(extractFunction(fs.readFileSync(path.join(__dirname,'..','server','lib','projection-row-patch.js'),'utf8'), 'applyIncrementalProjectionPatch'), ctx);
 
   const ruleRow = { 'Order Code': 4100001, 'Supp. FOB': 5.0 };
   ctx.applyIncrementalProjectionPatch(

@@ -6368,7 +6368,10 @@ app.post('/api/backups/restore/inspect', userAccess.requireArea('source'), userA
 // /api/data?mode=initial) yerel arka uç Genel Bakış modelini ve modül projeksiyonlarını
 // kendi işçisinde boşta ısıtır. Diğer API çağrıları ön ısıtma başlatmaz (yan etkisiz).
 // Bağımlılıklar ilk kullanımda okunur (rota kayıtları aşağıdadır).
+// CP hesaplanmış sütun servisi (rota kaydı aşağıda); ön ısıtma ilk kullanımda okur.
+let cpComputedServiceGetter = null;
 const readModelPrewarm = require('./lib/read-model/prewarm-scheduler').createReadModelPrewarm({
+  getCpComputedService: () => cpComputedServiceGetter ? cpComputedServiceGetter() : null,
   getPool: () => require('./lib/read-model/read-model-pool').getReadModelPool(),
   userAccess,
   preferenceValue: (profile, key) => {
@@ -6423,12 +6426,14 @@ require('./lib/read-model/overview-model-routes')(app, {
 });
 // CP hesaplanmış sütunlar (#1078): POST /api/read-model/cp/computed. Test raporu görevleri
 // GET /api/test-reports/tasks ile aynı süzmeyle (yetkili siparişler) gelir.
-require('./lib/read-model/cp-computed-routes')(app, {
+cpComputedServiceGetter = require('./lib/read-model/cp-computed-routes')(app, {
   userAccess, apiError, ensureComputedProjection, getComputeReadGuard: () => computeReadGuard,
   contextSources: cpDecisionContextSources,
   testTasks: { list: () => require('./lib/test-reports/store').tasks(), authorizedOrders: profile => agentQualityAuthorizedOrders(profile) },
   // #1077: CP isteği kullanıcı işidir; spekülatif ön ısıtmayı keser (ölçüm: açılışta CP −10,7 sn).
   runReadModelCompute: readModelPrewarm.runCompute,
+  rowPatchLog: { chain: (...args) => cpRowPatchLog().chain(...args) },
+  onRowPatchMismatch: info => logRuntimeFailure('cpRowPatchMismatch', Object.assign(new Error('CP satır yaması gerçek nesille uyuşmadı / CP row patch did not match the real generation'), { detail: info })),
 });
 // ERP okuma modeli (#1073): POST /api/read-model/:module/query. Global 100 MB JSON
 // ayrıştırıcısından ÖNCE kaydolur: yetki gövdeden önce, rota kendi 2 MB sınırını uygular.
@@ -8743,8 +8748,9 @@ async function computeSourceFor(profile){
   coldComputeSourcesInFlight.set(id,operation);
   try{return await operation;}finally{if(coldComputeSourcesInFlight.get(id)===operation)coldComputeSourcesInFlight.delete(id);}
 }
-function computeReadContext(profile){
-  const context=pageProjectionContext(profile),shared=loadOverrides(),day=new Date();
+// context: önceden hesaplanmış pageProjectionContext (satır kaydı aynı anın bağlamını iki kez hesaplamaz).
+function computeReadContext(profile,context=pageProjectionContext(profile)){
+  const shared=loadOverrides(),day=new Date();
   return {...context,contextHash:stableHashValue([context.contextHash,shared._revision||0,shared._revisions||null,require('./lib/merch-calendar-store').fingerprint(),day.getFullYear(),day.getMonth(),day.getDate()])};
 }
 const computeReadGuard=createComputeReadGuard({sessionProfile:req=>userAccess.sessionProfile(req),profileById:id=>userAccess.profileById(id),
@@ -10163,64 +10169,10 @@ function liveRowPatchesFor(items) {
     .map(item => ({ orderCode: Number(item.orderCode), patch: item.patch }));
   return clean.length === list.length ? clean : null;
 }
-function projectionPatchMatches(row, item) {
-  const patch=item&&item.patch||{}, orderCode=parseLib.orderCodeKey(item&&item.orderCode);
-  if (!row || parseLib.orderCodeKey(row['Order Code']) !== orderCode) return false;
-  const model=String(patch.modelName??patch.model??'').trim(),ccode=String(patch.ccode??patch.colourCode??patch.colorCode??'').trim();
-  if (model && String(row['Model Name']||'').trim() !== model) return false;
-  if (ccode && String(row['C.Code']||'').trim() !== ccode) return false;
-  return true;
-}
-function applyIncrementalProjectionPatch(row, patch, overrides, includePriority = true) {
-  if (patch.notes && typeof patch.notes === 'object') {
-    if (Object.prototype.hasOwnProperty.call(patch.notes,'Notes')) row.Notes=patch.notes.Notes==null?'':String(patch.notes.Notes);
-    if (Object.prototype.hasOwnProperty.call(patch.notes,'EkNot')) row['Ek Not']=patch.notes.EkNot==null?'':String(patch.notes.EkNot);
-    /* v7.29 — yazar ve tarih damgaları KAYDEDİLMİŞ notesmap'ten okunur, patch'ten
-       değil: patch istemciden gelir ve yazar taşımaz (taşısa da kabul edilmezdi).
-       Bu satır atlanırsa önbellekten dönen satırlar yazarsız kalır ve kullanıcının
-       az önce yazdığı not kendi Genel Bakış listesinde görünmezdi. */
-    const notesRec = (overrides && overrides.notesmap
-      && (overrides.notesmap[parseLib.rowLineKey(row)] || overrides.notesmap[parseLib.orderCodeKey(row['Order Code'])])) || {};
-    row.NotesHtml=notesRec.NotesHtml||'';row['Ek NotHtml']=notesRec.EkNotHtml||'';
-    row._notesAt=notesRec.NotesAt||''; row._ekNotAt=notesRec.EkNotAt||'';
-    row._notesBy=notesRec.NotesBy||''; row._notesByName=notesRec.NotesByName||'';
-    row._ekNotBy=notesRec.EkNotBy||''; row._ekNotByName=notesRec.EkNotByName||'';
-  }
-  if (Object.prototype.hasOwnProperty.call(patch,'suppFob')) {
-    row['Supp. FOB']=patch.suppFob==null?null:Number(patch.suppFob);
-    const meta=patch.suppFobMeta&&typeof patch.suppFobMeta==='object'?patch.suppFobMeta:{source:'manual'};
-    row._suppFobMeta=meta;
-    row._suppFobManual=meta.source!=='rule';
-    row._suppFobOverride=true;
-    row._suppFobRule=row._suppFobManual?null:(meta.ruleId||true);
-  }
-  if (patch.delType != null) row['Del. Type']=String(patch.delType);
-  if (patch.dates && typeof patch.dates === 'object') {
-    const dateFields={exFactory:'Ex-factory',retailDate:'Retail Date',inStoreDate:'In-Store (Model Budget)'};
-    for (const [incoming,field] of Object.entries(dateFields)) if (Object.prototype.hasOwnProperty.call(patch.dates,incoming)) row[field]=String(patch.dates[incoming]);
-    if(Object.prototype.hasOwnProperty.call(patch.dates,'exFactory')&&row['Buying Son Onay Tarihi']){
-      const planned=parseLib.parseDateOnly(row['Ex-factory']);
-      const effective=BLBusinessRules.resolveExFactoryDate(planned,row['Buying Son Onay Tarihi'],parseLib.dateOrdinal);
-      row._exFactoryRevision=effective.automatic?{source:'loading-approval',previousDate:planned}:null;
-      row['Ex-factory']=effective.value;
-    }
-  }
-  if (Object.prototype.hasOwnProperty.call(patch,'imageRef')) {
-    const ref=patch.imageRef==null?'':String(patch.imageRef).trim();
-    row._imageRef=ref;row._imageUrl=ref?`/api/cp-images/${encodeURIComponent(ref)}`:'';
-  }
-  if (patch.noteColumns && typeof patch.noteColumns === 'object') {
-    const validIds = new Set((overrides.noteColumnDefs || []).map(def => def.id));
-    for (const [id, value] of Object.entries(patch.noteColumns)) {
-      if (!validIds.has(id)) continue;
-      row[id] = value == null ? '' : String(value);
-    }
-  }
-  if (Object.prototype.hasOwnProperty.call(patch,'importance')) parseLib.applyImportanceToRow(row, overrides);
-  if (patch.delType != null || patch.dates) parseLib.applyFormulas(row, overrides.transitRules, includePriority);
-  return row;
-}
-async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, items) {
+// Satır yaması tek tanımı: lib/projection-row-patch.js (okuma modeli işçisi de kullanır).
+const { applyIncrementalProjectionPatch, projectionPatchMatches } = require('./lib/projection-row-patch');
+// cpRows (isteğe bağlı): CP modülünde yamalanan satırlar yazımdan sonra buraya (okuma modeli doğrulaması, cp-row-patch-log).
+async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, items, cpRows=null) {
   const clean=(Array.isArray(items)?items:[]).filter(item=>item&&Number.isFinite(Number(item.orderCode))&&rowPatchIncrementalSafe(item.patch));
   if (!clean.length || clean.length !== (Array.isArray(items)?items.length:0)) return false;
   const afterContext=pageProjectionContext(currentUser);
@@ -10234,8 +10186,12 @@ async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, i
       if (Array.isArray(payload.rows)) lists.push(payload.rows);
       if (Array.isArray(payload.orderSummary)) lists.push(payload.orderSummary);
       for (const rows of lists) for (const row of rows) for (const item of clean) {
-        if (projectionPatchMatches(row,item)) applyIncrementalProjectionPatch(row,item.patch,overrides,_module!=='orders');
+        if (projectionPatchMatches(row,item)) {
+          applyIncrementalProjectionPatch(row,item.patch,overrides,_module!=='orders');
+          if (cpRows && _module==='cp' && rows===payload.rows && !cpRows.includes(row)) cpRows.push(row);
+        }
       }
+      if (cpRows && _module==='cp') cpRows.json=require('./lib/compute-tasks').serialize(cpRows,'projection');
       return payload;
     },
   });
@@ -10246,9 +10202,27 @@ async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, i
 // (gunzip → patch → gzip) took seconds on large data and delayed the save
 // acknowledgement. It starts now, serialized per user, and cache reads wait
 // for it (page-projection-cache pendingRewrites).
-function queueProjectionCacheRowPatches(currentUser,beforeContext,items,label){
-  rewriteProjectionCacheForRowPatches(currentUser,beforeContext,items).catch(cacheError=>logRuntimeFailure(label,cacheError));
+function queueProjectionCacheRowPatches(currentUser,beforeContext,items,label,rowPatch=null){
+  const cpRows=rowPatch?[]:null;
+  rewriteProjectionCacheForRowPatches(currentUser,beforeContext,items,cpRows)
+    .then(ok=>{if(rowPatch)cpRowPatchLog().settle(rowPatch,{ok:Boolean(ok)&&typeof cpRows.json==='string',rowsJson:cpRows.json});})
+    .catch(cacheError=>{if(rowPatch)cpRowPatchLog().settle(rowPatch,{ok:false});logRuntimeFailure(label,cacheError);});
   return true;
+}
+/* CP satır yaması günlüğü (#1078 WS5): okuma modeli yeni projeksiyon neslini beklemeden bu yamaları uygular.
+   Bağlam damgaları okuma kapısınınkiyle (computeReadContext) aynıdır; yama bağlamı yeniden yazımla aynı kaynaktan. */
+let cpRowPatchLogInstance=null;
+function cpRowPatchLog(){return cpRowPatchLogInstance||(cpRowPatchLogInstance=require('./lib/read-model/cp-row-patch-log').createCpRowPatchLog());}
+function recordCpRowPatches({user,before,items}){
+  try{
+    const read=computeReadContext(user),overrides=effectiveOverridesForUser(read.id),notes=overrides.notesmap||{},notesmap={};
+    for(const item of items){
+      const patch=item.patch||{};
+      for(const key of [parseLib.orderLineKey(item.orderCode,patch.model,patch.ccode),parseLib.orderCodeKey(item.orderCode)])if(notes[key])notesmap[key]=notes[key];
+    }
+    return cpRowPatchLog().record({userId:String(user.id),before,after:read.contextHash,items,safe:rowPatchIncrementalSafe,
+      context:{notesmap,noteColumnDefs:overrides.noteColumnDefs||[],transitRules:overrides.transitRules||[]}});
+  }catch(error){logRuntimeFailure('cpRowPatchLog',error);return null;}
 }
 
 function assertAutomaticDatesReadOnly(currentUser,items){
@@ -10321,6 +10295,7 @@ app.patch('/api/overrides/:orderCode', async (req, res) => {
 require('./lib/read-model/cp-row-save').registerCpRowSaveRoute(app,{
   patchRows:(items,options)=>require('./db').patchOrderOverrideRows(items,options),
   rejectUnauthorizedOrders,rejectSharedOwnerWrites,assertAutomaticDatesReadOnly,pageProjectionContext,queueProjectionCacheRowPatches,liveRowPatchesFor,noteActorOf,apiError,
+  readContextHashOf:context=>computeReadContext(null,context).contextHash,recordRowPatches:recordCpRowPatches,
   ensureAutomaticDateSource:async(req,items)=>{if(items.some(item=>Object.prototype.hasOwnProperty.call(item.patch.dates||{},'exFactory'))&&!Array.isArray(cacheForUser(req.currentUser).asasOrders))await ensureDataLoaded(req.currentUser);},
   notifyShared:user=>{void sharedRevisionStore.update('cpOverrides',{actorId:user.id}).catch(error=>logRuntimeFailure('sharedRevision',error));},
   appendAudit:(user,action,target,detail)=>userAccess.appendAudit(user,action,target,detail),

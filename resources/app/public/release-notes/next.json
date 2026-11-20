@@ -12,6 +12,26 @@
   },
   "changes": [
     {
+      "id": "collection-hidden-tab-render-deferred",
+      "type": "improvement",
+      "module": {"tr": "Koleksiyon", "en": "Collection"},
+      "title": {
+        "tr": "Koleksiyon, sekmesi açılmadan çizilmez",
+        "en": "Collection is not drawn until its tab is opened"
+      },
+      "body": {
+        "tr": "Açılışta ve başka bir sayfadayken gelen güncellemelerde Koleksiyon tablosu arka planda çizilmez. Çizim, Koleksiyon sekmesine geçtiğinizde yapılır. Royalty, Hologram, FOB, PLM, OPD ve Licensor hesapları ile kayıt eskisi gibi hemen yapılır ve diğer kullanıcılara aynı anda ulaşır.",
+        "en": "At startup and when updates arrive while you are on another page, the Collection table is no longer drawn in the background. It is drawn when you switch to the Collection tab. Royalty, Hologram, FOB, PLM, OPD and Licensor calculations and saving still happen immediately and reach other users at the same time."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; Koleksiyon aynı tabloyu gösterir, yalnız çizim sekme açılınca yapılır.",
+          "en": "There is no change on screen; Collection shows the same table and is only drawn when its tab is opened."
+        }
+      }
+    },
+    {
       "id": "backlog-overview-delivery-read-model",
       "type": "improvement",
       "module": {
@@ -781,16 +801,16 @@
       "id": "cp-read-model-windowed",
       "type": "improvement",
       "module": {"tr": "CP Tracker", "en": "CP Tracker"},
-      "title": {"tr": "CP filtreleri yerel arka uçta çalışabilir (pilot)", "en": "CP filters can run on the local backend (pilot)"},
+      "title": {"tr": "CP filtreleri yerel arka uçta çalışır", "en": "CP filters run on the local backend"},
       "body": {
-        "tr": "Pilot ayarı açıkken CP tüm satırları tarayıcıda süzmez ve sıralamaz. Filtre, arama, öncelik sıralaması, hızlı filtre sayaçları ve alt toplamlar bilgisayardaki yerel arka uçta çalışır; tablo yalnız ekrandaki satırları ister. Tümünü seç, Kopyala ve Excel tüm eşleşen satırları arka uçtan alır. Henüz desteklenmeyen filtrelerde ve kaydedilmemiş bir düzenleme varken mevcut yol kullanılır. Ayar varsayılan olarak kapalıdır.",
-        "en": "With the pilot setting on, CP no longer filters and sorts every row in the browser. Filtering, search, priority sorting, quick filter counts and totals run on the local backend on this computer, and the table requests only the rows on screen. Select all, Copy and Excel fetch all matching rows from the backend. Filters that are not supported yet, and unsaved edits, use the existing path. The setting is off by default."
+        "tr": "CP tüm satırları tarayıcıda süzmez ve sıralamaz. Filtre, arama, öncelik sıralaması, hızlı filtre sayaçları ve alt toplamlar bilgisayardaki yerel arka uçta çalışır; tablo yalnız ekrandaki satırları ister. Tümünü seç, Kopyala ve Excel tüm eşleşen satırları arka uçtan alır. Henüz desteklenmeyen filtrelerde mevcut yol kullanılır.",
+        "en": "CP no longer filters and sorts every row in the browser. Filtering, search, priority sorting, quick filter counts and totals run on the local backend on this computer, and the table requests only the rows on screen. Select all, Copy and Excel fetch all matching rows from the backend. Filters that are not supported yet use the existing path."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
         "src": "cp-read-model-windowed.png",
-        "alt": {"tr": "Pilot ayarı açık CP Tracker: 2.077 demo satırından Kritik öncelik çipiyle süzülen 42 satır", "en": "CP Tracker with the pilot setting on: 42 of 2,077 demo rows filtered by the Critical priority chip"},
+        "alt": {"tr": "CP Tracker: 2.077 demo satırından Kritik öncelik çipiyle süzülen 42 satır", "en": "CP Tracker: 42 of 2,077 demo rows filtered by the Critical priority chip"},
         "caption": {"tr": "Demo veride Kritik çipi seçili; satırlar, sayaçlar ve sayım arka uçtan gelir ve mevcut yolla aynıdır.", "en": "The Critical chip is selected on demo data; rows, counts and totals come from the backend and match the existing path."}
       }
     },
@@ -856,6 +876,28 @@
       "visual": {
         "kind": "none",
         "reason": {"tr": "Ekranda değişen bir şey yok; yalnız aynı değerlerin hesaplanma süresi kısalır.", "en": "Nothing changes on screen; the same values are only calculated faster."}
+      }
+    },
+    {
+      "id": "quotations-cp-lookup-fast",
+      "type": "improvement",
+      "module": {"tr": "CP · Fiyat Çalışmaları", "en": "CP · Quotations"},
+      "title": {"tr": "Büyük CP fiyat çalışmaları donmadan açılır", "en": "Large CP quotations open without freezing"},
+      "body": {"tr": "CP Fiyat Çalışmaları penceresi, her satırın hedef fiyatı, kategorisi ve kumaşı için tüm CP listesini yeniden taramaz; sipariş, PLM ve model eşleşmesi bir kez kurulur. On binlerce CP satırında yüzlerce satırlık bir çalışma, artık neredeyse bir dakika takılmadan açılır; Excel dışa aktarımı da aynı şekilde hızlanır. Gösterilen değerler değişmez.", "en": "The CP Quotations window no longer rescans the whole CP list for the target price, category and fabric of every line; the order, PLM and model match is built once. With tens of thousands of CP rows, a quotation with hundreds of lines now opens without stalling for close to a minute, and Excel export speeds up the same way. The displayed values do not change."},
+      "visual": {
+        "kind": "none",
+        "reason": {"tr": "Ekranda değişen bir şey yok; aynı değerler yalnız daha hızlı hazırlanır.", "en": "Nothing changes on screen; the same values are only prepared faster."}
+      }
+    },
+    {
+      "id": "cp-row-patch-no-wait",
+      "type": "improvement",
+      "module": {"tr": "CP Tracker", "en": "CP Tracker"},
+      "title": {"tr": "CP'de kayıttan sonra öncelikler ve filtreler beklemeden güncellenir", "en": "CP priorities and filters update without waiting after a save"},
+      "body": {"tr": "CP'de bir notu, teslimat tipini ya da tarihi kaydettiğinizde öncelik ve checklist sütunları ile filtre sonuçları, sayfa önbelleğinin yeniden yazılmasını beklemeden yalnız değişen satırlar üzerinden hesaplanır. Kayıt sürerken açılan filtre ya da kaydırma hata uyarısı göstermez; önceki sonuç ekranda kalır ve yenisi hazır olunca tablo kendini günceller. CP hesabı çalışma alanı açılırken arka planda hazırlanır. Hesaplanan değerler değişmez; yeni sayfa önbelleği hazır olunca sonuçlar onunla karşılaştırılır.", "en": "When you save a note, delivery type or date in CP, the priority and checklist columns and filter results are calculated from the changed rows only, without waiting for the page cache to be rewritten. A filter or scroll during a save no longer shows an error; the previous result stays on screen and the table updates itself when the new one is ready. CP calculations are prepared in the background when the workspace opens. Calculated values do not change; once the new page cache is ready, the results are checked against it."},
+      "visual": {
+        "kind": "none",
+        "reason": {"tr": "Ekranda yeni bir öğe yok; aynı değerler kayıttan sonra daha erken gelir ve geçici hata uyarısı gösterilmez.", "en": "Nothing new appears on screen; the same values arrive sooner after a save and no temporary error warning is shown."}
       }
     },
     {

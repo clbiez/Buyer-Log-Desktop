@@ -51,7 +51,8 @@ function validateItems(raw){
 
 /* deps: { patchRows(items,{actor}), rejectUnauthorizedOrders(req,res,codes), rejectSharedOwnerWrites(req,res,items),
      ensureAutomaticDateSource(req,items), assertAutomaticDatesReadOnly(user,items), pageProjectionContext(user),
-     queueProjectionCacheRowPatches(user,before,items,label), notifyShared(user), appendAudit(user,action,target,detail),
+     queueProjectionCacheRowPatches(user,before,items,label,rowPatch), notifyShared(user),
+     readContextHashOf(projectionContext)?, recordRowPatches({user,before,items})? (okuma modeli satır yaması günlüğü), appendAudit(user,action,target,detail),
      notifyLive(req,rowPatches), liveRowPatchesFor(items), noteActorOf(user), apiError(res,err,fallback) } */
 function registerCpRowSaveRoute(app,deps){
   app.post('/api/overrides/rows',async(req,res)=>{
@@ -63,12 +64,15 @@ function registerCpRowSaveRoute(app,deps){
       await deps.ensureAutomaticDateSource(req,items);
       deps.assertAutomaticDatesReadOnly(req.currentUser,items);
       const before=deps.pageProjectionContext(req.currentUser);
+      const readBefore=typeof deps.readContextHashOf==='function'?deps.readContextHashOf(before):null;
       const saved=deps.patchRows(items,{actor:deps.noteActorOf(req.currentUser)});
       const written=saved.applied.filter(item=>!item.noop).map(item=>({orderCode:item.orderCode,patch:item.patch}));
+      // Okuma modeli satır yaması (cp-row-patch-log): yazımın hemen ardından, bağlam başka bir yazımla kaymadan.
+      const rowPatch=written.length&&readBefore&&typeof deps.recordRowPatches==='function'?deps.recordRowPatches({user:req.currentUser,before:readBefore,items:written}):null;
       let pageCachePatchQueued=false;
       if(written.length){
         deps.notifyShared(req.currentUser);
-        pageCachePatchQueued=deps.queueProjectionCacheRowPatches(req.currentUser,before,written,'cpRowSaveProjectionCachePatch');
+        pageCachePatchQueued=deps.queueProjectionCacheRowPatches(req.currentUser,before,written,'cpRowSaveProjectionCachePatch',rowPatch);
         deps.appendAudit(req.currentUser,'ORDER_ROW_UPDATE','orders',{orderCodes:[...new Set(written.map(item=>item.orderCode))].slice(0,200),count:written.length,conflicts:saved.conflicts.length});
         deps.notifyLive(req,deps.liveRowPatchesFor(written));
       }else if(saved.conflicts.length){

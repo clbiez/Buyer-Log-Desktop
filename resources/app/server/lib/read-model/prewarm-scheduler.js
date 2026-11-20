@@ -14,7 +14,12 @@
  *     Sonuç Genel Bakış servisinin önbelleğine girer; işçide veri kümeleri ve
  *     karar barındırıcısı sıcak kalır (filtre değişse de pahalı karar işi tekrar
  *     edilmez).
- *  2. CP / Siparişler / Koleksiyon sayfa projeksiyonları (sayfa önbelleği).
+ *  2. CP hesaplanmış sütunları (#1078): kullanıcının dili, istemcinin ilk isteğiyle aynı gövde. Sonuç CP
+ *     servisinin önbelleğine girer; işçide CP karar barındırıcısı sıcak kalır (ilk filtre/CP açılışı soğuk
+ *     hesap beklemez). CP alanı yoksa atlanır. 'bl.cpComputed.v1' tercihi cihazda kalır (sunucuya eşitlenmez);
+ *     sunucuda '0' kaydı varsa atlanır, yoksa ısıtılır: iş 'background' önceliklidir ve CP dışı her
+ *     kullanıcı işi onu keser (kapatmış kullanıcıda maliyet boşta geçen işçi zamanıdır).
+ *  3. CP / Siparişler / Koleksiyon sayfa projeksiyonları (sayfa önbelleği).
  *
  * Tek işçi (maxWorkers:1) güvenceleri:
  *  - Ön ısıtma işleri havuza 'background' önceliğiyle girer; kuyrukta bekleyen
@@ -22,7 +27,8 @@
  *  - Kimsenin beklemediği (spekülatif) bir ön ısıtma işi çalışırken ya da kuyruktayken
  *    kullanıcıdan yeni bir okuma modeli işi (Siparişler sorgusu, CP hesaplanmış sütunlar,
  *    Akış Haritası…)
- *    gelirse ön ısıtma iptal edilir
+ *    gelirse ön ısıtma iptal edilir (istisna: CP okuması süren CP ısıtmasını kesmez, ona katılır —
+ *    iptal işçiyi emekli eder ve CP isteği aynı hesabı soğuk baştan yapardı)
  *    (havuz çalışan işi işçiyi emekli ederek keser). Kullanıcı sorgusu ön ısıtmanın
  *    arkasında beklemez; ön ısıtma okuma modeli sessizleşince yeniden dener.
  *  - İstemci aynı Genel Bakış gövdesini isterse ikinci bir hesap başlatılmaz:
@@ -42,6 +48,8 @@ const Model=require('../../../public/overview-model');
 // Sayfa projeksiyonu → alan. Genel Bakış projeksiyonu istemci açılışta zaten ister.
 const PROJECTIONS=Object.freeze([['cp','cp'],['orders','orders'],['collection-catalog','koleksiyon']]);
 const LANG_KEY='lcw.lang.v1';
+const CP_COMPUTED_PREF='bl.cpComputed.v1';
+const CP_TASKS=new Set(['read-model-cp-computed','read-model-cp-query']);
 const FILTER_KEYS=Object.freeze({main:'lcw.overview.dimFilters.v1',bg:'lcw.overview.bgDimFilters.v1'});
 const hash=value=>crypto.createHash('sha256').update(String(value)).digest('hex').slice(0,32);
 const abortedError=()=>Object.assign(new Error('Ön ısıtma iptal edildi. / Prewarm cancelled.'),{code:'COMPUTE_ABORTED',statusCode:499});
@@ -65,7 +73,7 @@ function overviewBodyFor(read,parts){
   return {version:1,lang,parts,filters};
 }
 
-function createReadModelPrewarm({getPool,userAccess,preferenceValue=()=>null,loadProjection=null,getOverviewService=null,guard=null,
+function createReadModelPrewarm({getPool,userAccess,preferenceValue=()=>null,loadProjection=null,getOverviewService=null,getCpComputedService=null,guard=null,
   enabled=()=>prewarmEnabled(),quietMs=1500,maxAttempts=3,maxUsers=64,now=()=>Date.now(),
   defer=fn=>{const timer=setTimeout(fn,0);timer.unref?.();},wait=ms=>new Promise(resolve=>{const timer=setTimeout(resolve,ms);timer.unref?.();}),
   onFailure=()=>{}}={}){
@@ -75,8 +83,13 @@ function createReadModelPrewarm({getPool,userAccess,preferenceValue=()=>null,loa
   let interactiveActive=0,lastInteractiveAt=0;
   const counters={sessions:0,runs:0,completed:0,failed:0,preempted:0,joined:0,backgroundJobs:0,interactiveJobs:0};
 
-  function preemptSpeculative(){
-    for(const run of runs)if(run.speculative&&run.jobs>0&&!run.controller.signal.aborted){counters.preempted++;run.controller.abort();}
+  function preemptSpeculative(task){
+    for(const run of runs){
+      if(!run.speculative||run.jobs<=0||run.controller.signal.aborted)continue;
+      // CP okuması CP ısıtmasının hesabını kullanır: iptal yerine katılır (koşu artık spekülatif değil).
+      if(run.kind==='cp'&&CP_TASKS.has(task)){run.speculative=false;counters.joined++;continue;}
+      counters.preempted++;run.controller.abort();
+    }
   }
   /* Okuma modeli servislerinin ortak havuz girişi. Ön ısıtma bağlamındaki işler
      'background' önceliği alır; diğer her iş kullanıcı işidir. */
@@ -86,13 +99,16 @@ function createReadModelPrewarm({getPool,userAccess,preferenceValue=()=>null,loa
       const run=store.run;
       if(run.controller.signal.aborted)return Promise.reject(abortedError());
       counters.backgroundJobs++;run.jobs++;
-      return pool.run(task,payload,{...options,priority:run.speculative?'background':'interactive'}).finally(()=>{run.jobs--;});
+      // Koşunun iptali havuza zamanlayıcının sinyaliyle ulaşır: CP servisi istemci sinyalini işçiye iletmez
+      // (workerOptions), yoksa preemptSpeculative spekülatif CP ısıtmasını kesemez (Codex #1096). Katılınan
+      // (spekülatif olmayan) koşunun denetleyicisi iptal edilmez; sinyal o durumda zararsızdır.
+      return pool.run(task,payload,{...options,signal:options.signal||run.controller.signal,priority:run.speculative?'background':'interactive'}).finally(()=>{run.jobs--;});
     }
     counters.interactiveJobs++;interactiveActive++;lastInteractiveAt=now();
     // Bekleyen kullanıcı işi ön ısıtmanın arkasında kalmaz. Farklı gövdeli bir Genel Bakış
     // isteği istisnadır: aynı ekranın işidir ve ön ısıtmanın kurduğu veri kümesi/karar
     // barındırıcısını kullanır; işçiyi sıfırlamak onu yalnız geciktirir.
-    if(task!=='read-model-overview')preemptSpeculative();
+    if(task!=='read-model-overview')preemptSpeculative(task);
     return pool.run(task,payload,options).finally(()=>{interactiveActive--;lastInteractiveAt=now();});
   }
   function poolIdle(){
@@ -154,6 +170,28 @@ function createReadModelPrewarm({getPool,userAccess,preferenceValue=()=>null,loa
     return promise;
   }
 
+  /* CP hesaplanmış sütunları: istemcinin ilk isteğiyle aynı gövde (dil; bekleyen cevap katmanı yok). */
+  async function warmCpComputed(session,status){
+    const profile=session.req.currentUser,service=typeof getCpComputedService==='function'?getCpComputedService():null;
+    if(!service||!userAccess.hasArea(profile,'cp')){status.cp='skipped';return;}
+    if(String(preferenceValue(profile,CP_COMPUTED_PREF)??'')==='0'){status.cp='disabled';return;}
+    const lang=preferenceValue(profile,LANG_KEY)==='en'?'en':'tr';
+    for(let attempt=1;;attempt++){
+      const run={controller:new AbortController(),speculative:!session.joined,jobs:0,session,kind:'cp'};runs.add(run);
+      try{
+        if(attempt>1&&!await waitQuiet(session))throw abortedError();
+        const out=await als.run({run},()=>service.computed(session.req,{version:1,lang},{signal:run.controller.signal}));
+        status.cp=out&&out.cached?'cached':'ready';return;
+      }catch(error){
+        if(error?.code!=='COMPUTE_ABORTED'||attempt>=maxAttempts||!live(session)){
+          status.cp=error?.code==='COMPUTE_ABORTED'?'preempted':error?.code==='SOURCE_FILTER_REQUIRED'||error?.statusCode===403?'skipped':'error';
+          if(status.cp==='error')onFailure('cp-computed',error);
+          return;
+        }
+        status.cp='preempted';
+      }finally{runs.delete(run);}
+    }
+  }
   async function warmProjections(session,status){
     if(typeof loadProjection!=='function')return;
     for(const [module,area] of PROJECTIONS){
@@ -190,6 +228,7 @@ function createReadModelPrewarm({getPool,userAccess,preferenceValue=()=>null,loa
           if(status.overview[parts]!=='ready'&&status.overview[parts]!=='cached')break;
         }
       }
+      if(live(session))await warmCpComputed(session,status);
       await warmProjections(session,status.projections);
       status.state='done';counters.completed++;
     }catch(error){status.state='error';counters.failed++;onFailure('session',error);}
@@ -214,8 +253,8 @@ function createReadModelPrewarm({getPool,userAccess,preferenceValue=()=>null,loa
     const id=req&&req.currentUser&&String(req.currentUser.id),session=id&&users.get(id);
     if(!enabled())return {state:'disabled'};
     if(!session)return {state:'idle'};
-    const {state,startedAt,finishedAt,overview,projections}=session.status;
-    return {state,startedAt,finishedAt,overview:{...overview},projections:{...projections}};
+    const {state,startedAt,finishedAt,overview,projections,cp}=session.status;
+    return {state,startedAt,finishedAt,overview:{...overview},...(cp?{cp}:{}),projections:{...projections}};
   }
   function stats(){return {...counters,activeRuns:runs.size,flights:flights.size,users:users.size,interactiveActive};}
   // Test kancası: fn'i verilen ön ısıtma koşusunun bağlamında çalıştırır.
