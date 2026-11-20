@@ -214,14 +214,15 @@ function serviceHarness(){
     return {value:{buffer,uncompressedBytes:buffer.length*8},manifest:{activeGeneration:'g-'+state.contextHash,modules:{cp:{checksum:crypto.createHash('sha256').update(buffer).digest('hex')}}},assertResponse(){},release(){}};
   };
   const runCompute=async(name,payload,options)=>{
-    state.payloads.push({name,virtual:Boolean(payload.dataset.virtual),buffer:Boolean(payload.dataset.buffer),verify:Boolean(payload.verify),datasetKey:payload.dataset.datasetKey,baseKey:payload.dataset.virtual&&payload.dataset.virtual.baseKey});
+    state.payloads.push({name,virtual:Boolean(payload.dataset.virtual),buffer:Boolean(payload.dataset.buffer),verify:Boolean(payload.verify),datasetKey:payload.dataset.datasetKey,baseKey:payload.dataset.virtual&&payload.dataset.virtual.baseKey,
+      warmOnly:Boolean(payload.warmOnly),estimated:options.estimatedBytes});
     const run=name==='read-model-cp-query'?queryTask:task;
     const value=await run.execute(structuredClone(payload),{cache:worker.cache,engine});
     if(state.onRun){const hook=state.onRun;state.onRun=null;hook();}
     return {value,release(){}};
   };
   const log=createCpRowPatchLog();
-  const service=createCpComputedService({guard,loadProjection,runCompute,loadContext:()=>({key:'ctx',value:contextFor('moderator')}),
+  const service=createCpComputedService({guard,loadProjection,runCompute,loadContext:()=>({key:'ctx',value:contextFor('moderator'),revision:'r1'}),
     rowPatchLog:log,onRowPatchMismatch:info=>state.mismatches.push(info)});
   const overrides={notesmap:{},noteColumnDefs:NOTE_COLUMNS,transitRules:TRANSIT};
   /* Kayıt: günlük girdisi + bağlam ilerler; gerçek nesil (disk) yeniden yazımla güncellenir. Dönen: {entry, touchedJson}. */
@@ -334,4 +335,27 @@ test('servis: gerçek nesil okuması sırasında kayıt gelirse temel yine kayde
   await h.service.computed(moderator,computedBody);
   assert.equal(h.state.leases,1,'işçideki veri kümesi temel olarak kullanıldı');
   assert.equal(h.state.payloads.at(-1).virtual,true);
+});
+
+/* Havuz, boştaki işçinin yerleşik belleği + işin tahmini bütçeyi aşınca işçiyi emekli eder (bütün veri kümeleri ve
+   barındırıcılar düşer). Sıcak barındırıcıdaki artımlı iş soğuk tahmin istemez; soğuksa işçi hesaplamadan söyler. */
+test('servis: sıcak barındırıcıda yama okuması sıcak tahminle tek işte; soğuksa hesapsız `cold` ve soğuk tahminle yeniden',{timeout:120000},async()=>{
+  worker.cache.clear();task.clearHosts();
+  const h=serviceHarness();
+  await h.service.computed(moderator,computedBody);
+  h.save(0);
+  const n0=h.state.payloads.length;
+  await h.service.computed(moderator,computedBody);
+  const warm=h.state.payloads.slice(n0);
+  assert.equal(warm.length,1,'tek iş');assert.equal(warm[0].warmOnly,true);
+  assert.equal(warm[0].estimated,96*1024*1024,'sıcak tahmin (soğuk karar payı istenmez)');
+  // Barındırıcı yok (ör. dil/tercih değişti): işçi hesap yapmadan `cold` döner, servis soğuk tahminle yeniden gönderir.
+  task.clearHosts();h.save(1);
+  const n1=h.state.payloads.length;
+  const out=await h.service.computed(moderator,computedBody);
+  const cold=h.state.payloads.slice(n1);
+  assert.equal(cold.length,2);assert.equal(cold[0].warmOnly,true);assert.equal(cold[1].warmOnly,false);
+  assert.ok(cold[1].estimated>cold[0].estimated,'soğuk tahmin');
+  assert.equal(h.state.leases,1,'kira yok');assert.equal(h.service.stats().coldRetries,1);
+  assert.ok(out.timing.service.rowPatch.steps>=1);
 });

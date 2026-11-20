@@ -120,7 +120,7 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
   if(!guard||typeof loadProjection!=='function'||typeof runCompute!=='function'||typeof loadContext!=='function'||typeof loadTasks!=='function')
     throw TypeError('Invalid CP computed service dependencies');
   const cache=new Map(),latest=new Map(),bases=new Map(),building=new Map();let cachedBytes=0;
-  const counters={requests:0,hits:0,misses:0,emptyDeltas:0,datasetLoads:0,rowPatchReads:0,rowPatchBuilds:0,rowPatchVerified:0,rowPatchMismatches:0,rowPatchFallbacks:0};
+  const counters={requests:0,hits:0,misses:0,emptyDeltas:0,datasetLoads:0,rowPatchReads:0,rowPatchBuilds:0,rowPatchVerified:0,rowPatchMismatches:0,rowPatchFallbacks:0,coldRetries:0};
   function remove(key){const entry=cache.get(key);if(!entry)return;cache.delete(key);cachedBytes-=entry.bytes;}
   function put(key,scope,entry){
     for(const [other,value] of cache)if(value.scope===scope)remove(other);
@@ -175,8 +175,13 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
       else{
         const generation='rp:'+plan.datasetKey.slice(0,24);
         const dataset={datasetKey:plan.datasetKey,scopeKey:scope,...(plan.steps?{virtual:{baseKey:plan.base.datasetKey,steps:plan.steps}}:{})};
-        const running=exec({dataset,extra:verification?{verify:{rowsJson:verification.rowsJson}}:{},generation,verifying:Boolean(verification),
-          options:workerOptions({signal,estimatedBytes:96*1024*1024+Math.ceil(plan.base.uncompressed*DECISION_FACTOR),ownerKey:'read-model',generation:'1'})});
+        const extra=verification?{verify:{rowsJson:verification.rowsJson}}:{};
+        const running=(async()=>{
+          let result=await exec({dataset,extra:{...extra,warmOnly:true},generation,verifying:Boolean(verification),options:workerOptions({signal,estimatedBytes:WARM_BASE_BYTES,ownerKey:'read-model',generation:'1'})});
+          if(result&&result.cold){counters.coldRetries++;result=await exec({dataset,extra,generation,verifying:Boolean(verification),
+            options:workerOptions({signal,estimatedBytes:96*1024*1024+Math.ceil(plan.base.uncompressed*DECISION_FACTOR),ownerKey:'read-model',generation:'1'})});}
+          return result;
+        })();
         if(plan.steps){building.set(scope,running);running.catch(()=>{}).finally(()=>{if(building.get(scope)===running)building.delete(scope);});}
         const out=await running;
         if(out&&out.short)return {short:out.short,generation,leaseMs:0};
@@ -207,8 +212,10 @@ function createCpComputedService({guard,loadProjection,runCompute,loadContext,lo
       const value=lease.value||{},compressed=Buffer.isBuffer(value.buffer)?value.buffer.length:Number(value.buffer&&value.buffer.byteLength)||0;
       const uncompressed=Number(value.uncompressedBytes)||compressed*8;
       const options={signal,estimatedBytes:96*1024*1024+Math.ceil(uncompressed*DECISION_FACTOR),ownerKey:'read-model',generation:'1'};
-      let out=await exec({dataset:{datasetKey,scopeKey:scope},extra:{},generation,verifying:false,options:workerOptions(options)});
+      // Önce sıcak tahminle (işçide veri kümesi + sıcak barındırıcı varsa artımlı/yeniden kullanım); soğuksa soğuk tahminle.
+      let out=await exec({dataset:{datasetKey,scopeKey:scope},extra:{warmOnly:true},generation,verifying:false,options:workerOptions({...options,estimatedBytes:WARM_BASE_BYTES})});
       if(out&&out.short)return {short:out.short,generation,leaseMs,rowPatch:{miss}};
+      if(out&&out.cold){counters.coldRetries++;out=await exec({dataset:{datasetKey,scopeKey:scope},extra:{},generation,verifying:false,options:workerOptions(options)});}
       if(out&&Array.isArray(out.missing)&&out.missing.includes('cp')){
         counters.datasetLoads++;
         const source=value.buffer,bytes=Uint8Array.from(Buffer.isBuffer(source)?source:Buffer.from(source||[]));

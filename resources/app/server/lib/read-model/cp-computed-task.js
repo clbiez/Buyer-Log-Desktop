@@ -268,7 +268,12 @@ async function ensureComputed(payload,deps){
   const verify=payload.verify&&typeof payload.verify.rowsJson==='string'?verifyRows(dataset,payload.verify.rowsJson,deps.engine):null;
   const key=hostKeyOf(payload);
   let entry=hosts.get(key),hostMs=0;
+  // warmOnly (#1078 satır yaması): servis işi sıcak bellek tahminiyle gönderdi. Soğuk hesap (barındırıcı yok ya da
+  // tam hesap gerekiyor) bu tahmini aşar; havuz işçiyi emekli eder ve bütün veri kümeleri/barındırıcılar düşer.
+  // Bunun yerine hesap yapılmadan `cold` döner; servis aynı isteği soğuk tahminle yeniden gönderir.
+  const cold=()=>({missing:['cp'],warm:false,cold:true});
   if(entry){hosts.delete(key);hosts.set(key,entry);}
+  else if(payload.warmOnly)return cold();
   else{
     const hostStarted=performance.now();
     entry=await createEntry(payload);
@@ -303,8 +308,9 @@ async function ensureComputed(payload,deps){
     changed=[];for(const [id,digest] of source)if(previous.source.get(id)!==digest)changed.push(id);
     sourceMs=performance.now()-sourceStarted;
   }
-  if(virtual)virtual.baseRows=new WeakRef([]);
   const incremental=previous?incrementalPlan(previous,rows,changed):null;
+  if(!incremental&&payload.warmOnly)return cold();
+  if(virtual)virtual.baseRows=new WeakRef([]);
   const {out,phases}=incremental?(incremental.targets.length?computeRows(entry,rows,transitRules,incremental.targets):{out:new Map(),phases:{}}):computeRows(entry,rows,transitRules);
   if(source)phases.sourceMs=sourceMs;
   const serialized=new Map(),digests=new Map();
@@ -371,7 +377,7 @@ function incrementalPlan(previous,rows,changed){
 async function execute(payload,deps){
   const started=performance.now();
   const computed=await ensureComputed(payload,deps);
-  if(computed.missing)return {missing:computed.missing,warm:computed.warm};
+  if(computed.missing)return {missing:computed.missing,warm:computed.warm,...(computed.cold?{cold:true}:{})};
   const {entry,current,hostMs,loads}=computed,rows=current.rows,serialized=current.serialized,digests=current.digests;
   // Delta, aynı barındırıcının aynı veri kümesi üzerindeki son HISTORY sonucundan birine göre
   // (istemci araya giren bağlam olayıyla bir sonucu atmış olabilir). Satır başına yalnız özet tutulur.
