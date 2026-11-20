@@ -97,6 +97,10 @@
   };
 
   pricingRuleMatchesValues=function(rule,opd,country,season,licensor,license,category){
+    // #1079 WS6: koşulların hepsi saf; açıkken ucuz ve seçici olanlar (licensor/license,
+    // ülke tarafı) önce denenir. Eşleşmeyen kural için satır tarihi, sezon ve kategori
+    // normalleştirmesi yapılmaz. Sonuç aynıdır (ölçüm: satır × kural başına tarih ayrıştırma).
+    if(typeof royaltyRecomputeFastEnabled==='function'&&royaltyRecomputeFastEnabled()&&(turknormFast(license)!==turknormFast(rule&&rule.license)||turknormFast(licensor)!==turknormFast(rule&&rule.licensor)||!hasSide(rule,country)))return false;
     const day=dateOrdinal(opd),start=dateOrdinal(rule&&rule.opdStart),end=dateOrdinal(rule&&rule.opdEnd);
     const dateMatches=(start==null&&end==null)||(day!=null&&(start==null||day>=start)&&(end==null||day<=end));
     return dateMatches&&api.pricingRuleCategoryMatches(rule,category)&&pricingRuleSeasonMatches(rule,season)&&hasSide(rule,country)&&turknormFast(licensor)===turknormFast(rule&&rule.licensor)&&turknormFast(license)===turknormFast(rule&&rule.license);

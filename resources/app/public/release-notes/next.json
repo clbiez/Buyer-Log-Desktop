@@ -935,6 +935,29 @@
       }
     },
     {
+      "id": "royalty-recompute-fast",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans Kartları · Royalty",
+        "en": "License Cards · Royalty"
+      },
+      "title": {
+        "tr": "Royalty kuralları kaydedildikten sonra hesap daha kısa sürer",
+        "en": "Calculation after saving royalty rules takes less time"
+      },
+      "body": {
+        "tr": "Royalty kuralları Lisans Kartları'nda kaydedildiğinde siparişler, her kural için önce lisans, licensor ve ülke eşleşmesine bakılarak yeniden hesaplanır; eşleşmeyen kurallar için tarih ve sezon tekrar okunmaz. On binlerce satırda kayıttan sonraki yeniden hesap belirgin biçimde kısalır. Hesaplanan Supp. FOB değerleri değişmez.",
+        "en": "When royalty rules are saved in License Cards, orders are recalculated by checking the license, licensor and country match of each rule first; dates and seasons are not read again for rules that do not match. On tens of thousands of rows the recalculation after saving is noticeably shorter. Calculated Supp. FOB values stay the same."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişen bir öğe yok; değişiklik yalnız hesabın süresini kısaltır.",
+          "en": "Nothing on screen changes; the change only shortens the calculation."
+        }
+      }
+    },
+    {
       "id": "cp-save-other-screens-no-wait",
       "type": "improvement",
       "module": {"tr": "CP Tracker", "en": "CP Tracker"},
