@@ -252,6 +252,11 @@ async function runOnce({ appRoot, label, source, chromium, options }) {
       await delay(options.settleMs);
     }
     phase = 'done';
+    // Sunucu süreci belleği (Linux /proc; işçi iş parçacıkları aynı süreçte): anlık RSS ve tepe.
+    try {
+      const status = fs.readFileSync(`/proc/${server.pid}/status`, 'utf8'), kb = name => Number((status.match(new RegExp(name + ':\\s+(\\d+)')) || [])[1]);
+      result.serverMemory = { rssMB: P.round(kb('VmRSS') / 1024), peakMB: P.round(kb('VmHWM') / 1024) };
+    } catch (_) { result.serverMemory = null; }
     const { profile } = await cdp.send('Profiler.stop');
     const final = await page.evaluate(() => ({ longTasks: window.__erpProbe.longTasks, lag: window.__erpProbe.lag, longTaskUnsupported: !!window.__erpProbe.longTaskUnsupported,
       timeline: window.BLPerf?.timeline?.() || [], origin: window.BLPerf?.origin?.() ?? 0, anchor: window.__erpProbe.anchor }));
