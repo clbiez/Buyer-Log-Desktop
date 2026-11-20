@@ -210,3 +210,22 @@ test('footer totals: the cp-query copy of the accumulator equals WS3 orders-face
   const actual=cpQuery.runCpFacets({rows},{version:1,today:'2026-11-20',footer},helpers).footer;
   assert.deepEqual(actual,expected);
 });
+
+test('decision host key ignores UI-only preferences the host never reads (a filter save must not recompute 30k rows)',()=>{
+  const fs=require('node:fs'),path=require('node:path');
+  const {SCRIPTS}=require('../server/lib/read-model/overview-decision-host');
+  // Bekçi: barındırıcıda çalışan hiçbir betik bu anahtarları okumaz.
+  for(const name of [...SCRIPTS,'checklist-supplier-sync.js']){
+    const src=fs.readFileSync(path.join(__dirname,'..','public',name),'utf8');
+    for(const m of src.matchAll(/['"`](lcw\.cp\.[A-Za-z0-9_.-]+)/g))assert.ok(!task.UI_ONLY_ENTRY.test(m[1]),`${name} okuyor: ${m[1]}`);
+  }
+  const base={scopeKey:'s',lang:'tr',context:{userId:'u',entries:{'lcw.cp.rules.priority.v1':'{"rules":[]}','lcw.cp.assistant.v1':'{}'},managedRules:null,plm:null,transitRules:[]}};
+  const key=task.hostKeyOf(base);
+  const withUi=structuredClone(base);
+  Object.assign(withUi.context.entries,{'lcw.cp.dimFilters.v1':'{"country":["TR"]}','lcw.cp.imageSize.v2':'{"col":60}','lcw.cp.bomControl.v1':'{}','lcw.cp.checklist.v1':'{"a::b":{}}'});
+  assert.equal(task.hostKeyOf(withUi),key,'arayüz durumu ve cevaplar barındırıcıyı değiştirmez');
+  const rules=structuredClone(base);rules.context.entries['lcw.cp.rules.priority.v1']='{"rules":[{"id":"x"}]}';
+  assert.notEqual(task.hostKeyOf(rules),key,'kural değişikliği yeni barındırıcı');
+  const view=structuredClone(base);view.context.entries['lcw.cp.assistant.queue-view.v1']='{}';
+  assert.notEqual(task.hostKeyOf(view),key,'barındırıcının okuduğu anahtar dışarıda bırakılmaz');
+});

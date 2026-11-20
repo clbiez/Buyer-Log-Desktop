@@ -54,9 +54,15 @@ function datasetFor(spec,{cache,engine},loads){
 }
 
 /* Cevap dışındaki bağlam: değişirse barındırıcı yeniden kurulur. */
+/* Barındırıcıda çalışan betiklerin (SCRIPTS + checklist-supplier-sync.js) HİÇ okumadığı arayüz
+   durumu: boyut filtreleri, görsel boyutu, BOM kontrol işaretleri. Anahtara girerse her filtre
+   kaydı 30k satırın kararlarını baştan hesaplatır (#1078 alt PR 2 ölçümü: 13,7 sn). Bekçi:
+   read-model-cp-window-route.test.js (betik taraması). */
+const UI_ONLY_ENTRY=/^lcw\.cp\.(?:dimFilters|imageSize|bomControl)\./;
 function hostKeyOf(payload){
   const context=payload.context||{},entries={...(context.entries||{})};
   delete entries[ANSWER_KEY];
+  for(const key of Object.keys(entries))if(UI_ONLY_ENTRY.test(key))delete entries[key];
   return hash(JSON.stringify([payload.scopeKey||'',payload.lang==='en'?'en':'tr',String(context.userId||''),entries,
     context.managedRules||null,context.plm||null,context.transitRules||[]]));
 }
@@ -231,4 +237,4 @@ async function execute(payload,deps){
 }
 function clearHosts(){hosts.clear();}
 function hostCount(){return hosts.size;}
-module.exports={execute,ensureComputed,clearHosts,hostCount,FIELDS,MAX_HOSTS};
+module.exports={execute,ensureComputed,clearHosts,hostCount,hostKeyOf,UI_ONLY_ENTRY,FIELDS,MAX_HOSTS};
