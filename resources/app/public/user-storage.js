@@ -24,7 +24,9 @@
     // v2026-11-15 — tablo içi Rapor görünümü tercihi tablo ve kullanıcı başınadır.
     'buyerlog.tableReportMode.',
     // v2026-11-19 — Siparişler okuma modeli pilot anahtarı kullanıcı başınadır (#1076).
-    'bl.ordersReadModel.'
+    'bl.ordersReadModel.',
+    // v2026-11-20 — CP hesaplanmış sütunlar pilot anahtarı kullanıcı başınadır (#1078).
+    'bl.cpComputed.'
   ];
   /* AYNI BİLGİSAYARDA BİRDEN FAZLA KULLANICI.
      Aşağıdaki kişisel filtre/görünüm anahtarları eskiden kullanıcı önekine

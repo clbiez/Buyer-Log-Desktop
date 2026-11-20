@@ -73,5 +73,5 @@ test('server wires one prewarm scheduler into every read model route; only works
   const routes=SERVER.slice(SERVER.indexOf("require('./lib/read-model/overview-model-routes')(app, {"),SERVER.indexOf("app.use(express.json({ limit: '100mb' }));"));
   assert.equal((routes.match(/runReadModelCompute: readModelPrewarm\.runCompute,/g)||[]).length,3,'overview, query and global flow share the priority-aware pool entry');
   assert.match(routes,/overviewModelService: readModelPrewarm\.overviewServiceProxy\(\),/);
-  assert.match(SERVER,/runCompute: readModelPrewarm\.runCompute,\n    loadContext: createContextLoader\(overviewModelContextSources\),/);
+  assert.match(SERVER,/runCompute: readModelPrewarm\.runCompute,\n    loadContext: createContextLoader\(cpDecisionContextSources\),/);
 });

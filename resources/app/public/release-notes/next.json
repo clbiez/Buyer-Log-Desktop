@@ -738,6 +738,23 @@
       }
     },
     {
+      "id": "cp-computed-columns",
+      "type": "improvement",
+      "module": {"tr": "CP Tracker", "en": "CP Tracker"},
+      "title": {"tr": "CP öncelik ve checklist sütunları yerel arka uçta hesaplanabilir (pilot)", "en": "CP priority and checklist columns can be computed on the local backend (pilot)"},
+      "body": {
+        "tr": "Pilot ayarı açıkken CP'deki öncelik, neden, etiket ve checklist durumları bilgisayardaki Buyer Log arka ucunda, aynı kurallarla hesaplanır. Tarayıcı tüm satırlar için karar motorunu çalıştırmaz; CP daha hızlı açılır ve ekran daha az donar. Bir checklist cevabı verdiğinizde ilgili sipariş hemen güncellenir. Kaydedilmemiş bir CP düzenlemesi varken mevcut yol kullanılır. Ayar varsayılan olarak kapalıdır.",
+        "en": "With the pilot setting on, CP priorities, reasons, tags and checklist statuses are computed on the Buyer Log backend on this computer with the same rules. The browser no longer runs the decision engine for every row, so CP opens faster and the screen freezes less. When you answer a checklist item, that order updates right away. While a CP edit is unsaved, the existing path is used. The setting is off by default."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-computed-columns.png",
+        "alt": {"tr": "Pilot ayarı açık CP Tracker: 30.000 demo satırında checklist sütunları ve onaylanan bir kontrol", "en": "CP Tracker with the pilot setting on: checklist columns and an approved check on 30,000 demo rows"},
+        "caption": {"tr": "30.000 satırlık demo veride checklist durumları arka uçtan gelir; değerler mevcut hesapla aynıdır.", "en": "On 30,000 demo rows, checklist statuses come from the backend; the values match the existing calculation."}
+      }
+    },
+    {
       "id": "read-model-backend-prewarm",
       "type": "improvement",
       "module": {"tr": "Genel Bakış", "en": "Overview"},

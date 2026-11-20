@@ -1112,6 +1112,10 @@ function syncUnifiedPrioritiesForTable(tableKey,preparedResult=null){
   const contextRevision=typeof assistant.decisionContextRevision==='function'?assistant.decisionContextRevision():0;
   const cached=_unifiedPriorityCache[tableKey];
   if(cached&&cached.rows===rows&&cached.dataRevision===_unifiedPriorityTableRevision[tableKey]&&cached.contextRevision===contextRevision&&cached.day===new Date().toDateString())return true;
+  // Hesaplanmış sütunlar arka uçtaysa (#1078) 30k satır burada eşzamanlı hesaplanmaz;
+  // sonuç gelene kadar satırlar son değerlerini korur.
+  if(tableKey==='cp'&&!preparedResult&&window.BLCpComputedColumns?.active?.()){void scheduleUnifiedPrioritiesForTable('cp');return false;}
+  if(tableKey==='cp')window.BLCpComputedColumns?.legacyApplied?.();
   const activeRows=rows.filter(row=>unifiedPriorityRowActive(tableKey,row));
   const result=preparedResult||assistant.computeDecisionsForRows(activeRows);
   for(const row of rows){
@@ -1389,18 +1393,22 @@ window.BLCpPriorityIndex={
   catalog:()=>{const OD=window.BLOrderDecisionEngine;return OD&&typeof OD.getPriorityCatalog==='function'?OD.getPriorityCatalog():[];},
 };
 let cpPriorityJob=null;
-function scheduleUnifiedPrioritiesForTable(tableKey){
+function scheduleUnifiedPrioritiesForTable(tableKey,options={}){
   if(tableKey==='orders')return Promise.resolve(true);
   const rows=state.cp?.rows,assistant=window.BLCpAssistant;
   if(!rows||!assistant?.computeDecisionsForRowsAsync)return Promise.resolve(false);
   const revision=_unifiedPriorityTableRevision.cp,contextRevision=assistant.decisionContextRevision();
   const day=new Date().toDateString(),cached=_unifiedPriorityCache.cp;
   if(cached&&cached.rows===rows&&cached.dataRevision===revision&&cached.contextRevision===contextRevision&&cached.day===day){window.BLModulePreparation?.setStatus('cp','ready');return Promise.resolve(true);}
+  if(!options.legacy&&window.BLCpComputedColumns?.active?.())return window.BLCpComputedColumns.schedule(rows,revision,contextRevision,day);
   if(cpPriorityJob&&cpPriorityJob.rows===rows&&cpPriorityJob.revision===revision&&cpPriorityJob.contextRevision===contextRevision)return cpPriorityJob.promise;
   const job={rows,revision,contextRevision};cpPriorityJob=job;
   job.promise=assistant.computeDecisionsForRowsAsync(rows).then(result=>{
     if(!result||state.cp?.rows!==rows||revision!==_unifiedPriorityTableRevision.cp||contextRevision!==assistant.decisionContextRevision()||day!==new Date().toDateString())return false;
     syncUnifiedPrioritiesForTable('cp',result);
+    // Arka uç sütunlarından bu hesap için dönüldü (#1078): sağlayıcı etkin kalsa da checklist
+    // hücreleri aynı karar nesnesiyle yerelde yazılır (karar verilince sağlayıcı devreye girmez).
+    if(options.legacy)window.BLChecklistSupplierSync?.refreshColumns?.({render:false,decision:result,reuse:true});
     window.BLModulePreparation?.setStatus('cp','ready');
     window.BLPerf?.mark?.('CP_PRIORITY_READY',{rows:rows.length,mode:'background'});
     // Görünmüyorsa wrapper çizimi ilk dönüşe erteler; yükleme kartı takılı kalmaz.
@@ -1409,6 +1417,211 @@ function scheduleUnifiedPrioritiesForTable(tableKey){
   }).catch(error=>{window.BLModulePreparation?.setStatus('cp','error','CP_PRIORITY_FAILED');showToast(error.message);return false;}).finally(()=>{if(cpPriorityJob===job)cpPriorityJob=null;});
   return job.promise;
 }
+/* ---- CP hesaplanmış sütunlar (#1078, WS5 alt PR 1) ----
+   Anahtar açıkken (window.BL_READ_MODEL_CP_COMPUTED===true) CP satırlarının
+   öncelik/karar sütunları (Priority, nedenler, sinyaller, etiketler, hesap durumu,
+   revizyon temel önceliği) ve checklist hücreleri yerel arka uçta aynı motorlarla
+   hesaplanır (POST /api/read-model/cp/computed). İstemci 30k satır için karar
+   motoru ve checklist sütun geçişi çalıştırmaz; değerleri _id ile uygular.
+   - Kişisel bağlam (tercih, kural, checklist cevabı) önce sunucuya yazılır
+     (flushPending + checklist senkronu), sonra yalnız değişen satırlar istenir.
+   - Kaydedilmemiş/yolda CP satır düzenlemesi varken sunucu bu değerleri bilmez:
+     bugünkü istemci yolu kullanılır (satır bazlı düzenleme alt PR 3).
+   - Herhangi bir hata oturumu eski yola döndürür.
+   Anahtar: window.BL_READ_MODEL_CP_COMPUTED (boolean) ya da kullanıcı tercihi
+   'bl.cpComputed.v1'='1' (Siparişler okuma modeliyle aynı kalıp); varsayılan kapalı. */
+const CP_COMPUTED_STORAGE_KEY='bl.cpComputed.v1';
+const cpComputed={disabled:false,applied:null,job:null,enabled:null,answersOnly:false,optimistic:null};
+function cpComputedEnabled(){
+  if(cpComputed.disabled)return false;
+  if(typeof window.BL_READ_MODEL_CP_COMPUTED==='boolean')return window.BL_READ_MODEL_CP_COMPUTED;
+  if(cpComputed.enabled===null){
+    try{cpComputed.enabled=(window.BLStorage||localStorage).getItem(CP_COMPUTED_STORAGE_KEY)==='1';}catch(_){cpComputed.enabled=false;}
+  }
+  return cpComputed.enabled;
+}
+function cpComputedEligible(){
+  if(!cpComputedEnabled()||!state.cp||!Array.isArray(state.cp.rows))return false;
+  return !(state.cpDirty&&state.cpDirty.size>0)&&pendingOverrideWriteCount()===0;
+}
+const CP_COMPUTED_HIDDEN=['_checklistStatus','_checklistParts','_checklistElements','_checklistTasks'];
+function applyCpComputedRow(row,tuple){
+  row['Priority']=tuple[1];
+  row._calculationStatus=tuple[2];
+  row._trackingTags=Array.isArray(tuple[3])?tuple[3]:[];
+  row._priorityTags=Array.isArray(tuple[4])?tuple[4]:[];
+  row._actionPriorityReasons=Array.isArray(tuple[5])?tuple[5]:[];
+  row._actionPrioritySignals=Array.isArray(tuple[6])?tuple[6]:[];
+  if(tuple[7]!=null){
+    // Revizyon rozeti temel satırı okur: gölge satır istemcideki gibi kurulur, önceliği sunucudan gelir.
+    const base=BLRevision.baselineRow(row,shadow=>{const cf=computeFlags(shadow);shadow['Ex→Retail']=cf.exr==null?'':cf.exr;shadow['LT']=cf.lt==null?'':cf.lt;});
+    if(base)base['Priority']=tuple[7];
+    row._unifiedBasePriority=tuple[7];
+  }else row._unifiedBasePriority=row['Priority'];
+  // Checklist cevap anahtarı → satır eşlemesi (iyimser yerel güncelleme); export'a girmez.
+  Object.defineProperty(row,'_cpOrderKey',{value:String(tuple[9]||''),enumerable:false,configurable:true,writable:true});
+  Object.defineProperty(row,'_cpOptionId',{value:String(tuple[10]||''),enumerable:false,configurable:true,writable:true});
+  const checklist=tuple[8];
+  if(!checklist)return;
+  for(const [key,value] of Object.entries(checklist.cells||{}))row[key]=value;
+  const hidden={_checklistStatus:checklist.status||{},_checklistParts:checklist.parts||{},_checklistElements:checklist.elements||{},_checklistTasks:checklist.tasks||{}};
+  for(const key of CP_COMPUTED_HIDDEN)Object.defineProperty(row,key,{value:hidden[key],enumerable:false,configurable:true,writable:true});
+  Object.defineProperty(row,'_checklistSingleSet',{value:checklist.single===true,enumerable:false,configurable:true});
+}
+// Ekranda görünen hesaplanmış değerlerin imzası (iyimser değer ile sunucu sonucu aynı mı?).
+function cpComputedSignature(row){
+  const cells=Object.keys(row).filter(key=>key.startsWith('__checklist__')).sort().map(key=>[key,row[key]]);
+  return JSON.stringify([row['Priority'],row._calculationStatus,row._trackingTags,row._priorityTags,row._actionPriorityReasons,row._unifiedBasePriority,
+    cells,row._checklistStatus||null,row._checklistParts||null,row._checklistElements||null,row._checklistTasks||null,row._checklistSingleSet===true]);
+}
+function applyCpComputedColumns(rows,columns,since){
+  const delta=Boolean(since&&columns.delta);
+  const byId=new Map();
+  for(const row of rows){const id=row&&row._id!=null?String(row._id):'';if(id)byId.set(id,row);}
+  let applied=0,unchanged=0;
+  const optimistic=cpComputed.optimistic;
+  for(const tuple of Array.isArray(columns.rows)?columns.rows:[]){
+    const row=byId.get(String(tuple&&tuple[0]));
+    if(!row)continue;
+    applyCpComputedRow(row,tuple);applied+=1;
+    if(optimistic&&optimistic.get(row)===cpComputedSignature(row))unchanged+=1;
+  }
+  cpComputed.optimistic=null;
+  // Tam yanıt bütün satırları kapsamalı: projeksiyonlar ayrıştıysa eski yol hesaplar.
+  if(!delta&&applied!==byId.size)throw Object.assign(new Error('CP_COMPUTED_ROW_MISMATCH'),{code:'CP_COMPUTED_ROW_MISMATCH',fallback:'job'});
+  applyCpComputedColumns.lastUnchanged=unchanged;
+  return applied;
+}
+/* Checklist cevabı değişince yalnız o sipariş/opsiyonun satırları aynı motorla hemen
+   (yerelde) hesaplanır; arka uç sonucu yetkili kaynaktır ve aynı değerleri üzerine yazar.
+   Opsiyon kapsamlı onayın diğer siparişlere yayılması gibi satırlar arası etkiler arka
+   uç sonucuyla gelir. */
+const CP_COMPUTED_OPTIMISTIC_MAX_ROWS=400;
+function cpComputedOptimisticAnswer(){
+  const sync=window.BLChecklistSupplierSync,assistant=window.BLCpAssistant;
+  if(!cpComputedEligible()||!cpComputed.applied||cpComputed.applied.rows!==state.cp?.rows)return false;
+  if(typeof sync?.refreshColumns!=='function'||typeof assistant?.computeDecisionsForRows!=='function')return false;
+  const heads=new Set();
+  for(const key of Object.keys(sync._state?.pendingAnswers||{})){const cut=key.lastIndexOf('::');if(cut>0)heads.add(key.slice(0,cut));}
+  if(!heads.size)return false;
+  const rows=state.cp.rows.filter(row=>heads.has(row._cpOrderKey)||(row._cpOptionId&&heads.has('@option:'+row._cpOptionId)));
+  if(!rows.length||rows.length>CP_COMPUTED_OPTIMISTIC_MAX_ROWS)return false;
+  const decision=assistant.computeDecisionsForRows(rows);
+  for(const row of rows)applyUnifiedPriorityAnalysis(row,decision&&decision.byRow?decision.byRow.get(row):null);
+  sync.refreshColumns({render:false,decision,rows});
+  cpComputed.optimistic=new Map(rows.map(row=>[row,cpComputedSignature(row)]));
+  if(currentActiveTab()==='cp')renderCP();
+  return true;
+}
+/* Sunucu kişisel bağlamı kendi kayıtlarından okur. Cevap dışı bağlam (kural, ayar,
+   tercih) değiştiyse bekleyen tercih yazımı önce gider. Henüz sunucuya ulaşmamış
+   checklist cevapları (supplier-sync kuyruğu) beklenmez: istekle birlikte geçici
+   katman olarak gider; böylece hücre senkron turunu beklemeden güncellenir. */
+const CP_COMPUTED_OVERLAY_MAX_BYTES=512*1024;
+function cpComputedAnswerOverlay(){
+  const sync=window.BLChecklistSupplierSync,answers=window.BLCpAssistant?._state?.answers||{};
+  const keys=Object.keys(sync?._state?.pendingAnswers||{});
+  if(!keys.length)return null;
+  const overlay={};
+  for(const key of keys)overlay[key]=Object.prototype.hasOwnProperty.call(answers,key)?answers[key]:null;
+  return overlay;
+}
+async function prepareCpComputedContext(){
+  // Aynı olayın diğer dinleyicileri (supplier-sync cevap günlüğü) önce çalışır.
+  await Promise.resolve();
+  const answersOnly=cpComputed.answersOnly;cpComputed.answersOnly=true;
+  if(!answersOnly){
+    try{await window.BLStorage?.flushPending?.();}
+    catch(error){
+      // Tercih yazılamadı: sunucu eski kural/ayarla hesaplardı. Başarısız yazım kuyruğa geri
+      // dönmediği için sonraki boş yazım da başarılı görünür; oturum eski (yerel) yola geçer.
+      cpComputed.answersOnly=false;
+      throw Object.assign(new Error('CP_COMPUTED_PREFERENCES_UNSAVED'),{code:'CP_COMPUTED_PREFERENCES_UNSAVED',cause:error});
+    }
+  }
+  let overlay=cpComputedAnswerOverlay();
+  if(overlay&&JSON.stringify(overlay).length>CP_COMPUTED_OVERLAY_MAX_BYTES){
+    // Toplu değişiklik: katman yerine senkron beklenir.
+    try{await window.BLChecklistSupplierSync?.syncAnswerChanges?.();}catch(_){}
+    overlay=cpComputedAnswerOverlay();
+    if(overlay&&JSON.stringify(overlay).length>CP_COMPUTED_OVERLAY_MAX_BYTES)throw Object.assign(new Error('CP_COMPUTED_ANSWERS_PENDING'),{code:'CP_COMPUTED_ANSWERS_PENDING',fallback:'job'});
+  }
+  return overlay;
+}
+function scheduleCpComputedColumns(rows,revision,contextRevision,day){
+  const running=cpComputed.job,lang=appLang==='en'?'en':'tr';
+  if(running&&running.rows===rows&&running.revision===revision&&running.contextRevision===contextRevision&&running.day===day&&running.lang===lang)return running.promise;
+  const assistant=window.BLCpAssistant;
+  const job={rows,revision,contextRevision,day,lang};cpComputed.job=job;
+  const isCurrent=()=>cpComputed.job===job&&state.cp?.rows===rows&&revision===_unifiedPriorityTableRevision.cp
+    &&contextRevision===assistant.decisionContextRevision()&&day===new Date().toDateString()&&lang===(appLang==='en'?'en':'tr')&&cpComputedEligible();
+  const started=performance.now();
+  job.promise=(async()=>{
+    const overlay=await prepareCpComputedContext();
+    const prepared=performance.now();
+    if(!isCurrent())return false;
+    const applied=cpComputed.applied;
+    const since=applied&&applied.rows===rows&&applied.lang===lang?applied.token:null;
+    const response=await fetch('/api/read-model/cp/computed',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({version:1,lang,...(since?{since}:{}),...(overlay?{answers:overlay}:{})})});
+    const payload=await response.json().catch(()=>null);
+    if(!response.ok||!payload||payload.ok!==true||!payload.columns)throw Object.assign(new Error(payload?.code||('HTTP '+response.status)),{code:payload?.code||'CP_COMPUTED_HTTP'});
+    if(!isCurrent()){window.BLPerf?.mark?.('CP_COMPUTED_STALE_RESULT',{ms:Math.round(performance.now()-started),server:payload.timing||null});return false;}
+    const fetched=performance.now();
+    cpComputed.applied=null;
+    const count=applyCpComputedColumns(rows,payload.columns,since);
+    cpComputed.applied={rows,token:payload.columns.token,lang};
+    _unifiedPriorityCache.cp={rows,dataRevision:revision,contextRevision,day,source:'read-model'};
+    _cpPriorityIndex=null;_cpPriorityIndexRevision+=1;
+    try{window.dispatchEvent(new CustomEvent('bl:cp-priority-index-changed'));}catch(_){}
+    window.BLModulePreparation?.setStatus('cp','ready');
+    window.BLPerf?.mark?.('CP_PRIORITY_READY',{rows:rows.length,mode:'read-model',delta:Boolean(payload.columns.delta),changed:count,ms:Math.round(performance.now()-started),
+      phases:{prepareMs:Math.round(prepared-started),fetchMs:Math.round(fetched-prepared),applyMs:Math.round(performance.now()-fetched)},server:payload.timing||null});
+    // Değişmeyen delta (ör. senkron sonrası aynı bağlam) ya da iyimser değerle aynı sonuç tabloyu yeniden çizmez.
+    if(!(payload.columns.delta&&(count===0||applyCpComputedColumns.lastUnchanged===count))){renderCP();scheduleOverviewRender('cp-priority-ready');}
+    return true;
+  })().catch(error=>{
+    if(cpComputed.job!==job)return false;
+    cpComputed.applied=null;
+    // Satır uyuşmazlığı ve gönderilemeyen cevap yalnız bu hesabı eski yola alır; diğer hatalar oturumu.
+    if(error?.fallback!=='job'){cpComputed.disabled=true;console.warn('CP hesaplanmış sütunları arka uçtan alınamadı; eski yol kullanılıyor:',error?.code||error);}
+    cpComputed.job=null;
+    return scheduleUnifiedPrioritiesForTable('cp',{legacy:true});
+  }).finally(()=>{if(cpComputed.job===job)cpComputed.job=null;});
+  return job.promise;
+}
+/* checklist-supplier-sync.js için sağlayıcı: anahtar açıkken checklist hücreleri
+   sunucudan gelir; modül yalnız sütun tanımlarını kurar ve yenilemeyi buraya iletir. */
+window.BLCpComputedColumns={
+  active:()=>cpComputedEligible(),
+  covers:rows=>cpComputedEligible()&&Boolean(cpComputed.applied)&&cpComputed.applied.rows===rows&&rows===state.cp?.rows,
+  refresh:()=>{if(!cpComputedEligible())return Promise.resolve(false);_unifiedPriorityCache.cp=null;return scheduleUnifiedPrioritiesForTable('cp');},
+  schedule:(rows,revision,contextRevision,day)=>scheduleCpComputedColumns(rows,revision,contextRevision,day),
+  // Eski yol satırlara kendi sonucunu yazdı: sonraki arka uç isteği tam (token geçersiz) ve tercih yazımını bekler.
+  legacyApplied:()=>{cpComputed.applied=null;cpComputed.answersOnly=false;},
+  isEnabled:()=>cpComputedEnabled(),
+  setEnabled(value){
+    try{(window.BLStorage||localStorage).setItem(CP_COMPUTED_STORAGE_KEY,value?'1':'0');}catch(_){}
+    cpComputed.enabled=Boolean(value);cpComputed.disabled=false;cpComputed.applied=null;
+    invalidateUnifiedPriorityDecisions('cp-computed-toggle',['cp']);if(state.cp)renderCP();return cpComputedEnabled();
+  },
+  status:()=>({enabled:cpComputedEnabled(),disabled:cpComputed.disabled,applied:Boolean(cpComputed.applied),token:cpComputed.applied?.token||null}),
+  /* Kişisel karar bağlamı değişti. Cevap dışı bağlamda sonraki istek tercih yazımını bekler.
+     Arka uç sütunları uygulanmışsa cevabı değişen satırlar yerelde hemen (supplier-sync cevap
+     günlüğünden sonra), bütünü arka uçtan gelince çizilir; true → çağıran çizmez. */
+  onDecisionContextChanged(event){
+    const reason=event?.detail?.reason;
+    if(reason!=='checklist-answer')cpComputed.answersOnly=false;
+    if(!(cpComputedEligible()&&cpComputed.applied?.rows===state.cp?.rows))return false;
+    if(reason==='checklist-answer')queueMicrotask(()=>{try{cpComputedOptimisticAnswer();}catch(error){console.warn('CP iyimser checklist güncellemesi:',error);}});
+    void scheduleUnifiedPrioritiesForTable('cp');
+    return true;
+  },
+};
+document.addEventListener('bl:language-changed',()=>{
+  // Checklist hücre etiketleri dile bağlıdır.
+  if(cpComputed.applied&&cpComputedEligible()){_unifiedPriorityCache.cp=null;if(currentActiveTab()==='cp')renderCP();else void scheduleUnifiedPrioritiesForTable('cp');}
+});
 function renderCorePageLoadingState(tableKey,message){
   const empty=document.getElementById(tableKey==='cp'?'cpEmpty':'ordersEmpty');
   const content=document.getElementById(tableKey==='cp'?'cpContent':'ordersContent');
@@ -1447,6 +1660,9 @@ function ensureUnifiedPrioritiesForTable(tableKey){
   if(tableKey==='orders')return true;
   const cached=_unifiedPriorityCache[tableKey],assistant=window.BLCpAssistant;
   if(cached&&cached.rows===state[tableKey]?.rows&&cached.dataRevision===_unifiedPriorityTableRevision[tableKey]&&cached.contextRevision===assistant?.decisionContextRevision()&&cached.day===new Date().toDateString())return true;
+  // Arka uç sütunları bu satırlara uygulanmışsa tablo son değerlerle çizilir; yeni sonuç
+  // (bağlam/gün/dil değişimi) gelince yeniden çizilir. Yükleme ekranına dönülmez.
+  if(assistant?.computeDecisionsForRowsAsync&&window.BLCpComputedColumns?.covers?.(state.cp?.rows)){void scheduleUnifiedPrioritiesForTable(tableKey);return true;}
   if(assistant?.computeDecisionsForRowsAsync){showUnifiedPriorityLoading(tableKey);void scheduleUnifiedPrioritiesForTable(tableKey);return false;}
   showUnifiedPriorityLoading(tableKey);
   if(!_unifiedPriorityFeaturePromise){
@@ -1459,9 +1675,10 @@ function ensureUnifiedPrioritiesForTable(tableKey){
   }
   return false;
 }
-window.addEventListener('bl:cp-decision-context-changed',()=>{
+window.addEventListener('bl:cp-decision-context-changed',event=>{
   invalidateUnifiedPriorityDecisions('personal-decision-context',['cp']);
-  if(currentActiveTab()==='cp')renderCP();
+  // CP hesaplanmış sütunlar (#1078) etkinse yenilemeyi kendisi yapar (eski değerlerle ara çizim yok).
+  if(!window.BLCpComputedColumns?.onDecisionContextChanged?.(event)&&currentActiveTab()==='cp')renderCP();
   scheduleOverviewRender('personal-decision-context');
   // Siparişler önceliği checklist cevabına değil kural/katalog anahtarına bağlıdır;
   // anahtar bir sonraki okumada yeniden kurulur, yalnız gerçekten değiştiyse hesaplanır.
