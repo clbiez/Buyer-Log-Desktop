@@ -71,6 +71,17 @@ test('dates per subfield (set / clear), note columns per id, order-level seed is
   assert.equal(save([item(5202,{delType:'Uçak'},{delType:'Gemi'})]).updated,1);
 });
 
+test('an all no-op save (value already stored by another writer) still returns the stored current values',()=>{
+  save([item(5401,{delType:'Uçak',notes:{Notes:'ortak',NotesHtml:''}},{delType:'',notes:{Notes:'',NotesHtml:''}})]);
+  const before=db.loadOverrides()._revisions.orders;
+  // İkinci yazar aynı değerleri (başka base ile) ister: hiçbir şey yazılmaz.
+  const out=save([item(5401,{delType:'Uçak'},{delType:'Gemi'})]);
+  assert.equal(out.updated,0);assert.equal(out.applied.length,1);assert.equal(out.applied[0].noop,true);
+  assert.equal(db.loadOverrides()._revisions.orders,before,'yazma yok, revizyon ilerlemez');
+  assert.ok(out.applied[0].current,'no-op onayı da kayıtlı değerleri döner (istemci bekleyen düzenlemenin base\'ini buna taşır)');
+  assert.equal(out.applied[0].current.delType,'Uçak');assert.equal(out.applied[0].current.notes.Notes,'ortak');
+});
+
 test('notes keep server-side authorship; HTML stays paired with its text',()=>{
   const r=save([item(5301,{notes:{Notes:'metin',NotesHtml:'<b>metin</b>',EkNot:'',EkNotHtml:''}},{notes:{Notes:'',NotesHtml:'',EkNot:'',EkNotHtml:''}})],{id:'n1',name:'Not Yazarı'});
   assert.equal(r.updated,1);

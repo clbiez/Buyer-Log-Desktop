@@ -15451,6 +15451,8 @@ function flushPendingOverrideWrites(){
 async function settleOverrideWrites(){
   flushPendingOverrideWrites();
   try{ await overrideMutationsSettled(); }catch(_){ }
+  // #1078: CP satır kaydı ayrı sırada gider; yenileme / toplu işlem onu da bekler.
+  try{ await window.BLCpRowSave?.settled?.(); }catch(_){ }
 }
 const _pendingDateOverrideKeys = new Map();
 function saveDateOverrides(row, touchedKeys){
@@ -15733,7 +15735,7 @@ function cpRowSaveSend(row,orderCode,patch,units){
     const entries=cpRowSave.units.get(key);if(!entries)return;
     for(const {unit,dirty} of sent){
       const entry=entries.get(unit);if(!entry)continue;
-      if(entry.dirty<=dirty)entries.delete(unit);else if(acked)entry.base=cpRowUnitValue(current,unit);
+      if(entry.dirty<=dirty)entries.delete(unit);else if(acked&&cpRowIsObject(current))entry.base=cpRowUnitValue(current,unit);
     }
     if(!entries.size)cpRowSave.units.delete(key);
   };
@@ -15748,7 +15750,10 @@ function cpRowSaveSend(row,orderCode,patch,units){
     try{data=await fetchJSON('/api/overrides/rows',{method:'POST',headers,body:JSON.stringify({items:[item]})});}
     catch(err){settle(null,false);throw err;}
     if(data.revisions&&typeof data.revisions==='object')Object.entries(data.revisions).forEach(([name,value])=>{if(Number.isInteger(Number(value)))state.storeRevisions[name]=Number(value);});
-    for(const applied of data.applied||[]){cpRowApplyStored(key,applied.current,units);settle(applied.current,true);}
+    // Onay: yalnız yeni düzenlemesi beklemeyen birimler haritaya yazılır; bekleyen yerel değer (sonraki kaydın
+    // gövdesi buradan kurulur, ör. not sütunları) eski onaylı değerle ezilmez.
+    const settledUnits=()=>{const entries=cpRowSave.units.get(key);return sent.filter(({unit,dirty})=>!entries?.get(unit)||entries.get(unit).dirty<=dirty).map(({unit})=>unit);};
+    for(const applied of data.applied||[]){cpRowApplyStored(key,applied.current,settledUnits());settle(applied.current,true);}
     let reload=false;
     for(const conflict of data.conflicts||[]){
       cpRowApplyStored(key,conflict.current,units);settle(conflict.current,false);

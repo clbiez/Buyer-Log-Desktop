@@ -1117,7 +1117,11 @@ function patchOrderOverrideRows(items, options = null) {
       applied.push({orderCode,key:String(key),patch:write,noop:!changes.length});
     }
     const writes=applied.filter(item=>!item.noop);
-    if(!writes.length)return {applied,conflicts,revision:current,revisions:{orders:current,suppFob:Number(ov._revisions.suppFob)||0},updated:0};
+    if(!writes.length){
+      // Hiçbir şey yazılmadı (değer zaten kayıtlı): istemci bekleyen düzenlemenin base'ini yine kayıtlı değere taşır.
+      for(const item of applied)item.current=currentOrderLineValues(ov,item.orderCode,item.key);
+      return {applied,conflicts,revision:current,revisions:{orders:current,suppFob:Number(ov._revisions.suppFob)||0},updated:0};
+    }
     for(const item of writes)applyOrderPatch(ov,item.orderCode,item.patch,options);
     ov._revisions.orders=current+1;
     let saved;

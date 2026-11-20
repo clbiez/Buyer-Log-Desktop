@@ -212,3 +212,44 @@ test('hooks: markDirty captures before maps change; pushUndo / history / date sa
   assert.match(extractFunction(SOURCE,'cpComputedEligible'),/return !\(typeof cpUnsavedRowEdits==='function'\?cpUnsavedRowEdits\(\):Boolean\(state\.cpDirty&&state\.cpDirty\.size>0\)\)&&pendingOverrideWriteCount\(\)===0;/);
   assert.match(fs.readFileSync(path.join(__dirname,'..','public','user-storage.js'),'utf8'),/'bl\.cpRowSave\.'/);
 });
+
+test('ack of an earlier save does not overwrite a newer pending local value (note column sent again would be the old one)',async()=>{
+  const r=row();let release;const gate=new Promise(resolve=>{release=resolve;});
+  const server={noteColumns:{},dates:{}};
+  const reply=ack(server);
+  const {api,ctx,requests}=load({rows:[r],responses:[async body=>{await gate;return reply(body);},reply]});
+  edit(ctx,api,r,{nc_a:'first'});
+  const p1=api.cpRowSavePlan(r,123,fullBody(r,ctx));
+  const first=api.cpRowSaveSend(r,123,p1.patch,p1.units);
+  edit(ctx,api,r,{nc_a:'second'});            // ilk kayıt yoldayken; harita 'second'
+  release();await first;                      // ilk kaydın onayı
+  assert.equal(ctx.state.overrides.noteColumnValues[key].nc_a,'second','bekleyen yerel değer ezilmedi');
+  const p2=api.cpRowSavePlan(r,123,fullBody(r,ctx));
+  assert.equal(p2.patch.noteColumns.nc_a,'second');
+  await api.cpRowSaveSend(r,123,p2.patch,p2.units);
+  assert.equal(requests[1].body.items[0].base.noteColumns.nc_a,'first','base onaylanan sunucu değerine taşındı');
+  assert.equal(server.noteColumns.nc_a,'second');
+});
+
+test('an ack without current values (old server / no-op) keeps the pending base instead of emptying it',async()=>{
+  const r=row();let release;const gate=new Promise(resolve=>{release=resolve;});
+  const bare=body=>({applied:body.items.map(item=>({orderCode:item.orderCode,key,noop:true})),conflicts:[]});
+  const {api,ctx,requests}=load({rows:[r],responses:[async body=>{await gate;return bare(body);},bare]});
+  ctx.state.overrides.delmap[key]='Gemi';
+  edit(ctx,api,r,{'Del. Type':'Uçak'});const p1=api.cpRowSavePlan(r,123,fullBody(r,ctx));
+  const first=api.cpRowSaveSend(r,123,p1.patch,p1.units);
+  edit(ctx,api,r,{'Del. Type':'Kamyon'});const p2=api.cpRowSavePlan(r,123,fullBody(r,ctx));
+  release();await first;
+  await api.cpRowSaveSend(r,123,p2.patch,p2.units);
+  assert.equal(requests[1].body.items[0].base.delType,'Gemi','current yoksa base boşaltılmaz');
+});
+
+test('settleOverrideWrites also waits for row saves (refresh / bulk operations never race a flushed row save)',async()=>{
+  let release;const rowQueue=new Promise(resolve=>{release=resolve;});
+  const ctx=vm.createContext({window:{BLCpRowSave:{settled:()=>rowQueue}},flushPendingOverrideWrites(){ctx.flushed=true;},overrideMutationsSettled:async()=>{},Promise});
+  vm.runInContext(extractFunction(SOURCE,'settleOverrideWrites')+';globalThis.settle=settleOverrideWrites;',ctx);
+  let done=false;const waiting=ctx.settle().then(()=>{done=true;});
+  await new Promise(resolve=>setTimeout(resolve,20));
+  assert.equal(ctx.flushed,true);assert.equal(done,false,'satır kaydı bitmeden bariyer açılmadı');
+  release();await waiting;assert.equal(done,true);
+});
