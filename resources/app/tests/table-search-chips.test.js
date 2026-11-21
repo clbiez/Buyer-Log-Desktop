@@ -51,6 +51,10 @@ test('kip kaldırma yalnız o terimi siler, anlamı korur', () => {
 test('öneri: alan adı, sezon ve ay değerleri satır sayısıyla', () => {
   assert.deepEqual(Suggest.currentSegment('S7; MB=M', 9), { start: 4, end: 9, text: 'MB=M' });
   assert.deepEqual(Suggest.currentSegment('A, !EX', 6), { start: 4, end: 6, text: 'EX' });
+  // Aramanın başındaki terim (ayraç yok) 0'dan başlar.
+  assert.deepEqual(Suggest.currentSegment('MB=', 3), { start: 0, end: 3, text: 'MB=' });
+  assert.deepEqual(Suggest.currentSegment('!SEZON=', 7), { start: 1, end: 7, text: 'SEZON=' });
+  assert.deepEqual(Suggest.currentSegment('(A; MB=', 7), { start: 4, end: 7, text: 'MB=' });
   assert.deepEqual(Suggest.suggestions('ex', [], false).map(item => item.insert), ['EXF=']);
   assert.deepEqual(Suggest.suggestions('se', [], true).map(item => item.insert), ['SEASON=']);
   assert.deepEqual(Suggest.suggestions('m', [], false), [], 'tek harf öneri açmaz');
@@ -76,6 +80,12 @@ test('uygulama kipleri ve önerileri bağlar; CP jetonları ilk kısayola kadar 
   assert.match(APP, /chipsApi\?\.bind\(group,group\.dataset\.searchInput\)/);
   const cp = APP.match(/function cpSearchHaystack\(r\)\{[^]*?\n\}/)[0];
   assert.match(cp, /globalThis\.BLTableSearchPeriods\?\.used/);
+  // Merch takvimi değişince satır önbellekleri de geçersizleşir (CP ve Koleksiyon).
+  const cpTokens = APP.match(/function cpSearchFieldTokens\(r\)\{[^]*?\n\}/)[0];
+  assert.match(cpTokens, /cached\.revision===revision/);
+  assert.match(cpTokens, /merchCalendarRevision/);
+  const kol = APP.match(/function kolSearchHaystack\(row\)\{[^]*?\n\}/)[0];
+  assert.match(kol, /merchCalendarRevision/);
   assert.match(APP, /window\.BLTableSearch\.fieldTokenTexts=inputId=>/);
   const order = ['table-search-periods.js', 'app-main.js', 'table-search-feedback.js', 'table-search-chips.js', 'table-search-suggest.js'].map(name => INDEX.indexOf(name));
   assert.ok(order.every((value, index) => value > 0 && (index === 0 || value > order[index - 1])), JSON.stringify(order));

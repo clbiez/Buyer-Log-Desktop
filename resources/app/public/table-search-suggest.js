@@ -30,7 +30,9 @@
   function currentSegment(value,caret){
     const text=String(value==null?'':value),end=caret==null?text.length:caret;
     const before=text.slice(0,end);
-    const start=Math.max(before.lastIndexOf(', ')+2,before.lastIndexOf('; ')+2,before.lastIndexOf('(')+1,0);
+    // Ayraç yoksa (aramanın ilk terimi) başlangıç 0'dır; -1+2 ilk harfi kesmesin.
+    const after=(token,width)=>{const at=before.lastIndexOf(token);return at<0?0:at+width;};
+    const start=Math.max(after(', ',2),after('; ',2),after('(',1));
     const raw=before.slice(start);
     const marker=/^[!/]/.test(raw)?raw[0]:'';
     return {start:start+marker.length,end,text:raw.slice(marker.length)};

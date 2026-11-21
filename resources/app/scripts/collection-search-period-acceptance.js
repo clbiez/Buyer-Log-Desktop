@@ -63,6 +63,14 @@ const ROWS=[
   const exf=await search('EXF=M4');
   assert.deepEqual(exf.sort(),[5,6],'Ex-Factory month uses the date');
   console.log('PASS MB / EXF period shortcuts filter Collection rows');
+  // 2b) Merch takvimi değişince önbelleğe alınmış satırlar yeni dönemle eşleşir (sayfa yenilemeden).
+  await page.evaluate(()=>window.BLDateDimension.setMerchCalendar({weeks:[{year:2027,week:15,month:3,monthWeek:5,start:'2027-04-12'}]}));
+  // 12.04.2027 takvimde ay 3'e eşlenir; takvimde olmayan 08.03 ve 19.04 takvim ayına düşer.
+  assert.deepEqual((await search('EXF=M3')).sort(),[4,5],'calendar maps 2027-04-12 to business month 3');
+  assert.deepEqual((await search('EXF=M4')).sort(),[6],'cached row 5 no longer matches its old month');
+  await page.evaluate(()=>window.BLDateDimension.clearMerchCalendar());
+  assert.deepEqual((await search('EXF=M4')).sort(),[5,6],'clearing the calendar restores the default periods');
+  console.log('PASS merch calendar change refreshes cached search periods');
   // 3) Sezon alanı ve yıllı dönem.
   assert.deepEqual((await search('SEZON=S7; MB=2027M4-2027M5')).sort(),[2,3]);
   assert.deepEqual((await search('SEASON=W7')).sort(),[5,6,7]);
@@ -96,6 +104,14 @@ const ROWS=[
   assert.equal(await page.locator('#tableSearchSuggestList').count(),0);
   await page.keyboard.press('Escape');
   console.log('PASS shortcut suggestions list table values and apply with the keyboard');
+  // 6b) Aramanın ilk terimi olarak yazılan kısayol da öneri açar.
+  await search('');
+  await page.locator('#kolSearch').click();
+  await page.keyboard.type('EXF=');
+  await page.waitForSelector('#tableSearchSuggestList [role="option"]');
+  assert.ok((await page.locator('#tableSearchSuggestList [role="option"]').allInnerTexts()).some(t=>/^EXF=M4/.test(t.trim())));
+  await page.keyboard.press('Escape');
+  console.log('PASS suggestions open for a shortcut at the start of the search');
   // 7) CP/Siparişler haystack'i aynı kısayolları anlar.
   const cp=await page.evaluate(()=>{
     const rows=[{'PLM ID':'CP-1','Season':'S7','Ex-factory':'15.03.2027','In-Store (Model Budget)':'2027-05-10'},{'PLM ID':'CP-2','Season':'W7','Ex-factory':'2027-08-16'}];

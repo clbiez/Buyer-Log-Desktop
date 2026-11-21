@@ -10191,11 +10191,13 @@ function cpSearchFieldTokens(r){
   }
   const K=_cpSearchFieldKeys;
   const mbDate=cpSearchFieldValue(r,K.inStore),exFactory=cpSearchFieldValue(r,K.exFactory),retail=cpSearchFieldValue(r,K.retail),season=cpSearchFieldValue(r,K.season);
+  // Merch takvimi yüklenince/değişince hafta-ay ataması değişir; önbellek takvim sürümüne bağlıdır.
+  const revision=globalThis.BLDateDimension?.merchCalendarRevision?.()??0;
   const cached=_cpSearchFieldCache.get(r);
-  if(cached&&cached.mbDate===mbDate&&cached.exFactory===exFactory&&cached.retail===retail&&cached.season===season)return cached.value;
+  if(cached&&cached.revision===revision&&cached.mbDate===mbDate&&cached.exFactory===exFactory&&cached.retail===retail&&cached.season===season)return cached.value;
   // Excel seri no, gg.aa.yyyy, ISO: ekrandaki tarih ayrıştırıcısıyla aynı.
   const value=globalThis.BLTableSearchPeriods.rowTokens({mbDate:coerceDateLoose(mbDate),exFactory:coerceDateLoose(exFactory),retail:coerceDateLoose(retail),season});
-  _cpSearchFieldCache.set(r,{mbDate,exFactory,retail,season,value});
+  _cpSearchFieldCache.set(r,{revision,mbDate,exFactory,retail,season,value});
   return value;
 }
 const CP_MIRROR_GROUPS=[
@@ -29707,7 +29709,8 @@ function kolMonthSearchText(value){
 }
 function kolSearchHaystack(row){
   if(!row||typeof row!=='object')return '';
-  const signature=[...KOL_SEARCH_KEYS,...KOL_SEARCH_PERIOD_KEYS].map(key=>String(kolEffectiveValue(row,key)??'')).join('\u0001');
+  // Takvim sürümü imzadadır: merch takvimi değişince dönem jetonları yeniden hesaplanır.
+  const signature=[...KOL_SEARCH_KEYS,...KOL_SEARCH_PERIOD_KEYS].map(key=>String(kolEffectiveValue(row,key)??'')).join('\u0001')+'\u0001'+(globalThis.BLDateDimension?.merchCalendarRevision?.()??0);
   const cached=_kolSearchCache.get(row);
   if(cached?.signature===signature)return cached.value;
   const text=KOL_SEARCH_KEYS.map(key=>key==='inStoreMonth'?kolMonthSearchText(kolEffectiveValue(row,key)):norm(kolEffectiveValue(row,key)).toLowerCase()).join(' ');
