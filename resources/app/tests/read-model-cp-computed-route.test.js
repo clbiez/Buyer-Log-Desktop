@@ -55,7 +55,8 @@ function harness({day='2026-11-20',realGuard=false}={}){
     return {value:{buffer:built.buffer,uncompressedBytes:built.buffer.length*10},manifest:{activeGeneration:state.generation,modules:{cp:{checksum:built.checksum}}},assertResponse(){},release(){}};
   };
   const loadContext=createContextLoader({
-    preferences:{load:()=>({entries:{'lcw.cp.checklist.v1':{value:JSON.stringify(state.own)},
+    // 2026-11-21: yerleşik kural yok; eski tanımlar kullanıcı kuralı olarak kurulur.
+    preferences:{load:()=>({entries:{...Object.fromEntries(Object.entries(require('./fixtures/legacy-builtin-rules').storeEntries()).map(([k,v])=>[k,{value:v}])),'lcw.cp.checklist.v1':{value:JSON.stringify(state.own)},
       'lcw.cp.assistant.v1':{value:JSON.stringify({settings:{targetType:'retail'},checklistSettings:{enabled:true}})}}})},
     roleEntries:()=>({}),managedRules:()=>null,transitRules:()=>[{id:'t',seasons:[],countries:[],delType:'',days:30}],plmPayload:()=>null,
     checklistPayload:()=>({answers:{},tombstones:{}}),revision:()=>state.contextRevision,merge:(own,shared)=>Merge.merge(own,shared)});

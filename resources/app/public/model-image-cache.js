@@ -54,7 +54,14 @@
     const base=canonicalImageKey(modelId,colourCode);
     if(!base||!map||typeof map!=='object')return [];
     const prefix=`${base}|name:`;
-    const keys=index?(index.get(base)||[]):Object.keys(map).filter(key=>key.startsWith(prefix));
+    /* Yayımlanmış kayıt haritası (setRegistryMap/patchRegistryMap) kendi adlı
+       indeksini taşır. CP/Orders satır döngüleri aynı haritayı indekssiz
+       sorar; tam tarama her eşleşmeyen satırda TÜM anahtarları dolaşıyordu
+       (satır × anahtar). PLM görsel senkronundan sonra ana iş parçacığı bu
+       yüzden saniyelerce/dakikalarca donuyordu. Yayımlanmamış haritalar
+       durumsuz kalır ve yerinde değişiklikleri görmeye devam eder. */
+    const named=index||(map===registryMap?registryNamed:null);
+    const keys=named?(named.get(base)||[]):Object.keys(map).filter(key=>key.startsWith(prefix));
     return keys.filter(key=>Object.prototype.hasOwnProperty.call(map,key)).map(key=>({key,ref:clean(map[key])}));
   };
   const resolveImageRef=(map,modelId,colourCode,colourName='',index)=>{

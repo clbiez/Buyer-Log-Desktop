@@ -13,6 +13,8 @@
   const MONTHS_EN=['January','February','March','April','May','June','July','August','September','October','November','December'];
   const pad2=value=>String(value).padStart(2,'0');
   let merch={active:false,weeks:[],byDate:new Map(),byWeek:new Map(),meta:null};
+  // Takvim her yüklenip temizlendiğinde artar; dönem önbellekleri bununla geçersizleşir.
+  let calendarRevision=0;
 
   function dateParts(year,month,day){
     const d=new Date(Number(year),Number(month)-1,Number(day));
@@ -89,6 +91,7 @@
     return {year,week,month,monthWeek,start,end};
   }
   function setMerchCalendar(payload){
+    calendarRevision++;
     const input=payload&&payload.calendar?payload.calendar:payload;
     const weeks=Array.isArray(input&&input.weeks)?input.weeks.map(normalizeWeek).filter(Boolean):[];
     if(!weeks.length){merch=emptyMerch();return false;}
@@ -114,7 +117,8 @@
     };
     return true;
   }
-  function clearMerchCalendar(){merch=emptyMerch();}
+  function clearMerchCalendar(){calendarRevision++;merch=emptyMerch();}
+  function merchCalendarRevision(){return calendarRevision;}
   function merchCalendarMeta(){
     return merch.active?{active:true,weeks:merch.weeks.length,...(merch.meta||{})}:{active:false,weeks:0};
   }
@@ -274,7 +278,7 @@
 
   return {
     MONTHS_TR,MONTHS_EN,parseDate,toISO,mondayOf,sundayOf,isoWeekYear,isoWeekNumber,mondayFromIsoWeek,mondayFromBusinessWeek,
-    setMerchCalendar,clearMerchCalendar,hasMerchCalendar,merchCalendarMeta,
+    setMerchCalendar,clearMerchCalendar,hasMerchCalendar,merchCalendarMeta,merchCalendarRevision,
     describe,businessWeekRange,businessMonthRange,previousBusinessMonthRange,weekPair,
     bucketKey,bucketLabel,monthLabel,weekLabel
   };
