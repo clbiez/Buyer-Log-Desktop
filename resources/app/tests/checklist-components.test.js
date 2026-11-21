@@ -184,6 +184,8 @@ test('test report preview requires an explicit valid set part before linking evi
   b.ctx.BLTestReports=require('../public/test-report-engine');
   vm.runInContext(fs.readFileSync(path.join(ROOT,'public/test-report-import.js'),'utf8'),b.ctx);
   const api=b.ctx.BLTestReportImport;
+  // 2026-11-21: yerleşik 'tests' sorusu yok; kullanıcının kendi checklist kuralı katalogdadır.
+  b.assistant._state.rules.push(require('../public/cp-rules-engine').normalizeRule({id:'tests',kind:'checklist',name:'Tests',conditions:[{field:'@qty',operator:'gt',value:0}]}));
   api._ui.decision={byRow:new Map([[row,analysis]])};
   api._ui.store={links:{},reports:{}};
   const entry={report:{talepNo:'R-SET-1',kararlar:[]},candidates:[{key:analysis.orderKey,row}],chosen:analysis.orderKey,itemId:'tests',include:true};

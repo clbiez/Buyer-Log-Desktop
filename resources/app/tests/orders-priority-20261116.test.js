@@ -24,9 +24,14 @@ test.after(()=>OD.setPriorityCatalog(null));
 
 test('checklist kuralları Siparişler’de tetiklenmez; CP’de tetiklenir',()=>{
   const r=row();
-  const cp=Rules.evaluateOrder(CP.analyzeOrder(r,{}),{rules:Rules.DEFAULT_RULES,answers:{},checklistEnabled:true});
+  // 2026-11-21: yerleşik kural yok; checklist'e bağlı kural kullanıcı tarafından yazılır.
+  const checklistRules=[
+    Rules.normalizeRule({id:'confirm',kind:'checklist',name:'Teyit',conditions:[{field:'@daysToLoad',operator:'lte',value:30}]}),
+    Rules.normalizeRule({id:'confirm-open',kind:'priority',target:'ACTION_THIS_WEEK',name:'Teyit yok',conditions:[{field:'@checklist:confirm',operator:'in',value:['open','rejected']}]}),
+  ];
+  const cp=Rules.evaluateOrder(CP.analyzeOrder(r,{}),{rules:checklistRules,answers:{},checklistEnabled:true});
   assert.equal(cp.priority,'ACTION_THIS_WEEK','CP: cevapsız checklist aksiyon üretir');
-  assert.deepEqual(Engine.createSession({rules:Rules.DEFAULT_RULES}).evaluateRow(r),{priority:'ON_TRACK',trackingTags:[],priorityTags:[]},'Siparişler: checklist yok');
+  assert.deepEqual(Engine.createSession({rules:checklistRules}).evaluateRow(r),{priority:'ON_TRACK',trackingTags:[],priorityTags:[]},'Siparişler: checklist yok');
 });
 
 test('checklist’ten bağımsız kurallar ve takip etiketleri Siparişler’de CP ile aynıdır',()=>{
