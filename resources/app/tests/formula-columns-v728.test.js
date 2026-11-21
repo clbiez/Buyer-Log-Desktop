@@ -352,11 +352,12 @@ test('kaydedince tablo yeni sütuna kaydırılır (46+ sütunlu tabloda sağda k
    yayılmalı ve formül betikleri güncel önbellek etiketiyle yüklenmeli — ama
    beklenen değer package.json'dan OKUNUYOR. */
 const CURRENT_VERSION = JSON.parse(read('package.json')).version;
-const CURRENT_DISPLAY_VERSION = CURRENT_VERSION.replace(/^7\.0\./, '7.');
+const { toDisplayVersion } = require('../server/lib/app-version.js');
+const CURRENT_DISPLAY_VERSION = toDisplayVersion(CURRENT_VERSION);
 
 test('sürüm numarası tek canonical runtime kaynaktan yayılır', () => {
   assert.match(CURRENT_VERSION, /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/);
-  assert.match(CURRENT_DISPLAY_VERSION, /^7\.\d+$/);
+  assert.match(CURRENT_DISPLAY_VERSION, /^\d+\.\d{2,}$/);
   assert.ok(indexHtml.includes('Version __BL_DISPLAY_VERSION__'), 'statik HTML display placeholder taşımalı');
   assert.ok(indexHtml.includes('buyerlog.bootRetry.v__BL_DISPLAY_VERSION__'), 'boot anahtarı runtime display sürümünden türemeli');
   assert.ok(indexHtml.includes('?v=__BL_ASSET_VERSION__'), 'asset cache canonical runtime sürümünden türemeli');
