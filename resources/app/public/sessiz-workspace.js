@@ -182,7 +182,7 @@ const critical=it=>!!(it.priority&&(it.priority.rank===0||it.priority.code==='CR
 const urgent=it=>!!(it.priority&&it.priority.risk);
 
 /* ------------------------------------------------------------------ 3) DURUM */
-const S={open:false,view:load('view','cp'),filters:{},opt:null,report:!!load('report',false),collapsed:new Set(load('collapsed',[])),search:'',limit:300,sort:null,
+const S={open:false,view:load('view','cp'),filters:{},opt:null,report:!!load('report',false),collapsed:new Set(load('collapsed',[])),search:'',limit:120,sort:null,
   sel:null,detail:null,overview:load('overview',null),edit:false,drawer:false,send:null,dl:7,bd:'country',exc:'all'};
 let host=null,clockTimer=0,langObserver=null;
 
@@ -203,7 +203,8 @@ function render(){
   host.querySelector('.slMain').classList.remove('blMotionEnter');void host.offsetWidth;host.querySelector('.slMain').classList.add('blMotionEnter');
   paint();
 }
-function renderAll(){if(!host)return;host.innerHTML=shell();render();}
+function renderAll(){if(!host)return;host.innerHTML=shell();host.querySelector('#slMain').innerHTML=preparing();paint();
+  root.requestAnimationFrame(()=>setTimeout(()=>{if(host)render();},0));}
 
 /* ------------------------------------------------------------------ 5) CP TRACKER */
 function visibleFields(){return FIELDS;}
@@ -248,7 +249,7 @@ function cpHtml(){
   if(s.cpState?.()!=='ready'){return '<p class="slLead">'+esc(L('CP verisi yükleniyor…','Loading CP data…'))+'</p>';}
   const all=s.cpRows?.()||[];if(!all.length)return '<p class="slLead">'+esc(L('Yetkili kapsamda CP satırı yok.','No CP rows in your scope.'))+'</p>';
   if(dataPending())return preparing();
-  const list=sortItems(cpItems());const cols=columnsForView();const tpl=cols.map(colWidth).join(' ');
+  const list=sortItems(cpItems());host._list=list;const cols=columnsForView();const tpl=cols.map(colWidth).join(' ');
   const facetVals=key=>[...new Set(itemsFromRows(all).map(it=>it.facets[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
   let h='<div class="slTitle"><h2>CP Tracker</h2><p>'+esc(L('Ex-Factory haftasına göre · salt okunur · düzenleme klasik görünümde','By Ex-Factory week · read-only · edit in classic view'))+'</p></div>';
   h+='<div class="slTb"><div class="slTbL">'+FACETS.map(([k,l])=>'<button type="button" data-sl-opt="'+k+'" aria-pressed="'+(S.opt===k)+'"'+(S.filters[k]?' class="on"':'')+'>'+esc(pick(l))+' <b>'+esc(S.filters[k]||L('hepsi','all'))+'</b></button>').join('')+
@@ -342,10 +343,10 @@ function paint(){
   if(!host)return;host.querySelectorAll('.slCell.sel,.slCell.act').forEach(e=>e.classList.remove('sel','act'));
   const cells=selCells();cells.flat().forEach(el=>el&&el.classList.add('sel'));if(S.sel){const a=rowEls()[S.sel.r1]?.children[S.sel.c1];if(a)a.classList.add('act');}
   const foot=host.querySelector('#slFoot'),meta=host.querySelector('#slMeta');const s=src();
-  if(meta){const items=S.view==='cp'?cpItems():allItems();meta.textContent=fmt(items.length)+' '+L('kayıt','records')+' · '+fmt(items.reduce((a,x)=>a+(x.ordered||0),0))+' '+L('adet','pcs')+(s?.cpState?.()!=='ready'?' · '+L('yükleniyor','loading'):'');}
+  if(meta){const items=S.view==='cp'?(host._list||[]):allItems();meta.textContent=fmt(items.length)+' '+L('kayıt','records')+' · '+fmt(items.reduce((a,x)=>a+(x.ordered||0),0))+' '+L('adet','pcs')+(s?.cpState?.()!=='ready'?' · '+L('yükleniyor','loading'):'');}
   if(!foot)return;const flat=cells.flat().filter(Boolean);let stat='';
   if(flat.length){const sm=summarize(flat.map(cellPlain).filter(t=>!/^\d{2}\.\d{2}/.test(t)));stat=fmt(flat.length)+' '+L('hücre','cells')+(sm.count>1?' · '+L('toplam','sum')+' '+fmt(sm.sum)+' · '+L('ortalama','average')+' '+dec(sm.avg,sm.avg%1?2:0)+' · '+L('sayı','count')+' '+sm.count:'');}
-  foot.innerHTML=(S.view==='cp'?'<span>'+fmt(rowEls().length)+' / '+fmt(cpItems().length)+' '+esc(L('satır','rows'))+'</span>':'<span>'+esc(L('Genel Bakış','Overview'))+'</span>')+(stat?'<span class="slStat">'+esc(stat)+'</span>':'')+'<span class="slSp"></span><span class="slKeys">'+esc(L('tık seç · Shift genişlet · Enter detay · Ctrl C kopyala · salt okunur','click select · Shift extend · Enter detail · Ctrl C copy · read-only'))+'</span>';
+  foot.innerHTML=(S.view==='cp'?'<span>'+fmt(rowEls().length)+' / '+fmt((host._list||[]).length)+' '+esc(L('satır','rows'))+'</span>':'<span>'+esc(L('Genel Bakış','Overview'))+'</span>')+(stat?'<span class="slStat">'+esc(stat)+'</span>':'')+'<span class="slSp"></span><span class="slKeys">'+esc(L('tık seç · Shift genişlet · Enter detay · Ctrl C kopyala · salt okunur','click select · Shift extend · Enter detail · Ctrl C copy · read-only'))+'</span>';
 }
 function toast(text){try{if(typeof root.showToast==='function')root.showToast(text);}catch(_){}}
 function copy(text,msg){try{root.navigator.clipboard.writeText(text).then(()=>toast(msg),()=>toast(L('Kopyalanamadı','Copy failed')));}catch(_){toast(L('Kopyalanamadı','Copy failed'));}}
@@ -359,7 +360,7 @@ function onClick(e){
   if(d.sl==='classic-overview'){close();src()?.openClassic?.('overview');return;}
   if(d.sl==='open-classic'){const idx=+d.index;close();src()?.openClassic?.('cp',idx);return;}
   if(d.slOpt){S.opt=S.opt===d.slOpt?null:d.slOpt;render();return;}
-  if(d.slSet!=null){if(d.slSet)S.filters[S.opt]=d.slSet;else delete S.filters[S.opt];S.opt=null;S.limit=300;S.sel=null;render();return;}
+  if(d.slSet!=null){if(d.slSet)S.filters[S.opt]=d.slSet;else delete S.filters[S.opt];S.opt=null;S.limit=120;S.sel=null;render();return;}
   if(d.sl==='clear'){S.filters={};S.opt=null;S.sel=null;render();return;}
   if(d.sl==='table'||d.sl==='report'){S.report=d.sl==='report';save('report',S.report);S.sel=null;render();return;}
   if(d.sl==='more'){S.limit+=300;render();return;}
@@ -409,7 +410,7 @@ function onKey(e){
 }
 function onCopy(e){if(!S.open||!S.sel)return;const t=doc.activeElement;if(t&&/INPUT|TEXTAREA/.test(t.tagName))return;
   e.clipboardData.setData('text/plain',selCells().map(l=>l.map(cellPlain).join('\t')).join('\n'));e.preventDefault();toast(L('Seçim kopyalandı','Selection copied'));}
-function onInput(e){if(e.target.id!=='slSearch')return;clearTimeout(searchTimer);searchTimer=setTimeout(()=>{S.search=e.target.value;S.limit=300;S.sel=null;const pos=e.target.selectionStart;render();},160);}
+function onInput(e){if(e.target.id!=='slSearch')return;clearTimeout(searchTimer);searchTimer=setTimeout(()=>{S.search=e.target.value;S.limit=120;S.sel=null;const pos=e.target.selectionStart;render();},160);}
 
 /* ------------------------------------------------------------------ 9) AÇ / KAPAT */
 async function ensureData(){const s=src();if(!s)return;try{if(s.cpState?.()!=='ready'){paint();await s.ensureCp?.();}}catch(_){}if(S.open)render();}

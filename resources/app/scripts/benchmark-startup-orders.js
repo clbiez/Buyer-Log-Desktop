@@ -163,11 +163,11 @@ async function measureSessiz(context){
     await page.waitForFunction(()=>Number.isFinite(window.__startupProbe?.startupCompleteMs),null,{timeout:rendererTimeoutMs,polling:100});
     if(!(await page.evaluate(()=>!!document.getElementById('railSessizBtn'))))return {available:false};
     const run=()=>page.evaluate(()=>new Promise((resolve,reject)=>{
-      const longBefore=window.__startupProbe.longTasks.length,started=performance.now();
-      const done=()=>{const tasks=window.__startupProbe.longTasks.slice(longBefore);resolve({ms:performance.now()-started,domRows:document.querySelectorAll('#blSessiz .slRow').length,longTaskTotalMs:tasks.reduce((s,t)=>s+t.duration,0),maxLongTaskMs:Math.max(0,...tasks.map(t=>t.duration))});};
+      const longBefore=window.__startupProbe.longTasks.length,started=performance.now();let shellMs=null;
+      const done=()=>{const tasks=window.__startupProbe.longTasks.slice(longBefore);resolve({shellMs,ms:performance.now()-started,domRows:document.querySelectorAll('#blSessiz .slRow').length,longTaskTotalMs:tasks.reduce((s,t)=>s+t.duration,0),maxLongTaskMs:Math.max(0,...tasks.map(t=>t.duration))});};
       window.BLSessiz?.close?.();
       document.getElementById('railSessizBtn').click();
-      const tick=()=>{const host=document.getElementById('blSessiz');
+      const tick=()=>{const host=document.getElementById('blSessiz');if(host&&shellMs==null)shellMs=performance.now()-started;
         if(host&&!host.querySelector('[data-sl-nav="cp"][aria-current]'))host.querySelector('[data-sl-nav="cp"]')?.click();
         if(document.querySelector('#blSessiz .slRow'))return requestAnimationFrame(()=>requestAnimationFrame(done));
         if(performance.now()-started>180000)return reject(Error('Sessiz open timed out'));setTimeout(tick,10);};tick();}));
@@ -190,7 +190,7 @@ async function measureSameTab(context){
       const result=await page.evaluate(([module,selector])=>new Promise((resolve,reject)=>{
         const started=performance.now();switchTab(module);
         const tick=()=>{
-          if(document.body.dataset.activeTab===module&&document.querySelector(selector))return requestAnimationFrame(()=>requestAnimationFrame(()=>resolve({ms:performance.now()-started,rows:module==='cp'?state.cp?.rows.length:module==='orders'?state.orders?.rows.length:kolRows.length})));
+          if(document.body.dataset.activeTab===module&&document.querySelector(selector))return requestAnimationFrame(()=>requestAnimationFrame(()=>resolve({shellMs,ms:performance.now()-started,rows:module==='cp'?state.cp?.rows.length:module==='orders'?state.orders?.rows.length:kolRows.length})));
           if(performance.now()-started>180000)return reject(Error(module+' switch timed out'));setTimeout(tick,20);
         };tick();
       }),[module,selector]);
