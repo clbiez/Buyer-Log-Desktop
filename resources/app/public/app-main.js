@@ -23393,9 +23393,10 @@ function shipLicenseSourceIndex(){
   // Kural listesi yoksa "kural eksik" yazmak yurt içi fiyatı yanlışlıkla boşaltırdı.
   if(!Array.isArray(pricingRules)||!pricingRules.length)return null;
   /* Dizin her tablo çiziminde yeniden kurulursa 30k CP satırında çizim başına
-     ~15 ms ekliyordu (L1 ölçümü). Kaynak dizi kimliği ve uzunluğu değişmedikçe
-     önceki dizin kullanılır; satır nesneleri canlı okunduğu için yerinde alan
-     değişiklikleri (Licensor, License…) yine yansır. */
+     ~15 ms ekliyordu (L1 ölçümü). Dizin satır nesnesini değil KONUMUNU tutar;
+     okumada o konumdaki GÜNCEL satır alınır ve anahtarı doğrulanır. Böylece
+     yerinde değiştirilen satır (kolRows[i]=…) bayat kalmaz; anahtar tutmazsa
+     (sıralama, silme, ekleme) dizin bir kez yeniden kurulur. */
   const cpRows=state.cp&&Array.isArray(state.cp.rows)?state.cp.rows:[];
   const kol=Array.isArray(kolRows)?kolRows:[];
   const cached=shipLicenseSourceIndex.cache;
@@ -23404,20 +23405,41 @@ function shipLicenseSourceIndex(){
   shipLicenseSourceIndex.cache={cpRows,cpLength:cpRows.length,kol,kolLength:kol.length,index};
   return index;
 }
+function shipCpSourceKey(row){
+  return row?shipOrderCodeKey(window.BLCanonicalFields.canonicalValue(row,'cp','orderCode')):'';
+}
 function buildShipLicenseSourceIndex(cpRows,kol){
   const collection=new Map();
-  kol.forEach(row=>{
+  kol.forEach((row,position)=>{
     const key=row&&collectionShippingModelKey(row);
     if(!key)return;
-    const current=collection.get(key);
-    if(!current||(current.modelGroupRole!=='parent'&&row.modelGroupRole==='parent'))collection.set(key,row);
+    const current=collection.has(key)?kol[collection.get(key)]:null;
+    if(!current||(current.modelGroupRole!=='parent'&&row.modelGroupRole==='parent'))collection.set(key,position);
   });
   const cp=new Map();
-  cpRows.forEach(row=>{
-    const code=shipOrderCodeKey(window.BLCanonicalFields.canonicalValue(row,'cp','orderCode'));
-    if(code&&!cp.has(code))cp.set(code,row);
+  cpRows.forEach((row,position)=>{
+    const code=shipCpSourceKey(row);
+    if(code&&!cp.has(code))cp.set(code,position);
   });
-  return {collection,cp};
+  const lookup=(map,rows,keyOf,key)=>{
+    if(!map.has(key))return null;
+    const row=rows[map.get(key)];
+    if(row&&keyOf(row)===key)return row;
+    return undefined; // konum bayat: dizin yeniden kurulmalı
+  };
+  return {
+    collection:{get:key=>lookup(collection,kol,row=>collectionShippingModelKey(row),key)},
+    cp:{get:key=>lookup(cp,cpRows,shipCpSourceKey,key)},
+  };
+}
+function shipLicenseSourceRow(index,kind,key){
+  let row=index[kind].get(key);
+  if(row===undefined){
+    shipLicenseSourceIndex.cache=null;
+    const fresh=shipLicenseSourceIndex();
+    row=fresh?fresh[kind].get(key):null;
+  }
+  return row||null;
 }
 function shipOrderCodeKey(value){
   const text=String(value==null?'':value).replace(/\./g,'').trim();
@@ -23428,8 +23450,12 @@ function shipOrderCodeKey(value){
 function shipLicenseFieldsFromSource(shipRow,index){
   if(!shipRow||!index)return null;
   if(shipRow._sourceModule==='collection'){
-    const source=index.collection.get(shipRow._modelKey);
+    const source=shipLicenseSourceRow(index,'collection',shipRow._modelKey);
     if(!source)return null;
+    // CP yoluyla aynı kural: boş/belirsiz Licensor DTR sayılmaz; çözülene kadar
+    // satırdaki mevcut lisans alanları korunur.
+    const effective=typeof kolGroupSummaryEffectiveLandedRow==='function'?kolGroupSummaryEffectiveLandedRow(source):source;
+    if(!norm(kolPricingRuleContext(effective).licensor)||kolLicensorUnresolvedState(effective))return null;
     const mapped=mapCollectionRowToShip(source);
     if(!mapped)return null;
     const out={};
@@ -23437,7 +23463,7 @@ function shipLicenseFieldsFromSource(shipRow,index){
     return out;
   }
   const code=shipOrderCodeKey(shipRow.orderCode);
-  return code?shipLicenseFieldsFromCpRow(index.cp.get(code)):null;
+  return code?shipLicenseFieldsFromCpRow(shipLicenseSourceRow(index,'cp',code)):null;
 }
 // Değişen satırları bellekte günceller ve sunucuya yazar; değişmeyen satıra yazmaz.
 function refreshShipLicenseFromSources(rows=shipRows){

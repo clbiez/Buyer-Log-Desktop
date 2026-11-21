@@ -36,9 +36,11 @@ function context({ rules = [RULE], cpRows = [], kolRows = [], mapCollectionRowTo
       turknorm(rule.licensor) === turknorm(licensor) && turknorm(rule.license) === turknorm(license)
       && Business.pricingRuleCommissionForCountry(rule, country) != null) || null,
     patchShipRow: (id, patch) => patches.push({ id, patch }),
+    kolPricingRuleContext: row => ({ licensor: norm(row && row.licensor) }),
+    kolLicensorUnresolvedState: row => (row && row.licensorUnresolved ? { status: 'ambiguous' } : null),
   };
   vm.createContext(ctx);
-  vm.runInContext([keysDecl[0], ...['shipLicenseFieldsFromCpRow', 'shipLicenseSourceIndex', 'buildShipLicenseSourceIndex', 'shipOrderCodeKey', 'shipLicenseFieldsFromSource', 'refreshShipLicenseFromSources'].map(pick)].join('\n'), ctx);
+  vm.runInContext([keysDecl[0], ...['shipLicenseFieldsFromCpRow', 'shipLicenseSourceIndex', 'shipCpSourceKey', 'buildShipLicenseSourceIndex', 'shipLicenseSourceRow', 'shipOrderCodeKey', 'shipLicenseFieldsFromSource', 'refreshShipLicenseFromSources'].map(pick)].join('\n'), ctx);
   return { ctx, patches };
 }
 const cpRow = (extra = {}) => ({ 'Order Code': '1.359.318', Licensor: 'NBA', License: 'NBA', Country: 'Bangladesh', Season: 'S7', OPD: '2026-07-09', ...extra });
@@ -87,7 +89,7 @@ test('DTR siparişte eski lisans alanları temizlenir', () => {
 });
 
 test('eski Koleksiyon satırı Koleksiyondaki modelin güncel lisansını alır', () => {
-  const kol = { plmId: 'P9', modelKod: 'NBA SHORT 2', modelGroupRole: 'parent' };
+  const kol = { plmId: 'P9', modelKod: 'NBA SHORT 2', modelGroupRole: 'parent', licensor: 'NBA' };
   const { ctx } = context({ kolRows: [kol], mapCollectionRowToShip: () => ({ trRoyaltyPct: 35, trHologramCost: 0.09, ydRoyaltyPct: 37.5, ydHologramCost: 0.09 }) });
   const row = { _shipId: 's2', _sourceModule: 'collection', _modelKey: 'PLM:P9', fob: 4.33 };
   ctx.refreshShipLicenseFromSources([row]);
@@ -114,9 +116,44 @@ test('kaynak dizin her çizimde yeniden kurulmaz; satır eklenince yenilenir', (
   cpRows.push(cpRow({ 'Order Code': '1.354.546' }));
   const second = ctx.shipLicenseSourceIndex();
   assert.notEqual(second, first);
-  assert.ok(second.cp.has('1354546'));
+  assert.ok(second.cp.get('1354546'));
   const row = { _shipId: 's3', orderCode: 1354546 };
   assert.equal(ctx.refreshShipLicenseFromSources([row]), 1);
+});
+
+test('boş veya belirsiz Licensor olan Koleksiyon modelinde mevcut lisans alanları korunur', () => {
+  for (const extra of [{ licensor: '' }, { licensor: '', licensorUnresolved: true }]) {
+    const kol = { plmId: 'P9', modelKod: 'NBA SHORT 2', modelGroupRole: 'parent', ...extra };
+    const { ctx, patches } = context({ kolRows: [kol], mapCollectionRowToShip: () => ({}) });
+    const row = { _shipId: 's2', _sourceModule: 'collection', _modelKey: 'PLM:P9', ydRoyaltyPct: 37.5, _trLicenseRuleMissing: true };
+    assert.equal(ctx.refreshShipLicenseFromSources([row]), 0);
+    assert.equal(row.ydRoyaltyPct, 37.5);
+    assert.equal(row._trLicenseRuleMissing, true);
+    assert.equal(patches.length, 0);
+  }
+});
+
+test('yerinde değiştirilen kaynak satır (kolRows[i]=…, cp.rows[i]=…) önbellekten bayat okunmaz', () => {
+  const kolRows = [{ plmId: 'P9', modelKod: 'NBA SHORT 2', modelGroupRole: 'parent', licensor: 'NBA', v: 1 }];
+  const cpRows = [cpRow()];
+  const { ctx } = context({ kolRows, cpRows, mapCollectionRowToShip: source => ({ ydRoyaltyPct: source.v === 1 ? 30 : 40 }) });
+  const kolShip = { _shipId: 's2', _sourceModule: 'collection', _modelKey: 'PLM:P9' };
+  ctx.refreshShipLicenseFromSources([kolShip]);
+  assert.equal(kolShip.ydRoyaltyPct, 30);
+  kolRows[0] = { ...kolRows[0], v: 2 };
+  ctx.refreshShipLicenseFromSources([kolShip]);
+  assert.equal(kolShip.ydRoyaltyPct, 40, 'aynı anahtarlı yeni nesne okunur');
+  const cpShip = { _shipId: 's1', orderCode: 1359318 };
+  ctx.refreshShipLicenseFromSources([cpShip]);
+  assert.equal(cpShip.ydRoyaltyPct, 37.5);
+  cpRows[0] = cpRow({ Licensor: 'DTR' });
+  ctx.refreshShipLicenseFromSources([cpShip]);
+  assert.equal(cpShip.ydRoyaltyPct, null);
+  cpRows[0] = cpRow({ 'Order Code': '7.777.777' });
+  const gone = { _shipId: 's8', orderCode: 1359318, ydRoyaltyPct: 37.5 };
+  assert.equal(ctx.refreshShipLicenseFromSources([gone]), 0, 'kaynağı kalkan satıra dokunulmaz');
+  assert.equal(gone.ydRoyaltyPct, 37.5);
+  assert.equal(ctx.refreshShipLicenseFromSources([{ _shipId: 's9', orderCode: 7777777 }]), 1, 'bayat konum görülünce dizin yeniden kurulur; yeni anahtar bulunur');
 });
 
 test('Nakliye tablosu çizilmeden önce lisans alanları kaynaktan tazelenir', () => {
