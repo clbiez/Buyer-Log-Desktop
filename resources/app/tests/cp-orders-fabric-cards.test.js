@@ -89,3 +89,41 @@ test('CP/Orders fabric code never writes the PLM fabric text back to the row',()
   assert.doesNotMatch(shared,/\[CP_FABRIC_PLM_KEY\]\s*=(?!=)/);
   assert.doesNotMatch(shared,/\['Fabric \(PLM\)'\]\s*=(?!=)/);
 });
+
+test('set models filter fabric card details per part (A/B/C) and keep legacy any-part keys',()=>{
+  const vm=require('node:vm');
+  const engine=require('../public/fabric-cards-engine');
+  const section=APP.slice(APP.indexOf('const fabricFacetValueCache=new Map();'),APP.indexOf('function fabricCardDetailsForRaw('));
+  const match=APP.slice(APP.indexOf('function fabricCardDetailsMatch('),APP.indexOf('function kolFabricDetailMatches('));
+  const context={window:{BLFabricCards:engine},KOL_FABRIC_DETAIL_KEYS:['category','type','yarn','weight','composition','finish','sustainability']};
+  vm.runInNewContext(section+'\n'+match+'\nthis.facet={fabricFacetKeyInfo,fabricFacetScopedKey,fabricCardDetailsMatch};',context);
+  const facet=context.facet;
+  assert.deepEqual({...facet.fabricFacetKeyInfo('B:composition')},{part:'B',field:'composition'});
+  assert.deepEqual({...facet.fabricFacetKeyInfo('composition')},{part:'',field:'composition'});
+  assert.equal(facet.fabricFacetKeyInfo('B:unknown'),null);
+  assert.equal(facet.fabricFacetKeyInfo('b:composition'),null);
+  assert.equal(facet.fabricFacetScopedKey('C','yarn'),'C:yarn');
+  const set=[{part:'A',category:'Örme',composition:'100% Pamuk'},
+             {part:'B',category:'Dokuma',composition:'65% Pamuk 35% Poliester'}];
+  const single=[{part:'',category:'Örme',composition:'65% Pamuk 35% Poliester'}];
+  // Legacy key: any fabric of the set.
+  assert.equal(facet.fabricCardDetailsMatch(set,{category:new Set(['Woven'])}),true);
+  // Part scope: only that part's fabric.
+  assert.equal(facet.fabricCardDetailsMatch(set,{'A:category':new Set(['Knit'])}),true);
+  assert.equal(facet.fabricCardDetailsMatch(set,{'A:category':new Set(['Woven'])}),false);
+  assert.equal(facet.fabricCardDetailsMatch(set,{'A:category':new Set(['Knit']),'B:composition':new Set(['65% Cotton 35% Poliester'])}),true);
+  // Fields inside one part are evaluated on the same fabric.
+  assert.equal(facet.fabricCardDetailsMatch(set,{'B:category':new Set(['Woven']),'B:composition':new Set(['100% Cotton'])}),false);
+  // Part filters exclude single-fabric models that have no such part.
+  assert.equal(facet.fabricCardDetailsMatch(single,{'A:category':new Set(['Knit'])}),false);
+  // omitKey drops only the scoped key it names.
+  assert.equal(facet.fabricCardDetailsMatch(set,{'A:category':new Set(['Woven'])},'A:category'),true);
+  assert.equal(facet.fabricCardDetailsMatch(set,{'A:category':new Set(['Woven'])},'category'),false);
+  // Details carry the part label; tabs and lazy groups exist in the shared section.
+  assert.match(APP,/details=\{part:part\.label\|\|''\}/);
+  assert.match(APP,/seg\.className='kolFabricPartSeg'/);
+  assert.match(APP,/partLabels:\(\)=>new Set\(universe\.flat\(\)\.map\(details=>details\.part\)\.filter\(Boolean\)\)/);
+  assert.match(APP,/partLabels:\(\)=>new Set\(kolRows\.filter\(passesKolColFilters\)/);
+  assert.match(APP,/const chosen=group\?\[\.\.\.group\.querySelectorAll\('input\[data-fabric-facet\]'\)\]/);
+  assert.match(CSS,/\.kolFabricFacetGroup\[hidden\]\{display:none\}/);
+});

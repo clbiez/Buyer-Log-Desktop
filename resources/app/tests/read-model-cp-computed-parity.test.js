@@ -170,7 +170,8 @@ function decisionContext(userId,keys,{salt=0}={}){
   const shared=answersFor(keys.slice(Math.ceil(keys.length/2)),salt+3);
   return {
     userId,
-    personal:{'lcw.cp.rules.priority.v1':JSON.stringify({version:1,rules:[rule],deletedRuleIds:[],priorityCatalog:catalog}),
+    // 2026-11-21: yerleşik kural yok; eski tanımlar kullanıcı kuralı olarak kurulur.
+    personal:{...require('./fixtures/legacy-builtin-rules').storeEntries({extraPriority:[rule],priorityCatalog:catalog}),
       'lcw.cp.checklist.v1':JSON.stringify(own)},
     roleDefaults:{'lcw.cp.assistant.v1':{value:JSON.stringify({settings:{targetType:'retail'},checklistSettings:{enabled:true}})}},
     shared:{answers:shared,tombstones:{}},
