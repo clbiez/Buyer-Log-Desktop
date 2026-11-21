@@ -7,8 +7,8 @@
     "en": "Collection colour options, stage forecast and CP redraw fixes"
   },
   "summary": {
-    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: FiyatMaliyetKontrolRapor modelinden landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder.",
-    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: it analyses landed, Integral and forecast gap from the FiyatMaliyetKontrolRapor model with quantity weighting."
+    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: FiyatMaliyetKontrolRapor modelinden landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur.",
+    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: it analyses landed, Integral and forecast gap from the FiyatMaliyetKontrolRapor model with quantity weighting. Starting directly on CP now completes the startup screen without an error."
   },
   "changes": [
     {
@@ -147,6 +147,81 @@
         "caption": {
           "tr": "Anonim demo satırlarla: KPI şeridi adet ağırlıklı toplamları, tablo üretici ülke kırılımını ve aykırı sayısını gösterir.",
           "en": "With anonymous demo rows: the KPI strip shows quantity-weighted totals, the table shows the origin-country breakdown and outlier counts."
+        }
+      }
+    },
+    {
+      "id": "auth-permission-snapshot-cache",
+      "type": "fix",
+      "module": {
+        "tr": "Sunucu · Koleksiyon izinleri · Fiyat Talepleri",
+        "en": "Server · Collection permissions · Quotations"
+      },
+      "title": {
+        "tr": "Yetki hesabı her istekte izin belgesini yeniden işlemez; büyük veride sunucu donmaları azaldı",
+        "en": "Authorization no longer reprocesses the permission file on every request; fewer server stalls on large data"
+      },
+      "body": {
+        "tr": "Koleksiyon izinleri, kullanıcı profili ve Fiyat Talebi listesi her istekte (talep başına iki kez) izin belgesini diskten okuyup yeniden işliyordu; büyük veride sunucu saniyelerce yanıt vermiyordu. İşlenmiş izinler artık belge değişene kadar yeniden kullanılır. Yetki verme, geri alma, Shared Hub eşitlemesi veya dosyanın dışarıdan değişmesi bir sonraki istekte hemen etkili olur; sonuçlar öncekiyle aynıdır.",
+        "en": "Collection permissions, the user profile and the Quotation list re-read and reprocessed the permission file on every request (twice per quotation); on large data the server stopped responding for seconds. Processed permissions are now reused until the file changes. Granting, revoking, Shared Hub sync or an external change to the file takes effect on the very next request; results are unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Yalnız sunucu tarafı performans düzeltmesi; ekranda değişen bir öğe yok.",
+          "en": "Server-side performance fix only; nothing changes on screen."
+        }
+      }
+    },
+    {
+      "id": "model-snapshot-save-cooperative",
+      "type": "fix",
+      "module": {
+        "tr": "Yenileme · Yerel depolama",
+        "en": "Refresh · Local storage"
+      },
+      "title": {
+        "tr": "Yenilemenin sonunda sunucu artık saniyelerce yanıtsız kalmaz",
+        "en": "The server no longer stops responding for seconds at the end of a refresh"
+      },
+      "body": {
+        "tr": "Yenileme bittiğinde model verisi diske kaydedilirken tüm veri tek seferde metne çevriliyordu. Büyük veride bu adım sunucuyu saniyelerce (kullanıcı verisinde daha da uzun) meşgul ediyor, diğer ekranlar ve istekler bu sürede beklemede kalıyordu. Kayıt artık küçük parçalar hâlinde hazırlanır ve arada diğer isteklere yanıt verilir. Kaydedilen dosya, sağlama değeri ve yedek/doğrulama adımları aynıdır.",
+        "en": "When a refresh finished, the model data was turned into text in a single step while it was saved to disk. With large data this kept the server busy for seconds (even longer on user data), and other screens and requests had to wait. The save is now prepared in small parts and other requests are answered in between. The saved file, its checksum and the backup/verification steps are unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; yalnız yenileme sonunda sunucunun yanıt vermediği bekleme kalkar.",
+          "en": "There is no change on screen; only the wait while the server did not respond at the end of a refresh is gone."
+        }
+      }
+    },
+    {
+      "id": "cp-startup-primary-ready",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker · Açılış",
+        "en": "CP Tracker · Startup"
+      },
+      "title": {
+        "tr": "CP ile açılışta başlangıç ekranı hazır olur",
+        "en": "Startup screen completes when Buyer Log opens on CP"
+      },
+      "body": {
+        "tr": "Buyer Log doğrudan CP ekranıyla açıldığında CP satırları çizilse de açılış kartı \"Başlangıç ekranı hazırlanamadı\" uyarısıyla bitiyordu. Hesaplanmış sütunlar ısınırken CP'nin karar motoru istenmiyordu. Artık satırlar \"Hesaplanıyor…\" hücreleriyle görünür görünmez açılış ekranı hazır sayılır; öncelik ve checklist değerleri arka planda hesaplanıp tabloya gelir.",
+        "en": "When Buyer Log opened directly on the CP screen, the startup card ended with \"The initial screen could not be prepared\" even though the CP rows were drawn. While the calculated columns were warming up, CP's decision engine was never requested. The startup screen is now ready as soon as the rows appear with \"Calculating…\" cells; priority and checklist values are calculated in the background and fill in the table."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-startup-primary-ready.png",
+        "alt": {
+          "tr": "Demo veriyle CP ile açılış: açılış kartında Buyer Log hazır, başlangıç verisi, ekran ve kullanıcı bilgileri tamamlandı",
+          "en": "Opening on CP with demo data: the startup card shows Buyer Log ready with startup data, screen and user details complete"
+        },
+        "caption": {
+          "tr": "Demo veride /?module=cp açılışı \"Başlangıç ekranı hazır\" ile tamamlanır; uyarı gösterilmez.",
+          "en": "On demo data, opening /?module=cp completes with \"The opening screen is ready\"; no warning is shown."
         }
       }
     }
