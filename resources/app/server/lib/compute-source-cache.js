@@ -7,7 +7,9 @@ function sourceError(code){
     COMPUTE_STALE_GENERATION:['Kaynak sürümü değişti.','Source generation changed.',409]};
   const [tr,en,statusCode]=values[code];return Object.assign(Error(`${tr} / ${en}`),{code,statusCode,errorEn:en});
 }
-function createComputeSourceCache({maxBytes=2*1024*1024*1024,loadSnapshot}={}){
+// İşçi içi kaynak önbelleği sınırı; hesap servisi kabulde aynı sınırı kontrol eder.
+const WORKER_SOURCE_CACHE_BYTES=2*1024*1024*1024;
+function createComputeSourceCache({maxBytes=WORKER_SOURCE_CACHE_BYTES,loadSnapshot}={}){
   if(!Number.isSafeInteger(maxBytes)||maxBytes<1)throw Error('Invalid source cache byte limit');
   const load=loadSnapshot||((owner)=>require('./model-snapshot').loadModelSnapshotAsync(owner));
   const entries=new Map(),held=new Set(),loading=new Map(),epochs=new Map();
@@ -73,4 +75,4 @@ function createComputeSourceCache({maxBytes=2*1024*1024*1024,loadSnapshot}={}){
   function stats(){return {maxBytes,reservedBytes,entries:entries.size,loading:loading.size,pinnedEntries:[...held].filter(entry=>entry.pins>0).length,loads,hits,evictions};}
   return {acquire,invalidate,clear,stats};
 }
-module.exports={createComputeSourceCache};
+module.exports={createComputeSourceCache,WORKER_SOURCE_CACHE_BYTES};
