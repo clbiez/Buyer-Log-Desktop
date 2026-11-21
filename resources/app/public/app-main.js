@@ -5498,15 +5498,34 @@ function tableFieldsDeleteColumn(tableKey,key){
   else if(meta.kind==='note')void removeCpNoteColumn(meta.col.noteColumnId,done);
   else if(meta.kind==='personalNote')removePersonalOrderNoteColumn(meta.col.k,done);
 }
-// Sütun yalnız kendi başlığı içinde taşınır; bant bölünmez.
-function tableFieldsMoveColumn(tableKey,key,targetKey,after){
+// Koleksiyon'da kullanıcının eklediği serbest sütun (checklist hariç) ana başlığını
+// soldaki komşusundan alır; bu yüzden başka bir başlığın içine sürüklenebilir ve
+// başlığı yerleştiği yere göre kendiliğinden değişir. Sistem sütunlarının ve
+// CP/Orders'ın ortak (sunucu) sütun tanımlarının başlığı sabittir.
+function tableFieldsCanChangeGroup(tableKey,key){
+  return tableKey==='koleksiyon'&&tableFieldsColumn(tableKey,key).kind==='custom';
+}
+// Sütun kendi başlığı içinde taşınır; yalnız tableFieldsCanChangeGroup sütunları
+// başka başlığa geçebilir. targetGroup verilirse sütun o başlıkta kalmalıdır.
+// Koleksiyon yerleşim planı: normalize edilmiş yeni sıra ya da sütun hedef başlıkta
+// kalamıyorsa null. Başlığın ilk sütununun önüne bırakılan serbest sütun soldaki
+// başlığa düşerdi; hedef başlıkta kalacak taraf seçilir. Sona sabitlenen başlıkta
+// (Endeksmatik & Avantaj) serbest sütun kalamaz; çekmece bu hedefi hiç kabul etmez.
+function tableFieldsKolPlan(key,targetKey,after,targetGroup){
+  if(!key||!targetKey||key===targetKey||key==='__picture__'||targetKey==='__picture__')return null;
+  const base=kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder()).filter(item=>item!==key);
+  if(base.indexOf(targetKey)<0)return null;
+  const place=side=>{const order=base.slice();order.splice(order.indexOf(targetKey)+(side?1:0),0,key);return kolNormalizeDisplayOrder(order);};
+  const fits=order=>!targetGroup||kolColumnGroupFor(key,order)===targetGroup;
+  return [place(!!after),place(!after)].find(fits)||null;
+}
+function tableFieldsMoveColumn(tableKey,key,targetKey,after,targetGroup){
   if(!key||!targetKey||key===targetKey)return false;
   if(tableKey==='koleksiyon'){
     if(key==='__picture__'||targetKey==='__picture__')return false;
-    const order=kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder()).filter(item=>item!==key);
-    const at=order.indexOf(targetKey);if(at<0)return false;
-    order.splice(after?at+1:at,0,key);
-    kolColOrder=kolNormalizeDisplayOrder(order);saveKolColState();
+    const next=tableFieldsKolPlan(key,targetKey,after,targetGroup);
+    if(!next){showToast(appLang==='en'?'This column cannot be moved under that heading.':'Bu sütun o başlığın altına taşınamaz.');return false;}
+    kolColOrder=next;saveKolColState();
   }else{
     const cs=colmgr[tableKey];if(!cs)return false;
     const order=normalizedColumnOrder(tableKey,cs.order).filter(item=>item!==key);
@@ -5558,10 +5577,11 @@ function renderTableFieldsMenu(menu,tableKey){
         meta.canDelete?`<button type="button" class="tableFieldsIcon isDanger" data-table-fields-delete="${escapeHtml(key)}" title="${escapeHtml(en?'Delete column':'Sütunu sil')}" aria-label="${escapeHtml(en?'Delete column':'Sütunu sil')}"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg></button>`:'',
       ].join('');
       const checks=TABLE_FIELDS_PRESETS.map(preset=>tableFieldsCheckbox(`data-table-fields-preset="${preset}" data-key="${escapeHtml(key)}"`,presetSets[preset].has(key)?'all':'none',`${meta.label} · ${tableViewPresetName(preset)}`)).join('');
-      const draggable=!meta.fixed&&entry.keys.length>1;
-      return `<div class="tableFieldsColumn${hidden.has(key)?' isHiddenNow':''}${meta.userLabel?' hasUserLabel':''}" data-table-fields-col="${escapeHtml(key)}" data-group="${escapeHtml(entry.group)}"${draggable?' draggable="true"':''}><span class="tableFieldsDrag${draggable?'':' isDisabled'}" aria-hidden="true">⋮⋮</span><span class="tableFieldsColumnName" title="${escapeHtml(meta.label)}">${meta.kind==='personalNote'?'🔒 ':''}${escapeHtml(meta.label)}</span><span class="tableFieldsActions">${actions}</span><span class="tableFieldsChecks">${checks}</span></div>`;
+      const crossGroup=tableFieldsCanChangeGroup(tableKey,key);
+      const draggable=!meta.fixed&&(entry.keys.length>1||crossGroup);
+      return `<div class="tableFieldsColumn${hidden.has(key)?' isHiddenNow':''}${meta.userLabel?' hasUserLabel':''}" data-table-fields-col="${escapeHtml(key)}" data-group="${escapeHtml(entry.group)}"${draggable?' draggable="true"':''}${crossGroup?' data-cross-group="1"':''}${meta.fixed?' data-fixed="1"':''}><span class="tableFieldsDrag${draggable?'':' isDisabled'}" aria-hidden="true"><svg class="ic"><use href="#i-grip"/></svg></span><span class="tableFieldsColumnName" title="${escapeHtml(meta.label)}">${meta.kind==='personalNote'?'🔒 ':''}${escapeHtml(meta.label)}</span><span class="tableFieldsActions">${actions}</span><span class="tableFieldsChecks">${checks}</span></div>`;
     }).join('');
-    return `<div class="tableFieldsGroup is-${mode}${open?' isOpen':''}" style="--grp-accent:${GROUP_ACCENTS[entry.group]||'var(--ui-accent)'}"><div class="tableFieldsGroupRow"><button type="button" class="tableFieldsGroupToggle" data-table-fields-toggle="${escapeHtml(entry.group)}" aria-expanded="${open}"><svg class="ic" aria-hidden="true"><use href="#${open?'i-chevron-down':'i-chevron-right'}"/></svg><b>${escapeHtml(entry.label)}</b><span class="tableFieldsItemCount">${shown}/${entry.keys.length}</span></button><button type="button" class="tableFieldsModeBtn is-${mode}" data-table-fields-group="${escapeHtml(entry.group)}" title="${escapeHtml(modeTitle)}">${escapeHtml(modeLabel)}</button><span class="tableFieldsChecks">${groupChecks}</span></div>${columns?`<div class="tableFieldsColumns" ${open?'':'hidden'}>${columns}</div>`:''}</div>`;
+    return `<div class="tableFieldsGroup is-${mode}${open?' isOpen':''}" style="--grp-accent:${GROUP_ACCENTS[entry.group]||'var(--ui-accent)'}"><div class="tableFieldsGroupRow" data-table-fields-drop-group="${escapeHtml(entry.group)}"><button type="button" class="tableFieldsGroupToggle" data-table-fields-toggle="${escapeHtml(entry.group)}" aria-expanded="${open}"><svg class="ic" aria-hidden="true"><use href="#${open?'i-chevron-down':'i-chevron-right'}"/></svg><b>${escapeHtml(entry.label)}</b><span class="tableFieldsItemCount">${shown}/${entry.keys.length}</span></button><button type="button" class="tableFieldsModeBtn is-${mode}" data-table-fields-group="${escapeHtml(entry.group)}" title="${escapeHtml(modeTitle)}">${escapeHtml(modeLabel)}</button><span class="tableFieldsChecks">${groupChecks}</span></div>${columns?`<div class="tableFieldsColumns" ${open?'':'hidden'}>${columns}</div>`:''}</div>`;
   }).join('');
   const addButtons=[];
   if(tableKey==='cp'||tableKey==='orders'){
@@ -5573,7 +5593,7 @@ function renderTableFieldsMenu(menu,tableKey){
     addButtons.push(`<button type="button" class="tbtn" data-table-fields-add="column">+ ${escapeHtml(en?'Add Column':'Sütun Ekle')}</button>`);
     addButtons.push(`<button type="button" class="tbtn" data-table-fields-checklist>+ ${escapeHtml(en?'Add checklist item':'Checklist maddesi ekle')}</button>`);
   }
-  menu.innerHTML=`<div class="tableFieldsHead"><div><b>${escapeHtml(en?'Fields':'Alanlar')}</b><span>${escapeHtml(en?'Open a heading to see its columns. Ticks choose the views a column appears in; drag to reorder.':'Başlığı açıp sütunları görün. Tikler sütunun hangi görünümde yer alacağını belirler; sürükleyerek sıralayın.')}</span></div><button type="button" class="tableFieldsClose" data-table-fields-close aria-label="${escapeHtml(en?'Close':'Kapat')}">×</button></div><div class="tableFieldsGridHead"><span>${escapeHtml(en?'Heading / column':'Başlık / sütun')}</span><span class="tableFieldsChecks">${presetHead}</span></div><div class="tableFieldsList" role="group">${groupsHtml}</div><div class="tableFieldsFoot"><div class="tableFieldsAdd">${addButtons.join('')}</div><button type="button" class="tbtn" data-table-fields-reset ${Object.keys(overrides).length?'':'disabled'}>${escapeHtml(en?'Reset fields':'Alanları sıfırla')}</button></div>`;
+  menu.innerHTML=`<div class="tableFieldsHead"><div><b>${escapeHtml(en?'Fields':'Alanlar')}</b><span>${escapeHtml(en?'Open a heading to see its columns. Ticks choose the views a column appears in; drag to reorder. Drag your own columns onto another heading to move them there.':'Başlığı açıp sütunları görün. Tikler sütunun hangi görünümde yer alacağını belirler; sürükleyerek sıralayın. Eklediğiniz sütunları başka bir başlığa sürükleyerek o başlığa taşıyın.')}</span></div><button type="button" class="tableFieldsClose" data-table-fields-close aria-label="${escapeHtml(en?'Close':'Kapat')}">×</button></div><div class="tableFieldsGridHead"><span>${escapeHtml(en?'Heading / column':'Başlık / sütun')}</span><span class="tableFieldsChecks">${presetHead}</span></div><div class="tableFieldsList" role="group">${groupsHtml}</div><div class="tableFieldsFoot"><div class="tableFieldsAdd">${addButtons.join('')}</div><button type="button" class="tbtn" data-table-fields-reset ${Object.keys(overrides).length?'':'disabled'}>${escapeHtml(en?'Reset fields':'Alanları sıfırla')}</button></div>`;
   menu.querySelectorAll('input[data-indeterminate]').forEach(input=>{input.indeterminate=true;});
   const list=menu.querySelector('.tableFieldsList');if(list)list.scrollTop=listScroll;
   menu.querySelector('[data-table-fields-close]')?.addEventListener('click',()=>closeTableFieldsMenu());
@@ -5601,12 +5621,21 @@ function renderTableFieldsMenu(menu,tableKey){
   menu.querySelectorAll('[data-table-fields-rename]').forEach(button=>button.addEventListener('click',()=>tableFieldsRenameColumn(tableKey,button.dataset.tableFieldsRename)));
   menu.querySelectorAll('[data-table-fields-formula]').forEach(button=>button.addEventListener('click',()=>tableFieldsRenameColumn(tableKey,button.dataset.tableFieldsFormula)));
   menu.querySelectorAll('[data-table-fields-delete]').forEach(button=>button.addEventListener('click',()=>tableFieldsDeleteColumn(tableKey,button.dataset.tableFieldsDelete)));
+  // Başka başlığa bırakma yalnız yerleşim planı sütunu o başlıkta tutuyorsa kabul edilir;
+  // plan her sürüklemede hedef başına bir kez hesaplanır.
+  const crossPlans=new Map();
+  const crossFits=(targetKey,group)=>{
+    const id=`${tableFieldsDragKey}\u0000${targetKey}\u0000${group}`;
+    if(!crossPlans.has(id))crossPlans.set(id,tableKey==='koleksiyon'&&!!tableFieldsKolPlan(tableFieldsDragKey,targetKey,true,group));
+    return crossPlans.get(id);
+  };
   menu.querySelectorAll('.tableFieldsColumn[draggable="true"]').forEach(row=>{
-    row.addEventListener('dragstart',event=>{tableFieldsDragKey=row.dataset.tableFieldsCol;row.classList.add('isDragging');event.dataTransfer.effectAllowed='move';try{event.dataTransfer.setData('text/plain',tableFieldsDragKey);}catch(_){}});
-    row.addEventListener('dragend',()=>{tableFieldsDragKey=null;menu.querySelectorAll('.isDragging,.dropBefore,.dropAfter').forEach(el=>el.classList.remove('isDragging','dropBefore','dropAfter'));});
+    row.addEventListener('dragstart',event=>{tableFieldsDragKey=row.dataset.tableFieldsCol;crossPlans.clear();row.classList.add('isDragging');event.dataTransfer.effectAllowed='move';try{event.dataTransfer.setData('text/plain',tableFieldsDragKey);}catch(_){}});
+    row.addEventListener('dragend',()=>{tableFieldsDragKey=null;menu.querySelectorAll('.isDragging,.dropBefore,.dropAfter,.isDropTarget').forEach(el=>el.classList.remove('isDragging','dropBefore','dropAfter','isDropTarget'));});
   });
+  const draggedRow=()=>tableFieldsDragKey&&menu.querySelector(`[data-table-fields-col="${CSS.escape(tableFieldsDragKey)}"]`);
   menu.querySelectorAll('.tableFieldsColumn').forEach(row=>{
-    const sameGroup=()=>{const dragged=tableFieldsDragKey&&menu.querySelector(`[data-table-fields-col="${CSS.escape(tableFieldsDragKey)}"]`);return dragged&&dragged.dataset.group===row.dataset.group&&dragged!==row&&row.getAttribute('draggable')==='true';};
+    const sameGroup=()=>{const dragged=draggedRow();if(!dragged||dragged===row)return false;if(dragged.dataset.group===row.dataset.group)return row.getAttribute('draggable')==='true';return dragged.dataset.crossGroup==='1'&&row.dataset.fixed!=='1'&&crossFits(row.dataset.tableFieldsCol,row.dataset.group);};
     row.addEventListener('dragover',event=>{
       if(!sameGroup())return;event.preventDefault();
       const rect=row.getBoundingClientRect(),after=event.clientY>rect.top+rect.height/2;
@@ -5616,7 +5645,21 @@ function renderTableFieldsMenu(menu,tableKey){
     row.addEventListener('drop',event=>{
       if(!sameGroup())return;event.preventDefault();
       const after=row.classList.contains('dropAfter');row.classList.remove('dropBefore','dropAfter');
-      tableFieldsMoveColumn(tableKey,tableFieldsDragKey,row.dataset.tableFieldsCol,after);
+      tableFieldsMoveColumn(tableKey,tableFieldsDragKey,row.dataset.tableFieldsCol,after,row.dataset.group);
+    });
+  });
+  // Kapalı başlığın satırına bırakılan sütun o başlığın sonuna eklenir ve başlık açılır.
+  menu.querySelectorAll('[data-table-fields-drop-group]').forEach(head=>{
+    const group=head.dataset.tableFieldsDropGroup;
+    const lastKey=()=>{const entry=catalog.find(item=>item.group===group);return entry&&[...entry.keys].reverse().find(key=>key!=='__picture__');};
+    const accepts=()=>{const dragged=draggedRow(),target=lastKey();return !!dragged&&!!target&&dragged.dataset.crossGroup==='1'&&dragged.dataset.group!==group&&crossFits(target,group);};
+    head.addEventListener('dragover',event=>{if(!accepts())return;event.preventDefault();head.classList.add('isDropTarget');});
+    head.addEventListener('dragleave',event=>{if(!head.contains(event.relatedTarget))head.classList.remove('isDropTarget');});
+    head.addEventListener('drop',event=>{
+      if(!accepts())return;event.preventDefault();head.classList.remove('isDropTarget');
+      const target=lastKey();if(!target)return;
+      expanded.add(group);
+      tableFieldsMoveColumn(tableKey,tableFieldsDragKey,target,true,group);
     });
   });
   menu.querySelector('[data-table-fields-reset]')?.addEventListener('click',()=>{resetTableGroupOverrides(tableKey);renderTableFieldsMenu(menu,tableKey);});
@@ -23419,6 +23462,139 @@ function mapCollectionRowToShip(row){
   }
   return BLShippingEngine.mapCollectionRow(effective,{toISODate,toNum,norm,normalizeTransitDelType,parseMoney:kolParseMoneyNum,basePrice:confirmed?confirmed.price:null});
 }
+/* Nakliye satırının lisans alanları (royalty %, hologram) eskiden yalnız
+   aktarım anında yazılıyordu: CP'den gelen satırlar hiç almıyor, Koleksiyon'dan
+   daha önce gelen satırlar ise model yeniden gönderilmedikçe güncellenmiyordu.
+   Sonuç: aynı ekranda bazı modellerde royalty/hologram uygulanıyor, bazılarında
+   uygulanmıyordu. Artık alanlar kaynağın GÜNCEL kuralından türetilir:
+     · Koleksiyon satırı → Koleksiyon'daki model (mapCollectionRowToShip ile aynı kural)
+     · CP satırı → CP siparişinin License Royalty sözleşmesi; YD tarafı siparişin
+       ülkesi, TR tarafı Country Group = TR (Koleksiyon TR Landed ile aynı kural).
+   Kaynak veya kural listesi henüz yüklenmemişse satıra dokunulmaz (null döner). */
+const SHIP_LICENSE_KEYS=['trRoyaltyPct','trHologramCost','_trLicenseRuleMissing','ydRoyaltyPct','ydHologramCost'];
+function shipLicenseFieldsFromCpRow(cp){
+  if(!cp)return null;
+  const value=id=>window.BLCanonicalFields.canonicalValue(cp,'cp',id);
+  const licensor=norm(value('licensor'));
+  // Belirsiz Licensor DTR sayılmaz; çözülene kadar satır olduğu gibi kalır.
+  if(!licensor)return null;
+  if(turknorm(licensor)==='DTR')return {};
+  const api=window.BLBusinessRules;
+  const opd=value('orderPlacementDate'),season=value('season'),license=value('license'),category=value('category');
+  const side=group=>{
+    const rule=typeof findSuppFobRule==='function'?findSuppFobRule(opd,group,season,licensor,license,category):null;
+    if(!rule)return null;
+    const total=api.pricingRuleEffectiveRoyalty(rule,group),hologram=api.pricingRuleHologramForCountry(rule,group);
+    if(!Number.isFinite(total)||total<0||total>=100||!Number.isFinite(hologram)||hologram<0)return null;
+    return {royalty:total,hologram};
+  };
+  const out={};
+  const tr=side('TR');
+  if(tr){out.trRoyaltyPct=tr.royalty;out.trHologramCost=tr.hologram;}
+  else out._trLicenseRuleMissing=true;
+  const country=norm(value('country'));
+  const yd=country?side(country):null;
+  if(yd&&(yd.royalty>0||yd.hologram>0)){out.ydRoyaltyPct=yd.royalty;out.ydHologramCost=yd.hologram;}
+  return out;
+}
+function shipLicenseSourceIndex(){
+  const pricingRules=state.overrides&&state.overrides.pricingRules;
+  // Kural listesi yoksa "kural eksik" yazmak yurt içi fiyatı yanlışlıkla boşaltırdı.
+  if(!Array.isArray(pricingRules)||!pricingRules.length)return null;
+  /* Dizin her tablo çiziminde yeniden kurulursa 30k CP satırında çizim başına
+     ~15 ms ekliyordu (L1 ölçümü). Dizin satır nesnesini değil KONUMUNU tutar;
+     okumada o konumdaki GÜNCEL satır alınır ve anahtarı doğrulanır. Böylece
+     yerinde değiştirilen satır (kolRows[i]=…) bayat kalmaz; anahtar tutmazsa
+     (sıralama, silme, ekleme) dizin bir kez yeniden kurulur. */
+  const cpRows=state.cp&&Array.isArray(state.cp.rows)?state.cp.rows:[];
+  const kol=Array.isArray(kolRows)?kolRows:[];
+  const cached=shipLicenseSourceIndex.cache;
+  if(cached&&cached.cpRows===cpRows&&cached.cpLength===cpRows.length&&cached.kol===kol&&cached.kolLength===kol.length)return cached.index;
+  const index=buildShipLicenseSourceIndex(cpRows,kol);
+  shipLicenseSourceIndex.cache={cpRows,cpLength:cpRows.length,kol,kolLength:kol.length,index};
+  return index;
+}
+function shipCpSourceKey(row){
+  return row?shipOrderCodeKey(window.BLCanonicalFields.canonicalValue(row,'cp','orderCode')):'';
+}
+function buildShipLicenseSourceIndex(cpRows,kol){
+  const collection=new Map();
+  kol.forEach((row,position)=>{
+    const key=row&&collectionShippingModelKey(row);
+    if(!key)return;
+    const current=collection.has(key)?kol[collection.get(key)]:null;
+    if(!current||(current.modelGroupRole!=='parent'&&row.modelGroupRole==='parent'))collection.set(key,position);
+  });
+  const cp=new Map();
+  cpRows.forEach((row,position)=>{
+    const code=shipCpSourceKey(row);
+    if(code&&!cp.has(code))cp.set(code,position);
+  });
+  const lookup=(map,rows,keyOf,key)=>{
+    if(!map.has(key))return null;
+    const row=rows[map.get(key)];
+    if(row&&keyOf(row)===key)return row;
+    return undefined; // konum bayat: dizin yeniden kurulmalı
+  };
+  return {
+    collection:{get:key=>lookup(collection,kol,row=>collectionShippingModelKey(row),key)},
+    cp:{get:key=>lookup(cp,cpRows,shipCpSourceKey,key)},
+  };
+}
+function shipLicenseSourceRow(index,kind,key){
+  let row=index[kind].get(key);
+  if(row===undefined){
+    shipLicenseSourceIndex.cache=null;
+    const fresh=shipLicenseSourceIndex();
+    row=fresh?fresh[kind].get(key):null;
+  }
+  return row||null;
+}
+function shipOrderCodeKey(value){
+  const text=String(value==null?'':value).replace(/\./g,'').trim();
+  if(!text)return '';
+  const n=Number(text);
+  return Number.isFinite(n)?String(n):text;
+}
+function shipLicenseFieldsFromSource(shipRow,index){
+  if(!shipRow||!index)return null;
+  if(shipRow._sourceModule==='collection'){
+    const source=shipLicenseSourceRow(index,'collection',shipRow._modelKey);
+    if(!source)return null;
+    // CP yoluyla aynı kural: boş/belirsiz Licensor DTR sayılmaz; çözülene kadar
+    // satırdaki mevcut lisans alanları korunur.
+    const effective=typeof kolGroupSummaryEffectiveLandedRow==='function'?kolGroupSummaryEffectiveLandedRow(source):source;
+    if(!norm(kolPricingRuleContext(effective).licensor)||kolLicensorUnresolvedState(effective))return null;
+    const mapped=mapCollectionRowToShip(source);
+    if(!mapped)return null;
+    const out={};
+    SHIP_LICENSE_KEYS.forEach(key=>{if(mapped[key]!=null)out[key]=mapped[key];});
+    return out;
+  }
+  const code=shipOrderCodeKey(shipRow.orderCode);
+  return code?shipLicenseFieldsFromCpRow(shipLicenseSourceRow(index,'cp',code)):null;
+}
+// Değişen satırları bellekte günceller ve sunucuya yazar; değişmeyen satıra yazmaz.
+function refreshShipLicenseFromSources(rows=shipRows){
+  const index=shipLicenseSourceIndex();
+  if(!index)return 0;
+  let changed=0;
+  (rows||[]).forEach(row=>{
+    const fields=shipLicenseFieldsFromSource(row,index);
+    if(!fields)return;
+    const patch={};
+    SHIP_LICENSE_KEYS.forEach(key=>{
+      const next=fields[key]==null?null:fields[key];
+      const prev=row[key]==null?null:row[key];
+      if(prev!==next)patch[key]=next;
+    });
+    if(!Object.keys(patch).length)return;
+    Object.assign(row,patch);
+    if(row._shipId)patchShipRow(row._shipId,patch);
+    changed++;
+  });
+  return changed;
+}
 function collectionShippingColourOptions(row){
   const clean=value=>String(value==null?'':value).trim();
   const source=Array.isArray(row&&row._colourOptions)
@@ -24316,6 +24492,7 @@ function renderShipTable(){
   empty.style.display='none'; content.style.display='block';
   document.getElementById('shipCount').textContent = `${shipRows.length} satır`;
   updateShipSelectionActions();
+  refreshShipLicenseFromSources();
   shipRows.forEach(computeShipFormulas);
   const cols = visibleCols('ship');
   const table = document.getElementById('shipTable');
@@ -33962,8 +34139,35 @@ window.BLLicenseDataBridge={
     }else if(Number(data&&data.pricingRevision)!==Number(state.storeRevisions.pricingRules||0))await refreshPricingRulesFromServer();
   },
 };
+/* Fiyat & Üretici Analizi: PLM Kumaş / PLM Artwork ve PLM kumaş özellikleri
+   filtre boyutları. LFL satırları bunları sunucudan hazır taşır; diğer
+   kaynaklarda kalıcı PLM BOM özetinden (BLPlmModelDetails) okunur. PLM
+   Artwork filtre kimliği dilden bağımsız TR metindir; EN görünüm
+   valueLabels.plmArtwork ile yalnız etiketi çevirir (dil değişiminde seçim
+   korunur). */
+const PRICE_ANALYSIS_PLM_FIELDS=['fabricCategory','kumasTipi','iplikNo','fabricWeight','karisim'];
+async function priceAnalysisAttachPlmDetails(result){
+  if(!result||!Array.isArray(result.observations))return result;
+  const observations=result.observations,artworkEn={};
+  const remember=(tr,en)=>{if(tr&&en&&tr!==en&&!artworkEn[tr])artworkEn[tr]=en;};
+  if(result.source==='lfl'){
+    for(const obs of observations){const row=obs&&(obs.row||obs.raw);if(row)remember(row.plmArtwork,row.plmArtworkEn);}
+    return {...result,valueLabels:{plmArtwork:{en:artworkEn}}};
+  }
+  const api=window.BLPlmModelDetails;if(!api)return result;
+  const ids=observations.map(obs=>obs&&obs.plmId).filter(Boolean);
+  if(ids.length){try{await api.ensure(ids);}catch(_){}}
+  let found=0;
+  for(const obs of observations){
+    const details=obs&&api.get(obs.plmId);if(!details)continue;found++;
+    obs.plmFabric=details.plmFabric||'';obs.plmArtwork=details.plmArtwork||'';remember(details.plmArtwork,details.plmArtworkEn);
+    PRICE_ANALYSIS_PLM_FIELDS.forEach(key=>{if(details[key])obs[key]=details[key];});
+  }
+  return {...result,valueLabels:{plmArtwork:{en:artworkEn}},version:`${result.version}|plm:${found}`};
+}
 window.BLPriceSupplierAnalysisBridge={
-  async get(source,scope='all',priceType='finalFob'){
+  async get(source,scope='all',priceType='finalFob'){return priceAnalysisAttachPlmDetails(await window.BLPriceSupplierAnalysisBridge.sourceData(source,scope,priceType));},
+  async sourceData(source,scope='all',priceType='finalFob'){
     const selected=String(source||'collection').toLowerCase();
     if(selected==='lfl'){
       const lfl=await window.BLPriceSupplierLFLBridge?.get(scope)||{observations:[],priceTypes:[],version:'lfl:0'};

@@ -14,8 +14,12 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(businessRules){
   'use strict';
 
-  const DIMENSIONS=['manufacturer','country','classification','productGroup','productDescription','productMainDefinition','mag','mmyg','buyingGroup','buyer'];
-  const FILTER_DIMENSIONS=['buyingGroup','buyer','mag','mmyg','classification','productGroup','productDescription','productMainDefinition','country','manufacturer'];
+  /* PLM Kumaş / PLM Artwork ve PLM kumaş metninden ayrıştırılan özellikler
+     (server/lib/plm-model-details.js). LFL satırları bunları sunucudan hazır
+     taşır; diğer kaynaklarda köprü BLPlmModelDetails ile gözleme yazar. */
+  const PLM_DIMENSIONS=['plmFabric','plmArtwork','fabricCategory','kumasTipi','iplikNo','fabricWeight','karisim'];
+  const DIMENSIONS=['manufacturer','country','classification','productGroup','productDescription','productMainDefinition','mag','mmyg','buyingGroup','buyer',...PLM_DIMENSIONS];
+  const FILTER_DIMENSIONS=['buyingGroup','buyer','mag','mmyg','classification','productGroup','productDescription','productMainDefinition','country','manufacturer',...PLM_DIMENSIONS];
   /* Kanonik boyutların dışında, kaynağın ham satırındaki HERHANGİ bir sütun
      "col:<başlık>" anahtarıyla filtre olarak kullanılabilir. Değerler ilk
      istekte tembel hesaplanır ve veri setinde önbelleklenir. */
@@ -392,5 +396,5 @@
     return canonicalObservation(row,moduleId,{rowId:row._id??index,price:Number.isFinite(price)&&price>0?price:null,currency:isTurkeyCountry(country)?'TRY':'USD'},fields);
   }
 
-  return {canonicalObservation,orderPriceObservation,DIMENSIONS,FILTER_DIMENSIONS,COLUMN_PREFIX,isColumnDim,columnName,isFilterDim,columnKeys,PERIOD_FIELDS,GROUP_DIMENSIONS,RELATION_DIMENSIONS,keyOf,prepare,seasons,defaultPeriods,previousSeason,dimensionValues,availableDimensions,periodValues,analyze,scorecardSuppliers,priceMovers,volumeMovers,newcomers,leavers,relations,insights,round};
+  return {canonicalObservation,orderPriceObservation,DIMENSIONS,FILTER_DIMENSIONS,PLM_DIMENSIONS,COLUMN_PREFIX,isColumnDim,columnName,isFilterDim,columnKeys,PERIOD_FIELDS,GROUP_DIMENSIONS,RELATION_DIMENSIONS,keyOf,prepare,seasons,defaultPeriods,previousSeason,dimensionValues,availableDimensions,periodValues,analyze,scorecardSuppliers,priceMovers,volumeMovers,newcomers,leavers,relations,insights,round};
 });

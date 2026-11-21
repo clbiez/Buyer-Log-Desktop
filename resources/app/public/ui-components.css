@@ -13992,9 +13992,13 @@ html[data-ui-system="manifest"] .tableFieldsColumn {border-top:0 !important;bord
 }
 html[data-ui-system="manifest"] .tableFieldsColumn:hover {background:var(--ui-surface) !important
 }
+html[data-ui-system="manifest"] .tableFieldsColumn.dropBefore::before,html[data-ui-system="manifest"] .tableFieldsColumn.dropAfter::after {background:var(--ui-accent) !important;z-index:var(--ui-z-data)
+}
+html[data-ui-system="manifest"] .tableFieldsGroupRow.isDropTarget {background:color-mix(in srgb,var(--ui-accent) 14%,var(--ui-surface)) !important
+}
 html[data-ui-system="manifest"] .tableFieldsColumn.isHiddenNow .tableFieldsColumnName {color:var(--ui-text-muted) !important
 }
-html[data-ui-system="manifest"] .tableFieldsDrag {color:var(--ui-text-muted) !important;font-size:var(--ui-font-sm) !important;line-height:1;letter-spacing:-1px
+html[data-ui-system="manifest"] .tableFieldsDrag {color:var(--ui-text-muted) !important
 }
 html[data-ui-system="manifest"] .tableFieldsColumn.hasUserLabel .tableFieldsColumnName {font-style:italic !important
 }
