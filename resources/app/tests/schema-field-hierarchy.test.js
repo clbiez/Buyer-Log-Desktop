@@ -132,3 +132,14 @@ test('Horizon ve eşleme seçicileri aynı yüzen listede Tablo → Klasör baş
   }
   assert.match(read('public/intake.js'), /<optgroup label=/);
 });
+
+test('Seçici başlık satırları flex listede ezilmez (ASAS/IAS ara başlık regresyonu)', () => {
+  /* .dmfPickerList bir flex sütunudur. overflow:hidden taşıyan başlığın
+     min-height'ı 0'a düşer; uzun listede başlıklar ~8px'e ezilip üst üste
+     biniyordu. Satırlar küçülmemeli. */
+  const css = read('public/data-management.css');
+  const rule = (css.match(/\.dmfPickerGroup\s*\{([^}]*)\}/) || [])[1] || '';
+  assert.match(rule, /flex(?:-shrink)?\s*:\s*(?:0\b|none)/, '.dmfPickerGroup küçülmemeli');
+  const items = (css.match(/\.dmfPickerList\s*>\s*\*\s*\{([^}]*)\}/) || [])[1] || '';
+  assert.match(items, /flex-shrink\s*:\s*0/, 'liste satırları küçülmemeli');
+});

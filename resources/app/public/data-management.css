@@ -285,13 +285,16 @@
 .dmfPickerSearch { height: var(--ui-control-height); padding: 0 8px;
 }
 .dmfPickerList { overflow-y: auto; display: flex; flex-direction: column; }
+/* Liste flex sütunu: satırlar ve başlıklar küçülmez. overflow:hidden taşıyan
+   başlığın min-height'ı 0 olduğundan uzun listede başlıklar eziliyordu. */
+.dmfPickerList > * { flex-shrink: 0; }
 .dmfPickerItem { text-align: left; padding: 4px 9px; cursor: pointer;
 }
 .dmfPickerItem.isSelected,.dmfPickerItem[aria-selected="true"] { cursor: default;
 }
 .dmfPickerItem:disabled { opacity: 1; }
 .dmfPickerEmpty { margin: 0; padding: 9px; }
-.dmfPickerGroup { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dmfPickerGroup { flex: 0 0 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dmfPickerGroup.isTable { position: sticky; top: 0; }
 .dmfPickerList .dmfPickerItem[data-tree-depth] { padding-left: calc(9px + var(--tree-depth, 0) * 14px); }
 

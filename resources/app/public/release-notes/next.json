@@ -11,6 +11,20 @@
     "en": "Program files are verified in parallel and the workspace opens directly after sign-in. Reports have their own image-size settings and row dividers. ASAS / IAS refresh is faster."
   },
   "changes": [
+    {
+      "id": "data-picker-group-headers",
+      "type": "fix",
+      "module": {"tr": "ASAS / IAS · Veri Yönetimi", "en": "ASAS / IAS · Data Management"},
+      "title": {
+        "tr": "Alan seçicideki tablo ve klasör başlıkları okunur",
+        "en": "Table and folder headings in the field picker are readable"
+      },
+      "body": {
+        "tr": "ASAS / IAS filtresinde ve aynı alan seçiciyi kullanan eşleme, CP sütunları ve eşleşme kuralı ekranlarında liste uzadığında tablo ve klasör ara başlıkları birkaç piksele eziliyor, yazıları üst üste biniyordu. Başlıklar artık tam yükseklikte çizilir; kaydırırken tablo başlığı üstte sabit ve okunur kalır.",
+        "en": "In the ASAS / IAS filter and in the mapping, CP columns and match rule screens that use the same field picker, table and folder headings were squeezed to a few pixels and their text overlapped when the list was long. Headings are now drawn at full height; while scrolling, the table heading stays pinned at the top and readable."
+      },
+      "visual": {"kind": "screenshot", "capture": "post-change", "src": "data-picker-group-headers.png", "alt": {"tr": "Alan seçicide demo alanlar için Tablo ve Klasör ara başlıkları", "en": "Table and folder headings for demo fields in the field picker"}, "caption": {"tr": "\"merch\" araması: her tablo ve klasör başlığı kendi satırında, okunur.", "en": "Searching \"merch\": each table and folder heading sits on its own readable row."}}
+    },
     {"id": "shipping-license-all-rows", "type": "fix", "module": {"tr": "Nakliye Kıyaslama", "en": "Shipping Comparison"}, "title": {"tr": "Royalty ve hologram tüm lisanslı modellerde uygulanır", "en": "Royalty and hologram apply to every licensed model"}, "body": {"tr": "Nakliye Kıyaslama’da royalty ve hologram maliyeti bazı modellerde uygulanıyor, bazılarında uygulanmıyordu. CP’den aktarılan siparişler bu bilgiyi hiç almıyordu. Koleksiyon’dan daha önce aktarılan modeller ise yeniden gönderilmeden güncellenmiyordu. Artık her satır lisans bilgisini tablo açıldığında License Royalty sözleşmesinden güncel olarak alır. Yurt Dışı FOB altında ve Yurt İçi kartında +Roy. / +Holo. notu her lisanslı modelde görünür. CP’den aktarılan satırlarda, TL fiyatı girildiyse Yurt İçi FOB’a da TR royalty ve hologram eklenir; TR komisyonu tanımlı değilse yurt içi maliyet royaltysiz hesaplanmaz, boş kalır. DTR modeller değişmez.", "en": "In Shipping Comparison, royalty and hologram cost applied to some models but not to others. Orders sent from CP never received this information. Models sent from Collection earlier were not updated unless sent again. Each row now takes its licence information from the current License Royalty contract when the table opens. The +Roy. / +Holo. note appears under Overseas FOB and on the Domestic card for every licensed model. For rows sent from CP, TR royalty and hologram are also added to Domestic FOB when a TL price is entered; if no TR commission is defined, the domestic cost is left blank instead of being calculated without royalty. DTR models are unchanged."}, "visual": {"kind": "screenshot", "capture": "post-change", "src": "shipping-license-all-rows.png", "alt": {"tr": "Demo CP siparişlerinde Yurt Dışı FOB ve Yurt İçi kartında royalty ve hologram notu", "en": "Royalty and hologram note under Overseas FOB and on the Domestic card for demo CP orders"}, "caption": {"tr": "CP’den aktarılan lisanslı demo siparişlerde +Roy. / +Holo. notu görünür; DTR modelde (HARRY) not yoktur.", "en": "Licensed demo orders sent from CP show the +Roy. / +Holo. note; the DTR model (HARRY) shows none."}}},
     {
       "id": "plm-sync-images-no-freeze",
