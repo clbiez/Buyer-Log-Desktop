@@ -130,3 +130,33 @@ test('normalizeModel kalıcı şekli doğrular; eski Excel analizi model sayılm
   // Evrak tarihi yoksa geç teslim oranı bilinmiyor (0 değil).
   assert.equal(again.groups[0].docsLateShare, null);
 });
+
+test('durumla geçildiği bilinen ve kaynakta sütunu olmayan adım "bekliyor" sayılmaz', () => {
+  const model = sampleModel();
+  // Yolda parsiyel: yalnız talep + Handover tarihi var; Cut Off / Fiili Yükleme sütunu kaynakta yok.
+  const input = { loadingRequest: '2026-03-01', handover: '2026-03-04' };
+  const naive = SM.project(input, { model, country: 'Bangladesh', vehicle: 'Gemi', today: '2026-03-30' });
+  assert.equal(naive.currentStage, '2', 'eski davranış: Handover → Cut-off aşımı');
+  assert.ok(naive.openOverrunDays > 20);
+  const fixed = SM.project(input, { model, country: 'Bangladesh', vehicle: 'Gemi', today: '2026-03-30',
+    passed: 'actualLoading', observed: ['handover', 'loadingRequest', 'eta', 'warehouseEntry'] });
+  // Sıradaki gözlenebilen adım ETA; Handover'dan beri 26 gün, beklenen 51-5 = 46 → aşım yok.
+  assert.equal(fixed.openOverrunDays, 0);
+  assert.equal(fixed.currentStage, '4');
+  assert.equal(fixed.overrunSigma, 0);
+  assert.equal(fixed.etaMean, '2026-04-24'); // Handover + 51
+  // Koşan aşama günü aşamanın kendi başlangıcından: Handover'dan 26 gün − beklenen 6 gün (Handover → Yükleme) = 20 / 40.
+  const running = fixed.stages.find(s => s.status === 'running');
+  assert.deepEqual([running.code, running.days, running.mean], ['4', 20, 40]);
+  for (const code of ['1', '2', '3']) assert.equal(fixed.stages.find(s => s.code === code).status, 'done', code);
+  // Gerçekten geciken yoldaki parsiyel yine yakalanır: Handover'dan beri 60 gün.
+  const late = SM.project(input, { model, country: 'Bangladesh', vehicle: 'Gemi', today: '2026-05-03',
+    passed: 'actualLoading', observed: ['handover', 'loadingRequest', 'eta', 'warehouseEntry'] });
+  assert.equal(late.openOverrunDays, 14);
+  assert.ok(late.overrunSigma > 0);
+  // Gümrük-Liman: ETA geçildi → ETA ayağı açık aşım üretmez.
+  const port = SM.project(input, { model, country: 'Bangladesh', vehicle: 'Gemi', today: '2026-05-03',
+    passed: 'eta', observed: ['handover', 'loadingRequest', 'eta', 'warehouseEntry'] });
+  assert.equal(port.openOverrunDays, 0);
+  assert.equal(port.stages.find(s => s.code === '4').status, 'done');
+});

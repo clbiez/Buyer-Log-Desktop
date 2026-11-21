@@ -8580,10 +8580,6 @@ html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTab
 }
 html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th.kolSpreadsheetLetterActive {color:var(--ui-accent)!important;background:var(--ui-surface-soft)!important
 }
-html[data-ui-system="manifest"] .kolSpreadsheetRowNumber {background:transparent !important;color:var(--ui-text-muted) !important;font:600 var(--ui-font-2xs)/1 var(--ui-font-mono,monospace) !important
-}
-html[data-ui-system="manifest"] .kolSpreadsheetRowNumber:hover,html[data-ui-system="manifest"] .kolSpreadsheetRowNumber.isActive {background:color-mix(in srgb,var(--ui-accent) 14%,var(--ui-surface-soft)) !important;color:var(--ui-accent) !important
-}
 html[data-ui-system="manifest"] .kolSpreadsheetStatusBar {background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-2xs) !important
 }
 html[data-ui-system="manifest"] .kolSpreadsheetStatusBar b {color:var(--ui-text) !important;font-weight:700 !important
@@ -8643,8 +8639,18 @@ html[data-ui-system="manifest"] .kolModelGroupToggle:hover {background:color-mix
 }
 html[data-ui-system="manifest"] .kolModelGroupToggle:focus-visible {color:var(--ui-accent) !important
 }
-html[data-ui-system="manifest"] .kolModelGroupGutterSpacer.isVariant::after {
-  background:color-mix(in srgb,var(--ui-accent) 74%,var(--ui-text)) !important
+html[data-ui-system="manifest"] .kolModelGroupToggle.kolModelGroupCount[aria-expanded] {border:0 !important;border-radius:var(--ui-radius) !important;font:600 var(--ui-font-2xs)/1 var(--ui-font-mono) !important;font-variant-numeric:tabular-nums;background:transparent !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .kolModelGroupToggle.kolModelGroupCount[aria-expanded="false"] {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .kolModelGroupToggle.kolModelGroupCount[aria-expanded]:hover {color:var(--ui-accent) !important;background:var(--ui-selected) !important
+}
+/* Renk karesi veri rengidir (kullanıcı/PLM rengi), tema rengi değil. */
+html[data-ui-system="manifest"] .kolColourDot {position:relative;border-radius:var(--ui-radius);background:color-mix(in srgb,var(--ui-text) 32%,transparent)
+}
+html[data-ui-system="manifest"] .kolColourDot::before {content:"";position:absolute;inset:1px;border-radius:var(--ui-radius);background:var(--kol-dot)
+}
+html[data-ui-system="manifest"] .kolColourDot.isUnknown::before {background:var(--ui-surface)
 }
 html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td[data-kol-group-summary="1"]:not(.kolSpreadsheetEditing):not(:focus-within) {
   color:transparent!important
@@ -16037,7 +16043,7 @@ html[data-ui-system="manifest"] .bomcFinding.tone-wait {background:var(--ui-warn
 
 /* Shared row-selection rail: native semantics/events remain intact. Only explicit
    row-selection controls are included; boolean fields, filters and permissions stay controls.
-   Collection keeps its numbered/group gutter beside the same 8px selection rail. */
+   Collection keeps its model-count/colour-dot gutter beside the same 8px selection rail. */
 html[data-ui-system="manifest"] body[data-ui-migrated] :is(td,th):has(>input[type="checkbox"]:is(.rowChk,.shipCompareChk,.shipRowChk,[data-tr-check],[data-ship-chk-all],[data-fabric-pick],[data-bin-id],[data-cpa-queue-check],[data-dc-item],[data-dc-toggle-all],[data-ta-pick],[data-ta-all],[data-act="selectRow"],[data-act="selectAll"],#kolSelAll,#shipChkAll,[id$="_selAll"])){padding:0!important;width:var(--ui-row-select-width)!important;min-width:var(--ui-row-select-width)!important;max-width:var(--ui-row-select-width)!important;overflow:visible!important}
 html[data-ui-system="manifest"] body[data-ui-migrated] table input[type="checkbox"]:is(.rowChk,.shipCompareChk,.shipRowChk,[data-tr-check],[data-ship-chk-all],[data-fabric-pick],[data-bin-id],[data-cpa-queue-check],[data-dc-item],[data-dc-toggle-all],[data-ta-pick],[data-ta-all],[data-act="selectRow"],[data-act="selectAll"],#kolSelAll,#shipChkAll,[id$="_selAll"]){appearance:none!important;-webkit-appearance:none!important;position:absolute!important;inset:0 auto 0 0!important;box-sizing:border-box!important;width:var(--ui-row-select-width)!important;min-width:var(--ui-row-select-width)!important;max-width:var(--ui-row-select-width)!important;height:100%!important;min-height:100%!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;cursor:pointer;transition:none!important}
 html[data-ui-system="manifest"] body[data-ui-migrated] table input[type="checkbox"]:is(.rowChk,.shipCompareChk,.shipRowChk,[data-tr-check],[data-ship-chk-all],[data-fabric-pick],[data-bin-id],[data-cpa-queue-check],[data-dc-item],[data-dc-toggle-all],[data-ta-pick],[data-ta-all],[data-act="selectRow"],[data-act="selectAll"],#kolSelAll,#shipChkAll,[id$="_selAll"]):checked{background:var(--ui-accent)!important}
@@ -16046,7 +16052,9 @@ html[data-ui-system="manifest"] body[data-ui-migrated] table input[type="checkbo
 html[data-ui-system="manifest"] body[data-ui-migrated] table input[type="checkbox"]:is(.rowChk,.shipCompareChk,.shipRowChk,[data-tr-check],[data-ship-chk-all],[data-fabric-pick],[data-bin-id],[data-cpa-queue-check],[data-dc-item],[data-dc-toggle-all],[data-ta-pick],[data-ta-all],[data-act="selectRow"],[data-act="selectAll"],#kolSelAll,#shipChkAll,[id$="_selAll"]):focus-visible{outline:2px solid var(--ui-accent)!important;outline-offset:2px!important}
 html[data-ui-system="manifest"] body[data-ui-migrated] table input[type="checkbox"]:is(.rowChk,.shipCompareChk,.shipRowChk,[data-tr-check],[data-ship-chk-all],[data-fabric-pick],[data-bin-id],[data-cpa-queue-check],[data-dc-item],[data-dc-toggle-all],[data-ta-pick],[data-ta-all],[data-act="selectRow"],[data-act="selectAll"],#kolSelAll,#shipChkAll,[id$="_selAll"]):disabled{opacity:.4!important;cursor:not-allowed!important}
 html[data-ui-system="manifest"] body[data-ui-migrated] table input[type="checkbox"]:is(.rowChk,.shipCompareChk,.shipRowChk,[data-tr-check],[data-ship-chk-all],[data-fabric-pick],[data-bin-id],[data-cpa-queue-check],[data-dc-item],[data-dc-toggle-all],[data-ta-pick],[data-ta-all],[data-act="selectRow"],[data-act="selectAll"],#kolSelAll,#shipChkAll,[id$="_selAll"]):not(:checked):not(:disabled):hover{background:var(--ui-selected)!important}
-html[data-ui-system="manifest"] body[data-ui-migrated] #kolTable :is(.kolSpreadsheetRowGutter,.chkTh){width:72px!important;min-width:72px!important;max-width:72px!important;padding-left:12px!important}
+html[data-ui-system="manifest"] body[data-ui-migrated] #kolTable :is(.kolSpreadsheetRowGutter,.chkTh){width:48px!important;min-width:48px!important;max-width:48px!important;padding-left:12px!important}
+/* Ortak şerit kuralı (#kolSelAll içeren :has) gutter dolgusunu sıfırlar; sayaç şeridin sağında kalsın. */
+html[data-ui-system="manifest"] body[data-ui-migrated] #kolTable td.kolSpreadsheetRowGutter>:is(.kolModelGroupToggle,.kolModelGroupGutterSpacer){margin-left:12px}
 html[data-ui-system="manifest"] body[data-ui-migrated] .chkTh>.chkFilterBtn{position:absolute;left:8px;top:0;width:18px;min-width:18px;height:100%;opacity:0;pointer-events:none}
 html[data-ui-system="manifest"] body[data-ui-migrated] .chkTh:is(:hover,:focus-within)>.chkFilterBtn{opacity:1;pointer-events:auto;background:var(--ui-surface)}
 html[data-ui-system="manifest"] body[data-ui-migrated] td:has(>input[type="checkbox"]:is(.rowChk,.shipCompareChk,.shipRowChk,[data-tr-check],[data-ship-chk-all],[data-fabric-pick],[data-bin-id],[data-cpa-queue-check],[data-dc-item],[data-dc-toggle-all],[data-ta-pick],[data-ta-all],[data-act="selectRow"],[data-act="selectAll"],#kolSelAll,#shipChkAll,[id$="_selAll"])){position:relative}

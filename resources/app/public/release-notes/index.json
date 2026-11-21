@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "8.0.1",
+      "publishedAt": "2026-11-18",
+      "title": {
+        "tr": "Buyer Log 8.0: aşama bazlı teslimat tahmini, daha hızlı açılış ve arka planda hesaplanan ekranlar",
+        "en": "Buyer Log 8.0: stage-based delivery forecast, faster startup and screens computed in the background"
+      },
+      "stats": {
+        "features": 10,
+        "improvements": 34,
+        "fixes": 24
+      },
+      "file": "release-notes/8.0.1/release.json"
+    },
+    {
       "version": "7.0.362",
       "publishedAt": "2026-11-17",
       "title": {

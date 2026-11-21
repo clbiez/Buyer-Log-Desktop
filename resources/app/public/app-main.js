@@ -7009,7 +7009,7 @@ function cpLogisticStageHtml(segment){
   if(!st)return '<div class="cpLogisticStage">—</div>';
   const shift=cpStageShiftText(st.vsRule);
   const run=cpStageRunText(st);
-  return `<div class="cpLogisticStage${st.over>0?' cpStageOver':''}"><strong>${fmtDate(coerceDateLoose(st.eta))||'—'}</strong>${run?`<small>${escapeHtml(run)}</small>`:''}${shift?`<small class="cpStageShift ${Number(st.vsRule)>0?'is-early':Number(st.vsRule)<0?'is-late':''}">${escapeHtml(shift)}</small>`:''}</div>`;
+  return `<div class="cpLogisticStage${st.over>0?' cpStageOver':''}"><strong>${fmtDate(coerceDateLoose(st.eta))||'—'}</strong>${run?`<small data-no-i18n>${escapeHtml(run)}</small>`:''}${shift?`<small class="cpStageShift ${Number(st.vsRule)>0?'is-early':Number(st.vsRule)<0?'is-late':''}">${escapeHtml(shift)}</small>`:''}</div>`;
 }
 function cpLogisticSegmentTitle(segment){
   if(segment.kind==='production') return appLang==='en'?'Remaining in production':'Üretimde kalan';
@@ -7030,6 +7030,8 @@ function cpLogisticDetailRowHtml(row,cols,withChk,tableKey='cp'){
   const remaining=Math.max(0,toNum(row._logisticRemainingQty)||Math.max(0,total-loaded));
   // Ex-Factory ve Yükleme Onayı sipariş seviyesindedir; her parsiyelde aynı
   // sipariş tarihlerini gösterir. Handover ve Antrepo tarihi parsiyel bazında kalır.
+  // Buyer Log'un ürettiği (IAS kaydı olmayan) üretimde/eksik/kapanmış bakiye
+  // parsiyelleri önceki parsiyelin yükleme onayını devralmaz.
   const exFactory=coerceDateLoose(row&&row['Ex-factory']);
   const loadingApproval=coerceDateLoose(row&&row['Buying Son Onay Tarihi']);
   // Aşama sütunu yalnız en az bir parsiyelde aşama tahmini varsa eklenir.
@@ -7045,7 +7047,7 @@ function cpLogisticDetailRowHtml(row,cols,withChk,tableKey='cp'){
       <div>${badge(escapeHtml(statusDisplay(segment.status)||'—'),statusTone(segment.status))}</div>
       <div>${escapeHtml(segment.delType?transitDelTypeDisplay(segment.delType):'—')}</div>
       <div>${BLRevision.isAutomaticExFactory(row)?revisionHtml('Ex-factory',revisionInfo(row,'Ex-factory')):(fmtDate(exFactory)||'—')}</div>
-      <div>${fmtDate(loadingApproval)||'—'}</div>
+      <div>${segment.synthetic?'—':(fmtDate(loadingApproval)||'—')}</div>
       <div>${fmtDate(handover)||'—'}</div>
       <div class="cpLogisticDateValue"><strong>${fmtDate(arrival)||'—'}</strong>${arrivalNote?`<small>${escapeHtml(arrivalNote)}</small>`:''}</div>${hasStage?cpLogisticStageHtml(segment):''}
     </div>`;
@@ -7266,7 +7268,8 @@ function cellHtml(c,r,cf,tableKey='cp'){
       const run=r&&r._stageRun;
       if(!run||!run.code) return '<td></td>';
       const text=cpStageRunText(run);
-      return `<td class="${run.over>0?'cpStageOver':''}" title="${escapeHtml(text)}">${escapeHtml(text)}</td>`;
+      // Metin zaten aktif dilde üretilir; çeviri ağı "ETA"yı yeniden çevirmesin.
+      return `<td class="${run.over>0?'cpStageOver':''}" title="${escapeHtml(text)}" data-no-i18n>${escapeHtml(text)}</td>`;
     }
     case 'pct': return `<td class="num">${fmtPct(v)}</td>`;
     case 'importance': {
@@ -10991,6 +10994,10 @@ function cpRMSortClick(key){
 }
 function cpRMPaintTable(){
   const rows=cpRM.rows||[];
+  // Pencere satırları sunucunun hesaplanmış demetiyle gelir (cpRMDecorate): eski yolun ilk açılışta
+  // kurduğu "Hesaplanıyor…" görünümü burada kapanır; aksi halde Redraw dahil hiçbir çizim güncel
+  // Priority/checklist/formül değerini göstermezdi.
+  cpComputed.pendingView=false;
   applyFormulaColumns('cp');
   updateCpDimBtnLabels();
   document.getElementById('cpEmpty').style.display='none';
@@ -28798,6 +28805,17 @@ function kolSetAllVariantsVisible(visible){
   kolGroupedModelIds().forEach(id=>{if(visible)collapsed.delete(id);else collapsed.add(id);});
   kolSaveCollapsedGroups();renderKol();return Boolean(visible);
 }
+/* Model şeridi yalnız görünümü senkronlar: renklerin bir kısmı seçiliyse
+   model satırının şeridi yarım (indeterminate) görünür. Seçim kümesi değişmez. */
+function kolSyncModelRail(tbody,members,logicalIds){
+  const visible=(members||[]).filter(item=>logicalIds.has(String(item.id)));
+  if(visible.length<2||!tbody)return;
+  const parent=visible.find(item=>item.modelGroupRole==='parent')||visible[0];
+  const chk=[...tbody.querySelectorAll('td[data-kol-rail="parent"]>.rowChk')].find(el=>String(el.dataset.id)===String(parent.id));
+  if(!chk)return;
+  const count=visible.reduce((n,item)=>n+(selectionHasId(kolSelected,item.id)?1:0),0);
+  chk.indeterminate=count>0&&count<visible.length;
+}
 function kolToggleModelGroup(groupId){
   const id=String(groupId||'');if(!id)return false;
   const collapsed=kolLoadCollapsedGroups();if(collapsed.has(id))collapsed.delete(id);else collapsed.add(id);
@@ -32743,7 +32761,7 @@ function renderKol(){
   table.style.setProperty('--kol-row-h',`${collectionRowHeight}px`);
   table.style.setProperty('--kol-variant-row-h',`${kolVariantRowHeight(collectionRowHeight)}px`);
   table.style.setProperty('--kol-text-h',`${Math.max(24,collectionRowHeight-4)}px`);
-  colgroup.innerHTML='<col class="kolSpreadsheetGutterCol" style="width:72px;">'+(pictureVisible?`<col style="width:${_imgDim.col}px;">`:'')+descriptors.map(d=>`<col data-kcol="${d.k}" style="width:${kolDescriptorWidth(d)}px;">`).join('');
+  colgroup.innerHTML='<col class="kolSpreadsheetGutterCol" style="width:48px;">'+(pictureVisible?`<col style="width:${_imgDim.col}px;">`:'')+descriptors.map(d=>`<col data-kcol="${d.k}" style="width:${kolDescriptorWidth(d)}px;">`).join('');
   const confirmedPriceFilterHint=appLang==='en'?'Set with the approval check in the price cell':'Fiyat hücresindeki onay tikiyle belirlenir';
   const headers=descriptors.map(d=>{
     if(d.kind==='base'){
@@ -32826,7 +32844,7 @@ function renderKol(){
   syncTableSelectAll(selAll,logicalRows,kolSelected,row=>row.id);
   selAll.addEventListener('change',()=>{
     logicalRows.forEach(r=>selectionSetId(kolSelected,r.id,selAll.checked));
-    tbody.querySelectorAll('.rowChk').forEach(chk=>{chk.checked=selAll.checked;});
+    tbody.querySelectorAll('.rowChk').forEach(chk=>{chk.checked=selAll.checked;chk.indeterminate=false;});
     updateSelectionFooterCount(table,logicalRows,kolSelected,row=>row.id);
     updateKolSendBtnState();
   });
@@ -32865,10 +32883,20 @@ function renderKol(){
     tr.dataset.id=r.id;tr.dataset.modelGroupId=r.modelGroupId||'';tr.dataset.variantId=r.variantId||'';tr.dataset.modelGroupRole=isGrouped?(isParent?'parent':'variant'):'single';
     if(isParent)tr.classList.add('kolModelGroupParent');else if(showAsVariant)tr.classList.add('kolModelGroupVariant');
     if(r.dropped){tr.classList.add('kolDroppedRow');tr.dataset.dropped='true';}
-    const groupToggle=isParent
-      ?`<button type="button" class="kolModelGroupToggle" data-kol-group-toggle="${escapeHtml(r.modelGroupId)}" aria-expanded="${collapsed?'false':'true'}" title="${escapeHtml((collapsed?(appLang==='en'?'Expand colour variants':'Renk varyantlarını aç'):(appLang==='en'?'Collapse colour variants':'Renk varyantlarını daralt'))+` · ${groupMembers.length}`)}"><svg class="ic" aria-hidden="true"><use href="${collapsed?'#i-chevron-right':'#i-chevron-down'}"/></svg></button>`
-      :`<span class="kolModelGroupGutterSpacer${showAsVariant?' isVariant':''}" aria-hidden="true"></span>`;
-    let html=`<td class="chkCell kolSpreadsheetRowGutter" data-r="${ri}" data-c="0">${groupToggle}<button type="button" class="kolSpreadsheetRowNumber" data-kol-row-number="${ri+1}" data-row-id="${r.id}" title="${escapeHtml(appLang==='en'?'Select spreadsheet row':'Tablo satırını seç')}">${ri+1}</button><input type="checkbox" class="rowChk" aria-label="${escapeHtml(appLang==='en'?'Select row':'Satırı seç')}" data-id="${r.id}" ${selectionHasId(kolSelected,r.id)?'checked':''}></td>`;
+    // Sol gutter (B): model satırında renk sayacı (aç/kapa), her renk kaydında
+    // gerçek renk noktası. Seçim şeridi model satırında grubu birlikte seçer.
+    const railCount=isParent?groupMembers.filter(item=>logicalIds.has(String(item.id))).length:0;
+    const railRole=railCount>1?'parent':(showAsVariant?'variant':'single');
+    const railLabel=railRole==='parent'
+      ?(appLang==='en'?`Select model with all ${railCount} colour options`:`Modeli ${railCount} renk opsiyonuyla birlikte seç`)
+      :railRole==='variant'?(appLang==='en'?'Select this colour option only':'Yalnız bu renk opsiyonunu seç'):(appLang==='en'?'Select row':'Satırı seç');
+    const groupToggle=railRole==='parent'
+      ?`<button type="button" class="kolModelGroupToggle kolModelGroupCount" data-kol-group-toggle="${escapeHtml(r.modelGroupId)}" aria-expanded="${collapsed?'false':'true'}" title="${escapeHtml((collapsed?(appLang==='en'?'Show colour options':'Renk opsiyonlarını göster'):(appLang==='en'?'Hide colour options':'Renk opsiyonlarını gizle'))+` · ${railCount}`)}">${railCount}</button>`
+      :`<span class="kolModelGroupGutterSpacer" aria-hidden="true"></span>`;
+    const swatch=window.BLCollectionModelGroups?.colourSwatch?.(r)||'';
+    const colourName=String(r.colour||r.colourCode||'').trim();
+    const colourDot=`<span class="kolColourDot${swatch?'':' isUnknown'}"${swatch?` style="--kol-dot:${swatch}"`:''} title="${escapeHtml(colourName||(appLang==='en'?'No colour':'Renk yok'))}" aria-hidden="true"></span>`;
+    let html=`<td class="chkCell kolSpreadsheetRowGutter" data-r="${ri}" data-c="0" data-kol-rail="${railRole}">${groupToggle}${colourDot}<input type="checkbox" class="rowChk" aria-label="${escapeHtml(railLabel)}" title="${escapeHtml(railLabel)}" data-id="${r.id}" ${selectionHasId(kolSelected,r.id)?'checked':''}></td>`;
     if(pictureVisible){
       const canonicalImageSource=canonicalModelImageSource(r.plmId,r.colourCode,r.colour);
       const sharedCollectionImageSource=String(r&&r._sharedCollectionImageUrl||'');
@@ -33063,7 +33091,21 @@ function renderKol(){
   tbody.querySelectorAll('[data-kol-group-toggle]').forEach(btn=>btn.addEventListener('click',event=>{
     event.preventDefault();event.stopPropagation();kolToggleModelGroup(btn.dataset.kolGroupToggle);
   }));
-  tbody.querySelectorAll('.rowChk').forEach(chk=>chk.addEventListener('change',()=>{const id=selectionActualId(logicalRows,row=>row.id,chk.dataset.id);selectionSetId(kolSelected,id,chk.checked);updateSelectionFooterCount(table,logicalRows,kolSelected,row=>row.id);updateKolSendBtnState();}));
+  tbody.querySelectorAll('.rowChk').forEach(chk=>chk.addEventListener('change',()=>{
+    const id=selectionActualId(logicalRows,row=>row.id,chk.dataset.id);
+    const row=logicalRows.find(item=>String(item.id)===String(id));
+    const members=row?.modelGroupId?(groupMembersById.get(String(row.modelGroupId))||[]).filter(item=>logicalIds.has(String(item.id))):[];
+    if(chk.closest('td')?.dataset.kolRail==='parent'&&members.length>1){
+      // Model şeridi: kısmi seçimde tamamını seçer, tam seçimde tamamını bırakır.
+      const target=!members.every(item=>selectionHasId(kolSelected,item.id));
+      const memberIds=new Set(members.map(item=>String(item.id)));
+      members.forEach(item=>selectionSetId(kolSelected,item.id,target));
+      tbody.querySelectorAll('.rowChk').forEach(other=>{if(memberIds.has(String(other.dataset.id)))other.checked=target;});
+    }else selectionSetId(kolSelected,id,chk.checked);
+    if(row?.modelGroupId)kolSyncModelRail(tbody,groupMembersById.get(String(row.modelGroupId))||[],logicalIds);
+    updateSelectionFooterCount(table,logicalRows,kolSelected,row=>row.id);updateKolSendBtnState();
+  }));
+  new Set(visibleRows.map(row=>String(row.modelGroupId||'')).filter(Boolean)).forEach(groupId=>kolSyncModelRail(tbody,groupMembersById.get(groupId)||[],logicalIds));
   tbody.querySelectorAll('.endeksmatikCellBtn[data-endeksmatik-id]').forEach(btn=>btn.addEventListener('click',event=>{
     event.preventDefault();event.stopPropagation();const row=kolRows.find(item=>Number(item.id)===Number(btn.dataset.endeksmatikId));if(!row)return;
     if(kolCellLinkedToModel(row,'endeksmatik')){showToast(appLang==='en'?'This field is linked to the model. Use right-click › Make this field colour-specific first.':'Bu alan modele bağlı. Önce sağ tık › Bu alanı renk özelinde yap.');return;}
@@ -42566,6 +42608,8 @@ function kolEditingRowIds(){
   const active=document.activeElement;
   if(!active||typeof active.closest!=='function')return null;
   if(!active.closest('input,textarea,select,[contenteditable="true"]'))return null;
+  // Satır seçim kutusu veri düzenlemesi değildir; odakta kalsa da çizimi ertelemez.
+  if(active.matches?.('.rowChk,#kolSelAll'))return null;
   const host=active.closest('[data-id]')||active;
   const id=host&&host.dataset?host.dataset.id:'';
   return new Set(id===''||id==null?[]:[String(id)]);
@@ -42582,7 +42626,7 @@ document.addEventListener('change',event=>{
   if(event.target?.dataset?.kolUncommitted==='1')delete event.target.dataset.kolUncommitted;
 },true);
 function kolHasActiveWorkspaceEditor(){
-  return kolPointerActive||Boolean(kolEditingRowIds()?.size||document.activeElement?.matches?.('#kolSearch, #view-koleksiyon input, #view-koleksiyon textarea, #view-koleksiyon select, #view-koleksiyon [contenteditable="true"]'));
+  return kolPointerActive||Boolean(kolEditingRowIds()?.size||document.activeElement?.matches?.('#kolSearch, #view-koleksiyon input:not(.rowChk):not(#kolSelAll), #view-koleksiyon textarea, #view-koleksiyon select, #view-koleksiyon [contenteditable="true"]'));
 }
 function kolDirtyRowIds(){
   const change=kolCollectChanges();

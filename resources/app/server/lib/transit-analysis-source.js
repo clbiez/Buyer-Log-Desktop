@@ -298,6 +298,17 @@ function milestonesFromEntry(entry) {
   return out;
 }
 
+/* Tembel tekil denetim: projeksiyon yalnız sıradaki birkaç adımı sorar
+   (Backlog sıcak yolunda her parsiyelde bütün alanları taramamak için). */
+function hasMilestoneColumn(entry, milestone) {
+  if (milestone === 'handover' || milestone === 'warehouseEntry') return true;
+  const fields = entry && entry._sourceFields;
+  const wanted = SOURCE_KEYS[milestone];
+  if (!fields || typeof fields !== 'object' || !wanted) return true;
+  for (const name in fields) if (wanted.has(cachedHeaderKey(name))) return true;
+  return false;
+}
+
 /* Risk hesabının okuduğu aşama süre modeli. Canlı analizle aynı parsiyel
    kümesinden (kapsam + tarih penceresi) yalnız gerçekleşen tarihlerle kurulur. */
 function buildStageModel({ orders, antrepoMap, overrides, today, sourceLabel, window, scope, generatedBy } = {}) {
@@ -344,5 +355,5 @@ function buildLiveAnalysis({ orders, antrepoMap, overrides, today, sourceLabel, 
 module.exports = {
   SOURCE_FIELDS, COMPANY_EXTRA_FIELDS, headerKey, findSchemaColumn,
   collectShipments, collectAllShipments, applyReportRules, baseHorizonForCompany, queryCompanyIasRows, buildLiveAnalysis,
-  milestonesFromEntry, buildStageModel,
+  milestonesFromEntry, hasMilestoneColumn, buildStageModel,
 };

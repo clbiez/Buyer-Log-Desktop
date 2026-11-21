@@ -31,7 +31,9 @@ test('checkbox selection keeps the source row id instead of coercing every id to
   assert.doesNotMatch(framework, /Number\(chk\.dataset\.id\)/);
 
   const collectionStart = APP.indexOf("tbody.querySelectorAll('.rowChk').forEach(chk=>chk.addEventListener", APP.indexOf('function renderKol'));
-  const collection = APP.slice(collectionStart, collectionStart + 700);
+  // İşleyicinin tamamı (model şeridi grup seçimi dahil) denetlenir.
+  const collection = APP.slice(collectionStart, APP.indexOf('updateKolSendBtnState();\n  }));', collectionStart));
+  assert.ok(collectionStart >= 0 && collection.length > 0, 'Koleksiyon checkbox işleyicisi bulunamadı');
   assert.match(collection, /selectionActualId\(logicalRows,row=>row\.id,chk\.dataset\.id\)/);
   assert.match(collection, /selectionSetId\(kolSelected,id,chk\.checked\)/);
   assert.doesNotMatch(collection, /Number\(chk\.dataset\.id\)/);

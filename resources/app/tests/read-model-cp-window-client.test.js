@@ -200,3 +200,23 @@ test('windowed path waits for the first server computed result of the session; u
   assert.match(sched,/cpComputed\.applied=\{rows,token:payload\.columns\.token,lang\};cpComputed\.transient=0;cpComputed\.readyOnce=true;/);
   assert.ok(sched.indexOf('cpComputed.readyOnce=true')<sched.indexOf('renderCP();'),'ilk sonuç tabloyu yeniden çizer → pencereli yol');
 });
+
+test('windowed paint clears the legacy "calculating" view: window rows carry the server computed tuple (Redraw shows fresh values)',()=>{
+  const fn=extractFunction(SOURCE,'cpRMPaintTable');
+  const pendingCell=extractFunction(SOURCE,'cpComputedPendingCell');
+  const el={style:{}};
+  const ctx=vm.createContext({document:{getElementById:()=>el},state:{cpSort:{},cpDirty:new Set(),cpSelected:new Set()},appLang:'tr',
+    escapeHtml:s=>String(s),__seenPending:null});
+  vm.runInContext(`var cpRM={rows:[{_id:1,Priority:'ON_TRACK'}]};var cpComputed={pendingView:true};const CP_IMAGE_WARMUP_ROWS=300;
+    const cpComputedPendingText=()=>'Hesaplanıyor…';function cpComputedDependentKey(k){return k==='Priority';}
+    function applyFormulaColumns(){}function updateCpDimBtnLabels(){}function computeFlags(){return {};}function renderCP(){}
+    function cpRMSortClick(){}function cpRMSelectionNeedsRows(){return false;}function cpRMLoadRowsForSelection(){}function updateShippingBtnVisibility(){}
+    function cellHtml(){return '';}function cpRMNeedRow(){}function cpLogisticDetailRowHtml(){return '';}function cpRMLoadAllIdRows(){}
+    function cpRMSelectionRows(){}function cpRMFooterTotals(){}function bindCpImageCells(){}function bindStatusBacklogDrilldown(){}function scheduleCpImageWarmup(){}
+    ${pendingCell}
+    function renderFullTable(){__seenPending=cpComputedPendingCell({k:'Priority'},'cp');}
+    ${fn};globalThis.paint=cpRMPaintTable;globalThis.s={cpComputed};`,ctx);
+  ctx.paint();
+  assert.equal(ctx.s.cpComputed.pendingView,false,'pencereli yol bekleyen görünümü kapatır');
+  assert.equal(ctx.__seenPending,'','Priority hücresi "Hesaplanıyor…" yerine gerçek değeri çizer');
+});
