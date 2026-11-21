@@ -111,6 +111,9 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
             {ownerKey:preparationOwner,generation:version,priority:'background',estimatedBytes:96*MiB+uncompressedBytes*SOURCE_JOB_FACTOR,inputBytes:uncompressedBytes*2});
         }catch(error){
           if(error?.code!=='COMPUTE_JOB_TOO_LARGE')throw error;
+          // İşçi yazdıktan sonra heap'i tükettiyse (sonlanmış; başka yazma olmaz) yarım/tam kopya
+          // izlenmeden diskte kalmasın: kayıttan ve bütçeden düşmeden önce silinir.
+          if(error.workerOutOfMemory)await fs.promises.rm(replicaFile,{force:true});
           await locally(()=>{
             if(preparing.get(owner)!==version)throw failure('COMPUTE_STALE_GENERATION');
             delete descriptor.replicaFile;descriptor.inlineSource=true;

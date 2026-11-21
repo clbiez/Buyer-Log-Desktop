@@ -46,6 +46,21 @@ test('a source larger than the worker source cache uses the capacity path instea
   assert.equal(pool.stats().workerCount,0,'no worker is started for a source the worker cache cannot hold');
 });
 
+test('a source copy whose worker ran out of memory after writing removes the orphaned replica file',async t=>{
+  let written;
+  const pool={setGeneration(){},stats:()=>({maxWorkers:1}),close:async()=>{},
+    run:async(task,payload)=>{
+      if(task!=='seed-source')throw Error('unexpected '+task);
+      written=payload.replicaFile;fs.writeFileSync(written,Buffer.alloc(1024));
+      throw Object.assign(Error('out of memory'),{code:'COMPUTE_JOB_TOO_LARGE',workerOutOfMemory:true});
+    }};
+  const service=createComputeService({pool,root});t.after(()=>service.close());
+  const descriptor=await service.seedSource({ownerId:'a',generation:'g1',source:source(),uncompressedBytes:MiB});
+  assert.equal(descriptor.inlineSource,true);
+  assert.ok(written);assert.equal(fs.existsSync(written),false,'the partial replica is not left behind');
+  assert.equal(service.stats().reservedDiskBytes,0);
+});
+
 test('a worker that runs out of memory reports a capacity rejection, other crashes stay failures',async t=>{
   const workers=[];
   class FakeWorker extends EventEmitter{
