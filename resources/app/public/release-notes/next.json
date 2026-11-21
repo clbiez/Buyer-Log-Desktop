@@ -41,35 +41,6 @@
       }
     },
     {
-      "id": "sessiz-workspace-preview",
-      "type": "feature",
-      "module": {
-        "tr": "Görünüm",
-        "en": "Appearance"
-      },
-      "title": {
-        "tr": "Sessiz çalışma alanı (önizleme)",
-        "en": "Quiet workspace (preview)"
-      },
-      "body": {
-        "tr": "Görünüm menüsündeki Stil: Sessiz (önizleme), uygulamanın içinde ayrı bir sade görünüm açar. CP Tracker gerçek CP satırlarını Ex-Factory haftalarına göre gruplar; ana sütun başlıkları daraltılabilir, rapor görünümü aynı başlık altındaki alanları tek sütunda toplar. Hızlı filtre, arama, sıralama, hücre seçimi ve toplamı, kopyalama ve satır detayı vardır. Genel Bakış widget ızgarası sayfa, sürükle, boyutlandır ve dünya saatleriyle gelir. Önizleme salt okunurdur; düzenleme ve diğer modüller tek tıkla klasik görünümde açılır. Klasik görünüm düğmesi her zaman geri döner.",
-        "en": "Style: Quiet (preview) in the Appearance menu opens a separate, minimal view inside the app. CP Tracker groups live CP rows by Ex-Factory week; main column headers collapse, and report view stacks the fields under each header in one column. Quick filters, search, sorting, cell selection with totals, copy and row details are included. The Overview widget grid supports pages, drag, resize and world clocks. The preview is read-only; editing and other modules open in the classic view with one click, and Classic view always returns."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "sessiz-workspace-cp.png",
-        "alt": {
-          "tr": "Sessiz çalışma alanında CP Tracker, Ex-Factory haftalarına göre gruplu",
-          "en": "CP Tracker in the Quiet workspace, grouped by Ex-Factory week"
-        },
-        "caption": {
-          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo hesapları ve verisi.",
-          "en": "Actual post-change Buyer Log with isolated demo accounts and data."
-        }
-      }
-    },
-    {
       "id": "data-picker-group-headers",
       "type": "fix",
       "module": {"tr": "ASAS / IAS · Veri Yönetimi", "en": "ASAS / IAS · Data Management"},
