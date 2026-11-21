@@ -243,7 +243,8 @@ test('central directory · network failure returns an empty canonical lookup ins
 test('v7.35/v7.36 sürüm tüm dosyalarda canonical runtime kaynaktan birlikte ilerliyor', () => {
   const pkgVersion = JSON.parse(read('package.json')).version;
   assert.match(pkgVersion, /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/);
-  const displayVersion = pkgVersion.replace(/^7\.0\./, '7.');
+  const displayVersion = require(path.join(ROOT, 'server', 'lib', 'app-version.js')).toDisplayVersion(pkgVersion);
+  assert.match(displayVersion, /^\d+\.\d{2,}$/);
   const index = read('public/index.html');
   assert.ok(index.includes('Version __BL_DISPLAY_VERSION__'));
   assert.ok(index.includes('buyerlog.bootRetry.v__BL_DISPLAY_VERSION__'));

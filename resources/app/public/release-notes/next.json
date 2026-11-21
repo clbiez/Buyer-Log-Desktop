@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-18",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Daha hızlı açılış, rapor görünümü ve ASAS / IAS",
-    "en": "Faster startup, report view and ASAS / IAS"
+    "tr": "Buyer Log 8.0: aşama bazlı teslimat tahmini, daha hızlı açılış ve arka planda hesaplanan ekranlar",
+    "en": "Buyer Log 8.0: stage-based delivery forecast, faster startup and screens computed in the background"
   },
   "summary": {
-    "tr": "Program dosyaları paralel doğrulanır ve girişten sonra çalışma alanı doğrudan açılır. Raporların ayrı görsel boyutu ayarı ve satır ayraçları vardır. ASAS / IAS yenilemesi hızlanır.",
-    "en": "Program files are verified in parallel and the workspace opens directly after sign-in. Reports have their own image-size settings and row dividers. ASAS / IAS refresh is faster."
+    "tr": "Teslimat tahmini IAS aşama sürelerinden hesaplanır ve CP, Siparişler ve Priority Rules'ta görünür. Program dosyaları paralel doğrulanır, girişten sonra çalışma alanı doğrudan açılır; Genel Bakış, CP ve Siparişler arka planda hazırlanır. Raporların ayrı görsel boyutu ve satır ayraçları vardır, ASAS / IAS yenilemesi hızlanır.",
+    "en": "Delivery forecasts are calculated from IAS stage durations and shown in CP, Orders and Priority Rules. Program files are verified in parallel and the workspace opens directly after sign-in; Overview, CP and Orders are prepared in the background. Reports have their own image size and row dividers, and ASAS / IAS refresh is faster."
   },
   "changes": [
     {
