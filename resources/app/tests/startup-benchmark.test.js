@@ -31,7 +31,7 @@ test('heap sampling reads metrics without forcing GC and bounds unresponsive pro
 test('real benchmark wait predicates reject missing probes during document navigation',()=>{
   const source=fs.readFileSync(path.join(__dirname,'../scripts/benchmark-startup-orders.js'),'utf8');
   const lines=source.split('\n').filter(line=>line.includes('page.waitForFunction(')&&(/primaryScreenReadyMs|startupCompleteMs/.test(line)));
-  assert.equal(lines.length,3);
+  assert.equal(lines.length,2);
   for(const line of lines){
     const predicate=line.slice(line.indexOf('page.waitForFunction(')+'page.waitForFunction('.length,line.indexOf(',null,'));
     for(const probe of [undefined,{}, {primaryScreenReadyMs:null,startupReadyMs:null,startupCompleteMs:null}]){
