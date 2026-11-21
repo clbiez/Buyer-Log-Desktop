@@ -32,6 +32,26 @@
       }
     },
     {
+      "id": "sync-onedrive-transfer-guard",
+      "type": "feature",
+      "module": {"tr": "Sync", "en": "Sync"},
+      "title": {
+        "tr": "OneDrive aktarımı takıldığında Buyer Log uyarır",
+        "en": "Buyer Log warns when the OneDrive transfer gets stuck"
+      },
+      "body": {
+        "tr": "Buyer Log, değişikliklerinizin 30 dakikadan uzun süredir diğer cihazlara ulaşmadığını veya diğer cihazların değişikliklerinin bu bilgisayara inmediğini cihazlar arası onayla algılar. Sync rozeti ve Sync durumu uyarı gösterir. Uyarıda, \"Dosyaları bu cihazda tut\" ve kullanıcı onayıyla \"OneDrive'ı yeniden başlat\" işlemleri sunulur. İki işlem de dosya silmez ve kendiliğinden çalışmaz. Ortak klasörde zaman zaman kalan .buyerlog-hub-probe dosyaları da artık bırakılmaz; eskileri temizlenir.",
+        "en": "Buyer Log uses acknowledgements between devices to detect when your changes have not reached other devices for more than 30 minutes, or when changes from other devices have not arrived on this computer. The sync badge and Sync Status show a warning. The warning offers \"Keep files on this device\" and, after you confirm, \"Restart OneDrive\". Neither action deletes files or runs on its own. The .buyerlog-hub-probe files that were sometimes left in the shared folder are no longer left behind, and old ones are cleaned up."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sync-onedrive-transfer-alert.png",
+        "alt": {"tr": "Demo Sync durumu penceresinde OneDrive aktarım uyarısı ve güvenli işlem düğmeleri", "en": "OneDrive transfer warning with safe action buttons in a demo Sync Status window"},
+        "caption": {"tr": "Yayın diğer cihazlara ulaşmadığında Sync durumu nedeni ve güvenli çözümleri gösterir.", "en": "When a publication does not reach other devices, Sync Status shows the cause and safe fixes."}
+      }
+    },
+    {
       "id": "fabric-filter-set-parts",
       "type": "feature",
       "module": {"tr": "Koleksiyon · CP · Siparişler", "en": "Collection · CP · Orders"},
