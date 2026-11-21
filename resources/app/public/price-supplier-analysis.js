@@ -103,6 +103,8 @@
   const unit=()=>model&&!model.weighted?t('records'):t('units');
   const vol=value=>`${fmtInt(value)} ${unit()}`;
   function persist(){try{(window.BLStorage||localStorage).setItem(STORAGE_KEY,JSON.stringify(state));}catch(_){}}
+  // Filtre kimliği dilden bağımsızdır (PLM Artwork: TR metin); EN yalnız etiketi çevirir.
+  function valueLabel(dim,value){return (isEn()&&data?.valueLabels?.[dim]?.en?.[value])||value;}
   function filterValues(dim){const raw=state.filters[dim];return Array.isArray(raw)?raw.filter(Boolean):(raw?[raw]:[]);}
   /* Kanonik boyutlar + kullanıcının eklediği ham sütun filtreleri. */
   function filterDims(){return [...new Set([...E.FILTER_DIMENSIONS,...state.filterLayout,...Object.keys(state.filters)])].filter(E.isFilterDim);}
@@ -190,14 +192,14 @@
     if(!values.length)return `<div class="psaMultiFilter psaField isEmpty" title="${esc(t('noSourceData'))}"><span class="psaMultiCaption">${esc(dimLabel(dim))}</span><span class="psaMultiTrigger" aria-disabled="true"><span class="psaMultiLabel">${esc(t('noSourceData'))}</span><span class="psaMultiChevron" aria-hidden="true">▾</span></span></div>`;
     const selected=filterValues(dim),selectedKeys=new Set(selected.map(value=>E.keyOf(value))),query=ui.filterSearch[dim]||'',queryKey=E.keyOf(query);
     const ordered=values.slice().sort((a,b)=>Number(selectedKeys.has(E.keyOf(b)))-Number(selectedKeys.has(E.keyOf(a))));
-    const shown=values.filter(value=>!queryKey||E.keyOf(value).includes(queryKey)),summary=selected.length>1?`${selected.length} ${t('selected')}`:selected[0]||t('all');
+    const shown=values.filter(value=>!queryKey||E.keyOf(value).includes(queryKey)||E.keyOf(valueLabel(dim,value)).includes(queryKey)),summary=selected.length>1?`${selected.length} ${t('selected')}`:(selected[0]?valueLabel(dim,selected[0]):t('all'));
     return `<details class="psaMultiFilter psaField${selected.length?' isActive':''}" data-ps-filter-menu="${dim}"${ui.openFilter===dim?' open':''}>
       <summary><span class="psaMultiCaption">${esc(dimLabel(dim))}</span><span class="psaMultiTrigger"><span class="psaMultiLabel">${esc(summary)}</span><span class="psaMultiChevron" aria-hidden="true">▾</span></span></summary>
       <div class="psaMultiPanel blMotionOverlay">
         <input type="search" class="psaMultiSearch" data-ps-filter-search="${dim}" value="${esc(query)}" placeholder="${esc(t('filterSearch'))}" autocomplete="off">
         <div class="cfpHeader"><button type="button" class="cfpAll" data-ps-filter-bulk="all" data-ps-filter-dim="${dim}">${esc(t('selectAll'))}</button><button type="button" class="cfpAll" data-ps-filter-bulk="clear" data-ps-filter-dim="${dim}">${esc(t('clear'))}</button></div>
         <div class="psaMultiList" role="listbox" aria-multiselectable="true">
-          ${ordered.map(value=>{const key=E.keyOf(value),hidden=queryKey&&!key.includes(queryKey);return `<label class="psaMultiOption" data-ps-filter-option data-search="${esc(key)}"${hidden?' hidden':''}><input type="checkbox" data-ps-filter-value="${dim}" value="${esc(value)}"${selectedKeys.has(key)?' checked':''}><span>${esc(value)}</span></label>`;}).join('')}
+          ${ordered.map(value=>{const key=E.keyOf(value),label=valueLabel(dim,value),search=label===value?key:`${key} ${E.keyOf(label)}`,hidden=queryKey&&!search.includes(queryKey);return `<label class="psaMultiOption" data-ps-filter-option data-search="${esc(search)}"${hidden?' hidden':''}><input type="checkbox" data-ps-filter-value="${dim}" value="${esc(value)}"${selectedKeys.has(key)?' checked':''}><span>${esc(label)}</span></label>`;}).join('')}
           <p class="psaMultiEmpty" data-ps-filter-empty${shown.length?' hidden':''}>${esc(t('noFilterMatch'))}</p>
         </div>
       </div>
@@ -476,7 +478,7 @@
       const X=window.XLSX;if(!X)throw new Error('XLSX');
       const book=X.utils.book_new(),r=value=>E.round(value,2);
       const summary=[{[t('summary')]:t('source'),[t('value')]:t('src_'+state.source)},{[t('summary')]:t('season'),[t('value')]:model.currentSeason||t('allSeasons')},{[t('summary')]:t('compare'),[t('value')]:model.previousSeason||t('noCompare')},
-        ...filterDims().filter(dim=>filterValues(dim).length).map(dim=>({[t('summary')]:dimLabel(dim),[t('value')]:filterValues(dim).join(', ')})),
+        ...filterDims().filter(dim=>filterValues(dim).length).map(dim=>({[t('summary')]:dimLabel(dim),[t('value')]:filterValues(dim).map(value=>valueLabel(dim,value)).join(', ')})),
         {[t('summary')]:t('volume'),[t('value')]:model.totals.volume},{[t('summary')]:`${t('avgPrice')} (${model.currency})`,[t('value')]:r(model.totals.price)},{[t('summary')]:t('activeSuppliers'),[t('value')]:model.totals.manufacturers},
         ...E.insights(model,isEn()?'en':'tr').map(item=>({[t('summary')]:t('assistant'),[t('value')]:item.text}))];
       X.utils.book_append_sheet(book,X.utils.json_to_sheet(summary),t('summary').slice(0,31));
@@ -554,8 +556,6 @@
      visible; otherwise prepare once on the next visit. */
   let datasetStale=false;
   function isVisible(){return typeof window.currentActiveTab==='function'?window.currentActiveTab()==='priceanalysis':Boolean(root&&root.offsetParent);}
-  // PLM Artwork etkin dilde hazırlanır: dil değişince veri yeniden hazırlanır.
-  if(typeof MutationObserver==='function')new MutationObserver(()=>{if(dataset)invalidate();}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
   function invalidate(){prefetched=false;if(!root||!root.dataset.initialized)return;datasetStale=true;if(isVisible()){datasetStale=false;void prepare();}}
   /* v20260929 — Tek yenileme bitince ekran HİÇ açılmamış olsa bile veri kümesi
      arka planda hazırlanır (DOM çizilmez: kök yokken render() hiçbir şey yapmaz).

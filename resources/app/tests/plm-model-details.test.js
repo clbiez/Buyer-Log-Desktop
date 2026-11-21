@@ -70,3 +70,18 @@ test('Compact LFL yanıtı: PLM metinleri satıra değil model sözlüğüne yaz
   assert.deepEqual(Object.keys(dict), ['101']);
   assert.equal(dict['101'].plmArtworkEn, 'Front: 1 | Pigment | Total: 1');
 });
+
+test('Set Style: EN artwork metni parça yerleşimlerinden A/B etiketiyle kurulur', () => {
+  const set = store({
+    201: { plmId: '201', styleId: '9201', isSetStyle: true,
+      setComponents: [
+        { label: 'A', childStyleId: '1', childPlmId: '11', fabric: 'Orme,Süprem,150 gsm,100% Cotton', placements: [{ placement: 'front_body', placementTr: 'Ön', placementEn: 'Front', count: 1, printType: 'Pigment' }] },
+        { label: 'B', childStyleId: '2', childPlmId: '12', fabric: 'Orme,Ribana,220 gsm,100% Cotton', placements: [] },
+      ] },
+  });
+  const out = details.detailsForIds(['201'], set)['201'];
+  assert.equal(out.plmArtworkEn, 'A - Front: 1 | Pigment | Total: 1\nB - No print');
+  assert.match(out.plmArtwork, /^A - Ön: 1 \| Pigment \| Toplam: 1\nB - Baskı yok$/);
+  assert.doesNotMatch(out.plmArtworkEn, /Ön|Toplam|Baskı/);
+  assert.equal(out.kumasTipi, 'Süprem + Ribana');
+});

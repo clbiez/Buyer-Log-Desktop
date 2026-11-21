@@ -59,20 +59,17 @@ function fieldKey(name, value) {
   return hit;
 }
 
-function artworkText(entry, lang) {
-  if (!entry) return '';
-  if (entry.isSetStyle) return clean(entry.artworkSummary || entry.summary);
-  const placements = Array.isArray(entry.placements) ? entry.placements : [];
-  const counted = placements.filter(item => item && item.placement !== 'all_over');
-  if (!counted.length) return lang === 'en' ? 'No print' : 'Baskı yok';
-  if (lang !== 'en') return clean(entry.summary) || clean(bomApi.summaryForPlacements(placements).summary);
-  /* EN metni yerleşim sözlüğünden kurulur (sunucu özetiyle aynı kural):
-     aynı teknik paylaşılıyorsa sonda tek teknik, değilse bölge başına. */
+/* Yerleşimlerden baskı özeti (sunucu summaryForPlacements ile aynı kural):
+   aynı teknik paylaşılıyorsa sonda tek teknik, değilse bölge başına. */
+function placementsText(placements, lang) {
+  const en = lang === 'en';
+  const counted = (Array.isArray(placements) ? placements : []).filter(item => item && item.placement !== 'all_over');
+  if (!counted.length) return en ? 'No print' : 'Baskı yok';
   const groups = new Map(), techniques = new Set();
   let total = 0;
   for (const item of counted) {
     const meta = bomApi.PLACEMENTS[item.placement] || bomApi.PLACEMENTS.other;
-    const label = item.placementEn || meta.en;
+    const label = en ? (item.placementEn || meta.en) : (item.placementTr || meta.tr);
     const count = Math.max(1, Math.min(20, Number(item.count) || meta.count || 1));
     const technique = clean(item.printType);
     const group = groups.get(label) || { order: Object.keys(bomApi.PLACEMENTS).indexOf(meta.key), count: 0, techniques: new Set() };
@@ -84,9 +81,26 @@ function artworkText(entry, lang) {
   const ordered = [...groups].sort((a, b) => a[1].order - b[1].order);
   const techOf = group => [...group.techniques].join(' + ');
   const uniform = new Set(ordered.map(([, group]) => techOf(group))).size <= 1;
-  if (!uniform) return `${ordered.map(([label, group]) => `${label}: ${group.count}${techOf(group) ? ` | ${techOf(group)}` : ''}`).join(' • ')} | Total: ${total}`;
+  const totalText = `${en ? 'Total' : 'Toplam'}: ${total}`;
+  if (!uniform) return `${ordered.map(([label, group]) => `${label}: ${group.count}${techOf(group) ? ` | ${techOf(group)}` : ''}`).join(' • ')} | ${totalText}`;
   const tech = [...techniques].join(' + ');
-  return `${ordered.map(([label, group]) => `${label}: ${group.count}`).join(' • ')}${tech ? ` | ${tech}` : ''} | Total: ${total}`;
+  return `${ordered.map(([label, group]) => `${label}: ${group.count}`).join(' • ')}${tech ? ` | ${tech}` : ''} | ${totalText}`;
+}
+
+function artworkText(entry, lang) {
+  if (!entry) return '';
+  if (entry.isSetStyle) {
+    /* TR: kayıtlı kanonik Set Style özeti (A/B/C ayrımı korunur). EN: aynı
+       satırlar her parçanın kendi yerleşimlerinden, A/B/C etiketiyle kurulur. */
+    const parts = Array.isArray(entry.setComponents) ? entry.setComponents : [];
+    if (lang === 'en' && parts.length) {
+      return parts.map((part, index) => `${clean(part && part.label) || (index < 26 ? String.fromCharCode(65 + index) : String(index + 1))} - ${placementsText(part && part.placements, 'en')}`).join('\n');
+    }
+    return String(entry.artworkSummary || entry.summary || '').trim();
+  }
+  const placements = Array.isArray(entry.placements) ? entry.placements : [];
+  if (lang !== 'en' && placements.some(item => item && item.placement !== 'all_over')) return clean(entry.summary) || placementsText(placements, 'tr');
+  return placementsText(placements, lang);
 }
 
 /* Set Style'da her parçanın kumaşı ayrı ayrıştırılır; parçalar aynı değeri

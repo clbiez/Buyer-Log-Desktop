@@ -33874,16 +33874,18 @@ window.BLLicenseDataBridge={
 };
 /* Fiyat & Üretici Analizi: PLM Kumaş / PLM Artwork ve PLM kumaş özellikleri
    filtre boyutları. LFL satırları bunları sunucudan hazır taşır; diğer
-   kaynaklarda kalıcı PLM BOM özetinden (BLPlmModelDetails) okunur. Artwork
-   metni etkin dilde yazılır; sürüm dile bağlıdır, dil değişince analiz
-   yeniden hazırlanır. */
+   kaynaklarda kalıcı PLM BOM özetinden (BLPlmModelDetails) okunur. PLM
+   Artwork filtre kimliği dilden bağımsız TR metindir; EN görünüm
+   valueLabels.plmArtwork ile yalnız etiketi çevirir (dil değişiminde seçim
+   korunur). */
 const PRICE_ANALYSIS_PLM_FIELDS=['fabricCategory','kumasTipi','iplikNo','fabricWeight','karisim'];
 async function priceAnalysisAttachPlmDetails(result){
   if(!result||!Array.isArray(result.observations))return result;
-  const en=appLang==='en',observations=result.observations;
+  const observations=result.observations,artworkEn={};
+  const remember=(tr,en)=>{if(tr&&en&&tr!==en&&!artworkEn[tr])artworkEn[tr]=en;};
   if(result.source==='lfl'){
-    for(const obs of observations){const row=obs&&(obs.row||obs.raw);if(row&&row.plmArtwork)obs.plmArtwork=en?(row.plmArtworkEn||row.plmArtwork):row.plmArtwork;}
-    return {...result,version:`${result.version}|${en?'en':'tr'}`};
+    for(const obs of observations){const row=obs&&(obs.row||obs.raw);if(row)remember(row.plmArtwork,row.plmArtworkEn);}
+    return {...result,valueLabels:{plmArtwork:{en:artworkEn}}};
   }
   const api=window.BLPlmModelDetails;if(!api)return result;
   const ids=observations.map(obs=>obs&&obs.plmId).filter(Boolean);
@@ -33891,10 +33893,10 @@ async function priceAnalysisAttachPlmDetails(result){
   let found=0;
   for(const obs of observations){
     const details=obs&&api.get(obs.plmId);if(!details)continue;found++;
-    obs.plmFabric=details.plmFabric||'';obs.plmArtwork=en?(details.plmArtworkEn||details.plmArtwork||''):(details.plmArtwork||'');
+    obs.plmFabric=details.plmFabric||'';obs.plmArtwork=details.plmArtwork||'';remember(details.plmArtwork,details.plmArtworkEn);
     PRICE_ANALYSIS_PLM_FIELDS.forEach(key=>{if(details[key])obs[key]=details[key];});
   }
-  return {...result,version:`${result.version}|plm:${found}|${en?'en':'tr'}`};
+  return {...result,valueLabels:{plmArtwork:{en:artworkEn}},version:`${result.version}|plm:${found}`};
 }
 window.BLPriceSupplierAnalysisBridge={
   async get(source,scope='all',priceType='finalFob'){return priceAnalysisAttachPlmDetails(await window.BLPriceSupplierAnalysisBridge.sourceData(source,scope,priceType));},

@@ -61,3 +61,11 @@ test('LFL: PLM Kumaş / PLM Artwork filtre, kırılım ve detay sütunu olarak t
   assert.match(html, /id="lflDimBtn_plmFabric"/);
   assert.match(html, /id="lflDimBtn_plmArtwork"/);
 });
+
+test('Fiyat & Üretici: PLM Artwork filtre kimliği dilden bağımsız, EN yalnız etiketi çevirir', () => {
+  const psa = read('price-supplier-analysis.js'), app = read('app-main.js');
+  assert.match(psa, /function valueLabel\(dim,value\)/);
+  assert.doesNotMatch(psa, /attributeFilter:\['lang'\]\}\);\n\s*function invalidate/);
+  assert.match(app, /valueLabels:\{plmArtwork:\{en:artworkEn\}\}/);
+  assert.match(app, /obs\.plmArtwork=details\.plmArtwork\|\|''/);
+});
