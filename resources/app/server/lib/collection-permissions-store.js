@@ -62,6 +62,9 @@ async function readJson(file) {
   catch (error) { if (error && error.code === 'ENOENT') return null; throw error; }
 }
 
+// Süreç içi her yazımda artar; senkron okuma önbelleğinin anahtarına girer.
+let writeEpoch = 0;
+
 async function writeJson(file, state) {
   await fsp.mkdir(path.dirname(file), { recursive: true });
   const temporary = `${file}.${process.pid}.${crypto.randomUUID()}.tmp`;
@@ -70,7 +73,7 @@ async function writeJson(file, state) {
     try { await handle.writeFile(JSON.stringify(normalizeState(state), null, 2), 'utf8'); await handle.sync(); }
     finally { await handle.close(); }
     await fsp.rename(temporary, file);
-  } finally { try { await fsp.unlink(temporary); } catch (_) {} }
+  } finally { writeEpoch += 1; try { await fsp.unlink(temporary); } catch (_) {} }
 }
 
 function createCollectionPermissionsStore({ file, getProfiles = () => [], getSharedSyncRoot = async () => '', onAudit = null, trialPolicy = require('./update-trial-backend').createTrialWritePolicy() } = {}) {
@@ -103,22 +106,45 @@ function createCollectionPermissionsStore({ file, getProfiles = () => [], getSha
   function accessLevelFrom(state, userId, ownerId) {
     return effectiveOwnersFrom(state, userId).find(item => item.ownerId === clean(ownerId))?.level || null;
   }
+  /* Her istekte yetki hesabı (publicProfile, fiyat talebi görünürlüğü) bu
+     senkron okuyuculardan geçer. Belge her çağrıda yeniden okunup normalize
+     edildiğinde büyük veride ana iş parçacığı saniyelerce kilitleniyordu.
+     Normalize edilmiş durum dosya kimliğiyle (ino/boyut/mtime/ctime) ve süreç
+     içi yazım sayacıyla anahtarlanır: yerel yazım, hub senkron içe aktarımı ya
+     da dosyanın dışarıdan değiştirilmesi anahtarı değiştirir ve bir sonraki
+     çağrı yeniden okur. Okuma hatası önbelleğe alınmaz; eski davranış (fail-
+     closed geri dönüşler) aynen korunur. */
+  let snapshotCache = null;
+  function snapshot() {
+    const stat = fs.statSync(localFile, { bigint: true });
+    const key = `${writeEpoch}:${stat.ino}:${stat.size}:${stat.mtimeNs}:${stat.ctimeNs}`;
+    if (snapshotCache && snapshotCache.key === key) return snapshotCache;
+    const state = normalizeState(JSON.parse(fs.readFileSync(localFile, 'utf8')));
+    const byGrantee = new Map();
+    for (const grant of state.grants) {
+      if (!byGrantee.has(grant.granteeId)) byGrantee.set(grant.granteeId, []);
+      byGrantee.get(grant.granteeId).push(grant);
+    }
+    snapshotCache = { key, state, byGrantee };
+    return snapshotCache;
+  }
   function effectiveOwners(userId) {
     try {
-      const text = fs.readFileSync(localFile, 'utf8');
-      return effectiveOwnersFrom(normalizeState(JSON.parse(text)), userId);
+      const { byGrantee } = snapshot();
+      const id = clean(userId); if (!id) return [];
+      return [{ ownerId: id, level: 'edit' }, ...(byGrantee.get(id) || []).map(grant => ({ ownerId: grant.ownerId, level: grant.level }))];
     } catch (_) { return clean(userId) ? [{ ownerId: clean(userId), level: 'edit' }] : []; }
   }
   function accessLevel(userId, ownerId) {
     return effectiveOwners(userId).find(item => item.ownerId === clean(ownerId))?.level || null;
   }
   function isReady() {
-    try { return Boolean(normalizeState(JSON.parse(fs.readFileSync(localFile, 'utf8'))).migrations.legacyInboundAccessV1); }
+    try { return Boolean(snapshot().state.migrations.legacyInboundAccessV1); }
     catch (_) { return false; }
   }
   function outgoing(ownerId) {
     const id = clean(ownerId);
-    try { return normalizeState(JSON.parse(fs.readFileSync(localFile, 'utf8'))).grants.filter(item => item.ownerId === id); }
+    try { return snapshot().state.grants.filter(item => item.ownerId === id).map(item => ({ ...item })); }
     catch (_) { return []; }
   }
   function validateGrant({ ownerId, granteeId, level }) {

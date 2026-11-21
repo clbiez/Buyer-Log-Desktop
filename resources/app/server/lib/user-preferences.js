@@ -41,7 +41,7 @@ const WORKSPACE_CATEGORY_PREFIXES = Object.freeze({
     'lcw.overview.dimFilters.', 'lcw.overview.bgDimFilters.',
     'lcw.backlog.autoState.', 'lcw.lfl.filters.', 'lcw.lfl.readyFilters.',
     'lcw.lfl.customCompare.', 'lcw.lfl.analysisSplit.', 'lcw.koleksiyon.scope.',
-    'lcw.koleksiyon.analytics.', 'lcw.oab.', 'lcw.intake.', 'lcw_filter_favorite_',
+    'lcw.koleksiyon.analytics.', 'lcw.oab.', 'lcw.intake.', 'lcw.postfob.', 'lcw_filter_favorite_',
     'bl.autoRefresh.',
     // Global Flow Map kaynak, görünüm, çoklu filtre ve hızlı filtre seti.
     'buyerlog.overview.globalFlow.',
