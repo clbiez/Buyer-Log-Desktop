@@ -38075,7 +38075,13 @@ const BLSilentImageComplete=(()=>{
       if(current)silentImagePatchCells(new Set(identities.map(item=>item.key)));
     },
     isResolved:entry=>!modelAssetIdentityMissing(entry.identity),
+    /* Yalnız alt detay/drilldown kapsayıcısının jetonu (ağ yok). PLM oturumu
+       yokken başlayan geri çekilme, YENİ bir alt detay raporu açılınca bir tur
+       için kalkar; ana tablolar ('') bunu tetiklemez. */
+    currentViewToken:()=>activeModelAssetViewHost()?.dataset?.blModelAssetToken||'',
   });
+  // PLM oturumu sessizce geri geldi: 30 dk beklemeden eksikler tamamlanır.
+  window.addEventListener('bl:corporate-session-reconnected',event=>{if(event?.detail?.key==='plm')engine.resume();});
   // Etkileşim yalnız zaman damgası yazar; istek BAŞLATMAZ.
   const touch=()=>engine.notifyInteraction();
   ['pointerdown','keydown','wheel','touchstart','input'].forEach(type=>window.addEventListener(type,touch,{capture:true,passive:true}));

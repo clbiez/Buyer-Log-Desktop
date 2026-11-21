@@ -80,6 +80,9 @@
     const request = typeof deps.request === 'function' ? deps.request : null;
     const apply = typeof deps.apply === 'function' ? deps.apply : () => {};
     const isResolved = typeof deps.isResolved === 'function' ? deps.isResolved : () => false;
+    // Ucuz görünüm kimliği (ağ yok). Yetki geri çekilmesinde yeni bir alt
+    // detay raporunun açıldığını anlamak için kullanılır; yoksa '' döner.
+    const currentViewToken = typeof deps.currentViewToken === 'function' ? deps.currentViewToken : () => '';
 
     let timer = 0;
     let running = false;
@@ -87,6 +90,8 @@
     let inFlight = null;
     let lastInteraction = -Infinity;
     let backoffUntil = 0;
+    // Yetki (PLM oturumu yok) geri çekilmesi hangi görünümde başladı?
+    let authBackoffView = null;
     let viewToken = '';
     let attempted = new Set();
     const stats = { ticks: 0, requests: 0, items: 0, resolved: 0, negative: 0, deferred: 0, errors: 0, skippedBusy: 0, skippedStale: 0 };
@@ -117,11 +122,17 @@
       timer = setTimer(() => { timer = 0; tick(); }, Math.max(0, Number(delay) || 0));
     }
 
+    function readViewToken() {
+      try { return clean(currentViewToken()); } catch (_) { return ''; }
+    }
+
     function backOff(code) {
+      authBackoffView = null;
       if (code === 'PLM_BACKGROUND_DEFERRED' || code === 'MODEL_IMAGE_IMPORT_BUSY' || code === 'PLM_OFFLINE' || code === 'PLM_JOB_CANCELLED') {
         stats.deferred += 1; backoffUntil = now() + options.deferredBackoffMs;
       } else if (/AUTH|TOKEN|LOGIN|SESSION|UNAUTHORI[SZ]ED/i.test(code)) {
         stats.errors += 1; backoffUntil = now() + options.authBackoffMs;
+        authBackoffView = readViewToken();
       } else {
         stats.errors += 1; backoffUntil = now() + options.errorBackoffMs;
       }
@@ -138,7 +149,17 @@
       if (!isEnabled() || isHidden() || !isOnline()) { schedule(options.intervalMs); return; }
       if ((() => { try { return Boolean(isBusy()); } catch (_) { return true; } })()) { stats.skippedBusy += 1; schedule(options.intervalMs); return; }
       const at = now();
-      if (at < backoffUntil) { schedule(backoffUntil - at); return; }
+      if (at < backoffUntil) {
+        /* PLM oturumu yokken 30 dk beklemek, sonra açılan alt detay
+           raporunun yerel/paylaşılan depodan (ve oturum geldiyse PLM'den)
+           görsel almasını da engelliyordu. Yalnız yetki geri çekilmesinde ve
+           yalnız YENİ bir görünüm açıldığında bir tur izin verilir; aynı
+           görünüm beklemeye devam eder. Kontrol ağ isteği değildir. */
+        if (authBackoffView === null) { schedule(backoffUntil - at); return; }
+        const token = readViewToken();
+        if (!token || token === authBackoffView) { schedule(Math.min(backoffUntil - at, options.intervalMs)); return; }
+        backoffUntil = 0; authBackoffView = null;
+      }
       const quietLeft = lastInteraction + options.quietMs - at;
       if (quietLeft > 0) { schedule(quietLeft); return; }
       running = true;
@@ -215,10 +236,16 @@
     }
     /* Etkileşim yalnız bir zaman damgası yazar; istek BAŞLATMAZ. */
     function notifyInteraction() { lastInteraction = now(); }
+    /* PLM oturumu geri geldi: geri çekilme beklenmeden sürülür. */
+    function resume() {
+      backoffUntil = 0; authBackoffView = null;
+      if (started && !inFlight && !running) schedule(options.intervalMs);
+      return api;
+    }
     function clearNegative() { negative = new Map(); persistNegative(); }
 
     const api = {
-      start, stop, notifyInteraction, clearNegative,
+      start, stop, notifyInteraction, clearNegative, resume,
       isNegative, tick,
       pending: () => inFlight,
       stats: () => ({ ...stats, negativeSize: negative.size, started, inFlight: Boolean(inFlight), viewToken }),
