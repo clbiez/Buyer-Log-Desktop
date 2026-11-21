@@ -153,3 +153,9 @@ test('durum iyileşmesi: statik kurala göre gecikecek sipariş aşama ETA\'sıy
   assert.ok(after.scheduleBufferDays > 5);
   assert.ok(withModel._stageVsRule > 0, 'statik ETA\'dan erken');
 });
+
+test('Buyer Log üretimi parsiyel (üretimde/eksik) önceki parsiyelin yükleme onayını göstermez', () => {
+  const src = read('public/app-main.js');
+  assert.match(src, /\$\{segment\.synthetic\?'—':\(fmtDate\(loadingApproval\)\|\|'—'\)\}/);
+  assert.match(read('server/lib/parse.js'), /synthetic: syntheticSegmentKind\(segment\)/);
+});

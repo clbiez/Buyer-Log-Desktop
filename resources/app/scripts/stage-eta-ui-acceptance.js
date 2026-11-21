@@ -18,6 +18,7 @@ env.BL_DATA_DIR = env.BUYER_LOG_SERVER_DATA_ROOT;
 const source = path.join(root, 'source'); fs.mkdirSync(source);
 fs.writeFileSync(env.BUYER_LOG_CONFIG_PATH, JSON.stringify({ port, host: '127.0.0.1', sourceFolder: source, updates: { enabled: false } }));
 
+const SPARSE = process.env.BUYER_LOG_STAGE_ETA_SPARSE === '1';
 const today = new Date();
 const DAY = 86400000, t0 = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
 const iso = offset => new Date(t0 + offset * DAY).toISOString().slice(0, 10);
@@ -57,8 +58,9 @@ for (const row of demo.antrepo.slice(1)) {
     // Çoğu yeni yüklenmiş (ETA gelecekte); her dördüncüsü ETA'yı geçmiş, gümrük açık.
     const shift = transitCount % 4 === 0 ? -between(45, 60) : -between(8, 14);
     const c = chain(vehicle, country, shift);
-    set('Yükleme Talep Tarih', c.loadingRequest); set('HANDOVER Tarihi', c.handover); set('Cut Off Tarih', c.cutOff);
-    set('Fiili Yükleme Tarih', c.actualLoading); set('ETA Tarih', c.eta);
+    set('Yükleme Talep Tarih', c.loadingRequest); set('HANDOVER Tarihi', c.handover);
+    // SPARSE: gerçek Backlog/CP sorgusu gibi yoldaki parsiyelde yalnız Talep + Handover.
+    if (!SPARSE) { set('Cut Off Tarih', c.cutOff); set('Fiili Yükleme Tarih', c.actualLoading); set('ETA Tarih', c.eta); }
   } else if (status === 'Yüklemede') {
     const c = chain(vehicle, country, -between(4, 18));
     set('Yükleme Talep Tarih', c.loadingRequest);
@@ -202,7 +204,7 @@ async function shot(page, top, bottom, file) {
     detail: document.querySelectorAll('.cpLogisticDetailLine.hasStage .cpLogisticStage strong').length,
     shiftColor: getComputedStyle(document.querySelector('.cpLogisticStage .cpStageShift') || document.body).color }));
   assert.match(cells.exr, /g (erken|geç)|±0/, 'Ex→Retail ikinci satırı');
-  assert.match(cells.run, /σ/, 'Koşan Aşama σ gösterir');
+  if (!SPARSE) assert.match(cells.run, /σ/, 'Koşan Aşama σ gösterir');
   assert.match(cells.eta, /\d{2}\.\d{2}\.\d{2}/);
   assert.ok(cells.run.length > 3 && cells.detail >= 1, JSON.stringify(cells));
   await page.evaluate(() => { const th = [...document.querySelectorAll('#cpTable thead tr:last-child th')].find(e => /Retail Date|Retail Tarihi/i.test(e.textContent)); const wrap = document.getElementById('cpTableWrap'); if (th && wrap) wrap.scrollLeft += th.getBoundingClientRect().left - wrap.getBoundingClientRect().left - 8; });
@@ -246,6 +248,43 @@ async function shot(page, top, bottom, file) {
   await page.evaluate(() => { const t = document.getElementById('_toast'); if (t) t.remove(); const wrap = document.getElementById('cpTableWrap'); if (wrap) wrap.scrollLeft = 0; });
   const pbox = await page.locator('#cpTableWrap').boundingBox();
   await page.screenshot({ path: path.join(outDir, 'cp-stage-priority.png'), clip: { x: pbox.x, y: pbox.y, width: pbox.width, height: Math.min(pbox.height, Math.max(420, Math.ceil(pbox.width / 3.1))) } });
+  if (SPARSE) {
+    /* Yoldaki parsiyel (yalnız Talep + Handover) sahte "Handover → Cut-off"
+       aşımı üretmez; Buyer Log'un ürettiği üretimde parsiyeli sipariş yükleme
+       onayını devralmaz. */
+    const mixed = await page.evaluate(() => {
+      const rows = (state.cp && state.cp.rows) || [];
+      const hit = rows.find(r => Array.isArray(r._logisticSegments) && r._logisticSegments.some(s => s.synthetic === 'production')
+        && r._logisticSegments.some(s => s.stage && /Yolda/i.test(s.status || '')) && r['Buying Son Onay Tarihi']);
+      return hit ? { id: hit._id != null ? hit._id : null, code: String(hit['Order Code']) } : null;
+    });
+    assert.ok(mixed, 'Yolda + üretimde parsiyelli sipariş');
+    await page.fill('#cpSearch', mixed.code); await page.keyboard.press('Enter');
+    await page.waitForTimeout(2500);
+    await page.evaluate(() => {
+      const keep = new Set(['Priority', 'Order Code', 'Ex→Retail', 'STATUS', 'Ant. Arrival', 'Stage ETA', 'Current Stage', 'Order Quantity']);
+      CP_COLS.forEach(c => { if (keep.has(c.k)) colmgr.cp.hidden.delete(c.k); else colmgr.cp.hidden.add(c.k); });
+      saveAutoTableColumnState(); renderCP();
+      const tr = document.querySelector('#cpTable tbody tr[data-id]'); state.cpLogisticExpanded.add(Number(tr.dataset.id)); renderCP();
+    });
+    await page.waitForTimeout(2500);
+    const detail = await page.evaluate(() => [...document.querySelectorAll('.cpLogisticDetailLine')].map(line => ({
+      name: line.querySelector('.cpLogisticDetailName strong')?.textContent.trim() || '',
+      cells: [...line.children].map(c => c.textContent.trim().replace(/\s+/g, ' ')),
+    })));
+    console.log('DETAIL', JSON.stringify(detail));
+    const run = await page.evaluate(() => document.querySelector('#cpTable tbody td[data-key="Current Stage"]')?.textContent.trim() || '');
+    assert.doesNotMatch(run, /Cut-?off/i, `yoldaki parsiyel Cut-off'ta görünmez: ${run}`);
+    assert.ok(detail.every(d => !/Tahmini kalan/.test(d.cells.join(' '))), 'aşama metni çeviri ağınca bozulmaz');
+    assert.doesNotMatch(run, /\d\.\d+\//, 'gün tam sayı');
+    const prod = detail.find(d => /Üretim/i.test(d.name));
+    assert.ok(prod, 'üretimde satırı');
+    assert.equal(prod.cells[6], '—', 'üretimde parsiyeli yükleme onayı devralmaz');
+    await page.evaluate(() => { const t = document.getElementById('_toast'); if (t) t.remove(); const wrap = document.getElementById('cpTableWrap'); if (wrap) wrap.scrollLeft = 0; });
+    await page.waitForTimeout(600);
+    const dbox = await page.locator('#cpTableWrap').boundingBox();
+    await page.screenshot({ path: path.join(outDir, 'cp-stage-status-floor.png'), clip: { x: dbox.x, y: dbox.y, width: dbox.width, height: Math.min(dbox.height, Math.max(480, Math.ceil(dbox.width / 3.2))) } });
+  }
   assert.deepEqual(errors, [], 'browser errors');
   console.log(`PASS model ${saved.analysis.stats.used} partials · ${projected.length} projected Backlog partials · signal cards ${counts.join('/')} · screenshots in ${outDir}`);
 })().catch(e => { console.error(e); process.exitCode = 1; }).finally(async () => {

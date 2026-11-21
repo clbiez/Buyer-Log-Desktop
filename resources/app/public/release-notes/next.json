@@ -3,14 +3,72 @@
   "publishedAt": "2026-11-21",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Koleksiyon: renk opsiyonları seçim şeridinde",
-    "en": "Collection: colour options in the selection rail"
+    "tr": "Koleksiyon renk opsiyonları, aşama tahmini ve CP yeniden çizim düzeltmeleri",
+    "en": "Collection colour options, stage forecast and CP redraw fixes"
   },
   "summary": {
-    "tr": "Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer.",
-    "en": "Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours."
+    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer.",
+    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours."
   },
   "changes": [
+    {
+      "id": "cp-stage-status-floor-synthetic-approval",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Siparişler · Backlog",
+        "en": "CP · Orders · Backlog"
+      },
+      "title": {
+        "tr": "Yoldaki parsiyelin aşama tahmini düzeltildi; Buyer Log'un açtığı üretimde parsiyeli yükleme onayı devralmaz",
+        "en": "Stage forecast fixed for partials in transit; production balances created by Buyer Log no longer inherit the loading approval"
+      },
+      "body": {
+        "tr": "IAS durumu Yolda / Yol Operasyonları olan parsiyelde yükleme, Gümrük-Liman Operasyonları'nda ETA geçilmiş sayılır. Cut Off veya Fiili Yükleme tarihi sorguda gelmese de parsiyel artık Handover'dan beri \"Handover → Cut-off\" aşamasında bekliyor görünmez; bu sahte aşım σ'yı, Aşama ETA'sını ve gecikme uyarısını şişirmiyor. Koşan aşamanın günü aşamanın kendi başlangıcına göre gösterilir. Lojistik akışında Buyer Log'un IAS kaydı olmadan açtığı üretimde / eksik / kapanmış bakiye satırları önceki parsiyelin yükleme onay tarihini göstermez.",
+        "en": "A partial whose IAS status is In Transit / Transit Operations counts loading as done; Customs-Port Operations counts the ETA as passed. Even when Cut Off or Actual Loading dates are missing from the query, the partial no longer appears stuck in \"Handover → Cut-off\" since Handover, so that false overrun no longer inflates σ, Stage ETA or the delay warning. The running stage's days are counted from that stage's own start. In the logistics flow, production / shortage / closed-balance lines that Buyer Log creates without an IAS record no longer show the previous partial's loading approval date."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-stage-status-floor.png",
+        "alt": {
+          "tr": "Demo CP lojistik akışı: üretimde satırında yükleme onayı boş, yoldaki parsiyel 4. Yükleme → ETA aşamasında",
+          "en": "Demo CP logistics flow: no loading approval on the production line, the partial in transit in stage 4 Loading → ETA"
+        },
+        "caption": {
+          "tr": "Demo veride yalnız Talep + Handover tarihi olan yoldaki parsiyel Cut-off'ta bekliyor görünmez; üretimde kalan satırı onay tarihi almaz.",
+          "en": "On demo data, a partial in transit with only Request + Handover dates is not shown waiting at Cut-off; the production line gets no approval date."
+        }
+      }
+    },
+    {
+      "id": "cp-redraw-computed-values",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Tabloyu yeniden çiz hesaplanan değerleri gösterir",
+        "en": "Redraw table shows calculated values"
+      },
+      "body": {
+        "tr": "CP açıldıktan sonra Öncelik, checklist ve formül hücreleri, değerleri sunucudan gelmiş olsa bile \"Hesaplanıyor…\" olarak kalabiliyordu; Tabloyu yeniden çiz düğmesi bunu düzeltmiyor, değer ancak bir filtre ya da düzenleme sonrası görünüyordu. Artık her çizimde, Tabloyu yeniden çiz dahil, güncel hesaplanmış değerler gösterilir.",
+        "en": "After CP opened, Priority, checklist and formula cells could stay on \"Calculating…\" even though their values had arrived from the server; the Redraw table button did not fix it and the values only appeared after a filter change or an edit. Every redraw, including Redraw table, now shows the current calculated values."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-redraw-computed-values.png",
+        "alt": {
+          "tr": "Demo verili CP tablosunda Tabloyu yeniden çiz sonrası Öncelik sütunu",
+          "en": "Priority column in a demo CP table after Redraw table"
+        },
+        "caption": {
+          "tr": "Yeniden çizimden sonra Öncelik hücreleri gerçek değeri gösterir; düzenlenen Retail tarihi Sevk→Perakende değerine yansımıştır.",
+          "en": "After a redraw, Priority cells show their real value; the edited retail date is reflected in Ex→Retail."
+        }
+      }
+    },
     {
       "id": "collection-model-swatch-rail",
       "type": "improvement",
