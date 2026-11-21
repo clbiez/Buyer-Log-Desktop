@@ -7,7 +7,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const read = p => fs.readFileSync(path.join(__dirname, '..', p), 'utf8');
-const q = read('public/quotations.js'), css = read('public/pricing-workspace.css');
+const q = read('public/quotations.js'), css = read('public/pricing-workspace.css'), ui = read('public/ui-components.css');
 
 test('workspace group cards cannot overflow the narrow nav column', () => {
   // Masa listesi tek kaynağa süzülür; kaynak rozeti yalnız eski modalde kalır.
@@ -26,5 +26,5 @@ test('secondary detail actions live in the shared More menu with unchanged hooks
   assert.match(q, /BLLayerSystem\?\.openMenu\?\.\(moreMenu,\{trigger:moreBtn/);
   assert.doesNotMatch(q, /quotationSummaryChip/);
   // Menü yapışkan başlığın altında kalmaz.
-  assert.match(css, /quotationDetailHead:has\(\.quotationMoreMenu:not\(\[hidden\]\)\)\{z-index:var\(--ui-z-popover,100\)!important\}/);
+  assert.match(ui, /\.quotationDetailHead:has\(\.quotationMoreMenu:not\(\[hidden\]\)\) \{z-index:var\(--ui-z-popover\) !important\}/);
 });

@@ -75,15 +75,11 @@
 .quotationWorkspaceShell .quotationNavItem{min-width:0;max-width:100%;overflow:hidden}
 .quotationWorkspaceShell .quotationNavItem .verHistNavTop{min-width:0;gap:6px}
 .quotationWorkspaceShell .quotationNavItem .quotationStatusBadge{flex:none}
-.quotationWorkspaceShell .quotationNavItem .verHistNavDate{flex:0 1 auto;min-width:0;margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.quotationWorkspaceShell .quotationNavItem .verHistNavDate{flex:0 1 auto;min-width:0;margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .quotationWorkspaceShell .quotationNavItem .navDragGrip{flex:none;margin-left:0;padding-right:0}
 .quotationWorkspaceShell .quotationNavTitle,.quotationWorkspaceShell .quotationNavMeta{min-width:0;max-width:100%;overflow-wrap:anywhere}
 /* Sade detay başlığı: özet tek satır metin, ikincil eylemler "Diğer" çekmecesinde. */
-.quotationSummaryLine{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.quotationSummaryLine{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .quotationDetailIdentity{min-width:0}
 .quotationHeadActions{flex-wrap:nowrap}
-.quotationMoreMenu{z-index:var(--ui-z-popover,100)}
-/* Yapışkan başlık kendi katmanını açar; menü açıkken alttaki matris araç
-   çubuğunun üstüne çıkması için başlık popover katmanına yükselir. */
-html .quotationWorkspaceShell .quotationDetailHead:has(.quotationMoreMenu:not([hidden])){z-index:var(--ui-z-popover,100)!important}
 @media(max-width:1150px){.quotationHeadActions{flex-wrap:wrap}}
