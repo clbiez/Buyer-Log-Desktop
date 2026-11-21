@@ -8639,11 +8639,18 @@ html[data-ui-system="manifest"] .kolModelGroupToggle:hover {background:color-mix
 }
 html[data-ui-system="manifest"] .kolModelGroupToggle:focus-visible {color:var(--ui-accent) !important
 }
-html[data-ui-system="manifest"] .kolModelGroupToggle.kolModelGroupCount[aria-expanded] {background:transparent !important;color:var(--ui-text-muted) !important;border-color:var(--ui-group-divider) !important
+html[data-ui-system="manifest"] .kolModelGroupToggle.kolModelGroupCount[aria-expanded] {border:0 !important;border-radius:var(--ui-radius) !important;font:600 var(--ui-font-2xs)/1 var(--ui-font-mono) !important;font-variant-numeric:tabular-nums;background:transparent !important;color:var(--ui-text-muted) !important
 }
 html[data-ui-system="manifest"] .kolModelGroupToggle.kolModelGroupCount[aria-expanded="false"] {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important
 }
-html[data-ui-system="manifest"] .kolModelGroupToggle.kolModelGroupCount[aria-expanded]:hover {color:var(--ui-accent) !important;border-color:var(--ui-accent) !important
+html[data-ui-system="manifest"] .kolModelGroupToggle.kolModelGroupCount[aria-expanded]:hover {color:var(--ui-accent) !important;background:var(--ui-selected) !important
+}
+/* Renk karesi veri rengidir (kullanıcı/PLM rengi), tema rengi değil. */
+html[data-ui-system="manifest"] .kolColourDot {position:relative;border-radius:var(--ui-radius);background:color-mix(in srgb,var(--ui-text) 32%,transparent)
+}
+html[data-ui-system="manifest"] .kolColourDot::before {content:"";position:absolute;inset:1px;border-radius:var(--ui-radius);background:var(--kol-dot)
+}
+html[data-ui-system="manifest"] .kolColourDot.isUnknown::before {background:var(--ui-surface)
 }
 html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td[data-kol-group-summary="1"]:not(.kolSpreadsheetEditing):not(:focus-within) {
   color:transparent!important

@@ -67,13 +67,10 @@
   cursor:pointer;
 }
 .kolModelGroupToggle .ic{width:12px;height:12px;}
-/* Model satırı: renk sayısı rozeti aynı zamanda aç/kapa düğmesidir. */
-.kolModelGroupCount{width:18px;height:16px;border-radius:var(--ui-radius);border:1px solid var(--ui-row-divider);
-  font:600 var(--ui-font-2xs)/1 var(--ui-font-mono,monospace);font-variant-numeric:tabular-nums;}
-/* Her renk kaydı: veri renginin karesi; bilinmeyen renk boş çerçeve kalır. */
-.kolColourDot{display:inline-block;width:9px;height:9px;margin-right:2px;border-radius:var(--ui-radius);vertical-align:middle;box-sizing:border-box;
-  background:var(--kol-dot,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--ui-text) 28%,transparent);}
-.kolColourDot.isUnknown{background:transparent;box-shadow:0 0 0 1px color-mix(in srgb,var(--ui-text) 38%,transparent);}
+/* Model satırı: renk sayısı rozeti aynı zamanda aç/kapa düğmesidir; her renk
+   kaydında veri renginin karesi. Görünüm ui-components.css manifest katmanında. */
+.kolModelGroupCount{width:18px;height:16px;}
+.kolColourDot{display:inline-block;width:9px;height:9px;margin-right:2px;vertical-align:middle;box-sizing:border-box;}
 /* Legacy in-cell hierarchy marks are intentionally suppressed: hierarchy now lives
    in the row gutter and never changes spreadsheet column coordinates. */
 .kolModelGroupBadge,.kolModelVariantBadge,.kolVariantOverrideDot{display:none!important;}

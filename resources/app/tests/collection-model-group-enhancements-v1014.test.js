@@ -95,6 +95,6 @@ test('row-gutter colour hierarchy is theme-safe and visually explicit', () => {
   assert.match(appSource, /class="kolModelGroupToggle kolModelGroupCount"[^`]*aria-expanded=/);
   assert.match(appSource, /class="kolColourDot/);
   assert.doesNotMatch(spreadsheetCssSource, /kolSpreadsheetRowNumber/);
-  assert.match(spreadsheetCssSource, /\.kolColourDot\{[^}]*box-shadow:0 0 0 1px color-mix/);
+  assert.match(fs.readFileSync(path.join(__dirname, '..', 'public', 'ui-components.css'), 'utf8'), /\.kolColourDot \{[^}]*background:color-mix\(in srgb,var\(--ui-text\) 32%,transparent\)/);
   assert.doesNotMatch(spreadsheetCssSource, /kolModelGroupGutterSpacer\.isVariant/);
 });

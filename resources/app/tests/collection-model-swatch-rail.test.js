@@ -47,8 +47,10 @@ test('gutter satır numarası taşımaz, sayaç + renk noktası çizer', () => {
   assert.doesNotMatch(UI, /\.kolSpreadsheetRowNumber/);
   assert.ok(CSS.includes('#view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetRowGutter{width:48px!important;min-width:48px!important}'));
   assert.match(UI, /#kolTable :is\(\.kolSpreadsheetRowGutter,\.chkTh\)\{width:48px!important;min-width:48px!important;max-width:48px!important/);
-  assert.match(CSS, /\.kolColourDot\{[^}]*border-radius:var\(--ui-radius\);/, 'renk işareti kare (nokta değil)');
-  assert.match(CSS, /\.kolColourDot\.isUnknown\{/);
+  assert.match(CSS, /\.kolColourDot\{display:inline-block;width:9px;height:9px;/);
+  assert.match(UI, /\.kolColourDot \{position:relative;border-radius:var\(--ui-radius\);/, 'renk işareti kare (nokta değil)');
+  assert.match(UI, /\.kolColourDot::before \{content:"";position:absolute;inset:1px;border-radius:var\(--ui-radius\);background:var\(--kol-dot\)/);
+  assert.match(UI, /\.kolColourDot\.isUnknown::before \{background:var\(--ui-surface\)/);
 });
 
 test('model şeridi grubu seçer, renk şeridi tek rengi; kısmi seçim yarım görünür', () => {
