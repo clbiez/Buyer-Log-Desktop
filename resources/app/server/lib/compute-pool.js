@@ -95,7 +95,10 @@ function createComputePool(options={}){
         // kilidi okuyucusu emekli thread'i istemci callback'inden önce görür.
         try{registerLeaseWorker(slot.worker);}catch(error){setupError=error;}
         slot.worker.on('message',message=>received(slot,message));
-        slot.worker.on('error',()=>{void retire(slot,failure('COMPUTE_WORKER_FAILED'));});
+        // İşçi heap sınırına ulaştı: iş belleğe sığmadı (kapasite reddi). Çağıranlar
+        // mevcut kapasite yoluna geçer; diğer çökmeler hata olarak kalır.
+        slot.worker.on('error',error=>{void retire(slot,error?.code==='ERR_WORKER_OUT_OF_MEMORY'
+          ?Object.assign(failure('COMPUTE_JOB_TOO_LARGE'),{workerOutOfMemory:true}):failure('COMPUTE_WORKER_FAILED'));});
         slot.worker.once('exit',()=>exited(slot));
       }catch(_){rejectJob(job,failure('COMPUTE_WORKER_FAILED'));exited(slot);return;}
       if(setupError){void retire(slot,failure('COMPUTE_WORKER_FAILED'));return;}
@@ -119,7 +122,8 @@ function createComputePool(options={}){
           if(generations.get(job.ownerKey)!==job.generation){removeQueued(job);rejectJob(job,failure('COMPUTE_STALE_GENERATION'));launched=true;break;}
           if(job.serializationKey&&[...slots].some(slot=>slot.state!=='idle'&&slot.job?.serializationKey===job.serializationKey))continue;
           const fit=extra=>reserved()-job.inputBytes+job.estimatedBytes+extra<=budget;
-          let slot=[...slots].find(s=>s.state==='idle'&&fit(0));
+          // Aynı sahibin kaynağını önbellekte tutan boş işçi tercih edilir: ikinci işçi kopyayı yeniden çözmez.
+          let slot=[...slots].find(s=>s.state==='idle'&&s.ownerKey===job.ownerKey&&fit(0))||[...slots].find(s=>s.state==='idle'&&fit(0));
           if(!slot&&slots.size<maxWorkers&&fit(workerBase)){slot={state:'idle',worker:null,residentBytes:0,estimatedBytes:0,job:null};slots.add(slot);}
           if(slot){start(job,slot);launched=true;break;}
           // Yalnız gerçekten yer açacak idle cache emekli edilir. Sonuç lease'i
