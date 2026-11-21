@@ -23392,15 +23392,28 @@ function shipLicenseSourceIndex(){
   const pricingRules=state.overrides&&state.overrides.pricingRules;
   // Kural listesi yoksa "kural eksik" yazmak yurt içi fiyatı yanlışlıkla boşaltırdı.
   if(!Array.isArray(pricingRules)||!pricingRules.length)return null;
+  /* Dizin her tablo çiziminde yeniden kurulursa 30k CP satırında çizim başına
+     ~15 ms ekliyordu (L1 ölçümü). Kaynak dizi kimliği ve uzunluğu değişmedikçe
+     önceki dizin kullanılır; satır nesneleri canlı okunduğu için yerinde alan
+     değişiklikleri (Licensor, License…) yine yansır. */
+  const cpRows=state.cp&&Array.isArray(state.cp.rows)?state.cp.rows:[];
+  const kol=Array.isArray(kolRows)?kolRows:[];
+  const cached=shipLicenseSourceIndex.cache;
+  if(cached&&cached.cpRows===cpRows&&cached.cpLength===cpRows.length&&cached.kol===kol&&cached.kolLength===kol.length)return cached.index;
+  const index=buildShipLicenseSourceIndex(cpRows,kol);
+  shipLicenseSourceIndex.cache={cpRows,cpLength:cpRows.length,kol,kolLength:kol.length,index};
+  return index;
+}
+function buildShipLicenseSourceIndex(cpRows,kol){
   const collection=new Map();
-  (Array.isArray(kolRows)?kolRows:[]).forEach(row=>{
+  kol.forEach(row=>{
     const key=row&&collectionShippingModelKey(row);
     if(!key)return;
     const current=collection.get(key);
     if(!current||(current.modelGroupRole!=='parent'&&row.modelGroupRole==='parent'))collection.set(key,row);
   });
   const cp=new Map();
-  (state.cp&&Array.isArray(state.cp.rows)?state.cp.rows:[]).forEach(row=>{
+  cpRows.forEach(row=>{
     const code=shipOrderCodeKey(window.BLCanonicalFields.canonicalValue(row,'cp','orderCode'));
     if(code&&!cp.has(code))cp.set(code,row);
   });

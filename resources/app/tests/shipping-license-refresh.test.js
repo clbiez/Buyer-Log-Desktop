@@ -38,7 +38,7 @@ function context({ rules = [RULE], cpRows = [], kolRows = [], mapCollectionRowTo
     patchShipRow: (id, patch) => patches.push({ id, patch }),
   };
   vm.createContext(ctx);
-  vm.runInContext([keysDecl[0], ...['shipLicenseFieldsFromCpRow', 'shipLicenseSourceIndex', 'shipOrderCodeKey', 'shipLicenseFieldsFromSource', 'refreshShipLicenseFromSources'].map(pick)].join('\n'), ctx);
+  vm.runInContext([keysDecl[0], ...['shipLicenseFieldsFromCpRow', 'shipLicenseSourceIndex', 'buildShipLicenseSourceIndex', 'shipOrderCodeKey', 'shipLicenseFieldsFromSource', 'refreshShipLicenseFromSources'].map(pick)].join('\n'), ctx);
   return { ctx, patches };
 }
 const cpRow = (extra = {}) => ({ 'Order Code': '1.359.318', Licensor: 'NBA', License: 'NBA', Country: 'Bangladesh', Season: 'S7', OPD: '2026-07-09', ...extra });
@@ -104,6 +104,19 @@ test('kaynak veya kural listesi yüklenmemişse satıra dokunulmaz', () => {
   assert.equal(stale.trRoyaltyPct, 35);
   const unresolved = context({ cpRows: [cpRow({ Licensor: '' })] });
   assert.equal(unresolved.ctx.refreshShipLicenseFromSources([stale]), 0);
+});
+
+test('kaynak dizin her çizimde yeniden kurulmaz; satır eklenince yenilenir', () => {
+  const cpRows = [cpRow()];
+  const { ctx } = context({ cpRows });
+  const first = ctx.shipLicenseSourceIndex();
+  assert.equal(ctx.shipLicenseSourceIndex(), first);
+  cpRows.push(cpRow({ 'Order Code': '1.354.546' }));
+  const second = ctx.shipLicenseSourceIndex();
+  assert.notEqual(second, first);
+  assert.ok(second.cp.has('1354546'));
+  const row = { _shipId: 's3', orderCode: 1354546 };
+  assert.equal(ctx.refreshShipLicenseFromSources([row]), 1);
 });
 
 test('Nakliye tablosu çizilmeden önce lisans alanları kaynaktan tazelenir', () => {
