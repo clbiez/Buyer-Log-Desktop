@@ -47,7 +47,8 @@ function compute(row,{coerceDateLoose,toNum,toISODate,days,multipliers,methods})
   const trTl = toNum(row.trFiyatTl), kur = toNum(row.kur);
   /* Koleksiyon'dan gelen Non-DTR satırlar TR lisans komisyonu (royalty %) ve
      hologram maliyetini taşır: TR USD = (TL ÷ kur) ÷ (1 − royalty) + hologram.
-     Alan yoksa (CP / DTR) eski davranış aynen korunur. Kural eksikse TR
+     CP satırları da aynı alanları kaynaktaki sözleşmeden alır (app-main.js
+     refreshShipLicenseFromSources); DTR satırda alan yoksa eski davranış korunur. Kural eksikse TR
      maliyeti royaltysiz (sessizce düşük) hesaplanmaz, boş kalır. */
   const trRoyalty = toNum(row.trRoyaltyPct), trHologram = toNum(row.trHologramCost);
   const trDenom = 1 - ((trRoyalty!=null && trRoyalty>0) ? trRoyalty/100 : 0);

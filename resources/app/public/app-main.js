@@ -23353,6 +23353,100 @@ function mapCollectionRowToShip(row){
   }
   return BLShippingEngine.mapCollectionRow(effective,{toISODate,toNum,norm,normalizeTransitDelType,parseMoney:kolParseMoneyNum,basePrice:confirmed?confirmed.price:null});
 }
+/* Nakliye satırının lisans alanları (royalty %, hologram) eskiden yalnız
+   aktarım anında yazılıyordu: CP'den gelen satırlar hiç almıyor, Koleksiyon'dan
+   daha önce gelen satırlar ise model yeniden gönderilmedikçe güncellenmiyordu.
+   Sonuç: aynı ekranda bazı modellerde royalty/hologram uygulanıyor, bazılarında
+   uygulanmıyordu. Artık alanlar kaynağın GÜNCEL kuralından türetilir:
+     · Koleksiyon satırı → Koleksiyon'daki model (mapCollectionRowToShip ile aynı kural)
+     · CP satırı → CP siparişinin License Royalty sözleşmesi; YD tarafı siparişin
+       ülkesi, TR tarafı Country Group = TR (Koleksiyon TR Landed ile aynı kural).
+   Kaynak veya kural listesi henüz yüklenmemişse satıra dokunulmaz (null döner). */
+const SHIP_LICENSE_KEYS=['trRoyaltyPct','trHologramCost','_trLicenseRuleMissing','ydRoyaltyPct','ydHologramCost'];
+function shipLicenseFieldsFromCpRow(cp){
+  if(!cp)return null;
+  const value=id=>window.BLCanonicalFields.canonicalValue(cp,'cp',id);
+  const licensor=norm(value('licensor'));
+  // Belirsiz Licensor DTR sayılmaz; çözülene kadar satır olduğu gibi kalır.
+  if(!licensor)return null;
+  if(turknorm(licensor)==='DTR')return {};
+  const api=window.BLBusinessRules;
+  const opd=value('orderPlacementDate'),season=value('season'),license=value('license'),category=value('category');
+  const side=group=>{
+    const rule=typeof findSuppFobRule==='function'?findSuppFobRule(opd,group,season,licensor,license,category):null;
+    if(!rule)return null;
+    const total=api.pricingRuleEffectiveRoyalty(rule,group),hologram=api.pricingRuleHologramForCountry(rule,group);
+    if(!Number.isFinite(total)||total<0||total>=100||!Number.isFinite(hologram)||hologram<0)return null;
+    return {royalty:total,hologram};
+  };
+  const out={};
+  const tr=side('TR');
+  if(tr){out.trRoyaltyPct=tr.royalty;out.trHologramCost=tr.hologram;}
+  else out._trLicenseRuleMissing=true;
+  const country=norm(value('country'));
+  const yd=country?side(country):null;
+  if(yd&&(yd.royalty>0||yd.hologram>0)){out.ydRoyaltyPct=yd.royalty;out.ydHologramCost=yd.hologram;}
+  return out;
+}
+function shipLicenseSourceIndex(){
+  const pricingRules=state.overrides&&state.overrides.pricingRules;
+  // Kural listesi yoksa "kural eksik" yazmak yurt içi fiyatı yanlışlıkla boşaltırdı.
+  if(!Array.isArray(pricingRules)||!pricingRules.length)return null;
+  const collection=new Map();
+  (Array.isArray(kolRows)?kolRows:[]).forEach(row=>{
+    const key=row&&collectionShippingModelKey(row);
+    if(!key)return;
+    const current=collection.get(key);
+    if(!current||(current.modelGroupRole!=='parent'&&row.modelGroupRole==='parent'))collection.set(key,row);
+  });
+  const cp=new Map();
+  (state.cp&&Array.isArray(state.cp.rows)?state.cp.rows:[]).forEach(row=>{
+    const code=shipOrderCodeKey(window.BLCanonicalFields.canonicalValue(row,'cp','orderCode'));
+    if(code&&!cp.has(code))cp.set(code,row);
+  });
+  return {collection,cp};
+}
+function shipOrderCodeKey(value){
+  const text=String(value==null?'':value).replace(/\./g,'').trim();
+  if(!text)return '';
+  const n=Number(text);
+  return Number.isFinite(n)?String(n):text;
+}
+function shipLicenseFieldsFromSource(shipRow,index){
+  if(!shipRow||!index)return null;
+  if(shipRow._sourceModule==='collection'){
+    const source=index.collection.get(shipRow._modelKey);
+    if(!source)return null;
+    const mapped=mapCollectionRowToShip(source);
+    if(!mapped)return null;
+    const out={};
+    SHIP_LICENSE_KEYS.forEach(key=>{if(mapped[key]!=null)out[key]=mapped[key];});
+    return out;
+  }
+  const code=shipOrderCodeKey(shipRow.orderCode);
+  return code?shipLicenseFieldsFromCpRow(index.cp.get(code)):null;
+}
+// Değişen satırları bellekte günceller ve sunucuya yazar; değişmeyen satıra yazmaz.
+function refreshShipLicenseFromSources(rows=shipRows){
+  const index=shipLicenseSourceIndex();
+  if(!index)return 0;
+  let changed=0;
+  (rows||[]).forEach(row=>{
+    const fields=shipLicenseFieldsFromSource(row,index);
+    if(!fields)return;
+    const patch={};
+    SHIP_LICENSE_KEYS.forEach(key=>{
+      const next=fields[key]==null?null:fields[key];
+      const prev=row[key]==null?null:row[key];
+      if(prev!==next)patch[key]=next;
+    });
+    if(!Object.keys(patch).length)return;
+    Object.assign(row,patch);
+    if(row._shipId)patchShipRow(row._shipId,patch);
+    changed++;
+  });
+  return changed;
+}
 function collectionShippingColourOptions(row){
   const clean=value=>String(value==null?'':value).trim();
   const source=Array.isArray(row&&row._colourOptions)
@@ -24250,6 +24344,7 @@ function renderShipTable(){
   empty.style.display='none'; content.style.display='block';
   document.getElementById('shipCount').textContent = `${shipRows.length} satır`;
   updateShipSelectionActions();
+  refreshShipLicenseFromSources();
   shipRows.forEach(computeShipFormulas);
   const cols = visibleCols('ship');
   const table = document.getElementById('shipTable');
