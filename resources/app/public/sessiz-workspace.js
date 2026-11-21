@@ -130,20 +130,44 @@ const pick=pair=>isEn()?pair[1]:pair[0];
 let today=startOfDay(new Date());
 let cache={rows:null,items:[]};
 function canonical(row,id){const C=root.BLCanonicalFields;if(!C)return '';try{const v=C.canonicalValue(row,'cp',id);return v==null?'':v;}catch(_){return '';}}
-function itemsFromRows(rows){
-  if(cache.rows===rows&&cache.lang===isEn())return cache.items;
-  const s=src();const items=rows.map((row,index)=>{
-    const v={};for(const f of FIELDS){if(f.kind==='image'||f.kind==='priority')continue;v[f.id]=canonical(row,f.id);}
-    const pr=s?.priority?.(row)||{code:'',label:'',risk:false,rank:99};
-    const ordered=toNum(v.orderQuantity),shipped=toNum(v.shipmentQuantity);let remaining=toNum(v.remainingUnits);
-    if(remaining==null&&ordered!=null)remaining=Math.max(0,ordered-(shipped||0));
-    const exf=toDate(v.exFactory);
-    return {row,index,v,exf,inStore:toDate(v.inStore),retail:toDate(v.retailDate),ordered,shipped,remaining,fob:toNum(v.fob),priority:pr,
-      facets:{country:String(v.country||''),license:String(v.license||''),season:String(v.season||''),buyer:String(v.buyer||''),buyingGroup:String(v.buyingGroup||''),status:String(v.orderStatus||''),priority:pr.label||''},
-      text:(Object.values(v).join(' ')+' '+(pr.label||'')).toLocaleLowerCase('tr-TR')};
-  });
-  cache={rows,items,lang:isEn()};return items;
+/* Satır hazırlığı: büyük CP'de ana iş parçacığını kilitlememek için parça parça (CHUNK satır)
+   yapılır ve ilerleme gösterilir; sonuç satır dizisi kimliği ve dil ile önbelleklenir,
+   Sessiz kapanınca korunur (tekrar açılış yeniden hesaplamaz), yeni veri ya da dil gelince yenilenir. */
+const CHUNK=1500;let building=null;
+function buildItem(row,index,s){
+  const v={};for(const f of FIELDS){if(f.kind==='image'||f.kind==='priority')continue;v[f.id]=canonical(row,f.id);}
+  const pr=s?.priority?.(row)||{code:'',label:'',risk:false,rank:99};
+  const ordered=toNum(v.orderQuantity),shipped=toNum(v.shipmentQuantity);let remaining=toNum(v.remainingUnits);
+  if(remaining==null&&ordered!=null)remaining=Math.max(0,ordered-(shipped||0));
+  return {row,index,v,exf:toDate(v.exFactory),inStore:toDate(v.inStore),retail:toDate(v.retailDate),ordered,shipped,remaining,fob:toNum(v.fob),priority:pr,
+    facets:{country:String(v.country||''),license:String(v.license||''),season:String(v.season||''),buyer:String(v.buyer||''),buyingGroup:String(v.buyingGroup||''),status:String(v.orderStatus||''),priority:pr.label||''},
+    text:(Object.values(v).join(' ')+' '+(pr.label||'')).toLocaleLowerCase('tr-TR')};
 }
+const itemsReady=rows=>cache.rows===rows&&cache.lang===isEn();
+function itemsFromRows(rows){
+  if(itemsReady(rows))return cache.items;
+  if(rows.length<=CHUNK){const s=src();const items=rows.map((row,index)=>buildItem(row,index,s));cache={rows,items,lang:isEn()};return items;}
+  ensureItems(rows);return [];
+}
+function ensureItems(rows){
+  if(itemsReady(rows))return Promise.resolve(cache.items);
+  const lang=isEn();
+  if(building&&building.rows===rows&&building.lang===lang)return building.promise;
+  const job={rows,lang,done:0,items:new Array(rows.length)};building=job;
+  job.promise=(async()=>{
+    const s=src();
+    for(let i=0;i<rows.length;i+=CHUNK){
+      if(building!==job)return null;
+      const end=Math.min(rows.length,i+CHUNK);for(let k=i;k<end;k++)job.items[k]=buildItem(rows[k],k,s);
+      job.done=end;const el=host?.querySelector('#slPrep');if(el)el.textContent=fmt(end)+' / '+fmt(rows.length);
+      await new Promise(resolve=>setTimeout(resolve,0));
+    }
+    if(building!==job)return null;building=null;cache={rows,items:job.items,lang};if(S.open)render();return cache.items;
+  })();
+  return job.promise;
+}
+const preparing=()=>'<p class="slLead">'+esc(L('CP satırları hazırlanıyor','Preparing CP rows'))+' <span class="slMono" id="slPrep">…</span></p>';
+const dataPending=()=>{const rows=src()?.cpRows?.()||[];if(itemsReady(rows)||rows.length<=CHUNK)return false;ensureItems(rows);return true;};
 function cellText(f,it){
   switch(f.kind){
     case 'qty':return fmt(f.id==='orderQuantity'?it.ordered:f.id==='shipmentQuantity'?it.shipped:it.remaining);
@@ -223,6 +247,7 @@ function cpHtml(){
   if(!s){return '<p class="slLead">'+esc(L('Veri kaynağı hazır değil.','Data source is not ready.'))+'</p>';}
   if(s.cpState?.()!=='ready'){return '<p class="slLead">'+esc(L('CP verisi yükleniyor…','Loading CP data…'))+'</p>';}
   const all=s.cpRows?.()||[];if(!all.length)return '<p class="slLead">'+esc(L('Yetkili kapsamda CP satırı yok.','No CP rows in your scope.'))+'</p>';
+  if(dataPending())return preparing();
   const list=sortItems(cpItems());const cols=columnsForView();const tpl=cols.map(colWidth).join(' ');
   const facetVals=key=>[...new Set(itemsFromRows(all).map(it=>it.facets[key]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
   let h='<div class="slTitle"><h2>CP Tracker</h2><p>'+esc(L('Ex-Factory haftasına göre · salt okunur · düzenleme klasik görünümde','By Ex-Factory week · read-only · edit in classic view'))+'</p></div>';
@@ -300,7 +325,7 @@ function overviewHtml(){
     (S.edit?'<button type="button" data-sl-ov="drawer" aria-pressed="'+S.drawer+'">'+esc(L('widget ekle','add widget'))+'</button><button type="button" data-sl-ov="compact">'+esc(L('yukarı hizala','align up'))+'</button><button type="button" data-sl-ov="addpage"'+(l.pages.length>=MAX_PAGES?' disabled':'')+'>'+esc(L('sayfa ekle','add page'))+'</button><button type="button" data-sl-ov="delpage">'+esc(L('boş sayfayı sil','delete empty page'))+'</button><button type="button" data-sl-ov="reset">'+esc(L('varsayılan düzen','default layout'))+'</button><button type="button" class="on" data-sl-ov="done">'+esc(L('bitti','done'))+'</button>':'<button type="button" data-sl-ov="edit">'+esc(L('düzenle','edit'))+'</button>')+'</div>';
   h+='<div class="slPages" role="tablist">'+l.pages.map((p,i)=>'<button type="button" role="tab" data-sl-page="'+i+'" aria-selected="'+(l.page===i)+'">'+esc(pageName(p))+' <span class="slMono">'+p.items.length+'</span></button>').join('')+'</div>';
   if(S.edit&&S.drawer)h+='<div class="slDrawer blMotionOverlay">'+Object.entries(GROUPS_W).map(([g,gl])=>'<div><span class="slKdh">'+esc(pick(gl))+'</span>'+Object.entries(WIDGETS).filter(([,w])=>w.group===g).map(([k,w])=>'<button type="button" class="slDw" data-sl-add="'+k+'"'+(used.has(k)?' disabled':'')+'><b>'+esc(pick(w.t))+'</b><span>'+esc(pick(w.d))+'</span><span class="slMono">'+w.w+'×'+w.h+(used.has(k)?' · '+esc(L('yerleşik','placed')):'')+'</span></button>').join('')+'</div>').join('')+'</div>';
-  h+='<div class="slGrid'+(S.edit?' editing':'')+'">'+P.items.map(it=>{const w=WIDGETS[it.key];let body='';try{body=w.classic?classicWidget(it.key):W[it.key]();}catch(err){body='<span class="slRed">'+esc(L('Widget çizilemedi','Widget could not be drawn'))+'</span>';}
+  h+='<div class="slGrid'+(S.edit?' editing':'')+'">'+P.items.map(it=>{const w=WIDGETS[it.key];let body='';try{body=w.classic?classicWidget(it.key):(['pulse','exceptionInbox','deadline','breakdown'].includes(it.key)&&(src()?.cpState?.()!=='ready'||dataPending()))?preparing():W[it.key]();}catch(err){body='<span class="slRed">'+esc(L('Widget çizilemedi','Widget could not be drawn'))+'</span>';}
     return '<div class="slW blMotionEnter" data-w="'+it.key+'" style="grid-column:'+(it.x+1)+' / span '+it.w+';grid-row:'+(it.y+1)+' / span '+it.h+'"><div class="slWh"><span class="slWt">'+esc(pick(w.t))+'</span><span class="slWl"></span>'+
       (S.edit?'<span class="slMono slMuted">'+it.w+'×'+it.h+'</span><button type="button" data-sl-send="'+it.key+'">'+esc(L('sayfaya gönder','send to page'))+'</button><button type="button" data-sl-rm="'+it.key+'" aria-label="'+esc(L('Kaldır','Remove'))+'">×</button>':'')+'</div>'+
       (S.send===it.key?'<div class="slOpt">'+l.pages.map((p,i)=>i===l.page?'':'<button type="button" data-sl-to="'+i+'">'+esc(pageName(p))+'</button>').join('')+'</div>':'')+'<div class="slWb">'+body+'</div>'+(S.edit?'<span class="slResize" aria-hidden="true"></span>':'')+'</div>';}).join('')+'</div>';
@@ -402,7 +427,7 @@ function stopDrag(){drag=false;}
 function close(){
   if(!S.open)return;S.open=false;save('active',false);clearInterval(clockTimer);clockTimer=0;langObserver?.disconnect();langObserver=null;
   doc.removeEventListener('mouseup',stopDrag);doc.removeEventListener('keydown',onKey);doc.removeEventListener('copy',onCopy);
-  host?.remove();host=null;doc.documentElement.classList.remove('blSessizOpen');cache={rows:null,items:[]};S.sel=null;S.detail=null;
+  host?.remove();host=null;doc.documentElement.classList.remove('blSessizOpen');building=null;S.sel=null;S.detail=null;
   try{root.dispatchEvent(new CustomEvent('bl:sessiz-closed'));}catch(_){}
 }
 function refresh(){cache={rows:null,items:[]};if(S.open)render();}
