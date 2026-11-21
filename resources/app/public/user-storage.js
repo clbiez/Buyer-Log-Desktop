@@ -14,7 +14,7 @@
     // v2026-10-22 — Koleksiyon fiyat görünümü, Fiyat Masası tercihleri ve kullanıcının
     // Koleksiyon'a henüz yansımamış teklif düzenlemeleri kişiseldir.
     'lcw.koleksiyon.priceView.','lcw.pricingDesk.','lcw.quotations.projectedLineEdits.',
-    'bl.privateOrderNotes.v1.','lcw.personalOrderNotes.','lcw.todo.','lcw.notifications.','lcw.masterReleaseNotice.','lcw.lfl.filters.','lcw.lfl.readyFilters.','lcw.lfl.customCompare.','lcw.lfl.analysisSplit.','lcw.quotations.columnWidths.','lcw.oab.','lcw.intake.',
+    'bl.privateOrderNotes.v1.','lcw.personalOrderNotes.','lcw.todo.','lcw.notifications.','lcw.masterReleaseNotice.','lcw.lfl.filters.','lcw.lfl.readyFilters.','lcw.lfl.customCompare.','lcw.lfl.analysisSplit.','lcw.quotations.columnWidths.','lcw.oab.','lcw.intake.','lcw.postfob.',
     'lcw_view_favorite_','lcw_filter_favorite_','buyerlog.fx.persist.v1','buyerlog.workspace.','buyerlog.dashboard.','buyerlog.favorites.','buyerlog.presetCache.v2.',
     'bl.backlog.excelColumns.','bl.detailTables.showImages.','bl.modelImages.','bl.tableRange.','bl.refreshHistory.','bl.autoRefresh.','bl.lcwai.history.','buyerlog.overview.notesReminderCollapsed','buyerlog.overview.collectionSummary.','buyerlog.overview.layout.','buyerlog.overview.breakdown.','buyerlog.overview.globalFlow.',
     // v2026-10-30 — kişisel ASAS ⇄ IAS alan eşleme hafızası (yalnız sunucu yazar).
@@ -130,7 +130,7 @@
     'lcw.lfl.filters.','lcw.lfl.readyFilters.','lcw.lfl.customCompare.','lcw.lfl.analysisSplit.',
     'lcw.koleksiyon.scope.','lcw.koleksiyon.analytics.','lcw.koleksiyon.colState.','lcw.koleksiyon.pricingExcelColumns.',
     'lcw.koleksiyon.priceView.','lcw.pricingDesk.', // v2026-10-22 — görünüm tercihleri hesapla taşınır
-    'lcw.quotations.columnWidths.','lcw.oab.','lcw.intake.','lcw_view_favorite_','lcw_filter_favorite_',
+    'lcw.quotations.columnWidths.','lcw.oab.','lcw.intake.','lcw.postfob.','lcw_view_favorite_','lcw_filter_favorite_',
     'buyerlog.workspace.horizon.','buyerlog.workspace.applied-horizon.','buyerlog.dashboard.','lcw.dashboard.','buyerlog.favorites.','lcw.favorites.','bl.backlog.excelColumns.','bl.detailTables.showImages.',
     'bl.formulaColumns.', // v7.28 — hesaplanan sütun tanımları kullanıcıyla birlikte taşınır
     'bl.excelImport.profiles.', // Excel içe aktarma eşleme profilleri: kullanıcıya ve modüle ait YAPILANDIRMA (çalışma kitabı verisi değil)

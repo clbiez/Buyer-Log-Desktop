@@ -5,14 +5,32 @@ const {createComputePool}=require('./compute-pool');
 const {captureAntrepoMetadata}=require('./compute-source-codec');
 const {accessForTask}=require('./compute-task-access');
 const {serializeForTransfer}=require('./compute-ipc');
+const {WORKER_SOURCE_CACHE_BYTES}=require('./compute-source-cache');
 const MiB=1024*1024;
+/* Kaynağa bağlı işlerin işçi bellek tahmini. Ölçüm (30k satır, 123 MiB kaynak, 2026-11-21):
+   işçi isolate tepe heap'i ≈673 MB ≈ 96 MiB + 4,7×kaynak; heap dışı tamponlarla ≈5,5×.
+   Eski 12×kaynak tahmini bunun ≈2,3 katıydı ve 16 GB makinede ≈324 MiB üstü her kaynağı
+   sunucu iş parçacığına atıyordu (15–45 sn olay döngüsü kilidi). Kaynak kopyası hazırlığı ve tüm
+   modülleri üreten 'projections' 8×; diğer kaynak işleri 6× (işçi önbelleğindeki 4× kopya ayrıca
+   sayılır; daha yüksek tahmin her işte önbelleği boşaltıp kaynağı yeniden çözüyordu; 6× 'projections'
+   için ölçümde tahmini aştı). İşçi yine de belleği ya da tahmini aşarsa (ERR_WORKER_OUT_OF_MEMORY /
+   COMPUTE_ESTIMATE_EXCEEDED) yalnız o görev, o kaynak sürümünde kapasite yoluna geçer. */
+const SOURCE_JOB_FACTOR=8,DESCRIPTOR_BYTES_PER_SOURCE=4; // descriptor.bytes = 4×kaynak
+// İşçi kaynağı önbelleğe sığdıramazsa (COMPUTE_SOURCE_TOO_LARGE) iş kabul edilmez: kapasite yoluna gider.
+const SOURCE_INDEPENDENT_TASKS=new Set(['projection-envelope','cp-image-registry','cp-shared-edit-codes']);
+const exceedsWorkerSourceCache=(task,descriptor)=>!SOURCE_INDEPENDENT_TASKS.has(task)&&Number(descriptor?.bytes)>WORKER_SOURCE_CACHE_BYTES;
+const descriptorJobBytes=(task,bytes)=>Math.ceil(bytes*(task==='projections'?SOURCE_JOB_FACTOR:6)/DESCRIPTOR_BYTES_PER_SOURCE);
 function failure(code){
     const messages={COMPUTE_SOURCE_TOO_LARGE:['Kaynak kopyası bayt bütçesine sığmıyor.','Source replica exceeds the byte budget.',413],COMPUTE_SOURCE_OWNER_MISMATCH:['Kaynak sahibi uyuşmuyor.','Source owner mismatch.',403],COMPUTE_STALE_GENERATION:['Kaynak sürümü değişti.','Source generation changed.',409],COMPUTE_POOL_CLOSED:['Hesaplama havuzu kapalı.','Compute pool is closed.',503],COMPUTE_JOB_INVALID:['Geçersiz hesaplama isteği.','Invalid compute request.',400],COMPUTE_ABORTED:['Hesaplama iptal edildi.','Compute operation cancelled.',499],COMPUTE_TIMEOUT:['Hesaplama zaman aşımına uğradı.','Compute operation timed out.',504],COMPUTE_QUEUE_BUSY:['Hesaplama kuyruğu dolu; tekrar deneyin.','Compute queue is full; retry later.',503]};
   const [tr,en,statusCode]=messages[code];return Object.assign(Error(`${tr} / ${en}`),{code,statusCode,errorEn:en});
 }
+/* Kuyruk girdi bayt sınırı. Kuyruktaki girdi zaten toplam bellek bütçesine (≤4 GiB) dahil sayılır;
+   ayrı 512 MiB sınırı ≈256 MiB üstü kaynak kopyası hazırlığını (girdi 2×kaynak) COMPUTE_QUEUE_BUSY ile
+   reddediyor ve yenileme yayımını düşürüyordu. Fiilî sınır bütçedir. */
+const SERVICE_MAX_PENDING_BYTES=4096*MiB;
 function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
   if(!Number.isSafeInteger(diskBudgetBytes)||diskBudgetBytes<1)throw Error('Invalid source replica byte budget');
-  pool??=createComputePool({maxPendingBytes:512*MiB});
+  pool??=createComputePool({maxPendingBytes:SERVICE_MAX_PENDING_BYTES});
   const privateRoot=fs.mkdtempSync(path.join(root||os.tmpdir(),'buyerlog-source-replicas-'));
   fs.chmodSync(privateRoot,0o700);
   const records=new Map(),current=new Map(),preparing=new Map();let reservedDiskBytes=0,closed=false,closing,warming,authorityGeneration=0;
@@ -38,7 +56,7 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     };
     return locally(async()=>{
       assertCurrent();const started=performance.now(),transfer=[];
-      const sourceIndependent=['projection-envelope','cp-image-registry','cp-shared-edit-codes'].includes(task);
+      const sourceIndependent=SOURCE_INDEPENDENT_TASKS.has(task);
       let source=record.liveSource||record.sourceRef?.deref();
       if(!source&&!sourceIndependent&&record.descriptor.replicaFile){
         source=require('./compute-source-codec').decode(await fs.promises.readFile(record.descriptor.replicaFile),record.descriptor);
@@ -94,9 +112,13 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
       try{
         try{
           lease=await pool.run('seed-source',{ownerId:owner,generation:version,source,antrepoMetadata:captureAntrepoMetadata(source),replicaFile,maxBytes:diskBytes},
-            {ownerKey:preparationOwner,generation:version,priority:'background',estimatedBytes:96*MiB+uncompressedBytes*12,inputBytes:uncompressedBytes*2});
+            {ownerKey:preparationOwner,generation:version,priority:'background',estimatedBytes:96*MiB+uncompressedBytes*SOURCE_JOB_FACTOR,inputBytes:uncompressedBytes*2});
         }catch(error){
-          if(error?.code!=='COMPUTE_JOB_TOO_LARGE')throw error;
+          // Kuyruk yoğunluğu kalıcı yenileme yayımına yeni bir başarısızlık bağımlılığı getirmez: kapasite yolu.
+          if(!['COMPUTE_JOB_TOO_LARGE','COMPUTE_QUEUE_BUSY'].includes(error?.code))throw error;
+          // İşçi yazdıktan sonra heap'i tükettiyse (sonlanmış; başka yazma olmaz) yarım/tam kopya
+          // izlenmeden diskte kalmasın: kayıttan ve bütçeden düşmeden önce silinir.
+          if(error.workerOutOfMemory)await fs.promises.rm(replicaFile,{force:true});
           await locally(()=>{
             if(preparing.get(owner)!==version)throw failure('COMPUTE_STALE_GENERATION');
             delete descriptor.replicaFile;descriptor.inlineSource=true;
@@ -146,16 +168,22 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
       // baytını ücretler; büyük ham kaynak bu yoldan tekrar taşınmaz.
       const jobParams=params.access?{...params,access:accessForTask(params.access,task,params)}:params;
       let lease,paramsSerializeMs=0,inputBytes=1024;
-      if(record.descriptor.inlineSource)lease=await runLocal(task,record,jobParams,options);
+      // workerOverflow: bu görev bu sürümde işçi belleğini/tahminini zaten aştı; her istekte işçiyi yeniden denemez.
+      if(record.descriptor.inlineSource||record.workerOverflow?.has(task)||exceedsWorkerSourceCache(task,record.descriptor))lease=await runLocal(task,record,jobParams,options);
       else{
         const encodeStarted=performance.now(),paramsBytes=serializeForTransfer(jobParams);
         paramsSerializeMs=performance.now()-encodeStarted;inputBytes=paramsBytes.byteLength+1024;
-        const estimate=task==='cp-shared-edit-codes'?96*MiB+inputBytes*8:(task==='backlog-workbook'?256*MiB+record.descriptor.bytes*6:96*MiB+record.descriptor.bytes*3)+inputBytes*3;
+        const estimate=task==='cp-shared-edit-codes'?96*MiB+inputBytes*8:(task==='backlog-workbook'?256*MiB+record.descriptor.bytes*6:96*MiB+descriptorJobBytes(task,record.descriptor.bytes))+inputBytes*3;
         try{
+          // Bir sahibin kaynak işleri sırayla koşar (önceki büyük tahminin fiili davranışı): eşzamanlı
+          // ikinci iş başka işçide kaynağın ikinci kopyasını çözüp CPU ve bellek için yarışmaz.
           lease=await pool.run(task,{ownerId:owner,source:record.descriptor,paramsBytes},{ownerKey:poolOwner(owner),generation:version,priority:'interactive',
-            ...options,estimatedBytes:estimate,inputBytes,transferList:[paramsBytes]});
+            serializationKey:poolOwner(owner),...options,estimatedBytes:estimate,inputBytes,transferList:[paramsBytes]});
         }catch(error){
-          if(error?.code!=='COMPUTE_JOB_TOO_LARGE')throw error;
+          // Tahmini aşan ya da işçi heap'ini tüketen görev: bu sürümde kapasite yolunda kalır (sonuç aynı motorla).
+          const overflow=['COMPUTE_ESTIMATE_EXCEEDED','COMPUTE_SOURCE_TOO_LARGE'].includes(error?.code)||(error?.code==='COMPUTE_JOB_TOO_LARGE'&&error.workerOutOfMemory===true);
+          if(error?.code!=='COMPUTE_JOB_TOO_LARGE'&&!overflow)throw error;
+          if(overflow)(record.workerOverflow??=new Set()).add(task);
           lease=await runLocal(task,record,jobParams,options);
         }
       }
@@ -253,8 +281,8 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
       const started=performance.now(),paramsBytes=serializeForTransfer({...params,access:accessForTask(params.access,task)});
       const paramsSerializeMs=performance.now()-started,inputBytes=paramsBytes.byteLength+1024;
       pool.setGeneration(ownerKey,generation);
-      const promise=pool.run(task,{ownerId:descriptor.ownerId,source:descriptor,paramsBytes},
-        {ownerKey,generation,priority:'interactive',estimatedBytes:96*MiB+descriptor.bytes*3+inputBytes*3,inputBytes,transferList:[paramsBytes]});
+      const promise=exceedsWorkerSourceCache(task,descriptor)?Promise.reject(Object.assign(Error('Worker source cache capacity'),{code:'COMPUTE_JOB_TOO_LARGE'})):pool.run(task,{ownerId:descriptor.ownerId,source:descriptor,paramsBytes},
+        {ownerKey,generation,priority:'interactive',estimatedBytes:96*MiB+descriptorJobBytes(task,descriptor.bytes)+inputBytes*3,inputBytes,transferList:[paramsBytes]});
       // Attach a rejection handler during admission without holding the lane
       // until execution finishes.
       promise.catch(()=>{});return {promise,paramsSerializeMs,inputBytes};
@@ -314,4 +342,4 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
   }
   return {seedSource,publishSource,retireSource,coldSource,bindColdSource,run,runExcelUtility,runOffice,encodeLocalDbSnapshot,runEndeksmatikStatus,collectionLflSource,runCollectionLfl,hashAccessAuthority,warm,stats,close};
 }
-module.exports={createComputeService};
+module.exports={createComputeService,SERVICE_MAX_PENDING_BYTES};

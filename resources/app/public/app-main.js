@@ -3046,6 +3046,7 @@ function switchTab(tab){
   }
   if(tab==='overview')void ensureOverviewOabModule();
   if(tab==='overview')void ensureOverviewIntakeModule();
+  if(tab==='overview')void ensureOverviewPostFobModule();
   /* v7.81 — Veri Yönetimi. Lazy: ilk geçişte yüklenir, açılışta değil.
      Sekmeden çıkılıp geri dönülürse modül zaten yüklüdür ve yalnız tazelenir. */
   if(tab==='source'){
@@ -19904,6 +19905,25 @@ function ensureOverviewIntakeModule(){
     .catch(error=>{overviewIntakeLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'intake',mode:'after-ui',failed:true});console.warn('INTAKE modülü yüklenemedi:',error);return null;});
   return overviewIntakeLoadPromise;
 }
+/* FOB Sonrası Maliyet widget'ı: betik Genel Bakış'ta yüklenir, sunucu isteği
+   widget görünür olana kadar postfob.js içinde bekletilir. */
+let overviewPostFobLoadPromise=null;
+function ensureOverviewPostFobModule(){
+  if(window.BLBootGuard&&!window.BL_STARTUP_COMPLETE){
+    if(window.BLBootGuard.autoContinue)return Promise.resolve(null);
+    return afterStartupReveal(ensureOverviewPostFobModule);
+  }
+  if(window.BLPostFob)return Promise.resolve(window.BLPostFob);
+  if(overviewPostFobLoadPromise)return overviewPostFobLoadPromise;
+  const loader=window.BLPerf?._loadScript;
+  if(typeof loader!=='function'||!document.getElementById('postFobSection'))return Promise.resolve(null);
+  window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'postfob',mode:'after-ui'});
+  overviewPostFobLoadPromise=loader('postfob-analysis.js?rev=20261121')
+    .then(()=>loader('postfob.js?rev=20261121'))
+    .then(()=>{window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'postfob',mode:'after-ui'});return window.BLPostFob||null;})
+    .catch(error=>{overviewPostFobLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'postfob',mode:'after-ui',failed:true});console.warn('FOB sonrası maliyet modülü yüklenemedi:',error);return null;});
+  return overviewPostFobLoadPromise;
+}
 let postUiStartupScheduled=false;
 const EXCEL_ENGINE_LOAD_DEADLINE_MS=1500;
 function schedulePostUiStartupTasks(){
@@ -19914,6 +19934,7 @@ function schedulePostUiStartupTasks(){
     void refreshFolderLabel();
     if(currentActiveTab()==='overview')void ensureOverviewOabModule();
     if(currentActiveTab()==='overview')void ensureOverviewIntakeModule();
+    if(currentActiveTab()==='overview')void ensureOverviewPostFobModule();
     const ensureFeature=window.BLPerf?.ensureFeature;
     if(typeof ensureFeature==='function'){
       void ensureFeature('deferredUi').then(()=>{
