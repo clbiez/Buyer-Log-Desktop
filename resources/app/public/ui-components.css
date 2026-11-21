@@ -16076,3 +16076,9 @@ html:root[data-ui-system="manifest"] body[data-ui-migrated] table tr.rowDirty in
 html:root[data-ui-system="manifest"] body[data-ui-migrated] :is(#cpTable,#ordersTable,#kolTable,.blTableReportTable) thead input[type="checkbox"]:is(#kolSelAll,[id$="_selAll"],[data-tr-check="all"]):indeterminate::after {
   content:""!important;display:block!important;position:absolute;inset:0;margin:auto;width:4px;height:2px;background:var(--ui-text);pointer-events:none;
 }
+
+/* Fiyat Masası · Fiyat Teklifleri: yapışkan detay başlığı kendi katmanını açar;
+   "Diğer" menüsü açıkken alttaki matris araç çubuğunun üstüne çıkması için
+   başlık popover katmanına yükselir. Tarih/özet sayıları sabit genişlikli. */
+html[data-ui-system="manifest"] .quotationWorkspaceShell .quotationDetailHead:has(.quotationMoreMenu:not([hidden])) {z-index:var(--ui-z-popover) !important}
+html[data-ui-system="manifest"] .quotationWorkspaceShell .quotationNavItem .verHistNavDate,html[data-ui-system="manifest"] .quotationSummaryLine {font-variant-numeric:tabular-nums}
