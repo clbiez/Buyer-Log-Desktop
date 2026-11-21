@@ -2181,6 +2181,7 @@ pairs:[
 ["Noktalı virgül + boşluk = VE. Aynı kayıtta iki koşul da bulunmalıdır.","Semicolon + space = AND. Both conditions must be in the same record."],
 ["! = bu değeri içermesin.","! = must not contain this value."],
 ["Excel’den yapıştırma","Pasting from Excel"],
+["Tarih kısayolları (Koleksiyon)","Date shortcuts (Collection)"],
 ["Excel’de bir veya birden fazla hücreyi kopyalayıp doğrudan arama kutusuna yapıştırın. Satır ve sütunlar tek listeye çevrilir; boş hücreler atılır, tekrar edenler tekilleştirilir ve değerler otomatik olarak VEYA şeklinde aranır.","Copy one or more cells in Excel and paste them directly into the search box. Rows and columns are turned into a single list; empty cells are dropped, duplicates are removed and the values are searched automatically as OR."],
 ["İpucu: Ayraçlardan sonra boşluk kullanılır. Böylece 13,50 gibi ondalık değerler tek arama değeri olarak kalır.","Tip: a space is used after separators, so decimal values such as 13,50 stay a single search value."],
 ["Önemli bildirimler","Important notifications"],

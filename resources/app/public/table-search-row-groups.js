@@ -26,6 +26,9 @@
     else if(text[0]==='!'&&text.length>1){mode='notContains';text=clean(text.slice(1));}
     else if(text.length>1&&text[text.length-1]==='!'){mode='notContains';text=clean(text.slice(0,-1));}
     if(!text)return null;
+    // Dönem kısayolu ana arama ayrıştırıcısıyla aynı kriteri üretir.
+    const period=typeof globalThis!=='undefined'&&globalThis.BLTableSearchPeriods?globalThis.BLTableSearchPeriods.parse(text):null;
+    if(period)return {mode:mode==='notContains'?'notContains':'period',value:text.toLocaleLowerCase('tr-TR'),values:period.tokens};
     return {mode,value:text.toLocaleLowerCase('tr-TR')};
   }
 

@@ -393,7 +393,11 @@ function parseTableSearchTerms(value){
     const suffix=marker!=='!'&&marker!=='/'&&raw.length>1&&raw[raw.length-1]==='!';
     const mode=marker==='!'||suffix?'notContains':marker==='/'?'contains':'exact';
     const criterion=marker==='!'||marker==='/'?norm(raw.slice(1)):suffix?norm(raw.slice(0,-1)):raw;
-    return criterion?{mode,value:normalize(criterion)}:null;
+    if(!criterion)return null;
+    // Dönem kısayolu (MB=M3-M5, EXF=W12): dil bağımsız satır jetonlarının VEYA kümesi.
+    const period=globalThis.BLTableSearchPeriods?.parse(criterion);
+    if(period)return {mode:mode==='notContains'?'notContains':'period',value:normalize(criterion),values:period.tokens};
+    return {mode,value:normalize(criterion)};
   };
   // "14! SAD!" gibi boşlukla yan yana yazılan sonek hariç tutmaları ayrı kriterdir.
   // Yalnız tamamlanmış sonekten sonra bölünür; "! RED" önek yazımı bozulmaz.
@@ -439,6 +443,10 @@ function tableSearchMatches(haystack,terms,options){
   };
   const criterionMatches=criterion=>{
     const item=criterion&&typeof criterion==='object'?criterion:{mode:'exact',value:criterion};
+    if(Array.isArray(item.values)){
+      const hit=item.values.some(token=>text.includes(token));
+      return item.mode==='notContains'?!hit:hit;
+    }
     const value=normalize(item.value);
     if(!value)return false;
     if(item.mode==='contains')return text.includes(value);
@@ -29545,13 +29553,31 @@ function passesKolColFilters(r){
   });
 }
 const KOL_SEARCH_KEYS=['plmId','modelKod','productMainDefinition','lisans','urunTipi','specialCode','line','colourCode','colour','fabric','fit','buyingSampleManufacturer','assortment','licensor','season','country','mmyg','mag','buyingGroup','buyer','inStoreWeek','inStoreMonth','confirmedManufacturer','_collectionOwnerName','not'];
+// Arama metnine girmeyen ama dönem kısayollarını (MB=M3, EXF=W12, RT=M10-M12) besleyen tarih alanları.
+const KOL_SEARCH_PERIOD_KEYS=['inStore','exFactory','retail'];
 const _kolSearchCache=new WeakMap();
+// Model Budget Month kayıt anındaki arayüz dilinde saklanabilir ("TEMMUZ 2027" / "JULY 2027").
+// Arama iki dilde de bulsun diye ay adı TR + EN eklenir; saklanan değer değiştirilmez.
+function kolMonthSearchText(value){
+  const code=kolMonthCode(value);
+  if(!code)return norm(value).toLowerCase();
+  const idx=Number(code.slice(4))-1,year=code.slice(0,4);
+  return `${KOL_MONTHS_TR[idx]} ${year} ${KOL_MONTHS_EN[idx]} ${year} ${code}`.toLocaleLowerCase('tr-TR');
+}
 function kolSearchHaystack(row){
   if(!row||typeof row!=='object')return '';
-  const signature=KOL_SEARCH_KEYS.map(key=>String(kolEffectiveValue(row,key)??'')).join('\u0001');
+  const signature=[...KOL_SEARCH_KEYS,...KOL_SEARCH_PERIOD_KEYS].map(key=>String(kolEffectiveValue(row,key)??'')).join('\u0001');
   const cached=_kolSearchCache.get(row);
   if(cached?.signature===signature)return cached.value;
-  const value=KOL_SEARCH_KEYS.map(key=>norm(kolEffectiveValue(row,key)).toLowerCase()).join(' ');
+  const text=KOL_SEARCH_KEYS.map(key=>key==='inStoreMonth'?kolMonthSearchText(kolEffectiveValue(row,key)):norm(kolEffectiveValue(row,key)).toLowerCase()).join(' ');
+  const periods=window.BLTableSearchPeriods?.rowTokens({
+    mbWeekCode:kolWeekCode(kolEffectiveValue(row,'inStoreWeek'),kolEffectiveValue(row,'inStore')),
+    mbMonthCode:kolMonthCode(kolEffectiveValue(row,'inStoreMonth')),
+    mbDate:kolEffectiveValue(row,'inStore'),
+    exFactory:kolEffectiveValue(row,'exFactory'),
+    retail:kolEffectiveValue(row,'retail')
+  })||'';
+  const value=periods?text+' '+periods:text;
   _kolSearchCache.set(row,{signature,value});
   return value;
 }
