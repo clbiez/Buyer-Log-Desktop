@@ -296,6 +296,10 @@ footer{padding:10px var(--ui-space-5) 26px;}
 .tableFieldsColumns{display:flex;flex-direction:column;margin-left:3px;padding:0 0 var(--ui-space-1);}
 .tableFieldsColumn{display:flex;align-items:center;gap:var(--ui-space-1);min-height:30px;padding:0 var(--ui-space-1) 0 calc(var(--ui-space-3) + 7px);}
 .tableFieldsColumn.isDragging{opacity:.4;}
+.tableFieldsColumn.dropBefore,.tableFieldsColumn.dropAfter{position:relative;}
+.tableFieldsColumn.dropBefore::before,.tableFieldsColumn.dropAfter::after{content:"";position:absolute;left:var(--ui-space-2);right:var(--ui-space-2);height:2px;pointer-events:none;}
+.tableFieldsColumn.dropBefore::before{top:-1px;}
+.tableFieldsColumn.dropAfter::after{bottom:-1px;}
 .tableFieldsDrag{flex:0 0 auto;width:14px;margin-right:4px;text-align:center;cursor:grab;user-select:none;}
 .tableFieldsDrag.isDisabled{visibility:hidden;}
 .tableFieldsColumnName{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}

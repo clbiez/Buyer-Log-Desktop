@@ -313,7 +313,8 @@ test('Alanlar çekmecesi: başlık açılır, tikler, düzenle / formül / sil v
   const move = extractFunction(APP, 'tableFieldsMoveColumn');
   assert.match(move, /if\(key==='__picture__'\|\|targetKey==='__picture__'\)return false;/);
   assert.match(move, /cs\.order=order;saveAutoTableColumnState\(\);/);
-  assert.match(move, /kolColOrder=kolNormalizeDisplayOrder\(order\);saveKolColState\(\);/);
+  assert.match(move, /return kolNormalizeDisplayOrder\(order\);/);
+  assert.match(move, /kolColOrder=next;saveKolColState\(\);/);
   const del = extractFunction(APP, 'tableFieldsDeleteColumn');
   assert.match(del, /removeFormulaColumn\(/);
   assert.match(del, /removeCpModelColumn\(/);
@@ -321,4 +322,42 @@ test('Alanlar çekmecesi: başlık açılır, tikler, düzenle / formül / sil v
   assert.match(del, /kolRemoveCustomColumn\(key,done\)/);
   // Çekmeceden açılan diyaloglar çekmeceyi kapatmaz.
   assert.match(extractFunction(APP, 'openTableFieldsMenu'), /\.warnOverlay,\.modalCard,\[aria-modal="true"\]/);
+});
+
+test('Alanlar çekmecesi: Koleksiyon serbest sütunu başka başlığa sürüklenince başlığı kendiliğinden değişir', () => {
+  // Sistem sütunlarının başlığı sabit; serbest sütun başlığını soldaki komşusundan alır.
+  const fixed = { a1: 'A', a2: 'A', b1: 'B', b2: 'B' };
+  const saved = [];
+  const context = {
+    appLang: 'tr', kolColOrder: ['a1', 'a2', 'b1', 'b2', 'x'], toasts: [],
+    kolDefaultDisplayOrder: () => ['a1', 'a2', 'b1', 'b2', 'x'],
+    kolNormalizeDisplayOrder: order => order.slice(),
+    kolColumnGroupFor: (key, order) => {
+      if (fixed[key]) return fixed[key];
+      for (let i = order.indexOf(key) - 1; i >= 0; i -= 1) if (fixed[order[i]]) return fixed[order[i]];
+      return 'A';
+    },
+    saveKolColState: () => saved.push(context.kolColOrder.slice()),
+    showToast: message => context.toasts.push(message),
+    tableFieldsRerender: () => {},
+    tableFieldsColumn: (_table, key) => ({ kind: fixed[key] ? 'system' : 'custom' }),
+  };
+  vm.runInNewContext(`${extractFunction(APP, 'tableFieldsCanChangeGroup')}${extractFunction(APP, 'tableFieldsMoveColumn')};this.move=tableFieldsMoveColumn;this.can=tableFieldsCanChangeGroup;`, context);
+  assert.equal(context.can('koleksiyon', 'x'), true);
+  assert.equal(context.can('koleksiyon', 'b1'), false);
+  assert.equal(context.can('cp', 'x'), false, 'CP/Orders ortak sütun başlığı sürüklemeyle değişmez');
+  // B başlığındaki x, A'nın son sütununun ardına bırakılır → A başlığına geçer.
+  assert.equal(context.move('koleksiyon', 'x', 'a2', true, 'A'), true);
+  assert.deepEqual(plain(context.kolColOrder), ['a1', 'a2', 'x', 'b1', 'b2']);
+  assert.equal(context.kolColumnGroupFor('x', context.kolColOrder), 'A');
+  // B'nin ilk sütununun ÖNÜNE bırakılırsa soldaki A'ya düşerdi; B'de kalacak taraf seçilir.
+  assert.equal(context.move('koleksiyon', 'x', 'b1', false, 'B'), true);
+  assert.deepEqual(plain(context.kolColOrder), ['a1', 'a2', 'b1', 'x', 'b2']);
+  assert.equal(context.kolColumnGroupFor('x', context.kolColOrder), 'B');
+  assert.equal(saved.length, 2);
+  const fn = extractFunction(APP, 'renderTableFieldsMenu');
+  assert.match(fn, /data-table-fields-drop-group=/);
+  assert.match(fn, /dragged\.dataset\.crossGroup==='1'/);
+  assert.match(fn, /Drag your own columns onto another heading/);
+  assert.match(fn, /Eklediğiniz sütunları başka bir başlığa sürükleyerek/);
 });
