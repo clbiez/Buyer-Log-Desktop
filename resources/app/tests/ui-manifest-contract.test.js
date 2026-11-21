@@ -36,7 +36,8 @@ test('Manifest has one token source; migrated owners never consume legacy appear
    m[1]==='--kol-status-color'&&/^#kolTable (?:select|td)/.test(d.selector)||
    m[1]==='--kol-quick-status'&&d.selector==='#kolQuickFilters .kpi[data-kolq-key="durum"]:not(.active) .n'||
    m[1]==='--status-color'&&d.selector==='.kolStatusManagerDot'||
-   m[1]==='--swatch'&&d.selector==='.kolStatusSwatch'))continue;
+   m[1]==='--swatch'&&d.selector==='.kolStatusSwatch'||
+   m[1]==='--kol-dot'&&d.selector==='.kolColourDot::before'))continue;
   // Module-local values may describe measured geometry, never appearance.
   // Undefined geometry is independently rejected by design-token-guard.
   if(!m[1].startsWith('--ui-')&&/^(?:--[\w-]+|(?:min-|max-)?(?:width|height)|padding(?:-.*)?|margin(?:-.*)?|gap|row-gap|column-gap|grid(?:-.*)?|flex(?:-.*)?|inset(?:-.*)?|top|right|bottom|left|transform|contain-intrinsic-size)$/.test(d.prop)&&!/^--(?:acc|card|ink|line|muted|fs-|sans|head|mono|r-)/.test(m[1]))continue;

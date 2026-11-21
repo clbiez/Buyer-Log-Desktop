@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-21",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Aşama tahmini ve CP yeniden çizim düzeltmeleri",
-    "en": "Stage forecast and CP redraw fixes"
+    "tr": "Koleksiyon renk opsiyonları, aşama tahmini ve CP yeniden çizim düzeltmeleri",
+    "en": "Collection colour options, stage forecast and CP redraw fixes"
   },
   "summary": {
-    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir.",
-    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values."
+    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer.",
+    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours."
   },
   "changes": [
     {
@@ -66,6 +66,35 @@
         "caption": {
           "tr": "Yeniden çizimden sonra Öncelik hücreleri gerçek değeri gösterir; düzenlenen Retail tarihi Sevk→Perakende değerine yansımıştır.",
           "en": "After a redraw, Priority cells show their real value; the edited retail date is reflected in Ex→Retail."
+        }
+      }
+    },
+    {
+      "id": "collection-model-swatch-rail",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Satır numaraları kaldırıldı; model ve renk opsiyonları seçim şeridinde ayrışır",
+        "en": "Row numbers removed; models and colour options are told apart in the selection rail"
+      },
+      "body": {
+        "tr": "Koleksiyon tablosunun solundaki satır numarası hücresi kaldırıldı. Renk opsiyonu olan model satırında renk sayısı görünür; sayaca tıklamak renkleri açar ya da kapatır. Her renk kaydında, renk adından ya da renk kodundan okunan bir renk karesi bulunur; tanınmayan renk boş çerçeve olarak kalır. Model satırının şeridine tıklamak modeli tüm renk opsiyonlarıyla birlikte seçer ya da bırakır; renk satırının şeridi yalnız o rengi seçer. Renklerin bir kısmı seçiliyse model şeridi yarım dolu görünür. Bir satır kutusu işaretlendikten hemen sonra renkleri aç/kapa artık beklemeden çalışır.",
+        "en": "The row-number cell on the left of the Collection table was removed. A model row with colour options shows its colour count; clicking the count shows or hides the colours. Each colour record has a colour square read from its colour name or code; an unrecognised colour stays an empty frame. Clicking the rail of a model row selects or clears the model with all its colour options; the rail of a colour row selects only that colour. When only some colours are selected, the model rail is half filled. Showing or hiding colours right after ticking a row checkbox now works without delay."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-model-swatch-dark.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosunda renk sayaçları, renk kareleri ve yarım dolu model şeritleri",
+          "en": "Colour counts, colour squares and half-filled model rails in a demo Collection table"
+        },
+        "caption": {
+          "tr": "Demo veride iki modelin renk sayısı ve her rengin karesi görünür; kısmen seçili modellerin şeridi yarım dolu.",
+          "en": "On demo data, two models show their colour count and every colour its square; partly selected models have a half-filled rail."
         }
       }
     }

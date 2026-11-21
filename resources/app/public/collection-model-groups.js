@@ -604,5 +604,58 @@ function kolParseMoneyNum(v){
   }else value=value.replace(',','.');
   return Number(value);
 }
-  return { writeGroupedValue,adoptImportedValue,kolImportReadTargetField,kolParseQuantityNum,kolParseMoneyNum,kolApplyApprovedPlmUpdate,kolImportMatchKey,kolImportReadField,kolPlmCodePrefix,kolPlmSeason,kolPlmBrandToken,kolPlmImportTouchedKeys,kolPlmImportColourKey,kolPlmNormalizeDirectRecord,kolBuildPlmImportPlan,bestPricing,confirmedPricing,identityOf, colourIdentity, fieldMetadata, normalizeRows, linkImportedColourVariants, inheritModelValues, groupFor, hasVariantOverride, effectiveValue, createValueReader, valueReaderForRevision, invalidateValueReader, setSharedValue, setVariantOverride, clearVariantOverride, clearAllVariantOverrides, setPricingOverrides, visibleRows, mergeGroups, detachVariant, relinkVariant, summary };
+// Gutter renk noktası: veri rengini gösterir (UI paleti değil). Önce açık hex
+// değer, sonra TR/EN renk adı kelime bazında eşlenir; bilinmeyen renk '' döner.
+const SWATCH_WORDS=[
+  [['NAVY','LACIVERT','LACİVERT','MARINE'],'#24324f'],
+  [['ANTHRACITE','ANTRASIT','ANTRASİT','CHARCOAL'],'#3b3f45'],
+  [['BLACK','SIYAH','SİYAH'],'#141414'],
+  [['WHITE','BEYAZ','OPTIC'],'#f4f4f2'],
+  [['ECRU','EKRU','OFFWHITE','OFF-WHITE'],'#e8dfc8'],
+  [['CREAM','KREM','IVORY'],'#efe6cf'],
+  [['BEIGE','BEJ','SAND','STONE','TAS','TAŞ'],'#cdb99a'],
+  [['CAMEL','TABA'],'#b0844f'],
+  [['BROWN','KAHVE','KAHVERENGI','KAHVERENGİ','CHOCOLATE'],'#6b4630'],
+  [['KHAKI','HAKI','HAKİ'],'#8a8456'],
+  [['OLIVE','ZEYTIN','ZEYTİN'],'#6b6b35'],
+  [['MINT','MENTA','MENTE'],'#a8dcc4'],
+  [['GREEN','YESIL','YEŞİL','YEŞIL'],'#3f7d4e'],
+  [['TURQUOISE','TURKUAZ'],'#3bb3b0'],
+  [['INDIGO','INDIGO','İNDİGO'],'#3a4a8c'],
+  [['SAX','SAKS'],'#3f6fb5'],
+  [['BLUE','MAVI','MAVİ','DENIM'],'#3d6fa8'],
+  [['LILAC','LILA','LİLA','LAVENDER'],'#b7a2d4'],
+  [['PURPLE','MOR','VIOLET'],'#6c3f8f'],
+  [['FUCHSIA','FUSYA','FUŞYA'],'#c2357f'],
+  [['PINK','PEMBE','ROSE','PUDRA','POWDER'],'#e3a3b5'],
+  [['BURGUNDY','BORDO','MAROON','WINE'],'#6e1f2c'],
+  [['RED','KIRMIZI'],'#b3343a'],
+  [['ORANGE','TURUNCU'],'#e07a2e'],
+  [['MUSTARD','HARDAL'],'#c99a2e'],
+  [['YELLOW','SARI'],'#e6c83a'],
+  [['SILVER','GUMUS','GÜMÜŞ'],'#b8bcc2'],
+  [['GOLD','ALTIN'],'#c8a44a'],
+  [['GREY','GRAY','GRI','GRİ'],'#8a8f96'],
+];
+const SWATCH_INDEX=new Map();
+SWATCH_WORDS.forEach(([words,hex],rank)=>words.forEach(word=>{const key=word.toLocaleUpperCase('tr-TR');if(!SWATCH_INDEX.has(key))SWATCH_INDEX.set(key,{hex,rank});}));
+function colourSwatch(row){
+  if(!row)return '';
+  for(const value of [row.colour,row.colourCode]){
+    const m=/^#?([0-9a-f]{6})$/i.exec(text(value));
+    if(m&&text(value).startsWith('#'))return '#'+m[1].toLowerCase();
+  }
+  let best=null;
+  for(const value of [row.colour,row.colourCode]){
+    `${normal(value)} ${text(value).toUpperCase()}`.split(/[^0-9A-ZÇĞİÖŞÜ-]+/).forEach(word=>{
+      const hit=SWATCH_INDEX.get(word);
+      if(hit&&(!best||hit.rank<best.rank))best=hit;
+    });
+    if(best)break;
+  }
+  if(!best)return '';
+  return best.hex;
+}
+
+  return { writeGroupedValue,adoptImportedValue,kolImportReadTargetField,kolParseQuantityNum,kolParseMoneyNum,kolApplyApprovedPlmUpdate,kolImportMatchKey,kolImportReadField,kolPlmCodePrefix,kolPlmSeason,kolPlmBrandToken,kolPlmImportTouchedKeys,kolPlmImportColourKey,kolPlmNormalizeDirectRecord,kolBuildPlmImportPlan,bestPricing,confirmedPricing,colourSwatch,identityOf, colourIdentity, fieldMetadata, normalizeRows, linkImportedColourVariants, inheritModelValues, groupFor, hasVariantOverride, effectiveValue, createValueReader, valueReaderForRevision, invalidateValueReader, setSharedValue, setVariantOverride, clearVariantOverride, clearAllVariantOverrides, setPricingOverrides, visibleRows, mergeGroups, detachVariant, relinkVariant, summary };
 });

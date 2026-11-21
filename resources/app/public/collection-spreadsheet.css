@@ -17,9 +17,8 @@
 .kolSpreadsheetHelper{display:flex;align-items:center;min-height:25px;padding:2px 7px;min-width:0}
 .kolSpreadsheetBusinessSelection{flex:0 0 auto;min-width:92px;white-space:nowrap}
 #view-koleksiyon.kolSpreadsheetDragSelecting #kolTable{user-select:none;-webkit-user-select:none}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable .chkTh,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetRowGutter{width:72px!important;min-width:72px!important}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable .chkTh,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetRowGutter{width:48px!important;min-width:48px!important}
 .kolSpreadsheetRowGutter{padding:0 3px!important;white-space:nowrap;text-align:center}
-.kolSpreadsheetRowNumber{display:inline-grid;place-items:center;width:25px;height:22px;margin-right:3px;padding:0;cursor:pointer}
 .kolSpreadsheetRowGutter .rowChk{width:14px;height:14px;margin:0;vertical-align:middle;box-sizing:border-box;}
 .kolSpreadsheetStatusBar{display:flex;align-items:center;gap:14px;min-height:25px;padding:3px 8px;white-space:nowrap;overflow:auto}
 .kolSpreadsheetContextMenu{position:fixed;min-width:210px;padding:4px}
@@ -68,14 +67,10 @@
   cursor:pointer;
 }
 .kolModelGroupToggle .ic{width:12px;height:12px;}
-.kolModelGroupToggle:hover{transform:scale(1.04);}
-.kolModelGroupGutterSpacer.isVariant{position:relative;}
-.kolModelGroupGutterSpacer.isVariant::before{
-  content:"";width:10px;height:15px;align-self:start;margin-top:0;
-}
-.kolModelGroupGutterSpacer.isVariant::after{
-  content:"";position:absolute;right:1px;bottom:4px;width:4px;height:4px;opacity:.78;
-}
+/* Model satırı: renk sayısı rozeti aynı zamanda aç/kapa düğmesidir; her renk
+   kaydında veri renginin karesi. Görünüm ui-components.css manifest katmanında. */
+.kolModelGroupCount{width:18px;height:16px;}
+.kolColourDot{display:inline-block;width:9px;height:9px;margin-right:2px;vertical-align:middle;box-sizing:border-box;}
 /* Legacy in-cell hierarchy marks are intentionally suppressed: hierarchy now lives
    in the row gutter and never changes spreadsheet column coordinates. */
 .kolModelGroupBadge,.kolModelVariantBadge,.kolVariantOverrideDot{display:none!important;}
