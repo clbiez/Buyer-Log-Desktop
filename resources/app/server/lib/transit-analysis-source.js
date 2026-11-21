@@ -15,6 +15,7 @@
 
 const parseLib = require('./parse');
 const BLTransitAnalysis = require('../../public/transit-analysis');
+const BLTransitStageModel = require('../../public/transit-stage-model');
 
 const TR = { 'İ': 'I', 'I': 'I', 'ı': 'I', 'Ş': 'S', 'ş': 'S', 'Ç': 'C', 'ç': 'C', 'Ö': 'O', 'ö': 'O', 'Ü': 'U', 'ü': 'U', 'Ğ': 'G', 'ğ': 'G' };
 function headerKey(value) {
@@ -68,12 +69,25 @@ function isoDate(value) {
   const p = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
+// Başlık anahtarı saf fonksiyondur; Backlog her parsiyelde aynı başlıkları
+// tekrar normalleştirmesin diye (30k satırda ölçülen sıcak yol) önbelleklenir.
+const HEADER_KEY_CACHE = new Map();
+function cachedHeaderKey(name) {
+  let key = HEADER_KEY_CACHE.get(name);
+  if (key === undefined) {
+    key = headerKey(name);
+    if (HEADER_KEY_CACHE.size >= 4000) HEADER_KEY_CACHE.clear();
+    HEADER_KEY_CACHE.set(name, key);
+  }
+  return key;
+}
 function sourceValue(entry, field) {
   const fields = entry && entry._sourceFields;
   if (!fields || typeof fields !== 'object') return null;
   const wanted = SOURCE_KEYS[field];
-  for (const [name, value] of Object.entries(fields)) {
-    if (value != null && value !== '' && wanted.has(headerKey(name))) return value;
+  for (const name in fields) {
+    const value = fields[name];
+    if (value != null && value !== '' && wanted.has(cachedHeaderKey(name))) return value;
   }
   return null;
 }
@@ -273,6 +287,32 @@ function applyReportRules(shipments, options = {}) {
   return { hasActualEntry, hasDestination };
 }
 
+/* Backlog satırının aşama projeksiyonu için IAS kilometre taşları. Model ile
+   AYNI alan eşlemesi kullanılır (shipmentFromEntry); ülke çağıranın işidir. */
+function milestonesFromEntry(entry) {
+  if (!entry || typeof entry !== 'object') return null;
+  const s = shipmentFromEntry(entry, '');
+  const out = {};
+  for (const m of BLTransitStageModel.MILESTONES) out[m] = s[m] || '';
+  out.documentDelivery = s.documentDelivery || '';
+  return out;
+}
+
+/* Risk hesabının okuduğu aşama süre modeli. Canlı analizle aynı parsiyel
+   kümesinden (kapsam + tarih penceresi) yalnız gerçekleşen tarihlerle kurulur. */
+function buildStageModel({ orders, antrepoMap, overrides, today, sourceLabel, window, scope, generatedBy } = {}) {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  const todayIso = today || `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  const range = BLTransitAnalysis.windowRange(window || 'y1', todayIso);
+  const shipments = scope === 'filtered'
+    ? collectShipments(orders, antrepoMap, overrides)
+    : collectAllShipments(antrepoMap, orders, overrides);
+  return BLTransitStageModel.buildModel(shipments, {
+    today: todayIso, fromDate: range.from, toDate: range.to, window: range.key,
+    sourceLabel: sourceLabel || 'Buyer Log IAS (Antrepo)', generatedBy: generatedBy || '', generatedAt: new Date().toISOString(),
+  });
+}
+
 function buildLiveAnalysis({ orders, antrepoMap, overrides, today, sourceLabel, window, scope, weighting } = {}) {
   const todayIso = today || new Date().toISOString().slice(0, 10);
   const range = BLTransitAnalysis.windowRange(window || 'all', todayIso);
@@ -304,4 +344,5 @@ function buildLiveAnalysis({ orders, antrepoMap, overrides, today, sourceLabel, 
 module.exports = {
   SOURCE_FIELDS, COMPANY_EXTRA_FIELDS, headerKey, findSchemaColumn,
   collectShipments, collectAllShipments, applyReportRules, baseHorizonForCompany, queryCompanyIasRows, buildLiveAnalysis,
+  milestonesFromEntry, buildStageModel,
 };

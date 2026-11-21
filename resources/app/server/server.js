@@ -2898,7 +2898,7 @@ async function automationSourceRows(ownerId, profile, source, recipe, assertAuth
     } catch (_) { ruleContext = null; }
     return cpAutomation.enrichRows(list, {
       transitRules: (overrides && overrides.transitRules) || [],
-      settings: { targetType: settings.targetType || 'retail', requireTransitRule: settings.requireTransitRule !== false },
+      settings: { targetType: settings.targetType || 'retail', requireTransitRule: settings.requireTransitRule !== false, etaStat: settings.etaStat === 'p80' ? 'p80' : 'mean' },
       ...(ruleContext || {}),
     });
   }
@@ -2907,7 +2907,7 @@ async function automationSourceRows(ownerId, profile, source, recipe, assertAuth
   const routing = settings.routing && Object.keys(settings.routing).length
     ? { ...backlogAutomation.DEFAULT_OWNER_ROUTING, ...settings.routing } : null;
   return backlogAutomation.enrichRows(list, {
-    settings: { targetType: settings.targetType || 'retail', requireTransitRule: settings.requireTransitRule !== false },
+    settings: { targetType: settings.targetType || 'retail', requireTransitRule: settings.requireTransitRule !== false, etaStat: settings.etaStat === 'p80' ? 'p80' : 'mean' },
     routing,
   });
 }
@@ -8342,6 +8342,8 @@ function pageProjectionContext(currentUser = null) {
       suppFob:Number(shared._revisions && shared._revisions.suppFob) || 0,
       pricingRules:Number(shared._revisions && shared._revisions.pricingRules) || 0,
       transitRules:Number(shared._revisions && shared._revisions.transitRules) || 0,
+      // Aşama süre modeli Backlog Teslimat Riski ETA'sını belirler.
+      transitAnalysis:Number(shared._revisions && shared._revisions.transitAnalysis) || 0,
       nonDtrManufacturers:stableHashValue(shared.nonDtrManufacturers || []),
       landedMultipliers:Number(shared._revisions && shared._revisions.landedMultipliers) || 0,
       freightRates:Number(shared._revisions && shared._revisions.freightRates) || 0,
@@ -11301,9 +11303,7 @@ app.put('/api/transit-rules', userAccess.requireArea('source'), userAccess.requi
   } catch (err) { apiError(res, err, 'Transit kuralları kaydedilemedi.'); }
 });
 
-// İthalat Yol Süresi Raporu analizi. Excel istemcide okunur; sunucu aynı
-// paylaşılan normalize kuralıyla doğrular ve tek merkezde saklar. Kural motoru
-// bunu okumaz: öneriler kullanıcı onayıyla /api/transit-rules'a yazılır.
+// Yol Süresi Analizi: kayıtlı aşama süre modeli (Backlog Teslimat Riski okur).
 
 const nativeRefreshGroupService=require('./lib/refresh-group-service').createRefreshGroupService({db:require('./db')});
 
@@ -11342,16 +11342,9 @@ app.get('/api/transit-analysis', (req, res) => {
 // Uyarılar {tr,en} çiftidir; istemci aktif dili seçer.
 const transitCompanyCache = new Map();
 const TRANSIT_COMPANY_CACHE_MS = 15 * 60 * 1000;
-app.get('/api/transit-analysis/live', userAccess.requireAnyArea('source', 'backlog'), async (req, res) => {
-  try {
-    const scope = req.query.scope === 'filtered' ? 'filtered' : 'company';
-    const window = BLTransitAnalysis.WINDOW_KEYS.includes(String(req.query.window || '')) ? String(req.query.window) : 'y1';
-    const force = req.query.refresh === '1';
-    // Ortalama tipi: sevkiyat (rapor/Excel ile aynı, varsayılan) veya adet ağırlıklı.
-    const weighting = req.query.weight === 'qty' ? 'qty' : 'shipment';
-    if (scope === 'company' && !userAccess.hasPermission(req.currentUser, 'manageBusinessRules')) {
-      return res.status(403).json({ error: 'IAS database kapsamı için iş kuralı yönetme yetkisi gerekir.', errorEn: 'Managing business rules permission is required for the IAS database scope.', code: 'PERMISSION_REQUIRED', permission: 'manageBusinessRules' });
-    }
+/* Yol Süresi Analizi veri kaynağı: canlı analiz ve kaydedilen aşama modeli AYNI
+   parsiyel kümesini kullanır. Erken yanıt gerekiyorsa { response } döner. */
+async function resolveTransitAnalysisSource(req, { scope, window, force }) {
     const id = sourceUserId(req);
     const overrides = effectiveOverridesForUser(id);
     const mode = ['database', 'dashboard'].includes(overrides.antrepoSourceMode) ? overrides.antrepoSourceMode : 'excel';
@@ -11373,7 +11366,7 @@ app.get('/api/transit-analysis/live', userAccess.requireAnyArea('source', 'backl
     if (scope === 'filtered') {
       const filterStatus = sourceFilterReadiness(['backlog'], req);
       if (!filterStatus.ready) {
-        return res.json({ analysis: null, scope, window, sourceFilterRequired: true, message: sourceFilterReadinessMessage(filterStatus, 'tr'), messageEn: sourceFilterReadinessMessage(filterStatus, 'en') });
+        return { response: { status: 200, body: { analysis: null, scope, window, sourceFilterRequired: true, message: sourceFilterReadinessMessage(filterStatus, 'tr'), messageEn: sourceFilterReadinessMessage(filterStatus, 'en') } } };
       }
       orders = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser, 'backlog', ordersForTarget(active, 'backlog', overrides)));
       antrepoMap = antrepoForTarget(active, 'backlog');
@@ -11410,10 +11403,10 @@ app.get('/api/transit-analysis/live', userAccess.requireAnyArea('source', 'backl
           const detail = String(queryError.detail || queryError.message || queryError);
           const fallbackMap = active ? antrepoForTarget(active, 'backlog') : {};
           if (!Object.keys(fallbackMap || {}).length) {
-            return res.status(queryError.statusCode && queryError.statusCode < 500 ? queryError.statusCode : 502).json({
+            return { response: { status: queryError.statusCode && queryError.statusCode < 500 ? queryError.statusCode : 502, body: {
               error: `IAS database sorgusu başarısız: ${detail}`, errorEn: `IAS database query failed: ${detail}`,
               code: queryError.code || 'TRANSIT_COMPANY_QUERY_FAILED', scope, window,
-            });
+            } } };
           }
           warnings.push({ tr: `IAS database sorgusu başarısız (${detail}); Buyer Log'un okuduğu IAS satırları kullanıldı.`, en: `IAS database query failed (${detail}); the IAS rows Buyer Log already read were used.` });
           antrepoMap = fallbackMap;
@@ -11440,8 +11433,27 @@ app.get('/api/transit-analysis/live', userAccess.requireAnyArea('source', 'backl
         sourceLabel = `Buyer Log IAS (Antrepo · ${label})`;
       }
     }
+    return { orders, antrepoMap, sourceLabel, warnings, diag, mode };
+}
+app.get('/api/transit-analysis/live', userAccess.requireAnyArea('source', 'backlog'), async (req, res) => {
+  try {
+    const scope = req.query.scope === 'filtered' ? 'filtered' : 'company';
+    const window = BLTransitAnalysis.WINDOW_KEYS.includes(String(req.query.window || '')) ? String(req.query.window) : 'y1';
+    const force = req.query.refresh === '1';
+    // Ortalama tipi: sevkiyat (rapor/Excel ile aynı, varsayılan) veya adet ağırlıklı.
+    const weighting = req.query.weight === 'qty' ? 'qty' : 'shipment';
+    if (scope === 'company' && !userAccess.hasPermission(req.currentUser, 'manageBusinessRules')) {
+      return res.status(403).json({ error: 'IAS database kapsamı için iş kuralı yönetme yetkisi gerekir.', errorEn: 'Managing business rules permission is required for the IAS database scope.', code: 'PERMISSION_REQUIRED', permission: 'manageBusinessRules' });
+    }
+    const source = await resolveTransitAnalysisSource(req, { scope, window, force });
+    if (source.response) return res.status(source.response.status).json(source.response.body);
+    const { orders, antrepoMap, sourceLabel, warnings, diag, mode } = source;
+    const overrides = effectiveOverridesForUser(sourceUserId(req));
     const analysis = transitAnalysisSource.buildLiveAnalysis({ orders, antrepoMap, overrides, sourceLabel, window, scope, weighting });
-    res.json({ analysis, scope, window, weighting, antrepoSourceMode: mode, orderCount: Array.isArray(orders) ? orders.length : 0, warnings, diag });
+    // Aynı parsiyellerden kurulacak aşama modeli önizlemesi: kaydedilirse risk
+    // hesabı bu aşama sürelerini kullanır (POST /api/transit-analysis/stage-model).
+    const stageModel = transitAnalysisSource.buildStageModel({ orders, antrepoMap, overrides, sourceLabel, window, scope });
+    res.json({ analysis, stageModel, scope, window, weighting, antrepoSourceMode: mode, orderCount: Array.isArray(orders) ? orders.length : 0, warnings, diag });
   } catch (err) {
     // Genel apiError yedek metni gerçek nedeni gizliyordu; kullanıcı ne olduğunu görmeli.
     if (err && err.code === 'REVISION_CONFLICT') return apiError(res, err, 'Yol süresi analizi hesaplanamadı.');
@@ -11451,26 +11463,46 @@ app.get('/api/transit-analysis/live', userAccess.requireAnyArea('source', 'backl
     res.status(status).json({ error: `Yol süresi analizi hesaplanamadı: ${detail}`, errorEn: `Lead time analysis could not be calculated: ${detail}`, code: err && err.code || 'TRANSIT_ANALYSIS_FAILED' });
   }
 });
-app.put('/api/transit-analysis', userAccess.requireArea('source'), userAccess.requirePermission('manageBusinessRules'), (req, res) => {
+/* Risk hesabının aşama süre modeli. Model istemciden ALINMAZ: sunucu canlı
+   analizle aynı IAS parsiyellerinden kendisi kurar ve tek merkezde saklar.
+   Backlog Teslimat Riski her satırın ETA'sını bu modelle son gerçekleşen
+   kilometre taşından yeniden hesaplar. */
+app.post('/api/transit-analysis/stage-model', userAccess.requireArea('source'), userAccess.requirePermission('manageBusinessRules'), async (req, res) => {
   try {
-    const raw = req.body && Object.prototype.hasOwnProperty.call(req.body, 'analysis') ? req.body.analysis : undefined;
-    if (raw === undefined) return res.status(400).json({ error: 'analysis alanı zorunlu (temizlemek için null).' });
-    let analysis = null;
-    if (raw !== null) {
-      analysis = BLTransitAnalysis.normalizeAnalysis(raw);
-      if (!analysis) return res.status(400).json({ error: 'Analizde okunabilir ülke/dönem kaydı bulunamadı.' });
-      if (JSON.stringify(analysis).length > 4 * 1024 * 1024) return res.status(413).json({ error: 'Yol süresi analizi çok büyük (en fazla 4 MB).' });
-      const actor = req.currentUser && (req.currentUser.displayName || req.currentUser.name || req.currentUser.id) || '';
-      analysis.importedBy = String(actor).slice(0, 120);
-    }
-    const saved = replaceTransitAnalysis(analysis, requestRevision(req));
-    userAccess.appendAudit(req.currentUser, 'TRANSIT_ANALYSIS_UPDATE', 'source', {
-      records: saved.analysis ? saved.analysis.records.length : 0, revision: saved.revision,
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    // Paylaşılan model herkesin riskini belirler: kaydedenin kişisel Backlog
+    // filtresinden değil, şirket geneli IAS kapsamından kurulur.
+    const scope = 'company';
+    const window = BLTransitAnalysis.WINDOW_KEYS.includes(String(body.window || '')) ? String(body.window) : 'y1';
+    const source = await resolveTransitAnalysisSource(req, { scope, window, force: false });
+    if (source.response) return res.status(source.response.status).json(source.response.body);
+    const actor = req.currentUser && (req.currentUser.displayName || req.currentUser.name || req.currentUser.id) || '';
+    const model = transitAnalysisSource.buildStageModel({
+      orders: source.orders, antrepoMap: source.antrepoMap, overrides: effectiveOverridesForUser(sourceUserId(req)),
+      sourceLabel: source.sourceLabel, window, scope, generatedBy: String(actor).slice(0, 120),
+    });
+    if (!model) return res.status(422).json({ error: 'Antrepoya girmiş ve kilometre taşı tarihi olan parsiyel bulunamadı; aşama modeli kurulamadı.', errorEn: 'No partials with a warehouse entry and milestone dates were found; the stage model could not be built.', code: 'STAGE_MODEL_EMPTY' });
+    if (JSON.stringify(model).length > 4 * 1024 * 1024) return res.status(413).json({ error: 'Aşama modeli çok büyük (en fazla 4 MB).', errorEn: 'The stage model is too large (max 4 MB).' });
+    const saved = replaceTransitAnalysis(model, requestRevision(req));
+    userAccess.appendAudit(req.currentUser, 'TRANSIT_STAGE_MODEL_UPDATE', 'source', {
+      groups: saved.analysis ? saved.analysis.groups.length : 0, used: saved.analysis ? saved.analysis.stats.used : 0, scope, window, revision: saved.revision,
     });
     publishSharedMasterChange('transitAnalysis', req);
     res.set('ETag', `"${saved.revision}"`);
     res.json(saved);
-  } catch (err) { apiError(res, err, 'Yol süresi analizi kaydedilemedi.'); }
+  } catch (err) { apiError(res, err, 'Aşama modeli kaydedilemedi.'); }
+});
+// Yalnız kaldırma: model kaldırılınca risk hesabı tek kural gününe döner.
+app.put('/api/transit-analysis', userAccess.requireArea('source'), userAccess.requirePermission('manageBusinessRules'), (req, res) => {
+  try {
+    const raw = req.body && Object.prototype.hasOwnProperty.call(req.body, 'analysis') ? req.body.analysis : undefined;
+    if (raw !== null) return res.status(400).json({ error: 'Aşama modeli istemciden yazılamaz; kaldırmak için analysis: null gönderin.', errorEn: 'The stage model cannot be written by the client; send analysis: null to remove it.' });
+    const saved = replaceTransitAnalysis(null, requestRevision(req));
+    userAccess.appendAudit(req.currentUser, 'TRANSIT_STAGE_MODEL_UPDATE', 'source', { groups: 0, revision: saved.revision });
+    publishSharedMasterChange('transitAnalysis', req);
+    res.set('ETag', `"${saved.revision}"`);
+    res.json(saved);
+  } catch (err) { apiError(res, err, 'Aşama modeli kaldırılamadı.'); }
 });
 
 /* v7.0.290 — Moderatörün tüm kullanıcılara uyguladığı CP kural / checklist
