@@ -343,8 +343,11 @@
        Off) "henüz olmadı" sayılamaz; sıradaki adım gözlenebilenlerden seçilir.
        Aksi halde yoldaki parsiyel Handover'dan beri "Cut-off'ta bekliyor" görünür. */
     const passedIdx = options.passed && MILESTONE_INDEX[options.passed] != null ? MILESTONE_INDEX[options.passed] : -1;
-    const observed = options.observed ? new Set(options.observed) : null;
-    const isObserved = m => !observed || observed.has(m) || actual[m] != null || planned[m] != null;
+    // observed: dizi ya da (tembel) milestone => boolean.
+    const observedFn = typeof options.observed === 'function' ? options.observed : null;
+    const observed = !observedFn && options.observed ? new Set(options.observed) : null;
+    const isObserved = m => actual[m] != null || planned[m] != null
+      || (observedFn ? observedFn(m) !== false : (!observed || observed.has(m)));
     const floorIdx = Math.max(anchorIdx, passedIdx);
 
     // Planlı kilometre taşı (geçilmiş tabandan sonraki en ileri plan).

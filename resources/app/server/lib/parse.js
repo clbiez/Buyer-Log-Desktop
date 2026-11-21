@@ -3519,7 +3519,7 @@ function backlogStageProjection(ias, order, model, todayIso, status) {
   if (!milestones) return null;
   const projection = BLTransitStageModel.project(milestones, {
     model, country: order && order.countryRaw, vehicle: ias.vasita || '', today: todayIso,
-    passed: stagePassedMilestone(status), observed: _transitAnalysisSource.observedMilestones(ias),
+    passed: stagePassedMilestone(status), observed: m => _transitAnalysisSource.hasMilestoneColumn(ias, m),
   });
   if (!projection) return null;
   const iso = value => { const d = toDateOnly(value); return d ? localIsoDate(d) : null; };
