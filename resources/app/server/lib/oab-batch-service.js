@@ -1,5 +1,6 @@
 'use strict';
 const crypto=require('crypto');
+const {runWithBoundedFileLeaseWaits}=require('./shared-file-transaction');
 const commandHash=value=>crypto.createHash('sha256').update(String(value)).digest('hex');
 
 // The original native OAB planner/worker, shared by HTTP and Office adapters.
@@ -460,8 +461,11 @@ function oabBuildPlan(body) {
     catch(error){if(error.code==='OAB_BATCH_IN_PROGRESS')throw serviceError(error.code,409,{job:oabBatchPublicJob(error.job)});throw error;}
     if(reserved.reused)return {started:true,reused:true,job:oabBatchPublicJob(reserved.job)};
     oabBatchJobs.set(currentUser.id, job);
-    // İş arka planda yürür; istek hemen döner.
-    void (async () => {
+    // İş arka planda yürür; istek hemen döner. Başlatan HTTP isteğinin
+    // "nonblocking" kilit politikası işe MİRAS KALMAZ: aksi halde başka bir
+    // sürecin kısa kilidi veya Windows'un geçici EPERM'i, sınırlı bekleme
+    // yerine anında OAB_JOB_STORE_BUSY üretir ve çekilen satırlar kaydedilmez.
+    void runWithBoundedFileLeaseWaits(async () => {
       if (job.probe) {
         try {
           const { verdict, result } = await oabProbeBatchedBuyerGroups(job.userId, job.probe, job.transport, job);
@@ -493,7 +497,7 @@ function oabBuildPlan(body) {
         try {checkpointJob(job);}catch(error){job.errorCode='OAB_JOB_STORE_FAILED';job.error='OAB_JOB_STORE_FAILED';job.queue=[];logRuntimeFailure('oabBatchReceipt',error);}
       }
       await runOabBatchJob(job, currentUser);
-    })();
+    });
 
     return {started:true,job:oabBatchPublicJob(job)};
   }
