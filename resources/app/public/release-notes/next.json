@@ -97,6 +97,29 @@
           "en": "On demo data, two models show their colour count and every colour its square; partly selected models have a half-filled rail."
         }
       }
+    },
+    {
+      "id": "large-data-server-no-freeze",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Siparişler · Genel Bakış · Backlog",
+        "en": "CP · Orders · Overview · Backlog"
+      },
+      "title": {
+        "tr": "Büyük veride açılıştan sonra ekranlar beklemez",
+        "en": "Screens no longer wait after startup with large data"
+      },
+      "body": {
+        "tr": "Büyük veri kümelerinde (yaklaşık 320 MiB üstü) CP, Siparişler ve diğer ekranların hesapları arka plan işçisi yerine sunucunun ana iş parçacığında yapılıyordu; açılıştan ve senkrondan sonra sunucu 15–45 saniyelik aralarla yanıt veremiyor, ekranlar bekliyordu. Bellek tahmini ölçülen gerçek kullanıma göre düzeltildi: hesaplar artık arka plan işçisinde yapılır, sunucu ekranlara yanıt vermeye devam eder. İşçinin belleği gerçekten yetmezse önceki güvenli yol kullanılır; sonuçlar aynıdır.",
+        "en": "With large data sets (about 320 MiB and above), the calculations for CP, Orders and other screens ran on the server main thread instead of the background worker; after startup and sync the server could not respond for 15–45 seconds at a time and screens waited. The memory estimate now follows the measured real usage: calculations run in the background worker and the server keeps responding to screens. If the worker truly runs out of memory, the previous safe path is used; results are the same."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; tablolar aynı görünür, yalnız büyük veride bekleme ve donma kalkar.",
+          "en": "There is no change on screen; tables look the same, only the waiting and freezes with large data are gone."
+        }
+      }
     }
   ]
 }
