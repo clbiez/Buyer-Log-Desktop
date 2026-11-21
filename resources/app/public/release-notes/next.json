@@ -12,6 +12,26 @@
   },
   "changes": [
     {
+      "id": "cp-rules-no-builtin",
+      "type": "improvement",
+      "module": {"tr": "CP · Siparişler · Kontrol & Kurallar", "en": "CP · Orders · Checks & Rules"},
+      "title": {
+        "tr": "Yerleşik öncelik kuralları ve checklist soruları kaldırıldı",
+        "en": "Built-in priority rules and checklist questions were removed"
+      },
+      "body": {
+        "tr": "Kontrol & Kurallar Merkezi artık hazır (yerleşik) öncelik kuralı veya checklist sorusu getirmez; öncelik ve sorular yalnız sizin ya da Moderatörün yayımladığı kurallardan gelir. Daha önce kaydedilmiş yerleşik kopyalar da geri gelmez. Expected Late, Already Late gibi teslimat sonucu, yüklemeye kalan gün ve sistem önerisi öncelik hesapları korunur; kendi kuralınızın koşulunda seçebilirsiniz. Öncelik etiketleri (Kritik, Bugün Aksiyon …) ve verilmiş checklist yanıtları silinmez.",
+        "en": "The Checks & Rules Center no longer ships ready-made (built-in) priority rules or checklist questions; priorities and questions now come only from your own rules or rules published by the Moderator. Previously saved built-in copies do not come back. Calculations such as the Expected Late / Already Late delivery outcome, days to load and the system-suggested priority are kept, and you can pick them in your own rule conditions. Priority tags (Critical, Action Today …) and existing checklist answers are not deleted."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-rules-no-builtin.png",
+        "alt": {"tr": "Yerleşik kural içermeyen boş Öncelik Kuralları listesi", "en": "Empty Priority Rules list without built-in rules"},
+        "caption": {"tr": "Demo veride Kurallarım listesi yerleşik kural olmadan boş açılır; yeni kural LCW AI ile ya da hazır örnekten oluşturulur.", "en": "On demo data, the My Rules list opens empty without built-in rules; new rules are created with LCW AI or from a ready-made example."}
+      }
+    },
+    {
       "id": "override-save-independent-of-background-compute",
       "type": "fix",
       "module": {"tr": "CP · Siparişler · License Royalty", "en": "CP · Orders · License Royalty"},
