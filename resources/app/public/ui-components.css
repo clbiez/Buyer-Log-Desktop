@@ -14312,6 +14312,12 @@ html[data-ui-system="manifest"] .cpLogisticDetailName strong {font-size:var(--ui
 }
 html[data-ui-system="manifest"] .cpLogisticDetailName small,html[data-ui-system="manifest"] .cpLogisticDateValue small {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
 }
+html[data-ui-system="manifest"] .cpLogisticStage small,html[data-ui-system="manifest"] .cpStageShift {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpStageShift.is-early {color:var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .cpStageShift.is-late,html[data-ui-system="manifest"] .cpStageOver,html[data-ui-system="manifest"] .cpLogisticStage.cpStageOver small:first-of-type {color:var(--ui-danger) !important
+}
 html[data-ui-system="manifest"] .cpShortageAction {background:var(--ui-warning-bg) !important;color:var(--ui-warning) !important;font:inherit !important;font-size:var(--ui-font-2xs) !important;font-weight:650 !important
 }
 html[data-ui-system="manifest"] .cpShortageAction.is-undo {background:transparent !important;color:var(--ui-text-secondary) !important

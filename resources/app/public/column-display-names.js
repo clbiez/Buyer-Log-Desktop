@@ -185,6 +185,8 @@
     'Karışım':asas('Karışım',{tr:'Yalnız "Ana Kumaş Mı" = 1 satırından',en:'Only from the "Ana Kumaş Mı" = 1 row'}),
     'STATUS':ias({tr:'IAS / Antrepo parsiyel durumu; kayıt yoksa Üretimde / Pasif',en:'IAS / bonded-warehouse partial status; In Production / Inactive when missing'}),
     'Ant. Arrival':ias({tr:'IAS / Antrepo varış tarihi',en:'IAS / bonded-warehouse arrival date'}),
+    'Stage ETA':computed({tr:'Aşama modelinden ETA: en geç gelecek parsiyelin son gerçekleşen kilometre taşı + kalan süre (yalnız bilgi)',en:'Stage-model ETA: last realized milestone + remaining time of the latest partial (information only)'}),
+    'Current Stage':computed({tr:'En geç gelecek parsiyelin henüz bitmemiş aşaması ve geçen gün / ortalama gün',en:'Unfinished stage of the latest partial and elapsed days / average days'}),
     'Del. Type':ias({tr:'IAS parsiyelinin teslim tipi; yoksa Buyer Log kuralı',en:'Delivery type of the IAS partial; otherwise the Buyer Log rule'}),
     'Notes':buyerlog({tr:'Buyer Log not alanı',en:'Buyer Log note field'}),
     'Ek Not':buyerlog({tr:'Buyer Log ek not alanı',en:'Buyer Log additional note field'}),

@@ -175,6 +175,38 @@ async function shot(page, top, bottom, file) {
   assert.match(await model.textContent(), /Demo Moderatör/);
   assert.doesNotMatch(await model.textContent(), /Tahmini kalan/);
   await shot(page, '.trxStageModel', '.trxStageModel', path.join(outDir, 'transit-stage-model.png'));
+  // CP Tracker: yeni sütunlar varsayılan gizli; kullanıcı açınca en geç parsiyel,
+  // Ex→Retail hücresinde statik ETA farkı, alt detayda parsiyel bazında aşama.
+  await page.evaluate(() => { document.querySelectorAll('.warnOverlay,.modalOverlay').forEach(e => e.remove()); });
+  const targets = [...new Set(projected.filter(r => /Yolda/.test(r['GÜNCEL DURUM\n(STATUS)'] || '')).map(r => String(r['Sipariş Kod'])))].slice(0, 4); // i18n-ignore
+  const target = targets.join(', ');
+  await page.setViewportSize({ width: 1920, height: 1000 });
+  await page.evaluate(() => switchTab('cp'));
+  for (let i = 0; i < 60; i++) { if (await page.evaluate(() => !!document.querySelector('#cpTable tbody tr[data-id]'))) break; await page.waitForTimeout(1000); }
+  const defaults = await page.evaluate(() => ({ cp: ['Stage ETA', 'Current Stage'].every(k => colmgr.cp.hidden.has(k)), orders: ['Stage ETA', 'Current Stage'].every(k => colmgr.orders.hidden.has(k)) }));
+  assert.deepEqual(defaults, { cp: true, orders: true }, 'yeni sütunlar varsayılan gizli');
+  await page.evaluate(() => {
+    colmgr.cp.hidden.delete('Stage ETA'); colmgr.cp.hidden.delete('Current Stage');
+    CP_COLS.filter(c => c.group === 'Kumaş Detayları' || ['Original Ex-factory', 'OPD', 'LT', 'In-Store (Model Budget)', 'Del. Type'].includes(c.k)).forEach(c => colmgr.cp.hidden.add(c.k));
+    saveAutoTableColumnState(); renderCP();
+  });
+  await page.fill('#cpSearch', target); await page.keyboard.press('Enter');
+  await page.waitForTimeout(3000);
+  await page.evaluate(() => { const tr = document.querySelector('#cpTable tbody tr[data-id]'); state.cpLogisticExpanded.add(Number(tr.dataset.id)); renderCP(); });
+  await page.waitForTimeout(2500);
+  const cells = await page.evaluate(() => ({ exr: document.querySelector('#cpTable tbody td[data-key="Ex→Retail"] .cpStageShift')?.textContent || '',
+    eta: document.querySelector('#cpTable tbody td[data-key="Stage ETA"]')?.textContent.trim() || '', run: document.querySelector('#cpTable tbody td[data-key="Current Stage"]')?.textContent.trim() || '',
+    detail: document.querySelectorAll('.cpLogisticDetailLine.hasStage .cpLogisticStage strong').length,
+    shiftColor: getComputedStyle(document.querySelector('.cpLogisticStage .cpStageShift') || document.body).color }));
+  assert.match(cells.exr, /g (erken|geç)|±0/, 'Ex→Retail ikinci satırı');
+  assert.match(cells.eta, /\d{2}\.\d{2}\.\d{2}/);
+  assert.ok(cells.run.length > 3 && cells.detail >= 1, JSON.stringify(cells));
+  await page.evaluate(() => { const th = [...document.querySelectorAll('#cpTable thead tr:last-child th')].find(e => /Retail Date|Retail Tarihi/i.test(e.textContent)); const wrap = document.getElementById('cpTableWrap'); if (th && wrap) wrap.scrollLeft += th.getBoundingClientRect().left - wrap.getBoundingClientRect().left - 8; });
+  await page.evaluate(() => { const t = document.getElementById('_toast'); if (t) t.remove(); });
+  await page.waitForTimeout(600);
+  const box = await page.locator('#cpTableWrap').boundingBox();
+  await page.screenshot({ path: path.join(outDir, 'cp-stage-columns.png'), clip: { x: box.x, y: box.y, width: box.width, height: Math.min(box.height, Math.max(560, Math.ceil(box.width / 3))) } });
+  console.log('CP', JSON.stringify(cells));
   assert.deepEqual(errors, [], 'browser errors');
   console.log(`PASS model ${saved.analysis.stats.used} partials · ${projected.length} projected Backlog partials · signal cards ${counts.join('/')} · screenshots in ${outDir}`);
 })().catch(e => { console.error(e); process.exitCode = 1; }).finally(async () => {

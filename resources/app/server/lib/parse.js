@@ -2116,6 +2116,8 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
     const legacyRef = norm(overrideGet(imageMap, order));
     if (legacyRef) imageByIdentity.set(key, legacyRef);
   });
+  const stageModel = ov.transitAnalysis && ov.transitAnalysis.kind === BLTransitStageModel.KIND ? ov.transitAnalysis : null;
+  const stageToday = localIsoDate(new Date());
   const logisticByOrder = new Map();
   buildBacklogOperationalRows(filtered, antrepoMap, ov).forEach(segment => {
     const source = sourceOrderRef(segment);
@@ -2136,6 +2138,22 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       ? rawLogisticSegments
       : rawLogisticSegments.filter(segment => segment && segment._segmentKind === 'ias');
     const logistic = cpLogisticSummary(orderLogisticSegments, o.qty);
+    // Aşama tahmini (kayıtlı aşama modeli varsa): parsiyel alt detayına ve satıra
+    // en geç gelecek parsiyelin özeti olarak yazılır. Model yoksa alanlar boş kalır.
+    let latestStage = null;
+    if (stageModel) {
+      const stageById = new Map();
+      orderLogisticSegments.forEach(segment => {
+        const info = cpSegmentStageInfo(segment, o, ov, stageModel, stageToday);
+        if (info) stageById.set(`partial-${Number(segment._segmentIndex) || 0}`, info);
+      });
+      logistic.segments.forEach(item => {
+        const info = item.kind === 'partial' ? stageById.get(item.id) : null;
+        if (!info) return;
+        item.stage = info;
+        if (!latestStage || info.eta > latestStage.eta) latestStage = info;
+      });
+    }
     // Shortage sentetik bir operasyon notudur; CP/Orders STATUS alanına yazılmaz.
     // Ana durum, gerçek IAS parsiyellerinden (veya gerçek üretim satırından) gelir.
     const primary = logistic.segments.find(segment => segment.kind !== 'shortage') || logistic.primary;
@@ -2191,6 +2209,11 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       _initialInspection: o.initialInspection || null,
       'Order Quantity': o.qty, 'Shipment Quantity': logistic.loadedQty, 'Remaining Units': logistic.remainingQty, '%': o.qty ? (o.qty - logistic.remainingQty) / o.qty : '',
       STATUS: status, 'Ant. Arrival': ant, 'Del. Type': delType,
+      // Aşama tahmini (bilgi kolonları; varsayılan gizli). En geç gelecek parsiyel.
+      'Stage ETA': latestStage ? toDateOnly(latestStage.eta) : null,
+      'Current Stage': latestStage ? latestStage.code : '',
+      _stageRun: latestStage ? { code: latestStage.code, days: latestStage.days, mean: latestStage.mean, over: latestStage.over } : null,
+      _stageVsRule: latestStage ? latestStage.vsRule : null,
       _logisticSegments: logistic.segments,
       _logisticStatusValues: logistic.statuses,
       _logisticDelTypeValues: logistic.delTypes,
@@ -3460,6 +3483,40 @@ function backlogStageProjection(ias, order, model, todayIso) {
 function localIsoDate(d) {
   const p = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+/* CP / Siparişler: yüklenmiş ve henüz antrepoya girmemiş IAS parsiyelinin aşama
+   özeti (yalnız bilgi; hiçbir bayrak, öncelik veya kurala girmez).
+   vsRule: tanımlı tek kural günüyle ETA (Handover + gün) − aşama ETA'sı;
+   + erken, − geç. Kural tanımlı değilse null (varsayılan gün ölçüt sayılmaz). */
+function cpSegmentStageInfo(segment, order, ov, stageModel, todayIso) {
+  if (!stageModel || !segment || segment._segmentKind !== 'ias' || !segment._iasRow) return null;
+  const statusKey = antrepoStatusKey(segment._status);
+  if (statusKey === 'DEPODA' || statusKey === 'RETAILE AKTARIM BEKLENIYOR') return null;
+  const ias = segment._iasRow;
+  const projection = backlogStageProjection(ias, order, stageModel, todayIso);
+  if (!projection || !projection.etaMean) return null;
+  const handover = toDateOnly(ias.handover);
+  let vsRule = null;
+  if (handover) {
+    const transitInfo = resolveTransitDays({
+      delType: normalizeTransitDelType(segment._delType) || norm(segment._delType),
+      exFactory: handover, season: order.season, country: order.countryRaw, status: segment._status,
+      rules: ov && ov.transitRules, forceRules: true,
+    });
+    const days = transitInfo && transitInfo.rule ? Number(transitInfo.days) : NaN;
+    const etaOrd = dateOrdinal(projection.etaMean), handoverOrd = dateOrdinal(handover);
+    if (Number.isFinite(days) && etaOrd != null && handoverOrd != null) vsRule = handoverOrd + days - etaOrd;
+  }
+  const run = (projection.stages || []).find(item => item && item[3] === 'r') || null;
+  return {
+    eta: projection.etaMean, etaP80: projection.etaP80 || null,
+    code: run ? String(run[0]) : (projection.currentStage ? String(projection.currentStage) : ''),
+    days: run && Number.isFinite(Number(run[1])) ? Number(run[1]) : null,
+    mean: run && Number.isFinite(Number(run[2])) ? Math.round(Number(run[2])) : null,
+    over: Number(projection.openOverrunDays) > 0 ? Number(projection.openOverrunDays) : 0,
+    vsRule,
+  };
 }
 
 /* Segment -> BACKLOG_TEMPLATE_HEADERS satırı.

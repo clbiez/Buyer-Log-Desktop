@@ -2887,6 +2887,8 @@ pairs:[
 ["Sipariş Adeti","Order Qty"],
 ["Yükleme Adet","Shipment Qty"],
 ["Antrepo Varış","Ant. Arrival"],
+["Aşama ETA","Stage ETA"],
+["Koşan Aşama","Current Stage"],
 ["Yükleme Tipi","Del. Type"],
 ["Ek Notlar","Notes 2"],
 ["Sütun adı","Column name"],

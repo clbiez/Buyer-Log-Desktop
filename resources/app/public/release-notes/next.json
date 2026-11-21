@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "cp-orders-stage-eta-columns",
+      "type": "feature",
+      "module": {
+        "tr": "CP ve Siparişler",
+        "en": "CP and Orders"
+      },
+      "title": {
+        "tr": "Aşama tahmini CP ve Siparişler'de: Ex→Retail farkı ve parsiyel detayı",
+        "en": "Stage forecast in CP and Orders: Ex→Retail shift and partial detail"
+      },
+      "body": {
+        "tr": "Yüklenmiş siparişlerde Ex→Retail hücresinin altında, aşama bazlı ETA'nın tek yol süresi kuralına göre kaç gün erken ya da geç olduğu görünür; Ex→Retail değeri, filtresi ve Excel çıktısı değişmez. Yeni Aşama ETA ve Koşan Aşama sütunları en geç gelecek parsiyeli gösterir ve varsayılan gizlidir; Sütunlar listesinden açılır. Lojistik akışı detayında her parsiyelin kendi aşama tahmini vardır. Bu bilgiler uyarı, öncelik veya kurallara girmez.",
+        "en": "For loaded orders, the Ex→Retail cell shows below the value how many days the stage-based ETA is earlier or later than the single transit-time rule; the Ex→Retail value, its filter and the Excel export are unchanged. The new Stage ETA and Current Stage columns show the latest partial and are hidden by default; turn them on from the Columns list. The logistics flow detail shows each partial's own stage forecast. This information does not feed warnings, priorities or rules."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-stage-columns.png",
+        "alt": {
+          "tr": "Demo CP satırlarında Ex→Retail farkı, Aşama ETA, Koşan Aşama ve parsiyel detayı",
+          "en": "Ex→Retail shift, Stage ETA, Current Stage and partial detail on demo CP rows"
+        },
+        "caption": {
+          "tr": "Demo veride Ex→Retail altında erken/geç günü, açılan sütunlar ve parsiyel bazında aşama tahmini.",
+          "en": "On demo data: early/late days under Ex→Retail, the enabled columns and the per-partial stage forecast."
+        }
+      }
+    },
+    {
       "id": "backlog-stage-based-eta",
       "type": "feature",
       "module": {
