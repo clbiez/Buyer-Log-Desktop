@@ -63,21 +63,77 @@ const ROWS=[
   const exf=await search('EXF=M4');
   assert.deepEqual(exf.sort(),[5,6],'Ex-Factory month uses the date');
   console.log('PASS MB / EXF period shortcuts filter Collection rows');
-  // 3) Yardım penceresi dönem bölümünü iki dilde gösterir.
+  // 3) Sezon alanı ve yıllı dönem.
+  assert.deepEqual((await search('SEZON=S7; MB=2027M4-2027M5')).sort(),[2,3]);
+  assert.deepEqual((await search('SEASON=W7')).sort(),[5,6,7]);
+  console.log('PASS season field and year-bound period shortcuts');
+  // 4) Arama terim terim kip olarak görünür; × yalnız o terimi kaldırır.
+  await search('DEMO-1, DEMO-5; MB=M3-M5');
+  const chips=page.locator('#kolActiveFilterTokens .tableSearchChip');
+  const labels=(await chips.allInnerTexts()).map(t=>t.trim());
+  assert.deepEqual(labels,['DEMO-1','DEMO-5','MB · March–May'],'English chips: two OR terms + one period');
+  assert.match(await page.locator('#kolActiveFilterTokens .tableSearchChips').innerText(),/DEMO-1\s*or\s*DEMO-5\s*and\s*MB/);
+  await page.waitForFunction(()=>document.querySelector('#kolActiveFilterTokens [data-chip-key="demo-5"]')?.classList.contains('tableSearchChip--missing'));
+  await chips.nth(1).click();
+  await page.waitForFunction(()=>document.getElementById('kolSearch').value==='DEMO-1; MB=M3-M5');
+  await page.waitForTimeout(400);
+  assert.deepEqual(await page.evaluate(()=>filteredKol().map(r=>r.id)),[1]);
+  console.log('PASS search chips show OR/AND structure, missing term and remove one term');
+  // 5) Geçersiz kısayol açıkça uyarılır.
+  await search('MB=M13');
+  assert.equal(await page.locator('#kolActiveFilterTokens .tableSearchChip--invalid').count(),1);
+  assert.match(await page.locator('#kolSearchFeedback').innerText(),/Invalid shortcut \(1\):[^]*MB=M13 — Month must be 1–12/);
+  console.log('PASS invalid shortcut is explained');
+  // 6) Öneri listesi: MB= yazınca tablodaki aylar, ok + Enter ile uygulanır.
+  await search('');
+  await page.locator('#kolSearch').click();
+  await page.keyboard.type('S7; MB=');
+  await page.waitForSelector('#tableSearchSuggestList [role="option"]');
+  const options=(await page.locator('#tableSearchSuggestList [role="option"]').allInnerTexts()).map(t=>t.replace(/\s+/g,' ').trim());
+  assert.ok(options.includes('MB=M3 March · 1 row')&&options.includes('MB=M7 July · 2 rows'),JSON.stringify(options));
+  await page.keyboard.press('ArrowDown');await page.keyboard.press('Enter');
+  assert.equal(await page.locator('#kolSearch').inputValue(),'S7; MB=M3');
+  assert.equal(await page.locator('#tableSearchSuggestList').count(),0);
+  await page.keyboard.press('Escape');
+  console.log('PASS shortcut suggestions list table values and apply with the keyboard');
+  // 7) CP/Siparişler haystack'i aynı kısayolları anlar.
+  const cp=await page.evaluate(()=>{
+    const rows=[{'PLM ID':'CP-1','Season':'S7','Ex-factory':'15.03.2027','In-Store (Model Budget)':'2027-05-10'},{'PLM ID':'CP-2','Season':'W7','Ex-factory':'2027-08-16'}];
+    const terms=parseTableSearchTerms('SEZON=S7; MB=M5');
+    return rows.filter(r=>tableSearchMatches(cpSearchHaystack(r),terms,{plainMode:'contains'})).map(r=>r['PLM ID']);
+  });
+  assert.deepEqual(cp,['CP-1']);
+  console.log('PASS CP / Orders search understands field shortcuts');
+  // 7b) CP sıcak yolu: 30k satır arama metni; kısayol kullanılmadan ve kullanıldıktan sonra (ölçüm, eşik değil).
+  const perf=await page.evaluate(()=>{
+    const rows=Array.from({length:30000},(_,i)=>({'PLM ID':'P'+i,'Model Name':'MODEL '+i,'Season':i%2?'S7':'W7','Ex-factory':'2027-0'+(1+i%9)+'-15','In-Store (Model Budget)':'2027-0'+(1+i%9)+'-01','Retail Date':'2027-0'+(1+i%9)+'-20'}));
+    const P=window.BLTableSearchPeriods,was=P.used,time=()=>{const t=performance.now();for(const r of rows)cpSearchHaystack(r);return performance.now()-t;};
+    const median=list=>list.sort((a,b)=>a-b)[Math.floor(list.length/2)];
+    P.used=false;const off=[time(),time(),time(),time(),time()];
+    P.used=true;const first=time();const warm=[time(),time(),time(),time(),time()];
+    P.used=was;
+    return {offMs:off.map(v=>+v.toFixed(1)),offMedian:+median(off).toFixed(1),firstUseMs:+first.toFixed(1),warmMs:warm.map(v=>+v.toFixed(1)),warmMedian:+median(warm).toFixed(1)};
+  });
+  console.log('PERF cpSearchHaystack 30k',JSON.stringify(perf));
+  // 8) Yardım penceresi kısayol bölümünü iki dilde gösterir.
   await page.locator('.tableSearchHelpButton[data-search-help-for="kolSearch"]').click();
-  assert.match(await page.locator('#tableSearchHelpPopover').innerText(),/Date shortcuts \(Collection\)[^]*MB=W1-W24/);
+  assert.match(await page.locator('#tableSearchHelpPopover').innerText(),/Date and season shortcuts[^]*SEASON=S7; MB=M3-M5/);
   await page.keyboard.press('Escape');
   await page.evaluate(()=>applyLanguage('tr'));
   await page.locator('.tableSearchHelpButton[data-search-help-for="kolSearch"]').click();
-  assert.match(await page.locator('#tableSearchHelpPopover').innerText(),/Tarih kısayolları \(Koleksiyon\)/);
-  console.log('PASS search help explains period shortcuts in TR and EN');
+  assert.match(await page.locator('#tableSearchHelpPopover').innerText(),/Tarih ve sezon kısayolları/);
+  console.log('PASS search help explains shortcuts in TR and EN');
   if(shot){
     await page.keyboard.press('Escape');
-    await search('S7; MB=M3-M5');
+    await search('SEZON=S7; MB=M3-M5, MB=M7; DEMO MODEL');
     await page.waitForTimeout(500);
+    await page.mouse.move(5,700);
+    const missingBg=await page.locator('#kolActiveFilterTokens [data-chip-key="mb=m7"]').evaluate(el=>getComputedStyle(el).backgroundColor);
+    const plainBg=await page.locator('#kolActiveFilterTokens [data-chip-key="demo model"]').evaluate(el=>getComputedStyle(el).backgroundColor);
+    assert.notEqual(missingBg,plainBg,'missing chip has its own colour');
     const box=await page.locator('#kolSearch').boundingBox();
     const y=Math.max(0,box.y-150);
-    await page.screenshot({path:shot,clip:{x:0,y,width:1400,height:540}});
+    await page.screenshot({path:shot,clip:{x:212,y,width:1188,height:400}});
     console.log('SCREENSHOT',shot);
   }
   assert.deepEqual(errors,[],'no page errors');

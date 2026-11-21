@@ -36,22 +36,41 @@ test('dönem ifadesi alan/birim takma adlarını ve aralığı çözer', () => {
   assert.equal(Periods.parse('MB=W1-W24').tokens.length, 24);
 });
 
-test('geçersiz dönem ifadesi normal arama metni olarak kalır', () => {
-  for (const text of ['MB=M13', 'MB=W0', 'MB=M3-W5', 'XX=M3', 'MB', 'MB=', 'S7', 'a=b', '13,50']) {
+test('alan adı olmayan ifade düz metin, tanınan alanın hatalı değeri geçersiz kısayoldur', () => {
+  for (const text of ['XX=M3', 'MB', 'S7', 'a=b', '13,50', 'Uzun Kollu']) {
     assert.equal(Periods.parse(text), null, text);
+  }
+  for (const [text, reason] of [['MB=M13', 'month'], ['MB=W0', 'week'], ['MB=M3-W5', 'format'], ['MB=', 'format'],
+    ['EXF=xyz', 'format'], ['MB=2027M5-2027M3', 'order'], ['MB=M3-2027M5', 'format'], ['SEZON=', 'season']]) {
+    const parsed = Periods.parse(text);
+    assert.equal(parsed?.invalid, true, text);
+    assert.equal(parsed.reason, reason, text);
+    assert.ok(Periods.invalidReason(parsed, false) && Periods.invalidReason(parsed, true), text);
   }
 });
 
-test('satır jetonları MB kodlarından ve tarihlerden üretilir', () => {
+test('yıllı dönem ve sezon kısayolu', () => {
+  assert.deepEqual(Periods.parse('MB=2027M3').tokens, ['~mbm202703~']);
+  assert.deepEqual(Periods.parse('RT=2026M11-M2').tokens, ['~rtm202611~', '~rtm202612~', '~rtm202701~', '~rtm202702~']);
+  assert.deepEqual(Periods.parse('MB=2026M12-2027M1').tokens, ['~mbm202612~', '~mbm202701~']);
+  assert.deepEqual(Periods.parse('MB=2027W52-2028W1').tokens.slice(-2), ['~mbw202753~', '~mbw202801~']);
+  assert.deepEqual(Periods.parse('SEZON=S7').tokens, ['~szs7~']);
+  assert.deepEqual(Periods.parse('season = w 7').tokens, ['~szw7~']);
+  assert.equal(Periods.label(Periods.parse('MB=M3-M5'), false), 'MB · Mart–Mayıs');
+  assert.equal(Periods.label(Periods.parse('MB=2026M11-2027M2'), true), 'MB · November 2026–February 2027');
+  assert.equal(Periods.label(Periods.parse('EXF=W12-W14'), false), 'Ex-Factory · 12–14. hafta');
+  assert.equal(Periods.label(Periods.parse('SEZON=s7'), true), 'Season · S7');
+});
+
+test('satır jetonları MB kodlarından, tarihlerden ve sezondan üretilir', () => {
   const tokens = Periods.rowTokens({
-    mbWeekCode: '2027-07', mbMonthCode: '202703', exFactory: '2026-12-15', retail: '15.04.2027',
+    mbWeekCode: '2027-07', mbMonthCode: '202703', exFactory: '2026-12-15', retail: '15.04.2027', season: 'S7',
   }).split(' ');
-  assert.ok(tokens.includes('~mbw07~'));
-  assert.ok(tokens.includes('~mbm03~'));
-  assert.ok(tokens.some(t => /^~exfm\d\d~$/.test(t)) && tokens.some(t => /^~exfw\d\d~$/.test(t)));
-  assert.ok(tokens.some(t => /^~rtm\d\d~$/.test(t)) && tokens.some(t => /^~rtw\d\d~$/.test(t)));
-  // MB kodu yoksa MB tarihinden türetilir; hiç veri yoksa jeton yok.
-  assert.match(Periods.rowTokens({ mbDate: '2027-03-08' }), /~mbw\d\d~ ~mbm\d\d~/);
+  for (const t of ['~mbw07~', '~mbw202707~', '~mbm03~', '~mbm202703~', '~szs7~']) assert.ok(tokens.includes(t), t);
+  assert.ok(tokens.some(t => /^~exfm\d\d~$/.test(t)) && tokens.some(t => /^~exfm\d{6}~$/.test(t)));
+  assert.ok(tokens.some(t => /^~rtw\d\d~$/.test(t)) && tokens.some(t => /^~rtw\d{6}~$/.test(t)));
+  // MB kodu yoksa MB tarihinden türetilir (Date nesnesi de kabul edilir); hiç veri yoksa jeton yok.
+  assert.match(Periods.rowTokens({ mbDate: new Date(2027, 2, 8) }), /~mbw\d\d~ ~mbw\d{6}~ ~mbm\d\d~ ~mbm\d{6}~/);
   assert.equal(Periods.rowTokens({}), '');
 });
 
@@ -63,6 +82,10 @@ test('ortak arama: "S7; MB=M3-M5" sezon VE ay aralığı olarak eşleşir', () =
   assert.equal(matches(row('w7', 4), terms, opts), false);
   // Düz metin "mb=m3" artık literal aranmaz; jetonsuz satır eşleşmez.
   assert.equal(matches('mb=m3 s7', parse('MB=M3'), opts), false);
+  // Geçersiz kısayol işaretli düz kriter olarak kalır.
+  assert.equal(parse('MB=M13')[0].invalid, true);
+  assert.equal(matches('~szs7~ ~mbm03~', parse('SEZON=S7; MB=2027M3'), opts), false);
+  assert.equal(matches('~szs7~ ~mbm03~ ~mbm202703~', parse('SEZON=S7; MB=2027M3'), opts), true);
 });
 
 test('ortak arama: dönem hariç tutma tüm aralığı dışlar', () => {

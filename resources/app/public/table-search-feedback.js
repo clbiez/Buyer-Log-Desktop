@@ -33,6 +33,8 @@
       // Olumsuz koşullar model/değer listesi değildir; eksik olarak işaretlenmez.
       const criteria=grouped?terms[0].terms:terms;
       if(criteria.every(term=>term.mode==='notContains'))continue;
+      // Geçersiz kısayol "bulunamadı" değil; findInvalid ayrıca nedeniyle gösterir.
+      if(criteria.some(term=>term.invalid))continue;
       const key=JSON.stringify(terms);
       if(seen.has(key))continue;
       seen.add(key);pending.push({label,terms});
@@ -47,16 +49,37 @@
     return pending.map(item=>item.label);
   }
 
+  /* Tanınan alan adıyla yazılmış ama değeri geçersiz kısayollar (MB=M13). */
+  function findInvalid(query){
+    const periods=root.BLTableSearchPeriods;
+    const source=String(query||'').trim();
+    if(!periods||!source||source[0]==='(')return [];
+    const seen=new Set(),out=[];
+    source.split(/;\s+|,\s+/).forEach(part=>{
+      const text=part.trim().replace(/^[!/]/,'').replace(/!$/,'').trim();
+      const parsed=periods.parse(text);
+      if(parsed&&parsed.invalid&&!seen.has(text)){seen.add(text);out.push({label:text,parsed});}
+    });
+    return out;
+  }
+
+  const lastMissingByInput=new Map();
+  function lastMissing(inputId){return lastMissingByInput.get(inputId)||[];}
+
   function render(inputId,rows,haystackOf,english){
     const input=root.document?.getElementById(inputId);
     if(!input)return;
     let panel=root.document.getElementById(inputId+'Feedback');
-    if(!input.value.trim()){
+    const hide=()=>{
+      lastMissingByInput.set(inputId,[]);root.BLTableSearchChips?.markMissing(inputId,[]);
       if(panel){panel.hidden=true;panel.replaceChildren();}
-      return;
-    }
+    };
+    if(!input.value.trim())return hide();
     const missing=findMissing(input.value,rows,haystackOf,root.BLTableSearch);
-    if(!missing.length){if(panel){panel.hidden=true;panel.replaceChildren();}return;}
+    const invalid=findInvalid(input.value);
+    lastMissingByInput.set(inputId,missing);
+    root.BLTableSearchChips?.markMissing(inputId,missing);
+    if(!missing.length&&!invalid.length)return hide();
     if(!panel){
       panel=root.document.createElement('div');panel.id=inputId+'Feedback';
       panel.className='tableSearchFeedback';panel.setAttribute('role','status');
@@ -66,17 +89,26 @@
       input.setAttribute('aria-describedby',[...new Set([...describedBy,panel.id])].join(' '));
     }
     const label=(english?'Not found in filtered results':'Filtrelenmiş sonuçlarda bulunamayan')+' ('+missing.length+'):';
-    const signature=JSON.stringify([label,missing]);
+    const invalidLabel=(english?'Invalid shortcut':'Geçersiz kısayol')+' ('+invalid.length+'):';
+    const reasons=invalid.map(item=>root.BLTableSearchPeriods.invalidReason(item.parsed,english));
+    const signature=JSON.stringify([label,missing,invalidLabel,invalid.map(item=>item.label),reasons]);
     if(!panel.hidden&&panel.dataset.signature===signature)return;
     panel.dataset.signature=signature;
-    const heading=root.document.createElement('strong');heading.textContent=label;
-    const chips=missing.map(value=>{
-      const chip=root.document.createElement('span');chip.className='tableSearchMissingTerm';
-      chip.textContent=value;return chip;
-    });
-    panel.replaceChildren(heading,...chips);panel.hidden=false;
+    const nodes=[];
+    const section=(text,values,className,titles)=>{
+      const heading=root.document.createElement('strong');heading.textContent=text;nodes.push(heading);
+      values.forEach((value,index)=>{
+        const chip=root.document.createElement('span');chip.className=className;
+        chip.textContent=value;if(titles&&titles[index])chip.title=titles[index];nodes.push(chip);
+      });
+    };
+    if(invalid.length){
+      section(invalidLabel,invalid.map((item,index)=>item.label+' — '+reasons[index]),'tableSearchMissingTerm tableSearchInvalidTerm');
+    }
+    if(missing.length)section(label,missing,'tableSearchMissingTerm');
+    panel.replaceChildren(...nodes);panel.hidden=false;
     root.BLMotionPlus?.play('card',panel);
   }
 
-  return {findMissing,render};
+  return {findMissing,findInvalid,lastMissing,render};
 });

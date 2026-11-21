@@ -28,7 +28,7 @@
     if(!text)return null;
     // Dönem kısayolu ana arama ayrıştırıcısıyla aynı kriteri üretir.
     const period=typeof globalThis!=='undefined'&&globalThis.BLTableSearchPeriods?globalThis.BLTableSearchPeriods.parse(text):null;
-    if(period)return {mode:mode==='notContains'?'notContains':'period',value:text.toLocaleLowerCase('tr-TR'),values:period.tokens};
+    if(period&&!period.invalid)return {mode:mode==='notContains'?'notContains':'period',value:text.toLocaleLowerCase('tr-TR'),values:period.tokens};
     return {mode,value:text.toLocaleLowerCase('tr-TR')};
   }
 

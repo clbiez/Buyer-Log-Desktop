@@ -27,12 +27,14 @@
         ],
         imageTitle:'Paste a screenshot',
         image:'Paste a screenshot (an e-mail, a pivot or a PLM list) into the search box. LCW AI reads the values you are probably looking for; only values found in this table are offered, and they are written to the search box after you approve.',
-        periodTitle:'Date shortcuts (Collection)',
+        periodTitle:'Date and season shortcuts',
         periodRows:[
           ['MB=M3','MB month 3. EXF = Ex-Factory, RT = Retail.'],
           ['MB=W1-W24','MB weeks 1 to 24. M = month, W = week; a range may wrap the year (M11-M2).'],
-          ['S7; MB=M3-M5','Add the season for scope: shortcuts carry no year. Weeks/months follow the LCW merch calendar.'],
+          ['SEASON=S7; MB=M3-M5','Season S7 and MB March–May. Without a year every year matches; weeks/months follow the LCW merch calendar.'],
+          ['MB=2027M3','With a year: only March 2027. Example range: MB=2026M11-2027M2.'],
         ],
+        chipsNote:'Your search is shown term by term in Table filters; × on a term removes only that term. Typing MB= or SEASON= lists the values in the table.',
         excelTitle:'Paste from Excel',
         excel:'Paste an Excel block directly into the search box. A single column stays an OR list. With multiple columns, each Excel row becomes its own parenthesized group, for example (A; 1), (B; 2), so values from different source rows never mix.',
         note:'Tip: separators intentionally include a following space. This keeps decimal values such as 13,50 as one search value.'
@@ -51,12 +53,14 @@
       ],
       imageTitle:'Ekran görüntüsü yapıştırma',
       image:'Bir ekran görüntüsünü (e-posta, pivot, PLM listesi) arama kutusuna yapıştırın. LCW AI aramak istediğiniz değerleri okur; yalnız bu tabloda bulunan değerler önerilir ve onayınızdan sonra arama kutusuna yazılır.',
-      periodTitle:'Tarih kısayolları (Koleksiyon)',
+      periodTitle:'Tarih ve sezon kısayolları',
       periodRows:[
         ['MB=M3','MB 3. ay. EXF = Ex-Factory, RT = Retail.'],
         ['MB=W1-W24','MB 1–24. hafta arası. M (veya A) = ay, W (veya H) = hafta; aralık yıl sonunu aşabilir (M11-M2).'],
-        ['S7; MB=M3-M5','Kapsam için sezonu ekleyin: kısayolda yıl yoktur. Hafta/ay LCW merch takvimine göredir.'],
+        ['SEZON=S7; MB=M3-M5','S7 sezonu ve MB Mart–Mayıs. Yıl yazılmazsa her yıl eşleşir; hafta/ay LCW merch takvimine göredir.'],
+        ['MB=2027M3','Yıllı: yalnız Mart 2027. Aralık örneği: MB=2026M11-2027M2.'],
       ],
+      chipsNote:'Aramanız Tablo filtreleri şeridinde terim terim görünür; bir terimdeki × yalnız o terimi kaldırır. MB= veya SEZON= yazınca tablodaki değerler listelenir.',
       excelTitle:'Excel’den yapıştırma',
       excel:'Excel’de bir bloğu doğrudan arama kutusuna yapıştırın. Tek sütun eski VEYA listesi olarak kalır. Birden fazla sütunda ise her Excel satırı kendi parantez grubuna dönüşür; örneğin (A; 1), (B; 2). Böylece farklı kaynak satırlarındaki değerler birbirine karışmaz.',
       note:'İpucu: Ayraçlardan sonra boşluk kullanılır. Böylece 13,50 gibi ondalık değerler tek arama değeri olarak kalır.'
@@ -174,12 +178,11 @@
       '<div class="tableSearchHelpExamples">'+text.rows.map(row=>
         '<div class="tableSearchHelpExample"><code>'+esc(row[0])+'</code><span>'+esc(row[1])+'</span></div>'
       ).join('')+'</div>'+
-      (button.dataset.searchHelpFor==='kolSearch'
-        ?'<div class="tableSearchHelpExcel"><strong>'+esc(text.periodTitle)+'</strong></div>'+
-          '<div class="tableSearchHelpExamples">'+text.periodRows.map(row=>
-            '<div class="tableSearchHelpExample"><code>'+esc(row[0])+'</code><span>'+esc(row[1])+'</span></div>'
-          ).join('')+'</div>'
-        :'')+
+      '<div class="tableSearchHelpExcel"><strong>'+esc(text.periodTitle)+'</strong></div>'+
+      '<div class="tableSearchHelpExamples">'+text.periodRows.map(row=>
+        '<div class="tableSearchHelpExample"><code>'+esc(row[0])+'</code><span>'+esc(row[1])+'</span></div>'
+      ).join('')+'</div>'+
+      '<div class="tableSearchHelpNote">'+esc(text.chipsNote)+'</div>'+
       '<div class="tableSearchHelpExcel"><strong>'+esc(text.excelTitle)+'</strong><span>'+esc(text.excel)+'</span></div>'+
       '<div class="tableSearchHelpExcel"><strong>'+esc(text.imageTitle)+'</strong><span>'+esc(text.image)+'</span></div>'+
       '<div class="tableSearchHelpNote">'+esc(text.note)+'</div>';
