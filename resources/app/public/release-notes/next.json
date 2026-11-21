@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-21",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Aşama tahmini düzeltmesi",
-    "en": "Stage forecast fix"
+    "tr": "Aşama tahmini ve CP yeniden çizim düzeltmeleri",
+    "en": "Stage forecast and CP redraw fixes"
   },
   "summary": {
-    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz.",
-    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval."
+    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir.",
+    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values."
   },
   "changes": [
     {
@@ -37,6 +37,35 @@
         "caption": {
           "tr": "Demo veride yalnız Talep + Handover tarihi olan yoldaki parsiyel Cut-off'ta bekliyor görünmez; üretimde kalan satırı onay tarihi almaz.",
           "en": "On demo data, a partial in transit with only Request + Handover dates is not shown waiting at Cut-off; the production line gets no approval date."
+        }
+      }
+    },
+    {
+      "id": "cp-redraw-computed-values",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Tabloyu yeniden çiz hesaplanan değerleri gösterir",
+        "en": "Redraw table shows calculated values"
+      },
+      "body": {
+        "tr": "CP açıldıktan sonra Öncelik, checklist ve formül hücreleri, değerleri sunucudan gelmiş olsa bile \"Hesaplanıyor…\" olarak kalabiliyordu; Tabloyu yeniden çiz düğmesi bunu düzeltmiyor, değer ancak bir filtre ya da düzenleme sonrası görünüyordu. Artık her çizimde, Tabloyu yeniden çiz dahil, güncel hesaplanmış değerler gösterilir.",
+        "en": "After CP opened, Priority, checklist and formula cells could stay on \"Calculating…\" even though their values had arrived from the server; the Redraw table button did not fix it and the values only appeared after a filter change or an edit. Every redraw, including Redraw table, now shows the current calculated values."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-redraw-computed-values.png",
+        "alt": {
+          "tr": "Demo verili CP tablosunda Tabloyu yeniden çiz sonrası Öncelik sütunu",
+          "en": "Priority column in a demo CP table after Redraw table"
+        },
+        "caption": {
+          "tr": "Yeniden çizimden sonra Öncelik hücreleri gerçek değeri gösterir; düzenlenen Retail tarihi Sevk→Perakende değerine yansımıştır.",
+          "en": "After a redraw, Priority cells show their real value; the edited retail date is reflected in Ex→Retail."
         }
       }
     }
