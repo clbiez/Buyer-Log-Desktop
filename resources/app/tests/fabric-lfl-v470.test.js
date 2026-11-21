@@ -174,7 +174,7 @@ test('v4.72 CP kumaş sütunları istenen sırada ve yan yana bulunur', () => {
   }
 });
 
-test('v4.72 LFL filtreleri, kırılımları ve kumaş detay düğmesi korunur', () => {
+test('v4.72 LFL kumaş filtreleri ve kırılımları korunur; Kumaş Detayları düğmesi kaldırıldı (PLM Kumaş sütunu kalır)', () => {
   for (const dim of ['fabricCategory', 'fabricSupplierCountry', 'fabricSupplier', 'kumasTipi', 'iplikNo', 'fabricWeight', 'karisim']) {
     assert.ok(lflSource.includes(`${dim}:{label:`), `${dim} filtre meta alanında bulunmalı`);
     assert.ok(html.includes(`data-lfldim="${dim}"`), `${dim} filtre düğmesi bulunmalı`);
@@ -182,8 +182,11 @@ test('v4.72 LFL filtreleri, kırılımları ve kumaş detay düğmesi korunur', 
   for (const dim of ['fabricCategory', 'kumasTipi', 'fabricWeight', 'karisim']) {
     assert.ok(lflSource.includes(`${dim}:{tr:`), `${dim} kırılım alanında bulunmalı`);
   }
-  assert.ok(html.includes('id="lflFabricDetailsBtn"'));
-  assert.ok(lflSource.includes('...(state.showFabricDetails?fabricDetailColumns():[])'));
+  // Ayrı ASAS kumaş sütunu anahtarı kaldırıldı; kumaş bilgisi PLM SYNC'ten gelen
+  // PLM Kumaş sütunu ve PLM tabanlı filtre/kırılımlarla okunur.
+  assert.ok(!html.includes('lflFabricDetailsBtn'));
+  assert.doesNotMatch(lflSource, /showFabricDetails|fabricDetailColumns|toggleFabricDetails/);
+  assert.ok(lflSource.includes('...plmDetailColumns(),'));
 });
 
 test('v4.72 ayrı Update Fabric Informations işlevi ve Fabric bağlantı rolü kaldırılmıştır', () => {

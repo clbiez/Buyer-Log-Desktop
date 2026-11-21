@@ -122,7 +122,6 @@
     trial:{enabled:false,items:new Map(),rows:[],scope:null,pendingCorrections:new Map()},
     filters:Object.fromEntries(FILTER_DIMS.map(k=>[k,new Set()])),
     periods:{current:{dateField:'inStore'},compare:{dateField:'inStore'}},
-    showFabricDetails:false,
     breakdown:[...window.BLLflCalculationEngine.DEFAULT_BREAKDOWN],
     sort:{key:'qty',dir:-1},analysis:null,
     tableViews:{group:emptyTableView('qty',-1),manufacturer:emptyTableView('currentQty',-1),customCompare:emptyTableView('currentQty',-1),currentDetail:emptyTableView(),compareDetail:emptyTableView()},
@@ -230,7 +229,7 @@
     return {};
   }
   function saveFilters(){
-    const data={currentSeason:$('lflCurrentSeason')?.value||'',compareSeason:$('lflCompareSeason')?.value||'',currentDateField:normalizeDateField(state.periods.current.dateField),compareDateField:normalizeDateField(state.periods.compare.dateField),breakdown:[...state.breakdown],showFabricDetails:!!state.showFabricDetails};
+    const data={currentSeason:$('lflCurrentSeason')?.value||'',compareSeason:$('lflCompareSeason')?.value||'',currentDateField:normalizeDateField(state.periods.current.dateField),compareDateField:normalizeDateField(state.periods.compare.dateField),breakdown:[...state.breakdown]};
     FILTER_DIMS.forEach(dim=>{data[dim]=[...state.filters[dim]];});
     try{BLStorage.setItem(STORAGE_KEY,JSON.stringify(data));}catch(e){}
   }
@@ -452,7 +451,7 @@
   }
   function readySave(items){try{BLStorage.setItem(READY_FILTERS_KEY,JSON.stringify(items));}catch(e){}}
   function currentFilterSnapshot(){
-    const data={currentSeason:$('lflCurrentSeason')?.value||'',compareSeason:$('lflCompareSeason')?.value||'',currentDateField:normalizeDateField(state.periods.current.dateField),compareDateField:normalizeDateField(state.periods.compare.dateField),breakdown:[...state.breakdown],showFabricDetails:!!state.showFabricDetails};
+    const data={currentSeason:$('lflCurrentSeason')?.value||'',compareSeason:$('lflCompareSeason')?.value||'',currentDateField:normalizeDateField(state.periods.current.dateField),compareDateField:normalizeDateField(state.periods.compare.dateField),breakdown:[...state.breakdown]};
     FILTER_DIMS.forEach(dim=>{data[dim]=[...state.filters[dim]];});return data;
   }
   function closeReadyPanel(){const panel=$('lflReadyFiltersPanel'),btn=$('lflReadyFiltersBtn');if(panel)panel.hidden=true;if(btn)btn.setAttribute('aria-expanded','false');}
@@ -465,7 +464,6 @@
     syncDateFieldControls();
     const savedBreakdown=Array.isArray(item.breakdown)?item.breakdown:(item.groupBy==='lflKey'?['mag','mmyg','classification']:[item.groupBy]);
     const valid=[...new Set(savedBreakdown.filter(isValidBreakdownDim))].slice(0,MAX_BREAKDOWN_LEVELS);if(valid.length)state.breakdown=valid;
-    if(typeof item.showFabricDetails==='boolean')state.showFabricDetails=item.showFabricDetails;
     FILTER_DIMS.forEach(dim=>{state.filters[dim]=new Set((Array.isArray(item[dim])?item[dim]:[]).filter(isUsableValue).map(String));});
     pruneFilters();closePanels();closeBreakdownPanel();closeReadyPanel();saveFilters();render();
     if(window.showToast)showToast(isEn()?'Ready filter applied.':'Hazır filtre uygulandı.');
@@ -522,7 +520,6 @@
     if(!state.filtersLoaded){
       state.periods.current.dateField=normalizeDateField(saved.currentDateField);
       state.periods.compare.dateField=normalizeDateField(saved.compareDateField);
-      state.showFabricDetails=saved.showFabricDetails===true;
       const legacyMap={classification:'classification',manufacturer:'manufacturer',buyingGroup:'buyingGroup',buyer:'buyer',mag:'mag',mmyg:'mmyg',country:'country'};
       SHARED_DIMS.forEach(dim=>{
         let vals=Array.isArray(saved[dim])?saved[dim]:[];
@@ -2141,16 +2138,6 @@
     const add=$('lflScenarioAddBtn');if(add){add.disabled=scenarios.length>=12;add.title=scenarios.length>=12?(isEn()?'Maximum 12 comparisons':'En fazla 12 karşılaştırma'):'';}
     const refresh=$('lflScenarioRefreshBtn');if(refresh){const label=refresh.querySelector('span');if(label)label.textContent=isEn()?'Refresh summaries':'Özetleri Yenile';refresh.disabled=state.loading||!scenarios.length;refresh.title=isEn()?'Reload the latest LFL data and recalculate every saved comparison with exactly the same periods and portfolio filters.':'En güncel LFL verisini yeniden yükle ve tüm kayıtlı karşılaştırmaları aynı dönem ve portföy filtreleriyle tekrar hesapla.';}
   }
-  function fabricDetailColumns(){return [
-    {key:'fabricCategory',label:isEn()?'Fabric Category':'Kumaş Kategorisi',value:r=>r.fabricCategory||'',type:'text'},
-    {key:'fabricSupplierCountry',label:isEn()?'Fabric Supplier Country':'Kumaşçı Ülkesi',value:r=>r.fabricSupplierCountry||'',type:'text'},
-    {key:'fabricSupplier',label:isEn()?'Fabric Supplier':'Kumaşçı',value:r=>r.fabricSupplier||'',type:'text'},
-    {key:'kumasTipi',label:isEn()?'Fabric Type':'Kumaş Tipi',value:r=>r.kumasTipi||'',type:'text'},
-    {key:'iplikNo',label:isEn()?'Yarn Count':'İplik No',value:r=>r.iplikNo||'',type:'text'},
-    {key:'fabricWeight',label:isEn()?'Weight (GSM)':'Gramaj',value:r=>r.fabricWeight||'',type:'text'},
-    {key:'karisim',label:isEn()?'Composition':'Karışım',value:r=>r.karisim||'',type:'text'},
-    {key:'fabricInfoSource',label:isEn()?'Fabric Info Source':'Kumaş Bilgi Kaynağı',value:r=>r.fabricInfoSource||'',type:'text'},
-  ];}
   /* Sunucu PLM Kumaş / Artwork metinlerini model başına bir kez gönderir
      (meta.plmDetails); satırlara burada PLM ID ile yazılır. Revize kumaş
      alanları (Kategori, Tip, İplik, Gramaj, Karışım) satırda hazır gelir. */
@@ -2172,7 +2159,9 @@
     {key:'plmArtwork',label:'PLM Artwork',value:r=>plmArtworkText(r),type:'text',exportWidth:28},
   ];}
   function detailColumns(){return [
-    {key:'rowType',label:isEn()?'Type':'Tür',value:r=>r.isTrial?'TRIAL':'REAL',display:r=>r.isTrial?'TRIAL':(isEn()?'Real':'Gerçek'),type:'text'},
+    /* Tür (Trial/Gerçek) yalnız Trial LFL açıkken anlamlıdır; kapalıyken her
+       satır gerçek olduğundan etiket gürültüdür ve gösterilmez. */
+    ...(trialActiveCount()?[{key:'rowType',label:isEn()?'Type':'Tür',value:r=>r.isTrial?'TRIAL':'REAL',display:r=>r.isTrial?'TRIAL':(isEn()?'Real':'Gerçek'),type:'text'}]:[]),
     {key:'orderCode',label:'Order Code',value:r=>r.orderCode||'',type:'text'},
     {key:'modelName',label:isEn()?'Model':'Model',value:r=>r.modelName||'',type:'text'},
     {key:'mag',label:'MAG',value:r=>r.mag||'',type:'text'},
@@ -2187,26 +2176,14 @@
     {key:'buyingGroup',label:'Buying Group',value:r=>r.buyingGroup||'',type:'text'},
     {key:'buyer',label:'Buyer',value:r=>r.buyer||'',type:'text'},
     ...plmDetailColumns(),
-    ...(state.showFabricDetails?fabricDetailColumns():[]),
     {key:'fob',label:'FOB',value:r=>num(r.fob),display:r=>money(r.fob,currencyForRow(r)),type:'number',cls:'num'},
     {key:'quantity',label:isEn()?'Quantity':'Miktar',value:r=>num(r.quantity),display:r=>integer(r.quantity),type:'number',cls:'num'},
     {key:'amount',label:isEn()?'Amount':'Tutar',value:r=>(num(r.fob)||0)*(num(r.quantity)||0),display:r=>money((num(r.fob)||0)*(num(r.quantity)||0),currencyForRow(r)),type:'number',cls:'num'},
   ];}
-  function updateFabricDetailsButton(){
-    const btn=$('lflFabricDetailsBtn'),label=$('lflFabricDetailsBtnText');if(!btn)return;
-    btn.classList.toggle('isOn',!!state.showFabricDetails);btn.setAttribute('aria-pressed',state.showFabricDetails?'true':'false');
-    if(label)label.textContent=isEn()?'Fabric Details':'Kumaş Detayları';
-    btn.title=state.showFabricDetails?(isEn()?'Hide main fabric fields in portfolio details':'Portföy detaylarında ana kumaş alanlarını gizle'):(isEn()?'Show main fabric fields in portfolio details':'Portföy detaylarında ana kumaş alanlarını göster');
-  }
-  function toggleFabricDetails(){
-    state.showFabricDetails=!state.showFabricDetails;saveFilters();render();
-    if(lflPortfolioModalState)renderLflPortfolioModal();
-  }
 
   function render(){
     enforceTrialFilterRules();
     trialUpdateButton();
-    updateFabricDetailsButton();
     updateAllFilterButtons();
     if(!state.rows.length){$('lflContent').hidden=true;$('lflEmpty').hidden=false;updatePortfolioAccessButtons(null);renderSource();return;}
     $('lflContent').hidden=false;$('lflEmpty').hidden=true;
@@ -2234,14 +2211,13 @@
     const summaryRows=[['LFL Analiz Özeti','Değer','Para Birimi'],['Kaynak Dosya',state.source||'',''],...filters.map(r=>[...r,'']),[],['KPI','Değer','Para Birimi'],...kpiRows,...(fxRows.length?[[],['Ülke / Ay Bazlı USD Kuru','Değer','Döviz'],...fxRows.flatMap(x=>x.points.map(p=>[`${x.country} · ${monthLabel(p.requested)}`,p.rate,x.currency]))]:[])];
     const groupRows=[[breakdownLabel(a.groupBy),comparisonColumnHeader(a.currentPeriod,'Ağırlıklı FOB'),comparisonColumnHeader(a.comparePeriod,'Ağırlıklı FOB'),'FOB Değişimi %','Adet','Sipariş'],...a.groups.map(g=>[g.key,moneySummary(g.current),moneySummary(g.previous),g.priceChange,g.qty,g.orders])];
     const scenarioRows=comparisonScenarioResults(a),customRows=[['Karşılaştırma','Portföy Kapsamı','Güncel Dönem','Kıyas Dönemi','Güncel Adet','Kıyas Adet','Hacim Değişimi %','Güncel Sipariş','Kıyas Sipariş','Güncel Ağırlıklı FOB','Kıyas Ağırlıklı FOB','Ağırlıklı LFL Değişimi %'],...scenarioRows.map(row=>[row.name,scenarioScopeLabel(row),scenarioPeriodLabel(row.currentSeason,row.currentMonths,row.currentDateField),scenarioPeriodLabel(row.compareSeason,row.compareMonths,row.compareDateField),row.currentQty,row.previousQty,row.qtyChange,row.currentOrders,row.previousOrders,moneySummary(row.current),moneySummary(row.previous),row.priceChange])];
-    const fabricExcelHead=state.showFabricDetails?['Kumaş Kategorisi','Kumaşçı Ülkesi','Kumaşçı','Kumaş Tipi','İplik No','Gramaj','Karışım',isEn()?'Fabric Info Source':'Kumaş Bilgi Kaynağı']:[];
     const plmExcelHead=[isEn()?'PLM Fabric':'PLM Kumaş','PLM Artwork'];
-    const detailHead=['Tür','Order Code','Model','MAG','MMYG','Klasman','Sezon','OPD','Ex-F.','In-Store','Üretici','Ülke','Buying Group','Buyer',...plmExcelHead,...fabricExcelHead,'FOB','Para Birimi','Quantity','Weighted Amount'];
+    const detailHead=['Tür','Order Code','Model','MAG','MMYG','Klasman','Sezon','OPD','Ex-F.','In-Store','Üretici','Ülke','Buying Group','Buyer',...plmExcelHead,'FOB','Para Birimi','Quantity','Weighted Amount'];
     const excelDate=iso=>{const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?new Date(Number(m[1]),Number(m[2])-1,Number(m[3])):iso;};
-    const fabricExcelValues=r=>[r.plmFabric||'',plmArtworkText(r),...(state.showFabricDetails?[r.fabricCategory,r.fabricSupplierCountry,r.fabricSupplier,r.kumasTipi,r.iplikNo,r.fabricWeight,r.karisim,r.fabricInfoSource||'']:[])];
+    const fabricExcelValues=r=>[r.plmFabric||'',plmArtworkText(r)];
     const rowToExcel=r=>[r.isTrial?'TRIAL':'GERÇEK',String(r.orderCode||'').replace(/\.(?=\d{3}(?:\D|$))/g,''),r.modelName,r.mag,r.mmyg,r.classification,r.season,excelDate(r.opd),excelDate(r.exFactory),excelDate(r.inStore),r.manufacturer,r.country,r.buyingGroup,r.buyer,...fabricExcelValues(r),r.fob,currencyForRow(r),r.quantity,r.fob*r.quantity];
     const currentDetailRows=[detailHead,...a.currentRows.map(rowToExcel)],compareDetailRows=[detailHead,...a.compareRows.map(rowToExcel)];
-    const wb=XLSX.utils.book_new(),ws1=XLSX.utils.aoa_to_sheet(summaryRows),ws2=XLSX.utils.aoa_to_sheet(groupRows),wsCustom=XLSX.utils.aoa_to_sheet(customRows),ws3=XLSX.utils.aoa_to_sheet(currentDetailRows),ws4=XLSX.utils.aoa_to_sheet(compareDetailRows);ws1['!cols']=[{wch:34},{wch:30},{wch:14}];ws2['!cols']=[{wch:30},...Array(5).fill({wch:18})];wsCustom['!cols']=[{wch:28},{wch:42},{wch:30},{wch:30},...Array(8).fill({wch:18})];const fabricDetailCols=state.showFabricDetails?[{wch:20},{wch:20},{wch:24},{wch:18},{wch:14},{wch:12},{wch:26}]:[];const detailCols=[{wch:10},{wch:15},{wch:28},{wch:13},{wch:13},{wch:18},{wch:10},{wch:13},{wch:13},{wch:13},{wch:25},{wch:16},{wch:18},{wch:18},...fabricDetailCols,{wch:12},{wch:12},{wch:12},{wch:16}];ws3['!cols']=detailCols;ws4['!cols']=detailCols;[ws3,ws4].forEach(ws=>{const range=ws['!ref']?XLSX.utils.decode_range(ws['!ref']):null;if(!range)return;for(let r=1;r<=range.e.r;r++){const idCell=ws[XLSX.utils.encode_cell({r,c:1})];if(idCell){idCell.t='s';idCell.v=String(idCell.v??'');idCell.z='@';}for(const c of [7,8,9]){const cell=ws[XLSX.utils.encode_cell({r,c})];if(cell&&cell.t==='d')cell.z='dd.mm.yy';}}});XLSX.utils.book_append_sheet(wb,ws1,'Özet');XLSX.utils.book_append_sheet(wb,ws2,'Grup Analizi');XLSX.utils.book_append_sheet(wb,wsCustom,'Bağımsız Kıyaslar');XLSX.utils.book_append_sheet(wb,ws3,'Seçili Portföy');XLSX.utils.book_append_sheet(wb,ws4,'Kıyas Portföyü');const d=new Date(),p=n=>String(n).padStart(2,'0');XLSX.writeFile(wb,`LFL_Analizi_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}.xlsx`);
+    const wb=XLSX.utils.book_new(),ws1=XLSX.utils.aoa_to_sheet(summaryRows),ws2=XLSX.utils.aoa_to_sheet(groupRows),wsCustom=XLSX.utils.aoa_to_sheet(customRows),ws3=XLSX.utils.aoa_to_sheet(currentDetailRows),ws4=XLSX.utils.aoa_to_sheet(compareDetailRows);ws1['!cols']=[{wch:34},{wch:30},{wch:14}];ws2['!cols']=[{wch:30},...Array(5).fill({wch:18})];wsCustom['!cols']=[{wch:28},{wch:42},{wch:30},{wch:30},...Array(8).fill({wch:18})];const detailCols=[{wch:10},{wch:15},{wch:28},{wch:13},{wch:13},{wch:18},{wch:10},{wch:13},{wch:13},{wch:13},{wch:25},{wch:16},{wch:18},{wch:18},{wch:36},{wch:28},{wch:12},{wch:12},{wch:12},{wch:16}];ws3['!cols']=detailCols;ws4['!cols']=detailCols;[ws3,ws4].forEach(ws=>{const range=ws['!ref']?XLSX.utils.decode_range(ws['!ref']):null;if(!range)return;for(let r=1;r<=range.e.r;r++){const idCell=ws[XLSX.utils.encode_cell({r,c:1})];if(idCell){idCell.t='s';idCell.v=String(idCell.v??'');idCell.z='@';}for(const c of [7,8,9]){const cell=ws[XLSX.utils.encode_cell({r,c})];if(cell&&cell.t==='d')cell.z='dd.mm.yy';}}});XLSX.utils.book_append_sheet(wb,ws1,'Özet');XLSX.utils.book_append_sheet(wb,ws2,'Grup Analizi');XLSX.utils.book_append_sheet(wb,wsCustom,'Bağımsız Kıyaslar');XLSX.utils.book_append_sheet(wb,ws3,'Seçili Portföy');XLSX.utils.book_append_sheet(wb,ws4,'Kıyas Portföyü');const d=new Date(),p=n=>String(n).padStart(2,'0');XLSX.writeFile(wb,`LFL_Analizi_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}.xlsx`);
   }
   /* İlk yükleme sırasında LFL ekranı boş kontrollerle açılmaz: ortak bekleme
      durumu (Biliyor muydunuz? kartlarıyla) gösterilir; veri gelince ekran çizilir. */
@@ -2311,7 +2287,7 @@
   function bind(){
     if(state.initialized)return;state.initialized=true;
     const refreshButton=$('lflRefreshBtn');if(refreshButton)refreshButton.title=linkedRefreshTitle();
-    $('lflRefreshBtn')?.addEventListener('click',()=>{void refreshLinked();});$('lflCurrentPortfolioBtn')?.addEventListener('click',()=>openLflDetailModal('current'));$('lflComparePortfolioBtn')?.addEventListener('click',()=>openLflDetailModal('compare'));$('lflExportBtn')?.addEventListener('click',exportAnalysis);$('lflResetBtn')?.addEventListener('click',resetFilters);$('lflReadyFiltersBtn')?.addEventListener('click',e=>{e.stopPropagation();toggleReadyPanel();});$('lflShiftYear')?.addEventListener('click',copyPreviousYearMonths);$('lflFabricDetailsBtn')?.addEventListener('click',toggleFabricDetails);
+    $('lflRefreshBtn')?.addEventListener('click',()=>{void refreshLinked();});$('lflCurrentPortfolioBtn')?.addEventListener('click',()=>openLflDetailModal('current'));$('lflComparePortfolioBtn')?.addEventListener('click',()=>openLflDetailModal('compare'));$('lflExportBtn')?.addEventListener('click',exportAnalysis);$('lflResetBtn')?.addEventListener('click',resetFilters);$('lflReadyFiltersBtn')?.addEventListener('click',e=>{e.stopPropagation();toggleReadyPanel();});$('lflShiftYear')?.addEventListener('click',copyPreviousYearMonths);
     $('lflBreakdownBtn')?.addEventListener('click',event=>{event.stopPropagation();toggleBreakdownPanel();});
     for(let i=0;i<3;i++){$(`lflCustomCompareDimension${i}`)?.addEventListener('change',event=>updateCustomCompareDimension(i,event.target.value));$(`lflCustomCompareValueBtn${i}`)?.addEventListener('click',event=>{event.stopPropagation();toggleCustomComparePanel(i);});}
     $('lflCustomCompareReference')?.addEventListener('change',event=>{state.customCompare.reference=event.target.value;saveCustomCompare();renderCustomCompare(state.analysis||compute());});
@@ -2352,5 +2328,5 @@
     values(field){const rowKey=field==='category'?'classification':field==='inStoreMonth'?'inStoreMonth':field;return unique((state.serverRows||[]).map(row=>norm(row&&row[rowKey])).filter(isUsableValue)).sort(BLBusinessRules.compareChronologicalValues);},
     async ensureLoaded(){if(!state.serverRows.length&&!state.loading)await load(false);return this.values('category');}
   };
-  window.__lflTest={countryCurrency,countryIdentity,dimensionIdentity,resolveDimensionLabel,normalizeDateField,rowPeriodMonth,comparisonColumnHeader,dateFieldLabel,filterRows,fxRateReport,selectedFxMonths,dtrTypeForRow,summary,dtrScopeText,manufacturerVolumes,customCompareValue,customCompareOptionsFromRows,customComparisonRows,multiComparisonRows,quantityTotal,uniqueOrderCount,groupValue,breakdownValue,breakdownDimLabel,breakdownDims:()=>[...BREAKDOWN_DIMS,...new Set(state.breakdown.filter(isAsasBreakdownDim))],filterDims:()=>[...FILTER_DIMS],fabricDetailColumns,detailColumns,showFabricDetails:()=>!!state.showFabricDetails,matchesSearch,pct,comparablePct,metricBetween,comparablePeriodRows,comparableMetricBetweenRows,normalizeComparisonScenario,freezeScenarioScope,scenarioComparisonResult,scenarioPeriodLabel,scenarioScopeLabel,scenarioDateField,refreshComparisonScenarios,trialScope,trialDraftFromModel,trialValidation,trialValidationDetails,trialScopeNotices,trialRowFrom,trialImpactFor,trialConfiguredCount,trialActiveCount,openTrialPanel};
+  window.__lflTest={countryCurrency,countryIdentity,dimensionIdentity,resolveDimensionLabel,normalizeDateField,rowPeriodMonth,comparisonColumnHeader,dateFieldLabel,filterRows,fxRateReport,selectedFxMonths,dtrTypeForRow,summary,dtrScopeText,manufacturerVolumes,customCompareValue,customCompareOptionsFromRows,customComparisonRows,multiComparisonRows,quantityTotal,uniqueOrderCount,groupValue,breakdownValue,breakdownDimLabel,breakdownDims:()=>[...BREAKDOWN_DIMS,...new Set(state.breakdown.filter(isAsasBreakdownDim))],filterDims:()=>[...FILTER_DIMS],detailColumns,matchesSearch,pct,comparablePct,metricBetween,comparablePeriodRows,comparableMetricBetweenRows,normalizeComparisonScenario,freezeScenarioScope,scenarioComparisonResult,scenarioPeriodLabel,scenarioScopeLabel,scenarioDateField,refreshComparisonScenarios,trialScope,trialDraftFromModel,trialValidation,trialValidationDetails,trialScopeNotices,trialRowFrom,trialImpactFor,trialConfiguredCount,trialActiveCount,openTrialPanel};
 })();

@@ -10888,8 +10888,6 @@ html[data-ui-system="manifest"] .lflScenarioNoOption {color:var(--ui-text-muted)
 }
 html[data-ui-system="manifest"] #lflTrialBtn.isOn {background:var(--ui-selected,var(--ui-accent)) !important;color:var(--ui-selected-ink,var(--ui-accent)) !important
 }
-html[data-ui-system="manifest"] #lflFabricDetailsBtn.isOn {background:color-mix(in srgb,var(--ui-accent,var(--ui-accent)) 11%,var(--ui-surface)) !important;color:var(--ui-accent,var(--ui-accent)) !important
-}
 html[data-ui-system="manifest"] .lflTrialBanner {background:var(--ui-selected,var(--ui-accent)) !important;color:var(--ui-selected-ink,var(--ui-accent)) !important;font-size:var(--ui-font-sm) !important;font-weight:600 !important
 }
 html[data-ui-system="manifest"] .lflTrialBanner.isPaused {background:var(--ui-surface-soft) !important;color:var(--ui-text-muted) !important

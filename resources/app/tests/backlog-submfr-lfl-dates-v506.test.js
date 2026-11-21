@@ -92,7 +92,7 @@ test('v5.07 generic OPD / EX-FACTORY columns do not backfill LFL dates when exac
 });
 test('v5.06 LFL detail tables and exports include OPD and Ex-F.', () => {
   const detailStart = LFL_UI.indexOf('function detailColumns()');
-  const detailEnd = LFL_UI.indexOf('function updateFabricDetailsButton', detailStart);
+  const detailEnd = LFL_UI.indexOf('function render()', detailStart);
   const detail = LFL_UI.slice(detailStart, detailEnd);
   assert.match(detail, /key:'opd',label:'OPD'/);
   assert.match(detail, /key:'exFactory',label:isEn\(\)\?'Ex-F\.':'Ex-F\.'/);
