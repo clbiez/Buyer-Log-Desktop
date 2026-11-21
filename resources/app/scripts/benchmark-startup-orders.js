@@ -150,16 +150,17 @@ async function open(context,page,module){
     persist();throw error;
   }
 }
-/* --sessiz: Sessiz çalışma alanı (önizleme) yaşam döngüsü. CP yüklü sayfada Görünüm
+/* --sessiz: Sessiz çalışma alanı (önizleme) yaşam döngüsü. Genel Bakış'ta Görünüm
    düğmesiyle ilk açılış ve kapat/yeniden aç; görünür satır DOM'u sınırlı kalmalı (≤300). */
 async function measureSessiz(context){
   const page=await context.newPage();
   try{
     await page.addInitScript(installProbe,{sampleWindowMs,logEvents:false});
-    await page.goto(base+'/?module=cp',{waitUntil:'domcontentloaded',timeout:120000});
+    // Genel Bakış'tan açılır: CP okuma modeli varsayılan açıkken tam CP yüklemesi Sessiz'in kendi maliyetidir.
+    await page.goto(base+'/?module=overview',{waitUntil:'domcontentloaded',timeout:120000});
     await page.waitForFunction(()=>Number.isFinite(window.__startupProbe?.startupReadyMs),null,{timeout:rendererTimeoutMs,polling:100});
     await page.evaluate(()=>window.BLBootGuard?.continue({intentAtMs:performance.now()}));
-    await page.waitForFunction(()=>state.cp?.rows.length>0&&document.querySelector('#cpTable tbody tr[data-id]'),null,{timeout:rendererTimeoutMs,polling:100});
+    await page.waitForFunction(()=>Number.isFinite(window.__startupProbe?.startupCompleteMs),null,{timeout:rendererTimeoutMs,polling:100});
     if(!(await page.evaluate(()=>!!document.getElementById('railSessizBtn'))))return {available:false};
     const run=()=>page.evaluate(()=>new Promise((resolve,reject)=>{
       const longBefore=window.__startupProbe.longTasks.length,started=performance.now();

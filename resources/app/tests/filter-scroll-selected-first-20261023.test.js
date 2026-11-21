@@ -10,9 +10,11 @@ test('Price & Supplier multi-filters pin selected values without resetting the l
   const src = read('price-supplier-analysis.js');
   const code = src.slice(src.indexOf('  function filterSelect(dim){'), src.indexOf('  function filterConfigurator(){'));
   const E = { dimensionValues: () => ['Kaşe-Örme','Kaşkorse','Keten','Krep','Kırınkıl','Mikro','Müslin'], keyOf: value => String(value).toLocaleUpperCase('tr-TR') };
-  const select = new Function('E','dataset','ui','esc','t','dimLabel','filterValues', code + '\nreturn filterSelect;')(
-    E, {}, {filterSearch:{},openFilter:'kumaşTipi'}, String, key => key, key => key, () => ['Mikro','Kaşkorse']
+  // valueLabel modül kapsamındadır (EN değer etiketleri); izole çalıştırmada gerçek sözleşmesiyle verilir.
+  const select = new Function('E','dataset','ui','esc','t','dimLabel','filterValues','valueLabel', code + '\nreturn filterSelect;')(
+    E, {}, {filterSearch:{},openFilter:'kumaşTipi'}, String, key => key, key => key, () => ['Mikro','Kaşkorse'], (dim, value) => value
   );
+  assert.match(src, /function valueLabel\(dim,value\)\{return \(isEn\(\)&&data\?\.valueLabels\?\.\[dim\]\?\.en\?\.\[value\]\)\|\|value;\}/);
   const html = select('kumaşTipi');
   const options = [...html.matchAll(/data-ps-filter-value="kumaşTipi" value="([^"]+)"/g)].map(match => match[1]);
   assert.deepEqual(options.slice(0,2), ['Kaşkorse','Mikro']);

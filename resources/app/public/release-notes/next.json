@@ -40,42 +40,11 @@
         }
       }
     },
-    {
-      "id": "shipping-license-all-rows",
-      "type": "fix",
-      "module": {
-        "tr": "Nakliye Kıyaslama",
-        "en": "Shipping Comparison"
-      },
-      "title": {
-        "tr": "Royalty ve hologram tüm lisanslı modellerde uygulanır",
-        "en": "Royalty and hologram apply to every licensed model"
-      },
-      "body": {
-        "tr": "Nakliye Kıyaslama’da royalty ve hologram maliyeti bazı modellerde uygulanıyor, bazılarında uygulanmıyordu. CP’den aktarılan siparişler bu bilgiyi hiç almıyordu. Koleksiyon’dan daha önce aktarılan modeller ise yeniden gönderilmeden güncellenmiyordu. Artık her satır lisans bilgisini tablo açıldığında License Royalty sözleşmesinden güncel olarak alır. Yurt Dışı FOB altında ve Yurt İçi kartında +Roy. / +Holo. notu her lisanslı modelde görünür. CP’den aktarılan satırlarda, TL fiyatı girildiyse Yurt İçi FOB’a da TR royalty ve hologram eklenir; TR komisyonu tanımlı değilse yurt içi maliyet royaltysiz hesaplanmaz, boş kalır. DTR modeller değişmez.",
-        "en": "In Shipping Comparison, royalty and hologram cost applied to some models but not to others. Orders sent from CP never received this information. Models sent from Collection earlier were not updated unless sent again. Each row now takes its licence information from the current License Royalty contract when the table opens. The +Roy. / +Holo. note appears under Overseas FOB and on the Domestic card for every licensed model. For rows sent from CP, TR royalty and hologram are also added to Domestic FOB when a TL price is entered; if no TR commission is defined, the domestic cost is left blank instead of being calculated without royalty. DTR models are unchanged."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "shipping-license-all-rows.png",
-        "alt": {
-          "tr": "Demo CP siparişlerinde Yurt Dışı FOB ve Yurt İçi kartında royalty ve hologram notu",
-          "en": "Royalty and hologram note under Overseas FOB and on the Domestic card for demo CP orders"
-        },
-        "caption": {
-          "tr": "CP’den aktarılan lisanslı demo siparişlerde +Roy. / +Holo. notu görünür; DTR modelde (HARRY) not yoktur.",
-          "en": "Licensed demo orders sent from CP show the +Roy. / +Holo. note; the DTR model (HARRY) shows none."
-        }
-      }
-    },
+    {"id": "shipping-license-all-rows", "type": "fix", "module": {"tr": "Nakliye Kıyaslama", "en": "Shipping Comparison"}, "title": {"tr": "Royalty ve hologram tüm lisanslı modellerde uygulanır", "en": "Royalty and hologram apply to every licensed model"}, "body": {"tr": "Nakliye Kıyaslama’da royalty ve hologram maliyeti bazı modellerde uygulanıyor, bazılarında uygulanmıyordu. CP’den aktarılan siparişler bu bilgiyi hiç almıyordu. Koleksiyon’dan daha önce aktarılan modeller ise yeniden gönderilmeden güncellenmiyordu. Artık her satır lisans bilgisini tablo açıldığında License Royalty sözleşmesinden güncel olarak alır. Yurt Dışı FOB altında ve Yurt İçi kartında +Roy. / +Holo. notu her lisanslı modelde görünür. CP’den aktarılan satırlarda, TL fiyatı girildiyse Yurt İçi FOB’a da TR royalty ve hologram eklenir; TR komisyonu tanımlı değilse yurt içi maliyet royaltysiz hesaplanmaz, boş kalır. DTR modeller değişmez.", "en": "In Shipping Comparison, royalty and hologram cost applied to some models but not to others. Orders sent from CP never received this information. Models sent from Collection earlier were not updated unless sent again. Each row now takes its licence information from the current License Royalty contract when the table opens. The +Roy. / +Holo. note appears under Overseas FOB and on the Domestic card for every licensed model. For rows sent from CP, TR royalty and hologram are also added to Domestic FOB when a TL price is entered; if no TR commission is defined, the domestic cost is left blank instead of being calculated without royalty. DTR models are unchanged."}, "visual": {"kind": "screenshot", "capture": "post-change", "src": "shipping-license-all-rows.png", "alt": {"tr": "Demo CP siparişlerinde Yurt Dışı FOB ve Yurt İçi kartında royalty ve hologram notu", "en": "Royalty and hologram note under Overseas FOB and on the Domestic card for demo CP orders"}, "caption": {"tr": "CP’den aktarılan lisanslı demo siparişlerde +Roy. / +Holo. notu görünür; DTR modelde (HARRY) not yoktur.", "en": "Licensed demo orders sent from CP show the +Roy. / +Holo. note; the DTR model (HARRY) shows none."}}},
     {
       "id": "plm-sync-images-no-freeze",
       "type": "fix",
-      "module": {
-        "tr": "CP · Siparişler · Backlog · Koleksiyon · PLM SYNC",
-        "en": "CP · Orders · Backlog · Collection · PLM SYNC"
-      },
+      "module": {"tr": "CP · Siparişler · Backlog · Koleksiyon · PLM SYNC", "en": "CP · Orders · Backlog · Collection · PLM SYNC"},
       "title": {
         "tr": "PLM SYNC görsel indirmesinden sonra uygulama donmaz",
         "en": "The app no longer freezes after PLM SYNC downloads images"
@@ -95,10 +64,7 @@
     {
       "id": "oab-batch-job-store-busy-fix",
       "type": "fix",
-      "module": {
-        "tr": "OAB",
-        "en": "OAB"
-      },
+      "module": {"tr": "OAB", "en": "OAB"},
       "title": {
         "tr": "OAB toplu çekme, satırlar alındıktan sonra iş kaydı hatasıyla bitmez",
         "en": "OAB batch fetch no longer ends with a job receipt error after the rows are fetched"
@@ -118,10 +84,7 @@
     {
       "id": "sync-onedrive-transfer-guard",
       "type": "feature",
-      "module": {
-        "tr": "Sync",
-        "en": "Sync"
-      },
+      "module": {"tr": "Sync", "en": "Sync"},
       "title": {
         "tr": "OneDrive aktarımı takıldığında Buyer Log uyarır",
         "en": "Buyer Log warns when the OneDrive transfer gets stuck"
@@ -134,14 +97,8 @@
         "kind": "screenshot",
         "capture": "post-change",
         "src": "sync-onedrive-transfer-alert.png",
-        "alt": {
-          "tr": "Demo Sync durumu penceresinde OneDrive aktarım uyarısı ve güvenli işlem düğmeleri",
-          "en": "OneDrive transfer warning with safe action buttons in a demo Sync Status window"
-        },
-        "caption": {
-          "tr": "Yayın diğer cihazlara ulaşmadığında Sync durumu nedeni ve güvenli çözümleri gösterir.",
-          "en": "When a publication does not reach other devices, Sync Status shows the cause and safe fixes."
-        }
+        "alt": {"tr": "Demo Sync durumu penceresinde OneDrive aktarım uyarısı ve güvenli işlem düğmeleri", "en": "OneDrive transfer warning with safe action buttons in a demo Sync Status window"},
+        "caption": {"tr": "Yayın diğer cihazlara ulaşmadığında Sync durumu nedeni ve güvenli çözümleri gösterir.", "en": "When a publication does not reach other devices, Sync Status shows the cause and safe fixes."}
       }
     },
     {
@@ -176,10 +133,7 @@
     {
       "id": "fabric-filter-set-parts",
       "type": "feature",
-      "module": {
-        "tr": "Koleksiyon · CP · Siparişler",
-        "en": "Collection · CP · Orders"
-      },
+      "module": {"tr": "Koleksiyon · CP · Siparişler", "en": "Collection · CP · Orders"},
       "title": {
         "tr": "Takım modellerde A/B/C parçasına göre kumaş filtresi",
         "en": "Fabric filter by A/B/C part in set models"
@@ -192,23 +146,14 @@
         "kind": "screenshot",
         "capture": "post-change",
         "src": "fabric-filter-set-parts.png",
-        "alt": {
-          "tr": "Demo koleksiyonda kumaş filtresinin Parça A sekmesinde Örme seçili",
-          "en": "Knit selected on the Part A tab of the Fabric filter in a demo collection"
-        },
-        "caption": {
-          "tr": "Parça A sekmesinde seçilen Kategori yalnız takımın A kumaşına uygulanır.",
-          "en": "The Category chosen on the Part A tab applies only to the set's A fabric."
-        }
+        "alt": {"tr": "Demo koleksiyonda kumaş filtresinin Parça A sekmesinde Örme seçili", "en": "Knit selected on the Part A tab of the Fabric filter in a demo collection"},
+        "caption": {"tr": "Parça A sekmesinde seçilen Kategori yalnız takımın A kumaşına uygulanır.", "en": "The Category chosen on the Part A tab applies only to the set's A fabric."}
       }
     },
     {
       "id": "cp-rules-no-builtin",
       "type": "improvement",
-      "module": {
-        "tr": "CP · Siparişler · Kontrol & Kurallar",
-        "en": "CP · Orders · Checks & Rules"
-      },
+      "module": {"tr": "CP · Siparişler · Kontrol & Kurallar", "en": "CP · Orders · Checks & Rules"},
       "title": {
         "tr": "Yerleşik öncelik kuralları ve checklist soruları kaldırıldı",
         "en": "Built-in priority rules and checklist questions were removed"
@@ -221,23 +166,14 @@
         "kind": "screenshot",
         "capture": "post-change",
         "src": "cp-rules-no-builtin.png",
-        "alt": {
-          "tr": "Yerleşik kural içermeyen boş Öncelik Kuralları listesi",
-          "en": "Empty Priority Rules list without built-in rules"
-        },
-        "caption": {
-          "tr": "Demo veride Kurallarım listesi yerleşik kural olmadan boş açılır; yeni kural LCW AI ile ya da hazır örnekten oluşturulur.",
-          "en": "On demo data, the My Rules list opens empty without built-in rules; new rules are created with LCW AI or from a ready-made example."
-        }
+        "alt": {"tr": "Yerleşik kural içermeyen boş Öncelik Kuralları listesi", "en": "Empty Priority Rules list without built-in rules"},
+        "caption": {"tr": "Demo veride Kurallarım listesi yerleşik kural olmadan boş açılır; yeni kural LCW AI ile ya da hazır örnekten oluşturulur.", "en": "On demo data, the My Rules list opens empty without built-in rules; new rules are created with LCW AI or from a ready-made example."}
       }
     },
     {
       "id": "override-save-independent-of-background-compute",
       "type": "fix",
-      "module": {
-        "tr": "CP · Siparişler · License Royalty",
-        "en": "CP · Orders · License Royalty"
-      },
+      "module": {"tr": "CP · Siparişler · License Royalty", "en": "CP · Orders · License Royalty"},
       "title": {
         "tr": "Kayıt, arka plan hesabı hazırlanırken reddedilmez",
         "en": "Saving is no longer rejected while background calculations are being prepared"
@@ -257,10 +193,7 @@
     {
       "id": "collection-hidden-tab-render-deferred",
       "type": "improvement",
-      "module": {
-        "tr": "Koleksiyon",
-        "en": "Collection"
-      },
+      "module": {"tr": "Koleksiyon", "en": "Collection"},
       "title": {
         "tr": "Koleksiyon, sekmesi açılmadan çizilmez",
         "en": "Collection is not drawn until its tab is opened"
@@ -303,14 +236,8 @@
     {
       "id": "global-flow-backlog-read-model",
       "type": "improvement",
-      "module": {
-        "tr": "Genel Bakış · Küresel Akış Haritası",
-        "en": "Overview · Global Flow Map"
-      },
-      "title": {
-        "tr": "Akış Haritası Backlog verisini arka planda hazırlar",
-        "en": "The Flow Map prepares Backlog data in the background"
-      },
+      "module": {"tr": "Genel Bakış · Küresel Akış Haritası", "en": "Overview · Global Flow Map"},
+      "title": {"tr": "Akış Haritası Backlog verisini arka planda hazırlar", "en": "The Flow Map prepares Backlog data in the background"},
       "body": {
         "tr": "Backlog parsiyelleri bilgisayarınızdaki yerel Buyer Log arka ucunda ayrı bir işçide hazırlanır. Arayüz daha küçük bir veri alır. Öncelikler değiştiğinde veri yalnız gerçekten yenilendiyse yeniden indirilir; girdiler aynıysa harita modeli yeniden kurulmaz.",
         "en": "Backlog partials are prepared in a separate worker of the local Buyer Log backend on your computer. The interface receives less data. When priorities change, the data is downloaded again only if it was actually refreshed, and the map does not rebuild its model when the inputs are unchanged."
@@ -326,14 +253,8 @@
     {
       "id": "cp-orders-status-production-balance",
       "type": "fix",
-      "module": {
-        "tr": "CP ve Siparişler",
-        "en": "CP and Orders"
-      },
-      "title": {
-        "tr": "Üretimde kalan adet Durum sütununda görünüyor",
-        "en": "Status shows the remaining quantity in production"
-      },
+      "module": {"tr": "CP ve Siparişler", "en": "CP and Orders"},
+      "title": {"tr": "Üretimde kalan adet Durum sütununda görünüyor", "en": "Status shows the remaining quantity in production"},
       "body": {
         "tr": "Buyer Log’un hesapladığı üretim bakiyesi, sevkiyat durumlarıyla birlikte Durum hücresinde kendi etiketi ve adediyle gösterilir.",
         "en": "The Status cell shows the production balance calculated by Buyer Log with its own badge and quantity alongside the shipment statuses."
@@ -342,27 +263,15 @@
         "kind": "screenshot",
         "capture": "post-change",
         "src": "cp-orders-status-production-balance.png",
-        "alt": {
-          "tr": "Demo CP siparişinde üç durum etiketi ve adetleri",
-          "en": "Three status badges with quantities on a demo CP order"
-        },
-        "caption": {
-          "tr": "Demo siparişte Üretimde, Yol Operasyonları ve Depoda etiketleri aynı Durum hücresinde yer alır.",
-          "en": "The demo order shows In Production, In Transit and In Warehouse in the same Status cell."
-        }
+        "alt": {"tr": "Demo CP siparişinde üç durum etiketi ve adetleri", "en": "Three status badges with quantities on a demo CP order"},
+        "caption": {"tr": "Demo siparişte Üretimde, Yol Operasyonları ve Depoda etiketleri aynı Durum hücresinde yer alır.", "en": "The demo order shows In Production, In Transit and In Warehouse in the same Status cell."}
       }
     },
     {
       "id": "report-images-fit-row-height",
       "type": "fix",
-      "module": {
-        "tr": "Rapor görünümü",
-        "en": "Report view"
-      },
-      "title": {
-        "tr": "Görseller rapor satırının yüksekliğine uyum sağlar",
-        "en": "Images scale with report row height"
-      },
+      "module": {"tr": "Rapor görünümü", "en": "Report view"},
+      "title": {"tr": "Görseller rapor satırının yüksekliğine uyum sağlar", "en": "Images scale with report row height"},
       "body": {
         "tr": "CP, Siparişler ve Koleksiyon raporlarında metin sarıldığında veya arayüz büyütüldüğünde görseller en küçük ayarda bile satır yüksekliğine uyum sağlar. Görsellerin en-boy oranı korunur.",
         "en": "Images in CP, Orders and Collection reports scale with the row when text wraps or the interface is enlarged, even at the smallest setting. Images keep their aspect ratio."
@@ -371,27 +280,15 @@
         "kind": "screenshot",
         "capture": "post-change",
         "src": "report-image-fits-row.png",
-        "alt": {
-          "tr": "CP raporunda farklı yükseklikteki satırlara uyum sağlayan demo görselleri",
-          "en": "Demo images fitting rows of different heights in the CP report"
-        },
-        "caption": {
-          "tr": "En küçük görsel ayarında, metni sarılan satırın görseli de satırla birlikte büyür.",
-          "en": "At the smallest image setting, the image grows with the row where the text wraps."
-        }
+        "alt": {"tr": "CP raporunda farklı yükseklikteki satırlara uyum sağlayan demo görselleri", "en": "Demo images fitting rows of different heights in the CP report"},
+        "caption": {"tr": "En küçük görsel ayarında, metni sarılan satırın görseli de satırla birlikte büyür.", "en": "At the smallest image setting, the image grows with the row where the text wraps."}
       }
     },
     {
       "id": "table-selection-scroll-layer",
       "type": "fix",
-      "module": {
-        "tr": "CP, Siparişler ve Koleksiyon",
-        "en": "CP, Orders and Collection"
-      },
-      "title": {
-        "tr": "Kaydırırken başlık ve toplamlar görünür kalır",
-        "en": "Headers and totals stay visible while scrolling"
-      },
+      "module": {"tr": "CP, Siparişler ve Koleksiyon", "en": "CP, Orders and Collection"},
+      "title": {"tr": "Kaydırırken başlık ve toplamlar görünür kalır", "en": "Headers and totals stay visible while scrolling"},
       "body": {
         "tr": "CP, Siparişler ve Koleksiyon tablolarında satır işaretleme kutuları, kaydırma sırasında sabit başlıkların ve alt toplam satırının arkasından geçer. Satır seçimi soldaki sütundan yapılabilir.",
         "en": "In CP, Orders and Collection, row checkboxes scroll behind the sticky headers and bottom totals row. The left column remains available for selecting rows."
@@ -400,27 +297,15 @@
         "kind": "screenshot",
         "capture": "post-change",
         "src": "table-selection-scroll-layer.png",
-        "alt": {
-          "tr": "Aşağı kaydırılmış CP tablosunda başlık ve alt toplam satırı",
-          "en": "Header and bottom totals in the CP grid after scrolling down"
-        },
-        "caption": {
-          "tr": "Demo verisiyle CP tablosu aşağı kaydırıldığında seçim kutuları başlık ile toplam satırı arasında kalır.",
-          "en": "With demo data scrolled down in CP, row checkboxes stay between the header and totals row."
-        }
+        "alt": {"tr": "Aşağı kaydırılmış CP tablosunda başlık ve alt toplam satırı", "en": "Header and bottom totals in the CP grid after scrolling down"},
+        "caption": {"tr": "Demo verisiyle CP tablosu aşağı kaydırıldığında seçim kutuları başlık ile toplam satırı arasında kalır.", "en": "With demo data scrolled down in CP, row checkboxes stay between the header and totals row."}
       }
     },
     {
       "id": "report-image-heading-border",
       "type": "fix",
-      "module": {
-        "tr": "Rapor görünümü",
-        "en": "Report view"
-      },
-      "title": {
-        "tr": "Görsel sütun başlığı sadeleşti",
-        "en": "Simpler Image column heading"
-      },
+      "module": {"tr": "Rapor görünümü", "en": "Report view"},
+      "title": {"tr": "Görsel sütun başlığı sadeleşti", "en": "Simpler Image column heading"},
       "body": {
         "tr": "CP, Siparişler ve Koleksiyon raporlarında Görsel sütununun başlığındaki çerçeve kaldırıldı. Görsel boyutunu ayarlamak için başlığı seçebilirsiniz.",
         "en": "The Image column heading in CP, Orders and Collection reports is now borderless. Select the heading to adjust the image size."
@@ -429,27 +314,15 @@
         "kind": "screenshot",
         "capture": "post-change",
         "src": "report-image-heading.png",
-        "alt": {
-          "tr": "CP raporunda çerçevesiz Görsel sütun başlığı",
-          "en": "Borderless Image column heading in the CP report"
-        },
-        "caption": {
-          "tr": "CP rapor görünümünde demo görselleri ve çerçevesiz sütun başlığı.",
-          "en": "Demo images and their borderless column heading in the CP report view."
-        }
+        "alt": {"tr": "CP raporunda çerçevesiz Görsel sütun başlığı", "en": "Borderless Image column heading in the CP report"},
+        "caption": {"tr": "CP rapor görünümünde demo görselleri ve çerçevesiz sütun başlığı.", "en": "Demo images and their borderless column heading in the CP report view."}
       }
     },
     {
       "id": "cp-orders-stable-column-hover",
       "type": "fix",
-      "module": {
-        "tr": "CP ve Siparişler",
-        "en": "CP and Orders"
-      },
-      "title": {
-        "tr": "Satır vurgusunda sütunlar sabit kalır",
-        "en": "Columns stay in place while rows are highlighted"
-      },
+      "module": {"tr": "CP ve Siparişler", "en": "CP and Orders"},
+      "title": {"tr": "Satır vurgusunda sütunlar sabit kalır", "en": "Columns stay in place while rows are highlighted"},
       "body": {
         "tr": "CP ve Siparişler'in klasik tablo görünümünde fare bir satırın üzerine geldiğinde veya tablodan ayrıldığında sütunların konumu ve genişliği sabit kalır. Fare altındaki satır vurgulanmaya devam eder.",
         "en": "In the classic CP and Orders grids, column positions and widths stay fixed when the pointer enters a row or leaves the table. The row under the pointer stays highlighted."
@@ -458,14 +331,8 @@
         "kind": "screenshot",
         "capture": "post-change",
         "src": "cp-orders-stable-column-hover.png",
-        "alt": {
-          "tr": "CP tablosunda vurgulanan satır ve sütun başlıkları",
-          "en": "Highlighted row and column headers in the CP table"
-        },
-        "caption": {
-          "tr": "Demo verileriyle CP tablosunda satır vurgusu açıkken sütunlar yerini koruyor.",
-          "en": "The CP grid keeps its columns in place while highlighting a row of demo data."
-        }
+        "alt": {"tr": "CP tablosunda vurgulanan satır ve sütun başlıkları", "en": "Highlighted row and column headers in the CP table"},
+        "caption": {"tr": "Demo verileriyle CP tablosunda satır vurgusu açıkken sütunlar yerini koruyor.", "en": "The CP grid keeps its columns in place while highlighting a row of demo data."}
       }
     },
     {
@@ -529,14 +396,8 @@
     {
       "id": "desktop-direct-startup",
       "type": "improvement",
-      "module": {
-        "tr": "Açılış",
-        "en": "Startup"
-      },
-      "title": {
-        "tr": "Girişten doğrudan çalışma alanına geçin",
-        "en": "Go straight from sign-in to the workspace"
-      },
+      "module": {"tr": "Açılış", "en": "Startup"},
+      "title": {"tr": "Girişten doğrudan çalışma alanına geçin", "en": "Go straight from sign-in to the workspace"},
       "body": {
         "tr": "Giriş ekranı son kullanılan hesabı Shared Sync durumu gelmeden doldurur. Başarılı masaüstü girişinden sonra çalışma alanı kendiliğinden açılır. Genel Bakış verisi hâlâ yükleniyorsa menüyü kullanabilir, yükleme hata verirse ekranın içinden yeniden deneyebilirsiniz.",
         "en": "The sign-in screen fills in the last account while the Shared Sync status is loading. After successful desktop sign-in, the workspace opens automatically. You can use the menu while Overview data loads and retry from Overview if the load fails."
@@ -545,27 +406,15 @@
         "kind": "screenshot",
         "capture": "post-change",
         "src": "startup-direct-overview-loading.png",
-        "alt": {
-          "tr": "Genel Bakış verisi yüklenirken Buyer Log menüsü açık ve kullanılabilir.",
-          "en": "The Buyer Log workspace menu is available while Overview data loads."
-        },
-        "caption": {
-          "tr": "Başarılı girişten sonra açılan çalışma alanı, izole demo verisiyle.",
-          "en": "The workspace after successful sign-in, with isolated demo data."
-        }
+        "alt": {"tr": "Genel Bakış verisi yüklenirken Buyer Log menüsü açık ve kullanılabilir.", "en": "The Buyer Log workspace menu is available while Overview data loads."},
+        "caption": {"tr": "Başarılı girişten sonra açılan çalışma alanı, izole demo verisiyle.", "en": "The workspace after successful sign-in, with isolated demo data."}
       }
     },
     {
       "id": "launcher-faster-file-verification",
       "type": "improvement",
-      "module": {
-        "tr": "Açılış",
-        "en": "Startup"
-      },
-      "title": {
-        "tr": "Program dosyaları daha hızlı doğrulanır",
-        "en": "Program files are verified faster"
-      },
+      "module": {"tr": "Açılış", "en": "Startup"},
+      "title": {"tr": "Program dosyaları daha hızlı doğrulanır", "en": "Program files are verified faster"},
       "body": {
         "tr": "Açılışta program dosyaları birkaç kanaldan paralel okunur; her dosya yine SHA-256 ile denetlenir. Paket yalnız çalışma zamanı dosyalarını içerir; doğrulanan dosya sayısı yaklaşık dörtte bir azaldı. Güncelleme uygulanırken yalnız yeni sürüm taranır; önceki sürüm geri dönüş gerekirse açılmadan önce doğrulanır. Açılış penceresi yavaş bilgisayarda da görünür kalır.",
         "en": "At startup, program files are read in parallel and each file is still checked with SHA-256. The package now holds only runtime files, so about a quarter fewer files are verified. When an update is applied, only the new version is scanned; the previous version is verified before it opens if a rollback is needed. The startup window stays visible on slow computers too."
@@ -574,14 +423,8 @@
         "kind": "screenshot",
         "capture": "post-change",
         "src": "launcher-update-verify-new-only.png",
-        "alt": {
-          "tr": "Güncelleme açılış penceresinde ilk adım Yeni sürüm doğrulanıyor.",
-          "en": "The update startup window starts with Verifying the new version."
-        },
-        "caption": {
-          "tr": "Güncelleme açılışında mevcut sürüm artık ayrıca taranmaz.",
-          "en": "Applying an update no longer scans the current version separately."
-        }
+        "alt": {"tr": "Güncelleme açılış penceresinde ilk adım Yeni sürüm doğrulanıyor.", "en": "The update startup window starts with Verifying the new version."},
+        "caption": {"tr": "Güncelleme açılışında mevcut sürüm artık ayrıca taranmaz.", "en": "Applying an update no longer scans the current version separately."}
       }
     },
     {
@@ -1085,14 +928,8 @@
     {
       "id": "overview-read-model",
       "type": "improvement",
-      "module": {
-        "tr": "Genel Bakış",
-        "en": "Overview"
-      },
-      "title": {
-        "tr": "Genel Bakış özeti CP verisini beklemeden hazırlanır",
-        "en": "The Overview summary is ready without waiting for CP data"
-      },
+      "module": {"tr": "Genel Bakış", "en": "Overview"},
+      "title": {"tr": "Genel Bakış özeti CP verisini beklemeden hazırlanır", "en": "The Overview summary is ready without waiting for CP data"},
       "body": {
         "tr": "Sipariş KPI'ları, ülke, alt üretici, sezon × öncelik ve Buying Group kırılımları, İstisna Kutusu ile Kontrol Listesi ve Kurallar özeti bilgisayarınızdaki Buyer Log arka ucunda hesaplanır. Genel Bakış için tarayıcıya tam CP listesi indirilmez ve kurallar orada yeniden hesaplanmaz. Sayılar ve kırılımlar aynıdır. İş Listesi veya aksiyon gerekenler gibi satır isteyen bir tıklamada CP o anda yüklenir.",
         "en": "Order KPIs, the country, sub-manufacturer, season × priority and Buying Group breakdowns, the Exception Inbox, and the Checklist & Rules summary are calculated in the Buyer Log back end on your computer. Overview no longer downloads the full CP list into the browser or recalculates the rules there. The numbers and breakdowns are unchanged. A click that needs rows, such as Work Queue or orders needing action, loads CP at that moment."
@@ -1108,14 +945,8 @@
     {
       "id": "orders-read-model-windowed",
       "type": "improvement",
-      "module": {
-        "tr": "Siparişler",
-        "en": "Orders"
-      },
-      "title": {
-        "tr": "Siparişler filtreleri yerel arka uçta çalışabilir (pilot)",
-        "en": "Orders filters can run on the local backend (pilot)"
-      },
+      "module": {"tr": "Siparişler", "en": "Orders"},
+      "title": {"tr": "Siparişler filtreleri yerel arka uçta çalışabilir (pilot)", "en": "Orders filters can run on the local backend (pilot)"},
       "body": {
         "tr": "Pilot ayarı açıkken Siparişler tüm satırları indirmez. Filtre, arama ve sıralama bilgisayardaki yerel arka uçta çalışır ve tablo yalnız görünen satırları ister. Hızlı filtre sayaçları ve sütun filtresi değerleri de arka uçtan gelir. Tümünü seç, Kopyala ve Excel tüm eşleşen satırları arka uçtan alır. Henüz desteklenmeyen filtreler mevcut yolla çalışır. Ayar varsayılan olarak kapalıdır.",
         "en": "With the pilot setting on, Orders does not download every row. Filtering, search and sorting run on the local backend on this computer, and the table requests only the rows on screen. Quick filter counts and column filter values also come from the backend. Select all, Copy and Excel fetch all matching rows from the backend. Filters that are not supported yet use the existing path. The setting is off by default."
@@ -1124,27 +955,15 @@
         "kind": "screenshot",
         "capture": "post-change",
         "src": "orders-read-model-windowed.png",
-        "alt": {
-          "tr": "Pilot ayarı açık Siparişler tablosu: 30.000 demo satırında ülke, sezon ve arama filtresi",
-          "en": "Orders table with the pilot setting on: country, season and search filters on 30,000 demo rows"
-        },
-        "caption": {
-          "tr": "30.000 satırlık demo veride filtrelenen 4.974 satır arka uçtan gelir; sayaçlar ve sayım satırı aynı kalır.",
-          "en": "On 30,000 demo rows, the 4,974 filtered rows come from the backend; counts and the count line stay the same."
-        }
+        "alt": {"tr": "Pilot ayarı açık Siparişler tablosu: 30.000 demo satırında ülke, sezon ve arama filtresi", "en": "Orders table with the pilot setting on: country, season and search filters on 30,000 demo rows"},
+        "caption": {"tr": "30.000 satırlık demo veride filtrelenen 4.974 satır arka uçtan gelir; sayaçlar ve sayım satırı aynı kalır.", "en": "On 30,000 demo rows, the 4,974 filtered rows come from the backend; counts and the count line stay the same."}
       }
     },
     {
       "id": "cp-computed-columns",
       "type": "improvement",
-      "module": {
-        "tr": "CP Tracker",
-        "en": "CP Tracker"
-      },
-      "title": {
-        "tr": "CP öncelik ve checklist sütunları yerel arka uçta hesaplanır",
-        "en": "CP priority and checklist columns are computed on the local backend"
-      },
+      "module": {"tr": "CP Tracker", "en": "CP Tracker"},
+      "title": {"tr": "CP öncelik ve checklist sütunları yerel arka uçta hesaplanır", "en": "CP priority and checklist columns are computed on the local backend"},
       "body": {
         "tr": "CP'deki öncelik, neden, etiket ve checklist durumları bilgisayardaki Buyer Log arka ucunda, aynı kurallarla hesaplanır. Tarayıcı tüm satırlar için karar motorunu çalıştırmaz; CP daha hızlı açılır ve ekran daha az donar. Bir checklist cevabı verdiğinizde ilgili sipariş hemen güncellenir. Bir hücre düzenlemesinden sonra öncelik ve checklist değerleri arka planda güncellenir; düzenleme ve kayıt bu hesabı beklemez.",
         "en": "CP priorities, reasons, tags and checklist statuses are computed on the Buyer Log backend on this computer with the same rules. The browser no longer runs the decision engine for every row, so CP opens faster and the screen freezes less. When you answer a checklist item, that order updates right away. After a cell edit, priority and checklist values update in the background; editing and saving do not wait for this calculation."
@@ -1153,27 +972,15 @@
         "kind": "screenshot",
         "capture": "post-change",
         "src": "cp-computed-columns.png",
-        "alt": {
-          "tr": "CP Tracker: 30.000 demo satırında checklist sütunları ve onaylanan bir kontrol",
-          "en": "CP Tracker: checklist columns and an approved check on 30,000 demo rows"
-        },
-        "caption": {
-          "tr": "30.000 satırlık demo veride checklist durumları arka uçtan gelir; değerler mevcut hesapla aynıdır.",
-          "en": "On 30,000 demo rows, checklist statuses come from the backend; the values match the existing calculation."
-        }
+        "alt": {"tr": "CP Tracker: 30.000 demo satırında checklist sütunları ve onaylanan bir kontrol", "en": "CP Tracker: checklist columns and an approved check on 30,000 demo rows"},
+        "caption": {"tr": "30.000 satırlık demo veride checklist durumları arka uçtan gelir; değerler mevcut hesapla aynıdır.", "en": "On 30,000 demo rows, checklist statuses come from the backend; the values match the existing calculation."}
       }
     },
     {
       "id": "cp-read-model-windowed",
       "type": "improvement",
-      "module": {
-        "tr": "CP Tracker",
-        "en": "CP Tracker"
-      },
-      "title": {
-        "tr": "CP filtreleri yerel arka uçta çalışır",
-        "en": "CP filters run on the local backend"
-      },
+      "module": {"tr": "CP Tracker", "en": "CP Tracker"},
+      "title": {"tr": "CP filtreleri yerel arka uçta çalışır", "en": "CP filters run on the local backend"},
       "body": {
         "tr": "CP tüm satırları tarayıcıda süzmez ve sıralamaz. Filtre, arama, öncelik sıralaması, hızlı filtre sayaçları ve alt toplamlar bilgisayardaki yerel arka uçta çalışır; tablo yalnız ekrandaki satırları ister. Tümünü seç, Kopyala ve Excel tüm eşleşen satırları arka uçtan alır. Henüz desteklenmeyen filtrelerde mevcut yol kullanılır.",
         "en": "CP no longer filters and sorts every row in the browser. Filtering, search, priority sorting, quick filter counts and totals run on the local backend on this computer, and the table requests only the rows on screen. Select all, Copy and Excel fetch all matching rows from the backend. Filters that are not supported yet use the existing path."
@@ -1182,27 +989,15 @@
         "kind": "screenshot",
         "capture": "post-change",
         "src": "cp-read-model-windowed.png",
-        "alt": {
-          "tr": "CP Tracker: 2.077 demo satırından Kritik öncelik çipiyle süzülen 42 satır",
-          "en": "CP Tracker: 42 of 2,077 demo rows filtered by the Critical priority chip"
-        },
-        "caption": {
-          "tr": "Demo veride Kritik çipi seçili; satırlar, sayaçlar ve sayım arka uçtan gelir ve mevcut yolla aynıdır.",
-          "en": "The Critical chip is selected on demo data; rows, counts and totals come from the backend and match the existing path."
-        }
+        "alt": {"tr": "CP Tracker: 2.077 demo satırından Kritik öncelik çipiyle süzülen 42 satır", "en": "CP Tracker: 42 of 2,077 demo rows filtered by the Critical priority chip"},
+        "caption": {"tr": "Demo veride Kritik çipi seçili; satırlar, sayaçlar ve sayım arka uçtan gelir ve mevcut yolla aynıdır.", "en": "The Critical chip is selected on demo data; rows, counts and totals come from the backend and match the existing path."}
       }
     },
     {
       "id": "cp-row-save-conflict",
       "type": "improvement",
-      "module": {
-        "tr": "CP Tracker",
-        "en": "CP Tracker"
-      },
-      "title": {
-        "tr": "CP düzenlemeleri satır bazında anında kaydedilir",
-        "en": "CP edits are saved instantly per row"
-      },
+      "module": {"tr": "CP Tracker", "en": "CP Tracker"},
+      "title": {"tr": "CP düzenlemeleri satır bazında anında kaydedilir", "en": "CP edits are saved instantly per row"},
       "body": {
         "tr": "CP'de bir hücre düzenlemesi yalnız değiştirdiğiniz alanı hemen kaydeder ve diğer sekme ile kullanıcılara yalnız o satır gider. Başka bir kullanıcının başka satıra ya da aynı satırın başka alanına yaptığı kayıt artık sizin kaydınızı reddettirmez; sizin kaydınız da onlarınkini ezmez. Aynı alanı biri sizden önce değiştirdiyse onun değeri satırda gösterilir ve bir bildirimle haber verilir; düzenleme sessizce kaybolmaz. Öncelik ve checklist değerleri arkadan güncellenir ve yalnız etkilenen satırlar yeniden hesaplanır. Toplu yapıştırma, Licensor ve Supp. FOB mevcut yolla kaydedilir.",
         "en": "A CP cell edit now saves only the field you changed, right away, and only that row is sent to other tabs and users. A save by another user to another row, or to another field of the same row, no longer rejects your save, and your save does not overwrite theirs. If someone changed the same field before you, their value is shown in the row and a notice tells you; the edit is not lost silently. Priority and checklist values update in the background, and only the affected rows are recalculated. Bulk paste, Licensor and Supp. FOB are saved through the existing path."
@@ -1211,158 +1006,77 @@
         "kind": "screenshot",
         "capture": "post-change",
         "src": "cp-row-save-conflict.png",
-        "alt": {
-          "tr": "CP Tracker: aynı notu başka sekme önce kaydettiği için gösterilen çakışma bildirimi",
-          "en": "CP Tracker: the conflict notice shown because another tab saved the same note first"
-        },
-        "caption": {
-          "tr": "Demo veride iki sekme aynı notu aynı anda yazdı; kazanan değer satırda gösterilir, diğer sekmeye bildirim çıkar.",
-          "en": "On demo data two tabs wrote the same note at once; the winning value is shown in the row and the other tab gets a notice."
-        }
+        "alt": {"tr": "CP Tracker: aynı notu başka sekme önce kaydettiği için gösterilen çakışma bildirimi", "en": "CP Tracker: the conflict notice shown because another tab saved the same note first"},
+        "caption": {"tr": "Demo veride iki sekme aynı notu aynı anda yazdı; kazanan değer satırda gösterilir, diğer sekmeye bildirim çıkar.", "en": "On demo data two tabs wrote the same note at once; the winning value is shown in the row and the other tab gets a notice."}
       }
     },
     {
       "id": "read-model-backend-prewarm",
       "type": "improvement",
-      "module": {
-        "tr": "Genel Bakış",
-        "en": "Overview"
-      },
-      "title": {
-        "tr": "Genel Bakış verisi oturum açılınca arka planda hazırlanır",
-        "en": "Overview data is prepared in the background at sign-in"
-      },
-      "body": {
-        "tr": "Oturum açılınca bilgisayarınızdaki yerel Buyer Log arka ucu Genel Bakış modelini ve modül verilerini ayrı bir işçide hazırlamaya başlar. Genel Bakış açılırken aynı hesap ikinci kez yapılmaz. Siparişler gibi bir modül açılırsa arka plan hazırlığı onu bekletmez, kendisi sonraya kalır. Pilot ayarı açıkken arayüz açılıştan sonra modülleri toplu hazırlamaz, her modül ilk açılışında yüklenir.",
-        "en": "At sign-in, the local Buyer Log backend on your computer starts preparing the Overview model and module data in a separate worker. Opening the Overview does not repeat the same calculation. If you open a module such as Orders, the background preparation does not hold it up and waits instead. With the pilot setting on, the interface no longer prepares all modules after startup; each module loads when you first open it."
-      },
+      "module": {"tr": "Genel Bakış", "en": "Overview"},
+      "title": {"tr": "Genel Bakış verisi oturum açılınca arka planda hazırlanır", "en": "Overview data is prepared in the background at sign-in"},
+      "body": {"tr": "Oturum açılınca bilgisayarınızdaki yerel Buyer Log arka ucu Genel Bakış modelini ve modül verilerini ayrı bir işçide hazırlamaya başlar. Genel Bakış açılırken aynı hesap ikinci kez yapılmaz. Siparişler gibi bir modül açılırsa arka plan hazırlığı onu bekletmez, kendisi sonraya kalır. Pilot ayarı açıkken arayüz açılıştan sonra modülleri toplu hazırlamaz, her modül ilk açılışında yüklenir.", "en": "At sign-in, the local Buyer Log backend on your computer starts preparing the Overview model and module data in a separate worker. Opening the Overview does not repeat the same calculation. If you open a module such as Orders, the background preparation does not hold it up and waits instead. With the pilot setting on, the interface no longer prepares all modules after startup; each module loads when you first open it."},
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
         "src": "read-model-backend-prewarm.png",
-        "alt": {
-          "tr": "Pilot ayarı açık Buyer Log: yalnız açılan CP Tracker modülünde Hazır rozeti var, diğer modüllerde Bekliyor yazmıyor",
-          "en": "Buyer Log with the pilot setting on: only the opened CP Tracker module shows a Ready badge; the other modules show no Pending label"
-        },
-        "caption": {
-          "tr": "Pilot açıkken modüller açılınca yüklenir; hazırlık rozeti yalnız gerçekten yüklenen modülde görünür.",
-          "en": "With the pilot on, modules load when opened; the preparation badge appears only on a module that has actually loaded."
-        }
+        "alt": {"tr": "Pilot ayarı açık Buyer Log: yalnız açılan CP Tracker modülünde Hazır rozeti var, diğer modüllerde Bekliyor yazmıyor", "en": "Buyer Log with the pilot setting on: only the opened CP Tracker module shows a Ready badge; the other modules show no Pending label"},
+        "caption": {"tr": "Pilot açıkken modüller açılınca yüklenir; hazırlık rozeti yalnız gerçekten yüklenen modülde görünür.", "en": "With the pilot on, modules load when opened; the preparation badge appears only on a module that has actually loaded."}
       }
     },
     {
       "id": "read-model-integration-context-key",
       "type": "improvement",
-      "module": {
-        "tr": "Genel Bakış · CP Tracker",
-        "en": "Overview · CP Tracker"
-      },
-      "title": {
-        "tr": "Genel Bakış ve CP önceliği gereksiz yere yeniden hesaplanmaz",
-        "en": "Overview and CP priorities are no longer recalculated needlessly"
-      },
-      "body": {
-        "tr": "Tablo sütunları gibi CP kararına girmeyen bir ayar değiştiğinde Genel Bakış'ın CP özeti yerel arka uçta yeniden hesaplanmaz. CP öncelikleri arka uçta hesaplanırken açılıştan sonraki modül hazırlığı bu hesabı beklemez. CP açılırken arka plan hazırlığı CP hesabını bekletmez.",
-        "en": "When a setting outside the CP decision changes, such as table columns, the local backend does not recalculate the Overview CP summary. When CP priorities are calculated on the backend, module preparation after startup no longer waits for that calculation. Opening CP is not held up by background preparation."
-      },
+      "module": {"tr": "Genel Bakış · CP Tracker", "en": "Overview · CP Tracker"},
+      "title": {"tr": "Genel Bakış ve CP önceliği gereksiz yere yeniden hesaplanmaz", "en": "Overview and CP priorities are no longer recalculated needlessly"},
+      "body": {"tr": "Tablo sütunları gibi CP kararına girmeyen bir ayar değiştiğinde Genel Bakış'ın CP özeti yerel arka uçta yeniden hesaplanmaz. CP öncelikleri arka uçta hesaplanırken açılıştan sonraki modül hazırlığı bu hesabı beklemez. CP açılırken arka plan hazırlığı CP hesabını bekletmez.", "en": "When a setting outside the CP decision changes, such as table columns, the local backend does not recalculate the Overview CP summary. When CP priorities are calculated on the backend, module preparation after startup no longer waits for that calculation. Opening CP is not held up by background preparation."},
       "visual": {
         "kind": "none",
-        "reason": {
-          "tr": "Ekranda değişen bir şey yok; yalnız arka uç hesaplarının sayısı ve zamanlaması değişir.",
-          "en": "Nothing changes on screen; only the number and timing of backend calculations change."
-        }
+        "reason": {"tr": "Ekranda değişen bir şey yok; yalnız arka uç hesaplarının sayısı ve zamanlaması değişir.", "en": "Nothing changes on screen; only the number and timing of backend calculations change."}
       }
     },
     {
       "id": "collection-status-lookup-linear",
       "type": "improvement",
-      "module": {
-        "tr": "Koleksiyon · Genel Bakış",
-        "en": "Collection · Overview"
-      },
-      "title": {
-        "tr": "Büyük Koleksiyon sayfaları açılışta donmaz",
-        "en": "Large Collection pages no longer freeze at startup"
-      },
-      "body": {
-        "tr": "Koleksiyon statü etiketleri, renkleri ve filtre değerleri her satır için tüm sayfayı yeniden taramaz. Binlerce satırlık bir Koleksiyon sayfasında Genel Bakış Koleksiyon özeti ve Koleksiyon filtreleri açılışta saniyelerce takılmaz. Gösterilen değerler değişmez.",
-        "en": "Collection status labels, colours and filter values no longer rescan the whole page for every row. On a Collection page with thousands of rows, the Overview Collection summary and the Collection filters no longer stall for seconds at startup. The displayed values do not change."
-      },
+      "module": {"tr": "Koleksiyon · Genel Bakış", "en": "Collection · Overview"},
+      "title": {"tr": "Büyük Koleksiyon sayfaları açılışta donmaz", "en": "Large Collection pages no longer freeze at startup"},
+      "body": {"tr": "Koleksiyon statü etiketleri, renkleri ve filtre değerleri her satır için tüm sayfayı yeniden taramaz. Binlerce satırlık bir Koleksiyon sayfasında Genel Bakış Koleksiyon özeti ve Koleksiyon filtreleri açılışta saniyelerce takılmaz. Gösterilen değerler değişmez.", "en": "Collection status labels, colours and filter values no longer rescan the whole page for every row. On a Collection page with thousands of rows, the Overview Collection summary and the Collection filters no longer stall for seconds at startup. The displayed values do not change."},
       "visual": {
         "kind": "none",
-        "reason": {
-          "tr": "Ekranda değişen bir şey yok; yalnız aynı değerlerin hesaplanma süresi kısalır.",
-          "en": "Nothing changes on screen; the same values are only calculated faster."
-        }
+        "reason": {"tr": "Ekranda değişen bir şey yok; yalnız aynı değerlerin hesaplanma süresi kısalır.", "en": "Nothing changes on screen; the same values are only calculated faster."}
       }
     },
     {
       "id": "backlog-overview-normalize-fast",
       "type": "improvement",
-      "module": {
-        "tr": "Backlog · Genel Bakış",
-        "en": "Backlog · Overview"
-      },
-      "title": {
-        "tr": "Backlog Genel Bakış paneli daha hızlı hazırlanır",
-        "en": "The Backlog Overview panel is prepared faster"
-      },
-      "body": {
-        "tr": "Backlog açıldığında Genel Bakış paneli, satırların alanlarını her satır için yeniden aramaz; aynı başlık düzenindeki satırlar için alan eşleşmesi bir kez çözülür. On binlerce Backlog satırında panel hazırlanırken ekranın takıldığı süre kısalır. Gösterilen sayılar ve gruplar değişmez.",
-        "en": "When Backlog opens, the Overview panel no longer searches for each field again on every row; field matching is resolved once for rows that share the same header layout. With tens of thousands of Backlog rows, the time the screen stalls while the panel is prepared is shorter. The displayed numbers and groups do not change."
-      },
+      "module": {"tr": "Backlog · Genel Bakış", "en": "Backlog · Overview"},
+      "title": {"tr": "Backlog Genel Bakış paneli daha hızlı hazırlanır", "en": "The Backlog Overview panel is prepared faster"},
+      "body": {"tr": "Backlog açıldığında Genel Bakış paneli, satırların alanlarını her satır için yeniden aramaz; aynı başlık düzenindeki satırlar için alan eşleşmesi bir kez çözülür. On binlerce Backlog satırında panel hazırlanırken ekranın takıldığı süre kısalır. Gösterilen sayılar ve gruplar değişmez.", "en": "When Backlog opens, the Overview panel no longer searches for each field again on every row; field matching is resolved once for rows that share the same header layout. With tens of thousands of Backlog rows, the time the screen stalls while the panel is prepared is shorter. The displayed numbers and groups do not change."},
       "visual": {
         "kind": "none",
-        "reason": {
-          "tr": "Ekranda değişen bir şey yok; yalnız aynı değerlerin hesaplanma süresi kısalır.",
-          "en": "Nothing changes on screen; the same values are only calculated faster."
-        }
+        "reason": {"tr": "Ekranda değişen bir şey yok; yalnız aynı değerlerin hesaplanma süresi kısalır.", "en": "Nothing changes on screen; the same values are only calculated faster."}
       }
     },
     {
       "id": "quotations-cp-lookup-fast",
       "type": "improvement",
-      "module": {
-        "tr": "CP · Fiyat Çalışmaları",
-        "en": "CP · Quotations"
-      },
-      "title": {
-        "tr": "Büyük CP fiyat çalışmaları donmadan açılır",
-        "en": "Large CP quotations open without freezing"
-      },
-      "body": {
-        "tr": "CP Fiyat Çalışmaları penceresi, her satırın hedef fiyatı, kategorisi ve kumaşı için tüm CP listesini yeniden taramaz; sipariş, PLM ve model eşleşmesi bir kez kurulur. On binlerce CP satırında yüzlerce satırlık bir çalışma, artık neredeyse bir dakika takılmadan açılır; Excel dışa aktarımı da aynı şekilde hızlanır. Gösterilen değerler değişmez.",
-        "en": "The CP Quotations window no longer rescans the whole CP list for the target price, category and fabric of every line; the order, PLM and model match is built once. With tens of thousands of CP rows, a quotation with hundreds of lines now opens without stalling for close to a minute, and Excel export speeds up the same way. The displayed values do not change."
-      },
+      "module": {"tr": "CP · Fiyat Çalışmaları", "en": "CP · Quotations"},
+      "title": {"tr": "Büyük CP fiyat çalışmaları donmadan açılır", "en": "Large CP quotations open without freezing"},
+      "body": {"tr": "CP Fiyat Çalışmaları penceresi, her satırın hedef fiyatı, kategorisi ve kumaşı için tüm CP listesini yeniden taramaz; sipariş, PLM ve model eşleşmesi bir kez kurulur. On binlerce CP satırında yüzlerce satırlık bir çalışma, artık neredeyse bir dakika takılmadan açılır; Excel dışa aktarımı da aynı şekilde hızlanır. Gösterilen değerler değişmez.", "en": "The CP Quotations window no longer rescans the whole CP list for the target price, category and fabric of every line; the order, PLM and model match is built once. With tens of thousands of CP rows, a quotation with hundreds of lines now opens without stalling for close to a minute, and Excel export speeds up the same way. The displayed values do not change."},
       "visual": {
         "kind": "none",
-        "reason": {
-          "tr": "Ekranda değişen bir şey yok; aynı değerler yalnız daha hızlı hazırlanır.",
-          "en": "Nothing changes on screen; the same values are only prepared faster."
-        }
+        "reason": {"tr": "Ekranda değişen bir şey yok; aynı değerler yalnız daha hızlı hazırlanır.", "en": "Nothing changes on screen; the same values are only prepared faster."}
       }
     },
     {
       "id": "cp-row-patch-no-wait",
       "type": "improvement",
-      "module": {
-        "tr": "CP Tracker",
-        "en": "CP Tracker"
-      },
-      "title": {
-        "tr": "CP'de kayıttan sonra öncelikler ve filtreler beklemeden güncellenir",
-        "en": "CP priorities and filters update without waiting after a save"
-      },
-      "body": {
-        "tr": "CP'de bir notu, teslimat tipini ya da tarihi kaydettiğinizde öncelik ve checklist sütunları ile filtre sonuçları, sayfa önbelleğinin yeniden yazılmasını beklemeden yalnız değişen satırlar üzerinden hesaplanır. Kayıt sürerken açılan filtre ya da kaydırma hata uyarısı göstermez; önceki sonuç ekranda kalır ve yenisi hazır olunca tablo kendini günceller. CP hesabı çalışma alanı açılırken arka planda hazırlanır. Hesaplanan değerler değişmez; yeni sayfa önbelleği hazır olunca sonuçlar onunla karşılaştırılır.",
-        "en": "When you save a note, delivery type or date in CP, the priority and checklist columns and filter results are calculated from the changed rows only, without waiting for the page cache to be rewritten. A filter or scroll during a save no longer shows an error; the previous result stays on screen and the table updates itself when the new one is ready. CP calculations are prepared in the background when the workspace opens. Calculated values do not change; once the new page cache is ready, the results are checked against it."
-      },
+      "module": {"tr": "CP Tracker", "en": "CP Tracker"},
+      "title": {"tr": "CP'de kayıttan sonra öncelikler ve filtreler beklemeden güncellenir", "en": "CP priorities and filters update without waiting after a save"},
+      "body": {"tr": "CP'de bir notu, teslimat tipini ya da tarihi kaydettiğinizde öncelik ve checklist sütunları ile filtre sonuçları, sayfa önbelleğinin yeniden yazılmasını beklemeden yalnız değişen satırlar üzerinden hesaplanır. Kayıt sürerken açılan filtre ya da kaydırma hata uyarısı göstermez; önceki sonuç ekranda kalır ve yenisi hazır olunca tablo kendini günceller. CP hesabı çalışma alanı açılırken arka planda hazırlanır. Hesaplanan değerler değişmez; yeni sayfa önbelleği hazır olunca sonuçlar onunla karşılaştırılır.", "en": "When you save a note, delivery type or date in CP, the priority and checklist columns and filter results are calculated from the changed rows only, without waiting for the page cache to be rewritten. A filter or scroll during a save no longer shows an error; the previous result stays on screen and the table updates itself when the new one is ready. CP calculations are prepared in the background when the workspace opens. Calculated values do not change; once the new page cache is ready, the results are checked against it."},
       "visual": {
         "kind": "none",
-        "reason": {
-          "tr": "Ekranda yeni bir öğe yok; aynı değerler kayıttan sonra daha erken gelir ve geçici hata uyarısı gösterilmez.",
-          "en": "Nothing new appears on screen; the same values arrive sooner after a save and no temporary error warning is shown."
-        }
+        "reason": {"tr": "Ekranda yeni bir öğe yok; aynı değerler kayıttan sonra daha erken gelir ve geçici hata uyarısı gösterilmez.", "en": "Nothing new appears on screen; the same values arrive sooner after a save and no temporary error warning is shown."}
       }
     },
     {
@@ -1391,24 +1105,12 @@
     {
       "id": "cp-save-projection-rewrite-background",
       "type": "improvement",
-      "module": {
-        "tr": "CP Tracker",
-        "en": "CP Tracker"
-      },
-      "title": {
-        "tr": "CP kaydından sonra program takılmaz, diğer ekranlar beklemez",
-        "en": "The app no longer stalls after a CP save and other screens do not wait"
-      },
-      "body": {
-        "tr": "CP'de bir değişiklik kaydedildiğinde hazır ekran önbelleği arka planda güncellenir; yalnız değişen satırlar ve modüller yazılır. Art arda yapılan kayıtlar tek seferde işlenir. Kayıt eskisi gibi hemen yapılır ve diğer kullanıcılara aynı anda ulaşır. Bu sırada açılan Siparişler gibi diğer ekranlar artık uzun süre beklemez.",
-        "en": "When a change is saved in CP, the prepared screen cache is updated in the background; only the changed rows and modules are written. Back-to-back saves are processed together. Saving still happens immediately and reaches other users at the same time. Other screens such as Orders, opened meanwhile, no longer wait a long time."
-      },
+      "module": {"tr": "CP Tracker", "en": "CP Tracker"},
+      "title": {"tr": "CP kaydından sonra program takılmaz, diğer ekranlar beklemez", "en": "The app no longer stalls after a CP save and other screens do not wait"},
+      "body": {"tr": "CP'de bir değişiklik kaydedildiğinde hazır ekran önbelleği arka planda güncellenir; yalnız değişen satırlar ve modüller yazılır. Art arda yapılan kayıtlar tek seferde işlenir. Kayıt eskisi gibi hemen yapılır ve diğer kullanıcılara aynı anda ulaşır. Bu sırada açılan Siparişler gibi diğer ekranlar artık uzun süre beklemez.", "en": "When a change is saved in CP, the prepared screen cache is updated in the background; only the changed rows and modules are written. Back-to-back saves are processed together. Saving still happens immediately and reaches other users at the same time. Other screens such as Orders, opened meanwhile, no longer wait a long time."},
       "visual": {
         "kind": "none",
-        "reason": {
-          "tr": "Ekranda değişen bir şey yok; aynı değerler kayıttan sonra program takılmadan ve daha erken hazırlanır.",
-          "en": "Nothing changes on screen; the same values are prepared sooner after a save, without the app stalling."
-        }
+        "reason": {"tr": "Ekranda değişen bir şey yok; aynı değerler kayıttan sonra program takılmadan ve daha erken hazırlanır.", "en": "Nothing changes on screen; the same values are prepared sooner after a save, without the app stalling."}
       }
     },
     {
@@ -1460,239 +1162,51 @@
     {
       "id": "cp-save-other-screens-no-wait",
       "type": "improvement",
-      "module": {
-        "tr": "CP Tracker",
-        "en": "CP Tracker"
-      },
-      "title": {
-        "tr": "CP'de art arda kayıt yapılırken diğer ekranlar neredeyse beklemeden açılır",
-        "en": "Other screens open almost without waiting while CP saves follow one another"
-      },
-      "body": {
-        "tr": "CP kaydından sonra hazır ekran önbelleğinin modülleri artık aynı anda güncellenir. Kayıtlar art arda yapılırken açılan Siparişler gibi ekranlar eskisine göre çok daha kısa bekler. Kayıt eskisi gibi hemen yapılır ve diğer kullanıcılara aynı anda ulaşır.",
-        "en": "After a CP save, the modules of the prepared screen cache are now updated at the same time. Screens such as Orders opened while saves follow one another wait much less than before. Saving still happens immediately and reaches other users at the same time."
-      },
+      "module": {"tr": "CP Tracker", "en": "CP Tracker"},
+      "title": {"tr": "CP'de art arda kayıt yapılırken diğer ekranlar neredeyse beklemeden açılır", "en": "Other screens open almost without waiting while CP saves follow one another"},
+      "body": {"tr": "CP kaydından sonra hazır ekran önbelleğinin modülleri artık aynı anda güncellenir. Kayıtlar art arda yapılırken açılan Siparişler gibi ekranlar eskisine göre çok daha kısa bekler. Kayıt eskisi gibi hemen yapılır ve diğer kullanıcılara aynı anda ulaşır.", "en": "After a CP save, the modules of the prepared screen cache are now updated at the same time. Screens such as Orders opened while saves follow one another wait much less than before. Saving still happens immediately and reaches other users at the same time."},
       "visual": {
         "kind": "none",
-        "reason": {
-          "tr": "Ekranda değişen bir şey yok; aynı değerler kayıttan sonra daha erken hazırlanır.",
-          "en": "Nothing changes on screen; the same values are prepared sooner after a save."
-        }
+        "reason": {"tr": "Ekranda değişen bir şey yok; aynı değerler kayıttan sonra daha erken hazırlanır.", "en": "Nothing changes on screen; the same values are prepared sooner after a save."}
       }
     },
     {
       "id": "checklist-save-server-wait",
       "type": "fix",
-      "module": {
-        "tr": "CP Tracker",
-        "en": "CP Tracker"
-      },
-      "title": {
-        "tr": "Checklist kaydı ve yüklemesi sunucuyu bekletmez",
-        "en": "Checklist saves and loads no longer stall the server"
-      },
-      "body": {
-        "tr": "Büyük veride bir checklist durumunu kaydetmek ya da checklist cevaplarını yüklemek, sunucuyu saniyelerce meşgul ediyordu. Bu sırada diğer kullanıcıların ekranları da bekliyordu. Sunucu artık yetki kontrolü için yalnız sipariş kimliklerini okuyor. Yetki kuralları ve kaydedilen değerler değişmedi.",
-        "en": "With large data, saving a checklist status or loading checklist answers kept the server busy for several seconds. Other users' screens waited during that time too. The server now reads only order identities for the permission check. Permission rules and saved values are unchanged."
-      },
+      "module": {"tr": "CP Tracker", "en": "CP Tracker"},
+      "title": {"tr": "Checklist kaydı ve yüklemesi sunucuyu bekletmez", "en": "Checklist saves and loads no longer stall the server"},
+      "body": {"tr": "Büyük veride bir checklist durumunu kaydetmek ya da checklist cevaplarını yüklemek, sunucuyu saniyelerce meşgul ediyordu. Bu sırada diğer kullanıcıların ekranları da bekliyordu. Sunucu artık yetki kontrolü için yalnız sipariş kimliklerini okuyor. Yetki kuralları ve kaydedilen değerler değişmedi.", "en": "With large data, saving a checklist status or loading checklist answers kept the server busy for several seconds. Other users' screens waited during that time too. The server now reads only order identities for the permission check. Permission rules and saved values are unchanged."},
       "visual": {
         "kind": "none",
-        "reason": {
-          "tr": "Ekranda yeni bir öğe yok; aynı checklist durumları daha kısa sürede kaydedilir ve yüklenir.",
-          "en": "Nothing new appears on screen; the same checklist statuses save and load sooner."
-        }
+        "reason": {"tr": "Ekranda yeni bir öğe yok; aynı checklist durumları daha kısa sürede kaydedilir ve yüklenir.", "en": "Nothing new appears on screen; the same checklist statuses save and load sooner."}
       }
     },
     {
       "id": "orders-query-lane",
       "type": "improvement",
-      "module": {
-        "tr": "Siparişler",
-        "en": "Orders"
-      },
-      "title": {
-        "tr": "Siparişler, CP hesabı sürerken de hemen açılır",
-        "en": "Orders opens right away even while CP is being calculated"
-      },
-      "body": {
-        "tr": "Siparişler'in filtre, sıralama ve sayaç sorguları bilgisayarınızdaki yerel Buyer Log arka ucunda ayrı bir işçide çalışır. CP öncelik ve checklist hesabı ya da Genel Bakış hazırlığı sürerken Siparişler satırları bu hesabın bitmesini beklemez. Gösterilen satırlar, toplamlar ve kayıt davranışı değişmez.",
-        "en": "Orders filter, sort and counter queries run in a separate worker in your local Buyer Log backend. While CP priority and checklist calculation or Overview preparation is running, Orders rows no longer wait for it to finish. The rows, totals and save behaviour stay the same."
-      },
+      "module": {"tr": "Siparişler", "en": "Orders"},
+      "title": {"tr": "Siparişler, CP hesabı sürerken de hemen açılır", "en": "Orders opens right away even while CP is being calculated"},
+      "body": {"tr": "Siparişler'in filtre, sıralama ve sayaç sorguları bilgisayarınızdaki yerel Buyer Log arka ucunda ayrı bir işçide çalışır. CP öncelik ve checklist hesabı ya da Genel Bakış hazırlığı sürerken Siparişler satırları bu hesabın bitmesini beklemez. Gösterilen satırlar, toplamlar ve kayıt davranışı değişmez.", "en": "Orders filter, sort and counter queries run in a separate worker in your local Buyer Log backend. While CP priority and checklist calculation or Overview preparation is running, Orders rows no longer wait for it to finish. The rows, totals and save behaviour stay the same."},
       "visual": {
         "kind": "none",
-        "reason": {
-          "tr": "Ekranda değişen bir öğe yok; yalnız Siparişler verisinin arka uçta hazırlanma sırası ve süresi değişir.",
-          "en": "Nothing on screen changes; only the order and time in which the backend prepares Orders data change."
-        }
+        "reason": {"tr": "Ekranda değişen bir öğe yok; yalnız Siparişler verisinin arka uçta hazırlanma sırası ve süresi değişir.", "en": "Nothing on screen changes; only the order and time in which the backend prepares Orders data change."}
       }
     },
     {
       "id": "test-report-import-server-wait",
       "type": "fix",
-      "module": {
-        "tr": "Test Raporu Aktarımı",
-        "en": "Test Report Import"
-      },
-      "title": {
-        "tr": "Test raporu aktarımı sunucuyu bekletmez",
-        "en": "Test report import no longer stalls the server"
-      },
-      "body": {
-        "tr": "Büyük veride test raporu listesini açmak ya da rapor dosyası okumak, sipariş yetkisi kontrolü sırasında sunucuyu saniyelerce meşgul ediyordu. Bu sırada diğer kullanıcıların ekranları da bekliyordu. Kontrol artık yalnız sipariş kimliklerini okuyor. Yetki kuralları ve eşleşmeler değişmedi.",
-        "en": "With large data, opening the test report list or reading a report file kept the server busy for several seconds during the order permission check. Other users' screens waited during that time too. The check now reads only order identities. Permission rules and matches are unchanged."
-      },
+      "module": {"tr": "Test Raporu Aktarımı", "en": "Test Report Import"},
+      "title": {"tr": "Test raporu aktarımı sunucuyu bekletmez", "en": "Test report import no longer stalls the server"},
+      "body": {"tr": "Büyük veride test raporu listesini açmak ya da rapor dosyası okumak, sipariş yetkisi kontrolü sırasında sunucuyu saniyelerce meşgul ediyordu. Bu sırada diğer kullanıcıların ekranları da bekliyordu. Kontrol artık yalnız sipariş kimliklerini okuyor. Yetki kuralları ve eşleşmeler değişmedi.", "en": "With large data, opening the test report list or reading a report file kept the server busy for several seconds during the order permission check. Other users' screens waited during that time too. The check now reads only order identities. Permission rules and matches are unchanged."},
       "visual": {
         "kind": "none",
-        "reason": {
-          "tr": "Ekranda yeni bir öğe yok; aynı liste ve eşleşmeler daha kısa sürede gelir.",
-          "en": "Nothing new appears on screen; the same list and matches arrive sooner."
-        }
+        "reason": {"tr": "Ekranda yeni bir öğe yok; aynı liste ve eşleşmeler daha kısa sürede gelir.", "en": "Nothing new appears on screen; the same list and matches arrive sooner."}
       }
     },
-    {
-      "id": "pricing-desk-quotation-groups-layout",
-      "type": "fix",
-      "module": {
-        "tr": "Fiyat Masası · Fiyat Teklifleri",
-        "en": "Pricing Desk · Quotations"
-      },
-      "title": {
-        "tr": "Fiyat talebi grupları listesi kesilmeden görünür; başlık sadeleşti",
-        "en": "Quotation groups list no longer gets cut off; the header is simpler"
-      },
-      "body": {
-        "tr": "Soldaki fiyat talebi grupları listesinde kartlar sütundan taşıp listeyi yatay kaydırıyor, kart metinleri soldan kesiliyordu. Kartlar artık sütuna sığar: tekrar eden Koleksiyon etiketi kaldırıldı, tarih tek satırda gün olarak gösterilir (tam saat üzerine gelince görünür). Seçili talebin başlığında model, üretici ve onay sayıları tek satır özette yer alır; Koleksiyonda Aç, Fiyat Geçmişi, Düzenleme Yetkisi, Excel'e Aktar, taslak e-postayı yeniden açma ve Sil işlemleri \"Diğer\" menüsünde toplandı.",
-        "en": "In the quotation groups list on the left, cards overflowed the column, the list scrolled sideways and card text was cut off on the left. Cards now fit the column: the repeated Collection badge was removed and the date is shown on one line as a day (the full time appears on hover). The selected request's header shows model, manufacturer and approval counts in a one-line summary; Open in Collection, Pricing History, Editing Permission, Export to Excel, re-opening the draft e-mail and Delete are grouped in the \"More\" menu."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "quotation-desk-layout.png",
-        "alt": {
-          "tr": "Demo fiyat talepleriyle sığan grup listesi ve açık Diğer menüsü",
-          "en": "Fitting groups list with demo quotations and the open More menu"
-        },
-        "caption": {
-          "tr": "Grup kartları sütuna sığar; ikincil işlemler Diğer menüsündedir.",
-          "en": "Group cards fit the column; secondary actions are in the More menu."
-        }
-      }
-    },
-    {
-      "id": "collection-search-month-language-independent",
-      "type": "fix",
-      "module": {
-        "tr": "Koleksiyon",
-        "en": "Collection"
-      },
-      "title": {
-        "tr": "MB ayı her iki dilde de aranabilir",
-        "en": "MB month can be searched in both languages"
-      },
-      "body": {
-        "tr": "Model Budget Month, kaydedildiği arayüz diline göre TEMMUZ veya JULY olarak saklanabildiği için arama yalnız o dilde sonuç veriyordu. Artık Temmuz ve July aynı kayıtları bulur; kayıtlı değer değişmez.",
-        "en": "Model Budget Month could be stored as TEMMUZ or JULY depending on the interface language at save time, so search only matched that language. Temmuz and July now find the same records; stored values are unchanged."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "collection-search-period-shortcuts.png",
-        "alt": {
-          "tr": "Koleksiyon aramasında S7; MB=M3-M5 ile süzülmüş üç demo model",
-          "en": "Three demo models filtered in Collection search with S7; MB=M3-M5"
-        },
-        "caption": {
-          "tr": "S7 sezonunda MB Mart–Mayıs modelleri listelenir; İngilizce kaydedilmiş Nisan da sonuçtadır.",
-          "en": "S7 models with MB March–May are listed; April saved in English is included too."
-        }
-      }
-    },
-    {
-      "id": "collection-search-period-shortcuts",
-      "type": "feature",
-      "module": {
-        "tr": "Koleksiyon · CP · Siparişler",
-        "en": "Collection · CP · Orders"
-      },
-      "title": {
-        "tr": "Arama terim terim kip olarak görünür; tarih ve sezon kısayolları",
-        "en": "Search shows each term as a chip; date and season shortcuts"
-      },
-      "body": {
-        "tr": "Tablo filtreleri şeridinde arama tek satır yerine kip kip gösterilir: \"XXX, YYY\" iki kip ve aralarında veya, noktalı virgül ve, hariç tutulan değer üstü çizili, tabloda bulunmayan terim uyarı renginde görünür; × yalnız o terimi kaldırır. MB=M3, MB=W1-W24, EXF=M10-M12, RT=W34, SEZON=S7 ve yıllı MB=2027M3 kısayollarıyla süzebilirsiniz. MB= veya SEZON= yazınca tablodaki değerler satır sayısıyla önerilir; geçersiz kısayol nedeniyle belirtilir.",
-        "en": "In Table filters, search is shown as chips instead of one line: \"XXX, YYY\" becomes two chips joined by or, a semicolon becomes and, excluded values are struck through and terms not found are highlighted; × removes only that term. Filter with MB=M3, MB=W1-W24, EXF=M10-M12, RT=W34, SEASON=S7 or MB=2027M3 with a year. Typing MB= or SEASON= suggests the table's values with row counts; an invalid shortcut is explained."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "collection-search-period-shortcuts.png",
-        "alt": {
-          "tr": "Koleksiyon aramasında sezon, MB ay aralığı ve model adı kipleri",
-          "en": "Collection search chips for season, MB month range and model name"
-        },
-        "caption": {
-          "tr": "SEZON=S7; MB=M3-M5, MB=M7; DEMO MODEL araması kip kip görünür; tabloda bulunmayan MB · Temmuz uyarı renginde.",
-          "en": "The search SEZON=S7; MB=M3-M5, MB=M7; DEMO MODEL is shown as chips; MB · July, which is not in the table, is highlighted."
-        }
-      }
-    },
-    {
-      "id": "collection-fields-move-heading",
-      "type": "feature",
-      "module": {
-        "tr": "Koleksiyon · Alanlar",
-        "en": "Collection · Fields"
-      },
-      "title": {
-        "tr": "Eklediğiniz sütunu sürükleyerek başka ana başlığa taşıyın",
-        "en": "Drag your own columns under another main heading"
-      },
-      "body": {
-        "tr": "Alanlar ekranında eklediğiniz bir sütunu başka bir başlığın sütunları arasına ya da kapalı başlık satırının üzerine bırakın; sütun o başlığa geçer ve tablodaki yeri ile başlık bandı kendiliğinden güncellenir. Sistem sütunları ve Checklist maddeleri kendi başlığında kalır. Sürükleme tutamacı artık düzgün altı nokta olarak görünür.",
-        "en": "In the Fields panel, drop a column you added among another heading's columns or onto a collapsed heading row; the column joins that heading and its table position and heading band update automatically. System columns and Checklist items stay under their own heading. The drag handle now shows as a clean six-dot grip."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "collection-fields-move-heading.png",
-        "alt": {
-          "tr": "Demo Koleksiyonda Alanlar ekranı: Mill sütunu Model Detayları altında Kumaş'ın ardında, Construction Notlar başlığında",
-          "en": "Fields panel in a demo collection: the Mill column under Model Details after Fabric, Construction under Notes"
-        },
-        "caption": {
-          "tr": "Mill Fiyatlandırma'dan Model Detayları'na, Construction Notlar'a sürüklendi.",
-          "en": "Mill was dragged from Pricing to Model Details and Construction to Notes."
-        }
-      }
-    },
-    {
-      "id": "excel-import-duplicate-keep-all",
-      "type": "improvement",
-      "module": {
-        "tr": "Koleksiyon · Kullanıcı Excelini İçeri Aktar",
-        "en": "Collection · Import User Excel"
-      },
-      "title": {
-        "tr": "Tekrar çakışmasında tüm Excel satırlarını aktarma",
-        "en": "Import all workbook rows in a duplicate conflict"
-      },
-      "body": {
-        "tr": "Gözden Geçir adımındaki tekrar çakışmalarında artık yalnız tek Excel satırı seçmek zorunda değilsiniz: \"Tümünü aktar (gerekirse yeni satır oluştur)\" seçeneğinde ilk satır eşleşen Buyer Log satırını günceller, aynı anahtarlı diğer satırlar yeni satır olarak eklenir. Aynı satırları kapsayan ikinci çakışma için tekrar karar istenmez. Bu açık karar, \"Eşleşmeyen satırları yeni kayıt olarak oluştur\" kapalı olsa da yalnız bu çakışmadaki satırları ekler.",
-        "en": "In duplicate conflicts on the Review step you no longer have to keep a single workbook row: with \"Import all (create new rows if needed)\" the first row updates the matching Buyer Log row and the other rows with the same key are added as new rows. The second conflict covering the same rows does not ask again. This explicit choice adds only the rows of that conflict, even when \"Create unmatched rows as new records\" is off."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "excel-import-duplicate-keep-all.png",
-        "alt": {
-          "tr": "Demo Excelde aynı PLM ID'li iki satırdan biri mevcut satırı günceller, diğeri yeni satır olur",
-          "en": "In a demo workbook, one of two rows with the same PLM ID updates the existing row and the other becomes a new row"
-        },
-        "caption": {
-          "tr": "Excel 2 mevcut 001234 satırını günceller; Excel 3 aynı anahtarla yeni satır olarak eklenir.",
-          "en": "Workbook row 2 updates the existing 001234 row; row 3 is added as a new row with the same key."
-        }
-      }
-    }
+    {"id": "pricing-desk-quotation-groups-layout", "type": "fix", "module": {"tr": "Fiyat Masası · Fiyat Teklifleri", "en": "Pricing Desk · Quotations"}, "title": {"tr": "Fiyat talebi grupları listesi kesilmeden görünür; başlık sadeleşti", "en": "Quotation groups list no longer gets cut off; the header is simpler"}, "body": {"tr": "Soldaki fiyat talebi grupları listesinde kartlar sütundan taşıp listeyi yatay kaydırıyor, kart metinleri soldan kesiliyordu. Kartlar artık sütuna sığar: tekrar eden Koleksiyon etiketi kaldırıldı, tarih tek satırda gün olarak gösterilir (tam saat üzerine gelince görünür). Seçili talebin başlığında model, üretici ve onay sayıları tek satır özette yer alır; Koleksiyonda Aç, Fiyat Geçmişi, Düzenleme Yetkisi, Excel'e Aktar, taslak e-postayı yeniden açma ve Sil işlemleri \"Diğer\" menüsünde toplandı.", "en": "In the quotation groups list on the left, cards overflowed the column, the list scrolled sideways and card text was cut off on the left. Cards now fit the column: the repeated Collection badge was removed and the date is shown on one line as a day (the full time appears on hover). The selected request's header shows model, manufacturer and approval counts in a one-line summary; Open in Collection, Pricing History, Editing Permission, Export to Excel, re-opening the draft e-mail and Delete are grouped in the \"More\" menu."}, "visual": {"kind": "screenshot", "capture": "post-change", "src": "quotation-desk-layout.png", "alt": {"tr": "Demo fiyat talepleriyle sığan grup listesi ve açık Diğer menüsü", "en": "Fitting groups list with demo quotations and the open More menu"}, "caption": {"tr": "Grup kartları sütuna sığar; ikincil işlemler Diğer menüsündedir.", "en": "Group cards fit the column; secondary actions are in the More menu."}}},
+    {"id": "collection-search-month-language-independent", "type": "fix", "module": {"tr": "Koleksiyon", "en": "Collection"}, "title": {"tr": "MB ayı her iki dilde de aranabilir", "en": "MB month can be searched in both languages"}, "body": {"tr": "Model Budget Month, kaydedildiği arayüz diline göre TEMMUZ veya JULY olarak saklanabildiği için arama yalnız o dilde sonuç veriyordu. Artık Temmuz ve July aynı kayıtları bulur; kayıtlı değer değişmez.", "en": "Model Budget Month could be stored as TEMMUZ or JULY depending on the interface language at save time, so search only matched that language. Temmuz and July now find the same records; stored values are unchanged."}, "visual": {"kind": "screenshot", "capture": "post-change", "src": "collection-search-period-shortcuts.png", "alt": {"tr": "Koleksiyon aramasında S7; MB=M3-M5 ile süzülmüş üç demo model", "en": "Three demo models filtered in Collection search with S7; MB=M3-M5"}, "caption": {"tr": "S7 sezonunda MB Mart–Mayıs modelleri listelenir; İngilizce kaydedilmiş Nisan da sonuçtadır.", "en": "S7 models with MB March–May are listed; April saved in English is included too."}}},
+    {"id": "collection-search-period-shortcuts", "type": "feature", "module": {"tr": "Koleksiyon · CP · Siparişler", "en": "Collection · CP · Orders"}, "title": {"tr": "Arama terim terim kip olarak görünür; tarih ve sezon kısayolları", "en": "Search shows each term as a chip; date and season shortcuts"}, "body": {"tr": "Tablo filtreleri şeridinde arama tek satır yerine kip kip gösterilir: \"XXX, YYY\" iki kip ve aralarında veya, noktalı virgül ve, hariç tutulan değer üstü çizili, tabloda bulunmayan terim uyarı renginde görünür; × yalnız o terimi kaldırır. MB=M3, MB=W1-W24, EXF=M10-M12, RT=W34, SEZON=S7 ve yıllı MB=2027M3 kısayollarıyla süzebilirsiniz. MB= veya SEZON= yazınca tablodaki değerler satır sayısıyla önerilir; geçersiz kısayol nedeniyle belirtilir.", "en": "In Table filters, search is shown as chips instead of one line: \"XXX, YYY\" becomes two chips joined by or, a semicolon becomes and, excluded values are struck through and terms not found are highlighted; × removes only that term. Filter with MB=M3, MB=W1-W24, EXF=M10-M12, RT=W34, SEASON=S7 or MB=2027M3 with a year. Typing MB= or SEASON= suggests the table's values with row counts; an invalid shortcut is explained."}, "visual": {"kind": "screenshot", "capture": "post-change", "src": "collection-search-period-shortcuts.png", "alt": {"tr": "Koleksiyon aramasında sezon, MB ay aralığı ve model adı kipleri", "en": "Collection search chips for season, MB month range and model name"}, "caption": {"tr": "SEZON=S7; MB=M3-M5, MB=M7; DEMO MODEL araması kip kip görünür; tabloda bulunmayan MB · Temmuz uyarı renginde.", "en": "The search SEZON=S7; MB=M3-M5, MB=M7; DEMO MODEL is shown as chips; MB · July, which is not in the table, is highlighted."}}},
+    {"id": "collection-fields-move-heading", "type": "feature", "module": {"tr": "Koleksiyon · Alanlar", "en": "Collection · Fields"}, "title": {"tr": "Eklediğiniz sütunu sürükleyerek başka ana başlığa taşıyın", "en": "Drag your own columns under another main heading"}, "body": {"tr": "Alanlar ekranında eklediğiniz bir sütunu başka bir başlığın sütunları arasına ya da kapalı başlık satırının üzerine bırakın; sütun o başlığa geçer ve tablodaki yeri ile başlık bandı kendiliğinden güncellenir. Sistem sütunları ve Checklist maddeleri kendi başlığında kalır. Sürükleme tutamacı artık düzgün altı nokta olarak görünür.", "en": "In the Fields panel, drop a column you added among another heading's columns or onto a collapsed heading row; the column joins that heading and its table position and heading band update automatically. System columns and Checklist items stay under their own heading. The drag handle now shows as a clean six-dot grip."}, "visual": {"kind": "screenshot", "capture": "post-change", "src": "collection-fields-move-heading.png", "alt": {"tr": "Demo Koleksiyonda Alanlar ekranı: Mill sütunu Model Detayları altında Kumaş'ın ardında, Construction Notlar başlığında", "en": "Fields panel in a demo collection: the Mill column under Model Details after Fabric, Construction under Notes"}, "caption": {"tr": "Mill Fiyatlandırma'dan Model Detayları'na, Construction Notlar'a sürüklendi.", "en": "Mill was dragged from Pricing to Model Details and Construction to Notes."}}},
+    {"id": "excel-import-duplicate-keep-all", "type": "improvement", "module": {"tr": "Koleksiyon · Kullanıcı Excelini İçeri Aktar", "en": "Collection · Import User Excel"}, "title": {"tr": "Tekrar çakışmasında tüm Excel satırlarını aktarma", "en": "Import all workbook rows in a duplicate conflict"}, "body": {"tr": "Gözden Geçir adımındaki tekrar çakışmalarında artık yalnız tek Excel satırı seçmek zorunda değilsiniz: \"Tümünü aktar (gerekirse yeni satır oluştur)\" seçeneğinde ilk satır eşleşen Buyer Log satırını günceller, aynı anahtarlı diğer satırlar yeni satır olarak eklenir. Aynı satırları kapsayan ikinci çakışma için tekrar karar istenmez. Bu açık karar, \"Eşleşmeyen satırları yeni kayıt olarak oluştur\" kapalı olsa da yalnız bu çakışmadaki satırları ekler.", "en": "In duplicate conflicts on the Review step you no longer have to keep a single workbook row: with \"Import all (create new rows if needed)\" the first row updates the matching Buyer Log row and the other rows with the same key are added as new rows. The second conflict covering the same rows does not ask again. This explicit choice adds only the rows of that conflict, even when \"Create unmatched rows as new records\" is off."}, "visual": {"kind": "screenshot", "capture": "post-change", "src": "excel-import-duplicate-keep-all.png", "alt": {"tr": "Demo Excelde aynı PLM ID'li iki satırdan biri mevcut satırı günceller, diğeri yeni satır olur", "en": "In a demo workbook, one of two rows with the same PLM ID updates the existing row and the other becomes a new row"}, "caption": {"tr": "Excel 2 mevcut 001234 satırını günceller; Excel 3 aynı anahtarla yeni satır olarak eklenir.", "en": "Workbook row 2 updates the existing 001234 row; row 3 is added as a new row with the same key."}}}
   ]
 }
