@@ -45,6 +45,8 @@ const { createSyncSettings, writeValidatedJson, withTimeout: syncNetworkTimeout 
 const syncHealth = require('./lib/sync-health');
 const hubDirent = require('./lib/hub-dirent');
 const oneDriveConflictCopies = require('./lib/onedrive-conflict-copies');
+const { createSyncTransportGuard } = require('./lib/sync-transport-guard');
+const { createOneDriveControl } = require('./lib/onedrive-control');
 const { createSharedHub } = require('./lib/shared-hub');
 const masterReleases = require('./lib/master-releases');
 const { createRefreshPerformance } = require('./lib/refresh-performance');
@@ -746,12 +748,7 @@ const asasTechnicalImages = require('./lib/asas-technical-images');
 const webScriptStore = require('./lib/web-script-store');
 const webScriptRegistry = require('./lib/web-script-registry');
 const liveEvents = require('./lib/live-events');
-syncSettings.onStateChange(status => liveEvents.notifySyncStatus(status, entry => {
-  try {
-    const profile = entry && entry.req ? userAccess.sessionProfile(entry.req) : null;
-    return Boolean(profile && userAccess.hasArea(profile, 'source'));
-  } catch (_) { return false; }
-}));
+syncSettings.onStateChange(status => liveEvents.notifySyncStatus({ ...status, transport:syncTransportAssessment }, canSeeSyncStatus));
 const qtxStore = require('./lib/qtx-store');
 const oabStore = require('./lib/oab-store');
 const oabSessionStore = require('./lib/oab-session-store');
@@ -1579,6 +1576,28 @@ async function currentSyncHealth(status) {
     displayName: syncHealthActor && syncHealthActor.displayName || '', appVersion: APP_VERSION,
     masterRevisionApplied: Number(readModeratorMasterState().revision) || 0 });
 }
+/* OneDrive aktarım bekçisi (sync-transport-guard.js): her başarılı sync
+   sonunda küçük bir aktarım işareti yazar ve eşlerin işaretlerinden "yayınım
+   ulaşmadı / eşin yayını bana ulaşmadı" kanıtı üretir. Yalnız ölçer; sonuç
+   sync durumuyla canlı yayılır. Hatası sync'i veya sağlık raporunu etkilemez. */
+let syncTransportGuard = null, syncTransportAssessment = null;
+const oneDriveControl = createOneDriveControl();
+const canSeeSyncStatus = entry => {
+  try {
+    const profile = entry && entry.req ? userAccess.sessionProfile(entry.req) : null;
+    return Boolean(profile && userAccess.hasArea(profile, 'source'));
+  } catch (_) { return false; }
+};
+async function updateSyncTransport(status, head) {
+  syncTransportGuard = syncTransportGuard || createSyncTransportGuard({ localDataRoot:LOCAL_DATA_ROOT, withTimeout:syncNetworkTimeout, writeJson:writeValidatedJson });
+  const previousKey = syncTransportAssessment ? syncTransportAssessment.key : '';
+  syncTransportAssessment = await syncTransportGuard.afterSync({ syncRoot:path.join(status.sharedSyncRoot, 'BUYER_LOG_SYNC'),
+    deviceId:localDb.getDeviceId(), state:await localDb.read(), head, lastSyncAt:status.lastSync || status.lastSyncAt || null });
+  if (syncTransportAssessment && (syncTransportAssessment.alert || previousKey)) {
+    markStartup('SYNC_TRANSPORT_ASSESSED', { alert:syncTransportAssessment.alert, outbound:syncTransportAssessment.outbound.status, inbound:syncTransportAssessment.inbound.status, peers:syncTransportAssessment.peerCount });
+  }
+  liveEvents.notifySyncStatus(await currentSyncStatus(), canSeeSyncStatus);
+}
 async function publishSyncHealth(status) {
   if (!status.sharedSyncRoot) return;
   // The existing completion listener starts this same single-flight task.
@@ -1587,6 +1606,7 @@ async function publishSyncHealth(status) {
   const headFile = path.join(status.sharedSyncRoot, 'BUYER_LOG_SYNC', 'changes', encodeURIComponent(localDb.getDeviceId()), '_head.json');
   const head = await fs.promises.readFile(headFile, 'utf8').then(JSON.parse).catch(() => null);
   if (head) status = { ...status, latestPublishedSeq:Number(head.latestSequence) || 0 };
+  try { await updateSyncTransport(status, head); } catch (error) { logRuntimeFailure('syncTransport', error); }
   const report = await currentSyncHealth(status);
   const file = path.join(status.sharedSyncRoot, 'BUYER_LOG_SYNC', 'health', `${encodeURIComponent(report.deviceId)}.json`);
   await writeValidatedJson(file, report);
@@ -4533,6 +4553,7 @@ function collectionWorkspaceWithLocalImages(ownerId, workspace = null) {
   // Startup /api/data excludes imagemap. Hydrate ONLY models in this authorised
   // Collection workspace, not the full cross-user registry. No PLM network call.
   const imagemap = loadOverrides().imagemap || {};
+  const imageNamedIndex = parseLib.plmImageLazyNamedIndex(imagemap);
   const availability = new Map();
   const localImageExists = ref => {
     if (!ref) return false;
@@ -4547,7 +4568,7 @@ function collectionWorkspaceWithLocalImages(ownerId, workspace = null) {
     const sharedRef = String(cached && cached.imageRef || '').trim();
     const plmRef = String(parseLib.plmImageRef(imagemap, {
       plm: row.plmId, ccode: row.colourCode, colour: row.colour,
-    }) || '').trim();
+    }, imageNamedIndex) || '').trim();
     const sharedUrl = localImageExists(sharedRef) ? '/api/collection-images/' + encodeURIComponent(sharedRef) : '';
     const plmUrl = localImageExists(plmRef) ? '/api/collection-images/' + encodeURIComponent(plmRef) : '';
     if (!sharedUrl && !plmUrl) return row;
@@ -9756,8 +9777,39 @@ async function currentSyncStatus() {
   try { status.localSnapshotDate = (await fs.promises.stat(localDb.getFile())).mtime.toISOString(); }
   catch (_) { status.localSnapshotDate = null; }
   const master = readModeratorMasterState();
-  return { ...status, localDbPath:localDb.getFile(), sharedSyncRoot:status.sharedSyncRoot || '', masterRelease:master.release || null, masterHubId:master.hubId || '' };
+  return { ...status, localDbPath:localDb.getFile(), sharedSyncRoot:status.sharedSyncRoot || '', masterRelease:master.release || null, masterHubId:master.hubId || '', transport:syncTransportAssessment };
 }
+/* OneDrive yardımcı işlemleri yalnız bu bilgisayardaki oturumdan çağrılır:
+   uzak bir tarayıcı istemcisi sunucu makinesinin OneDrive'ını yönetemez. */
+const isLoopbackRequest = req => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(String(req.socket && req.socket.remoteAddress || ''));
+function requireLoopback(req, res, next) {
+  if (isLoopbackRequest(req)) return next();
+  res.status(403).json({ error:'Bu işlem yalnız Buyer Log\'un çalıştığı bilgisayardan yapılabilir.', code:'ONEDRIVE_LOCAL_ONLY' });
+}
+const oneDriveControlError = (res, error, fallback) => res.status(error.statusCode || 500).json({ error:error.message || String(error), code:error.code || fallback });
+app.get('/api/sync-transport/onedrive', userAccess.requireArea('source'), requireLoopback, async (_req, res) => {
+  try { const settings = await syncSettings.read(); res.set('Cache-Control', 'no-store').json({ ok:true, onedrive:await oneDriveControl.detect(settings.sharedSyncRoot || '') }); }
+  catch (error) { oneDriveControlError(res, error, 'ONEDRIVE_DETECT_FAILED'); }
+});
+app.post('/api/sync-transport/onedrive/keep-local', userAccess.requireArea('source'), requireLoopback, express.json({ limit:'4kb' }), async (req, res) => {
+  try {
+    const settings = await syncSettings.read();
+    const checked = await sharedHub.validate(settings.sharedSyncRoot || '', { requireWrite:false });
+    const result = await oneDriveControl.keepOnDevice(checked.root, checked.manifest && checked.manifest.layout || {});
+    userAccess.appendAudit(req.currentUser, 'ONEDRIVE_KEEP_ON_DEVICE', 'sync', { pinned:result.pinned, failed:result.failed.length });
+    res.json({ ok:true, result });
+  } catch (error) { oneDriveControlError(res, error, 'ONEDRIVE_PIN_FAILED'); }
+});
+app.post('/api/sync-transport/onedrive/restart', userAccess.requireArea('source'), requireLoopback, express.json({ limit:'4kb' }), async (req, res) => {
+  try {
+    if (!(req.body && req.body.confirm === true)) return res.status(400).json({ error:'Onay gerekli.', code:'ONEDRIVE_CONFIRM_REQUIRED' });
+    const status = await currentSyncStatus();
+    if (status.progress) return res.status(409).json({ error:'Sync sürerken OneDrive yeniden başlatılmaz.', code:'SYNC_IN_PROGRESS' });
+    const result = await oneDriveControl.restart(status.sharedSyncRoot || '');
+    userAccess.appendAudit(req.currentUser, 'ONEDRIVE_RESTART', 'sync', { restarted:result.restarted });
+    res.json({ ok:true, result });
+  } catch (error) { oneDriveControlError(res, error, 'ONEDRIVE_RESTART_FAILED'); }
+});
 /* Data Maintenance is deliberately lazy/read-only until invoked. No storage
    scan or legacy hashing is allowed on the startup critical path. */
 app.get('/api/data-maintenance/analyze', userAccess.requireArea('source'), async (_req, res) => {

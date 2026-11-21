@@ -112,6 +112,27 @@ function createSharedHub({ localDataRoot, appVersion = '', networkTimeoutMs = 15
     await atomicWriteJson(localStateFile, { version: BOOTSTRAP_STATE_VERSION, ...next });
     return readLocalState();
   }
+  /* Eski sürümlerin zaman aşımında bıraktığı yazma testi dosyaları. Yalnız
+     kendi adlandırma desenimiz ve 24 saatten eski olanlar silinir; saatte en
+     fazla bir tarama, hata sessizce yok sayılır (yalnız temizlik). */
+  const PROBE_NAME = /^\.buyerlog-hub-probe-\d+-[0-9a-f-]{36}(\.ready)?$/i;
+  let lastProbeSweepAt = 0;
+  async function removeStaleProbes(selected) {
+    const started = Date.now();
+    if (started - lastProbeSweepAt < 60 * 60 * 1000) return 0;
+    lastProbeSweepAt = started;
+    let removed = 0;
+    try {
+      const names = await timeout(() => fsp.readdir(selected), 'Shared Hub probe temizliği');
+      for (const name of names.filter(item => PROBE_NAME.test(item)).slice(0, 200)) {
+        try {
+          const file = safePath(selected, name), stat = await timeout(() => fsp.stat(file), 'Shared Hub probe yaşı');
+          if (stat.isFile() && started - stat.mtimeMs > 24 * 60 * 60 * 1000) { await timeout(() => fsp.unlink(file), 'Shared Hub probe silme'); removed++; }
+        } catch (_) {}
+      }
+    } catch (_) {}
+    return removed;
+  }
   async function validate(root, { requireWrite = false } = {}) {
     const selected = path.resolve(clean(root));
     if (!selected) throw error('Shared Hub klasörü seçilmedi.', 'SHARED_HUB_REQUIRED');
@@ -124,11 +145,19 @@ function createSharedHub({ localDataRoot, appVersion = '', networkTimeoutMs = 15
       await timeout(() => fsp.access(selected, fs.constants.W_OK), 'Shared Hub yazma kontrolü');
       const probe = safePath(selected, `.buyerlog-hub-probe-${process.pid}-${crypto.randomUUID()}`);
       const renamed = `${probe}.ready`;
+      /* Zaman aşımı alttaki dosya işlemini iptal etmez: OneDrive yavaşken yazma
+         temizlikten SONRA bitip probe dosyasını ortak klasörde bırakıyordu.
+         Temizlik, başlatılan her işlem sonuçlandıktan sonra yapılır. */
+      const started = [];
+      const tracked = factory => () => { const operation = Promise.resolve().then(factory); started.push(operation); return operation; };
       try {
-        await timeout(() => fsp.writeFile(probe, 'ok', { encoding: 'utf8', flag: 'wx' }), 'Shared Hub yazma testi');
-        await timeout(() => fsp.rename(probe, renamed), 'Shared Hub atomic publish testi');
-        await timeout(() => fsp.unlink(renamed), 'Shared Hub temizlik testi');
-      } finally { void fsp.unlink(probe).catch(() => {}); void fsp.unlink(renamed).catch(() => {}); }
+        await timeout(tracked(() => fsp.writeFile(probe, 'ok', { encoding: 'utf8', flag: 'wx' })), 'Shared Hub yazma testi');
+        await timeout(tracked(() => fsp.rename(probe, renamed)), 'Shared Hub atomic publish testi');
+        await timeout(tracked(() => fsp.unlink(renamed)), 'Shared Hub temizlik testi');
+      } finally {
+        void Promise.allSettled(started).then(() => Promise.allSettled([fsp.unlink(probe), fsp.unlink(renamed)]));
+      }
+      void removeStaleProbes(selected);
     }
     return { ok: true, root: selected, manifest };
   }
@@ -267,7 +296,7 @@ function createSharedHub({ localDataRoot, appVersion = '', networkTimeoutMs = 15
     return writeLocalState({ hubId:clean(hubId,80), root:clean(root,1000), masterRevision:Math.max(0,Number(masterRevision)||0), businessRevision:businessRevision==null?Math.max(0,Number(previous&&previous.businessRevision)||0):Math.max(0,Number(businessRevision)||0), iamRevision:Math.max(0,Number(iamRevision)||0), completed:completed===true, completedAt:completed===true?(previous&&previous.completedAt||new Date().toISOString()):null, updatedAt:new Date().toISOString() });
   }
   function clearBootstrap() { try { fs.unlinkSync(localStateFile); } catch (_) {} }
-  return { HUB_FORMAT, HUB_SCHEMA_VERSION, localStateFile, readLocalState, markBootstrap, clearBootstrap, validate, initialize, publishMaster, readMaster, readMasterHead, publishBusiness, readBusiness, readBusinessHead };
+  return { HUB_FORMAT, HUB_SCHEMA_VERSION, localStateFile, readLocalState, markBootstrap, clearBootstrap, validate, removeStaleProbes, initialize, publishMaster, readMaster, readMasterHead, publishBusiness, readBusiness, readBusinessHead };
 }
 
 module.exports = { HUB_FORMAT, HUB_SCHEMA_VERSION, HUB_MANIFEST, MASTER_SCHEMA_VERSION, BUSINESS_SCHEMA_VERSION, createSharedHub, validateManifest };
