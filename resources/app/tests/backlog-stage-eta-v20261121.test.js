@@ -38,16 +38,16 @@ function order() {
     countryRaw: 'HINDISTAN', license: '', productDescription: '', ex: iso(-30), retail: iso(45), mb: iso(60), opd: iso(-90), shipConf: null, buyer: 'B', line: 'L',
   };
 }
-function partial(fields) {
+function partial(fields, status = 'Yolda') {
   const o = order();
-  return { ...o, qty: 100, kalan: 0, _status: 'Yolda', _arr: iso(90), _delType: 'Gemi',
+  return { ...o, qty: 100, kalan: 0, _status: status, _arr: iso(90), _delType: 'Gemi',
     _iasRow: { handover: fields['HANDOVER Tarihi'] || '', vasita: 'Gemi', _sourceRow: 7, _sourceFields: fields },
     _segmentKind: 'ias', _segmentIndex: 0, _orderQty: 100, _asasKalan: 0, _loadedQty: 100 };
 }
 const rule = [{ id: 'sea', exfStart: '', exfEnd: '', seasons: [], countries: [], delType: 'Gemi', days: 70 }];
 
-function rowFor(fields, model = history()) {
-  const rows = parse.backlogTemplateRowsFromSegments([partial(fields)], { transitRules: rule, transitAnalysis: model }, new Map(), []);
+function rowFor(fields, model = history(), status) {
+  const rows = parse.backlogTemplateRowsFromSegments([partial(fields, status)], { transitRules: rule, transitAnalysis: model }, new Map(), []);
   return rows[0];
 }
 
@@ -85,7 +85,7 @@ test('Ortalama / P80 seçimi aşama ETA istatistiğini değiştirir', () => {
 
 test('ortalamayı aşan açık aşama gecikmeyi erken yakalar; statik kural "yetişiyor" derdi', () => {
   // Talep 25 gün önce, Handover hâlâ yok (ortalama 3 gün) → yükleme aşamasında açık aşım.
-  const row = rowFor({ 'Yükleme Talep Tarih': iso(-25) }); // i18n-ignore
+  const row = rowFor({ 'Yükleme Talep Tarih': iso(-25) }, undefined, 'Yükleme Operasyonları'); // i18n-ignore
   const p = row._backlogExcel.stageProjection;
   assert.equal(p.currentStage, '1');
   assert.ok(p.openOverrunDays >= 20);
@@ -111,7 +111,7 @@ test('antrepoya girmiş parsiyelde aşama tahmini yapılmaz', () => {
 });
 
 test('toplu analiz aşama sinyallerini sayar ve kırılımı açar', () => {
-  const late = rowFor({ 'Yükleme Talep Tarih': iso(-25) }); // i18n-ignore
+  const late = rowFor({ 'Yükleme Talep Tarih': iso(-25) }, undefined, 'Yükleme Operasyonları'); // i18n-ignore
   const ok = rowFor({ 'Yükleme Talep Tarih': iso(-31), 'HANDOVER Tarihi': iso(-28), 'Cut Off Tarih': iso(-24), 'Fiili Yükleme Tarih': iso(-20), 'ETA Tarih': iso(20) }); // i18n-ignore
   const model = Engine.analyze([late, ok].map(Engine.projectRow), { today: todayOrd, dateOrdinal: ord });
   assert.equal(model.stagePerformance.projected.rows, 2);
@@ -135,4 +135,17 @@ test('işçi / okuma modeli yolu: tarih sözlüğü yalnız rowDateValues\'tan k
     assert.equal(order.eta, ord(etaStat === 'p80' ? row._backlogExcel.stageProjection.etaP80 : row._backlogExcel.stageProjection.etaMean));
     assert.equal(model.stagePerformance.projected.rows, 1);
   }
+});
+
+test('Yolda parsiyel: Cut Off / Fiili Yükleme sütunu gelmese de sahte Handover → Cut-off gecikmesi üretilmez', () => {
+  // Gerçek sorgu şekli: Talep + Handover + ETA sütunu var (ETA boş), Cut Off / Fiili Yükleme yok.
+  const row = rowFor({ 'Yükleme Talep Tarih': iso(-33), 'HANDOVER Tarihi': iso(-30), 'ETA Tarih': '' }); // i18n-ignore
+  const p = row._backlogExcel.stageProjection;
+  assert.ok(p);
+  assert.equal(p.openOverrunDays, 0);
+  assert.notEqual(p.currentStage, '2');
+  assert.equal(p.etaMean, iso(-30 + 51)); // Handover + Kalan(handover)
+  const a = Engine.analyzeOrder(Engine.projectRow(row), { today: todayOrd, dateOrdinal: ord });
+  assert.equal(a.stageOverrunDays || 0, 0);
+  assert.ok(!a.riskReasons.includes('LATE_LOADING'));
 });

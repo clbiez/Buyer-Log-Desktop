@@ -3503,13 +3503,23 @@ function buildBacklogTemplateRows(asasOrders, antrepoMap, overrides, filterOrOco
    taşları canlı analizle AYNI alan eşlemesinden okunur (döngüsel bağımlılık
    olmasın diye transit-analysis-source tembel yüklenir). */
 let _transitAnalysisSource = null;
-function backlogStageProjection(ias, order, model, todayIso) {
+/* IAS durumunun kanıtladığı son geçilmiş kilometre taşı: "Yol Operasyonları"
+   yüklendi demektir, "Gümrük-Liman Operasyonları" gemi vardı demektir. Tarih
+   sütunu gelmese de bu adımlar tamamlanmış sayılır. */
+function stagePassedMilestone(status) {
+  const key = antrepoStatusKey(status);
+  if (key === 'GUMRUK LIMAN OPERASYONLARI') return 'eta';
+  if (key === 'YOL OPERASYONLARI' || key === 'YOLDA') return 'actualLoading';
+  return null;
+}
+function backlogStageProjection(ias, order, model, todayIso, status) {
   if (!ias || !model || !Array.isArray(model.groups)) return null;
   if (!_transitAnalysisSource) _transitAnalysisSource = require('./transit-analysis-source');
   const milestones = _transitAnalysisSource.milestonesFromEntry(ias);
   if (!milestones) return null;
   const projection = BLTransitStageModel.project(milestones, {
     model, country: order && order.countryRaw, vehicle: ias.vasita || '', today: todayIso,
+    passed: stagePassedMilestone(status), observed: m => _transitAnalysisSource.hasMilestoneColumn(ias, m),
   });
   if (!projection) return null;
   const iso = value => { const d = toDateOnly(value); return d ? localIsoDate(d) : null; };
@@ -3529,7 +3539,7 @@ function cpSegmentStageInfo(segment, order, ov, stageModel, todayIso) {
   const statusKey = antrepoStatusKey(segment._status);
   if (statusKey === 'DEPODA' || statusKey === 'RETAILE AKTARIM BEKLENIYOR') return null;
   const ias = segment._iasRow;
-  const projection = backlogStageProjection(ias, order, stageModel, todayIso);
+  const projection = backlogStageProjection(ias, order, stageModel, todayIso, segment._status);
   if (!projection || !projection.etaMean) return null;
   const handover = toDateOnly(ias.handover);
   let vsRule = null;
@@ -3774,7 +3784,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
         transitOverdueDays: transitOverdue.overdueDays,
         // Yüklenmiş ve henüz antrepoya girmemiş parsiyelde aşama bazlı ETA.
         stageProjection: stageModel && isPartial && !isInWarehouse && !isRetailWaiting
-          ? backlogStageProjection(ias, order, stageModel, stageToday) : null,
+          ? backlogStageProjection(ias, order, stageModel, stageToday, segment._status) : null,
         shipConfirmationDate,
         // ASAS'ta bu rengin Ex-Factory'si boştu; aynı PO'nun diğer renginden alındı.
         exFactoryInheritedFrom: order._exInheritedFrom ? (order._exInheritedFrom.ccode || '') : '',

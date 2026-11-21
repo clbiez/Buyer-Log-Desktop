@@ -7009,7 +7009,7 @@ function cpLogisticStageHtml(segment){
   if(!st)return '<div class="cpLogisticStage">—</div>';
   const shift=cpStageShiftText(st.vsRule);
   const run=cpStageRunText(st);
-  return `<div class="cpLogisticStage${st.over>0?' cpStageOver':''}"><strong>${fmtDate(coerceDateLoose(st.eta))||'—'}</strong>${run?`<small>${escapeHtml(run)}</small>`:''}${shift?`<small class="cpStageShift ${Number(st.vsRule)>0?'is-early':Number(st.vsRule)<0?'is-late':''}">${escapeHtml(shift)}</small>`:''}</div>`;
+  return `<div class="cpLogisticStage${st.over>0?' cpStageOver':''}"><strong>${fmtDate(coerceDateLoose(st.eta))||'—'}</strong>${run?`<small data-no-i18n>${escapeHtml(run)}</small>`:''}${shift?`<small class="cpStageShift ${Number(st.vsRule)>0?'is-early':Number(st.vsRule)<0?'is-late':''}">${escapeHtml(shift)}</small>`:''}</div>`;
 }
 function cpLogisticSegmentTitle(segment){
   if(segment.kind==='production') return appLang==='en'?'Remaining in production':'Üretimde kalan';
@@ -7030,6 +7030,8 @@ function cpLogisticDetailRowHtml(row,cols,withChk,tableKey='cp'){
   const remaining=Math.max(0,toNum(row._logisticRemainingQty)||Math.max(0,total-loaded));
   // Ex-Factory ve Yükleme Onayı sipariş seviyesindedir; her parsiyelde aynı
   // sipariş tarihlerini gösterir. Handover ve Antrepo tarihi parsiyel bazında kalır.
+  // Buyer Log'un ürettiği (IAS kaydı olmayan) üretimde/eksik/kapanmış bakiye
+  // parsiyelleri önceki parsiyelin yükleme onayını devralmaz.
   const exFactory=coerceDateLoose(row&&row['Ex-factory']);
   const loadingApproval=coerceDateLoose(row&&row['Buying Son Onay Tarihi']);
   // Aşama sütunu yalnız en az bir parsiyelde aşama tahmini varsa eklenir.
@@ -7045,7 +7047,7 @@ function cpLogisticDetailRowHtml(row,cols,withChk,tableKey='cp'){
       <div>${badge(escapeHtml(statusDisplay(segment.status)||'—'),statusTone(segment.status))}</div>
       <div>${escapeHtml(segment.delType?transitDelTypeDisplay(segment.delType):'—')}</div>
       <div>${BLRevision.isAutomaticExFactory(row)?revisionHtml('Ex-factory',revisionInfo(row,'Ex-factory')):(fmtDate(exFactory)||'—')}</div>
-      <div>${fmtDate(loadingApproval)||'—'}</div>
+      <div>${segment.synthetic?'—':(fmtDate(loadingApproval)||'—')}</div>
       <div>${fmtDate(handover)||'—'}</div>
       <div class="cpLogisticDateValue"><strong>${fmtDate(arrival)||'—'}</strong>${arrivalNote?`<small>${escapeHtml(arrivalNote)}</small>`:''}</div>${hasStage?cpLogisticStageHtml(segment):''}
     </div>`;
@@ -7266,7 +7268,8 @@ function cellHtml(c,r,cf,tableKey='cp'){
       const run=r&&r._stageRun;
       if(!run||!run.code) return '<td></td>';
       const text=cpStageRunText(run);
-      return `<td class="${run.over>0?'cpStageOver':''}" title="${escapeHtml(text)}">${escapeHtml(text)}</td>`;
+      // Metin zaten aktif dilde üretilir; çeviri ağı "ETA"yı yeniden çevirmesin.
+      return `<td class="${run.over>0?'cpStageOver':''}" title="${escapeHtml(text)}" data-no-i18n>${escapeHtml(text)}</td>`;
     }
     case 'pct': return `<td class="num">${fmtPct(v)}</td>`;
     case 'importance': {
