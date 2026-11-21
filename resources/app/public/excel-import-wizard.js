@@ -23,6 +23,7 @@
 
   var STEPS = ['file', 'sheet', 'columns', 'match', 'review', 'import'];
   var PAGE_SIZE = 50;
+  var KEEP_ALL = '__keep_all__';
   var state = null, host = null, aiPanel = null;
   // Cancellation identity, never a permission cache. Ordinary hydration may
   // replace the same profile object; access/actor changes invalidate old jobs.
@@ -568,6 +569,7 @@
           + '<option value="all">' + esc(T('Tüm uygun hedeflere uygula (açık onay)', 'Apply to all eligible targets (explicit)')) + '</option>'
           + '</select></div>';
       }).join('') + '</div>' : '';
+    var canKeepAll = state.options.createNew && state.adapter.canCreate !== false;
     var duplicateBlock = plan.conflicts.filter(function (item) { return !item.resolved; }).length
       ? '<div class="ximBlock"><h4>' + esc(T('Tekrar çakışmaları', 'Duplicate conflicts')) + '</h4>'
       + plan.conflicts.filter(function (item) { return !item.resolved; }).slice(0, 20).map(function (conflict) {
@@ -579,7 +581,11 @@
           + conflict.sourceRowIds.map(function (id) {
             var row = (state.table.rows || []).find(function (item) { return item.id === id; });
             return '<option value="' + esc(id) + '">' + esc(T('Yalnız Excel satırı', 'Only workbook row') + ' ' + (row ? row.excelRowNumber : id)) + '</option>';
-          }).join('') + '</select></div>';
+          }).join('')
+          // Tümünü aktar: ilk satır eşleşen kaydı günceller, diğerleri yeni
+          // satır olur. Yeni satır oluşturulamıyorsa seçenek sunulmaz.
+          + (canKeepAll ? '<option value="' + KEEP_ALL + '">' + esc(T('Tümünü aktar (gerekirse yeni satır oluştur)', 'Import all (create new rows if needed)')) + '</option>' : '')
+          + '</select></div>';
       }).join('') + '</div>' : '';
 
     var operations = plan.operations;
@@ -788,6 +794,12 @@
 
   function setOption(key, value) {
     state.options[key] = value;
+    if (key === 'createNew' && !value) {
+      // "Tümünü aktar" yeni satır gerektirebilir; oluşturma kapanınca bu
+      // kararlar geçersizdir ve çakışma yeniden karar ister.
+      var resolutions = state.decisions.duplicateResolution;
+      Object.keys(resolutions).forEach(function (k) { if (resolutions[k] && resolutions[k].keepAll) delete resolutions[k]; });
+    }
     if (['includeHiddenRows', 'includeHiddenColumns', 'fillMergedCells', 'includeStructuralRows'].indexOf(key) >= 0 && state.grid) rebuildTable();
     invalidatePlan();
   }
@@ -1117,7 +1129,7 @@
     }
     if (action === 'duplicate') {
       if (!element.value) delete state.decisions.duplicateResolution[element.dataset.key];
-      else state.decisions.duplicateResolution[element.dataset.key] = { keep: element.value };
+      else state.decisions.duplicateResolution[element.dataset.key] = element.value === KEEP_ALL ? { keepAll: true } : { keep: element.value };
       rebuildPlan(); return;
     }
     if (action === 'include') {
