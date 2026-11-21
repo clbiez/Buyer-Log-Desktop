@@ -190,7 +190,7 @@ async function measureSameTab(context){
       const result=await page.evaluate(([module,selector])=>new Promise((resolve,reject)=>{
         const started=performance.now();switchTab(module);
         const tick=()=>{
-          if(document.body.dataset.activeTab===module&&document.querySelector(selector))return requestAnimationFrame(()=>requestAnimationFrame(()=>resolve({shellMs,ms:performance.now()-started,rows:module==='cp'?state.cp?.rows.length:module==='orders'?state.orders?.rows.length:kolRows.length})));
+          if(document.body.dataset.activeTab===module&&document.querySelector(selector))return requestAnimationFrame(()=>requestAnimationFrame(()=>resolve({ms:performance.now()-started,rows:module==='cp'?state.cp?.rows.length:module==='orders'?state.orders?.rows.length:kolRows.length})));
           if(performance.now()-started>180000)return reject(Error(module+' switch timed out'));setTimeout(tick,20);
         };tick();
       }),[module,selector]);
