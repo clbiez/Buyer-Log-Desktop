@@ -35,6 +35,22 @@ test('a source within the measured worker footprint is prepared and computed in 
   }finally{lease.release();}
 });
 
+test('a large source copy fits the service queue limit and is prepared in the worker',async t=>{
+  // 350 MiB kaynak: kuyruk girdisi 2×350=700 MiB; eski 512 MiB kuyruk sınırı COMPUTE_QUEUE_BUSY veriyordu.
+  const {SERVICE_MAX_PENDING_BYTES}=require('../server/lib/compute-service');
+  const pool=createComputePool({maxWorkers:1,memoryBudgetBytes:4096*MiB,maxPendingBytes:SERVICE_MAX_PENDING_BYTES}),service=createComputeService({pool,root});t.after(()=>service.close());
+  const descriptor=await service.seedSource({ownerId:'a',generation:'g1',source:source(),uncompressedBytes:350*MiB,publish:false});
+  assert.notEqual(descriptor.inlineSource,true);assert.ok(descriptor.replicaFile);
+});
+
+test('a busy queue never fails a refreshed source copy; it uses the capacity path',async t=>{
+  const pool={setGeneration(){},stats:()=>({maxWorkers:1}),close:async()=>{},
+    run:async()=>{throw Object.assign(Error('busy'),{code:'COMPUTE_QUEUE_BUSY'});}};
+  const service=createComputeService({pool,root});t.after(()=>service.close());
+  const descriptor=await service.seedSource({ownerId:'a',generation:'g1',source:source(),uncompressedBytes:MiB});
+  assert.equal(descriptor.inlineSource,true);
+});
+
 test('a source larger than the worker source cache uses the capacity path instead of failing',async t=>{
   // 4 GiB bütçede 550 MiB kaynak 6× tahminle kabul edilir; işçi önbelleği (2 GiB, 4×kaynak) ise reddeder.
   const pool=createComputePool({maxWorkers:1,memoryBudgetBytes:4096*MiB}),service=createComputeService({pool,root});t.after(()=>service.close());

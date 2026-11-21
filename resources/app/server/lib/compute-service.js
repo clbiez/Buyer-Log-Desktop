@@ -24,9 +24,13 @@ function failure(code){
     const messages={COMPUTE_SOURCE_TOO_LARGE:['Kaynak kopyası bayt bütçesine sığmıyor.','Source replica exceeds the byte budget.',413],COMPUTE_SOURCE_OWNER_MISMATCH:['Kaynak sahibi uyuşmuyor.','Source owner mismatch.',403],COMPUTE_STALE_GENERATION:['Kaynak sürümü değişti.','Source generation changed.',409],COMPUTE_POOL_CLOSED:['Hesaplama havuzu kapalı.','Compute pool is closed.',503],COMPUTE_JOB_INVALID:['Geçersiz hesaplama isteği.','Invalid compute request.',400],COMPUTE_ABORTED:['Hesaplama iptal edildi.','Compute operation cancelled.',499],COMPUTE_TIMEOUT:['Hesaplama zaman aşımına uğradı.','Compute operation timed out.',504],COMPUTE_QUEUE_BUSY:['Hesaplama kuyruğu dolu; tekrar deneyin.','Compute queue is full; retry later.',503]};
   const [tr,en,statusCode]=messages[code];return Object.assign(Error(`${tr} / ${en}`),{code,statusCode,errorEn:en});
 }
+/* Kuyruk girdi bayt sınırı. Kuyruktaki girdi zaten toplam bellek bütçesine (≤4 GiB) dahil sayılır;
+   ayrı 512 MiB sınırı ≈256 MiB üstü kaynak kopyası hazırlığını (girdi 2×kaynak) COMPUTE_QUEUE_BUSY ile
+   reddediyor ve yenileme yayımını düşürüyordu. Fiilî sınır bütçedir. */
+const SERVICE_MAX_PENDING_BYTES=4096*MiB;
 function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
   if(!Number.isSafeInteger(diskBudgetBytes)||diskBudgetBytes<1)throw Error('Invalid source replica byte budget');
-  pool??=createComputePool({maxPendingBytes:512*MiB});
+  pool??=createComputePool({maxPendingBytes:SERVICE_MAX_PENDING_BYTES});
   const privateRoot=fs.mkdtempSync(path.join(root||os.tmpdir(),'buyerlog-source-replicas-'));
   fs.chmodSync(privateRoot,0o700);
   const records=new Map(),current=new Map(),preparing=new Map();let reservedDiskBytes=0,closed=false,closing,warming,authorityGeneration=0;
@@ -110,7 +114,8 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
           lease=await pool.run('seed-source',{ownerId:owner,generation:version,source,antrepoMetadata:captureAntrepoMetadata(source),replicaFile,maxBytes:diskBytes},
             {ownerKey:preparationOwner,generation:version,priority:'background',estimatedBytes:96*MiB+uncompressedBytes*SOURCE_JOB_FACTOR,inputBytes:uncompressedBytes*2});
         }catch(error){
-          if(error?.code!=='COMPUTE_JOB_TOO_LARGE')throw error;
+          // Kuyruk yoğunluğu kalıcı yenileme yayımına yeni bir başarısızlık bağımlılığı getirmez: kapasite yolu.
+          if(!['COMPUTE_JOB_TOO_LARGE','COMPUTE_QUEUE_BUSY'].includes(error?.code))throw error;
           // İşçi yazdıktan sonra heap'i tükettiyse (sonlanmış; başka yazma olmaz) yarım/tam kopya
           // izlenmeden diskte kalmasın: kayıttan ve bütçeden düşmeden önce silinir.
           if(error.workerOutOfMemory)await fs.promises.rm(replicaFile,{force:true});
@@ -337,4 +342,4 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
   }
   return {seedSource,publishSource,retireSource,coldSource,bindColdSource,run,runExcelUtility,runOffice,encodeLocalDbSnapshot,runEndeksmatikStatus,collectionLflSource,runCollectionLfl,hashAccessAuthority,warm,stats,close};
 }
-module.exports={createComputeService};
+module.exports={createComputeService,SERVICE_MAX_PENDING_BYTES};
