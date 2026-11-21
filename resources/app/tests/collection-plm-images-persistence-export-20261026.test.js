@@ -75,7 +75,7 @@ test('Collection server rehydrates ONLY accessible workspace row assets and stri
       () => workspace,()=>({entries:{'owner|1':{imageRef:'ci_shared'}}}),
       ()=>({imagemap:{'plm:2086163|colour:BLUE':'ci_visible','plm:999999':'ci_foreign'}}),
       ref => indexed.has(ref)?{item:{id:ref}}:null,
-      {plmImageRef:(map,row)=>map['plm:'+row.plm+'|colour:'+row.ccode]},
+      {plmImageRef:(map,row)=>map['plm:'+row.plm+'|colour:'+row.ccode],plmImageNamedIndex:()=>new Map()},
       {rowSharedImageIdentity:row=>row.id===1?{id:row.id}:null},
       (owner,item)=>owner+'|'+item.id);
   const result = resolve('owner');

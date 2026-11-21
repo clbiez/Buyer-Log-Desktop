@@ -206,7 +206,24 @@ function plmImageUsable(map, plmId) {
   if (plmImageDeleted(map, plmId)) return false;
   return keys.some(key => String(map[key] == null ? '' : map[key]).trim() !== '');
 }
-function plmImageRef(map, order) {
+/* Adlı renk anahtarları (plm:X|colour:Y|name:Z) için taban → anahtarlar
+   dizini. plmImageRef kod anahtarı bulamayınca her çağrıda TÜM haritayı
+   tarıyordu; Backlog ve Koleksiyon satır döngülerinde bu satır × anahtar
+   maliyetine dönüşüp PLM görsel senkronundan sonra olay döngüsünü
+   kilitliyordu. Dizin kalıcı önbellek DEĞİLDİR: çağıran döngü başında bir
+   kez kurar ve döngü boyunca haritayı değiştirmeden kullanır. */
+function plmImageNamedIndex(map) {
+  const index = new Map();
+  if (!map || typeof map !== 'object') return index;
+  for (const key of Object.keys(map)) {
+    const at = key.indexOf('|name:');
+    if (at < 0) continue;
+    const base = key.slice(0, at), list = index.get(base);
+    if (list) list.push(key); else index.set(base, [key]);
+  }
+  return index;
+}
+function plmImageRef(map, order, namedIndex) {
   if (!map || !order) return undefined;
   const namedKey = plmColourImageNameKey(order.plm, order.ccode, order.colour || order.color);
   if (namedKey && Object.prototype.hasOwnProperty.call(map, namedKey)) return map[namedKey];
@@ -223,7 +240,9 @@ function plmImageRef(map, order) {
      PLM-only kaydına geri düşme. */
   if (key) {
     const prefix = `${key}|name:`;
-    const namedKeys = Object.keys(map).filter(candidate => candidate.indexOf(prefix) === 0);
+    const namedKeys = namedIndex instanceof Map
+      ? (namedIndex.get(key) || []).filter(candidate => Object.prototype.hasOwnProperty.call(map, candidate))
+      : Object.keys(map).filter(candidate => candidate.indexOf(prefix) === 0);
     if (namedKeys.length) {
       const refs = [...new Set(namedKeys.map(candidate => String(map[candidate] == null ? '' : map[candidate]).trim()))];
       return refs.length === 1 ? refs[0] : undefined;
@@ -3449,6 +3468,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
   const requestedColumns = (Array.isArray(extraColumns) ? extraColumns : []).filter(column =>
     column && (column.source === 'asas' || column.source === 'antrepo') && column.header && column.label
   );
+  const imageNamedIndex = plmImageNamedIndex(overrides && overrides.imagemap);
   return (Array.isArray(sourceSegments) ? sourceSegments : []).map(segment => {
     const order = sourceOrderRef(segment) || segment;
     const ias = segment._iasRow || null;
@@ -3617,7 +3637,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
       _plmId: order.plm || '',
       _colourCode: order.ccode || '',
       _modelName: order.model || '',
-      _imageRef: plmImageRef(overrides && overrides.imagemap, order) || '',
+      _imageRef: plmImageRef(overrides && overrides.imagemap, order, imageNamedIndex) || '',
       // Parsiyel kimliği (Global Flow). Excel başlıklarına eklenmez.
       _partial: {
         kind: isProduction ? 'production' : (segment._segmentKind === 'shortage' ? 'shortage' : 'partial'),
@@ -3692,7 +3712,7 @@ module.exports = {
   parseASASWorkbook, parseASASRows, parseFabricWorkbook, applyFabricEntries, applyFabricEntriesToLflRows, parseAntrepoWorkbook, parseAntrepoRows, parseCPUpdateWorkbook,
   buildCPRowsFromASAS, buildOrdersRowsFromASAS, buildSharedOrderProjectionRowsFromASAS, buildOverviewSummaryRowsFromASAS, buildOrderSummaryRowsFromASAS, buildBacklogOperationalRows, buildBacklogGrouped, buildBacklogDetailRows, buildBacklogTemplateRows, backlogCustomDimensionContext, computeFlags, applyFormulas, deriveOperationalStatus, shouldWaitForRetail, isShortageStatus, isWarehouseShortageStatus, backlogRemainderStatus, findAntrepoHit, findAntrepoHits, backlogOrderQuantityFromAntrepo, backlogProductionRemainder, PRODUCTION_REMAINDER_TOLERANCE_RATE, SHORTAGE_REMAINDER_RATE, SHORTAGE_STATUS, WAREHOUSE_STATUS, WAREHOUSE_SHORTAGE_STATUS, BACKLOG_DIM_LABELS,
   orderCodeKey, toOrderCodeNumber, antrepoParseMeta, dateOrdinal,
-  orderLineKey, orderLineKeyOf, rowLineKey, normalizePlmImageId, normalizeCpImageColourCode, plmImageKey, plmColourImageKey, plmColourImageNameKey, plmImageRef, plmImageKeysFor, plmImageDeleted, plmImageUsable, overrideKeyOf, overrideHas, overrideGet,
+  orderLineKey, orderLineKeyOf, rowLineKey, normalizePlmImageId, normalizeCpImageColourCode, plmImageKey, plmColourImageKey, plmColourImageNameKey, plmImageRef, plmImageNamedIndex, plmImageKeysFor, plmImageDeleted, plmImageUsable, overrideKeyOf, overrideHas, overrideGet,
   antrepoEntryConflicts, backlogNodeAtPath,
   ANTREPO_MATCH_RULES, ANTREPO_MATCH_RULE_LABELS, DEFAULT_ANTREPO_MATCH_RULE, normalizeAntrepoMatchRule,
   DEFAULT_ANTREPO_MATCH_CONDITIONS, defaultAntrepoMatchConfig, normalizeAntrepoMatchConfig, antrepoMatchConfigLabel, antrepoMatchConfigSignature, isDefaultAntrepoMatchConfig,

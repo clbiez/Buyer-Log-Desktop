@@ -46,3 +46,28 @@ test('applySyncedPlmImages publishes the registry before the per-row loop',()=>{
   const sync=body.indexOf('syncModelImageRegistry()'),loop=body.indexOf('cpImageRefFromOverride(');
   assert.ok(sync>0&&loop>sync,'registry must be published (indexed) before rows resolve refs');
 });
+
+test('server plmImageRef: row loops resolve named keys from a loop-scoped index (no per-row full scan)',()=>{
+  const parse=require('../server/lib/parse');
+  const raw={'plm:7|colour:C|name:RED':'a','plm:8|colour:C|name:RED':'x','plm:8|colour:C|name:BLUE':'y','plm:9|colour:C|name:RED':'','plm:9':'legacy','plm:10|colour:C':'code'};
+  for(let i=0;i<500;i++)raw[`plm:${1000+i}|colour:S|name:N`]=`n${i}`;
+  const cases=[{plm:'7',ccode:'C'},{plm:'8',ccode:'C'},{plm:'9',ccode:'C'},{plm:'10',ccode:'C'},{plm:'7',ccode:'C',colour:'RED'},{plm:'404',ccode:'C'}];
+  const expected=cases.map(order=>parse.plmImageRef(raw,order));
+  let scans=0;const map=new Proxy(raw,{ownKeys(t){scans++;return Reflect.ownKeys(t);}});
+  const index=parse.plmImageNamedIndex(map);scans=0;
+  for(let n=0;n<200;n++)cases.forEach((order,i)=>assert.equal(parse.plmImageRef(map,order,index),expected[i]));
+  assert.equal(scans,0,'indexed lookups must not enumerate the whole imagemap');
+  assert.deepEqual(expected,['a',undefined,'',  'code','a',undefined]);
+});
+
+test('server row loops build the named image index once before iterating',()=>{
+  const parse=fs.readFileSync(path.join(__dirname,'..','server','lib','parse.js'),'utf8');
+  const start=parse.indexOf('function backlogTemplateRowsFromSegments(');
+  const body=parse.slice(start,parse.indexOf('\nfunction ',start+10));
+  assert.ok(body.indexOf('plmImageNamedIndex(')>0&&body.indexOf('plmImageNamedIndex(')<body.indexOf('.map(segment'));
+  assert.match(body,/plmImageRef\(overrides && overrides\.imagemap, order, imageNamedIndex\)/);
+  const server=fs.readFileSync(path.join(__dirname,'..','server','server.js'),'utf8');
+  const s=server.indexOf('function collectionWorkspaceWithLocalImages(');
+  const sb=server.slice(s,server.indexOf('\nfunction ',s+10));
+  assert.match(sb,/plmImageNamedIndex\(imagemap\)/);assert.match(sb,/\}, imageNamedIndex\)/);
+});
