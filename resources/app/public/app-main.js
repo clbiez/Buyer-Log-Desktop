@@ -10991,6 +10991,10 @@ function cpRMSortClick(key){
 }
 function cpRMPaintTable(){
   const rows=cpRM.rows||[];
+  // Pencere satırları sunucunun hesaplanmış demetiyle gelir (cpRMDecorate): eski yolun ilk açılışta
+  // kurduğu "Hesaplanıyor…" görünümü burada kapanır; aksi halde Redraw dahil hiçbir çizim güncel
+  // Priority/checklist/formül değerini göstermezdi.
+  cpComputed.pendingView=false;
   applyFormulaColumns('cp');
   updateCpDimBtnLabels();
   document.getElementById('cpEmpty').style.display='none';

@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-21",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "CP Tracker düzeltmeleri",
+    "en": "CP Tracker fixes"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir.",
+    "en": "Redraw table now shows the current calculated values."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "cp-redraw-computed-values",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Tabloyu yeniden çiz hesaplanan değerleri gösterir",
+        "en": "Redraw table shows calculated values"
+      },
+      "body": {
+        "tr": "CP açıldıktan sonra Öncelik, checklist ve formül hücreleri, değerleri sunucudan gelmiş olsa bile \"Hesaplanıyor…\" olarak kalabiliyordu; Tabloyu yeniden çiz düğmesi bunu düzeltmiyor, değer ancak bir filtre ya da düzenleme sonrası görünüyordu. Artık her çizimde, Tabloyu yeniden çiz dahil, güncel hesaplanmış değerler gösterilir.",
+        "en": "After CP opened, Priority, checklist and formula cells could stay on \"Calculating…\" even though their values had arrived from the server; the Redraw table button did not fix it and the values only appeared after a filter change or an edit. Every redraw, including Redraw table, now shows the current calculated values."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-redraw-computed-values.png",
+        "alt": {
+          "tr": "Demo verili CP tablosunda Tabloyu yeniden çiz sonrası Öncelik sütunu",
+          "en": "Priority column in a demo CP table after Redraw table"
+        },
+        "caption": {
+          "tr": "Yeniden çizimden sonra Öncelik hücreleri gerçek değeri gösterir; düzenlenen Retail tarihi Sevk→Perakende değerine yansımıştır.",
+          "en": "After a redraw, Priority cells show their real value; the edited retail date is reflected in Ex→Retail."
+        }
+      }
+    }
+  ]
 }
