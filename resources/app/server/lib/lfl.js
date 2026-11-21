@@ -409,6 +409,8 @@ function withFabricDimensions(meta, rows) {
       yarnCounts: uniqueSorted(source, 'iplikNo'),
       fabricWeights: uniqueSorted(source, 'fabricWeight'),
       fabricBlends: uniqueSorted(source, 'karisim'),
+      plmFabrics: uniqueSorted(source, 'plmFabric'),
+      plmArtworks: uniqueSorted(source, 'plmArtwork'),
     },
   };
 }
