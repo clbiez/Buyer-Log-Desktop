@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "plm-fabric-artwork-detail-reports-filters",
+      "type": "feature",
+      "module": {
+        "tr": "Alt detay raporları · LFL · Fiyat & Üretici Analizi",
+        "en": "Detail reports · LFL · Price & Supplier Analysis"
+      },
+      "title": {
+        "tr": "PLM Kumaş ve PLM Artwork detay raporlarında ve filtrelerde",
+        "en": "PLM Fabric and PLM Artwork in detail reports and filters"
+      },
+      "body": {
+        "tr": "PLM ID taşıyan her alt detay raporunda (LFL portföy detayları, Fiyat & Üretici Analizi, Siparişler, CP, Backlog ve diğerleri) PLM Kumaş ve PLM Artwork sütunları yer alır ve Excel'e aktarılır. LFL'de ve Fiyat & Üretici Analizi'nde bu iki alanla filtreleme yapılabilir. Kumaş Kategorisi, Kumaş Tipi, İplik No, Gramaj ve Karışım filtreleri artık modelin PLM kumaş bilgisinden gelir; PLM kaydı olmayan modelde ASAS değeri korunur ve aynı özelliğin farklı yazımları tek değerde birleşir. Kumaşçı ve Kumaşçı Ülkesi PLM'de bulunmadığı için ASAS'tan okunmaya devam eder.",
+        "en": "Every detail report that carries a PLM ID (LFL portfolio details, Price & Supplier Analysis, Orders, CP, Backlog and others) now shows PLM Fabric and PLM Artwork columns, and they are included in Excel exports. LFL and Price & Supplier Analysis can filter by both fields. The Fabric Category, Fabric Type, Yarn Count, Weight and Composition filters now come from the model's PLM fabric information. When a model has no PLM record, the ASAS value is kept, and different spellings of the same property are merged into one value. Fabric Supplier and Fabric Supplier Country are not in PLM, so they are still read from ASAS."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-fabric-artwork-detail-reports.png",
+        "alt": {
+          "tr": "Demo LFL portföy detayında PLM Kumaş ve PLM Artwork sütunları",
+          "en": "PLM Fabric and PLM Artwork columns in a demo LFL portfolio detail"
+        },
+        "caption": {
+          "tr": "Demo LFL portföy detayı: her model için PLM kumaş metni ve baskı yerleşimleri.",
+          "en": "Demo LFL portfolio detail: the PLM fabric text and print placements for each model."
+        }
+      }
+    },
+    {
       "id": "override-save-independent-of-background-compute",
       "type": "fix",
       "module": {"tr": "CP · Siparişler · License Royalty", "en": "CP · Orders · License Royalty"},
