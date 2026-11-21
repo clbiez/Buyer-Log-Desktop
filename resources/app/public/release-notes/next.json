@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-21",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Aşama tahmini düzeltmesi",
+    "en": "Stage forecast fix"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz.",
+    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "cp-stage-status-floor-synthetic-approval",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Siparişler · Backlog",
+        "en": "CP · Orders · Backlog"
+      },
+      "title": {
+        "tr": "Yoldaki parsiyelin aşama tahmini düzeltildi; Buyer Log'un açtığı üretimde parsiyeli yükleme onayı devralmaz",
+        "en": "Stage forecast fixed for partials in transit; production balances created by Buyer Log no longer inherit the loading approval"
+      },
+      "body": {
+        "tr": "IAS durumu Yolda / Yol Operasyonları olan parsiyelde yükleme, Gümrük-Liman Operasyonları'nda ETA geçilmiş sayılır. Cut Off veya Fiili Yükleme tarihi sorguda gelmese de parsiyel artık Handover'dan beri \"Handover → Cut-off\" aşamasında bekliyor görünmez; bu sahte aşım σ'yı, Aşama ETA'sını ve gecikme uyarısını şişirmiyor. Koşan aşamanın günü aşamanın kendi başlangıcına göre gösterilir. Lojistik akışında Buyer Log'un IAS kaydı olmadan açtığı üretimde / eksik / kapanmış bakiye satırları önceki parsiyelin yükleme onay tarihini göstermez.",
+        "en": "A partial whose IAS status is In Transit / Transit Operations counts loading as done; Customs-Port Operations counts the ETA as passed. Even when Cut Off or Actual Loading dates are missing from the query, the partial no longer appears stuck in \"Handover → Cut-off\" since Handover, so that false overrun no longer inflates σ, Stage ETA or the delay warning. The running stage's days are counted from that stage's own start. In the logistics flow, production / shortage / closed-balance lines that Buyer Log creates without an IAS record no longer show the previous partial's loading approval date."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-stage-status-floor.png",
+        "alt": {
+          "tr": "Demo CP lojistik akışı: üretimde satırında yükleme onayı boş, yoldaki parsiyel 4. Yükleme → ETA aşamasında",
+          "en": "Demo CP logistics flow: no loading approval on the production line, the partial in transit in stage 4 Loading → ETA"
+        },
+        "caption": {
+          "tr": "Demo veride yalnız Talep + Handover tarihi olan yoldaki parsiyel Cut-off'ta bekliyor görünmez; üretimde kalan satırı onay tarihi almaz.",
+          "en": "On demo data, a partial in transit with only Request + Handover dates is not shown waiting at Cut-off; the production line gets no approval date."
+        }
+      }
+    }
+  ]
 }
