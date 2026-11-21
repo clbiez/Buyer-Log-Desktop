@@ -393,7 +393,11 @@ function parseTableSearchTerms(value){
     const suffix=marker!=='!'&&marker!=='/'&&raw.length>1&&raw[raw.length-1]==='!';
     const mode=marker==='!'||suffix?'notContains':marker==='/'?'contains':'exact';
     const criterion=marker==='!'||marker==='/'?norm(raw.slice(1)):suffix?norm(raw.slice(0,-1)):raw;
-    return criterion?{mode,value:normalize(criterion)}:null;
+    if(!criterion)return null;
+    // Dönem kısayolu (MB=M3-M5, EXF=W12): dil bağımsız satır jetonlarının VEYA kümesi.
+    const period=globalThis.BLTableSearchPeriods?.parse(criterion);
+    if(period&&!period.invalid)return {mode:mode==='notContains'?'notContains':'period',value:normalize(criterion),values:period.tokens};
+    return period?{mode,value:normalize(criterion),invalid:true}:{mode,value:normalize(criterion)};
   };
   // "14! SAD!" gibi boşlukla yan yana yazılan sonek hariç tutmaları ayrı kriterdir.
   // Yalnız tamamlanmış sonekten sonra bölünür; "! RED" önek yazımı bozulmaz.
@@ -439,6 +443,10 @@ function tableSearchMatches(haystack,terms,options){
   };
   const criterionMatches=criterion=>{
     const item=criterion&&typeof criterion==='object'?criterion:{mode:'exact',value:criterion};
+    if(Array.isArray(item.values)){
+      const hit=item.values.some(token=>text.includes(token));
+      return item.mode==='notContains'?!hit:hit;
+    }
     const value=normalize(item.value);
     if(!value)return false;
     if(item.mode==='contains')return text.includes(value);
@@ -3234,13 +3242,17 @@ function renderActiveFilterContext(tableKey){
   if(!bar||!wrap)return;
   bar.setAttribute('aria-label',appLang==='en'?'Active table filters':'Aktif tablo filtreleri');
   const tokens=activeTableFilterTokens(tableKey),removeText=appLang==='en'?'Remove filter':'Filtreyi kaldır';
+  const chipsApi=window.BLTableSearchChips;
   wrap.innerHTML=tokens.length?tokens.map(token=>{
+    // Arama tek etiket yerine terim terim kip olarak gösterilir (VE/VEYA, hariç, kısayol).
+    if(token.kind==='search'&&chipsApi)return chipsApi.html(token.detail,{english:appLang==='en',inputId:token.key,missing:new Set((window.BLTableSearchFeedback?.lastMissing?.(token.key)||[]).map(value=>norm(value).toLocaleLowerCase('tr-TR')))});
     const text=`${token.label}: ${token.detail}`;
     return `<button type="button" class="activeFilterToken" data-filter-remove data-filter-kind="${escapeHtml(token.kind)}" data-filter-key="${escapeHtml(token.key)}" title="${escapeHtml(`${removeText}: ${text}`)}" aria-label="${escapeHtml(`${removeText}: ${text}`)}"><span>${escapeHtml(text)}</span><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>`;
   }).join(''):`<span class="activeFilterEmpty">${escapeHtml(appLang==='en'?'No active table filters':'Aktif tablo filtresi yok')}</span>`;
   bar.dataset.activeCount=String(tokens.length);
   const clear=bar.querySelector('[data-active-filter-clear]');if(clear)clear.hidden=!tokens.length;
   wrap.querySelectorAll('[data-filter-remove]').forEach(button=>button.addEventListener('click',()=>removeActiveFilterToken(tableKey,button.dataset.filterKind,button.dataset.filterKey)));
+  wrap.querySelectorAll('.tableSearchChips').forEach(group=>chipsApi?.bind(group,group.dataset.searchInput));
 }
 function removeActiveFilterToken(tableKey,kind,key){
   if(kind==='search'||kind==='select'){const input=document.getElementById(key);if(input)input.value='';}
@@ -10159,7 +10171,34 @@ function cpSearchHaystack(r){
     const s=norm(v).toLowerCase();
     if(s)hay=hay?hay+' '+s:s;
   }
+  // Alan kısayolu (MB=M3, SEZON=S7) oturumda ilk kez kullanılana kadar tarih jetonu hesaplanmaz.
+  if(globalThis.BLTableSearchPeriods?.used){const tokens=cpSearchFieldTokens(r);if(tokens)hay=hay?hay+' '+tokens:tokens;}
   return hay;
+}
+// CP/Siparişler alan jetonları satır başına önbelleklenir; tarih/sezon değişince yenilenir.
+const _cpSearchFieldCache=new WeakMap();
+// Kanonik bağlama anahtarları bir kez çözülür; sıcak yolda yalnız düz özellik okuması kalır.
+let _cpSearchFieldKeys=null;
+function cpSearchFieldValue(r,keys){
+  for(let i=0;i<keys.length;i++){const v=r[keys[i]];if(v!==undefined&&v!==null&&v!=='')return v;}
+  return '';
+}
+function cpSearchFieldTokens(r){
+  if(!r||typeof r!=='object')return '';
+  if(!_cpSearchFieldKeys){
+    const keysOf=id=>window.BLCanonicalFields?.bindingFor?.('cp',id)?.keys||[];
+    _cpSearchFieldKeys={inStore:keysOf('inStore'),exFactory:keysOf('exFactory'),retail:keysOf('retailDate'),season:keysOf('season')};
+  }
+  const K=_cpSearchFieldKeys;
+  const mbDate=cpSearchFieldValue(r,K.inStore),exFactory=cpSearchFieldValue(r,K.exFactory),retail=cpSearchFieldValue(r,K.retail),season=cpSearchFieldValue(r,K.season);
+  // Merch takvimi yüklenince/değişince hafta-ay ataması değişir; önbellek takvim sürümüne bağlıdır.
+  const revision=globalThis.BLDateDimension?.merchCalendarRevision?.()??0;
+  const cached=_cpSearchFieldCache.get(r);
+  if(cached&&cached.revision===revision&&cached.mbDate===mbDate&&cached.exFactory===exFactory&&cached.retail===retail&&cached.season===season)return cached.value;
+  // Excel seri no, gg.aa.yyyy, ISO: ekrandaki tarih ayrıştırıcısıyla aynı.
+  const value=globalThis.BLTableSearchPeriods.rowTokens({mbDate:coerceDateLoose(mbDate),exFactory:coerceDateLoose(exFactory),retail:coerceDateLoose(retail),season});
+  _cpSearchFieldCache.set(r,{revision,mbDate,exFactory,retail,season,value});
+  return value;
 }
 const CP_MIRROR_GROUPS=[
   {id:'pri',col:'Priority'},
@@ -29682,13 +29721,33 @@ function passesKolColFilters(r){
   });
 }
 const KOL_SEARCH_KEYS=['plmId','modelKod','productMainDefinition','lisans','urunTipi','specialCode','line','colourCode','colour','fabric','fit','buyingSampleManufacturer','assortment','licensor','season','country','mmyg','mag','buyingGroup','buyer','inStoreWeek','inStoreMonth','confirmedManufacturer','_collectionOwnerName','not'];
+// Arama metnine girmeyen ama dönem kısayollarını (MB=M3, EXF=W12, RT=M10-M12) besleyen tarih alanları.
+const KOL_SEARCH_PERIOD_KEYS=['inStore','exFactory','retail'];
 const _kolSearchCache=new WeakMap();
+// Model Budget Month kayıt anındaki arayüz dilinde saklanabilir ("TEMMUZ 2027" / "JULY 2027").
+// Arama iki dilde de bulsun diye ay adı TR + EN eklenir; saklanan değer değiştirilmez.
+function kolMonthSearchText(value){
+  const code=kolMonthCode(value);
+  if(!code)return norm(value).toLowerCase();
+  const idx=Number(code.slice(4))-1,year=code.slice(0,4);
+  return `${KOL_MONTHS_TR[idx]} ${year} ${KOL_MONTHS_EN[idx]} ${year} ${code}`.toLocaleLowerCase('tr-TR');
+}
 function kolSearchHaystack(row){
   if(!row||typeof row!=='object')return '';
-  const signature=KOL_SEARCH_KEYS.map(key=>String(kolEffectiveValue(row,key)??'')).join('\u0001');
+  // Takvim sürümü imzadadır: merch takvimi değişince dönem jetonları yeniden hesaplanır.
+  const signature=[...KOL_SEARCH_KEYS,...KOL_SEARCH_PERIOD_KEYS].map(key=>String(kolEffectiveValue(row,key)??'')).join('\u0001')+'\u0001'+(globalThis.BLDateDimension?.merchCalendarRevision?.()??0);
   const cached=_kolSearchCache.get(row);
   if(cached?.signature===signature)return cached.value;
-  const value=KOL_SEARCH_KEYS.map(key=>norm(kolEffectiveValue(row,key)).toLowerCase()).join(' ');
+  const text=KOL_SEARCH_KEYS.map(key=>key==='inStoreMonth'?kolMonthSearchText(kolEffectiveValue(row,key)):norm(kolEffectiveValue(row,key)).toLowerCase()).join(' ');
+  const periods=window.BLTableSearchPeriods?.rowTokens({
+    mbWeekCode:kolWeekCode(kolEffectiveValue(row,'inStoreWeek'),kolEffectiveValue(row,'inStore')),
+    mbMonthCode:kolMonthCode(kolEffectiveValue(row,'inStoreMonth')),
+    mbDate:coerceDateLoose(kolEffectiveValue(row,'inStore')),
+    exFactory:coerceDateLoose(kolEffectiveValue(row,'exFactory')),
+    retail:coerceDateLoose(kolEffectiveValue(row,'retail')),
+    season:kolEffectiveValue(row,'season')
+  })||'';
+  const value=periods?text+' '+periods:text;
   _kolSearchCache.set(row,{signature,value});
   return value;
 }
@@ -29711,6 +29770,12 @@ function tableSearchSpace(tab){
   return null;
 }
 window.BLTableSearch.searchSpace=tableSearchSpace;
+// Kısayol öneri listesi (table-search-suggest.js) için satır başına alan jetonları.
+window.BLTableSearch.fieldTokenTexts=inputId=>{
+  if(inputId==='kolSearch')return (Array.isArray(kolRows)?kolRows:[]).map(kolSearchHaystack);
+  const rows=inputId==='cpSearch'?state.cp?.rows:inputId==='ordersSearch'?state.orders?.rows:null;
+  return (rows||[]).map(cpSearchFieldTokens);
+};
 /* v6.34 — Koleksiyon'da da üç durumlu işaret filtresi. CP/Siparişler ile aynı
    kip metni kullanılır ('' | 'checked' | 'unchecked'), böylece davranış ve
    kayıtlı değerlerin normalleştirilmesi tek yerden yönetilir. */
