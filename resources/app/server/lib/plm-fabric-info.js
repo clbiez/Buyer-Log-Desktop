@@ -334,6 +334,21 @@ function compareField(fieldName, asasValue, parsed) {
   return same ? COMPARISON.MATCH : COMPARISON.DIFFERENT;
 }
 
+/* Filtre/kırılım kimliği: aynı kumaş özelliğinin farklı yazımları (PLM
+   "Jersey" / "Süprem", "150 gsm" / "150 GR", "100% Cotton" / "%100 Pamuk")
+   tek anahtarda birleşir. Tanınamayan değer yazım biçimiyle anahtarlanır;
+   değer uydurulmaz. */
+function fieldKey(fieldName, value) {
+  const textValue = clean(value);
+  if (!textValue) return '';
+  if (fieldName === 'fabricWeight') { const n = weightNumber(textValue); return n != null ? `GSM:${n}` : `T:${words(textValue)}`; }
+  if (fieldName === 'karisim') { const key = asasCompositionKey(textValue); return key ? `K:${key}` : `T:${words(textValue)}`; }
+  if (fieldName === 'iplikNo') { const key = yarnKey(textValue); return key ? `Y:${key}` : `T:${words(textValue)}`; }
+  if (fieldName === 'kumasTipi') { const c = canonicalOf(FABRIC_TYPE_ALIASES, textValue); return c ? `C:${c}` : `T:${words(textValue)}`; }
+  if (fieldName === 'fabricCategory') { const c = canonicalOf(CATEGORY_ALIASES, textValue); return c ? `C:${c}` : `T:${words(textValue)}`; }
+  return `T:${words(textValue)}`;
+}
+
 const plmKey = value => String(value == null ? '' : value).trim().replace(/\.0+$/, '').toUpperCase();
 
 /* PLM kayıtlarından PLM ID → ham mainFabricInfo haritası. Aynı PLM ID'de
@@ -421,4 +436,5 @@ module.exports = {
   yarnKey,
   compareField,
   compareFabricSources,
+  fieldKey,
 };

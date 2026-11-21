@@ -38,13 +38,19 @@
     manufacturer:{label:'Üretici',allLabel:'hepsi',rowKey:'manufacturer'},
     buyingGroup:{label:'Buying Group',allLabel:'hepsi',rowKey:'buyingGroup'},
     buyer:{label:'Buyer',allLabel:'hepsi',rowKey:'buyer'},
-    fabricCategory:{label:'Kumaş Kategorisi',allLabel:'hepsi',rowKey:'fabricCategory'},
-    fabricSupplierCountry:{label:'Kumaşçı Ülkesi',allLabel:'hepsi',rowKey:'fabricSupplierCountry'},
-    fabricSupplier:{label:'Kumaşçı',allLabel:'hepsi',rowKey:'fabricSupplier'},
-    kumasTipi:{label:'Kumaş Tipi',allLabel:'hepsi',rowKey:'kumasTipi'},
-    iplikNo:{label:'İplik No',allLabel:'hepsi',rowKey:'iplikNo'},
-    fabricWeight:{label:'Gramaj',allLabel:'hepsi',rowKey:'fabricWeight'},
-    karisim:{label:'Karışım',allLabel:'hepsi',rowKey:'karisim'},
+    /* Kumaş Kategorisi, Kumaş Tipi, İplik No, Gramaj ve Karışım modelin PLM
+       kumaş bilgisinden gelir (sunucu: plm-model-details.js); PLM kaydı
+       olmayan modelde ASAS değeri korunur. Kumaşçı / Kumaşçı Ülkesi PLM'de
+       bulunmadığı için ASAS'tan okunur. */
+    fabricCategory:{label:'Kumaş Kategorisi',labelEn:'Fabric Category',allLabel:'hepsi',rowKey:'fabricCategory'},
+    fabricSupplierCountry:{label:'Kumaşçı Ülkesi',labelEn:'Fabric Supplier Country',allLabel:'hepsi',rowKey:'fabricSupplierCountry'},
+    fabricSupplier:{label:'Kumaşçı',labelEn:'Fabric Supplier',allLabel:'hepsi',rowKey:'fabricSupplier'},
+    kumasTipi:{label:'Kumaş Tipi',labelEn:'Fabric Type',allLabel:'hepsi',rowKey:'kumasTipi'},
+    iplikNo:{label:'İplik No',labelEn:'Yarn Count',allLabel:'hepsi',rowKey:'iplikNo'},
+    fabricWeight:{label:'Gramaj',labelEn:'Weight (GSM)',allLabel:'hepsi',rowKey:'fabricWeight'},
+    karisim:{label:'Karışım',labelEn:'Composition',allLabel:'hepsi',rowKey:'karisim'},
+    plmFabric:{label:'PLM Kumaş',labelEn:'PLM Fabric',allLabel:'hepsi',rowKey:'plmFabric'},
+    plmArtwork:{label:'PLM Artwork',labelEn:'PLM Artwork',allLabel:'hepsi',rowKey:'plmArtwork'},
   };
   const FILTER_DIMS=Object.keys(FILTER_META);
   const MONTH_DIMS=['currentMonth','compareMonth'];
@@ -72,6 +78,8 @@
     kumasTipi:{tr:'Kumaş Tipi',en:'Fabric Type',rowKey:'kumasTipi'},
     fabricWeight:{tr:'Gramaj',en:'Weight (GSM)',rowKey:'fabricWeight'},
     karisim:{tr:'Karışım',en:'Composition',rowKey:'karisim'},
+    plmFabric:{tr:'PLM Kumaş',en:'PLM Fabric',rowKey:'plmFabric'},
+    plmArtwork:{tr:'PLM Artwork',en:'PLM Artwork',value:row=>plmArtworkText(row)},
     license:{tr:'Lisans',en:'License',rowKey:'license'},
     licensor:{tr:'Lisansör',en:'Licensor',rowKey:'licensor'},
     dtrType:{tr:'DTR / NON-DTR',en:'DTR / NON-DTR',value:row=>dtrTypeForRow(row)},
@@ -175,7 +183,11 @@
   const countryIdentity=value=>COUNTRY_IDENTITY_MAP[countryKey(value)]||searchCompact(value);
   const dimensionIdentity=(dim,value)=>dim==='country'?countryIdentity(value):searchCompact(value);
   let dimensionLabelIndex=Object.create(null);
+  // PLM Artwork filtre kimliği TR metindir; EN görünümde aynı modelin EN metni gösterilir.
+  let plmArtworkEnIndex=new Map();
+  const plmArtworkText=row=>norm(isEn()?(row&&row.plmArtworkEn)||(row&&row.plmArtwork):row&&row.plmArtwork);
   function rebuildDimensionLabelIndex(rows=state.serverRows){
+    const artworkEn=new Map();(rows||[]).forEach(row=>{const tr=norm(row&&row.plmArtwork),en=norm(row&&row.plmArtworkEn);if(tr&&en&&!artworkEn.has(tr))artworkEn.set(tr,en);});plmArtworkEnIndex=artworkEn;
     const next=Object.create(null);SHARED_DIMS.forEach(dim=>{next[dim]=new Map();});
     (rows||[]).forEach(row=>{SHARED_DIMS.forEach(dim=>{const rowKey=FILTER_META[dim]?.rowKey||dim,value=norm(row&&row[rowKey]);if(!isUsableValue(value))return;const key=dimensionIdentity(dim,value);if(key&&!next[dim].has(key))next[dim].set(key,value);});});
     dimensionLabelIndex=next;
@@ -489,7 +501,10 @@
     if(MONTH_DIMS.includes(dim)){const prefix=dim==='currentMonth'?(isEn()?'Current':'Güncel'):(isEn()?'Comparison':'Kıyas');return `${prefix} ${dateFieldLabel(dateFieldForDim(dim))}`;}
     const meta=FILTER_META[dim]||{};return isEn()?(meta.labelEn||meta.label||dim):(meta.label||dim);
   }
-  function displayFilterValue(dim,value){return FILTER_META[dim]?.month?monthLabel(value):value;}
+  function displayFilterValue(dim,value){
+    if(dim==='plmArtwork'&&isEn())return plmArtworkEnIndex.get(norm(value))||value;
+    return FILTER_META[dim]?.month?monthLabel(value):value;
+  }
   function fillControls(){
     const saved=loadSaved(),dims=state.meta.dimensions||{};
     // Sezon listesi sunucu meta'sı İLE mevcut satırların birleşimidir. Yalnız meta
@@ -2134,6 +2149,27 @@
     {key:'iplikNo',label:isEn()?'Yarn Count':'İplik No',value:r=>r.iplikNo||'',type:'text'},
     {key:'fabricWeight',label:isEn()?'Weight (GSM)':'Gramaj',value:r=>r.fabricWeight||'',type:'text'},
     {key:'karisim',label:isEn()?'Composition':'Karışım',value:r=>r.karisim||'',type:'text'},
+    {key:'fabricInfoSource',label:isEn()?'Fabric Info Source':'Kumaş Bilgi Kaynağı',value:r=>r.fabricInfoSource||'',type:'text'},
+  ];}
+  /* Sunucu PLM Kumaş / Artwork metinlerini model başına bir kez gönderir
+     (meta.plmDetails); satırlara burada PLM ID ile yazılır. Revize kumaş
+     alanları (Kategori, Tip, İplik, Gramaj, Karışım) satırda hazır gelir. */
+  const PLM_FABRIC_FIELDS=['fabricCategory','kumasTipi','iplikNo','fabricWeight','karisim'];
+  function applyPlmDetails(rows,details){
+    const map=details&&typeof details==='object'?details:{};
+    for(const row of rows||[]){
+      if(!row||typeof row!=='object')continue;
+      const id=String(row.plmId==null?'':row.plmId).trim().replace(/^_+/,'').replace(/\.0+$/,'').replace(/^0+(?=\d)/,'');
+      const item=id?map[id]:null;
+      if(row.plmFabric===undefined)row.plmFabric=item&&item.plmFabric||'';
+      if(row.plmArtwork===undefined){row.plmArtwork=item&&item.plmArtwork||'';row.plmArtworkEn=item&&item.plmArtworkEn||'';}
+      if(row.fabricInfoSource===undefined)row.fabricInfoSource=row.plmFabric?'PLM':(PLM_FABRIC_FIELDS.some(key=>isUsableValue(row[key]))?'ASAS':'');
+    }
+    return rows;
+  }
+  function plmDetailColumns(){return [
+    {key:'plmFabric',label:isEn()?'PLM Fabric':'PLM Kumaş',value:r=>r.plmFabric||'',type:'text',exportWidth:36},
+    {key:'plmArtwork',label:'PLM Artwork',value:r=>plmArtworkText(r),type:'text',exportWidth:28},
   ];}
   function detailColumns(){return [
     {key:'rowType',label:isEn()?'Type':'Tür',value:r=>r.isTrial?'TRIAL':'REAL',display:r=>r.isTrial?'TRIAL':(isEn()?'Real':'Gerçek'),type:'text'},
@@ -2150,6 +2186,7 @@
     {key:'country',label:isEn()?'Country':'Ülke',value:r=>r.country||'',type:'text'},
     {key:'buyingGroup',label:'Buying Group',value:r=>r.buyingGroup||'',type:'text'},
     {key:'buyer',label:'Buyer',value:r=>r.buyer||'',type:'text'},
+    ...plmDetailColumns(),
     ...(state.showFabricDetails?fabricDetailColumns():[]),
     {key:'fob',label:'FOB',value:r=>num(r.fob),display:r=>money(r.fob,currencyForRow(r)),type:'number',cls:'num'},
     {key:'quantity',label:isEn()?'Quantity':'Miktar',value:r=>num(r.quantity),display:r=>integer(r.quantity),type:'number',cls:'num'},
@@ -2197,10 +2234,11 @@
     const summaryRows=[['LFL Analiz Özeti','Değer','Para Birimi'],['Kaynak Dosya',state.source||'',''],...filters.map(r=>[...r,'']),[],['KPI','Değer','Para Birimi'],...kpiRows,...(fxRows.length?[[],['Ülke / Ay Bazlı USD Kuru','Değer','Döviz'],...fxRows.flatMap(x=>x.points.map(p=>[`${x.country} · ${monthLabel(p.requested)}`,p.rate,x.currency]))]:[])];
     const groupRows=[[breakdownLabel(a.groupBy),comparisonColumnHeader(a.currentPeriod,'Ağırlıklı FOB'),comparisonColumnHeader(a.comparePeriod,'Ağırlıklı FOB'),'FOB Değişimi %','Adet','Sipariş'],...a.groups.map(g=>[g.key,moneySummary(g.current),moneySummary(g.previous),g.priceChange,g.qty,g.orders])];
     const scenarioRows=comparisonScenarioResults(a),customRows=[['Karşılaştırma','Portföy Kapsamı','Güncel Dönem','Kıyas Dönemi','Güncel Adet','Kıyas Adet','Hacim Değişimi %','Güncel Sipariş','Kıyas Sipariş','Güncel Ağırlıklı FOB','Kıyas Ağırlıklı FOB','Ağırlıklı LFL Değişimi %'],...scenarioRows.map(row=>[row.name,scenarioScopeLabel(row),scenarioPeriodLabel(row.currentSeason,row.currentMonths,row.currentDateField),scenarioPeriodLabel(row.compareSeason,row.compareMonths,row.compareDateField),row.currentQty,row.previousQty,row.qtyChange,row.currentOrders,row.previousOrders,moneySummary(row.current),moneySummary(row.previous),row.priceChange])];
-    const fabricExcelHead=state.showFabricDetails?['Kumaş Kategorisi','Kumaşçı Ülkesi','Kumaşçı','Kumaş Tipi','İplik No','Gramaj','Karışım']:[];
-    const detailHead=['Tür','Order Code','Model','MAG','MMYG','Klasman','Sezon','OPD','Ex-F.','In-Store','Üretici','Ülke','Buying Group','Buyer',...fabricExcelHead,'FOB','Para Birimi','Quantity','Weighted Amount'];
+    const fabricExcelHead=state.showFabricDetails?['Kumaş Kategorisi','Kumaşçı Ülkesi','Kumaşçı','Kumaş Tipi','İplik No','Gramaj','Karışım',isEn()?'Fabric Info Source':'Kumaş Bilgi Kaynağı']:[];
+    const plmExcelHead=[isEn()?'PLM Fabric':'PLM Kumaş','PLM Artwork'];
+    const detailHead=['Tür','Order Code','Model','MAG','MMYG','Klasman','Sezon','OPD','Ex-F.','In-Store','Üretici','Ülke','Buying Group','Buyer',...plmExcelHead,...fabricExcelHead,'FOB','Para Birimi','Quantity','Weighted Amount'];
     const excelDate=iso=>{const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?new Date(Number(m[1]),Number(m[2])-1,Number(m[3])):iso;};
-    const fabricExcelValues=r=>state.showFabricDetails?[r.fabricCategory,r.fabricSupplierCountry,r.fabricSupplier,r.kumasTipi,r.iplikNo,r.fabricWeight,r.karisim]:[];
+    const fabricExcelValues=r=>[r.plmFabric||'',plmArtworkText(r),...(state.showFabricDetails?[r.fabricCategory,r.fabricSupplierCountry,r.fabricSupplier,r.kumasTipi,r.iplikNo,r.fabricWeight,r.karisim,r.fabricInfoSource||'']:[])];
     const rowToExcel=r=>[r.isTrial?'TRIAL':'GERÇEK',String(r.orderCode||'').replace(/\.(?=\d{3}(?:\D|$))/g,''),r.modelName,r.mag,r.mmyg,r.classification,r.season,excelDate(r.opd),excelDate(r.exFactory),excelDate(r.inStore),r.manufacturer,r.country,r.buyingGroup,r.buyer,...fabricExcelValues(r),r.fob,currencyForRow(r),r.quantity,r.fob*r.quantity];
     const currentDetailRows=[detailHead,...a.currentRows.map(rowToExcel)],compareDetailRows=[detailHead,...a.compareRows.map(rowToExcel)];
     const wb=XLSX.utils.book_new(),ws1=XLSX.utils.aoa_to_sheet(summaryRows),ws2=XLSX.utils.aoa_to_sheet(groupRows),wsCustom=XLSX.utils.aoa_to_sheet(customRows),ws3=XLSX.utils.aoa_to_sheet(currentDetailRows),ws4=XLSX.utils.aoa_to_sheet(compareDetailRows);ws1['!cols']=[{wch:34},{wch:30},{wch:14}];ws2['!cols']=[{wch:30},...Array(5).fill({wch:18})];wsCustom['!cols']=[{wch:28},{wch:42},{wch:30},{wch:30},...Array(8).fill({wch:18})];const fabricDetailCols=state.showFabricDetails?[{wch:20},{wch:20},{wch:24},{wch:18},{wch:14},{wch:12},{wch:26}]:[];const detailCols=[{wch:10},{wch:15},{wch:28},{wch:13},{wch:13},{wch:18},{wch:10},{wch:13},{wch:13},{wch:13},{wch:25},{wch:16},{wch:18},{wch:18},...fabricDetailCols,{wch:12},{wch:12},{wch:12},{wch:16}];ws3['!cols']=detailCols;ws4['!cols']=detailCols;[ws3,ws4].forEach(ws=>{const range=ws['!ref']?XLSX.utils.decode_range(ws['!ref']):null;if(!range)return;for(let r=1;r<=range.e.r;r++){const idCell=ws[XLSX.utils.encode_cell({r,c:1})];if(idCell){idCell.t='s';idCell.v=String(idCell.v??'');idCell.z='@';}for(const c of [7,8,9]){const cell=ws[XLSX.utils.encode_cell({r,c})];if(cell&&cell.t==='d')cell.z='dd.mm.yy';}}});XLSX.utils.book_append_sheet(wb,ws1,'Özet');XLSX.utils.book_append_sheet(wb,ws2,'Grup Analizi');XLSX.utils.book_append_sheet(wb,wsCustom,'Bağımsız Kıyaslar');XLSX.utils.book_append_sheet(wb,ws3,'Seçili Portföy');XLSX.utils.book_append_sheet(wb,ws4,'Kıyas Portföyü');const d=new Date(),p=n=>String(n).padStart(2,'0');XLSX.writeFile(wb,`LFL_Analizi_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}.xlsx`);
@@ -2230,6 +2268,7 @@
       const res=await fetch(force?'/api/lfl/refresh':'/api/lfl',{method:force?'POST':'GET'}),data=await res.json();
       if(!res.ok)throw new Error(data.error||'LFL verisi okunamadı.');
       if(data&&data.sourceFilterRequired&&typeof window.showSourceFilterRequiredNotice==='function')window.showSourceFilterRequiredNotice(data.sourceFilterStatus,data.sourceFilterMessage);
+      applyPlmDetails(Array.isArray(data.rows)?data.rows:[],data.meta&&data.meta.plmDetails);
       state.serverRows=(Array.isArray(data.rows)?data.rows:[]).filter(r=>['mag','mmyg','classification','season','manufacturer','country','buyingGroup','buyer'].every(k=>isUsableValue(r[k]))&&['inStore','opd','retailDate'].some(k=>isUsableValue(r[k])));
       rebuildDimensionLabelIndex(state.serverRows);applyTrialRows();state.meta=data.meta||{};state.source=data.source||null;state.loadedAt=data.loadedAt||null;
       if(force)window.BLCollectionLfl?.invalidate();

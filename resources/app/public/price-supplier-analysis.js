@@ -19,7 +19,7 @@
   const BASE={source:'lfl',tab:'overview',currentSeason:'',previousSeason:'',filters:Object.fromEntries(E.FILTER_DIMENSIONS.map(dim=>[dim,[]])),filterLayout:[...DEFAULT_FILTER_LAYOUT],periods:{current:{dateField:'inStore',month:''},previous:{dateField:'inStore',month:''}},priceType:'',currency:'',groupBy:'classification',relationDim:'buyingGroup',sort:'volume',movement:'price'};
   const TEXT={
     tr:{title:'Fiyat & Üretici Analizi',subtitle:'Hangi üretici nerede avantajlı, kim pahalandı, kim yeni — tek bakışta.',source:'Veri',src_lfl:'LFL siparişleri',src_orders:'Siparişler',src_cp:'CP',src_collection:'Koleksiyon teklifleri',src_horizon:'Horizon',
-      season:'Sezon',compare:'Kıyas',noCompare:'Kıyas yok',allSeasons:'Tüm sezonlar',all:'Tümü',selectAll:'Tümünü seç',clear:'Temizle',excel:'Excel',price:'Fiyat',currency:'Para birimi',period:'Dönem',month:'Ay',allMonths:'Tüm aylar',inStore:'In-Store',opd:'OPD',filterConfig:'Filtre ekle/çıkar',filterSearch:'Filtrede ara…',filterStandard:'Standart alanlar',filterColumns:'Tablo sütunları',columnSearch:'Sütun ara…',noSourceData:'Bu kaynakta veri yok',noColumnMatch:'Eşleşen sütun yok.',productMainDefinition:'Ürün Ana Tanım',selected:'seçim',noFilterMatch:'Eşleşen değer yok.',
+      season:'Sezon',compare:'Kıyas',noCompare:'Kıyas yok',allSeasons:'Tüm sezonlar',all:'Tümü',selectAll:'Tümünü seç',clear:'Temizle',excel:'Excel',price:'Fiyat',currency:'Para birimi',period:'Dönem',month:'Ay',allMonths:'Tüm aylar',inStore:'In-Store',opd:'OPD',filterConfig:'Filtre ekle/çıkar',filterSearch:'Filtrede ara…',filterStandard:'Standart alanlar',filterColumns:'Tablo sütunları',columnSearch:'Sütun ara…',noSourceData:'Bu kaynakta veri yok',noColumnMatch:'Eşleşen sütun yok.',productMainDefinition:'Ürün Ana Tanım',plmFabric:'PLM Kumaş',plmArtwork:'PLM Artwork',fabricCategory:'Kumaş Kategorisi',kumasTipi:'Kumaş Tipi',iplikNo:'İplik No',fabricWeight:'Gramaj',karisim:'Karışım',selected:'seçim',noFilterMatch:'Eşleşen değer yok.',
       buyingGroup:'Buying Group',buyer:'Buyer',mag:'MAG',mmyg:'MMYG',classification:'Klasman',productGroup:'Ürün Grubu',country:'Ülke',manufacturer:'Üretici',
       productDescription:'Ürün Tanımı',breakdown:'Kırılım',volumeFocus:'Hacim odağı',coverage:'Kapsama',coverageOf:'{0} kapsama',noVolume:'Güncel hacim yok',noBreakdown:'Kırılım bilgisi yok',
       noCurrentPrice:'Güncel fiyat yok',noPreviousPrice:'Önceki dönem fiyatı yok',noMatchedPrice:'Ortak kırılımda fiyat yok',noPricePeers:'Fiyat kıyası için yeterli üretici yok',
@@ -43,7 +43,7 @@
       notEnough:'Kıyaslanabilir fiyat verisi yok.',prevVolume:'Kıyas hacmi',suppliers:'üretici',pts:'puan',excelFail:'Excel dosyası hazırlanamadı.',
       summary:'Özet',sheetSuppliers:'Üreticiler',sheetAdvantage:'Nerede avantajlı',sheetRelations:'Kim kiminle',value:'Değer',status:'Durum',group:'Grup',drillHint:'Tıklayınca siparişler açılır'},
     en:{title:'Price & Supplier Analysis',subtitle:'Which supplier wins where, who got pricier, who is new — at a glance.',source:'Data',src_lfl:'LFL orders',src_orders:'Orders',src_cp:'CP',src_collection:'Collection quotes',src_horizon:'Horizon',
-      season:'Season',compare:'Compare',noCompare:'No comparison',allSeasons:'All seasons',all:'All',selectAll:'Select all',clear:'Clear',excel:'Excel',price:'Price',currency:'Currency',period:'Period',month:'Month',allMonths:'All months',inStore:'In-Store',opd:'OPD',filterConfig:'Add/remove filters',filterSearch:'Search filter…',filterStandard:'Standard fields',filterColumns:'Table columns',columnSearch:'Search columns…',noSourceData:'No data in this source',noColumnMatch:'No matching columns.',productMainDefinition:'Product Main Definition',selected:'selected',noFilterMatch:'No matching values.',
+      season:'Season',compare:'Compare',noCompare:'No comparison',allSeasons:'All seasons',all:'All',selectAll:'Select all',clear:'Clear',excel:'Excel',price:'Price',currency:'Currency',period:'Period',month:'Month',allMonths:'All months',inStore:'In-Store',opd:'OPD',filterConfig:'Add/remove filters',filterSearch:'Search filter…',filterStandard:'Standard fields',filterColumns:'Table columns',columnSearch:'Search columns…',noSourceData:'No data in this source',noColumnMatch:'No matching columns.',productMainDefinition:'Product Main Definition',plmFabric:'PLM Fabric',plmArtwork:'PLM Artwork',fabricCategory:'Fabric Category',kumasTipi:'Fabric Type',iplikNo:'Yarn Count',fabricWeight:'Weight (GSM)',karisim:'Composition',selected:'selected',noFilterMatch:'No matching values.',
       buyingGroup:'Buying Group',buyer:'Buyer',mag:'MAG',mmyg:'MMYG',classification:'Category',productGroup:'Product Group',country:'Country',manufacturer:'Supplier',
       productDescription:'Product Description',breakdown:'Breakdown',volumeFocus:'Volume focus',coverage:'Coverage',coverageOf:'{0} coverage',noVolume:'No current volume',noBreakdown:'No breakdown data',
       noCurrentPrice:'No current price',noPreviousPrice:'No comparison-period price',noMatchedPrice:'No prices in matching groups',noPricePeers:'Too few suppliers to compare prices',
@@ -103,6 +103,8 @@
   const unit=()=>model&&!model.weighted?t('records'):t('units');
   const vol=value=>`${fmtInt(value)} ${unit()}`;
   function persist(){try{(window.BLStorage||localStorage).setItem(STORAGE_KEY,JSON.stringify(state));}catch(_){}}
+  // Filtre kimliği dilden bağımsızdır (PLM Artwork: TR metin); EN yalnız etiketi çevirir.
+  function valueLabel(dim,value){return (isEn()&&data?.valueLabels?.[dim]?.en?.[value])||value;}
   function filterValues(dim){const raw=state.filters[dim];return Array.isArray(raw)?raw.filter(Boolean):(raw?[raw]:[]);}
   /* Kanonik boyutlar + kullanıcının eklediği ham sütun filtreleri. */
   function filterDims(){return [...new Set([...E.FILTER_DIMENSIONS,...state.filterLayout,...Object.keys(state.filters)])].filter(E.isFilterDim);}
@@ -190,14 +192,14 @@
     if(!values.length)return `<div class="psaMultiFilter psaField isEmpty" title="${esc(t('noSourceData'))}"><span class="psaMultiCaption">${esc(dimLabel(dim))}</span><span class="psaMultiTrigger" aria-disabled="true"><span class="psaMultiLabel">${esc(t('noSourceData'))}</span><span class="psaMultiChevron" aria-hidden="true">▾</span></span></div>`;
     const selected=filterValues(dim),selectedKeys=new Set(selected.map(value=>E.keyOf(value))),query=ui.filterSearch[dim]||'',queryKey=E.keyOf(query);
     const ordered=values.slice().sort((a,b)=>Number(selectedKeys.has(E.keyOf(b)))-Number(selectedKeys.has(E.keyOf(a))));
-    const shown=values.filter(value=>!queryKey||E.keyOf(value).includes(queryKey)),summary=selected.length>1?`${selected.length} ${t('selected')}`:selected[0]||t('all');
+    const shown=values.filter(value=>!queryKey||E.keyOf(value).includes(queryKey)||E.keyOf(valueLabel(dim,value)).includes(queryKey)),summary=selected.length>1?`${selected.length} ${t('selected')}`:(selected[0]?valueLabel(dim,selected[0]):t('all'));
     return `<details class="psaMultiFilter psaField${selected.length?' isActive':''}" data-ps-filter-menu="${dim}"${ui.openFilter===dim?' open':''}>
       <summary><span class="psaMultiCaption">${esc(dimLabel(dim))}</span><span class="psaMultiTrigger"><span class="psaMultiLabel">${esc(summary)}</span><span class="psaMultiChevron" aria-hidden="true">▾</span></span></summary>
       <div class="psaMultiPanel blMotionOverlay">
         <input type="search" class="psaMultiSearch" data-ps-filter-search="${dim}" value="${esc(query)}" placeholder="${esc(t('filterSearch'))}" autocomplete="off">
         <div class="cfpHeader"><button type="button" class="cfpAll" data-ps-filter-bulk="all" data-ps-filter-dim="${dim}">${esc(t('selectAll'))}</button><button type="button" class="cfpAll" data-ps-filter-bulk="clear" data-ps-filter-dim="${dim}">${esc(t('clear'))}</button></div>
         <div class="psaMultiList" role="listbox" aria-multiselectable="true">
-          ${ordered.map(value=>{const key=E.keyOf(value),hidden=queryKey&&!key.includes(queryKey);return `<label class="psaMultiOption" data-ps-filter-option data-search="${esc(key)}"${hidden?' hidden':''}><input type="checkbox" data-ps-filter-value="${dim}" value="${esc(value)}"${selectedKeys.has(key)?' checked':''}><span>${esc(value)}</span></label>`;}).join('')}
+          ${ordered.map(value=>{const key=E.keyOf(value),label=valueLabel(dim,value),search=label===value?key:`${key} ${E.keyOf(label)}`,hidden=queryKey&&!search.includes(queryKey);return `<label class="psaMultiOption" data-ps-filter-option data-search="${esc(search)}"${hidden?' hidden':''}><input type="checkbox" data-ps-filter-value="${dim}" value="${esc(value)}"${selectedKeys.has(key)?' checked':''}><span>${esc(label)}</span></label>`;}).join('')}
           <p class="psaMultiEmpty" data-ps-filter-empty${shown.length?' hidden':''}>${esc(t('noFilterMatch'))}</p>
         </div>
       </div>
@@ -476,7 +478,7 @@
       const X=window.XLSX;if(!X)throw new Error('XLSX');
       const book=X.utils.book_new(),r=value=>E.round(value,2);
       const summary=[{[t('summary')]:t('source'),[t('value')]:t('src_'+state.source)},{[t('summary')]:t('season'),[t('value')]:model.currentSeason||t('allSeasons')},{[t('summary')]:t('compare'),[t('value')]:model.previousSeason||t('noCompare')},
-        ...filterDims().filter(dim=>filterValues(dim).length).map(dim=>({[t('summary')]:dimLabel(dim),[t('value')]:filterValues(dim).join(', ')})),
+        ...filterDims().filter(dim=>filterValues(dim).length).map(dim=>({[t('summary')]:dimLabel(dim),[t('value')]:filterValues(dim).map(value=>valueLabel(dim,value)).join(', ')})),
         {[t('summary')]:t('volume'),[t('value')]:model.totals.volume},{[t('summary')]:`${t('avgPrice')} (${model.currency})`,[t('value')]:r(model.totals.price)},{[t('summary')]:t('activeSuppliers'),[t('value')]:model.totals.manufacturers},
         ...E.insights(model,isEn()?'en':'tr').map(item=>({[t('summary')]:t('assistant'),[t('value')]:item.text}))];
       X.utils.book_append_sheet(book,X.utils.json_to_sheet(summary),t('summary').slice(0,31));

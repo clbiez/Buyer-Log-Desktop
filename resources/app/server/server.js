@@ -4553,6 +4553,7 @@ function collectionWorkspaceWithLocalImages(ownerId, workspace = null) {
   // Startup /api/data excludes imagemap. Hydrate ONLY models in this authorised
   // Collection workspace, not the full cross-user registry. No PLM network call.
   const imagemap = loadOverrides().imagemap || {};
+  const imageNamedIndex = parseLib.plmImageLazyNamedIndex(imagemap);
   const availability = new Map();
   const localImageExists = ref => {
     if (!ref) return false;
@@ -4567,7 +4568,7 @@ function collectionWorkspaceWithLocalImages(ownerId, workspace = null) {
     const sharedRef = String(cached && cached.imageRef || '').trim();
     const plmRef = String(parseLib.plmImageRef(imagemap, {
       plm: row.plmId, ccode: row.colourCode, colour: row.colour,
-    }) || '').trim();
+    }, imageNamedIndex) || '').trim();
     const sharedUrl = localImageExists(sharedRef) ? '/api/collection-images/' + encodeURIComponent(sharedRef) : '';
     const plmUrl = localImageExists(plmRef) ? '/api/collection-images/' + encodeURIComponent(plmRef) : '';
     if (!sharedUrl && !plmUrl) return row;

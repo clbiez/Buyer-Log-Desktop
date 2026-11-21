@@ -1,5 +1,7 @@
 'use strict';
 const collectionLflEngine=require('../../public/collection-lfl-engine');
+const plmBomStore=require('../lib/plm-bom-store');
+const plmModelDetails=require('../lib/plm-model-details');
 
 /* LFL verisi route'ları
    server.js'ten birebir taşındı (davranış değişikliği yok). Kayıt, server.js'te
@@ -28,6 +30,46 @@ module.exports = function registerLflRoutes(app, deps) {
     adoptSavedRuntime,
   } = deps;
 
+/* PLM Kumaş / PLM Artwork ve PLM tabanlı kumaş özellikleri yanıt anında
+   kalıcı PLM BOM deposundan eklenir (plm-model-details.js); runtime ve
+   snapshot değiştirilmez. Depo okunamazsa satırlar ASAS değerleriyle döner. */
+function withPlmDetails(rows,meta){
+  let enriched=rows;
+  try{enriched=plmModelDetails.attachToRows(rows,plmBomStore.load());}catch(err){console.warn('[LFL] PLM model detayları eklenemedi:',err&&err.message);}
+  return {rows:enriched,meta:meta===undefined?undefined:withFabricDimensions({...(meta||{}),rowCount:enriched.length},enriched)};
+}
+/* /api/lfl yanıtı her istekte bütün satırları kopyalamasın: görsel kimliği
+   + PLM detaylı satırlar runtime LFL dizisi, ASAS sipariş kaynağı ve PLM BOM
+   deposu kimliğiyle bir kez hazırlanır. Kapsam filtresi aynı satır
+   nesnelerini döndürdüğü için istek yalnız eşleme yapar. Kaynaklardan biri
+   değişince (yenileme, yükleme, PLM SYNC) kimlik değişir ve yeniden kurulur. */
+const lflResponseCache=new WeakMap();
+function lflResponse(runtime,scopedRows){
+  const rows=Array.isArray(runtime&&runtime.lflRows)?runtime.lflRows:[];
+  let store=null;
+  try{store=plmBomStore.load();}catch(err){console.warn('[LFL] PLM BOM deposu okunamadı:',err&&err.message);}
+  const hit=lflResponseCache.get(rows);
+  let entry=hit&&hit.store===store&&hit.asasOrders===runtime.asasOrders&&hit.asasOrdersByTarget===runtime.asasOrdersByTarget&&hit.lflMeta===runtime.lflMeta?hit:null;
+  if(!entry){
+    const imageAware=attachModelImageIdentities(rows,modelImageIdentityOrders(runtime));
+    let enriched=imageAware;
+    let plmDetails={};
+    if(store){try{enriched=plmModelDetails.attachToRows(imageAware,store,{compact:true});plmDetails=plmModelDetails.detailsForRows(enriched,store);}catch(err){console.warn('[LFL] PLM model detayları eklenemedi:',err&&err.message);}}
+    const byRow=new Map();rows.forEach((row,index)=>byRow.set(row,enriched[index]));
+    // PLM Kumaş / Artwork metinleri model başına bir kez taşınır; istemci PLM ID ile eşler (lfl.js).
+    const base=withFabricDimensions(runtime.lflMeta||{},enriched);
+    entry={store,asasOrders:runtime.asasOrders,asasOrdersByTarget:runtime.asasOrdersByTarget,lflMeta:runtime.lflMeta,byRow,
+      meta:{...base,dimensions:{...(base.dimensions||{}),plmFabrics:[...new Set(Object.values(plmDetails).map(item=>item.plmFabric).filter(Boolean))].sort(),plmArtworks:[...new Set(Object.values(plmDetails).map(item=>item.plmArtwork).filter(Boolean))].sort()},plmDetails}};
+    lflResponseCache.set(rows,entry);
+  }
+  const scoped=Array.isArray(scopedRows)?scopedRows:[];
+  // Kapsam dışı yeni nesne gelirse (beklenmez) yine görsel kimliği + PLM detayıyla çözülür.
+  const missing=scoped.filter(row=>!entry.byRow.has(row));
+  const extra=missing.length?withPlmDetails(attachModelImageIdentities(missing,modelImageIdentityOrders(runtime))).rows:[]; // tam (inline) biçim
+  const extraMap=new Map(missing.map((row,index)=>[row,extra[index]]));
+  const out=scoped.map(row=>entry.byRow.get(row)||extraMap.get(row)||row);
+  return {rows:out,meta:{...entry.meta,rowCount:out.length}};
+}
 async function collectionReferenceSource(req,res,fallback=null,summaryOnly=false,assertResponse=()=>{}){
     res.set('Cache-Control','no-store');
     // A saved legacy summary is shown as-is while its source cannot upgrade it.
@@ -98,7 +140,7 @@ app.post('/api/collection-lfl-detail',userAccess.requireArea('koleksiyon'),userA
     const reference=collectionLflEngine.excludeCountries(stored,excluded);
     if(!reference)return res.status(404).json({code:'LFL_REFERENCE_NOT_FOUND'});
     const rows=collectionLflEngine.referenceDetails(userAccess.filterRowsByScope(req.currentUser,source.rows),stored,excluded);
-    const imageAwareRows=attachModelImageIdentities(rows,modelImageIdentityOrders(source.runtime));
+    const imageAwareRows=withPlmDetails(attachModelImageIdentities(rows,modelImageIdentityOrders(source.runtime))).rows;
     sendDateSafeJson(res,{version:String(source.version),calculatedAt:snapshot.calculatedAt,reference,rows:imageAwareRows});
   }catch(err){apiError(res,err,'LFL order detail could not be loaded.');}
 });
@@ -115,10 +157,10 @@ app.get('/api/lfl', userAccess.requireArea('lfl'), async (req, res) => {
     await ensureDataLoaded(id);
     const runtime=cacheForUser(id);
     const scopedRows=userAccess.filterRowsByScope(req.currentUser,runtime.lflRows||[]);
-    const imageAwareRows=attachModelImageIdentities(scopedRows,modelImageIdentityOrders(runtime));
+    const enriched=lflResponse(runtime,scopedRows);
     sendDateSafeJson(res, {
-      rows: imageAwareRows,
-      meta: {...(runtime.lflMeta||{}),rowCount:imageAwareRows.length},
+      rows: enriched.rows,
+      meta: enriched.meta,
       source: runtime.sources && runtime.sources.lfl || null,
       loadedAt: runtime.lflLoadedAt,
     });
@@ -133,8 +175,8 @@ app.post('/api/lfl/refresh', userAccess.requireArea('lfl'), async (req, res) => 
     const pending=initialDataLoadPromises.get(id); if(pending) await pending;
     const runtime=await loadFromModels(id, ['lfl']);
     const scopedRows=userAccess.filterRowsByScope(req.currentUser,runtime.lflRows||[]);
-    const imageAwareRows=attachModelImageIdentities(scopedRows,modelImageIdentityOrders(runtime));
-    const result={rows:imageAwareRows,meta:{...(runtime.lflMeta||{}),rowCount:imageAwareRows.length},source:runtime.sources&&runtime.sources.lfl||null,loadedAt:runtime.lflLoadedAt};
+    const enriched=lflResponse(runtime,scopedRows);
+    const result={rows:enriched.rows,meta:enriched.meta,source:runtime.sources&&runtime.sources.lfl||null,loadedAt:runtime.lflLoadedAt};
     userAccess.appendAudit(req.currentUser,'LFL_MODEL_REFRESH','Data Model Connection',{source:result.source,rowCount:Number(result.meta&&result.meta.rowCount)||0});
     sendDateSafeJson(res, result);
   }
@@ -161,8 +203,8 @@ app.post('/api/lfl/upload', userAccess.requireArea('lfl'), async (req, res) => {
     await adoptSavedRuntime(id,runtime,next);
     userAccess.appendAudit(req.currentUser,'LFL_UPLOAD',name||'uploaded',{rowCount:Number(parsed.meta&&parsed.meta.rowCount)||0});
     const scopedRows=userAccess.filterRowsByScope(req.currentUser,runtime.lflRows||[]);
-    const imageAwareRows=attachModelImageIdentities(scopedRows,modelImageIdentityOrders(runtime));
-    sendDateSafeJson(res, { rows: imageAwareRows, meta: {...(runtime.lflMeta||{}),rowCount:imageAwareRows.length}, source: runtime.sources.lfl, loadedAt: runtime.lflLoadedAt });
+    const enriched=lflResponse(runtime,scopedRows);
+    sendDateSafeJson(res, { rows: enriched.rows, meta: enriched.meta, source: runtime.sources.lfl, loadedAt: runtime.lflLoadedAt });
   } catch (err) { apiError(res, err, 'Yüklenen LFL Excel dosyası işlenemedi.'); }
 });
 

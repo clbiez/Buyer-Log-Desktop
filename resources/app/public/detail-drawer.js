@@ -68,13 +68,103 @@ function includeMagColumn(rows,columns,moduleId,canonical){
   return columns;
 }
 
-if(!root||!root.document)return {inferColumns,normalizeColumns,safeFilePart,includeMagColumn};
+/* PLM Kumaş + PLM Artwork: PLM ID taşıyan her alt detay raporuna (LFL,
+   Fiyat & Üretici Analizi, Siparişler, CP, Backlog, Koleksiyon…) eklenir.
+   Değer önce satırın kendi PLM projeksiyonundan (LFL plmFabric/plmArtwork,
+   CP/Siparişler "Fabric (PLM)"/"Artwork Detail", Koleksiyon artworkDetail),
+   yoksa kalıcı PLM BOM deposunun salt okunur özetinden
+   (/api/plm-model-details/batch) okunur. Rapor zaten bu sütunları taşıyorsa
+   ikinci kopya eklenmez. */
+const PLM_FABRIC_KEY='plmFabric',PLM_ARTWORK_KEY='plmArtwork';
+const PLM_FABRIC_ALIASES=['plmFabric','Fabric (PLM)','fabricPlm','PLM Kumaş']; // i18n-ignore — kaynak alan adları
+const PLM_ARTWORK_ALIASES=['plmArtwork','Artwork Detail','artworkDetail','Artwork Detayı']; // i18n-ignore — kaynak alan adları
+const PLM_ID_KEYS=['plmId','PLM ID','plm','PLM','Plm Kod','_plmId']; // i18n-ignore — kaynak alan adları
+function plmCoreId(value){
+  let text=String(value==null?'':value).trim().replace(/^_+/,'');
+  if(/^\d+\.0+$/.test(text))text=text.slice(0,text.indexOf('.'));
+  text=text.replace(/^0+(?=\d)/,'');
+  return /^\d+$/.test(text)&&Number(text)>0?text:'';
+}
+function plmIdOfRow(row,moduleId,canonical){
+  for(const source of rowSources(row)){
+    for(const key of PLM_ID_KEYS){const id=plmCoreId(source[key]);if(id)return id;}
+    const id=plmCoreId(canonical?.canonicalValue?.(source,moduleId,'plmId'));if(id)return id;
+  }
+  return '';
+}
+function ownPlmValue(row,kind,en){
+  const aliases=kind==='fabric'?PLM_FABRIC_ALIASES:PLM_ARTWORK_ALIASES;
+  for(const source of rowSources(row)){
+    if(kind==='artwork'&&en&&hasValue(source.plmArtworkEn))return source.plmArtworkEn;
+    for(const key of aliases)if(Object.prototype.hasOwnProperty.call(source,key)&&hasValue(source[key]))return source[key];
+  }
+  return undefined;
+}
+function plmDetailValue(details,kind,en){
+  if(!details)return '';
+  if(kind==='fabric')return details.plmFabric||'';
+  return (en&&details.plmArtworkEn)||details.plmArtwork||'';
+}
+function hasPlmColumn(columns,kind){
+  const aliases=(kind==='fabric'?PLM_FABRIC_ALIASES:PLM_ARTWORK_ALIASES).map(value=>value.toLowerCase());
+  return columns.some(col=>[col.key,col.field,col.label].some(value=>aliases.includes(clean(value).toLowerCase())));
+}
+function includePlmDetailColumns(rows,columns,options={}){
+  if(!Array.isArray(rows)||!rows.length)return columns;
+  const needFabric=!hasPlmColumn(columns,'fabric'),needArtwork=!hasPlmColumn(columns,'artwork');
+  if(!needFabric&&!needArtwork)return columns;
+  const sample=rows.length<=160?rows:rows.slice(0,120).concat(rows.slice(-40));
+  if(!sample.some(row=>plmIdOfRow(row,options.moduleId,options.canonical)||ownPlmValue(row,'fabric')!==undefined||ownPlmValue(row,'artwork')!==undefined))return columns;
+  const en=typeof options.isEn==='function'?options.isEn:()=>false,lookup=typeof options.lookup==='function'?options.lookup:()=>null;
+  const make=kind=>({key:kind==='fabric'?PLM_FABRIC_KEY:PLM_ARTWORK_KEY,label:kind==='fabric'?(en()?'PLM Fabric':'PLM Kumaş'):'PLM Artwork',type:'text',group:'PLM',exportWidth:kind==='fabric'?36:28,plmDetail:kind,
+    value:row=>{const own=ownPlmValue(row,kind,en());if(own!==undefined)return own;return plmDetailValue(lookup(plmIdOfRow(row,options.moduleId,options.canonical)),kind,en());}});
+  return [...columns,...(needFabric?[make('fabric')]:[]),...(needArtwork?[make('artwork')]:[])];
+}
+
+if(!root||!root.document)return {inferColumns,normalizeColumns,safeFilePart,includeMagColumn,includePlmDetailColumns,plmIdOfRow};
 
 const document=root.document;
 const isEn=()=>String(document.documentElement.lang||'tr').toLowerCase().startsWith('en');
 const L=(tr,en)=>isEn()?en:tr;
 const store=()=>root.BLStorage||root.localStorage;
 let active=null;
+/* Paylaşılan PLM model detayı önbelleği (alt detay raporları ve Fiyat &
+   Üretici Analizi). Yalnız rapor açılınca, görünen satırların PLM ID'leri için
+   okunur; arka planda yoklama yapılmaz. */
+const plmDetails={map:new Map(),at:new Map(),inflight:new Map()};
+const PLM_DETAILS_FRESH_MS=60000,PLM_DETAILS_BATCH=500;
+async function ensurePlmModelDetails(ids){
+  const now=Date.now(),wanted=[...new Set((Array.isArray(ids)?ids:[]).map(plmCoreId).filter(Boolean))];
+  const missing=wanted.filter(id=>!plmDetails.inflight.has(id)&&!(plmDetails.at.has(id)&&now-plmDetails.at.get(id)<PLM_DETAILS_FRESH_MS));
+  let changed=0;
+  const jobs=[];
+  for(let i=0;i<missing.length;i+=PLM_DETAILS_BATCH){
+    const part=missing.slice(i,i+PLM_DETAILS_BATCH);
+    const job=(async()=>{
+      try{
+        const response=await root.fetch('/api/plm-model-details/batch',{method:'POST',headers:{'Content-Type':'application/json'},cache:'no-store',body:JSON.stringify({plmIds:part})});
+        const payload=await response.json().catch(()=>({}));
+        if(!response.ok||!payload.ok)return; // okunamazsa eldeki değer korunur
+        const entries=payload.entries||{},stamp=Date.now();
+        for(const id of part){
+          const next=entries[id]||null,previous=plmDetails.map.get(id)||null;
+          if(JSON.stringify(previous)!==JSON.stringify(next))changed++;
+          plmDetails.map.set(id,next);plmDetails.at.set(id,stamp);
+        }
+      }catch(_){}finally{part.forEach(id=>plmDetails.inflight.delete(id));}
+    })();
+    part.forEach(id=>plmDetails.inflight.set(id,job));jobs.push(job);
+  }
+  const pending=[...new Set(wanted.map(id=>plmDetails.inflight.get(id)).filter(Boolean))];
+  await Promise.all([...jobs,...pending]);
+  return changed;
+}
+root.BLPlmModelDetails={
+  ensure:ensurePlmModelDetails,
+  get:id=>plmDetails.map.get(plmCoreId(id))||null,
+  value:(id,kind)=>plmDetailValue(plmDetails.map.get(plmCoreId(id))||null,kind,isEn()),
+  coreId:plmCoreId,
+};
 
 function storagePart(value){return clean(value||'generic').replace(/[^a-z0-9_.-]+/gi,'_');}
 function pageScope(input){
@@ -864,13 +954,15 @@ function open(options){
   const contextKeys=setup?contextColumns.map(col=>col.key).filter(key=>!setupColumns.some(col=>col.key===key)):[];
   const scope=input.storageKey||input.scope||input.source||'generic',page=pageScope(input);
   const suppliedColumns=setup?normalizeColumns([...setupColumns,...contextColumns.filter(col=>!setupColumns.some(base=>base.key===col.key))],rows):contextColumns;
-  const columns=input.flatColumns===true?suppliedColumns:includeMagColumn(rows,suppliedColumns,input.moduleId||input.source||page,root.BLCanonicalFields);
   const canonical=root.BLCanonicalFields,moduleId=input.moduleId||input.source||page;
+  const baseColumns=input.flatColumns===true?suppliedColumns:includeMagColumn(rows,suppliedColumns,moduleId,canonical);
+  const columns=input.flatColumns===true||input.plmDetails===false?baseColumns:includePlmDetailColumns(rows,baseColumns,{moduleId:detailModuleFor(input,page),canonical,isEn,lookup:id=>plmDetails.map.get(id)||null});
+  const plmKeys=columns.filter(col=>col.plmDetail&&!baseColumns.includes(col)).map(col=>col.key);
   const requestedDefaults=Array.isArray(input.defaultVisible||input.initialVisible)?(input.defaultVisible||input.initialVisible):[];
   const exactDefault=input.exactDefaultVisible===true?requestedDefaults.filter(key=>columns.some(col=>col.key===key)):[];
-  const focus=[...new Set((exactDefault.length?exactDefault:root.BLDetailReportLayout.focusKeys(columns,moduleId,canonical,requestedDefaults)).concat(contextKeys))];
+  const focus=[...new Set((exactDefault.length?exactDefault:root.BLDetailReportLayout.focusKeys(columns,moduleId,canonical,requestedDefaults)).concat(contextKeys).concat(plmKeys))];
   const supplied=setup?{focus:setupPresetKeys(setup,'focus'),extended:setupPresetKeys(setup,'extended')}:normalizeViewPresets(input,columns);
-  const extended=[...new Set(focus.concat(supplied?.extended||columns.slice(0,24).map(col=>col.key),contextKeys))];
+  const extended=[...new Set(focus.concat(supplied?.extended||columns.slice(0,24).map(col=>col.key),contextKeys,plmKeys))];
   const viewPresets={focus,extended};
   let preset='focus';
   if(viewPresets){
@@ -899,6 +991,22 @@ function open(options){
   root.BLGridClipboard?.clear?.(CLIPBOARD_TABLE_ID);
   render();
   requestAnimationFrame(()=>ensureHost().querySelector('[data-bl-detail-search]')?.focus());
+  if(plmKeys.length)loadPlmDetailsFor(active);
+}
+/* Eklenen PLM sütunlarının satırda kendi değeri yoksa depo özeti okunur ve
+   yalnız tablo yeniden çizilir (çekmece, filtre ve kaydırma korunur). */
+function loadPlmDetailsFor(report){
+  const moduleId=detailModuleFor(report,report.pageScope),canonical=root.BLCanonicalFields;
+  const ids=report.rows.filter(row=>ownPlmValue(row,'fabric')===undefined||ownPlmValue(row,'artwork')===undefined).map(row=>plmIdOfRow(row,moduleId,canonical)).filter(Boolean);
+  if(!ids.length)return;
+  ensurePlmModelDetails(ids).then(changed=>{
+    if(active!==report||!changed)return;
+    report.searchIndex=null;report.filterCache=null;report.autoWidths=null;renderTable();
+  }).catch(()=>{});
+}
+function detailModuleFor(input,page){
+  const previous=active;active={moduleId:input&&input.moduleId,pageScope:page,scope:input&&(input.storageKey||input.scope),source:input&&input.source};
+  try{return detailModule();}finally{active=previous;}
 }
 function close(options={}){releaseVirtualBody(document.getElementById(CLIPBOARD_TABLE_ID));if(active&&active.searchTimer)clearTimeout(active.searchTimer);active?.exportOperation?.cancel();if(typeof root.closeHeaderFilter==='function')root.closeHeaderFilter();active=null;const host=document.getElementById('blSharedDetailDrawer');if(host){root.BLLayerSystem?.closeDialog?.(host,{restoreFocus:options.restoreFocus!==false});host.classList.remove('is-open');host.setAttribute('aria-hidden','true');}}
 document.addEventListener('keydown',event=>{
