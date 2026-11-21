@@ -8,7 +8,7 @@ const { promisify } = require('util');
 const gzip = promisify(zlib.gzip);
 const gunzip = promisify(zlib.gunzip);
 const { LOCAL_DATA_ROOT, atomicWriteBuffer, atomicWriteBufferAsync } = require('../user-data');
-const { jsonToBuffer, parseJsonBuffer, parseJsonBufferAsync } = require('./large-json');
+const { jsonToBuffer, jsonToBufferAsync, parseJsonBuffer, parseJsonBufferAsync } = require('./large-json');
 
 const SNAPSHOT_ROOT = path.join(LOCAL_DATA_ROOT, 'model-snapshots');
 const LEGACY_SNAPSHOT_SCHEMA_VERSION = 1;
@@ -124,26 +124,58 @@ function prepareSnapshot(payload) {
   const contentBuffer = jsonToBuffer(content);
   return { contentBuffer, contentKey:checksum(contentBuffer), metadata, savedAt:new Date().toISOString(), aliasCount:compacted.aliasCount };
 }
-function finishSnapshot(prepared) {
-  // Gövde = metadata + içerik; çözücü gövdeyi olduğu gibi ayrıştırır.
-  const { contentBuffer, ...rest } = prepared, { contentKey, metadata, savedAt } = rest;
+/* Yenileme/kayıt yolu (saveModelSnapshotAsync) için kooperatif eşdeğerler.
+   Senkron prepare/finish 120 MiB sentetik veride ana thread'i ~6,6 sn tek
+   blokta tutuyordu (kullanıcı verisinde çok daha uzun). Baytlar, contentKey ve
+   checksum aynı fonksiyonlarla aynı sırada üretilir; yalnız iş ~8 ms dilimlere
+   bölünür ve hash 8 MiB dilimlerle güncellenir. */
+const HASH_SLICE_BYTES = 8 * 1024 * 1024;
+const yieldToEventLoop = () => new Promise(resolve => setImmediate(resolve));
+async function hashPartsAsync(parts, yieldControl) {
+  const hash = crypto.createHash('sha256');
+  for (const part of parts) {
+    for (let offset = 0; offset < part.length; offset += HASH_SLICE_BYTES) {
+      hash.update(part.subarray(offset, Math.min(part.length, offset + HASH_SLICE_BYTES)));
+      await yieldControl();
+    }
+  }
+  return hash.digest('hex');
+}
+async function prepareSnapshotAsync(payload, yieldControl = yieldToEventLoop) {
+  const compacted = compactSnapshotPayload(payload);
+  const { content, metadata } = splitCompactedPayload(compacted);
+  const contentBuffer = await jsonToBufferAsync(content, { yieldControl });
+  const contentKey = await hashPartsAsync([contentBuffer], yieldControl);
+  return { contentBuffer, contentKey, metadata, savedAt:new Date().toISOString(), aliasCount:compacted.aliasCount };
+}
+async function finishSnapshotAsync(prepared, yieldControl = yieldToEventLoop) {
+  const bodyParts = snapshotBodyParts(prepared);
+  return assembleSnapshot(prepared, bodyParts, await hashPartsAsync(bodyParts, yieldControl));
+}
+// Gövde = metadata + içerik; çözücü gövdeyi olduğu gibi ayrıştırır.
+// Gövde parçalar halinde hash'lenir ve tek tampona yazılır. Eskiden parçalar
+// birleştirilmiş tek metne dönüştürülüyordu; V8 bu metni düzleştirirken büyük
+// veri setinde içeriğin ikinci tam kopyasını heap'te açıyor ve yenileme
+// "snapshot-save" adımında heap out of memory ile çöküyordu. Baytlar aynıdır.
+function snapshotBodyParts({ contentBuffer, metadata, savedAt }) {
   const metadataJson = JSON.stringify({ savedAt, ...metadata });
-  // Gövde parçalar halinde hash'lenir ve tek tampona yazılır. Eskiden parçalar
-  // birleştirilmiş tek metne dönüştürülüyordu; V8 bu metni düzleştirirken büyük
-  // veri setinde içeriğin ikinci tam kopyasını heap'te açıyor ve yenileme
-  // "snapshot-save" adımında heap out of memory ile çöküyordu. Baytlar aynıdır.
-  const bodyParts = contentBuffer.length === 2
+  return contentBuffer.length === 2
     ? [Buffer.from(metadataJson,'utf8')]
     : [Buffer.from(`${metadataJson.slice(0, -1)},`,'utf8'),contentBuffer.subarray(1)];
-  const hash = crypto.createHash('sha256');
-  for (const part of bodyParts) hash.update(part);
-  const digest = hash.digest('hex');
-  const parts = [Buffer.from(`{"schemaVersion":${SNAPSHOT_SCHEMA_VERSION},"checksum":"${digest}","contentKey":"${contentKey}","payload":`,'utf8'), ...bodyParts, Buffer.from('}')];
+}
+function assembleSnapshot(prepared, bodyParts, digest) {
+  const { contentBuffer, ...rest } = prepared;
+  const parts = [Buffer.from(`{"schemaVersion":${SNAPSHOT_SCHEMA_VERSION},"checksum":"${digest}","contentKey":"${rest.contentKey}","payload":`,'utf8'), ...bodyParts, Buffer.from('}')];
   const json = Buffer.allocUnsafe(parts.reduce((sum, part) => sum + part.length, 0));
   let offset = 0;
   for (const part of parts) offset += part.copy(json, offset);
   if (offset !== json.length) throw new Error('Snapshot gövdesi yazılamadı.');
   return { ...rest, json, baseChecksum:digest };
+}
+function finishSnapshot(prepared) {
+  const bodyParts = snapshotBodyParts(prepared), hash = crypto.createHash('sha256');
+  for (const part of bodyParts) hash.update(part);
+  return assembleSnapshot(prepared, bodyParts, hash.digest('hex'));
 }
 function encodeSnapshot(payload) { return finishSnapshot(prepareSnapshot(payload)); }
 
@@ -240,7 +272,7 @@ async function writeModelSnapshotAsync(userId, payload) {
   await new Promise(resolve => setImmediate(resolve));
   assertSnapshotPayload(payload);
   const serializeStarted = Date.now(), previous = verifiedSnapshots.get(safeUserId(userId));
-  let prepared = prepareSnapshot(payload);
+  let prepared = await prepareSnapshotAsync(payload);
   if (previous && previous.contentKey === prepared.contentKey) {
     // Re-read and hash the compressed primary: a replaced/deleted/corrupt file
     // must never inherit an in-memory verification from an older generation.
@@ -253,7 +285,7 @@ async function writeModelSnapshotAsync(userId, payload) {
         aliasCount:prepared.aliasCount, reused:true, totalMs:Date.now()-started };
     }
   }
-  const encoded = finishSnapshot(prepared);
+  const encoded = await finishSnapshotAsync(prepared);
   prepared = null; // release the content buffer before the awaited gzip/write
   const compressStarted = Date.now(), buffer = await gzip(encoded.json, { level: 6 });
   const validateStarted = Date.now();

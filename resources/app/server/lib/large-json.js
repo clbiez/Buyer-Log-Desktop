@@ -89,6 +89,27 @@ function jsonToBuffer(value, options = {}) {
   return parts.length === 1 ? parts[0] : Buffer.concat(parts);
 }
 
+/* jsonToBuffer ile bayt bayt aynı; olay döngüsünü kilitlemeden üretir.
+   Model snapshot kaydı 120+ MiB içeriği tek senkron turda serileştirince
+   sunucu yenileme sırasında saniyelerce (kullanıcı verisinde 10 sn+) cevap
+   vermiyordu. Aynı jsonChunks dizisi ve aynı toplama kullanılır; parçalar
+   arasında ~8 ms iş bütçesi dolunca yieldControl beklenir. Değer bekleme
+   sırasında değiştirilmemelidir (çağıran değişmez/yerinde mutasyonsuz veri
+   verir). */
+const ASYNC_CHUNK_CHECK = 256;
+async function jsonToBufferAsync(value, { yieldControl, ...options } = {}) {
+  if (typeof yieldControl !== 'function') throw new TypeError('A cooperative yield callback is required');
+  const parts = [];
+  let batch = [], size = 0, count = 0, deadline = performance.now() + 8;
+  for (const chunk of jsonChunks(value, options)) {
+    batch.push(chunk); size += chunk.length;
+    if (size >= FLUSH_CHARS) { parts.push(Buffer.from(batch.join(''), 'utf8')); batch = []; size = 0; }
+    if (++count % ASYNC_CHUNK_CHECK === 0 && performance.now() >= deadline) { await yieldControl(); deadline = performance.now() + 8; }
+  }
+  if (batch.length) parts.push(Buffer.from(batch.join(''), 'utf8'));
+  return parts.length === 1 ? parts[0] : Buffer.concat(parts);
+}
+
 /* sha256(JSON.stringify(value)) eşdeğeri — tam metni hiç oluşturmaz. */
 function jsonSha256(value, options = {}) {
   const hash = crypto.createHash('sha256');
@@ -278,4 +299,4 @@ async function parseJsonBufferAsync(buffer, {yieldControl} = {}) {
   for(;;){const step=steps.next();if(step.done)return step.value;if(performance.now()>=deadline){await yieldControl();deadline=performance.now()+8;}}
 }
 
-module.exports = { jsonChunks, jsonToBuffer, jsonSha256, jsonPreview, parseJsonBuffer, parseJsonBufferAsync, DIRECT_PARSE_MAX_BYTES };
+module.exports = { jsonChunks, jsonToBuffer, jsonToBufferAsync, jsonSha256, jsonPreview, parseJsonBuffer, parseJsonBufferAsync, DIRECT_PARSE_MAX_BYTES };
