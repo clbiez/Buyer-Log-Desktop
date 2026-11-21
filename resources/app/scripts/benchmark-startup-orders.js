@@ -150,34 +150,6 @@ async function open(context,page,module){
     persist();throw error;
   }
 }
-/* --sessiz: Sessiz çalışma alanı (önizleme) yaşam döngüsü. Genel Bakış'ta Görünüm
-   düğmesiyle ilk açılış ve kapat/yeniden aç; görünür satır DOM'u sınırlı kalmalı (≤300). */
-async function measureSessiz(context){
-  const page=await context.newPage();
-  try{
-    await page.addInitScript(installProbe,{sampleWindowMs,logEvents:false});
-    // Genel Bakış'tan açılır: CP okuma modeli varsayılan açıkken tam CP yüklemesi Sessiz'in kendi maliyetidir.
-    await page.goto(base+'/?module=overview',{waitUntil:'domcontentloaded',timeout:120000});
-    await page.waitForFunction(()=>Number.isFinite(window.__startupProbe?.startupReadyMs),null,{timeout:rendererTimeoutMs,polling:100});
-    await page.evaluate(()=>window.BLBootGuard?.continue({intentAtMs:performance.now()}));
-    await page.waitForFunction(()=>Number.isFinite(window.__startupProbe?.startupCompleteMs),null,{timeout:rendererTimeoutMs,polling:100});
-    if(!(await page.evaluate(()=>!!document.getElementById('railSessizBtn'))))return {available:false};
-    const run=()=>page.evaluate(()=>new Promise((resolve,reject)=>{
-      const longBefore=window.__startupProbe.longTasks.length,started=performance.now();let shellMs=null;
-      const done=()=>{const tasks=window.__startupProbe.longTasks.slice(longBefore);resolve({shellMs,ms:performance.now()-started,domRows:document.querySelectorAll('#blSessiz .slRow').length,longTaskTotalMs:tasks.reduce((s,t)=>s+t.duration,0),maxLongTaskMs:Math.max(0,...tasks.map(t=>t.duration))});};
-      window.BLSessiz?.close?.();
-      document.getElementById('railSessizBtn').click();
-      const tick=()=>{const host=document.getElementById('blSessiz');if(host&&shellMs==null)shellMs=performance.now()-started;
-        if(host&&!host.querySelector('[data-sl-nav="cp"][aria-current]'))host.querySelector('[data-sl-nav="cp"]')?.click();
-        if(document.querySelector('#blSessiz .slRow'))return requestAnimationFrame(()=>requestAnimationFrame(done));
-        if(performance.now()-started>180000)return reject(Error('Sessiz open timed out'));setTimeout(tick,10);};tick();}));
-    const first=await run(),repeat=await run();
-    await page.evaluate(()=>window.BLSessiz?.close?.());
-    await page.screenshot({path:path.join(root,'sessiz.png')});
-    console.log('sessiz first '+Math.round(first.ms)+' ms, repeat '+Math.round(repeat.ms)+' ms, dom rows '+first.domRows);
-    return {available:true,first,repeat,rows:await page.evaluate(()=>state.cp.rows.length),rendererRssBytes:await rendererRss()};
-  }finally{await page.close();}
-}
 async function measureSameTab(context){
   const page=await context.newPage();
   try{
@@ -257,7 +229,6 @@ function prepareFixture(){
     // Every page, including same-tab scenario, closes before the next measurement.
     if(!process.argv.includes('--skip-same-tab'))report.sameTab=await measureSameTab(context);
     await measureModules(context,requestedModules,(page,module)=>open(context,page,module));
-    if(process.argv.includes('--sessiz'))report.sessiz=await measureSessiz(context);
     report.status='passed';report.limitations=['Linux headless Chromium; Windows/Electron, antivirus and cold OS disk cache are not measured.',
       'Collection workspace is empty synthetic data. RSS sums include shared renderer pages, not unique physical memory.',
       'Health probes are serial every 500 ms after completion; timeouts/errors are retained in quantiles, not discarded.',

@@ -30,9 +30,7 @@
     // v2026-11-20 — CP pencereli okuma modeli pilot anahtarı kullanıcı başınadır (#1078 alt PR 2).
     'bl.cpReadModel.',
     // v2026-11-20 — CP satır kaydı pilot anahtarı kullanıcı başınadır (#1078 alt PR 3).
-    'bl.cpRowSave.',
-    // v2026-11-16 — Sessiz çalışma alanı (önizleme): açık/kapalı, görünüm ve Genel Bakış düzeni kullanıcı başınadır.
-    'buyerlog.sessiz.v1.'
+    'bl.cpRowSave.'
   ];
   /* AYNI BİLGİSAYARDA BİRDEN FAZLA KULLANICI.
      Aşağıdaki kişisel filtre/görünüm anahtarları eskiden kullanıcı önekine
