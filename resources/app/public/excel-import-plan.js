@@ -320,7 +320,7 @@
     var duplicateBlockedRows = new Set();
     // "Tümünü aktar" (keepAll) açık bir karardır: çakışan satırların hepsi
     // aktarılır. Aynı Buyer Log satırına düşenlerden ilki onu günceller,
-    // diğerleri yeni satır olarak oluşturulur (createNew kurallarıyla).
+    // diğerleri yeni satır olarak oluşturulur (createNew kapalı olsa bile).
     // Aynı satır kümesini kapsayan diğer çakışma (Excel tekrarı ↔ ters
     // tekrar) için kullanıcıdan ikinci kez karar istenmez.
     var keepAllRows = new Set();
@@ -349,8 +349,11 @@
     });
 
     var claimedTargets = new Set();
-    function pushCreate(row, payload) {
-      if (!options.createNew || target.canCreate === false) {
+    // forced: kullanıcı tekrar çakışmasında "Tümünü aktar" dedi. Bu açık,
+    // satır bazlı karar genel "eşleşmeyenleri oluştur" ayarından bağımsızdır;
+    // modülün oluşturma yeteneği (canCreate) yine de aşılmaz.
+    function pushCreate(row, payload, forced) {
+      if ((!options.createNew && !forced) || target.canCreate === false) {
         skipped.push({ sourceRowId: row.id, excelRow: row.excelRowNumber, reason: target.canCreate === false ? 'create-not-supported' : 'create-disabled' });
         return;
       }
@@ -381,7 +384,7 @@
         return;
       }
 
-      if (match.status === 'none') { pushCreate(row, payload); return; }
+      if (match.status === 'none') { pushCreate(row, payload, keepAllRows.has(row.id)); return; }
 
       var targets = [];
       if (match.status === 'exact') targets = match.targets.slice();
@@ -406,7 +409,7 @@
         // Bu plan içinde başka bir satırın zaten güncellediği hedefe ikinci
         // kez yazılmaz; satır kaybolmasın diye yeni satır olarak eklenir.
         var free = targets.filter(function (hit) { return !claimedTargets.has(hit.position); });
-        if (targets.length && !free.length) { pushCreate(row, payload); return; }
+        if (targets.length && !free.length) { pushCreate(row, payload, true); return; }
         targets = free;
       }
       targets.forEach(function (hit) { claimedTargets.add(hit.position); });

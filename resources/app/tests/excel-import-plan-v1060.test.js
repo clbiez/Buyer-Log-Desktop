@@ -260,21 +260,30 @@ test('tekrar çakışmasında "tümünü aktar": ilk satır eşleşeni güncelle
   assert.deepEqual(viaTarget.operations.map(op => op.op).sort(), ['create', 'update']);
 });
 
-test('"tümünü aktar" eşleşmeyen tekrarları ayrı yeni satırlar olarak oluşturur; createNew kapalıysa oluşturmaz', () => {
+test('"tümünü aktar" açık karardır: createNew kapalıyken de tekrar satırlarını oluşturur; canCreate=false aşılmaz', () => {
   const rows = [
     sourceRow('r1', 2, { 'col:0': cell('0999'), 'col:1': cell(10), 'col:2': cell(''), 'col:3': cell('') }),
     sourceRow('r2', 3, { 'col:0': cell('0999'), 'col:1': cell(20), 'col:2': cell(''), 'col:3': cell('') }),
+    sourceRow('r3', 4, { 'col:0': cell('0555'), 'col:1': cell(30), 'col:2': cell(''), 'col:3': cell('') }),
   ];
   const decisions = { excludedSourceRows: [], ambiguousChoice: {}, duplicateResolution: { '0999': { keepAll: true } } };
-  const plan = Plan.buildImportPlan(baseSpec(rows, [], { decisions }));
-  assert.equal(plan.executable, true);
-  assert.deepEqual(plan.operations.map(op => op.op), ['create', 'create']);
+  const off = { blankClears: false, createNew: false };
 
-  const disabled = Plan.buildImportPlan(baseSpec(rows, [{ plmId: '0999', _rev: 1 }], {
-    decisions, options: { blankClears: false, createNew: false },
-  }));
-  assert.equal(disabled.operations.filter(op => op.op === 'create').length, 0);
-  assert.ok(disabled.skipped.some(item => item.sourceRowId === 'r2' && item.reason === 'create-disabled'));
+  const unmatched = Plan.buildImportPlan(baseSpec(rows, [], { decisions, options: off }));
+  assert.equal(unmatched.executable, true);
+  assert.deepEqual(unmatched.operations.map(op => op.sourceRowId), ['r1', 'r2']);
+  assert.ok(unmatched.operations.every(op => op.op === 'create'));
+  // Çakışmaya girmeyen eşleşmeyen satır genel ayara uyar.
+  assert.ok(unmatched.skipped.some(item => item.sourceRowId === 'r3' && item.reason === 'create-disabled'));
+
+  const matched = Plan.buildImportPlan(baseSpec(rows, [{ plmId: '0999', _rev: 1 }], { decisions, options: off }));
+  assert.equal(matched.executable, true);
+  assert.equal(matched.operations.find(op => op.sourceRowId === 'r1').op, 'update');
+  assert.equal(matched.operations.find(op => op.sourceRowId === 'r2').op, 'create');
+
+  const noCreate = Plan.buildImportPlan(baseSpec(rows, [{ plmId: '0999', _rev: 1 }], { decisions, options: off, target: { canCreate: false } }));
+  assert.equal(noCreate.operations.filter(op => op.op === 'create').length, 0);
+  assert.ok(noCreate.skipped.some(item => item.sourceRowId === 'r2' && item.reason === 'create-not-supported'));
 });
 
 test('geçersiz hücre taşıyan satır yazılmaz', () => {

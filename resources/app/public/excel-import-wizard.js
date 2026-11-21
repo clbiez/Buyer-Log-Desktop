@@ -569,7 +569,7 @@
           + '<option value="all">' + esc(T('Tüm uygun hedeflere uygula (açık onay)', 'Apply to all eligible targets (explicit)')) + '</option>'
           + '</select></div>';
       }).join('') + '</div>' : '';
-    var canKeepAll = state.options.createNew && state.adapter.canCreate !== false;
+    var canKeepAll = state.adapter.canCreate !== false;
     var duplicateBlock = plan.conflicts.filter(function (item) { return !item.resolved; }).length
       ? '<div class="ximBlock"><h4>' + esc(T('Tekrar çakışmaları', 'Duplicate conflicts')) + '</h4>'
       + plan.conflicts.filter(function (item) { return !item.resolved; }).slice(0, 20).map(function (conflict) {
@@ -794,12 +794,6 @@
 
   function setOption(key, value) {
     state.options[key] = value;
-    if (key === 'createNew' && !value) {
-      // "Tümünü aktar" yeni satır gerektirebilir; oluşturma kapanınca bu
-      // kararlar geçersizdir ve çakışma yeniden karar ister.
-      var resolutions = state.decisions.duplicateResolution;
-      Object.keys(resolutions).forEach(function (k) { if (resolutions[k] && resolutions[k].keepAll) delete resolutions[k]; });
-    }
     if (['includeHiddenRows', 'includeHiddenColumns', 'fillMergedCells', 'includeStructuralRows'].indexOf(key) >= 0 && state.grid) rebuildTable();
     invalidatePlan();
   }
