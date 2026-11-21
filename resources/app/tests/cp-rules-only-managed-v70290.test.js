@@ -47,32 +47,36 @@ test('engine suggestion no longer escalates by itself; only rules do', () => {
   assert.deepEqual(evaluated.matched.map(item => item.id), ['use-suggestion']);
 });
 
-test('a deleted built-in rule never comes back and never escalates', () => {
+test('a legacy built-in rule never comes back and never escalates', () => {
+  /* 2026-11-21: yerleşik kural yok; eski kayıtlardaki builtIn:true kopyalar da düşer. */
   const analysis = CP.analyzeOrder(overdueRow, { today: TODAY, transitRules: [] });
   analysis.deliveryOutcome = 'EXPECTED_LATE';
-  const deleted = Rules.DEFAULT_PRIORITY_RULES.map(rule => rule.id);
-  const rules = Rules.effectiveRules([], deleted, null);
+  const legacy = { id: 'builtin_critical_late', builtIn: true, kind: 'priority', target: 'CRITICAL', name: 'Legacy',
+    conditions: [{ field: '@deliveryOutcome', operator: 'in', value: ['EXPECTED_LATE', 'ALREADY_LATE'] }] };
+  const rules = Rules.effectiveRules([legacy], [], null);
   assert.equal(rules.filter(rule => rule.kind === 'priority').length, 0);
   assert.equal(Rules.evaluateOrder(analysis, { rules, answers: {} }).priority, 'ON_TRACK');
-  const kept = Rules.effectiveRules([], deleted.filter(id => id !== 'builtin_critical_late'), null);
-  assert.equal(Rules.evaluateOrder(analysis, { rules: kept, answers: {} }).priority, 'CRITICAL', 'kept built-in still works');
+  const own = Rules.effectiveRules([{ ...legacy, id: 'user-late', builtIn: false }], [], null);
+  assert.equal(Rules.evaluateOrder(analysis, { rules: own, answers: {} }).priority, 'CRITICAL', 'the same calculation still works in a user rule');
 });
 
 test('moderator publication adds/deletes for everyone but never touches user-created rules', () => {
   const own = Rules.normalizeRule({ id: 'user-own', kind: 'priority', target: 'WATCH', name: 'Mine', conditions: [{ field: '@qty', operator: 'gt', value: 0 }] });
-  const builtinCopy = { ...Rules.DEFAULT_PRIORITY_RULES[0], target: 'WATCH' };
+  const builtinCopy = { id: 'builtin_critical_late', builtIn: true, kind: 'priority', target: 'WATCH', name: 'Legacy', conditions: [{ field: '@qty', operator: 'gt', value: 0 }] };
+  const sharedId = 'shared-rule';
+  const shared = Rules.normalizeRule({ id: sharedId, kind: 'priority', target: 'WATCH', name: 'Shared', conditions: [{ field: '@qty', operator: 'gt', value: 0 }] });
   const managed = Rules.normalizeManagedRules({
     rules: [{ id: 'mod-1', kind: 'checklist', name: 'Hologram', conditions: [{ field: '@daysToLoad', operator: 'lte', value: 60 }] }],
-    deletedRuleIds: [Rules.DEFAULT_PRIORITY_RULES[1].id, 'mod-1'],
+    deletedRuleIds: [sharedId, 'mod-1'],
   });
-  assert.deepEqual(managed.deletedRuleIds, [Rules.DEFAULT_PRIORITY_RULES[1].id], 'a published id cannot also be deleted');
+  assert.deepEqual(managed.deletedRuleIds, [sharedId], 'a published id cannot also be deleted');
   assert.equal(managed.rules[0].managed, true);
-  const rules = Rules.effectiveRules([own, builtinCopy], [], managed);
+  const rules = Rules.effectiveRules([own, builtinCopy, shared], [], managed);
   const ids = rules.map(rule => rule.id);
   assert.ok(ids.includes('user-own'), 'user rule untouched');
   assert.ok(ids.includes('mod-1'), 'published rule reaches the user');
-  assert.ok(!ids.includes(Rules.DEFAULT_PRIORITY_RULES[1].id), 'deleted for all users');
-  assert.equal(rules.find(rule => rule.id === Rules.DEFAULT_PRIORITY_RULES[0].id).target, 'WATCH', 'user edit of a built-in kept');
+  assert.ok(!ids.includes(sharedId), 'deleted for all users');
+  assert.ok(!ids.includes('builtin_critical_late'), 'legacy built-in copy is dropped (2026-11-21)');
   // Same id: moderator copy wins; user copy returns when unpublished.
   const override = Rules.normalizeManagedRules({ rules: [{ ...own, target: 'CRITICAL' }] });
   assert.equal(Rules.effectiveRules([own], [], override).find(rule => rule.id === 'user-own').target, 'CRITICAL');

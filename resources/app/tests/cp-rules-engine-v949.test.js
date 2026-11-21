@@ -55,33 +55,29 @@ function nearOrder(ocode, license) {
   return order({ ocode: ocode || 7001, license, opd: '2026-07-07', ex: '2026-10-15', retail: '2027-02-01' });
 }
 
-test('v9.49 yerleşik tanımlar koda gömülü değil, düzenlenebilir kural olarak duruyor', () => {
-  const ids = Rules.DEFAULT_RULES.map(rule => rule.id);
-  assert.ok(ids.includes('builtin_critical_late'), 'Kritik tanımı kural olarak görünmeli');
-  assert.ok(ids.includes('builtin_action_confirmation'));
-  assert.ok(ids.includes('builtin_action_samples'));
-  assert.ok(ids.includes('builtin_action_tests'));
-  for (const rule of Rules.DEFAULT_RULES) {
-    assert.equal(rule.builtIn, true);
-    assert.ok(rule.conditions.length, `${rule.id} koşulsuz olamaz`);
-    assert.ok(rule.name, `${rule.id} kullanıcıya görünen bir ada sahip olmalı`);
-  }
-});
+/* 2026-11-21 — yerleşik öncelik/checklist kuralları kaldırıldı. Aşağıdaki
+   motor testleri eski yerleşik tanımların KULLANICI KURALI karşılıklarıyla
+   koşar; böylece türetilmiş hesaplamaların (@deliveryOutcome, @daysToLoad,
+   @checklist:<id>) anlamı korunur. */
+const LATE_RULE = Rules.normalizeRule({ id: 'user_critical_late', kind: 'priority', target: 'CRITICAL', name: 'Geç', match: 'all',
+  conditions: [
+    { field: '@daysToLoad', operator: 'lt', value: 0 },
+    { field: '@deliveryOutcome', operator: 'in', value: ['EXPECTED_LATE', 'ALREADY_LATE'] },
+  ] });
+const CONFIRMATION_RULE = Rules.normalizeRule({ id: 'user_action_confirmation', kind: 'priority', target: 'ACTION_THIS_WEEK', name: 'Teyit', match: 'all',
+  conditions: [
+    { field: '@daysToLoad', operator: 'gte', value: 0 },
+    { field: '@daysToLoad', operator: 'lte', value: 14 },
+    { field: '@checklist:supplierConfirmation', operator: 'in', value: ['open', 'rejected'] },
+  ] });
 
-test('predefined checklist soruları kural editöründe yerleşik kurallar olarak görünür', () => {
-  assert.deepEqual(Rules.DEFAULT_CHECKLIST_RULE_IDS, Checklist.ITEMS.map(item => item.id));
-  for (const item of Checklist.ITEMS) {
-    const rule = Rules.DEFAULT_RULES.find(candidate => candidate.id === item.id);
-    assert.ok(rule, `${item.id} kural listesinde görünmeli`);
-    assert.equal(rule.kind, 'checklist');
-    assert.equal(rule.builtIn, true);
-    assert.equal(rule.questionTr, item.questionTr);
-    assert.equal(rule.questionEn, item.questionEn);
-  }
+test('yerleşik öncelik ve checklist kuralı yoktur', () => {
+  assert.deepEqual(Rules.DEFAULT_RULES, []);
+  assert.deepEqual(Rules.DEFAULT_CHECKLIST_RULE_IDS, Checklist.ITEMS.map(item => item.id), 'eski kimlikler susturma için korunur');
 });
 
 test('v9.49 Kritik tanımı: yükleme geçmiş VE hedef tarihe yetişmiyor', () => {
-  const rule = Rules.DEFAULT_RULES.find(item => item.id === 'builtin_critical_late');
+  const rule = LATE_RULE;
   assert.equal(rule.target, 'CRITICAL');
   assert.equal(rule.match, 'all', 'iki koşul birlikte sağlanmalı');
   const fields = rule.conditions.map(condition => `${condition.field}${condition.operator}`);
@@ -106,9 +102,9 @@ test('v9.49 Bu Hafta Aksiyon: gelecek hafta yükleme + teyit/numune/test işaret
   const stateOpen = Checklist.stateFor(analysis, { settings, answers: {} });
   assert.equal(stateOpen.supplierConfirmation, 'open', 'ön koşul: teyit sorusu açık');
 
-  const applied = Rules.applyPriorityRules(analysis, Rules.DEFAULT_RULES, stateOpen);
+  const applied = Rules.applyPriorityRules(analysis, [CONFIRMATION_RULE], stateOpen);
   assert.equal(applied.priority, 'ACTION_THIS_WEEK');
-  assert.ok(applied.matched.some(rule => rule.id === 'builtin_action_confirmation'));
+  assert.ok(applied.matched.some(rule => rule.id === 'user_action_confirmation'));
 
   // İşaretlendiğinde o kural artık eşleşmemeli.
   const answers = {};
@@ -116,7 +112,7 @@ test('v9.49 Bu Hafta Aksiyon: gelecek hafta yükleme + teyit/numune/test işaret
     answers[Checklist.answerKey(analysis.orderKey, id)] = Checklist.makeAnswer('done', analysis, {});
   }
   const stateDone = Checklist.stateFor(analysis, { settings, answers });
-  const after = Rules.applyPriorityRules(analysis, Rules.DEFAULT_RULES, stateDone);
+  const after = Rules.applyPriorityRules(analysis, [CONFIRMATION_RULE], stateDone);
   assert.deepEqual(after.matched.map(rule => rule.id), [], 'işaretlenen kontroller kural üretmemeli');
 });
 
@@ -226,22 +222,19 @@ test('v9.49 kapalı kural ve koşulsuz kural hiçbir siparişe uygulanmaz', () =
   assert.equal(Rules.applyPriorityRules(model.orders[0], [disabled, empty], {}).matched.length, 0);
 });
 
-test('v9.49 kaydedilmiş kurallar yerleşiklerle birleşir; yeni yerleşik kaybolmaz', () => {
-  // Kullanıcı bir yerleşiği kapatmış ve kendi kuralını eklemiş.
+test('v9.49 kaydedilmiş kurallar korunur; eski yerleşik kopyalar geri gelmez', () => {
   const saved = [
-    { ...JSON.parse(JSON.stringify(Rules.DEFAULT_RULES[0])), enabled: false },
+    { ...JSON.parse(JSON.stringify(LATE_RULE)), id: 'builtin_critical_late', builtIn: true },
+    { ...JSON.parse(JSON.stringify(CONFIRMATION_RULE)), enabled: false },
     Rules.normalizeRule({ id: 'mine', kind: 'priority', target: 'CRITICAL', name: 'benim', conditions: [{ field: '@stage', operator: 'eq', value: 'PRODUCTION' }] }),
   ];
   const merged = Rules.mergeWithDefaults(saved);
-  assert.equal(merged.find(rule => rule.id === 'builtin_critical_late').enabled, false, 'kullanıcının kararı kazanmalı');
+  assert.ok(!merged.some(rule => rule.id === 'builtin_critical_late'), 'eski yerleşik kopya düşer');
+  assert.equal(merged.find(rule => rule.id === 'user_action_confirmation').enabled, false, 'kullanıcının kararı kazanmalı');
   assert.ok(merged.some(rule => rule.id === 'mine'), 'kullanıcı kuralı korunmalı');
-  for (const rule of Rules.DEFAULT_RULES) {
-    assert.ok(merged.some(item => item.id === rule.id), `${rule.id} kaybolmamalı`);
-  }
-  // Silinen yerleşikler tombstone ile yeniden eklenmemeli.
-  const deleted = Rules.mergeWithDefaults(saved, ['builtin_critical_late', 'pps']);
-  assert.ok(!deleted.some(rule => rule.id === 'builtin_critical_late'));
-  assert.ok(!deleted.some(rule => rule.id === 'pps'));
+  // Silinen kurallar tombstone ile yeniden eklenmemeli.
+  const deleted = Rules.mergeWithDefaults(saved, ['mine']);
+  assert.ok(!deleted.some(rule => rule.id === 'mine'));
 
   // Aynı id iki kez kaydedilmişse tek kalmalı.
   assert.equal(Rules.normalizeRules([{ id: 'x', conditions: [] }, { id: 'x', conditions: [] }]).length, 1);
