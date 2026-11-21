@@ -156,7 +156,7 @@
     // yaratıyordu. Lazy grup yalnız gerçekten lazy bağımlılıkları içerir.
     backlogAnalysis:['backlog-delivery-engine.js','backlog-delivery-insights.js','backlog-delivery-analysis.js','backlog-plan-actual-report.js?rev=2','backlog-plan-actual.js?rev=3','backlog-presentation-report.js?rev=2','backlog-presentation.js?rev=2'],
     // Yol Süreleri › İthalat Yol Süresi Analizi: saf motor görünümden ÖNCE yüklenir.
-    transitAnalysis:['transit-analysis.js','transit-analysis-ui.js'],
+    transitAnalysis:['transit-analysis.js','transit-stage-model.js','transit-analysis-ui.js'],
     /* v9.48 — CP üretim öncelikleri. Sıra önemli: iki saf motor görünümden
        ÖNCE yüklenir; görünüm ikisini de window'dan okur. */
     /* backlog-delivery-engine.js BURADA ZORUNLU: CP hazırlık motoru teslimat

@@ -34,7 +34,7 @@
     insightLimit: 3,
     // Kullanıcı isterse tüm analiz gövdesini daraltabilir; tercih oturumlar arasında saklanır.
     collapsed: false,
-    folds: { cause: false, attention: true, stage: false, dimension: false, quality: false },
+    folds: { cause: false, attention: true, stageModel: true, stage: false, dimension: false, quality: false },
     automate: false,
     showAllInsights: false,
     period: { mode: 'all', from: '', to: '' },
@@ -63,6 +63,8 @@
   const loadingLabel = key => Engine.LOADING_LABELS[lang()][key] || key;
   const dimLabel = key => Engine.DIMENSION_LABELS[lang()][key] || key;
   const measureOf = measure => (state.measure === 'orders' ? measure.orders : measure.qty);
+  const stepLabel = code => (Engine.STAGE_STEP_LABELS && Engine.STAGE_STEP_LABELS[lang()][code]) || '';
+  const signedDays = value => (value == null || !Number.isFinite(Number(value)) ? '' : `${Number(value) > 0 ? '+' : ''}${int(value)}`);
   const measureWord = () => (state.measure === 'orders' ? L('sipariş', 'orders') : L('adet', 'units'));
 
   function load() {
@@ -338,12 +340,15 @@
   function openRows(title, rows) {
     if (!rows.length) { if (typeof showToast === 'function') showToast(L('Gösterilecek sipariş bulunamadı.', 'No orders to show.')); return; }
     const headers = Object.keys(rows[0]).filter(key => !key.startsWith('_'));
+    const stage = stageColumns(rows);
     if (window.BLDetailDrawer?.open) {
       window.BLDetailDrawer.open({
         storageKey:'backlog.analysis.detail',source:'backlog',title,
-        subtitle:`${int(rows.length)} ${L('satır', 'rows')}`,rows,
-        columns:headers.map(key=>({key,label:key})),
-        viewPresets:typeof window.BLBacklogDetailViewPresets === 'function' ? window.BLBacklogDetailViewPresets(headers) : undefined,
+        subtitle:`${int(rows.length)} ${L('satır', 'rows')}`,rows:stage.rows,
+        // Aşama kolonları tekil alanların başına: gruplanmış kimlik kolonlarının hemen arkasında görünür.
+        columns:[...stage.columns,...headers.map(key=>({key,label:key}))],
+        defaultVisible:stage.columns.map(col=>col.key),
+        viewPresets:withStagePresets(typeof window.BLBacklogDetailViewPresets === 'function' ? window.BLBacklogDetailViewPresets(headers) : undefined, stage.columns),
         images:true,fileName:`Backlog_${title}`
       });
       return;
@@ -351,6 +356,46 @@
     if (typeof openBacklogDetailShell !== 'function' || typeof renderBacklogDetailTable !== 'function') return;
     openBacklogDetailShell(`${title} · ${int(rows.length)} ${L('satır', 'rows')}`, L('Yükleniyor…', 'Loading…'));
     renderBacklogDetailTable(rows, headers);
+  }
+  /* Aşama modeli kolonları: satırın sunucu projeksiyonundan, seçili ETA
+     istatistiğiyle. Projeksiyonu olmayan kümede kolon eklenmez. */
+  const STAGE_COLUMN_KEYS = ['stageEta', 'stageCurrent', 'stageOverrun', 'stageVsRule', 'stageProbability', 'stageDeviation'];
+  function stageColumns(rows) {
+    if (!rows.some(row => row && row._backlogExcel && row._backlogExcel.stageProjection)) return { rows, columns: [] };
+    const stat = state.settings.etaStat === 'p80' ? 'p80' : 'mean';
+    const out = rows.map(row => {
+      const p = row && row._backlogExcel && row._backlogExcel.stageProjection;
+      if (!p) return row;
+      const analysis = Engine.analyzeOrder(row, { settings: state.settings });
+      const deviations = (Array.isArray(p.stages) ? p.stages : [])
+        .filter(item => item && item[4] != null && item[4] !== 0)
+        .map(item => `${item[0]}: ${signedDays(item[4])}`).join(' · ');
+      return { ...row,
+        stageEta: (stat === 'p80' ? p.etaP80 : p.etaMean) || '',
+        stageCurrent: p.currentStage ? `${p.currentStage}. ${stepLabel(p.currentStage)}` : '',
+        stageOverrun: Number(p.openOverrunDays) > 0 ? Number(p.openOverrunDays) : '',
+        stageVsRule: analysis.stageVsRuleDays == null ? '' : analysis.stageVsRuleDays,
+        stageProbability: analysis.onTimeProbability == null ? '' : Math.round(analysis.onTimeProbability * 100),
+        stageDeviation: deviations };
+    });
+    const labels = {
+      stageEta: stat === 'p80' ? L('Aşama ETA (P80)', 'Stage ETA (P80)') : L('Aşama ETA (Ortalama)', 'Stage ETA (Average)'),
+      stageCurrent: L('Koşan Aşama', 'Current Stage'),
+      stageOverrun: L('Aşama Aşımı (gün)', 'Stage Overrun (days)'),
+      stageVsRule: L('Statik ETA\'ya Göre (+erken/−geç)', 'vs Static ETA (+early/−late)'),
+      stageProbability: L('Zamanında Varış Olasılığı %', 'On-Time Probability %'),
+      stageDeviation: L('Aşama Sapmaları (gün)', 'Stage Deviations (days)'),
+    };
+    return { rows: out, columns: STAGE_COLUMN_KEYS.map(key => ({ key, label: labels[key] })) };
+  }
+  // Aşama kolonları Odak/Genişletilmiş görünümde de görünür (yalnız "Tümü"nde kalmaz).
+  function withStagePresets(presets, columns) {
+    if (!columns.length || !presets || typeof presets !== 'object') return presets;
+    const keys = columns.map(col => col.key);
+    const out = { ...presets };
+    // Kimlik kolonlarının hemen arkasına: yatay kaydırmada gözden kaçmasın.
+    ['focus', 'extended'].forEach(name => { if (Array.isArray(out[name])) out[name] = [...out[name].slice(0, 3), ...keys, ...out[name].slice(3)]; });
+    return out;
   }
   const ordersWhere = predicate => (state.model ? state.model.orders.filter(predicate) : []);
 
@@ -421,7 +466,7 @@
         source: 'backlog',
         recipientField: 'Üretici',
         reportFields: ['Sipariş Kod', 'Model Adı', 'Renk Kod', 'Adet', 'REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)', 'Teslimat Sonucu', 'Risk Sebebi'],
-        backlog: { targetType: state.settings.targetType, requireTransitRule: state.settings.requireTransitRule !== false },
+        backlog: { targetType: state.settings.targetType, requireTransitRule: state.settings.requireTransitRule !== false, etaStat: state.settings.etaStat === 'p80' ? 'p80' : 'mean' },
         ...spec,
       });
     } catch (error) {
@@ -444,6 +489,29 @@
         <span class="bdaKpiMeta bdaAttentionMeta">${esc(int(groups.quantities[key]))} ${esc(L('adet', 'units'))}</span></button>`).join('');
     const urgent = (groups.counts.CRITICAL || 0) + (groups.counts.ACTION_TODAY || 0);
     return `${foldHead('attention', L('Aksiyon Gerekenler', 'Needs Attention'), urgent ? L(`${int(urgent)} acil sipariş`, `${int(urgent)} urgent orders`) : L('Acil sipariş yok', 'No urgent orders'))}<div class="bdaAttentionRow">${cards}</div></div></div>`;
+  }
+
+  /* Aşama modeli özeti: kayıtlı Yol Süresi aşama modeliyle hesaplanan
+     parsiyeller. Yalnız en az bir parsiyel aşama ETA'sıyla hesaplandıysa çizilir. */
+  function renderStagePerformance(model) {
+    const perf = model.stagePerformance;
+    if (!perf || !perf.projected || !perf.projected.rows) return '';
+    const stat = state.settings.etaStat === 'p80' ? L('P80 (temkinli)', 'P80 (conservative)') : L('Ortalama', 'Average');
+    const items = [
+      ['projected', L('Aşama ETA\'sıyla hesaplanan', 'Calculated with stage ETA'), 'mute', L('Son gerçekleşen kilometre taşından yeniden hesaplandı', 'Recalculated from the last realized milestone')],
+      ['overrun', L('Koşan aşama ortalamayı aştı', 'Current stage over average'), 'bad', L('Henüz gerçekleşmemiş aşama ortalama süresini geçti', 'A not-yet-completed stage has exceeded its average duration')],
+      ['later', L('Statik ETA\'dan geç', 'Later than static ETA'), 'warn', L('Tek kural gününe göre en az 3 gün geç', 'At least 3 days later than the single rule duration')],
+      ['earlier', L('Statik ETA\'dan erken', 'Earlier than static ETA'), 'ok', L('Tek kural gününe göre en az 3 gün erken', 'At least 3 days earlier than the single rule duration')],
+      ['lowProbability', L('Zamanında varış olasılığı < %50', 'On-time probability < 50%'), 'bad', L('Geçmiş parsiyellerin kalan süre dağılımına göre', 'Based on the remaining-time distribution of past partials')],
+    ];
+    const cards = items.map(([key, label, tone, title]) => `<button type="button" class="bdaKpi is-${tone}" data-stage-signal="${esc(key)}" title="${esc(title)}">
+        <span class="bdaKpiLabel">${esc(label)}</span>
+        <span class="bdaKpiValue">${esc(int(measureOf(perf[key])))}</span>
+        <span class="bdaKpiMeta">${esc(int(perf[key].orders))} ${esc(L('sipariş', 'orders'))}</span></button>`).join('');
+    const summary = L(`${int(perf.projected.orders)} sipariş · ETA: ${stat}`, `${int(perf.projected.orders)} orders · ETA: ${stat}`);
+    return `${foldHead('stageModel', L('Aşama Bazlı Tahmin', 'Stage-Based Forecast'), summary)}<div class="bdaKpiRow">${cards}</div>
+      <p class="bdaMuted">${esc(L('ETA, Yol Süresi Analizi\'nde kaydedilen aşama modeliyle son gerçekleşen kilometre taşından hesaplanır. Erken biten aşama toplam süreye yansır; ortalamayı aşan ve hâlâ gerçekleşmeyen aşama ETA\'yı ileri iter. Paralel evrak süreci yalnız ETA\'dan sonra teslim edilirse gümrüğü etkiler.',
+        'ETA is calculated from the last realized milestone with the stage model saved in Lead Time Analysis. A stage that finishes early shortens the total; a stage that exceeds its average and is still open pushes the ETA out. The parallel document process only affects customs when documents arrive after the ETA.'))}</p></div></div>`;
   }
 
   function renderStageMatrix(model) {
@@ -541,6 +609,11 @@
             <option value="retail"${state.settings.targetType === 'retail' ? ' selected' : ''}>${esc(L('Retail Depo', 'Retail Warehouse'))}</option>
             <option value="inStore"${state.settings.targetType === 'inStore' ? ' selected' : ''}>${esc(L('Model Bütçe / In Store', 'Model Budget / In Store'))}</option>
           </select></label>
+        <label class="bdaControl" title="${esc(L('Aşama modeli ETA istatistiği. Ortalama: geçmiş parsiyellerin ortalama kalan süresi. P80: parsiyellerin %80\'inin vardığı süre (temkinli).', 'Stage model ETA statistic. Average: mean remaining time of past partials. P80: the time within which 80% of partials arrived (conservative).'))}"><span>${esc(L('ETA', 'ETA'))}</span>
+          <select data-control="etaStat">
+            <option value="mean"${state.settings.etaStat !== 'p80' ? ' selected' : ''}>${esc(L('Ortalama', 'Average'))}</option>
+            <option value="p80"${state.settings.etaStat === 'p80' ? ' selected' : ''}>${esc(L('P80 (temkinli)', 'P80 (conservative)'))}</option>
+          </select></label>
         <label class="bdaControl"><span>${esc(L('Ölçü', 'Measure'))}</span>
           <select data-control="measure">
             <option value="qty"${state.measure === 'qty' ? ' selected' : ''}>${esc(L('Adet', 'Quantity'))}</option>
@@ -587,6 +660,7 @@
       ${renderOutcomeRow(model)}
       ${renderCauseRow(model)}
       ${renderNeedsAttention(model)}
+      ${renderStagePerformance(model)}
       ${renderStageMatrix(model)}
       ${renderDimension(model)}
       ${renderDataQuality(model)}`;
@@ -614,6 +688,7 @@
       select.addEventListener('change', () => {
         const key = select.dataset.control;
         if (key === 'targetType') { state.settings = { ...state.settings, targetType: select.value }; }
+        else if (key === 'etaStat') { state.settings = { ...state.settings, etaStat: select.value === 'p80' ? 'p80' : 'mean' }; }
         else if (key === 'measure') state.measure = select.value;
         else if (key === 'periodMode') { state.period = { ...state.period, mode: select.value }; }
         else if (key === 'periodFrom') { state.period = { ...state.period, from: select.value }; }
@@ -674,6 +749,11 @@
         filters: [{ field: 'Risk Sebebi Kodu', operator: 'eq', value: key }],
         subject: causeLabel(key),
       });
+    }));
+    host.querySelectorAll('[data-stage-signal]').forEach(button => button.addEventListener('click', () => {
+      const key = button.dataset.stageSignal;
+      const label = button.querySelector('.bdaKpiLabel')?.textContent || key;
+      openDrill(label, { k: 'stageSignal', key }, () => ordersWhere(order => Engine.stageSignalKeys(order).includes(key)));
     }));
     host.querySelectorAll('[data-cause]').forEach(button => button.addEventListener('click', () => {
       const key = button.dataset.cause;

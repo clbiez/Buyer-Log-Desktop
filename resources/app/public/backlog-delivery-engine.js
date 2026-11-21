@@ -128,7 +128,34 @@
     lateLoadingToleranceDays: 0,
     productionOverdueDays: 9,
     handoverOverdueDays: 3,
+    /* Aşama modeli ETA istatistiği: 'mean' ortalama, 'p80' temkinli (geçmiş
+       parsiyellerin %80'i bu sürede varmış). Yalnız aşama projeksiyonu olan
+       satırları etkiler; diğerleri tek kural gününe göre hesaplanır. */
+    etaStat: 'mean',
   });
+  const STAGE_GROUPS = Object.freeze({ 1: 'loading', 2: 'loading', 3: 'loading', 4: 'transit', 5: 'customs', 6: 'customs', 7: 'customs', 8: 'customs' });
+  const STAGE_ANCHOR_HIGH = Object.freeze(new Set(['eta', 'summaryDeclaration', 'warehouseApproval', 'transitDeclaration']));
+  /* Kritik yol aşama adları (transit-stage-model.js STAGES ile aynı kodlar).
+     Görünüm katmanı modeli yüklemeden etiket gösterebilsin diye burada. */
+  const STAGE_STEP_LABELS = Object.freeze({
+    tr: { 1: 'Yükleme Talep → Handover', 2: 'Handover → Cut Off', 3: 'Cut Off → Fiili Yükleme', 4: 'Fiili Yükleme → ETA', 5: 'ETA → Özet Beyan', 6: 'Özet Beyan → Ambar Onay', 7: 'Ambar Onay → Transit Beyanname', 8: 'Transit Beyanname → Antrepo Giriş' },
+    en: { 1: 'Loading Request → Handover', 2: 'Handover → Cut-off', 3: 'Cut-off → Actual Loading', 4: 'Actual Loading → ETA', 5: 'ETA → Summary Declaration', 6: 'Summary Declaration → Warehouse Approval', 7: 'Warehouse Approval → Transit Declaration', 8: 'Transit Declaration → Antrepo Entry' },
+  });
+  const STAGE_SIGNALS = Object.freeze(['projected', 'overrun', 'earlier', 'later', 'lowProbability']);
+  const STAGE_SHIFT_DAYS = 3;
+  function stageSignalKeys(order) {
+    if (!order || order.etaSource !== 'stage') return [];
+    const out = ['projected'];
+    if (Number(order.stageOverrunDays) > 0) out.push('overrun');
+    if (order.stageVsRuleDays != null && order.stageVsRuleDays >= STAGE_SHIFT_DAYS) out.push('earlier');
+    if (order.stageVsRuleDays != null && order.stageVsRuleDays <= -STAGE_SHIFT_DAYS) out.push('later');
+    if (order.onTimeProbability != null && order.onTimeProbability < 0.5) out.push('lowProbability');
+    return out;
+  }
+  function stageProjectionOf(meta) {
+    const p = meta && meta.stageProjection;
+    return p && typeof p === 'object' && (p.etaMean || p.etaP80) ? p : null;
+  }
 
   const EMPTY = '(Boş)';
   const text = value => String(value == null ? '' : value).trim();
@@ -172,6 +199,10 @@
   /* =================================================================
      SİPARİŞ BAZINDA ANALİZ
      ================================================================= */
+  function probabilityOf(projection, targetType) {
+    const value = Number(targetType === 'inStore' ? projection.pInStore : projection.pRetail);
+    return projection[targetType === 'inStore' ? 'pInStore' : 'pRetail'] == null || !Number.isFinite(value) ? null : value;
+  }
   function analyzeOrder(row, context) {
     const ctx = context || {};
     const ord = typeof ctx.dateOrdinal === 'function' ? ctx.dateOrdinal : defaultOrdinal;
@@ -207,6 +238,12 @@
        "Hesaplanamıyor" kalır ve eksik bilgi olarak raporlanır. */
     const transitRuleDefined = Boolean(meta.transitRule);
     const requireRule = settings.requireTransitRule !== false;
+    /* Aşama projeksiyonu: Yol Süresi Analizi'nde kaydedilen modelden, son
+       GERÇEKLEŞEN kilometre taşına göre (sunucu üretir). Gerçekleşen veriye
+       dayandığı için kural şartı onu engellemez. */
+    const stageProjection = stageProjectionOf(meta);
+    const etaStat = settings.etaStat === 'p80' ? 'p80' : 'mean';
+    const stageEta = stageProjection ? ord(etaStat === 'p80' ? (stageProjection.etaP80 || stageProjection.etaMean) : (stageProjection.etaMean || stageProjection.etaP80)) : null;
     const transitRuleMissing = requireRule && !transitRuleDefined;
     const plannedTransitDays = transitRuleMissing ? null : rawTransitDays;
 
@@ -222,7 +259,7 @@
        Handover gerçekleşmişse fiili yükleme bazıdır. Handover yoksa ürün henüz
        çıkmadığı için geçmiş Ex-Factory bugüne taşınır: MAX(Today, Ex-Factory).
        Üretim ve shortage'ın mevcut davranışı korunur. */
-    let eta = null, etaSource = null;
+    let eta = null, etaSource = null, ruleEta = null;
     /* etaSource='ias': tarih IAS'tan geliyor ('Tahmini Antrepo Giriş Tarihi').
        Bu tarih GELECEKTE de olabilir — yani "gerçekleşmiş varış" demek DEĞİL,
        yalnız kaynağı bizim hesabımız değil demek. Gerçekten varmış olma
@@ -241,6 +278,17 @@
          "kural yoksa hesaplama" kuralı arka kapıdan delinmiş olurdu. */
       eta = rowAntrepoDate; etaSource = 'estimated';
     }
+    /* Aşama ETA'sı (varış gerçekleşmemişse): tek kural gününün yerini alır.
+       Kural/tahmin ETA'sı karşılaştırma için ruleEta'da kalır: fark, statik
+       ortalamaya göre ürünün ne kadar erken/geç geleceğini gösterir. */
+    if (stageEta != null && !(etaSource === 'ias' && today != null && eta != null && eta <= today)) {
+      // Karşılaştırma ölçütü yalnız TANIMLI tek kural günüdür (Handover + gün);
+      // IAS tahmini veya varsayılan gün "statik ETA" sayılmaz.
+      const ruleBase = actualLoadDate != null ? actualLoadDate : revisedLoadDate;
+      ruleEta = transitRuleDefined && ruleBase != null && rawTransitDays != null ? ruleBase + rawTransitDays : null;
+      eta = stageEta; etaSource = 'stage';
+    }
+    const stageVsRuleDays = etaSource === 'stage' && ruleEta != null ? ruleEta - eta : null;
 
     const requiredBuffer = targetType === 'inStore' ? num(settings.requiredBufferInStore) : num(settings.requiredBufferRetail);
     const scheduleBufferDays = targetDate != null && eta != null ? targetDate - eta : null;
@@ -264,7 +312,14 @@
       && !preLoad
       && !warehouseReceived
       && today > actualLoadDate + plannedTransitDays;
-    const postProductionTransitOverdue = meta.transitOverdue === true || calculatedTransitOverdue;
+    /* Aşama modeli varsa statik "yükleme + tek gün doldu mu" yerine koşan
+       aşamanın ORTALAMASI aşıldı mı sorulur (açık aşım). */
+    const stageOverrunDays = stageProjection && Number(stageProjection.openOverrunDays) > 0 ? Number(stageProjection.openOverrunDays) : 0;
+    const stageGroup = stageProjection ? (STAGE_GROUPS[stageProjection.currentStage] || null) : null;
+    const stageOverrun = stageOverrunDays > num(settings.transitToleranceDays);
+    const postProductionTransitOverdue = stageProjection
+      ? stageOverrun && stageGroup === 'transit'
+      : (meta.transitOverdue === true || calculatedTransitOverdue);
 
     /* Yükleme başarımı */
     let loadingPerformance = 'UNKNOWN';
@@ -285,8 +340,9 @@
     if (!loadingType) missing.push(F.delType);
     // "Kural tanımlı değil" ile "süre hiç yok" ayrı sorunlardır; kullanıcıya
     // hangisini düzelteceğini söyleyebilmek için ayrı raporlanır.
-    if (transitRuleMissing) missing.push('transitRule');
-    else if (plannedTransitDays == null) missing.push('transitDays');
+    // Aşama ETA'sı olan satır kural gününe ihtiyaç duymaz; eksik sayılmaz.
+    if (stageEta == null && transitRuleMissing) missing.push('transitRule');
+    else if (stageEta == null && plannedTransitDays == null) missing.push('transitDays');
     if (eta == null) missing.push(F.antrepo);
 
     let deliveryOutcome = 'UNKNOWN';
@@ -322,9 +378,10 @@
     } else if (deliveryOutcome !== 'ON_TRACK') {
       if (today != null && targetDate != null && targetDate < today && !arrived) riskReasons.push('TARGET_DATE_PASSED');
       if (stage === 'AWAITING_RETAIL_TRANSFER' || signalCodes.has('ANTREPO_DELAY')) riskReasons.push('RETAIL_TRANSFER_DELAY');
-      if (stage === 'CUSTOMS') riskReasons.push('CUSTOMS_DELAY');
-      if (postProductionTransitOverdue || (transitVarianceDays != null && transitVarianceDays > num(settings.transitToleranceDays))) riskReasons.push('TRANSIT_DELAY');
-      if (loadingPerformance === 'LOADED_LATE') riskReasons.push('LATE_LOADING');
+      if (stage === 'CUSTOMS' || (stageOverrun && stageGroup === 'customs') || (stageProjection && Number(stageProjection.docsLateDays) > 0)) riskReasons.push('CUSTOMS_DELAY');
+      if (stageOverrun && stageGroup === 'loading') riskReasons.push('LATE_LOADING');
+      if (postProductionTransitOverdue || (!stageProjection && transitVarianceDays != null && transitVarianceDays > num(settings.transitToleranceDays))) riskReasons.push('TRANSIT_DELAY');
+      if (loadingPerformance === 'LOADED_LATE' && !riskReasons.includes('LATE_LOADING')) riskReasons.push('LATE_LOADING');
       if (isProduction && plannedLoadDate != null && today != null && today - plannedLoadDate > num(settings.productionOverdueDays)) riskReasons.push('PRODUCTION_DELAY');
       if (preLoad && actualLoadDate == null) {
         riskReasons.push(latestSafeLoadDate != null && today != null && today > latestSafeLoadDate ? 'INSUFFICIENT_TRANSIT_BUFFER' : 'NOT_YET_LOADED');
@@ -339,6 +396,7 @@
     let confidence = 'LOW';
     if (deliveryOutcome === 'UNKNOWN') confidence = 'LOW';
     else if (etaSource === 'ias') confidence = 'HIGH';
+    else if (etaSource === 'stage') confidence = STAGE_ANCHOR_HIGH.has(stageProjection.anchor) || stageProjection.plan === 'eta' ? 'HIGH' : 'MEDIUM';
     else if (actualLoadDate != null || (revisedLoadDate != null && plannedTransitDays != null)) confidence = 'MEDIUM';
 
     // Unified Action Priority: delivery outcome, stage timing and structured
@@ -364,6 +422,15 @@
       loadingVarianceDays, transitVarianceDays,
       postProductionTransitOverdue,
       eta, etaSource, latestSafeLoadDate, remainingDays, scheduleBufferDays, requiredBuffer,
+      // Aşama modeli: ruleEta = tek kural günüyle ETA; stageVsRuleDays + ise
+      // ürün statik ortalamadan o kadar gün ERKEN, − ise GEÇ gelecek.
+      etaStat: etaSource === 'stage' ? etaStat : null, ruleEta, stageVsRuleDays,
+      stageAnchor: stageProjection ? stageProjection.anchor || null : null,
+      stageCurrent: stageProjection ? stageProjection.currentStage || null : null,
+      stageOverrunDays: stageProjection ? stageOverrunDays : null,
+      stageGainDays: stageProjection && Number.isFinite(Number(stageProjection.gainDays)) && stageProjection.gainDays !== null ? Number(stageProjection.gainDays) : null,
+      onTimeProbability: stageProjection ? probabilityOf(stageProjection, targetType) : null,
+      stageDeviations: stageProjection && Array.isArray(stageProjection.stages) ? stageProjection.stages : null,
       deliveryOutcome, loadingPerformance, riskCause, riskReasons, confidence,
       calculationStatus: actionDecision.calculationStatus,
       actionPriority: actionDecision.priority, actionReasons: actionDecision.reasons || [],
@@ -427,7 +494,8 @@
     const stages = new Map();
     const stageOutcome = new Map();
     const dims = {}; DIMENSIONS.forEach(dim => { dims[dim] = new Map(); });
-    const etaSources = { ias: blankMeasure(), calculated: blankMeasure(), estimated: blankMeasure(), none: blankMeasure() };
+    const etaSources = { ias: blankMeasure(), stage: blankMeasure(), calculated: blankMeasure(), estimated: blankMeasure(), none: blankMeasure() };
+    const stageSignals = {}; STAGE_SIGNALS.forEach(key => { stageSignals[key] = blankMeasure(); });
     const confidences = { HIGH: blankMeasure(), MEDIUM: blankMeasure(), LOW: blankMeasure() };
     const missingCounts = new Map();
     const transitDelayed = blankMeasure();      // zamanında yüklendi AMA transit aşıldı
@@ -441,7 +509,8 @@
       addMeasure(totals, analysis);
       addMeasure(outcomes[analysis.deliveryOutcome], analysis);
       addMeasure(loading[analysis.loadingPerformance], analysis);
-      addMeasure(etaSources[analysis.etaSource || 'none'], analysis);
+      addMeasure(etaSources[analysis.etaSource] || etaSources.none, analysis);
+      stageSignalKeys(analysis).forEach(key => addMeasure(stageSignals[key], analysis));
       addMeasure(confidences[analysis.confidence], analysis);
 
       if (!stages.has(analysis.stage)) stages.set(analysis.stage, blankMeasure());
@@ -521,6 +590,9 @@
         loadedOnTimeButDelayed: sealMeasure(transitDelayed, totalQty),
         loadedOnTimeButDelayedAtRisk: sealMeasure(transitDelayedAtRisk, totalQty),
       },
+      // Aşama modeli: kaç parsiyel aşama ETA'sıyla hesaplandı; kaçında koşan
+      // aşama ortalamayı aştı; kaçı statik kural ETA'sından ≥3 gün erken/geç.
+      stagePerformance: Object.fromEntries(STAGE_SIGNALS.map(key => [key, sealMeasure(stageSignals[key], totalQty)])),
       stages: [...stages.entries()].map(([key, measure]) => ({
         key, total: sealMeasure(measure, totalQty),
         outcomes: sealOutcomeSet(stageOutcome.get(key) || blankOutcomeSet(), totalQty),
@@ -603,7 +675,7 @@
     const meta = row._backlogExcel || {};
     projected._backlogExcel = { mag: meta.mag, mmyg: meta.mmyg, handoverDate: meta.handoverDate,
       actualAntrepoDate: meta.actualAntrepoDate, transitDays: meta.transitDays, transitRule: !!meta.transitRule,
-      transitOverdue: meta.transitOverdue, signals: meta.signals };
+      transitOverdue: meta.transitOverdue, signals: meta.signals, stageProjection: meta.stageProjection || null };
     return projected;
   }
   const DATE_FIELDS = Object.freeze([F.retail, F.inStore, F.plannedLoad, F.revisedLoad, F.antrepo]);
@@ -611,7 +683,10 @@
   // Satırın motorun tarih olarak okuduğu bütün değerleri (dateOrdinal girdileri).
   function rowDateValues(row) {
     const meta = (row && row._backlogExcel) || {};
-    return [...DATE_FIELDS.map(field => row[field]), meta.handoverDate, meta.actualAntrepoDate];
+    const stage = meta.stageProjection && typeof meta.stageProjection === 'object' ? meta.stageProjection : null;
+    // Aşama ETA'ları da tarih sözlüğüne girer: işçi ve okuma modeli dateOrdinal'ı
+    // yalnız bu listeden kurar; eksik kalırsa aşama ETA'sı sessizce yok sayılır.
+    return [...DATE_FIELDS.map(field => row[field]), meta.handoverDate, meta.actualAntrepoDate, stage ? stage.etaMean : undefined, stage ? stage.etaP80 : undefined];
   }
   // dateKey → değer (tarayıcı sözlüğü bu değerlerle dateOrdinal'ı çalıştırır).
   function valueOfDateKey(key) {
@@ -652,6 +727,7 @@
       case 'outcome': return orders.filter(order => order.deliveryOutcome === s.key);
       case 'cause': return orders.filter(order => order.riskReasons.includes(s.key));
       case 'attention': return needsAttention(model, { limit: 500 })[s.key] || [];
+      case 'stageSignal': return STAGE_SIGNALS.includes(s.key) ? orders.filter(order => stageSignalKeys(order).includes(s.key)) : [];
       case 'stageOutcome': return orders.filter(order => order.stage === s.stage && order.deliveryOutcome === s.outcome);
       case 'dimOutcome': return DIMENSIONS.includes(s.dim) ? orders.filter(order => order.dims[s.dim] === s.value && order.deliveryOutcome === s.outcome) : [];
       default: return [];
@@ -661,7 +737,7 @@
   return {
     FIELDS: F, STAGES, STAGE_LABELS, OUTCOMES, OUTCOME_LABELS, RISK_CAUSES, RISK_CAUSE_LABELS,
     LOADING_OUTCOMES, LOADING_LABELS, DIMENSIONS, DIMENSION_LABELS, DEFAULT_SETTINGS,
-    PRE_LOAD_STAGES, ARRIVED_STAGES,
+    PRE_LOAD_STAGES, ARRIVED_STAGES, STAGE_SIGNALS, STAGE_STEP_LABELS, stageSignalKeys,
     stageOf, analyzeOrder, analyze, needsAttention, defaultOrdinal, dimKey,
     DATE_FIELDS, projectRow, dateKey, rowDateValues, valueOfDateKey, analyzeDataset, parityTotals, selectOrders,
   };

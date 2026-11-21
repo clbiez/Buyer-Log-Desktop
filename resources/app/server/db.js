@@ -8,7 +8,8 @@ const path = require('path');
 const { SERVER_DATA_ROOT: DATA_DIR, APP_DATA_ROOT: USER_DATA_ROOT, atomicWriteJson } = require('./user-data');
 const BLBusinessRules = require('../public/business-rules');
 const BLFreight = require('../public/freight-calc');
-const BLTransitAnalysis = require('../public/transit-analysis');
+// Yol Süresi Analizi kalıcı kaydı: risk hesabının okuduğu aşama süre modeli.
+const BLTransitStageModel = require('../public/transit-stage-model');
 const BLOrderImportance = require('../public/order-importance');
 const modelHorizon = require('./lib/modelHorizon');
 const modelScopes = require('./lib/model-scopes');
@@ -398,7 +399,7 @@ function loadOverrides({ projectManufacturers = true } = {}) {
   merged.asasFabricMode = String(parsed && parsed.asasFabricMode || '').toLowerCase() === 'separate' ? 'separate' : 'off';
   merged.landedMultipliers = normalizeLandedMultipliers(parsed && parsed.landedMultipliers);
   merged.freightRates = BLFreight.normalizeSettings(parsed && parsed.freightRates);
-  merged.transitAnalysis = BLTransitAnalysis.normalizeAnalysis(parsed && parsed.transitAnalysis);
+  merged.transitAnalysis = BLTransitStageModel.normalizeModel(parsed && parsed.transitAnalysis);
   merged.tableReportLayouts = require('./lib/table-report-layouts').normalize(parsed && parsed.tableReportLayouts);
   merged.cpManagedRules = normalizeCpManagedRules(parsed && parsed.cpManagedRules);
   // License Royalty v2: eski TR / Non-TR kayıtları okunurken tek
@@ -630,7 +631,7 @@ function replaceTransitAnalysis(value, expectedRevision = null) {
   const current = Number(ov._revisions.transitAnalysis) || 0;
   const wanted = expectedNumber(expectedRevision);
   if (wanted != null && wanted !== current) throw new RevisionConflictError('Yol süresi analizi', wanted, current, 'transitAnalysis');
-  ov.transitAnalysis = value == null ? null : BLTransitAnalysis.normalizeAnalysis(value);
+  ov.transitAnalysis = value == null ? null : BLTransitStageModel.normalizeModel(value);
   ov._revisions.transitAnalysis = current + 1;
   const saved = saveOverrides(ov, ov._revision);
   return { analysis: saved.transitAnalysis || null, revision: saved._revisions.transitAnalysis };

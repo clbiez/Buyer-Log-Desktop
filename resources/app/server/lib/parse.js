@@ -12,6 +12,7 @@ const BLBusinessRules = require('../../public/business-rules');
 const BLOrderImportance = require('../../public/order-importance');
 const BLCanonicalFields = require('./canonical-fields');
 const BLCpReadinessEngine = require('../../public/cp-readiness-engine');
+const BLTransitStageModel = require('../../public/transit-stage-model');
 
 const LICMAP = {};
 ['FC Barcelona', 'Marvel', 'Sonic The Hedgehog', 'Warner Bros', 'Lucas', 'Disney', 'Hotwheels', 'Paris Saint Germain'].forEach(l => LICMAP[l] = 'DTR');
@@ -2141,6 +2142,8 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
     const legacyRef = norm(overrideGet(imageMap, order));
     if (legacyRef) imageByIdentity.set(key, legacyRef);
   });
+  const stageModel = ov.transitAnalysis && ov.transitAnalysis.kind === BLTransitStageModel.KIND ? ov.transitAnalysis : null;
+  const stageToday = localIsoDate(new Date());
   const logisticByOrder = new Map();
   buildBacklogOperationalRows(filtered, antrepoMap, ov).forEach(segment => {
     const source = sourceOrderRef(segment);
@@ -2161,6 +2164,22 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       ? rawLogisticSegments
       : rawLogisticSegments.filter(segment => segment && segment._segmentKind === 'ias');
     const logistic = cpLogisticSummary(orderLogisticSegments, o.qty);
+    // Aşama tahmini (kayıtlı aşama modeli varsa): parsiyel alt detayına ve satıra
+    // en geç gelecek parsiyelin özeti olarak yazılır. Model yoksa alanlar boş kalır.
+    let latestStage = null;
+    if (stageModel) {
+      const stageById = new Map();
+      orderLogisticSegments.forEach(segment => {
+        const info = cpSegmentStageInfo(segment, o, ov, stageModel, stageToday);
+        if (info) stageById.set(`partial-${Number(segment._segmentIndex) || 0}`, info);
+      });
+      logistic.segments.forEach(item => {
+        const info = item.kind === 'partial' ? stageById.get(item.id) : null;
+        if (!info) return;
+        item.stage = info;
+        if (!latestStage || info.eta > latestStage.eta) latestStage = info;
+      });
+    }
     // Shortage sentetik bir operasyon notudur; CP/Orders STATUS alanına yazılmaz.
     // Ana durum, gerçek IAS parsiyellerinden (veya gerçek üretim satırından) gelir.
     const primary = logistic.segments.find(segment => segment.kind !== 'shortage') || logistic.primary;
@@ -2216,6 +2235,11 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       _initialInspection: o.initialInspection || null,
       'Order Quantity': o.qty, 'Shipment Quantity': logistic.loadedQty, 'Remaining Units': logistic.remainingQty, '%': o.qty ? (o.qty - logistic.remainingQty) / o.qty : '',
       STATUS: status, 'Ant. Arrival': ant, 'Del. Type': delType,
+      // Aşama tahmini (bilgi kolonları; varsayılan gizli). En geç gelecek parsiyel.
+      'Stage ETA': latestStage ? toDateOnly(latestStage.eta) : null,
+      'Current Stage': latestStage ? latestStage.code : '',
+      _stageRun: latestStage ? { code: latestStage.code, days: latestStage.days, mean: latestStage.mean, over: latestStage.over } : null,
+      _stageVsRule: latestStage ? latestStage.vsRule : null,
       _logisticSegments: logistic.segments,
       _logisticStatusValues: logistic.statuses,
       _logisticDelTypeValues: logistic.delTypes,
@@ -3463,6 +3487,64 @@ function buildBacklogTemplateRows(asasOrders, antrepoMap, overrides, filterOrOco
   return rows;
 }
 
+/* Aşama bazlı ETA projeksiyonu (Yol Süresi Analizi'nde kaydedilen model).
+   Yalnız yüklenmiş/yoldaki, henüz antrepoya girmemiş IAS parsiyellerinde
+   üretilir; model yoksa veya grubun örneklemi yetersizse null kalır ve
+   Teslimat Riski tek kural gününe göre hesaplamaya devam eder. Kilometre
+   taşları canlı analizle AYNI alan eşlemesinden okunur (döngüsel bağımlılık
+   olmasın diye transit-analysis-source tembel yüklenir). */
+let _transitAnalysisSource = null;
+function backlogStageProjection(ias, order, model, todayIso) {
+  if (!ias || !model || !Array.isArray(model.groups)) return null;
+  if (!_transitAnalysisSource) _transitAnalysisSource = require('./transit-analysis-source');
+  const milestones = _transitAnalysisSource.milestonesFromEntry(ias);
+  if (!milestones) return null;
+  const projection = BLTransitStageModel.project(milestones, {
+    model, country: order && order.countryRaw, vehicle: ias.vasita || '', today: todayIso,
+  });
+  if (!projection) return null;
+  const iso = value => { const d = toDateOnly(value); return d ? localIsoDate(d) : null; };
+  return BLTransitStageModel.compact(projection, { retail: iso(order && order.retail), inStore: iso(order && order.mb) });
+}
+function localIsoDate(d) {
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+/* CP / Siparişler: yüklenmiş ve henüz antrepoya girmemiş IAS parsiyelinin aşama
+   özeti (yalnız bilgi; hiçbir bayrak, öncelik veya kurala girmez).
+   vsRule: tanımlı tek kural günüyle ETA (Handover + gün) − aşama ETA'sı;
+   + erken, − geç. Kural tanımlı değilse null (varsayılan gün ölçüt sayılmaz). */
+function cpSegmentStageInfo(segment, order, ov, stageModel, todayIso) {
+  if (!stageModel || !segment || segment._segmentKind !== 'ias' || !segment._iasRow) return null;
+  const statusKey = antrepoStatusKey(segment._status);
+  if (statusKey === 'DEPODA' || statusKey === 'RETAILE AKTARIM BEKLENIYOR') return null;
+  const ias = segment._iasRow;
+  const projection = backlogStageProjection(ias, order, stageModel, todayIso);
+  if (!projection || !projection.etaMean) return null;
+  const handover = toDateOnly(ias.handover);
+  let vsRule = null;
+  if (handover) {
+    const transitInfo = resolveTransitDays({
+      delType: normalizeTransitDelType(segment._delType) || norm(segment._delType),
+      exFactory: handover, season: order.season, country: order.countryRaw, status: segment._status,
+      rules: ov && ov.transitRules, forceRules: true,
+    });
+    const days = transitInfo && transitInfo.rule ? Number(transitInfo.days) : NaN;
+    const etaOrd = dateOrdinal(projection.etaMean), handoverOrd = dateOrdinal(handover);
+    if (Number.isFinite(days) && etaOrd != null && handoverOrd != null) vsRule = handoverOrd + days - etaOrd;
+  }
+  const run = (projection.stages || []).find(item => item && item[3] === 'r') || null;
+  return {
+    eta: projection.etaMean, etaP80: projection.etaP80 || null,
+    code: run ? String(run[0]) : (projection.currentStage ? String(projection.currentStage) : ''),
+    days: run && Number.isFinite(Number(run[1])) ? Number(run[1]) : null,
+    mean: run && Number.isFinite(Number(run[2])) ? Math.round(Number(run[2])) : null,
+    over: Number(projection.openOverrunDays) > 0 ? Number(projection.openOverrunDays) : 0,
+    vsRule,
+  };
+}
+
 /* Segment -> BACKLOG_TEMPLATE_HEADERS satırı.
    Bu eşleme TEK YERDE durur. Eskiden Backlog Excel'i ile CP/Siparişler'deki
    "Sipariş Backlog Raporu" penceresi iki ayrı eşleme kullanıyordu ve rapor
@@ -3475,6 +3557,9 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
   const requestedColumns = (Array.isArray(extraColumns) ? extraColumns : []).filter(column =>
     column && (column.source === 'asas' || column.source === 'antrepo') && column.header && column.label
   );
+  const stageModel = overrides && overrides.transitAnalysis && overrides.transitAnalysis.kind === BLTransitStageModel.KIND
+    ? overrides.transitAnalysis : null;
+  const stageToday = localIsoDate(new Date());
   const imageNamedIndex = plmImageLazyNamedIndex(overrides && overrides.imagemap);
   return (Array.isArray(sourceSegments) ? sourceSegments : []).map(segment => {
     const order = sourceOrderRef(segment) || segment;
@@ -3675,6 +3760,9 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
         expectedTransitArrival: transitOverdue.expectedArrival || null,
         transitOverdue: transitOverdue.overdue === true,
         transitOverdueDays: transitOverdue.overdueDays,
+        // Yüklenmiş ve henüz antrepoya girmemiş parsiyelde aşama bazlı ETA.
+        stageProjection: stageModel && isPartial && !isInWarehouse && !isRetailWaiting
+          ? backlogStageProjection(ias, order, stageModel, stageToday) : null,
         shipConfirmationDate,
         // ASAS'ta bu rengin Ex-Factory'si boştu; aynı PO'nun diğer renginden alındı.
         exFactoryInheritedFrom: order._exInheritedFrom ? (order._exInheritedFrom.ccode || '') : '',

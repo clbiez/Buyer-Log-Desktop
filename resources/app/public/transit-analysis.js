@@ -1,12 +1,11 @@
 /* Buyer Log — İthalat Yol Süresi Analizi (tarayıcı + Node.js, bağımlılıksız).
  *
- * Kaynak: Global Lojistik "İthalat Yol Süresi Raporu" pivot Excel'i. Sayfalar
- * ülke (Ürün Menşei) × dönem (Fiili Yükleme / Tema Depo Giriş Yıl Ay|Hafta)
- * kırılımında Yükleme / Yol / Gümrük / Uçtan Uca süreleri ve alt süreç
- * adımlarını taşır. Pivot filtre bloğundaki "Vasita Tanim" taşıt tipidir.
+ * Kaynak: IAS (Antrepo) parsiyellerinin GERÇEKLEŞEN tarihleri. Adımlar ve
+ * süre tanımları Global Lojistik "İthalat Yol Süresi Raporu" ile aynıdır;
+ * rapor Excel'inin içe aktarılması kaldırıldı (hesap doğrudan IAS'tan).
  *
  * Bu modül yalnız deterministik iş gerçeğini üretir:
- *   parseWorkbook  → ham sayfa satırlarından normalize analiz kaydı
+ *   buildFromShipments → IAS parsiyellerinden ülke × taşıt × dönem kaydı
  *   normalizeAnalysis → sunucu/istemci ortak doğrulama (kalıcı şekil)
  *   summarize      → ülke × taşıt özet (adet ağırlıklı ortalama, P80, trend)
  *   suggestRules / applySuggestions → Yol Süreleri kurallarına aktarım
@@ -27,20 +26,22 @@
   const MAX_SOURCES = 60;
   const BASES = Object.freeze(['loading', 'warehouse']);
   const GRANULARITIES = Object.freeze(['month', 'week']);
-  const MAIN_METRICS = Object.freeze(['loading', 'transit', 'customs', 'endToEnd']);
+  // handoverToWarehouse: parsiyel bazında doğrudan Handover → Antrepo Giriş (Backlog ETA'sının çapası).
+  const MAIN_METRICS = Object.freeze(['loading', 'transit', 'customs', 'endToEnd', 'handoverToWarehouse']);
   // Etiketler [Türkçe, English] çiftidir; *_LABELS / RULE_* sabitleri Türkçe
   // (geriye uyumlu) kalır, labels(lang) aktif dilin karşılığını verir.
   const TEXT = Object.freeze({
     metric: {
       loading: ['Yükleme Süresi', 'Loading Time'], transit: ['Yol Süresi', 'Transit Time'],
       customs: ['Gümrük Süresi (Antrepo)', 'Customs Time (Bonded Warehouse)'], endToEnd: ['Uçtan Uca Yol Süresi', 'End-to-End Lead Time'],
+      handoverToWarehouse: ['Handover → Antrepo', 'Handover → Antrepo'],
     },
     basis: { loading: ['Fiili Yükleme bazlı', 'Based on actual loading'], warehouse: ['Tema Depo Giriş bazlı', 'Based on Tema warehouse entry'] },
     /* Kural gün sayısı Ex-Factory'ye eklenir (Tahmini Antrepo = Ex-Factory + gün).
        Hangi analiz aralığının bu güne karşılık geleceği kullanıcı seçimidir. */
     ruleMetric: {
       endToEnd: ['Uçtan Uca (Yükleme Talep → Antrepo)', 'End-to-end (Loading Request → Antrepo)'],
-      handoverToWarehouse: ['Handover → Antrepo (Uçtan Uca − Üretici teslim)', 'Handover → Antrepo (end-to-end − supplier handover)'],
+      handoverToWarehouse: ['Handover → Antrepo (parsiyel bazında ölçülür)', 'Handover → Antrepo (measured per partial)'],
       loadingToWarehouse: ['Fiili Yükleme → Antrepo (Yol + Gümrük)', 'Actual Loading → Antrepo (transit + customs)'],
     },
     ruleStat: { mean: ['Ortalama', 'Average'], p80: ['P80 (temkinli)', 'P80 (conservative)'] },
@@ -112,105 +113,6 @@
     return ruleVehicle(value);
   }
 
-  /* ---------- Excel pivot okuma ---------- */
-  function headerKind(label) {
-    const k = key(label);
-    if (!k) return null;
-    if (k === 'URUN MENSEI') return { type: 'country' };
-    const period = k.match(/(FIILI YUKLEME|TEMA DEPO GIRIS).*YIL (AY|HAFTA)$/);
-    if (period) return { type: 'period', basis: period[1] === 'FIILI YUKLEME' ? 'loading' : 'warehouse', granularity: period[2] === 'AY' ? 'month' : 'week' };
-    if (k === 'YUKLEME SURESI') return { type: 'metric', metric: 'loading' };
-    if (k === 'YOL SURESI') return { type: 'metric', metric: 'transit' };
-    if (k === 'FIILI YUKLEME - ETA') return { type: 'alias' };
-    if (k.startsWith('GUMRUK SURESI')) return { type: 'metric', metric: 'customs' };
-    if (k === 'UCTAN UCA YOL SURESI') return { type: 'metric', metric: 'endToEnd' };
-    if (k === 'YUKLEME TOPLAM ADET') return { type: 'qty' };
-    if (k.startsWith('ANTREPO/DEPO KABUL')) return { type: 'acceptance' };
-    const step = text(label).match(/^(\d+(?:\.\d+)?)\.?\s+(.+)$/);
-    if (step) {
-      const code = step[1];
-      const major = Number(code.split('.')[0]);
-      const group = major <= 3 ? 'loading' : major === 4 ? 'transit' : 'customs';
-      // 1.2 ve 4.1 bilgi amaçlıdır; üst adımın içinde yer alır (Açıklamalar sayfası).
-      return { type: 'step', code, label: clip(step[2], 90), group, informational: code.includes('.') };
-    }
-    return null;
-  }
-
-  function readFilters(rows, headerIndex) {
-    const filters = {};
-    for (let i = 0; i < headerIndex; i += 1) {
-      const row = rows[i] || [];
-      const label = text(row[0]);
-      if (!label || row[1] == null || row[1] === '') continue;
-      if (!Object.prototype.hasOwnProperty.call(filters, label)) filters[label] = text(row[1]);
-    }
-    return filters;
-  }
-
-  function findHeader(rows) {
-    const limit = Math.min(rows.length, 40);
-    for (let i = 0; i < limit; i += 1) {
-      const kinds = (rows[i] || []).map(headerKind);
-      const country = kinds.findIndex(k => k && k.type === 'country');
-      const period = kinds.findIndex(k => k && k.type === 'period');
-      const metrics = kinds.filter(k => k && (k.type === 'metric' || k.type === 'step')).length;
-      if (country >= 0 && period >= 0 && metrics) return { index: i, kinds, country, period };
-    }
-    return null;
-  }
-
-  function filterValue(filters, wanted) {
-    const hit = Object.keys(filters).find(label => key(label) === wanted);
-    return hit ? filters[hit] : '';
-  }
-
-  /* sheets: [{ name, rows }] — rows SheetJS sheet_to_json(header:1) dizisi. */
-  function parseSheet(sheet) {
-    const rows = Array.isArray(sheet && sheet.rows) ? sheet.rows : [];
-    const header = findHeader(rows);
-    if (!header) return null;
-    const periodKind = header.kinds[header.period];
-    const filters = readFilters(rows, header.index);
-    const vehicleRaw = filterValue(filters, 'VASITA TANIM');
-    const vehicle = vehicleType(vehicleRaw);
-    const records = [];
-    const stepRows = [];
-    for (let r = header.index + 1; r < rows.length; r += 1) {
-      const row = rows[r] || [];
-      const country = clip(row[header.country], 60);
-      const periodText = text(row[header.period]).replace(/\.0+$/, '');
-      if (!country || !/^\d{6}$/.test(periodText) || key(country) === 'GENEL TOPLAM') continue;
-      const record = { country, period: periodText, qty: 0, loading: null, transit: null, customs: null, endToEnd: null };
-      const steps = {};
-      header.kinds.forEach((kind, col) => {
-        if (!kind) return;
-        const value = num(row[col]);
-        if (kind.type === 'qty') record.qty = value != null && value > 0 ? Math.round(value) : 0;
-        else if (kind.type === 'metric') record[kind.metric] = value == null ? null : round(value, 2);
-        else if (kind.type === 'step' && value != null) steps[kind.code] = round(value, 2);
-      });
-      if (!MAIN_METRICS.some(m => record[m] != null) && !Object.keys(steps).length) continue;
-      records.push(record);
-      if (Object.keys(steps).length) stepRows.push({ country, period: periodText, qty: record.qty, steps });
-    }
-    if (!records.length) return null;
-    const stepDefs = header.kinds.filter(k => k && k.type === 'step')
-      .map(k => ({ code: k.code, label: k.label, group: k.group, informational: !!k.informational }));
-    return {
-      sheet: clip(sheet.name, 80),
-      basis: periodKind.basis,
-      granularity: periodKind.granularity,
-      vehicle,
-      vehicleLabel: clip(vehicleRaw || 'Tümü', 40),
-      finalDestination: clip(filterValue(filters, 'FINAL DESTINATION'), 40),
-      hasMain: records.some(rec => rec.endToEnd != null),
-      records,
-      stepDefs,
-      stepRows,
-    };
-  }
-
   /* weightOf varsayılanı adettir. Sevkiyat ortalamasında (Excel raporu gibi)
      her parsiyel/sevkiyat 1, dönem kayıtları ise sevkiyat sayısıyla tartılır. */
   function weightedMean(items, pick, weightOf) {
@@ -227,77 +129,6 @@
   }
 
   function yearOf(period) { return String(period || '').slice(0, 4); }
-
-  /* Aynı veri farklı pivotlarda (aylık/haftalık, ana/alt süreç) tekrar eder.
-     Çift sayımı önlemek için her (baz, taşıt, yıl) için tek ana veri seti
-     (aylık > haftalık, sonra en çok satır) ve tek adım veri seti seçilir. */
-  function metricRichness(slice) {
-    return MAIN_METRICS.filter(m => slice.rows.some(row => row[m] != null)).length;
-  }
-  function pickBest(candidates) {
-    return candidates.slice().sort((a, b) => {
-      const g = GRANULARITIES.indexOf(a.granularity) - GRANULARITIES.indexOf(b.granularity);
-      if (g) return g;
-      const rich = metricRichness(b) - metricRichness(a);
-      if (rich) return rich;
-      return b.rows.length - a.rows.length;
-    })[0] || null;
-  }
-
-  function parseWorkbook(sheets, meta = {}) {
-    const parsed = (Array.isArray(sheets) ? sheets : []).map(parseSheet).filter(Boolean);
-    const slices = new Map();
-    for (const sheet of parsed) {
-      const byYear = new Map();
-      sheet.records.forEach(rec => { const y = yearOf(rec.period); if (!byYear.has(y)) byYear.set(y, []); byYear.get(y).push(rec); });
-      for (const [year, rows] of byYear) {
-        const id = [sheet.basis, sheet.vehicle, year].join('|');
-        if (!slices.has(id)) slices.set(id, { main: [], steps: [] });
-        const slice = { sheet, year, granularity: sheet.granularity, rows };
-        if (sheet.hasMain) slices.get(id).main.push(slice);
-        if (sheet.stepDefs.length) slices.get(id).steps.push({ ...slice, rows: sheet.stepRows.filter(s => yearOf(s.period) === year) });
-      }
-    }
-    const records = [];
-    const steps = [];
-    const sources = [];
-    for (const [id, slice] of slices) {
-      const [basis, vehicle, year] = id.split('|');
-      const main = pickBest(slice.main);
-      if (main) {
-        main.rows.forEach(rec => {
-          if (rec.endToEnd == null && rec.loading == null && rec.transit == null && rec.customs == null) return;
-          records.push({ basis, vehicle, year, granularity: main.granularity, period: rec.period, country: rec.country,
-            qty: rec.qty, loading: rec.loading, transit: rec.transit, customs: rec.customs, endToEnd: rec.endToEnd });
-        });
-        sources.push({ sheet: main.sheet.sheet, role: 'main', basis, vehicle, vehicleLabel: main.sheet.vehicleLabel, year, granularity: main.granularity, rows: main.rows.length });
-      }
-      const stepSlice = pickBest(slice.steps);
-      if (stepSlice) {
-        const byCountry = new Map();
-        stepSlice.rows.forEach(row => { if (!byCountry.has(row.country)) byCountry.set(row.country, []); byCountry.get(row.country).push(row); });
-        for (const [country, rows] of byCountry) {
-          for (const def of stepSlice.sheet.stepDefs) {
-            const mean = weightedMean(rows, row => row.steps[def.code]);
-            if (mean == null) continue;
-            const qty = rows.reduce((s, row) => s + (row.steps[def.code] != null ? (Number(row.qty) || 0) : 0), 0);
-            steps.push({ basis, vehicle, year, country, code: def.code, label: def.label, group: def.group,
-              informational: def.informational, days: round(mean, 2), qty });
-          }
-        }
-        sources.push({ sheet: stepSlice.sheet.sheet, role: 'steps', basis, vehicle, vehicleLabel: stepSlice.sheet.vehicleLabel, year, granularity: stepSlice.granularity, rows: stepSlice.rows.length });
-      }
-    }
-    return normalizeAnalysis({
-      version: VERSION,
-      fileName: meta.fileName,
-      importedAt: meta.importedAt || new Date().toISOString(),
-      importedBy: meta.importedBy,
-      sheetCount: Array.isArray(sheets) ? sheets.length : 0,
-      parsedSheets: parsed.map(s => s.sheet),
-      sources, records, steps,
-    });
-  }
 
   /* ---------- Buyer Log IAS (Antrepo) parsiyellerinden doğrudan analiz ----------
      Excel gerekmez: Buyer Log'un ASAS + IAS kaynağından (Database / Dashboard /
@@ -438,6 +269,7 @@
       const item = {
         qty: Math.max(0, Math.round(num(s.qty) || 0)),
         endToEnd,
+        handoverToWarehouse: s.handover ? span(s.handover, s.warehouseEntry) : null,
         loading: span(s.loadingRequest, departure),
         transit: span(departure, customsStart),
         customs: span(customsStart, s.warehouseEntry),
@@ -676,6 +508,7 @@
         p80: round(weightedPercentile(list, r => r.endToEnd, 0.8, recW), 1),
         min: e2eValues.length ? round(Math.min(...e2eValues), 1) : null,
         max: e2eValues.length ? round(Math.max(...e2eValues), 1) : null,
+        handoverToWarehouseP80: round(weightedPercentile(list, r => r.handoverToWarehouse, 0.8, recW), 1),
         loadingToWarehouse: round(weightedMean(list, loadingToWarehouse, recW), 1),
         loadingToWarehouseP80: round(weightedPercentile(list, loadingToWarehouse, 0.8, recW), 1),
         producerDays: producerStep ? round(producerStep.days, 1) : null,
@@ -707,13 +540,18 @@
   }
 
   /* ---------- Kural önerisi ve aktarım ---------- */
-  function ruleDays(row, metric = 'endToEnd', stat = 'mean') {
+  function ruleDays(row, metric = 'handoverToWarehouse', stat = 'mean') {
     if (!row) return null;
     let value = null;
     if (metric === 'loadingToWarehouse') value = stat === 'p80' ? row.loadingToWarehouseP80 : row.loadingToWarehouse;
-    else {
+    else if (metric === 'handoverToWarehouse') {
+      // Backlog ETA'sı Handover/Ex-Factory'ye eklenir: Yükleme Talep'ten ölçülen
+      // uçtan uca süreyi eklemek üretici teslim süresini iki kez saymak olurdu.
+      // Doğrudan ölçüm yoksa (eski kayıt) uçtan uca − 1. adım yedeğine düşülür.
+      value = stat === 'p80' ? row.handoverToWarehouseP80 : row.handoverToWarehouse;
+      if (value == null) { const e2e = stat === 'p80' ? row.p80 : row.endToEnd; value = e2e == null || row.producerDays == null ? null : e2e - row.producerDays; }
+    } else {
       value = stat === 'p80' ? row.p80 : row.endToEnd;
-      if (metric === 'handoverToWarehouse') value = value == null || row.producerDays == null ? null : value - row.producerDays;
     }
     if (value == null || !Number.isFinite(value)) return null;
     return Math.min(3650, Math.max(0, Math.round(value)));
@@ -736,7 +574,7 @@
   }
 
   function suggestRules(summary, settings = {}) {
-    const metric = RULE_METRICS[settings.metric] ? settings.metric : 'endToEnd';
+    const metric = RULE_METRICS[settings.metric] ? settings.metric : 'handoverToWarehouse';
     const stat = RULE_STATS[settings.stat] ? settings.stat : 'mean';
     const buffer = normalizeBuffer(settings);
     return (summary && Array.isArray(summary.rows) ? summary.rows : [])
@@ -800,7 +638,7 @@
   return {
     VERSION, BASES, BASIS_LABELS, METRIC_LABELS, RULE_METRICS, RULE_STATS, LOW_SAMPLE_QTY, LOW_SAMPLE_PERIODS, LOW_SAMPLE_SHIPMENTS,
     WINDOW_KEYS, windowRange, windowLabel, isoWeekOf,
-    headerKind, parseSheet, parseWorkbook, buildFromShipments, labels, metricLabels, stepLabel, normalizeAnalysis, options, summarize,
+    buildFromShipments, labels, metricLabels, stepLabel, normalizeAnalysis, options, summarize,
     ruleDays, suggestRules, applySuggestions, currentRuleDays, countryRuleName, vehicleType, ruleVehicle,
     normalizeBuffer, applyBuffer, MAX_BUFFER_DAYS, MAX_BUFFER_PCT,
   };

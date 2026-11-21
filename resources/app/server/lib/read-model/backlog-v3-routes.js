@@ -27,7 +27,7 @@ const STALE_ATTEMPTS=3;
 const QUERY_KEYS=Object.freeze(['retailFrom','retailTo','inStoreFrom','inStoreTo','exFactoryFrom','exFactoryTo','buyerGrup','groupBy','dimFilters','analysisFilters','antrepoFrom','antrepoTo','antrepoDateLevels','sourceColumns']);
 const MAX_VALUE_LENGTH=256*1024;
 const DRILL_KINDS=new Set(['all','stages','overdue','special','tags','quality','risk','group','bucket']);
-const DELIVERY_DRILL_KINDS=new Set(['outcome','cause','attention','stageOutcome','dimOutcome']);
+const DELIVERY_DRILL_KINDS=new Set(['outcome','cause','attention','stageOutcome','dimOutcome','stageSignal']);
 
 function invalid(detail){return Object.assign(new Error('Geçersiz Backlog V3 isteği. / Invalid Backlog V3 request.'),{code:'READ_MODEL_QUERY_INVALID',statusCode:400,detail});}
 const isDay=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value);

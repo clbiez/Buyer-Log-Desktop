@@ -4562,6 +4562,11 @@ const CP_COLS = [
   {k:'Buying Son Onay Tarihi', label:'Yükleme Onayı', type:'date', weight:9, group:'Lojistik'},
   {k:'HANDOVER Tarihi', label:'Handover', type:'date', weight:9, group:'Lojistik'},
   {k:'Ant. Arrival', label:'Ant. Arrival', type:'date', weight:8, group:'Lojistik'},
+  /* Aşama tahmini (Yol Süresi Analizi aşama modeli): yalnız bilgi; hiçbir
+     uyarı, öncelik veya kurala girmez. Varsayılan gizli; Sütunlar listesinden açılır.
+     Birden çok parsiyelde EN GEÇ gelecek parsiyel; parsiyel bazında alt detayda. */
+  {k:'Stage ETA', label:'Stage ETA', type:'date', weight:9, group:'Lojistik', defaultHidden:true},
+  {k:'Current Stage', label:'Current Stage', type:'stageRun', weight:14, group:'Lojistik', defaultHidden:true},
   {k:'Notes', label:'Notes', type:'text', weight:16, group:'Notlar'},
   {k:'Ek Not', label:'Ek Notlar', type:'text', weight:16, group:'Notlar'},
   {k:'__personalOrderNote', label:'Kişisel Not', labelTr:'Kişisel Not', labelEn:'Private Note', type:'privateNote', weight:16, group:'Notlar', privatePersonal:true},
@@ -4675,7 +4680,12 @@ function tableColumnGroupLabel(group){
   return L(name);
 }
 
-function initColState(cols){ return { order: cols.map(c=>c.k), hidden:new Set(), widthPx:{} }; }
+// defaultHidden: kullanıcı açana kadar gizli gelen sütun (kayıtlı düzende hiç görülmemişse).
+function initColState(cols){ return { order: cols.map(c=>c.k), hidden:new Set(cols.filter(c=>c.defaultHidden).map(c=>c.k)), widthPx:{} }; }
+function hideUnseenDefaultHiddenColumns(tableKey,savedOrder){
+  const seen=new Set(Array.isArray(savedOrder)?savedOrder:[]);
+  (COLS_BY_TABLE[tableKey]||[]).forEach(c=>{if(c.defaultHidden&&!seen.has(c.k))colmgr[tableKey].hidden.add(c.k);});
+}
 const colmgr = { cp: initColState(CP_COLS), orders:initColState(ORDERS_COLS), ship: initColState(SHIP_COLS) };
 const COLS_BY_TABLE = { cp:CP_COLS, orders:ORDERS_COLS, ship:SHIP_COLS };
 const CP_BASE_COLUMN_KEYS=new Set(CP_COLS.map(c=>c.k));
@@ -5032,6 +5042,7 @@ function restoreLateManagedColumnState(tableKey){
   const hidden=new Set([...cs.hidden].filter(k=>validSet.has(k)));
   if(entry&&Array.isArray(entry.hidden))entry.hidden.forEach(k=>{if(validSet.has(k))hidden.add(k);});
   cs.hidden=hidden;
+  if(entry)hideUnseenDefaultHiddenColumns(tableKey,entry.order);
   const widthPx=Object.fromEntries(Object.entries(cs.widthPx||{}).filter(([k,v])=>validSet.has(k)&&Number.isFinite(Number(v))));
   if(entry)Object.entries(entry.widthPx||{}).forEach(([k,v])=>{if(validSet.has(k)&&Number.isFinite(Number(v)))widthPx[k]=Number(v);});
   cs.widthPx=widthPx;
@@ -5106,6 +5117,7 @@ function loadAutoTableColumnState(){
       const valid=(COLS_BY_TABLE[t]||[]).map(c=>c.k);
       colmgr[t].order=normalizedColumnOrder(t,saved[t].order);
       colmgr[t].hidden=new Set((saved[t].hidden||[]).filter(k=>valid.includes(k)));
+      hideUnseenDefaultHiddenColumns(t,saved[t].order);
       colmgr[t].widthPx=Object.fromEntries(Object.entries(saved[t].widthPx||{}).filter(([k,v])=>valid.includes(k)&&Number.isFinite(Number(v))));
     });
   }catch(e){}
@@ -6277,6 +6289,8 @@ const CP_EN_HEADER_LABELS = {
   'Gramaj':'Weight (GSM)',
   'Karışım':'Composition',
   'Ant. Arrival':'Ant. Arrival',
+  'Stage ETA':'Stage ETA',
+  'Current Stage':'Current Stage',
   'Del. Type':'Del. Type',
   'Importance':'Importance',
   'Notes':'Notes',
@@ -6333,6 +6347,8 @@ const CP_TR_HEADER_LABELS = {
   'Karışım':'Karışım',
   'STATUS':'Durum',
   'Ant. Arrival':'Antrepo Varış',
+  'Stage ETA':'Aşama ETA',
+  'Current Stage':'Koşan Aşama',
   'Del. Type':'Yükleme Tipi',
   'Notes':'Notlar',
   'Ek Not':'Ek Notlar',
@@ -6957,6 +6973,40 @@ async function cpSetShortageMark(row,marked,qty){
     showToast((en?'Could not save: ':'Kaydedilemedi: ')+(err&&err.message||err));
   }
 }
+/* Aşama tahmini metinleri (transit-stage-model.js STAGES kodları; kısa etiket). */
+const CP_STAGE_SHORT_LABELS={
+  tr:{1:'Talep → Handover',2:'Handover → Cut Off',3:'Cut Off → Yükleme',4:'Yükleme → ETA',5:'ETA → Özet Beyan',6:'Özet Beyan → Ambar',7:'Ambar → Transit',8:'Transit → Antrepo'},
+  en:{1:'Request → Handover',2:'Handover → Cut-off',3:'Cut-off → Loading',4:'Loading → ETA',5:'ETA → Summary Decl.',6:'Summary Decl. → Warehouse',7:'Warehouse → Transit',8:'Transit → Antrepo'}
+};
+function cpStageRunText(run){
+  if(!run||!run.code)return '';
+  const en=appLang==='en',label=CP_STAGE_SHORT_LABELS[en?'en':'tr'][run.code]||'';
+  const span=run.days!=null&&run.mean!=null?` · ${run.days}/${run.mean} ${en?'d':'g'}`:'';
+  const over=run.over>0?(en?` · over by ${run.over} d`:` · ${run.over} g aşıldı`):'';
+  return `${run.code}. ${label}${span}${over}`;
+}
+function cpStageShiftText(days){
+  if(days==null||!Number.isFinite(Number(days)))return '';
+  const n=Number(days),en=appLang==='en';
+  if(n===0)return en?'Stage ETA ±0':'Aşama ETA ±0';
+  return n>0?(en?`+${n} d early`:`+${n} g erken`):(en?`${n} d late`:`${n} g geç`);
+}
+function cpStageShiftHtml(r){
+  const days=r&&r._stageVsRule;
+  if(days==null||!Number.isFinite(Number(days)))return '';
+  const n=Number(days),cls=n>0?'is-early':n<0?'is-late':'';
+  const tip=appLang==='en'
+    ?'Stage-based ETA versus the single transit rule (Handover + rule days). Information only; Ex→Retail is unchanged.'
+    :'Aşama bazlı ETA ile tek yol süresi kuralının (Handover + kural günü) farkı. Yalnız bilgi; Ex→Retail değeri değişmez.';
+  return `<small class="cpStageShift ${cls}" title="${escapeHtml(tip)}">${escapeHtml(cpStageShiftText(n))}</small>`;
+}
+function cpLogisticStageHtml(segment){
+  const st=segment&&segment.stage;
+  if(!st)return '<div class="cpLogisticStage">—</div>';
+  const shift=cpStageShiftText(st.vsRule);
+  const run=cpStageRunText(st);
+  return `<div class="cpLogisticStage${st.over>0?' cpStageOver':''}"><strong>${fmtDate(coerceDateLoose(st.eta))||'—'}</strong>${run?`<small>${escapeHtml(run)}</small>`:''}${shift?`<small class="cpStageShift ${Number(st.vsRule)>0?'is-early':Number(st.vsRule)<0?'is-late':''}">${escapeHtml(shift)}</small>`:''}</div>`;
+}
 function cpLogisticSegmentTitle(segment){
   if(segment.kind==='production') return appLang==='en'?'Remaining in production':'Üretimde kalan';
   if(segment.kind==='shortage'&&segment.userShortage) return appLang==='en'?'Shortage (marked by user)':'Eksik adet (kullanıcı işareti)';
@@ -6978,11 +7028,13 @@ function cpLogisticDetailRowHtml(row,cols,withChk,tableKey='cp'){
   // sipariş tarihlerini gösterir. Handover ve Antrepo tarihi parsiyel bazında kalır.
   const exFactory=coerceDateLoose(row&&row['Ex-factory']);
   const loadingApproval=coerceDateLoose(row&&row['Buying Son Onay Tarihi']);
+  // Aşama sütunu yalnız en az bir parsiyelde aşama tahmini varsa eklenir.
+  const hasStage=segments.some(segment=>segment&&segment.stage);
   const rows=segments.map(segment=>{
     const priority=Number(segment.priority)||2;
     const arrival=coerceDateLoose(segment.arrival), handover=coerceDateLoose(segment.handover);
     const arrivalNote=(segment.kind==='production'||segment.kind==='shortage')?(appLang==='en'?'Calculated from Ex-Factory':'Ex-Factory üzerinden hesaplandı'):'';
-    return `<div class="cpLogisticDetailLine priority-${priority}">
+    return `<div class="cpLogisticDetailLine priority-${priority}${hasStage?' hasStage':''}">
       <div class="cpLogisticPriority"><b>${priority}</b><span>${escapeHtml(cpLogisticPriorityText(priority))}</span></div>
       <div class="cpLogisticDetailName"><strong>${escapeHtml(cpLogisticSegmentTitle(segment))}</strong>${segment.sourceRow?`<small>IAS #${segment.sourceRow}</small>`:''}${cpShortageActionHtml(row,segment,segments)}</div>
       <div class="cpLogisticQty">${fmtInt(segment.quantity)} <small>${appLang==='en'?'units':'adet'}</small></div>
@@ -6991,13 +7043,13 @@ function cpLogisticDetailRowHtml(row,cols,withChk,tableKey='cp'){
       <div>${BLRevision.isAutomaticExFactory(row)?revisionHtml('Ex-factory',revisionInfo(row,'Ex-factory')):(fmtDate(exFactory)||'—')}</div>
       <div>${fmtDate(loadingApproval)||'—'}</div>
       <div>${fmtDate(handover)||'—'}</div>
-      <div class="cpLogisticDateValue"><strong>${fmtDate(arrival)||'—'}</strong>${arrivalNote?`<small>${escapeHtml(arrivalNote)}</small>`:''}</div>
+      <div class="cpLogisticDateValue"><strong>${fmtDate(arrival)||'—'}</strong>${arrivalNote?`<small>${escapeHtml(arrivalNote)}</small>`:''}</div>${hasStage?cpLogisticStageHtml(segment):''}
     </div>`;
   }).join('');
   const colspan=Math.max(1,cols.length+(withChk?1:0));
   return `<td colspan="${colspan}" class="cpLogisticDetailCell"><div class="cpLogisticDetailCard">
     <div class="cpLogisticDetailHead"><div><strong>${appLang==='en'?'Logistics flow':'Lojistik akışı'}</strong><span>${fmtInt(loaded)} / ${fmtInt(total)} ${appLang==='en'?'loaded':'yüklendi'}${remaining?` · ${fmtInt(remaining)} ${appLang==='en'?'remaining':'kalan'}`:''}${shortage?` · ${fmtInt(shortage)} ${appLang==='en'?'shortage':'eksik yükleme'}`:''}</span></div><div class="cpLogisticPriorityLegend"><span><b>1</b>${appLang==='en'?'Production / Shortage':'Üretim / Eksik Yükleme'}</span><span><b>2</b>${appLang==='en'?'Pre-warehouse':'Depo öncesi'}</span><span><b>3</b>${appLang==='en'?'Warehouse':'Depo'}</span></div></div>
-    <div class="cpLogisticDetailGridHead"><span>${appLang==='en'?'Flow Rank':'Akış Sırası'}</span><span>${appLang==='en'?'Detail':'Detay'}</span><span>${appLang==='en'?'Quantity':'Adet'}</span><span>${appLang==='en'?'Status':'Durum'}</span><span>${appLang==='en'?'Vehicle':'Vasıta'}</span><span>${appLang==='en'?'Ex-Factory Date':'Ex-Factory Tarihi'}</span><span>${appLang==='en'?'Loading Approval Date':'Yükleme Onay Tarihi'}</span><span>Handover</span><span>${appLang==='en'?'Warehouse ETA':'Antrepo tarihi'}</span></div>
+    <div class="cpLogisticDetailGridHead${hasStage?' hasStage':''}"><span>${appLang==='en'?'Flow Rank':'Akış Sırası'}</span><span>${appLang==='en'?'Detail':'Detay'}</span><span>${appLang==='en'?'Quantity':'Adet'}</span><span>${appLang==='en'?'Status':'Durum'}</span><span>${appLang==='en'?'Vehicle':'Vasıta'}</span><span>${appLang==='en'?'Ex-Factory Date':'Ex-Factory Tarihi'}</span><span>${appLang==='en'?'Loading Approval Date':'Yükleme Onay Tarihi'}</span><span>Handover</span><span>${appLang==='en'?'Warehouse ETA':'Antrepo tarihi'}</span>${hasStage?`<span title="${escapeHtml(appLang==='en'?'Stage-based ETA from the stage model (information only)':'Aşama modelinden ETA (yalnız bilgi)')}">${appLang==='en'?'Stage forecast':'Aşama tahmini'}</span>`:''}</div>
     <div class="cpLogisticDetailBody">${rows}</div>
   </div></td>`;
 }
@@ -7191,9 +7243,12 @@ function cellHtml(c,r,cf,tableKey='cp'){
         const link = value => (oc && value!=null && value!=='')
           ? `<a class="lnk" title="${escapeHtml(appLang==='en'?'Double-click to open':'Açmak için çift tıklayın')}" target="_blank" rel="noopener" href="${SHIP_URL(oc)}">${escapeHtml(String(value))}</a>`
           : escapeHtml(value==null||value===''?'—':String(value));
-        if(rev) return `<td class="num">${revisionHtml(c.k, rev, value=>(value===rev.to?link(value):escapeHtml(value==null||value===''?'—':String(value))))}</td>`;
-        if(val==null || val==='') return `<td class="num"></td>`;
-        return `<td class="num">${oc?`<a class="lnk" title="${escapeHtml(appLang==='en'?'Double-click to open':'Açmak için çift tıklayın')}" target="_blank" rel="noopener" href="${SHIP_URL(oc)}">${val}</a>`:val}</td>`;
+        // Aşama tahmini statik ETA'dan ayrıştıysa hücrede ikinci satır (yalnız bilgi;
+        // Ex→Retail değeri, filtresi, sıralaması ve Excel çıktısı değişmez).
+        const shift=cpStageShiftHtml(r);
+        if(rev) return `<td class="num">${revisionHtml(c.k, rev, value=>(value===rev.to?link(value):escapeHtml(value==null||value===''?'—':String(value))))}${shift}</td>`;
+        if(val==null || val==='') return `<td class="num">${shift}</td>`;
+        return `<td class="num">${oc?`<a class="lnk" title="${escapeHtml(appLang==='en'?'Double-click to open':'Açmak için çift tıklayın')}" target="_blank" rel="noopener" href="${SHIP_URL(oc)}">${val}</a>`:val}${shift}</td>`;
       }
       if(c.k==='LT'){
         // Üretim süresi: Ex-Factory - OPD (gün). Rakam biçiminde gösterilir.
@@ -7202,6 +7257,12 @@ function cellHtml(c,r,cf,tableKey='cp'){
         return `<td class="num">${val==null||val===''?'':val}</td>`;
       }
       return `<td class="num">${v==null||v===''?'':v}</td>`;
+    }
+    case 'stageRun': {
+      const run=r&&r._stageRun;
+      if(!run||!run.code) return '<td></td>';
+      const text=cpStageRunText(run);
+      return `<td class="${run.over>0?'cpStageOver':''}" title="${escapeHtml(text)}">${escapeHtml(text)}</td>`;
     }
     case 'pct': return `<td class="num">${fmtPct(v)}</td>`;
     case 'importance': {
@@ -7279,6 +7340,7 @@ function cellPlainText(c,r,cf){
   if(c.type==='date'||c.type==='exfactory'||c.type==='retail'||c.type==='retailEdit'||c.type==='instoreEdit') return fmtDate(v);
   if(c.type==='money'||c.type==='moneyEdit'){ const n=toNum(v); return n==null?'':fmtMoneyPlain(n); }
   if(c.type==='pct') return fmtPct(v);
+  if(c.type==='stageRun') return r&&r._stageRun&&r._stageRun.code?cpStageRunText(r._stageRun):'';
   if(c.type==='int') return fmtInt(v);
   if(c.type==='plm') return fmtOC(v);
   if(c.type==='num'){ if(c.k==='Ex→Retail' && cf) return cf.exr==null?'':String(cf.exr); if(c.k==='LT' && cf) return cf.lt==null?'':String(cf.lt); return v==null?'':String(v); }
@@ -10652,7 +10714,7 @@ const CP_RM_WINDOW=200;
 const CP_RM_PREFETCH=2;
 const CP_RM_BULK_PAGE=1000;
 const CP_RM_CLIENT_DERIVED_KEYS=new Set(['Supp. FOB','Licensor','Ex→Retail','LT','PLM Numune','Fabric (PLM)']);
-const CP_RM_CLIENT_TYPES=new Set(['formula','cpImage','privateNote']);
+const CP_RM_CLIENT_TYPES=new Set(['formula','cpImage','privateNote','stageRun']);
 const CP_RM_OPTION_SELECTS=[['cpFCountry','Country'],['cpFLicense','License'],['cpFDelType','Del. Type'],['cpFStatus','STATUS'],['cpFSeason','Season']];
 const CP_RM_DATA_REASONS=new Set(['cp-projection-loaded','server-cp-deferred','cp-peer-sync','remote-cp-decision-patch','cp-generated-from-asas',
   'transit-rules-local','transit-rules-server','server-transit-rules-hydrated']);
@@ -11549,7 +11611,7 @@ const ORDERS_RM_BULK_PAGE=1000;
 // applyPricingRulesToLoadedRows / applyFormulas istemcide yeniden hesaplar; sunucu
 // projeksiyonundaki değer ekrandakinden farklı olabilir (filtre/sıralama eski yola).
 const ORDERS_RM_CLIENT_DERIVED_KEYS=new Set(['Priority','Supp. FOB','Licensor','Ex→Retail','LT']);
-const ORDERS_RM_CLIENT_TYPES=new Set(['formula','cpImage','privateNote','priority']);
+const ORDERS_RM_CLIENT_TYPES=new Set(['formula','cpImage','privateNote','priority','stageRun']);
 const ORDERS_RM_LOGISTIC_KEYS=new Set(['STATUS','Del. Type','Ant. Arrival','Fabric (PLM)']);
 const ORDERS_RM_OPTION_SELECTS=[['ordersFCountry','Country'],['ordersFLicense','License'],['ordersFDelType','Del. Type'],['ordersFStatus','STATUS'],['ordersFSeason','Season']];
 const ordersRM={
@@ -42890,9 +42952,10 @@ function refreshSharedMasterClient(area){
     return Promise.resolve(window.BLMerchCalendarRuntime?.reload?.());
   }
   if(area==='transitAnalysis'){
-    // Analiz yalnız Yol Süreleri penceresinde okunur; hesaplamaları etkilemez.
+    // Kayıtlı aşama süre modeli Backlog Teslimat Riski ETA'sını belirler:
+    // pencere önbelleği düşer ve Backlog satırları yeniden okunur.
     window.BLTransitAnalysisUI?.invalidate?.();
-    return Promise.resolve();
+    return typeof loadFromServer==='function' ? loadFromServer(false) : Promise.resolve();
   }
   if(area==='nonDtrManufacturers')return loadFromServer(false).then(()=>window.reloadLflFromCache?.());
   if(['transitRules','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','asasFabricMode','lflSourceMode','noteColumnDefs','importanceSettings','systemSettings'].includes(area)){

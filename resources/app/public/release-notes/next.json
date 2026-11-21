@@ -40,6 +40,20 @@
         }
       }
     },
+    {
+      "id": "data-picker-group-headers",
+      "type": "fix",
+      "module": {"tr": "ASAS / IAS · Veri Yönetimi", "en": "ASAS / IAS · Data Management"},
+      "title": {
+        "tr": "Alan seçicideki tablo ve klasör başlıkları okunur",
+        "en": "Table and folder headings in the field picker are readable"
+      },
+      "body": {
+        "tr": "ASAS / IAS filtresinde ve aynı alan seçiciyi kullanan eşleme, CP sütunları ve eşleşme kuralı ekranlarında liste uzadığında tablo ve klasör ara başlıkları birkaç piksele eziliyor, yazıları üst üste biniyordu. Başlıklar artık tam yükseklikte çizilir; kaydırırken tablo başlığı üstte sabit ve okunur kalır.",
+        "en": "In the ASAS / IAS filter and in the mapping, CP columns and match rule screens that use the same field picker, table and folder headings were squeezed to a few pixels and their text overlapped when the list was long. Headings are now drawn at full height; while scrolling, the table heading stays pinned at the top and readable."
+      },
+      "visual": {"kind": "screenshot", "capture": "post-change", "src": "data-picker-group-headers.png", "alt": {"tr": "Alan seçicide demo alanlar için Tablo ve Klasör ara başlıkları", "en": "Table and folder headings for demo fields in the field picker"}, "caption": {"tr": "\"merch\" araması: her tablo ve klasör başlığı kendi satırında, okunur.", "en": "Searching \"merch\": each table and folder heading sits on its own readable row."}}
+    },
     {"id": "shipping-license-all-rows", "type": "fix", "module": {"tr": "Nakliye Kıyaslama", "en": "Shipping Comparison"}, "title": {"tr": "Royalty ve hologram tüm lisanslı modellerde uygulanır", "en": "Royalty and hologram apply to every licensed model"}, "body": {"tr": "Nakliye Kıyaslama’da royalty ve hologram maliyeti bazı modellerde uygulanıyor, bazılarında uygulanmıyordu. CP’den aktarılan siparişler bu bilgiyi hiç almıyordu. Koleksiyon’dan daha önce aktarılan modeller ise yeniden gönderilmeden güncellenmiyordu. Artık her satır lisans bilgisini tablo açıldığında License Royalty sözleşmesinden güncel olarak alır. Yurt Dışı FOB altında ve Yurt İçi kartında +Roy. / +Holo. notu her lisanslı modelde görünür. CP’den aktarılan satırlarda, TL fiyatı girildiyse Yurt İçi FOB’a da TR royalty ve hologram eklenir; TR komisyonu tanımlı değilse yurt içi maliyet royaltysiz hesaplanmaz, boş kalır. DTR modeller değişmez.", "en": "In Shipping Comparison, royalty and hologram cost applied to some models but not to others. Orders sent from CP never received this information. Models sent from Collection earlier were not updated unless sent again. Each row now takes its licence information from the current License Royalty contract when the table opens. The +Roy. / +Holo. note appears under Overseas FOB and on the Domestic card for every licensed model. For rows sent from CP, TR royalty and hologram are also added to Domestic FOB when a TL price is entered; if no TR commission is defined, the domestic cost is left blank instead of being calculated without royalty. DTR models are unchanged."}, "visual": {"kind": "screenshot", "capture": "post-change", "src": "shipping-license-all-rows.png", "alt": {"tr": "Demo CP siparişlerinde Yurt Dışı FOB ve Yurt İçi kartında royalty ve hologram notu", "en": "Royalty and hologram note under Overseas FOB and on the Domestic card for demo CP orders"}, "caption": {"tr": "CP’den aktarılan lisanslı demo siparişlerde +Roy. / +Holo. notu görünür; DTR modelde (HARRY) not yoktur.", "en": "Licensed demo orders sent from CP show the +Roy. / +Holo. note; the DTR model (HARRY) shows none."}}},
     {
       "id": "plm-sync-images-no-freeze",
@@ -168,6 +182,93 @@
         "src": "cp-rules-no-builtin.png",
         "alt": {"tr": "Yerleşik kural içermeyen boş Öncelik Kuralları listesi", "en": "Empty Priority Rules list without built-in rules"},
         "caption": {"tr": "Demo veride Kurallarım listesi yerleşik kural olmadan boş açılır; yeni kural LCW AI ile ya da hazır örnekten oluşturulur.", "en": "On demo data, the My Rules list opens empty without built-in rules; new rules are created with LCW AI or from a ready-made example."}
+      }
+    },
+    {
+      "id": "cp-orders-stage-eta-columns",
+      "type": "feature",
+      "module": {
+        "tr": "CP ve Siparişler",
+        "en": "CP and Orders"
+      },
+      "title": {
+        "tr": "Aşama tahmini CP ve Siparişler'de: Ex→Retail farkı ve parsiyel detayı",
+        "en": "Stage forecast in CP and Orders: Ex→Retail shift and partial detail"
+      },
+      "body": {
+        "tr": "Yüklenmiş siparişlerde Ex→Retail hücresinin altında, aşama bazlı ETA'nın tek yol süresi kuralına göre kaç gün erken ya da geç olduğu görünür; Ex→Retail değeri, filtresi ve Excel çıktısı değişmez. Yeni Aşama ETA ve Koşan Aşama sütunları en geç gelecek parsiyeli gösterir ve varsayılan gizlidir; Sütunlar listesinden açılır. Lojistik akışı detayında her parsiyelin kendi aşama tahmini vardır. Bu bilgiler uyarı, öncelik veya kurallara girmez.",
+        "en": "For loaded orders, the Ex→Retail cell shows below the value how many days the stage-based ETA is earlier or later than the single transit-time rule; the Ex→Retail value, its filter and the Excel export are unchanged. The new Stage ETA and Current Stage columns show the latest partial and are hidden by default; turn them on from the Columns list. The logistics flow detail shows each partial's own stage forecast. This information does not feed warnings, priorities or rules."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-stage-columns.png",
+        "alt": {
+          "tr": "Demo CP satırlarında Ex→Retail farkı, Aşama ETA, Koşan Aşama ve parsiyel detayı",
+          "en": "Ex→Retail shift, Stage ETA, Current Stage and partial detail on demo CP rows"
+        },
+        "caption": {
+          "tr": "Demo veride Ex→Retail altında erken/geç günü, açılan sütunlar ve parsiyel bazında aşama tahmini.",
+          "en": "On demo data: early/late days under Ex→Retail, the enabled columns and the per-partial stage forecast."
+        }
+      }
+    },
+    {
+      "id": "backlog-stage-based-eta",
+      "type": "feature",
+      "module": {
+        "tr": "Backlog · Teslimat Riski",
+        "en": "Backlog · Delivery Risk"
+      },
+      "title": {
+        "tr": "Teslimat tahmini aşama bazlı, son gerçekleşen adımdan yeniden hesaplanır",
+        "en": "Delivery forecast is stage-based and recalculated from the last completed step"
+      },
+      "body": {
+        "tr": "Yoldaki parsiyelin ETA'sı artık tek bir ortalama yol süresiyle değil, son gerçekleşen kilometre taşından (Handover, Fiili Yükleme, ETA, gümrük adımları) kalan sürenin geçmiş dağılımıyla hesaplanır. Erken biten aşama tahmini öne çeker; ortalamayı aşan ve hâlâ gerçekleşmeyen aşama tahmini ileri iter ve gecikme sebebi olarak gösterilir. Ortalama veya temkinli P80 seçilebilir. Yeni bölüm, statik ETA'ya göre erken/geç gelecek siparişleri ve zamanında varış olasılığını gösterir; detay tablosunda aşama kolonları vardır.",
+        "en": "The ETA of a partial in transit is no longer calculated from a single average lead time but from the historical distribution of the remaining time after the last completed milestone (Handover, actual loading, ETA, customs steps). A stage that finishes early brings the forecast forward; a stage that exceeds its average and is still open pushes it out and is shown as the delay reason. Average or conservative P80 can be selected. A new section shows orders expected earlier/later than the static ETA and the on-time probability; the detail table has stage columns."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-stage-eta-forecast.png",
+        "alt": {
+          "tr": "Demo Backlog verisinde Aşama Bazlı Tahmin kartları",
+          "en": "Stage-Based Forecast cards on demo Backlog data"
+        },
+        "caption": {
+          "tr": "Demo veride aşama ETA'sıyla hesaplanan siparişler, ortalamayı aşan koşan aşamalar ve statik ETA'ya göre erken/geç dağılımı.",
+          "en": "On demo data: orders calculated with the stage ETA, current stages over their average, and the earlier/later split versus the static ETA."
+        }
+      }
+    },
+    {
+      "id": "transit-stage-model-ias",
+      "type": "improvement",
+      "module": {
+        "tr": "Yol Süreleri · İthalat Yol Süresi Analizi",
+        "en": "Transit Times · Import Lead Time Analysis"
+      },
+      "title": {
+        "tr": "Aşama süreleri doğrudan IAS'tan; rapor Excel'i içe aktarma kaldırıldı",
+        "en": "Stage durations come straight from IAS; report Excel import removed"
+      },
+      "body": {
+        "tr": "Yükleme Talep → Handover → Cut Off → Fiili Yükleme → ETA → Özet Beyan → Ambar Onay → Transit Beyanname → Antrepo Giriş aşamalarının ortalama ve P80 süreleri IAS parsiyellerinin gerçekleşen tarihlerinden hesaplanır. Evrak süreci paralel olduğu için toplam süreye eklenmez; geç teslim oranı ayrıca gösterilir. \"Risk hesabına uygula\" ile model Teslimat Riski'nde kullanılır. Kural önerisi artık Handover → Antrepo süresini parsiyel bazında ölçer; üretici teslim süresi iki kez sayılmaz.",
+        "en": "Average and P80 durations of the Loading Request → Handover → Cut-off → Actual Loading → ETA → Summary Declaration → Warehouse Approval → Transit Declaration → Antrepo Entry stages are calculated from the realized dates of IAS partials. The document process runs in parallel, so it is not added to the total; its late-delivery share is shown separately. \"Apply to risk calculation\" makes Delivery Risk use the model. The rule suggestion now measures Handover → Antrepo per partial, so the supplier handover time is not counted twice."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "transit-stage-model.png",
+        "alt": {
+          "tr": "Demo IAS verisinden aşama süre modeli tablosu",
+          "en": "Stage duration model table from demo IAS data"
+        },
+        "caption": {
+          "tr": "Demo IAS parsiyellerinden ülke × taşıt bazında aşama süreleri, Handover → Antrepo ve evrak geç oranı.",
+          "en": "Stage durations by country × vehicle from demo IAS partials, Handover → Antrepo and the late-document share."
+        }
       }
     },
     {
