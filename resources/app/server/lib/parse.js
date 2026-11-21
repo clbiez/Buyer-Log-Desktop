@@ -2166,7 +2166,7 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
     const logistic = cpLogisticSummary(orderLogisticSegments, o.qty);
     // Aşama tahmini (kayıtlı aşama modeli varsa): parsiyel alt detayına ve satıra
     // en geç gelecek parsiyelin özeti olarak yazılır. Model yoksa alanlar boş kalır.
-    let latestStage = null;
+    let latestStage = null, stageMaxSigma = null;
     if (stageModel) {
       const stageById = new Map();
       orderLogisticSegments.forEach(segment => {
@@ -2178,6 +2178,7 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
         if (!info) return;
         item.stage = info;
         if (!latestStage || info.eta > latestStage.eta) latestStage = info;
+        if (info.sigma != null && (stageMaxSigma == null || info.sigma > stageMaxSigma)) stageMaxSigma = info.sigma;
       });
     }
     // Shortage sentetik bir operasyon notudur; CP/Orders STATUS alanına yazılmaz.
@@ -2238,8 +2239,16 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       // Aşama tahmini (bilgi kolonları; varsayılan gizli). En geç gelecek parsiyel.
       'Stage ETA': latestStage ? toDateOnly(latestStage.eta) : null,
       'Current Stage': latestStage ? latestStage.code : '',
-      _stageRun: latestStage ? { code: latestStage.code, days: latestStage.days, mean: latestStage.mean, over: latestStage.over } : null,
+      _stageRun: latestStage ? { code: latestStage.code, days: latestStage.days, mean: latestStage.mean, over: latestStage.over, sigma: latestStage.sigma } : null,
       _stageVsRule: latestStage ? latestStage.vsRule : null,
+      // Priority Rules (@stageDelaySigma): en çok geciken yoldaki parsiyelin σ değeri.
+      _stageMaxSigma: stageMaxSigma,
+      // CP teslimat sonucu (@deliveryOutcome) aşama ETA'sını kullanır: en geç parsiyel.
+      _stageProjection: latestStage ? {
+        etaMean: latestStage.eta, etaP80: latestStage.etaP80, anchor: latestStage.anchor, plan: latestStage.plan,
+        currentStage: latestStage.code, openOverrunDays: latestStage.over, overrunSigma: latestStage.sigma,
+        pRetail: latestStage.pRetail, pInStore: latestStage.pInStore,
+      } : null,
       _logisticSegments: logistic.segments,
       _logisticStatusValues: logistic.statuses,
       _logisticDelTypeValues: logistic.delTypes,
@@ -3541,6 +3550,9 @@ function cpSegmentStageInfo(segment, order, ov, stageModel, todayIso) {
     days: run && Number.isFinite(Number(run[1])) ? Number(run[1]) : null,
     mean: run && Number.isFinite(Number(run[2])) ? Math.round(Number(run[2])) : null,
     over: Number(projection.openOverrunDays) > 0 ? Number(projection.openOverrunDays) : 0,
+    sigma: Number.isFinite(Number(projection.overrunSigma)) && projection.overrunSigma !== null ? Number(projection.overrunSigma) : null,
+    anchor: projection.anchor || null, plan: projection.plan || null,
+    pRetail: projection.pRetail != null ? projection.pRetail : null, pInStore: projection.pInStore != null ? projection.pInStore : null,
     vsRule,
   };
 }

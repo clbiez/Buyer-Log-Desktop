@@ -57,7 +57,7 @@ test('satırda en geç gelecek parsiyel; alt detay parsiyel bazında; statik kur
   const latest = partials.map(s => s.stage).sort((a, b) => (a.eta < b.eta ? 1 : -1))[0];
   assert.equal(ord(row['Stage ETA']), Math.round(Date.parse(latest.eta) / DAY), 'satır = en geç parsiyel');
   assert.equal(row['Current Stage'], latest.code);
-  assert.deepEqual(Object.keys(row._stageRun).sort(), ['code', 'days', 'mean', 'over']);
+  assert.deepEqual(Object.keys(row._stageRun).sort(), ['code', 'days', 'mean', 'over', 'sigma']);
   // Statik ölçüt: Handover + 70 gün (tanımlı kural) − aşama ETA'sı.
   const p1 = partials.find(s => s.stage.eta === partials.map(x => x.stage.eta).sort()[0]).stage;
   assert.equal(typeof p1.vsRule, 'number');
@@ -81,7 +81,7 @@ test('model yoksa veya kural tanımsızsa alanlar boş/yok; varsayılan gün öl
 test('istemci sözleşmesi: sütunlar varsayılan gizli, Ex→Retail ikinci satırı, alt detay sütunu, TR/EN', () => {
   const app = read('public/app-main.js');
   assert.match(app, /\{k:'Stage ETA', label:'Stage ETA', type:'date', weight:9, group:'Lojistik', defaultHidden:true\}/);
-  assert.match(app, /\{k:'Current Stage', label:'Current Stage', type:'stageRun', weight:14, group:'Lojistik', defaultHidden:true\}/);
+  assert.match(app, /\{k:'Current Stage', label:'Current Stage', type:'stageRun', weight:26, group:'Lojistik', defaultHidden:true\}/);
   assert.doesNotMatch(app, /k:'Zamanında|onTimeProbability/, '% sütunu yok');
   assert.match(app, /function initColState\(cols\)\{ return \{ order: cols\.map\(c=>c\.k\), hidden:new Set\(cols\.filter\(c=>c\.defaultHidden\)\.map\(c=>c\.k\)\)/);
   assert.match(app, /hideUnseenDefaultHiddenColumns\(t,saved\[t\]\.order\);/);
@@ -92,4 +92,64 @@ test('istemci sözleşmesi: sütunlar varsayılan gizli, Ex→Retail ikinci sat�
   // Excel/pano metni: Ex→Retail sayısı değişmez (ikinci satır yalnız HTML).
   assert.match(app, /if\(c\.type==='num'\)\{ if\(c\.k==='Ex→Retail' && cf\) return cf\.exr==null\?'':String\(cf\.exr\);/);
   assert.match(app, /const CP_RM_CLIENT_TYPES=new Set\(\['formula','cpImage','privateNote','stageRun'\]\);/);
+});
+
+// v20261121b — Aşama tahmini Priority Rules ile paralel: σ koşul alanı ve
+// aşama ETA'sına göre teslimat sonucu (erken ilerleyen sipariş On Track olur).
+const CPR = require('../public/cp-readiness-engine.js');
+const RULES = require('../public/cp-rules-engine.js');
+
+test('aşama modeli σ saklar; koşan aşamanın gecikmesi σ cinsinden ölçülür', () => {
+  const m = model();
+  const g = m.groups.find(x => x.scope === 'country');
+  assert.ok(Number.isFinite(g.stages['1'].sd), 'aşama standart sapması');
+  assert.equal(SM.normalizeModel(JSON.parse(JSON.stringify(m))).groups[0].stages['1'].sd, g.stages['1'].sd);
+  // Handover 3 gün ortalamalı aşamada 25 gündür bekleyen parsiyel: σ belirgin.
+  const late = SM.project({ loadingRequest: iso(-25) }, { model: m, country: 'Hindistan', vehicle: 'Gemi', today: iso(0) });
+  assert.ok(late.overrunSigma >= 2, `σ=${late.overrunSigma}`);
+  // Planlı ETA gelecekte: gecikme yok.
+  const sailing = SM.project({ loadingRequest: iso(-30), handover: iso(-27), cutOff: iso(-23), actualLoading: iso(-20), eta: iso(25) }, { model: m, country: 'Hindistan', vehicle: 'Gemi', today: iso(0) });
+  assert.equal(sailing.overrunSigma, 0);
+});
+
+test('CP: @deliveryOutcome aşama ETA\'sını kullanır; @stageDelaySigma kuralı Priority\'yi yükseltir; model yoksa boş', () => {
+  const ruleSet = RULES.normalizeRules([
+    { id: 'stage-sigma', kind: 'priority', name: 'Aşama gecikmesi', enabled: true, target: 'ACTION_TODAY', // i18n-ignore
+      conditions: [{ field: '@stageDelaySigma', operator: 'gte', value: 1 }] },
+  ]);
+  const settings = { targetType: 'retail', requireTransitRule: true };
+  const ctx = { transitRules: rule, settings };
+  // Yoldaki parsiyeli olan sipariş + kayıtlı model.
+  const withModel = cpRow({ transitAnalysis: model() });
+  assert.equal(typeof withModel._stageMaxSigma, 'number');
+  assert.ok(withModel._stageProjection && withModel._stageProjection.etaMean);
+  const a = CPR.analyzeOrder(withModel, ctx);
+  assert.equal(a.etaSource, 'stage', 'CP teslimat sonucu aşama ETA\'sından');
+  assert.equal(a.stageDelaySigma, withModel._stageMaxSigma);
+  // Model yok: σ boş, kural eşleşmez, ETA eski yoldan.
+  const plain = cpRow({});
+  const b = CPR.analyzeOrder(plain, ctx);
+  assert.notEqual(b.etaSource, 'stage');
+  assert.equal(b.stageDelaySigma, null);
+  assert.equal(RULES.applyPriorityRules({ ...b, sourceRow: plain }, ruleSet).matched.length, 0, 'boş σ koşulu karşılamaz');
+  // σ ≥ 1 olan sipariş kuralla Bugün Aksiyon olur.
+  const delayed = { ...a, stageDelaySigma: 2.5, sourceRow: withModel };
+  assert.equal(RULES.applyPriorityRules(delayed, ruleSet).priority, 'ACTION_TODAY');
+  assert.ok(RULES.DERIVED_FIELDS.some(f => f.id === '@stageDelaySigma' && f.numeric && f.meaning.tr && f.meaning.en));
+  assert.ok(RULES.DERIVED_FIELDS.some(f => f.id === '@stageVsRuleDays' && f.numeric));
+});
+
+test('durum iyileşmesi: statik kurala göre gecikecek sipariş aşama ETA\'sıyla yetişiyorsa On Track', () => {
+  // Statik kural 200 gün → Handover + 200 retail\'i (+60) kaçırır; aşama modeli +35 der.
+  const longRule = [{ id: 'sea-long', exfStart: '', exfEnd: '', seasons: [], countries: [], delType: 'Gemi', days: 200 }];
+  const settings = { targetType: 'retail', requireTransitRule: true };
+  const noModel = cpRow({ transitRules: longRule });
+  const before = CPR.analyzeOrder(noModel, { transitRules: longRule, settings });
+  const withModel = cpRow({ transitRules: longRule, transitAnalysis: model() });
+  const after = CPR.analyzeOrder(withModel, { transitRules: longRule, settings });
+  assert.equal(after.etaSource, 'stage');
+  assert.equal(before.deliveryOutcome, 'EXPECTED_LATE', 'statik kural: gecikecek');
+  assert.equal(after.deliveryOutcome, 'ON_TRACK', 'aşama ETA: yetişir (durum iyileşmesi)');
+  assert.ok(after.scheduleBufferDays > 5);
+  assert.ok(withModel._stageVsRule > 0, 'statik ETA\'dan erken');
 });

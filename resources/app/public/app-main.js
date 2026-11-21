@@ -4566,7 +4566,7 @@ const CP_COLS = [
      uyarı, öncelik veya kurala girmez. Varsayılan gizli; Sütunlar listesinden açılır.
      Birden çok parsiyelde EN GEÇ gelecek parsiyel; parsiyel bazında alt detayda. */
   {k:'Stage ETA', label:'Stage ETA', type:'date', weight:9, group:'Lojistik', defaultHidden:true},
-  {k:'Current Stage', label:'Current Stage', type:'stageRun', weight:14, group:'Lojistik', defaultHidden:true},
+  {k:'Current Stage', label:'Current Stage', type:'stageRun', weight:26, group:'Lojistik', defaultHidden:true},
   {k:'Notes', label:'Notes', type:'text', weight:16, group:'Notlar'},
   {k:'Ek Not', label:'Ek Notlar', type:'text', weight:16, group:'Notlar'},
   {k:'__personalOrderNote', label:'Kişisel Not', labelTr:'Kişisel Not', labelEn:'Private Note', type:'privateNote', weight:16, group:'Notlar', privatePersonal:true},
@@ -6983,7 +6983,11 @@ function cpStageRunText(run){
   const en=appLang==='en',label=CP_STAGE_SHORT_LABELS[en?'en':'tr'][run.code]||'';
   const span=run.days!=null&&run.mean!=null?` · ${run.days}/${run.mean} ${en?'d':'g'}`:'';
   const over=run.over>0?(en?` · over by ${run.over} d`:` · ${run.over} g aşıldı`):'';
-  return `${run.code}. ${label}${span}${over}`;
+  // 1σ ve üstü: olağan dalgalanmanın dışında (Priority Rules @stageDelaySigma ile aynı ölçü).
+  // Ekranda 10σ ve üstü "≥10σ" (okunabilirlik); kural ham değeri kullanır.
+  const sigmaValue=Number(run.sigma);
+  const sigma=sigmaValue>=1?` · ${sigmaValue>=10?'≥10':sigmaValue.toLocaleString(en?'en-GB':'tr-TR',{maximumFractionDigits:1})}σ`:'';
+  return `${run.code}. ${label}${sigma}${span}${over}`;
 }
 function cpStageShiftText(days){
   if(days==null||!Number.isFinite(Number(days)))return '';
