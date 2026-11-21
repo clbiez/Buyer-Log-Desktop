@@ -300,7 +300,8 @@ footer{padding:10px var(--ui-space-5) 26px;}
 .tableFieldsColumn.dropBefore::before,.tableFieldsColumn.dropAfter::after{content:"";position:absolute;left:var(--ui-space-2);right:var(--ui-space-2);height:2px;pointer-events:none;}
 .tableFieldsColumn.dropBefore::before{top:-1px;}
 .tableFieldsColumn.dropAfter::after{bottom:-1px;}
-.tableFieldsDrag{flex:0 0 auto;width:14px;margin-right:4px;text-align:center;cursor:grab;user-select:none;}
+.tableFieldsDrag{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-right:4px;cursor:grab;user-select:none;}
+.tableFieldsDrag .ic{width:16px;height:16px;vertical-align:0;}
 .tableFieldsDrag.isDisabled{visibility:hidden;}
 .tableFieldsColumnName{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .tableFieldsActions{flex:0 0 auto;display:inline-flex;align-items:center;gap:2px;}

@@ -360,4 +360,8 @@ test('Alanlar çekmecesi: Koleksiyon serbest sütunu başka başlığa sürükle
   assert.match(fn, /dragged\.dataset\.crossGroup==='1'/);
   assert.match(fn, /Drag your own columns onto another heading/);
   assert.match(fn, /Eklediğiniz sütunları başka bir başlığa sürükleyerek/);
+  // Tutamaç yazı tipine bağlı '⋮⋮' karakterleri yerine 2×3 noktalı SVG ikondur.
+  assert.match(fn, /class="tableFieldsDrag[^"]*" aria-hidden="true"><svg class="ic"><use href="#i-grip"\/><\/svg><\/span>/);
+  assert.doesNotMatch(fn, /⋮⋮/);
+  assert.match(INDEX, /<symbol id="i-grip" viewBox="0 0 24 24">/);
 });
