@@ -149,6 +149,29 @@
           "en": "With anonymous demo rows: the KPI strip shows quantity-weighted totals, the table shows the origin-country breakdown and outlier counts."
         }
       }
+    },
+    {
+      "id": "auth-permission-snapshot-cache",
+      "type": "fix",
+      "module": {
+        "tr": "Sunucu · Koleksiyon izinleri · Fiyat Talepleri",
+        "en": "Server · Collection permissions · Quotations"
+      },
+      "title": {
+        "tr": "Yetki hesabı her istekte izin belgesini yeniden işlemez; büyük veride sunucu donmaları azaldı",
+        "en": "Authorization no longer reprocesses the permission file on every request; fewer server stalls on large data"
+      },
+      "body": {
+        "tr": "Koleksiyon izinleri, kullanıcı profili ve Fiyat Talebi listesi her istekte (talep başına iki kez) izin belgesini diskten okuyup yeniden işliyordu; büyük veride sunucu saniyelerce yanıt vermiyordu. İşlenmiş izinler artık belge değişene kadar yeniden kullanılır. Yetki verme, geri alma, Shared Hub eşitlemesi veya dosyanın dışarıdan değişmesi bir sonraki istekte hemen etkili olur; sonuçlar öncekiyle aynıdır.",
+        "en": "Collection permissions, the user profile and the Quotation list re-read and reprocessed the permission file on every request (twice per quotation); on large data the server stopped responding for seconds. Processed permissions are now reused until the file changes. Granting, revoking, Shared Hub sync or an external change to the file takes effect on the very next request; results are unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Yalnız sunucu tarafı performans düzeltmesi; ekranda değişen bir öğe yok.",
+          "en": "Server-side performance fix only; nothing changes on screen."
+        }
+      }
     }
   ]
 }
