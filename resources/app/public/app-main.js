@@ -19897,6 +19897,49 @@ function ensureOverviewIntakeModule(){
     .catch(error=>{overviewIntakeLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'intake',mode:'after-ui',failed:true});console.warn('INTAKE modülü yüklenemedi:',error);return null;});
   return overviewIntakeLoadPromise;
 }
+/* Sessiz çalışma alanı (önizleme): Görünüm menüsünden açılan ayrı görünüm stili.
+   Modül ve stil dosyası yalnız seçildiğinde yüklenir; veri, yetki ve öncelik kararı
+   ana uygulamanınkidir. Adaptör salt okunurdur: satır, öncelik ve sekme geçişi verir. */
+let sessizLoadPromise=null;
+function sessizPriority(row){
+  const code=actionPriorityCode(row&&row.Priority)||'';
+  const OD=window.BLOrderDecisionEngine;
+  let meta=code&&OD&&OD.ACTION_PRIORITY?OD.ACTION_PRIORITY[code]:null;
+  if(!meta&&code&&OD&&typeof OD.getPriorityCatalog==='function')meta=(OD.getPriorityCatalog()||[]).find(item=>item&&item.id===code)||null;
+  return {code,label:code?priorityDisplay(code):'',risk:!!(meta&&meta.isRisk),rank:meta&&Number.isFinite(meta.rank)?meta.rank:99};
+}
+window.BLSessizSource=Object.freeze({
+  lang:()=>appLang,
+  userName:()=>String(state.currentUser&&(state.currentUser.displayName||state.currentUser.username)||'').trim(),
+  cpState:()=>state.cp?'ready':'loading',
+  cpRows:()=>state.cp&&Array.isArray(state.cp.rows)?state.cp.rows:[],
+  ensureCp:()=>ensureCpLoaded({reason:'sessiz',deferRender:true}),
+  priority:sessizPriority,
+  openClassic:(tab,index)=>{
+    try{switchTab(tab);}catch(error){console.warn('Sessiz → klasik görünüm',error);return;}
+    const row=tab==='cp'&&Number.isInteger(index)?window.BLSessizSource.cpRows()[index]:null;
+    const code=row&&window.BLCanonicalFields?window.BLCanonicalFields.canonicalValue(row,'cp','orderCode'):'';
+    if(code)showToast(appLang==='en'?'Order '+code+' — use search in CP Tracker to edit it.':'Sipariş '+code+' — düzenlemek için CP Tracker aramasını kullanın.');
+  }
+});
+function ensureSessizModule(){
+  if(window.BLSessiz)return Promise.resolve(window.BLSessiz);
+  if(sessizLoadPromise)return sessizLoadPromise;
+  const loader=window.BLPerf?._loadScript;
+  if(typeof loader!=='function')return Promise.resolve(null);
+  if(!document.getElementById('blSessizCss')){const link=document.createElement('link');link.id='blSessizCss';link.rel='stylesheet';link.href='sessiz-workspace.css?rev=20261116';document.head.appendChild(link);}
+  sessizLoadPromise=loader('sessiz-workspace.js?rev=20261116').then(()=>window.BLSessiz||null)
+    .catch(error=>{sessizLoadPromise=null;console.warn('Sessiz çalışma alanı yüklenemedi:',error);showToast(appLang==='en'?'Quiet workspace could not be loaded.':'Sessiz çalışma alanı yüklenemedi.');return null;});
+  return sessizLoadPromise;
+}
+async function openSessizWorkspace(){
+  window.BLPerf?.mark?.('SESSIZ_OPEN_START');
+  const api=await ensureSessizModule();
+  if(api&&api.open())window.BLPerf?.mark?.('SESSIZ_OPEN_READY');
+}
+function sessizWasActive(){try{return BLStorage.getItem('buyerlog.sessiz.v1.active')==='true';}catch(_){return false;}}
+document.getElementById('railSessizBtn')?.addEventListener('click',()=>{document.getElementById('railAppearanceMenu')?.setAttribute('hidden','');document.getElementById('railAppearanceBtn')?.setAttribute('aria-expanded','false');openSessizWorkspace();});
+if(sessizWasActive())afterStartupReveal(()=>{openSessizWorkspace();});
 let postUiStartupScheduled=false;
 const EXCEL_ENGINE_LOAD_DEADLINE_MS=1500;
 function schedulePostUiStartupTasks(){
