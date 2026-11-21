@@ -955,6 +955,29 @@
         <div class="cardBox intakeTableWrap"><table class="miniTable" id="intakeTable"></table></div>
       </div>
     </div>
+    <!-- FOB Sonrası Maliyet — FiyatMaliyetKontrolRapor modeli; INTAKE ile aynı doğrudan model sorgusu. -->
+    <div id="postFobSection" data-overview-widget="postFob" class="cardBox intakeSection postFobSection">
+      <div class="intakeHeader">
+        <div class="intakeHeaderMain">
+          <p class="cardTitle ovSectionTitle"><svg class="ic" aria-hidden="true"><use href="#i-chart-bar"/></svg><span data-i18n-tr="FOB Sonrası Maliyet" data-i18n-en="Post-FOB Cost">FOB Sonrası Maliyet</span></p>
+          <span id="postFobStateMeta" class="intakeStateMeta"></span>
+        </div>
+        <div class="intakeHeaderActions">
+          <label class="postFobControl"><span data-i18n-tr="Grupla" data-i18n-en="Group by">Grupla</span><select id="postFobGroupBy" aria-label="Gruplama" data-i18n-aria-label-tr="Gruplama" data-i18n-aria-label-en="Grouping"></select></label>
+          <label class="postFobControl"><span data-i18n-tr="Kapsam" data-i18n-en="Scope">Kapsam</span><select id="postFobSegment" aria-label="Üretim kapsamı" data-i18n-aria-label-tr="Üretim kapsamı" data-i18n-aria-label-en="Production scope"></select></label>
+          <label class="postFobToggle"><input type="checkbox" id="postFobOutliersOnly"><span data-i18n-tr="Yalnız aykırılar" data-i18n-en="Outliers only">Yalnız aykırılar</span></label>
+          <button type="button" class="navActionBtn" id="postFobRefreshBtn" title="FOB sonrası maliyet modelini sorgula" data-i18n-title-tr="FOB sonrası maliyet modelini sorgula" data-i18n-title-en="Query the post-FOB cost model"><svg class="ic"><use href="#i-refresh"/></svg><span data-i18n-tr="Yenile" data-i18n-en="Refresh">Yenile</span></button>
+          <button type="button" class="navActionBtn intakeFiltersBtn" id="postFobFiltersBtn" aria-expanded="false" aria-controls="postFobFilterPanel" title="FOB sonrası maliyet filtreleri" aria-label="Filtreler" data-i18n-title-tr="FOB sonrası maliyet filtreleri" data-i18n-title-en="Post-FOB cost filters" data-i18n-aria-label-tr="Filtreler" data-i18n-aria-label-en="Filters"><svg class="ic" aria-hidden="true"><use href="#i-filter"/></svg></button>
+        </div>
+      </div>
+      <div id="postFobStatus" class="intakeStatus" hidden></div>
+      <div id="postFobFilterPanel" class="intakeFilterPanel" hidden><div id="postFobFilterBar" class="intakeFilterBar"></div></div>
+      <div id="postFobBody" class="intakeBody postFobBody" hidden>
+        <div class="kpirow postFobKpis" id="postFobKpis"></div>
+        <p id="postFobNote" class="postFobNote" hidden></p>
+        <div class="cardBox intakeTableWrap"><table class="miniTable" id="postFobTable"></table></div>
+      </div>
+    </div>
     </div>
     <div id="ovHomeDots" class="ovHomeDots" aria-hidden="true"></div>
     <div class="kpirow" id="kpiOrders" hidden aria-hidden="true" style="display:none!important"></div>
