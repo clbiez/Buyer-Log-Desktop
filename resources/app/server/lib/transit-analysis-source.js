@@ -298,6 +298,22 @@ function milestonesFromEntry(entry) {
   return out;
 }
 
+/* Kaynakta SÜTUNU bulunan kilometre taşları (değeri boş olsa da). Sütunu hiç
+   gelmeyen adım (ör. sorguya eklenemeyen Cut Off) "henüz olmadı" sayılmasın
+   diye projeksiyona bildirilir. Handover IAS eşlemesinin temel alanıdır. */
+const OBSERVABLE_MILESTONES = ['loadingRequest', 'cutOff', 'actualLoading', 'eta', 'summaryDeclaration', 'warehouseApproval', 'transitDeclaration'];
+function observedMilestones(entry) {
+  const fields = entry && entry._sourceFields;
+  const out = ['handover', 'warehouseEntry'];
+  if (!fields || typeof fields !== 'object') return out;
+  const keys = Object.keys(fields).map(cachedHeaderKey);
+  for (const m of OBSERVABLE_MILESTONES) {
+    const wanted = SOURCE_KEYS[m];
+    if (keys.some(k => wanted.has(k))) out.push(m);
+  }
+  return out;
+}
+
 /* Risk hesabının okuduğu aşama süre modeli. Canlı analizle aynı parsiyel
    kümesinden (kapsam + tarih penceresi) yalnız gerçekleşen tarihlerle kurulur. */
 function buildStageModel({ orders, antrepoMap, overrides, today, sourceLabel, window, scope, generatedBy } = {}) {
@@ -344,5 +360,5 @@ function buildLiveAnalysis({ orders, antrepoMap, overrides, today, sourceLabel, 
 module.exports = {
   SOURCE_FIELDS, COMPANY_EXTRA_FIELDS, headerKey, findSchemaColumn,
   collectShipments, collectAllShipments, applyReportRules, baseHorizonForCompany, queryCompanyIasRows, buildLiveAnalysis,
-  milestonesFromEntry, buildStageModel,
+  milestonesFromEntry, observedMilestones, buildStageModel,
 };

@@ -337,17 +337,27 @@
     const anchorDate = actual[anchor];
     const rem = (m, stat) => (group.remaining[m] ? group.remaining[m][stat] : null);
 
-    // Planlı kilometre taşı (çapadan sonraki en ileri plan).
+    /* Geçilmiş adım tabanı: IAS durumu (Yolda → yükleme, Gümrük-Liman → ETA
+       geçildi) tarihi olmasa da o adımın gerçekleştiğini söyler. Gözlenebilirlik:
+       kaynakta sütunu hiç olmayan kilometre taşı (ör. Backlog sorgusunda Cut
+       Off) "henüz olmadı" sayılamaz; sıradaki adım gözlenebilenlerden seçilir.
+       Aksi halde yoldaki parsiyel Handover'dan beri "Cut-off'ta bekliyor" görünür. */
+    const passedIdx = options.passed && MILESTONE_INDEX[options.passed] != null ? MILESTONE_INDEX[options.passed] : -1;
+    const observed = options.observed ? new Set(options.observed) : null;
+    const isObserved = m => !observed || observed.has(m) || actual[m] != null || planned[m] != null;
+    const floorIdx = Math.max(anchorIdx, passedIdx);
+
+    // Planlı kilometre taşı (geçilmiş tabandan sonraki en ileri plan).
     let plan = null;
-    for (let i = MILESTONES.length - 2; i > anchorIdx; i -= 1) {
+    for (let i = MILESTONES.length - 2; i > floorIdx; i -= 1) {
       const m = MILESTONES[i];
       if (planned[m] != null && group.remaining[m]) { plan = m; break; }
     }
-    // Bir sonraki ölçülen kilometre taşı (çapadan sonra, kalan dağılımı olan).
+    // Bir sonraki ölçülebilir kilometre taşı: tabandan sonra, kalan dağılımı olan ve gözlenebilen.
     let next = null;
-    for (let i = anchorIdx + 1; i < MILESTONES.length - 1; i += 1) {
+    for (let i = floorIdx + 1; i < MILESTONES.length - 1; i += 1) {
       const m = MILESTONES[i];
-      if (group.remaining[m]) { next = m; break; }
+      if (group.remaining[m] && isObserved(m)) { next = m; break; }
     }
     const elapsed = today != null ? today - anchorDate : 0;
     const expectedGap = next ? Math.max(0, rem(anchor, 'mean') - rem(next, 'mean')) : rem(anchor, 'mean');
@@ -369,6 +379,15 @@
     for (const m of MILESTONES) { if (actual[m] != null && group.remaining[m]) { first = m; break; } }
     const baseline = first ? Math.round(actual[first] + rem(first, 'mean')) : null;
 
+    /* Koşan aralık: çapadan bir sonraki ölçülebilir kilometre taşına kadar.
+       Ara adımların tarihi kaynakta yoksa aralık birden çok aşamayı kapsar;
+       o zaman beklenen süre kalan-süre farkından, σ çapanın kalan-süre
+       dağılımından alınır (tek aşamaysa aşamanın kendi σ'sı). */
+    const runningStage = next && actual[next] == null ? (STAGES.find(st => st.to === next) || null) : null;
+    const singleStage = runningStage && runningStage.from === anchor ? group.stages[runningStage.code] : null;
+    const gapSd = singleStage && Number.isFinite(singleStage.sd) ? singleStage.sd
+      : (group.remaining[anchor] && Number.isFinite(group.remaining[anchor].sd) ? group.remaining[anchor].sd : null);
+
     // Aşama sapmaları (yalnız kritik yol, ortalamaya göre).
     const stages = STAGES.map(st => {
       const a = actual[st.from], b = actual[st.to];
@@ -377,27 +396,24 @@
         const days = b - a;
         return { code: st.code, status: 'done', days, mean: ref, deviation: ref == null ? null : round(days - ref) };
       }
-      if (a != null && b == null) {
-        const days = today != null ? today - a : null;
-        const over = ref != null && days != null && days > ref ? round(days - ref) : 0;
-        return { code: st.code, status: 'running', days, mean: ref, deviation: over > 0 ? over : null };
+      // Durumla geçildiği bilinen ya da çapanın gerisinde kalan adım: tarihsiz ama tamam.
+      if (MILESTONE_INDEX[st.to] <= floorIdx) return { code: st.code, status: 'done', days: null, mean: ref, deviation: null };
+      if (runningStage && st.code === runningStage.code) {
+        /* Aralık çapadan önceki aşamalardan başlıyorsa gün/beklenen aşamanın
+           kendi başlangıcına göre (beklenen ara süre düşülerek) verilir; böylece
+           "4. Yükleme → ETA" etiketi Handover'dan sayılan günü göstermez. */
+        const offset = st.from !== anchor && group.remaining[st.from] ? Math.max(0, rem(anchor, 'mean') - rem(st.from, 'mean')) : 0;
+        return { code: st.code, status: 'running', days: Math.max(0, Math.round(elapsed - offset)), mean: Math.round(Math.max(0, expectedGap - offset)), deviation: openOverrun > 0 ? openOverrun : null };
       }
       return { code: st.code, status: 'pending', days: null, mean: ref, deviation: null };
     });
-    // Koşan aşama: çapadan sonraki ilk tamamlanmamış aşama.
-    const current = stages.find(s => s.status === 'running' && MILESTONE_INDEX[STAGES.find(x => x.code === s.code).from] === anchorIdx)
-      || stages.find(s => s.status === 'running') || null;
-    const currentStage = current ? current.code : (next ? (STAGES.find(st => st.to === next) || {}).code || null : null);
-    /* σ cinsinden açık gecikme: koşan aşamada geçen gün ortalamayı kaç standart
-       sapma aşıyor. Ortalamanın altında / planlı adımda 0; aşama istatistiği
-       (veya σ) yoksa null — uydurma eşik üretilmez. σ en az 0,5 gün alınır ki
-       neredeyse sabit süreli aşamada 1 günlük sapma "sonsuz" görünmesin. */
+    const currentStage = runningStage ? runningStage.code : null;
+    /* σ cinsinden açık gecikme: koşan aralıkta geçen gün beklenen süreyi kaç
+       standart sapma aşıyor. Beklenen içinde / planlı adımda 0; σ yoksa null —
+       uydurma eşik üretilmez. σ en az 0,5 gün alınır. */
     let overrunSigma = null;
-    if (current && current.days != null) {
-      const stat = group.stages[current.code];
-      if (stat && Number.isFinite(stat.sd)) overrunSigma = current.days > stat.mean ? round((current.days - stat.mean) / Math.max(0.5, stat.sd)) : 0;
-    } else if (openOverrun === 0) overrunSigma = 0;
-    if (next && planned[next] != null) overrunSigma = 0;
+    if (!next || (next && planned[next] != null)) overrunSigma = 0;
+    else if (gapSd != null) overrunSigma = openOverrun > 0 ? round(openOverrun / Math.max(0.5, gapSd)) : 0;
 
     // Paralel kol: evrak ETA'dan sonra teslim edildiyse gümrüğü bekletebilir.
     const docDate = dayOrdinal(raw.documentDelivery);
