@@ -7,8 +7,8 @@
     "en": "Collection colour options, stage forecast and CP redraw fixes"
   },
   "summary": {
-    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: FiyatMaliyetKontrolRapor modelinden landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder.",
-    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: it analyses landed, Integral and forecast gap from the FiyatMaliyetKontrolRapor model with quantity weighting."
+    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: FiyatMaliyetKontrolRapor modelinden landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur.",
+    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: it analyses landed, Integral and forecast gap from the FiyatMaliyetKontrolRapor model with quantity weighting. Starting directly on CP now completes the startup screen without an error."
   },
   "changes": [
     {
@@ -193,6 +193,35 @@
         "reason": {
           "tr": "Ekranda değişiklik yok; yalnız yenileme sonunda sunucunun yanıt vermediği bekleme kalkar.",
           "en": "There is no change on screen; only the wait while the server did not respond at the end of a refresh is gone."
+        }
+      }
+    },
+    {
+      "id": "cp-startup-primary-ready",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker · Açılış",
+        "en": "CP Tracker · Startup"
+      },
+      "title": {
+        "tr": "CP ile açılışta başlangıç ekranı hazır olur",
+        "en": "Startup screen completes when Buyer Log opens on CP"
+      },
+      "body": {
+        "tr": "Buyer Log doğrudan CP ekranıyla açıldığında CP satırları çizilse de açılış kartı \"Başlangıç ekranı hazırlanamadı\" uyarısıyla bitiyordu. Hesaplanmış sütunlar ısınırken CP'nin karar motoru istenmiyordu. Artık satırlar \"Hesaplanıyor…\" hücreleriyle görünür görünmez açılış ekranı hazır sayılır; öncelik ve checklist değerleri arka planda hesaplanıp tabloya gelir.",
+        "en": "When Buyer Log opened directly on the CP screen, the startup card ended with \"The initial screen could not be prepared\" even though the CP rows were drawn. While the calculated columns were warming up, CP's decision engine was never requested. The startup screen is now ready as soon as the rows appear with \"Calculating…\" cells; priority and checklist values are calculated in the background and fill in the table."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-startup-primary-ready.png",
+        "alt": {
+          "tr": "Demo veriyle CP ile açılış: açılış kartında Buyer Log hazır, başlangıç verisi, ekran ve kullanıcı bilgileri tamamlandı",
+          "en": "Opening on CP with demo data: the startup card shows Buyer Log ready with startup data, screen and user details complete"
+        },
+        "caption": {
+          "tr": "Demo veride /?module=cp açılışı \"Başlangıç ekranı hazır\" ile tamamlanır; uyarı gösterilmez.",
+          "en": "On demo data, opening /?module=cp completes with \"The opening screen is ready\"; no warning is shown."
         }
       }
     }
