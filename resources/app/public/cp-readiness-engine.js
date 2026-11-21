@@ -82,6 +82,12 @@
     asasExFactory: '_asasExFactory',
     asasRetail: '_asasRetailDate',
     asasInStore: '_asasInStore',
+    /* Aşama modeli (Yol Süresi Analizi): sunucu CP satırına yazar.
+       stageProjection teslimat sonucunu, stageMaxSigma / stageVsRule
+       Priority Rules koşullarını besler. Model yoksa boş. */
+    stageProjection: '_stageProjection',
+    stageMaxSigma: '_stageMaxSigma',
+    stageVsRule: '_stageVsRule',
   });
 
   /* Tarih senkronu (§25). Kaynak ASAS DB'dir: Buyer Log revizyonu
@@ -184,6 +190,8 @@
   const EMPTY = '—';
   const text = value => String(value == null ? '' : value).trim();
   const num = value => { const n = Number(value); return Number.isFinite(n) ? n : 0; };
+  // Boş değer boş kalır (0 değil): kural koşulu eksik veriyi karşılamaz.
+  const numOrNull = value => (value == null || value === '' || !Number.isFinite(Number(value)) ? null : Number(value));
   const dimKey = value => text(value) || EMPTY;
 
   function defaultOrdinal(value) {
@@ -250,6 +258,8 @@
         actualAntrepoDate: actualAntrepo,
         priority: row && row[F.priority], // legacy display only; decision logic uses signals
         signals: Array.isArray(operationalSignals) ? operationalSignals : [],
+        // Yoldaki en geç parsiyelin aşama ETA'sı: varsa tek kural gününün yerini alır.
+        stageProjection: row && row[F.stageProjection] && typeof row[F.stageProjection] === 'object' ? row[F.stageProjection] : null,
         mag: row && row[F.mag],
         mmyg: row && row[F.mmyg],
       },
@@ -390,6 +400,9 @@
       orderDate, orderAgeDays,
       plannedLoadDate: exFactory, daysToLoad, weeksToLoad, loadWindow,
       retailDate, inStoreDate,
+      // Aşama modeli: σ cinsinden en büyük açık aşama gecikmesi ve statik ETA'ya göre ±gün.
+      stageDelaySigma: numOrNull(row && row[F.stageMaxSigma]),
+      stageVsRuleDays: numOrNull(row && row[F.stageVsRule]),
       transitDays, transitRuleDefined: Boolean(transitRule), transitRuleMissing: Boolean(delivery && delivery.transitRuleMissing),
       eta: delivery ? delivery.eta : null,
       etaSource: delivery ? delivery.etaSource : 'none',

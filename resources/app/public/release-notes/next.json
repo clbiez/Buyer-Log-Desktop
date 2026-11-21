@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "cp-priority-stage-delay-rules",
+      "type": "feature",
+      "module": {
+        "tr": "CP · Priority Rules",
+        "en": "CP · Priority Rules"
+      },
+      "title": {
+        "tr": "Priority Rules aşama gecikmesini (σ) okur; erken ilerleyen sipariş On Track olur",
+        "en": "Priority Rules read stage delay (σ); orders running early show as on track"
+      },
+      "body": {
+        "tr": "Priority Rules'a iki yeni koşul alanı eklendi: Aşama gecikmesi (σ), yoldaki en çok geciken parsiyelin bitmemiş aşamasının ortalamayı kaç standart sapma aştığını; Statik ETA'ya göre gün, aşama tahmininin tek yol süresi kuralına göre kaç gün erken ya da geç olduğunu verir. Örneğin \"Aşama gecikmesi ≥ 1 → Bugün Aksiyon\" kuralı olağan dalgalanmanın dışındaki gecikmeyi Priority sütununda gösterir. Kayıtlı aşama modeli varsa Teslimat sonucu aşama ETA'sını kullanır: statik kurala göre gecikecek görünen ama erken ilerleyen sipariş yetişir (On Track) görünür. Yerleşik kural eklenmedi; uyarıyı kullanıcı ya da moderatör kuralı kurar.",
+        "en": "Priority Rules have two new condition fields: Stage delay (σ) gives how many standard deviations the unfinished stage of the most delayed partial in transit exceeds its average; Days vs static ETA gives how many days the stage forecast is earlier or later than the single transit-time rule. For example, a rule \"Stage delay ≥ 1 → Action Today\" flags delays outside normal variation in the Priority column. When a stage model is saved, Delivery outcome uses the stage ETA: an order that looks late by the static rule but is running early shows as on track. No built-in rule was added; a user or moderator rule raises the warning."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-stage-priority.png",
+        "alt": {
+          "tr": "Demo CP satırlarında aşama gecikmesi kuralıyla Bugün Aksiyon ve Yolunda öncelikleri",
+          "en": "Action Today and On Track priorities from a stage-delay rule on demo CP rows"
+        },
+        "caption": {
+          "tr": "Demo veride \"Aşama gecikmesi ≥ 1σ → Bugün Aksiyon\" kuralı: σ'sı yüksek siparişler uyarılır, diğerleri Yolunda kalır.",
+          "en": "On demo data, the rule \"Stage delay ≥ 1σ → Action Today\" flags high-σ orders while the others stay On Track."
+        }
+      }
+    },
+    {
       "id": "data-picker-group-headers",
       "type": "fix",
       "module": {"tr": "ASAS / IAS · Veri Yönetimi", "en": "ASAS / IAS · Data Management"},
