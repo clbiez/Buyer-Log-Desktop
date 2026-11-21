@@ -12,6 +12,26 @@
   },
   "changes": [
     {
+      "id": "plm-sync-images-no-freeze",
+      "type": "fix",
+      "module": {"tr": "CP · Siparişler · PLM SYNC", "en": "CP · Orders · PLM SYNC"},
+      "title": {
+        "tr": "PLM SYNC görsel indirmesinden sonra uygulama donmaz",
+        "en": "The app no longer freezes after PLM SYNC downloads images"
+      },
+      "body": {
+        "tr": "Görseller indirildikten sonra CP ve Siparişler satırlarına bağlanırken, görseli olmayan her satır için tüm görsel kaydı baştan taranıyordu. Büyük veride bu işlem ekranı saniyelerce, hatta dakikalarca kilitliyordu. Satırlar artık hazır görsel dizininden çözülür; sonuç ve görseller aynıdır, bekleme ortadan kalkar.",
+        "en": "When downloaded images were linked to CP and Orders rows, the whole image registry was scanned again for every row without an image. With large data this locked the screen for seconds or even minutes. Rows are now resolved from the ready image index; the results and images are the same, without the wait."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; görseller ve tablolar aynı görünür, yalnız senkron sonrası donma kalkar.",
+          "en": "There is no change on screen; images and tables look the same, only the freeze after sync is gone."
+        }
+      }
+    },
+    {
       "id": "override-save-independent-of-background-compute",
       "type": "fix",
       "module": {"tr": "CP · Siparişler · License Royalty", "en": "CP · Orders · License Royalty"},
