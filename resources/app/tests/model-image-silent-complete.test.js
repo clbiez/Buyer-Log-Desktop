@@ -210,3 +210,49 @@ test('uygulama meşgulken (modül yükleniyor) istek gitmez; meşguliyet bitince
   await h.advance(5000);
   assert.equal(h.calls.length, 1);
 });
+
+/* PLM oturumu yokken açılan YENİ alt detay raporu 30 dk beklemez.
+ * Saha: açılışta CP/Orders turu token olmadan döner (upstreamDeferred
+ * CORENECTUM_API_TOKEN_REQUIRED); eskiden bu tek cevap TÜM sessiz işi 30 dk
+ * donduruyordu — sonra açılan rapor ne yerel/paylaşılan depodan ne de (oturum
+ * gelmişse) PLM'den görsel alıyordu. Aynı görünüm yine 30 dk bekler. */
+test('yetki geri çekilmesinde yeni görünüm bir kez denenir; aynı görünüm beklemeye devam eder', async () => {
+  const h = harness({ identities: ids(3), requestImpl: () => ({ ok: true, images: [], imagemapPatch: {}, upstreamDeferred: { code: 'CORENECTUM_API_TOKEN_REQUIRED' } }) });
+  let token = 'table:cp';
+  h.setView({ token });
+  const api = createSilentImageCompleter({ ...h.env, collect: ({ limit, skip }) => ({ viewToken: token, contextType: 'x', identities: ids(3).filter(i => !skip(i)).slice(0, limit), isStillCurrent: () => true }), currentViewToken: () => token });
+  api.start();
+  await h.advance(5000);
+  assert.equal(h.calls.length, 1);
+  await h.advance(60_000);
+  assert.equal(h.calls.length, 1, 'aynı görünüm geri çekilmede kalır');
+  token = 'view-detail-1';
+  await h.advance(6000);
+  assert.equal(h.calls.length, 2, 'yeni alt detay raporu 30 dk beklemeden bir kez denenir');
+  await h.advance(10 * 60 * 1000);
+  assert.equal(h.calls.length, 2, 'yeni görünüm de yetki yoksa tekrar beklemeye girer');
+  assert.equal(api.isNegative(ids(1)[0].key), false, 'yetki eksikliği bulunamadı sayılmaz');
+});
+
+test('PLM oturumu geri gelince (resume) geri çekilme beklenmeden sürer', async () => {
+  let n = 0;
+  const h = harness({ identities: ids(2), requestImpl: () => { n++; throw Object.assign(new Error('auth'), { code: 'CORENECTUM_API_TOKEN_REQUIRED' }); } });
+  h.api.start();
+  await h.advance(5000);
+  assert.equal(n, 1);
+  h.api.resume();
+  await h.advance(5000);
+  assert.equal(n, 2);
+});
+
+test('kullanıcı işi ertelemesi (PLM_BACKGROUND_DEFERRED) yeni görünümde de bekler', async () => {
+  let token = 'view-a';
+  const h = harness({ identities: ids(2) });
+  const api = createSilentImageCompleter({ ...h.env, request: async items => { h.calls.push(items); throw Object.assign(new Error('busy'), { code: 'PLM_BACKGROUND_DEFERRED' }); }, currentViewToken: () => token });
+  api.start();
+  await h.advance(5000);
+  assert.equal(h.calls.length, 1);
+  token = 'view-b';
+  await h.advance(10_000);
+  assert.equal(h.calls.length, 1, 'kullanıcının PLM işi önceliklidir');
+});

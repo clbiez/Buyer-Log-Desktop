@@ -117,6 +117,9 @@ async function shot(page, top, bottom, file) {
   // Statik karşılaştırma ölçütü: taşıt başına tek kural günü (Handover + gün).
   const rules = [['Gemi', 52], ['Tır', 24], ['Uçak', 9]].map(([delType, days], i) => ({ id: `demo-${i}`, exfStart: '', exfEnd: '', seasons: [], countries: [], delType, days }));
   await api('/api/transit-rules', { rules }, 'PUT');
+  // Priority Rules ile paralel: moderatör kuralı "Aşama gecikmesi ≥ 1σ → Bugün Aksiyon".
+  await api('/api/cp-managed-rules', { rules: [{ id: 'stage-sigma-demo', kind: 'priority', name: 'Aşama gecikmesi ≥ 1σ', enabled: true, target: 'ACTION_TODAY', // i18n-ignore
+    conditions: [{ field: '@stageDelaySigma', operator: 'gte', value: 1 }] }] }, 'PUT');
   await api('/api/refresh', {});
   for (let i = 0; i < 160; i++) { if (!(await (await api('/api/refresh-status')).json()).running) break; await new Promise(r => setTimeout(r, 250)); }
   const saved = await (await api('/api/transit-analysis/stage-model', { scope: 'company', window: 'y1' })).json();
@@ -199,6 +202,7 @@ async function shot(page, top, bottom, file) {
     detail: document.querySelectorAll('.cpLogisticDetailLine.hasStage .cpLogisticStage strong').length,
     shiftColor: getComputedStyle(document.querySelector('.cpLogisticStage .cpStageShift') || document.body).color }));
   assert.match(cells.exr, /g (erken|geç)|±0/, 'Ex→Retail ikinci satırı');
+  assert.match(cells.run, /σ/, 'Koşan Aşama σ gösterir');
   assert.match(cells.eta, /\d{2}\.\d{2}\.\d{2}/);
   assert.ok(cells.run.length > 3 && cells.detail >= 1, JSON.stringify(cells));
   await page.evaluate(() => { const th = [...document.querySelectorAll('#cpTable thead tr:last-child th')].find(e => /Retail Date|Retail Tarihi/i.test(e.textContent)); const wrap = document.getElementById('cpTableWrap'); if (th && wrap) wrap.scrollLeft += th.getBoundingClientRect().left - wrap.getBoundingClientRect().left - 8; });
@@ -207,6 +211,41 @@ async function shot(page, top, bottom, file) {
   const box = await page.locator('#cpTableWrap').boundingBox();
   await page.screenshot({ path: path.join(outDir, 'cp-stage-columns.png'), clip: { x: box.x, y: box.y, width: box.width, height: Math.min(box.height, Math.max(560, Math.ceil(box.width / 3))) } });
   console.log('CP', JSON.stringify(cells));
+  // σ ≥ 1 olan yoldaki sipariş kuralla Bugün Aksiyon; σ verisi olmayan sipariş etkilenmez.
+  await page.fill('#cpSearch', ''); await page.keyboard.press('Enter');
+  let prio = null;
+  for (let i = 0; i < 60 && !prio; i++) {
+    prio = await page.evaluate(() => {
+      const rows = (state.cp && state.cp.rows) || [];
+      const hit = rows.find(r => Number(r._stageMaxSigma) >= 1 && r.Priority && !/^\s*$/.test(String(r.Priority)));
+      const none = rows.filter(r => r._stageMaxSigma == null);
+      if (!hit) return null;
+      return { code: hit['Order Code'], priority: hit.Priority, sigma: hit._stageMaxSigma, noneRaised: none.filter(r => r.Priority === 'ACTION_TODAY').length };
+    });
+    if (!prio) await page.waitForTimeout(1000);
+  }
+  assert.ok(prio && prio.priority === 'ACTION_TODAY', `σ kuralı: ${JSON.stringify(prio)}`);
+  assert.equal(prio.noneRaised, 0, 'aşama verisi olmayan sipariş kuraldan etkilenmez');
+  await page.fill('#cpSearch', String(prio.code)); await page.keyboard.press('Enter');
+  await page.waitForTimeout(2500);
+  await page.evaluate(() => { const wrap = document.getElementById('cpTableWrap'); if (wrap) wrap.scrollLeft = 0; state.cpLogisticExpanded.clear(); renderCP(); });
+  await page.waitForTimeout(1500);
+  console.log('PRIORITY', JSON.stringify(prio));
+  // Görüntü: Priority ile aşama sütunları yan yana (kullanıcının Sütunlar panelinden yapabileceği gibi).
+  const stageCodes = await page.evaluate(() => {
+    const withStage = state.cp.rows.filter(r => r._stageMaxSigma != null).sort((a, b) => b._stageMaxSigma - a._stageMaxSigma);
+    return [...withStage.filter(r => r._stageMaxSigma >= 1).slice(0, 4), ...withStage.filter(r => r._stageMaxSigma < 1).slice(0, 3)].map(r => String(r['Order Code'])).join(', ');
+  });
+  await page.fill('#cpSearch', stageCodes); await page.keyboard.press('Enter');
+  await page.evaluate(() => {
+    const keep = new Set(['Priority', 'Order Code', 'Ex→Retail', 'STATUS', 'Ant. Arrival', 'Stage ETA', 'Current Stage']);
+    CP_COLS.forEach(c => { if (keep.has(c.k)) colmgr.cp.hidden.delete(c.k); else colmgr.cp.hidden.add(c.k); });
+    saveAutoTableColumnState(); renderCP();
+  });
+  await page.waitForTimeout(3000);
+  await page.evaluate(() => { const t = document.getElementById('_toast'); if (t) t.remove(); const wrap = document.getElementById('cpTableWrap'); if (wrap) wrap.scrollLeft = 0; });
+  const pbox = await page.locator('#cpTableWrap').boundingBox();
+  await page.screenshot({ path: path.join(outDir, 'cp-stage-priority.png'), clip: { x: pbox.x, y: pbox.y, width: pbox.width, height: Math.min(pbox.height, Math.max(420, Math.ceil(pbox.width / 3.1))) } });
   assert.deepEqual(errors, [], 'browser errors');
   console.log(`PASS model ${saved.analysis.stats.used} partials · ${projected.length} projected Backlog partials · signal cards ${counts.join('/')} · screenshots in ${outDir}`);
 })().catch(e => { console.error(e); process.exitCode = 1; }).finally(async () => {

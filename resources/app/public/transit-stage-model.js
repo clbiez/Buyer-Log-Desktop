@@ -112,7 +112,10 @@
     const list = values.filter(v => Number.isFinite(v)).sort((a, b) => a - b);
     if (!list.length) return null;
     const mean = list.reduce((s, v) => s + v, 0) / list.length;
-    const out = { n: list.length, mean: round(mean), p80: round(quantile(list, 0.8)) };
+    // Standart sapma (örneklem): aşama gecikmesinin "normal dalgalanma" mı yoksa
+    // olağan dışı mı olduğunu σ cinsinden ölçmek için.
+    const sd = list.length > 1 ? Math.sqrt(list.reduce((s, v) => s + (v - mean) ** 2, 0) / (list.length - 1)) : 0;
+    const out = { n: list.length, mean: round(mean), p80: round(quantile(list, 0.8)), sd: round(sd) };
     if (withQuantiles) out.q = QUANTILES.map(p => round(quantile(list, p / 100)));
     return out;
   }
@@ -226,6 +229,8 @@
     const mean = Number(value.mean), p80 = Number(value.p80);
     if (!n || !Number.isFinite(mean) || !Number.isFinite(p80) || Math.abs(mean) > 3650 || Math.abs(p80) > 3650) return null;
     const out = { n, mean: round(mean), p80: round(p80) };
+    const sd = Number(value.sd);
+    if (Number.isFinite(sd) && sd >= 0 && sd <= 3650) out.sd = round(sd);
     if (withQuantiles) {
       const q = Array.isArray(value.q) ? value.q.map(Number) : null;
       if (q && q.length === QUANTILES.length && q.every(Number.isFinite) && q.every((v, i) => i === 0 || v >= q[i - 1])) out.q = q.map(v => round(v));
@@ -383,6 +388,16 @@
     const current = stages.find(s => s.status === 'running' && MILESTONE_INDEX[STAGES.find(x => x.code === s.code).from] === anchorIdx)
       || stages.find(s => s.status === 'running') || null;
     const currentStage = current ? current.code : (next ? (STAGES.find(st => st.to === next) || {}).code || null : null);
+    /* σ cinsinden açık gecikme: koşan aşamada geçen gün ortalamayı kaç standart
+       sapma aşıyor. Ortalamanın altında / planlı adımda 0; aşama istatistiği
+       (veya σ) yoksa null — uydurma eşik üretilmez. σ en az 0,5 gün alınır ki
+       neredeyse sabit süreli aşamada 1 günlük sapma "sonsuz" görünmesin. */
+    let overrunSigma = null;
+    if (current && current.days != null) {
+      const stat = group.stages[current.code];
+      if (stat && Number.isFinite(stat.sd)) overrunSigma = current.days > stat.mean ? round((current.days - stat.mean) / Math.max(0.5, stat.sd)) : 0;
+    } else if (openOverrun === 0) overrunSigma = 0;
+    if (next && planned[next] != null) overrunSigma = 0;
 
     // Paralel kol: evrak ETA'dan sonra teslim edildiyse gümrüğü bekletebilir.
     const docDate = dayOrdinal(raw.documentDelivery);
@@ -405,7 +420,7 @@
 
     return {
       anchor, anchorDate: isoFromOrdinal(anchorDate), plan, planDate: plan ? isoFromOrdinal(planned[plan]) : null,
-      next, currentStage, elapsedDays: elapsed, openOverrunDays: openOverrun,
+      next, currentStage, elapsedDays: elapsed, openOverrunDays: openOverrun, overrunSigma,
       etaMean: isoFromOrdinal(etaMean), etaP80: isoFromOrdinal(etaP80),
       baselineEta: isoFromOrdinal(baseline),
       // + : plansız temel çizgiye göre erken (kazanç), − : geç.
@@ -424,7 +439,7 @@
       v: VERSION,
       anchor: projection.anchor, anchorDate: projection.anchorDate,
       plan: projection.plan, planDate: projection.planDate,
-      currentStage: projection.currentStage, openOverrunDays: projection.openOverrunDays,
+      currentStage: projection.currentStage, openOverrunDays: projection.openOverrunDays, overrunSigma: projection.overrunSigma,
       etaMean: projection.etaMean, etaP80: projection.etaP80,
       baselineEta: projection.baselineEta, gainDays: projection.gainDays,
       docsLateDays: projection.docsLateDays, sample: projection.sample, scope: projection.scope,
