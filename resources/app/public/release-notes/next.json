@@ -33,6 +33,26 @@
       }
     },
     {
+      "id": "oab-batch-job-store-busy-fix",
+      "type": "fix",
+      "module": {"tr": "OAB", "en": "OAB"},
+      "title": {
+        "tr": "OAB toplu çekme, satırlar alındıktan sonra iş kaydı hatasıyla bitmez",
+        "en": "OAB batch fetch no longer ends with a job receipt error after the rows are fetched"
+      },
+      "body": {
+        "tr": "OAB kombinasyonları çekildikten sonra iş \"Kalıcı OAB iş makbuzu doğrulanamadı veya kaydedilemedi\" hatasıyla bitebiliyor, yeni satırlar rapora kaydedilmiyor ve ekranda önceki rapor kalıyordu. Arka plandaki OAB işi artık kısa süreli dosya kilitlerinde hata vermek yerine kısa bir süre bekler; çekilen satırlar kaydedilir ve rapor güncellenir.",
+        "en": "After OAB combinations were fetched, the job could end with \"The persistent OAB job receipt could not be verified or saved\", the new rows were not saved to the report and the previous report stayed on screen. The background OAB job now briefly waits on short-lived file locks instead of failing; the fetched rows are saved and the report is updated."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda yeni bir öğe yok; düzeltme sunucudaki arka plan OAB işinin dosya kilidi davranışındadır.",
+          "en": "There is no new element on screen; the fix is in the file-lock behaviour of the background OAB job on the server."
+        }
+      }
+    },
+    {
       "id": "sync-onedrive-transfer-guard",
       "type": "feature",
       "module": {"tr": "Sync", "en": "Sync"},
