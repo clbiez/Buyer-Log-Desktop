@@ -5507,17 +5507,23 @@ function tableFieldsCanChangeGroup(tableKey,key){
 }
 // Sütun kendi başlığı içinde taşınır; yalnız tableFieldsCanChangeGroup sütunları
 // başka başlığa geçebilir. targetGroup verilirse sütun o başlıkta kalmalıdır.
+// Koleksiyon yerleşim planı: normalize edilmiş yeni sıra ya da sütun hedef başlıkta
+// kalamıyorsa null. Başlığın ilk sütununun önüne bırakılan serbest sütun soldaki
+// başlığa düşerdi; hedef başlıkta kalacak taraf seçilir. Sona sabitlenen başlıkta
+// (Endeksmatik & Avantaj) serbest sütun kalamaz; çekmece bu hedefi hiç kabul etmez.
+function tableFieldsKolPlan(key,targetKey,after,targetGroup){
+  if(!key||!targetKey||key===targetKey||key==='__picture__'||targetKey==='__picture__')return null;
+  const base=kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder()).filter(item=>item!==key);
+  if(base.indexOf(targetKey)<0)return null;
+  const place=side=>{const order=base.slice();order.splice(order.indexOf(targetKey)+(side?1:0),0,key);return kolNormalizeDisplayOrder(order);};
+  const fits=order=>!targetGroup||kolColumnGroupFor(key,order)===targetGroup;
+  return [place(!!after),place(!after)].find(fits)||null;
+}
 function tableFieldsMoveColumn(tableKey,key,targetKey,after,targetGroup){
   if(!key||!targetKey||key===targetKey)return false;
   if(tableKey==='koleksiyon'){
     if(key==='__picture__'||targetKey==='__picture__')return false;
-    const base=kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder()).filter(item=>item!==key);
-    if(base.indexOf(targetKey)<0)return false;
-    const place=side=>{const order=base.slice();order.splice(order.indexOf(targetKey)+(side?1:0),0,key);return kolNormalizeDisplayOrder(order);};
-    // Başlığın ilk sütununun önüne bırakılan serbest sütun soldaki başlığa düşerdi;
-    // hedef başlıkta kalacak taraf seçilir.
-    const fits=order=>!targetGroup||kolColumnGroupFor(key,order)===targetGroup;
-    const next=[place(!!after),place(!after)].find(fits);
+    const next=tableFieldsKolPlan(key,targetKey,after,targetGroup);
     if(!next){showToast(appLang==='en'?'This column cannot be moved under that heading.':'Bu sütun o başlığın altına taşınamaz.');return false;}
     kolColOrder=next;saveKolColState();
   }else{
@@ -5615,13 +5621,21 @@ function renderTableFieldsMenu(menu,tableKey){
   menu.querySelectorAll('[data-table-fields-rename]').forEach(button=>button.addEventListener('click',()=>tableFieldsRenameColumn(tableKey,button.dataset.tableFieldsRename)));
   menu.querySelectorAll('[data-table-fields-formula]').forEach(button=>button.addEventListener('click',()=>tableFieldsRenameColumn(tableKey,button.dataset.tableFieldsFormula)));
   menu.querySelectorAll('[data-table-fields-delete]').forEach(button=>button.addEventListener('click',()=>tableFieldsDeleteColumn(tableKey,button.dataset.tableFieldsDelete)));
+  // Başka başlığa bırakma yalnız yerleşim planı sütunu o başlıkta tutuyorsa kabul edilir;
+  // plan her sürüklemede hedef başına bir kez hesaplanır.
+  const crossPlans=new Map();
+  const crossFits=(targetKey,group)=>{
+    const id=`${tableFieldsDragKey}\u0000${targetKey}\u0000${group}`;
+    if(!crossPlans.has(id))crossPlans.set(id,tableKey==='koleksiyon'&&!!tableFieldsKolPlan(tableFieldsDragKey,targetKey,true,group));
+    return crossPlans.get(id);
+  };
   menu.querySelectorAll('.tableFieldsColumn[draggable="true"]').forEach(row=>{
-    row.addEventListener('dragstart',event=>{tableFieldsDragKey=row.dataset.tableFieldsCol;row.classList.add('isDragging');event.dataTransfer.effectAllowed='move';try{event.dataTransfer.setData('text/plain',tableFieldsDragKey);}catch(_){}});
+    row.addEventListener('dragstart',event=>{tableFieldsDragKey=row.dataset.tableFieldsCol;crossPlans.clear();row.classList.add('isDragging');event.dataTransfer.effectAllowed='move';try{event.dataTransfer.setData('text/plain',tableFieldsDragKey);}catch(_){}});
     row.addEventListener('dragend',()=>{tableFieldsDragKey=null;menu.querySelectorAll('.isDragging,.dropBefore,.dropAfter,.isDropTarget').forEach(el=>el.classList.remove('isDragging','dropBefore','dropAfter','isDropTarget'));});
   });
   const draggedRow=()=>tableFieldsDragKey&&menu.querySelector(`[data-table-fields-col="${CSS.escape(tableFieldsDragKey)}"]`);
   menu.querySelectorAll('.tableFieldsColumn').forEach(row=>{
-    const sameGroup=()=>{const dragged=draggedRow();if(!dragged||dragged===row)return false;if(dragged.dataset.group===row.dataset.group)return row.getAttribute('draggable')==='true';return dragged.dataset.crossGroup==='1'&&row.dataset.fixed!=='1';};
+    const sameGroup=()=>{const dragged=draggedRow();if(!dragged||dragged===row)return false;if(dragged.dataset.group===row.dataset.group)return row.getAttribute('draggable')==='true';return dragged.dataset.crossGroup==='1'&&row.dataset.fixed!=='1'&&crossFits(row.dataset.tableFieldsCol,row.dataset.group);};
     row.addEventListener('dragover',event=>{
       if(!sameGroup())return;event.preventDefault();
       const rect=row.getBoundingClientRect(),after=event.clientY>rect.top+rect.height/2;
@@ -5637,13 +5651,13 @@ function renderTableFieldsMenu(menu,tableKey){
   // Kapalı başlığın satırına bırakılan sütun o başlığın sonuna eklenir ve başlık açılır.
   menu.querySelectorAll('[data-table-fields-drop-group]').forEach(head=>{
     const group=head.dataset.tableFieldsDropGroup;
-    const accepts=()=>{const dragged=draggedRow();return !!dragged&&dragged.dataset.crossGroup==='1'&&dragged.dataset.group!==group;};
+    const lastKey=()=>{const entry=catalog.find(item=>item.group===group);return entry&&[...entry.keys].reverse().find(key=>key!=='__picture__');};
+    const accepts=()=>{const dragged=draggedRow(),target=lastKey();return !!dragged&&!!target&&dragged.dataset.crossGroup==='1'&&dragged.dataset.group!==group&&crossFits(target,group);};
     head.addEventListener('dragover',event=>{if(!accepts())return;event.preventDefault();head.classList.add('isDropTarget');});
     head.addEventListener('dragleave',event=>{if(!head.contains(event.relatedTarget))head.classList.remove('isDropTarget');});
     head.addEventListener('drop',event=>{
       if(!accepts())return;event.preventDefault();head.classList.remove('isDropTarget');
-      const entry=catalog.find(item=>item.group===group),target=entry&&[...entry.keys].reverse().find(key=>key!=='__picture__');
-      if(!target)return;
+      const target=lastKey();if(!target)return;
       expanded.add(group);
       tableFieldsMoveColumn(tableKey,tableFieldsDragKey,target,true,group);
     });

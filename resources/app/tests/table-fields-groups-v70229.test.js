@@ -313,7 +313,8 @@ test('Alanlar çekmecesi: başlık açılır, tikler, düzenle / formül / sil v
   const move = extractFunction(APP, 'tableFieldsMoveColumn');
   assert.match(move, /if\(key==='__picture__'\|\|targetKey==='__picture__'\)return false;/);
   assert.match(move, /cs\.order=order;saveAutoTableColumnState\(\);/);
-  assert.match(move, /return kolNormalizeDisplayOrder\(order\);/);
+  assert.match(extractFunction(APP, 'tableFieldsKolPlan'), /return kolNormalizeDisplayOrder\(order\);/);
+  assert.match(move, /const next=tableFieldsKolPlan\(key,targetKey,after,targetGroup\);/);
   assert.match(move, /kolColOrder=next;saveKolColState\(\);/);
   const del = extractFunction(APP, 'tableFieldsDeleteColumn');
   assert.match(del, /removeFormulaColumn\(/);
@@ -326,12 +327,13 @@ test('Alanlar çekmecesi: başlık açılır, tikler, düzenle / formül / sil v
 
 test('Alanlar çekmecesi: Koleksiyon serbest sütunu başka başlığa sürüklenince başlığı kendiliğinden değişir', () => {
   // Sistem sütunlarının başlığı sabit; serbest sütun başlığını soldaki komşusundan alır.
-  const fixed = { a1: 'A', a2: 'A', b1: 'B', b2: 'B' };
+  // z, Endeksmatik gibi normalizasyonda her zaman sona sabitlenen başlıktır.
+  const fixed = { a1: 'A', a2: 'A', b1: 'B', b2: 'B', z: 'Z' };
   const saved = [];
   const context = {
-    appLang: 'tr', kolColOrder: ['a1', 'a2', 'b1', 'b2', 'x'], toasts: [],
-    kolDefaultDisplayOrder: () => ['a1', 'a2', 'b1', 'b2', 'x'],
-    kolNormalizeDisplayOrder: order => order.slice(),
+    appLang: 'tr', kolColOrder: ['a1', 'a2', 'b1', 'b2', 'x', 'z'], toasts: [],
+    kolDefaultDisplayOrder: () => ['a1', 'a2', 'b1', 'b2', 'x', 'z'],
+    kolNormalizeDisplayOrder: order => [...order.filter(key => key !== 'z'), 'z'],
     kolColumnGroupFor: (key, order) => {
       if (fixed[key]) return fixed[key];
       for (let i = order.indexOf(key) - 1; i >= 0; i -= 1) if (fixed[order[i]]) return fixed[order[i]];
@@ -342,22 +344,29 @@ test('Alanlar çekmecesi: Koleksiyon serbest sütunu başka başlığa sürükle
     tableFieldsRerender: () => {},
     tableFieldsColumn: (_table, key) => ({ kind: fixed[key] ? 'system' : 'custom' }),
   };
-  vm.runInNewContext(`${extractFunction(APP, 'tableFieldsCanChangeGroup')}${extractFunction(APP, 'tableFieldsMoveColumn')};this.move=tableFieldsMoveColumn;this.can=tableFieldsCanChangeGroup;`, context);
+  vm.runInNewContext(`${extractFunction(APP, 'tableFieldsCanChangeGroup')}${extractFunction(APP, 'tableFieldsKolPlan')}${extractFunction(APP, 'tableFieldsMoveColumn')};this.move=tableFieldsMoveColumn;this.can=tableFieldsCanChangeGroup;this.plan=tableFieldsKolPlan;`, context);
   assert.equal(context.can('koleksiyon', 'x'), true);
   assert.equal(context.can('koleksiyon', 'b1'), false);
   assert.equal(context.can('cp', 'x'), false, 'CP/Orders ortak sütun başlığı sürüklemeyle değişmez');
   // B başlığındaki x, A'nın son sütununun ardına bırakılır → A başlığına geçer.
   assert.equal(context.move('koleksiyon', 'x', 'a2', true, 'A'), true);
-  assert.deepEqual(plain(context.kolColOrder), ['a1', 'a2', 'x', 'b1', 'b2']);
+  assert.deepEqual(plain(context.kolColOrder), ['a1', 'a2', 'x', 'b1', 'b2', 'z']);
   assert.equal(context.kolColumnGroupFor('x', context.kolColOrder), 'A');
   // B'nin ilk sütununun ÖNÜNE bırakılırsa soldaki A'ya düşerdi; B'de kalacak taraf seçilir.
   assert.equal(context.move('koleksiyon', 'x', 'b1', false, 'B'), true);
-  assert.deepEqual(plain(context.kolColOrder), ['a1', 'a2', 'b1', 'x', 'b2']);
+  assert.deepEqual(plain(context.kolColOrder), ['a1', 'a2', 'b1', 'x', 'b2', 'z']);
   assert.equal(context.kolColumnGroupFor('x', context.kolColOrder), 'B');
+  assert.equal(saved.length, 2);
+  // Sona sabitlenen başlık serbest sütunu tutamaz: plan yok, çekmece hedefi kabul etmez.
+  assert.equal(context.plan('x', 'z', true, 'Z'), null);
+  assert.equal(context.plan('x', 'z', false, 'Z'), null);
+  assert.equal(context.move('koleksiyon', 'x', 'z', true, 'Z'), false);
   assert.equal(saved.length, 2);
   const fn = extractFunction(APP, 'renderTableFieldsMenu');
   assert.match(fn, /data-table-fields-drop-group=/);
   assert.match(fn, /dragged\.dataset\.crossGroup==='1'/);
+  assert.match(fn, /crossFits\(row\.dataset\.tableFieldsCol,row\.dataset\.group\)/);
+  assert.match(fn, /dragged\.dataset\.group!==group&&crossFits\(target,group\)/);
   assert.match(fn, /Drag your own columns onto another heading/);
   assert.match(fn, /Eklediğiniz sütunları başka bir başlığa sürükleyerek/);
   // Tutamaç yazı tipine bağlı '⋮⋮' karakterleri yerine 2×3 noktalı SVG ikondur.
