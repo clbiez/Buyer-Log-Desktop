@@ -85,7 +85,7 @@
     const g=grid();if(!g||!state||editing||session||!g.getClientRects().length)return;
     const items=state.pages[state.page]?.items||[],m=metrics();if(!m)return;
     const boundaries=[...new Set([0,...items.flatMap(item=>[item.y,item.y+item.h])])].sort((a,b)=>a-b);
-    const sizes=items.map(item=>({item,el:widgetEl(item.key),height:['oab','intake'].includes(item.key)?pivotContentHeight(widgetEl(item.key)):item.h*m.stepY-m.rowGap}));
+    const sizes=items.map(item=>({item,el:widgetEl(item.key),height:['oab','intake','postFob'].includes(item.key)?pivotContentHeight(widgetEl(item.key)):item.h*m.stepY-m.rowGap}));
     const signature=JSON.stringify([state.page,isNarrow(),boundaries,sizes.map(({item,height})=>[item.key,height])]);
     if(signature===contentSignature)return;
     contentSignature=signature;
@@ -549,7 +549,7 @@
     document.addEventListener('bl:language-changed',()=>apply());
     new MutationObserver(()=>apply()).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
     const pivotResize=new ResizeObserver(schedulePivotFit);
-    g.querySelectorAll(':scope > :is(#oabSection,#intakeSection) > *').forEach(el=>pivotResize.observe(el));
+    g.querySelectorAll(':scope > :is(#oabSection,#intakeSection,#postFobSection) > *').forEach(el=>pivotResize.observe(el));
     window.addEventListener('resize',schedulePivotFit,{passive:true});
     syncNarrow();
   }

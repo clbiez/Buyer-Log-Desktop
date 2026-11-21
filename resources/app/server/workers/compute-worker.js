@@ -2,7 +2,7 @@
 const {parentPort,threadId}=require('node:worker_threads'),fs=require('node:fs'),zlib=require('node:zlib'),{promisify}=require('node:util');
 const {performance}=require('node:perf_hooks'),codec=require('../lib/compute-source-codec'),tasks=require('../lib/compute-tasks');
 const v8=require('node:v8');
-const dates=require('../../public/date-dimension'),{createComputeSourceCache}=require('../lib/compute-source-cache');
+const dates=require('../../public/date-dimension'),{createComputeSourceCache,WORKER_SOURCE_CACHE_BYTES}=require('../lib/compute-source-cache');
 const access=require('../lib/compute-access'),catalog=require('../lib/collection-catalog');
 const {projectionRuntimeMeta}=require('../lib/projection-runtime-meta');
 const {collectionLflSourceVersion}=require('../lib/collection-lfl-source-version');
@@ -14,7 +14,7 @@ function projectionSourceKeys(source){
   if(!keys){keys=require('../lib/derived-input-keys').keys(source,'compute-source',null,{version:'1',day:'source'});sourceFingerprints.set(source,keys);}
   return keys;
 }
-const sourceCache=createComputeSourceCache({maxBytes:2*1024*MiB,loadSnapshot:async(owner,descriptor)=>{
+const sourceCache=createComputeSourceCache({maxBytes:WORKER_SOURCE_CACHE_BYTES,loadSnapshot:async(owner,descriptor)=>{
   if(descriptor.replicaFile)return codec.decode(await fs.promises.readFile(descriptor.replicaFile),descriptor);
   const snapshot=await require('../lib/model-snapshot').loadModelSnapshotAsync(owner);
   if(snapshot&&!snapshot.loadedAt)snapshot.loadedAt=snapshot.savedAt||new Date().toISOString();
