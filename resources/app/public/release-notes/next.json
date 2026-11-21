@@ -12,6 +12,64 @@
   },
   "changes": [
     {
+      "id": "backlog-stage-based-eta",
+      "type": "feature",
+      "module": {
+        "tr": "Backlog · Teslimat Riski",
+        "en": "Backlog · Delivery Risk"
+      },
+      "title": {
+        "tr": "Teslimat tahmini aşama bazlı, son gerçekleşen adımdan yeniden hesaplanır",
+        "en": "Delivery forecast is stage-based and recalculated from the last completed step"
+      },
+      "body": {
+        "tr": "Yoldaki parsiyelin ETA'sı artık tek bir ortalama yol süresiyle değil, son gerçekleşen kilometre taşından (Handover, Fiili Yükleme, ETA, gümrük adımları) kalan sürenin geçmiş dağılımıyla hesaplanır. Erken biten aşama tahmini öne çeker; ortalamayı aşan ve hâlâ gerçekleşmeyen aşama tahmini ileri iter ve gecikme sebebi olarak gösterilir. Ortalama veya temkinli P80 seçilebilir. Yeni bölüm, statik ETA'ya göre erken/geç gelecek siparişleri ve zamanında varış olasılığını gösterir; detay tablosunda aşama kolonları vardır.",
+        "en": "The ETA of a partial in transit is no longer calculated from a single average lead time but from the historical distribution of the remaining time after the last completed milestone (Handover, actual loading, ETA, customs steps). A stage that finishes early brings the forecast forward; a stage that exceeds its average and is still open pushes it out and is shown as the delay reason. Average or conservative P80 can be selected. A new section shows orders expected earlier/later than the static ETA and the on-time probability; the detail table has stage columns."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-stage-eta-forecast.png",
+        "alt": {
+          "tr": "Demo Backlog verisinde Aşama Bazlı Tahmin kartları",
+          "en": "Stage-Based Forecast cards on demo Backlog data"
+        },
+        "caption": {
+          "tr": "Demo veride aşama ETA'sıyla hesaplanan siparişler, ortalamayı aşan koşan aşamalar ve statik ETA'ya göre erken/geç dağılımı.",
+          "en": "On demo data: orders calculated with the stage ETA, current stages over their average, and the earlier/later split versus the static ETA."
+        }
+      }
+    },
+    {
+      "id": "transit-stage-model-ias",
+      "type": "improvement",
+      "module": {
+        "tr": "Yol Süreleri · İthalat Yol Süresi Analizi",
+        "en": "Transit Times · Import Lead Time Analysis"
+      },
+      "title": {
+        "tr": "Aşama süreleri doğrudan IAS'tan; rapor Excel'i içe aktarma kaldırıldı",
+        "en": "Stage durations come straight from IAS; report Excel import removed"
+      },
+      "body": {
+        "tr": "Yükleme Talep → Handover → Cut Off → Fiili Yükleme → ETA → Özet Beyan → Ambar Onay → Transit Beyanname → Antrepo Giriş aşamalarının ortalama ve P80 süreleri IAS parsiyellerinin gerçekleşen tarihlerinden hesaplanır. Evrak süreci paralel olduğu için toplam süreye eklenmez; geç teslim oranı ayrıca gösterilir. \"Risk hesabına uygula\" ile model Teslimat Riski'nde kullanılır. Kural önerisi artık Handover → Antrepo süresini parsiyel bazında ölçer; üretici teslim süresi iki kez sayılmaz.",
+        "en": "Average and P80 durations of the Loading Request → Handover → Cut-off → Actual Loading → ETA → Summary Declaration → Warehouse Approval → Transit Declaration → Antrepo Entry stages are calculated from the realized dates of IAS partials. The document process runs in parallel, so it is not added to the total; its late-delivery share is shown separately. \"Apply to risk calculation\" makes Delivery Risk use the model. The rule suggestion now measures Handover → Antrepo per partial, so the supplier handover time is not counted twice."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "transit-stage-model.png",
+        "alt": {
+          "tr": "Demo IAS verisinden aşama süre modeli tablosu",
+          "en": "Stage duration model table from demo IAS data"
+        },
+        "caption": {
+          "tr": "Demo IAS parsiyellerinden ülke × taşıt bazında aşama süreleri, Handover → Antrepo ve evrak geç oranı.",
+          "en": "Stage durations by country × vehicle from demo IAS partials, Handover → Antrepo and the late-document share."
+        }
+      }
+    },
+    {
       "id": "override-save-independent-of-background-compute",
       "type": "fix",
       "module": {"tr": "CP · Siparişler · License Royalty", "en": "CP · Orders · License Royalty"},

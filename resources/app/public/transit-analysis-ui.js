@@ -1,10 +1,11 @@
 /* Buyer Log — Yol Süreleri › İthalat Yol Süresi Analizi paneli.
  *
  * Yol Süreleri penceresi açıldığında lazy yüklenir (perf-runtime: transitAnalysis).
- * Analiz Excel'i istemcide okunur (BLTransitAnalysis.parseWorkbook), sunucuda tek
- * merkezde saklanır (/api/transit-analysis). Panel kuralları KENDİSİ KAYDETMEZ:
- * seçili öneriler pencerenin çalışma listesine aktarılır, kullanıcı mevcut
- * "Kuralları Kaydet" akışıyla onaylar. */
+ * Süreler doğrudan IAS (Antrepo) parsiyellerinden hesaplanır (/api/transit-analysis/live).
+ * Aşama süre modeli sunucuda aynı parsiyellerden kurulup tek merkezde saklanır
+ * (/api/transit-analysis/stage-model); Backlog Teslimat Riski ETA'yı bununla hesaplar.
+ * Panel kuralları KENDİSİ KAYDETMEZ: seçili öneriler pencerenin çalışma listesine
+ * aktarılır, kullanıcı mevcut "Kuralları Kaydet" akışıyla onaylar. */
 (function attachTransitAnalysisUI(global) {
   'use strict';
 
@@ -13,9 +14,9 @@
   const L = (tr, en) => (isEn() ? en : tr);
   const loc = () => (isEn() ? 'en-GB' : 'tr-TR');
   const lang = () => (isEn() ? 'en' : 'tr');
-  const LOCAL_KEY = 'lcw.transitAnalysis.v1';
   const VIEW_KEY = 'lcw.transitAnalysis.view.v1';
-  const store = { loaded: false, analysis: null, revision: 0, pending: null };
+  // Kayıtlı aşama süre modeli (risk hesabının okuduğu).
+  const store = { loaded: false, model: null, revision: 0, pending: null };
   // Excel'siz varsayılan kaynak: Buyer Log'un ASAS + IAS verisinden canlı hesap.
   const live = { loaded: false, analysis: null, message: '', meta: null, warnings: [], params: '', pending: null };
 
@@ -59,7 +60,7 @@
         const data=await res.json().catch(()=>({}));
         if(!res.ok)result.message=L(data.error||res.statusText,data.errorEn||data.error||res.statusText);
         else{
-          result.analysis=data.analysis||null;result.messageTr=data.message||'';result.messageEn=data.messageEn||data.message||'';result.message=L(result.messageTr,result.messageEn);
+          result.analysis=data.analysis||null;result.stageModel=SM()?SM().normalizeModel(data.stageModel):null;result.messageTr=data.message||'';result.messageEn=data.messageEn||data.message||'';result.message=L(result.messageTr,result.messageEn);
           result.warnings=Array.isArray(data.warnings)?data.warnings:[];result.diag=data.diag||null;
           result.meta={antrepoSourceMode:data.antrepoSourceMode||'',orderCount:Number(data.orderCount)||0};
           if(generation===liveGeneration)rememberLive(key,result);
@@ -75,6 +76,7 @@
   }
 
   function TA() { return global.BLTransitAnalysis; }
+  function SM() { return global.BLTransitStageModel; }
   function esc(value) {
     return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
@@ -122,51 +124,42 @@
       if (global.SERVER_BACKED) {
         const res = await fetch('/api/transit-analysis', { headers: { Accept: 'application/json' } });
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.error || res.statusText);
-        store.analysis = TA().normalizeAnalysis(data.analysis);
+        if (!res.ok) throw new Error(L(data.error || res.statusText, data.errorEn || data.error || res.statusText));
+        store.model = SM() ? SM().normalizeModel(data.analysis) : null;
         store.revision = Number(data.revision) || 0;
-      } else {
-        try { store.analysis = TA().normalizeAnalysis(JSON.parse((global.BLStorage || global.localStorage).getItem(LOCAL_KEY) || 'null')); }
-        catch (_) { store.analysis = null; }
-      }
+      } else store.model = null;
       store.loaded = true;
       return store;
     })().finally(() => { store.pending = null; });
     return store.pending;
   }
 
-  async function save(analysis) {
-    const clean = analysis == null ? null : TA().normalizeAnalysis(analysis);
-    if (global.SERVER_BACKED) {
-      const res = await fetch('/api/transit-analysis', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'If-Match': String(store.revision || 0), ...(global.BL_CLIENT_ID ? { 'X-Client-Id': global.BL_CLIENT_ID } : {}) },
-        body: JSON.stringify({ analysis: clean }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || res.statusText);
-      store.analysis = TA().normalizeAnalysis(data.analysis);
-      store.revision = Number(data.revision) || store.revision;
-    } else {
-      try {
-        const storage = global.BLStorage || global.localStorage;
-        if (clean) storage.setItem(LOCAL_KEY, JSON.stringify(clean)); else storage.removeItem(LOCAL_KEY);
-      } catch (_) {}
-      store.analysis = clean;
-    }
+  /* Model istemciden yazılmaz: sunucu aynı kapsam + pencereden kendisi kurar. */
+  async function saveModel(params) {
+    const res = await fetch('/api/transit-analysis/stage-model', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'If-Match': String(store.revision || 0), ...(global.BL_CLIENT_ID ? { 'X-Client-Id': global.BL_CLIENT_ID } : {}) },
+      body: JSON.stringify({ scope: 'company', window: params.window || 'y1' }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(L(data.error || res.statusText, data.errorEn || data.error || res.statusText));
+    store.model = SM() ? SM().normalizeModel(data.analysis) : null;
+    store.revision = Number(data.revision) || store.revision;
     store.loaded = true;
-    return store.analysis;
+    return store.model;
   }
-
-  async function readWorkbookFile(file) {
-    if (global.BLPerf && global.BLPerf.ensureLibrary) await global.BLPerf.ensureLibrary('xlsx');
-    if (!global.XLSX) throw new Error(L('Excel okuyucu yüklenemedi.', 'The Excel reader could not be loaded.'));
-    const wb = await global.BLFileParser.readWorkbook(file, { type: 'array', cellDates: false });
-    const sheets = wb.SheetNames.map(name => ({
-      name,
-      rows: global.XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, raw: true, defval: null }),
-    }));
-    return TA().parseWorkbook(sheets, { fileName: file.name, importedAt: new Date().toISOString() });
+  async function removeModel() {
+    const res = await fetch('/api/transit-analysis', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'If-Match': String(store.revision || 0), ...(global.BL_CLIENT_ID ? { 'X-Client-Id': global.BL_CLIENT_ID } : {}) },
+      body: JSON.stringify({ analysis: null }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(L(data.error || res.statusText, data.errorEn || data.error || res.statusText));
+    store.model = null;
+    store.revision = Number(data.revision) || store.revision;
+    store.loaded = true;
+    return null;
   }
 
   function stackedBar(row, scale) {
@@ -204,15 +197,16 @@
      Kart iskeleti (başlık + kaynak + araç çubuğu) her durumda çizilir; yükleme,
      boş sonuç ve hata yalnız gövdeyi değiştirir. Böylece kapsam/tarih/Yenile
      kontrolleri hiçbir durumda kaybolmaz. */
-  const VIEW_VERSION = 2;
+  const VIEW_VERSION = 3;
   function mount(container, ctx) {
     if (!container || !TA()) return null;
     const saved = readView();
-    const view = { source: 'database', scope: 'company', window: 'y1', basis: '', year: '', vehicle: '*', metric: 'endToEnd', stat: 'mean', collapsed: false, bufferDays: 0, bufferPct: 0,
-      ...saved, v: VIEW_VERSION };
+    const view = { scope: 'company', window: 'y1', basis: '', year: '', vehicle: '*', metric: 'handoverToWarehouse', stat: 'mean', collapsed: false, bufferDays: 0, bufferPct: 0,
+      ...saved, source: 'database', v: VIEW_VERSION };
     // v2: varsayılan kapsam modülün kendi IAS database ufkudur.
-    if (saved.v !== VIEW_VERSION) view.scope = 'company';
-    if (!['database', 'excel'].includes(view.source)) view.source = 'database';
+    // v3: Excel kaynağı kaldırıldı; kurala esas varsayılanı Handover → Antrepo
+    //     (Backlog ETA'sı Handover/Ex-Factory'ye eklenir, Yükleme Talep'e değil).
+    if (saved.v !== VIEW_VERSION) { view.scope = 'company'; view.metric = 'handoverToWarehouse'; }
     if (!['filtered', 'company'].includes(view.scope)) view.scope = 'company';
     if (!TA().WINDOW_KEYS.includes(view.window)) view.window = 'y1';
     if (!['shipment', 'qty'].includes(view.weight)) view.weight = 'shipment';
@@ -255,11 +249,6 @@
       return notes.length ? `<div class="trxNote">${notes.map(esc).join(' · ')}</div>` : '';
     }
 
-    function sourceSeg() {
-      const b = (id, label) => `<button type="button" data-ta-source="${id}" aria-pressed="${view.source === id}">${label}</button>`;
-      return `<div class="trxSeg" role="group" aria-label="${esc(L('Kaynak', 'Source'))}">${b('database', L('IAS verisi', 'IAS data'))}${b('excel', L('Rapor Excel\'i', 'Report Excel'))}</div>`;
-    }
-
     function dbToolbar() {
       const seg = (id, label, title) => `<button type="button" data-ta-scope="${id}" aria-pressed="${view.scope === id}" title="${esc(title)}">${label}</button>`;
       const group = (label, keys) => `<optgroup label="${esc(label)}">${keys.map(k => `<option value="${k}" ${view.window === k ? 'selected' : ''}>${esc(TA().windowLabel(k, lang()))}</option>`).join('')}</optgroup>`;
@@ -283,19 +272,51 @@
       </div>`;
     }
 
-    function excelToolbar(analysis) {
-      const years = analysis ? TA().options(analysis, view.basis || undefined).years : [];
-      return `<div class="trxToolbar">
-        ${analysis ? `<label class="trxInline"><span>${L('Yıl', 'Year')}</span><select class="trxSelect" data-ta-view="year">${years.map(y => opt(y, y, view.year)).join('')}</select></label>
-        <span class="trxMeta">${esc(analysis.fileName || 'Excel')} · ${esc(new Date(analysis.importedAt).toLocaleDateString(loc()))}${analysis.importedBy ? ' · ' + esc(analysis.importedBy) : ''}</span>` : `<span class="trxMeta">${L('Global Lojistik "İthalat Yol Süresi Raporu" Excel\'ini yükleyin.', 'Upload the Global Logistics "İthalat Yol Süresi Raporu" Excel.')}</span>`}
-        <span class="trxGrow"></span>
-        <label class="trxBtn" style="cursor:pointer;"><svg class="ic"><use href="#i-file-import"/></svg><span>${busy ? L('Okunuyor…', 'Reading…') : (analysis ? L('Yeni Excel', 'New Excel') : L('Excel Yükle', 'Upload Excel'))}</span><input type="file" data-ta-file accept=".xlsx,.xlsm,.xls" hidden ${busy ? 'disabled' : ''}></label>
-        ${analysis ? `<button type="button" class="trxBtn" data-ta-clear title="${esc(L('Kayıtlı analizi kaldır (kurallar değişmez)', 'Remove the saved analysis (rules are unchanged)'))}"><svg class="ic"><use href="#i-trash"/></svg></button>` : ''}
+    /* Risk hesabının aşama modeli: önizleme bu ekrandaki IAS parsiyellerinden
+       (aynı kapsam + ufuk), kaydedilen model tek merkezdedir. Kritik yol
+       aşamaları sıralıdır; evrak süreci paralel olduğu için toplam süreye
+       eklenmez, yalnız ETA'dan sonra teslim edildiyse gümrüğü bekletir. */
+    let modelBusy = false;
+    function stageModelHtml() {
+      if (!SM()) return '';
+      const preview = live.stageModel;
+      const saved = store.model;
+      const canWrite = !!global.SERVER_BACKED;
+      const stat = view.stat === 'p80' ? 'p80' : 'mean';
+      const codes = SM().STAGES.map(st => st.code);
+      const groups = (preview ? preview.groups : []).filter(g => g.scope === 'country'
+        && (view.vehicle === '*' || TA().ruleVehicle(g.vehicle) === TA().ruleVehicle(view.vehicle)))
+        .sort((a, b) => b.n - a.n).slice(0, 40);
+      const cell = d => (d ? `<span title="${esc(L(`Ortalama ${fmt(d.mean)} · P80 ${fmt(d.p80)} · ${d.n} parsiyel`, `Average ${fmt(d.mean)} · P80 ${fmt(d.p80)} · ${d.n} partials`))}">${fmt(d[stat])}</span>` : '—');
+      const body = groups.map(g => `<tr>
+          <td><span class="trxBadge">${esc(vehicleLabel(g.vehicle, live.analysis))}</span></td>
+          <td><strong>${esc(TA().countryRuleName(g.country))}</strong></td>
+          <td class="num">${g.n.toLocaleString(loc())}</td>
+          ${codes.map(code => `<td class="num">${cell(g.stages[code])}</td>`).join('')}
+          <td class="num"><strong>${cell(g.remaining.handover)}</strong></td>
+          <td class="num">${g.docsLateShare == null ? '—' : esc((g.docsLateShare * 100).toLocaleString(loc(), { maximumFractionDigits: 0 })) + '%'}</td>
+        </tr>`).join('');
+      const savedText = saved
+        ? L(`Risk hesabında kullanılan model: ${new Date(saved.generatedAt).toLocaleString(loc())}${saved.generatedBy ? ' · ' + saved.generatedBy : ''} · ${TA().windowLabel(saved.window, lang())} · ${saved.stats.used.toLocaleString(loc())} parsiyel`,
+          `Model used by the risk calculation: ${new Date(saved.generatedAt).toLocaleString(loc())}${saved.generatedBy ? ' · ' + saved.generatedBy : ''} · ${TA().windowLabel(saved.window, 'en')} · ${saved.stats.used.toLocaleString(loc())} partials`)
+        : L('Kayıtlı aşama modeli yok: Backlog Teslimat Riski tek kural gününe göre hesaplanıyor.', 'No saved stage model: Backlog Delivery Risk is calculated with the single rule duration.');
+      const head = codes.map(code => `<th class="num" title="${esc(SM().stageLabel(code, lang()))}">${esc(code)}</th>`).join('');
+      return `<div class="trxStageModel">
+        <div class="trxToolbar">
+          <div><div class="trxH">${L('Aşama süre modeli (risk hesabı)', 'Stage duration model (risk calculation)')}</div>
+            <div class="trxSub">${L('Kritik yol aşamaları birbirini bekler; Backlog ETA\'sı son gerçekleşen kilometre taşından kalan sürenin dağılımıyla hesaplanır. Gösterilen istatistik:', 'Critical-path stages wait for each other; the Backlog ETA is calculated from the last realized milestone with the remaining-time distribution. Statistic shown:')} ${esc(TA().labels(lang()).ruleStat[stat])}</div></div>
+          <span class="trxGrow"></span>
+          ${canWrite ? `<button type="button" class="trxBtn trxBtnPrimary" data-ta-model-save ${modelBusy || !preview || view.scope !== 'company' ? 'disabled' : ''} title="${esc(view.scope !== 'company' ? L('Paylaşılan model yalnız IAS Database kapsamından kaydedilir; kapsamı IAS Database yapın.', 'The shared model is saved only from the IAS Database scope; switch the scope to IAS Database.') : L('Modeli şirket geneli IAS verisi ve modül ufkuyla sunucuda yeniden kurar ve risk hesabına uygular (iş kuralı yetkisi gerekir).', 'Rebuilds the model on the server from company-wide IAS data and the module horizon and applies it to the risk calculation (business rules permission required).'))}"><svg class="ic"><use href="#i-check"/></svg><span>${modelBusy ? L('Kaydediliyor…', 'Saving…') : L('Risk hesabına uygula', 'Apply to risk calculation')}</span></button>` : ''}
+          ${canWrite && saved ? `<button type="button" class="trxBtn" data-ta-model-remove ${modelBusy ? 'disabled' : ''} title="${esc(L('Modeli kaldır: risk hesabı tek kural gününe döner', 'Remove the model: the risk calculation returns to the single rule duration'))}"><svg class="ic"><use href="#i-trash"/></svg></button>` : ''}
+        </div>
+        <div class="trxNote">${esc(savedText)}</div>
+        ${groups.length ? `<div class="trxTableWrap"><table class="trxTable trxMini"><thead><tr><th>${L('Taşıt', 'Vehicle')}</th><th>${L('Ülke', 'Country')}</th><th class="num">${L('Parsiyel', 'Partials')}</th>${head}<th class="num" title="${esc(L('Handover\'dan antrepo girişine kalan süre (parsiyel bazında doğrudan ölçülür)', 'Remaining time from Handover to antrepo entry (measured directly per partial)'))}">${L('Handover → Antrepo', 'Handover → Antrepo')}</th><th class="num" title="${esc(L('Evrakı ETA\'dan sonra teslim edilen parsiyel oranı (paralel süreç gümrüğü bekletir)', 'Share of partials whose documents arrived after the ETA (the parallel process delays customs)'))}">${L('Evrak geç', 'Docs late')}</th></tr></thead><tbody>${body}</tbody></table></div>
+        <div class="trxNote" data-no-i18n>${esc(SM().STAGES.map(st => `${st.code}: ${SM().stageLabel(st.code, lang())}`).join(' · '))}</div>` : `<div class="trxNote">${esc(L('Bu kapsamda aşama tarihleri olan ve antrepoya girmiş parsiyel yok.', 'No partials with stage dates and a warehouse entry in this scope.'))}</div>`}
       </div>`;
     }
 
     function bodyHtml(analysis) {
-      const isDb = view.source === 'database';
+      const isDb = true;
       if (isDb && busyLive && !analysis) return `<div class="trxEmpty">${view.scope === 'company' ? L('IAS database sorgulanıyor…', 'Querying the IAS database…') : L('Hesaplanıyor…', 'Calculating…')}</div>`;
       if (isDb && errorText) return `<div class="trxEmpty trxError">${esc(errorText)}</div>`;
       if (isDb && !(analysis && analysis.records && analysis.records.length)) {
@@ -304,8 +325,7 @@
           : L('IAS verisi okunuyor…', 'Reading IAS data…'));
         return `<div class="trxEmpty">${esc(msg)}${statsLine(analysis) ? `<div class="trxNote">${esc(statsLine(analysis))}</div>` : ''}${columnNotes(analysis)}</div>`;
       }
-      if (!isDb && !analysis) return '';
-      return tableHtml(analysis);
+      return tableHtml(analysis) + stageModelHtml();
     }
 
     function tableHtml(analysis) {
@@ -376,19 +396,16 @@
     }
 
     function render() {
-      const analysis = view.source === 'database' ? live.analysis : store.analysis;
+      const analysis = live.analysis;
       const title = L('İthalat Yol Süresi Analizi', 'Import Lead Time Analysis');
-      const sub = view.source === 'database'
-        ? L('Ülke × taşıt süreleri IAS database\'inden hesaplanır; seçilen öneriler aşağıdaki kurallara aktarılır.', 'Country × vehicle lead times are calculated from the IAS database; selected suggestions are transferred to the rules below.')
-        : L('Global Lojistik rapor Excel\'inden ülke × taşıt süreleri.', 'Country × vehicle lead times from the Global Logistics report Excel.');
+      const sub = L('Ülke × taşıt ve aşama süreleri IAS parsiyellerinin gerçekleşen tarihlerinden hesaplanır; seçilen öneriler aşağıdaki kurallara aktarılır, aşama modeli risk hesabına uygulanır.', 'Country × vehicle and stage durations are calculated from the realized dates of IAS partials; selected suggestions are transferred to the rules below and the stage model is applied to the risk calculation.');
       container.innerHTML = `<section class="trxCard${view.collapsed ? ' is-collapsed' : ''}">
         <div class="trxCardHead">
           <button type="button" class="trxCollapse" data-ta-collapse aria-expanded="${!view.collapsed}" title="${esc(view.collapsed ? L('Aç', 'Expand') : L('Daralt', 'Collapse'))}">${view.collapsed ? '▸' : '▾'}</button>
           <div class="trxCardTitle"><div class="trxH">${title}</div><div class="trxSub">${sub}</div></div>
-          ${sourceSeg()}
         </div>
-        ${view.collapsed ? '' : `<div class="trxDisclosureBody">${view.source === 'database' ? dbToolbar() : excelToolbar(analysis)}
-        ${view.source === 'database' && live.warnings && live.warnings.length ? `<div class="trxWarn">${live.warnings.map(w => esc(w && typeof w === 'object' ? L(w.tr, w.en || w.tr) : String(w))).join(' · ')}</div>` : ''}
+        ${view.collapsed ? '' : `<div class="trxDisclosureBody">${dbToolbar()}
+        ${live.warnings && live.warnings.length ? `<div class="trxWarn">${live.warnings.map(w => esc(w && typeof w === 'object' ? L(w.tr, w.en || w.tr) : String(w))).join(' · ')}</div>` : ''}
         <div class="trxCardBody">${bodyHtml(analysis)}</div></div>`}
       </section>`;
       bindAll();
@@ -416,13 +433,6 @@
         if (global.BLMotionPlus?.disclosure) global.BLMotionPlus.disclosure(body, !view.collapsed, { trigger: button, ...(!view.collapsed ? { fromHeight: 0 } : {}) });
         else if (body) body.hidden = view.collapsed;
       });
-      qa('[data-ta-source]').forEach(el => el.addEventListener('click', () => {
-        if (view.source === el.dataset.taSource) return;
-        view.source = el.dataset.taSource; view.basis = ''; view.year = ''; view.vehicle = '*';
-        selected.clear(); writeView(view);
-        if (view.source === 'database') reloadLive(false);
-        else load().then(render).catch(err => { toast(err.message); render(); });
-      }));
       q('[data-ta-refresh]')?.addEventListener('click', () => reloadLive(true));
       qa('[data-ta-scope]').forEach(el => el.addEventListener('click', () => {
         if (view.scope === el.dataset.taScope || busyLive) return;
@@ -463,50 +473,52 @@
           `${result.added} rule(s) added, ${result.updated} updated${result.unchanged ? `, ${result.unchanged} unchanged` : ''}. Use "Save Rules" to keep them.`));
         render();
       });
-      q('[data-ta-clear]')?.addEventListener('click', async () => {
-        if (!global.confirm(L('Kayıtlı yol süresi analizi kaldırılsın mı? Yol Süreleri kuralları değişmez.', 'Remove the saved lead time analysis? Transit time rules are not changed.'))) return;
-        try { await save(null); selected.clear(); render(); toast(L('Yol süresi analizi kaldırıldı.', 'Lead time analysis removed.')); }
-        catch (err) { toast(L('Analiz kaldırılamadı: ', 'Could not remove the analysis: ') + err.message); }
-      });
-      qa('[data-ta-file]').forEach(input => input.addEventListener('change', async () => {
-        const file = input.files && input.files[0];
-        input.value = '';
-        if (!file || busy) return;
-        busy = true; render();
+      q('[data-ta-model-save]')?.addEventListener('click', async () => {
+        if (modelBusy) return;
+        modelBusy = true; render();
         try {
-          const parsed = await readWorkbookFile(file);
-          if (!parsed) throw new Error(L('Rapor yapısı tanınmadı: "Ürün Menşei" ve "Yıl Ay/Hafta" başlıklı pivot sayfası bulunamadı.', 'Report layout not recognised: no pivot sheet with "Ürün Menşei" and "Yıl Ay/Hafta" headers was found.'));
-          await save(parsed);
-          selected.clear(); view.basis = ''; view.year = '';
-          toast(L(`${parsed.records.length} ülke/dönem kaydı okundu (${parsed.sources.length} kaynak pivot).`, `${parsed.records.length} country/period record(s) read (${parsed.sources.length} source pivot(s)).`));
-        } catch (err) {
-          toast(L('Analiz yüklenemedi: ', 'Could not load the analysis: ') + err.message);
-        } finally { busy = false; render(); }
-      }));
+          const model = await saveModel(liveParams());
+          toast(L(`Aşama modeli kaydedildi (${model ? model.stats.used.toLocaleString(loc()) : 0} parsiyel). Backlog Teslimat Riski yeniden hesaplanacak.`,
+            `Stage model saved (${model ? model.stats.used.toLocaleString(loc()) : 0} partials). Backlog Delivery Risk will be recalculated.`));
+          if (typeof global.loadFromServer === 'function') void global.loadFromServer(false);
+        } catch (err) { toast(L('Aşama modeli kaydedilemedi: ', 'Could not save the stage model: ') + err.message); }
+        finally { modelBusy = false; render(); }
+      });
+      q('[data-ta-model-remove]')?.addEventListener('click', async () => {
+        if (modelBusy) return;
+        if (!global.confirm(L('Aşama modeli kaldırılsın mı? Backlog Teslimat Riski tek kural gününe göre hesaplanır.', 'Remove the stage model? Backlog Delivery Risk will be calculated with the single rule duration.'))) return;
+        modelBusy = true; render();
+        try {
+          await removeModel();
+          toast(L('Aşama modeli kaldırıldı.', 'Stage model removed.'));
+          if (typeof global.loadFromServer === 'function') void global.loadFromServer(false);
+        } catch (err) { toast(L('Aşama modeli kaldırılamadı: ', 'Could not remove the stage model: ') + err.message); }
+        finally { modelBusy = false; render(); }
+      });
     }
 
     // Pencere her açıldığında yeniden hesaplanır (IAS sorgusu sunucuda 15 dk
     // önbellekli; "Yenile" önbelleği atlar).
     live.loaded = false;
-    if (view.source === 'database') reloadLive(false);
-    else { render(); load().then(render).catch(err => { toast(err.message); render(); }); }
-    return { refresh: () => (view.source === 'database' ? reloadLive(true) : load(true).then(render)), render };
+    reloadLive(false);
+    load().then(render).catch(err => { toast(err.message); render(); });
+    return { refresh: () => { reloadLive(true); load(true).then(render).catch(() => {}); }, render };
   }
 
   function invalidate({liveOnly=false}={}) { if(!liveOnly)store.loaded=false;live.loaded=false;live.pending=null;live.pendingKey='';liveSnapshots.clear();++liveGeneration;++liveRequestSeq; }
   // Kural düzenleyicisi IAS analizindeki ülke ve taşıt sözlüğünü de sunar.
   function knownCountries() {
     const names = new Set();
-    [live.analysis, store.analysis].forEach(a => (a && Array.isArray(a.records) ? a.records : [])
-      .forEach(r => { const name = TA() && TA().countryRuleName(r.country); if (name) names.add(name); }));
+    (live.analysis && Array.isArray(live.analysis.records) ? live.analysis.records : [])
+      .forEach(r => { const name = TA() && TA().countryRuleName(r.country); if (name) names.add(name); });
     return [...names];
   }
   function knownVehicles() {
     const names = new Set();
-    [live.analysis, store.analysis].forEach(a => (a && Array.isArray(a.records) ? a.records : [])
-      .forEach(r => { const name = TA() && TA().ruleVehicle(r.vehicle); if (name) names.add(name); }));
+    (live.analysis && Array.isArray(live.analysis.records) ? live.analysis.records : [])
+      .forEach(r => { const name = TA() && TA().ruleVehicle(r.vehicle); if (name) names.add(name); });
     return [...names].sort((a, b) => a.localeCompare(b, 'tr'));
   }
 
-  global.BLTransitAnalysisUI = { mount, load, loadLive, save, invalidate, readWorkbookFile, knownCountries, knownVehicles };
+  global.BLTransitAnalysisUI = { mount, load, loadLive, saveModel, removeModel, invalidate, knownCountries, knownVehicles };
 })(typeof window !== 'undefined' ? window : globalThis);

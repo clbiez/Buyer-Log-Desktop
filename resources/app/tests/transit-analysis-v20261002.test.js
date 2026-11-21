@@ -24,85 +24,31 @@ const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 
 test.after(() => fs.rmSync(root, { recursive: true, force: true }));
 
-function filters(vehicle, basisLabel = 'Fiili Yükleme Yıl') {
-  return [
-    ['Dolum Şekli', 'All'],
-    [basisLabel, '2025'],
-    ['Vasita Tanim', vehicle],
-    ['Final Destination', 'Antrepo'],
-    [],
-  ];
-}
-
-const monthlyMain = {
-  name: '1.2.Ant_Yük.Ay_Ana Süreç',
-  rows: [
-    ...filters('Gemi'),
-    [null, null, 'Değerler'],
-    ['Fiili Yükleme Yıl Ay', 'Ürün Menşei', 'Yükleme Süresi', 'Fiili Yükleme - ETA', 'Yol Süresi', 'Gümrük Süresi (Antrepo)', 'Uçtan Uca Yol Süresi', 'Yükleme Toplam Adet', 'Antrepo/Depo Kabul Oranı'],
-    [202501, 'BANGLADEŞ', 10, 50, 50, 5, 65, 3000, 1],
-    [202502, 'BANGLADEŞ', 12, 48, 48, 5, 65, 1000, 1],
-    [202503, 'BANGLADEŞ', 14, 54, 54, 7, 75, 1000, 1],
-    [202501, 'KAMBOÇYA', 10, 60, 60, 4, 74, 6000, 1],
-    [202501, 'MISIR', 11, -2, -2, 8, 17, 90000, 1],
-    [202502, 'MISIR', 11, -2, -2, 8, 17, 90000, 1],
-    [202503, 'MISIR', 11, -2, -2, 8, 17, 90000, 1],
-    [202502, null, null, null, null, null, null, 928],
-    ['Genel Toplam', null, 11, 50, 50, 5, 66, 999999, 1],
-  ],
-};
-
-// Aynı veri haftalık kırılımda: aylık sayfa varken kullanılmamalı.
-const weeklyDuplicate = {
-  name: '2.1.Ant_Yük.Haft.-Ana Süreç',
-  rows: [
-    ...filters('Gemi'),
-    ['Fiili Yükleme Yıl Hafta', 'Ürün Menşei', 'Yükleme Süresi', 'Yol Süresi', 'Gümrük Süresi (Antrepo)', 'Uçtan Uca Yol Süresi', 'Yükleme Toplam Adet'],
-    [202501, 'BANGLADEŞ', 99, 99, 99, 297, 5000],
-  ],
-};
-
-const weeklySteps = {
-  name: '2.2.Ant_Yük.Haft.-Alt Süreç',
-  rows: [
-    ['ANA SÜREÇLER'],
-    ...filters('Gemi'),
-    [null, null, null, 'YÜKLEME SÜRESİ', null, null, null, 'YOL SÜRESİ'],
-    [null, null, 'Değerler'],
-    ['Fiili Yükleme Yıl Hafta', 'Ürün Menşei', '1.2. Yükleme İthalat Onay Tarihi - Yükleme Talep Tarihi', '1. Yükleme Talep - HandOver', '2. Handover Tarihi - CutOff Tarihi', '4. Fiili Yükleme - ETA', '5. Özet Beyan Onay Tarihi-ETA Tarihi', 'Yükleme Süresi', 'Yol Süresi', 'Gümrük Süresi (Antrepo)', 'Uçtan Uca Yol Süresi', 'Yükleme Toplam Adet'],
-    [202501, 'BANGLADEŞ', 1, 4, 3, 50, 1, 10, 50, 5, 65, 1000],
-    [202502, 'BANGLADEŞ', 1, 2, 3, 50, 1, 10, 50, 5, 65, 3000],
-  ],
-};
-
-// Vasita = All: taşıt karışık; analizde görünür ama kurala aktarılamaz.
-const mixedVehicle = {
-  name: '4.1.Ant_DepoHaft_Alt Süreç (2)',
-  rows: [
-    ...filters('All', 'Tema Depo Giriş Yıl'),
-    ['Ürün Menşei', 'Tema Depo Giriş Yıl Hafta', 'Yükleme Süresi', 'Yol Süresi', 'Gümrük Süresi (Antrepo)', 'Uçtan Uca Yol Süresi', 'Yükleme Toplam Adet'],
-    ['ÇİN', 202601, 15, 40, 5, 60, 2000],
-  ],
-};
-
-const explanations = { name: 'Açıklamalar', rows: [['BAŞLIK', 'AÇIKLAMA / FORMÜL'], ['Yükleme Süresi', 'Yükleme Talep Tarih - Fiili Yükleme Tarih']] };
-
+// Rapor Excel'inin içe aktarılması kaldırıldı (v20261121): ülke × taşıt × dönem
+// kayıtları yalnız IAS parsiyellerinden gelir. Özet/öneri sözleşmesi kalıcı şekil
+// (normalizeAnalysis) üzerinden aynı sayılarla korunur.
 function analysis() {
-  return TA.parseWorkbook([monthlyMain, weeklyDuplicate, weeklySteps, mixedVehicle, explanations], { fileName: 'rapor.xlsx', importedAt: '2026-10-02T08:00:00.000Z' });
+  const rec = (period, country, loading, transit, customs, endToEnd, qty) => ({ basis: 'loading', vehicle: 'Gemi', granularity: 'month', period, country, qty, loading, transit, customs, endToEnd });
+  return TA.normalizeAnalysis({
+    records: [
+      rec('202501', 'BANGLADEŞ', 10, 50, 5, 65, 3000), rec('202502', 'BANGLADEŞ', 12, 48, 5, 65, 1000), rec('202503', 'BANGLADEŞ', 14, 54, 7, 75, 1000),
+      rec('202501', 'KAMBOÇYA', 10, 60, 4, 74, 6000),
+      rec('202501', 'MISIR', 11, -2, 8, 17, 90000), rec('202502', 'MISIR', 11, -2, 8, 17, 90000), rec('202503', 'MISIR', 11, -2, 8, 17, 90000),
+      { basis: 'warehouse', vehicle: '', granularity: 'week', period: '202601', country: 'ÇİN', qty: 2000, loading: 15, transit: 40, customs: 5, endToEnd: 60 },
+    ],
+    steps: [
+      { basis: 'loading', vehicle: 'Gemi', year: '2025', country: 'BANGLADEŞ', code: '1', label: 'Yükleme Talep - HandOver', group: 'loading', days: 2.5, qty: 4000 },
+      { basis: 'loading', vehicle: 'Gemi', year: '2025', country: 'BANGLADEŞ', code: '1.2', label: 'Yükleme İthalat Onay Tarihi - Yükleme Talep Tarihi', group: 'loading', informational: true, days: 1, qty: 4000 },
+      { basis: 'loading', vehicle: 'Gemi', year: '2025', country: 'BANGLADEŞ', code: '5', label: 'Özet Beyan Onay Tarihi-ETA Tarihi', group: 'customs', days: 1, qty: 4000 },
+    ],
+  });
 }
 
-test('pivot sayfaları okunur; tekrar eden haftalık veri aylık varken kullanılmaz', () => {
-  const a = analysis();
-  assert.ok(a);
-  assert.deepEqual(a.parsedSheets, [monthlyMain.name, weeklyDuplicate.name, weeklySteps.name, mixedVehicle.name]);
-  const main = a.sources.filter(s => s.role === 'main');
-  assert.deepEqual(main.map(s => [s.sheet, s.basis, s.vehicle, s.year, s.granularity]), [
-    [monthlyMain.name, 'loading', 'Gemi', '2025', 'month'],
-    [mixedVehicle.name, 'warehouse', '', '2026', 'week'],
-  ]);
-  assert.ok(!a.records.some(r => r.endToEnd === 297), 'haftalık kopya çift sayılmamalı');
-  assert.ok(!a.records.some(r => /GENEL TOPLAM/i.test(r.country)), 'Genel Toplam satırı veri değildir');
-  assert.ok(!a.records.some(r => r.qty === 928), 'ülkesi boş satır atlanır');
+test('Excel içe aktarma yolu kaldırıldı: okuyucu, yükleme düğmesi ve istemci yazımı yok', () => {
+  assert.equal(TA.parseWorkbook, undefined);
+  const ui = read('public/transit-analysis-ui.js');
+  assert.doesNotMatch(ui, /data-ta-file|readWorkbookFile|data-ta-source|parseWorkbook/);
+  assert.doesNotMatch(read('public/transit-analysis.js'), /function parseWorkbook|function parseSheet/);
 });
 
 test('ülke × taşıt özeti adet ağırlıklı ortalama, P80 ve alt süreçleri üretir', () => {
@@ -117,17 +63,13 @@ test('ülke × taşıt özeti adet ağırlıklı ortalama, P80 ve alt süreçler
   assert.equal(bd.loading, (10 * 3000 + 12 * 1000 + 14 * 1000) / 5000);
   assert.equal(bd.p80, 65);
   assert.equal(bd.max, 75);
-  // Alt süreç: 1. adım adet ağırlıklı (4*1000 + 2*3000)/4000 = 2.5
   assert.equal(bd.producerDays, 2.5);
-  assert.deepEqual(bd.steps.map(x => x.code), ['1', '1.2', '2', '4', '5']);
+  assert.deepEqual(bd.steps.map(x => x.code), ['1', '1.2', '5']);
   assert.equal(bd.steps.find(x => x.code === '1.2').informational, true);
-  assert.equal(bd.steps.find(x => x.code === '5').group, 'customs');
-
   const kh = s.rows.find(r => r.ruleCountry === 'Cambodia');
   assert.equal(kh.lowSample, true, 'tek dönem/az adet düşük örneklem sayılır');
   const eg = s.rows.find(r => r.ruleCountry === 'Egypt');
   assert.equal(eg.anomaly, true, 'negatif yol süresi veri tutarsızlığıdır');
-
   const wh = TA.summarize(analysis(), { basis: 'warehouse' });
   assert.equal(wh.year, '2026', 'varsayılan yıl seçili bazdaki en güncel yıldır');
   assert.equal(wh.rows[0].vehicle, '');
@@ -139,6 +81,7 @@ test('öneriler yalnız tarihsiz/sezonsuz ülke-taşıt kuralını ekler/güncel
   assert.deepEqual(suggestions.map(x => [x.delType, x.country, x.days]).sort(), [
     ['Gemi', 'Bangladesh', 67], ['Gemi', 'Cambodia', 74], ['Gemi', 'Egypt', 17],
   ]);
+  // Doğrudan Handover → Antrepo ölçümü olmayan kayıtta uçtan uca − 1. adım yedeği.
   assert.equal(TA.suggestRules(s, { metric: 'handoverToWarehouse' }).find(x => x.country === 'Bangladesh').days, Math.round(67 - 2.5));
   assert.equal(TA.suggestRules(s, { metric: 'loadingToWarehouse' }).find(x => x.country === 'Bangladesh').days, 56); // (55*3000+53*1000+61*1000)/5000 = 55.8
 
@@ -154,8 +97,6 @@ test('öneriler yalnız tarihsiz/sezonsuz ülke-taşıt kuralını ekler/güncel
   assert.equal(result.rules.find(r => r.id === 'dated-bd').days, 90, 'tarih kısıtlı özel kurala dokunulmaz');
   assert.equal(result.rules.find(r => r.id === 'air-bd').days, 15, 'başka taşıt tipine dokunulmaz');
   assert.equal(existing[0].days, 70, 'girdi dizisi mutasyona uğramaz');
-
-  // Kural motoru CP'deki İngilizce ve Excel'deki Türkçe ülke adını aynı kabul eder.
   for (const country of ['Cambodia', 'KAMBOÇYA']) {
     const hit = BR.findTransitRule(result.rules, '2026-05-01', 'SS26', country, 'Gemi');
     assert.equal(hit && hit.days, 74, country);
@@ -165,6 +106,16 @@ test('öneriler yalnız tarihsiz/sezonsuz ülke-taşıt kuralını ekler/güncel
   assert.equal(TA.applySuggestions(result.rules, suggestions).unchanged, 3, 'tekrar aktarım idempotenttir');
 });
 
+test('varsayılan kural ölçüsü Handover → Antrepo ve parsiyel bazında doğrudan ölçülür (üretici teslim süresi iki kez sayılmaz)', () => {
+  const ship = (req, ho, entry) => ({ country: 'PAKİSTAN', vehicle: 'Gemi', qty: 10, arrived: true, loadingRequest: req, handover: ho, warehouseEntry: entry });
+  const a = TA.buildFromShipments([ship('2026-01-01', '2026-01-11', '2026-03-02'), ship('2026-01-01', '2026-01-03', '2026-03-04')], { today: '2026-12-31' });
+  const row = TA.summarize(a, { basis: 'warehouse', year: '*' }).rows[0];
+  assert.equal(row.endToEnd, 61);            // (60 + 62) / 2
+  assert.equal(row.handoverToWarehouse, 55);  // (50 + 60) / 2 — Ex-Factory/Handover'a eklenecek gün
+  const [s] = TA.suggestRules(TA.summarize(a, { basis: 'warehouse', year: '*' }), {});
+  assert.equal(s.days, 55, 'varsayılan öneri uçtan uca (62) değil Handover → Antrepo');
+});
+
 test('normalizeAnalysis bozuk girdiyi reddeder ve kalıcı şekli sınırlar', () => {
   assert.equal(TA.normalizeAnalysis(null), null);
   assert.equal(TA.normalizeAnalysis({ records: [{ basis: 'x', period: '202501', country: 'A', endToEnd: 5 }] }), null);
@@ -172,20 +123,24 @@ test('normalizeAnalysis bozuk girdiyi reddeder ve kalıcı şekli sınırlar', (
   assert.equal(clean.records[0].vehicle, 'Gemi');
   assert.equal(clean.records[0].endToEnd, 12.5);
   assert.equal(clean.records[0].loading, null, 'makul olmayan gün değeri atılır');
-  assert.equal(TA.parseWorkbook([explanations]), null, 'pivot olmayan Excel tanınmaz');
 });
 
-test('analiz sunucuda revizyonlu tek merkezde saklanır', () => {
+test('aşama modeli sunucuda revizyonlu tek merkezde saklanır; eski Excel analizi model sayılmaz', () => {
   const db = require('../server/db');
+  const SM = require('../public/transit-stage-model');
   assert.equal(db.loadOverrides().transitAnalysis, null);
-  const first = db.replaceTransitAnalysis(analysis(), 0);
+  const list = Array.from({ length: 6 }, (_, i) => ({ country: 'Bangladesh', vehicle: 'Gemi', arrived: true, loadingRequest: `2026-0${i + 1}-01`, handover: `2026-0${i + 1}-04`, warehouseEntry: `2026-0${i + 2}-20` }));
+  const model = SM.buildModel(list, { today: '2026-12-31' });
+  const first = db.replaceTransitAnalysis(model, 0);
   assert.equal(first.revision, 1);
-  assert.equal(first.analysis.records.length, analysis().records.length);
+  assert.equal(first.analysis.kind, 'stageModel');
   assert.deepEqual(db.loadOverrides().transitAnalysis, first.analysis);
   assert.throws(() => db.replaceTransitAnalysis(null, 0), err => err.code === 'REVISION_CONFLICT' && err.revisionKey === 'transitAnalysis');
-  const cleared = db.replaceTransitAnalysis(null, 1);
+  const legacy = db.replaceTransitAnalysis(analysis(), 1);
+  assert.equal(legacy.analysis, null, 'eski rapor analizi aşama modeli değildir');
+  const cleared = db.replaceTransitAnalysis(null, 2);
   assert.equal(cleared.analysis, null);
-  assert.equal(cleared.revision, 2);
+  assert.equal(cleared.revision, 3);
 });
 
 test('Yol Süreleri penceresi analizi lazy yükler; sunucu uçları ve senkron alanı bağlıdır', () => {
@@ -197,11 +152,16 @@ test('Yol Süreleri penceresi analizi lazy yükler; sunucu uçları ve senkron a
   assert.match(app, /id="_transitAnalysisMount"/);
   assert.match(app, /ensureFeature\?\.\('transitAnalysis'\)/);
   assert.match(app, /BLTransitAnalysisUI\.mount\(analysisMount,\{getRules:\(\)=>working,applyRules:/);
-  assert.match(perf, /transitAnalysis:\['transit-analysis\.js','transit-analysis-ui\.js'\]/);
+  assert.match(perf, /transitAnalysis:\['transit-analysis\.js','transit-stage-model\.js','transit-analysis-ui\.js'\]/);
   assert.doesNotMatch(read('public/index.html'), /transit-analysis/, 'pencere açılmadan yüklenmez');
   assert.match(server, /app\.get\('\/api\/transit-analysis'/);
   assert.match(server, /app\.put\('\/api\/transit-analysis', userAccess\.requireArea\('source'\), userAccess\.requirePermission\('manageBusinessRules'\)/);
   assert.match(server, /publishSharedMasterChange\('transitAnalysis', req\)/);
+  // Model istemciden yazılmaz: sunucu aynı IAS parsiyellerinden kurar.
+  assert.match(server, /app\.post\('\/api\/transit-analysis\/stage-model', userAccess\.requireArea\('source'\), userAccess\.requirePermission\('manageBusinessRules'\)/);
+  assert.match(server, /transitAnalysisSource\.buildStageModel\(/);
+  assert.match(server, /transitAnalysis:Number\(shared\._revisions && shared\._revisions\.transitAnalysis\) \|\| 0,/, 'model değişince Backlog projeksiyon önbelleği düşer');
+  assert.match(app, /if\(area==='transitAnalysis'\)\{[\s\S]*?loadFromServer\(false\)/, 'model değişince Backlog yeniden okunur');
   assert.match(policy, /'transitAnalysis'/);
   // Panel kuralları kendisi kaydetmez; mevcut "Kuralları Kaydet" akışı kullanılır.
   assert.doesNotMatch(ui, /\/api\/transit-rules/);
@@ -255,7 +215,9 @@ test('IAS parsiyellerinden ülke × taşıt süreleri Excel olmadan hesaplanır'
   const air = s.rows.find(r => r.vehicle === 'Uçak');
   assert.equal(air.ruleCountry, 'India');
   assert.equal(air.endToEnd, 11);
-  assert.deepEqual(TA.suggestRules(s).map(x => [x.delType, x.country, x.days]).sort(), [['Gemi', 'Bangladesh', 78], ['Uçak', 'India', 11]]);
+  assert.deepEqual(TA.suggestRules(s, { metric: 'endToEnd' }).map(x => [x.delType, x.country, x.days]).sort(), [['Gemi', 'Bangladesh', 78], ['Uçak', 'India', 11]]);
+  // Varsayılan: Handover → Antrepo (Backlog ETA'sının çapası), parsiyel bazında ölçülür.
+  assert.deepEqual(TA.suggestRules(s).map(x => [x.delType, x.country, x.days]).sort(), [['Gemi', 'Bangladesh', 77], ['Uçak', 'India', 9]]);
   assert.equal(TA.metricLabels(analysis).endToEnd, 'Yükleme Talep → Antrepo Giriş');
 });
 
@@ -280,9 +242,9 @@ test('canlı uç nokta: Backlog filtresi kapsamı Backlog ile aynı süzmeyi kul
   assert.match(server, /app\.get\('\/api\/transit-analysis\/live', userAccess\.requireAnyArea\('source', 'backlog'\)/);
   assert.match(server, /filterRowsByScope\(req\.currentUser, filterRowsByEffectiveHorizon\(req\.currentUser, 'backlog', ordersForTarget\(active, 'backlog', overrides\)\)\)/);
   assert.match(read('server/lib/transit-analysis-source.js'), /parseLib\.findAntrepoHits\(antrepoMap, order, \{ rule: overrides \}\)/);
-  assert.match(ui, /const view = \{ source: 'database', scope: 'company', window: 'y1'/);
-  // v2 görünüm kaydı: eski "filtered" tercihi bir kez modülün kendi ufkuna döner.
-  assert.match(ui, /if \(saved\.v !== VIEW_VERSION\) view\.scope = 'company';/);
+  assert.match(ui, /const view = \{ scope: 'company', window: 'y1'/);
+  // v3 görünüm kaydı: eski tercih bir kez modülün kendi ufkuna ve Handover → Antrepo ölçüsüne döner.
+  assert.match(ui, /if \(saved\.v !== VIEW_VERSION\) \{ view\.scope = 'company'; view\.metric = 'handoverToWarehouse'; \}/);
   assert.match(ui, /fetch\('\/api\/transit-analysis\/live\?'\s*\+\s*qs\.toString\(\)/);
 });
 
@@ -488,8 +450,8 @@ test('ek sütunla IAS sorgusu düşerse ek sütunsuz yeniden denenir; ikinci hat
 
 test('canlı uç nokta gerçek hatayı iki dilde iletir; IAS sorgusu düşerse Buyer Log IAS satırlarıyla sürer', () => {
   const server = read('server/server.js');
-  const start = server.indexOf("app.get('/api/transit-analysis/live'");
-  const route = server.slice(start, server.indexOf("app.put('/api/transit-analysis', ", start));
+  const start = server.indexOf("async function resolveTransitAnalysisSource(");
+  const route = server.slice(start, server.indexOf("app.post('/api/transit-analysis/stage-model'", start));
   assert.doesNotMatch(route, /apiError\(res, err, 'Yol süresi analizi hesaplanamadı\.'\);\s*\}\s*\}\);\s*$/, 'genel yedek metin gerçek nedeni gizlemez');
   assert.match(route, /error: `Yol süresi analizi hesaplanamadı: \$\{detail\}`, errorEn: `Lead time analysis could not be calculated: \$\{detail\}`/);
   assert.match(route, /error: `IAS database sorgusu başarısız: \$\{detail\}`, errorEn: `IAS database query failed: \$\{detail\}`/);
@@ -604,7 +566,7 @@ test('database\'deki bütün taşıt tipleri ayrı satırdır ve tamamı kendi t
   assert.deepEqual(rows.map(r => [r.vehicle, r.ruleType]), [
     ['Gemi', 'Gemi'], ['Gemi+Uçak', 'Gemi+Uçak'], ['Kurye', 'Kurye'], ['Tır', 'Tır'], ['Uçak+Tır', 'Uçak+Tır'], ['', ''],
   ]);
-  assert.deepEqual(TA.suggestRules({ rows }).map(s => [s.vehicle, s.delType, s.days]), [
+  assert.deepEqual(TA.suggestRules({ rows }, { metric: 'endToEnd' }).map(s => [s.vehicle, s.delType, s.days]), [
     ['Gemi', 'Gemi', 25], ['Gemi+Uçak', 'Gemi+Uçak', 18], ['Kurye', 'Kurye', 4], ['Tır', 'Tır', 9], ['Uçak+Tır', 'Uçak+Tır', 12],
   ]);
   assert.equal(TA.ruleVehicle('Uçak+Tır'), 'Uçak+Tır');
@@ -630,4 +592,23 @@ test('Buffer hesaplanan güne önce yüzde sonra gün olarak eklenir ve kurallar
   assert.match(ui, /data-ta-buffer="bufferPct"/);
   assert.match(ui, /const canSelect = !!row\.ruleType && !!s;/);
   assert.match(ui, /currentRuleDays\(rules, row\.ruleType, row\.ruleCountry\)/);
+});
+
+test('aşama modeli canlı analizle aynı IAS parsiyellerinden kurulur; Backlog kilometre taşları aynı eşlemeden okunur', () => {
+  const parse = require('../server/lib/parse');
+  const source = require('../server/lib/transit-analysis-source');
+  const overrides = require('../server/db').defaultOverrides();
+  const rows = Array.from({ length: 6 }, (_, i) => iasRow({ 'İthalat Dosya No': `S${i}`, 'Ürün Menşei': 'BANGLADEŞ', 'Yükleme Talep Tarih': '2025-01-01', 'HANDOVER Tarihi': '2025-01-05', 'ETA Tarih': `2025-03-${String(10 + i).padStart(2, '0')}`, 'Antrepo Giriş Tarihi': `2025-03-${String(20 + i).padStart(2, '0')}` }));
+  const map = parse.parseAntrepoRows(rows, overrides);
+  const model = source.buildStageModel({ orders: [], antrepoMap: map, overrides, today: '2026-10-02', window: 'all', scope: 'company' });
+  assert.equal(model.kind, 'stageModel');
+  const g = model.groups.find(x => x.scope === 'country');
+  assert.equal(g.n, 6);
+  assert.equal(g.stages['1'].mean, 4);
+  assert.equal(g.remaining.eta.mean, 10);
+  const entry = Object.values(map).find(e => e && e._sourceRow != null);
+  const m = source.milestonesFromEntry(entry);
+  assert.equal(m.loadingRequest, '2025-01-01');
+  assert.equal(m.handover, '2025-01-05');
+  assert.ok(m.warehouseEntry, 'gerçekleşen antrepo girişi okunur');
 });

@@ -132,7 +132,7 @@ function normalizeBacklog(raw){
     const causeKey=String(cause||'').trim().toUpperCase(),ownerKey=clean(owner).toLowerCase();
     if(BACKLOG_ROUTING_CAUSES.has(causeKey)&&BACKLOG_ROUTING_OWNERS.has(ownerKey))routing[causeKey]=ownerKey;
   }
-  return { targetType:clean(item.targetType)==='inStore'?'inStore':'retail', requireTransitRule:item.requireTransitRule!==false, routing };
+  return { targetType:clean(item.targetType)==='inStore'?'inStore':'retail', requireTransitRule:item.requireTransitRule!==false, etaStat:clean(item.etaStat)==='p80'?'p80':'mean', routing };
 }
 function normalizeAppActions(raw){
   const allowed=new Set(['open_page','refresh_source','show_report']);

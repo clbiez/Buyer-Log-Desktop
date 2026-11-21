@@ -42441,9 +42441,10 @@ function refreshSharedMasterClient(area){
     return Promise.resolve(window.BLMerchCalendarRuntime?.reload?.());
   }
   if(area==='transitAnalysis'){
-    // Analiz yalnız Yol Süreleri penceresinde okunur; hesaplamaları etkilemez.
+    // Kayıtlı aşama süre modeli Backlog Teslimat Riski ETA'sını belirler:
+    // pencere önbelleği düşer ve Backlog satırları yeniden okunur.
     window.BLTransitAnalysisUI?.invalidate?.();
-    return Promise.resolve();
+    return typeof loadFromServer==='function' ? loadFromServer(false) : Promise.resolve();
   }
   if(area==='nonDtrManufacturers')return loadFromServer(false).then(()=>window.reloadLflFromCache?.());
   if(['transitRules','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','asasFabricMode','lflSourceMode','noteColumnDefs','importanceSettings','systemSettings'].includes(area)){

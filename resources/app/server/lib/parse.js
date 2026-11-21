@@ -12,6 +12,7 @@ const BLBusinessRules = require('../../public/business-rules');
 const BLOrderImportance = require('../../public/order-importance');
 const BLCanonicalFields = require('./canonical-fields');
 const BLCpReadinessEngine = require('../../public/cp-readiness-engine');
+const BLTransitStageModel = require('../../public/transit-stage-model');
 
 const LICMAP = {};
 ['FC Barcelona', 'Marvel', 'Sonic The Hedgehog', 'Warner Bros', 'Lucas', 'Disney', 'Hotwheels', 'Paris Saint Germain'].forEach(l => LICMAP[l] = 'DTR');
@@ -3437,6 +3438,30 @@ function buildBacklogTemplateRows(asasOrders, antrepoMap, overrides, filterOrOco
   return rows;
 }
 
+/* Aşama bazlı ETA projeksiyonu (Yol Süresi Analizi'nde kaydedilen model).
+   Yalnız yüklenmiş/yoldaki, henüz antrepoya girmemiş IAS parsiyellerinde
+   üretilir; model yoksa veya grubun örneklemi yetersizse null kalır ve
+   Teslimat Riski tek kural gününe göre hesaplamaya devam eder. Kilometre
+   taşları canlı analizle AYNI alan eşlemesinden okunur (döngüsel bağımlılık
+   olmasın diye transit-analysis-source tembel yüklenir). */
+let _transitAnalysisSource = null;
+function backlogStageProjection(ias, order, model, todayIso) {
+  if (!ias || !model || !Array.isArray(model.groups)) return null;
+  if (!_transitAnalysisSource) _transitAnalysisSource = require('./transit-analysis-source');
+  const milestones = _transitAnalysisSource.milestonesFromEntry(ias);
+  if (!milestones) return null;
+  const projection = BLTransitStageModel.project(milestones, {
+    model, country: order && order.countryRaw, vehicle: ias.vasita || '', today: todayIso,
+  });
+  if (!projection) return null;
+  const iso = value => { const d = toDateOnly(value); return d ? localIsoDate(d) : null; };
+  return BLTransitStageModel.compact(projection, { retail: iso(order && order.retail), inStore: iso(order && order.mb) });
+}
+function localIsoDate(d) {
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
 /* Segment -> BACKLOG_TEMPLATE_HEADERS satırı.
    Bu eşleme TEK YERDE durur. Eskiden Backlog Excel'i ile CP/Siparişler'deki
    "Sipariş Backlog Raporu" penceresi iki ayrı eşleme kullanıyordu ve rapor
@@ -3449,6 +3474,9 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
   const requestedColumns = (Array.isArray(extraColumns) ? extraColumns : []).filter(column =>
     column && (column.source === 'asas' || column.source === 'antrepo') && column.header && column.label
   );
+  const stageModel = overrides && overrides.transitAnalysis && overrides.transitAnalysis.kind === BLTransitStageModel.KIND
+    ? overrides.transitAnalysis : null;
+  const stageToday = localIsoDate(new Date());
   return (Array.isArray(sourceSegments) ? sourceSegments : []).map(segment => {
     const order = sourceOrderRef(segment) || segment;
     const ias = segment._iasRow || null;
@@ -3648,6 +3676,9 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
         expectedTransitArrival: transitOverdue.expectedArrival || null,
         transitOverdue: transitOverdue.overdue === true,
         transitOverdueDays: transitOverdue.overdueDays,
+        // Yüklenmiş ve henüz antrepoya girmemiş parsiyelde aşama bazlı ETA.
+        stageProjection: stageModel && isPartial && !isInWarehouse && !isRetailWaiting
+          ? backlogStageProjection(ias, order, stageModel, stageToday) : null,
         shipConfirmationDate,
         // ASAS'ta bu rengin Ex-Factory'si boştu; aynı PO'nun diğer renginden alındı.
         exFactoryInheritedFrom: order._exInheritedFrom ? (order._exInheritedFrom.ccode || '') : '',
