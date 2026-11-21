@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-21",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Aşama tahmini düzeltmesi",
-    "en": "Stage forecast fix"
+    "tr": "Aşama tahmini ve CP yeniden çizim düzeltmeleri",
+    "en": "Stage forecast and CP redraw fixes"
   },
   "summary": {
-    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz.",
-    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval."
+    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir.",
+    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values."
   },
   "changes": [
     {
