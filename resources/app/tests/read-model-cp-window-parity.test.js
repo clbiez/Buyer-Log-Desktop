@@ -96,7 +96,8 @@ function projections(rows=PARITY_ROWS){
   return {buyers,scoped};
 }
 const CONTEXT=createContextLoader({
-  preferences:{load:()=>({entries:{}})},
+  // 2026-11-21: yerleşik kural yok; eski tanımlar kullanıcı kuralı olarak kurulur.
+  preferences:{load:()=>({entries:Object.fromEntries(Object.entries(require('./fixtures/legacy-builtin-rules').storeEntries()).map(([k,v])=>[k,{value:v}]))})},
   roleEntries:()=>({'lcw.cp.assistant.v1':{value:JSON.stringify({settings:{targetType:'retail'},checklistSettings:{enabled:true}})}}),
   managedRules:()=>({rules:[],deletedRuleIds:[],priorityCatalog:[],checklistStatuses:[],revision:0}),transitRules:()=>[{id:'t-sea',seasons:[],countries:[],delType:'',days:35,exfStart:'',exfEnd:''}],
   plmPayload:()=>({models:{},updatedAt:null}),checklistPayload:()=>({answers:{},tombstones:{}}),revision:()=>'r1',merge:(own,shared)=>Merge.merge(own,shared)})({id:'u'}).value;

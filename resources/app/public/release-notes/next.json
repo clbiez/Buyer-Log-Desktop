@@ -41,6 +41,46 @@
       }
     },
     {
+      "id": "fabric-filter-set-parts",
+      "type": "feature",
+      "module": {"tr": "Koleksiyon · CP · Siparişler", "en": "Collection · CP · Orders"},
+      "title": {
+        "tr": "Takım modellerde A/B/C parçasına göre kumaş filtresi",
+        "en": "Fabric filter by A/B/C part in set models"
+      },
+      "body": {
+        "tr": "Kumaş filtresindeki kumaş kartı detayları artık Tüm parçalar, Parça A, Parça B… sekmeleriyle ayrı ayrı seçilebilir. Örneğin A parçası Örme ve B parçası %100 Pamuk olan takımlar birlikte süzülür. Tüm parçalar sekmesi eskisi gibi takımdaki herhangi bir kumaşa bakar; kayıtlı filtreler değişmez.",
+        "en": "Fabric card details in the Fabric filter can now be chosen separately on the All parts, Part A, Part B… tabs. For example, sets whose part A is Knit and part B is 100% Cotton can be filtered together. The All parts tab still checks any fabric in the set as before; saved filters are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "fabric-filter-set-parts.png",
+        "alt": {"tr": "Demo koleksiyonda kumaş filtresinin Parça A sekmesinde Örme seçili", "en": "Knit selected on the Part A tab of the Fabric filter in a demo collection"},
+        "caption": {"tr": "Parça A sekmesinde seçilen Kategori yalnız takımın A kumaşına uygulanır.", "en": "The Category chosen on the Part A tab applies only to the set's A fabric."}
+      }
+    },
+    {
+      "id": "cp-rules-no-builtin",
+      "type": "improvement",
+      "module": {"tr": "CP · Siparişler · Kontrol & Kurallar", "en": "CP · Orders · Checks & Rules"},
+      "title": {
+        "tr": "Yerleşik öncelik kuralları ve checklist soruları kaldırıldı",
+        "en": "Built-in priority rules and checklist questions were removed"
+      },
+      "body": {
+        "tr": "Kontrol & Kurallar Merkezi artık hazır (yerleşik) öncelik kuralı veya checklist sorusu getirmez; öncelik ve sorular yalnız sizin ya da Moderatörün yayımladığı kurallardan gelir. Daha önce kaydedilmiş yerleşik kopyalar da geri gelmez. Expected Late, Already Late gibi teslimat sonucu, yüklemeye kalan gün ve sistem önerisi öncelik hesapları korunur; kendi kuralınızın koşulunda seçebilirsiniz. Öncelik etiketleri (Kritik, Bugün Aksiyon …) ve verilmiş checklist yanıtları silinmez.",
+        "en": "The Checks & Rules Center no longer ships ready-made (built-in) priority rules or checklist questions; priorities and questions now come only from your own rules or rules published by the Moderator. Previously saved built-in copies do not come back. Calculations such as the Expected Late / Already Late delivery outcome, days to load and the system-suggested priority are kept, and you can pick them in your own rule conditions. Priority tags (Critical, Action Today …) and existing checklist answers are not deleted."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-rules-no-builtin.png",
+        "alt": {"tr": "Yerleşik kural içermeyen boş Öncelik Kuralları listesi", "en": "Empty Priority Rules list without built-in rules"},
+        "caption": {"tr": "Demo veride Kurallarım listesi yerleşik kural olmadan boş açılır; yeni kural LCW AI ile ya da hazır örnekten oluşturulur.", "en": "On demo data, the My Rules list opens empty without built-in rules; new rules are created with LCW AI or from a ready-made example."}
+      }
+    },
+    {
       "id": "override-save-independent-of-background-compute",
       "type": "fix",
       "module": {"tr": "CP · Siparişler · License Royalty", "en": "CP · Orders · License Royalty"},
@@ -1072,6 +1112,7 @@
         "kind": "none",
         "reason": {"tr": "Ekranda yeni bir öğe yok; aynı liste ve eşleşmeler daha kısa sürede gelir.", "en": "Nothing new appears on screen; the same list and matches arrive sooner."}
       }
-    }
+    },
+    {"id": "pricing-desk-quotation-groups-layout", "type": "fix", "module": {"tr": "Fiyat Masası · Fiyat Teklifleri", "en": "Pricing Desk · Quotations"}, "title": {"tr": "Fiyat talebi grupları listesi kesilmeden görünür; başlık sadeleşti", "en": "Quotation groups list no longer gets cut off; the header is simpler"}, "body": {"tr": "Soldaki fiyat talebi grupları listesinde kartlar sütundan taşıp listeyi yatay kaydırıyor, kart metinleri soldan kesiliyordu. Kartlar artık sütuna sığar: tekrar eden Koleksiyon etiketi kaldırıldı, tarih tek satırda gün olarak gösterilir (tam saat üzerine gelince görünür). Seçili talebin başlığında model, üretici ve onay sayıları tek satır özette yer alır; Koleksiyonda Aç, Fiyat Geçmişi, Düzenleme Yetkisi, Excel'e Aktar, taslak e-postayı yeniden açma ve Sil işlemleri \"Diğer\" menüsünde toplandı.", "en": "In the quotation groups list on the left, cards overflowed the column, the list scrolled sideways and card text was cut off on the left. Cards now fit the column: the repeated Collection badge was removed and the date is shown on one line as a day (the full time appears on hover). The selected request's header shows model, manufacturer and approval counts in a one-line summary; Open in Collection, Pricing History, Editing Permission, Export to Excel, re-opening the draft e-mail and Delete are grouped in the \"More\" menu."}, "visual": {"kind": "screenshot", "capture": "post-change", "src": "quotation-desk-layout.png", "alt": {"tr": "Demo fiyat talepleriyle sığan grup listesi ve açık Diğer menüsü", "en": "Fitting groups list with demo quotations and the open More menu"}, "caption": {"tr": "Grup kartları sütuna sığar; ikincil işlemler Diğer menüsündedir.", "en": "Group cards fit the column; secondary actions are in the More menu."}}}
   ]
 }
