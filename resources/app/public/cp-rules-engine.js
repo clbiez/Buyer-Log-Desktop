@@ -8,10 +8,10 @@
  *
  * TASARIM KARARLARI:
  *
- * 1) YERLEŞİK KURALLAR DA AYNI BİÇİMDE YAZILIR. "Critical" ve "Bu Hafta
- *    Aksiyon" tanımları koda gömülü değil; DEFAULT_RULES içinde, kullanıcının
- *    ekranda görüp değiştirebileceği aynı koşul dilinde duruyor. Gizli bir
- *    kural kalırsa kullanıcı neden bir siparişin Kritik olduğunu göremez.
+ * 1) GİZLİ KURAL YOK. 2026-11-21'den beri yerleşik kural da yoktur
+ *    (DEFAULT_RULES boş); her öncelik ve soru kullanıcının ekranda gördüğü
+ *    bir kuraldan gelir. Gizli bir kural kalırsa kullanıcı neden bir
+ *    siparişin Kritik olduğunu göremez.
  *
  * 2) KURALLAR YALNIZ YÜKSELTİR. Bir kural önceliği düşüremez. Aksi hâlde
  *    yanlış yazılmış tek bir kural gerçekten geciken siparişleri listeden
@@ -790,113 +790,23 @@
   }
 
   /* ------------------------------------------------------------- YERLEŞİK
-     Kullanıcının tarif ettiği tanımlar, düzenlenebilir kural olarak. */
-  const DEFAULT_PRIORITY_RULES = Object.freeze([
-    Object.freeze(normalizeRule({
-      id: 'builtin_critical_late', builtIn: true, kind: 'priority', target: 'CRITICAL',
-      name: 'Yükleme geçti ve Retail tarihine yetişmiyor',
-      nameEn: 'Load date passed and it will not make the Retail date',
-      reasonTr: 'Yükleme tarihi geçmiş ve hedef tarihe yetişmiyor',
-      reasonEn: 'Load date passed and will not make the target date',
-      match: 'all',
-      conditions: [
-        { field: '@daysToLoad', operator: 'lt', value: 0 },
-        { field: '@deliveryOutcome', operator: 'in', value: ['EXPECTED_LATE', 'ALREADY_LATE'] },
-      ],
-    })),
-    Object.freeze(normalizeRule({
-      id: 'builtin_action_confirmation', builtIn: true, kind: 'priority', target: 'ACTION_THIS_WEEK',
-      name: 'Gelecek hafta yüklenecek, üretici teyidi yok',
-      nameEn: 'Loads next week, no supplier confirmation',
-      reasonTr: 'Gelecek hafta yükleme var, üretici teyidi işaretlenmemiş',
-      reasonEn: 'Loading next week without supplier confirmation',
-      match: 'all',
-      conditions: [
-        { field: '@daysToLoad', operator: 'gte', value: 0 },
-        { field: '@daysToLoad', operator: 'lte', value: 14 },
-        { field: '@checklist:supplierConfirmation', operator: 'in', value: ['open', 'rejected'] },
-      ],
-    })),
-    Object.freeze(normalizeRule({
-      id: 'builtin_action_samples', builtIn: true, kind: 'priority', target: 'ACTION_THIS_WEEK',
-      name: 'Gelecek hafta yüklenecek, numune onayı işaretlenmemiş',
-      nameEn: 'Loads next week, sample approval not ticked',
-      reasonTr: 'Gelecek hafta yükleme var, numune onayları işaretlenmemiş',
-      reasonEn: 'Loading next week without sample approvals',
-      match: 'all',
-      conditions: [
-        { field: '@daysToLoad', operator: 'gte', value: 0 },
-        { field: '@daysToLoad', operator: 'lte', value: 14 },
-        { field: '@checklist:pps', operator: 'in', value: ['open', 'rejected'] },
-      ],
-    })),
-    /* PLM numune talepleri (CoreNectum Requests): Ex-factory yaklaşırken PPS
-       hâlâ onaysız. Eşik (21 gün) kural düzenleyicisinden değiştirilebilir.
-       PPS sorusu PLM onayı, aşama zinciri veya üretim sonrası sipariş
-       aşamasıyla kapanır; açık kalması gerçekten onay olmadığı demektir. */
-    Object.freeze(normalizeRule({
-      id: 'builtin_action_pps_exfactory', builtIn: true, kind: 'priority', target: 'ACTION_THIS_WEEK',
-      name: "Ex-factory'ye 21 gün kala PPS onayı yok",
-      nameEn: '21 days to ex-factory and no PPS approval',
-      reasonTr: "Ex-factory yaklaşıyor, PPS onayı yok",
-      reasonEn: 'Ex-factory is approaching without PPS approval',
-      match: 'all',
-      conditions: [
-        { field: '@daysToLoad', operator: 'gte', value: 0 },
-        { field: '@daysToLoad', operator: 'lte', value: 21 },
-        { field: '@checklist:pps', operator: 'in', value: ['open', 'rejected'] },
-      ],
-    })),
-    Object.freeze(normalizeRule({
-      id: 'builtin_action_tests', builtIn: true, kind: 'priority', target: 'ACTION_THIS_WEEK',
-      name: 'Gelecek hafta yüklenecek, test onayı işaretlenmemiş',
-      nameEn: 'Loads next week, test approval not ticked',
-      reasonTr: 'Gelecek hafta yükleme var, testler işaretlenmemiş',
-      reasonEn: 'Loading next week without test approvals',
-      match: 'all',
-      conditions: [
-        { field: '@daysToLoad', operator: 'gte', value: 0 },
-        { field: '@daysToLoad', operator: 'lte', value: 14 },
-        { field: '@checklist:tests', operator: 'in', value: ['open', 'rejected'] },
-      ],
-    })),
-  ]);
-
-  /* Yerleşik checklist tanımları da aynı kural editörüne taşınır. Böylece
-     kullanıcı ön tanımlı soruları görebilir, değiştirebilir, kapatabilir veya
-     kullanıcı bazında silebilir. Kimlikler Checklist.ITEMS ile aynıdır; bu,
-     mevcut cevap anahtarlarını ve @checklist:<id> priority koşullarını korur. */
+     2026-11-21 — "Built In Checklist / Priority olmasın, kaldıralım hepsini."
+     Yerleşik öncelik kuralı ve yerleşik checklist sorusu YOKTUR; öncelik ve
+     sorular yalnız kullanıcının (ve Moderatörün yayımladığı) kurallardan gelir.
+     Motorun türettiği hesaplamalar (@deliveryOutcome: EXPECTED_LATE /
+     ALREADY_LATE, @basePriority, @daysToLoad…) DERIVED_FIELDS'te kalır ve
+     kullanıcı kuralında seçilebilir.
+     DEFAULT_CHECKLIST_RULE_IDS korunur: Checklist.ITEMS'in eski sabit
+     sorularını CP'de susturan (managedItemIds) ve @checklist:<id> koşullarını
+     'notApplicable' yapan kimlik listesidir. */
   const DEFAULT_CHECKLIST_RULE_IDS = Object.freeze(
     (Array.isArray(Checklist.ITEMS) ? Checklist.ITEMS : []).map(item => item.id)
   );
-  function checklistDefaultRule(item) {
-    const stages = Array.isArray(item.stages) ? item.stages.slice() : [];
-    const maxDays = Number(item.maxDaysToLoad);
-    const minAge = item.minOrderAgeDays == null ? null : Number(item.minOrderAgeDays);
-    const conditions = [
-      { field: '@stage', operator: 'in', value: stages },
-      { field: '@daysToLoad', operator: 'gte', value: -30 },
-      { field: '@daysToLoad', operator: 'lte', value: Number.isFinite(maxDays) ? maxDays : 365 },
-    ];
-    if (Number.isFinite(minAge)) conditions.push({ field: '@orderAgeDays', operator: 'gte', value: minAge });
-    const raw = {
-      id: item.id, builtIn: true, kind: 'checklist', enabled: item.defaultEnabled !== false,
-      name: item.tr || item.en || item.id, nameEn: item.en || item.tr || item.id, tr: item.tr || item.id, en: item.en || item.tr || item.id,
-      questionTr: item.questionTr || item.tr || item.id,
-      questionEn: item.questionEn || item.en || item.tr || item.id,
-      match: 'all', conditions,
-    };
-    if (Number.isFinite(minAge)) {
-      const stageArgs = stages.map(stage => JSON.stringify(String(stage))).join(',');
-      const loadLimit = Number.isFinite(maxDays) ? maxDays : 365;
-      raw.mode = 'formula';
-      raw.formula = `=AND(IN([@stage],${stageArgs}),OR(ISBLANK([@daysToLoad]),[@daysToLoad]>=-30),OR([@daysToLoad]<=${loadLimit},[@orderAgeDays]>=${minAge}))`;
-    }
-    return Object.freeze(normalizeRule(raw));
-  }
-  const DEFAULT_CHECKLIST_RULES = Object.freeze(
-    (Array.isArray(Checklist.ITEMS) ? Checklist.ITEMS : []).map(checklistDefaultRule)
-  );
+  const DEFAULT_PRIORITY_RULES = Object.freeze([]);
+  const DEFAULT_CHECKLIST_RULES = Object.freeze([]);
+  /* Eski sürümler yerleşikleri kişisel kayda ve Moderatör yayınına builtIn:true
+     ile yazıyordu. Bu kopyalar geri gelmez. */
+  const isLegacyBuiltIn = rule => Boolean(rule && rule.builtIn === true);
   const DEFAULT_RULES = Object.freeze([...DEFAULT_PRIORITY_RULES, ...DEFAULT_CHECKLIST_RULES]);
 
   /* --------------------------------------------------------------- gerçekler
@@ -1589,7 +1499,7 @@
      yerleşikler güncel tanımıyla gelir (yeni sürümde eklenen kural kaybolmaz). */
   function mergeWithDefaults(savedRules, deletedRuleIds) {
     const deleted = new Set((Array.isArray(deletedRuleIds) ? deletedRuleIds : []).map(text).filter(Boolean));
-    const saved = normalizeRules(savedRules).filter(rule => !deleted.has(rule.id));
+    const saved = normalizeRules(savedRules).filter(rule => !deleted.has(rule.id) && !isLegacyBuiltIn(rule));
     const byId = new Map(saved.map(rule => [rule.id, rule]));
     const merged = DEFAULT_RULES
       .filter(rule => !deleted.has(rule.id))
@@ -1623,7 +1533,7 @@
       .map(entry => Checklist.normalizeCustomStatusEntry ? Checklist.normalizeCustomStatusEntry({ ...entry, managed: true }) : null)
       .filter(Boolean)
       .slice(0, 24);
-    const rules = normalizeRules(source.rules).map(rule => ({ ...normalizeRule({ ...rule, managed: true }, { priorityCatalog }) }));
+    const rules = normalizeRules(source.rules).filter(rule => !isLegacyBuiltIn(rule)).map(rule => ({ ...normalizeRule({ ...rule, managed: true }, { priorityCatalog }) }));
     const ids = new Set(rules.map(rule => rule.id));
     const deletedRuleIds = [...new Set((Array.isArray(source.deletedRuleIds) ? source.deletedRuleIds : []).map(text).filter(Boolean))]
       .filter(id => !ids.has(id)).slice(0, MAX_MANAGED_DELETED);
