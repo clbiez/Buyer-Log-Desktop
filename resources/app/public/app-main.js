@@ -1489,7 +1489,14 @@ function cpComputedPendingNotice(){
 // bağlıysa bugünkü yükleme durumu (ensureUnifiedPrioritiesForTable) — sonuç gelince renderCP yeniden çağrılır.
 function cpPrioritiesReadyForRender(){
   cpComputed.pendingView=cpComputedPending()&&!cpViewNeedsComputed();
-  if(cpComputed.pendingView){void scheduleUnifiedPrioritiesForTable('cp');return true;}
+  if(cpComputed.pendingView){
+    // Görünür CP'nin karar motoru henüz yoksa istenir (yükleme durumu çizilmez). Motorsuz planlama
+    // hemen false döner; motor gelince yalnız öncelikler planlanır, satırlar yeniden çizilmez.
+    if(window.BLCpAssistant?.computeDecisionsForRowsAsync)void scheduleUnifiedPrioritiesForTable('cp');
+    else void Promise.resolve(window.BLPerf?.ensureFeature?.('cpAssistant')).then(()=>scheduleUnifiedPrioritiesForTable('cp'))
+      .catch(err=>{window.BLModulePreparation?.setStatus('cp','error',err?.code||'CP_FEATURE_FAILED');showToast(err&&err.message?err.message:String(err));});
+    return true;
+  }
   return ensureUnifiedPrioritiesForTable('cp');
 }
 // cellHtml kancası: bekleyen görünümde hesaplanmış değere bağlı hücre.
@@ -20049,6 +20056,9 @@ async function waitForStartupPrimaryScreen(){
     try{
       // Görünür CP'nin mevcut çizim yolu zorunlu karar motorunu başlatır.
       renderCP();
+      // Hesaplanmış sütunlar ısınırken satırlar "Hesaplanıyor…" hücreleriyle çizildi: açılış ekranı
+      // hazırdır; öncelikler arka planda tamamlanır ('cp' durumu sonra 'ready' olur).
+      if(cpComputed.pendingView&&document.querySelector('#cpTable tbody tr[data-id]'))return true;
       if(_unifiedPriorityFeaturePromise)await _unifiedPriorityFeaturePromise;
       for(let attempt=0;attempt<3;attempt++){
         const rows=state.cp?.rows,revision=_unifiedPriorityTableRevision.cp,context=window.BLCpAssistant?.decisionContextRevision?.();
