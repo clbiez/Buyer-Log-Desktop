@@ -6179,7 +6179,14 @@ app.post('/api/intake/report', userAccess.requireAnyArea('overview'), userAccess
 });
 
 // ---- FOB Sonrası Maliyet (Genel Bakış widget'ı) → server/routes/postfob-routes.js ----
-require('./routes/postfob-routes')(app, { express, userAccess, modelQuery, loadModelConnections, userPreferences, BLBusinessRules });
+require('./routes/postfob-routes')(app, {
+  BLBusinessRules,
+  express,
+  loadModelConnections,
+  modelQuery,
+  userAccess,
+  userPreferences,
+});
 
 
 function currentUserIsModerator(req) { return Boolean(req.currentUser && userAccess.hasPermission(req.currentUser, 'manageAllOrders')); }

@@ -25,7 +25,14 @@ const SOURCE_MESSAGE = {
 };
 
 module.exports = function registerPostFobRoutes(app, deps) {
-  const { express, userAccess, modelQuery, loadModelConnections, userPreferences, BLBusinessRules } = deps;
+  const {
+    BLBusinessRules,
+    express,
+    loadModelConnections,
+    modelQuery,
+    userAccess,
+    userPreferences,
+  } = deps;
   const store = deps.store || createIntakeStore({ root: path.join(SERVER_DATA_ROOT, 'postfob-cache'), ttlMinutes: 30 });
   const guard = [userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW')];
 
