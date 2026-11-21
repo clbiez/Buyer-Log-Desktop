@@ -12,6 +12,26 @@
   },
   "changes": [
     {
+      "id": "fabric-filter-set-parts",
+      "type": "feature",
+      "module": {"tr": "Koleksiyon · CP · Siparişler", "en": "Collection · CP · Orders"},
+      "title": {
+        "tr": "Takım modellerde A/B/C parçasına göre kumaş filtresi",
+        "en": "Fabric filter by A/B/C part in set models"
+      },
+      "body": {
+        "tr": "Kumaş filtresindeki kumaş kartı detayları artık Tüm parçalar, Parça A, Parça B… sekmeleriyle ayrı ayrı seçilebilir. Örneğin A parçası Örme ve B parçası %100 Pamuk olan takımlar birlikte süzülür. Tüm parçalar sekmesi eskisi gibi takımdaki herhangi bir kumaşa bakar; kayıtlı filtreler değişmez.",
+        "en": "Fabric card details in the Fabric filter can now be chosen separately on the All parts, Part A, Part B… tabs. For example, sets whose part A is Knit and part B is 100% Cotton can be filtered together. The All parts tab still checks any fabric in the set as before; saved filters are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "fabric-filter-set-parts.png",
+        "alt": {"tr": "Demo koleksiyonda kumaş filtresinin Parça A sekmesinde Örme seçili", "en": "Knit selected on the Part A tab of the Fabric filter in a demo collection"},
+        "caption": {"tr": "Parça A sekmesinde seçilen Kategori yalnız takımın A kumaşına uygulanır.", "en": "The Category chosen on the Part A tab applies only to the set's A fabric."}
+      }
+    },
+    {
       "id": "override-save-independent-of-background-compute",
       "type": "fix",
       "module": {"tr": "CP · Siparişler · License Royalty", "en": "CP · Orders · License Royalty"},
