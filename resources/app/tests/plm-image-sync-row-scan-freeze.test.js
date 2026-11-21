@@ -58,16 +58,21 @@ test('server plmImageRef: row loops resolve named keys from a loop-scoped index 
   for(let n=0;n<200;n++)cases.forEach((order,i)=>assert.equal(parse.plmImageRef(map,order,index),expected[i]));
   assert.equal(scans,0,'indexed lookups must not enumerate the whole imagemap');
   assert.deepEqual(expected,['a',undefined,'',  'code','a',undefined]);
+  // Tembel dizin: yalnız adlı-kayıt düşüşünde ve bir kez kurulur.
+  scans=0;const lazy=parse.plmImageLazyNamedIndex(map);
+  assert.equal(parse.plmImageRef(map,{plm:'10',ccode:'C'},lazy),'code');assert.equal(scans,0,'code-key hits never build the index');
+  for(let n=0;n<50;n++)assert.equal(parse.plmImageRef(map,{plm:'7',ccode:'C'},lazy),'a');
+  assert.equal(scans,1,'lazy index is built once per loop');
 });
 
 test('server row loops build the named image index once before iterating',()=>{
   const parse=fs.readFileSync(path.join(__dirname,'..','server','lib','parse.js'),'utf8');
   const start=parse.indexOf('function backlogTemplateRowsFromSegments(');
   const body=parse.slice(start,parse.indexOf('\nfunction ',start+10));
-  assert.ok(body.indexOf('plmImageNamedIndex(')>0&&body.indexOf('plmImageNamedIndex(')<body.indexOf('.map(segment'));
+  assert.ok(body.indexOf('plmImageLazyNamedIndex(')>0&&body.indexOf('plmImageLazyNamedIndex(')<body.indexOf('.map(segment'));
   assert.match(body,/plmImageRef\(overrides && overrides\.imagemap, order, imageNamedIndex\)/);
   const server=fs.readFileSync(path.join(__dirname,'..','server','server.js'),'utf8');
   const s=server.indexOf('function collectionWorkspaceWithLocalImages(');
   const sb=server.slice(s,server.indexOf('\nfunction ',s+10));
-  assert.match(sb,/plmImageNamedIndex\(imagemap\)/);assert.match(sb,/\}, imageNamedIndex\)/);
+  assert.match(sb,/plmImageLazyNamedIndex\(imagemap\)/);assert.match(sb,/\}, imageNamedIndex\)/);
 });

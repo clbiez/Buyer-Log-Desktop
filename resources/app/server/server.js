@@ -4533,7 +4533,7 @@ function collectionWorkspaceWithLocalImages(ownerId, workspace = null) {
   // Startup /api/data excludes imagemap. Hydrate ONLY models in this authorised
   // Collection workspace, not the full cross-user registry. No PLM network call.
   const imagemap = loadOverrides().imagemap || {};
-  const imageNamedIndex = parseLib.plmImageNamedIndex(imagemap);
+  const imageNamedIndex = parseLib.plmImageLazyNamedIndex(imagemap);
   const availability = new Map();
   const localImageExists = ref => {
     if (!ref) return false;

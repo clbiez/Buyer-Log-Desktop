@@ -210,8 +210,10 @@ function plmImageUsable(map, plmId) {
    dizini. plmImageRef kod anahtarı bulamayınca her çağrıda TÜM haritayı
    tarıyordu; Backlog ve Koleksiyon satır döngülerinde bu satır × anahtar
    maliyetine dönüşüp PLM görsel senkronundan sonra olay döngüsünü
-   kilitliyordu. Dizin kalıcı önbellek DEĞİLDİR: çağıran döngü başında bir
-   kez kurar ve döngü boyunca haritayı değiştirmeden kullanır. */
+   kilitliyordu. Dizin kalıcı önbellek DEĞİLDİR: çağıran döngü kapsamında
+   tutar ve döngü boyunca haritayı değiştirmez. plmImageLazyNamedIndex dizini
+   yalnız ilk adlı-kayıt düşüşünde kurar; tüm satırlar kod anahtarıyla
+   çözülüyorsa ek maliyet yoktur. */
 function plmImageNamedIndex(map) {
   const index = new Map();
   if (!map || typeof map !== 'object') return index;
@@ -222,6 +224,10 @@ function plmImageNamedIndex(map) {
     if (list) list.push(key); else index.set(base, [key]);
   }
   return index;
+}
+function plmImageLazyNamedIndex(map) {
+  let index = null;
+  return () => index || (index = plmImageNamedIndex(map));
 }
 function plmImageRef(map, order, namedIndex) {
   if (!map || !order) return undefined;
@@ -240,8 +246,9 @@ function plmImageRef(map, order, namedIndex) {
      PLM-only kaydına geri düşme. */
   if (key) {
     const prefix = `${key}|name:`;
-    const namedKeys = namedIndex instanceof Map
-      ? (namedIndex.get(key) || []).filter(candidate => Object.prototype.hasOwnProperty.call(map, candidate))
+    const named = typeof namedIndex === 'function' ? namedIndex() : namedIndex;
+    const namedKeys = named instanceof Map
+      ? (named.get(key) || []).filter(candidate => Object.prototype.hasOwnProperty.call(map, candidate))
       : Object.keys(map).filter(candidate => candidate.indexOf(prefix) === 0);
     if (namedKeys.length) {
       const refs = [...new Set(namedKeys.map(candidate => String(map[candidate] == null ? '' : map[candidate]).trim()))];
@@ -3468,7 +3475,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
   const requestedColumns = (Array.isArray(extraColumns) ? extraColumns : []).filter(column =>
     column && (column.source === 'asas' || column.source === 'antrepo') && column.header && column.label
   );
-  const imageNamedIndex = plmImageNamedIndex(overrides && overrides.imagemap);
+  const imageNamedIndex = plmImageLazyNamedIndex(overrides && overrides.imagemap);
   return (Array.isArray(sourceSegments) ? sourceSegments : []).map(segment => {
     const order = sourceOrderRef(segment) || segment;
     const ias = segment._iasRow || null;
@@ -3712,7 +3719,7 @@ module.exports = {
   parseASASWorkbook, parseASASRows, parseFabricWorkbook, applyFabricEntries, applyFabricEntriesToLflRows, parseAntrepoWorkbook, parseAntrepoRows, parseCPUpdateWorkbook,
   buildCPRowsFromASAS, buildOrdersRowsFromASAS, buildSharedOrderProjectionRowsFromASAS, buildOverviewSummaryRowsFromASAS, buildOrderSummaryRowsFromASAS, buildBacklogOperationalRows, buildBacklogGrouped, buildBacklogDetailRows, buildBacklogTemplateRows, backlogCustomDimensionContext, computeFlags, applyFormulas, deriveOperationalStatus, shouldWaitForRetail, isShortageStatus, isWarehouseShortageStatus, backlogRemainderStatus, findAntrepoHit, findAntrepoHits, backlogOrderQuantityFromAntrepo, backlogProductionRemainder, PRODUCTION_REMAINDER_TOLERANCE_RATE, SHORTAGE_REMAINDER_RATE, SHORTAGE_STATUS, WAREHOUSE_STATUS, WAREHOUSE_SHORTAGE_STATUS, BACKLOG_DIM_LABELS,
   orderCodeKey, toOrderCodeNumber, antrepoParseMeta, dateOrdinal,
-  orderLineKey, orderLineKeyOf, rowLineKey, normalizePlmImageId, normalizeCpImageColourCode, plmImageKey, plmColourImageKey, plmColourImageNameKey, plmImageRef, plmImageNamedIndex, plmImageKeysFor, plmImageDeleted, plmImageUsable, overrideKeyOf, overrideHas, overrideGet,
+  orderLineKey, orderLineKeyOf, rowLineKey, normalizePlmImageId, normalizeCpImageColourCode, plmImageKey, plmColourImageKey, plmColourImageNameKey, plmImageRef, plmImageNamedIndex, plmImageLazyNamedIndex, plmImageKeysFor, plmImageDeleted, plmImageUsable, overrideKeyOf, overrideHas, overrideGet,
   antrepoEntryConflicts, backlogNodeAtPath,
   ANTREPO_MATCH_RULES, ANTREPO_MATCH_RULE_LABELS, DEFAULT_ANTREPO_MATCH_RULE, normalizeAntrepoMatchRule,
   DEFAULT_ANTREPO_MATCH_CONDITIONS, defaultAntrepoMatchConfig, normalizeAntrepoMatchConfig, antrepoMatchConfigLabel, antrepoMatchConfigSignature, isDefaultAntrepoMatchConfig,
