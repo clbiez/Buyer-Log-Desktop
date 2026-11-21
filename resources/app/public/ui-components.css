@@ -15588,9 +15588,9 @@ html[data-ui-system="manifest"] :is(.toolbarMoreMenu,.railAppearanceMenu,#corpor
 }
 html[data-ui-system="manifest"] :is(.toolbarMoreMenu,.railAppearanceMenu,#corporateConnections) :is(.navActionBtn,button.tbtn,label.tbtn,.vfMenuTrigger,.corporateConnection,button[id^="rail"]):hover:not(:disabled) {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
 }
-html:root[data-ui-system="manifest"] :is(.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips,.cpaSeg) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]) {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;font-weight:600 !important
+html:root[data-ui-system="manifest"] :is(.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips,.kolFabricPartSeg,.cpaSeg) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]) {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;font-weight:600 !important
 }
-html:root[data-ui-system="manifest"] :is(.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips,.cpaSeg) > button:not(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]):hover:not(:disabled) {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
+html:root[data-ui-system="manifest"] :is(.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips,.kolFabricPartSeg,.cpaSeg) > button:not(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]):hover:not(:disabled) {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
 }
 html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs,.cpaStudioTabs,.trFocusTabs) > button {position:relative;border:0 !important;box-shadow:none !important
 }
@@ -16076,3 +16076,9 @@ html:root[data-ui-system="manifest"] body[data-ui-migrated] table tr.rowDirty in
 html:root[data-ui-system="manifest"] body[data-ui-migrated] :is(#cpTable,#ordersTable,#kolTable,.blTableReportTable) thead input[type="checkbox"]:is(#kolSelAll,[id$="_selAll"],[data-tr-check="all"]):indeterminate::after {
   content:""!important;display:block!important;position:absolute;inset:0;margin:auto;width:4px;height:2px;background:var(--ui-text);pointer-events:none;
 }
+
+/* Fiyat Masası · Fiyat Teklifleri: yapışkan detay başlığı kendi katmanını açar;
+   "Diğer" menüsü açıkken alttaki matris araç çubuğunun üstüne çıkması için
+   başlık popover katmanına yükselir. Tarih/özet sayıları sabit genişlikli. */
+html[data-ui-system="manifest"] .quotationWorkspaceShell .quotationDetailHead:has(.quotationMoreMenu:not([hidden])) {z-index:var(--ui-z-popover) !important}
+html[data-ui-system="manifest"] .quotationWorkspaceShell .quotationNavItem .verHistNavDate,html[data-ui-system="manifest"] .quotationSummaryLine {font-variant-numeric:tabular-nums}

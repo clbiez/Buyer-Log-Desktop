@@ -244,6 +244,11 @@
 .kolFabricFacetPanel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:7px 10px;margin:9px 0;padding:10px 2px}
 .kolFabricFacetPanel>strong{grid-column:1/-1;padding:0 3px}
 .kolFabricFacetField{min-width:0}
+/* Takım modellerde A/B/C parça kapsamı (ortak segment görünümü ui-components.css v7.0.319). */
+.kolFabricPartSeg{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px;padding:0 3px}
+.kolFabricPartSeg>button{min-height:28px;padding:4px 10px;cursor:pointer}
+.kolFabricFacetGroup{display:contents}
+.kolFabricFacetGroup[hidden]{display:none}
 .kolFabricFacetField>summary{cursor:pointer;padding:8px 10px;list-style-position:inside}
 .kolFabricFacetSearch{box-sizing:border-box;margin:7px 7px 3px;width:calc(100% - 14px);min-height:30px;padding:4px 8px}
 .kolFabricFacetOptions{max-height:112px;overflow:auto;padding:5px 7px 7px;display:grid;gap:2px}
@@ -256,7 +261,7 @@
 /* Compact single column on narrow windows; action buttons remain visible. */
 @media (max-width:650px){
   .kolFabricFacetPanel{grid-template-columns:minmax(0,1fr)}
-  .kolFabricFacetPanel>strong{grid-column:1}
+  .kolFabricFacetPanel>strong,.kolFabricPartSeg{grid-column:1}
   .colFilterPanel:has(.kolFabricFacetPanel)>.cfpApplyRow{display:flex;flex-wrap:wrap;gap:5px}
 }
 

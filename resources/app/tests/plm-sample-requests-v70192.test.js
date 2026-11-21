@@ -396,13 +396,15 @@ test('v7.0.193 Sample Evaluation Status onaylıysa talep onaylı sayılır', () 
 
 test('v7.0.193 Priority: Ex-factory’ye 21 gün kala PPS onayı yoksa ayrı sebep; eşik düzenlenebilir', () => {
   const Rules = require('../public/cp-rules-engine.js');
-  const rule = Rules.DEFAULT_RULES.find(item => item.id === 'builtin_action_pps_exfactory');
-  assert.ok(rule && rule.builtIn && rule.kind === 'priority');
-  assert.equal(rule.reasonTr, 'Ex-factory yaklaşıyor, PPS onayı yok');
-  const days = rule.conditions.find(c => c.field === '@daysToLoad' && c.operator === 'lte');
-  assert.equal(days.value, 21);
-  // v7.221: 'açık' = Pending ya da Reddedildi (reddedilen PPS de onay değildir).
-  assert.ok(rule.conditions.some(c => c.field === '@checklist:pps' && c.operator === 'in' && c.value.includes('open') && c.value.includes('rejected')));
+  // 2026-11-21: yerleşik kural kaldırıldı; aynı tanım kullanıcı kuralı olarak sınanır.
+  assert.ok(!Rules.DEFAULT_RULES.some(item => item.id === 'builtin_action_pps_exfactory'));
+  const rule = Rules.normalizeRule({ id: 'user_pps_exfactory', kind: 'priority', target: 'ACTION_THIS_WEEK', name: 'PPS', match: 'all',
+    reasonTr: 'Ex-factory yaklaşıyor, PPS onayı yok', reasonEn: 'Ex-factory is approaching without PPS approval',
+    conditions: [
+      { field: '@daysToLoad', operator: 'gte', value: 0 },
+      { field: '@daysToLoad', operator: 'lte', value: 21 },
+      { field: '@checklist:pps', operator: 'in', value: ['open', 'rejected'] },
+    ] });
   const a = analysis({ daysToLoad: 18 });
   assert.ok(Rules.applyPriorityRules(a, [rule], { pps: 'open' }).matched.length, 'PPS açık → kural eşleşir');
   assert.equal(Rules.applyPriorityRules(a, [rule], { pps: 'approved' }).matched.length, 0, 'PPS onaylı → eşleşmez');
