@@ -11,6 +11,136 @@
     "en": "Program files are verified in parallel and the workspace opens directly after sign-in. Reports have their own image-size settings and row dividers. ASAS / IAS refresh is faster."
   },
   "changes": [
+    {"id": "shipping-license-all-rows", "type": "fix", "module": {"tr": "Nakliye Kıyaslama", "en": "Shipping Comparison"}, "title": {"tr": "Royalty ve hologram tüm lisanslı modellerde uygulanır", "en": "Royalty and hologram apply to every licensed model"}, "body": {"tr": "Nakliye Kıyaslama’da royalty ve hologram maliyeti bazı modellerde uygulanıyor, bazılarında uygulanmıyordu. CP’den aktarılan siparişler bu bilgiyi hiç almıyordu. Koleksiyon’dan daha önce aktarılan modeller ise yeniden gönderilmeden güncellenmiyordu. Artık her satır lisans bilgisini tablo açıldığında License Royalty sözleşmesinden güncel olarak alır. Yurt Dışı FOB altında ve Yurt İçi kartında +Roy. / +Holo. notu her lisanslı modelde görünür. CP’den aktarılan satırlarda, TL fiyatı girildiyse Yurt İçi FOB’a da TR royalty ve hologram eklenir; TR komisyonu tanımlı değilse yurt içi maliyet royaltysiz hesaplanmaz, boş kalır. DTR modeller değişmez.", "en": "In Shipping Comparison, royalty and hologram cost applied to some models but not to others. Orders sent from CP never received this information. Models sent from Collection earlier were not updated unless sent again. Each row now takes its licence information from the current License Royalty contract when the table opens. The +Roy. / +Holo. note appears under Overseas FOB and on the Domestic card for every licensed model. For rows sent from CP, TR royalty and hologram are also added to Domestic FOB when a TL price is entered; if no TR commission is defined, the domestic cost is left blank instead of being calculated without royalty. DTR models are unchanged."}, "visual": {"kind": "screenshot", "capture": "post-change", "src": "shipping-license-all-rows.png", "alt": {"tr": "Demo CP siparişlerinde Yurt Dışı FOB ve Yurt İçi kartında royalty ve hologram notu", "en": "Royalty and hologram note under Overseas FOB and on the Domestic card for demo CP orders"}, "caption": {"tr": "CP’den aktarılan lisanslı demo siparişlerde +Roy. / +Holo. notu görünür; DTR modelde (HARRY) not yoktur.", "en": "Licensed demo orders sent from CP show the +Roy. / +Holo. note; the DTR model (HARRY) shows none."}}},
+    {
+      "id": "plm-sync-images-no-freeze",
+      "type": "fix",
+      "module": {"tr": "CP · Siparişler · Backlog · Koleksiyon · PLM SYNC", "en": "CP · Orders · Backlog · Collection · PLM SYNC"},
+      "title": {
+        "tr": "PLM SYNC görsel indirmesinden sonra uygulama donmaz",
+        "en": "The app no longer freezes after PLM SYNC downloads images"
+      },
+      "body": {
+        "tr": "Görseller indirildikten sonra CP, Siparişler, Backlog ve Koleksiyon satırlarına bağlanırken, görseli olmayan her satır için tüm görsel kaydı baştan taranıyordu (hem ekranda hem sunucuda). Büyük veride bu işlem ekranı saniyelerce, hatta dakikalarca kilitliyordu. Satırlar artık hazır görsel dizininden çözülür; sonuç ve görseller aynıdır, bekleme ortadan kalkar.",
+        "en": "When downloaded images were linked to CP, Orders, Backlog and Collection rows, the whole image registry was scanned again for every row without an image (both on screen and on the server). With large data this locked the screen for seconds or even minutes. Rows are now resolved from the ready image index; the results and images are the same, without the wait."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; görseller ve tablolar aynı görünür, yalnız senkron sonrası donma kalkar.",
+          "en": "There is no change on screen; images and tables look the same, only the freeze after sync is gone."
+        }
+      }
+    },
+    {
+      "id": "oab-batch-job-store-busy-fix",
+      "type": "fix",
+      "module": {"tr": "OAB", "en": "OAB"},
+      "title": {
+        "tr": "OAB toplu çekme, satırlar alındıktan sonra iş kaydı hatasıyla bitmez",
+        "en": "OAB batch fetch no longer ends with a job receipt error after the rows are fetched"
+      },
+      "body": {
+        "tr": "OAB kombinasyonları çekildikten sonra iş \"Kalıcı OAB iş makbuzu doğrulanamadı veya kaydedilemedi\" hatasıyla bitebiliyor, yeni satırlar rapora kaydedilmiyor ve ekranda önceki rapor kalıyordu. Arka plandaki OAB işi artık kısa süreli dosya kilitlerinde hata vermek yerine kısa bir süre bekler; çekilen satırlar kaydedilir ve rapor güncellenir.",
+        "en": "After OAB combinations were fetched, the job could end with \"The persistent OAB job receipt could not be verified or saved\", the new rows were not saved to the report and the previous report stayed on screen. The background OAB job now briefly waits on short-lived file locks instead of failing; the fetched rows are saved and the report is updated."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda yeni bir öğe yok; düzeltme sunucudaki arka plan OAB işinin dosya kilidi davranışındadır.",
+          "en": "There is no new element on screen; the fix is in the file-lock behaviour of the background OAB job on the server."
+        }
+      }
+    },
+    {
+      "id": "sync-onedrive-transfer-guard",
+      "type": "feature",
+      "module": {"tr": "Sync", "en": "Sync"},
+      "title": {
+        "tr": "OneDrive aktarımı takıldığında Buyer Log uyarır",
+        "en": "Buyer Log warns when the OneDrive transfer gets stuck"
+      },
+      "body": {
+        "tr": "Buyer Log, değişikliklerinizin 30 dakikadan uzun süredir diğer cihazlara ulaşmadığını veya diğer cihazların değişikliklerinin bu bilgisayara inmediğini cihazlar arası onayla algılar. Sync rozeti ve Sync durumu uyarı gösterir. Uyarıda, \"Dosyaları bu cihazda tut\" ve kullanıcı onayıyla \"OneDrive'ı yeniden başlat\" işlemleri sunulur. İki işlem de dosya silmez ve kendiliğinden çalışmaz. Ortak klasörde zaman zaman kalan .buyerlog-hub-probe dosyaları da artık bırakılmaz; eskileri temizlenir.",
+        "en": "Buyer Log uses acknowledgements between devices to detect when your changes have not reached other devices for more than 30 minutes, or when changes from other devices have not arrived on this computer. The sync badge and Sync Status show a warning. The warning offers \"Keep files on this device\" and, after you confirm, \"Restart OneDrive\". Neither action deletes files or runs on its own. The .buyerlog-hub-probe files that were sometimes left in the shared folder are no longer left behind, and old ones are cleaned up."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sync-onedrive-transfer-alert.png",
+        "alt": {"tr": "Demo Sync durumu penceresinde OneDrive aktarım uyarısı ve güvenli işlem düğmeleri", "en": "OneDrive transfer warning with safe action buttons in a demo Sync Status window"},
+        "caption": {"tr": "Yayın diğer cihazlara ulaşmadığında Sync durumu nedeni ve güvenli çözümleri gösterir.", "en": "When a publication does not reach other devices, Sync Status shows the cause and safe fixes."}
+      }
+    },
+    {
+      "id": "plm-fabric-artwork-detail-reports-filters",
+      "type": "feature",
+      "module": {
+        "tr": "Alt detay raporları · LFL · Fiyat & Üretici Analizi",
+        "en": "Detail reports · LFL · Price & Supplier Analysis"
+      },
+      "title": {
+        "tr": "PLM Kumaş ve PLM Artwork detay raporlarında ve filtrelerde",
+        "en": "PLM Fabric and PLM Artwork in detail reports and filters"
+      },
+      "body": {
+        "tr": "PLM ID taşıyan her alt detay raporunda (LFL portföy detayları, Fiyat & Üretici Analizi, Siparişler, CP, Backlog ve diğerleri) PLM Kumaş ve PLM Artwork sütunları yer alır ve Excel'e aktarılır. LFL'de ve Fiyat & Üretici Analizi'nde bu iki alanla filtreleme yapılabilir. Kumaş Kategorisi, Kumaş Tipi, İplik No, Gramaj ve Karışım filtreleri artık modelin PLM kumaş bilgisinden gelir; PLM kaydı olmayan modelde ASAS değeri korunur ve aynı özelliğin farklı yazımları tek değerde birleşir. Kumaşçı ve Kumaşçı Ülkesi PLM'de bulunmadığı için ASAS'tan okunmaya devam eder.",
+        "en": "Every detail report that carries a PLM ID (LFL portfolio details, Price & Supplier Analysis, Orders, CP, Backlog and others) now shows PLM Fabric and PLM Artwork columns, and they are included in Excel exports. LFL and Price & Supplier Analysis can filter by both fields. The Fabric Category, Fabric Type, Yarn Count, Weight and Composition filters now come from the model's PLM fabric information. When a model has no PLM record, the ASAS value is kept, and different spellings of the same property are merged into one value. Fabric Supplier and Fabric Supplier Country are not in PLM, so they are still read from ASAS."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-fabric-artwork-detail-reports.png",
+        "alt": {
+          "tr": "Demo LFL portföy detayında PLM Kumaş ve PLM Artwork sütunları",
+          "en": "PLM Fabric and PLM Artwork columns in a demo LFL portfolio detail"
+        },
+        "caption": {
+          "tr": "Demo LFL portföy detayı: her model için PLM kumaş metni ve baskı yerleşimleri.",
+          "en": "Demo LFL portfolio detail: the PLM fabric text and print placements for each model."
+        }
+      }
+    },
+    {
+      "id": "fabric-filter-set-parts",
+      "type": "feature",
+      "module": {"tr": "Koleksiyon · CP · Siparişler", "en": "Collection · CP · Orders"},
+      "title": {
+        "tr": "Takım modellerde A/B/C parçasına göre kumaş filtresi",
+        "en": "Fabric filter by A/B/C part in set models"
+      },
+      "body": {
+        "tr": "Kumaş filtresindeki kumaş kartı detayları artık Tüm parçalar, Parça A, Parça B… sekmeleriyle ayrı ayrı seçilebilir. Örneğin A parçası Örme ve B parçası %100 Pamuk olan takımlar birlikte süzülür. Tüm parçalar sekmesi eskisi gibi takımdaki herhangi bir kumaşa bakar; kayıtlı filtreler değişmez.",
+        "en": "Fabric card details in the Fabric filter can now be chosen separately on the All parts, Part A, Part B… tabs. For example, sets whose part A is Knit and part B is 100% Cotton can be filtered together. The All parts tab still checks any fabric in the set as before; saved filters are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "fabric-filter-set-parts.png",
+        "alt": {"tr": "Demo koleksiyonda kumaş filtresinin Parça A sekmesinde Örme seçili", "en": "Knit selected on the Part A tab of the Fabric filter in a demo collection"},
+        "caption": {"tr": "Parça A sekmesinde seçilen Kategori yalnız takımın A kumaşına uygulanır.", "en": "The Category chosen on the Part A tab applies only to the set's A fabric."}
+      }
+    },
+    {
+      "id": "cp-rules-no-builtin",
+      "type": "improvement",
+      "module": {"tr": "CP · Siparişler · Kontrol & Kurallar", "en": "CP · Orders · Checks & Rules"},
+      "title": {
+        "tr": "Yerleşik öncelik kuralları ve checklist soruları kaldırıldı",
+        "en": "Built-in priority rules and checklist questions were removed"
+      },
+      "body": {
+        "tr": "Kontrol & Kurallar Merkezi artık hazır (yerleşik) öncelik kuralı veya checklist sorusu getirmez; öncelik ve sorular yalnız sizin ya da Moderatörün yayımladığı kurallardan gelir. Daha önce kaydedilmiş yerleşik kopyalar da geri gelmez. Expected Late, Already Late gibi teslimat sonucu, yüklemeye kalan gün ve sistem önerisi öncelik hesapları korunur; kendi kuralınızın koşulunda seçebilirsiniz. Öncelik etiketleri (Kritik, Bugün Aksiyon …) ve verilmiş checklist yanıtları silinmez.",
+        "en": "The Checks & Rules Center no longer ships ready-made (built-in) priority rules or checklist questions; priorities and questions now come only from your own rules or rules published by the Moderator. Previously saved built-in copies do not come back. Calculations such as the Expected Late / Already Late delivery outcome, days to load and the system-suggested priority are kept, and you can pick them in your own rule conditions. Priority tags (Critical, Action Today …) and existing checklist answers are not deleted."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-rules-no-builtin.png",
+        "alt": {"tr": "Yerleşik kural içermeyen boş Öncelik Kuralları listesi", "en": "Empty Priority Rules list without built-in rules"},
+        "caption": {"tr": "Demo veride Kurallarım listesi yerleşik kural olmadan boş açılır; yeni kural LCW AI ile ya da hazır örnekten oluşturulur.", "en": "On demo data, the My Rules list opens empty without built-in rules; new rules are created with LCW AI or from a ready-made example."}
+      }
+    },
     {
       "id": "cp-orders-stage-eta-columns",
       "type": "feature",
@@ -1130,6 +1260,11 @@
         "kind": "none",
         "reason": {"tr": "Ekranda yeni bir öğe yok; aynı liste ve eşleşmeler daha kısa sürede gelir.", "en": "Nothing new appears on screen; the same list and matches arrive sooner."}
       }
-    }
+    },
+    {"id": "pricing-desk-quotation-groups-layout", "type": "fix", "module": {"tr": "Fiyat Masası · Fiyat Teklifleri", "en": "Pricing Desk · Quotations"}, "title": {"tr": "Fiyat talebi grupları listesi kesilmeden görünür; başlık sadeleşti", "en": "Quotation groups list no longer gets cut off; the header is simpler"}, "body": {"tr": "Soldaki fiyat talebi grupları listesinde kartlar sütundan taşıp listeyi yatay kaydırıyor, kart metinleri soldan kesiliyordu. Kartlar artık sütuna sığar: tekrar eden Koleksiyon etiketi kaldırıldı, tarih tek satırda gün olarak gösterilir (tam saat üzerine gelince görünür). Seçili talebin başlığında model, üretici ve onay sayıları tek satır özette yer alır; Koleksiyonda Aç, Fiyat Geçmişi, Düzenleme Yetkisi, Excel'e Aktar, taslak e-postayı yeniden açma ve Sil işlemleri \"Diğer\" menüsünde toplandı.", "en": "In the quotation groups list on the left, cards overflowed the column, the list scrolled sideways and card text was cut off on the left. Cards now fit the column: the repeated Collection badge was removed and the date is shown on one line as a day (the full time appears on hover). The selected request's header shows model, manufacturer and approval counts in a one-line summary; Open in Collection, Pricing History, Editing Permission, Export to Excel, re-opening the draft e-mail and Delete are grouped in the \"More\" menu."}, "visual": {"kind": "screenshot", "capture": "post-change", "src": "quotation-desk-layout.png", "alt": {"tr": "Demo fiyat talepleriyle sığan grup listesi ve açık Diğer menüsü", "en": "Fitting groups list with demo quotations and the open More menu"}, "caption": {"tr": "Grup kartları sütuna sığar; ikincil işlemler Diğer menüsündedir.", "en": "Group cards fit the column; secondary actions are in the More menu."}}},
+    {"id": "collection-search-month-language-independent", "type": "fix", "module": {"tr": "Koleksiyon", "en": "Collection"}, "title": {"tr": "MB ayı her iki dilde de aranabilir", "en": "MB month can be searched in both languages"}, "body": {"tr": "Model Budget Month, kaydedildiği arayüz diline göre TEMMUZ veya JULY olarak saklanabildiği için arama yalnız o dilde sonuç veriyordu. Artık Temmuz ve July aynı kayıtları bulur; kayıtlı değer değişmez.", "en": "Model Budget Month could be stored as TEMMUZ or JULY depending on the interface language at save time, so search only matched that language. Temmuz and July now find the same records; stored values are unchanged."}, "visual": {"kind": "screenshot", "capture": "post-change", "src": "collection-search-period-shortcuts.png", "alt": {"tr": "Koleksiyon aramasında S7; MB=M3-M5 ile süzülmüş üç demo model", "en": "Three demo models filtered in Collection search with S7; MB=M3-M5"}, "caption": {"tr": "S7 sezonunda MB Mart–Mayıs modelleri listelenir; İngilizce kaydedilmiş Nisan da sonuçtadır.", "en": "S7 models with MB March–May are listed; April saved in English is included too."}}},
+    {"id": "collection-search-period-shortcuts", "type": "feature", "module": {"tr": "Koleksiyon · CP · Siparişler", "en": "Collection · CP · Orders"}, "title": {"tr": "Arama terim terim kip olarak görünür; tarih ve sezon kısayolları", "en": "Search shows each term as a chip; date and season shortcuts"}, "body": {"tr": "Tablo filtreleri şeridinde arama tek satır yerine kip kip gösterilir: \"XXX, YYY\" iki kip ve aralarında veya, noktalı virgül ve, hariç tutulan değer üstü çizili, tabloda bulunmayan terim uyarı renginde görünür; × yalnız o terimi kaldırır. MB=M3, MB=W1-W24, EXF=M10-M12, RT=W34, SEZON=S7 ve yıllı MB=2027M3 kısayollarıyla süzebilirsiniz. MB= veya SEZON= yazınca tablodaki değerler satır sayısıyla önerilir; geçersiz kısayol nedeniyle belirtilir.", "en": "In Table filters, search is shown as chips instead of one line: \"XXX, YYY\" becomes two chips joined by or, a semicolon becomes and, excluded values are struck through and terms not found are highlighted; × removes only that term. Filter with MB=M3, MB=W1-W24, EXF=M10-M12, RT=W34, SEASON=S7 or MB=2027M3 with a year. Typing MB= or SEASON= suggests the table's values with row counts; an invalid shortcut is explained."}, "visual": {"kind": "screenshot", "capture": "post-change", "src": "collection-search-period-shortcuts.png", "alt": {"tr": "Koleksiyon aramasında sezon, MB ay aralığı ve model adı kipleri", "en": "Collection search chips for season, MB month range and model name"}, "caption": {"tr": "SEZON=S7; MB=M3-M5, MB=M7; DEMO MODEL araması kip kip görünür; tabloda bulunmayan MB · Temmuz uyarı renginde.", "en": "The search SEZON=S7; MB=M3-M5, MB=M7; DEMO MODEL is shown as chips; MB · July, which is not in the table, is highlighted."}}},
+    {"id": "collection-fields-move-heading", "type": "feature", "module": {"tr": "Koleksiyon · Alanlar", "en": "Collection · Fields"}, "title": {"tr": "Eklediğiniz sütunu sürükleyerek başka ana başlığa taşıyın", "en": "Drag your own columns under another main heading"}, "body": {"tr": "Alanlar ekranında eklediğiniz bir sütunu başka bir başlığın sütunları arasına ya da kapalı başlık satırının üzerine bırakın; sütun o başlığa geçer ve tablodaki yeri ile başlık bandı kendiliğinden güncellenir. Sistem sütunları ve Checklist maddeleri kendi başlığında kalır. Sürükleme tutamacı artık düzgün altı nokta olarak görünür.", "en": "In the Fields panel, drop a column you added among another heading's columns or onto a collapsed heading row; the column joins that heading and its table position and heading band update automatically. System columns and Checklist items stay under their own heading. The drag handle now shows as a clean six-dot grip."}, "visual": {"kind": "screenshot", "capture": "post-change", "src": "collection-fields-move-heading.png", "alt": {"tr": "Demo Koleksiyonda Alanlar ekranı: Mill sütunu Model Detayları altında Kumaş'ın ardında, Construction Notlar başlığında", "en": "Fields panel in a demo collection: the Mill column under Model Details after Fabric, Construction under Notes"}, "caption": {"tr": "Mill Fiyatlandırma'dan Model Detayları'na, Construction Notlar'a sürüklendi.", "en": "Mill was dragged from Pricing to Model Details and Construction to Notes."}}},
+    {"id": "excel-import-duplicate-keep-all", "type": "improvement", "module": {"tr": "Koleksiyon · Kullanıcı Excelini İçeri Aktar", "en": "Collection · Import User Excel"}, "title": {"tr": "Tekrar çakışmasında tüm Excel satırlarını aktarma", "en": "Import all workbook rows in a duplicate conflict"}, "body": {"tr": "Gözden Geçir adımındaki tekrar çakışmalarında artık yalnız tek Excel satırı seçmek zorunda değilsiniz: \"Tümünü aktar (gerekirse yeni satır oluştur)\" seçeneğinde ilk satır eşleşen Buyer Log satırını günceller, aynı anahtarlı diğer satırlar yeni satır olarak eklenir. Aynı satırları kapsayan ikinci çakışma için tekrar karar istenmez. Bu açık karar, \"Eşleşmeyen satırları yeni kayıt olarak oluştur\" kapalı olsa da yalnız bu çakışmadaki satırları ekler.", "en": "In duplicate conflicts on the Review step you no longer have to keep a single workbook row: with \"Import all (create new rows if needed)\" the first row updates the matching Buyer Log row and the other rows with the same key are added as new rows. The second conflict covering the same rows does not ask again. This explicit choice adds only the rows of that conflict, even when \"Create unmatched rows as new records\" is off."}, "visual": {"kind": "screenshot", "capture": "post-change", "src": "excel-import-duplicate-keep-all.png", "alt": {"tr": "Demo Excelde aynı PLM ID'li iki satırdan biri mevcut satırı günceller, diğeri yeni satır olur", "en": "In a demo workbook, one of two rows with the same PLM ID updates the existing row and the other becomes a new row"}, "caption": {"tr": "Excel 2 mevcut 001234 satırını günceller; Excel 3 aynı anahtarla yeni satır olarak eklenir.", "en": "Workbook row 2 updates the existing 001234 row; row 3 is added as a new row with the same key."}}}
   ]
 }

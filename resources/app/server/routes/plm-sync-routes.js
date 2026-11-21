@@ -2,6 +2,7 @@
 
 const plmBomSync = require('../lib/plm-bom-sync');
 const plmBomStore = require('../lib/plm-bom-store');
+const plmModelDetails = require('../lib/plm-model-details');
 const plmBomSilentSync = require('../lib/plm-bom-silent-sync');
 const setStyleApi = require('../lib/corenectum-set-style-api');
 const coreNectumApiSettings = require('../lib/corenectum-api-settings');
@@ -122,6 +123,24 @@ app.post('/api/plm-sync/bom/batch', userAccess.requireAnyArea('koleksiyon', 'cp'
       updatedAt: store._updatedAt || null,
     });
   } catch (err) { apiError(res, err, 'PLM BOM özetleri okunamadı.'); }
+});
+
+/* PLM Kumaş + PLM Artwork detayları (alt detay raporları, LFL, Fiyat &
+   Üretici Analizi). Yalnız kalıcı plm-bom.json kaydını okur; bileşen listesi,
+   görsel veya AI çıktısı taşımaz. Model düzeyi ürün bilgisi olduğu için
+   detay raporu açabilen modüllerin hepsine açıktır. */
+app.post('/api/plm-model-details/batch', userAccess.requireAnyArea('source', 'koleksiyon', 'cp', 'orders', 'backlog', 'lfl', 'overview', 'priceanalysis', 'opencosting', 'shipping'), express.json({ limit: '128kb' }), (req, res) => {
+  try {
+    const raw = Array.isArray(req.body && req.body.plmIds) ? req.body.plmIds : null;
+    if (!raw) return res.status(400).json({ error: 'plmIds (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
+    const plmIds = [...new Set(raw.map(normalizePlmId).filter(Boolean))].slice(0, 1000);
+    const store = plmBomStore.load();
+    const entries = plmModelDetails.detailsForIds(plmIds, store);
+    res.set('Cache-Control', 'no-store').json({
+      ok: true, entries, requested: plmIds.length, found: Object.keys(entries).length,
+      revision: Number(store._revision) || 0, updatedAt: store._updatedAt || null,
+    });
+  } catch (err) { apiError(res, err, 'PLM model detayları okunamadı.'); }
 });
 
 /* CP BOM Kontrol: kapsamdaki modellerin saklanan tam BOM kalemleri. Yalnız

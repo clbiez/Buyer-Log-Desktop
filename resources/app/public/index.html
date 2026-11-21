@@ -365,7 +365,7 @@
 </script>
 <link rel="stylesheet" href="app.css?v=__BL_ASSET_VERSION__&rev=20261024-notebook-rich-editor">
 <template data-bl-style="automations-fields.css" data-href="automations-fields.css?v=__BL_ASSET_VERSION__&rev=1"></template>
-<link rel="stylesheet" href="table-search-help.css?v=__BL_ASSET_VERSION__&rev=SEARCH-HELP-V1">
+<link rel="stylesheet" href="table-search-help.css?v=__BL_ASSET_VERSION__&rev=SEARCH-HELP-V3">
 <template data-bl-style="open-costing.css" data-href="open-costing.css?v=__BL_ASSET_VERSION__"></template>
 <template data-bl-style="lfl.css" data-href="lfl.css?v=__BL_ASSET_VERSION__"></template>
 <template data-bl-style="collection-analytics.css" data-href="collection-analytics.css?v=__BL_ASSET_VERSION__&rev=7144"></template>
@@ -398,7 +398,7 @@
 <link rel="stylesheet" href="command-palette.css?v=__BL_ASSET_VERSION__&rev=1">
 <template data-bl-style="backlog-presentation.css" data-href="backlog-presentation.css?v=__BL_ASSET_VERSION__&rev=2"></template>
 <link rel="stylesheet" href="table-view-drawers.css?v=__BL_ASSET_VERSION__&rev=2">
-<link rel="stylesheet" href="ui-components.css?v=__BL_ASSET_VERSION__&rev=20261119-table-scroll-layers">
+<link rel="stylesheet" href="ui-components.css?v=__BL_ASSET_VERSION__&rev=20261121-search-chips">
 <link rel="stylesheet" href="ui-motion.css?v=__BL_ASSET_VERSION__&rev=20261117-flow-selection">
 <link rel="stylesheet" href="thinking-orbs.css?v=__BL_ASSET_VERSION__&rev=1">
 <link id="blBootGuardStyle" rel="stylesheet" href="ui-startup.css?v=__BL_ASSET_VERSION__">
@@ -515,7 +515,7 @@
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 6.5"/></symbol>
   <symbol id="i-snowflake" viewBox="0 0 24 24"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/><path d="M12 6.6l2.2-2.2M12 6.6L9.8 4.4M12 17.4l2.2 2.2M12 17.4l-2.2 2.2"/><path d="M6.9 9.1l-3-.8M6.9 9.1l-.8-3M17.1 14.9l3 .8M17.1 14.9l.8 3"/><path d="M17.1 9.1l3-.8M17.1 9.1l.8-3M6.9 14.9l-3 .8M6.9 14.9l-.8 3"/></symbol>
   <symbol id="i-coins" viewBox="0 0 24 24"><ellipse cx="9" cy="6" rx="6" ry="2.6"/><path d="M3 6v5c0 1.4 2.7 2.6 6 2.6s6-1.2 6-2.6V6"/><path d="M3 11v4c0 1.4 2.7 2.6 6 2.6.7 0 1.4-.05 2-.15"/><ellipse cx="16.5" cy="15" rx="5" ry="2.3"/><path d="M11.5 15v3.5c0 1.2 2.2 2.2 5 2.2s5-1 5-2.2V15"/></symbol>
-  <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/></symbol><symbol id="i-grip" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.8" fill="currentColor" stroke="none"/><circle cx="15" cy="6" r="1.8" fill="currentColor" stroke="none"/><circle cx="9" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="9" cy="18" r="1.8" fill="currentColor" stroke="none"/><circle cx="15" cy="18" r="1.8" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-robot" viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="3"/><path d="M12 3v4M9 3h6M8 12h.01M16 12h.01M8 16h8M2 11v5M22 11v5"/></symbol>
 </svg>
 
@@ -1315,6 +1315,8 @@
         <div class="lflDimWrap"><button type="button" class="lflDimBtn" id="lflDimBtn_iplikNo" data-lfldim="iplikNo" aria-expanded="false"><svg class="ic"><use href="#i-tag"/></svg><span class="lflDimText">İplik No</span><span class="lflDimCount" hidden></span><svg class="ic lflDimChevron"><use href="#i-chevron-down"/></svg></button><div class="lflDimPanel" id="lflDimPanel_iplikNo" hidden></div></div>
         <div class="lflDimWrap"><button type="button" class="lflDimBtn" id="lflDimBtn_fabricWeight" data-lfldim="fabricWeight" aria-expanded="false"><svg class="ic"><use href="#i-tag"/></svg><span class="lflDimText">Gramaj</span><span class="lflDimCount" hidden></span><svg class="ic lflDimChevron"><use href="#i-chevron-down"/></svg></button><div class="lflDimPanel" id="lflDimPanel_fabricWeight" hidden></div></div>
         <div class="lflDimWrap"><button type="button" class="lflDimBtn" id="lflDimBtn_karisim" data-lfldim="karisim" aria-expanded="false"><svg class="ic"><use href="#i-tag"/></svg><span class="lflDimText">Karışım</span><span class="lflDimCount" hidden></span><svg class="ic lflDimChevron"><use href="#i-chevron-down"/></svg></button><div class="lflDimPanel" id="lflDimPanel_karisim" hidden></div></div>
+        <div class="lflDimWrap"><button type="button" class="lflDimBtn" id="lflDimBtn_plmFabric" data-lfldim="plmFabric" aria-expanded="false"><svg class="ic"><use href="#i-hanger"/></svg><span class="lflDimText" data-i18n-tr="PLM Kumaş" data-i18n-en="PLM Fabric">PLM Kumaş</span><span class="lflDimCount" hidden></span><svg class="ic lflDimChevron"><use href="#i-chevron-down"/></svg></button><div class="lflDimPanel" id="lflDimPanel_plmFabric" hidden></div></div>
+        <div class="lflDimWrap"><button type="button" class="lflDimBtn" id="lflDimBtn_plmArtwork" data-lfldim="plmArtwork" aria-expanded="false"><svg class="ic"><use href="#i-tag"/></svg><span class="lflDimText" data-i18n-tr="PLM Artwork" data-i18n-en="PLM Artwork">PLM Artwork</span><span class="lflDimCount" hidden></span><svg class="ic lflDimChevron"><use href="#i-chevron-down"/></svg></button><div class="lflDimPanel" id="lflDimPanel_plmArtwork" hidden></div></div>
           </div>
         </div>
       </div>
@@ -1622,6 +1624,7 @@
 <div class="dropzone" id="dropzone" data-i18n-tr="Dosyayı buraya bırak" data-i18n-en="Drop the file here">Dosyayı buraya bırak</div>
 
 <script src="date-dimension.js?v=__BL_ASSET_VERSION__&rev=2"></script>
+<script src="table-search-periods.js?v=__BL_ASSET_VERSION__&rev=SEARCH-PERIODS-V2"></script>
 <script src="merch-calendar-runtime.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="dual-week-datepicker.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="column-schema.js?v=__BL_ASSET_VERSION__"></script>
@@ -1694,7 +1697,9 @@
 <script src="plm-bom.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="checklist-supplier-sync.js?v=__BL_ASSET_VERSION__&rev=5"></script>
 <script src="table-search-row-groups.js?v=__BL_ASSET_VERSION__&rev=20261116-search-input-order"></script>
-<script src="table-search-feedback.js?v=__BL_ASSET_VERSION__&rev=SEARCH-FEEDBACK-V1"></script>
+<script src="table-search-feedback.js?v=__BL_ASSET_VERSION__&rev=SEARCH-FEEDBACK-V2"></script>
+<script src="table-search-chips.js?v=__BL_ASSET_VERSION__&rev=SEARCH-CHIPS-V1"></script>
+<script src="table-search-suggest.js?v=__BL_ASSET_VERSION__&rev=SEARCH-SUGGEST-V1"></script>
 <script src="image-search.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="command-palette.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="kpi-motion.js?v=__BL_ASSET_VERSION__&rev=2"></script>
@@ -1734,7 +1739,7 @@
 <script src="backlog-overview.js?v=__BL_ASSET_VERSION__&rev=20261120-read-model-v3"></script>
 <script src="backlog-radar-layout.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="collection-plm-drag-import.js?v=__BL_ASSET_VERSION__&rev=1"></script>
-<script src="table-search-help.js?v=__BL_ASSET_VERSION__&rev=SEARCH-HELP-V2"></script>
+<script src="table-search-help.js?v=__BL_ASSET_VERSION__&rev=SEARCH-HELP-V3"></script>
 <script src="table-toolbar-action-cleanup.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="collection-status-ui.js?v=__BL_ASSET_VERSION__"></script>
 <script src="workspace-blur.js?v=__BL_ASSET_VERSION__"></script>

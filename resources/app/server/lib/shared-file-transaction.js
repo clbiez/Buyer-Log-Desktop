@@ -46,6 +46,10 @@ leaseRuntime.requestPolicy ||= new AsyncLocalStorage();
 // contract. Within HTTP work they fail busy instead of sleeping on this event
 // loop. Awaited writers continue to queue normally; startup retains its policy.
 function runWithNonblockingFileLeases(operation){return leaseRuntime.requestPolicy.run({nonblocking:true},operation);}
+// Background work started by an HTTP request (e.g. the OAB batch worker) must
+// not inherit that request's fail-fast policy: it returns the normal bounded
+// lease wait (timeoutMs) instead of turning brief contention into BUSY.
+function runWithBoundedFileLeaseWaits(operation){return leaseRuntime.requestPolicy.run({nonblocking:false},operation);}
 leaseRuntime.completedScopes ||= new WeakSet();
 leaseRuntime.activePins ||= new Set();
 leaseRuntime.asyncResources ||= new Set();
@@ -405,4 +409,4 @@ async function withFileLeaseAsync(file,operation,settings={}){
   });
 }
 
-module.exports={withFileLeaseSync,withFileLeaseAsync,replaceFileWithRetry,getBuyerLogInstanceId,assertHeldFileLeases,assertHeldFileLeasesAsync,runWithNonblockingFileLeases};
+module.exports={withFileLeaseSync,withFileLeaseAsync,replaceFileWithRetry,getBuyerLogInstanceId,assertHeldFileLeases,assertHeldFileLeasesAsync,runWithNonblockingFileLeases,runWithBoundedFileLeaseWaits};

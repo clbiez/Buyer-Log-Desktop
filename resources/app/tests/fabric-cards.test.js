@@ -244,7 +244,7 @@ test('no arbitrary text limits: UI and persistent server preserve complete summa
 test('Collection Fabric detail facets use same-card AND semantics, active filter persistence and whole-dataset filtering',()=>{
   assert.match(APP,/function kolFabricDetailMatches\(row,omitKey/);
   assert.match(APP,/return fabricCardDetailsMatch\(kolFabricDetailsForRow\(row\),kolFabricDetailFilters,omitKey\)/);
-  assert.match(APP,/\(detailsList\|\|\[\]\)\.some\(details=>active\.every/);
+  assert.match(APP,/if\(group\.part&&details\.part!==group\.part\)continue;\n\s*if\(fabricFacetGroupPasses\(details,group\)\)\{found=true;break;\}/);
   assert.match(APP,/if\(!passesKolColFilters\(r\)\|\|!kolFabricDetailMatches\(r\)\) return false/);
   assert.match(APP,/fabricDetails:Object\.fromEntries/);
   assert.match(APP,/if\(key==='fabric'\)kolFabricDetailPanel\(panel\)/);

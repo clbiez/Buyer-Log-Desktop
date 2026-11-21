@@ -393,7 +393,11 @@ function parseTableSearchTerms(value){
     const suffix=marker!=='!'&&marker!=='/'&&raw.length>1&&raw[raw.length-1]==='!';
     const mode=marker==='!'||suffix?'notContains':marker==='/'?'contains':'exact';
     const criterion=marker==='!'||marker==='/'?norm(raw.slice(1)):suffix?norm(raw.slice(0,-1)):raw;
-    return criterion?{mode,value:normalize(criterion)}:null;
+    if(!criterion)return null;
+    // Dönem kısayolu (MB=M3-M5, EXF=W12): dil bağımsız satır jetonlarının VEYA kümesi.
+    const period=globalThis.BLTableSearchPeriods?.parse(criterion);
+    if(period&&!period.invalid)return {mode:mode==='notContains'?'notContains':'period',value:normalize(criterion),values:period.tokens};
+    return period?{mode,value:normalize(criterion),invalid:true}:{mode,value:normalize(criterion)};
   };
   // "14! SAD!" gibi boşlukla yan yana yazılan sonek hariç tutmaları ayrı kriterdir.
   // Yalnız tamamlanmış sonekten sonra bölünür; "! RED" önek yazımı bozulmaz.
@@ -439,6 +443,10 @@ function tableSearchMatches(haystack,terms,options){
   };
   const criterionMatches=criterion=>{
     const item=criterion&&typeof criterion==='object'?criterion:{mode:'exact',value:criterion};
+    if(Array.isArray(item.values)){
+      const hit=item.values.some(token=>text.includes(token));
+      return item.mode==='notContains'?!hit:hit;
+    }
     const value=normalize(item.value);
     if(!value)return false;
     if(item.mode==='contains')return text.includes(value);
@@ -3204,8 +3212,9 @@ function activeTableFilterTokens(tableKey){
     });
     Object.entries(kolFabricDetailFilters).forEach(([key,entry])=>{
       if(!entry?.size)return;
-      const label=window.BLFabricCards?.DETAIL_LABELS?.[key];
-      tokens.push({kind:'fabricDetail',key,label:(appLang==='en'?'Fabric · ':'Kumaş · ')+(label?(appLang==='en'?label.en:label.tr):key),detail:activeFilterEntrySummary({values:entry})});
+      const info=fabricFacetKeyInfo(key),label=window.BLFabricCards?.DETAIL_LABELS?.[info?info.field:key];
+      const part=info&&info.part?(appLang==='en'?'Part ':'Parça ')+info.part+' · ':'';
+      tokens.push({kind:'fabricDetail',key,label:(appLang==='en'?'Fabric · ':'Kumaş · ')+part+(label?(appLang==='en'?label.en:label.tr):key),detail:activeFilterEntrySummary({values:entry})});
     });
     const checked=normalizeCheckFilterMode(kolCheckFilter);
     if(checked)tokens.push({kind:'check',key:'',label:appLang==='en'?'Rows':'Satırlar',detail:checked==='checked'?(appLang==='en'?'Checked':'İşaretli'):(appLang==='en'?'Unchecked':'İşaretsiz')});
@@ -3233,13 +3242,17 @@ function renderActiveFilterContext(tableKey){
   if(!bar||!wrap)return;
   bar.setAttribute('aria-label',appLang==='en'?'Active table filters':'Aktif tablo filtreleri');
   const tokens=activeTableFilterTokens(tableKey),removeText=appLang==='en'?'Remove filter':'Filtreyi kaldır';
+  const chipsApi=window.BLTableSearchChips;
   wrap.innerHTML=tokens.length?tokens.map(token=>{
+    // Arama tek etiket yerine terim terim kip olarak gösterilir (VE/VEYA, hariç, kısayol).
+    if(token.kind==='search'&&chipsApi)return chipsApi.html(token.detail,{english:appLang==='en',inputId:token.key,missing:new Set((window.BLTableSearchFeedback?.lastMissing?.(token.key)||[]).map(value=>norm(value).toLocaleLowerCase('tr-TR')))});
     const text=`${token.label}: ${token.detail}`;
     return `<button type="button" class="activeFilterToken" data-filter-remove data-filter-kind="${escapeHtml(token.kind)}" data-filter-key="${escapeHtml(token.key)}" title="${escapeHtml(`${removeText}: ${text}`)}" aria-label="${escapeHtml(`${removeText}: ${text}`)}"><span>${escapeHtml(text)}</span><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>`;
   }).join(''):`<span class="activeFilterEmpty">${escapeHtml(appLang==='en'?'No active table filters':'Aktif tablo filtresi yok')}</span>`;
   bar.dataset.activeCount=String(tokens.length);
   const clear=bar.querySelector('[data-active-filter-clear]');if(clear)clear.hidden=!tokens.length;
   wrap.querySelectorAll('[data-filter-remove]').forEach(button=>button.addEventListener('click',()=>removeActiveFilterToken(tableKey,button.dataset.filterKind,button.dataset.filterKey)));
+  wrap.querySelectorAll('.tableSearchChips').forEach(group=>chipsApi?.bind(group,group.dataset.searchInput));
 }
 function removeActiveFilterToken(tableKey,kind,key){
   if(kind==='search'||kind==='select'){const input=document.getElementById(key);if(input)input.value='';}
@@ -5497,15 +5510,34 @@ function tableFieldsDeleteColumn(tableKey,key){
   else if(meta.kind==='note')void removeCpNoteColumn(meta.col.noteColumnId,done);
   else if(meta.kind==='personalNote')removePersonalOrderNoteColumn(meta.col.k,done);
 }
-// Sütun yalnız kendi başlığı içinde taşınır; bant bölünmez.
-function tableFieldsMoveColumn(tableKey,key,targetKey,after){
+// Koleksiyon'da kullanıcının eklediği serbest sütun (checklist hariç) ana başlığını
+// soldaki komşusundan alır; bu yüzden başka bir başlığın içine sürüklenebilir ve
+// başlığı yerleştiği yere göre kendiliğinden değişir. Sistem sütunlarının ve
+// CP/Orders'ın ortak (sunucu) sütun tanımlarının başlığı sabittir.
+function tableFieldsCanChangeGroup(tableKey,key){
+  return tableKey==='koleksiyon'&&tableFieldsColumn(tableKey,key).kind==='custom';
+}
+// Sütun kendi başlığı içinde taşınır; yalnız tableFieldsCanChangeGroup sütunları
+// başka başlığa geçebilir. targetGroup verilirse sütun o başlıkta kalmalıdır.
+// Koleksiyon yerleşim planı: normalize edilmiş yeni sıra ya da sütun hedef başlıkta
+// kalamıyorsa null. Başlığın ilk sütununun önüne bırakılan serbest sütun soldaki
+// başlığa düşerdi; hedef başlıkta kalacak taraf seçilir. Sona sabitlenen başlıkta
+// (Endeksmatik & Avantaj) serbest sütun kalamaz; çekmece bu hedefi hiç kabul etmez.
+function tableFieldsKolPlan(key,targetKey,after,targetGroup){
+  if(!key||!targetKey||key===targetKey||key==='__picture__'||targetKey==='__picture__')return null;
+  const base=kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder()).filter(item=>item!==key);
+  if(base.indexOf(targetKey)<0)return null;
+  const place=side=>{const order=base.slice();order.splice(order.indexOf(targetKey)+(side?1:0),0,key);return kolNormalizeDisplayOrder(order);};
+  const fits=order=>!targetGroup||kolColumnGroupFor(key,order)===targetGroup;
+  return [place(!!after),place(!after)].find(fits)||null;
+}
+function tableFieldsMoveColumn(tableKey,key,targetKey,after,targetGroup){
   if(!key||!targetKey||key===targetKey)return false;
   if(tableKey==='koleksiyon'){
     if(key==='__picture__'||targetKey==='__picture__')return false;
-    const order=kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder()).filter(item=>item!==key);
-    const at=order.indexOf(targetKey);if(at<0)return false;
-    order.splice(after?at+1:at,0,key);
-    kolColOrder=kolNormalizeDisplayOrder(order);saveKolColState();
+    const next=tableFieldsKolPlan(key,targetKey,after,targetGroup);
+    if(!next){showToast(appLang==='en'?'This column cannot be moved under that heading.':'Bu sütun o başlığın altına taşınamaz.');return false;}
+    kolColOrder=next;saveKolColState();
   }else{
     const cs=colmgr[tableKey];if(!cs)return false;
     const order=normalizedColumnOrder(tableKey,cs.order).filter(item=>item!==key);
@@ -5557,10 +5589,11 @@ function renderTableFieldsMenu(menu,tableKey){
         meta.canDelete?`<button type="button" class="tableFieldsIcon isDanger" data-table-fields-delete="${escapeHtml(key)}" title="${escapeHtml(en?'Delete column':'Sütunu sil')}" aria-label="${escapeHtml(en?'Delete column':'Sütunu sil')}"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg></button>`:'',
       ].join('');
       const checks=TABLE_FIELDS_PRESETS.map(preset=>tableFieldsCheckbox(`data-table-fields-preset="${preset}" data-key="${escapeHtml(key)}"`,presetSets[preset].has(key)?'all':'none',`${meta.label} · ${tableViewPresetName(preset)}`)).join('');
-      const draggable=!meta.fixed&&entry.keys.length>1;
-      return `<div class="tableFieldsColumn${hidden.has(key)?' isHiddenNow':''}${meta.userLabel?' hasUserLabel':''}" data-table-fields-col="${escapeHtml(key)}" data-group="${escapeHtml(entry.group)}"${draggable?' draggable="true"':''}><span class="tableFieldsDrag${draggable?'':' isDisabled'}" aria-hidden="true">⋮⋮</span><span class="tableFieldsColumnName" title="${escapeHtml(meta.label)}">${meta.kind==='personalNote'?'🔒 ':''}${escapeHtml(meta.label)}</span><span class="tableFieldsActions">${actions}</span><span class="tableFieldsChecks">${checks}</span></div>`;
+      const crossGroup=tableFieldsCanChangeGroup(tableKey,key);
+      const draggable=!meta.fixed&&(entry.keys.length>1||crossGroup);
+      return `<div class="tableFieldsColumn${hidden.has(key)?' isHiddenNow':''}${meta.userLabel?' hasUserLabel':''}" data-table-fields-col="${escapeHtml(key)}" data-group="${escapeHtml(entry.group)}"${draggable?' draggable="true"':''}${crossGroup?' data-cross-group="1"':''}${meta.fixed?' data-fixed="1"':''}><span class="tableFieldsDrag${draggable?'':' isDisabled'}" aria-hidden="true"><svg class="ic"><use href="#i-grip"/></svg></span><span class="tableFieldsColumnName" title="${escapeHtml(meta.label)}">${meta.kind==='personalNote'?'🔒 ':''}${escapeHtml(meta.label)}</span><span class="tableFieldsActions">${actions}</span><span class="tableFieldsChecks">${checks}</span></div>`;
     }).join('');
-    return `<div class="tableFieldsGroup is-${mode}${open?' isOpen':''}" style="--grp-accent:${GROUP_ACCENTS[entry.group]||'var(--ui-accent)'}"><div class="tableFieldsGroupRow"><button type="button" class="tableFieldsGroupToggle" data-table-fields-toggle="${escapeHtml(entry.group)}" aria-expanded="${open}"><svg class="ic" aria-hidden="true"><use href="#${open?'i-chevron-down':'i-chevron-right'}"/></svg><b>${escapeHtml(entry.label)}</b><span class="tableFieldsItemCount">${shown}/${entry.keys.length}</span></button><button type="button" class="tableFieldsModeBtn is-${mode}" data-table-fields-group="${escapeHtml(entry.group)}" title="${escapeHtml(modeTitle)}">${escapeHtml(modeLabel)}</button><span class="tableFieldsChecks">${groupChecks}</span></div>${columns?`<div class="tableFieldsColumns" ${open?'':'hidden'}>${columns}</div>`:''}</div>`;
+    return `<div class="tableFieldsGroup is-${mode}${open?' isOpen':''}" style="--grp-accent:${GROUP_ACCENTS[entry.group]||'var(--ui-accent)'}"><div class="tableFieldsGroupRow" data-table-fields-drop-group="${escapeHtml(entry.group)}"><button type="button" class="tableFieldsGroupToggle" data-table-fields-toggle="${escapeHtml(entry.group)}" aria-expanded="${open}"><svg class="ic" aria-hidden="true"><use href="#${open?'i-chevron-down':'i-chevron-right'}"/></svg><b>${escapeHtml(entry.label)}</b><span class="tableFieldsItemCount">${shown}/${entry.keys.length}</span></button><button type="button" class="tableFieldsModeBtn is-${mode}" data-table-fields-group="${escapeHtml(entry.group)}" title="${escapeHtml(modeTitle)}">${escapeHtml(modeLabel)}</button><span class="tableFieldsChecks">${groupChecks}</span></div>${columns?`<div class="tableFieldsColumns" ${open?'':'hidden'}>${columns}</div>`:''}</div>`;
   }).join('');
   const addButtons=[];
   if(tableKey==='cp'||tableKey==='orders'){
@@ -5572,7 +5605,7 @@ function renderTableFieldsMenu(menu,tableKey){
     addButtons.push(`<button type="button" class="tbtn" data-table-fields-add="column">+ ${escapeHtml(en?'Add Column':'Sütun Ekle')}</button>`);
     addButtons.push(`<button type="button" class="tbtn" data-table-fields-checklist>+ ${escapeHtml(en?'Add checklist item':'Checklist maddesi ekle')}</button>`);
   }
-  menu.innerHTML=`<div class="tableFieldsHead"><div><b>${escapeHtml(en?'Fields':'Alanlar')}</b><span>${escapeHtml(en?'Open a heading to see its columns. Ticks choose the views a column appears in; drag to reorder.':'Başlığı açıp sütunları görün. Tikler sütunun hangi görünümde yer alacağını belirler; sürükleyerek sıralayın.')}</span></div><button type="button" class="tableFieldsClose" data-table-fields-close aria-label="${escapeHtml(en?'Close':'Kapat')}">×</button></div><div class="tableFieldsGridHead"><span>${escapeHtml(en?'Heading / column':'Başlık / sütun')}</span><span class="tableFieldsChecks">${presetHead}</span></div><div class="tableFieldsList" role="group">${groupsHtml}</div><div class="tableFieldsFoot"><div class="tableFieldsAdd">${addButtons.join('')}</div><button type="button" class="tbtn" data-table-fields-reset ${Object.keys(overrides).length?'':'disabled'}>${escapeHtml(en?'Reset fields':'Alanları sıfırla')}</button></div>`;
+  menu.innerHTML=`<div class="tableFieldsHead"><div><b>${escapeHtml(en?'Fields':'Alanlar')}</b><span>${escapeHtml(en?'Open a heading to see its columns. Ticks choose the views a column appears in; drag to reorder. Drag your own columns onto another heading to move them there.':'Başlığı açıp sütunları görün. Tikler sütunun hangi görünümde yer alacağını belirler; sürükleyerek sıralayın. Eklediğiniz sütunları başka bir başlığa sürükleyerek o başlığa taşıyın.')}</span></div><button type="button" class="tableFieldsClose" data-table-fields-close aria-label="${escapeHtml(en?'Close':'Kapat')}">×</button></div><div class="tableFieldsGridHead"><span>${escapeHtml(en?'Heading / column':'Başlık / sütun')}</span><span class="tableFieldsChecks">${presetHead}</span></div><div class="tableFieldsList" role="group">${groupsHtml}</div><div class="tableFieldsFoot"><div class="tableFieldsAdd">${addButtons.join('')}</div><button type="button" class="tbtn" data-table-fields-reset ${Object.keys(overrides).length?'':'disabled'}>${escapeHtml(en?'Reset fields':'Alanları sıfırla')}</button></div>`;
   menu.querySelectorAll('input[data-indeterminate]').forEach(input=>{input.indeterminate=true;});
   const list=menu.querySelector('.tableFieldsList');if(list)list.scrollTop=listScroll;
   menu.querySelector('[data-table-fields-close]')?.addEventListener('click',()=>closeTableFieldsMenu());
@@ -5600,12 +5633,21 @@ function renderTableFieldsMenu(menu,tableKey){
   menu.querySelectorAll('[data-table-fields-rename]').forEach(button=>button.addEventListener('click',()=>tableFieldsRenameColumn(tableKey,button.dataset.tableFieldsRename)));
   menu.querySelectorAll('[data-table-fields-formula]').forEach(button=>button.addEventListener('click',()=>tableFieldsRenameColumn(tableKey,button.dataset.tableFieldsFormula)));
   menu.querySelectorAll('[data-table-fields-delete]').forEach(button=>button.addEventListener('click',()=>tableFieldsDeleteColumn(tableKey,button.dataset.tableFieldsDelete)));
+  // Başka başlığa bırakma yalnız yerleşim planı sütunu o başlıkta tutuyorsa kabul edilir;
+  // plan her sürüklemede hedef başına bir kez hesaplanır.
+  const crossPlans=new Map();
+  const crossFits=(targetKey,group)=>{
+    const id=`${tableFieldsDragKey}\u0000${targetKey}\u0000${group}`;
+    if(!crossPlans.has(id))crossPlans.set(id,tableKey==='koleksiyon'&&!!tableFieldsKolPlan(tableFieldsDragKey,targetKey,true,group));
+    return crossPlans.get(id);
+  };
   menu.querySelectorAll('.tableFieldsColumn[draggable="true"]').forEach(row=>{
-    row.addEventListener('dragstart',event=>{tableFieldsDragKey=row.dataset.tableFieldsCol;row.classList.add('isDragging');event.dataTransfer.effectAllowed='move';try{event.dataTransfer.setData('text/plain',tableFieldsDragKey);}catch(_){}});
-    row.addEventListener('dragend',()=>{tableFieldsDragKey=null;menu.querySelectorAll('.isDragging,.dropBefore,.dropAfter').forEach(el=>el.classList.remove('isDragging','dropBefore','dropAfter'));});
+    row.addEventListener('dragstart',event=>{tableFieldsDragKey=row.dataset.tableFieldsCol;crossPlans.clear();row.classList.add('isDragging');event.dataTransfer.effectAllowed='move';try{event.dataTransfer.setData('text/plain',tableFieldsDragKey);}catch(_){}});
+    row.addEventListener('dragend',()=>{tableFieldsDragKey=null;menu.querySelectorAll('.isDragging,.dropBefore,.dropAfter,.isDropTarget').forEach(el=>el.classList.remove('isDragging','dropBefore','dropAfter','isDropTarget'));});
   });
+  const draggedRow=()=>tableFieldsDragKey&&menu.querySelector(`[data-table-fields-col="${CSS.escape(tableFieldsDragKey)}"]`);
   menu.querySelectorAll('.tableFieldsColumn').forEach(row=>{
-    const sameGroup=()=>{const dragged=tableFieldsDragKey&&menu.querySelector(`[data-table-fields-col="${CSS.escape(tableFieldsDragKey)}"]`);return dragged&&dragged.dataset.group===row.dataset.group&&dragged!==row&&row.getAttribute('draggable')==='true';};
+    const sameGroup=()=>{const dragged=draggedRow();if(!dragged||dragged===row)return false;if(dragged.dataset.group===row.dataset.group)return row.getAttribute('draggable')==='true';return dragged.dataset.crossGroup==='1'&&row.dataset.fixed!=='1'&&crossFits(row.dataset.tableFieldsCol,row.dataset.group);};
     row.addEventListener('dragover',event=>{
       if(!sameGroup())return;event.preventDefault();
       const rect=row.getBoundingClientRect(),after=event.clientY>rect.top+rect.height/2;
@@ -5615,7 +5657,21 @@ function renderTableFieldsMenu(menu,tableKey){
     row.addEventListener('drop',event=>{
       if(!sameGroup())return;event.preventDefault();
       const after=row.classList.contains('dropAfter');row.classList.remove('dropBefore','dropAfter');
-      tableFieldsMoveColumn(tableKey,tableFieldsDragKey,row.dataset.tableFieldsCol,after);
+      tableFieldsMoveColumn(tableKey,tableFieldsDragKey,row.dataset.tableFieldsCol,after,row.dataset.group);
+    });
+  });
+  // Kapalı başlığın satırına bırakılan sütun o başlığın sonuna eklenir ve başlık açılır.
+  menu.querySelectorAll('[data-table-fields-drop-group]').forEach(head=>{
+    const group=head.dataset.tableFieldsDropGroup;
+    const lastKey=()=>{const entry=catalog.find(item=>item.group===group);return entry&&[...entry.keys].reverse().find(key=>key!=='__picture__');};
+    const accepts=()=>{const dragged=draggedRow(),target=lastKey();return !!dragged&&!!target&&dragged.dataset.crossGroup==='1'&&dragged.dataset.group!==group&&crossFits(target,group);};
+    head.addEventListener('dragover',event=>{if(!accepts())return;event.preventDefault();head.classList.add('isDropTarget');});
+    head.addEventListener('dragleave',event=>{if(!head.contains(event.relatedTarget))head.classList.remove('isDropTarget');});
+    head.addEventListener('drop',event=>{
+      if(!accepts())return;event.preventDefault();head.classList.remove('isDropTarget');
+      const target=lastKey();if(!target)return;
+      expanded.add(group);
+      tableFieldsMoveColumn(tableKey,tableFieldsDragKey,target,true,group);
     });
   });
   menu.querySelector('[data-table-fields-reset]')?.addEventListener('click',()=>{resetTableGroupOverrides(tableKey);renderTableFieldsMenu(menu,tableKey);});
@@ -7638,7 +7694,7 @@ function isCpFabricFilterKey(tableKey,key){return (tableKey==='cp'||tableKey==='
 function cpFabricFilterDetails(entry){
   const out={};
   Object.entries(entry&&entry.fabricDetails||{}).forEach(([key,values])=>{
-    if(KOL_FABRIC_DETAIL_KEYS.includes(key)&&values&&(values.size||values.length))out[key]=new Set([...values].map(String));
+    if(fabricFacetKeyInfo(key)&&values&&(values.size||values.length))out[key]=new Set([...values].map(String));
   });
   return out;
 }
@@ -8153,7 +8209,8 @@ function openHeaderFilter(tableKey, key, anchorEl, rerenderOuter){
     const universe=rowsForFilterUniverse(tableKey,key).map(row=>fabricCardDetailsForRaw(row&&row[key]));
     const read=fabricCardFacetSection(panel,{
       current,
-      detailsForKey:field=>universe.filter(list=>fabricCardDetailsMatch(list,current,field)).flat()
+      detailsForKey:field=>universe.filter(list=>fabricCardDetailsMatch(list,current,field)).flat(),
+      partLabels:()=>new Set(universe.flat().map(details=>details.part).filter(Boolean))
     });
     if(read) panel._readFabricFacets=read;
   }
@@ -10219,7 +10276,34 @@ function cpSearchHaystack(r){
     const s=norm(v).toLowerCase();
     if(s)hay=hay?hay+' '+s:s;
   }
+  // Alan kısayolu (MB=M3, SEZON=S7) oturumda ilk kez kullanılana kadar tarih jetonu hesaplanmaz.
+  if(globalThis.BLTableSearchPeriods?.used){const tokens=cpSearchFieldTokens(r);if(tokens)hay=hay?hay+' '+tokens:tokens;}
   return hay;
+}
+// CP/Siparişler alan jetonları satır başına önbelleklenir; tarih/sezon değişince yenilenir.
+const _cpSearchFieldCache=new WeakMap();
+// Kanonik bağlama anahtarları bir kez çözülür; sıcak yolda yalnız düz özellik okuması kalır.
+let _cpSearchFieldKeys=null;
+function cpSearchFieldValue(r,keys){
+  for(let i=0;i<keys.length;i++){const v=r[keys[i]];if(v!==undefined&&v!==null&&v!=='')return v;}
+  return '';
+}
+function cpSearchFieldTokens(r){
+  if(!r||typeof r!=='object')return '';
+  if(!_cpSearchFieldKeys){
+    const keysOf=id=>window.BLCanonicalFields?.bindingFor?.('cp',id)?.keys||[];
+    _cpSearchFieldKeys={inStore:keysOf('inStore'),exFactory:keysOf('exFactory'),retail:keysOf('retailDate'),season:keysOf('season')};
+  }
+  const K=_cpSearchFieldKeys;
+  const mbDate=cpSearchFieldValue(r,K.inStore),exFactory=cpSearchFieldValue(r,K.exFactory),retail=cpSearchFieldValue(r,K.retail),season=cpSearchFieldValue(r,K.season);
+  // Merch takvimi yüklenince/değişince hafta-ay ataması değişir; önbellek takvim sürümüne bağlıdır.
+  const revision=globalThis.BLDateDimension?.merchCalendarRevision?.()??0;
+  const cached=_cpSearchFieldCache.get(r);
+  if(cached&&cached.revision===revision&&cached.mbDate===mbDate&&cached.exFactory===exFactory&&cached.retail===retail&&cached.season===season)return cached.value;
+  // Excel seri no, gg.aa.yyyy, ISO: ekrandaki tarih ayrıştırıcısıyla aynı.
+  const value=globalThis.BLTableSearchPeriods.rowTokens({mbDate:coerceDateLoose(mbDate),exFactory:coerceDateLoose(exFactory),retail:coerceDateLoose(retail),season});
+  _cpSearchFieldCache.set(r,{revision,mbDate,exFactory,retail,season,value});
+  return value;
 }
 const CP_MIRROR_GROUPS=[
   {id:'pri',col:'Priority'},
@@ -19279,6 +19363,8 @@ async function openSyncLocalDataModal(){
 function syncStatusBadgeView(s){
   const pending=Number(s&&s.pendingUpload||0)+Number(s&&s.pendingDownload||0),en=appLang==='en';
   if(s&&s.progress)return {icon:'i-cloud',tone:'syncing',label:en?'Syncing':'Senkronize ediliyor',count:0};
+  // OneDrive aktarım bekçisi: yayın/indirme eşlere ulaşmıyorsa uyarı tonu.
+  if(s&&s.transport&&s.transport.alert)return {icon:'i-alert-triangle',tone:'pending',label:en?'OneDrive transfer may be stuck':'OneDrive aktarımı takılmış olabilir',count:0};
   if(pending)return {icon:'i-cloud',tone:'pending',label:en?`${pending} pending sync`:`${pending} bekleyen senkron`,count:pending};
   if(!s||!s.online)return {icon:'i-cloud-off',tone:'offline',label:en?'Offline':'Çevrimdışı',count:0};
   return {icon:'i-cloud',tone:'synced',label:en?'Synced':'Senkronize',count:0};
@@ -19312,6 +19398,20 @@ function renderSyncStatusBadge(s){
   badge.innerHTML=`<svg class="ic" aria-hidden="true"><use href="#${view.icon}"/></svg>${view.count?`<b class="syncStatusCount" aria-hidden="true">${view.count>99?'99+':view.count}</b>`:''}`;
   button?.setAttribute('title',view.label);
   button?.setAttribute('aria-label',view.label);
+  noticeSyncTransportAlert(s);
+}
+/* Aynı takılma için tek bildirim: anahtar değişmedikçe tekrar gösterilmez. */
+let syncTransportNoticeKey='';
+function noticeSyncTransportAlert(s){
+  const transport=s&&s.transport;
+  if(!transport||!transport.alert){if(transport)syncTransportNoticeKey='';return;}
+  if(!transport.key||transport.key===syncTransportNoticeKey)return;
+  syncTransportNoticeKey=transport.key;
+  const en=appLang==='en',out=transport.outbound&&transport.outbound.status==='stalled';
+  showToast(out
+    ?(en?'Your changes have not reached other devices for a while. OneDrive upload may be stuck — open Sync Status for safe fixes.':'Değişiklikleriniz bir süredir diğer cihazlara ulaşmadı. OneDrive yüklemesi takılmış olabilir; güvenli çözümler için Sync durumunu açın.')
+    :(en?'Changes from other devices have not arrived. OneDrive download may be stuck — open Sync Status for safe fixes.':'Diğer cihazların değişiklikleri gelmedi. OneDrive indirmesi takılmış olabilir; güvenli çözümler için Sync durumunu açın.'),
+    {kind:'warning'});
 }
 let syncStatusModalRenderer=null, syncStatusPollTimer=0;
 function syncStatusRelativeTime(value){
@@ -19353,7 +19453,7 @@ async function openSyncStatusModal(){
   document.getElementById('_syncStatusModal')?.remove();syncStatusModalRenderer=null;if(syncStatusPollTimer){clearInterval(syncStatusPollTimer);syncStatusPollTimer=0;}
   let payload={status:{}};try{payload=await fetchJSON('/api/sync-status');}catch(_){ }
   const modal=document.createElement('div');modal.id='_syncStatusModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';const initial=payload.status||{},en=appLang==='en',tx=(tr,eng)=>appLang==='en'?eng:tr;
-  modal.innerHTML=`<div class="modalCard syncStatusModalCard" role="dialog" aria-modal="true" aria-labelledby="_syncStatusTitle"><div class="syncStatusModalHead"><div><div class="modalTitle" id="_syncStatusTitle">${tx('Sync durumu','Sync Status')}</div><p class="syncStatusModalSub">${tx('Yerel değişiklikleri ve ortak klasör durumunu tek görünümde izleyin.','Monitor local changes and the shared folder in one view.')}</p></div><button type="button" class="pricingRuleIconBtn" data-close aria-label="${tx('Kapat','Close')}"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="syncStatusHero"><div class="syncStatusHeroMain"><span class="syncStatusDot" aria-hidden="true"></span><div><div class="syncStatusHeroTitle" data-sync-status role="status" aria-live="polite">—</div><div class="syncStatusHeroSub" data-sync-last-success>—</div></div></div><div class="syncStatusHeroSide"><div data-sync-network></div><label class="syncPeriodControl"><span>${tx('Sync','Sync')}</span><select data-period aria-label="${tx('Sync periyodu','Sync period')}"><option value="1">1 ${tx('dk','min')}</option><option value="2">2 ${tx('dk','min')}</option><option value="5">5 ${tx('dk','min')}</option><option value="10">10 ${tx('dk','min')}</option><option value="15">15 ${tx('dk','min')}</option><option value="manual">${tx('Manuel','Manual')}</option></select></label><label class="syncPeriodControl"><span>${tx('Paketleri sakla','Keep packages')}</span><select data-retention aria-label="${tx('Eski paketlerin silinme süresi','Package retention')}"><option value="7">7 ${tx('gün','days')}</option><option value="14">14 ${tx('gün','days')}</option><option value="30">30 ${tx('gün','days')}</option><option value="60">60 ${tx('gün','days')}</option><option value="90">90 ${tx('gün','days')}</option><option value="180">180 ${tx('gün','days')}</option><option value="365">365 ${tx('gün','days')}</option><option value="0">${tx('Süresiz','Never')}</option></select></label></div></div><section class="syncTransferGrid" aria-label="${tx('Transferler','Transfers')}"><div data-sync-upload></div><div data-sync-download></div></section><section class="syncStatusSource"><div class="syncStatusSourceHead"><b>${tx('Shared folder','Shared folder')}</b><span data-sync-network></span></div><div class="syncStatusSourcePath" data-sync-folder>—</div></section><section class="syncStatusFacts"><div><span>${tx('Last successful sync','Last successful sync')}</span><b data-sync-last-success>—</b></div><div><span>${tx('Last check','Last check')}</span><b data-sync-last-check>—</b></div><div><span>${tx('Next automatic sync','Next automatic sync')}</span><b data-sync-next>—</b></div><div><span>${tx('Last duration','Last duration')}</span><b data-sync-duration>—</b></div></section><section class="syncStatusLocal"><div><span class="syncSectionEyebrow">${tx('Local data','Local data')}</span><b data-sync-local-db>—</b></div><span data-sync-local-state>—</span></section><div class="syncStatusError" data-sync-error hidden><div><b data-sync-error-title>${tx('Shared folder unavailable','Shared folder unavailable')}</b><span data-sync-error-detail></span></div><button type="button" class="tbtn" data-test>${tx('Test connection','Test connection')}</button></div><details class="syncAdvancedDetails"><summary>${tx('Advanced details','Advanced details')}</summary><div class="syncAdvancedGrid"><div><span>Device ID</span><b data-sync-device>—</b></div><div><span>${tx('Period','Period')}</span><b data-sync-period>—</b></div><div><span>${tx('Local snapshot date','Local snapshot date')}</span><b data-sync-snapshot>—</b></div><div class="syncAdvancedWide"><span>${tx('Local DB path','Local DB path')}</span><b data-sync-local-db-path>—</b></div><div><span>Checkpoint</span><b data-sync-checkpoint>—</b></div><div><span>${tx('Conflict / Retry','Conflict / Retry')}</span><b data-sync-conflict>—</b></div><div><span>${tx('Corrupt packages','Corrupt packages')}</span><b data-sync-corrupt>—</b></div><div><span>${tx('Temizlenen paket','Pruned packages')}</span><b data-sync-pruned>—</b></div><div><span>${tx('Onay bekleyen olay','Awaiting peer ack')}</span><b data-sync-pending-ack>—</b></div><div><span>${tx('Downloaded / uploaded events','Downloaded / uploaded events')}</span><b data-sync-events>—</b></div><div><span>${tx('Downloaded / uploaded packages','Downloaded / uploaded packages')}</span><b data-sync-packages>—</b></div><div><span>${tx('Sync protocol','Sync protocol')}</span><b data-sync-protocol>—</b></div><div><span>${tx('Network traffic','Network traffic')}</span><b data-sync-traffic>—</b></div><div class="syncAdvancedWide"><span>Progress</span><b data-sync-progress>—</b></div></div></details><div class="syncConflictPanel" data-sync-conflicts-panel hidden aria-live="polite"></div><div class="syncStatusActions"><button type="button" class="tbtn" data-refresh>${tx('Refresh Status','Refresh Status')}</button><button type="button" class="tbtn" data-retry>${tx('Retry Failed','Retry Failed')}</button><button type="button" class="tbtn" data-conflicts>${tx('View Conflicts','View Conflicts')}</button><button type="button" class="tbtn primary" data-sync-now>${tx('Sync Now','Sync Now')}</button></div></div>`;document.body.appendChild(modal);
+  modal.innerHTML=`<div class="modalCard syncStatusModalCard" role="dialog" aria-modal="true" aria-labelledby="_syncStatusTitle"><div class="syncStatusModalHead"><div><div class="modalTitle" id="_syncStatusTitle">${tx('Sync durumu','Sync Status')}</div><p class="syncStatusModalSub">${tx('Yerel değişiklikleri ve ortak klasör durumunu tek görünümde izleyin.','Monitor local changes and the shared folder in one view.')}</p></div><button type="button" class="pricingRuleIconBtn" data-close aria-label="${tx('Kapat','Close')}"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="syncStatusHero"><div class="syncStatusHeroMain"><span class="syncStatusDot" aria-hidden="true"></span><div><div class="syncStatusHeroTitle" data-sync-status role="status" aria-live="polite">—</div><div class="syncStatusHeroSub" data-sync-last-success>—</div></div></div><div class="syncStatusHeroSide"><div data-sync-network></div><label class="syncPeriodControl"><span>${tx('Sync','Sync')}</span><select data-period aria-label="${tx('Sync periyodu','Sync period')}"><option value="1">1 ${tx('dk','min')}</option><option value="2">2 ${tx('dk','min')}</option><option value="5">5 ${tx('dk','min')}</option><option value="10">10 ${tx('dk','min')}</option><option value="15">15 ${tx('dk','min')}</option><option value="manual">${tx('Manuel','Manual')}</option></select></label><label class="syncPeriodControl"><span>${tx('Paketleri sakla','Keep packages')}</span><select data-retention aria-label="${tx('Eski paketlerin silinme süresi','Package retention')}"><option value="7">7 ${tx('gün','days')}</option><option value="14">14 ${tx('gün','days')}</option><option value="30">30 ${tx('gün','days')}</option><option value="60">60 ${tx('gün','days')}</option><option value="90">90 ${tx('gün','days')}</option><option value="180">180 ${tx('gün','days')}</option><option value="365">365 ${tx('gün','days')}</option><option value="0">${tx('Süresiz','Never')}</option></select></label></div></div><section class="syncTransferGrid" aria-label="${tx('Transferler','Transfers')}"><div data-sync-upload></div><div data-sync-download></div></section><section class="syncStatusSource"><div class="syncStatusSourceHead"><b>${tx('Shared folder','Shared folder')}</b><span data-sync-network></span></div><div class="syncStatusSourcePath" data-sync-folder>—</div></section><section class="syncStatusFacts"><div><span>${tx('Last successful sync','Last successful sync')}</span><b data-sync-last-success>—</b></div><div><span>${tx('Last check','Last check')}</span><b data-sync-last-check>—</b></div><div><span>${tx('Next automatic sync','Next automatic sync')}</span><b data-sync-next>—</b></div><div><span>${tx('Last duration','Last duration')}</span><b data-sync-duration>—</b></div></section><section class="syncStatusLocal"><div><span class="syncSectionEyebrow">${tx('Local data','Local data')}</span><b data-sync-local-db>—</b></div><span data-sync-local-state>—</span></section><div class="syncStatusError" data-sync-error hidden><div><b data-sync-error-title>${tx('Shared folder unavailable','Shared folder unavailable')}</b><span data-sync-error-detail></span></div><button type="button" class="tbtn" data-test>${tx('Test connection','Test connection')}</button></div><div data-sync-transport hidden></div><details class="syncAdvancedDetails"><summary>${tx('Advanced details','Advanced details')}</summary><div class="syncAdvancedGrid"><div><span>Device ID</span><b data-sync-device>—</b></div><div><span>${tx('Period','Period')}</span><b data-sync-period>—</b></div><div><span>${tx('Local snapshot date','Local snapshot date')}</span><b data-sync-snapshot>—</b></div><div class="syncAdvancedWide"><span>${tx('Local DB path','Local DB path')}</span><b data-sync-local-db-path>—</b></div><div><span>Checkpoint</span><b data-sync-checkpoint>—</b></div><div><span>${tx('Conflict / Retry','Conflict / Retry')}</span><b data-sync-conflict>—</b></div><div><span>${tx('Corrupt packages','Corrupt packages')}</span><b data-sync-corrupt>—</b></div><div><span>${tx('Temizlenen paket','Pruned packages')}</span><b data-sync-pruned>—</b></div><div><span>${tx('Onay bekleyen olay','Awaiting peer ack')}</span><b data-sync-pending-ack>—</b></div><div><span>${tx('Downloaded / uploaded events','Downloaded / uploaded events')}</span><b data-sync-events>—</b></div><div><span>${tx('Downloaded / uploaded packages','Downloaded / uploaded packages')}</span><b data-sync-packages>—</b></div><div><span>${tx('Sync protocol','Sync protocol')}</span><b data-sync-protocol>—</b></div><div><span>${tx('Network traffic','Network traffic')}</span><b data-sync-traffic>—</b></div><div class="syncAdvancedWide"><span>Progress</span><b data-sync-progress>—</b></div></div></details><div class="syncConflictPanel" data-sync-conflicts-panel hidden aria-live="polite"></div><div class="syncStatusActions"><button type="button" class="tbtn" data-refresh>${tx('Refresh Status','Refresh Status')}</button><button type="button" class="tbtn" data-retry>${tx('Retry Failed','Retry Failed')}</button><button type="button" class="tbtn" data-conflicts>${tx('View Conflicts','View Conflicts')}</button><button type="button" class="tbtn primary" data-sync-now>${tx('Sync Now','Sync Now')}</button></div></div>`;document.body.appendChild(modal);
   const period=modal.querySelector('[data-period]'),retention=modal.querySelector('[data-retention]'),nowButton=modal.querySelector('[data-sync-now]');let syncRequest=null,latestStatus={...initial};
   const ruleStatus=document.createElement('p');ruleStatus.className='syncStatusHeroSub';ruleStatus.dataset.syncMasterRelease='';
   modal.querySelector('.syncStatusHeroMain > div').append(ruleStatus);
@@ -19385,7 +19485,16 @@ async function openSyncStatusModal(){
   modal.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',close));modal.addEventListener('click',event=>{if(event.target===modal)close();});
   // Pencere başka bir yoldan DOM'dan kaldırıldıysa (ör. katman temizliği) canlı
   // sync olayı kaybolan elemana yazmaya çalışmasın; dinleyici ve zamanlayıcı kapatılır.
-  const render=q=>{if(!modal.isConnected||!modal.querySelector('[data-sync-status]')){close();return;}q=q||{};latestStatus=q;renderMasterReleaseStatus(ruleStatus,q);observeMasterRelease(q);const progress=q.progress,pending=Number(q.pendingUpload||0)+Number(q.pendingDownload||0),hero=progress?tx('Syncing…','Syncing…'):pending?tx(`${pending.toLocaleString(en?'en-US':'tr-TR')} changes waiting`,`${pending.toLocaleString('en-US')} changes waiting`):q.online?tx('Synced','Synced'):!q.sharedSyncRoot?tx('Sync folder not configured','Sync folder not configured'):tx('Shared folder unavailable','Shared folder unavailable');const successTime=q.lastSync?syncStatusTime(q.lastSync):'—',successCaption=q.lastSync?`${tx('Last successful sync','Last successful sync')} ${successTime}`:tx('No successful sync yet','No successful sync yet'),successNodes=modal.querySelectorAll('[data-sync-last-success]');successNodes.forEach((node,index)=>{node.innerHTML=index===0?successCaption:successTime;});modal.querySelector('[data-sync-status]').textContent=hero;modal.querySelector('[data-sync-last-check]').innerHTML=syncStatusTime(q.lastAttempt);modal.querySelector('[data-sync-next]').innerHTML=q.nextSync?syncStatusTime(q.nextSync):'—';modal.querySelector('[data-sync-duration]').textContent=q.lastDurationMs?`${(Number(q.lastDurationMs)/1000).toFixed(1)} s`:'—';modal.querySelectorAll('[data-sync-network]').forEach(node=>{node.innerHTML=syncStatusNetwork(q,tx);});modal.querySelector('[data-sync-folder]').innerHTML=syncStatusPath(q.sharedSyncRoot);modal.querySelector('[data-sync-local-db]').textContent=String(q.localDbPath||'—').split(/[\\/]/).pop()||'—';modal.querySelector('[data-sync-local-db]').title=q.localDbPath||'';modal.querySelector('[data-sync-local-db-path]').textContent=q.localDbPath||'—';modal.querySelector('[data-sync-local-state]').textContent=q.localSnapshotDate?tx('Ready','Ready'):tx('Waiting','Waiting');modal.querySelector('[data-sync-upload]').innerHTML=syncStatusTransferCard('upload',q,tx);modal.querySelector('[data-sync-download]').innerHTML=syncStatusTransferCard('download',q,tx);modal.querySelector('[data-sync-device]').textContent=q.deviceId||'—';modal.querySelector('[data-sync-period]').textContent=q.syncPeriodMinutes==='manual'?tx('Manual','Manual'):`${q.syncPeriodMinutes||5} ${tx('min','min')}`;modal.querySelector('[data-sync-snapshot]').innerHTML=syncStatusTime(q.localSnapshotDate);modal.querySelector('[data-sync-checkpoint]').textContent=Object.keys(q.checkpoint||{}).length?Object.entries(q.checkpoint).map(([id,n])=>`${id}: ${n}`).join(', '):'—';modal.querySelector('[data-sync-conflict]').textContent=`${Number(q.conflict)||0} / ${Number(q.retries)||0}`;modal.querySelector('[data-sync-corrupt]').textContent=String(Number(q.corruptPackages)||0);modal.querySelector('[data-sync-events]').textContent=`${Number(q.downloadedEvents)||0} / ${Number(q.uploadedEvents)||0}`;modal.querySelector('[data-sync-packages]').textContent=`${Number(q.downloadedPackages)||0} / ${Number(q.uploadedPackages)||0}`;modal.querySelector('[data-sync-protocol]').textContent=q.legacyCompatibilityMode?tx('v1 uyumluluk modu','v1 compatibility mode'):'v2 bundled';modal.querySelector('[data-sync-protocol]').title=(q.legacyPeerDevices||[]).join(', ');modal.querySelector('[data-sync-traffic]').textContent=`↓ ${syncStatusBytes(q.networkBytesRead)} · ↑ ${syncStatusBytes(q.networkBytesWritten)}${progress&&progress.speedBytesPerSecond?` · ${progress.phase==='upload'?'↑':'↓'} ${syncStatusBytes(progress.speedBytesPerSecond)}/s`:''}`;modal.querySelector('[data-sync-progress]').textContent=progress?`${progress.stage||tx('Processing','Processing')} · ${progress.phase==='upload'?Number(progress.uploadDone)||0:Number(progress.eventDone)||0}/${progress.phase==='upload'?Number(progress.uploadTotal)||0:'—'}${Number(progress.packageTotal)?` · ${tx('Paket','Package')} ${Number(progress.packageDone)||0}/${Number(progress.packageTotal)||0}`:''}`:tx('Idle','Idle');const errorBox=modal.querySelector('[data-sync-error]');errorBox.hidden=!q.lastError;if(q.lastError){modal.querySelector('[data-sync-error-detail]').textContent=q.lastError;modal.querySelector('[data-sync-error-title]').textContent=q.sharedSyncRoot?tx('Shared folder unavailable','Shared folder unavailable'):tx('Sync folder not configured','Sync folder not configured');}const tone=progress?'syncing':q.online?'synced':pending?'pending':'offline';modal.querySelector('.syncStatusDot').className=`syncStatusDot is-${tone}`;period.value=String(q.syncPeriodMinutes||5);retention.value=String(q.packageRetentionDays??30);modal.querySelector('[data-sync-pending-ack]').textContent=String(Number(q.pendingAck)||0);modal.querySelector('[data-sync-pruned]').textContent=`${Number(q.prunedPackages)||0}${q.lastPruneAt?` · ${syncStatusTime(q.lastPruneAt)}`:''}`;const active=Boolean(progress);nowButton.disabled=active||Boolean(syncRequest);nowButton.textContent=active||syncRequest?tx('Syncing…','Syncing…'):tx('Sync Now','Sync Now');modal.querySelector('[data-retry]').disabled=!q.retries&&!q.lastError;/* Sayaç son BAŞARILI sync'ten gelir; sync düşerken bayatlayabilir. Liste
+  /* OneDrive aktarım uyarısı: panel modülü yalnız uyarı varken yüklenir. */
+  const transportHost=modal.querySelector('[data-sync-transport]');
+  const renderSyncTransportPanel=q=>{
+    const transport=q&&q.transport;
+    if(!transport||!transport.alert){transportHost.hidden=true;transportHost.innerHTML='';delete transportHost.dataset.key;return;}
+    Promise.resolve(window.BLPerf?.ensureFeature?.('syncTransport')).then(()=>{
+      if(modal.isConnected)window.BLSyncTransportUI?.render(transportHost,transport,{tx,escapeHtml,fetchJSON,syncStatusTime,showToast,syncNow:()=>nowButton.click()});
+    }).catch(error=>{transportHost.hidden=false;transportHost.textContent=tx('OneDrive uyarı paneli yüklenemedi.','The OneDrive alert panel could not be loaded.')+' '+(error.message||error);});
+  };
+  const render=q=>{if(!modal.isConnected||!modal.querySelector('[data-sync-status]')){close();return;}q=q||{};latestStatus=q;renderSyncTransportPanel(q);renderMasterReleaseStatus(ruleStatus,q);observeMasterRelease(q);const progress=q.progress,pending=Number(q.pendingUpload||0)+Number(q.pendingDownload||0),hero=progress?tx('Syncing…','Syncing…'):q.transport&&q.transport.alert?tx('OneDrive aktarımı takılmış olabilir','OneDrive transfer may be stuck'):pending?tx(`${pending.toLocaleString(en?'en-US':'tr-TR')} changes waiting`,`${pending.toLocaleString('en-US')} changes waiting`):q.online?tx('Synced','Synced'):!q.sharedSyncRoot?tx('Sync folder not configured','Sync folder not configured'):tx('Shared folder unavailable','Shared folder unavailable');const successTime=q.lastSync?syncStatusTime(q.lastSync):'—',successCaption=q.lastSync?`${tx('Last successful sync','Last successful sync')} ${successTime}`:tx('No successful sync yet','No successful sync yet'),successNodes=modal.querySelectorAll('[data-sync-last-success]');successNodes.forEach((node,index)=>{node.innerHTML=index===0?successCaption:successTime;});modal.querySelector('[data-sync-status]').textContent=hero;modal.querySelector('[data-sync-last-check]').innerHTML=syncStatusTime(q.lastAttempt);modal.querySelector('[data-sync-next]').innerHTML=q.nextSync?syncStatusTime(q.nextSync):'—';modal.querySelector('[data-sync-duration]').textContent=q.lastDurationMs?`${(Number(q.lastDurationMs)/1000).toFixed(1)} s`:'—';modal.querySelectorAll('[data-sync-network]').forEach(node=>{node.innerHTML=syncStatusNetwork(q,tx);});modal.querySelector('[data-sync-folder]').innerHTML=syncStatusPath(q.sharedSyncRoot);modal.querySelector('[data-sync-local-db]').textContent=String(q.localDbPath||'—').split(/[\\/]/).pop()||'—';modal.querySelector('[data-sync-local-db]').title=q.localDbPath||'';modal.querySelector('[data-sync-local-db-path]').textContent=q.localDbPath||'—';modal.querySelector('[data-sync-local-state]').textContent=q.localSnapshotDate?tx('Ready','Ready'):tx('Waiting','Waiting');modal.querySelector('[data-sync-upload]').innerHTML=syncStatusTransferCard('upload',q,tx);modal.querySelector('[data-sync-download]').innerHTML=syncStatusTransferCard('download',q,tx);modal.querySelector('[data-sync-device]').textContent=q.deviceId||'—';modal.querySelector('[data-sync-period]').textContent=q.syncPeriodMinutes==='manual'?tx('Manual','Manual'):`${q.syncPeriodMinutes||5} ${tx('min','min')}`;modal.querySelector('[data-sync-snapshot]').innerHTML=syncStatusTime(q.localSnapshotDate);modal.querySelector('[data-sync-checkpoint]').textContent=Object.keys(q.checkpoint||{}).length?Object.entries(q.checkpoint).map(([id,n])=>`${id}: ${n}`).join(', '):'—';modal.querySelector('[data-sync-conflict]').textContent=`${Number(q.conflict)||0} / ${Number(q.retries)||0}`;modal.querySelector('[data-sync-corrupt]').textContent=String(Number(q.corruptPackages)||0);modal.querySelector('[data-sync-events]').textContent=`${Number(q.downloadedEvents)||0} / ${Number(q.uploadedEvents)||0}`;modal.querySelector('[data-sync-packages]').textContent=`${Number(q.downloadedPackages)||0} / ${Number(q.uploadedPackages)||0}`;modal.querySelector('[data-sync-protocol]').textContent=q.legacyCompatibilityMode?tx('v1 uyumluluk modu','v1 compatibility mode'):'v2 bundled';modal.querySelector('[data-sync-protocol]').title=(q.legacyPeerDevices||[]).join(', ');modal.querySelector('[data-sync-traffic]').textContent=`↓ ${syncStatusBytes(q.networkBytesRead)} · ↑ ${syncStatusBytes(q.networkBytesWritten)}${progress&&progress.speedBytesPerSecond?` · ${progress.phase==='upload'?'↑':'↓'} ${syncStatusBytes(progress.speedBytesPerSecond)}/s`:''}`;modal.querySelector('[data-sync-progress]').textContent=progress?`${progress.stage||tx('Processing','Processing')} · ${progress.phase==='upload'?Number(progress.uploadDone)||0:Number(progress.eventDone)||0}/${progress.phase==='upload'?Number(progress.uploadTotal)||0:'—'}${Number(progress.packageTotal)?` · ${tx('Paket','Package')} ${Number(progress.packageDone)||0}/${Number(progress.packageTotal)||0}`:''}`:tx('Idle','Idle');const errorBox=modal.querySelector('[data-sync-error]');errorBox.hidden=!q.lastError;if(q.lastError){modal.querySelector('[data-sync-error-detail]').textContent=q.lastError;modal.querySelector('[data-sync-error-title]').textContent=q.sharedSyncRoot?tx('Shared folder unavailable','Shared folder unavailable'):tx('Sync folder not configured','Sync folder not configured');}const tone=progress?'syncing':q.online?'synced':pending?'pending':'offline';modal.querySelector('.syncStatusDot').className=`syncStatusDot is-${tone}`;period.value=String(q.syncPeriodMinutes||5);retention.value=String(q.packageRetentionDays??30);modal.querySelector('[data-sync-pending-ack]').textContent=String(Number(q.pendingAck)||0);modal.querySelector('[data-sync-pruned]').textContent=`${Number(q.prunedPackages)||0}${q.lastPruneAt?` · ${syncStatusTime(q.lastPruneAt)}`:''}`;const active=Boolean(progress);nowButton.disabled=active||Boolean(syncRequest);nowButton.textContent=active||syncRequest?tx('Syncing…','Syncing…'):tx('Sync Now','Sync Now');modal.querySelector('[data-retry]').disabled=!q.retries&&!q.lastError;/* Sayaç son BAŞARILI sync'ten gelir; sync düşerken bayatlayabilir. Liste
      her zaman açılabilir, çakışma yoksa panel bunu söyler. */modal.querySelector('[data-conflicts]').disabled=false;};
   syncStatusModalRenderer=render;render(initial);
   modal.querySelector('[data-refresh]').onclick=async()=>{try{render((await fetchJSON('/api/sync-status')).status);}catch(error){modal.querySelector('[data-sync-error]').hidden=false;modal.querySelector('[data-sync-error-detail]').textContent=error.message||String(error);}};
@@ -23415,6 +23524,139 @@ function mapCollectionRowToShip(row){
   }
   return BLShippingEngine.mapCollectionRow(effective,{toISODate,toNum,norm,normalizeTransitDelType,parseMoney:kolParseMoneyNum,basePrice:confirmed?confirmed.price:null});
 }
+/* Nakliye satırının lisans alanları (royalty %, hologram) eskiden yalnız
+   aktarım anında yazılıyordu: CP'den gelen satırlar hiç almıyor, Koleksiyon'dan
+   daha önce gelen satırlar ise model yeniden gönderilmedikçe güncellenmiyordu.
+   Sonuç: aynı ekranda bazı modellerde royalty/hologram uygulanıyor, bazılarında
+   uygulanmıyordu. Artık alanlar kaynağın GÜNCEL kuralından türetilir:
+     · Koleksiyon satırı → Koleksiyon'daki model (mapCollectionRowToShip ile aynı kural)
+     · CP satırı → CP siparişinin License Royalty sözleşmesi; YD tarafı siparişin
+       ülkesi, TR tarafı Country Group = TR (Koleksiyon TR Landed ile aynı kural).
+   Kaynak veya kural listesi henüz yüklenmemişse satıra dokunulmaz (null döner). */
+const SHIP_LICENSE_KEYS=['trRoyaltyPct','trHologramCost','_trLicenseRuleMissing','ydRoyaltyPct','ydHologramCost'];
+function shipLicenseFieldsFromCpRow(cp){
+  if(!cp)return null;
+  const value=id=>window.BLCanonicalFields.canonicalValue(cp,'cp',id);
+  const licensor=norm(value('licensor'));
+  // Belirsiz Licensor DTR sayılmaz; çözülene kadar satır olduğu gibi kalır.
+  if(!licensor)return null;
+  if(turknorm(licensor)==='DTR')return {};
+  const api=window.BLBusinessRules;
+  const opd=value('orderPlacementDate'),season=value('season'),license=value('license'),category=value('category');
+  const side=group=>{
+    const rule=typeof findSuppFobRule==='function'?findSuppFobRule(opd,group,season,licensor,license,category):null;
+    if(!rule)return null;
+    const total=api.pricingRuleEffectiveRoyalty(rule,group),hologram=api.pricingRuleHologramForCountry(rule,group);
+    if(!Number.isFinite(total)||total<0||total>=100||!Number.isFinite(hologram)||hologram<0)return null;
+    return {royalty:total,hologram};
+  };
+  const out={};
+  const tr=side('TR');
+  if(tr){out.trRoyaltyPct=tr.royalty;out.trHologramCost=tr.hologram;}
+  else out._trLicenseRuleMissing=true;
+  const country=norm(value('country'));
+  const yd=country?side(country):null;
+  if(yd&&(yd.royalty>0||yd.hologram>0)){out.ydRoyaltyPct=yd.royalty;out.ydHologramCost=yd.hologram;}
+  return out;
+}
+function shipLicenseSourceIndex(){
+  const pricingRules=state.overrides&&state.overrides.pricingRules;
+  // Kural listesi yoksa "kural eksik" yazmak yurt içi fiyatı yanlışlıkla boşaltırdı.
+  if(!Array.isArray(pricingRules)||!pricingRules.length)return null;
+  /* Dizin her tablo çiziminde yeniden kurulursa 30k CP satırında çizim başına
+     ~15 ms ekliyordu (L1 ölçümü). Dizin satır nesnesini değil KONUMUNU tutar;
+     okumada o konumdaki GÜNCEL satır alınır ve anahtarı doğrulanır. Böylece
+     yerinde değiştirilen satır (kolRows[i]=…) bayat kalmaz; anahtar tutmazsa
+     (sıralama, silme, ekleme) dizin bir kez yeniden kurulur. */
+  const cpRows=state.cp&&Array.isArray(state.cp.rows)?state.cp.rows:[];
+  const kol=Array.isArray(kolRows)?kolRows:[];
+  const cached=shipLicenseSourceIndex.cache;
+  if(cached&&cached.cpRows===cpRows&&cached.cpLength===cpRows.length&&cached.kol===kol&&cached.kolLength===kol.length)return cached.index;
+  const index=buildShipLicenseSourceIndex(cpRows,kol);
+  shipLicenseSourceIndex.cache={cpRows,cpLength:cpRows.length,kol,kolLength:kol.length,index};
+  return index;
+}
+function shipCpSourceKey(row){
+  return row?shipOrderCodeKey(window.BLCanonicalFields.canonicalValue(row,'cp','orderCode')):'';
+}
+function buildShipLicenseSourceIndex(cpRows,kol){
+  const collection=new Map();
+  kol.forEach((row,position)=>{
+    const key=row&&collectionShippingModelKey(row);
+    if(!key)return;
+    const current=collection.has(key)?kol[collection.get(key)]:null;
+    if(!current||(current.modelGroupRole!=='parent'&&row.modelGroupRole==='parent'))collection.set(key,position);
+  });
+  const cp=new Map();
+  cpRows.forEach((row,position)=>{
+    const code=shipCpSourceKey(row);
+    if(code&&!cp.has(code))cp.set(code,position);
+  });
+  const lookup=(map,rows,keyOf,key)=>{
+    if(!map.has(key))return null;
+    const row=rows[map.get(key)];
+    if(row&&keyOf(row)===key)return row;
+    return undefined; // konum bayat: dizin yeniden kurulmalı
+  };
+  return {
+    collection:{get:key=>lookup(collection,kol,row=>collectionShippingModelKey(row),key)},
+    cp:{get:key=>lookup(cp,cpRows,shipCpSourceKey,key)},
+  };
+}
+function shipLicenseSourceRow(index,kind,key){
+  let row=index[kind].get(key);
+  if(row===undefined){
+    shipLicenseSourceIndex.cache=null;
+    const fresh=shipLicenseSourceIndex();
+    row=fresh?fresh[kind].get(key):null;
+  }
+  return row||null;
+}
+function shipOrderCodeKey(value){
+  const text=String(value==null?'':value).replace(/\./g,'').trim();
+  if(!text)return '';
+  const n=Number(text);
+  return Number.isFinite(n)?String(n):text;
+}
+function shipLicenseFieldsFromSource(shipRow,index){
+  if(!shipRow||!index)return null;
+  if(shipRow._sourceModule==='collection'){
+    const source=shipLicenseSourceRow(index,'collection',shipRow._modelKey);
+    if(!source)return null;
+    // CP yoluyla aynı kural: boş/belirsiz Licensor DTR sayılmaz; çözülene kadar
+    // satırdaki mevcut lisans alanları korunur.
+    const effective=typeof kolGroupSummaryEffectiveLandedRow==='function'?kolGroupSummaryEffectiveLandedRow(source):source;
+    if(!norm(kolPricingRuleContext(effective).licensor)||kolLicensorUnresolvedState(effective))return null;
+    const mapped=mapCollectionRowToShip(source);
+    if(!mapped)return null;
+    const out={};
+    SHIP_LICENSE_KEYS.forEach(key=>{if(mapped[key]!=null)out[key]=mapped[key];});
+    return out;
+  }
+  const code=shipOrderCodeKey(shipRow.orderCode);
+  return code?shipLicenseFieldsFromCpRow(shipLicenseSourceRow(index,'cp',code)):null;
+}
+// Değişen satırları bellekte günceller ve sunucuya yazar; değişmeyen satıra yazmaz.
+function refreshShipLicenseFromSources(rows=shipRows){
+  const index=shipLicenseSourceIndex();
+  if(!index)return 0;
+  let changed=0;
+  (rows||[]).forEach(row=>{
+    const fields=shipLicenseFieldsFromSource(row,index);
+    if(!fields)return;
+    const patch={};
+    SHIP_LICENSE_KEYS.forEach(key=>{
+      const next=fields[key]==null?null:fields[key];
+      const prev=row[key]==null?null:row[key];
+      if(prev!==next)patch[key]=next;
+    });
+    if(!Object.keys(patch).length)return;
+    Object.assign(row,patch);
+    if(row._shipId)patchShipRow(row._shipId,patch);
+    changed++;
+  });
+  return changed;
+}
 function collectionShippingColourOptions(row){
   const clean=value=>String(value==null?'':value).trim();
   const source=Array.isArray(row&&row._colourOptions)
@@ -24312,6 +24554,7 @@ function renderShipTable(){
   empty.style.display='none'; content.style.display='block';
   document.getElementById('shipCount').textContent = `${shipRows.length} satır`;
   updateShipSelectionActions();
+  refreshShipLicenseFromSources();
   shipRows.forEach(computeShipFormulas);
   const cols = visibleCols('ship');
   const table = document.getElementById('shipTable');
@@ -29003,7 +29246,7 @@ function saveKolColState(){
   try{
     if(Array.isArray(kolColOrder))kolColOrder=kolNormalizeDisplayOrder(kolColOrder);
     const filters = {}; Object.entries(kolColFilters).forEach(([k,s])=>{ if(s&&s.size) filters[k]=[...s]; });
-    BLStorage.setItem(KOL_COL_STATE_KEY, JSON.stringify({layoutVersion:KOL_COL_LAYOUT_VERSION, order:kolColOrder, hidden:[...kolHiddenCols], custom:kolCustomCols, pictureHidden:kolPictureHidden, imgSize:kolImgSize, widths:kolColWidths, filters, fabricDetails:Object.fromEntries(Object.entries(kolFabricDetailFilters).filter(([key,set])=>KOL_FABRIC_DETAIL_KEYS.includes(key)&&set?.size).map(([key,set])=>[key,[...set]]))}));
+    BLStorage.setItem(KOL_COL_STATE_KEY, JSON.stringify({layoutVersion:KOL_COL_LAYOUT_VERSION, order:kolColOrder, hidden:[...kolHiddenCols], custom:kolCustomCols, pictureHidden:kolPictureHidden, imgSize:kolImgSize, widths:kolColWidths, filters, fabricDetails:Object.fromEntries(Object.entries(kolFabricDetailFilters).filter(([key,set])=>fabricFacetKeyInfo(key)&&set?.size).map(([key,set])=>[key,[...set]]))}));
   }catch(e){}
 }
 function loadKolColState(options={}){
@@ -29020,7 +29263,7 @@ function loadKolColState(options={}){
     if(obj.widths) kolColWidths = obj.widths;
     if(obj.filters) Object.entries(obj.filters).forEach(([k,vals])=>{ if(Array.isArray(vals)&&vals.length) kolColFilters[k]=kolCanonicalFilterSelection(k,vals); });
     kolFabricDetailFilters={};
-    Object.entries(obj.fabricDetails||{}).forEach(([key,vals])=>{ if(KOL_FABRIC_DETAIL_KEYS.includes(key)&&Array.isArray(vals)&&vals.length)kolFabricDetailFilters[key]=new Set(vals.map(String)); });
+    Object.entries(obj.fabricDetails||{}).forEach(([key,vals])=>{ if(fabricFacetKeyInfo(key)&&Array.isArray(vals)&&vals.length)kolFabricDetailFilters[key]=new Set(vals.map(String)); });
     if(Number(obj.layoutVersion||0)<KOL_COL_LAYOUT_VERSION){
       // v5.24: Fit artık sabit Koleksiyon alanıdır. Eski kullanıcı görünümünde
       // gizlenmiş kalmış olsa bile görünür hale getir.
@@ -29482,6 +29725,21 @@ const kolFabricDetailCache=new Map();
 /* Facet values are stored as language-independent Turkish canonical keys.
    Translate only for display, so legacy TR/EN mixtures and new cards group together. */
 const fabricFacetValueCache=new Map();
+/* Takım modellerde parçaya özgü süzgeç anahtarı "A:composition" biçimindedir:
+   yalnız A parçasının kumaşı değerlendirilir. Öneksiz anahtar eski davranıştır
+   (takımdaki herhangi bir kumaş); kayıtlı eski filtreler aynen çalışır. */
+const fabricFacetKeyInfoCache=new Map();
+function fabricFacetKeyInfo(key){
+  const text=String(key||'');
+  if(fabricFacetKeyInfoCache.has(text))return fabricFacetKeyInfoCache.get(text);
+  const match=/^([A-Z]):(.+)$/.exec(text);
+  const part=match?match[1]:'',field=match?match[2]:text;
+  const info=KOL_FABRIC_DETAIL_KEYS.includes(field)?Object.freeze({part,field}):null;
+  if(fabricFacetKeyInfoCache.size>500)fabricFacetKeyInfoCache.clear();
+  fabricFacetKeyInfoCache.set(text,info);
+  return info;
+}
+function fabricFacetScopedKey(part,field){return part?part+':'+field:field;}
 function fabricFacetValue(key,value){
   const text=String(value??'').trim(),api=window.BLFabricCards;
   if(!api||!text)return text;
@@ -29507,15 +29765,15 @@ function fabricCardDetailsForRaw(raw){
   const api=window.BLFabricCards;
   if(!api)return [];
   return api.parts(String(raw??'')).map(part=>{
-    const card=kolFabricCards.get(part.code)||null;
-    const memo=kolFabricDetailCache.get(part.code);
+    const card=kolFabricCards.get(part.code)||null,memoKey=(part.label||'')+'\u0000'+part.code;
+    const memo=kolFabricDetailCache.get(memoKey);
     if(memo&&memo.card===card&&memo.raw===part.raw)return memo.details;
-    const fallback=api.ruleCard(part.raw).details||{},source=card?.details||{},details={};
+    const fallback=api.ruleCard(part.raw).details||{},source=card?.details||{},details={part:part.label||''};
     KOL_FABRIC_DETAIL_KEYS.forEach(key=>{
       const value=String(source[key]||fallback[key]||'').trim();
       details[key]=fabricFacetValue(key,value);
     });
-    kolFabricDetailCache.set(part.code,{card,raw:part.raw,details});
+    kolFabricDetailCache.set(memoKey,{card,raw:part.raw,details});
     return details;
   });
 }
@@ -29523,11 +29781,59 @@ function kolFabricDetailsForRow(row){
   if(!row)return [];
   return fabricCardDetailsForRaw(kolEffectiveValue(row,'fabric'));
 }
-/* filters: {detailKey: Set(values)}. Aynı alandaki değerler VEYA, farklı alanlar
-   VE; hepsi takımdaki AYNI kumaş üzerinde değerlendirilir. */
+/* filters: {detailKey | "A:detailKey": Set(values)}. Aynı alandaki değerler VEYA,
+   farklı alanlar VE. Öneksiz alanlar takımdaki AYNI (herhangi bir) kumaşta, "A:"
+   önekli alanlar yalnız A parçasının kumaşında değerlendirilir; kapsamlar VE. */
 function fabricCardDetailsMatch(detailsList,filters,omitKey=''){
-  const active=Object.entries(filters||{}).filter(([key,set])=>key!==omitKey&&KOL_FABRIC_DETAIL_KEYS.includes(key)&&set?.size);
-  return !active.length||(detailsList||[]).some(details=>active.every(([key,set])=>fabricFacetSelectedValues(key,set).has(fabricFacetValue(key,details[key]||''))));
+  if(!filters)return true;
+  const plan=fabricFacetPlan(filters,omitKey);
+  if(!plan)return true;
+  const list=detailsList||[];
+  for(const group of plan.groups){
+    let found=false;
+    for(const details of list){
+      if(group.part&&details.part!==group.part)continue;
+      if(fabricFacetGroupPasses(details,group)){found=true;break;}
+    }
+    if(!found)return false;
+  }
+  return true;
+}
+/* Satır başına çağrılır (30k satırda sıcak yol): etkin alanlar filtre nesnesi
+   başına bir kez derlenir; nesne yerinde değişirse (anahtar/küme) yeniden derlenir. */
+const fabricFacetPlanCache=new WeakMap();
+function fabricFacetPlan(filters,omitKey){
+  let cached=fabricFacetPlanCache.get(filters);
+  if(cached&&cached.omitKey===omitKey){
+    let index=0,valid=true;
+    for(const key in filters){
+      const set=filters[key];
+      if(index>=cached.keys.length||cached.keys[index]!==key||cached.sets[index]!==set||cached.sizes[index]!==(set?.size||0)){valid=false;break;}
+      index++;
+    }
+    if(valid&&index===cached.keys.length)return cached.plan;
+  }
+  const keys=[],sets=[],sizes=[],fields=[],values=[],parts=[];
+  for(const key in filters){
+    const set=filters[key];
+    keys.push(key);sets.push(set);sizes.push(set?.size||0);
+    if(key===omitKey||!set?.size)continue;
+    const info=fabricFacetKeyInfo(key);
+    if(!info)continue;
+    parts.push(info.part);fields.push(info.field);values.push(fabricFacetSelectedValues(info.field,set));
+  }
+  const scopes=[...new Set(parts)];
+  const plan=!fields.length?null:{scoped:scopes.some(Boolean),groups:scopes.map(part=>{
+    const idx=parts.map((value,index)=>value===part?index:-1).filter(index=>index>=0);
+    return {part,fields:idx.map(index=>fields[index]),values:idx.map(index=>values[index])};
+  })};
+  fabricFacetPlanCache.set(filters,{omitKey,keys,sets,sizes,plan});
+  return plan;
+}
+function fabricFacetGroupPasses(details,group){
+  const fields=group.fields,values=group.values;
+  for(let i=0;i<fields.length;i++){if(!values[i].has(fabricFacetValue(fields[i],details[fields[i]]||'')))return false;}
+  return true;
 }
 function kolFabricDetailMatches(row,omitKey=''){
   return fabricCardDetailsMatch(kolFabricDetailsForRow(row),kolFabricDetailFilters,omitKey);
@@ -29535,39 +29841,80 @@ function kolFabricDetailMatches(row,omitKey=''){
 /* Değer filtresi panelinin içine (değer listesinin üstüne) kumaş kartı alan
    süzgeçlerini ekler. current: {key:Set}, detailsForKey(key): seçenekleri
    üretecek kumaş ayrıntıları listesi. Dönen fonksiyon seçimi {key:Set} okur. */
-function fabricCardFacetSection(panel,{current={},detailsForKey}){
+function fabricCardFacetSection(panel,{current={},detailsForKey,partLabels}){
   const api=window.BLFabricCards;
   if(!api)return null;
+  const en=appLang==='en',locale=en?'en':'tr';
   const host=document.createElement('section');host.className='kolFabricFacetPanel';
-  const title=document.createElement('strong');title.textContent=appLang==='en'?'Filter by fabric card details':'Kumaş kartı detaylarına göre süz';
+  const title=document.createElement('strong');title.textContent=en?'Filter by fabric card details':'Kumaş kartı detaylarına göre süz';
   host.appendChild(title);
-  const display=(value)=>api.translateTerms(value,appLang==='en'?'en':'tr',{translateTypes:true});
-  KOL_FABRIC_DETAIL_KEYS.forEach(key=>{
-    const field=document.createElement('details');field.className='kolFabricFacetField';field.open=key==='category'||key==='composition';
-    const selected=new Set([...(current[key]||[])].map(value=>fabricFacetValue(key,value)));
-    const options=new Set([...selected]);
-    (detailsForKey(key)||[]).forEach(details=>{if(details[key])options.add(fabricFacetValue(key,details[key]));});
-    const summary=document.createElement('summary');
-    summary.textContent=(appLang==='en'?api.DETAIL_LABELS[key].en:api.DETAIL_LABELS[key].tr)+' ('+selected.size+')';
-    field.appendChild(summary);
-    const search=document.createElement('input');search.type='search';search.className='kolFabricFacetSearch';
-    search.placeholder=appLang==='en'?'Search values…':'Değer ara…';
-    search.setAttribute('aria-label',summary.textContent);field.appendChild(search);
-    const list=document.createElement('div');list.className='kolFabricFacetOptions';
-    [...options].sort((a,b)=>display(a).localeCompare(display(b),appLang==='en'?'en':'tr',{numeric:true})).forEach(value=>{
-      const label=document.createElement('label');label.className='kolFabricFacetOption';
-      const box=document.createElement('input');box.type='checkbox';box.dataset.fabricFacet=key;box.value=value;box.checked=selected.has(value);
-      const span=document.createElement('span');span.textContent=display(value);label.append(box,span);list.appendChild(label);
+  const display=(value)=>api.translateTerms(value,locale,{translateTypes:true});
+  /* Takım modellerde (A/B/C…) her parça kendi süzgecini taşır. Parça sekmeleri
+     yalnız veride ya da mevcut seçimde parça etiketi varsa görünür. */
+  const parts=new Set();
+  Object.keys(current||{}).forEach(key=>{const info=fabricFacetKeyInfo(key);if(info&&info.part&&current[key]?.size)parts.add(info.part);});
+  [...(typeof partLabels==='function'?(partLabels()||[]):[])].forEach(label=>{if(/^[A-Z]$/.test(String(label||'')))parts.add(String(label));});
+  const scopes=['',...[...parts].sort()];
+  const groups=new Map(),buttons=new Map();
+  const fieldLabel=field=>en?api.DETAIL_LABELS[field].en:api.DETAIL_LABELS[field].tr;
+  const scopeLabel=scope=>scope?(en?'Part ':'Parça ')+scope:(en?'All parts':'Tüm parçalar');
+  const scopeCount=scope=>{
+    const group=groups.get(scope);
+    if(group)return group.querySelectorAll('input[data-fabric-facet]:checked').length;
+    return KOL_FABRIC_DETAIL_KEYS.reduce((sum,field)=>sum+((current||{})[fabricFacetScopedKey(scope,field)]?.size||0),0);
+  };
+  const refreshButton=scope=>{const button=buttons.get(scope);if(button)button.textContent=scopeLabel(scope)+' ('+scopeCount(scope)+')';};
+  if(scopes.length>1){
+    const seg=document.createElement('div');seg.className='kolFabricPartSeg';seg.setAttribute('role','group');
+    seg.setAttribute('aria-label',en?'Fabric part of the set':'Takımın kumaş parçası');
+    scopes.forEach(scope=>{
+      const button=document.createElement('button');button.type='button';button.dataset.fabricPart=scope;
+      button.title=scope?(en?`Only the fabric of part ${scope} in set models`:`Takım modellerde yalnız ${scope} parçasının kumaşı`):(en?'Any fabric in the set':'Takımdaki herhangi bir kumaş');
+      button.addEventListener('click',()=>show(scope));
+      buttons.set(scope,button);seg.appendChild(button);
     });
-    search.addEventListener('input',()=>{
-      const query=search.value.toLocaleLowerCase(appLang==='en'?'en':'tr');
-      list.querySelectorAll('label').forEach(label=>{label.hidden=!!query&&!label.textContent.toLocaleLowerCase(appLang==='en'?'en':'tr').includes(query);});
+    host.appendChild(seg);
+  }
+  function buildScope(scope){
+    const group=document.createElement('div');group.className='kolFabricFacetGroup';group.dataset.fabricPart=scope;
+    KOL_FABRIC_DETAIL_KEYS.forEach(field=>{
+      const key=fabricFacetScopedKey(scope,field);
+      const detailsField=document.createElement('details');detailsField.className='kolFabricFacetField';detailsField.open=field==='category'||field==='composition';
+      const selected=new Set([...((current||{})[key]||[])].map(value=>fabricFacetValue(field,value)));
+      const options=new Set([...selected]);
+      (detailsForKey(key)||[]).forEach(details=>{if(details&&(!scope||details.part===scope)&&details[field])options.add(fabricFacetValue(field,details[field]));});
+      const summary=document.createElement('summary');
+      summary.textContent=fieldLabel(field)+' ('+selected.size+')';
+      detailsField.appendChild(summary);
+      const search=document.createElement('input');search.type='search';search.className='kolFabricFacetSearch';
+      search.placeholder=en?'Search values…':'Değer ara…';
+      search.setAttribute('aria-label',(scope?scopeLabel(scope)+' · ':'')+summary.textContent);detailsField.appendChild(search);
+      const list=document.createElement('div');list.className='kolFabricFacetOptions';
+      [...options].sort((a,b)=>display(a).localeCompare(display(b),locale,{numeric:true})).forEach(value=>{
+        const label=document.createElement('label');label.className='kolFabricFacetOption';
+        const box=document.createElement('input');box.type='checkbox';box.dataset.fabricFacet=key;box.value=value;box.checked=selected.has(value);
+        const span=document.createElement('span');span.textContent=display(value);label.append(box,span);list.appendChild(label);
+      });
+      search.addEventListener('input',()=>{
+        const query=search.value.toLocaleLowerCase(locale);
+        list.querySelectorAll('label').forEach(label=>{label.hidden=!!query&&!label.textContent.toLocaleLowerCase(locale).includes(query);});
+      });
+      list.addEventListener('change',()=>{
+        summary.textContent=fieldLabel(field)+' ('+list.querySelectorAll('input:checked').length+')';
+        refreshButton(scope);
+      });
+      detailsField.appendChild(list);group.appendChild(detailsField);
     });
-    list.addEventListener('change',()=>{
-      summary.textContent=(appLang==='en'?api.DETAIL_LABELS[key].en:api.DETAIL_LABELS[key].tr)+' ('+list.querySelectorAll('input:checked').length+')';
-    });
-    field.appendChild(list);host.appendChild(field);
-  });
+    host.appendChild(group);groups.set(scope,group);
+  }
+  /* Parça grupları ilk seçildiğinde kurulur; görünmeyen parça için seçenek üretilmez. */
+  function show(scope){
+    if(!groups.has(scope))buildScope(scope);
+    groups.forEach((group,key)=>{group.hidden=key!==scope;});
+    buttons.forEach((button,key)=>button.setAttribute('aria-pressed',String(key===scope)));
+  }
+  show('');
+  scopes.forEach(refreshButton);
   /* Keep the Apply / Add / Remove actions outside the scrolling body. */
   const valueList=panel.querySelector('.cfpList');
   if(valueList){
@@ -29583,10 +29930,15 @@ function fabricCardFacetSection(panel,{current={},detailsForKey}){
   });
   return (add)=>{
     const next={};
-    KOL_FABRIC_DETAIL_KEYS.forEach(key=>{
-      const chosen=[...host.querySelectorAll('input[data-fabric-facet]')].filter(box=>box.dataset.fabricFacet===key&&box.checked).map(box=>box.value);
-      const values=new Set((add?[...(current[key]||[]),...chosen]:chosen).map(value=>fabricFacetValue(key,value)));
-      if(values.size)next[key]=values;
+    scopes.forEach(scope=>{
+      const group=groups.get(scope);
+      KOL_FABRIC_DETAIL_KEYS.forEach(field=>{
+        const key=fabricFacetScopedKey(scope,field),prior=[...((current||{})[key]||[])];
+        // Açılmamış parça sekmesinde kullanıcı değişiklik yapmamıştır: mevcut seçim korunur.
+        const chosen=group?[...group.querySelectorAll('input[data-fabric-facet]')].filter(box=>box.dataset.fabricFacet===key&&box.checked).map(box=>box.value):prior;
+        const values=new Set((add?[...prior,...chosen]:chosen).map(value=>fabricFacetValue(field,value)));
+        if(values.size)next[key]=values;
+      });
     });
     return next;
   };
@@ -29594,7 +29946,8 @@ function fabricCardFacetSection(panel,{current={},detailsForKey}){
 function kolFabricDetailPanel(panel){
   const read=fabricCardFacetSection(panel,{
     current:kolFabricDetailFilters,
-    detailsForKey:key=>kolRows.filter(row=>passesKolColFilters(row)&&kolFabricDetailMatches(row,key)).flatMap(kolFabricDetailsForRow)
+    detailsForKey:key=>kolRows.filter(row=>passesKolColFilters(row)&&kolFabricDetailMatches(row,key)).flatMap(kolFabricDetailsForRow),
+    partLabels:()=>new Set(kolRows.filter(passesKolColFilters).flatMap(kolFabricDetailsForRow).map(details=>details.part).filter(Boolean))
   });
   if(!read)return;
   panel._kolReadFabricFacets=(add)=>{kolFabricDetailFilters=read(add);};
@@ -29607,13 +29960,33 @@ function passesKolColFilters(r){
   });
 }
 const KOL_SEARCH_KEYS=['plmId','modelKod','productMainDefinition','lisans','urunTipi','specialCode','line','colourCode','colour','fabric','fit','buyingSampleManufacturer','assortment','licensor','season','country','mmyg','mag','buyingGroup','buyer','inStoreWeek','inStoreMonth','confirmedManufacturer','_collectionOwnerName','not'];
+// Arama metnine girmeyen ama dönem kısayollarını (MB=M3, EXF=W12, RT=M10-M12) besleyen tarih alanları.
+const KOL_SEARCH_PERIOD_KEYS=['inStore','exFactory','retail'];
 const _kolSearchCache=new WeakMap();
+// Model Budget Month kayıt anındaki arayüz dilinde saklanabilir ("TEMMUZ 2027" / "JULY 2027").
+// Arama iki dilde de bulsun diye ay adı TR + EN eklenir; saklanan değer değiştirilmez.
+function kolMonthSearchText(value){
+  const code=kolMonthCode(value);
+  if(!code)return norm(value).toLowerCase();
+  const idx=Number(code.slice(4))-1,year=code.slice(0,4);
+  return `${KOL_MONTHS_TR[idx]} ${year} ${KOL_MONTHS_EN[idx]} ${year} ${code}`.toLocaleLowerCase('tr-TR');
+}
 function kolSearchHaystack(row){
   if(!row||typeof row!=='object')return '';
-  const signature=KOL_SEARCH_KEYS.map(key=>String(kolEffectiveValue(row,key)??'')).join('\u0001');
+  // Takvim sürümü imzadadır: merch takvimi değişince dönem jetonları yeniden hesaplanır.
+  const signature=[...KOL_SEARCH_KEYS,...KOL_SEARCH_PERIOD_KEYS].map(key=>String(kolEffectiveValue(row,key)??'')).join('\u0001')+'\u0001'+(globalThis.BLDateDimension?.merchCalendarRevision?.()??0);
   const cached=_kolSearchCache.get(row);
   if(cached?.signature===signature)return cached.value;
-  const value=KOL_SEARCH_KEYS.map(key=>norm(kolEffectiveValue(row,key)).toLowerCase()).join(' ');
+  const text=KOL_SEARCH_KEYS.map(key=>key==='inStoreMonth'?kolMonthSearchText(kolEffectiveValue(row,key)):norm(kolEffectiveValue(row,key)).toLowerCase()).join(' ');
+  const periods=window.BLTableSearchPeriods?.rowTokens({
+    mbWeekCode:kolWeekCode(kolEffectiveValue(row,'inStoreWeek'),kolEffectiveValue(row,'inStore')),
+    mbMonthCode:kolMonthCode(kolEffectiveValue(row,'inStoreMonth')),
+    mbDate:coerceDateLoose(kolEffectiveValue(row,'inStore')),
+    exFactory:coerceDateLoose(kolEffectiveValue(row,'exFactory')),
+    retail:coerceDateLoose(kolEffectiveValue(row,'retail')),
+    season:kolEffectiveValue(row,'season')
+  })||'';
+  const value=periods?text+' '+periods:text;
   _kolSearchCache.set(row,{signature,value});
   return value;
 }
@@ -29636,6 +30009,12 @@ function tableSearchSpace(tab){
   return null;
 }
 window.BLTableSearch.searchSpace=tableSearchSpace;
+// Kısayol öneri listesi (table-search-suggest.js) için satır başına alan jetonları.
+window.BLTableSearch.fieldTokenTexts=inputId=>{
+  if(inputId==='kolSearch')return (Array.isArray(kolRows)?kolRows:[]).map(kolSearchHaystack);
+  const rows=inputId==='cpSearch'?state.cp?.rows:inputId==='ordersSearch'?state.orders?.rows:null;
+  return (rows||[]).map(cpSearchFieldTokens);
+};
 /* v6.34 — Koleksiyon'da da üç durumlu işaret filtresi. CP/Siparişler ile aynı
    kip metni kullanılır ('' | 'checked' | 'unchecked'), böylece davranış ve
    kayıtlı değerlerin normalleştirilmesi tek yerden yönetilir. */
@@ -33822,8 +34201,35 @@ window.BLLicenseDataBridge={
     }else if(Number(data&&data.pricingRevision)!==Number(state.storeRevisions.pricingRules||0))await refreshPricingRulesFromServer();
   },
 };
+/* Fiyat & Üretici Analizi: PLM Kumaş / PLM Artwork ve PLM kumaş özellikleri
+   filtre boyutları. LFL satırları bunları sunucudan hazır taşır; diğer
+   kaynaklarda kalıcı PLM BOM özetinden (BLPlmModelDetails) okunur. PLM
+   Artwork filtre kimliği dilden bağımsız TR metindir; EN görünüm
+   valueLabels.plmArtwork ile yalnız etiketi çevirir (dil değişiminde seçim
+   korunur). */
+const PRICE_ANALYSIS_PLM_FIELDS=['fabricCategory','kumasTipi','iplikNo','fabricWeight','karisim'];
+async function priceAnalysisAttachPlmDetails(result){
+  if(!result||!Array.isArray(result.observations))return result;
+  const observations=result.observations,artworkEn={};
+  const remember=(tr,en)=>{if(tr&&en&&tr!==en&&!artworkEn[tr])artworkEn[tr]=en;};
+  if(result.source==='lfl'){
+    for(const obs of observations){const row=obs&&(obs.row||obs.raw);if(row)remember(row.plmArtwork,row.plmArtworkEn);}
+    return {...result,valueLabels:{plmArtwork:{en:artworkEn}}};
+  }
+  const api=window.BLPlmModelDetails;if(!api)return result;
+  const ids=observations.map(obs=>obs&&obs.plmId).filter(Boolean);
+  if(ids.length){try{await api.ensure(ids);}catch(_){}}
+  let found=0;
+  for(const obs of observations){
+    const details=obs&&api.get(obs.plmId);if(!details)continue;found++;
+    obs.plmFabric=details.plmFabric||'';obs.plmArtwork=details.plmArtwork||'';remember(details.plmArtwork,details.plmArtworkEn);
+    PRICE_ANALYSIS_PLM_FIELDS.forEach(key=>{if(details[key])obs[key]=details[key];});
+  }
+  return {...result,valueLabels:{plmArtwork:{en:artworkEn}},version:`${result.version}|plm:${found}`};
+}
 window.BLPriceSupplierAnalysisBridge={
-  async get(source,scope='all',priceType='finalFob'){
+  async get(source,scope='all',priceType='finalFob'){return priceAnalysisAttachPlmDetails(await window.BLPriceSupplierAnalysisBridge.sourceData(source,scope,priceType));},
+  async sourceData(source,scope='all',priceType='finalFob'){
     const selected=String(source||'collection').toLowerCase();
     if(selected==='lfl'){
       const lfl=await window.BLPriceSupplierLFLBridge?.get(scope)||{observations:[],priceTypes:[],version:'lfl:0'};

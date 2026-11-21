@@ -318,8 +318,27 @@
     // 4 · İşlemler.
     var operations = [], skipped = [], changedCells = 0, createCount = 0, updateCount = 0;
     var duplicateBlockedRows = new Set();
+    // "Tümünü aktar" (keepAll) açık bir karardır: çakışan satırların hepsi
+    // aktarılır. Aynı Buyer Log satırına düşenlerden ilki onu günceller,
+    // diğerleri yeni satır olarak oluşturulur (createNew kapalı olsa bile).
+    // Aynı satır kümesini kapsayan diğer çakışma (Excel tekrarı ↔ ters
+    // tekrar) için kullanıcıdan ikinci kez karar istenmez.
+    var keepAllRows = new Set();
+    conflicts.forEach(function (conflict) {
+      if (conflict.resolved && conflict.resolution && conflict.resolution.keepAll) {
+        conflict.sourceRowIds.forEach(function (id) { keepAllRows.add(id); });
+      }
+    });
+    conflicts.forEach(function (conflict) {
+      if (conflict.resolved || !conflict.sourceRowIds.length) return;
+      if (conflict.sourceRowIds.every(function (id) { return keepAllRows.has(id); })) {
+        conflict.resolved = true;
+        conflict.resolution = { keepAll: true, implied: true };
+      }
+    });
     conflicts.forEach(function (conflict) {
       if (conflict.resolved) {
+        if (conflict.resolution && conflict.resolution.keepAll) return;
         // Çözüm yalnız seçilen satırı bırakır; diğerleri atlanır.
         var keep = conflict.resolution && conflict.resolution.keep;
         conflict.sourceRowIds.forEach(function (id) { if (id !== keep) duplicateBlockedRows.add(id); });
@@ -328,6 +347,30 @@
       conflict.sourceRowIds.forEach(function (id) { duplicateBlockedRows.add(id); });
       blocking.push({ code: conflict.kind, key: conflict.key || conflict.targetLabel, sourceRowIds: conflict.sourceRowIds });
     });
+
+    var claimedTargets = new Set();
+    // forced: kullanıcı tekrar çakışmasında "Tümünü aktar" dedi. Bu açık,
+    // satır bazlı karar genel "eşleşmeyenleri oluştur" ayarından bağımsızdır;
+    // modülün oluşturma yeteneği (canCreate) yine de aşılmaz.
+    function pushCreate(row, payload, forced) {
+      if ((!options.createNew && !forced) || target.canCreate === false) {
+        skipped.push({ sourceRowId: row.id, excelRow: row.excelRowNumber, reason: target.canCreate === false ? 'create-not-supported' : 'create-disabled' });
+        return;
+      }
+      var values = {};
+      var createCells = Array.isArray(payload.createCells) ? payload.createCells : payload.cells;
+      createCells.forEach(function (cell) { if (cell.kind === 'value') values[cell.fieldId] = cell.incoming; });
+      operations.push(Object.freeze({
+        op: 'create', sourceRowId: row.id, excelRow: row.excelRowNumber,
+        values: Object.freeze(values),
+        cells: Object.freeze(createCells.map(function (cell) {
+          return Object.freeze({ fieldId: cell.fieldId, label: cell.label, incoming: cell.incoming, current: null, final: cell.kind === 'value' ? cell.incoming : null, kind: cell.kind === 'value' ? 'set' : 'blank' });
+        })),
+        warnings: Object.freeze(payload.warnings.slice()),
+      }));
+      createCount += 1;
+      changedCells += Object.keys(values).length;
+    }
 
     sourceRows.forEach(function (row) {
       var payload = coerced.get(row.id);
@@ -341,26 +384,7 @@
         return;
       }
 
-      if (match.status === 'none') {
-        if (!options.createNew || target.canCreate === false) {
-          skipped.push({ sourceRowId: row.id, excelRow: row.excelRowNumber, reason: target.canCreate === false ? 'create-not-supported' : 'create-disabled' });
-          return;
-        }
-        var values = {};
-        var createCells = Array.isArray(payload.createCells) ? payload.createCells : payload.cells;
-        createCells.forEach(function (cell) { if (cell.kind === 'value') values[cell.fieldId] = cell.incoming; });
-        operations.push(Object.freeze({
-          op: 'create', sourceRowId: row.id, excelRow: row.excelRowNumber,
-          values: Object.freeze(values),
-          cells: Object.freeze(createCells.map(function (cell) {
-            return Object.freeze({ fieldId: cell.fieldId, label: cell.label, incoming: cell.incoming, current: null, final: cell.kind === 'value' ? cell.incoming : null, kind: cell.kind === 'value' ? 'set' : 'blank' });
-          })),
-          warnings: Object.freeze(payload.warnings.slice()),
-        }));
-        createCount += 1;
-        changedCells += Object.keys(values).length;
-        return;
-      }
+      if (match.status === 'none') { pushCreate(row, payload, keepAllRows.has(row.id)); return; }
 
       var targets = [];
       if (match.status === 'exact') targets = match.targets.slice();
@@ -380,6 +404,15 @@
           targets = [picked];
         }
       }
+
+      if (keepAllRows.has(row.id)) {
+        // Bu plan içinde başka bir satırın zaten güncellediği hedefe ikinci
+        // kez yazılmaz; satır kaybolmasın diye yeni satır olarak eklenir.
+        var free = targets.filter(function (hit) { return !claimedTargets.has(hit.position); });
+        if (targets.length && !free.length) { pushCreate(row, payload, true); return; }
+        targets = free;
+      }
+      targets.forEach(function (hit) { claimedTargets.add(hit.position); });
 
       targets.forEach(function (hit) {
         var changes = [], preview = [];

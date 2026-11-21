@@ -166,6 +166,8 @@
     // Kullanıcı menüsü → Ön Ayar Paylaşımı; yalnız ilk açılışta yüklenir.
     presetShare:['preset-share.js?rev=1'],
     syncHealth:['sync-health-ui.js'],
+    // Sync durumu › OneDrive aktarım uyarısı: yalnız uyarı varken yüklenir.
+    syncTransport:['sync-transport-ui.js?rev=1'],
     masterReleases:['master-releases-ui.js'],
     /* PLM numune talepleri (CoreNectum Requests) kontrol listesine kanıt verir;
        iki dosya görünümden ÖNCE yüklenir. deferredUi'de de listelidir (sağ tık

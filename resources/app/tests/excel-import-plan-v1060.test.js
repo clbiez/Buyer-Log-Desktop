@@ -231,6 +231,61 @@ test('ters tekrar ve Excel içi tekrar engelleyicidir; first-wins sessizce uygul
   assert.equal(resolved.operations[0].sourceRowId, 'r2');
 });
 
+test('tekrar çakışmasında "tümünü aktar": ilk satır eşleşeni günceller, diğeri yeni satır olur', () => {
+  const rows = [
+    sourceRow('r1', 2, { 'col:0': cell('0123'), 'col:1': cell(10), 'col:2': cell(''), 'col:3': cell('') }),
+    sourceRow('r2', 3, { 'col:0': cell('0123'), 'col:1': cell(20), 'col:2': cell(''), 'col:3': cell('') }),
+  ];
+  const targets = [{ plmId: '0123', targetPrice: 1, _rev: 1 }];
+  // Tek karar yeterli: aynı satırları kapsayan ters tekrar da çözülmüş sayılır.
+  const plan = Plan.buildImportPlan(baseSpec(rows, targets, {
+    decisions: { excludedSourceRows: [], ambiguousChoice: {}, duplicateResolution: { '0123': { keepAll: true } } },
+  }));
+  assert.equal(plan.executable, true);
+  assert.ok(plan.conflicts.every(item => item.resolved));
+  assert.equal(plan.operations.length, 2);
+  const update = plan.operations.find(op => op.op === 'update');
+  const create = plan.operations.find(op => op.op === 'create');
+  assert.equal(update.sourceRowId, 'r1');
+  assert.equal(update.targetPosition, 0);
+  assert.equal(create.sourceRowId, 'r2');
+  assert.equal(create.values.plmId, '0123');
+  assert.equal(create.values.targetPrice, 20);
+
+  // Ters tekrar tarafından seçilse de aynı sonuç.
+  const viaTarget = Plan.buildImportPlan(baseSpec(rows, targets, {
+    decisions: { excludedSourceRows: [], ambiguousChoice: {}, duplicateResolution: { 'target:0': { keepAll: true } } },
+  }));
+  assert.equal(viaTarget.executable, true);
+  assert.deepEqual(viaTarget.operations.map(op => op.op).sort(), ['create', 'update']);
+});
+
+test('"tümünü aktar" açık karardır: createNew kapalıyken de tekrar satırlarını oluşturur; canCreate=false aşılmaz', () => {
+  const rows = [
+    sourceRow('r1', 2, { 'col:0': cell('0999'), 'col:1': cell(10), 'col:2': cell(''), 'col:3': cell('') }),
+    sourceRow('r2', 3, { 'col:0': cell('0999'), 'col:1': cell(20), 'col:2': cell(''), 'col:3': cell('') }),
+    sourceRow('r3', 4, { 'col:0': cell('0555'), 'col:1': cell(30), 'col:2': cell(''), 'col:3': cell('') }),
+  ];
+  const decisions = { excludedSourceRows: [], ambiguousChoice: {}, duplicateResolution: { '0999': { keepAll: true } } };
+  const off = { blankClears: false, createNew: false };
+
+  const unmatched = Plan.buildImportPlan(baseSpec(rows, [], { decisions, options: off }));
+  assert.equal(unmatched.executable, true);
+  assert.deepEqual(unmatched.operations.map(op => op.sourceRowId), ['r1', 'r2']);
+  assert.ok(unmatched.operations.every(op => op.op === 'create'));
+  // Çakışmaya girmeyen eşleşmeyen satır genel ayara uyar.
+  assert.ok(unmatched.skipped.some(item => item.sourceRowId === 'r3' && item.reason === 'create-disabled'));
+
+  const matched = Plan.buildImportPlan(baseSpec(rows, [{ plmId: '0999', _rev: 1 }], { decisions, options: off }));
+  assert.equal(matched.executable, true);
+  assert.equal(matched.operations.find(op => op.sourceRowId === 'r1').op, 'update');
+  assert.equal(matched.operations.find(op => op.sourceRowId === 'r2').op, 'create');
+
+  const noCreate = Plan.buildImportPlan(baseSpec(rows, [{ plmId: '0999', _rev: 1 }], { decisions, options: off, target: { canCreate: false } }));
+  assert.equal(noCreate.operations.filter(op => op.op === 'create').length, 0);
+  assert.ok(noCreate.skipped.some(item => item.sourceRowId === 'r2' && item.reason === 'create-not-supported'));
+});
+
 test('geçersiz hücre taşıyan satır yazılmaz', () => {
   const rows = [sourceRow('r1', 2, { 'col:0': cell('0123'), 'col:1': cell('abc'), 'col:2': cell(''), 'col:3': cell('x') })];
   const plan = Plan.buildImportPlan(baseSpec(rows, [{ plmId: '0123', _rev: 1 }]));

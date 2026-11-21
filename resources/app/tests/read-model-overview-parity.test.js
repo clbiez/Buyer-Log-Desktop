@@ -172,7 +172,8 @@ function decisionContext(userId){
   const rule=Rules.normalizeRule({id:'vip-qty',kind:'priority',target:'prio:vip-acil',name:'VIP Adet',conditions:[{field:'@qty',operator:'gte',value:4000}]},{priorityCatalog:catalog});
   return {
     userId,
-    personal:{'lcw.cp.rules.priority.v1':JSON.stringify({version:1,rules:[rule],deletedRuleIds:[],priorityCatalog:catalog}),
+    // 2026-11-21: yerleşik kural yok; eski tanımlar kullanıcı kuralı olarak kurulur.
+    personal:{...require('./fixtures/legacy-builtin-rules').storeEntries({extraPriority:[rule],priorityCatalog:catalog}),
       'lcw.cp.checklist.v1':JSON.stringify({})},
     roleDefaults:{'lcw.cp.assistant.v1':{value:JSON.stringify({settings:{targetType:'retail'},checklistSettings:{enabled:true}})}},
     shared:{answers:{},tombstones:{}},

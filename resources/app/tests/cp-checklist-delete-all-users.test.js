@@ -121,11 +121,8 @@ test('global deletion retains dependency warnings and undo restores original che
   assert.ok(!m.state.rules.some(rule => rule.id === m.target.id), 'deletion still applies after preference reload');
   await vm.runInContext('restoreRuleForAll("shared-check")', m.ctx);
   assert.ok(m.state.rules.some(rule => rule.id === m.target.id), 'custom original returns in the same session');
-  const builtin = Rules.DEFAULT_CHECKLIST_RULES[0];
-  await vm.runInContext(`deleteRuleForAll(${JSON.stringify(builtin.id)})`, m.ctx);
-  assert.ok(!m.state.rules.some(rule => rule.id === builtin.id));
-  await vm.runInContext(`restoreRuleForAll(${JSON.stringify(builtin.id)})`, m.ctx);
-  assert.ok(m.state.rules.some(rule => rule.id === builtin.id));
+  // 2026-11-21: yerleşik checklist kuralı yoktur; geri getirilecek yerleşik kopya kalmaz.
+  assert.equal(Rules.DEFAULT_CHECKLIST_RULES.length, 0);
 });
 
 test('local trash action never writes a global deletion', () => {
