@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-21",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon: renk opsiyonları seçim şeridinde",
+    "en": "Collection: colour options in the selection rail"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer.",
+    "en": "Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "collection-model-swatch-rail",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Satır numaraları kaldırıldı; model ve renk opsiyonları seçim şeridinde ayrışır",
+        "en": "Row numbers removed; models and colour options are told apart in the selection rail"
+      },
+      "body": {
+        "tr": "Koleksiyon tablosunun solundaki satır numarası hücresi kaldırıldı. Renk opsiyonu olan model satırında renk sayısı görünür; sayaca tıklamak renkleri açar ya da kapatır. Her renk kaydında, renk adından ya da renk kodundan okunan bir renk karesi bulunur; tanınmayan renk boş çerçeve olarak kalır. Model satırının şeridine tıklamak modeli tüm renk opsiyonlarıyla birlikte seçer ya da bırakır; renk satırının şeridi yalnız o rengi seçer. Renklerin bir kısmı seçiliyse model şeridi yarım dolu görünür. Bir satır kutusu işaretlendikten hemen sonra renkleri aç/kapa artık beklemeden çalışır.",
+        "en": "The row-number cell on the left of the Collection table was removed. A model row with colour options shows its colour count; clicking the count shows or hides the colours. Each colour record has a colour square read from its colour name or code; an unrecognised colour stays an empty frame. Clicking the rail of a model row selects or clears the model with all its colour options; the rail of a colour row selects only that colour. When only some colours are selected, the model rail is half filled. Showing or hiding colours right after ticking a row checkbox now works without delay."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-model-swatch-dark.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosunda renk sayaçları, renk kareleri ve yarım dolu model şeritleri",
+          "en": "Colour counts, colour squares and half-filled model rails in a demo Collection table"
+        },
+        "caption": {
+          "tr": "Demo veride iki modelin renk sayısı ve her rengin karesi görünür; kısmen seçili modellerin şeridi yarım dolu.",
+          "en": "On demo data, two models show their colour count and every colour its square; partly selected models have a half-filled rail."
+        }
+      }
+    }
+  ]
 }

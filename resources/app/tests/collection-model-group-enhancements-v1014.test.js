@@ -91,9 +91,10 @@ test('Collection View controls can show or hide all colour variants at once', ()
 });
 
 test('row-gutter colour hierarchy is theme-safe and visually explicit', () => {
-  assert.match(appSource, /#i-chevron-right/);
-  assert.match(appSource, /#i-chevron-down/);
-  assert.doesNotMatch(spreadsheetCssSource, /kolSpreadsheetRowNumber:hover[^\n]*blue-soft/);
-  assert.match(spreadsheetCssSource, /kolModelGroupGutterSpacer\.isVariant::after\{[^}]*background:color-mix/);
-  assert.match(spreadsheetCssSource, /kolModelGroupGutterSpacer\.isVariant::after/);
+  // Model satırı renk sayısı rozetiyle aç/kapanır; renk kayıtları renk noktası taşır.
+  assert.match(appSource, /class="kolModelGroupToggle kolModelGroupCount"[^`]*aria-expanded=/);
+  assert.match(appSource, /class="kolColourDot/);
+  assert.doesNotMatch(spreadsheetCssSource, /kolSpreadsheetRowNumber/);
+  assert.match(spreadsheetCssSource, /\.kolColourDot\{[^}]*box-shadow:0 0 0 1px color-mix/);
+  assert.doesNotMatch(spreadsheetCssSource, /kolModelGroupGutterSpacer\.isVariant/);
 });

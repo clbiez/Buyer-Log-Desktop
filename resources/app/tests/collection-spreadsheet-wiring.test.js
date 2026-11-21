@@ -88,8 +88,8 @@ test('Ctrl+C gives spreadsheet range priority before business-row Copy button',(
   assert.match(sheet,/exporter\.toSafeHTML\(safe\)/);
 });
 
-test('row numbers and column letters are transient UI, not persisted schema fields',()=>{
-  assert.match(app,/kolSpreadsheetRowNumber/);assert.match(sheet,/Engine\.columnLetter/);
+test('column letters are transient UI, not persisted schema fields; row numbers are not rendered',()=>{
+  assert.doesNotMatch(app,/class="kolSpreadsheetRowNumber"/);assert.match(sheet,/Engine\.columnLetter/);
   assert.doesNotMatch(app,/kolColOrder[^\n]*columnLetter/);assert.doesNotMatch(app,/KOL_COL_STATE_KEY[^\n]*activeCell/);
 });
 
