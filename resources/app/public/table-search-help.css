@@ -82,3 +82,12 @@
   overflow-wrap:anywhere;
   padding:3px 7px;
 }
+
+/* Arama kipleri (Tablo filtreleri şeridi) ve kısayol öneri listesi: yalnız yerleşim.
+   Görünüm ui-components.css (Manifest) içindedir. */
+.activeFilterTokens:has(.tableSearchChips){flex-wrap:wrap;overflow:visible;}
+.tableSearchChips{display:inline-flex;flex-wrap:wrap;align-items:center;gap:var(--ui-space-1);min-width:0;}
+.tableSearchChipsLabel{margin-right:2px;}
+.tableSearchSuggest{position:fixed;max-height:320px;overflow:auto;padding:4px;}
+.tableSearchSuggestItem{display:flex;align-items:baseline;gap:10px;padding:6px 8px;cursor:pointer;}
+.tableSearchSuggestItem code{min-width:72px;}

@@ -16065,6 +16065,21 @@ html[data-ui-system="manifest"] .blReportField:focus-visible{outline:2px solid v
 
 html[data-ui-system="manifest"] .tableSearchFeedback{font-size:var(--ui-font-sm);color:var(--ui-text-muted);}
 html[data-ui-system="manifest"] .tableSearchMissingTerm{border-radius:var(--ui-radius);color:var(--ui-danger);background:var(--ui-danger-bg);}
+/* Arama kipleri: VE/VEYA bağlacı, alan kısayolu, hariç, bulunamayan ve geçersiz terim. */
+html[data-ui-system="manifest"] :is(.tableSearchChipsLabel,.tableSearchChipJoin){color:var(--ui-text-muted);font:600 var(--ui-font-2xs)/1 var(--ui-font-body);}
+html[data-ui-system="manifest"] .tableSearchChipJoin{text-transform:lowercase;}
+html[data-ui-system="manifest"] .activeFilterToken.tableSearchChip--field{background:var(--ui-selected)!important;color:var(--ui-selected-ink)!important;}
+html[data-ui-system="manifest"] .activeFilterToken.tableSearchChip--exclude{color:var(--ui-text-muted)!important;}
+html[data-ui-system="manifest"] .activeFilterToken.tableSearchChip--exclude span{text-decoration:line-through;}
+html[data-ui-system="manifest"] .activeFilterToken.tableSearchChip--missing{background:var(--ui-warning-bg)!important;color:var(--ui-warning)!important;}
+html[data-ui-system="manifest"] .activeFilterToken.tableSearchChip--invalid{background:var(--ui-danger-bg)!important;color:var(--ui-danger)!important;}
+html[data-ui-system="manifest"] :is(.activeFilterToken.tableSearchChip--invalid span,.tableSearchInvalidTerm){text-decoration:underline wavy;text-underline-offset:3px;}
+html[data-ui-system="manifest"] .tableSearchSuggest{z-index:var(--ui-z-popover);background:var(--ui-surface);color:var(--ui-text);border-radius:var(--ui-radius);box-shadow:var(--ui-shadow-overlay);}
+html[data-ui-system="manifest"] .tableSearchSuggestItem{border-radius:var(--ui-radius);font-size:var(--ui-font-sm);}
+html[data-ui-system="manifest"] .tableSearchSuggestItem code{font-weight:650;}
+html[data-ui-system="manifest"] .tableSearchSuggestItem span{color:var(--ui-text-muted);}
+html[data-ui-system="manifest"] .tableSearchSuggestItem:is(:hover,[aria-selected="true"]){background:var(--ui-selected);color:var(--ui-selected-ink);}
+html[data-ui-system="manifest"] .tableSearchSuggestItem:is(:hover,[aria-selected="true"]) span{color:inherit;}
 
 /* Akış: visible idle rail, native checkbox semantics, full-row light. */
 html:root[data-ui-system="manifest"] body[data-ui-migrated] table input[type="checkbox"]:is(.rowChk,.shipCompareChk,.shipRowChk,[data-tr-check],[data-ship-chk-all],[data-fabric-pick],[data-bin-id],[data-cpa-queue-check],[data-dc-item],[data-dc-toggle-all],[data-ta-pick],[data-ta-all],[data-act="selectRow"],[data-act="selectAll"],[data-xim="include"],#kolSelAll,#shipChkAll,[id$="_selAll"]){background:transparent!important;border:1px solid var(--ui-group-divider)!important}
