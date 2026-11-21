@@ -7,8 +7,8 @@
     "en": "Collection colour options, stage forecast and CP redraw fixes"
   },
   "summary": {
-    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer.",
-    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours."
+    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: FiyatMaliyetKontrolRapor modelinden landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder.",
+    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: it analyses landed, Integral and forecast gap from the FiyatMaliyetKontrolRapor model with quantity weighting."
   },
   "changes": [
     {
@@ -118,6 +118,35 @@
         "reason": {
           "tr": "Ekranda değişiklik yok; tablolar aynı görünür, yalnız büyük veride bekleme ve donma kalkar.",
           "en": "There is no change on screen; tables look the same, only the waiting and freezes with large data are gone."
+        }
+      }
+    },
+    {
+      "id": "overview-postfob-cost",
+      "type": "feature",
+      "module": {
+        "tr": "Genel Bakış · Ticari",
+        "en": "Overview · Commercial"
+      },
+      "title": {
+        "tr": "FOB Sonrası Maliyet widget'ı",
+        "en": "Post-FOB Cost widget"
+      },
+      "body": {
+        "tr": "INTAKE gibi doğrudan şirket modeline (FiyatMaliyetKontrolRapor) Windows kimliğinizle sorgu atar; Excel dosyası gerekmez. Sezon (zorunlu), MAG, buyer grup, klasman, üretici ve satış ülkesi filtreleriyle sipariş × renk düzeyinde FOB, landed (gerçekleşen/öngörü), Integral maliyet ve gümrük/navlun/ek maliyet oranlarını çeker. Birim değerler adet ağırlıklı ortalanır; Landed/FOB ve Integral/FOB aynı satır kümesinde hesaplanır. Üretici ülke, MAG, buyer grup, sezon, klasman, satış ülkesi, model veya siparişe göre gruplar; ithal/yerli ayrımı ve Landed/FOB oranına göre aykırı satırları (Q3 + 1,5×IQR) gösterir. Widget, Genel Bakış'taki widget çekmecesinden eklenebilir; yeni düzende Ticari sayfasındadır.",
+        "en": "Like INTAKE, it queries the company model (FiyatMaliyetKontrolRapor) directly with your Windows identity; no Excel file is needed. With season (required), MAG, buyer group, product class, origin and sales country filters it fetches FOB, landed (actual/forecast), Integral cost and customs/freight/extra cost rates at order × colour level. Unit values are quantity-weighted; Landed/FOB and Integral/FOB are computed on the same row set. It groups by origin country, MAG, buyer group, season, product class, sales country, model or order, separates import/domestic production and flags outlier rows by Landed/FOB (Q3 + 1.5×IQR). The widget can be added from the Overview widget drawer; in the default layout it is on the Commercial page."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "postfob-cost-light.png",
+        "alt": {
+          "tr": "Demo veriyle FOB Sonrası Maliyet widget'ı: üretici ülkeye göre FOB, landed, Landed/FOB, Integral/FOB ve öngörü sapması",
+          "en": "Post-FOB Cost widget with demo data: FOB, landed, Landed/FOB, Integral/FOB and forecast gap by origin country"
+        },
+        "caption": {
+          "tr": "Anonim demo satırlarla: KPI şeridi adet ağırlıklı toplamları, tablo üretici ülke kırılımını ve aykırı sayısını gösterir.",
+          "en": "With anonymous demo rows: the KPI strip shows quantity-weighted totals, the table shows the origin-country breakdown and outlier counts."
         }
       }
     }

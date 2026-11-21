@@ -30,6 +30,7 @@
     collectionSummary:{icon:'table',group:'commercial',tr:'Koleksiyon',en:'Collection',descTr:'Aylık adet, model görselleri ve status dağılımı.',descEn:'Monthly quantity, model images and status mix.',w:12,h:3,minW:4,minH:3,maxW:12,maxH:12},
     oab:{icon:'chart-histogram',group:'commercial',tr:'OAB',en:'OAB',descTr:'Order-Assortment-Budget pivotu.',descEn:'Order-Assortment-Budget pivot.',w:12,h:8,minW:6,minH:4,maxW:12,maxH:20},
     intake:{icon:'database-import',group:'commercial',tr:'INTAKE',en:'INTAKE',descTr:'INTAKE bütçe pivotu.',descEn:'INTAKE budget pivot.',w:12,h:8,minW:6,minH:4,maxW:12,maxH:20},
+    postFob:{icon:'chart-bar',group:'commercial',tr:'FOB Sonrası Maliyet',en:'Post-FOB Cost',descTr:'FOB sonrası landed ve Integral maliyet analizi (FiyatMaliyetKontrolRapor).',descEn:'Post-FOB landed and Integral cost analysis (FiyatMaliyetKontrolRapor).',w:12,h:8,minW:6,minH:4,maxW:12,maxH:20},
   });
   const WIDGETS=Object.freeze(Object.keys(REGISTRY));
   const DEFAULT_PAGES=Object.freeze([
@@ -49,6 +50,7 @@
       {key:'collectionSummary',x:0,y:0,w:12,h:4},
       {key:'oab',x:0,y:4,w:6,h:9},
       {key:'intake',x:6,y:4,w:6,h:9},
+      {key:'postFob',x:0,y:13,w:12,h:9},
     ]},
   ]);
   /* v1 → v2 taşıması için eski anahtarlar. */
