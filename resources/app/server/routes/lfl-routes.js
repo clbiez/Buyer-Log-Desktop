@@ -1,5 +1,5 @@
 'use strict';
-const crypto=require('node:crypto');
+const {createHash}=require('node:crypto');
 const collectionLflEngine=require('../../public/collection-lfl-engine');
 const plmBomStore=require('../lib/plm-bom-store');
 const plmModelDetails=require('../lib/plm-model-details');
@@ -84,7 +84,7 @@ function asasVersion(req,runtime,rowCount){
   const user=req&&req.currentUser||{};
   const profile=userAccess.publicProfile?userAccess.publicProfile(user)||{}:user;
   const identity=JSON.stringify([sourceUserId(req),profile.id||user.id||'',profile.dataScope||null,profile.scopes||null,profile.delegatedUserIds||null,String(runtime&&runtime.lflLoadedAt||''),rowCount]);
-  return crypto.createHash('sha256').update(identity).digest('hex').slice(0,24);
+  return createHash('sha256').update(identity).digest('hex').slice(0,24);
 }
 function lflResponse(runtime,scopedRows){
   const rows=Array.isArray(runtime&&runtime.lflRows)?runtime.lflRows:[];
