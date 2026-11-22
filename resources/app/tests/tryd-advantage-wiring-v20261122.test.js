@@ -50,3 +50,11 @@ test('TR/YD widget standart YD landed çarpanını ortak ayardan okur ve motora 
   assert.doesNotMatch(widget, /bounds\.upper|3×IQR/);
   assert.match(read('ui-components.css'), /#trydAdvantageTable td\.trydAdvantageHighMultiplier/);
 });
+
+test('TR/YD Yenile standart landed çarpanını yeniden okur; okuma hatasında bilinen değer korunur', () => {
+  const widget = read('tryd-advantage.js');
+  const refresh = widget.slice(widget.indexOf('async function refresh('), widget.indexOf('async function refresh(') + 1800);
+  assert.match(refresh, /Promise\.all\(\[requestJson\('\/api\/postfob\/tryd\/report'[^\]]*, loadStandardMultiplier\(\)\]\)/);
+  const loader = widget.slice(widget.indexOf('async function loadStandardMultiplier('), widget.indexOf('async function loadState('));
+  assert.doesNotMatch(loader, /catch \(_\) \{ state\.standardMultiplier = null; \}/);
+});

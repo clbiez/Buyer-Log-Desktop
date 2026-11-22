@@ -473,7 +473,7 @@
     try {
       const payload = await requestJson('/api/landed-multipliers');
       state.standardMultiplier = payload && payload.multipliers ? payload.multipliers.overseas : null;
-    } catch (_) { state.standardMultiplier = null; }
+    } catch (_) { /* Okunamazsa bilinen değer korunur; hiç okunmadıysa motor varsayılanı (UI bunu söyler). */ }
   }
   async function loadState() {
     try {
@@ -517,7 +517,8 @@
     try {
       clearTimeout(saveTimer);
       const revision = state.viewRevision;
-      const payload = await requestJson('/api/postfob/tryd/report', jsonBody('POST', { view: view(), forceRefresh: Boolean(force) }));
+      // Ortak standart çarpan ayarı değişmiş olabilir: Yenile onu da yeniden okur.
+      const [payload] = await Promise.all([requestJson('/api/postfob/tryd/report', jsonBody('POST', { view: view(), forceRefresh: Boolean(force) })), loadStandardMultiplier()]);
       if (payload.view && revision === state.viewRevision) state.view = engine.normalizePrefs(payload.view);
       applyData(payload);
       state.loaded = true;
