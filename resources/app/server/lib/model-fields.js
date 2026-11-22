@@ -147,6 +147,22 @@ function intakeFieldsForMapping(fields) {
     kind: field.fieldType,
   }));
 }
+/* IAS gerçekleşen kilometre taşı tarihleri (v5). Katalogda DEĞİLDİR (otomatik
+   eşlemenin içerme eşleşmesi, tahmini tarih sütununu "gerçekleşen" diye
+   alabilirdi). Normal yenileme bunları bir kez şemadan YALNIZ birebir sütun
+   adıyla ve zaten eşlenmiş fiziksel sütunları dışlayarak ekler. Başlık adları
+   aşama modelinin okuduğu adlarla aynıdır (transit-analysis-source SOURCE_FIELDS). */
+const IAS_MILESTONE_FIELDS = Object.freeze([
+  { header: 'Cut Off Tarih', names: ['Cut Off Tarih', 'Cut Off Tarihi', 'CutOff Tarih', 'CutOff Tarihi'] },
+  { header: 'Fiili Yükleme Tarih', names: ['Fiili Yükleme Tarih', 'Fiili Yükleme Tarihi'] },
+  { header: 'Antrepo Giriş Tarih', names: ['Antrepo Giriş Tarih', 'Antrepo Giriş Tarihi'] },
+  { header: 'Tema Depo Giriş Tarih', names: ['Tema Depo Giriş Tarih', 'Tema Depo Giriş Tarihi'] },
+  { header: 'Özet Beyan Onay Tarih', names: ['Özet Beyan Onay Tarih', 'Özet Beyan Onay Tarihi'] },
+  { header: 'Ambar Onay Tarih', names: ['Ambar Onay Tarih', 'Ambar Onay Tarihi'] },
+  { header: 'Transit Beyanname Tarih', names: ['Transit Beyanname Tarih', 'Transit Beyanname Tarihi', 'Transit Beyanname Tescil Tarihi'] },
+  { header: 'Evrak Teslim Tarih', names: ['Evrak Teslim Tarih', 'Evrak Teslim Tarihi', 'Gümrük Müşavirine Evrak Teslim Tarihi'] },
+]);
+
 function fieldsForRole(role) {
   if (role === 'antrepo') return FIELD_CATALOGUE.antrepo.slice();
   if (role === 'asas') return FIELD_CATALOGUE.asas.concat(FIELD_CATALOGUE.lfl);
@@ -515,7 +531,7 @@ function mappingHealth(role, mapping) {
 const FABRIC_HEADERS = Object.freeze(['Ana Kumaş Mı', 'Kumaş Kategorisi', 'Kumaşçı Ülkesi', 'Kumaşçı', 'Kumaş Tipi', 'İplik No', 'Gramaj', 'Karışım']); // i18n-ignore
 
 module.exports = {
-  FIELD_CATALOGUE, DERIVED_FIELDS, MAPPING_STATUSES, FABRIC_HEADERS,
+  FIELD_CATALOGUE, DERIVED_FIELDS, MAPPING_STATUSES, FABRIC_HEADERS, IAS_MILESTONE_FIELDS,
   fieldKey, fieldsForRole, intakeFieldsForMapping, autoMapColumns, autoMapSchema,
   normalizeMappingEntry, mappingHasInvalidEntries, missingRequired, suspectIdentityMappings,
   productDescriptionNeedsRepair, repairAsasProductDescriptionMapping,

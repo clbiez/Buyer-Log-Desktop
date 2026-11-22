@@ -14361,6 +14361,7 @@ html[data-ui-system="manifest"] .cpLogisticDetailName small,html[data-ui-system=
 }
 html[data-ui-system="manifest"] .cpLogisticStage small,html[data-ui-system="manifest"] .cpStageShift {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
 }
+html[data-ui-system="manifest"] .trxRuleBasis {font-size:var(--ui-font-2xs) !important;font-weight:400 !important;line-height:1.2 !important;color:var(--ui-text-muted) !important;}
 html[data-ui-system="manifest"] .cpStageShift.is-early {color:var(--ui-success) !important
 }
 html[data-ui-system="manifest"] .cpStageShift.is-late,html[data-ui-system="manifest"] .cpStageOver,html[data-ui-system="manifest"] .cpLogisticStage.cpStageOver small:first-of-type {color:var(--ui-danger) !important

@@ -69,10 +69,75 @@ function safeUserId(value) {
 function snapshotPath(userId) { return path.join(SNAPSHOT_ROOT, `${safeUserId(userId)}.json.gz`); }
 function checksum(value) { return crypto.createHash('sha256').update(value).digest('hex'); }
 
+/* İçerik eşitliği: yalnız JSON çıktısı (dolayısıyla yükleme sonrası değer)
+   birebir aynı olacak durumlarda true döner; şüphede false (takma ad yok).
+   Aynı referans en hızlı yoldur; dizide boy, nesnede anahtar SIRASI ve
+   prototip aynı olmalı. Date yalnız Date ile ve aynı zamanla eşittir; diğer
+   sınıflar (toJSON taşıyabilir) yalnız referansla. İlk farkta durur. */
+const PLAIN_PROTOTYPES = new Set([Object.prototype, null]);
+function sameSnapshotContent(a, b) {
+  if (a === b) return true;
+  if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return false;
+  if (Array.isArray(a)) {
+    if (!Array.isArray(b) || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i += 1) if (a[i] !== b[i] && !sameSnapshotContent(a[i], b[i])) return false;
+    return true;
+  }
+  if (Array.isArray(b)) return false;
+  if (a instanceof Date || b instanceof Date) {
+    if (!(a instanceof Date) || !(b instanceof Date)) return false;
+    const at = a.getTime(), bt = b.getTime();
+    return at === bt || (Number.isNaN(at) && Number.isNaN(bt));
+  }
+  const proto = Object.getPrototypeOf(a);
+  if (proto !== Object.getPrototypeOf(b) || !PLAIN_PROTOTYPES.has(proto)) return false;
+  const keys = Object.keys(a), otherKeys = Object.keys(b);
+  if (keys.length !== otherKeys.length) return false;
+  for (let i = 0; i < keys.length; i += 1) {
+    const key = keys[i];
+    if (key !== otherKeys[i]) return false;
+    if (a[key] !== b[key] && !sameSnapshotContent(a[key], b[key])) return false;
+  }
+  return true;
+}
+
 // Excel/local source modes intentionally reuse the same array/map for CP, Orders
 // and Backlog. Plain JSON duplicated that object up to four times on disk and on
 // every fallback parse. Preserve target semantics while storing identity aliases.
-function compactSnapshotPayload(payload) {
+// Buyer snapshot'ında hedefler ayrı dizi nesneleri olabilir (#1145 öncesi
+// snapshot'tan yükle→yeniden kaydet, ya da aynı ufka ayrı sorgular); içerikçe
+// aynıysa onlar da takma ad olur. Yükleme hedefleri tek nesnede birleştirir;
+// moderatör/Excel modundaki paylaşım sözleşmesiyle aynıdır (hedef dizisi yerinde
+// değiştirilmez, yenisiyle değiştirilir).
+/* Hedef başına üst seviye karşılaştırma bir üreteçtir: kooperatif kayıt yolu
+   (prepareSnapshotAsync) satır/anahtar arasında olay döngüsüne döner. 9082
+   satırlık eşit içerikte karşılaştırma ~130 ms sürüyordu; tek blok olsaydı
+   kayıt yolunun ~8 ms dilim sözleşmesini bozardı. */
+const COMPARE_YIELD_EVERY = 256;
+function* sameTopLevelContent(a, b) {
+  if (a === b) return true;
+  const isArray = Array.isArray(a);
+  if (isArray !== Array.isArray(b)) return false;
+  if (isArray) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i += 1) {
+      if (a[i] !== b[i] && !sameSnapshotContent(a[i], b[i])) return false;
+      if ((i + 1) % COMPARE_YIELD_EVERY === 0) yield;
+    }
+    return true;
+  }
+  if (Object.getPrototypeOf(a) !== Object.getPrototypeOf(b) || !PLAIN_PROTOTYPES.has(Object.getPrototypeOf(a))) return false;
+  const keys = Object.keys(a), otherKeys = Object.keys(b);
+  if (keys.length !== otherKeys.length) return false;
+  for (let i = 0; i < keys.length; i += 1) {
+    const key = keys[i];
+    if (key !== otherKeys[i]) return false;
+    if (a[key] !== b[key] && !sameSnapshotContent(a[key], b[key])) return false;
+    if ((i + 1) % COMPARE_YIELD_EVERY === 0) yield;
+  }
+  return true;
+}
+function* compactSnapshotSteps(payload) {
   const value = { ...(payload && typeof payload === 'object' ? payload : {}) };
   const targetAliases = {};
   let aliasCount = 0;
@@ -83,8 +148,16 @@ function compactSnapshotPayload(payload) {
     const base = value[baseKey];
     if (base && typeof base === 'object') seen.set(base, baseKey);
     for (const [target, entry] of Object.entries(source)) {
-      if (entry && typeof entry === 'object' && seen.has(entry)) {
-        aliases[target] = seen.get(entry); aliasCount += 1;
+      let match = entry && typeof entry === 'object' ? (seen.get(entry) || null) : null;
+      if (!match && entry && typeof entry === 'object') {
+        for (const [candidate, name] of seen) {
+          if (Array.isArray(candidate) !== Array.isArray(entry)) continue;
+          if (Array.isArray(entry) && candidate.length !== entry.length) continue;
+          if (yield* sameTopLevelContent(candidate, entry)) { match = name; break; }
+        }
+      }
+      if (match) {
+        aliases[target] = match; aliasCount += 1;
       } else {
         compact[target] = entry;
         if (entry && typeof entry === 'object') seen.set(entry, target);
@@ -95,6 +168,20 @@ function compactSnapshotPayload(payload) {
   }
   if (Object.keys(targetAliases).length) value.targetAliases = targetAliases;
   return { value, aliasCount };
+}
+function compactSnapshotPayload(payload) {
+  const steps = compactSnapshotSteps(payload);
+  for (;;) { const step = steps.next(); if (step.done) return step.value; }
+}
+const COMPACT_SLICE_MS = 8;
+async function compactSnapshotPayloadAsync(payload, yieldControl = yieldToEventLoop) {
+  const steps = compactSnapshotSteps(payload);
+  let sliceStart = Date.now();
+  for (;;) {
+    const step = steps.next();
+    if (step.done) return step.value;
+    if (Date.now() - sliceStart >= COMPACT_SLICE_MS) { await yieldControl(); sliceStart = Date.now(); }
+  }
 }
 
 function expandSnapshotPayload(snapshot) {
@@ -150,7 +237,7 @@ async function hashPartsAsync(parts, yieldControl) {
   return hash.digest('hex');
 }
 async function prepareSnapshotAsync(payload, yieldControl = yieldToEventLoop) {
-  const compacted = compactSnapshotPayload(payload);
+  const compacted = await compactSnapshotPayloadAsync(payload, yieldControl);
   const { content, metadata } = splitCompactedPayload(compacted);
   const contentBuffer = await jsonToBufferAsync(content, { yieldControl });
   const contentKey = await hashPartsAsync([contentBuffer], yieldControl);
