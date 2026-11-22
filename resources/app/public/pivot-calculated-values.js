@@ -480,18 +480,20 @@
       return true;
     });
 
+    /* Kip seçimi CP penceresindeki tarif kartlarıyla aynı segment bileşenidir
+       (fcModes/fcMode); yeni görünüm tanımı yoktur. */
     function renderModePicker(host, api, { mode, allowRow, rowNote, adapterFor }) {
-      const option = (id, title, body, disabled) => `<label class="pcvModeOption${mode === id ? ' active' : ''}${disabled ? ' disabled' : ''}"><input type="radio" name="pcvMode" value="${id}"${mode === id ? ' checked' : ''}${disabled ? ' disabled' : ''}><span><b>${esc(title)}</b><small>${esc(body)}</small></span></label>`;
+      const option = (id, title, body, disabled) => `<button type="button" role="tab" class="fcMode pcvMode${mode === id ? ' active' : ''}" data-pcv-mode="${id}" aria-selected="${mode === id}" tabindex="${mode === id ? '0' : '-1'}"${disabled ? ' disabled aria-disabled="true"' : ''}><b>${esc(title)}</b><small>${esc(body)}</small></button>`;
       host.innerHTML = `<div class="fcStep"><span class="fcStepNo">0</span>${esc(T('Nasıl hesaplansın?', 'How should it be calculated?'))}</div>
-        <div class="pcvModes" role="radiogroup" aria-label="${esc(T('Hesap modu', 'Calculation mode'))}">
+        <div class="fcModes pcvModes" data-bl-tabs="segment" role="tablist" aria-label="${esc(T('Hesap modu', 'Calculation mode'))}">
           ${option('aggregate', T('Toplamlar üzerinden (önerilen)', 'On totals (recommended)'), T('Excel pivot hesaplanan alanı gibi: formül her satırda, alt toplamda ve genel toplamda o satırın TOPLANMIŞ değerleriyle çalışır. Örn. Onaylı / WSSI oranı, satır oranlarının ortalaması değil toplamların oranıdır.', 'Like an Excel pivot calculated field: the formula runs on each row, subtotal and grand total with that row’s TOTALLED values. E.g. Approved / WSSI is the ratio of the totals, not the average of row ratios.'), false)}
           ${option('row', T('Satır bazında, sonra topla', 'Per row, then sum'), allowRow ? T('Formül her kaynak satırda (ör. option) ayrı çalışır, sonuçlar toplanır. Koşullu adetler için: IF([WSSI] = 0, [Onaylı], 0).', 'The formula runs on every source row (e.g. option) and the results are summed. For conditional quantities: IF([WSSI] = 0, [Approved], 0).') : (rowNote ? (isEnglish() ? rowNote.en : rowNote.tr) : T('Bu widget’ta kullanılamaz.', 'Not available in this widget.')), !allowRow)}
         </div>`;
-      host.addEventListener('change', event => {
-        const input = event.target.closest('input[name="pcvMode"]');
-        if (!input || input.value === mode) return;
+      host.addEventListener('click', event => {
+        const button = event.target.closest('[data-pcv-mode]');
+        if (!button || button.disabled || button.dataset.pcvMode === mode) return;
         // Taslak (başlık, formül, biçim) korunur; yalnız alan listesi değişir.
-        api.reopen(draft => adapterFor({ ...draft, mode: input.value }));
+        api.reopen(draft => adapterFor({ ...draft, mode: button.dataset.pcvMode }));
       });
     }
   }
@@ -503,8 +505,8 @@
      bölümünün altına hesaplanan değer listesi ve "ƒx Hesaplanan değer ekle"
      düğmesi. Liste bir TASLAKTIR; widget'ın kendi Kaydet'i kalıcılaştırır. */
   function sectionHtml() {
-    return `<div class="pcvSection" data-pcv-section>
-      <div class="pcvSectionHead"><span>${esc(T('Kendi hesaplanan değerleriniz (ƒx)', 'Your calculated values (ƒx)'))}</span><button type="button" class="navActionBtn pcvAddBtn" data-pcv-add><span aria-hidden="true">ƒx</span> ${esc(T('Hesaplanan değer ekle', 'Add calculated value'))}</button></div>
+    return `<div class="oabSettingsSection pcvSection" data-pcv-section>
+      <div class="oabSettingsSectionHead pcvSectionHead"><span>${esc(T('Kendi hesaplanan değerleriniz (ƒx)', 'Your calculated values (ƒx)'))}</span><button type="button" class="navActionBtn pcvAddBtn" data-pcv-add><span aria-hidden="true">ƒx</span> ${esc(T('Hesaplanan değer ekle', 'Add calculated value'))}</button></div>
       <div class="oabPivotConfigList pcvList" data-pcv-list></div>
     </div>`;
   }
@@ -533,7 +535,7 @@
             <button type="button" class="oabConfigIconBtn pcvEditBtn" data-pcv-edit title="${esc(T('Formülü düzenle', 'Edit formula'))}" aria-label="${esc(`${T('Formülü düzenle', 'Edit formula')}: ${labelOf(def)}`)}">ƒx</button>
             <button type="button" class="oabConfigIconBtn danger" data-pcv-remove title="${esc(T('Sil', 'Remove'))}" aria-label="${esc(`${T('Sil', 'Remove')}: ${labelOf(def)}`)}">×</button>
           </div>
-        </div>`).join('') : `<div class="pcvEmpty">${esc(T('Henüz hesaplanan değer yok. Örn. Onaylı / WSSI oranı ya da koşullu bir adet ekleyin.', 'No calculated values yet. Add e.g. an Approved / WSSI ratio or a conditional quantity.'))}</div>`;
+        </div>`).join('') : `<div class="intakeConfigEmpty pcvEmpty">${esc(T('Henüz hesaplanan değer yok. Örn. Onaylı / WSSI oranı ya da koşullu bir adet ekleyin.', 'No calculated values yet. Add e.g. an Approved / WSSI ratio or a conditional quantity.'))}</div>`;
       const add = host.querySelector('[data-pcv-add]');
       if (add) add.disabled = defs.length >= LIMITS.max;
     }

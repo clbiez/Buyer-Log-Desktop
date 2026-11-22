@@ -16168,3 +16168,9 @@ html:root[data-ui-system="manifest"] body[data-ui-migrated] :is(#cpTable,#orders
    başlık popover katmanına yükselir. Tarih/özet sayıları sabit genişlikli. */
 html[data-ui-system="manifest"] .quotationWorkspaceShell .quotationDetailHead:has(.quotationMoreMenu:not([hidden])) {z-index:var(--ui-z-popover) !important}
 html[data-ui-system="manifest"] .quotationWorkspaceShell .quotationNavItem .verHistNavDate,html[data-ui-system="manifest"] .quotationSummaryLine {font-variant-numeric:tabular-nums}
+/* Pivot hesaplanan değerleri (pivot-calculated-values.js): ƒx işareti, formül özeti ve hata hücresi. */
+html[data-ui-system="manifest"] :is(.pcvBadge,.pcvEditBtn,.pcvHeadMark,.pcvAddBtn>span) {font-style:italic;font-weight:800}
+html[data-ui-system="manifest"] .pcvBadge {background:var(--ui-selected);color:var(--ui-selected-ink);border-radius:var(--ui-radius)}
+html[data-ui-system="manifest"] .pcvName>small {color:var(--ui-text-muted);font-family:var(--ui-font-mono);font-size:var(--ui-font-xs)}
+html[data-ui-system="manifest"] .pcvHeadMark {color:var(--ui-accent)}
+html[data-ui-system="manifest"] td.pcvCell.pcvError {color:var(--ui-danger) !important}

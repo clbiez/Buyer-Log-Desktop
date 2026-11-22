@@ -124,8 +124,10 @@ const numberEn = text => Number(String(text).replace(/[^\d.-]/g, ''));
       await page.click('#_oabCubeFieldsModal [data-pcv-add]');
       await page.waitForSelector('#_formulaColumnModal .pcvModes', { timeout: 15000 });
       if (mode === 'row') {
-        await page.check('#_formulaColumnModal input[name="pcvMode"][value="row"]');
-        await page.waitForSelector('#_formulaColumnModal .pcvModeOption.active input[value="row"]', { timeout: 10000 });
+        await page.click('#_formulaColumnModal [data-pcv-mode="row"]');
+        await page.waitForSelector('#_formulaColumnModal [data-pcv-mode="row"][aria-selected="true"]', { timeout: 10000 });
+        // İnceleme için isteğe bağlı editör görüntüsü (sürüm notuna girmez).
+        if (process.env.PCV_EDITOR_SHOT) await page.locator('#_formulaColumnModal .fcCard').screenshot({ path: process.env.PCV_EDITOR_SHOT });
       }
       // Pivotta yalnız sayısal tarifler açılır.
       const recipes = await page.$$eval('#_formulaColumnModal [data-fc-mode]', buttons => buttons.map(button => button.dataset.fcMode));
