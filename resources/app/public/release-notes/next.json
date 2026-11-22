@@ -122,29 +122,6 @@
       }
     },
     {
-      "id": "very-large-data-worker-heap-cage",
-      "type": "improvement",
-      "module": {
-        "tr": "CP · Siparişler · Genel Bakış · Backlog",
-        "en": "CP · Orders · Overview · Backlog"
-      },
-      "title": {
-        "tr": "Çok büyük veride (≈650 MiB) hesaplar da arka planda yapılır",
-        "en": "Calculations also run in the background with very large data (≈650 MiB)"
-      },
-      "body": {
-        "tr": "16 GB bellekli bilgisayarlarda yaklaşık 500 MiB üstü model verisinde CP ve diğer ekranların hesapları hâlâ sunucunun ana iş parçacığında yapılıyor, açılıştan sonra sunucu 20–40 saniye yanıt veremiyordu. Arka plan işçisinin bellek sınırları ölçülen kullanıma göre ayarlandı ve işçinin bellekte tuttuğu veri artık iki kez sayılmıyor; 650 MiB veride hesaplar arka planda yapılır, ekranlar beklemez. Uygulamanın tüm bileşenleri tek bir ortak bellek alanını paylaştığı için işçi, sunucuya yer kalmadığında kullanılmaz ve önceki güvenli yol seçilir; sonuçlar aynıdır.",
-        "en": "On computers with 16 GB of memory, with model data above about 500 MiB the calculations for CP and other screens still ran on the server main thread and the server could not respond for 20–40 seconds after startup. The background worker's memory limits now follow the measured usage and data the worker keeps in memory is no longer counted twice; with 650 MiB of data the calculations run in the background and screens do not wait. Because all parts of the app share one common memory area, the worker is not used when it would leave the server without room, and the previous safe path is chosen instead; results are the same."
-      },
-      "visual": {
-        "kind": "none",
-        "reason": {
-          "tr": "Ekranda değişiklik yok; yalnız çok büyük veride açılış sonrası donma kalkar.",
-          "en": "There is no change on screen; only the freeze after startup with very large data is gone."
-        }
-      }
-    },
-    {
       "id": "overview-postfob-cost",
       "type": "feature",
       "module": {
