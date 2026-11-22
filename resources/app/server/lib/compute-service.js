@@ -58,9 +58,13 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     record.localSource={source,identity,timer};
   }
   // Kalıcı snapshot dosyasının kimliği: değiştirilmiş/yeniden yazılmış dosya eski kopyayla servis edilmez.
+  // Yükleyicinin okuduğu tüm dosyalar: ana dosya, yedeği ve meta yan dosyaları (yalnız meta
+  // değişen kayıt — aynı içerik, yeni loadedAt — ana dosyaya dokunmaz).
   async function snapshotIdentity(owner){
-    try{const stat=await fs.promises.stat(require('./model-snapshot').snapshotPath(owner));return `${stat.ino}:${stat.size}:${stat.mtimeMs}:${stat.ctimeMs}`;}
-    catch(_){return null;}
+    const file=require('./model-snapshot').snapshotPath(owner);
+    const parts=await Promise.all([file,file+'.bak',file+'.meta.json',file+'.meta.json.bak'].map(candidate=>fs.promises.stat(candidate)
+      .then(stat=>`${stat.ino}:${stat.size}:${stat.mtimeMs}:${stat.ctimeMs}`,error=>error?.code==='ENOENT'?'-':null)));
+    return parts.includes(null)?null:parts.join('|');
   }
   async function runLocal(task,record,params,options={}){
     const queuedAt=performance.now(),deadline=queuedAt+(options.timeoutMs??600000);

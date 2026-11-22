@@ -57,3 +57,13 @@ test('a new generation re-reads the snapshot and the retired generation is relea
   try{assert.equal(lease.value.loadedAt,'DISK-3');}finally{lease.release();}
   assert.equal(loads.length,2);
 });
+
+test('a metadata-only snapshot save (same content, new loadedAt) invalidates the kept source',async t=>{
+  const same=label=>{const s=source('X');s.loadedAt=label;return s;};
+  await snapshots.saveModelSnapshotAsync('a',same('META-1'));
+  const service=createComputeService({pool:capacityPool(),root});t.after(()=>service.close());
+  const descriptor=await service.coldSource({ownerId:'a',generation:'meta-1',loadedAt:'META-1',uncompressedBytes:MiB});
+  (await service.run('source-info',descriptor,{})).release();
+  await snapshots.saveModelSnapshotAsync('a',same('META-2'));
+  await assert.rejects(service.run('source-info',descriptor,{}),{code:'COMPUTE_STALE_GENERATION'});
+});
