@@ -28,7 +28,10 @@ function failure(code){
    ayrı 512 MiB sınırı ≈256 MiB üstü kaynak kopyası hazırlığını (girdi 2×kaynak) COMPUTE_QUEUE_BUSY ile
    reddediyor ve yenileme yayımını düşürüyordu. Fiilî sınır bütçedir. */
 const SERVICE_MAX_PENDING_BYTES=4096*MiB;
-function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
+/* localSourceFor(ownerId, descriptor): sunucunun bellekteki aynı sürüm kaynağı (yoksa null).
+   Kapasite yolunda (sunucu iş parçacığı) her istek 600+ MiB'lık snapshot'ı diskten yeniden
+   okuyup ayrıştırıyordu; aynı veri zaten bellekteyken bu 10+ sn'lik kilit demekti. */
+function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB,localSourceFor=null}={}){
   if(!Number.isSafeInteger(diskBudgetBytes)||diskBudgetBytes<1)throw Error('Invalid source replica byte budget');
   pool??=createComputePool({maxPendingBytes:SERVICE_MAX_PENDING_BYTES});
   const privateRoot=fs.mkdtempSync(path.join(root||os.tmpdir(),'buyerlog-source-replicas-'));
@@ -58,10 +61,16 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
       assertCurrent();const started=performance.now(),transfer=[];
       const sourceIndependent=SOURCE_INDEPENDENT_TASKS.has(task);
       let source=record.liveSource||record.sourceRef?.deref();
+      // Aynı sürüm (loadedAt eşit) bellekteyse kayda bağlanır: sonraki istekler de diski okumaz.
+      if(!source&&!sourceIndependent&&typeof localSourceFor==='function'&&record.descriptor.loadedAt!=null){
+        const live=localSourceFor(record.owner,record.descriptor);
+        if(live&&String(live.loadedAt||'')===String(record.descriptor.loadedAt)){record.liveSource=live;source=live;}
+      }
       if(!source&&!sourceIndependent&&record.descriptor.replicaFile){
         source=require('./compute-source-codec').decode(await fs.promises.readFile(record.descriptor.replicaFile),record.descriptor);
       }else if(!source&&!sourceIndependent){
-        source=await require('./model-snapshot').loadModelSnapshotAsync(record.owner);
+        // Ayrıştırma olay döngüsüne söz verir (yerel yol sunucu iş parçacığındadır).
+        source=await require('./model-snapshot').loadModelSnapshotAsync(record.owner,{yieldControl:()=>new Promise(setImmediate)});
       }
       assertCurrent();
       if(!sourceIndependent&&record.descriptor.loadedAt!=null&&String(source?.loadedAt||source?.savedAt||'')!==String(record.descriptor.loadedAt))throw failure('COMPUTE_STALE_GENERATION');

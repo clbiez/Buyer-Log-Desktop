@@ -387,7 +387,14 @@ const { saveModelSnapshotAsync, loadModelSnapshot, loadModelSnapshotAsync, SNAPS
 const pageProjectionCache = require('./lib/page-projection-cache');
 const derivedInputKeys = require('./lib/derived-input-keys');
 const { runProjectionWorker } = require('./lib/projection-worker-client');
-const { getComputeService:serverCompute, closeComputeService, retireComputeSource } = require('./lib/compute-runtime');
+const { getComputeService:serverCompute, closeComputeService, retireComputeSource, setLocalSourceProvider } = require('./lib/compute-runtime');
+/* Kapasite yolu (işçiye sığmayan kaynak) aynı sürümü diskten yeniden okumaz: bellekteki
+   runtime kullanılır. Önbellek kaydı oluşturulmaz ve erişim zamanı değiştirilmez. */
+setLocalSourceProvider((ownerId, descriptor) => {
+  const runtime = sourceCaches.get(sourceUserId(ownerId));
+  if (!runtime || !runtime.loadedAt || !Array.isArray(runtime.asasOrders) || String(runtime.loadedAt) !== String(descriptor && descriptor.loadedAt)) return null;
+  return runtimeSnapshotPayload(runtime);
+});
 const { createComputeReadGuard } = require('./lib/compute-read-guard');
 const { createComputeReadService } = require('./lib/compute-read-service');
 const { collectionLflSourceVersion } = require('./lib/collection-lfl-source-version');
@@ -7198,9 +7205,9 @@ async function hydrateModelSnapshotAsync(value) {
 }
 
 
-async function saveRuntimeModelSnapshot(id, runtime) {
-  if (!runtime || !runtime.loadedAt) return null;
-  const payload = {
+// Snapshot'a yazılan ve hesap kaynağı olan alanlar (aynı diziler; kopya değil).
+function runtimeSnapshotPayload(runtime) {
+  return {
     loadedAt: runtime.loadedAt,
     sources: runtime.sources || null,
     asasOrders: runtime.asasOrders || [],
@@ -7219,6 +7226,10 @@ async function saveRuntimeModelSnapshot(id, runtime) {
     modelRefresh: runtime.modelRefresh || null,
     lastRefreshResult: runtime.lastRefreshResult || null,
   };
+}
+async function saveRuntimeModelSnapshot(id, runtime) {
+  if (!runtime || !runtime.loadedAt) return null;
+  const payload = runtimeSnapshotPayload(runtime);
   const operation = (async () => {
     const metrics = await saveModelSnapshotAsync(id, payload);
     const descriptor = await serverCompute().seedSource({ownerId:id,generation:crypto.randomBytes(24).toString('hex'),source:payload,
