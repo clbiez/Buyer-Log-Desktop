@@ -2241,6 +2241,7 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       'Current Stage': latestStage ? latestStage.code : '',
       _stageRun: latestStage ? { code: latestStage.code, days: latestStage.days, mean: latestStage.mean, over: latestStage.over, sigma: latestStage.sigma } : null,
       _stageVsRule: latestStage ? latestStage.vsRule : null,
+      _stageWhy: latestStage ? (latestStage.why || null) : null,
       // Priority Rules (@stageDelaySigma): en çok geciken yoldaki parsiyelin σ değeri.
       _stageMaxSigma: stageMaxSigma,
       // CP teslimat sonucu (@deliveryOutcome) aşama ETA'sını kullanır: en geç parsiyel.
@@ -3530,6 +3531,28 @@ function localIsoDate(d) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
+/* Aşama bilgisinde tanımlı kural günü (Handover + gün). Aynı kural kümesi için
+   aynı girdiler tekrar tekrar çözülmesin diye kural dizisi başına önbelleklenir
+   (kurallar değişince dizi kimliği değişir). Kural yoksa NaN. */
+const _stageRuleCache = new WeakMap();
+function stageRuleDays(ov, segment, order, handover, handoverIso) {
+  const rules = ov && ov.transitRules;
+  const resolve = () => {
+    const delType = normalizeTransitDelType(segment._delType) || norm(segment._delType);
+    const info = resolveTransitDays({ delType, exFactory: toDateOnly(handover), season: order.season, country: order.countryRaw, status: segment._status, rules, forceRules: true });
+    return info && info.rule ? Number(info.days) : NaN;
+  };
+  if (!rules || typeof rules !== 'object') return resolve();
+  let cache = _stageRuleCache.get(rules);
+  if (!cache) { cache = new Map(); _stageRuleCache.set(rules, cache); }
+  // Anahtar ham değerlerden (normalleştirme yalnız ıskalamada).
+  // Handover anahtarı ISO gün (iki çağıranda aynı ölçek).
+  const key = `${segment._delType || ''}|${handoverIso || ''}|${order.season || ''}|${order.countryRaw || ''}|${segment._status || ''}`;
+  let value = cache.get(key);
+  if (value === undefined) { value = resolve(); cache.set(key, value); }
+  return value;
+}
+
 /* CP / Siparişler: yüklenmiş ve henüz antrepoya girmemiş IAS parsiyelinin aşama
    özeti (yalnız bilgi; hiçbir bayrak, öncelik veya kurala girmez).
    vsRule: tanımlı tek kural günüyle ETA (Handover + gün) − aşama ETA'sı;
@@ -3542,16 +3565,19 @@ function cpSegmentStageInfo(segment, order, ov, stageModel, todayIso) {
   const projection = backlogStageProjection(ias, order, stageModel, todayIso, segment._status);
   if (!projection || !projection.etaMean) return null;
   const handover = toDateOnly(ias.handover);
-  let vsRule = null;
+  let vsRule = null, why = null;
   if (handover) {
-    const transitInfo = resolveTransitDays({
-      delType: normalizeTransitDelType(segment._delType) || norm(segment._delType),
-      exFactory: handover, season: order.season, country: order.countryRaw, status: segment._status,
-      rules: ov && ov.transitRules, forceRules: true,
-    });
-    const days = transitInfo && transitInfo.rule ? Number(transitInfo.days) : NaN;
+    const days = stageRuleDays(ov, segment, order, handover, localIsoDate(handover));
     const etaOrd = dateOrdinal(projection.etaMean), handoverOrd = dateOrdinal(handover);
-    if (Number.isFinite(days) && etaOrd != null && handoverOrd != null) vsRule = handoverOrd + days - etaOrd;
+    if (Number.isFinite(days) && etaOrd != null && handoverOrd != null) {
+      vsRule = handoverOrd + days - etaOrd;
+      /* Farkın özeti (tooltip): kural günü ile model ortalaması + kalemler.
+         geç gün = (base − ruleDays) + Σ kalem = −vsRule. */
+      const d = projection.drivers;
+      if (d && Number.isFinite(Number(d.base))) {
+        why = { handover: localIsoDate(handover), ruleDays: days, ruleEta: localIsoDate(new Date(handover.getTime() + days * 86400000)), base: d.base, items: Array.isArray(d.items) ? d.items : [] };
+      }
+    }
   }
   const run = (projection.stages || []).find(item => item && item[3] === 'r') || null;
   return {
@@ -3563,7 +3589,7 @@ function cpSegmentStageInfo(segment, order, ov, stageModel, todayIso) {
     sigma: Number.isFinite(Number(projection.overrunSigma)) && projection.overrunSigma !== null ? Number(projection.overrunSigma) : null,
     anchor: projection.anchor || null, plan: projection.plan || null,
     pRetail: projection.pRetail != null ? projection.pRetail : null, pInStore: projection.pInStore != null ? projection.pInStore : null,
-    vsRule,
+    vsRule, why,
   };
 }
 

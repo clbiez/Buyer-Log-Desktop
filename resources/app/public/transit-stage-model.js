@@ -418,6 +418,32 @@
     if (!next || (next && planned[next] != null)) overrunSigma = 0;
     else if (gapSd != null) overrunSigma = openOverrun > 0 ? round(openOverrun / Math.max(0.5, gapSd)) : 0;
 
+    /* Farkın kaynakları (ortalama, Handover'dan): Aşama ETA'sı = Handover +
+       model ortalaması (base) + kalemler. Kalemler kümülatif yuvarlanır; toplamı
+       tam olarak etaMean − Handover'dır. done: iki gerçekleşen tarih arası
+       gerçek süre − beklenen; plan: planlı tarih (gemi tarifesi) etkisi;
+       overrun: açık aşım; today: henüz varmadı (en erken bugün). */
+    let drivers = null;
+    if (actual.handover != null && group.remaining.handover) {
+      const H = actual.handover, items = [];
+      let cur = H + rem('handover', 'mean'), shown = Math.round(cur);
+      const push = (kind, next, extra) => {
+        const r = Math.round(next), days = r - shown;
+        if (days !== 0) items.push({ kind, days, ...extra });
+        cur = next; shown = r;
+      };
+      let prev = 'handover';
+      for (let i = MILESTONE_INDEX.handover + 1; i <= anchorIdx; i += 1) {
+        const m = MILESTONES[i];
+        if (actual[m] == null || !group.remaining[m]) continue;
+        push('done', actual[m] + rem(m, 'mean'), { from: prev, to: m, actual: actual[m] - actual[prev], expected: round(rem(prev, 'mean') - rem(m, 'mean')) });
+        prev = m;
+      }
+      if (plan) push('plan', planned[plan] + rem(plan, 'mean'), { milestone: plan });
+      if (etaMean !== shown) push(openOverrun > 0 ? 'overrun' : 'today', etaMean, openOverrun > 0 ? { stage: currentStage } : {});
+      drivers = { base: Math.round(H + rem('handover', 'mean')) - H, items };
+    }
+
     // Paralel kol: evrak ETA'dan sonra teslim edildiyse gümrüğü bekletebilir.
     const docDate = dayOrdinal(raw.documentDelivery);
     const etaDate = actual.eta != null ? actual.eta : planned.eta;
@@ -446,7 +472,7 @@
       gainDays: baseline != null ? baseline - etaMean : null,
       docsLateDays,
       sample: dist0(group, plan || anchor), scope: group.scope,
-      stages, probability,
+      stages, probability, drivers,
     };
   }
   function dist0(group, m) { return group.remaining[m] ? group.remaining[m].n : 0; }
@@ -466,6 +492,7 @@
       pInStore: targets.inStore != null ? projection.probability(targets.inStore) : null,
       // [kod, gerçekleşen/geçen gün, ortalama, durum d/r/p, sapma]
       stages: projection.stages.map(s => [s.code, s.days, s.mean, s.status === 'done' ? 'd' : s.status === 'running' ? 'r' : 'p', s.deviation]),
+      drivers: projection.drivers || null,
     };
   }
 

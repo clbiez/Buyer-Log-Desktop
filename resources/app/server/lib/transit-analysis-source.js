@@ -63,7 +63,10 @@ const COMPANY_EXTRA_FIELDS = Object.freeze({
   'Yükleme İthalat Onay Tarih': SOURCE_FIELDS.importApproval,
 });
 
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 function isoDate(value) {
+  // Hızlı yol: zaten "YYYY-MM-DD" olan metin olduğu gibi (parseDateOnly ile aynı sonuç).
+  if (typeof value === 'string' && value.length === 10 && ISO_DAY.test(value)) return value;
   const d = parseLib.parseDateOnly(value);
   if (!d) return '';
   const p = n => String(n).padStart(2, '0');
@@ -289,12 +292,36 @@ function applyReportRules(shipments, options = {}) {
 
 /* Backlog satırının aşama projeksiyonu için IAS kilometre taşları. Model ile
    AYNI alan eşlemesi kullanılır (shipmentFromEntry); ülke çağıranın işidir. */
+/* Tek geçiş: alanlar bir kez taranır (her alan için ayrı sourceValue taraması
+   yerine); her kilometre taşı için ilk dolu değer alınır — sourceValue ile aynı
+   seçim. Yalnız eşleşen değerler tarih olarak ayrıştırılır (CP/Backlog sıcak yolu). */
+const MILESTONE_SOURCE = Object.freeze({
+  loadingRequest: 'loadingRequest', cutOff: 'cutOff', actualLoading: 'actualLoading', eta: 'eta',
+  summaryDeclaration: 'summaryDeclaration', warehouseApproval: 'warehouseApproval', transitDeclaration: 'transitDeclaration',
+  warehouseEntry: 'actualEntry', documentDelivery: 'documentDelivery',
+});
+const KEY_TO_MILESTONE = (() => {
+  const map = new Map();
+  for (const [milestone, field] of Object.entries(MILESTONE_SOURCE)) for (const key of SOURCE_KEYS[field]) map.set(key, milestone);
+  return map;
+})();
 function milestonesFromEntry(entry) {
   if (!entry || typeof entry !== 'object') return null;
-  const s = shipmentFromEntry(entry, '');
   const out = {};
-  for (const m of BLTransitStageModel.MILESTONES) out[m] = s[m] || '';
-  out.documentDelivery = s.documentDelivery || '';
+  for (const m of BLTransitStageModel.MILESTONES) out[m] = '';
+  out.documentDelivery = '';
+  out.handover = isoDate(entry.handover);
+  const fields = entry._sourceFields;
+  if (fields && typeof fields === 'object') {
+    const raw = {};
+    for (const name in fields) {
+      const value = fields[name];
+      if (value == null || value === '') continue;
+      const m = KEY_TO_MILESTONE.get(cachedHeaderKey(name));
+      if (m && raw[m] === undefined) raw[m] = value;
+    }
+    for (const m in raw) out[m] = isoDate(raw[m]);
+  }
   return out;
 }
 

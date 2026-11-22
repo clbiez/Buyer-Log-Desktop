@@ -6866,6 +6866,11 @@ function partialViewRows(tableKey,rows){
       };
       copy._logisticDelTypeValues=[...new Set(segments.map(s=>normalizeTransitDelType(s.delType)||norm(s.delType)).filter(Boolean))];
       copy._logisticArrivalValues=segments.map(s=>coerceDateLoose(s.arrival)).filter(Boolean);
+      // Aşama sütunları da grubun kendi parsiyellerinden (en geç gelecek olan).
+      const live=segments.filter(s=>s&&s.stage&&s.stage.eta).sort((a,b)=>(String(a.stage.eta)<String(b.stage.eta)?1:-1))[0];
+      copy['Stage ETA']=live?coerceDateLoose(live.stage.eta):null;
+      copy['Current Stage']=live?live.stage.code:'';
+      copy._stageRun=live?{code:live.stage.code,days:live.stage.days,mean:live.stage.mean,over:live.stage.over,sigma:live.stage.sigma}:null;
       if(primary){
         copy['Ant. Arrival']=coerceDateLoose(primary.arrival);
         copy['Del. Type']=normalizeTransitDelType(primary.delType)||norm(primary.delType);
@@ -6997,27 +7002,117 @@ function cpStageRunText(run){
   const sigma=sigmaValue>=1?` · ${sigmaValue>=10?'≥10':sigmaValue.toLocaleString(en?'en-GB':'tr-TR',{maximumFractionDigits:1})}σ`:'';
   return `${run.code}. ${label}${sigma}${span}${over}`;
 }
+// Statik ETA'ya göre fark: işaret yok, yön kelimeyle ("6 g geç"); eksi işareti
+// "erken" gibi okunuyordu.
 function cpStageShiftText(days){
   if(days==null||!Number.isFinite(Number(days)))return '';
   const n=Number(days),en=appLang==='en';
-  if(n===0)return en?'Stage ETA ±0':'Aşama ETA ±0';
-  return n>0?(en?`+${n} d early`:`+${n} g erken`):(en?`${n} d late`:`${n} g geç`);
+  if(n===0)return en?'Same as static ETA':'Statik ETA ile aynı';
+  return n>0?(en?`${n} d early`:`${n} g erken`):(en?`${-n} d late`:`${-n} g geç`);
+}
+const CP_STAGE_MILESTONE_LABELS={
+  tr:{loadingRequest:'Yükleme Talep',handover:'Handover',cutOff:'Cut Off',actualLoading:'Fiili Yükleme',eta:'ETA',summaryDeclaration:'Özet Beyan',warehouseApproval:'Ambar Onay',transitDeclaration:'Transit Beyanname',warehouseEntry:'Antrepo Giriş'},
+  en:{loadingRequest:'Loading Request',handover:'Handover',cutOff:'Cut-off',actualLoading:'Actual Loading',eta:'ETA',summaryDeclaration:'Summary Declaration',warehouseApproval:'Warehouse Approval',transitDeclaration:'Transit Declaration',warehouseEntry:'Antrepo Entry'}
+};
+/* Üzerine gelince: farkı oluşturan kalemler. Aşama ETA'sı = Handover + model
+   ortalaması + kalemler; statik ETA = Handover + kural günü. Kalemlerin toplamı
+   gösterilen farka eşittir. */
+function cpStageWhyText(vsRule,why){
+  const en=appLang==='en',g=en?'d':'g',lang=en?'en':'tr';
+  const eff=d=>d>0?(en?`${d} d later`:`${d} g geç`):d<0?(en?`${-d} d earlier`:`${-d} g erken`):(en?'no effect':'etkisiz');
+  const ms=m=>CP_STAGE_MILESTONE_LABELS[lang][m]||m;
+  const date=v=>fmtDate(coerceDateLoose(v))||'—';
+  const head=en?`Stage ETA vs static ETA: ${cpStageShiftText(vsRule)}`:`Aşama ETA'sı statik ETA'ya göre: ${cpStageShiftText(vsRule)}`;
+  if(!why) return `${head}\n${en?'Static ETA = Handover + transit rule days. Information only; Ex→Retail is unchanged.':'Statik ETA = Handover + yol süresi kuralı. Yalnız bilgi; Ex→Retail değişmez.'}`;
+  const lines=[head,
+    en?`Static ETA: Handover ${date(why.handover)} + ${why.ruleDays} ${g} rule = ${date(why.ruleEta)}`:`Statik ETA: Handover ${date(why.handover)} + ${why.ruleDays} ${g} kural = ${date(why.ruleEta)}`,
+    en?'Why:':'Nedenleri:',
+    en?`• Model average Handover → Antrepo ${why.base} ${g} (rule ${why.ruleDays} ${g}): ${eff(why.base-why.ruleDays)}`:`• Model ortalaması Handover → Antrepo ${why.base} ${g} (kural ${why.ruleDays} ${g}): ${eff(why.base-why.ruleDays)}`];
+  for(const item of why.items||[]){
+    if(item.kind==='done') lines.push(en?`• ${ms(item.from)} → ${ms(item.to)} took ${item.actual} ${g} (average ${Math.round(item.expected)} ${g}): ${eff(item.days)}`:`• ${ms(item.from)} → ${ms(item.to)} ${item.actual} ${g} sürdü (ortalama ${Math.round(item.expected)} ${g}): ${eff(item.days)}`);
+    else if(item.kind==='plan') lines.push(en?`• Planned ${ms(item.milestone)} date (schedule): ${eff(item.days)}`:`• Planlı ${ms(item.milestone)} tarihi (tarife): ${eff(item.days)}`);
+    else if(item.kind==='overrun') lines.push(en?`• Open stage over its average${item.stage?` (${item.stage}. ${CP_STAGE_SHORT_LABELS.en[item.stage]||''})`:''}: ${eff(item.days)}`:`• Ortalamasını aşan açık aşama${item.stage?` (${item.stage}. ${CP_STAGE_SHORT_LABELS.tr[item.stage]||''})`:''}: ${eff(item.days)}`);
+    else if(item.kind==='today') lines.push(en?`• Not arrived yet (earliest today): ${eff(item.days)}`:`• Henüz varmadı (en erken bugün): ${eff(item.days)}`);
+  }
+  if(!(why.items||[]).length) lines.push(en?'• No stage deviation measured since Handover (missing dates count as average)':'• Handover\'dan beri ölçülen aşama sapması yok (tarihi gelmeyen adım ortalama sayılır)');
+  return lines.join('\n');
+}
+function cpStageRunTitle(run){
+  const text=cpStageRunText(run);
+  if(!text||run.days==null||run.mean==null) return text;
+  return `${text}\n${appLang==='en'?`${run.days}/${run.mean} d: days spent in this stage / its average duration (estimated from the expected gap when the stage start date is missing)`:`${run.days}/${run.mean} g: bu aşamada geçen gün / aşamanın ortalama süresi (aşama başlangıç tarihi yoksa beklenen ara süreden tahmini)`}`;
+}
+/* Partial View: satır bir durum grubudur; ikinci satır o grubun parsiyellerinden
+   gelir. Yoldaysa en geç gelecek parsiyelin aşama farkı, depodaysa en son giren
+   parsiyelin gerçekleşen Handover → Antrepo süresi ve kurala göre farkı. */
+function cpPartialViewShiftHtml(r){
+  const segments=(Array.isArray(r._logisticSegments)?r._logisticSegments:[]).filter(Boolean);
+  const live=segments.filter(s=>s.stage&&s.stage.vsRule!=null&&Number.isFinite(Number(s.stage.vsRule))).sort((a,b)=>(String(a.stage.eta)<String(b.stage.eta)?1:-1))[0];
+  if(live){
+    const n=Number(live.stage.vsRule),cls=n>0?'is-early':n<0?'is-late':'';
+    return `<small class="cpStageShift ${cls}" title="${escapeHtml(cpStageWhyText(n,live.stage.why))}" data-no-i18n>${escapeHtml(cpStageShiftText(n))}</small>`;
+  }
+  const done=segments.map(s=>cpSegmentRealized(r,s)).filter(Boolean).sort((a,b)=>(dateOrdinal(b.entry)||0)-(dateOrdinal(a.entry)||0))[0];
+  if(!done)return '';
+  const d=done,en=appLang==='en',n=Number(d.vsRule),hasRule=d.vsRule!=null&&Number.isFinite(n);
+  // Kısa: "✓ 11 g · 41 g erken" (✓ = antrepoya girdi, gerçekleşen); ayrıntı tooltip'te.
+  const text=`✓ ${d.days} ${en?'d':'g'}${hasRule?` · ${cpStageShiftText(n)}`:''}`;
+  return `<small class="cpStageShift ${hasRule?(n>0?'is-early':n<0?'is-late':''):''}" title="${escapeHtml(cpRealizedWhyText(d))}" data-no-i18n>${escapeHtml(text)}</small>`;
 }
 function cpStageShiftHtml(r){
+  if(r&&r._partialViewActive)return cpPartialViewShiftHtml(r);
   const days=r&&r._stageVsRule;
   if(days==null||!Number.isFinite(Number(days)))return '';
   const n=Number(days),cls=n>0?'is-early':n<0?'is-late':'';
-  const tip=appLang==='en'
-    ?'Stage-based ETA versus the single transit rule (Handover + rule days). Information only; Ex→Retail is unchanged.'
-    :'Aşama bazlı ETA ile tek yol süresi kuralının (Handover + kural günü) farkı. Yalnız bilgi; Ex→Retail değeri değişmez.';
-  return `<small class="cpStageShift ${cls}" title="${escapeHtml(tip)}">${escapeHtml(cpStageShiftText(n))}</small>`;
+  return `<small class="cpStageShift ${cls}" title="${escapeHtml(cpStageWhyText(n,r._stageWhy))}" data-no-i18n>${escapeHtml(cpStageShiftText(n))}</small>`;
 }
-function cpLogisticStageHtml(segment){
+/* Antrepoya girmiş parsiyel: gerçekleşen Handover → Antrepo süresi ve tanımlı
+   yol süresi kuralına göre farkı. Yalnız çizilen satırda, segmentin zaten
+   taşıdığı Handover ve antrepo tarihinden hesaplanır (CP kurulumuna maliyet yok);
+   segment başına önbelleklenir. Kural yoksa yalnız süre gösterilir. */
+const cpRealizedCache=new WeakMap();
+function cpSegmentRealized(row,segment){
+  if(!segment||segment.kind!=='partial'||segment.synthetic||segment.partialNo==null)return null;
+  const key=turknorm(segment.status||'');
+  const arrived=key.includes('DEPO')||(key.includes('RETAIL')&&(key.includes('AKTAR')||key.includes('BEKLE')));
+  if(!arrived)return null;
+  const rules=state.overrides.transitRules;
+  const cached=cpRealizedCache.get(segment);
+  if(cached&&cached.rules===rules)return cached.value;
+  const h=dateOrdinal(segment.handover),a=dateOrdinal(segment.arrival);
+  let value=null;
+  if(h!=null&&a!=null&&a>=h){
+    const days=a-h;
+    const resolved=resolveTransitDaysForValues(segment.delType,segment.handover,row&&row.Season,row&&row.Country,segment.status,true,rules);
+    const ruleDays=resolved&&resolved.rule&&Number.isFinite(Number(resolved.days))?Number(resolved.days):null;
+    value={days,handover:segment.handover,entry:segment.arrival,ruleDays,vsRule:ruleDays!=null?ruleDays-days:null};
+  }
+  cpRealizedCache.set(segment,{rules,value});
+  return value;
+}
+function cpRealizedWhyText(done){
+  const en=appLang==='en',g=en?'d':'g';
+  const date=v=>fmtDate(coerceDateLoose(v))||'—';
+  const lines=[en?`Realized Handover → Antrepo: ${done.days} ${g}`:`Gerçekleşen Handover → Antrepo: ${done.days} ${g}`,
+    en?`Handover ${date(done.handover)} → Antrepo ${date(done.entry)} (IAS antrepo date)`:`Handover ${date(done.handover)} → Antrepo ${date(done.entry)} (IAS antrepo tarihi)`];
+  if(done.ruleDays!=null) lines.push(en?`Transit rule ${done.ruleDays} ${g}: ${cpStageShiftText(done.vsRule)}`:`Yol süresi kuralı ${done.ruleDays} ${g}: ${cpStageShiftText(done.vsRule)}`);
+  else lines.push(en?'No transit rule defined for this partial.':'Bu parsiyel için tanımlı yol süresi kuralı yok.');
+  return lines.join('\n');
+}
+function cpLogisticRealizedHtml(done){
+  const en=appLang==='en',n=Number(done.vsRule),shift=done.vsRule!=null?cpStageShiftText(n):'';
+  const label=en?'Realized · Handover → Antrepo':'Gerçekleşen · Handover → Antrepo';
+  return `<div class="cpLogisticStage" title="${escapeHtml(cpRealizedWhyText(done))}" data-no-i18n><strong>${done.days} ${en?'d':'g'}</strong><small>${escapeHtml(label)}</small>${shift?`<small class="cpStageShift ${n>0?'is-early':n<0?'is-late':''}">${escapeHtml(shift)}</small>`:''}</div>`;
+}
+function cpLogisticStageHtml(segment,row){
   const st=segment&&segment.stage;
+  const done=st?null:cpSegmentRealized(row,segment);
+  if(done)return cpLogisticRealizedHtml(done);
   if(!st)return '<div class="cpLogisticStage">—</div>';
   const shift=cpStageShiftText(st.vsRule);
   const run=cpStageRunText(st);
-  return `<div class="cpLogisticStage${st.over>0?' cpStageOver':''}"><strong>${fmtDate(coerceDateLoose(st.eta))||'—'}</strong>${run?`<small data-no-i18n>${escapeHtml(run)}</small>`:''}${shift?`<small class="cpStageShift ${Number(st.vsRule)>0?'is-early':Number(st.vsRule)<0?'is-late':''}">${escapeHtml(shift)}</small>`:''}</div>`;
+  const n=Number(st.vsRule);
+  return `<div class="cpLogisticStage${st.over>0?' cpStageOver':''}"><strong>${fmtDate(coerceDateLoose(st.eta))||'—'}</strong>${run?`<small data-no-i18n title="${escapeHtml(cpStageRunTitle(st))}">${escapeHtml(run)}</small>`:''}${shift?`<small class="cpStageShift ${n>0?'is-early':n<0?'is-late':''}" title="${escapeHtml(cpStageWhyText(n,st.why))}" data-no-i18n>${escapeHtml(shift)}</small>`:''}</div>`;
 }
 function cpLogisticSegmentTitle(segment){
   if(segment.kind==='production') return appLang==='en'?'Remaining in production':'Üretimde kalan';
@@ -7043,7 +7138,7 @@ function cpLogisticDetailRowHtml(row,cols,withChk,tableKey='cp'){
   const exFactory=coerceDateLoose(row&&row['Ex-factory']);
   const loadingApproval=coerceDateLoose(row&&row['Buying Son Onay Tarihi']);
   // Aşama sütunu yalnız en az bir parsiyelde aşama tahmini varsa eklenir.
-  const hasStage=segments.some(segment=>segment&&segment.stage);
+  const hasStage=segments.some(segment=>segment&&(segment.stage||cpSegmentRealized(row,segment)));
   const rows=segments.map(segment=>{
     const priority=Number(segment.priority)||2;
     const arrival=coerceDateLoose(segment.arrival), handover=coerceDateLoose(segment.handover);
@@ -7057,13 +7152,13 @@ function cpLogisticDetailRowHtml(row,cols,withChk,tableKey='cp'){
       <div>${BLRevision.isAutomaticExFactory(row)?revisionHtml('Ex-factory',revisionInfo(row,'Ex-factory')):(fmtDate(exFactory)||'—')}</div>
       <div>${segment.synthetic?'—':(fmtDate(loadingApproval)||'—')}</div>
       <div>${fmtDate(handover)||'—'}</div>
-      <div class="cpLogisticDateValue"><strong>${fmtDate(arrival)||'—'}</strong>${arrivalNote?`<small>${escapeHtml(arrivalNote)}</small>`:''}</div>${hasStage?cpLogisticStageHtml(segment):''}
+      <div class="cpLogisticDateValue"><strong>${fmtDate(arrival)||'—'}</strong>${arrivalNote?`<small>${escapeHtml(arrivalNote)}</small>`:''}</div>${hasStage?cpLogisticStageHtml(segment,row):''}
     </div>`;
   }).join('');
   const colspan=Math.max(1,cols.length+(withChk?1:0));
   return `<td colspan="${colspan}" class="cpLogisticDetailCell"><div class="cpLogisticDetailCard">
     <div class="cpLogisticDetailHead"><div><strong>${appLang==='en'?'Logistics flow':'Lojistik akışı'}</strong><span>${fmtInt(loaded)} / ${fmtInt(total)} ${appLang==='en'?'loaded':'yüklendi'}${remaining?` · ${fmtInt(remaining)} ${appLang==='en'?'remaining':'kalan'}`:''}${shortage?` · ${fmtInt(shortage)} ${appLang==='en'?'shortage':'eksik yükleme'}`:''}</span></div><div class="cpLogisticPriorityLegend"><span><b>1</b>${appLang==='en'?'Production / Shortage':'Üretim / Eksik Yükleme'}</span><span><b>2</b>${appLang==='en'?'Pre-warehouse':'Depo öncesi'}</span><span><b>3</b>${appLang==='en'?'Warehouse':'Depo'}</span></div></div>
-    <div class="cpLogisticDetailGridHead${hasStage?' hasStage':''}"><span>${appLang==='en'?'Flow Rank':'Akış Sırası'}</span><span>${appLang==='en'?'Detail':'Detay'}</span><span>${appLang==='en'?'Quantity':'Adet'}</span><span>${appLang==='en'?'Status':'Durum'}</span><span>${appLang==='en'?'Vehicle':'Vasıta'}</span><span>${appLang==='en'?'Ex-Factory Date':'Ex-Factory Tarihi'}</span><span>${appLang==='en'?'Loading Approval Date':'Yükleme Onay Tarihi'}</span><span>Handover</span><span>${appLang==='en'?'Warehouse ETA':'Antrepo tarihi'}</span>${hasStage?`<span title="${escapeHtml(appLang==='en'?'Stage-based ETA from the stage model (information only)':'Aşama modelinden ETA (yalnız bilgi)')}">${appLang==='en'?'Stage forecast':'Aşama tahmini'}</span>`:''}</div>
+    <div class="cpLogisticDetailGridHead${hasStage?' hasStage':''}"><span>${appLang==='en'?'Flow Rank':'Akış Sırası'}</span><span>${appLang==='en'?'Detail':'Detay'}</span><span>${appLang==='en'?'Quantity':'Adet'}</span><span>${appLang==='en'?'Status':'Durum'}</span><span>${appLang==='en'?'Vehicle':'Vasıta'}</span><span>${appLang==='en'?'Ex-Factory Date':'Ex-Factory Tarihi'}</span><span>${appLang==='en'?'Loading Approval Date':'Yükleme Onay Tarihi'}</span><span>Handover</span><span>${appLang==='en'?'Warehouse ETA':'Antrepo tarihi'}</span>${hasStage?`<span title="${escapeHtml(appLang==='en'?'In transit: stage-based ETA from the stage model. In the warehouse: realized Handover → Antrepo days. Information only.':'Yolda: aşama modelinden ETA. Depoda: gerçekleşen Handover → Antrepo süresi. Yalnız bilgi.')}">${appLang==='en'?'Stage forecast / actual':'Aşama tahmini / gerçekleşen'}</span>`:''}</div>
     <div class="cpLogisticDetailBody">${rows}</div>
   </div></td>`;
 }
@@ -7277,7 +7372,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
       if(!run||!run.code) return '<td></td>';
       const text=cpStageRunText(run);
       // Metin zaten aktif dilde üretilir; çeviri ağı "ETA"yı yeniden çevirmesin.
-      return `<td class="${run.over>0?'cpStageOver':''}" title="${escapeHtml(text)}" data-no-i18n>${escapeHtml(text)}</td>`;
+      return `<td class="${run.over>0?'cpStageOver':''}" title="${escapeHtml(cpStageRunTitle(run))}" data-no-i18n>${escapeHtml(text)}</td>`;
     }
     case 'pct': return `<td class="num">${fmtPct(v)}</td>`;
     case 'importance': {

@@ -160,3 +160,21 @@ test('durumla geçildiği bilinen ve kaynakta sütunu olmayan adım "bekliyor" s
   assert.equal(port.openOverrunDays, 0);
   assert.equal(port.stages.find(s => s.code === '4').status, 'done');
 });
+
+test('fark kalemleri: Handover + ortalama + kalemler = Aşama ETA', () => {
+  const model = sampleModel();
+  const cases = [
+    [{ loadingRequest: '2026-03-01', handover: '2026-03-04', cutOff: '2026-03-08', actualLoading: '2026-03-10', eta: '2026-04-30' }, '2026-03-20'],
+    [{ loadingRequest: '2026-03-01', handover: '2026-03-04', cutOff: '2026-03-12' }, '2026-03-14'],
+    [{ loadingRequest: '2026-03-01', handover: '2026-03-04' }, '2026-04-30'],
+  ];
+  for (const [input, today] of cases) {
+    const p = SM.project(input, { model, country: 'Bangladesh', vehicle: 'Gemi', today });
+    const sum = p.drivers.base + p.drivers.items.reduce((a, i) => a + i.days, 0);
+    assert.equal(SM.dayOrdinal(input.handover) + sum, SM.dayOrdinal(p.etaMean), JSON.stringify(p.drivers));
+  }
+  const slow = SM.project(cases[1][0], { model, country: 'Bangladesh', vehicle: 'Gemi', today: '2026-03-14' });
+  // Handover → Cut Off 8 gün (ortalama 4) → 4 gün geç kalemi.
+  assert.deepEqual(slow.drivers.items[0], { kind: 'done', days: 4, from: 'handover', to: 'cutOff', actual: 8, expected: 4 });
+  assert.deepEqual(SM.compact(slow).drivers, slow.drivers);
+});

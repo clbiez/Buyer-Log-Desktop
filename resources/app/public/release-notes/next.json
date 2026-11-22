@@ -7,8 +7,8 @@
     "en": "Collection colour options, stage forecast and CP redraw fixes"
   },
   "summary": {
-    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: FiyatMaliyetKontrolRapor modelinden landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur.",
-    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: it analyses landed, Integral and forecast gap from the FiyatMaliyetKontrolRapor model with quantity weighting. Starting directly on CP now completes the startup screen without an error."
+    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: FiyatMaliyetKontrolRapor modelinden landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur. Aşama farkı yönüyle yazılır ve üzerine gelince nedenleri görünür; depodaki parsiyelde ve Kısmi Görünümde gerçekleşen yol süresi gösterilir.",
+    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: it analyses landed, Integral and forecast gap from the FiyatMaliyetKontrolRapor model with quantity weighting. Starting directly on CP now completes the startup screen without an error. The stage gap shows its direction and its reasons on hover; partials in the warehouse and Partial View show the realized transit time."
   },
   "changes": [
     {
@@ -222,6 +222,64 @@
         "caption": {
           "tr": "Demo veride /?module=cp açılışı \"Başlangıç ekranı hazır\" ile tamamlanır; uyarı gösterilmez.",
           "en": "On demo data, opening /?module=cp completes with \"The opening screen is ready\"; no warning is shown."
+        }
+      }
+    },
+    {
+      "id": "cp-stage-gap-reasons-realized",
+      "type": "improvement",
+      "module": {
+        "tr": "CP · Siparişler",
+        "en": "CP · Orders"
+      },
+      "title": {
+        "tr": "Aşama farkı yönüyle yazılır, nedenleri görünür; depodaki parsiyelde gerçekleşen süre",
+        "en": "Stage gap shows its direction and reasons; realized time for partials in the warehouse"
+      },
+      "body": {
+        "tr": "Statik ETA'ya göre fark artık işaretsiz yazılır (\"6 g geç\", \"6 g erken\"); eksi işareti erken gibi okunuyordu. Üzerine gelince farkı oluşturan kalemler listelenir: statik ETA (Handover + kural günü), modelin Handover → Antrepo ortalaması ile kural farkı, tamamlanan aşamaların ortalamadan sapması, planlı ETA (tarife) ve ortalamayı aşan açık aşama; kalemlerin toplamı gösterilen farka eşittir. Koşan aşamadaki \"17/34 g\" ifadesinin anlamı (aşamada geçen gün / aşamanın ortalama süresi) de açıklanır. Lojistik akışında depoya girmiş parsiyeller gerçekleşen Handover → Antrepo süresini, kurala göre farkını ve üzerine gelince gerçekleşen aşama sürelerini gösterir.",
+        "en": "The gap to the static ETA is now written without a sign (\"6 d late\", \"6 d early\"); the minus sign read like early. Hovering lists what makes up the gap: the static ETA (Handover + rule days), the model's Handover → Antrepo average versus the rule, completed stages' deviation from their averages, the planned ETA (schedule) and an open stage over its average; the items add up to the shown gap. The meaning of \"17/34 d\" in the running stage (days in the stage / its average duration) is explained too. In the logistics flow, partials in the warehouse show the realized Handover → Antrepo time, its gap to the rule and, on hover, the realized stage durations."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-stage-realized.png",
+        "alt": {
+          "tr": "Demo CP lojistik akışı: depodaki parsiyelde 11 g gerçekleşen süre, yoldaki siparişte 4 g geç",
+          "en": "Demo CP logistics flow: 11 d realized time on a warehoused partial, 4 d late on an order in transit"
+        },
+        "caption": {
+          "tr": "Demo veride depodaki parsiyel gerçekleşen Handover → Antrepo süresini, yoldaki sipariş statik ETA'ya göre farkı yönüyle gösterir.",
+          "en": "On demo data, the warehoused partial shows its realized Handover → Antrepo time and the order in transit shows its gap to the static ETA with its direction."
+        }
+      }
+    },
+    {
+      "id": "cp-partial-view-realized-exr",
+      "type": "improvement",
+      "module": {
+        "tr": "CP · Siparişler · Kısmi Görünüm",
+        "en": "CP · Orders · Partial View"
+      },
+      "title": {
+        "tr": "Kısmi Görünümde Ex→Retail hücresi parsiyelin kendi süresini gösterir",
+        "en": "In Partial View the Ex→Retail cell shows the partial's own timing"
+      },
+      "body": {
+        "tr": "Kısmi Görünümde her durum satırının Ex→Retail ikinci satırı artık o satırdaki parsiyellerden gelir: depodaki satırda gerçekleşen Handover → Antrepo süresi ve kurala göre farkı (\"✓ 11 g · 41 g erken\"), yoldaki satırda aşama tahmininin statik ETA'ya göre farkı. Üzerine gelince ayrıntı görünür. Aşama ETA ve Koşan Aşama sütunları da satırın kendi parsiyellerinden okunur; üretimdeki satırda boş kalır.",
+        "en": "In Partial View, the second line of each status row's Ex→Retail cell now comes from that row's partials: a warehoused row shows the realized Handover → Antrepo time and its gap to the rule (\"✓ 11 d · 41 d early\"), a row in transit shows the stage forecast's gap to the static ETA. Hovering shows the details. Stage ETA and Current Stage are also read from the row's own partials and stay empty on the production row."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-partial-view-realized.png",
+        "alt": {
+          "tr": "Demo CP Kısmi Görünüm: depoda satırında gerçekleşen süre, yolda satırında 4 g geç",
+          "en": "Demo CP Partial View: realized time on the warehouse row, 4 d late on the transit row"
+        },
+        "caption": {
+          "tr": "Demo veride Kısmi Görünüm: her durum satırı kendi parsiyelinin süresini gösterir.",
+          "en": "Partial View on demo data: each status row shows its own partial's timing."
         }
       }
     }

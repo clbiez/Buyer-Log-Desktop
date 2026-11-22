@@ -88,7 +88,7 @@ test('istemci sözleşmesi: sütunlar varsayılan gizli, Ex→Retail ikinci sat�
   assert.match(app, /const shift=cpStageShiftHtml\(r\);/);
   assert.match(app, /'Stage ETA':'Aşama ETA',\n  'Current Stage':'Koşan Aşama',/);
   assert.match(app, /'Stage ETA':'Stage ETA',\n  'Current Stage':'Current Stage',/);
-  assert.match(app, /\$\{hasStage\?cpLogisticStageHtml\(segment\):''\}/);
+  assert.match(app, /\$\{hasStage\?cpLogisticStageHtml\(segment,row\):''\}/);
   // Excel/pano metni: Ex→Retail sayısı değişmez (ikinci satır yalnız HTML).
   assert.match(app, /if\(c\.type==='num'\)\{ if\(c\.k==='Ex→Retail' && cf\) return cf\.exr==null\?'':String\(cf\.exr\);/);
   assert.match(app, /const CP_RM_CLIENT_TYPES=new Set\(\['formula','cpImage','privateNote','stageRun'\]\);/);
@@ -158,4 +158,53 @@ test('Buyer Log üretimi parsiyel (üretimde/eksik) önceki parsiyelin yükleme 
   const src = read('public/app-main.js');
   assert.match(src, /\$\{segment\.synthetic\?'—':\(fmtDate\(loadingApproval\)\|\|'—'\)\}/);
   assert.match(read('server/lib/parse.js'), /synthetic: syntheticSegmentKind\(segment\)/);
+});
+
+// v20261122 — "-6 g geç" yanlış okunuyordu: işaretsiz yön; fark kalemleri
+// tooltip'te ve toplamı farka eşit; depoya girmiş parsiyelde gerçekleşen süre.
+test('statiğe göre fark kalemlere ayrılır; kalemlerin toplamı farka eşittir', () => {
+  const row = cpRow({ transitAnalysis: model() });
+  for (const seg of row._logisticSegments.filter(s => s.stage)) {
+    const st = seg.stage;
+    assert.ok(st.why, 'fark özeti');
+    const late = (st.why.base - st.why.ruleDays) + st.why.items.reduce((a, i) => a + i.days, 0);
+    assert.equal(late, -st.vsRule, JSON.stringify(st.why));
+    assert.equal(st.why.ruleDays, 70);
+  }
+  assert.deepEqual(row._stageWhy, row._logisticSegments.filter(s => s.stage).sort((a, b) => (a.stage.eta < b.stage.eta ? 1 : -1))[0].stage.why);
+  const p1 = row._logisticSegments.find(s => s.stage && s.stage.plan === 'eta').stage;
+  assert.ok(p1.why.items.some(i => i.kind === 'plan'), 'planlı ETA kalemi');
+});
+
+test('antrepoya girmiş parsiyel: gerçekleşen süre sunucuda hesaplanmaz (CP kurulum maliyeti yok); segment Handover ve antrepo tarihini taşır', () => {
+  const ov = { ...require('../server/db').defaultOverrides(), transitRules: rule, transitAnalysis: model() };
+  const map = parse.parseAntrepoRows([
+    ias({ 'İthalat Dosya No': 'F9', 'Supplier Portal Statü': 'Depoda', 'HANDOVER Tarihi': iso(-80), 'Tahmini Antrepo Giriş Tarihi': iso(-20) }), // i18n-ignore
+  ], ov);
+  const row = parse.buildCPRowsFromASAS([order()], map, ov)[0];
+  const seg = row._logisticSegments.find(s => s.kind === 'partial' && s.partialNo != null);
+  assert.ok(seg && seg.handover && seg.arrival, 'istemci hesabı için tarihler segmentte');
+  assert.equal(seg.stage, undefined, 'depodaki parsiyelde tahmin yok');
+  assert.equal(seg.realized, undefined);
+  const app = read('public/app-main.js');
+  assert.match(app, /const cpRealizedCache=new WeakMap\(\);/);
+  assert.match(app, /value=\{days,handover:segment\.handover,entry:segment\.arrival,ruleDays,vsRule:ruleDays!=null\?ruleDays-days:null\};/);
+  assert.match(app, /resolveTransitDaysForValues\(segment\.delType,segment\.handover,row&&row\.Season,row&&row\.Country,segment\.status,true,rules\)/);
+});
+
+test('istemci: işaretsiz yön metni, fark tooltip\'i ve gerçekleşen hücre', () => {
+  const app = read('public/app-main.js');
+  assert.match(app, /n>0\?\(en\?`\$\{n\} d early`:`\$\{n\} g erken`\):\(en\?`\$\{-n\} d late`:`\$\{-n\} g geç`\)/);
+  assert.match(app, /title="\$\{escapeHtml\(cpStageWhyText\(n,r\._stageWhy\)\)\}"/);
+  assert.match(app, /const done=st\?null:cpSegmentRealized\(row,segment\);\n  if\(done\)return cpLogisticRealizedHtml\(done\);/);
+  assert.match(app, /segments\.some\(segment=>segment&&\(segment\.stage\|\|cpSegmentRealized\(row,segment\)\)\)/);
+});
+
+test('Partial View: Ex→Retail ikinci satırı grubun kendi parsiyellerinden; depoda gerçekleşen süre', () => {
+  const app = read('public/app-main.js');
+  assert.match(app, /function cpStageShiftHtml\(r\)\{\n  if\(r&&r\._partialViewActive\)return cpPartialViewShiftHtml\(r\);/);
+  assert.match(app, /const text=`✓ \$\{d\.days\}/);
+  assert.match(app, /copy\['Stage ETA'\]=live\?coerceDateLoose\(live\.stage\.eta\):null;/);
+  // partialViewRows satır kopyasına yalnız grubun segmentlerini koyar.
+  assert.match(app, /_logisticSegments:segments,/);
 });

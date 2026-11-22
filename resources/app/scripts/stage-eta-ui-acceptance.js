@@ -51,6 +51,8 @@ for (const row of demo.antrepo.slice(1)) {
     const c = chain(vehicle, country, -between(60, 120));
     set('Yükleme Talep Tarih', c.loadingRequest); set('HANDOVER Tarihi', c.handover); set('Cut Off Tarih', c.cutOff);
     set('Fiili Yükleme Tarih', c.actualLoading); set('ETA Tarih', c.eta); set('Antrepo Giriş Tarihi', c.entry);
+    // Depodaki parsiyelde IAS antrepo tarihi gerçekleşen girişle aynı (demo tutarlılığı).
+    if (header.includes('Tahmini Antrepo Giriş Tarihi')) set('Tahmini Antrepo Giriş Tarihi', c.entry);
     set('Özet Beyan Onay Tarih', c.summary); set('Ambar Onay Tarih', c.warehouse); set('Transit Beyanname Tarih', c.transit); set('Evrak Teslim Tarih', c.docs);
   } else if (status === 'Yolda') {
     // Yüklendi; ETA gelecekte (gemi tarifesi) ya da geçmiş ama gümrük açık.
@@ -203,7 +205,7 @@ async function shot(page, top, bottom, file) {
     eta: document.querySelector('#cpTable tbody td[data-key="Stage ETA"]')?.textContent.trim() || '', run: document.querySelector('#cpTable tbody td[data-key="Current Stage"]')?.textContent.trim() || '',
     detail: document.querySelectorAll('.cpLogisticDetailLine.hasStage .cpLogisticStage strong').length,
     shiftColor: getComputedStyle(document.querySelector('.cpLogisticStage .cpStageShift') || document.body).color }));
-  assert.match(cells.exr, /g (erken|geç)|±0/, 'Ex→Retail ikinci satırı');
+  assert.match(cells.exr, /^\d+ g (erken|geç)$|Statik ETA ile aynı/, 'Ex→Retail ikinci satırı');
   if (!SPARSE) assert.match(cells.run, /σ/, 'Koşan Aşama σ gösterir');
   assert.match(cells.eta, /\d{2}\.\d{2}\.\d{2}/);
   assert.ok(cells.run.length > 3 && cells.detail >= 1, JSON.stringify(cells));
@@ -248,6 +250,55 @@ async function shot(page, top, bottom, file) {
   await page.evaluate(() => { const t = document.getElementById('_toast'); if (t) t.remove(); const wrap = document.getElementById('cpTableWrap'); if (wrap) wrap.scrollLeft = 0; });
   const pbox = await page.locator('#cpTableWrap').boundingBox();
   await page.screenshot({ path: path.join(outDir, 'cp-stage-priority.png'), clip: { x: pbox.x, y: pbox.y, width: pbox.width, height: Math.min(pbox.height, Math.max(420, Math.ceil(pbox.width / 3.1))) } });
+  {
+    /* Depoya girmiş parsiyel: gerçekleşen Handover → Antrepo süresi; yoldaki
+       parsiyelin farkı işaretsiz ("6 g geç") ve üzerine gelince kalemleri. */
+    const mixedDone = await page.evaluate(() => {
+      const rows = (state.cp && state.cp.rows) || [];
+      const segs = r => (Array.isArray(r._logisticSegments) ? r._logisticSegments : []);
+      const done = rows.find(r => segs(r).some(s => cpSegmentRealized(r, s) && cpSegmentRealized(r, s).ruleDays != null));
+      const live = rows.find(r => segs(r).some(s => s.stage && s.stage.why && s.stage.vsRule < 0)) || rows.find(r => segs(r).some(s => s.stage && s.stage.why));
+      return done && live ? [done, live].map(r => String(r['Order Code'])).join(', ') : null;
+    });
+    assert.ok(mixedDone, 'depoda ve yolda parsiyelli siparişler');
+    await page.fill('#cpSearch', mixedDone); await page.keyboard.press('Enter');
+    await page.waitForTimeout(2500);
+    await page.evaluate(() => {
+      const keep = new Set(['Priority', 'Order Code', 'Ex→Retail', 'STATUS', 'Ant. Arrival', 'Stage ETA', 'Current Stage', 'Order Quantity']);
+      CP_COLS.forEach(c => { if (keep.has(c.k)) colmgr.cp.hidden.delete(c.k); else colmgr.cp.hidden.add(c.k); });
+      saveAutoTableColumnState(); state.cpLogisticExpanded.clear();
+      document.querySelectorAll('#cpTable tbody tr[data-id]').forEach(tr => state.cpLogisticExpanded.add(Number(tr.dataset.id))); renderCP();
+    });
+    await page.waitForTimeout(2500);
+    const info = await page.evaluate(() => ({
+      realized: [...document.querySelectorAll('.cpLogisticStage[title*="Handover → Antrepo"]')].map(e => ({ text: e.textContent.trim(), title: e.title })),
+      why: [...document.querySelectorAll('.cpLogisticStage .cpStageShift[title]')].map(e => ({ text: e.textContent.trim(), title: e.title })),
+    }));
+    console.log('REALIZED', JSON.stringify(info).slice(0, 1500));
+    assert.ok(info.realized.length >= 1 && /^\d+ g/.test(info.realized[0].text), 'gerçekleşen süre');
+    assert.ok(info.why.some(w => /Nedenleri:/.test(w.title) && /Model ortalaması/.test(w.title)), 'fark kalemleri tooltip');
+    assert.ok(info.why.every(w => !/-\d/.test(w.text)), 'işaretsiz yön');
+    await page.evaluate(() => { const t = document.getElementById('_toast'); if (t) t.remove(); const wrap = document.getElementById('cpTableWrap'); if (wrap) wrap.scrollLeft = 0; });
+    await page.waitForTimeout(600);
+    const rbox = await page.locator('#cpTableWrap').boundingBox();
+    await page.screenshot({ path: path.join(outDir, 'cp-stage-realized.png'), clip: { x: rbox.x, y: rbox.y, width: rbox.width, height: Math.min(rbox.height, Math.max(480, Math.ceil(rbox.width / 3.2))) } });
+  }
+  {
+    // Partial View: Ex→Retail ikinci satırı grubun parsiyellerinden; depoda gerçekleşen.
+    await page.evaluate(() => { setPartialView('cp', true); renderCP(); });
+    await page.waitForTimeout(2500);
+    const pv = await page.evaluate(() => [...document.querySelectorAll('#cpTable tbody td[data-key="Ex→Retail"] .cpStageShift')].map(e => ({ text: e.textContent.trim(), title: e.title.split('\n')[0] })));
+    console.log('PARTIAL', JSON.stringify(pv));
+    assert.ok(pv.some(x => /^✓ \d+ g · \d+ g (erken|geç)$/.test(x.text) && /^Gerçekleşen/.test(x.title)), 'Partial View depoda satırı gerçekleşen süre');
+    const stageCells = await page.evaluate(() => [...document.querySelectorAll('#cpTable tbody tr[data-id]')].map(tr => ({ status: tr.querySelector('td[data-key="STATUS"]')?.textContent.trim() || '', eta: tr.querySelector('td[data-key="Stage ETA"]')?.textContent.trim() || '' })));
+    assert.ok(stageCells.filter(c => /ÜRETİMDE|Üretimde|DEPODA|Depoda/.test(c.status)).every(c => !c.eta), `üretimde/depoda grubunda aşama ETA yok: ${JSON.stringify(stageCells)}`);
+    assert.ok(pv.some(x => /^\d+ g (erken|geç)$|Statik ETA ile aynı/.test(x.text)), 'Partial View yolda satırı aşama farkı');
+    await page.evaluate(() => { state.cpLogisticExpanded.clear(); renderCP(); const wrap = document.getElementById('cpTableWrap'); if (wrap) wrap.scrollLeft = 0; const t = document.getElementById('_toast'); if (t) t.remove(); });
+    await page.waitForTimeout(1500);
+    const vbox = await page.locator('#cpTableWrap').boundingBox();
+    await page.screenshot({ path: path.join(outDir, 'cp-partial-view-realized.png'), clip: { x: vbox.x, y: vbox.y, width: vbox.width, height: Math.min(vbox.height, Math.max(420, Math.ceil(vbox.width / 3.2))) } });
+    await page.evaluate(() => { setPartialView('cp', false); renderCP(); });
+  }
   if (SPARSE) {
     /* Yoldaki parsiyel (yalnız Talep + Handover) sahte "Handover → Cut-off"
        aşımı üretmez; Buyer Log'un ürettiği üretimde parsiyeli sipariş yükleme
