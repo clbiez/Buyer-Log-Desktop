@@ -318,8 +318,8 @@
         "en": "Stage gap shows its direction and reasons; realized time for partials in the warehouse"
       },
       "body": {
-        "tr": "Statik ETA'ya göre fark artık işaretsiz yazılır (\"6 g geç\", \"6 g erken\"); eksi işareti erken gibi okunuyordu. Üzerine gelince farkı oluşturan kalemler listelenir: statik ETA (Handover + kural günü), modelin Handover → Antrepo ortalaması ile kural farkı, tamamlanan aşamaların ortalamadan sapması, planlı ETA (tarife) ve ortalamayı aşan açık aşama; kalemlerin toplamı gösterilen farka eşittir. Koşan aşamadaki \"17/34 g\" ifadesinin anlamı (aşamada geçen gün / aşamanın ortalama süresi) de açıklanır. Lojistik akışında depoya girmiş parsiyeller gerçekleşen Handover → Antrepo süresini ve kurala göre farkını gösterir; IAS'ta gerçekleşen antrepo giriş tarihi varsa o, yoksa IAS antrepo tarihi kullanılır ve üzerine gelince hangisi olduğu yazar.",
-        "en": "The gap to the static ETA is now written without a sign (\"6 d late\", \"6 d early\"); the minus sign read like early. Hovering lists what makes up the gap: the static ETA (Handover + rule days), the model's Handover → Antrepo average versus the rule, completed stages' deviation from their averages, the planned ETA (schedule) and an open stage over its average; the items add up to the shown gap. The meaning of \"17/34 d\" in the running stage (days in the stage / its average duration) is explained too. In the logistics flow, partials in the warehouse show the realized Handover → Antrepo time and its gap to the rule; the actual antrepo entry date from IAS is used when present, otherwise the IAS antrepo date, and the hover text says which."
+        "tr": "Planlanan ETA'ya göre fark artık işaretsiz yazılır (\"6 g geç\", \"6 g erken\"); eksi işareti erken gibi okunuyordu. Üzerine gelince farkı oluşturan kalemler listelenir: planlanan ETA (Handover + kural günü), modelin Handover → Antrepo ortalaması ile kural farkı, tamamlanan aşamaların ortalamadan sapması, gemi tarifesindeki ETA ve ortalamayı aşan açık aşama; kalemlerin toplamı gösterilen farka eşittir. Koşan aşamadaki \"17/34 g\" ifadesinin anlamı (aşamada geçen gün / aşamanın ortalama süresi) de açıklanır. Lojistik akışında depoya girmiş parsiyeller gerçekleşen Handover → Antrepo süresini ve kurala göre farkını gösterir; IAS'ta gerçekleşen antrepo giriş tarihi varsa o, yoksa IAS antrepo tarihi kullanılır ve üzerine gelince hangisi olduğu yazar.",
+        "en": "The gap to the planned ETA is now written without a sign (\"6 d late\", \"6 d early\"); the minus sign read like early. Hovering lists what makes up the gap: the planned ETA (Handover + rule days), the model's Handover → Antrepo average versus the rule, completed stages' deviation from their averages, the ETA on the vessel schedule and an open stage over its average; the items add up to the shown gap. The meaning of \"17/34 d\" in the running stage (days in the stage / its average duration) is explained too. In the logistics flow, partials in the warehouse show the realized Handover → Antrepo time and its gap to the rule; the actual antrepo entry date from IAS is used when present, otherwise the IAS antrepo date, and the hover text says which."
       },
       "visual": {
         "kind": "screenshot",
@@ -330,8 +330,8 @@
           "en": "Demo CP logistics flow: 11 d realized time on a warehoused partial, 4 d late on an order in transit"
         },
         "caption": {
-          "tr": "Demo veride depodaki parsiyel gerçekleşen Handover → Antrepo süresini, yoldaki sipariş statik ETA'ya göre farkı yönüyle gösterir.",
-          "en": "On demo data, the warehoused partial shows its realized Handover → Antrepo time and the order in transit shows its gap to the static ETA with its direction."
+          "tr": "Demo veride depodaki parsiyel gerçekleşen Handover → Antrepo süresini, yoldaki sipariş planlanan ETA'ya göre farkı yönüyle gösterir.",
+          "en": "On demo data, the warehoused partial shows its realized Handover → Antrepo time and the order in transit shows its gap to the planned ETA with its direction."
         }
       }
     },
@@ -347,8 +347,8 @@
         "en": "In Partial View the Ex→Retail cell shows the partial's own timing"
       },
       "body": {
-        "tr": "Kısmi Görünümde her durum satırının Ex→Retail ikinci satırı artık o satırdaki parsiyellerden gelir: depodaki satırda gerçekleşen Handover → Antrepo süresi ve kurala göre farkı (\"✓ 11 g · 41 g erken\"), yoldaki satırda aşama tahmininin statik ETA'ya göre farkı. Üzerine gelince ayrıntı görünür. Aşama ETA ve Koşan Aşama sütunları da satırın kendi parsiyellerinden okunur; üretimdeki satırda boş kalır.",
-        "en": "In Partial View, the second line of each status row's Ex→Retail cell now comes from that row's partials: a warehoused row shows the realized Handover → Antrepo time and its gap to the rule (\"✓ 11 d · 41 d early\"), a row in transit shows the stage forecast's gap to the static ETA. Hovering shows the details. Stage ETA and Current Stage are also read from the row's own partials and stay empty on the production row."
+        "tr": "Kısmi Görünümde her durum satırının Ex→Retail ikinci satırı artık o satırdaki parsiyellerden gelir: depodaki satırda gerçekleşen Handover → Antrepo süresi ve kurala göre farkı (\"✓ 11 g · 41 g erken\"), yoldaki satırda aşama tahmininin planlanan ETA'ya göre farkı. Üzerine gelince ayrıntı görünür. Aşama ETA ve Koşan Aşama sütunları da satırın kendi parsiyellerinden okunur; üretimdeki satırda boş kalır.",
+        "en": "In Partial View, the second line of each status row's Ex→Retail cell now comes from that row's partials: a warehoused row shows the realized Handover → Antrepo time and its gap to the rule (\"✓ 11 d · 41 d early\"), a row in transit shows the stage forecast's gap to the planned ETA. Hovering shows the details. Stage ETA and Current Stage are also read from the row's own partials and stay empty on the production row."
       },
       "visual": {
         "kind": "screenshot",
@@ -546,6 +546,35 @@
         "reason": {
           "tr": "Sunucu açılışındaki arka plan iyileştirmesi; ekranda değişen bir öğe yok.",
           "en": "Background server startup improvement; nothing on screen changes."
+        }
+      }
+    },
+    {
+      "id": "transit-rule-basis",
+      "type": "fix",
+      "module": {
+        "tr": "Yol Süreleri · CP · Backlog",
+        "en": "Transit Times · CP · Backlog"
+      },
+      "title": {
+        "tr": "Yol süresi kuralı aktarıldığı ölçünün başlangıcından uygulanır; \"Statik ETA\" artık \"Planlanan ETA\"",
+        "en": "Transit rules apply from the start of the metric they were transferred from; \"Static ETA\" is now \"Planned ETA\""
+      },
+      "body": {
+        "tr": "Yol Süresi Analizi'nden \"Kurala esas\" Uçtan Uca (Yükleme Talep → Antrepo) ile aktarılan kural artık Yükleme Talep tarihinden sayılır; önce Handover'a ekleniyor ve Yükleme Talep → Handover aralığı hesap dışı kalıyordu. Kural bazı kayıtla saklanır (Handover / Yükleme Talep / Fiili Yükleme) ve kural düzenleyicide görülüp değiştirilebilir; eski kurallar Handover bazlı kalır. Sevk edilmiş parsiyelde planlanan ETA = baz tarihi + kural günü: Backlog yol aşımı ve ETA, CP aşama farkı ve teslimat sonucu, Global Flow ve depodaki parsiyelin gerçekleşen süre karşılaştırması aynı bazı kullanır. Üretimdeki siparişte gün yine Ex-Factory'ye eklenir. \"Statik ETA\" terimi her yerde \"Planlanan ETA\" oldu; gemi tarifesindeki IAS ETA'sı ayrı adlandırıldı.",
+        "en": "A rule transferred from Transit Time Analysis with the End-to-end (Loading Request → Antrepo) rule basis now counts from the Loading Request date; before, it was added to Handover and the Loading Request → Handover span was left out. The rule basis is stored with the rule (Handover / Loading Request / Actual Loading) and can be seen and changed in the rule editor; existing rules stay Handover-based. For a shipped partial, planned ETA = basis date + rule days: Backlog transit overrun and ETA, the CP stage gap and delivery outcome, Global Flow and the realized-time comparison of warehoused partials use the same basis. For an order in production the days are still added to Ex-Factory. The term \"Static ETA\" is now \"Planned ETA\" everywhere; the IAS ETA on the vessel schedule is named separately."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "transit-rule-basis.png",
+        "alt": {
+          "tr": "Demo yol süresi kuralları: Baz alanı ve Gemi kuralında baz Yükleme Talep (uçtan uca)",
+          "en": "Demo transit rules: the Basis field and the Sea rule based on Loading Request (end-to-end)"
+        },
+        "caption": {
+          "tr": "Demo veride kural düzenleyicisi: her kuralın günü hangi tarihten saydığı görünür ve değiştirilebilir.",
+          "en": "The rule editor on demo data: each rule shows which date its days count from, and it can be changed."
         }
       }
     }

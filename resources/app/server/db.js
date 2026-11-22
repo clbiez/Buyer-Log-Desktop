@@ -474,6 +474,8 @@ function transitRuleComparable(rule) {
     id: String(rule.id || ''), exfStart: rule.exfStart || '', exfEnd: rule.exfEnd || '',
     seasons: Array.isArray(rule.seasons) ? rule.seasons : [], countries: Array.isArray(rule.countries) ? rule.countries : [],
     delType: rule.delType || '', days: Number(rule.days),
+    // Yalnız bazı değişen kural da değişiklik sayılır (aksi halde birleştirmede kaybolurdu).
+    basis: rule.basis || 'handover',
   });
 }
 function mergeTransitRules(baseRules, incomingRules, currentRules, wanted, current) {

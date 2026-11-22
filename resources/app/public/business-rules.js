@@ -489,6 +489,17 @@
     return key && Object.prototype.hasOwnProperty.call(DEFAULT_TRANSIT_DAYS, key) ? DEFAULT_TRANSIT_DAYS[key] : null;
   }
 
+  /* Kuralın günü HANGİ kilometre taşından sayılır (Yol Süresi Analizi'nde hangi
+     ölçüden aktarıldıysa): Uçtan Uca → Yükleme Talep, Handover → Antrepo →
+     Handover, Fiili Yükleme → Antrepo → Fiili Yükleme. Eski / elle girilmiş kural:
+     Handover (önceki davranış). Üretimdeki siparişte gün her zaman Ex-Factory'ye
+     eklenir; baz yalnız IAS tarihi olan sevk edilmiş parsiyelde uygulanır. */
+  const TRANSIT_RULE_BASES = Object.freeze(['handover', 'loadingRequest', 'actualLoading']);
+  function transitRuleBasis(rule) {
+    const value = rule && rule.basis;
+    return TRANSIT_RULE_BASES.includes(value) ? value : 'handover';
+  }
+
   function resolveTransitDays(options, dateOrdinal = defaultDateOrdinal) {
     const input = options || {};
     const fallback = defaultTransitDays(input.delType);
@@ -496,9 +507,26 @@
       return { days: fallback, rule: null, dynamic: false };
     }
     const rule = findTransitRule(input.rules, input.exFactory, input.season, input.country, input.delType, dateOrdinal);
-    return rule
-      ? { days: Number(rule.days), rule, dynamic: true }
-      : { days: fallback, rule: null, dynamic: false };
+    if (!rule) return { days: fallback, rule: null, dynamic: false };
+    const ruleDays = Number(rule.days);
+    const basis = transitRuleBasis(rule);
+    /* anchor: çağıranın günü EKLEYECEĞİ kilometre taşı (ör. parsiyelin Handover'ı).
+       Kural başka bir taştan sayılıyorsa gün, gerçekleşen "baz → anchor" farkı
+       kadar düzeltilir: anchor + gün = baz + kural günü. Böylece "Handover + gün"
+       kullanan bütün hesaplar kuralın kendi bazına göre çalışır. milestones bir
+       nesne ya da tembel fonksiyon (m → tarih) olabilir. Baz tarihi yoksa gün
+       düzeltilmez ve basisMissing işaretlenir. */
+    const anchor = TRANSIT_RULE_BASES.includes(input.anchor) ? input.anchor : null;
+    if (anchor && basis !== anchor && input.milestones) {
+      const get = typeof input.milestones === 'function' ? input.milestones : m => input.milestones[m];
+      const a = dateOrdinal(get(anchor)), b = dateOrdinal(get(basis));
+      if (a != null && b != null) {
+        const shift = a - b;
+        return { days: Math.max(0, ruleDays - shift), rule, dynamic: true, basis, ruleDays, basisShift: shift };
+      }
+      return { days: ruleDays, rule, dynamic: true, basis, ruleDays, basisMissing: true };
+    }
+    return { days: ruleDays, rule, dynamic: true, basis, ruleDays };
   }
 
   function roundHalfUp(value, decimals = 2) {
@@ -987,6 +1015,8 @@
     compareTransitSpecificity,
     findTransitRule,
     defaultTransitDays,
+    TRANSIT_RULE_BASES,
+    transitRuleBasis,
     resolveTransitDays,
     roundHalfUp,
     computePriorityFlags,
