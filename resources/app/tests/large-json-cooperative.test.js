@@ -29,3 +29,38 @@ test('büyük üyeden sonra gelen sondaki/boş virgül native parser gibi redded
   assert.throws(()=>JSON.parse(text),SyntaxError);await assert.rejects(parseJsonBufferAsync(Buffer.from(text),{yieldControl}),SyntaxError,text.slice(-10));
  }
 });
+/* Hızlı yol sözleşmesi: dizgiler native indexOf ile atlanır, büyük kapsayıcının
+   sonu ayrıştırılarak bulunur (alt ağaç iki kez taranmaz) ve satır dizileri `},{`
+   kesimiyle tahmini native toplu çözülür. Tahmin yanlış yerde kesse de (dizgi
+   içinde, iç içe listede, dizinin bittiği yerin ötesinde) sonuç JSON.parse ile
+   birebir aynı kalmalı ve bozuk veri yine SyntaxError vermelidir. */
+test('hızlı yol: tuzaklı `},{` dizgileri, kaçışlı tırnaklar, iç içe nesne listeleri ve dizi sonu ötesi kesimler JSON.parse ile aynı',async()=>{
+ const trap=i=>['},{','"},{"','\\"},{\\"','\\\\','\\\\\\"},{','x\\u0022},{','Türkçe 💙 },{ [}]'][i%7];
+ const rows=Array.from({length:24000},(_,i)=>({id:i,t:trap(i),n:i%5?{list:[{a:i},{b:trap(i+1)}],w:'},{'.repeat(i%4)}:{deep:[[{x:1},{y:2}],[]]},tail:'\\'.repeat(i%3)}));
+ const big='y'.repeat(90000);
+ const text=JSON.stringify({head:1,rows,mid:{many:rows.slice(0,3000),long:big},list2:[big,{z:big},rows.slice(0,2000)],after:rows.slice(0,5000),last:'},{'});
+ assert.ok(text.length>3*1024*1024,'birden çok toplu çözme kesimi');
+ assert.deepEqual(await parseJsonBufferAsync(Buffer.from(text),{yieldControl}),JSON.parse(text));
+ const pretty=JSON.stringify({rows:rows.slice(0,8000)},null,1); // boşluklu biçimde kesim deseni yok: kesin tarama
+ assert.deepEqual(await parseJsonBufferAsync(Buffer.from(pretty),{yieldControl}),JSON.parse(pretty));
+});
+test('hızlı yol: toplu çözme kesiminin içinde kalan bozuk veri ve büyük kapsayıcıdan sonraki fazlalık native parser gibi reddedilir',async()=>{
+ const rows=JSON.stringify(Array.from({length:30000},(_,i)=>({id:i,t:'satır '+i})));
+ const broken=[
+  rows.slice(0,700000)+'"oops":}'+rows.slice(700000+8), // ~1 MB toplu çözme bölgesinde bozuk üye
+  rows.slice(0,-1)+',]',                                 // büyük dizi sonunda boş üye
+  '{"a":'+rows+'} {"b":1}',                              // büyük kapsayıcıdan sonra fazlalık
+  '{"a":'+rows+',"b":'+rows.slice(0,-1)+'}',             // iç büyük dizi kapanmadan nesne kapanır
+  '{"a":'+rows+',"b":"kapanmayan',                       // kapanmayan dizgi
+ ];
+ for(const text of broken){
+  assert.throws(()=>JSON.parse(text),SyntaxError);
+  await assert.rejects(parseJsonBufferAsync(Buffer.from(text),{yieldControl}),SyntaxError,text.slice(-24));
+ }
+});
+test('hızlı yol: olay döngüsüne dönüş sıklığı korunur (tek blok yok)',async()=>{
+ const text=JSON.stringify({rows:Array.from({length:120000},(_,i)=>({id:i,a:'x'.repeat(i%40),b:[i,{c:'},{'}]})),map:Object.fromEntries(Array.from({length:40000},(_,i)=>['k'+i,{v:i}]))});
+ let last=performance.now(),max=0;
+ await parseJsonBufferAsync(Buffer.from(text),{yieldControl:async()=>{const now=performance.now();max=Math.max(max,now-last);await yieldControl();last=performance.now();}});
+ assert.ok(max<150,`en uzun kesintisiz dilim ${Math.round(max)} ms`);
+});

@@ -7,8 +7,8 @@
     "en": "Collection colour options, stage forecast and CP redraw fixes"
   },
   "summary": {
-    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: INTAKE tipi pivot, alan ekleme ve sipariş aramasıyla landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder; kaynağı ve ufku Veri Yönetimi'nden yönetilir. Pivot toplam satırları fare üzerindeyken okunur kalır. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur. Aşama farkı yönüyle yazılır ve üzerine gelince nedenleri görünür; depodaki parsiyelde ve Kısmi Görünümde gerçekleşen yol süresi gösterilir. Veritabanından yenilenen veri, aynı sorguyu paylaşan sayfalar için artık bir kez işlenip tek kopya saklanır; açılış, yenileme kaydı ve bellek kullanımı belirgin biçimde azalır. Widget pivot ayarlarındaki uzun alan listeleri ve OAB \"Filtre ekle\" listesi artık arama kutusuyla açılır; OAB Genel Toplam hücresi fare üzerindeyken okunur kalır. Kullanıcı model snapshot'ı içerikçe aynı sayfa verisini artık bir kez saklar; snapshot küçülür ve açılışta daha hızlı okunur. LFL ekranı artık ASAS sütunlarının tamamını indirmez; yalnız seçilen ASAS kırılım sütunu gelir, açılış hızlanır ve bellek kullanımı düşer.",
-    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: with an INTAKE-style pivot, field picker and order search it analyses landed, Integral and forecast gap with quantity weighting; its source and horizon are managed in Data Management. Pivot total rows stay readable on hover. Starting directly on CP now completes the startup screen without an error. The stage gap shows its direction and its reasons on hover; partials in the warehouse and Partial View show the realized transit time. Data refreshed from the database is now processed once and stored as a single copy for pages that share the same query; startup, refresh saving and memory use drop markedly. Long field lists in widget pivot settings and the OAB \"Add filter\" list now open with a search box; the OAB Grand Total cell stays readable on hover. The user model snapshot now stores identical page data once; the snapshot is smaller and reads faster at startup. The LFL screen no longer downloads every ASAS column; only the selected ASAS breakdown column is fetched, so it opens faster and uses less memory."
+    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: INTAKE tipi pivot, alan ekleme ve sipariş aramasıyla landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder; kaynağı ve ufku Veri Yönetimi'nden yönetilir. Pivot toplam satırları fare üzerindeyken okunur kalır. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur. Aşama farkı yönüyle yazılır ve üzerine gelince nedenleri görünür; depodaki parsiyelde ve Kısmi Görünümde gerçekleşen yol süresi gösterilir. Veritabanından yenilenen veri, aynı sorguyu paylaşan sayfalar için artık bir kez işlenip tek kopya saklanır; açılış, yenileme kaydı ve bellek kullanımı belirgin biçimde azalır. Widget pivot ayarlarındaki uzun alan listeleri ve OAB \"Filtre ekle\" listesi artık arama kutusuyla açılır; OAB Genel Toplam hücresi fare üzerindeyken okunur kalır. Kullanıcı model snapshot'ı içerikçe aynı sayfa verisini artık bir kez saklar; snapshot küçülür ve açılışta daha hızlı okunur. LFL ekranı artık ASAS sütunlarının tamamını indirmez; yalnız seçilen ASAS kırılım sütunu gelir, açılış hızlanır ve bellek kullanımı düşer. Büyük kayıtlı veri açılışta artık parça parça okunur; okuma sırasında uygulama donmaz, giriş ve durum istekleri beklemeden yanıtlanır.",
+    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: with an INTAKE-style pivot, field picker and order search it analyses landed, Integral and forecast gap with quantity weighting; its source and horizon are managed in Data Management. Pivot total rows stay readable on hover. Starting directly on CP now completes the startup screen without an error. The stage gap shows its direction and its reasons on hover; partials in the warehouse and Partial View show the realized transit time. Data refreshed from the database is now processed once and stored as a single copy for pages that share the same query; startup, refresh saving and memory use drop markedly. Long field lists in widget pivot settings and the OAB \"Add filter\" list now open with a search box; the OAB Grand Total cell stays readable on hover. The user model snapshot now stores identical page data once; the snapshot is smaller and reads faster at startup. The LFL screen no longer downloads every ASAS column; only the selected ASAS breakdown column is fetched, so it opens faster and uses less memory. Large saved data is now read in small steps at startup; the app no longer freezes while it loads, and sign-in and status requests are answered without waiting."
   },
   "changes": [
     {
@@ -429,6 +429,35 @@
       }
     },
     {
+      "id": "data-management-oab-cube-source",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri Yönetimi · OAB (Küp)",
+        "en": "Data Management · OAB (Cube)"
+      },
+      "title": {
+        "tr": "OAB (Küp) kaynağı Veri Yönetimi'nde; ufuk ayarlanabilir",
+        "en": "OAB (Cube) source in Data Management; horizon is configurable"
+      },
+      "body": {
+        "tr": "OAB_Cube bağlantısı INTAKE ve FOB Sonrası Maliyet gibi ayrı bir veritabanı olarak bağlantılar ve Corporate Integration Lab listesinde görünür; İncele canlı şemayı ve beklenen OAB alanlarını veri sorgusu atmadan doğrular. Mevcut kurulumlarda kayıtlı bağlantılar korunur: OAB_Cube daha önce Özel Database olarak eklendiyse yeni kayıt onun sunucusunu devralır, yoksa INTAKE sunucusunu kullanır; bağlantı listesi doluysa hiçbir kayıt silinmez. Horizon ve yenileme panelinde kendi satırı vardır: Filtreyi düzenle ile ortak ufuk tanımlanır. Ufuk widget sorgusuna eklenir; ufuk tanımlıysa widget'ta sezon seçmek zorunlu değildir, başlıkta ve Excel özetinde ufkun uygulandığı yazar. Ufuk yalnız küpte ölçülerle ilişkisi kanıtlı Data, DummyUrun ve Sezon alanlarıyla tanımlanabilir.",
+        "en": "The OAB_Cube connection appears as a separate database, like INTAKE and Post-FOB Cost, in the connections and Corporate Integration Lab lists; Inspect checks the live schema and the expected OAB fields without running a data query. Existing setups keep their saved connections: if OAB_Cube was added earlier as a Custom Database, the new record takes over its server, otherwise it uses the INTAKE server; when the connection list is full, no record is removed. It has its own row in the Horizon and refresh panel: Edit filter defines a shared horizon. The horizon is added to the widget query; with a horizon, selecting a season in the widget is no longer required, and the header and Excel summary state that the horizon was applied. The horizon can only use Data, DummyUrun and Sezon fields, whose relationship to the cube measures is proven."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-cube-data-management-light.png",
+        "alt": {
+          "tr": "Veri Yönetimi Horizon ve yenileme paneli: INTAKE ve FOB Sonrası Maliyet satırlarının altında OAB (Küp) satırı ve Filtreyi düzenle düğmesi",
+          "en": "Data Management Horizon and refresh panel: OAB (Cube) row with Edit filter below the INTAKE and Post-FOB Cost rows"
+        },
+        "caption": {
+          "tr": "Demo kurulumda OAB (Küp) kaynağı kendi ufuk satırıyla listelenir; ufuk yoksa sezon widget'ta seçilir.",
+          "en": "In the demo setup the OAB (Cube) source is listed with its own horizon row; without a horizon, the season is selected in the widget."
+        }
+      }
+    },
+    {
       "id": "backlog-handover-vs-loading",
       "type": "fix",
       "module": {
@@ -766,6 +795,29 @@
         "reason": {
           "tr": "Yalnız kayıt dosyası biçimi ve açılış performansı değişir; ekranda değişen bir öğe yok.",
           "en": "Only the saved file format and startup performance change; nothing changes on screen."
+        }
+      }
+    },
+    {
+      "id": "startup-cooperative-snapshot-load",
+      "type": "improvement",
+      "module": {
+        "tr": "Açılış · Yerel depolama",
+        "en": "Startup · Local storage"
+      },
+      "title": {
+        "tr": "Açılışta büyük kayıtlı veri yüklenirken uygulama donmaz",
+        "en": "The app no longer freezes while large saved data loads at startup"
+      },
+      "body": {
+        "tr": "Açılıştan hemen sonra kayıtlı model verisi tek seferde çözülüyordu; büyük veride sunucu bu sırada saniyelerce hiçbir isteğe yanıt veremiyor, pencere geç hazır oluyordu. Veri artık küçük dilimler hâlinde okunur ve arada diğer istekler yanıtlanır. Okuma süresi uzamaz, yükleme sırasında bellek kullanımı düşer; veriler ve ekranlardaki sonuçlar aynıdır. Yükleme sürerken yapılan yenileme ya da sıfırlama, sonradan biten eski yüklemeyle ezilmez.",
+        "en": "Right after startup the saved model data was decoded in one go; with large data the server could not answer any request for several seconds and the window became ready late. The data is now read in small slices and other requests are answered in between. Loading takes no longer, memory use during loading drops, and the data and on-screen results are unchanged. A refresh or reset made while loading is no longer overwritten by the older load finishing later."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Yalnız sunucunun açılıştaki veri okuma yöntemi değişir; ekranda değişen bir öğe yok.",
+          "en": "Only how the server reads data at startup changes; nothing changes on screen."
         }
       }
     }

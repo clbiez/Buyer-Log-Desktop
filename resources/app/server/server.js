@@ -6204,7 +6204,7 @@ const postFobRoutes = require('./routes/postfob-routes')(app, {
 });
 
 // ---- OAB (Küp) (Genel Bakış widget'ı, OAB_Cube SSAS modeli) → server/routes/oab-cube-routes.js ----
-require('./routes/oab-cube-routes')(app, {
+const oabCubeRoutes = require('./routes/oab-cube-routes')(app, {
   BLBusinessRules,
   express,
   loadModelConnections,
@@ -7216,9 +7216,18 @@ function hydrateModelSnapshot(value) {
   const id = sourceUserId(value);
   return hydrateSnapshotPayload(id, loadModelSnapshot(id));
 }
+/* Açılış/ilk veri yüklemesi snapshot'ı KOOPERATİF okur: JSON parse, v3 çözme,
+   checksum ve tarih dönüşümü ~8 ms dilimlerle setImmediate'e döner (hesap
+   servisiyle aynı yardımcı). Sahada 321 MiB'lık snapshot tek blokta çözülürken
+   olay döngüsü 7-22 sn duruyor, /api/status ve giriş istekleri bekliyordu.
+   Yükleme süresince araya giren reset/yenileme/başka hydrate önbelleği
+   değiştirdiyse eski yükleme sonucu YAZILMAZ: güncel önbellek döner. */
+const yieldSnapshotLoad = () => new Promise(resolve => setImmediate(resolve));
 async function hydrateModelSnapshotAsync(value) {
-  const id = sourceUserId(value);
-  return hydrateSnapshotPayload(id, await loadModelSnapshotAsync(id));
+  const id = sourceUserId(value), generation = sourceCaches.get(id);
+  const snapshot = await loadModelSnapshotAsync(id, { yieldControl:yieldSnapshotLoad });
+  if (sourceCaches.get(id) !== generation) return cacheForUser(id);
+  return hydrateSnapshotPayload(id, snapshot);
 }
 
 
@@ -7282,7 +7291,10 @@ async function ensureDataLoaded(value){
   const id = sourceUserId(value), runtime = cacheForUser(id);
   if(runtime.loadedAt && Array.isArray(runtime.asasOrders) && runtime.lflLoadedAt) return runtime;
   if(!initialDataLoadPromises.has(id)) {
-    initialDataLoadPromises.set(id, loadInitialDataAndLfl(id).finally(()=>{ initialDataLoadPromises.delete(id); }));
+    // Yalnız kendi kaydını siler: reset sonrası başlayan yeni yüklemenin sözü
+    // eski yüklemenin finally'siyle düşerse üçüncü çağıran ikinci kez yükler.
+    const pending = loadInitialDataAndLfl(id).finally(()=>{ if(initialDataLoadPromises.get(id)===pending) initialDataLoadPromises.delete(id); });
+    initialDataLoadPromises.set(id, pending);
   }
   return initialDataLoadPromises.get(id);
 }
@@ -11825,6 +11837,7 @@ function integrationLabRowsForSource(source, runtime, userId) {
     return snapshot && Array.isArray(snapshot.rows) ? snapshot.rows : [];
   }
   if (source.profileId === 'postfob-cost') return postFobRoutes.snapshotRows(userId);
+  if (source.profileId === 'oab-cube') return oabCubeRoutes.snapshotRows(userId);
   if (!runtime) return [];
   if (source.profileId === 'asas-orders') return Array.isArray(runtime.asasOrders) ? runtime.asasOrders : [];
   if (source.profileId === 'ias-warehouse') {
@@ -12073,7 +12086,9 @@ async function integrationLabRunLiveProbe(req, source, storedItem) {
       ? await integrationLabProbeIntake(req, source, storedItem, probe)
       : source.profileId === 'postfob-cost'
         ? await postFobRoutes.probe(req, storedItem || { server: source.connection.server, catalog: source.connection.catalog }, probe)
-        : await integrationLabProbeTabularSource(req, source, storedItem, probe);
+        : source.profileId === 'oab-cube'
+          ? await oabCubeRoutes.probe(req, storedItem || { server: source.connection.server, catalog: source.connection.catalog }, probe)
+          : await integrationLabProbeTabularSource(req, source, storedItem, probe);
   } catch (error) {
     const failure = integrationLabProbeError(error);
     probe.queryOk = false;
@@ -12106,7 +12121,7 @@ app.post('/api/data-management/integration-lab/inspect', userAccess.requireArea(
     const rawSource = store.items.find(item => item && item.id === source.id) || {
       id: source.id,
       name: source.name,
-      role: source.profileId === 'intake-budget' ? 'intake' : (source.profileId === 'postfob-cost' ? 'postfob' : (source.profileId === 'ias-warehouse' ? 'antrepo' : 'asas')),
+      role: source.profileId === 'intake-budget' ? 'intake' : (source.profileId === 'postfob-cost' ? 'postfob' : (source.profileId === 'oab-cube' ? 'oabcube' : (source.profileId === 'ias-warehouse' ? 'antrepo' : 'asas'))),
       server: source.connection.server,
       catalog: source.connection.catalog,
       mode: source.queryMode === 'manual' ? 'manual' : 'auto',

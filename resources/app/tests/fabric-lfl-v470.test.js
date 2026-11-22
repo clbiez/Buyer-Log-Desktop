@@ -191,7 +191,7 @@ test('v4.72 ayrı Update Fabric Informations işlevi ve Fabric bağlantı rolü 
   assert.doesNotMatch(serverSource, /\/api\/fabric\/refresh/);
   assert.doesNotMatch(workerSource, /parseFabricFile|parseFabricWorkbook/);
   assert.doesNotMatch(html, /refreshFabricInformation|fabricRefreshBtn|value="fabric"/);
-  assert.match(html, /MODEL_ROLE_TARGETS=\{asas:\['cp','orders','backlog','lfl'\],antrepo:\['cp','orders','backlog'\],intake:\['intake'\],postfob:\['postfob'\]\}/);
+  assert.match(html, /MODEL_ROLE_TARGETS=\{asas:\['cp','orders','backlog','lfl'\],antrepo:\['cp','orders','backlog'\],intake:\['intake'\],postfob:\['postfob'\],oabcube:\['oabcube'\]\}/);
   assert.match(findFilesSource, /Eski ASAS - Fabric dosyası artık kaynak değildir/);
 });
 

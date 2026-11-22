@@ -227,7 +227,7 @@ test('kip tercihi tarayıcıda hatırlanır', async () => {
 
 test('Veri Yönetimi: tek düzenleme yeri Horizon çekmecesi; CP, Diğer modüller ve INTAKE sekmeleri', () => {
   assert.match(DM, /function openHorizonDrawer\(groupId, moduleId = '', sourceId = ''\)/);
-  assert.match(DM, /const drawerGroups = \(\) => \[\.\.\.horizonGroupsOf\(\), \{ id: 'intake', targets: \['intake'\] \}, \{ id: 'postfob', targets: \['postfob'\] \}\];/);
+  assert.match(DM, /const drawerGroups = \(\) => \[\.\.\.horizonGroupsOf\(\), \{ id: 'intake', targets: \['intake'\] \}, \{ id: 'postfob', targets: \['postfob'\] \}, \{ id: 'oabcube', targets: \['oabcube'\] \}\];/);
   assert.match(DM, /openFilterEditor\(moduleId, sourceId, mountEl\)/);
   assert.match(DM, /onClosed: \(\) => closeHorizonDrawer\(true\)/);
   assert.match(DM, /className = 'blvFilterRoot dmHorizonDrawer'/, 'Backlog çekmecesinin ortak kabuğu');

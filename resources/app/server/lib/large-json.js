@@ -221,6 +221,7 @@ function parseJsonBuffer(buffer, { directMaxBytes = DIRECT_PARSE_MAX_BYTES } = {
 const ASYNC_BATCH_BYTES = 1024 * 1024;
 const ASYNC_SCAN_SLICE_BYTES = 256 * 1024;
 const ASYNC_NATIVE_CHILD_BYTES = 64 * 1024;
+const MEMBER_CUT = Buffer.from('},{');
 async function parseJsonBufferAsync(buffer, {yieldControl} = {}) {
   if(typeof yieldControl!=='function')throw new TypeError('A cooperative yield callback is required');
   const data=Buffer.isBuffer(buffer)?buffer:Buffer.from(String(buffer||''),'utf8');
@@ -229,35 +230,58 @@ async function parseJsonBufferAsync(buffer, {yieldControl} = {}) {
   // caller yields between bounded slices, so huge values still stay responsive.
   // Key text ends at the closing quote; walk back over whitespace and ':'.
   function skipWsBack(from,to){let k=to;while(k>from&&(WS.has(data[k-1])||data[k-1]===0x3a))k--;return k;}
-  function scanSlice(st,end){
-    const data_=data,limit=Math.min(end,st.i+ASYNC_SCAN_SLICE_BYTES);
-    let {i,depth,inString,escaped}=st;
+  // Strings are skipped with native Buffer#indexOf (memchr) instead of a JS
+  // loop over every character: snapshot rows are mostly string keys/values, and
+  // the per-byte string walk made the cooperative startup load ~2-3x slower
+  // than native JSON.parse. A quote closes the string unless it is preceded by
+  // an odd run of backslashes; that run cannot cross the opening quote (0x22),
+  // and UTF-8 continuation bytes are never 0x22/0x5c, so the boundaries are
+  // identical to the former byte-by-byte state machine.
+  function stringClose(open,end){
+    for(let q=open;;){
+      q=data.indexOf(0x22,q+1);
+      if(q<0||q>=end)return -1;
+      let k=q-1;while(data[k]===0x5c)k--;
+      if(!((q-1-k)&1))return q;
+    }
+  }
+  function scanSlice(st,end,bound){
+    const data_=data,limit=Math.min(end,bound,st.i+ASYNC_SCAN_SLICE_BYTES);
+    let {i,depth}=st;
     for(;i<limit;i++){
       const byte=data_[i];
-      if(inString){if(escaped)escaped=false;else if(byte===0x5c)escaped=true;else if(byte===0x22){inString=false;if(!depth)return i+1;}continue;}
-      if(byte===0x22){inString=true;continue;}
+      if(byte===0x22){
+        const close=stringClose(i,end);
+        if(close<0){st.i=end;st.depth=depth;st.inString=true;return -1;}
+        i=close;if(!depth)return i+1;continue;
+      }
       if(byte===0x7b||byte===0x5b)depth++;
       else if(byte===0x7d||byte===0x5d){if(!depth)return i;if(!--depth)return i+1;}
       else if(!depth&&(byte===0x20||byte===0x0a||byte===0x0d||byte===0x09||byte===0x2c))return i;
     }
-    st.i=i;st.depth=depth;st.inString=inString;st.escaped=escaped;return -1;
+    st.i=i;st.depth=depth;return -1;
   }
-  function* scan(index,end){
-    const st={i:index,depth:0,inString:false,escaped:false};
+  // End of the value at `index`; with `bound`, -1 once the value is known to
+  // extend past it (the caller then parses it as a large container instead of
+  // scanning the whole subtree first).
+  function* scan(index,end,bound=Infinity){
+    const st={i:index,depth:0,inString:false};
     for(;;){
-      const found=scanSlice(st,end);if(found>=0)return found;
+      const found=scanSlice(st,end,bound);if(found>=0)return found;
       if(st.i>=end){if(st.inString||st.depth)throw new SyntaxError('Unterminated JSON value');return end;}
+      if(st.i>=bound)return -1;
       yield;
     }
   }
-  function* parse(start,end){
-    start=skipWs(data,start,end);
-    let stop=end;while(stop>start&&WS.has(data[stop-1]))stop--;
-    const open=data[start];
-    if(stop-start<=ASYNC_NATIVE_CHILD_BYTES||(open!==0x7b&&open!==0x5b))return JSON.parse(data.toString('utf8',start,stop));
+  // Container at `start` (> ASYNC_NATIVE_CHILD_BYTES) parsed member by member;
+  // returns [value, index after its closing bracket]. Its end is found by
+  // parsing, so each byte is scanned once at the level where it is batched;
+  // previously every large container was first walked to its end and then again
+  // by its own members (the snapshot payload and its row lists twice).
+  function* parseLarge(start,stop){
     yield;
-    const array=open===0x5b,out=array?[]:{};let i=skipWs(data,start+1,stop);
-    if(data[i]===(array?0x5d:0x7d)){if(skipWs(data,i+1,stop)!==stop)throw new SyntaxError('Unexpected data after JSON value');return out;}
+    const array=data[start]===0x5b,close=array?0x5d:0x7d,out=array?[]:{};let i=skipWs(data,start+1,stop);
+    if(data[i]===close)return [out,i+1];
     // Consecutive small members are decoded by ONE native JSON.parse call per
     // ~BATCH bytes: per-member parse calls were the dominant cost on large DBs.
     let batchStart=-1,batchEnd=-1;
@@ -268,34 +292,70 @@ async function parseJsonBufferAsync(buffer, {yieldControl} = {}) {
       const part=JSON.parse('{'+text+'}');
       for(const key of Object.keys(part)){if(key==='__proto__')Object.defineProperty(out,key,{value:part[key],enumerable:true,writable:true,configurable:true});else out[key]=part[key];}
     };
+    // Speculative native batches for arrays of objects (snapshot row lists):
+    // cut at the first compact `},{` past ~BATCH bytes and let ONE native
+    // JSON.parse validate it. '['+prefix+']' parses only when the cut is outside
+    // every string and at this array's depth (otherwise a string or container is
+    // left open, or this array's own ']' is followed by more data), so a success
+    // yields exactly the members the precise scan would find; any failure (cut
+    // inside a string/nested list/past this array, or malformed data) is
+    // discarded and that stretch is scanned precisely, which also reports real
+    // syntax errors as before. Two consecutive misses turn speculation off for
+    // this array, so unusual layouts cost at most two wasted ~1 MB parses.
+    let speculate=array,misses=0;
+    const speculativeBatch=()=>{
+      const from=i+ASYNC_BATCH_BYTES;
+      if(from>=stop)return false;
+      const found=data.subarray(from,Math.min(stop,from+ASYNC_SCAN_SLICE_BYTES)).indexOf(MEMBER_CUT);
+      if(found<0)return false;
+      const end=from+found+1;
+      let items;
+      try{items=JSON.parse('['+data.toString('utf8',i,end)+']');}
+      catch(_){if(++misses>=2)speculate=false;return false;}
+      misses=0;for(let k=0;k<items.length;k++)out.push(items[k]);
+      i=end+1;return true; // data[end] is the ',' of the cut
+    };
     for(;;){
+      if(speculate&&batchStart<0&&speculativeBatch()){yield;continue;}
       const memberStart=i;
       if(!array){
         if(data[i]!==0x22)throw new SyntaxError('Expected property name in JSON');
         const keyEnd=yield* scan(i,stop);
         i=skipWs(data,keyEnd,stop);if(data[i]!==0x3a)throw new SyntaxError('Expected colon in JSON');i=skipWs(data,i+1,stop);
       }
-      const childEnd=yield* scan(i,stop);
+      let childEnd=yield* scan(i,stop,i+ASYNC_NATIVE_CHILD_BYTES+1);
       // A JSON value is never empty. Without this, a trailing comma after a
       // flushed large member became an empty batch that parsed as nothing.
       if(childEnd===i)throw new SyntaxError('Unexpected token in JSON');
-      if(childEnd-i<=ASYNC_NATIVE_CHILD_BYTES){
+      if(childEnd>=0&&childEnd-i<=ASYNC_NATIVE_CHILD_BYTES){
         if(batchStart<0)batchStart=memberStart;
         batchEnd=childEnd;
         if(batchEnd-batchStart>=ASYNC_BATCH_BYTES){flush();yield;}
       }else{
         flush();
         const name=array?null:JSON.parse(data.toString('utf8',memberStart,skipWsBack(memberStart,i)));
-        const child=yield* parse(i,childEnd);
+        let child;
+        if(childEnd>=0)child=JSON.parse(data.toString('utf8',i,childEnd)); // long primitive (string)
+        else if(data[i]===0x7b||data[i]===0x5b)[child,childEnd]=yield* parseLarge(i,stop);
+        else{childEnd=yield* scan(i,stop);child=JSON.parse(data.toString('utf8',i,childEnd));}
         if(array)out.push(child);else if(name==='__proto__')Object.defineProperty(out,name,{value:child,enumerable:true,writable:true,configurable:true});else out[name]=child;
       }
       i=skipWs(data,childEnd,stop);
       if(data[i]===0x2c){i=skipWs(data,i+1,stop);continue;}
-      if(data[i]===(array?0x5d:0x7d)){flush();if(skipWs(data,i+1,stop)!==stop)throw new SyntaxError('Unexpected data after JSON value');return out;}
+      if(data[i]===close){flush();return [out,i+1];}
       throw new SyntaxError('Unexpected token in JSON');
     }
   }
-  const start=data[0]===0xef&&data[1]===0xbb&&data[2]===0xbf?3:0,steps=parse(start,data.length);
+  function* parseDocument(start,end){
+    start=skipWs(data,start,end);
+    let stop=end;while(stop>start&&WS.has(data[stop-1]))stop--;
+    const open=data[start];
+    if(stop-start<=ASYNC_NATIVE_CHILD_BYTES||(open!==0x7b&&open!==0x5b))return JSON.parse(data.toString('utf8',start,stop));
+    const [value,valueEnd]=yield* parseLarge(start,stop);
+    if(skipWs(data,valueEnd,stop)!==stop)throw new SyntaxError('Unexpected data after JSON value');
+    return value;
+  }
+  const start=data[0]===0xef&&data[1]===0xbb&&data[2]===0xbf?3:0,steps=parseDocument(start,data.length);
   for(;;){const step=steps.next();if(step.done)return step.value;if(performance.now()>=deadline){await yieldControl();deadline=performance.now()+8;}}
 }
 

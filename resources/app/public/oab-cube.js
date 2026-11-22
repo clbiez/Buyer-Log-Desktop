@@ -23,7 +23,7 @@
     view: null,
     rows: [], fetchedAt: '', missing: [], truncated: false, rowLimit: 20000, dataDate: '', dataDateSource: '',
     dataFilterValues: null, dataMeasures: null, dataDimensions: null,
-    connection: null, loaded: false, loading: false, started: false,
+    connection: null, horizon: false, horizonApplied: false, loaded: false, loading: false, started: false,
     status: null, popover: null, viewRevision: 0, exporting: false, metadata: null, metadataPromise: null, search: '', displayItems: [],
   };
 
@@ -54,7 +54,8 @@
   }).join(', ');
 
   const ERROR_COPY = {
-    OAB_CUBE_SEASON_REQUIRED: ['Sorgu için filtrelerden en az bir sezon seçin.', 'Select at least one season in the filters.'],
+    OAB_CUBE_SEASON_REQUIRED: ['Sorgu için en az bir sezon seçin veya Veri Yönetimi’nde ufuk tanımlayın.', 'Select at least one season or define a horizon in Data Management.'],
+    OAB_CUBE_HORIZON_INVALID: ['Veri Yönetimi’ndeki OAB (Küp) ufku uygulanamadı; filtreyi orada düzeltin (yalnız Data, DummyUrun ve Sezon alanları).', 'The OAB (Cube) horizon in Data Management could not be applied; fix the filter there (Data, DummyUrun and Sezon fields only).'],
     OAB_CUBE_SOURCE_UNAVAILABLE: ['OAB küpüne şu anda ulaşılamıyor. Şirket ağı veya VPN bağlantısını kontrol edin.', 'The OAB cube is unreachable right now. Check the company network or VPN connection.'],
     OAB_CUBE_SCHEMA_MISMATCH: ['Küp beklenen OAB alanlarını (sezon, model, renk, WSSI/onaylı/plan adet) içermiyor; bağlantının kataloğunu kontrol edin.', 'The cube does not contain the expected OAB fields (season, model, colour, WSSI/approved/plan quantity); check the connection catalog.'],
     OAB_CUBE_FILTER_UNAVAILABLE: ['Seçilen filtre alanı canlı küpte bulunamadı.', 'The selected filter field was not found in the live cube.'],
@@ -269,6 +270,7 @@
     else if (state.loaded) parts.push(text('Veri tarihi okunamadı', 'Data date unavailable'));
     if (state.fetchedAt) { const date = new Date(state.fetchedAt); if (!Number.isNaN(date.getTime())) parts.push(`${text('Sorgu', 'Queried')}: ${date.toLocaleString(locale())}`); }
     if (state.connection && state.connection.catalog) parts.push(state.connection.catalog);
+    if (state.horizon) parts.push(text('Veri Yönetimi ufku', 'Data Management horizon'));
     node.textContent = parts.join(' · ');
     node.title = text('Küp ETL ile dolar, canlı değildir. Veri tarihi küpteki GuncellemeTarih (yoksa etl_time) değeridir.', 'The cube is loaded by ETL and is not live. The data date is the cube’s GuncellemeTarih (or etl_time) value.');
   }
@@ -285,7 +287,7 @@
     const fields = view().filters.map(ref => {
       const selected = view().filterValues[ref.key] || [];
       const label = selected.length > 1 ? `${selected.length} ${text('seçim', 'selected')}` : (selected[0] || text('Tümü', 'All'));
-      const required = ref.key === 'season' ? ` <span class="oabCubeRequired">${esc(text('(zorunlu)', '(required)'))}</span>` : '';
+      const required = ref.key === 'season' && !state.horizon ? ` <span class="oabCubeRequired">${esc(text('(zorunlu)', '(required)'))}</span>` : '';
       const removable = ref.key !== 'season';
       return `<div class="intakeFilterField"><span class="intakeFilterLabel">${esc(refLabel(ref))}${required}</span><div class="intakeFilterControl"><button type="button" class="oabMultiTrigger intakeFilterTrigger" data-oab-cube-filter="${esc(ref.key)}" aria-haspopup="listbox" aria-expanded="false"><span class="oabMultiLabel${selected.length ? ' hasValue' : ''}">${esc(label)}</span><span class="oabMultiChevron" aria-hidden="true">▾</span></button>${removable ? `<button type="button" class="intakeFilterRemove" data-oab-cube-filter-remove="${esc(ref.key)}" title="${esc(text('Filtreyi kaldır', 'Remove filter'))}" aria-label="${esc(text('Filtreyi kaldır', 'Remove filter'))}">×</button>` : ''}</div></div>`;
     }).join('');
@@ -349,7 +351,9 @@
       updateGroupButtons(null);
       const message = state.loaded
         ? text('Seçili filtrelerde satır yok. Filtreleri genişletip Yenile’ye basın.', 'No rows for the selected filters. Widen the filters and press Refresh.')
-        : text('Filtrelerden en az bir sezon (isterseniz MAG ve Buyer grup) seçip Yenile’ye basın. Sorgu OAB_Cube küpüne sizin Windows kimliğinizle tek DAX sorgusu olarak gider.', 'Select at least one season (optionally MAG and Buyer group) in the filters and press Refresh. The query runs against the OAB_Cube cube as a single DAX query with your Windows identity.');
+        : (state.horizon
+          ? text('Veri Yönetimi’ndeki ufuk uygulanır. İsterseniz filtreleri daraltıp Yenile’ye basın.', 'The Data Management horizon applies. Optionally narrow the filters and press Refresh.')
+          : text('Filtrelerden en az bir sezon (isterseniz MAG ve Buyer grup) seçip Yenile’ye basın ya da Veri Yönetimi’nde ufuk tanımlayın. Sorgu OAB_Cube küpüne sizin Windows kimliğinizle tek DAX sorgusu olarak gider.', 'Select at least one season (optionally MAG and Buyer group) in the filters and press Refresh, or define a horizon in Data Management. The query runs against the OAB_Cube cube as a single DAX query with your Windows identity.'));
       table.innerHTML = `<tbody><tr><td class="intakeEmpty">${esc(message)}</td></tr></tbody>`;
       return;
     }
@@ -487,6 +491,8 @@
       const stale = staleReason();
       const summary = [
         ...Object.entries(dataFilters).filter(([, values]) => Array.isArray(values) && values.length).map(([key, values]) => ({ [field]: filterLabel(key), [valueLabel]: values.join(', ') })),
+        // Dışa aktarılan satırları üreten sorguda ufuk uygulandıysa (ekrandaki ayar değil, verinin kendisi).
+        ...(state.horizonApplied ? [{ [field]: text('Veri Yönetimi ufku', 'Data Management horizon'), [valueLabel]: text('Uygulandı', 'Applied') }] : []),
         ...(stale ? [{ [field]: text('Uyarı', 'Warning'), [valueLabel]: stale === 'filters' ? text('Ekrandaki filtre seçimi bu verinin çekildiği filtrelerden farklı; yukarıdaki filtreler dışa aktarılan satırlarındır.', 'The on-screen filter selection differs from the filters this data was queried with; the filters above belong to the exported rows.') : text('Görünümdeki bazı alanlar son sorguda yoktu.', 'Some fields in the view were not in the last query.') }] : []),
         ...(state.search ? [{ [field]: text('Arama', 'Search'), [valueLabel]: state.search }] : []),
         { [field]: text('Veri tarihi', 'Data date'), [valueLabel]: state.dataDate || text('Okunamadı', 'Unavailable') },
@@ -540,6 +546,7 @@
     state.dataMeasures = Array.isArray(payload && payload.measures) ? payload.measures : null;
     state.dataDimensions = Array.isArray(payload && payload.dimensions) ? payload.dimensions : null;
     state.dataDateSource = clean(payload && payload.dataDateSource);
+    state.horizonApplied = Boolean(payload && payload.horizonApplied);
   }
 
   /* ---------- Veri ---------- */
@@ -549,6 +556,7 @@
       state.catalog = { ...state.catalog, ...(payload.catalog || {}) };
       state.view = payload.view || clone(state.catalog.defaults);
       state.connection = payload.connection || null;
+      state.horizon = Boolean(payload.horizon);
       if (payload.snapshot) { applyPayload(payload.snapshot); state.loaded = true; }
       setStatus(null);
     } catch (error) { setStatus(error.message || String(error), 'error'); }
@@ -580,11 +588,8 @@
 
   async function refresh(force) {
     if (state.loading) return;
-    if (!(view().filterValues.season || []).length) {
-      setStatus(() => text('Sorgu için filtrelerden en az bir sezon seçin.', 'Select at least one season in the filters.'), 'warning');
-      setFilterPanelOpen(true);
-      return;
-    }
+    /* Sezon/ufuk zorunluluğu sunucuda uygulanır: Veri Yönetimi'nde ufuk widget
+       açıkken tanımlanabilir. Sunucu sezon da ufuk da yoksa küpe gitmeden reddeder. */
     state.loading = true;
     setStatus(() => text('OAB küpü sorgulanıyor…', 'Querying the OAB cube…'), 'loading');
     render();
@@ -595,12 +600,17 @@
       const payload = await requestJson('/api/oab-cube/report', jsonBody('POST', { view: view(), forceRefresh: Boolean(force) }));
       pendingSaves.forEach(resolve => resolve(payload.view || null)); pendingSaves = [];
       if (payload.view && revision === state.viewRevision) state.view = payload.view;
+      if (typeof payload.horizon === 'boolean') state.horizon = payload.horizon;
       applyPayload(payload);
       state.loaded = true;
       if (payload.offline) setStatus(() => text('Küp şu anda erişilemiyor; son kayıtlı sonuç gösteriliyor.', 'The cube is unreachable; showing the last saved result.'), 'warning');
       else if (state.missing.length) setStatus(() => text(`Küpte bulunmayan alanlar boş gösterildi: ${missingLabels()}.`, `Fields missing from the cube are shown blank: ${missingLabels()}.`), 'warning');
       else setStatus(payload.fromCache ? () => text('Son 30 dakikadaki aynı sorgunun sonucu gösteriliyor.', 'Showing the result of the same query from the last 30 minutes.') : null, payload.fromCache ? 'ok' : '');
-    } catch (error) { setStatus(error.message || String(error), 'error'); }
+    } catch (error) {
+      const code = error && error.payload && error.payload.code;
+      if (code === 'OAB_CUBE_SEASON_REQUIRED') { state.horizon = false; setFilterPanelOpen(true); setStatus(() => errorText(error.payload, error.message), 'warning'); }
+      else setStatus(error.message || String(error), 'error');
+    }
     finally { pendingSaves.forEach(resolve => resolve(null)); pendingSaves = []; state.loading = false; render(); }
   }
 
@@ -691,7 +701,7 @@
         ${sectionHtml('oabCubeValuesList', text('Pivot Değerleri', 'Pivot Values'), text('Değer ekle', 'Add value'), draft.values.map(ref => valueRowHtml(poolIdOf(ref), ref.agg, vals)).join(''))}
         ${PCV() ? PCV().sectionHtml() : ''}
         ${sectionHtml('oabCubeFiltersList', text('Filtre Alanları', 'Filter Fields'), text('Alan ekle', 'Add field'), draft.filters.map(ref => axisRowHtml(poolIdOf(ref), dims)).join(''))}
-        <p class="oabSettingsHint">${esc(text('Satırları oklarla sıralayabilirsiniz. Adet ölçüleri toplanır; mağaza sayısı, landed fiyat ve markup toplanabilir değildir (varsayılan en büyük/ortalama). Küp alanı yalnız ölçülerle ilişkisi kanıtlı tablolardan (Data, DummyUrun, Sezon) eklenebilir; satır/sütuna eklenen alan sorgu düzeyini değiştirir ve kayıtta veri yeniden çekilir. Sezon filtresi zorunludur.', 'Reorder rows with the arrows. Quantity measures are summed; store count, landed price and markup are not additive (default max/average). Cube fields can be added only from tables with a proven relationship to the measures (Data, DummyUrun, Sezon); a field added to rows/columns changes the query level and data is re-queried on save. The season filter is required.'))}</p>
+        <p class="oabSettingsHint">${esc(text('Satırları oklarla sıralayabilirsiniz. Adet ölçüleri toplanır; mağaza sayısı, landed fiyat ve markup toplanabilir değildir (varsayılan en büyük/ortalama). Küp alanı yalnız ölçülerle ilişkisi kanıtlı tablolardan (Data, DummyUrun, Sezon) eklenebilir; satır/sütuna eklenen alan sorgu düzeyini değiştirir ve kayıtta veri yeniden çekilir. Veri Yönetimi’nde ufuk yoksa sezon filtresi zorunludur.', 'Reorder rows with the arrows. Quantity measures are summed; store count, landed price and markup are not additive (default max/average). Cube fields can be added only from tables with a proven relationship to the measures (Data, DummyUrun, Sezon); a field added to rows/columns changes the query level and data is re-queried on save. Without a Data Management horizon, the season filter is required.'))}</p>
       </div>
       <footer><button type="button" class="tbtn" data-oab-cube-settings-reset>${esc(text('Pivot Varsayılanına Dön', 'Reset Pivot'))}</button><button type="button" class="tbtn" data-oab-cube-close>${esc(text('Vazgeç', 'Cancel'))}</button><button type="button" class="tbtn primary" data-oab-cube-save>${esc(text('Kaydet', 'Save'))}</button></footer>
     </div>`;
