@@ -107,6 +107,30 @@
     return Number.isNaN(date.getTime()) ? raw : date.toLocaleString(locale(), { dateStyle: 'short', timeStyle: 'short' });
   }
 
+  /* ---------- Hesaplanan değerler (public/pivot-calculated-values.js) ----------
+     Tanım yoksa değerlendirici null'dır ve pivot sıcak yolu hiç değişmez.
+     Tanımlar görünümün `calculated` alanındadır (sunucu normalizeView
+     doğrular); sorguya girmez, yalnız istemcide hesaplanır. */
+  const PCV = () => window.BLPivotCalculatedValues || null;
+  const calcDefs = () => (PCV() && Array.isArray(view().calculated) ? view().calculated : []);
+  let calcCache = { signature: '', evaluator: null };
+  let activeCalc = null;
+  let calcEnginePending = false;
+  function calcEvaluator() {
+    const defs = calcDefs();
+    if (!defs.length) return null;
+    const signature = `${window.BLFormulaEngine ? 1 : 0}|${isEnglish() ? 'en' : 'tr'}|${JSON.stringify(defs)}`;
+    if (calcCache.signature !== signature) {
+      calcCache = { signature, evaluator: PCV().createEvaluator(defs, { isTextKey: key => Boolean(baseDim(key)), label: key => detailLabel(key) }) };
+    }
+    if (!window.BLFormulaEngine && !calcEnginePending) {
+      calcEnginePending = true;
+      PCV().ensureEngine(false).then(ok => { calcEnginePending = false; if (ok) renderBody(); });
+    }
+    return calcCache.evaluator;
+  }
+  const calcHeadKey = def => `pcv-${def.id}`;
+
   /* ---------- Pivot hesabı: OABPivotEngine toplamları ---------- */
   function groupMetrics(rows) {
     const out = {};
@@ -116,6 +140,7 @@
     const numeric = window.OABDataUtils && window.OABDataUtils.fieldNumericValue;
     const hasValue = key => rows.some(row => numeric ? numeric(row, key) != null : typeof (row && row[key]) === 'number');
     view().values.forEach(ref => { out[ref.key] = hasValue(ref.key) ? pivot.verifyTotal(rows, ref.key, ref.agg || 'SUM') : null; });
+    if (activeCalc) activeCalc.apply(out, rows);
     return out;
   }
   const searchKeys = ['modelCode', 'modelName', 'colourCode', 'colourName'];
@@ -153,6 +178,7 @@
     return [...map.entries()].map(([value, list]) => ({ value, rows: list, metrics: groupMetrics(list) }));
   }
   function displayRows(rows) {
+    activeCalc = calcEvaluator();
     const rowRefs = view().rows, colRefs = view().columns;
     const dims = [...rowRefs, ...colRefs];
     const collapsed = new Set(display().collapsedGroups || []);
@@ -226,6 +252,8 @@
     if (state.dataFilterValues && filterSignature(state.dataFilterValues) !== filterSignature(view().filterValues)) return 'filters';
     if (state.dataMeasures && view().values.some(ref => !state.dataMeasures.includes(ref.key))) return 'fields';
     if (state.dataDimensions && [...view().rows, ...view().columns].some(ref => !state.dataDimensions.includes(ref.key))) return 'fields';
+    // Satır bazlı hesaplanan değerin okuduğu hazır ölçü son sorguda yoksa.
+    if (state.dataMeasures && PCV() && PCV().requiredRowKeys(calcDefs()).some(key => (baseMeasure(key) && !baseMeasure(key).derived) && !state.dataMeasures.includes(key))) return 'fields';
     return '';
   }
 
@@ -292,6 +320,12 @@
     return `<td>${esc(value == null || value === '' ? text('(boş)', '(blank)') : value)}</td>`;
   }
 
+  function calcCellHtml(item, def) {
+    if (item.kind === 'group' && !item.subtotal) return '<td class="num"></td>';
+    const cell = PCV().cell(item.metrics, def);
+    return `<td class="num pcvCell${cell.error ? ' pcvError' : ''}" title="${esc(cell.title)}">${esc(cell.text)}</td>`;
+  }
+
   function renderPassGap() {
     const node = byId('oabCubePassGap');
     if (!node) return;
@@ -322,16 +356,18 @@
     const rows = visibleRows();
     const dims = [...view().rows, ...view().columns];
     const values = view().values;
+    const calcs = calcDefs();
     const sort = display().sort || {};
     const arrow = key => sort.key === key ? (Number(sort.dir) === 1 ? ' ↑' : ' ↓') : '';
     const head = [...dims.map(ref => `<th data-oab-cube-sort="${esc(ref.key)}" title="${esc(text('Sıralamak için tıklayın', 'Click to sort'))}">${esc(refLabel(ref))}${arrow(ref.key)}</th>`),
-      ...values.map(ref => `<th class="num" data-oab-cube-sort="${esc(ref.key)}" title="${esc(valueHint(ref))}">${esc(refLabel(ref))}${arrow(ref.key)}</th>`)].join('');
+      ...values.map(ref => `<th class="num" data-oab-cube-sort="${esc(ref.key)}" title="${esc(valueHint(ref))}">${esc(refLabel(ref))}${arrow(ref.key)}</th>`),
+      ...calcs.map(def => `<th class="num pcvHead" data-oab-cube-sort="${esc(PCV().keyOf(def))}" title="${esc(`${PCV().modeText(def.mode)} · ${text('Sıralamak için tıklayın', 'Click to sort')}`)}"><span class="pcvHeadMark" aria-hidden="true">ƒx</span> ${esc(PCV().labelOf(def))}${arrow(PCV().keyOf(def))}</th>`)].join('');
     const items = displayRows(rows);
     const shown = items.length > MAX_TABLE_ROWS ? [...items.slice(0, MAX_TABLE_ROWS - 1), items[items.length - 1]] : items;
     const rowClass = item => item.kind === 'grand' ? 'oabPivotGrandTotalRow' : (item.kind === 'group' ? (item.subtotal ? 'oabPivotSubtotalRow' : 'oabPivotGroupRow') : '');
     state.displayItems = shown;
-    const bodyHtml = shown.map((item, index) => `<tr class="${rowClass(item)}" data-oab-cube-row="${index}">${dims.map(ref => cellHtml(item, ref, dims, false)).join('')}${values.map(ref => cellHtml(item, ref, dims, true)).join('')}</tr>`).join('');
-    table.innerHTML = `<thead><tr>${head}</tr></thead><tbody>${bodyHtml || `<tr><td class="intakeEmpty" colspan="${dims.length + values.length}">${esc(text('Aramayla eşleşen satır yok.', 'No rows match the search.'))}</td></tr>`}</tbody>`;
+    const bodyHtml = shown.map((item, index) => `<tr class="${rowClass(item)}" data-oab-cube-row="${index}">${dims.map(ref => cellHtml(item, ref, dims, false)).join('')}${values.map(ref => cellHtml(item, ref, dims, true)).join('')}${calcs.length ? calcs.map(def => calcCellHtml(item, def)).join('') : ''}</tr>`).join('');
+    table.innerHTML = `<thead><tr>${head}</tr></thead><tbody>${bodyHtml || `<tr><td class="intakeEmpty" colspan="${dims.length + values.length + calcs.length}">${esc(text('Aramayla eşleşen satır yok.', 'No rows match the search.'))}</td></tr>`}</tbody>`;
     updateGroupButtons(rows);
     const drillTitle = text('Alt detayı görmek için çift tıklayın', 'Double-click to see drill-down details');
     table.querySelectorAll('tbody tr[data-oab-cube-row] > td').forEach(td => { td.classList.add('oabPivotDrillCell'); if (!td.title) td.title = drillTitle; });
@@ -342,7 +378,7 @@
         const groupExtra = index < view().rows.length - 1 || view().columns.length ? 120 : 0;
         return Math.min(360, Math.max(wordPx(refLabel(ref)), longest * 8 + 28 + groupExtra));
       };
-      window.BLTableColumnResize?.apply(table, { store: widthStore, columns: [...dims.map((ref, index) => ({ key: ref.key, label: refLabel(ref), type: 'text', minPx: dimPx(ref, index) })), ...values.map(ref => ({ key: ref.key, label: refLabel(ref), type: 'num', minPx: wordPx(refLabel(ref)) }))] });
+      window.BLTableColumnResize?.apply(table, { store: widthStore, columns: [...dims.map((ref, index) => ({ key: ref.key, label: refLabel(ref), type: 'text', minPx: dimPx(ref, index) })), ...values.map(ref => ({ key: ref.key, label: refLabel(ref), type: 'num', minPx: wordPx(refLabel(ref)) })), ...calcs.map(def => ({ key: calcHeadKey(def), label: PCV().labelOf(def), type: 'num', minPx: wordPx(PCV().labelOf(def)) + 18 }))] });
     } catch (error) { console.warn('OAB (Küp) sütun genişliği uygulanamadı:', error); }
     const notes = [];
     const stale = staleReason();
@@ -357,13 +393,21 @@
   /* ---------- Alt detay (OAB ile aynı ortak sağ çekmece) ---------- */
   const DEFAULT_DETAIL = ['season', 'mag', 'buyerGroup', 'classGroup', 'classification', 'modelCode', 'modelName', 'colourCode', 'colourName', 'wssi', 'approved', 'plan', 'unapproved', 'poQty'];
   function detailLabel(key) {
+    const calc = PCV() && PCV().isKey(key) ? calcDefs().find(def => PCV().keyOf(def) === key) : null;
+    if (calc) return PCV().labelOf(calc);
     const dim = baseDim(key); if (dim) return text(dim.tr, dim.en);
     const measure = baseMeasure(key); if (measure) return text(measure.tr, measure.en);
     const ref = [...view().rows, ...view().columns, ...view().filters, ...view().values].find(item => item.key === key);
     return ref ? refLabel(ref) : key;
   }
   function openDetail(item, ref) {
-    const rows = Array.isArray(item && item.rows) ? item.rows : [];
+    const sourceRows = Array.isArray(item && item.rows) ? item.rows : [];
+    /* Satır bazlı hesaplanan değer, çekmecede her kaynak satırın kendi değeri
+       olarak bir sütun olur; toplam modu değeri yalnız nota yazılır (tek bir
+       kaynak satırda "toplam oranı" yoktur). */
+    const calcRowDefs = calcDefs().filter(def => def.mode === 'row');
+    const rowEval = calcRowDefs.length ? calcEvaluator() : null;
+    const rows = rowEval ? sourceRows.map(row => { const out = { ...row }; calcRowDefs.forEach(def => { out[PCV().keyOf(def)] = rowEval.rowValue(PCV().keyOf(def), row); }); return out; }) : sourceRows;
     if (!rows.length) { setStatus(() => text('Bu hücre için alt detay bulunamadı.', 'No drill-down detail was found for this cell.'), 'warning'); return; }
     const keys = [];
     const add = key => { if (key && !keys.includes(key)) keys.push(key); };
@@ -380,14 +424,15 @@
       : (item.kind === 'group' ? item.path : dims.map(entry => item.dims[entry.key]).filter(value => value != null))
         .map((value, index) => `${refLabel(dims[index])}: ${value === '' ? text('(boş)', '(blank)') : value}`).join(' › ');
     const metric = ref && item.metrics[ref.key];
-    const note = [ref && metric != null ? `${refLabel(ref)}: ${valueFormat(ref)(metric)}` : '', `${rows.length.toLocaleString(locale())} ${text('kaynak satır', 'source rows')}`, dataDateText() ? `${text('Veri tarihi', 'Data date')}: ${dataDateText()}` : ''].filter(Boolean).join(' · ');
+    const calcCell = ref && ref.calc ? PCV().cell(item.metrics, ref.calc) : null;
+    const note = [calcCell ? `${PCV().labelOf(ref.calc)}: ${calcCell.error ? calcCell.title : calcCell.text}` : (ref && metric != null ? `${refLabel(ref)}: ${valueFormat(ref)(metric)}` : ''), `${rows.length.toLocaleString(locale())} ${text('kaynak satır', 'source rows')}`, dataDateText() ? `${text('Veri tarihi', 'Data date')}: ${dataDateText()}` : ''].filter(Boolean).join(' · ');
     if (!window.BLDetailDrawer || typeof window.BLDetailDrawer.open !== 'function') { setStatus(() => text('Alt detay çekmecesi yüklenemedi.', 'The drill-down drawer could not be loaded.'), 'error'); return; }
     window.BLDetailDrawer.open({
       storageKey: 'oabcube.pivot.detail',
       pageScope: 'overview.oabcube',
       moduleId: 'overview',
       source: 'oabcube',
-      title: `${text('OAB (Küp) Alt Detay', 'OAB (Cube) Drill-down')}${ref ? ` · ${refLabel(ref)}` : ''}`,
+      title: `${text('OAB (Küp) Alt Detay', 'OAB (Cube) Drill-down')}${ref ? ` · ${ref.calc ? PCV().labelOf(ref.calc) : refLabel(ref)}` : ''}`,
       subtitle: context,
       note,
       rows,
@@ -412,6 +457,9 @@
       const rows = visibleRows();
       const dims = [...view().rows, ...view().columns], values = view().values;
       const round = value => typeof value === 'number' && Number.isFinite(value) ? Math.round(value * 10000) / 10000 : (value == null ? null : value);
+      // Hesaplanan değer başlığı boyut/değer/sabit başlıkla çakışırsa "(ƒx)" alır; sütun ezilmez.
+      const calcList = calcDefs();
+      const calcHeaders = calcList.length ? PCV().uniqueHeaders([text('Satır tipi', 'Row type'), ...dims.map(refLabel), ...values.map(refLabel)], calcList) : [];
       const pivot = displayRows(rows).map(item => {
         const out = {};
         out[text('Satır tipi', 'Row type')] = item.kind === 'grand' ? text('Genel toplam', 'Grand total') : (item.kind === 'group' ? text('Alt toplam', 'Subtotal') : text('Detay', 'Detail'));
@@ -419,6 +467,8 @@
           out[refLabel(ref)] = item.kind === 'group' ? (index === item.level ? item.dims[ref.key] : (index < item.level ? item.path[index] : '')) : (item.dims[ref.key] ?? '');
         });
         values.forEach(ref => { out[refLabel(ref)] = round(item.metrics[ref.key]); });
+        // Hesaplanan değer Excel'e DEĞER olarak yazılır; hatalı hücre boştur.
+        calcList.forEach((def, index) => { out[calcHeaders[index]] = item.kind === 'group' && !item.subtotal ? null : PCV().exportValue(item.metrics, def); });
         return out;
       });
       const rowKeys = [];
@@ -616,6 +666,8 @@
     [...current.rows, ...current.columns].filter(ref => ref.source || Boolean((baseDim(ref.key) || {}).optionalGrain)).map(ref => ref.source || ref.key).sort(),
     current.filters.filter(ref => ref.source).map(ref => ref.source).sort(),
     current.values.filter(ref => ref.source).map(ref => ref.source).sort(),
+    // Satır bazlı hesaplanan değerin okuduğu hazır ölçü sorguya girer.
+    PCV() ? PCV().requiredRowKeys(current.calculated || []).filter(key => baseMeasure(key) && !baseMeasure(key).derived && !current.values.some(ref => ref.key === key)).sort() : [],
   ]);
 
   async function openFields() {
@@ -637,6 +689,7 @@
         ${sectionHtml('oabCubeRowsList', text('Pivot Satırları', 'Pivot Rows'), text('Alan ekle', 'Add field'), draft.rows.map(ref => axisRowHtml(poolIdOf(ref), dims)).join(''))}
         ${sectionHtml('oabCubeColsList', text('Pivot Sütunları', 'Pivot Columns'), text('Alan ekle', 'Add field'), draft.columns.map(ref => axisRowHtml(poolIdOf(ref), dims)).join(''))}
         ${sectionHtml('oabCubeValuesList', text('Pivot Değerleri', 'Pivot Values'), text('Değer ekle', 'Add value'), draft.values.map(ref => valueRowHtml(poolIdOf(ref), ref.agg, vals)).join(''))}
+        ${PCV() ? PCV().sectionHtml() : ''}
         ${sectionHtml('oabCubeFiltersList', text('Filtre Alanları', 'Filter Fields'), text('Alan ekle', 'Add field'), draft.filters.map(ref => axisRowHtml(poolIdOf(ref), dims)).join(''))}
         <p class="oabSettingsHint">${esc(text('Satırları oklarla sıralayabilirsiniz. Adet ölçüleri toplanır; mağaza sayısı, landed fiyat ve markup toplanabilir değildir (varsayılan en büyük/ortalama). Küp alanı yalnız ölçülerle ilişkisi kanıtlı tablolardan (Data, DummyUrun, Sezon) eklenebilir; satır/sütuna eklenen alan sorgu düzeyini değiştirir ve kayıtta veri yeniden çekilir. Sezon filtresi zorunludur.', 'Reorder rows with the arrows. Quantity measures are summed; store count, landed price and markup are not additive (default max/average). Cube fields can be added only from tables with a proven relationship to the measures (Data, DummyUrun, Sezon); a field added to rows/columns changes the query level and data is re-queried on save. The season filter is required.'))}</p>
       </div>
@@ -652,6 +705,30 @@
     modal.addEventListener('pointerup', event => { if (event.target === modal && modal.dataset.backdropDown === '1') close(); modal.dataset.backdropDown = '0'; });
     const lists = ['oabCubeRowsList', 'oabCubeColsList', 'oabCubeValuesList', 'oabCubeFiltersList'].map(id => modal.querySelector(`#${id}`));
     lists.forEach(refreshOrderButtons);
+    /* Hesaplanan değerler: toplam modunda pencerede SEÇİLİ değer alanları,
+       satır modunda kaynak satırın sayısal ölçüleri kullanılabilir. */
+    const draftValueFields = () => [...lists[2].querySelectorAll('.oabPivotValueRow')].map(row => vals.find(item => item.id === row.querySelector('.oabCubeValueField').value))
+      .filter(entry => entry && entry.ref.key).map(entry => ({ key: entry.ref.key, label: entry.label }));
+    const rowValueFields = () => [
+      ...state.catalog.measures.map(item => ({ key: item.key, label: text(item.tr, item.en) })),
+      ...view().values.filter(ref => ref.source && ref.key).map(ref => ({ key: ref.key, label: refLabel(ref) })),
+    ];
+    const sampleLabel = item => item.kind === 'grand' ? text('Genel Toplam', 'Grand Total') : (item.kind === 'group' ? item.path : [...view().rows, ...view().columns].map(entry => item.dims[entry.key])).map(value => value === '' ? text('(boş)', '(blank)') : value).join(' › ');
+    const calcSection = PCV() ? PCV().mountSection(modal.querySelector('[data-pcv-section]'), {
+      defs: draft.calculated || [],
+      allowRow: true,
+      widget: { tr: 'OAB (Küp)', en: 'OAB (Cube)' },
+      isTextKey: key => Boolean(baseDim(key)),
+      // Boyut, ölçü ve Excel sabit başlıkları ayrılmıştır (TR + EN).
+      reserved: () => ['Satır tipi', 'Row type', ...[...state.catalog.dimensions, ...state.catalog.measures].flatMap(item => [item.tr, item.en]), ...[...view().rows, ...view().columns, ...view().filters, ...view().values].map(refLabel)], // i18n-ignore: ayrılmış ad listesi (iki dil birlikte)
+      fields: mode => (mode === 'row' ? rowValueFields() : draftValueFields()),
+      samples: mode => {
+        if (!state.rows.length) return [];
+        if (mode === 'row') return state.rows.slice(0, 6).map(row => ({ label: [row.modelCode, row.colourCode].filter(Boolean).join(' · ') || text('Kaynak satır', 'Source row'), values: row }));
+        const items = displayRows(visibleRows()).filter(item => item.kind !== 'group' || item.subtotal);
+        return [...items.slice(0, 5), ...items.slice(-1)].filter((item, index, list) => list.indexOf(item) === index).map(item => ({ label: sampleLabel(item), values: item.metrics, rows: item.rows }));
+      },
+    }) : null;
     modal.addEventListener('click', event => {
       const add = event.target.closest('[data-oab-cube-add]');
       if (add) {
@@ -705,6 +782,7 @@
         return { ...clone(entry.ref), agg: row.querySelector('.oabCubeValueAgg').value || 'SUM' };
       }).filter(Boolean);
       next.display = { ...(next.display || {}), grouped: modal.querySelector('#oabCubeGroupedInput').checked, showSubtotals: modal.querySelector('#oabCubeSubtotalsInput').checked, collapsedGroups: [] };
+      if (calcSection) next.calculated = calcSection.value();
       if (!next.rows.length && !next.columns.length) { setStatus(() => text('En az bir satır veya sütun alanı seçin.', 'Select at least one row or column field.'), 'warning'); return; }
       state.view = next;
       close();
@@ -715,7 +793,8 @@
     });
     modal.querySelector('[data-oab-cube-settings-reset]').addEventListener('click', async () => {
       const keep = view().filterValues;
-      state.view = { ...clone(state.catalog.defaults), filterValues: Object.fromEntries(Object.entries(keep || {}).filter(([key]) => state.catalog.defaults.filters.some(ref => ref.key === key))) };
+      // Hesaplanan değerler kullanıcının tanımlarıdır; düzen sıfırlanınca silinmez.
+      state.view = { ...clone(state.catalog.defaults), filterValues: Object.fromEntries(Object.entries(keep || {}).filter(([key]) => state.catalog.defaults.filters.some(ref => ref.key === key))), calculated: clone(view().calculated || []) };
       close();
       await saveView({ immediate: true });
       render();
@@ -926,7 +1005,9 @@
       const dims = [...view().rows, ...view().columns];
       let column = 0;
       for (const td of row.cells) { if (td === cell) break; column += td.colSpan || 1; }
-      const ref = column >= dims.length ? view().values[column - dims.length] : null;
+      const values = view().values, calcs = calcDefs();
+      const calc = column >= dims.length + values.length ? calcs[column - dims.length - values.length] : null;
+      const ref = calc ? { key: PCV().keyOf(calc), calc } : (column >= dims.length ? values[column - dims.length] : null);
       if (item) openDetail(item, ref);
     });
     byId('oabCubeTable')?.addEventListener('click', event => {

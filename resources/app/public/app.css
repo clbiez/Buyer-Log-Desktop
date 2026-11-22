@@ -3810,3 +3810,18 @@ button.ovNoteCount{cursor:pointer;}
 .backlogColSource{display:block;white-space:normal;overflow-wrap:anywhere;margin-top:var(--ui-space-1);}
 .backlogColRowLabel input{width:100%;min-width:0;box-sizing:border-box;padding:var(--ui-space-1);}
 .backlogColFx{flex:none;min-width:38px;justify-content:center;align-items:center;white-space:nowrap;}
+
+/* Pivot hesaplanan değerleri (public/pivot-calculated-values.js) — OAB, OAB Küp,
+   INTAKE ve FOB Sonrası kalem pencereleri ile pivot hücreleri. Yalnız yerleşim;
+   görünüm ui-components.css ve paylaşılan oabSettings/fcMode bileşenlerinden. */
+.pcvSection{display:grid;gap:6px;}
+.pcvList{display:grid;gap:6px;}
+.pcvRow{display:flex;align-items:center;gap:8px;min-width:0;}
+.pcvBadge{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;}
+.pcvName{display:grid;gap:1px;flex:1 1 auto;min-width:0;}
+.pcvName>b,.pcvName>small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fcExtra{display:grid;gap:8px;}
+.fcModes.pcvModes[data-bl-tabs][role="tablist"]{grid-template-columns:repeat(2,minmax(0,1fr));}
+.fcModes.pcvModes>.fcMode:disabled{opacity:.6;cursor:not-allowed;}
+td.pcvCell.pcvError{cursor:help;}
+@media (max-width:640px){.fcModes.pcvModes[data-bl-tabs][role="tablist"]{grid-template-columns:1fr;}}

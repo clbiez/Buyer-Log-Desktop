@@ -192,6 +192,82 @@ function demoRows() {
     assert.equal(editedRows.length, 1 + 3 + 8 + 1);
     assert.ok(L('Sezon', 'Season') in editedRows[0] && !(L('Buyer grup', 'Buyer group') in editedRows[0]) && !('TR FOB USD' in editedRows[0]), Object.keys(editedRows[0]).join());
     assert.ok(Math.abs(editedRows[editedRows.length - 1][advKey] - expected.total.advantage) < 1e-6);
+    // ƒx hesaplanan değer (public/pivot-calculated-values.js): yalnız toplamlar
+    // üzerinden; alanlar her düzeyde tutarlardan. Satır modu TR/YD'de kapalıdır.
+    const calcLabel = L('Landed / TR FOB', 'Landed / TR FOB');
+    await page.click('#trydAdvantageFieldsBtn');
+    await page.waitForSelector('#_trydFieldsModal [data-pcv-add]', { timeout: 10000 });
+    await page.click('#_trydFieldsModal [data-pcv-add]');
+    await page.waitForSelector('#_formulaColumnModal .pcvModes', { timeout: 15000 });
+    assert.ok(await page.$eval('#_formulaColumnModal [data-pcv-mode="row"]', button => button.disabled), 'satır modu kapalı');
+    await page.click('#_formulaColumnModal [data-fc-mode="advanced"]');
+    await page.fill('#_formulaColumnModal [data-fc-formula]', L('[LANDED TUTAR] / [FOB TR TUTAR]', '[Landed amount] / [TR FOB amount]'));
+    await page.fill(`#_formulaColumnModal ${lang === 'en' ? '[data-fc-label-en]' : '[data-fc-label]'}`, calcLabel);
+    await page.click('#_formulaColumnModal .fcMore > summary');
+    await page.selectOption('#_formulaColumnModal [data-fc-format]', 'number');
+    await page.fill('#_formulaColumnModal [data-fc-decimals]', '3');
+    await page.waitForFunction(() => /isOk/.test(document.querySelector('#_formulaColumnModal [data-fc-preview]').className), null, { timeout: 10000 });
+    await page.click('#_formulaColumnModal [data-fc-save]');
+    await page.waitForFunction(() => !document.getElementById('_formulaColumnModal'), null, { timeout: 10000 });
+    await page.click('[data-tryd-save]');
+    await page.waitForFunction(() => document.querySelector('#trydAdvantageTable thead th.pcvHead'), null, { timeout: 15000 });
+    await page.waitForTimeout(700);
+    const savedCalc = await app.api('/api/postfob/tryd/state').then(response => response.json());
+    assert.equal(savedCalc.view.calculated.length, 1);
+    assert.equal(savedCalc.view.calculated[0].formula, '[landedAmount] / [fobTrAmount]');
+    assert.equal(savedCalc.view.calculated[0].mode, 'aggregate');
+    // Her düzeyde: Landed / TR FOB tutarı = 1 − avantaj (tutarlardan, ortalama değil).
+    const num = value => Number(String(value).replace(/[^\d,.-]/g, '').replace(lang === 'en' ? /,/g : /\./g, '').replace(',', '.'));
+    const calcCells = await page.$$eval('#trydAdvantageTable tbody tr', trs => trs.map(tr => ({ cls: tr.className, label: [...tr.cells].map(td => td.textContent).join('|'), calc: tr.cells[tr.cells.length - 1].textContent })));
+    const grandCalc = calcCells.find(row => /oabPivotGrandTotalRow/.test(row.cls));
+    // Taklit rapor ucu filtreyi uygulamaz: ekranda bütün demo modeller vardır.
+    const filtered = engine.analyze(rows, { target: 0.36, standardMultiplier: 1.11 });
+    const round3 = value => Math.round(value * 1000) / 1000;
+    assert.equal(num(grandCalc.calc), round3(1 - filtered.total.advantage), `genel toplam ${grandCalc.calc}`);
+    const dm201 = filtered.models.find(model => model.model === 'DM201');
+    const dm201Row = calcCells.find(row => row.label.includes('|DM201|'));
+    assert.equal(num(dm201Row.calc), round3(dm201.amounts.landedAmount / dm201.amounts.fobTrAmount));
+    // Sıralama: hesaplanan değer başlığı (model ve grup düzeyinde).
+    await page.click('#trydAdvantageTable thead th.pcvHead');
+    await page.waitForTimeout(300);
+    assert.match(await page.evaluate(() => window.BLTrydAdvantage.state.view.sort.key), /^calc:/);
+    const sortedModels = await page.$$eval('#trydAdvantageTable tbody tr:not(.oabPivotSubtotalRow):not(.oabPivotGrandTotalRow)', trs => trs.map(tr => tr.cells[tr.cells.length - 1].textContent));
+    assert.ok(sortedModels.length > 0);
+    // Excel: hesaplanan değer DEĞER olarak.
+    const [calcDownload] = await Promise.all([page.waitForEvent('download', { timeout: 30000 }), page.click('#trydAdvantageExcelExportBtn')]);
+    const calcRows = XLSX.utils.sheet_to_json(XLSX.read(fs.readFileSync(await calcDownload.path())).Sheets.Pivot);
+    assert.ok(Math.abs(calcRows[calcRows.length - 1][calcLabel] - (1 - filtered.total.advantage)) < 1e-6, JSON.stringify(calcRows[calcRows.length - 1]));
+    // Ad çakışması: editör boyut/sabit başlık adını ("Model") reddeder.
+    await page.click('#trydAdvantageFieldsBtn');
+    await page.waitForSelector('#_trydFieldsModal [data-pcv-add]', { timeout: 10000 });
+    await page.click('#_trydFieldsModal [data-pcv-add]');
+    await page.waitForSelector('#_formulaColumnModal .pcvModes', { timeout: 15000 });
+    await page.click('#_formulaColumnModal [data-fc-mode="advanced"]');
+    await page.fill('#_formulaColumnModal [data-fc-formula]', L('[YD adet]', '[Abroad qty]'));
+    await page.fill(`#_formulaColumnModal ${lang === 'en' ? '[data-fc-label-en]' : '[data-fc-label]'}`, 'Model');
+    await page.waitForFunction(() => /isOk/.test(document.querySelector('#_formulaColumnModal [data-fc-preview]').className), null, { timeout: 10000 });
+    await page.click('#_formulaColumnModal [data-fc-save]');
+    await page.waitForTimeout(300);
+    assert.ok(await page.$('#_formulaColumnModal'), 'ayrılmış ad kaydedilmez; pencere açık kalır');
+    await page.click('#_formulaColumnModal [data-fc-close]');
+    await page.click('#_trydFieldsModal [data-tryd-close]');
+    // Eski/dış kaynaklı "Model" adlı tanım bile Excel'de model kodunu ezmez: başlık "Model (ƒx)" olur.
+    const beforeClash = await app.api('/api/postfob/tryd/state').then(response => response.json());
+    const clashView = { ...beforeClash.view, calculated: [...beforeClash.view.calculated, { id: 'pcv_model', label: 'Model', formula: '[ydQty]', mode: 'aggregate', refs: {} }] };
+    delete clashView.version;
+    await app.api('/api/postfob/tryd/view', { view: clashView }, 'PUT');
+    await page.evaluate(() => window.BLTrydAdvantage.reload());
+    await page.waitForFunction(() => document.querySelectorAll('#trydAdvantageTable thead th.pcvHead').length === 2, null, { timeout: 15000 });
+    const [clashDownload] = await Promise.all([page.waitForEvent('download', { timeout: 30000 }), page.click('#trydAdvantageExcelExportBtn')]);
+    const clashRows = XLSX.utils.sheet_to_json(XLSX.read(fs.readFileSync(await clashDownload.path())).Sheets.Pivot);
+    const dm201Excel = clashRows.find(row => row.Model === 'DM201');
+    assert.ok(dm201Excel, 'model kodu Excel\'de korunur');
+    assert.equal(dm201Excel['Model (ƒx)'], dm201.amounts.ydQty, 'hesaplanan değer ayrı sütunda');
+    await app.api('/api/postfob/tryd/view', { view: { calculated: beforeClash.view.calculated } }, 'PUT');
+    await page.evaluate(() => window.BLTrydAdvantage.reload());
+    await page.waitForFunction(() => document.querySelectorAll('#trydAdvantageTable thead th.pcvHead').length === 1, null, { timeout: 15000 });
+    // Görselde hesaplanan sütun da görünür; sıralama etikete döner.
+    await page.click('#trydAdvantageTable thead th[data-tryd-sort="label"]');
     // İlgisiz açılış bildirimi görüntüyü kapatmasın.
     await page.evaluate(() => {
       const hit = [...document.querySelectorAll('body *')].filter(el => /uyarı var|warnings —/.test(el.textContent || '') && !el.children.length)[0];
@@ -236,6 +312,7 @@ function demoRows() {
     assert.equal(reset.view.values.length, engine.VALUE_KEYS.length);
     assert.deepEqual(reset.view.filterValues, { season: ['S6'] });
     assert.equal(await page.$$eval('#trydAdvantageTable tr.oabPivotSubtotalRow', trs => trs.length), 2 + 2 + 3);
+    assert.equal(reset.view.calculated.length, 1, 'pivot sıfırlama hesaplanan değeri silmez');
     assert.deepEqual(app.errors, []);
     console.log(JSON.stringify({ screenshot, total: expected.total.advantage, below: belowExpected, box }));
   } finally { await app.close(); }

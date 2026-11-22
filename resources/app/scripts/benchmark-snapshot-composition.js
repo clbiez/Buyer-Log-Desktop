@@ -22,9 +22,9 @@
  *   üretimdeki gibi LFL'yi CP'yi besleyen ASAS run'ının satırlarından üretir
  *   (model-refresh.js: 'lfl' kapsamı yoksa CP/backlog run'ı). Bu modda LFL _asas
  *   torbası ASAS _sourceFields ile aynı sütunları taşır (sahadaki 79,6 MiB'lık pay).
- * --snapshot-format v2|v3: v3, kayıttan sonra aynı yükü sütun sözlüklü v3 dosyası
- *   olarak yeniden yazar ve YÜKLEME ölçümünü onunla yapar (faz 1: yazıcı v2'dir;
- *   v3 yalnız okuyucu kanıtı içindir). Bu seçeneği tanımayan main yine v2 ölçer.
+ * --snapshot-format v3|v2: kayıt yolu v3 yazar (varsayılan). v2, kayıttan sonra aynı
+ *   yükü eski v2 dosyası olarak yeniden yazar ve YÜKLEME ölçümünü onunla yapar
+ *   (geçiş: eski sürümün bıraktığı v2 dosyasının açılışı).
  *
  *   node --expose-gc scripts/benchmark-snapshot-composition.js [--rows 30000] [--mode model|excel] [--lfl-source demo|cp] [--snapshot-format v2|v3] [--root <geçici klasör>] [--json|--summary] [--keep]
  */
@@ -40,7 +40,7 @@ function arg(name, fallback) {
 const rows = Number(arg('--rows', 30000)) || 30000;
 const mode = arg('--mode', 'model');
 const lflSource = arg('--lfl-source', 'demo');
-const snapshotFormat = arg('--snapshot-format', 'v2');
+const snapshotFormat = arg('--snapshot-format', 'v3');
 if (!['demo', 'cp'].includes(lflSource)) throw new Error(`--lfl-source demo|cp olmalı: ${lflSource}`);
 if (!['v2', 'v3'].includes(snapshotFormat)) throw new Error(`--snapshot-format v2|v3 olmalı: ${snapshotFormat}`);
 // --root verilirse içinde bu çalıştırmaya ait bir alt klasör açılır; temizlik yalnız onu siler
@@ -146,16 +146,20 @@ async function main() {
   gc();
   const heapWithSource = process.memoryUsage().heapUsed;
   const saveStarted = Date.now();
-  const saved = await snapshot.saveModelSnapshotAsync('synthetic', built.payload);
+  // Kayıt sırasındaki heap tepe noktası (kooperatif kayıt olay döngüsüne döndükçe örneklenir).
+  let saveHeapPeak = process.memoryUsage().heapUsed;
+  const sampler = setInterval(() => { saveHeapPeak = Math.max(saveHeapPeak, process.memoryUsage().heapUsed); }, 5);
+  const saved = await snapshot.saveModelSnapshotAsync('synthetic', built.payload).finally(() => clearInterval(sampler));
+  saveHeapPeak = Math.max(saveHeapPeak, process.memoryUsage().heapUsed);
   const saveMs = Date.now() - saveStarted;
   const orders = built.payload.asasOrders.length;
   const lflRows = Array.isArray(built.payload.lflRows) ? built.payload.lflRows.length : 0;
-  let v3 = null;
-  if (snapshotFormat === 'v3') {
-    const started = Date.now(), encoded = snapshot.encodeColumnarSnapshot(built.payload);
+  let v2 = null;
+  if (snapshotFormat === 'v2') {
+    const encoded = snapshot.encodeLegacyV2Snapshot(built.payload);
     const compressed = require('zlib').gzipSync(encoded.json, { level: 6 });
     fs.writeFileSync(snapshot.snapshotPath('synthetic'), compressed);
-    v3 = { v3CompressedBytes: compressed.length, v3UncompressedBytes: encoded.json.length, v3DecodedBytes: encoded.decodedBytes, v3EncodeMs: Date.now() - started };
+    v2 = { v2CompressedBytes: compressed.length, v2UncompressedBytes: encoded.json.length };
   }
   built = null;
   // Yükleme + heap ayrı, temiz bir süreçte ölçülür (kaynak verisinin kalıntısı karışmaz).
@@ -166,7 +170,8 @@ async function main() {
   if (load.orders !== orders) throw new Error('Snapshot geri yüklenemedi');
   const report = composition.analyzeFile(snapshot.snapshotPath('synthetic'), { verify: true, top: 15, columnNames: true });
   const summary = { mode, lflSource, snapshotFormat, rows, orders, lflRows, sourceMs, compressedBytes: saved.bytes, uncompressedBytes: saved.uncompressedBytes,
-    aliasCount: saved.aliasCount, saveMs, heapWithSourceMiB: MiB(heapWithSource), ...(v3 || {}), ...load };
+    fileBytes: saved.fileBytes ?? saved.uncompressedBytes, aliasCount: saved.aliasCount, saveMs, heapWithSourceMiB: MiB(heapWithSource),
+    saveHeapPeakMiB: MiB(saveHeapPeak), ...(v2 || {}), ...load };
   if (process.argv.includes('--json')) process.stdout.write(`${JSON.stringify({ summary, report }, null, 2)}\n`);
   else if (process.argv.includes('--summary')) process.stdout.write(`${JSON.stringify(summary)}\n`);
   else process.stdout.write(`${JSON.stringify(summary)}\n\n${composition.formatReport(report)}\n`);

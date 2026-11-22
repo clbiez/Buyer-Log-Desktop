@@ -305,7 +305,8 @@
         results[`${def.field}::${requestedAgg}`] = result;
       });
       calcFields.forEach(calc => {
-        try { results[calc.key] = calc.fn(results); } catch (_) { results[calc.key] = null; }
+        // İkinci argüman grubun kaynak satırlarıdır (satır bazlı hesaplanan değer).
+        try { results[calc.key] = calc.fn(results, group.rows); } catch (_) { results[calc.key] = null; }
       });
       cells.push({ rowKey: group.rowKey, colKey: group.colKey, rowValues: rowFields.map((f, i) => group.rows[0][f]), colValues: colFields.map((f) => group.rows[0][f]), results, rowCount: group.rows.length, sourceRows: group.rows.slice() });
     }
@@ -1870,6 +1871,70 @@
       else if (global.localStorage) global.localStorage.setItem(key, value);
     } catch (_) { /* kota dolu: seçim ekranda çalışır, yalnız hatırlanmaz */ }
   }
+  /* ---------- Hesaplanan değerler (public/pivot-calculated-values.js) ----------
+     OAB PASS pivot ayarı sunucuda ORTAKTIR (OAB.MANAGE, /api/oab/settings);
+     kişisel hesaplanan değerler oraya yazılmaz, kullanıcı kapsamlı yerel depoda
+     (lcw.oab.* → BLStorage kullanıcı öneki) durur ve aynı sınırlarla
+     doğrulanır. Hesap OABPivotEngine'in calculatedFields kancasıyla yapılır:
+     hücre, alt toplam ve genel toplam aynı motordan geçer. Tanım yoksa
+     yapılandırma değişmez (sıcak yol aynıdır). */
+  const OAB_CALC_PREF_KEY = 'lcw.oab.pivotCalculated.v1';
+  const oabPCV = () => global.BLPivotCalculatedValues || null;
+  let oabCalcList = null;
+  let oabCalcEnginePending = false;
+  function oabCalcDefs() {
+    if (!oabPCV()) return [];
+    if (oabCalcList == null) {
+      let parsed = [];
+      try { parsed = JSON.parse(oabStorageGet(OAB_CALC_PREF_KEY) || '[]'); } catch (_) { parsed = []; }
+      oabCalcList = oabPCV().normalizeList(parsed, { allowRow: true });
+    }
+    return oabCalcList;
+  }
+  function oabSaveCalculated(list) {
+    oabCalcList = oabPCV() ? oabPCV().normalizeList(list, { allowRow: true }) : [];
+    oabStorageSet(OAB_CALC_PREF_KEY, JSON.stringify(oabCalcList));
+    oabPivotViewCache.clear();
+  }
+  // Toplam anahtarı "alan::özetleme"dir: yalnız FIRST metin döndürür (COUNT bir
+  // kod alanında da sayıdır). Satır anahtarı alan adıdır: kod alanı metindir.
+  const oabCalcTextKey = key => (String(key).includes('::') ? /::FIRST$/.test(String(key)) : OABDataUtils.isLikelyCodeField(String(key)));
+  function oabPivotConfigWithCalculated(config) {
+    const defs = oabCalcDefs();
+    if (!defs.length) return config;
+    if (!global.BLFormulaEngine && !oabCalcEnginePending) {
+      oabCalcEnginePending = true;
+      oabPCV().ensureEngine(false).then(ok => { oabCalcEnginePending = false; if (ok && S.rows.length) { oabPivotViewCache.clear(); oabRenderTable(); } });
+    }
+    const evaluator = oabPCV().createEvaluator(defs, {
+      isTextKey: oabCalcTextKey,
+      readRow: (row, key) => (row && Object.prototype.hasOwnProperty.call(row, key) ? fieldNumericValue(row, key) : undefined),
+    });
+    // Aynı hücrenin bütün hesaplanan değerleri tek seferde hesaplanır.
+    const computed = new WeakMap();
+    const calculatedFields = defs.map(def => {
+      const key = oabPCV().keyOf(def);
+      return {
+        key, label: oabPCV().labelOf(def), calc: def,
+        fn: (results, rows) => {
+          if (!computed.has(results)) computed.set(results, evaluator.compute(results, rows || []));
+          const out = computed.get(results);
+          results[`${key}#err`] = out.errors[key] || null;
+          return out.values[key];
+        },
+      };
+    });
+    return { ...config, calculatedFields: [...(config.calculatedFields || []).filter(item => item && typeof item.fn === 'function'), ...calculatedFields] };
+  }
+  function oabCalcCellHtml(row, descriptor) {
+    // Alt toplamı kapalı grup satırı: diğer değerler gibi boş.
+    if (row.__oabHasChildren && !row.__oabSubtotal) return '<td class="num">—</td>';
+    const def = descriptor.calc, error = row[`${descriptor.key}#err`], value = row[descriptor.key];
+    const base = `${oabPCV().labelOf(def)} · ${oabPCV().modeText(def.mode)}`;
+    if (error) return `<td class="num pcvCell pcvError" title="${oabEsc(`${base} — ${oabPCV().errorText(error)}`)}">—</td>`;
+    return `<td class="num pcvCell" title="${oabEsc(base)}">${oabEsc(value == null ? '—' : oabPCV().format(value, def))}</td>`;
+  }
+
   function oabSaveLocalFilters() {
     const payload = {};
     for (const [field, values] of Object.entries(S.localFilters || {})) {
@@ -2193,20 +2258,21 @@
         const agg = def.agg || (OABDataUtils.isFormulaMetric(def.field) ? 'CALC' : 'SUM');
         return { valueKey, sourceField: def.field, agg, numeric: agg !== 'FIRST', calculated: false };
       }),
-      ...pivot.calcFields.map(calc => ({ valueKey: calc.key, sourceField: '', agg: 'CALC', calculated: true })),
+      ...pivot.calcFields.map(calc => ({ valueKey: calc.key, sourceField: '', agg: 'CALC', calculated: true, ...(calc.calc ? { label: calc.label, calc: calc.calc, numeric: true } : {}) })),
     ];
     const rowDescriptors = pivot.rowFields.map((field, i) => ({ key: `row:${i}:${field}`, label: field, numeric: false, rowIndex: i, sourceField: field }));
     const displayColKeys = colKeys.length && pivot.colFields.length ? colKeys : [''];
     const valueDescriptors = displayColKeys.flatMap(colKey => valueMetas.map(meta => ({
       key: `value:${colKey}::${meta.valueKey}`,
-      label: pivot.colFields.length ? `${String(colKey || oabT('(boş)', '(blank)')).split('␟').join(' / ')} · ${meta.valueKey}` : meta.valueKey,
+      label: pivot.colFields.length ? `${String(colKey || oabT('(boş)', '(blank)')).split('␟').join(' / ')} · ${meta.label || meta.valueKey}` : (meta.label || meta.valueKey),
       numeric: meta.numeric !== false, colKey, valueKey: meta.valueKey, sourceField: meta.sourceField, agg: meta.agg, calculated: meta.calculated,
+      ...(meta.calc ? { calc: meta.calc } : {}),
     })));
     const descriptors = [...rowDescriptors, ...valueDescriptors];
     const leaves = [...byRowKey.values()].map(group => {
       const display = {};
       rowDescriptors.forEach(d => { display[d.key] = group.rowValues[d.rowIndex]; });
-      valueDescriptors.forEach(d => { const results = group.byCol.get(d.colKey) || {}; display[d.key] = results[d.valueKey]; });
+      valueDescriptors.forEach(d => { const results = group.byCol.get(d.colKey) || {}; display[d.key] = results[d.valueKey]; if (d.calc) display[`${d.key}#err`] = results[`${d.valueKey}#err`] || null; });
       return { ...group, display };
     });
     return { pivot, colKeys: displayColKeys, rowDescriptors, valueDescriptors, descriptors, leaves };
@@ -2234,7 +2300,7 @@
   function oabPivotRowFromAggregate(path, level, base, aggregateByCol, options = {}) {
     const out = {};
     base.rowDescriptors.forEach(d => { out[d.key] = d.rowIndex === level ? (path[d.rowIndex] ?? '') : ''; });
-    base.valueDescriptors.forEach(d => { const results = aggregateByCol.get(d.colKey) || {}; out[d.key] = results[d.valueKey]; });
+    base.valueDescriptors.forEach(d => { const results = aggregateByCol.get(d.colKey) || {}; out[d.key] = results[d.valueKey]; if (d.calc) out[`${d.key}#err`] = results[`${d.valueKey}#err`] || null; });
     out.__oabKind = options.kind || 'group';
     out.__oabLevel = level;
     out.__oabPathKey = options.pathKey || '';
@@ -2248,7 +2314,7 @@
   }
 
   function oabBuildPivotViewModelUncached(rows, options = {}) {
-    const config = S.pivotConfig || defaultPivotConfigClient();
+    const config = oabPivotConfigWithCalculated(S.pivotConfig || defaultPivotConfigClient());
     const base = oabBuildPivotBase(rows, config);
     if (!base.pivot.cells.length) return { ...base, displayRows: [], groupPathKeys: [], grouped: false };
 
@@ -2336,7 +2402,8 @@
     // Seed before hashing: otherwise the collapsed first render was cached
     // under the expanded key, and Expand All could return that stale model.
     if(config.grouped!==false&&config.rows?.length)oabSeedDefaultCollapsedGroups(rows,config);
-    const cacheKey=global.BLAnalysisCache?.key?global.BLAnalysisCache.key({data:oabDataRevision,rows:oabRowsKey(rows),config:S.pivotConfig,filters:S.pivotFilters,sort:S.pivotSort,collapsed:[...S.collapsedGroups].sort(),options}):`${oabDataRevision}|${oabRowsKey(rows)}|${JSON.stringify({config:S.pivotConfig,filters:S.pivotFilters,sort:S.pivotSort,collapsed:[...S.collapsedGroups].sort(),options})}`;
+    const calc=oabCalcDefs().length?{defs:oabCalcDefs(),engine:Boolean(global.BLFormulaEngine),lang:oabT('tr','en')}:null;
+    const cacheKey=global.BLAnalysisCache?.key?global.BLAnalysisCache.key({data:oabDataRevision,rows:oabRowsKey(rows),config:S.pivotConfig,filters:S.pivotFilters,sort:S.pivotSort,collapsed:[...S.collapsedGroups].sort(),options,calc}):`${oabDataRevision}|${oabRowsKey(rows)}|${JSON.stringify({config:S.pivotConfig,filters:S.pivotFilters,sort:S.pivotSort,collapsed:[...S.collapsedGroups].sort(),options,calc})}`;
     const cached=oabPivotViewCache.get(cacheKey);if(cached)return cached;
     const model=oabBuildPivotViewModelUncached(rows,options);oabPivotViewCache.set(cacheKey,model);return model;
   }
@@ -2360,6 +2427,7 @@
   }
 
   function oabPivotCellHtml(row, descriptor) {
+    if (descriptor.calc && oabPCV()) return oabCalcCellHtml(row, descriptor);
     const value = row[descriptor.key];
     if (!descriptor.numeric && row.__oabHasChildren && descriptor.rowIndex === row.__oabLevel) {
       const collapsed = Boolean(row.__oabCollapsed);
@@ -2635,7 +2703,10 @@
     if (!sourceRows.length) { oabToast(oabT('Bu pivot hücresi için alt detay bulunamadı.', 'No drill-down detail was found for this pivot cell.')); return; }
     const metricLabel = descriptor && descriptor.sourceField ? descriptor.sourceField : (descriptor && descriptor.label) || oabT('Pivot Detayı', 'Pivot Detail');
     const clickedValue = row ? row[descriptor.key] : null;
-    const valueText = oabPivotPlainValue(clickedValue, descriptor && descriptor.label);
+    const calcError = descriptor && descriptor.calc && row ? row[`${descriptor.key}#err`] : null;
+    const valueText = descriptor && descriptor.calc && oabPCV()
+      ? (calcError ? `— (${oabPCV().errorText(calcError)})` : (clickedValue == null ? '—' : oabPCV().format(clickedValue, descriptor.calc)))
+      : oabPivotPlainValue(clickedValue, descriptor && descriptor.label);
     const context = oabDrillContextText(row, descriptor, model);
     const summaryFields = oabDrillSummaryFields(sourceRows, descriptor, model);
     const allFields = oabDrillOrderedFields(OABDataUtils.deriveFieldList(sourceRows), descriptor && descriptor.sourceField);
@@ -2970,7 +3041,8 @@
         td.dataset.oabDrillRow = String(rowIndex);
         td.dataset.oabDrillCol = String(colIndex);
         td.classList.add('oabPivotDrillCell');
-        td.title = oabT('Alt detayı görmek için çift tıklayın', 'Double-click to see drill-down details');
+        // Hesaplanan değer hücresi kendi ipucunu (mod / hata sebebi) taşır.
+        if (!td.title) td.title = oabT('Alt detayı görmek için çift tıklayın', 'Double-click to see drill-down details');
         td.addEventListener('dblclick', event => {
           if (event.target && event.target.closest && event.target.closest('[data-oab-group-key]')) return;
           event.preventDefault(); event.stopPropagation();
@@ -3083,7 +3155,9 @@
   function oabPivotExportMatrix(rows) {
     const model = oabBuildPivotViewModel(rows, { respectCollapse: false });
     const descriptors = oabVisibleColumns('pivot', model.descriptors);
-    const headers = descriptors.map(d => d.label);
+    // Hesaplanan değer başlığı alan/değer başlığıyla çakışırsa "(ƒx)" alır.
+    const takenHeaders = new Set(descriptors.filter(d => !d.calc).map(d => d.label));
+    const headers = descriptors.map(d => (d.calc && oabPCV() ? oabPCV().uniqueHeader(takenHeaders, d.label) : d.label));
     const dataRows = model.displayRows.map(row => descriptors.map(d => oabExcelPreserveBlank(row[d.key])));
     const rowMeta = model.displayRows.map(row => ({ subtotal: Boolean(row.__oabSubtotal), grand: Boolean(row.__oabGrandTotal), level: row.__oabLevel || 0 }));
     return { model, descriptors, headers, dataRows, rowMeta };
@@ -3262,6 +3336,7 @@
           </div>
           <div class="oabPivotConfigList" id="oabPivotValuesList">${(config.values || []).map((v, i) => oabPivotValueRowHtml(v, i, valueFields)).join('')}</div>
         </div>
+        ${oabPCV() ? oabPCV().sectionHtml() : ''}
 
         <p class="oabSettingsHint">${oabEsc(oabT(
           S.rows.length
@@ -3287,6 +3362,33 @@
     const rowList = modal.querySelector('#oabPivotRowsList');
     const colList = modal.querySelector('#oabPivotColsList');
     const valueList = modal.querySelector('#oabPivotValuesList');
+    /* Hesaplanan değerler: toplam modunda pencerede SEÇİLİ değer alanları
+       (alan::özetleme), satır modunda OAB satırının sayısal alanları. */
+    const draftValueFields = () => [...valueList.querySelectorAll('.oabPivotValueRow')].map(row => ({ field: row.querySelector('.oabPivotValueField')?.value, agg: row.querySelector('.oabPivotValueAgg')?.value }))
+      .filter(value => value.field && value.agg !== 'FIRST' && value.agg !== 'CALC').map(value => ({ key: oabValueResultKey(value), label: `${value.field} (${value.agg})` }));
+    const rowValueFields = () => (S.fields || []).filter(field => !OABDataUtils.isLikelyCodeField(field) && OABDataUtils.isNumericField(S.rows, field)).map(field => ({ key: field, label: field }));
+    modal._pcvSection = oabPCV() ? oabPCV().mountSection(modal.querySelector('[data-pcv-section]'), {
+      defs: oabCalcDefs(),
+      allowRow: true,
+      widget: { tr: 'OAB', en: 'OAB' },
+      isTextKey: oabCalcTextKey,
+      // OAB alan adları ve özetlemeli değer başlıkları ayrılmıştır.
+      reserved: () => [...(S.fields || []), ...[...valueList.querySelectorAll('.oabPivotValueRow')].map(row => oabValueResultKey({ field: row.querySelector('.oabPivotValueField')?.value, agg: row.querySelector('.oabPivotValueAgg')?.value }))],
+      fields: mode => (mode === 'row' ? rowValueFields() : draftValueFields()),
+      samples: mode => {
+        if (!S.rows.length) return [];
+        if (mode === 'row') return S.rows.slice(0, 6).map(row => ({ label: [row['Option Adı'], row['Renk Kodu']].filter(Boolean).join(' · ') || oabT('Kaynak satır', 'Source row'), values: row })); // i18n-ignore: OAB kaynak alan adları
+        const model = oabBuildPivotViewModel(oabFilteredRows(), { respectCollapse: true });
+        const colKey = (model.colKeys || [''])[0];
+        const items = (model.displayRows || []).filter(row => !row.__oabHasChildren || row.__oabSubtotal);
+        return [...items.slice(0, 5), ...items.slice(-1)].filter((item, index, list) => list.indexOf(item) === index).map(item => {
+          const values = {};
+          (model.valueDescriptors || []).filter(d => d.colKey === colKey && !d.calc).forEach(d => { values[d.valueKey] = item[d.key]; });
+          const label = item.__oabGrandTotal ? oabT('Genel Toplam', 'Grand Total') : (item.__oabPath || []).map(value => value === '' || value == null ? oabT('(boş)', '(blank)') : value).join(' › ');
+          return { label, values, rows: item.__oabSourceRows || [] };
+        });
+      },
+    }) : null;
 
     const refreshOrderButtons = () => {
       oabRefreshConfigOrderButtons(rowList);
@@ -3433,6 +3535,10 @@
     const grouped = Boolean(modal.querySelector('#oabGroupedViewInput')?.checked);
     const showSubtotals = Boolean(modal.querySelector('#oabShowSubtotalsInput')?.checked);
     const pivotConfig = { rows, columns, values, localFilters: {}, calculatedFields: (S.pivotConfig && S.pivotConfig.calculatedFields) || [], grouped, showSubtotals };
+    /* Kişisel hesaplanan değerler önce yerel depoya yazılır: ortak pivot
+       ayarını kaydetme yetkisi (OAB.MANAGE) olmayan kullanıcı da kendi
+       değerlerini kaybetmez. */
+    if (modal._pcvSection) { oabSaveCalculated(modal._pcvSection.value()); if (S.rows.length) oabRenderTable(); }
     try {
       const data = await OABApi.saveSettings({ ttlMinutes, pivotConfig });
       S.settings = data.settings; S.pivotConfig = data.settings.pivotConfig; S.collapsedGroups.clear();

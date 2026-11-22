@@ -49,7 +49,32 @@ function prepare({ fields, viewConfig, horizon }) {
   return { built, config, columns, calculated, query };
 }
 
-function createWorkbook({ connection, plan, rows, language = 'tr' }) {
+/* Hesaplanan değerler (public/pivot-calculated-values.js) istemcide, ekrandaki
+   pivotla aynı motorla hesaplanır ve DEĞER olarak gelir. Canlı OLAP pivotu
+   Buyer Log formül dilini bilemez; bu yüzden ayrı bir değer sayfası yazılır.
+   Girdi kullanıcının kendi isteğidir ama yine de sınırlanır: en fazla 5000
+   satır × 80 sütun, metin hücresi 200 karakter, sayı hücresi sonlu sayı. */
+const CALCULATED_SHEET_LIMITS = Object.freeze({ rows: 5000, columns: 80, text: 200 });
+function normalizeCalculatedSheet(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const headers = (Array.isArray(raw.headers) ? raw.headers : []).slice(0, CALCULATED_SHEET_LIMITS.columns)
+    .map(value => String(value == null ? '' : value).slice(0, CALCULATED_SHEET_LIMITS.text));
+  if (!headers.length) return null;
+  const numeric = new Set((Array.isArray(raw.numeric) ? raw.numeric : []).map(Number).filter(Number.isInteger));
+  const rows = (Array.isArray(raw.rows) ? raw.rows : []).slice(0, CALCULATED_SHEET_LIMITS.rows).map(row => headers.map((_, index) => {
+    const value = Array.isArray(row) ? row[index] : null;
+    if (value == null || value === '') return null;
+    if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+    // Sayı sütununa metin yazılmaz (yanlış/karışık hücre); boyut sütunu metindir.
+    if (numeric.has(index)) return null;
+    return typeof value === 'string' ? value.slice(0, CALCULATED_SHEET_LIMITS.text) : null;
+  }));
+  // İstemci 7 MB yük sınırında kırptıysa sayfa bunu açıkça yazar.
+  const total = Number.isInteger(raw.total) && raw.total > rows.length ? raw.total : rows.length;
+  return { headers, rows, numeric: [...numeric], truncated: raw.truncated === true && total > rows.length, total };
+}
+
+function createWorkbook({ connection, plan, rows, language = 'tr', calculatedSheet = null }) {
   const { config, columns, calculated } = plan;
   const en = language === 'en';
   const sourceData = rows.map(row => columns.map(field => {
@@ -80,6 +105,17 @@ function createWorkbook({ connection, plan, rows, language = 'tr' }) {
   ];
   const infoSheet = XLSX.utils.aoa_to_sheet(info);infoSheet['!cols'] = [{ wch: 125 }];
   XLSX.utils.book_append_sheet(wb, infoSheet, en ? 'Refresh Help' : 'Yenileme Bilgisi');
+  /* Pivot sheet1 olarak kalır (pivot tablo ilişkisi sheet1'e bağlıdır);
+     hesaplanan değerler en sona, düz değer sayfası olarak eklenir. */
+  const calc = calculatedSheet && Array.isArray(calculatedSheet.headers) && calculatedSheet.headers.length ? calculatedSheet : null;
+  if (calc) {
+    const note = calc.truncated
+      ? [[en ? `Showing ${calc.rows.length.toLocaleString('en-GB')} of ${calc.total.toLocaleString('en-GB')} rows; narrow the filters for the rest.` : `${calc.total.toLocaleString('tr-TR')} satırın ${calc.rows.length.toLocaleString('tr-TR')} tanesi gösteriliyor; kalanı için filtreleri daraltın.`]]
+      : [];
+    const sheet = XLSX.utils.aoa_to_sheet([calc.headers, ...calc.rows, ...note]);
+    sheet['!cols'] = calc.headers.map(() => ({ wch: 23 }));
+    XLSX.utils.book_append_sheet(wb, sheet, en ? 'Calculated values' : 'Hesaplanan değerler');
+  }
   const archive = XLSX.CFB.read(XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }), { type: 'buffer' });
   const get = name => Buffer.from(XLSX.CFB.find(archive, '/' + name).content).toString('utf8');
   const put = (name, value) => XLSX.CFB.utils.cfb_add(archive, '/' + name, Buffer.from(value));
@@ -127,4 +163,4 @@ function createWorkbook({ connection, plan, rows, language = 'tr' }) {
   return XLSX.CFB.write(archive, { type: 'buffer', fileType: 'zip', compression: true });
 }
 
-module.exports = { prepare, createWorkbook };
+module.exports = { prepare, createWorkbook, normalizeCalculatedSheet, CALCULATED_SHEET_LIMITS };
