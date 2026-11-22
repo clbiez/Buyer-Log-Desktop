@@ -798,16 +798,23 @@
     note.className = 'intakeConfigEmpty oabCubeDistinctNote';
     note.hidden = true;
     list.after(note);
+    /* Kesilme durumu aramaya göre tutulur: dar bir arama tam dönse bile arama
+       silinince ilk (kesik) listenin uyarısı geri gelir. */
+    const truncation = new Map();
+    const showNote = needle => {
+      const info = truncation.get(needle);
+      note.hidden = !(info && info.truncated);
+      note.textContent = note.hidden ? '' : text(`İlk ${info.limit.toLocaleString(locale())} değer gösteriliyor; aramayı daraltın.`, `Showing the first ${info.limit.toLocaleString(locale())} values; narrow the search.`);
+    };
     const fetchValues = needle => {
       const seq = ++requestSeq;
       return requestJson('/api/oab-cube/distinct', jsonBody('POST', { key, source: ref.source || '', search: needle, limit: 1000 }))
         .then(result => {
           if (state.popover !== popover) return;
           values = [...new Set([...values, ...(Array.isArray(result.values) ? result.values : []), ...local, ...selected])];
+          truncation.set(needle, { truncated: Boolean(result.truncated), limit: Number(result.limit) || 1000 });
           if (seq !== requestSeq) return;
-          const limit = Number(result.limit) || 1000;
-          note.hidden = !result.truncated;
-          note.textContent = result.truncated ? text(`İlk ${limit.toLocaleString(locale())} değer gösteriliyor; aramayı daraltın.`, `Showing the first ${limit.toLocaleString(locale())} values; narrow the search.`) : '';
+          showNote(needle);
           draw(); placePopover(popover, button, false);
         })
         .catch(error => {
@@ -820,6 +827,7 @@
       clearTimeout(searchTimer);
       const needle = clean(search.value);
       if (needle) searchTimer = setTimeout(() => void fetchValues(needle), 300);
+      else { requestSeq += 1; showNote(''); }
     });
     void fetchValues('');
   }

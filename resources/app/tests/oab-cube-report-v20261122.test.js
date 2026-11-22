@@ -338,6 +338,11 @@ test('istemci: pivot toplamları OABPivotEngine ile, görünür olunca yüklenir
   assert.match(js, /search: needle, limit: 1000/);
   assert.match(js, /if \(seq !== requestSeq\) return;/);
   assert.match(js, /`İlk \$\{[^}]+\} değer gösteriliyor; aramayı daraltın\.`, `Showing the first \$\{[^}]+\} values; narrow the search\.`/);
+  // Kesilme uyarısı aramaya göre tutulur: dar arama tam dönse bile arama
+  // silinince ilk (kesik) listenin uyarısı geri gelir; bekleyen arama yanıtı
+  // boş aramanın üzerine yazmaz.
+  assert.match(js, /truncation\.set\(needle, \{ truncated: Boolean\(result\.truncated\)/);
+  assert.match(js, /else \{ requestSeq \+= 1; showNote\(''\); \}/);
   assert.match(js, /hasValue\(ref\.key\) \? pivot\.verifyTotal/);
   assert.match(js, /book_append_sheet/);
   const main = read('public/app-main.js');
