@@ -467,7 +467,7 @@
       q('[data-ta-apply]')?.addEventListener('click', () => {
         const suggestions = new Map(TA().suggestRules(summary, view).map(s => [s.vehicle + '|' + s.countryKey, s]));
         const chosen = summary.rows.filter(r => selected.get(rowId(r))).map(r => suggestions.get(rowId(r))).filter(Boolean);
-        const result = TA().applySuggestions(ctx.getRules(), chosen);
+        const result = TA().applySuggestions(ctx.getRules(), chosen, view.metric);
         ctx.applyRules(result.rules);
         toast(L(`${result.added} kural eklendi, ${result.updated} güncellendi${result.unchanged ? `, ${result.unchanged} aynı` : ''}. Kalıcı olması için "Kuralları Kaydet".`,
           `${result.added} rule(s) added, ${result.updated} updated${result.unchanged ? `, ${result.unchanged} unchanged` : ''}. Use "Save Rules" to keep them.`));

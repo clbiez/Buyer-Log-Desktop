@@ -34,7 +34,7 @@ async function start(options = {}) {
     for (let i = 0; i < 240; i++) { const status = await (await api('/api/refresh-status')).json(); if (!status.running) { assert.equal(status.error, null); refreshed = true; break; } await delay(250); }
     assert.ok(refreshed, 'Synthetic refresh did not finish');
     browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', args: ['--no-sandbox'] });
-    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce', deviceScaleFactor: Number(options.deviceScaleFactor) > 0 ? Number(options.deviceScaleFactor) : 1 });
     const split = cookie.indexOf('='); await context.addCookies([{ name: cookie.slice(0, split), value: cookie.slice(split + 1), url: base, httpOnly: true }]);
     await context.addInitScript(() => { localStorage.setItem('bl.user.moderator.lcw.lang.v1', 'tr'); localStorage.setItem('bl.user.moderator.lcw_theme', 'light'); for (const key of ['bl.releaseNotes.lastSeenStable.v1', 'bl.user.moderator.bl.releaseNotes.lastSeenStable.v1']) localStorage.setItem(key, '99.0.0'); });
     if (options.initScript) await context.addInitScript(options.initScript, options.initArg);

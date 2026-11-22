@@ -285,6 +285,11 @@
     const weeksToLoad = daysToLoad == null ? null : Math.floor(daysToLoad / 7);
 
     /* Yol süresi: KANONİK kural motorundan. Kural yoksa gün sayısı üretme. */
+    // Sevk edilmiş satırda gün Handover'a eklenir; kural başka bir taştan
+    // sayılıyorsa (Uçtan Uca → Yükleme Talep) gün sunucunun taşıdığı baz
+    // tarihleriyle düzeltilir.
+    const handoverValue = row && row[F.handover];
+    const basisDates = row && row._ruleBasisDates && typeof row._ruleBasisDates === 'object' ? row._ruleBasisDates : null;
     const transitInfo = BR.resolveTransitDays ? BR.resolveTransitDays({
       delType: row && row[F.delType],
       exFactory: row && row[F.exFactory],
@@ -292,6 +297,8 @@
       country: row && row[F.country],
       status,
       rules: context.transitRules,
+      anchor: handoverValue && basisDates ? 'handover' : null,
+      milestones: handoverValue && basisDates ? { handover: handoverValue, loadingRequest: basisDates.loadingRequest, actualLoading: basisDates.actualLoading } : null,
       // Readiness hem üretim hem de yükleme/transit sonrası aşamaları analiz eder.
       // Merkezi resolver'ın legacy production-only guard'ını global olarak
       // değiştirmeden, bu çağrı noktasında tanımlı Transfer Lead Time Rule'u
@@ -400,7 +407,7 @@
       orderDate, orderAgeDays,
       plannedLoadDate: exFactory, daysToLoad, weeksToLoad, loadWindow,
       retailDate, inStoreDate,
-      // Aşama modeli: σ cinsinden en büyük açık aşama gecikmesi ve statik ETA'ya göre ±gün.
+      // Aşama modeli: σ cinsinden en büyük açık aşama gecikmesi ve planlanan ETA'ya göre ±gün.
       stageDelaySigma: numOrNull(row && row[F.stageMaxSigma]),
       stageVsRuleDays: numOrNull(row && row[F.stageVsRule]),
       transitDays, transitRuleDefined: Boolean(transitRule), transitRuleMissing: Boolean(delivery && delivery.transitRuleMissing),

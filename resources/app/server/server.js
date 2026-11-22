@@ -375,7 +375,7 @@ const corporateIntegrationLab = require('./lib/corporate-integration-lab');
 const modelFields = require('./lib/model-fields');
 const plmFabricInfo = require('./lib/plm-fabric-info');
 const filterValueTypes = require('./lib/filter-value-types');
-const { loadFromModelConnections, ensureConnectionMapping, alignHorizonWithMapping, validateAntrepoIntegrity, resolveColumnTypes, effectiveScopes, buildConnectionQuery, isRelatedLookupError } = require('./lib/model-refresh');
+const { loadFromModelConnections, ensureConnectionMapping, alignHorizonWithMapping, validateAntrepoIntegrity, resolveColumnTypes, effectiveScopes, buildConnectionQuery, isRelatedLookupError, applyRunMappingRepairs } = require('./lib/model-refresh');
 const refreshErrorDiagnostics = require('./lib/refresh-error-diagnostics');
 const {
   POWER_BI_IMPORT_DASHBOARD_URL, PowerBiImportDashboardConnector,
@@ -8054,6 +8054,11 @@ async function loadFromModels(value, targets = null, options = {}) {
   // Refresh sırasında eski/bozuk eşlemeler model şemasından otomatik onarıldıysa
   // aynı düzeltmeyi kalıcı bağlantı ayarına da yaz.
   if (result.mappingRepairs > 0) {
+    /* Yenileme bağlantıların KLONLARIYLA çalışır (kişisel ufuk uygulanmış kopya,
+       kapsam başına sığ kopya). Onarılan eşleme ve tarama işaretleri kalıcı
+       kayda kimlikle geri yazılır; aksi halde kaydedilen store.items değişmemiş
+       olur ve tarama her yenilemede tekrarlanır. */
+    applyRunMappingRepairs(store.items, result.runs || []);
     try { replaceModelConnections(store.items, store.revision); }
     catch (err) { result.warnings = [...(result.warnings || []), `Otomatik eşleme onarımı çalıştı ancak ayarlara kaydedilemedi: ${err.message}`]; }
   }

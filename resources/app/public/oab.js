@@ -834,9 +834,39 @@
     const choiceMarkup = choices.length
       ? choices.map(field => `<button type="button" role="menuitem" data-oab-add-field="${oabEsc(field)}">${oabEsc(field)}</button>`).join('')
       : `<div class="oabLocalFilterAddEmpty" role="status">${oabEsc(oabT('Eklenebilecek filtre alanı yok.', 'No additional filter fields available.'))}</div>`;
-    popover.innerHTML = `<div class="oabLocalFilterAddTitle">${oabEsc(oabT('Filtre alanı ekle', 'Add filter field'))}</div>${choiceMarkup}`;
+    /* Uzun alan listesi (80+ OAB alanı) arama kutusuyla süzülür; Enter ilk eşleşmeyi ekler. */
+    const searchMarkup = choices.length
+      ? `<input type="search" class="oabMultiSearch oabLocalFilterAddSearch" placeholder="${oabEsc(oabT('Alan ara…', 'Search fields…'))}" aria-label="${oabEsc(oabT('Filtre alanı ara', 'Search filter fields'))}" autocomplete="off"><div class="oabLocalFilterAddEmpty" data-oab-add-noresult hidden role="status">${oabEsc(oabT('Sonuç yok', 'No results'))}</div>`
+      : '';
+    popover.innerHTML = `<div class="oabLocalFilterAddTitle">${oabEsc(oabT('Filtre alanı ekle', 'Add filter field'))}</div>${searchMarkup}${choiceMarkup}`;
     document.body.appendChild(popover);
     oabPositionDropdown(popover, trigger);
+    const search = popover.querySelector('.oabLocalFilterAddSearch');
+    const visibleChoices = () => [...popover.querySelectorAll('[data-oab-add-field]')].filter(button => !button.hidden);
+    if (search) {
+      search.addEventListener('input', () => {
+        const needle = search.value.trim().toLocaleLowerCase('tr');
+        popover.querySelectorAll('[data-oab-add-field]').forEach(button => { button.hidden = Boolean(needle) && !button.dataset.oabAddField.toLocaleLowerCase('tr').includes(needle); });
+        popover.querySelector('[data-oab-add-noresult]').hidden = visibleChoices().length > 0;
+      });
+      search.addEventListener('keydown', event => {
+        if (event.key === 'ArrowDown') { event.preventDefault(); visibleChoices()[0]?.focus(); return; }
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        visibleChoices()[0]?.click();
+      });
+      setTimeout(() => search.focus(), 0);
+    }
+    popover.addEventListener('keydown', event => {
+      if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); oabCloseLocalFilterFieldPopover(); trigger.focus?.(); return; }
+      // Arama kutusu ↓'yi zaten işledi (ilk sonuca odak); ikinci kez ilerletme.
+      if (event.defaultPrevented || (event.key !== 'ArrowDown' && event.key !== 'ArrowUp')) return;
+      const list = visibleChoices(), index = list.indexOf(document.activeElement);
+      if (index < 0) return;
+      event.preventDefault();
+      if (event.key === 'ArrowUp' && index === 0) { search?.focus(); return; }
+      list[Math.max(0, Math.min(list.length - 1, index + (event.key === 'ArrowDown' ? 1 : -1)))].focus();
+    });
     popover.addEventListener('click', event => {
       const button = event.target.closest('[data-oab-add-field]');
       if (!button) return;

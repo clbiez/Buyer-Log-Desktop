@@ -115,8 +115,10 @@ test('paylaşılan run snapshot\'ta tek kopya yazılır ve eski çok kopyalı sn
     const shared = snapshot.saveModelSnapshot('shared', payload);
     const old = snapshot.saveModelSnapshot('legacy', legacy);
     assert.equal(shared.aliasCount, 7, '4 ASAS + 3 IAS hedefi takma ad olarak yazılır');
-    assert.equal(old.aliasCount, 2, 'eski yol yalnız cp takma adını yakalıyordu');
-    assert.ok(shared.uncompressedBytes < old.uncompressedBytes * 0.5, `${shared.uncompressedBytes} < ${old.uncompressedBytes}/2`);
+    // İçerikçe eşit ayrı nesneler de (eski snapshot'tan yükle→yeniden kaydet)
+    // takma ad olur; eskiden yalnız cp yakalanıyordu (aliasCount 2).
+    assert.equal(old.aliasCount, 7, 'eski çok kopyalı payload da tek kopya yazılır');
+    assert.equal(old.uncompressedBytes, shared.uncompressedBytes, 'aynı içerik aynı boyut');
     const a = snapshot.loadModelSnapshot('shared'), b = snapshot.loadModelSnapshot('legacy');
     for (const t of ASAS_TARGETS) assert.equal(JSON.stringify(a.asasOrdersByTarget[t]), JSON.stringify(b.asasOrdersByTarget[t]), t);
     for (const t of ['cp', 'orders', 'backlog']) assert.equal(JSON.stringify(a.antrepoMapByTarget[t]), JSON.stringify(b.antrepoMapByTarget[t]), `IAS ${t}`);

@@ -32,23 +32,46 @@
    *  2) Grup toplamlarında oran, satır oranlarının ortalaması değil, tutarların
    *     toplamından yeniden hesaplanır (pivot hesaplanan alanıyla aynı).
    *
-   * "Landed hatalı" eşiği public/postfob-analysis.js aykırı mantığıyla aynı
-   * yöntemi kullanır (Landed/FOB satır oranı, aynı çeyreklik hesabı, en az 8
-   * örnek), ancak İÇ çit (1,5×IQR, "aykırı") yerine Tukey'in DIŞ çitini
-   * (3×IQR, "çok uzak") kullanır: aykırı satır yalnız işaretlenir, hatalı satır
-   * ise hesaptan çıkarılır; veriyi hesaptan atmak daha güçlü kanıt ister.
-   * Buna ek olarak landed < FOB fiziksel olarak mümkün değildir (landed = FOB +
-   * navlun + gümrük + ek maliyet); örnek küçük olsa da hatalı sayılır.
+   * YD satırının durumu (ürün kararı, 2026-11-22):
+   *  - Landed hatalı: landed < FOB. Fiziksel olarak mümkün değildir (landed =
+   *    FOB + navlun + gümrük + ek maliyet); hesaptan çıkar.
+   *  - Landed çarpanı yüksek: Landed/FOB, Buyer Log'un ortak standart yurtdışı
+   *    landed çarpanının (/api/landed-multipliers → overseas, varsayılan 1,11)
+   *    üstünde. Çarpan yükleme tipine göre değişir (gemi < gemi+uçak < uçak);
+   *    bu bir hata DEĞİLDİR, gerçek maliyettir: hesapta KALIR, yalnız uyarıdır.
+   *  - Landed yok: landed boş veya 0; hesaptan çıkar.
+   * Önceki istatistiksel çit (Q3 ± 3×IQR) uçak gibi gerçek maliyetleri hatalı
+   * sayıp hesaptan attığı ve avantajı şişirdiği için kaldırıldı.
    */
 
   const DEFAULT_TARGET = 0.36;
-  const MIN_SAMPLE = 8;
-  const INVALID_FENCE = 3;
+  const DEFAULT_STANDARD_MULTIPLIER = 1.11;
   const MIN_LANDED_TO_FOB = 1;
   const LANDED_SOURCES = Object.freeze(['actual', 'forecast']);
-  const FILTER_KEYS = Object.freeze(['season', 'buyerGroup', 'classification', 'mag']);
-  const LEVELS = Object.freeze(['buyerGroup', 'classification', 'mag', 'model']);
-  const STATUS = Object.freeze({ ok: 'ok', noLanded: 'noLanded', invalid: 'invalidLanded' });
+  /* Görünüm v2 (kalemle pivot düzenleme):
+     - Satır ekseni model düzeyinde anlamlı alanlardan seçilir; Model her zaman
+       en alt kırılımdır. Kıyas birimi modeldir (TR FOB modelin TR satırlarından
+       ağırlıklanır ve aynı modelin YD adediyle çarpılır); modelin altında oran
+       üretilebilecek bir düzey yoktur ve model gizlenirse hedef altı satırın
+       kaynağı görünmez.
+     - Filtre: FOB Sonrası sorgusunun boyutları. Üretici ülke ve sipariş kodu
+       YASAK: ikisi de kıyasın bir tarafını (TR veya YD) siler.
+     - Değerler {key} referans dizisidir; ileride hesaplanan değer gibi yeni
+       referans türleri aynı diziye eklenebilir. */
+  const ROW_FIELDS = Object.freeze(['buyerGroup', 'classification', 'mag', 'season', 'productName']);
+  const DEFAULT_ROWS = Object.freeze(['buyerGroup', 'classification', 'mag']);
+  const LEVELS = Object.freeze([...ROW_FIELDS, 'model']);
+  const VALUE_KEYS = Object.freeze(['trFob', 'ydFob', 'ydLanded', 'advantage', 'target', 'gap', 'fobAdvantage', 'trQty', 'ydQty', 'coverage', 'status']);
+  const DEFAULT_VALUES = VALUE_KEYS;
+  const FILTER_KEYS = Object.freeze(['season', 'mag', 'buyerGroup', 'classification', 'productName', 'model', 'colour', 'salesCountry']);
+  const DEFAULT_FILTERS = Object.freeze(['season', 'mag', 'buyerGroup', 'classification']);
+  const BLOCKED_FILTER_KEYS = Object.freeze(['originCountry', 'order']);
+  const REQUIRED_FILTER = 'season';
+  const PREF_VERSION = 2;
+  const PREF_KEYS = Object.freeze(['version', 'rows', 'values', 'filters', 'filterValues', 'target', 'landedSource', 'belowTargetOnly', 'collapsedGroups', 'sort']);
+  const SORT_KEYS = Object.freeze(['label', 'trFob', 'ydFob', 'ydLanded', 'advantage', 'fobAdvantage', 'gap', 'trQty', 'ydQty', 'coverage']);
+  const MODEL_ATTRS = Object.freeze(['buyerGroup', 'classification', 'mag', 'season', 'productName']);
+  const STATUS = Object.freeze({ ok: 'ok', high: 'highMultiplier', noLanded: 'noLanded', invalid: 'invalidLanded' });
   const TR_TOKENS = new Set(['TURKIYE', 'TURKEY', 'TR', 'TURKIYE CUMHURIYETI']);
   const EXCLUDED_TOKENS = new Set(['FAS', 'MOROCCO', 'MAROC', 'FAS MOROCCO', 'MISIR', 'EGYPT', 'EGIPT', 'MISIR EGYPT']);
 
@@ -76,23 +99,15 @@
     return landed != null && landed > 0 && fob != null && fob > 0 && qtyOf(row) > 0 ? landed / fob : null;
   }
 
-  function quantile(sorted, p) {
-    if (!sorted.length) return null;
-    const index = (sorted.length - 1) * p, low = Math.floor(index), high = Math.ceil(index);
-    return sorted[low] + (sorted[high] - sorted[low]) * (index - low);
+  /* Standart YD landed çarpanı: geçerli bir sayı verilmediyse varsayılan. */
+  function standardOf(value) {
+    const n = num(typeof value === 'string' ? Number(value) : value);
+    return n != null && n > 0 && n <= 10 ? { value: n, fallback: false } : { value: DEFAULT_STANDARD_MULTIPLIER, fallback: true };
   }
 
-  /* Hatalı landed sınırı: YD satırlarının Landed/FOB oranlarından Tukey dış çiti. */
-  function landedBounds(rows, source) {
-    const ratios = (Array.isArray(rows) ? rows : []).filter(row => originClass(row) === 'yd')
-      .map(row => rowRatio(row, source)).filter(value => value != null).sort((a, b) => a - b);
-    if (ratios.length < MIN_SAMPLE) return { sample: ratios.length, floor: MIN_LANDED_TO_FOB, upper: null, lower: null, q1: null, q3: null };
-    const q1 = quantile(ratios, 0.25), q3 = quantile(ratios, 0.75), iqr = q3 - q1;
-    return { sample: ratios.length, floor: MIN_LANDED_TO_FOB, q1, q3, upper: q3 + INVALID_FENCE * iqr, lower: q1 - INVALID_FENCE * iqr };
-  }
-
-  /* YD satırının veri kalitesi: 'ok' | 'noLanded' | 'invalidLanded' (adet/FOB yoksa null). */
-  function rowStatus(row, bounds, source) {
+  /* YD satırının durumu: 'ok' | 'highMultiplier' | 'noLanded' | 'invalidLanded'
+     (adet/FOB yoksa null). standard: standart YD landed çarpanı (sayı). */
+  function rowStatus(row, standard, source) {
     if (!qtyOf(row)) return null;
     const fob = num(row && row.fob);
     if (fob == null || fob <= 0) return null;
@@ -102,12 +117,11 @@
     if (landed < 0) return STATUS.invalid;
     const ratio = landed / fob;
     if (ratio < MIN_LANDED_TO_FOB) return STATUS.invalid;
-    if (bounds && bounds.upper != null && (ratio > bounds.upper || ratio < bounds.lower)) return STATUS.invalid;
-    return STATUS.ok;
+    return ratio > standardOf(standard).value ? STATUS.high : STATUS.ok;
   }
 
   function emptyAmounts() {
-    return { fobTrAmount: 0, landedAmount: 0, fobYdAmount: 0, trQty: 0, ydQty: 0, ydQtyAll: 0, noLandedQty: 0, invalidQty: 0 };
+    return { fobTrAmount: 0, landedAmount: 0, fobYdAmount: 0, trQty: 0, ydQty: 0, ydQtyAll: 0, noLandedQty: 0, invalidQty: 0, highMultiplierQty: 0 };
   }
   function addAmounts(target, source) {
     for (const key of Object.keys(emptyAmounts())) target[key] += source[key] || 0;
@@ -128,20 +142,21 @@
     };
   }
 
+  const modeOf = slot => slot.map ? mode(slot.map) : slot.value;
   function mode(map) {
     let best = '', weight = -1;
     map.forEach((value, key) => { if (value > weight || (value === weight && key.localeCompare(best, 'tr') < 0)) { best = key; weight = value; } });
     return best;
   }
 
-  /* Model düzeyi kıyas. Model kırılım alanları (buyer grup, klasman, MAG) model
-     satırlarında adet ağırlıklı en sık değerden alınır (küpte modelin tek
-     değeri olması beklenir; çelişki varsa kararlı seçim). */
+  /* Model düzeyi kıyas. Model kırılım alanları (buyer grup, klasman, MAG, sezon,
+     ürün adı) model satırlarında adet ağırlıklı en sık değerden alınır (küpte
+     modelin tek değeri olması beklenir; çelişki varsa kararlı seçim). */
   function compareModels(rows, options = {}) {
     const source = sourceOf(options);
     const target = num(options.target) == null ? DEFAULT_TARGET : num(options.target);
     const list = Array.isArray(rows) ? rows : [];
-    const bounds = landedBounds(list, source);
+    const standard = standardOf(options.standardMultiplier);
     const byModel = new Map();
     const counts = { rows: list.length, tr: 0, yd: 0, excluded: 0, unknown: 0, noModel: 0 };
     for (const row of list) {
@@ -150,13 +165,18 @@
       if (origin !== 'tr' && origin !== 'yd') continue;
       const model = clean(row && row.model);
       if (!model) { counts.noModel += 1; continue; }
-      if (!byModel.has(model)) byModel.set(model, { model, tr: [], yd: [], attrs: { buyerGroup: new Map(), classification: new Map(), mag: new Map() } });
-      const entry = byModel.get(model);
+      let entry = byModel.get(model);
+      if (!entry) { entry = { model, tr: [], yd: [], attrs: MODEL_ATTRS.map(() => ({ value: '', weight: 0, map: null })) }; byModel.set(model, entry); }
       entry[origin].push(row);
       const weight = qtyOf(row) || 0.000001;
-      for (const key of ['buyerGroup', 'classification', 'mag']) {
-        const value = clean(row && row[key]);
-        if (value) entry.attrs[key].set(value, (entry.attrs[key].get(value) || 0) + weight);
+      // Sıcak yol: modelin alan değeri çoğunlukla tektir; Map yalnız ikinci farklı değerde açılır.
+      for (let index = 0; index < MODEL_ATTRS.length; index += 1) {
+        const value = clean(row[MODEL_ATTRS[index]]);
+        if (!value) continue;
+        const slot = entry.attrs[index];
+        if (!slot.map && (slot.value === '' || slot.value === value)) { slot.value = value; slot.weight += weight; continue; }
+        if (!slot.map) slot.map = new Map([[slot.value, slot.weight]]);
+        slot.map.set(value, (slot.map.get(value) || 0) + weight);
       }
     }
     const models = [];
@@ -174,41 +194,48 @@
       const trFob = trFobSum / trQty;
       const amounts = emptyAmounts();
       amounts.trQty = trQty;
-      const statusCount = { ok: 0, noLanded: 0, invalidLanded: 0 };
+      const statusCount = { ok: 0, highMultiplier: 0, noLanded: 0, invalidLanded: 0 };
+      let maxRatio = null;
       for (const row of ydActive) {
         const q = qtyOf(row);
-        const status = rowStatus(row, bounds, source);
+        const status = rowStatus(row, standard.value, source);
         statusCount[status] += 1;
         amounts.ydQtyAll += q;
         if (status === STATUS.noLanded) { amounts.noLandedQty += q; continue; }
         if (status === STATUS.invalid) { amounts.invalidQty += q; continue; }
+        // Yüksek çarpan gerçek maliyettir: hesapta kalır, ayrıca sayılır.
+        if (status === STATUS.high) amounts.highMultiplierQty += q;
+        const ratio = row[landedKey(source)] / row.fob;
+        if (maxRatio == null || ratio > maxRatio) maxRatio = ratio;
         amounts.ydQty += q;
         amounts.landedAmount += q * row[landedKey(source)];
         amounts.fobYdAmount += q * row.fob;
         amounts.fobTrAmount += trFob * q;
       }
-      const status = statusCount.invalidLanded ? STATUS.invalid : (statusCount.noLanded ? STATUS.noLanded : STATUS.ok);
+      const status = statusCount.invalidLanded ? STATUS.invalid : (statusCount.noLanded ? STATUS.noLanded : (statusCount.highMultiplier ? STATUS.high : STATUS.ok));
       models.push({
         model: entry.model,
-        buyerGroup: mode(entry.attrs.buyerGroup), classification: mode(entry.attrs.classification), mag: mode(entry.attrs.mag),
-        trFob, status, statusCount, amounts, ...ratios(amounts, target),
+        // entry.attrs MODEL_ATTRS sırasındadır.
+        buyerGroup: modeOf(entry.attrs[0]), classification: modeOf(entry.attrs[1]), mag: modeOf(entry.attrs[2]), season: modeOf(entry.attrs[3]), productName: modeOf(entry.attrs[4]),
+        trFob, status, statusCount, maxRatio, amounts, ...ratios(amounts, target),
         rows: [...entry.tr, ...entry.yd],
       });
     }
-    return { models, bounds, counts, skipped, target, landedSource: source };
+    return { models, standard, counts, skipped, target, landedSource: source };
   }
 
   function summarize(models, target) {
     const amounts = emptyAmounts();
-    let below = 0, invalid = 0, noLanded = 0, compared = 0;
+    let below = 0, invalid = 0, noLanded = 0, high = 0, compared = 0;
     for (const model of models) {
       addAmounts(amounts, model.amounts);
       if (model.amounts.ydQty > 0) compared += 1;
       if (model.advantage != null && model.advantage < target) below += 1;
       if (model.status === STATUS.invalid) invalid += 1;
       else if (model.status === STATUS.noLanded) noLanded += 1;
+      else if (model.status === STATUS.high) high += 1;
     }
-    return { amounts, ...ratios(amounts, target), models: models.length, compared, below, invalid, noLanded };
+    return { amounts, ...ratios(amounts, target), models: models.length, compared, below, invalid, noLanded, high };
   }
 
   const isBelowTarget = (model, target) => model.advantage != null && model.advantage < target;
@@ -224,7 +251,7 @@
     let visible = result.models;
     if (options.belowTargetOnly) visible = visible.filter(model => isBelowTarget(model, target));
     if (tokens.length) visible = visible.filter(model => {
-      const hay = fold([model.model, model.buyerGroup, model.classification, model.mag].join(' '));
+      const hay = fold([model.model, ...MODEL_ATTRS.map(key => model[key])].join(' '));
       return tokens.every(part => hay.includes(part));
     });
     return { ...result, visible, total: summarize(visible, target), scopeTotal: summarize(result.models, target) };
@@ -246,11 +273,13 @@
     return dir * (left - right);
   }
 
-  /* Hiyerarşi: Buyer grup › Ürün klasmanı › MAG › Model. Her grup düğümü kendi
-     modellerinin tutar toplamından oran üretir. */
+  /* Hiyerarşi: seçili satır alanları › Model (varsayılan Buyer grup › Ürün
+     klasmanı › MAG › Model). Her grup düğümü kendi modellerinin tutar
+     toplamından oran üretir; eksen sırası oranı değiştirmez. levels: [] düz
+     model listesidir. */
   function buildTree(models, options = {}) {
     const target = num(options.target) == null ? DEFAULT_TARGET : num(options.target);
-    const levels = Array.isArray(options.levels) && options.levels.length ? options.levels.filter(key => LEVELS.includes(key) && key !== 'model') : LEVELS.slice(0, 3);
+    const levels = Array.isArray(options.levels) ? [...new Set(options.levels.filter(key => ROW_FIELDS.includes(key)))] : DEFAULT_ROWS.slice();
     const sort = options.sort || { key: 'label', dir: 1 };
     const walk = (list, depth, path) => {
       if (depth >= levels.length) {
@@ -273,12 +302,33 @@
     return walk(Array.isArray(models) ? models : [], 0, []);
   }
 
-  /* Kullanıcı tercihi (lcw.postfob.tryd.v1): sunucu ve istemci aynı normalize'ı kullanır. */
+  /* Kullanıcı tercihi (lcw.postfob.tryd.v1): sunucu ve istemci aynı normalize'ı
+     kullanır. v1 kaydında eksen/değer/filtre listesi yoktur; varsayılanlar
+     (eski sabit görünüm) atanır, diğer alanlar aynen taşınır. Bilinmeyen üst
+     anahtar, alan ve referans düşer. */
+  function refKey(item) { return typeof item === 'string' ? clean(item) : (item && typeof item === 'object' ? clean(item.key) : ''); }
+  function refList(raw, allowed, fallback, max) {
+    if (!Array.isArray(raw)) return fallback.map(key => ({ key }));
+    const out = [], seen = new Set();
+    for (const item of raw) {
+      const key = refKey(item);
+      if (!allowed.includes(key) || seen.has(key)) continue;
+      seen.add(key); out.push({ key });
+      if (out.length >= max) break;
+    }
+    return out;
+  }
   function normalizePrefs(raw) {
     const source = raw && typeof raw === 'object' ? raw : {};
+    const rows = refList(source.rows, ROW_FIELDS, DEFAULT_ROWS, ROW_FIELDS.length);
+    let values = refList(source.values, VALUE_KEYS, DEFAULT_VALUES, VALUE_KEYS.length);
+    if (!values.length) values = DEFAULT_VALUES.map(key => ({ key }));
+    const filters = refList(source.filters, FILTER_KEYS, DEFAULT_FILTERS, FILTER_KEYS.length);
+    // Sezon, Veri Yönetimi ufku yoksa sorgu için zorunludur; alan hiç kaldırılamaz.
+    if (!filters.some(ref => ref.key === REQUIRED_FILTER)) filters.unshift({ key: REQUIRED_FILTER });
     const filterValues = {};
     const rawFilters = source.filterValues && typeof source.filterValues === 'object' ? source.filterValues : {};
-    for (const key of FILTER_KEYS) {
+    for (const { key } of filters) {
       const values = Array.isArray(rawFilters[key]) ? rawFilters[key] : [];
       const list = [...new Set(values.map(clean).filter(Boolean))].slice(0, 500);
       if (list.length) filterValues[key] = list;
@@ -286,20 +336,54 @@
     const rawTarget = Number(source.target);
     const target = source.target !== null && source.target !== '' && Number.isFinite(rawTarget) ? Math.max(-1, Math.min(1, Math.round(rawTarget * 10000) / 10000)) : DEFAULT_TARGET;
     const sort = source.sort && typeof source.sort === 'object' ? source.sort : {};
-    const sortKeys = ['label', 'trFob', 'ydFob', 'ydLanded', 'advantage', 'fobAdvantage', 'gap', 'trQty', 'ydQty', 'coverage'];
     return {
-      version: 1,
+      version: PREF_VERSION,
+      rows, values, filters,
       filterValues,
       target,
       landedSource: LANDED_SOURCES.includes(source.landedSource) ? source.landedSource : 'actual',
       belowTargetOnly: source.belowTargetOnly === true,
       collapsedGroups: Array.isArray(source.collapsedGroups) ? [...new Set(source.collapsedGroups.map(clean).filter(Boolean))].slice(0, 2000) : [],
-      sort: { key: sortKeys.includes(clean(sort.key)) ? clean(sort.key) : 'label', dir: Number(sort.dir) === -1 ? -1 : 1 },
+      sort: { key: SORT_KEYS.includes(clean(sort.key)) ? clean(sort.key) : 'label', dir: Number(sort.dir) === -1 ? -1 : 1 },
     };
   }
 
+  /* İstemciden gelen görünümün sıkı denetimi (PUT /tryd/view, POST /tryd/report).
+     normalizePrefs eski/senkronlanmış kayıtları yumuşak biçimde taşır; buradaki
+     denetim ise yeni yazımda bilinmeyen anahtarı, alanı ve yasak filtreyi açıkça
+     reddeder. Boş dizi = sorun yok. */
+  function validatePrefs(raw) {
+    const problems = [];
+    const add = (code, detail) => problems.push({ code, detail: String(detail) });
+    if (raw == null) return problems;
+    if (typeof raw !== 'object' || Array.isArray(raw)) { add('invalidShape', 'view'); return problems; }
+    for (const key of Object.keys(raw)) if (!PREF_KEYS.includes(key)) add('unknownKey', key);
+    const checkRefs = (name, allowed, code) => {
+      if (raw[name] === undefined) return;
+      if (!Array.isArray(raw[name])) { add('invalidShape', name); return; }
+      for (const item of raw[name]) {
+        if (item && typeof item === 'object' && Object.keys(item).some(field => field !== 'key')) { add('unknownRefField', `${name}:${refKey(item)}`); continue; }
+        const key = refKey(item);
+        if (name === 'filters' && BLOCKED_FILTER_KEYS.includes(key)) { add('blockedFilter', key); continue; }
+        if (!allowed.includes(key)) add(code, `${name}:${key}`);
+      }
+    };
+    checkRefs('rows', ROW_FIELDS, 'unknownRow');
+    checkRefs('values', VALUE_KEYS, 'unknownValue');
+    checkRefs('filters', FILTER_KEYS, 'unknownFilter');
+    if (raw.filterValues !== undefined) {
+      if (!raw.filterValues || typeof raw.filterValues !== 'object' || Array.isArray(raw.filterValues)) add('invalidShape', 'filterValues');
+      else for (const key of Object.keys(raw.filterValues)) {
+        if (BLOCKED_FILTER_KEYS.includes(key)) add('blockedFilter', key);
+        else if (!FILTER_KEYS.includes(key)) add('unknownFilter', key);
+      }
+    }
+    return problems;
+  }
+
   return Object.freeze({
-    DEFAULT_TARGET, MIN_SAMPLE, INVALID_FENCE, MIN_LANDED_TO_FOB, LANDED_SOURCES, FILTER_KEYS, LEVELS, STATUS,
-    originClass, rowRatio, landedBounds, rowStatus, compareModels, summarize, analyze, buildTree, normalizePrefs, isBelowTarget,
+    DEFAULT_TARGET, DEFAULT_STANDARD_MULTIPLIER, MIN_LANDED_TO_FOB, LANDED_SOURCES, FILTER_KEYS, LEVELS, STATUS,
+    ROW_FIELDS, DEFAULT_ROWS, VALUE_KEYS, DEFAULT_VALUES, DEFAULT_FILTERS, BLOCKED_FILTER_KEYS, REQUIRED_FILTER, PREF_VERSION, SORT_KEYS,
+    originClass, rowRatio, standardOf, rowStatus, compareModels, summarize, analyze, buildTree, normalizePrefs, validatePrefs, isBelowTarget,
   });
 });

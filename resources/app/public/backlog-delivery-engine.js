@@ -303,7 +303,7 @@
        ortalamaya göre ürünün ne kadar erken/geç geleceğini gösterir. */
     if (stageEta != null) {
       // Karşılaştırma ölçütü yalnız TANIMLI tek kural günüdür (Handover + gün);
-      // IAS tahmini veya varsayılan gün "statik ETA" sayılmaz.
+      // IAS tahmini veya varsayılan gün "planlanan ETA" sayılmaz.
       const ruleBase = actualLoadDate != null ? actualLoadDate : revisedLoadDate;
       ruleEta = transitRuleDefined && ruleBase != null && rawTransitDays != null ? ruleBase + rawTransitDays : null;
       eta = stageEta; etaSource = 'stage';
