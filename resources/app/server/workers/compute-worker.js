@@ -130,7 +130,7 @@ if(parentPort)parentPort.on('message',async message=>{
     const outputBytes=transfer.reduce((sum,buffer)=>sum+buffer.byteLength,0)+metadataBytes*4+1024;
     if(message.payload?.maxOutputBytes&&outputBytes>message.payload.maxOutputBytes)throw Object.assign(Error('Compute output estimate exceeded'),{code:'COMPUTE_ESTIMATE_EXCEEDED'});
     parentPort.postMessage({type:'result',id:message.id,ok:true,value,metrics:{threadId,executionMs:performance.now()-start,
-      retainedBytes:Math.max(sourceCache.stats().reservedBytes,memory.heapUsed+memory.arrayBuffers),outputBytes}},transfer);
+      retainedBytes:Math.max(sourceCache.stats().reservedBytes,memory.heapUsed+memory.arrayBuffers),outputBytes,heapUsedBytes:memory.heapUsed,cachedSources:sourceCache.keys()}},transfer);
   }catch(error){parentPort.postMessage({type:'result',id:message.id,ok:false,error:{code:error?.code||'COMPUTE_WORKER_FAILED'}});}
   finally{busy=false;}
 });
