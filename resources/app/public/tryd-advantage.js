@@ -323,9 +323,7 @@
       ? text(`${item.statusCount.ok} OK · ${item.statusCount.highMultiplier} yüksek çarpan · ${item.statusCount.noLanded} landed yok · ${item.statusCount.invalidLanded} hatalı satır` + (item.maxRatio != null ? ` · en yüksek Landed/FOB ${fmt(item.maxRatio, 2)} (${item.maxRatioVehicle || vehicleUnknownLabel()}, standart ${fmt(item.maxRatioStandard, 2)})` : ''),
         `${item.statusCount.ok} OK · ${item.statusCount.highMultiplier} high multiplier · ${item.statusCount.noLanded} no landed · ${item.statusCount.invalidLanded} invalid rows` + (item.maxRatio != null ? ` · highest landed/FOB ${fmt(item.maxRatio, 2)} (${item.maxRatioVehicle || vehicleUnknownLabel()}, standard ${fmt(item.maxRatioStandard, 2)})` : ''))
       : '';
-    // Model durum ipucu ortak hızlı ipucuyla (public/ui-tooltip.js, data-tip): başlık durum, açıklama satır sayıları + en yüksek oranlı satırın vasıtası ve standardı.
-    const tip = title ? ` data-tip="${esc(format(ref.format, value))}"` : '';
-    return `<td class="${classes.join(' ')}"${title ? ` title="${esc(title)}"` : ''}${tip}>${esc(format(ref.format, value))}</td>`;
+    return `<td class="${classes.join(' ')}"${title ? ` title="${esc(title)}"` : ''}>${esc(format(ref.format, value))}</td>`;
   }
 
   /* Vasıta eşleşme kapsamı: kıyaslanan modellerdeki YD adedinin IAS vasıtası bulunan kısmı. */
@@ -998,6 +996,13 @@
   bind();
   render();
   startWhenVisible();
+  /* Model durum ipucu ortak hızlı ipucuyla (public/ui-tooltip.js): data-tip yalnız fare
+     hücreye gelince eklenir (10k satırlık tabloda çizim HTML'i büyümez). Başlık durum,
+     açıklama satır sayıları + en yüksek oranlı satırın vasıtası ve kullanılan standart. */
+  section.addEventListener('pointerover', event => {
+    const cell = event.target.closest && event.target.closest('#trydAdvantageTable td.trydAdvantageStatusCell[title]');
+    if (cell && !cell.hasAttribute('data-tip')) cell.setAttribute('data-tip', cell.textContent.trim());
+  });
   // Ortak "Landed çarpanları" değişince standartlar yeniden okunur; yüklü satırlar yeniden hesaplanır (sorgu yok).
   window.addEventListener('bl:landed-multipliers-changed', () => {
     if (!state.started) return;

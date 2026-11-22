@@ -92,7 +92,9 @@ function postRows(count) {
       }
       const trydEngine = require('../public/tryd-advantage-engine');
       const vehicles = WITH_VEHICLES ? { byOrder: Object.fromEntries(trydRows.filter(row => row.originCountry !== 'TÜRKİYE' && row.originCountry !== 'FAS').map((row, i) => [row.order, i % 10 === 9 ? null : (i % 10 === 8 ? [['GEMI', 'Gemi', 700], ['UCAK', 'Uçak', 300]] : [[i % 3 ? 'GEMI' : 'UCAK', i % 3 ? 'Gemi' : 'Uçak', 500]])]).filter(([, parts]) => parts)), source: { loaded: true, parsiyels: 30000, loadedAt: '' }, ydOrders: 5000, matched: 4500 } : undefined;
-      if (WITH_VEHICLES) await app.api('/api/landed-multipliers', { multipliers: { tr: 1.05, overseas: 1.11, byVehicle: { GEMI: 1.07, UCAK: 1.36 } } }, 'PUT');
+      // Vasıta standartları genel değere eşit: vasıta yolu tamamen çalışır ama durumlar Main ile
+      // aynı kalır (çıktı eşdeğer; HTML farkı yalnız kod kaynaklı olur).
+      if (WITH_VEHICLES) await app.api('/api/landed-multipliers', { multipliers: { tr: 1.05, overseas: 1.11, byVehicle: { GEMI: 1.11, UCAK: 1.11 } } }, 'PUT');
       await page.route('**/api/postfob/tryd/report', route => { const body = JSON.parse(route.request().postData() || '{}'); route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, ...(vehicles ? { vehicles } : {}), view: trydEngine.normalizePrefs(body.view), rows: trydRows, fetchedAt: new Date().toISOString(), missing: [], truncated: false, rowLimit: 10000, filterValues: body.view && body.view.filterValues }) }); });
       const trydCalc = WITH_CALC ? [{ id: 'pcv_a', label: 'A', formula: '[landedAmount] / [fobTrAmount]', mode: 'aggregate' }, { id: 'pcv_b', label: 'B', formula: '[advantage] - [target]', mode: 'aggregate' }] : undefined;
       await put('/api/postfob/tryd/view', { view: { filterValues: { season: ['S6'] }, ...(trydCalc ? { calculated: trydCalc } : {}) } });
