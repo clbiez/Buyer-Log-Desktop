@@ -8786,12 +8786,12 @@ function acceptComputedMetadata(profile,metadata,projectionKeys){
 }
 async function computeSnapshotByteEstimate(id,metrics=null){
   if(Number.isSafeInteger(metrics?.uncompressedBytes)&&metrics.uncompressedBytes>0)return metrics.uncompressedBytes;
-  const file=require('./lib/model-snapshot').snapshotPath(id);
+  // v2: gzip açık boyutu; v3: başlıktaki çözülmüş (v2 eşdeğeri) boyut. v3 açık
+  // dosyası sözlük yüzünden ~%40 küçüktür, ISIZE işçi belleğini eksik tahmin ederdi.
+  const {snapshotPath,snapshotByteEstimate}=require('./lib/model-snapshot'),file=snapshotPath(id);
   for(const candidate of [file,file+'.bak']){
-    let handle;
-    try{handle=await fs.promises.open(candidate,'r');const stat=await handle.stat();if(stat.size<4)continue;
-      const tail=Buffer.alloc(4);await handle.read(tail,0,4,stat.size-4);return Math.max(1024*1024,tail.readUInt32LE(0));
-    }catch(error){if(error.code!=='ENOENT')throw error;}finally{await handle?.close();}
+    const bytes=await snapshotByteEstimate(candidate);
+    if(bytes!=null)return Math.max(1024*1024,bytes);
   }
   return 1024*1024;
 }
