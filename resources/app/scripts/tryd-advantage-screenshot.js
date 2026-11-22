@@ -63,6 +63,8 @@ function demoRows() {
     });
     await page.waitForFunction(() => window.BLOverviewHome && document.getElementById('trydAdvantageSection'), null, { timeout: 60000 });
     await page.evaluate(() => window.BLOverviewHome.goToPage(1));
+    // Genel Bakış yerleşim yenilemesi kaydırmayı başa alabiliyor; widget kaydırmasız görünsün diye uzun görünüm.
+    await page.setViewportSize({ width: 1900, height: 2400 });
     await page.evaluate(() => document.getElementById('trydAdvantageSection').scrollIntoView({ block: 'start' }));
     await page.waitForFunction(() => window.BLTrydAdvantage && window.BLTrydAdvantage.state.started && !document.getElementById('trydAdvantageSection').classList.contains('ovHomeOff'), null, { timeout: 60000 });
     await page.waitForFunction(() => window.BLTrydAdvantage.state.filters.length > 0, null, { timeout: 30000 });
