@@ -427,6 +427,35 @@
           "en": "On demo data two seasons and two MAGs in a single query; the cube's data date in the header and the PASS fields missing in the cube below."
         }
       }
+    },
+    {
+      "id": "backlog-handover-vs-loading",
+      "type": "fix",
+      "module": {
+        "tr": "Backlog · CP · Siparişler",
+        "en": "Backlog · CP · Orders"
+      },
+      "title": {
+        "tr": "Handover ile yükleme ayrıldı: Geç Handover, Cut-off Bekleme ve Geç Yükleme ayrı sebepler",
+        "en": "Handover and loading are separated: Late Handover, Cut-off Wait and Late Loading are separate causes"
+      },
+      "body": {
+        "tr": "Handover ürünün depoya teslimidir; ürün sonrasında cut-off'u bekleyebilir ve ardından gemiye yüklenir. Teslimat Riski'nde Handover'ı Ex-Factory ile karşılaştıran göstergeler artık doğru adla görünür: \"Geç Yüklendi\" → \"Geç Handover\", \"Henüz Yüklenmedi\" → \"Handover Bekleniyor\", \"Yüklenmedi — …\" → \"Handover Yok — …\". Aşama aşımı sebebi aşamaya göre ayrılır: Talep → Handover \"Geç Handover\", Handover → Cut Off \"Cut-off Bekleme\" (yeni), Cut Off → Fiili Yükleme \"Geç Yükleme\" (yeni); yeni sebepler otomasyonda varsayılan olarak İthalat'a yönlenir, mevcut yönlendirmeler korunur. \"Yükleme Operasyonları\" durumundaki parsiyel, Cut Off / Fiili Yükleme tarihi gelmese de yolda gösterilmez. Aralık tek aşamaya denk gelmiyorsa koşan aşama etiketi numarasız yazılır (ör. \"Handover → ETA\"). Hesaplar değişmedi.",
+        "en": "Handover is the delivery of goods to the warehouse; the goods may then wait for the cut-off and are loaded onto the vessel afterwards. In Delivery Risk, indicators that compare Handover with Ex-Factory now carry the right name: \"Loaded Late\" → \"Late Handover\", \"Not Yet Loaded\" → \"Awaiting Handover\", \"Not Loaded — …\" → \"No Handover — …\". Stage overrun causes are split by stage: Request → Handover \"Late Handover\", Handover → Cut-off \"Cut-off Wait\" (new), Cut-off → Actual Loading \"Late Loading\" (new); the new causes route to Import by default in automations, existing routings are kept. A partial in \"Loading Operations\" is no longer shown as in transit when Cut-off / Actual Loading dates are missing. When the span is not a single stage, the running stage label has no number (e.g. \"Handover → ETA\"). Calculations are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-handover-causes.png",
+        "alt": {
+          "tr": "Demo Backlog Teslimat Riski: Neden riskli? kartlarında Handover Bekleniyor",
+          "en": "Demo Backlog Delivery Risk: Awaiting Handover in the Why at risk? cards"
+        },
+        "caption": {
+          "tr": "Demo veride Neden riskli? bölümü Handover'ı yükleme olarak değil, Handover olarak adlandırır.",
+          "en": "On demo data the Why at risk? section names Handover as Handover, not as loading."
+        }
+      }
     }
   ]
 }
