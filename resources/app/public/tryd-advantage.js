@@ -143,6 +143,56 @@
       status: isModel ? statusText(node.status) : groupStatus(),
     };
   }
+  /* ---------- Hesaplanan değerler (public/pivot-calculated-values.js) ----------
+     Yalnız "toplamlar üzerinden": alanlar her düzeyde (model, grup, genel
+     toplam) tutarlardan gelen değerlerdir (engine.calcFieldValues). Satır
+     bazlı mod kapalıdır; kaynak satırlar sipariş × renktir ve kıyas birimi
+     modeldir (engine.CALC_FIELDS notu). Tanım yoksa değerlendirici null'dır;
+     tablo, sıralama ve Excel eski yolundan gider. */
+  const PCV = () => window.BLPivotCalculatedValues || null;
+  const calcDefs = () => (PCV() && Array.isArray(view().calculated) ? view().calculated : []);
+  const TRYD_ROW_MODE_NOTE = { tr: 'TR/YD kıyası model düzeyindedir: TR FOB aynı modelin YD adediyle çarpılır, Fas/Mısır ve hatalı/landed yok satırlar dışarıda kalır. Satır bazlı formül bu kuralı aşardı; toplamlar üzerinden kullanın.', en: 'The TR/abroad comparison is per model: TR FOB is multiplied by the same model’s abroad quantity and Morocco/Egypt and invalid/no-landed rows are left out. A per-row formula would bypass this rule; use “On totals”.' };
+  const CALC_FIELD_LABELS = {
+    fobTrAmount: ['FOB TR TUTAR', 'TR FOB amount'], landedAmount: ['LANDED TUTAR', 'Landed amount'],
+    fobYdAmount: ['FOB YD TUTAR', 'Abroad FOB amount'], ydQtyAll: ['Toplam YD adet', 'Total abroad qty'],
+  };
+  const calcFieldLabel = key => {
+    if (CALC_FIELD_LABELS[key]) return text(...CALC_FIELD_LABELS[key]);
+    const value = VALUES().find(entry => entry.key === key);
+    return value ? text(value.tr, value.en) : key;
+  };
+  let calcCache = { signature: '', evaluator: null, memo: new WeakMap() };
+  let calcEnginePending = false;
+  function calcEvaluator() {
+    const defs = calcDefs();
+    if (!defs.length) return null;
+    const signature = `${window.BLFormulaEngine ? 1 : 0}|${isEnglish() ? 'en' : 'tr'}|${view().target}|${JSON.stringify(defs)}`;
+    if (calcCache.signature !== signature) {
+      calcCache = { signature, evaluator: PCV().createEvaluator(defs, { label: calcFieldLabel }), memo: new WeakMap() };
+    }
+    if (!window.BLFormulaEngine && !calcEnginePending) {
+      calcEnginePending = true;
+      PCV().ensureEngine(false).then(ok => { calcEnginePending = false; if (ok) renderBody(); });
+    }
+    return calcCache.evaluator;
+  }
+  // Düğümün hesaplanan değerleri (değerler + sayılmayan __calcErrors); düğüm başına bir kez.
+  function calcMetricsOf(node) {
+    const evaluator = calcEvaluator();
+    if (!evaluator || !node) return {};
+    let metrics = calcCache.memo.get(node);
+    if (!metrics) {
+      metrics = evaluator.apply(engine.calcFieldValues(node, view().target), []);
+      calcCache.memo.set(node, metrics);
+    }
+    return metrics;
+  }
+  const calcSortValue = (node, key) => calcMetricsOf(node)[key];
+  function calcCellHtml(item, def) {
+    const cell = PCV().cell(calcMetricsOf(item), def);
+    return `<td class="num pcvCell${cell.error ? ' pcvError' : ''}" title="${esc(cell.title)}">${esc(cell.text)}</td>`;
+  }
+
   function flatten(tree) {
     const collapsed = new Set(view().collapsedGroups || []);
     const out = [];
@@ -295,13 +345,15 @@
         total.high ? 'trydAdvantageKpiWarning' : ''),
     ].join('');
     const values = selectedValues();
+    const calcs = calcDefs();
     const axis = axisKeys();
     const sort = view().sort || {};
     const arrow = key => sort.key === key ? (Number(sort.dir) === 1 ? ' ↑' : ' ↓') : '';
     const last = axis.length - 1;
     const head = [...axis.map((key, index) => `<th${index === last ? ' data-tryd-sort="label"' : ''} title="${esc(index === last ? text('Sıralamak için tıklayın', 'Click to sort') : '')}">${esc(fieldLabel(key))}${index === last ? arrow('label') : ''}</th>`),
-      ...values.map(ref => `<th class="num" data-tryd-sort="${esc(ref.key)}" title="${esc(ref.hint ? text(ref.hint[0], ref.hint[1]) : text('Sıralamak için tıklayın', 'Click to sort'))}">${esc(text(ref.tr, ref.en))}${arrow(ref.key)}</th>`)].join('');
-    const tree = engine.buildTree(result.visible, { target: view().target, levels: groupLevels(), sort: treeSort() });
+      ...values.map(ref => `<th class="num" data-tryd-sort="${esc(ref.key)}" title="${esc(ref.hint ? text(ref.hint[0], ref.hint[1]) : text('Sıralamak için tıklayın', 'Click to sort'))}">${esc(text(ref.tr, ref.en))}${arrow(ref.key)}</th>`),
+      ...calcs.map(def => `<th class="num pcvHead" data-tryd-sort="${esc(PCV().keyOf(def))}" title="${esc(`${PCV().modeText(def.mode)} · ${text('Sıralamak için tıklayın', 'Click to sort')}`)}"><span class="pcvHeadMark" aria-hidden="true">ƒx</span> ${esc(PCV().labelOf(def))}${arrow(PCV().keyOf(def))}</th>`)].join('');
+    const tree = engine.buildTree(result.visible, { target: view().target, levels: groupLevels(), sort: treeSort(), ...(calcs.length ? { sortValue: calcSortValue } : {}) });
     const items = [...flatten(tree)];
     if (result.visible.length) items.push({ kind: 'grand', ...total, modelsList: result.visible });
     const shown = items.length > MAX_TABLE_ROWS ? [...items.slice(0, MAX_TABLE_ROWS - 1), items[items.length - 1]] : items;
@@ -310,15 +362,15 @@
       const base = item.kind === 'grand' ? 'oabPivotGrandTotalRow' : (item.kind === 'group' ? 'oabPivotSubtotalRow' : '');
       return engine.isBelowTarget(item, view().target) ? `${base} trydAdvantageBelowRow`.trim() : base;
     };
-    const bodyHtml = shown.map((item, index) => `<tr class="${rowClass(item)}" data-tryd-row="${index}">${axis.map((key, dimIndex) => dimCell(item, dimIndex, axis)).join('')}${values.map(ref => valueCell(item, ref)).join('')}</tr>`).join('');
+    const bodyHtml = shown.map((item, index) => `<tr class="${rowClass(item)}" data-tryd-row="${index}">${axis.map((key, dimIndex) => dimCell(item, dimIndex, axis)).join('')}${values.map(ref => valueCell(item, ref)).join('')}${calcs.length ? calcs.map(def => calcCellHtml(item, def)).join('') : ''}</tr>`).join('');
     const emptyCopy = view().belowTargetOnly ? text('Hedefin altında kalan model yok.', 'No model is below the target.') : (state.search ? text('Aramayla eşleşen model yok.', 'No model matches the search.') : text('Hem Türkiye hem yurtdışı siparişi olan model yok.', 'No model has both Turkey and abroad orders.'));
-    table.innerHTML = `<thead><tr>${head}</tr></thead><tbody>${bodyHtml || `<tr><td class="intakeEmpty" colspan="${axis.length + values.length}">${esc(emptyCopy)}</td></tr>`}</tbody>`;
+    table.innerHTML = `<thead><tr>${head}</tr></thead><tbody>${bodyHtml || `<tr><td class="intakeEmpty" colspan="${axis.length + values.length + calcs.length}">${esc(emptyCopy)}</td></tr>`}</tbody>`;
     updateGroupButtons(groupKeys(tree));
     const drillTitle = text('Kaynak satırları görmek için çift tıklayın', 'Double-click to see the source rows');
     table.querySelectorAll('tbody tr[data-tryd-row] > td').forEach(td => { td.classList.add('oabPivotDrillCell'); if (!td.title) td.title = drillTitle; });
     try {
       const wordPx = label => Math.max(...String(label).split(/\s+/).map(word => word.length)) * 10 + 28;
-      window.BLTableColumnResize?.apply(table, { store: widthStore, columns: [...axis.map((key, index) => ({ key: `tryd_${key}`, label: fieldLabel(key), type: 'text', minPx: index < last ? 96 : 100 })), ...values.map(ref => ({ key: `tryd_${ref.key}`, label: text(ref.tr, ref.en), type: 'num', minPx: wordPx(text(ref.tr, ref.en)) }))] });
+      window.BLTableColumnResize?.apply(table, { store: widthStore, columns: [...axis.map((key, index) => ({ key: `tryd_${key}`, label: fieldLabel(key), type: 'text', minPx: index < last ? 96 : 100 })), ...values.map(ref => ({ key: `tryd_${ref.key}`, label: text(ref.tr, ref.en), type: 'num', minPx: wordPx(text(ref.tr, ref.en)) })), ...calcs.map(def => ({ key: `tryd_pcv_${def.id}`, label: PCV().labelOf(def), type: 'num', minPx: wordPx(PCV().labelOf(def)) + 18 }))] });
     } catch (error) { console.warn('TR/YD avantaj sütun genişliği uygulanamadı:', error); }
     const notes = [];
     if (state.truncated) notes.push(text(`Sorgu ${state.rowLimit.toLocaleString(locale())} satır sınırına ulaştı: bazı modellerin TR veya YD siparişleri eksik olabilir, avantaj oranları KISMİDİR. Sezon/MAG filtrelerini daraltıp Yenile’ye basın.`, `The query hit the ${state.rowLimit.toLocaleString(locale())} row limit: some models may miss TR or abroad orders, so the advantage ratios are PARTIAL. Narrow the season/MAG filters and press Refresh.`));
@@ -361,7 +413,9 @@
       : (item.path || []).map((value, index) => `${fieldLabel(axisKeys()[index])}: ${value === '' ? text('(boş)', '(blank)') : value}`).join(' › ');
     const metrics = metricsOf(item);
     const valueRef = ref && VALUES().find(entry => entry.key === ref);
-    const note = [valueRef ? `${text(valueRef.tr, valueRef.en)}: ${format(valueRef.format, metrics[valueRef.key])}` : '', `${rows.length.toLocaleString(locale())} ${text('kaynak satır', 'source rows')}`].filter(Boolean).join(' · ');
+    const calcRef = ref && PCV() && PCV().isKey(ref) ? calcDefs().find(def => PCV().keyOf(def) === ref) : null;
+    const calcCell = calcRef ? PCV().cell(calcMetricsOf(item), calcRef) : null;
+    const note = [calcCell ? `${PCV().labelOf(calcRef)}: ${calcCell.error ? calcCell.title : calcCell.text}` : (valueRef ? `${text(valueRef.tr, valueRef.en)}: ${format(valueRef.format, metrics[valueRef.key])}` : ''), `${rows.length.toLocaleString(locale())} ${text('kaynak satır', 'source rows')}`].filter(Boolean).join(' · ');
     window.BLDetailDrawer.open({
       storageKey: 'tryd.advantage.detail', pageScope: 'overview.trydAdvantage', moduleId: 'overview', source: 'trydAdvantage',
       title: text('TR/YD Landed Avantaj Alt Detay', 'TR/Abroad Landed Advantage Drill-down'),
@@ -385,11 +439,14 @@
       const values = selectedValues();
       const axis = axisKeys();
       const round = value => typeof value === 'number' && Number.isFinite(value) ? Math.round(value * 1000000) / 1000000 : (value == null ? null : value);
-      const tree = engine.buildTree(result.visible, { target: view().target, levels: groupLevels(), sort: treeSort() });
+      const calcs = calcDefs();
+      const tree = engine.buildTree(result.visible, { target: view().target, levels: groupLevels(), sort: treeSort(), ...(calcs.length ? { sortValue: calcSortValue } : {}) });
       const all = [];
       const walk = nodes => nodes.forEach(node => { all.push(node); if (node.kind === 'group') walk(node.children); });
       walk(tree);
       if (result.visible.length) all.push({ kind: 'grand', ...result.total, modelsList: result.visible });
+      // Hesaplanan değer başlığı eksen/değer/tutar/sabit başlıkla çakışırsa "(ƒx)" alır; sütun ezilmez.
+      const calcHeaders = calcs.length ? PCV().uniqueHeaders([text('Satır tipi', 'Row type'), ...axis.map(fieldLabel), ...values.map(ref => text(ref.tr, ref.en)), ...['fobTrAmount', 'landedAmount', 'fobYdAmount', 'ydQtyAll'].map(calcFieldLabel)], calcs) : [];
       const pivot = all.map(item => {
         const out = { [text('Satır tipi', 'Row type')]: item.kind === 'grand' ? text('Genel toplam', 'Grand total') : (item.kind === 'group' ? text('Alt toplam', 'Subtotal') : text('Model', 'Model')) };
         axis.forEach((key, index) => {
@@ -397,6 +454,8 @@
         });
         const metrics = metricsOf(item);
         values.forEach(ref => { out[text(ref.tr, ref.en)] = ref.key === 'status' ? metrics.status : round(metrics[ref.key]); });
+        // Hesaplanan değer Excel'e DEĞER olarak yazılır; hatalı hücre boştur.
+        calcs.forEach((def, index) => { out[calcHeaders[index]] = PCV().exportValue(calcMetricsOf(item), def); });
         const amounts = item.amounts || {};
         out[text('FOB TR TUTAR', 'TR FOB amount')] = round(amounts.fobTrAmount);
         out[text('LANDED TUTAR', 'Landed amount')] = round(amounts.landedAmount);
@@ -689,6 +748,7 @@
       <div class="autoModalBody">
         ${sectionHtml('trydRowsList', text('Pivot Satırları', 'Pivot Rows'), text('Alan ekle', 'Add field'), draft.rows.map(ref => axisRowHtml(ref.key, rowsPool)).join(''), `<p class="oabSettingsHint">${esc(text('Model her zaman en alt kırılımdır: kıyas birimi modeldir (TR FOB aynı modelin YD adediyle çarpılır). Satır alanı seçilmezse düz model listesi gösterilir.', 'Model is always the lowest level: the comparison unit is the model (TR FOB is multiplied by the same model’s abroad quantity). With no row field the pivot is a flat model list.'))}</p>`)}
         ${sectionHtml('trydValuesList', text('Pivot Değerleri', 'Pivot Values'), text('Değer ekle', 'Add value'), draft.values.map(ref => valueRowHtml(ref.key, valsPool)).join(''))}
+        ${PCV() ? PCV().sectionHtml() : ''}
         ${sectionHtml('trydFiltersList', text('Filtre Alanları', 'Filter Fields'), text('Alan ekle', 'Add field'), draft.filters.map(ref => axisRowHtml(ref.key, filtersPool, ref.key === engine.REQUIRED_FILTER)).join(''))}
         <p class="oabSettingsHint">${esc(text('Satırları oklarla sıralayabilirsiniz. Avantaj, FOB avantajı ve fark her düzeyde tutarların toplamından yeniden hesaplanır; ortalama alınmaz. Sezon ve ürün adı modelin adet ağırlıklı en sık değeridir. Üretici ülke ve sipariş kodu filtrelenemez: kıyas Türkiye ve yurtdışı siparişlerini birlikte ister. Hedef ve landed kaynağı araç çubuğundadır.', 'Reorder rows with the arrows. Advantage, FOB advantage and gap are recomputed from summed amounts at every level; they are never averaged. Season and product name are the model’s most frequent value by quantity. Origin country and order code cannot be filtered: the comparison needs Turkey and abroad orders together. Target and landed source are in the toolbar.'))}</p>
       </div>
@@ -705,6 +765,25 @@
     const lists = { rows: modal.querySelector('#trydRowsList'), values: modal.querySelector('#trydValuesList'), filters: modal.querySelector('#trydFiltersList') };
     const pools = { trydRowsList: rowsPool, trydValuesList: valsPool, trydFiltersList: filtersPool };
     Object.values(lists).forEach(refreshOrderButtons);
+    /* Hesaplanan değerler: yalnız toplamlar üzerinden; alanlar her düzeyde
+       tutarlardan gelen değerler (gizli değer sütunları da kullanılabilir).
+       Önizleme ekrandaki ilk satırlar ve genel toplamdır. */
+    const calcSection = PCV() ? PCV().mountSection(modal.querySelector('[data-pcv-section]'), {
+      defs: draft.calculated || [],
+      allowRow: false,
+      rowNote: TRYD_ROW_MODE_NOTE,
+      widget: { tr: 'TR/YD Landed Avantaj', en: 'TR/YD Landed Advantage' },
+      // Eksen, değer (iki landed kaynağı), tutar ve Excel sabit başlıkları ayrılmıştır (TR + EN).
+      reserved: () => ['Satır tipi', 'Row type', ...Object.values(FIELD_LABELS).flat(), ...Object.values(CALC_FIELD_LABELS).flat(), ...VALUES().flatMap(ref => [ref.tr, ref.en]), 'Gerçekleşen avantaj', 'Realized advantage', 'Öngörü avantajı', 'Forecast advantage', 'YD landed USD', 'Abroad landed USD', 'YD landed öngörü USD', 'Abroad forecast landed USD'], // i18n-ignore: ayrılmış ad listesi (iki dil birlikte)
+      fields: () => engine.CALC_FIELDS.map(key => ({ key, label: calcFieldLabel(key) })),
+      samples: () => {
+        if (!state.rows.length) return [];
+        const result = compute();
+        const tree = engine.buildTree(result.visible, { target: view().target, levels: groupLevels(), sort: treeSort() });
+        const nodes = [...tree.slice(0, 5), ...(result.visible.length ? [{ kind: 'grand', ...result.total }] : [])];
+        return nodes.map(node => ({ label: node.kind === 'grand' ? text('Genel Toplam', 'Grand Total') : (node.label === '' ? text('(boş)', '(blank)') : node.label), values: engine.calcFieldValues(node, view().target) }));
+      },
+    }) : null;
     modal.addEventListener('click', event => {
       const add = event.target.closest('[data-tryd-add]');
       if (add) {
@@ -729,10 +808,11 @@
     const collect = list => [...list.querySelectorAll('select')].map(select => ({ key: select.value }));
     modal.querySelector('[data-tryd-save]').addEventListener('click', () => {
       const before = view();
-      const next = engine.normalizePrefs({ ...before, rows: collect(lists.rows), values: collect(lists.values), filters: collect(lists.filters) });
+      const next = engine.normalizePrefs({ ...before, rows: collect(lists.rows), values: collect(lists.values), filters: collect(lists.filters), ...(calcSection ? { calculated: calcSection.value() } : {}) });
       // Eksen değişince eski grup anahtarları anlamsızdır; gizlenen değere göre sıralama etikete döner.
       if (JSON.stringify(next.rows) !== JSON.stringify(before.rows)) next.collapsedGroups = [];
-      if (next.sort.key !== 'label' && !next.values.some(ref => ref.key === next.sort.key)) next.sort = { key: 'label', dir: 1 };
+      const sortCalc = PCV() && PCV().isKey(next.sort.key) && (next.calculated || []).some(def => PCV().keyOf(def) === next.sort.key);
+      if (next.sort.key !== 'label' && !sortCalc && !next.values.some(ref => ref.key === next.sort.key)) next.sort = { key: 'label', dir: 1 };
       const filtersChanged = JSON.stringify(next.filterValues) !== JSON.stringify(before.filterValues);
       state.view = next;
       close();
@@ -744,7 +824,8 @@
       const current = view();
       // Satır, değer ve filtre alanları varsayılana döner; varsayılan filtrelerdeki seçimler, hedef ve landed kaynağı korunur.
       const keep = Object.fromEntries(Object.entries(current.filterValues || {}).filter(([key]) => engine.DEFAULT_FILTERS.includes(key)));
-      state.view = engine.normalizePrefs({ target: current.target, landedSource: current.landedSource, belowTargetOnly: current.belowTargetOnly, filterValues: keep });
+      // Hesaplanan değerler kullanıcının tanımlarıdır; düzen sıfırlanınca silinmez.
+      state.view = engine.normalizePrefs({ target: current.target, landedSource: current.landedSource, belowTargetOnly: current.belowTargetOnly, filterValues: keep, calculated: current.calculated });
       const filtersChanged = JSON.stringify(state.view.filterValues) !== JSON.stringify(current.filterValues);
       close();
       saveView({ immediate: true });
@@ -823,7 +904,9 @@
       let column = 0;
       for (const td of row.cells) { if (td === cell) break; column += td.colSpan || 1; }
       const axisCount = axisKeys().length;
-      const ref = column >= axisCount ? (selectedValues()[column - axisCount] || {}).key : null;
+      const valueCount = selectedValues().length, calcs = calcDefs();
+      const calc = column >= axisCount + valueCount ? calcs[column - axisCount - valueCount] : null;
+      const ref = calc ? PCV().keyOf(calc) : (column >= axisCount ? (selectedValues()[column - axisCount] || {}).key : null);
       if (item) openDetail(item, ref);
     });
     byId('trydAdvantageTable')?.addEventListener('click', event => {

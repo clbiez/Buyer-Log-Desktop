@@ -26,6 +26,7 @@
 const crypto = require('node:crypto');
 const intakeReport = require('./intake-report');
 const filterValueTypes = require('./filter-value-types');
+const PivotCalculated = require('../../public/pivot-calculated-values');
 
 const OAB_CUBE_CONNECTION = Object.freeze({
   server: 'lcwtabular_s20',
@@ -281,7 +282,17 @@ function normalizeView(raw) {
       sort: { key: clean(sort.key).slice(0, 40), dir: Number(sort.dir) === 1 ? 1 : -1 },
       widths,
     },
+    calculated: normalizeCalculated(source.calculated, values),
   };
+}
+
+/* Kişisel hesaplanan değerler (public/pivot-calculated-values.js). Sorguya
+   girmez; yalnız satır bazlı ("row") tanımın kullandığı hazır ölçü sorgulanır
+   (buildQuery). Başvurular yalnız bilinen ölçü anahtarlarını tutar. */
+function normalizeCalculated(raw, values) {
+  const catalogKeys = [...MEASURES, ...DERIVED_MEASURES].map(item => item.key);
+  const viewKeys = (values || []).map(ref => ref.key);
+  return PivotCalculated.normalizeList(raw, { allowRow: true, aggregateKeys: [...catalogKeys, ...viewKeys], rowKeys: [...catalogKeys, ...viewKeys] });
 }
 
 function viewExtras(view) {
@@ -355,6 +366,10 @@ function buildQuery({ liveFields = [], view = null, filterValues = {}, maxRows =
      olgu tablosunda) gruplamaya kendiliğinden girmez ve satır sayısını
      şişirmez. */
   const wantedMeasures = new Set(current.values.filter(ref => !ref.source).map(ref => ref.key));
+  /* Satır bazlı hesaplanan değer her kaynak satırda ölçü okur: görünümde
+     olmasa da o hazır ölçü sorgulanır (önbellek anahtarı built.measures ile
+     birlikte değişir). Toplam modu tanımı sorguyu değiştirmez. */
+  PivotCalculated.requiredRowKeys(current.calculated).forEach(key => { if (MEASURES.some(item => item.key === key)) wantedMeasures.add(key); });
   const queried = resolved.measures.filter(item => item.required || wantedMeasures.has(item.key));
   const measureFields = [...queried.map(item => ({ key: item.key, field: item.field })), ...extraMeasures];
   const groupExpressions = groupFields.map(item => intakeReport.daxRef(item.field));

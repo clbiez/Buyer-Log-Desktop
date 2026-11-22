@@ -40,6 +40,8 @@ async function start(options = {}) {
     if (options.initScript) await context.addInitScript(options.initScript, options.initArg);
     const page = await context.newPage(), errors = []; page.on('pageerror', error => errors.push(error.message));
     await page.route('https://**', route => route.abort());
+    // İsteğe bağlı: kaynak yanıt taklitleri ilk yüklemeden ÖNCE kaydedilir (açılışta istek atan widget'lar).
+    if (typeof options.beforeNavigate === 'function') await options.beforeNavigate(page);
     await page.goto(base + '/?module=overview', { waitUntil: 'domcontentloaded', timeout: 120000 });
     await page.waitForSelector('[data-boot-continue]', { timeout: 180000 }); await page.click('[data-boot-continue]');
     await page.waitForFunction(() => !document.getElementById('blBootGuard'), null, { timeout: 180000 });

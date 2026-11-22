@@ -81,13 +81,45 @@
     state.exporting = true;renderChrome();
     try {
       const response = await fetch('/api/intake/export', { method: 'POST', credentials: 'same-origin', cache: 'no-store',
-        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ viewConfig: clone(state.viewConfig), language: isEnglish() ? 'en' : 'tr' }) });
+        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ viewConfig: clone(state.viewConfig), language: isEnglish() ? 'en' : 'tr', calculated: intakeCalculatedSheet() }) });
       if (!response.ok) { const error = await response.json().catch(() => ({})); throw new Error(error.error || text('Excel aktarımı başarısız.', 'Excel export failed.')); }
       const url = URL.createObjectURL(await response.blob()), link = document.createElement('a');
       link.href = url;link.download = 'INTAKE-Live-Pivot.xlsx';link.click();setTimeout(() => URL.revokeObjectURL(url), 30000);
       setStatus({ tr: 'Canlı INTAKE pivotu aktarıldı. Excel’de Veri → Tümünü Yenile ile güncelleyebilirsiniz.', en: 'Live INTAKE pivot exported. In Excel, use Data → Refresh All to update it.' }, 'ok');
     } catch (error) { setStatus(error.message || text('Excel aktarımı başarısız.', 'Excel export failed.'), 'error'); }
     finally { state.exporting = false;renderChrome(); }
+  }
+
+  /* ---------- Hesaplanan değerler (public/pivot-calculated-values.js) ----------
+     INTAKE satırları sunucuda sorgu düzeyinde TOPLANMIŞ gelir (satır/sütun
+     eksenine göre SUMMARIZECOLUMNS); kaynak satır detayı yoktur. Bu yüzden
+     yalnız "toplamlar üzerinden" mod açıktır. Tanımlar görünümün display
+     bölümündedir: sorgu imzasına ve önbellek anahtarına girmez. */
+  const PCV = () => window.BLPivotCalculatedValues || null;
+  const calcDefs = () => (PCV() && Array.isArray(display().calculated) ? display().calculated : []);
+  const INTAKE_ROW_MODE_NOTE = { tr: 'INTAKE satırları sorgu düzeyinde toplanmış gelir; satır bazlı hesap yanlış sonuç verirdi. Toplamlar üzerinden kullanın.', en: 'INTAKE rows arrive already totalled at query level; a per-row calculation would be wrong. Use “On totals”.' };
+  let calcCache = { signature: '', evaluator: null };
+  let calcEnginePending = false;
+  function calcEvaluator() {
+    const defs = calcDefs();
+    if (!defs.length) return null;
+    const signature = `${window.BLFormulaEngine ? 1 : 0}|${isEnglish() ? 'en' : 'tr'}|${JSON.stringify(defs)}`;
+    if (calcCache.signature !== signature) {
+      const dimensionIds = new Set([...query().rows, ...query().columns].map(fieldId));
+      calcCache = { signature, evaluator: PCV().createEvaluator(defs, { isTextKey: key => dimensionIds.has(key), label: key => { const field = allFields().find(item => item.id === key); return field ? fieldLabel(field) : key; } }) };
+    }
+    if (!window.BLFormulaEngine && !calcEnginePending) {
+      calcEnginePending = true;
+      PCV().ensureEngine(false).then(ok => { calcEnginePending = false; if (ok) renderTable({ force: true }); });
+    }
+    return calcCache.evaluator;
+  }
+  // Tabloda ölçülerden sonra gelen sanal sütunlar; fieldLabel/columnType ile uyumlu.
+  const calcColumns = () => calcDefs().map(def => ({ id: PCV().keyOf(def), fieldType: 'measure', defaultLabel: PCV().labelOf(def), calc: def }));
+  function intakeCalcCellHtml(item, field) {
+    if (item.kind === 'group' && !item.subtotal) return '<td class="num"></td>';
+    const cell = PCV().cell(item.row, field.calc);
+    return `<td class="num pcvCell${cell.error ? ' pcvError' : ''}" title="${esc(cell.title)}">${esc(cell.text)}</td>`;
   }
 
   function activeColumns() {
@@ -314,14 +346,17 @@
     const columnFields = query().columns || [];
     const measureFields = query().measures || [];
     const grouped = display().grouped !== false && rowFields.length > 0;
-    if (!grouped) return sorted.map(row => ({ kind: 'leaf', row, level: rowFields.length }));
+    // Hesaplanan değer satır nesnesinin KOPYASINA yazılır; kaynak satırlar değişmez.
+    const calc = calcEvaluator();
+    const withCalc = (row, rows) => (calc ? calc.apply(row, rows) : row);
+    if (!grouped) return sorted.map(row => ({ kind: 'leaf', row: calc ? withCalc({ ...row }, [row]) : row, level: rowFields.length }));
     const showSubtotals = display().showSubtotals !== false;
     const collapsed = new Set(Array.isArray(display().collapsedGroups) ? display().collapsedGroups : []);
     const output = [];
 
     const walk = (sourceRows, level, path) => {
       if (level >= rowFields.length) {
-        sourceRows.forEach(row => output.push({ kind: 'leaf', row, level }));
+        sourceRows.forEach(row => output.push({ kind: 'leaf', row: calc ? withCalc({ ...row }, [row]) : row, level }));
         return;
       }
       const field = rowFields[level];
@@ -343,7 +378,7 @@
           const leaf = { ...(group.rows[0] || {}) };
           leaf[field.id] = group.value;
           measureFields.forEach(item => { leaf[item.id] = intakeAggregateRows(group.rows, item); });
-          output.push({ kind: 'leaf', row: leaf, level });
+          output.push({ kind: 'leaf', row: withCalc(leaf, group.rows), level });
           return;
         }
 
@@ -353,7 +388,7 @@
         rowFields.forEach(item => { aggregateRow[item.id] = ''; });
         columnFields.forEach(item => { aggregateRow[item.id] = ''; });
         aggregateRow[field.id] = group.value;
-        if (showSubtotals) measureFields.forEach(item => { aggregateRow[item.id] = intakeAggregateRows(group.rows, item); });
+        if (showSubtotals) { measureFields.forEach(item => { aggregateRow[item.id] = intakeAggregateRows(group.rows, item); }); withCalc(aggregateRow, group.rows); }
         const isCollapsed = collapsed.has(pathKey);
         output.push({ kind: 'group', row: aggregateRow, level, pathKey, collapsed: isCollapsed, subtotal: showSubtotals });
         if (!isCollapsed) walk(group.rows, level + 1, nextPath);
@@ -367,12 +402,13 @@
       columnFields.forEach(item => { grand[item.id] = ''; });
       if (rowFields[0]) grand[rowFields[0].id] = text('Genel Toplam', 'Grand Total');
       measureFields.forEach(item => { grand[item.id] = intakeAggregateRows(sorted, item); });
-      output.push({ kind: 'grand', row: grand, level: 0 });
+      output.push({ kind: 'grand', row: withCalc(grand, sorted), level: 0 });
     }
     return output;
   }
 
   function intakeCellHtml(item, field) {
+    if (field.calc) return intakeCalcCellHtml(item, field);
     const row = item.row || {};
     const value = row[field.id];
     if (item.kind === 'group' && field.fieldType !== 'measure') {
@@ -412,6 +448,7 @@
       (query().rows || []).map(fieldId), (query().columns || []).map(fieldId),
       current.sort || {}, current.grouped !== false, current.showSubtotals !== false,
       current.collapsedGroups || [], current.hideZeroCurrentBudget !== false,
+      calcDefs(), window.BLFormulaEngine ? 1 : 0,
     ]);
   }
 
@@ -430,30 +467,24 @@
       if (typeof _pendingTableRenders !== 'undefined') _pendingTableRenders.delete(previousBody);
     }
     table._blFinishNative = null;
-    const fields = activeColumns();
+    const baseFields = activeColumns();
+    const fields = baseFields.length ? [...baseFields, ...calcColumns()] : baseFields;
     if (!fields.length) {
       window.BLOverviewPremium?.renderMetricChart('intake',{raw:true});
       intakeUpdateGroupButtons([]);
       table.innerHTML = `<tbody><tr><td class="intakeEmpty" colspan="1">${esc(text('Alan seçilmedi.', 'No fields selected.'))}</td></tr></tbody>`;
       return;
     }
-    const currentBudgetField = (query().measures || []).find(intakeIsCurrentBudgetField);
-    const sorted = (display().hideZeroCurrentBudget !== false && currentBudgetField
-      ? state.rows.filter(row => intakeIsNonZeroBudgetRow(row, currentBudgetField))
-      : state.rows
-    ).slice();
+    const sorted = intakeSortedRows(fields);
     const sort = display().sort || {};
-    if (sort.id) {
-      const direction = Number(sort.dir) === -1 ? -1 : 1;
-      const sortField = fields.find(field => field.id === sort.id) || allFields().find(field => field.id === sort.id);
-      sorted.sort((left, right) => intakeCompareValues(sortField, left && left[sort.id], right && right[sort.id]) * direction);
-    }
     intakeUpdateGroupButtons(sorted);
     const header = fields.map(field => {
       const direction = sort.id === field.id ? (sort.dir === -1 ? ' ↓' : ' ↑') : '';
+      // Hesaplanan değerin adı ve formülü kalem penceresindeki ƒx ile düzenlenir.
+      if (field.calc) return `<th class="num pcvHead" data-intake-sort="${esc(field.id)}" title="${esc(`${PCV().modeText(field.calc.mode)} · ${text('Sıralamak için tıklayın', 'Click to sort')}`)}"><span class="pcvHeadMark" aria-hidden="true">ƒx</span> ${esc(fieldLabel(field))}${direction}</th>`;
       return `<th data-intake-sort="${esc(field.id)}" data-intake-rename="${esc(field.id)}" title="${esc(text('Sıralamak için tıklayın · yeniden adlandırmak için çift tıklayın', 'Click to sort · double-click to rename'))}">${esc(fieldLabel(field))}${direction}</th>`;
     }).join('');
-    renderOverviewChart(sorted,fields);
+    renderOverviewChart(sorted,baseFields);
     const viewRows = intakeDisplayRows(sorted);
     const rowClass = item => item.kind === 'grand' ? 'oabPivotGrandTotalRow' : (item.kind === 'group' ? (item.subtotal ? 'oabPivotSubtotalRow' : 'oabPivotGroupRow') : '');
     const rowCells = item => fields.map(field => intakeCellHtml(item, field)).join('');
@@ -485,6 +516,69 @@
       };
     }
     attachColumnResize(table, fields);
+  }
+
+  /* Görünür kaynak satırlar: sıfır bütçe gizleme + sıralama. Hesaplanan değere
+     göre sıralamada satırın kendi değerleriyle hesaplanan sonuç kullanılır
+     (diğer ölçü sıralamalarıyla aynı anlam); boş/hatalı değer sona gider. */
+  function intakeSortedRows(fields) {
+    const currentBudgetField = (query().measures || []).find(intakeIsCurrentBudgetField);
+    const sorted = (display().hideZeroCurrentBudget !== false && currentBudgetField
+      ? state.rows.filter(row => intakeIsNonZeroBudgetRow(row, currentBudgetField))
+      : state.rows
+    ).slice();
+    const sort = display().sort || {};
+    if (sort.id) {
+      const direction = Number(sort.dir) === -1 ? -1 : 1;
+      const calc = PCV() && PCV().isKey(sort.id) ? calcEvaluator() : null;
+      if (calc) {
+        const values = new Map(sorted.map(row => [row, calc.compute(row, [row]).values[sort.id]]));
+        sorted.sort((left, right) => {
+          const a = values.get(left), b = values.get(right);
+          if (a == null && b == null) return 0;
+          if (a == null) return 1;
+          if (b == null) return -1;
+          return (a - b) * direction;
+        });
+      } else {
+        const sortField = fields.find(field => field.id === sort.id) || allFields().find(field => field.id === sort.id);
+        sorted.sort((left, right) => intakeCompareValues(sortField, left && left[sort.id], right && right[sort.id]) * direction);
+      }
+    }
+    return sorted;
+  }
+
+  /* Excel: canlı OLAP pivotu Buyer Log formülünü bilemez; hesaplanan değerler
+     ekrandaki pivotla aynı satırlarda DEĞER sayfası olarak gönderilir. Yük
+     sunucu sınırının (8 MB, görünüm payıyla) altında tutulur; kırpılırsa sayfa
+     bunu yazar. */
+  const INTAKE_CALC_SHEET_MAX_BYTES = 7 * 1024 * 1024;
+  function intakeCalculatedSheet() {
+    const calcs = calcColumns();
+    if (!calcs.length || !state.rows.length) return null;
+    const dims = [...(query().rows || []), ...(query().columns || [])];
+    const measures = query().measures || [];
+    const rows = intakeDisplayRows(intakeSortedRows([...activeColumns(), ...calcs]));
+    const baseHeaders = [text('Satır tipi', 'Row type'), ...dims.map(fieldLabel), ...measures.map(fieldLabel)];
+    // Hesaplanan değer başlığı boyut/ölçü/sabit başlıkla çakışırsa "(ƒx)" alır.
+    const headers = [...baseHeaders, ...PCV().uniqueHeaders(baseHeaders, calcs.map(field => field.calc))];
+    const numberOrNull = value => { const number = typeof value === 'number' ? value : Number(String(value == null ? '' : value).replace(/\s/g, '').replace(',', '.')); return value === '' || value == null || !Number.isFinite(number) ? null : number; };
+    const body = rows.slice(0, 5000).map(item => [
+      item.kind === 'grand' ? text('Genel toplam', 'Grand total') : (item.kind === 'group' ? text('Alt toplam', 'Subtotal') : text('Detay', 'Detail')),
+      ...dims.map(field => clean(item.row && item.row[field.id])),
+      ...measures.map(field => (item.kind === 'group' && !item.subtotal ? null : numberOrNull(item.row && item.row[field.id]))),
+      ...calcs.map(field => (item.kind === 'group' && !item.subtotal ? null : PCV().exportValue(item.row, field.calc))),
+    ]);
+    const first = 1 + dims.length;
+    const sheet = { headers, rows: body, numeric: Array.from({ length: measures.length + calcs.length }, (_, index) => first + index), total: rows.length, truncated: rows.length > body.length };
+    let size = JSON.stringify(sheet).length;
+    while (size > INTAKE_CALC_SHEET_MAX_BYTES && sheet.rows.length > 1) {
+      // Satır başına ortalama boyuta göre kırp; tek geçişte sınırın altına iner.
+      sheet.rows = sheet.rows.slice(0, Math.max(1, Math.floor(sheet.rows.length * (INTAKE_CALC_SHEET_MAX_BYTES / size) * 0.95)));
+      sheet.truncated = true;
+      size = JSON.stringify(sheet).length;
+    }
+    return sheet;
   }
 
   function renderOverviewChart(rows,columns){
@@ -812,6 +906,7 @@
           <div class="oabSettingsSectionHead"><span>${esc(text('Pivot Değerleri', 'Pivot Values'))}</span><button type="button" class="navActionBtn" id="intakeAddValueBtn">+ ${esc(text('Değer ekle', 'Add value'))}</button></div>
           <div class="oabPivotConfigList" id="intakePivotValuesList">${(draft.query.measures || []).map(field => intakePivotValueRowHtml(field, valuePool)).join('')}</div>
         </div>
+        ${PCV() ? PCV().sectionHtml() : ''}
 
         <p class="oabSettingsHint">${esc(text('Satırları tutup sürükleyerek veya oklarla sıralayabilirsiniz. Pivot Values için SUM, AVG, Ağırlıklı ort., COUNT, MIN, MAX ve FIRST özetleme seçenekleri kullanılabilir. Oran/% sütunlarında Ağırlıklı ort. ile paydayı (ör. Güncel Alım Bütçe) seçin; alt toplam oranı doğru hesaplanır.', 'Drag rows to reorder them or use the arrows. Pivot Values support SUM, AVG, Weighted avg., COUNT, MIN, MAX and FIRST summarization. For ratio/% columns choose Weighted avg. with the denominator (e.g. Current Purchase Budget) so subtotals stay correct.'))}</p>
       </div>
@@ -833,6 +928,29 @@
       intakeRefreshConfigOrderButtons(valueList);
     };
     refreshOrderButtons();
+
+    /* Hesaplanan değerler: formülde pencerede SEÇİLİ değer alanları kullanılır.
+       Önizleme ekrandaki pivotun ilk satırları ve genel toplamıdır. */
+    const draftMeasureFields = () => [...valueList.querySelectorAll('.oabPivotValueRow')]
+      .map(row => valuePool.find(item => item.id === row.querySelector('.intakePivotValueField')?.value)).filter(Boolean)
+      .map(field => ({ key: field.id, label: fieldLabel(field) }));
+    const calcSection = PCV() ? PCV().mountSection(modal.querySelector('[data-pcv-section]'), {
+      defs: (draft.display && draft.display.calculated) || [],
+      allowRow: false,
+      rowNote: INTAKE_ROW_MODE_NOTE,
+      widget: { tr: 'INTAKE', en: 'INTAKE' },
+      isTextKey: key => dimensionPool.some(field => field.id === key),
+      // Boyut, ölçü ve Excel sabit başlıkları ayrılmıştır.
+      reserved: () => ['Satır tipi', 'Row type', ...dimensionPool.map(fieldLabel), ...valuePool.map(fieldLabel)], // i18n-ignore: ayrılmış ad listesi (iki dil birlikte)
+      fields: () => draftMeasureFields(),
+      samples: () => {
+        if (!state.rows.length) return [];
+        const items = intakeDisplayRows(intakeSortedRows(activeColumns())).filter(item => item.kind !== 'group' || item.subtotal);
+        const firstRow = (query().rows || [])[0];
+        const label = item => item.kind === 'grand' ? text('Genel Toplam', 'Grand Total') : [...(query().rows || []), ...(query().columns || [])].map(field => clean(item.row && item.row[field.id])).filter(Boolean).join(' › ') || (firstRow ? text('(boş)', '(blank)') : text('Satır', 'Row'));
+        return [...items.slice(0, 5), ...items.slice(-1)].filter((item, index, list) => list.indexOf(item) === index).map(item => ({ label: label(item), values: item.row }));
+      },
+    }) : null;
 
     modal.querySelector('#intakeAddRowBtn')?.addEventListener('click', () => {
       const field = intakeFirstUnusedField(rowList, dimensionPool, '.intakePivotAxisField');
@@ -925,6 +1043,7 @@
       draft.display.showSubtotals = Boolean(modal.querySelector('#intakeShowSubtotalsInput')?.checked);
       draft.display.hideZeroCurrentBudget = Boolean(modal.querySelector('#intakeHideZeroBudgetInput')?.checked);
       draft.display.collapsedGroups = [];
+      if (calcSection) draft.display.calculated = calcSection.value();
       await saveView(draft, close, { message: true, refresh: state.loaded });
     });
 

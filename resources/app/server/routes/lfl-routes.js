@@ -1,4 +1,5 @@
 'use strict';
+const {createHash}=require('node:crypto');
 const collectionLflEngine=require('../../public/collection-lfl-engine');
 const plmBomStore=require('../lib/plm-bom-store');
 const plmModelDetails=require('../lib/plm-model-details');
@@ -44,6 +45,47 @@ function withPlmDetails(rows,meta){
    nesnelerini döndürdüğü için istek yalnız eşleme yapar. Kaynaklardan biri
    değişince (yenileme, yükleme, PLM SYNC) kimlik değişir ve yeniden kurulur. */
 const lflResponseCache=new WeakMap();
+/* ASAS sütun torbası (_asas: ASAS sorgusunun ~41 ham sütunu) /api/lfl
+   satırlarında taşınmaz; sahada 62 bin satırda yanıtın büyük kısmıydı. İstemci
+   yalnız sütun adlarını (meta.asasHeaders) ve kırılım olarak seçilen ASAS
+   sütunlarının değerlerini alır: asas.columns = [{header, values}], values
+   yanıttaki rows ile aynı sıradadır. Sunucu runtime/snapshot'ı değişmez. */
+const ASAS_COLUMN_LIMIT=12,ASAS_HEADER_MAX=256;
+const hasOwn=(object,key)=>Object.prototype.hasOwnProperty.call(object,key);
+function withoutAsasBag(row){
+  if(!row||typeof row!=='object'||!hasOwn(row,'_asas'))return row;
+  const {_asas,...rest}=row;return rest;
+}
+function asasHeadersOf(rows){
+  const set=new Set();
+  for(const row of rows){const bag=row&&row._asas;if(bag&&typeof bag==='object')for(const key of Object.keys(bag))if(String(key||'').trim())set.add(key);}
+  return [...set];
+}
+// null: geçersiz istek (400). Boş dizi: sütun istenmedi.
+function requestedAsasHeaders(raw){
+  if(raw===undefined||raw==='')return [];
+  if(typeof raw!=='string'||raw.length>ASAS_COLUMN_LIMIT*(ASAS_HEADER_MAX+8))return null;
+  let list;try{list=JSON.parse(raw);}catch(_){return null;}
+  if(!Array.isArray(list)||list.length>ASAS_COLUMN_LIMIT)return null;
+  const out=[];
+  for(const item of list){if(typeof item!=='string')return null;const header=item.trim();if(!header||header.length>ASAS_HEADER_MAX)return null;if(!out.includes(header))out.push(header);}
+  return out;
+}
+// Değer, eski istemcideki breakdownValue ile aynı kurala göre seçilir: torbada varsa torbadan, yoksa satır alanından.
+function asasColumns(scopedRows,outRows,headers){
+  return headers.map(header=>({header,values:scopedRows.map((row,index)=>{
+    const bag=row&&row._asas;if(bag&&typeof bag==='object'&&hasOwn(bag,header))return bag[header]??null;
+    const out=outRows[index];return out&&typeof out==='object'&&hasOwn(out,header)?out[header]??null:null;
+  })}));
+}
+/* Sütun değerleri satır sırasına göre hizalanır; ayrı sütun isteği yalnız aynı
+   LFL yüklemesi, aynı satır sayısı ve aynı erişim kapsamı için geçerlidir. */
+function asasVersion(req,runtime,rowCount){
+  const user=req&&req.currentUser||{};
+  const profile=userAccess.publicProfile?userAccess.publicProfile(user)||{}:user;
+  const identity=JSON.stringify([sourceUserId(req),profile.id||user.id||'',profile.dataScope||null,profile.scopes||null,profile.delegatedUserIds||null,String(runtime&&runtime.lflLoadedAt||''),rowCount]);
+  return createHash('sha256').update(identity).digest('hex').slice(0,24);
+}
 function lflResponse(runtime,scopedRows){
   const rows=Array.isArray(runtime&&runtime.lflRows)?runtime.lflRows:[];
   let store=null;
@@ -55,20 +97,23 @@ function lflResponse(runtime,scopedRows){
     let enriched=imageAware;
     let plmDetails={};
     if(store){try{enriched=plmModelDetails.attachToRows(imageAware,store,{compact:true});plmDetails=plmModelDetails.detailsForRows(enriched,store);}catch(err){console.warn('[LFL] PLM model detayları eklenemedi:',err&&err.message);}}
-    const byRow=new Map();rows.forEach((row,index)=>byRow.set(row,enriched[index]));
+    const byRow=new Map();rows.forEach((row,index)=>byRow.set(row,withoutAsasBag(enriched[index])));
     // PLM Kumaş / Artwork metinleri model başına bir kez taşınır; istemci PLM ID ile eşler (lfl.js).
     const base=withFabricDimensions(runtime.lflMeta||{},enriched);
     entry={store,asasOrders:runtime.asasOrders,asasOrdersByTarget:runtime.asasOrdersByTarget,lflMeta:runtime.lflMeta,byRow,
-      meta:{...base,dimensions:{...(base.dimensions||{}),plmFabrics:[...new Set(Object.values(plmDetails).map(item=>item.plmFabric).filter(Boolean))].sort(),plmArtworks:[...new Set(Object.values(plmDetails).map(item=>item.plmArtwork).filter(Boolean))].sort()},plmDetails}};
+      meta:{...base,asasHeaders:asasHeadersOf(rows),dimensions:{...(base.dimensions||{}),plmFabrics:[...new Set(Object.values(plmDetails).map(item=>item.plmFabric).filter(Boolean))].sort(),plmArtworks:[...new Set(Object.values(plmDetails).map(item=>item.plmArtwork).filter(Boolean))].sort()},plmDetails}};
     lflResponseCache.set(rows,entry);
   }
   const scoped=Array.isArray(scopedRows)?scopedRows:[];
   // Kapsam dışı yeni nesne gelirse (beklenmez) yine görsel kimliği + PLM detayıyla çözülür.
   const missing=scoped.filter(row=>!entry.byRow.has(row));
-  const extra=missing.length?withPlmDetails(attachModelImageIdentities(missing,modelImageIdentityOrders(runtime))).rows:[]; // tam (inline) biçim
+  const extra=missing.length?withPlmDetails(attachModelImageIdentities(missing,modelImageIdentityOrders(runtime))).rows.map(withoutAsasBag):[]; // tam (inline) biçim
   const extraMap=new Map(missing.map((row,index)=>[row,extra[index]]));
-  const out=scoped.map(row=>entry.byRow.get(row)||extraMap.get(row)||row);
-  return {rows:out,meta:{...entry.meta,rowCount:out.length}};
+  const out=scoped.map(row=>entry.byRow.get(row)||extraMap.get(row)||withoutAsasBag(row));
+  return {rows:out,scoped,meta:{...entry.meta,rowCount:out.length}};
+}
+function lflAsasPayload(req,runtime,enriched,headers){
+  return {version:asasVersion(req,runtime,enriched.rows.length),columns:asasColumns(enriched.scoped,enriched.rows,headers)};
 }
 async function collectionReferenceSource(req,res,fallback=null,summaryOnly=false,assertResponse=()=>{}){
     res.set('Cache-Control','no-store');
@@ -149,6 +194,8 @@ app.post('/api/collection-lfl-detail',userAccess.requireArea('koleksiyon'),userA
 // GET çağrısı Excel/Power Query yenilemesi başlatmaz; yalnız diskteki kayıtlı dosyayı okur.
 app.get('/api/lfl', userAccess.requireArea('lfl'), async (req, res) => {
   try{
+    const asasHeaders=requestedAsasHeaders(req.query&&req.query.asas);
+    if(!asasHeaders)return res.status(400).json({error:'Geçersiz ASAS sütun isteği. / Invalid ASAS column request.',code:'VALIDATION_ERROR'});
     const id=sourceUserId(req);
     const filterStatus=sourceFilterReadiness(['lfl'],req);
     if(!filterStatus.ready){
@@ -161,13 +208,35 @@ app.get('/api/lfl', userAccess.requireArea('lfl'), async (req, res) => {
     sendDateSafeJson(res, {
       rows: enriched.rows,
       meta: enriched.meta,
+      asas: lflAsasPayload(req,runtime,enriched,asasHeaders),
       source: runtime.sources && runtime.sources.lfl || null,
       loadedAt: runtime.lflLoadedAt,
     });
   }catch(err){apiError(res,err,'LFL Excel dosyası okunamadı.');}
 });
+/* LFL ekranında yeni bir ASAS kırılımı seçilince yalnız o sütun(lar) gelir.
+   /api/lfl ile aynı alan yetkisi, kaynak filtresi ve satır kapsamı uygulanır;
+   version /api/lfl yanıtındaki asas.version ile eşleşmezse 409 döner ve istemci
+   LFL'yi baştan okur (satır hizası korunur). */
+app.get('/api/lfl/asas-columns', userAccess.requireArea('lfl'), async (req, res) => {
+  try{
+    res.set('Cache-Control','no-store');
+    const headers=requestedAsasHeaders(req.query&&req.query.headers),version=req.query&&req.query.version;
+    if(!headers||!headers.length||typeof version!=='string'||!version||version.length>64)return res.status(400).json({error:'Geçersiz ASAS sütun isteği. / Invalid ASAS column request.',code:'VALIDATION_ERROR'});
+    const id=sourceUserId(req);
+    if(!sourceFilterReadiness(['lfl'],req).ready)return res.status(409).json({error:'LFL kaynak filtresi gerekli. / The LFL source filter is required.',code:'SOURCE_FILTER_REQUIRED'});
+    await ensureDataLoaded(id);
+    const runtime=cacheForUser(id);
+    const scopedRows=userAccess.filterRowsByScope(req.currentUser,runtime.lflRows||[]);
+    const enriched=lflResponse(runtime,scopedRows),payload=lflAsasPayload(req,runtime,enriched,headers);
+    if(payload.version!==version)return res.status(409).json({error:'LFL verisi değişti. / LFL data changed.',code:'LFL_ASAS_STALE'});
+    sendDateSafeJson(res,{version:payload.version,rowCount:enriched.rows.length,columns:payload.columns});
+  }catch(err){apiError(res,err,'LFL ASAS sütunu okunamadı.');}
+});
 const lflRefreshInFlight=new Set();
 app.post('/api/lfl/refresh', userAccess.requireArea('lfl'), async (req, res) => {
+  const asasHeaders=requestedAsasHeaders(req.query&&req.query.asas);
+  if(!asasHeaders)return res.status(400).json({error:'Geçersiz ASAS sütun isteği. / Invalid ASAS column request.',code:'VALIDATION_ERROR'});
   const id=sourceUserId(req);
   if(lflRefreshInFlight.has(id))return res.status(409).json({error:'Bu kullanıcı için bir LFL yenileme işlemi zaten devam ediyor.',code:'OPERATION_IN_PROGRESS'});
   lflRefreshInFlight.add(id);
@@ -176,7 +245,7 @@ app.post('/api/lfl/refresh', userAccess.requireArea('lfl'), async (req, res) => 
     const runtime=await loadFromModels(id, ['lfl']);
     const scopedRows=userAccess.filterRowsByScope(req.currentUser,runtime.lflRows||[]);
     const enriched=lflResponse(runtime,scopedRows);
-    const result={rows:enriched.rows,meta:enriched.meta,source:runtime.sources&&runtime.sources.lfl||null,loadedAt:runtime.lflLoadedAt};
+    const result={rows:enriched.rows,meta:enriched.meta,asas:lflAsasPayload(req,runtime,enriched,asasHeaders),source:runtime.sources&&runtime.sources.lfl||null,loadedAt:runtime.lflLoadedAt};
     userAccess.appendAudit(req.currentUser,'LFL_MODEL_REFRESH','Data Model Connection',{source:result.source,rowCount:Number(result.meta&&result.meta.rowCount)||0});
     sendDateSafeJson(res, result);
   }
@@ -204,7 +273,7 @@ app.post('/api/lfl/upload', userAccess.requireArea('lfl'), async (req, res) => {
     userAccess.appendAudit(req.currentUser,'LFL_UPLOAD',name||'uploaded',{rowCount:Number(parsed.meta&&parsed.meta.rowCount)||0});
     const scopedRows=userAccess.filterRowsByScope(req.currentUser,runtime.lflRows||[]);
     const enriched=lflResponse(runtime,scopedRows);
-    sendDateSafeJson(res, { rows: enriched.rows, meta: enriched.meta, source: runtime.sources.lfl, loadedAt: runtime.lflLoadedAt });
+    sendDateSafeJson(res, { rows: enriched.rows, meta: enriched.meta, asas: lflAsasPayload(req,runtime,enriched,[]), source: runtime.sources.lfl, loadedAt: runtime.lflLoadedAt });
   } catch (err) { apiError(res, err, 'Yüklenen LFL Excel dosyası işlenemedi.'); }
 });
 

@@ -94,6 +94,67 @@
   const isValidBreakdownDim=dim=>BREAKDOWN_DIMS.includes(dim)||isAsasBreakdownDim(dim);
   const asasHeaderFromDim=dim=>isAsasBreakdownDim(dim)?String(dim).slice(ASAS_BREAKDOWN_PREFIX.length):'';
   const asasDimFromHeader=header=>ASAS_BREAKDOWN_PREFIX+String(header||'').trim();
+  const ASAS_COLUMN_REQUEST_LIMIT=12;
+  /* legacy: sunucu tam _asas torbasını satırla gönderdi (eski sunucu) — her sütun yüklü sayılır.
+     sourceRows: /api/lfl rows dizisi (süzülmeden önce); sütun değerleri bu sırayla hizalıdır. */
+  function asasColumnsState(payload=null,headers=[],sourceRows=[]){
+    return {version:payload&&payload.version?String(payload.version):'',legacy:!payload,headers:(Array.isArray(headers)?headers:[]).map(h=>String(h||'').trim()).filter(Boolean),
+      loaded:new Set(),failed:new Set(),sourceRows:Array.isArray(sourceRows)?sourceRows:[],pending:null};
+  }
+  function asasHeadersForDims(dims){return [...new Set((Array.isArray(dims)?dims:[]).filter(isAsasBreakdownDim).map(asasHeaderFromDim))];}
+  // İlk istekte hem güncel hem kayıtlı kırılımın ASAS sütunları istenir; kayıtlı kırılım fillControls'ta geri yüklenir.
+  function requestedAsasHeaders(){const saved=loadSaved();return [...new Set([...asasHeadersForDims(state.breakdown),...asasHeadersForDims(Array.isArray(saved.breakdown)?saved.breakdown:[])])].slice(0,ASAS_COLUMN_REQUEST_LIMIT);}
+  function applyAsasColumns(asas,columns){
+    const rows=asas.sourceRows;
+    (Array.isArray(columns)?columns:[]).forEach(column=>{
+      if(!column||typeof column.header!=='string'||!Array.isArray(column.values))return;
+      const header=column.header,values=column.values;
+      for(let index=0;index<rows.length;index++){
+        const row=rows[index];if(!row||typeof row!=='object')continue;
+        let bag=row._asas;if(!bag||typeof bag!=='object'){bag=Object.create(null);row._asas=bag;}
+        bag[header]=values[index]===undefined?null:values[index];
+      }
+      asas.loaded.add(header);
+    });
+  }
+  // Seçili kırılımda olup henüz gelmemiş ASAS sütunları. Yüklü listede olmayan başlık istenmez (değeri yok; satır alanına düşer).
+  function missingAsasHeaders(){
+    const asas=state.asas;if(!asas||asas.legacy||!asas.version)return [];
+    const known=new Set(asas.headers);
+    return asasHeadersForDims(state.breakdown).filter(header=>known.has(header)&&!asas.loaded.has(header)&&!asas.failed.has(header));
+  }
+  function invalidateAsasGroupCache(rows){
+    analysisDatasetRevision+=1;lflAnalysisCache.clear();lflScenarioCache.clear();
+    (rows||[]).forEach(row=>{const meta=row&&typeof row==='object'?ROW_META_CACHE.get(row):null;if(meta&&meta.groups)meta.groups.clear();});
+  }
+  /* Yeni seçilen ASAS kırılımı için yalnız o sütun(lar) indirilir. Veri veya
+     kapsam değiştiyse (409) LFL seçili sütunlarla baştan okunur. */
+  function ensureAsasColumns(){
+    const asas=state.asas,missing=missingAsasHeaders();
+    if(!missing.length)return Promise.resolve(true);
+    if(asas.pending)return asas.pending;
+    asas.pending=(async()=>{
+      try{
+        const res=await fetch(`/api/lfl/asas-columns?headers=${encodeURIComponent(JSON.stringify(missing))}&version=${encodeURIComponent(asas.version)}`,{cache:'no-store',headers:{Accept:'application/json'}});
+        const data=await res.json().catch(()=>({}));
+        if(state.asas!==asas)return false;
+        if(res.status===409&&data&&data.code==='LFL_ASAS_STALE'){
+          const ok=await load(false,{preserveOnError:true,silent:true});
+          if(!ok)missing.forEach(header=>asas.failed.add(header));
+          return ok;
+        }
+        if(!res.ok||!data||!Array.isArray(data.columns)||Number(data.rowCount)!==asas.sourceRows.length)throw new Error((data&&data.error)||`HTTP ${res.status}`);
+        applyAsasColumns(asas,data.columns);missing.forEach(header=>{if(!asas.loaded.has(header))asas.failed.add(header);});
+        invalidateAsasGroupCache(asas.sourceRows);
+        return true;
+      }catch(err){
+        missing.forEach(header=>asas.failed.add(header));
+        if(window.showToast)showToast((isEn()?'ASAS column could not be loaded: ':'ASAS sütunu yüklenemedi: ')+(err&&err.message||String(err)));
+        return false;
+      }finally{asas.pending=null;}
+    })();
+    return asas.pending;
+  }
   // Kirilim listesi filtre alanlariyla ayni kapsama acildi: eskiden yalniz BREAKDOWN_META
   // kullanilabiliyordu, Marka Mudurlukleri ve In-Store Ayi kirilim olarak secilemiyordu.
   // In-Store Ayi eklenince "Şubat ile Mart'i kiyasla" mevcut Referans satiri mekanizmasi
@@ -119,6 +180,9 @@
     // satırların yanına geçici olarak eklenir. serverRows her zaman dokunulmamış
     // gerçek veridir; trial kapatılınca rapor anında ona döner.
     serverRows:[],
+    // ASAS sütunları (_asas) satırlarla gelmez: /api/lfl yalnız sütun adlarını ve
+    // kırılım olarak seçilen ASAS sütunlarının değerlerini taşır (asasColumnsState).
+    asas:asasColumnsState(),
     trial:{enabled:false,items:new Map(),rows:[],scope:null,pendingCorrections:new Map()},
     filters:Object.fromEntries(FILTER_DIMS.map(k=>[k,new Set()])),
     periods:{current:{dateField:'inStore'},compare:{dateField:'inStore'}},
@@ -650,7 +714,9 @@
   function updateAllFilterButtons(){FILTER_DIMS.forEach(updateFilterButton);updateBreakdownButton();}
   function closeBreakdownPanel(){const panel=$('lflBreakdownPanel'),btn=$('lflBreakdownBtn');if(panel)panel.hidden=true;if(btn)btn.setAttribute('aria-expanded','false');}
   function loadedAsasHeaders(){
-    const set=new Set();(state.serverRows||[]).forEach(row=>{if(row&&row._asas&&typeof row._asas==='object')Object.keys(row._asas).forEach(key=>{if(String(key||'').trim())set.add(String(key).trim());});});
+    const set=new Set((state.asas&&state.asas.headers)||[]);
+    // Eski sunucu: sütun adları yalnız satır torbalarında.
+    if(!state.asas||state.asas.legacy)(state.serverRows||[]).forEach(row=>{if(row&&row._asas&&typeof row._asas==='object')Object.keys(row._asas).forEach(key=>{if(String(key||'').trim())set.add(String(key).trim());});});
     return [...set].sort((a,b)=>a.localeCompare(b,'tr-TR',{numeric:true,sensitivity:'base'}));
   }
   function connectionFeedsLfl(item){
@@ -2204,6 +2270,12 @@
   }
 
   function render(){
+    // Seçili ASAS kırılımının sütunu henüz yoksa önce yalnız o sütun indirilir; gruplar '(Boş)' ile çizilmez.
+    if(!state.loading&&state.serverRows.length&&missingAsasHeaders().length){
+      setLoadingView(true,{title:isEn()?'Loading ASAS column…':'ASAS sütunu yükleniyor…',detail:isEn()?'Only the selected ASAS breakdown column is downloaded.':'Yalnız seçilen ASAS kırılım sütunu indiriliyor.'});
+      void ensureAsasColumns().then(()=>{setLoadingView(false);if(!state.loading)render();});
+      return;
+    }
     enforceTrialFilterRules();
     trialUpdateButton();
     updateFabricDetailsButton();
@@ -2245,12 +2317,12 @@
   }
   /* İlk yükleme sırasında LFL ekranı boş kontrollerle açılmaz: ortak bekleme
      durumu (Biliyor muydunuz? kartlarıyla) gösterilir; veri gelince ekran çizilir. */
-  function setLoadingView(on){
+  function setLoadingView(on,message=null){
     const view=document.getElementById('view-lfl'),host=$('lflLoadingState');if(!view||!host)return;
     if(on){
       if(view.classList.contains('lflIsLoading'))return;
       view.classList.add('lflIsLoading');host.hidden=false;
-      const title=isEn()?'LFL data is loading to the screen…':'LFL verisi ekrana yükleniyor…',detail=isEn()?'Depending on data volume this can take a few seconds.':'Veri hacmine göre bu birkaç saniye sürebilir.';
+      const title=message&&message.title||(isEn()?'LFL data is loading to the screen…':'LFL verisi ekrana yükleniyor…'),detail=message&&message.detail||(isEn()?'Depending on data volume this can take a few seconds.':'Veri hacmine göre bu birkaç saniye sürebilir.');
       if(window.BLUI&&typeof BLUI.renderState==='function')BLUI.renderState(host,{kind:'loading',title,detail});else host.textContent=title;
     }else{
       if(!view.classList.contains('lflIsLoading'))return;
@@ -2259,16 +2331,20 @@
   }
   async function load(force=false,options={}){
     if(state.loading)return false;
-    const preserved=options.preserveOnError?{serverRows:state.serverRows,rows:state.rows,meta:state.meta,source:state.source,loadedAt:state.loadedAt,trialRows:state.trial.rows}:null;
+    const preserved=options.preserveOnError?{serverRows:state.serverRows,rows:state.rows,meta:state.meta,source:state.source,loadedAt:state.loadedAt,trialRows:state.trial.rows,asas:state.asas}:null;
     state.loading=true;const btn=$('lflRefreshBtn'),old=btn?.innerHTML;if(btn){btn.disabled=true;btn.innerHTML='<span>'+(isEn()?'Refreshing…':'Yenileniyor…')+'</span>';}
     analysisDatasetRevision+=1;lflAnalysisCache.clear();lflScenarioCache.clear();
     if(state.initialized&&!state.serverRows.length)setLoadingView(true);
     try{
       if(window.BLFX&&BLFX.load)await BLFX.load();
-      const res=await fetch(force?'/api/lfl/refresh':'/api/lfl',{method:force?'POST':'GET'}),data=await res.json();
+      const asasHeaders=requestedAsasHeaders(),asasQuery=asasHeaders.length?`?asas=${encodeURIComponent(JSON.stringify(asasHeaders))}`:'';
+      const res=await fetch((force?'/api/lfl/refresh':'/api/lfl')+asasQuery,{method:force?'POST':'GET'}),data=await res.json();
       if(!res.ok)throw new Error(data.error||'LFL verisi okunamadı.');
       if(data&&data.sourceFilterRequired&&typeof window.showSourceFilterRequiredNotice==='function')window.showSourceFilterRequiredNotice(data.sourceFilterStatus,data.sourceFilterMessage);
       applyPlmDetails(Array.isArray(data.rows)?data.rows:[],data.meta&&data.meta.plmDetails);
+      const asasPayload=data&&data.asas&&typeof data.asas==='object'?data.asas:null;
+      state.asas=asasColumnsState(asasPayload,data.meta&&data.meta.asasHeaders,Array.isArray(data.rows)?data.rows:[]);
+      if(asasPayload)applyAsasColumns(state.asas,asasPayload.columns);
       state.serverRows=(Array.isArray(data.rows)?data.rows:[]).filter(r=>['mag','mmyg','classification','season','manufacturer','country','buyingGroup','buyer'].every(k=>isUsableValue(r[k]))&&['inStore','opd','retailDate'].some(k=>isUsableValue(r[k])));
       rebuildDimensionLabelIndex(state.serverRows);applyTrialRows();state.meta=data.meta||{};state.source=data.source||null;state.loadedAt=data.loadedAt||null;
       if(force)window.BLCollectionLfl?.invalidate();
@@ -2281,9 +2357,9 @@
     }catch(err){
       setLoadingView(false);
       if(preserved){
-        state.serverRows=preserved.serverRows;state.rows=preserved.rows;state.meta=preserved.meta;state.source=preserved.source;state.loadedAt=preserved.loadedAt;state.trial.rows=preserved.trialRows;rebuildDimensionLabelIndex(state.serverRows);render();
+        state.serverRows=preserved.serverRows;state.rows=preserved.rows;state.meta=preserved.meta;state.source=preserved.source;state.loadedAt=preserved.loadedAt;state.trial.rows=preserved.trialRows;state.asas=preserved.asas;rebuildDimensionLabelIndex(state.serverRows);render();
       }else{
-        state.serverRows=[];rebuildDimensionLabelIndex([]);state.trial.rows=[];state.rows=[];state.meta={warnings:[err.message],rowCount:0};state.source=null;if(state.initialized)render();
+        state.serverRows=[];state.asas=asasColumnsState();rebuildDimensionLabelIndex([]);state.trial.rows=[];state.rows=[];state.meta={warnings:[err.message],rowCount:0};state.source=null;if(state.initialized)render();
       }
       if(!options.silent&&window.showToast)showToast((isEn()?'LFL refresh failed: ':'LFL yenileme başarısız: ')+err.message);
       return false;
