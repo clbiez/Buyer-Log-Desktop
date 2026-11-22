@@ -25,7 +25,7 @@ function resolveMultipliers(next,current,preserve){
  return {tr:merged.tr,overseas:merged.overseas,...(table?{byVehicle:table}:{})};
 }
 function createLandedMultiplierService({db}){
- const read=()=>{const value=db.loadOverrides();return {multipliers:db.normalizeLandedMultipliers(value.landedMultipliers),revision:Number(value._revisions.landedMultipliers)||0,documentRevision:value._revision};};
+ const read=()=>{const value=db.loadOverrides();return {multipliers:db.landedMultipliersOf(value),revision:Number(value._revisions.landedMultipliers)||0,documentRevision:value._revision};};
  const capacity=(value,reserve=2)=>{if(![value.revision,value.documentRevision].every(n=>Number.isSafeInteger(n)&&n>=0&&n<=Number.MAX_SAFE_INTEGER-reserve))throw error('OFFICE_RESOURCE_REVISION_INVALID',409);};
  const snapshot=ctx=>db.mutateSharedResource('landedMultipliers',()=>{ctx.assertAuthority?.();const {documentRevision,...value}=read();return value;});
  const preview=(raw,ctx)=>db.mutateSharedResource('landedMultipliers',()=>{

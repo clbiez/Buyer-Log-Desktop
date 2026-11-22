@@ -111,3 +111,14 @@ test('öneri: az örnekte öneri verilmez ve neden kodu döner', () => {
   assert.equal(narrow.enough, false);
   assert.equal(narrow.reason, 'fewOrders');
 });
+
+test('öneri yüzdeliği tek sabittir (varsayılan P50 = medyan); P90 seçilebilir ve sonuçta yazılır', () => {
+  assert.equal(V.SUGGEST_PERCENTILE, 0.5);
+  const samples = Array.from({ length: 10 }, (_, i) => ({ key: 'GEMI', label: 'Gemi', order: `O${i}`, qty: 100, ratio: 1.01 + i / 100 })).flatMap(item => [item, { ...item }]);
+  const p50 = V.suggest(samples)[0];
+  assert.equal(p50.percentile, 0.5);
+  close(p50.suggestion, (1.05 + 1.06) / 2);
+  const p90 = V.suggest(samples, { percentile: 0.9 })[0];
+  assert.equal(p90.percentile, 0.9);
+  close(p90.suggestion, (1.09 + 1.1) / 2);
+});

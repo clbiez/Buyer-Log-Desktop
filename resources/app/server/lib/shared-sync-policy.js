@@ -7,6 +7,8 @@
 
 const MASTER_OVERRIDE_FIELDS = new Set([
   'pricingRules', 'licenseCards', 'transitRules', 'nonDtrManufacturers', 'landedMultipliers',
+  // Vasıtaya göre yurtdışı landed standardı (TR/YD); landedMultipliers ile aynı revizyon.
+  'landedVehicleStandards',
   'freightRates', 'transitAnalysis', 'antrepoMatchRule', 'antrepoMatchConfig', 'antrepoSourceMode',
   'asasSourceMode', 'asasFabricMode', 'lflSourceMode', 'antrepoMatchConfigVersion', 'noteColumnDefs',
   // Önem etiketi kataloğu + Line kuralları: Moderatör yayımıyla ekibe dağılır.

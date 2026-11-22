@@ -148,7 +148,7 @@ function suggestions(rows, cache) {
   return {
     items: Vehicles.suggest(samples), ydRows, skipped,
     seasons: [...seasons].sort((a, b) => a.localeCompare(b, 'tr', { numeric: true })),
-    thresholds: { rows: Vehicles.MIN_SAMPLE_ROWS, orders: Vehicles.MIN_SAMPLE_ORDERS },
+    thresholds: { rows: Vehicles.MIN_SAMPLE_ROWS, orders: Vehicles.MIN_SAMPLE_ORDERS }, percentile: Vehicles.SUGGEST_PERCENTILE,
     iasLoaded: index.parsiyels > 0,
   };
 }

@@ -257,10 +257,25 @@ function normalizeLandedMultipliers(value) {
   return {
     tr: Number.isFinite(tr) && tr > 0 ? tr : 1.05,
     overseas: Number.isFinite(overseas) && overseas > 0 ? overseas : 1.11,
-    // Vasıtaya göre yurtdışı standardı (TR/YD Landed Avantaj). Boşsa alan yazılmaz:
-    // eski kaydın şekli ve parmak izi aynen kalır (public/landed-vehicle-standards.js).
+    // Vasıtaya göre yurtdışı standardı (TR/YD Landed Avantaj) API şeklinde birleşik
+    // gösterilir; boşsa alan yazılmaz (public/landed-vehicle-standards.js).
     ...(byVehicle => Object.keys(byVehicle).length ? { byVehicle } : {})(require('../public/landed-vehicle-standards').normalizeByVehicle(raw.byVehicle)),
   };
+}
+/* Depolama: vasıta standartları AYRI üst düzey anahtardadır (landedVehicleStandards).
+   Eski sürüm loadOverrides'ta bilinmeyen üst düzey anahtarları korur ({...base,
+   ...parsed}) ama landedMultipliers'ı yalnız {tr, overseas} olarak normalize eder;
+   iç içe tutulsaydı eski sürümün herhangi bir overrides yazımı onu silerdi.
+   Revizyon/CAS ortak: _revisions.landedMultipliers. Anahtar varsa (boş {} dahil)
+   önceliklidir; yoksa yalnız geçiş için iç içe değer okunur. */
+function landedVehicleStandardsOf(ov) {
+  const source = ov && typeof ov === 'object' ? ov : {};
+  const raw = Object.hasOwn(source, 'landedVehicleStandards') ? source.landedVehicleStandards : (source.landedMultipliers && source.landedMultipliers.byVehicle);
+  return require('../public/landed-vehicle-standards').normalizeByVehicle(raw);
+}
+function landedMultipliersOf(ov) {
+  const base = normalizeLandedMultipliers(ov && ov.landedMultipliers);
+  return normalizeLandedMultipliers({ tr: base.tr, overseas: base.overseas, byVehicle: landedVehicleStandardsOf(ov) });
 }
 
 function defaultOverrides() {
@@ -408,7 +423,9 @@ function loadOverrides({ projectManufacturers = true } = {}) {
   // bırakılabilir; açmak Moderatör kararıdır). Eski tek sorgu (inline) bilerek
   // seçilemez: kumaş kaydı olmayan siparişleri düşürüyor, satırları çoğaltıyordu.
   merged.asasFabricMode = String(parsed && parsed.asasFabricMode || '').toLowerCase() === 'separate' ? 'separate' : 'off';
-  merged.landedMultipliers = normalizeLandedMultipliers(parsed && parsed.landedMultipliers);
+  // landedMultipliers yalnız {tr, overseas}; vasıta standartları üst düzey landedVehicleStandards (landedMultipliersOf).
+  if (!Object.hasOwn(merged, 'landedVehicleStandards') && parsed && parsed.landedMultipliers && parsed.landedMultipliers.byVehicle) merged.landedVehicleStandards = landedVehicleStandardsOf(parsed);
+  merged.landedMultipliers = (({ tr, overseas }) => ({ tr, overseas }))(normalizeLandedMultipliers(parsed && parsed.landedMultipliers));
   merged.freightRates = BLFreight.normalizeSettings(parsed && parsed.freightRates);
   merged.transitAnalysis = BLTransitStageModel.normalizeModel(parsed && parsed.transitAnalysis);
   merged.tableReportLayouts = require('./lib/table-report-layouts').normalize(parsed && parsed.tableReportLayouts);
@@ -740,10 +757,13 @@ function replaceLandedMultipliers(value, expectedRevision = null, options = {}) 
   const current = Number(ov._revisions.landedMultipliers) || 0;
   const wanted = expectedNumber(expectedRevision);
   if (wanted != null && wanted !== current) throw new RevisionConflictError('Landed çarpanları', wanted, current, 'landedMultipliers');
-  ov.landedMultipliers = normalizeLandedMultipliers(value);
+  const next = normalizeLandedMultipliers(value);
+  ov.landedMultipliers = { tr: next.tr, overseas: next.overseas };
+  // Her yazımda açıkça yazılır (boşsa {}): eski iç içe değer geri gelmez.
+  ov.landedVehicleStandards = next.byVehicle || {};
   ov._revisions.landedMultipliers = current + 1;
   const saved = saveOverrides(ov, ov._revision, options);
-  return { multipliers: normalizeLandedMultipliers(saved.landedMultipliers), revision: saved._revisions.landedMultipliers };
+  return { multipliers: landedMultipliersOf(saved), revision: saved._revisions.landedMultipliers };
 }
 // Kullanıcı düzenlemeleri sipariş + model + renk koduyla saklanır. İstemci model
 // ve renk kodunu göndermezse (ör. yalnız Order Code sütunu olan Excel içe aktarma)
@@ -2254,7 +2274,7 @@ module.exports = {
   mutateTableProfiles,mutateHorizonTemplates,
   snapshotOrderOverride,verifyOrderOverridePatch,restoreOrderOverrideReceipt,restoreOrderOverrideReceipts,noteColumnSnapshot,restoreNoteColumnDefs,normalizeNoteColumnDefs,
   mutateSharedResource,mutateSettings,mutateModelConnections,attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores, cpExFactoryRevisionSnapshot, restoreCpExFactoryRevisions,
-  RevisionConflictError, revisionOf, expectedNumber, applyDatePatch, overrideWriteKey, normalizeLandedMultipliers,
+  RevisionConflictError, revisionOf, expectedNumber, applyDatePatch, overrideWriteKey, normalizeLandedMultipliers, landedMultipliersOf, landedVehicleStandardsOf,
   NOTE_AUTHOR_FIELDS, LEGACY_NOTE_AUTHOR_ID, LEGACY_NOTE_AUTHOR_NAME, backfillLegacyNoteAuthors,
   loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceCpManagedRules, normalizeCpManagedRules, replaceTableReportLayout, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceAsasFabricMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, replaceImportanceSettings, patchOrderOverride, patchOrderOverrides, patchOrderOverrideRows, CP_ROW_SAVE_FIELDS, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
   normalizeMapping, normalizeCustomFields, normalizeCpModelColumns, normalizeModelConnection, normalizeModelConnections, loadModelConnections, replaceModelConnections, recordModelConnectionRun, MODEL_CONNECTION_LIMIT, MODEL_CONNECTION_DEFAULT_SEASONS,

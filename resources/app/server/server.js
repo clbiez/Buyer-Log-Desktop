@@ -949,6 +949,8 @@ function changedMasterEntities(remoteRecords, localRecords, ids) {
       for (const field of ['pricingRules','licenseCards','transitRules','transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoSourceMode','asasSourceMode','asasFabricMode','lflSourceMode','noteColumnDefs','importanceSettings','cpManagedRules','tableReportLayouts']) {
         if (different(before && before[field], after && after[field])) changed.add(field);
       }
+      // Vasıta standartları ayrı anahtarda saklanır; istemci için landedMultipliers alanıdır.
+      if (different(before && before.landedVehicleStandards, after && after.landedVehicleStandards)) changed.add('landedMultipliers');
       if (
         different(before && before.antrepoMatchRule, after && after.antrepoMatchRule) ||
         different(before && before.antrepoMatchConfig, after && after.antrepoMatchConfig) ||
@@ -10835,7 +10837,7 @@ app.get('/api/landed-multipliers', (req, res) => {
   // knownVehicles: kullanıcının yüklü IAS verisinde görülen vasıtalar (vasıtaya göre standart alanları).
   let knownVehicles = [];
   try { knownVehicles = require('./lib/tryd-vehicle-index').knownVehicles(cacheForUser(req)); } catch (_) { knownVehicles = []; }
-  res.json({ multipliers: ov.landedMultipliers || { tr: 1.05, overseas: 1.11 }, revision, knownVehicles });
+  res.json({ multipliers: require('./db').landedMultipliersOf(ov), revision, knownVehicles });
 });
 app.put('/api/landed-multipliers', userAccess.requireArea('source'), userAccess.requirePermission('manageBusinessRules'), express.json({limit:'32kb'}), async (req, res) => {
   try {

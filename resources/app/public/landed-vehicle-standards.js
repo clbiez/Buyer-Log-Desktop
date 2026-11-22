@@ -26,6 +26,10 @@
      bağımsız örnek değildir. 20 satır / 5 sipariş, tek bir sevkiyatın (ör. tek
      acil uçak) medyanı belirlemesini önleyen en küçük makul tabandır. */
   const MIN_SAMPLE_ROWS = 20;
+  /* Öneri yüzdeliği (adet ağırlıklı): 0.5 = medyan (onaylı plan). P75 = 0.75, P90 = 0.9.
+     Medyanda o vasıtanın satırlarının ~yarısı standardın üstünde kalır ("yüksek" görünür);
+     üst yüzdelik uyarıyı seçici yapar. Ürün kararı bekleniyor; değişiklik yalnız bu sabittir. */
+  const SUGGEST_PERCENTILE = 0.5;
   const MIN_SAMPLE_ORDERS = 5;
 
   function fold(value) {
@@ -113,13 +117,13 @@
     return { value, source, known: true, weighting: qtyWeighted ? 'qty' : 'equal', parts: mix, label, labelEn };
   }
 
-  /* Adet ağırlıklı medyan: kümülatif ağırlık yarıyı ilk geçtiği değer; tam yarıda
-     sonraki değerle ortalanır. */
-  function weightedMedian(items) {
+  /* Adet ağırlıklı yüzdelik: kümülatif ağırlık p×toplamı ilk geçtiği değer; tam
+     sınırda sonraki değerle ortalanır (p = 0.5 → medyan). */
+  function weightedQuantile(items, p) {
     const list = items.filter(item => Number.isFinite(item.ratio) && item.weight > 0).sort((a, b) => a.ratio - b.ratio);
     const total = list.reduce((sum, item) => sum + item.weight, 0);
     if (!total) return null;
-    const half = total / 2;
+    const half = total * Math.min(1, Math.max(0, Number(p)));
     let cumulative = 0;
     for (let index = 0; index < list.length; index += 1) {
       cumulative += list[index].weight;
@@ -128,12 +132,14 @@
     }
     return list[list.length - 1].ratio;
   }
+  const weightedMedian = items => weightedQuantile(items, 0.5);
   /* Geçmiş veriden öneri. samples: [{ key, label, order, qty, ratio, dates? }] —
      yalnız tek vasıtalı siparişlerin geçerli (landed ≥ FOB) YD satırları.
      Sonuç kaydedilmez; kullanıcı alana alıp Kaydet'e basmalıdır. */
   function suggest(samples, options = {}) {
     const minRows = Number(options.minRows) || MIN_SAMPLE_ROWS;
     const minOrders = Number(options.minOrders) || MIN_SAMPLE_ORDERS;
+    const percentile = Number(options.percentile) > 0 && Number(options.percentile) < 1 ? Number(options.percentile) : SUGGEST_PERCENTILE;
     const groups = new Map();
     for (const sample of Array.isArray(samples) ? samples : []) {
       const key = normalizeVehicleKey(sample && sample.key);
@@ -156,17 +162,17 @@
     return [...groups.values()].map(group => {
       const count = group.items.length, orders = group.orders.size;
       const reason = count < minRows ? 'fewRows' : (orders < minOrders ? 'fewOrders' : '');
-      const median = weightedMedian(group.items);
+      const median = weightedQuantile(group.items, percentile);
       const label = [...group.labels.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0];
       return {
         key: group.key, label, count, orders, qty: group.qty, from: group.from, to: group.to,
-        median, enough: !reason, reason, suggestion: reason || median == null ? null : Math.round(median * 10000) / 10000,
+        median, percentile, enough: !reason, reason, suggestion: reason || median == null ? null : Math.round(median * 10000) / 10000,
       };
     }).sort((a, b) => b.qty - a.qty || a.key.localeCompare(b.key));
   }
 
   return Object.freeze({
-    MIN_MULTIPLIER, MAX_MULTIPLIER, MAX_VEHICLES, MIN_SAMPLE_ROWS, MIN_SAMPLE_ORDERS,
-    normalizeVehicleKey, multiplierOf, normalizeByVehicle, validateByVehicle, orderStandard, weightedMedian, suggest,
+    MIN_MULTIPLIER, MAX_MULTIPLIER, MAX_VEHICLES, MIN_SAMPLE_ROWS, MIN_SAMPLE_ORDERS, SUGGEST_PERCENTILE,
+    normalizeVehicleKey, multiplierOf, normalizeByVehicle, validateByVehicle, orderStandard, weightedQuantile, weightedMedian, suggest,
   });
 });

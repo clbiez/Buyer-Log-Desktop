@@ -38,14 +38,15 @@ test('servis: vasıta standardı kaydedilir; eski istemcinin {tr, overseas} PUT\
   const saved = await service.replace({ tr: 1.05, overseas: 1.11, byVehicle: { Gemi: 1.08, 'Gemi+Uçak': 1.2 } }, { revision: start.revision }, {});
   assert.deepEqual(saved.multipliers, { tr: 1.05, overseas: 1.11, byVehicle: { GEMI: 1.08, 'GEMI+UCAK': 1.2 } });
   assert.equal(saved.revision, start.revision + 1);
-  assert.deepEqual(db.loadOverrides().landedMultipliers.byVehicle, { GEMI: 1.08, 'GEMI+UCAK': 1.2 });
+  assert.deepEqual(db.loadOverrides().landedVehicleStandards, { GEMI: 1.08, 'GEMI+UCAK': 1.2 });
 
   const legacy = await service.replace({ tr: 1.06, overseas: 1.12 }, { revision: saved.revision }, {});
   assert.deepEqual(legacy.multipliers, { tr: 1.06, overseas: 1.12, byVehicle: { GEMI: 1.08, 'GEMI+UCAK': 1.2 } });
 
   const cleared = await service.replace({ tr: 1.06, overseas: 1.12, byVehicle: {} }, { revision: legacy.revision }, {});
   assert.deepEqual(cleared.multipliers, { tr: 1.06, overseas: 1.12 });
-  assert.equal(db.loadOverrides().landedMultipliers.byVehicle, undefined);
+  assert.deepEqual(db.loadOverrides().landedVehicleStandards, {});
+  assert.equal(db.landedMultipliersOf(db.loadOverrides()).byVehicle, undefined);
 });
 
 test('servis CAS: eski revizyonla vasıta standardı yazımı çakışma verir ve kaydı değiştirmez', async () => {
@@ -74,4 +75,43 @@ test('servis önizleme ve geri alma: önizleme vasıta değişimini bildirir, re
   const legacyPreview = await service.preview({ tr: 1.05, overseas: 1.11 }, {});
   assert.equal(legacyPreview.impact.vehicleStandardsChanged, false);
   assert.deepEqual(legacyPreview.next.byVehicle, { TIR: 1.07 });
+});
+
+/* Karışık sürüm: eski sürüm loadOverrides'ta bilinmeyen ÜST DÜZEY anahtarları korur
+   ({...base, ...parsed}) ama landedMultipliers'ı yalnız {tr, overseas} olarak normalize eder.
+   Bu yüzden vasıta standartları ayrı üst düzey anahtarda (landedVehicleStandards) tutulur. */
+const oldVersionView = ov => ({ ...ov, landedMultipliers: { tr: ov.landedMultipliers.tr, overseas: ov.landedMultipliers.overseas } });
+
+test('depolama: vasıta standartları ayrı üst düzey anahtarda; landedMultipliers yalnız {tr, overseas}', async () => {
+  const service = serviceLib.createLandedMultiplierService({ db });
+  const start = await service.snapshot({});
+  const saved = await service.replace({ tr: 1.05, overseas: 1.11, byVehicle: { Gemi: 1.08 } }, { revision: start.revision }, {});
+  assert.deepEqual(saved.multipliers, { tr: 1.05, overseas: 1.11, byVehicle: { GEMI: 1.08 } });
+  const raw = db.loadOverrides();
+  assert.deepEqual(raw.landedMultipliers, { tr: 1.05, overseas: 1.11 });
+  assert.deepEqual(raw.landedVehicleStandards, { GEMI: 1.08 });
+  assert.deepEqual(db.landedMultipliersOf(raw), { tr: 1.05, overseas: 1.11, byVehicle: { GEMI: 1.08 } });
+  assert.ok(require('../server/lib/shared-sync-policy').MASTER_OVERRIDE_FIELDS.has('landedVehicleStandards'), 'Shared Hub taşır');
+});
+
+test('karışık sürüm: eski sürümün bütün-belge overrides yazımı ve kendi landed PUT\'u vasıta standartlarını silmez', async () => {
+  const service = serviceLib.createLandedMultiplierService({ db });
+  const start = await service.snapshot({});
+  await service.replace({ tr: 1.05, overseas: 1.11, byVehicle: { Uçak: 1.4, Gemi: 1.07 } }, { revision: start.revision }, {});
+  // Eski sürüm: ilgisiz bir alanı (not) düzenleyip bütün belgeyi yazar.
+  const oldDoc = oldVersionView(db.loadOverrides());
+  oldDoc.notesmap = { ...oldDoc.notesmap, 'k|1': { Notes: 'eski sürüm' } };
+  db.saveOverrides(oldDoc, oldDoc._revision);
+  assert.deepEqual(db.landedMultipliersOf(db.loadOverrides()).byVehicle, { UCAK: 1.4, GEMI: 1.07 });
+  // Eski sürüm: kendi replaceLandedMultipliers akışı ({tr, overseas}, revizyon +1).
+  const oldPut = oldVersionView(db.loadOverrides());
+  oldPut.landedMultipliers = { tr: 1.06, overseas: 1.12 };
+  oldPut._revisions = { ...oldPut._revisions, landedMultipliers: oldPut._revisions.landedMultipliers + 1 };
+  db.saveOverrides(oldPut, oldPut._revision);
+  const after = await service.snapshot({});
+  assert.deepEqual(after.multipliers, { tr: 1.06, overseas: 1.12, byVehicle: { UCAK: 1.4, GEMI: 1.07 } });
+  // Açık temizleme: anahtar boş nesne olarak kalır (eski iç içe değer geri gelmez).
+  await service.replace({ tr: 1.06, overseas: 1.12, byVehicle: {} }, { revision: after.revision }, {});
+  assert.deepEqual(db.loadOverrides().landedVehicleStandards, {});
+  assert.deepEqual(db.landedMultipliersOf(db.loadOverrides()), { tr: 1.06, overseas: 1.12 });
 });
