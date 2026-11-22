@@ -54,3 +54,11 @@ test('normal runtime retains numeric stall diagnostics without starting the expe
  try{monitor=require('../server/lib/runtime-pressure-monitor').startRuntimePressureMonitor({now:()=>clock,cpu:()=>0,log:line=>logs.push(line)});clock+=20000;tick();assert.equal(workers,0);assert.ok(logs.some(line=>line.includes('[RUNTIME] event-loop-stall ')&&line.includes('blockedMs=15000')));assert.ok(logs.some(line=>line.includes('[RUNTIME] heap-limit ')));}
  finally{await monitor?.stop();wt.Worker=original.Worker;global.setInterval=original.setInterval;global.clearInterval=original.clearInterval;if(original.flag===undefined)delete process.env.BL_STALL_PROFILE;else process.env.BL_STALL_PROFILE=original.flag;}
 });
+test('the opt-in profile threshold can be lowered with BL_STALL_PROFILE_MS for field stalls under 10 s',()=>{
+  const {profileStallThreshold}=require('../server/lib/runtime-pressure-monitor');
+  assert.equal(profileStallThreshold(undefined),10000,'default stays 10 s');
+  assert.equal(profileStallThreshold('4000'),4000);
+  assert.equal(profileStallThreshold('500'),3000,'never below the 3 s stall report threshold');
+  assert.equal(profileStallThreshold('abc'),10000);
+  assert.equal(profileStallThreshold('9999999'),600000,'bounded');
+});
