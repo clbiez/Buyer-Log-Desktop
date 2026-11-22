@@ -192,7 +192,7 @@ test('antrepoya girmiş parsiyel: gerçekleşen süre sunucuda hesaplanmaz (CP k
   assert.equal(seg.realized, undefined);
   const app = read('public/app-main.js');
   assert.match(app, /const cpRealizedCache=new WeakMap\(\);/);
-  assert.match(app, /value=\{days,handover:segment\.handover,entry,entrySource,ruleDays,vsRule:ruleDays!=null\?ruleDays-days:null\};/);
+  assert.match(app, /value=\{days,basis,start,ruleBasis:rule\?ruleBasis:null,basisMissing,handover:segment\.handover,entry,entrySource,ruleDays,vsRule:ruleDays!=null\?ruleDays-days:null\};/);
   assert.match(app, /const entry=segment\.entry\|\|segment\.arrival,entrySource=segment\.entry\?'actual':'ias';/);
   // Gerçekleşen giriş sütunu yok: entry boş, istemci IAS tahminine düşer ve bunu yazar.
   assert.equal(seg.entry, null);

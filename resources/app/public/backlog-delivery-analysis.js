@@ -393,7 +393,7 @@
       stageEta: stat === 'p80' ? L('Aşama ETA (P80)', 'Stage ETA (P80)') : L('Aşama ETA (Ortalama)', 'Stage ETA (Average)'),
       stageCurrent: L('Koşan Aşama', 'Current Stage'),
       stageOverrun: L('Aşama Aşımı (gün)', 'Stage Overrun (days)'),
-      stageVsRule: L('Statik ETA\'ya Göre (+erken/−geç)', 'vs Static ETA (+early/−late)'),
+      stageVsRule: L('Planlanan ETA\'ya Göre (+erken/−geç)', 'vs Planned ETA (+early/−late)'),
       stageProbability: L('Zamanında Varış Olasılığı %', 'On-Time Probability %'),
       stageDeviation: L('Aşama Sapmaları (gün)', 'Stage Deviations (days)'),
     };
@@ -511,8 +511,8 @@
     const items = [
       ['projected', L('Aşama ETA\'sıyla hesaplanan', 'Calculated with stage ETA'), 'mute', L('Son gerçekleşen kilometre taşından yeniden hesaplandı', 'Recalculated from the last realized milestone')],
       ['overrun', L('Koşan aşama ortalamayı aştı', 'Current stage over average'), 'bad', L('Henüz gerçekleşmemiş aşama ortalama süresini geçti', 'A not-yet-completed stage has exceeded its average duration')],
-      ['later', L('Statik ETA\'dan geç', 'Later than static ETA'), 'warn', L('Tek kural gününe göre en az 3 gün geç', 'At least 3 days later than the single rule duration')],
-      ['earlier', L('Statik ETA\'dan erken', 'Earlier than static ETA'), 'ok', L('Tek kural gününe göre en az 3 gün erken', 'At least 3 days earlier than the single rule duration')],
+      ['later', L('Planlanan ETA\'dan geç', 'Later than planned ETA'), 'warn', L('Yol süresi kuralıyla planlanan ETA\'ya göre en az 3 gün geç', 'At least 3 days later than the ETA planned with the transit rule')],
+      ['earlier', L('Planlanan ETA\'dan erken', 'Earlier than planned ETA'), 'ok', L('Yol süresi kuralıyla planlanan ETA\'ya göre en az 3 gün erken', 'At least 3 days earlier than the ETA planned with the transit rule')],
       ['lowProbability', L('Zamanında varış olasılığı < %50', 'On-time probability < 50%'), 'bad', L('Geçmiş parsiyellerin kalan süre dağılımına göre', 'Based on the remaining-time distribution of past partials')],
     ];
     const cards = items.map(([key, label, tone, title]) => `<button type="button" class="bdaKpi is-${tone}" data-stage-signal="${esc(key)}" title="${esc(title)}">

@@ -2059,7 +2059,8 @@ function antrepoVesselName(ias) {
   const at = resolveAntrepoColumn(headers, ANTREPO_COLUMN_RULES.vesselName);
   return at >= 0 ? (norm(fields[Object.keys(fields)[at]]) || '') : '';
 }
-function cpLogisticSegmentsForOrder(segments) {
+function cpLogisticSegmentsForOrder(segments, opts = {}) {
+  const needBasis = opts.needBasis === true;
   const source = Array.isArray(segments) ? segments : [];
   return source.slice().sort((a, b) => {
     const priorityDiff = cpLogisticPriority(a) - cpLogisticPriority(b);
@@ -2090,6 +2091,8 @@ function cpLogisticSegmentsForOrder(segments) {
       // Handover → Antrepo süresi bununla, yoksa IAS antrepo tarihiyle hesaplanır.
       entry: ias && ['DEPODA', 'RETAILE AKTARIM BEKLENIYOR'].includes(antrepoStatusKey(segment && segment._status))
         ? (cpActualEntry(ias) || null) : null,
+      // Kural bazı tarihleri (yalnız Handover dışı bazlı kural varsa okunur).
+      basisDates: ias && needBasis ? iasBasisDates(ias) : null,
       delType: norm(segment && segment._delType),
       handover: ias ? (toDateOnly(ias.handover) || null) : null,
       sourceRow: ias && Number.isFinite(Number(ias._sourceRow)) ? Number(ias._sourceRow) : null,
@@ -2102,8 +2105,8 @@ function cpLogisticSegmentsForOrder(segments) {
     };
   });
 }
-function cpLogisticSummary(segments, orderQty) {
-  const list = cpLogisticSegmentsForOrder(segments);
+function cpLogisticSummary(segments, orderQty, opts = {}) {
+  const list = cpLogisticSegmentsForOrder(segments, opts);
   const primary = list[0] || null;
   const partials = list.filter(item => item.kind === 'partial');
   // Status filtresi/sayaçları siparişin tüm akışını kapsar: parsiyel varken de
@@ -2181,7 +2184,7 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
     const orderLogisticSegments = isActive
       ? rawLogisticSegments
       : rawLogisticSegments.filter(segment => segment && segment._segmentKind === 'ias');
-    const logistic = cpLogisticSummary(orderLogisticSegments, o.qty);
+    const logistic = cpLogisticSummary(orderLogisticSegments, o.qty, { needBasis: transitRulesNeedBasis(ov && ov.transitRules) });
     // Aşama tahmini (kayıtlı aşama modeli varsa): parsiyel alt detayına ve satıra
     // en geç gelecek parsiyelin özeti olarak yazılır. Model yoksa alanlar boş kalır.
     let latestStage = null, stageMaxSigma = null, stageUncovered = false;
@@ -2263,6 +2266,9 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       _stageRun: latestStage ? { code: latestStage.code, days: latestStage.days, mean: latestStage.mean, over: latestStage.over, sigma: latestStage.sigma, from: latestStage.from, to: latestStage.to } : null,
       _stageVsRule: latestStage ? latestStage.vsRule : null,
       _stageWhy: latestStage ? (latestStage.why || null) : null,
+      // Satırın Handover'ının (ana parsiyel) kural bazı tarihleri: CP teslimat
+      // motoru kural gününü Handover'a eklerken bazına göre düzeltir.
+      _ruleBasisDates: primaryIas && transitRulesNeedBasis(ov && ov.transitRules) ? iasBasisDates(primaryIas) : null,
       // Priority Rules (@stageDelaySigma): en çok geciken yoldaki parsiyelin σ değeri.
       _stageMaxSigma: stageMaxSigma,
       /* CP teslimat sonucu (@deliveryOutcome) aşama ETA'sını kullanır: en geç parsiyel.
@@ -3468,7 +3474,8 @@ function backlogTransitOverdueInfo({ isPartial, isInWarehouse, isRetailWaiting, 
   const loadOrdinal = dateOrdinal(loadDate);
   const todayOrdinal = dateOrdinal(todayValue);
   const days = Number(transitDays);
-  if (!load || loadOrdinal == null || todayOrdinal == null || !Number.isFinite(days) || days < 0) {
+  // Kural bazı düzeltmesiyle gün negatif olabilir (planlanan varış Handover'dan önce).
+  if (!load || loadOrdinal == null || todayOrdinal == null || !Number.isFinite(days) || days <= -3650) {
     return { overdue: false, expectedArrival: null, overdueDays: 0 };
   }
   const expectedOrdinal = loadOrdinal + days;
@@ -3531,6 +3538,33 @@ function cpActualEntry(ias) {
   if (!_transitAnalysisSource) _transitAnalysisSource = require('./transit-analysis-source');
   return _transitAnalysisSource.actualEntryIso(ias);
 }
+function iasMilestoneIso(ias, field) {
+  if (!_transitAnalysisSource) _transitAnalysisSource = require('./transit-analysis-source');
+  return _transitAnalysisSource.iasDateIso(ias, field);
+}
+/* Kural bazı Handover dışında bir kuralı var mı (kural dizisi başına önbellek)?
+   Yoksa Yükleme Talep / Fiili Yükleme tarihleri hiç okunmaz (sıcak yol maliyeti yok). */
+const _rulesNeedBasisCache = new WeakMap();
+function transitRulesNeedBasis(rules) {
+  if (!Array.isArray(rules)) return false;
+  let hit = _rulesNeedBasisCache.get(rules);
+  if (hit === undefined) { hit = rules.some(r => BLBusinessRules.transitRuleBasis(r) !== 'handover'); _rulesNeedBasisCache.set(rules, hit); }
+  return hit;
+}
+/* Parsiyelin kural bazı tarihleri (tembel): handover IAS satırından, diğerleri
+   IAS alanlarından. resolveTransitDays bunu anchor='handover' ile kullanır. */
+function iasBasisMilestones(ias, handover) {
+  const cache = {};
+  return m => {
+    if (m === 'handover') return handover || (ias ? ias.handover : null);
+    if (!ias) return null;
+    if (!(m in cache)) cache[m] = iasMilestoneIso(ias, m) || null;
+    return cache[m];
+  };
+}
+function iasBasisDates(ias) {
+  return ias ? { loadingRequest: iasMilestoneIso(ias, 'loadingRequest') || null, actualLoading: iasMilestoneIso(ias, 'actualLoading') || null } : null;
+}
 /* IAS durumunun kanıtladığı son geçilmiş kilometre taşı: "Yol Operasyonları"
    yüklendi demektir, "Gümrük-Liman Operasyonları" gemi vardı demektir. Tarih
    sütunu gelmese de bu adımlar tamamlanmış sayılır. */
@@ -3569,18 +3603,20 @@ function localIsoDate(d) {
    aynı girdiler tekrar tekrar çözülmesin diye kural dizisi başına önbelleklenir
    (kurallar değişince dizi kimliği değişir). Kural yoksa NaN. */
 const _stageRuleCache = new WeakMap();
-function stageRuleDays(ov, segment, order, handover, handoverIso) {
+/* Parsiyele uyan tanımlı yol süresi kuralı (yoksa null). Kural seçimi Handover
+   tarihine (Ex-Factory aralığı), ülke/sezon/taşıta bağlıdır; kural dizisi başına
+   önbelleklenir. Gün ve baz, çağıranda kuralın bazına göre uygulanır. */
+function stageRuleFor(ov, segment, order, handover, handoverIso) {
   const rules = ov && ov.transitRules;
   const resolve = () => {
     const delType = normalizeTransitDelType(segment._delType) || norm(segment._delType);
     const info = resolveTransitDays({ delType, exFactory: toDateOnly(handover), season: order.season, country: order.countryRaw, status: segment._status, rules, forceRules: true });
-    return info && info.rule ? Number(info.days) : NaN;
+    return info && info.rule ? info.rule : null;
   };
   if (!rules || typeof rules !== 'object') return resolve();
   let cache = _stageRuleCache.get(rules);
   if (!cache) { cache = new Map(); _stageRuleCache.set(rules, cache); }
-  // Anahtar ham değerlerden (normalleştirme yalnız ıskalamada).
-  // Handover anahtarı ISO gün (iki çağıranda aynı ölçek).
+  // Anahtar ham değerlerden (normalleştirme yalnız ıskalamada); Handover ISO gün.
   const key = `${segment._delType || ''}|${handoverIso || ''}|${order.season || ''}|${order.countryRaw || ''}|${segment._status || ''}`;
   let value = cache.get(key);
   if (value === undefined) { value = resolve(); cache.set(key, value); }
@@ -3602,15 +3638,25 @@ function cpSegmentStageInfo(segment, order, ov, stageModel, todayIso) {
   const handover = toDateOnly(ias.handover);
   let vsRule = null, why = null;
   if (handover) {
-    const days = stageRuleDays(ov, segment, order, handover, localIsoDate(handover));
+    const rule = stageRuleFor(ov, segment, order, handover, localIsoDate(handover));
+    const days = rule ? Number(rule.days) : NaN;
+    /* Planlanan ETA = kuralın BAZ kilometre taşı + kural günü (Uçtan Uca kural
+       Yükleme Talep'ten sayılır; Handover'a eklemek Talep → Handover süresini
+       hesap dışı bırakırdı). Baz tarihi yoksa karşılaştırma yapılmaz. */
+    const basis = rule ? BLBusinessRules.transitRuleBasis(rule) : 'handover';
+    const basisIso = basis === 'handover' ? localIsoDate(handover) : (iasMilestoneIso(ias, basis) || null);
     const etaOrd = dateOrdinal(projection.etaMean), handoverOrd = dateOrdinal(handover);
-    if (Number.isFinite(days) && etaOrd != null && handoverOrd != null) {
-      vsRule = handoverOrd + days - etaOrd;
-      /* Farkın özeti (tooltip): kural günü ile model ortalaması + kalemler.
-         geç gün = (base − ruleDays) + Σ kalem = −vsRule. */
+    const basisOrd = basisIso ? dateOrdinal(basisIso) : null;
+    if (Number.isFinite(days) && etaOrd != null && handoverOrd != null && basisOrd != null) {
+      const ruleEtaOrd = basisOrd + days;
+      vsRule = ruleEtaOrd - etaOrd;
+      /* Farkın özeti (tooltip): geç gün = (baz → Handover gerçekleşen) + model
+         Handover → Antrepo ortalaması − kural günü + Σ kalem = −vsRule. */
       const d = projection.drivers;
       if (d && Number.isFinite(Number(d.base))) {
-        why = { handover: localIsoDate(handover), ruleDays: days, ruleEta: localIsoDate(new Date(handover.getTime() + days * 86400000)), base: d.base, items: Array.isArray(d.items) ? d.items : [] };
+        const ruleEta = toDateOnly(basisIso); ruleEta.setDate(ruleEta.getDate() + days);
+        why = { basis, basisDate: basisIso, handover: localIsoDate(handover), basisToHandover: handoverOrd - basisOrd,
+          ruleDays: days, ruleEta: localIsoDate(ruleEta), base: d.base, items: Array.isArray(d.items) ? d.items : [] };
       }
     }
   }
@@ -3698,6 +3744,10 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
       country: order.countryRaw,
       status: segment._status,
       rules: overrides && overrides.transitRules,
+      // Sevk edilmiş parsiyelde gün Handover'a eklenir; kural başka bir taştan
+      // (ör. Uçtan Uca → Yükleme Talep) sayılıyorsa gün o farkla düzeltilir.
+      anchor: partialLoadDate && transitRulesNeedBasis(overrides && overrides.transitRules) ? 'handover' : null,
+      milestones: partialLoadDate && transitRulesNeedBasis(overrides && overrides.transitRules) ? iasBasisMilestones(ias, partialLoadDate) : null,
       // Backlog satırı hangi operasyon segmentinde olursa olsun aynı merkezi
       // Transfer Lead Time registry'sini çözsün. Bu yalnız bu çağrı noktasının
       // lookup davranışıdır; resolveTransitDays'in legacy global guard'ı korunur.
