@@ -100,16 +100,20 @@ test('multi-process: no lost update under real file leases (same field CAS loop,
   const script=`
     const db=require(${JSON.stringify(path.join(__dirname,'..','server','db'))});
     const [me,iter,code,colId]=process.argv.slice(1);const base={model:'M1',ccode:'C1'};
-    const key=db.overrideWriteKey(+code,base);let conflicts=0;
+    const key=db.overrideWriteKey(+code,base);let conflicts=0,busy=0;
+    // SHARED_WRITE_BUSY (409) ürün sözleşmesinde "yeniden dene" demektir: yavaş CI diskinde
+    // 4 süreçli yarışta kilit beklemesi 3 sn'yi aşabilir. Yeniden deneme kayıp güncelleme
+    // denetimini gevşetmez; yalnız beklenen meşgul yanıtını sözleşmeye uygun karşılar.
+    const patch=(rows,opts)=>{for(;;){try{return db.patchOrderOverrideRows(rows,opts);}catch(error){if(!error||error.code!=='SHARED_WRITE_BUSY'||error.recoveryRequired||++busy>200)throw error;}}};
     for(let i=0;i<+iter;i++){
       for(;;){
         const cur=(db.loadOverrides().notesmap||{})[key]||{};const text=cur.Notes||'';
-        const out=db.patchOrderOverrideRows([{orderCode:+code,patch:{...base,notes:{Notes:text+me,NotesHtml:''}},base:{notes:{Notes:text,NotesHtml:''}}}],{actor:{id:me,name:me}});
+        const out=patch([{orderCode:+code,patch:{...base,notes:{Notes:text+me,NotesHtml:''}},base:{notes:{Notes:text,NotesHtml:''}}}],{actor:{id:me,name:me}});
         if(out.updated===1)break;conflicts++;
       }
-      db.patchOrderOverrideRows([{orderCode:+code+1+(+process.argv[5]),patch:{...base,delType:'D'+i},base:{delType:i?'D'+(i-1):''}}],{actor:{id:me,name:me}});
+      patch([{orderCode:+code+1+(+process.argv[5]),patch:{...base,delType:'D'+i},base:{delType:i?'D'+(i-1):''}}],{actor:{id:me,name:me}});
     }
-    if(colId)db.patchOrderOverrideRows([{orderCode:+code,patch:{...base,noteColumns:{[colId]:'v-'+me}},base:{noteColumns:{[colId]:''}}}],{actor:{id:me,name:me}});
+    if(colId)patch([{orderCode:+code,patch:{...base,noteColumns:{[colId]:'v-'+me}},base:{noteColumns:{[colId]:''}}}],{actor:{id:me,name:me}});
     process.stdout.write(JSON.stringify({conflicts}));`;
   const run=index=>new Promise((resolve,reject)=>{
     const child=spawn(process.execPath,['-e',script,String.fromCharCode(97+index),String(ITER),String(code),defs[index]?defs[index].id:'',String(index)],{env:{...process.env,...env},stdio:['ignore','pipe','pipe']});
