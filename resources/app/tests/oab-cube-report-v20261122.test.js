@@ -102,6 +102,30 @@ test('kod alanları asla sayıya çevrilmez; yalnız ölçüler sayıdır (ondal
   assert.equal(row.unapproved, null);
 });
 
+test('türetilmiş ölçü: onaylanmış - sipariş geçilmemiş ve klasman analiz adedi PASS OAB satır formülüyle hesaplanır, küp sorgusuna girmez', () => {
+  const view = report.normalizeView({ filterValues: { season: ['S6'] }, values: [{ key: 'approvedNotOrdered' }, { key: 'classAnalysisQty' }] });
+  assert.deepEqual(view.values.map(ref => [ref.key, ref.agg]), [['approvedNotOrdered', 'SUM'], ['classAnalysisQty', 'SUM']]);
+  const built = report.buildQuery({ liveFields: liveSchema(), view });
+  assert.deepEqual(built.derived, ['approvedNotOrdered', 'classAnalysisQty']);
+  assert.ok(!built.measures.includes('approvedNotOrdered'));
+  assert.doesNotMatch(built.query, /approvedNotOrdered|classAnalysisQty|Geçilmemiş/);
+  const rows = report.normalizeRows([
+    { season: 'S6', modelCode: 'M1', colourCode: 'C1', wssi: 0, approved: 50 },
+    { season: 'S6', modelCode: 'M2', colourCode: 'C1', wssi: 10, approved: 30 },
+    { season: 'S6', modelCode: 'M3', colourCode: 'C1', wssi: null, approved: 7 },
+    { season: 'S6', modelCode: 'M4', colourCode: 'C1', wssi: null, approved: null },
+  ], built);
+  assert.deepEqual(rows.map(row => row.approvedNotOrdered), [50, 0, 7, 0]);
+  assert.deepEqual(rows.map(row => row.classAnalysisQty), [50, 10, 7, 0]);
+  // Satır formülü toplanmış veride yeniden kurulmaz: M1+M2 toplamında WSSI 10 olsa da geçilmemiş adet 50'dir.
+  assert.equal(rows.slice(0, 2).reduce((sum, row) => sum + row.approvedNotOrdered, 0), 50);
+  const measure = report.catalog().measures.find(item => item.key === 'approvedNotOrdered');
+  assert.equal(measure.derived, true);
+  assert.match(measure.hintTr, /WSSI sipariş 0 ise onaylı/);
+  assert.match(measure.hintEn, /WSSI order is 0/);
+  assert.match(read('public/oab-cube.js'), /measure\.derived\) return text\(measure\.hintTr, measure\.hintEn\)/);
+});
+
 test('görünüm: sezon filtresi her zaman kalır, yalnız kanıtlı tablodan küp boyutu eklenebilir, ölçü özetlemesi korunur', () => {
   const view = report.normalizeView({
     filters: ['mag'],
@@ -212,10 +236,20 @@ test('rapor: sezonsuz istek reddedilir; sorgu + veri tarihi çalışır; önbell
   assert.deepEqual(state.body.view.filterValues, { season: ['S6'] });
   assert.equal(state.body.catalog.passOnlyFields.length, 5);
   // Gösterilen verinin sorgu düzeyi istemciye döner (görünümle uyuşmazlık uyarısı için).
-  assert.deepEqual(state.body.snapshot.measures.sort(), ['approved', 'plan', 'poQty', 'unapproved', 'wssi']);
+  // Türetilmiş ölçüler (WSSI + Onaylı'dan satır düzeyinde) veride bulunduğu için listededir.
+  assert.deepEqual(state.body.snapshot.measures.sort(), ['approved', 'approvedNotOrdered', 'classAnalysisQty', 'plan', 'poQty', 'unapproved', 'wssi']);
   assert.ok(state.body.snapshot.dimensions.includes('modelCode'));
   // Görünüm mevcut lcw.oab. tercih öneki altında saklanır (senkron listesi değişmez).
   assert.equal([...h.prefs.get('u1')].some(([key]) => key === 'lcw.oab.cube.view.v1'), true);
+});
+
+test('rapor yanıtı türetilmiş ölçüleri satırlarda ve veri ölçü listesinde taşır', async () => {
+  const h = harness([{ season: 'S6', modelCode: 'M1', colourCode: 'C1', wssi: '0', approved: '40' }, { season: 'S6', modelCode: 'M2', colourCode: 'C1', wssi: '5', approved: '9' }]);
+  const res = await h.call('POST /api/oab-cube/report', { body: { view: { filterValues: { season: ['S6'] }, values: [{ key: 'approvedNotOrdered' }] } } });
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(res.body.rows.map(row => row.approvedNotOrdered), [40, 0]);
+  assert.ok(res.body.measures.includes('approvedNotOrdered') && res.body.measures.includes('classAnalysisQty'));
+  assert.match(read('server/routes/oab-cube-routes.js'), /report: 'oab-cube', version: 2/);
 });
 
 test('değer listesi sınırda kesildiyse yanıt bunu söyler; arama metni küp sorgusuna girer', async () => {

@@ -101,7 +101,7 @@ const FRESHNESS = Object.freeze([
 const FILTER_KEYS = Object.freeze(DIMENSIONS.filter(item => item.filter).map(item => item.key));
 const DEFAULT_FILTERS = Object.freeze(['season', 'mag', 'buyerGroup', 'brandAgeGroup', 'supplyBasket', 'carryOver']);
 const DEFAULT_ROWS = Object.freeze(['classGroup', 'classification']);
-const DEFAULT_VALUES = Object.freeze(['wssi', 'approved', 'plan', 'unapproved', 'poQty']);
+const DEFAULT_VALUES = Object.freeze(['wssi', 'approved', 'approvedNotOrdered', 'plan', 'unapproved', 'poQty']);
 const AGGREGATES = Object.freeze(['SUM', 'AVG', 'MIN', 'MAX']);
 const EXTRA_PREFIX = 'x_';
 const MAX_AXIS_FIELDS = 12;
@@ -109,7 +109,37 @@ const SOURCE_PATTERN = /^\[[^\[\]]{1,200}\](?:\.\[[^\[\]]{1,200}\]){1,2}$/;
 
 function clean(value) { return String(value == null ? '' : value).trim(); }
 function error(message, code, statusCode = 400) { return Object.assign(new Error(message), { code, statusCode }); }
-const measureByKey = key => MEASURES.find(item => item.key === key);
+/* Türetilmiş ölçüler küpte yoktur; küpten gelen satırlar üzerinde PASS OAB'nin
+   satır formülüyle (public/oab.js deriveBuyerMetrics) birebir hesaplanır ve
+   pivotta toplanır. Küp satırı model × renk (option) düzeyindedir; PASS OAB
+   satırı da option düzeyindedir. Boş WSSI/Onaylı 0 sayılır (PASS ile aynı).
+     Onaylanmış - sipariş geçilmemiş = WSSI 0 ise Onaylı, değilse 0
+     Klasman analizine konu adet     = WSSI + Onaylanmış - sipariş geçilmemiş */
+const DERIVED_MEASURES = Object.freeze([
+  {
+    key: 'approvedNotOrdered', tr: 'Onaylanmış - sipariş geçilmemiş', en: 'Approved - not yet ordered', kind: 'quantity', agg: 'SUM', derived: true,
+    pass: 'Toplam Onaylanmış - Sipariş Geçilmemiş Adet', // i18n-ignore: PASS kaynak başlığı
+    hintTr: 'Option satırında WSSI sipariş 0 ise onaylı sipariş adedi, değilse 0; sonra toplanır (PASS OAB ile aynı formül).',
+    hintEn: 'Per option row: the approved order quantity when the WSSI order is 0, otherwise 0; then summed (same formula as PASS OAB).',
+  },
+  {
+    key: 'classAnalysisQty', tr: 'Klasman analizine konu adet', en: 'Class analysis quantity', kind: 'quantity', agg: 'SUM', derived: true,
+    pass: 'Toplam Klasman Analize Konu Olan Toplam Adet', // i18n-ignore: PASS kaynak başlığı
+    hintTr: 'Option satırında WSSI sipariş + onaylanmış ama sipariş geçilmemiş adet; sonra toplanır (PASS OAB ile aynı formül).',
+    hintEn: 'Per option row: the WSSI order plus the approved but not yet ordered quantity; then summed (same formula as PASS OAB).',
+  },
+].map(Object.freeze));
+
+function deriveRow(row) {
+  const wssi = row.wssi == null ? 0 : row.wssi;
+  const approved = row.approved == null ? 0 : row.approved;
+  const approvedNotOrdered = wssi === 0 ? approved : 0;
+  row.approvedNotOrdered = approvedNotOrdered;
+  row.classAnalysisQty = wssi + approvedNotOrdered;
+  return row;
+}
+
+const measureByKey = key => MEASURES.find(item => item.key === key) || DERIVED_MEASURES.find(item => item.key === key);
 
 /* Bağlantı: bu kataloğa (OAB_Cube) Veri Yönetimi'nde tanımlanmış bir bağlantı
    varsa o; yoksa INTAKE rolünün sunucusu (aynı SSAS sunucusu) + OAB_Cube;
@@ -334,10 +364,15 @@ function buildQuery({ liveFields = [], view = null, filterValues = {}, maxRows =
   const headerMap = {};
   groupFields.forEach(item => outputAliases(item.field).forEach(alias => { headerMap[alias] = item.key; }));
   measureFields.forEach(item => { headerMap[item.key] = item.key; headerMap[`[${item.key}]`] = item.key; });
+  // WSSI ve Onaylı zorunlu ölçülerdir (her sorguda var); türetilmiş ölçüler
+  // bunlardan satır düzeyinde hesaplanır, küp sorgusuna girmez.
+  const queriedKeys = measureFields.map(item => item.key);
+  const derivedKeys = ['wssi', 'approved'].every(key => queriedKeys.includes(key)) ? DERIVED_MEASURES.map(item => item.key) : [];
   return {
     query, headerMap, maxRows: rowLimit, filterValues: filters,
     dimensions: groupFields.map(item => item.key),
-    measures: measureFields.map(item => item.key),
+    measures: queriedKeys,
+    derived: derivedKeys,
     missing,
   };
 }
@@ -401,11 +436,12 @@ function toNumber(value) {
 function normalizeRows(rows, built) {
   const dimensions = built && Array.isArray(built.dimensions) ? built.dimensions : DIMENSIONS.map(item => item.key);
   const measures = built && Array.isArray(built.measures) ? built.measures : MEASURES.map(item => item.key);
+  const derive = Boolean(built && Array.isArray(built.derived) && built.derived.length);
   return (Array.isArray(rows) ? rows : []).map(row => {
     const out = {};
     for (const key of dimensions) out[key] = clean(row && row[key]);
     for (const key of measures) out[key] = toNumber(row && row[key]);
-    return out;
+    return derive ? deriveRow(out) : out;
   });
 }
 
@@ -423,7 +459,10 @@ function distinctQuery(item, { search = '', limit = 500 } = {}) {
 function catalog() {
   return {
     dimensions: DIMENSIONS.map(({ key, tr, en, filter, required, code, optionalGrain }) => ({ key, tr, en, filter: Boolean(filter), required: Boolean(required), code: Boolean(code), optionalGrain: Boolean(optionalGrain) })),
-    measures: MEASURES.map(({ key, tr, en, kind, agg, required }) => ({ key, tr, en, kind, agg, required: Boolean(required) })),
+    measures: [
+      ...MEASURES.map(({ key, tr, en, kind, agg, required }) => ({ key, tr, en, kind, agg, required: Boolean(required) })),
+      ...DERIVED_MEASURES.map(({ key, tr, en, kind, agg, hintTr, hintEn }) => ({ key, tr, en, kind, agg, required: false, derived: true, hintTr, hintEn })),
+    ],
     passOnlyFields: PASS_ONLY_FIELDS.map(item => ({ ...item })),
     defaults: normalizeView(null),
     aggregates: [...AGGREGATES],
@@ -432,7 +471,7 @@ function catalog() {
 }
 
 module.exports = {
-  OAB_CUBE_CONNECTION, OAB_CUBE_MAX_ROWS, DIMENSIONS, MEASURES, PASS_ONLY_FIELDS, PROVEN_TABLES, FILTER_KEYS, DEFAULT_VALUES, DEFAULT_ROWS,
+  OAB_CUBE_CONNECTION, OAB_CUBE_MAX_ROWS, DIMENSIONS, MEASURES, DERIVED_MEASURES, PASS_ONLY_FIELDS, PROVEN_TABLES, FILTER_KEYS, DEFAULT_VALUES, DEFAULT_ROWS,
   resolveConnection, resolveFields, normalizeRef, normalizeFilterValues, normalizeView, buildQuery, normalizeRows, toNumber,
   freshnessQuery, normalizeFreshness, distinctQuery, resolveFilterField, metadata, extraKey, isProvenTable, catalog,
 };
