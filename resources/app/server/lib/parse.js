@@ -2072,6 +2072,10 @@ function cpLogisticSegmentsForOrder(segments) {
       quantity: Math.max(0, Number(segment && segment.qty) || 0),
       status: norm(segment && segment._status) || 'Durum Belirsiz',
       arrival: toDateOnly(segment && segment._arr) || null,
+      // Depodaki IAS parsiyelinin GERÇEKLEŞEN giriş tarihi (varsa); gerçekleşen
+      // Handover → Antrepo süresi bununla, yoksa IAS antrepo tarihiyle hesaplanır.
+      entry: ias && ['DEPODA', 'RETAILE AKTARIM BEKLENIYOR'].includes(antrepoStatusKey(segment && segment._status))
+        ? (cpActualEntry(ias) || null) : null,
       delType: norm(segment && segment._delType),
       handover: ias ? (toDateOnly(ias.handover) || null) : null,
       sourceRow: ias && Number.isFinite(Number(ias._sourceRow)) ? Number(ias._sourceRow) : null,
@@ -2166,12 +2170,15 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
     const logistic = cpLogisticSummary(orderLogisticSegments, o.qty);
     // Aşama tahmini (kayıtlı aşama modeli varsa): parsiyel alt detayına ve satıra
     // en geç gelecek parsiyelin özeti olarak yazılır. Model yoksa alanlar boş kalır.
-    let latestStage = null, stageMaxSigma = null;
+    let latestStage = null, stageMaxSigma = null, stageUncovered = false;
     if (stageModel) {
       const stageById = new Map();
       orderLogisticSegments.forEach(segment => {
         const info = cpSegmentStageInfo(segment, o, ov, stageModel, stageToday);
         if (info) stageById.set(`partial-${Number(segment._segmentIndex) || 0}`, info);
+        // Yoldaki bir IAS parsiyeli modelle kapsanmıyorsa (ör. taşıt grubu yok),
+        // "en geç parsiyel" aşama ETA'sı siparişin ETA'sını eksik gösterebilir.
+        else if (segment && segment._segmentKind === 'ias' && !['DEPODA', 'RETAILE AKTARIM BEKLENIYOR'].includes(antrepoStatusKey(segment._status))) stageUncovered = true;
       });
       logistic.segments.forEach(item => {
         const info = item.kind === 'partial' ? stageById.get(item.id) : null;
@@ -2239,13 +2246,15 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       // Aşama tahmini (bilgi kolonları; varsayılan gizli). En geç gelecek parsiyel.
       'Stage ETA': latestStage ? toDateOnly(latestStage.eta) : null,
       'Current Stage': latestStage ? latestStage.code : '',
-      _stageRun: latestStage ? { code: latestStage.code, days: latestStage.days, mean: latestStage.mean, over: latestStage.over, sigma: latestStage.sigma } : null,
+      _stageRun: latestStage ? { code: latestStage.code, days: latestStage.days, mean: latestStage.mean, over: latestStage.over, sigma: latestStage.sigma, from: latestStage.from, to: latestStage.to } : null,
       _stageVsRule: latestStage ? latestStage.vsRule : null,
       _stageWhy: latestStage ? (latestStage.why || null) : null,
       // Priority Rules (@stageDelaySigma): en çok geciken yoldaki parsiyelin σ değeri.
       _stageMaxSigma: stageMaxSigma,
-      // CP teslimat sonucu (@deliveryOutcome) aşama ETA'sını kullanır: en geç parsiyel.
-      _stageProjection: latestStage ? {
+      /* CP teslimat sonucu (@deliveryOutcome) aşama ETA'sını kullanır: en geç parsiyel.
+         Üretimde kalan miktar varsa ya da yoldaki bir parsiyel modelle kapsanmıyorsa
+         kullanılmaz: siparişin son varışı o miktarın/parsiyelin tarihine bağlıdır. */
+      _stageProjection: latestStage && !(Number(logistic.productionQty) > 0) && !stageUncovered ? {
         etaMean: latestStage.eta, etaP80: latestStage.etaP80, anchor: latestStage.anchor, plan: latestStage.plan,
         currentStage: latestStage.code, openOverrunDays: latestStage.over, overrunSigma: latestStage.sigma,
         pRetail: latestStage.pRetail, pInStore: latestStage.pInStore,
@@ -3504,6 +3513,10 @@ function buildBacklogTemplateRows(asasOrders, antrepoMap, overrides, filterOrOco
    taşları canlı analizle AYNI alan eşlemesinden okunur (döngüsel bağımlılık
    olmasın diye transit-analysis-source tembel yüklenir). */
 let _transitAnalysisSource = null;
+function cpActualEntry(ias) {
+  if (!_transitAnalysisSource) _transitAnalysisSource = require('./transit-analysis-source');
+  return _transitAnalysisSource.actualEntryIso(ias);
+}
 /* IAS durumunun kanıtladığı son geçilmiş kilometre taşı: "Yol Operasyonları"
    yüklendi demektir, "Gümrük-Liman Operasyonları" gemi vardı demektir. Tarih
    sütunu gelmese de bu adımlar tamamlanmış sayılır. */
@@ -3554,7 +3567,8 @@ function stageRuleDays(ov, segment, order, handover, handoverIso) {
 }
 
 /* CP / Siparişler: yüklenmiş ve henüz antrepoya girmemiş IAS parsiyelinin aşama
-   özeti (yalnız bilgi; hiçbir bayrak, öncelik veya kurala girmez).
+   özeti. Sütunlar ve alt detay bunu gösterir; sipariş düzeyinde en geç parsiyelin
+   özeti CP teslimat sonucunu ve Priority Rules aşama alanlarını besler.
    vsRule: tanımlı tek kural günüyle ETA (Handover + gün) − aşama ETA'sı;
    + erken, − geç. Kural tanımlı değilse null (varsayılan gün ölçüt sayılmaz). */
 function cpSegmentStageInfo(segment, order, ov, stageModel, todayIso) {
@@ -3579,12 +3593,14 @@ function cpSegmentStageInfo(segment, order, ov, stageModel, todayIso) {
       }
     }
   }
-  const run = (projection.stages || []).find(item => item && item[3] === 'r') || null;
+  // Koşan aralık: etiket (kod) ve gün/ortalama aynı aralığı (from → to) anlatır.
+  const run = projection.running || null;
   return {
     eta: projection.etaMean, etaP80: projection.etaP80 || null,
-    code: run ? String(run[0]) : (projection.currentStage ? String(projection.currentStage) : ''),
-    days: run && Number.isFinite(Number(run[1])) ? Number(run[1]) : null,
-    mean: run && Number.isFinite(Number(run[2])) ? Math.round(Number(run[2])) : null,
+    code: run ? String(run.code) : (projection.currentStage ? String(projection.currentStage) : ''),
+    days: run && Number.isFinite(Number(run.days)) ? Number(run.days) : null,
+    mean: run && Number.isFinite(Number(run.mean)) ? Math.round(Number(run.mean)) : null,
+    from: run ? run.from || null : null, to: run ? run.to || null : null,
     over: Number(projection.openOverrunDays) > 0 ? Number(projection.openOverrunDays) : 0,
     sigma: Number.isFinite(Number(projection.overrunSigma)) && projection.overrunSigma !== null ? Number(projection.overrunSigma) : null,
     anchor: projection.anchor || null, plan: projection.plan || null,

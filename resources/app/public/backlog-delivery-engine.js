@@ -241,7 +241,13 @@
     /* Aşama projeksiyonu: Yol Süresi Analizi'nde kaydedilen modelden, son
        GERÇEKLEŞEN kilometre taşına göre (sunucu üretir). Gerçekleşen veriye
        dayandığı için kural şartı onu engellemez. */
-    const stageProjection = stageProjectionOf(meta);
+    /* Uygulama koşulu DURUMDUR, tarih değil: sunucu projeksiyonu yalnız IAS
+       durumu "varmadı" diyen parsiyele üretir; geçmişte kalmış "Tahmini Antrepo
+       Giriş Tarihi" varış değildir, modelin yakalaması gereken gecikmedir.
+       Üretim / eksik yükleme / depoda satırında projeksiyon kullanılmaz: kalan
+       miktarın ETA'sı Ex-Factory + kuraldır, sevk edilmiş başka parsiyelin aşama
+       ETA'sı (ve aşım/olasılık sinyalleri) onun yerine geçemez. */
+    const stageProjection = ARRIVED_STAGES.has(stage) || stage === 'PRODUCTION' || stage === 'SHORTAGE' ? null : stageProjectionOf(meta);
     const etaStat = settings.etaStat === 'p80' ? 'p80' : 'mean';
     const stageEta = stageProjection ? ord(etaStat === 'p80' ? (stageProjection.etaP80 || stageProjection.etaMean) : (stageProjection.etaMean || stageProjection.etaP80)) : null;
     const transitRuleMissing = requireRule && !transitRuleDefined;
@@ -281,7 +287,7 @@
     /* Aşama ETA'sı (varış gerçekleşmemişse): tek kural gününün yerini alır.
        Kural/tahmin ETA'sı karşılaştırma için ruleEta'da kalır: fark, statik
        ortalamaya göre ürünün ne kadar erken/geç geleceğini gösterir. */
-    if (stageEta != null && !(etaSource === 'ias' && today != null && eta != null && eta <= today)) {
+    if (stageEta != null) {
       // Karşılaştırma ölçütü yalnız TANIMLI tek kural günüdür (Handover + gün);
       // IAS tahmini veya varsayılan gün "statik ETA" sayılmaz.
       const ruleBase = actualLoadDate != null ? actualLoadDate : revisedLoadDate;

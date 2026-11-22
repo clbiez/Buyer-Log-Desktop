@@ -325,6 +325,19 @@ function milestonesFromEntry(entry) {
   return out;
 }
 
+/* Gerçekleşen antrepo girişi (Antrepo / Tema Depo Giriş sütunu) — ISO veya ''.
+   "Tahmini Antrepo Giriş Tarihi" bu değildir. Tek geçiş; CP depodaki parsiyelin
+   gerçekleşen süresini bununla hesaplar. */
+function actualEntryIso(entry) {
+  const fields = entry && entry._sourceFields;
+  if (!fields || typeof fields !== 'object') return '';
+  const wanted = SOURCE_KEYS.actualEntry;
+  for (const name in fields) {
+    const value = fields[name];
+    if (value != null && value !== '' && wanted.has(cachedHeaderKey(name))) return isoDate(value);
+  }
+  return '';
+}
 /* Tembel tekil denetim: projeksiyon yalnız sıradaki birkaç adımı sorar
    (Backlog sıcak yolunda her parsiyelde bütün alanları taramamak için). */
 function hasMilestoneColumn(entry, milestone) {
@@ -382,5 +395,5 @@ function buildLiveAnalysis({ orders, antrepoMap, overrides, today, sourceLabel, 
 module.exports = {
   SOURCE_FIELDS, COMPANY_EXTRA_FIELDS, headerKey, findSchemaColumn,
   collectShipments, collectAllShipments, applyReportRules, baseHorizonForCompany, queryCompanyIasRows, buildLiveAnalysis,
-  milestonesFromEntry, hasMilestoneColumn, buildStageModel,
+  milestonesFromEntry, hasMilestoneColumn, actualEntryIso, buildStageModel,
 };

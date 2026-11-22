@@ -119,6 +119,12 @@
     if (withQuantiles) out.q = QUANTILES.map(p => round(quantile(list, p / 100)));
     return out;
   }
+  /* Ters dağılım: 5'lik kantillerden doğrusal; p ∈ [0, 1]. */
+  function quantileOf(q, p) {
+    const pos = Math.max(0, Math.min(1, p)) * (q.length - 1);
+    const lo = Math.floor(pos), hi = Math.min(q.length - 1, lo + 1);
+    return q[lo] + (q[hi] - q[lo]) * (pos - lo);
+  }
   /* Ampirik dağılım fonksiyonu: P(X ≤ x), 5'lik kantillerden doğrusal. */
   function cdf(q, x) {
     if (!Array.isArray(q) || q.length !== QUANTILES.length || !Number.isFinite(x)) return null;
@@ -363,33 +369,91 @@
       if (group.remaining[m] && isObserved(m)) { next = m; break; }
     }
     const elapsed = today != null ? today - anchorDate : 0;
-    const expectedGap = next ? Math.max(0, rem(anchor, 'mean') - rem(next, 'mean')) : rem(anchor, 'mean');
-    // Sonraki kilometre taşı gelecekte PLANLIYSA (gemi tarifesi) aşama gecikmiş sayılmaz.
-    const openOverrun = next && actual[next] == null && planned[next] == null && elapsed > expectedGap ? round(elapsed - expectedGap) : 0;
 
+    /* Aralığın beklenen süresi ve σ'sı: aralıktaki aşamaların KENDİ ortalamaları
+       (iki ucu gerçekleşen parsiyellerden) toplanır, σ bağımsız varsayımıyla
+       √Σσ². Kalan-süre ortalamalarının farkı farklı örneklemlerden gelebildiği
+       için (ör. Cut Off yalnız bazı parsiyellerde dolu) sahte aşım üretir; yalnız
+       bir aşamanın verisi yoksa ona düşülür. */
+    const spanList = (fromM, toM) => STAGES.filter(st => MILESTONE_INDEX[st.from] >= MILESTONE_INDEX[fromM] && MILESTONE_INDEX[st.to] <= MILESTONE_INDEX[toM]);
+    const spanMean = (fromM, toM) => {
+      if (fromM === toM) return 0;
+      const list = spanList(fromM, toM);
+      if (list.length && list.every(st => group.stages[st.code] && Number.isFinite(group.stages[st.code].mean))) {
+        return list.reduce((sum, st) => sum + group.stages[st.code].mean, 0);
+      }
+      const a = rem(fromM, 'mean'), b = rem(toM, 'mean');
+      return a != null && b != null ? Math.max(0, a - b) : null;
+    };
+    const spanSd = (fromM, toM) => {
+      const list = spanList(fromM, toM);
+      if (list.length && list.every(st => group.stages[st.code] && Number.isFinite(group.stages[st.code].sd))) {
+        return Math.sqrt(list.reduce((sum, st) => sum + group.stages[st.code].sd ** 2, 0));
+      }
+      return group.remaining[fromM] && Number.isFinite(group.remaining[fromM].sd) ? group.remaining[fromM].sd : null;
+    };
+
+    /* Açık aşım:
+       - sıradaki gözlenebilir adım varsa: çapadan beri geçen gün > aralığın ortalaması;
+       - yoksa (ör. Gümrük-Liman, sonraki adımların sütunu sorguda yok): çapadan
+         antrepoya kalan ortalama süre aşıldı mı. Aksi halde takılı kalmış parsiyel
+         hiç gecikme üretmezdi.
+       Sonraki adım (veya daha ileri bir adım) gelecekte PLANLIYSA aşım sayılmaz. */
+    const expectedGap = next ? (spanMean(anchor, next) || 0) : rem(anchor, 'mean');
+    // Tam gün: aşama ortalamaları toplamı kesirli olabilir; gösterim ve eşikler gün cinsindendir.
+    const openOverrun = today != null && !(next ? planned[next] != null : plan) && elapsed > expectedGap ? Math.round(elapsed - expectedGap) : 0;
+
+    /* Sıradaki adım yokken ETA, çapadan kalan süre dağılımının geçen güne göre
+       KOŞULLU değeridir (henüz varmadığı biliniyor): E[R | R > geçen] veya koşullu P80. */
+    const conditionalRemaining = stat => {
+      const dist = group.remaining[anchor];
+      if (!dist || !Array.isArray(dist.q) || dist.q.length !== QUANTILES.length) return null;
+      const c = cdf(dist.q, elapsed);
+      if (c == null || c >= 1) return null;
+      if (stat === 'p80') return quantileOf(dist.q, c + 0.8 * (1 - c));
+      let sum = 0;
+      for (let k = 0; k < 20; k += 1) sum += quantileOf(dist.q, c + (1 - c) * (k + 0.5) / 20);
+      return sum / 20;
+    };
     const etaFor = stat => {
       let eta = plan ? planned[plan] + rem(plan, stat) : anchorDate + rem(anchor, stat);
+      if (!plan && !next && today != null && elapsed > 0) {
+        const cond = conditionalRemaining(stat);
+        if (cond != null) eta = Math.max(eta, anchorDate + cond);
+      }
       if (openOverrun > 0 && next && today != null) eta = Math.max(eta, today + rem(next, stat));
       // Henüz gerçekleşmemiş varış en erken bugündür.
       if (today != null) eta = Math.max(eta, today);
       return Math.round(eta);
     };
     const etaMean = etaFor('mean');
-    const etaP80 = etaFor('p80');
+    // P80 "temkinli" seçimdir: aykırı değerli küçük örneklemde ortalamadan önce düşemez.
+    const etaP80 = Math.max(etaFor('p80'), etaMean);
 
     // Plansız temel çizgi: zincirin ilk ölçülen kilometre taşından ortalama.
     let first = null;
     for (const m of MILESTONES) { if (actual[m] != null && group.remaining[m]) { first = m; break; } }
     const baseline = first ? Math.round(actual[first] + rem(first, 'mean')) : null;
 
-    /* Koşan aralık: çapadan bir sonraki ölçülebilir kilometre taşına kadar.
-       Ara adımların tarihi kaynakta yoksa aralık birden çok aşamayı kapsar;
-       o zaman beklenen süre kalan-süre farkından, σ çapanın kalan-süre
-       dağılımından alınır (tek aşamaysa aşamanın kendi σ'sı). */
-    const runningStage = next && actual[next] == null ? (STAGES.find(st => st.to === next) || null) : null;
-    const singleStage = runningStage && runningStage.from === anchor ? group.stages[runningStage.code] : null;
-    const gapSd = singleStage && Number.isFinite(singleStage.sd) ? singleStage.sd
-      : (group.remaining[anchor] && Number.isFinite(group.remaining[anchor].sd) ? group.remaining[anchor].sd : null);
+    /* Koşan aralık: sıradaki gözlenebilir adıma (yoksa antrepoya) kadar. Etiket
+       aşama kodudur; gün ve beklenen süre aşamanın KENDİ başlangıcından sayılır
+       (çapadan aşama başlangıcına beklenen süre düşülür). Bu ara süre
+       hesaplanamıyorsa sayım çapadan yapılır ve aralık (spanFrom → spanTo) açıkça
+       taşınır; arayüz etiketi buna göre yazar. */
+    const runningStage = next
+      ? (STAGES.find(st => st.to === next) || null)
+      : (STAGES.find(st => MILESTONE_INDEX[st.from] >= floorIdx) || null);
+    let running = null;
+    if (runningStage) {
+      const offset = runningStage.from === anchor || MILESTONE_INDEX[runningStage.from] < anchorIdx ? 0 : spanMean(anchor, runningStage.from);
+      const spanFrom = offset == null ? anchor : (MILESTONE_INDEX[runningStage.from] < anchorIdx ? anchor : runningStage.from);
+      const off = offset == null ? 0 : offset;
+      running = {
+        code: runningStage.code, from: spanFrom, to: next || 'warehouseEntry',
+        days: Math.max(0, Math.round(elapsed - off)), mean: Math.round(Math.max(0, expectedGap - off)),
+      };
+    }
+    const gapSd = next ? spanSd(anchor, next) : (group.remaining[anchor] && Number.isFinite(group.remaining[anchor].sd) ? group.remaining[anchor].sd : null);
 
     // Aşama sapmaları (yalnız kritik yol, ortalamaya göre).
     const stages = STAGES.map(st => {
@@ -401,21 +465,17 @@
       }
       // Durumla geçildiği bilinen ya da çapanın gerisinde kalan adım: tarihsiz ama tamam.
       if (MILESTONE_INDEX[st.to] <= floorIdx) return { code: st.code, status: 'done', days: null, mean: ref, deviation: null };
-      if (runningStage && st.code === runningStage.code) {
-        /* Aralık çapadan önceki aşamalardan başlıyorsa gün/beklenen aşamanın
-           kendi başlangıcına göre (beklenen ara süre düşülerek) verilir; böylece
-           "4. Yükleme → ETA" etiketi Handover'dan sayılan günü göstermez. */
-        const offset = st.from !== anchor && group.remaining[st.from] ? Math.max(0, rem(anchor, 'mean') - rem(st.from, 'mean')) : 0;
-        return { code: st.code, status: 'running', days: Math.max(0, Math.round(elapsed - offset)), mean: Math.round(Math.max(0, expectedGap - offset)), deviation: openOverrun > 0 ? openOverrun : null };
+      if (running && st.code === running.code) {
+        return { code: st.code, status: 'running', days: running.days, mean: running.mean, deviation: openOverrun > 0 ? openOverrun : null };
       }
       return { code: st.code, status: 'pending', days: null, mean: ref, deviation: null };
     });
-    const currentStage = runningStage ? runningStage.code : null;
+    const currentStage = running ? running.code : null;
     /* σ cinsinden açık gecikme: koşan aralıkta geçen gün beklenen süreyi kaç
        standart sapma aşıyor. Beklenen içinde / planlı adımda 0; σ yoksa null —
        uydurma eşik üretilmez. σ en az 0,5 gün alınır. */
     let overrunSigma = null;
-    if (!next || (next && planned[next] != null)) overrunSigma = 0;
+    if (next ? planned[next] != null : plan) overrunSigma = 0;
     else if (gapSd != null) overrunSigma = openOverrun > 0 ? round(openOverrun / Math.max(0.5, gapSd)) : 0;
 
     /* Farkın kaynakları (ortalama, Handover'dan): Aşama ETA'sı = Handover +
@@ -449,7 +509,18 @@
     const etaDate = actual.eta != null ? actual.eta : planned.eta;
     const docsLateDays = docDate != null && etaDate != null && docDate > etaDate ? docDate - etaDate : 0;
 
+    /* Açık aşım varken varış en erken bugün + Kalan(sıradaki adım): olasılık bu
+       alt sınırın dağılımıyla da sınırlanır (aksi halde ETA geç derken olasılık
+       "kesin yetişir" diyebilirdi). */
     const probability = target => {
+      const base = probabilityBase(target);
+      const t = dayOrdinal(target);
+      const nd = next ? group.remaining[next] : null;
+      if (!(openOverrun > 0) || !nd || !Array.isArray(nd.q) || nd.n < MIN_PROBABILITY_SAMPLE || t == null || today == null) return base;
+      const pNext = round(cdf(nd.q, t - today), 3);
+      return base == null ? pNext : Math.min(base, pNext);
+    };
+    const probabilityBase = target => {
       const t = dayOrdinal(target);
       const dist = plan ? group.remaining[plan] : group.remaining[anchor];
       if (t == null || !dist || !dist.q || dist.n < MIN_PROBABILITY_SAMPLE) return null;
@@ -472,7 +543,7 @@
       gainDays: baseline != null ? baseline - etaMean : null,
       docsLateDays,
       sample: dist0(group, plan || anchor), scope: group.scope,
-      stages, probability, drivers,
+      stages, running, probability, drivers,
     };
   }
   function dist0(group, m) { return group.remaining[m] ? group.remaining[m].n : 0; }
@@ -493,6 +564,8 @@
       // [kod, gerçekleşen/geçen gün, ortalama, durum d/r/p, sapma]
       stages: projection.stages.map(s => [s.code, s.days, s.mean, s.status === 'done' ? 'd' : s.status === 'running' ? 'r' : 'p', s.deviation]),
       drivers: projection.drivers || null,
+      // Koşan aralık: { code, from, to, days, mean } — etiket ve gün aynı aralığı anlatır.
+      running: projection.running || null,
     };
   }
 

@@ -154,11 +154,51 @@ test('durumla geçildiği bilinen ve kaynakta sütunu olmayan adım "bekliyor" s
     passed: 'actualLoading', observed: ['handover', 'loadingRequest', 'eta', 'warehouseEntry'] });
   assert.equal(late.openOverrunDays, 14);
   assert.ok(late.overrunSigma > 0);
-  // Gümrük-Liman: ETA geçildi → ETA ayağı açık aşım üretmez.
+  // Gümrük-Liman: ETA geçildi, sonraki adımların sütunu yok (sıradaki gözlenebilir
+  // adım yok). Handover'dan 60 gün geçti, Handover → Antrepo ortalaması 51 gün →
+  // 9 gün açık aşım; takılı kalan parsiyel sessizce "yolunda" görünmez.
   const port = SM.project(input, { model, country: 'Bangladesh', vehicle: 'Gemi', today: '2026-05-03',
     passed: 'eta', observed: ['handover', 'loadingRequest', 'eta', 'warehouseEntry'] });
-  assert.equal(port.openOverrunDays, 0);
   assert.equal(port.stages.find(s => s.code === '4').status, 'done');
+  assert.equal(port.openOverrunDays, 9);
+  assert.ok(port.overrunSigma > 1, `σ=${port.overrunSigma}`);
+  assert.equal(port.currentStage, '5');
+  assert.deepEqual([port.running.from, port.running.to], ['eta', 'warehouseEntry']);
+  assert.equal(port.etaMean, '2026-05-03', 'gözlenen en uzun süre de aşıldı: en erken bugün');
+  // Henüz ortalama içinde: koşullu kalan süre ETA'yı ortalamanın biraz ötesine taşır, aşım yok.
+  const early = SM.project(input, { model, country: 'Bangladesh', vehicle: 'Gemi', today: '2026-04-20',
+    passed: 'eta', observed: ['handover', 'loadingRequest', 'eta', 'warehouseEntry'] });
+  assert.equal(early.openOverrunDays, 0);
+  assert.ok(SM.dayOrdinal(early.etaMean) >= SM.dayOrdinal('2026-04-24'));
+});
+
+test('aralık beklentisi aşamanın kendi ortalamasından: farklı örneklemli kalan süreler sahte aşım üretmez', () => {
+  // Cut Off yalnız uzun deniz ayaklı 5 parsiyelde dolu; diğer 10'unda yok.
+  const list = [];
+  for (let i = 0; i < 10; i += 1) { const s = shipment(i * 3); delete s.cutOff; list.push(s); }
+  for (let i = 0; i < 5; i += 1) list.push(shipment(40 + i * 3, { eta: 60 }));
+  const model = SM.buildModel(list, { today: '2026-12-31' });
+  const g = model.groups.find(x => x.scope === 'country');
+  assert.ok(g.remaining.cutOff.mean > g.remaining.handover.mean, 'kalan süre ortalamaları farklı örneklemden');
+  const p = SM.project({ loadingRequest: '2026-03-01', handover: '2026-03-04' }, { model, country: 'Bangladesh', vehicle: 'Gemi', today: '2026-03-06' });
+  assert.equal(p.currentStage, '2');
+  assert.equal(p.openOverrunDays, 0, 'Handover\'dan 2 gün sonra, aşama 2 ortalaması 4 gün');
+  assert.deepEqual([p.running.days, p.running.mean], [2, 4]);
+});
+
+test('P80 ortalamadan önce düşmez; açık aşımda olasılık alt sınırla sınırlanır', () => {
+  const list = [];
+  for (let i = 0; i < 8; i += 1) list.push(shipment(i * 3, { eta: i === 7 ? 300 : 40 }));
+  const model = SM.buildModel(list, { today: '2027-12-31' });
+  const p = SM.project({ loadingRequest: '2026-03-01', handover: '2026-03-04' }, { model, country: 'Bangladesh', vehicle: 'Gemi', today: '2026-03-05' });
+  assert.ok(SM.dayOrdinal(p.etaP80) >= SM.dayOrdinal(p.etaMean), `${p.etaP80} < ${p.etaMean}`);
+
+  const base = sampleModel();
+  // Talep 10 gün önce, Handover yok (ortalama 3): en erken bugün + Kalan(handover) 49..53.
+  const late = SM.project({ loadingRequest: '2026-03-01' }, { model: base, country: 'Bangladesh', vehicle: 'Gemi', today: '2026-03-11' });
+  assert.ok(late.openOverrunDays > 0);
+  assert.equal(late.probability('2026-04-24'), 0, 'ETA geç derken olasılık "yetişir" diyemez');
+  assert.ok(late.probability('2026-05-10') >= 0.99);
 });
 
 test('fark kalemleri: Handover + ortalama + kalemler = Aşama ETA', () => {

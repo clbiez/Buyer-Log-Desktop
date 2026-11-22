@@ -59,6 +59,8 @@ for (const row of demo.antrepo.slice(1)) {
     transitCount += 1;
     // Çoğu yeni yüklenmiş (ETA gelecekte); her dördüncüsü ETA'yı geçmiş, gümrük açık.
     const shift = transitCount % 4 === 0 ? -between(45, 60) : -between(8, 14);
+    // SPARSE: ETA'sı geçmiş olanlar gümrükte; sonraki adımların sütunu yok (gerçek sorgu gibi).
+    if (SPARSE && transitCount % 4 === 0) out[H('Supplier Portal Statü')] = 'Gümrük-Liman Operasyonları'; // i18n-ignore
     const c = chain(vehicle, country, shift);
     set('Yükleme Talep Tarih', c.loadingRequest); set('HANDOVER Tarihi', c.handover);
     // SPARSE: gerçek Backlog/CP sorgusu gibi yoldaki parsiyelde yalnız Talep + Handover.
@@ -88,6 +90,12 @@ for (const country of ['BANGLADES', 'CIN', 'MISIR', 'TURKIYE', 'Georgia', 'FAS']
       antrepo.push(out);
     }
   }
+}
+/* SPARSE: gerçek Backlog/CP IAS sorgusunun sütun kümesi — Cut Off, Fiili Yükleme,
+   Özet Beyan, Ambar Onay ve Transit Beyanname sütunları dosyada HİÇ yok. */
+if (SPARSE) {
+  const drop = new Set(['Cut Off Tarih', 'Fiili Yükleme Tarih', 'Özet Beyan Onay Tarih', 'Ambar Onay Tarih', 'Transit Beyanname Tarih'].map(name => antrepo[0].indexOf(name)).filter(i => i >= 0));
+  for (let r = 0; r < antrepo.length; r += 1) antrepo[r] = antrepo[r].filter((_, i) => !drop.has(i));
 }
 const XLSX = require('xlsx');
 for (const [name, rows] of [['ASAS', demo.asas], ['Antrepo', antrepo]]) {
@@ -333,6 +341,27 @@ async function shot(page, top, bottom, file) {
     assert.equal(prod.cells[6], '—', 'üretimde parsiyeli yükleme onayı devralmaz');
     await page.evaluate(() => { const t = document.getElementById('_toast'); if (t) t.remove(); const wrap = document.getElementById('cpTableWrap'); if (wrap) wrap.scrollLeft = 0; });
     await page.waitForTimeout(600);
+    // Gümrükte takılı parsiyel: sonraki adımın sütunu yok, yine de aşım görünür.
+    const stuck = await page.evaluate(() => {
+      const rows = (state.cp && state.cp.rows) || [];
+      const hit = rows.filter(r => r._stageRun && r._stageRun.to === 'warehouseEntry' && r._stageRun.over > 0).sort((a, b) => b._stageRun.over - a._stageRun.over)[0];
+      return hit ? { code: String(hit['Order Code']), run: hit._stageRun } : null;
+    });
+    console.log('STUCK', JSON.stringify(stuck));
+    assert.ok(stuck, 'gümrükte takılı parsiyel aşım gösterir');
+    await page.fill('#cpSearch', `${stuck.code}, ${mixed.code}`); await page.keyboard.press('Enter');
+    await page.waitForTimeout(2500);
+    await page.evaluate(() => { state.cpLogisticExpanded.clear(); renderCP(); const wrap = document.getElementById('cpTableWrap'); if (wrap) wrap.scrollLeft = 0; const t = document.getElementById('_toast'); if (t) t.remove(); });
+    await page.waitForTimeout(1500);
+    const stuckRun = await page.evaluate(() => [...document.querySelectorAll('#cpTable tbody td[data-key="Current Stage"]')].map(td => td.textContent.trim()));
+    console.log('STUCK_CELLS', JSON.stringify(stuckRun));
+    assert.ok(stuckRun.some(t => /ETA → Antrepo Giriş .* g aşıldı/.test(t)), 'etiket sayılan aralığı yazar');
+    const sbox = await page.locator('#cpTableWrap').boundingBox();
+    await page.screenshot({ path: path.join(outDir, 'cp-stage-stuck-customs.png'), clip: { x: sbox.x, y: sbox.y, width: sbox.width, height: Math.min(sbox.height, Math.max(420, Math.ceil(sbox.width / 3.2))) } });
+    await page.fill('#cpSearch', mixed.code); await page.keyboard.press('Enter');
+    await page.waitForTimeout(2000);
+    await page.evaluate(() => { const tr = document.querySelector('#cpTable tbody tr[data-id]'); state.cpLogisticExpanded.add(Number(tr.dataset.id)); renderCP(); });
+    await page.waitForTimeout(1500);
     const dbox = await page.locator('#cpTableWrap').boundingBox();
     await page.screenshot({ path: path.join(outDir, 'cp-stage-status-floor.png'), clip: { x: dbox.x, y: dbox.y, width: dbox.width, height: Math.min(dbox.height, Math.max(480, Math.ceil(dbox.width / 3.2))) } });
   }
