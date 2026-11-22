@@ -4,7 +4,6 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const engine = require('../public/tryd-advantage-engine');
-const postfobAnalysis = require('../public/postfob-analysis');
 
 const close = (actual, expected, message) => assert.ok(actual != null && Math.abs(actual - expected) < 1e-9, `${message || ''} beklenen ${expected}, gelen ${actual}`);
 
@@ -61,7 +60,8 @@ test('model formülleri Excel hesaplanan alanlarıyla aynı; yalnız TR+YD model
   close(m1.ydFob, 4600 / 1500, 'YD FOB');
   close(m1.coverage, 1500 / 1600, 'kapsam');
   assert.equal(m1.status, engine.STATUS.noLanded);
-  assert.deepEqual(m1.statusCount, { ok: 2, noLanded: 1, invalidLanded: 0 });
+  // Bangladeş 3,5/3 = 1,17 ve Çin 3,9/3,2 = 1,22 standart 1,11'in üstünde: uyarı alır, hesapta kalır.
+  assert.deepEqual(m1.statusCount, { ok: 0, highMultiplier: 2, noLanded: 1, invalidLanded: 0 });
 });
 
 test('landed < FOB hatalıdır ve hesaptan çıkar; model durumu "landed hatalı"', () => {
@@ -117,23 +117,46 @@ test('öngörü kaynağı yalnız açıkça seçilince kullanılır; iki kaynak 
   assert.equal(engine.compareModels(rows, { landedSource: 'bogus' }).landedSource, 'actual');
 });
 
-test('hatalı landed sınırı postfob aykırı yöntemiyle aynı çeyrekleri, dış çiti (3×IQR) kullanır', () => {
-  const yd = Array.from({ length: 12 }, (_, i) => ({ model: `X${i}`, originCountry: 'BANGLADEŞ', qty: 10, fob: 4, landedActual: 4.4 + (i % 4) * 0.08 }));
-  const outlierOnly = { model: 'Y', originCountry: 'BANGLADEŞ', qty: 10, fob: 4, landedActual: 4.4 + 0.24 + 0.36 }; // iç çit dışı, dış çit içi
-  const broken = { model: 'Z', originCountry: 'BANGLADEŞ', qty: 10, fob: 4, landedActual: 40 };
-  const sample = [...yd, outlierOnly, broken];
-  const bounds = engine.landedBounds(sample, 'actual');
-  const reference = postfobAnalysis.outlierBounds(sample);
-  close(bounds.q1, reference.q1, 'Q1');
-  close(bounds.q3, reference.q3, 'Q3');
-  close(bounds.upper, reference.q3 + 3 * (reference.q3 - reference.q1), 'üst sınır');
-  assert.equal(postfobAnalysis.isOutlier(outlierOnly, reference), true);
-  assert.equal(engine.rowStatus(outlierOnly, bounds, 'actual'), engine.STATUS.ok);
-  assert.equal(engine.rowStatus(broken, bounds, 'actual'), engine.STATUS.invalid);
-  // TR ve kıyas dışı satırlar sınırı etkilemez; küçük örnekte yalnız taban (landed < FOB) geçerli.
-  const small = engine.landedBounds(rows, 'actual');
-  assert.equal(small.upper, null);
-  assert.equal(small.floor, 1);
+// Ürün kararı (kullanıcı, 2026-11-22): landed çarpanı yükleme tipine göre değişir
+// (gemi < gemi+uçak < uçak). Standardın üstündeki çarpan HATA DEĞİLDİR; gerçek
+// maliyettir, hesapta kalır ve "Landed çarpanı yüksek" uyarısı alır. Önceki
+// istatistiksel çit (Q3 ± 3×IQR) bu karar nedeniyle hesaptan çıkarma kuralı
+// olmaktan çıkarıldı. Hatalı yalnız fiziksel olarak imkânsız olandır: landed < FOB.
+test('standart YD çarpanının üstü "landed çarpanı yüksek": hesapta kalır; hatalı yalnız landed < FOB', () => {
+  assert.equal(engine.DEFAULT_STANDARD_MULTIPLIER, 1.11);
+  const standard = 1.11;
+  // 4 × 1,10 = standart içi; 4 × 1,60 = uçak gibi yüksek çarpan; 40 = çok yüksek ama yine hata değil.
+  assert.equal(engine.rowStatus({ qty: 1, fob: 4, landedActual: 4.4 }, standard, 'actual'), engine.STATUS.ok);
+  assert.equal(engine.rowStatus({ qty: 1, fob: 4, landedActual: 6.4 }, standard, 'actual'), engine.STATUS.high);
+  assert.equal(engine.rowStatus({ qty: 1, fob: 4, landedActual: 40 }, standard, 'actual'), engine.STATUS.high);
+  assert.equal(engine.rowStatus({ qty: 1, fob: 4, landedActual: 3.9 }, standard, 'actual'), engine.STATUS.invalid);
+  assert.equal(engine.rowStatus({ qty: 1, fob: 4, landedActual: 4.4 }, 1.05, 'actual'), engine.STATUS.high);
+  // Standart verilmezse varsayılan 1,11 kullanılır.
+  assert.equal(engine.rowStatus({ qty: 1, fob: 4, landedActual: 4.6 }, null, 'actual'), engine.STATUS.high);
+  const sample = [
+    { model: 'A', originCountry: 'TÜRKİYE', qty: 100, fob: 6 },
+    { model: 'A', originCountry: 'BANGLADEŞ', qty: 100, fob: 4, landedActual: 4.4 },
+    { model: 'A', originCountry: 'ÇİN', qty: 100, fob: 4, landedActual: 6.4 },
+    { model: 'A', originCountry: 'HİNDİSTAN', qty: 50, fob: 4, landedActual: 3 },
+  ];
+  const result = engine.analyze(sample, { target: 0.36, standardMultiplier: standard });
+  const model = result.models[0];
+  assert.deepEqual(model.statusCount, { ok: 1, highMultiplier: 1, noLanded: 0, invalidLanded: 1 });
+  // Yüksek çarpanlı 100 adet hesapta; hatalı 50 adet dışarıda.
+  assert.equal(model.amounts.ydQty, 200);
+  assert.equal(model.amounts.highMultiplierQty, 100);
+  assert.equal(model.amounts.invalidQty, 50);
+  close(model.advantage, 1 - (440 + 640) / (6 * 200), 'avantaj yüksek çarpanı içerir');
+  close(model.maxRatio, 1.6, 'en yüksek Landed/FOB');
+  assert.equal(model.status, engine.STATUS.invalid);
+  assert.equal(result.total.high, 0);
+  assert.deepEqual(result.standard, { value: 1.11, fallback: false });
+  const onlyHigh = engine.analyze(sample.slice(0, 3), { standardMultiplier: standard });
+  assert.equal(onlyHigh.models[0].status, engine.STATUS.high);
+  assert.equal(onlyHigh.total.high, 1);
+  assert.equal(onlyHigh.total.invalid, 0);
+  assert.deepEqual(engine.analyze(sample, {}).standard, { value: 1.11, fallback: true });
+  assert.equal('landedBounds' in engine, false);
 });
 
 test('tercih normalize edilir: varsayılan hedef %36, bilinmeyen kaynak/filtre düşer', () => {

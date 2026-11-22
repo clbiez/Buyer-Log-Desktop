@@ -19,6 +19,8 @@
     view: engine.normalizePrefs(null), filters: [], rows: [], fetchedAt: '', missing: [], truncated: false, rowLimit: 10000, stale: false,
     connection: null, horizon: false, loaded: false, loading: false, started: false, status: null, popover: null,
     viewRevision: 0, exporting: false, search: '', displayItems: [], analysis: null, dataFilters: null,
+    // Standart YD landed çarpanı (ortak ayar); okunamazsa motor varsayılanı (1,11) kullanılır.
+    standardMultiplier: null,
   };
 
   const byId = id => document.getElementById(id);
@@ -50,7 +52,11 @@
     { key: 'coverage', tr: 'Landed kapsamı', en: 'Landed coverage', format: 'pct', hint: ['Kıyasa giren YD adedi / toplam YD adedi', 'Compared abroad qty / total abroad qty'] },
     { key: 'status', tr: 'Durum', en: 'Status', format: 'status' },
   ];
-  const STATUS_COPY = { ok: ['OK', 'OK'], noLanded: ['Landed yok', 'No landed'], invalidLanded: ['Landed hatalı', 'Invalid landed'] };
+  const STATUS_COPY = { ok: ['OK', 'OK'], highMultiplier: ['Landed çarpanı yüksek', 'High landed multiplier'], noLanded: ['Landed yok', 'No landed'], invalidLanded: ['Landed hatalı', 'Invalid landed'] };
+  const standardText = () => {
+    const standard = state.analysis ? state.analysis.standard : engine.standardOf(state.standardMultiplier);
+    return fmt(standard.value, 2) + (standard.fallback ? text(' (varsayılan; ortak ayar okunamadı)', ' (default; shared setting unavailable)') : '');
+  };
   const statusText = status => STATUS_COPY[status] ? text(...STATUS_COPY[status]) : '';
 
   const ERROR_COPY = {
@@ -98,7 +104,7 @@
 
   /* ---------- Hesap ---------- */
   function compute() {
-    state.analysis = engine.analyze(state.rows, { target: view().target, landedSource: view().landedSource, belowTargetOnly: view().belowTargetOnly, search: state.search });
+    state.analysis = engine.analyze(state.rows, { target: view().target, landedSource: view().landedSource, belowTargetOnly: view().belowTargetOnly, search: state.search, standardMultiplier: state.standardMultiplier });
     return state.analysis;
   }
   // Grup ve model satırının hücre değerleri; oranlar her düzeyde tutarlardan.
@@ -108,6 +114,7 @@
     const groupStatus = () => {
       if (node.invalid) return text(`${node.invalid} hatalı`, `${node.invalid} invalid`);
       if (node.noLanded) return text(`${node.noLanded} landed yok`, `${node.noLanded} no landed`);
+      if (node.high) return text(`${node.high} yüksek çarpan`, `${node.high} high multiplier`);
       return 'OK';
     };
     return {
@@ -209,9 +216,10 @@
     const classes = ['num'];
     // Genel toplam satırı koyu zeminlidir; vurgu KPI'dadır, hücre renklendirilmez.
     if (ref.key === 'gap' && value != null && item.kind !== 'grand') classes.push(value < 0 ? 'trydAdvantageBelow' : 'trydAdvantageAbove');
-    if (ref.key === 'status') { classes.splice(0, 1); if (item.kind === 'model' && item.status !== 'ok') classes.push(item.status === 'invalidLanded' ? 'trydAdvantageInvalid' : 'trydAdvantageNoLanded'); }
+    if (ref.key === 'status') { classes.splice(0, 1, 'trydAdvantageStatusCell'); if (item.kind === 'model' && item.status !== 'ok') classes.push(item.status === 'invalidLanded' ? 'trydAdvantageInvalid' : (item.status === 'highMultiplier' ? 'trydAdvantageHighMultiplier' : 'trydAdvantageNoLanded')); }
     const title = ref.key === 'status' && item.kind === 'model'
-      ? text(`${item.statusCount.ok} OK · ${item.statusCount.noLanded} landed yok · ${item.statusCount.invalidLanded} hatalı satır`, `${item.statusCount.ok} OK · ${item.statusCount.noLanded} no landed · ${item.statusCount.invalidLanded} invalid rows`)
+      ? text(`${item.statusCount.ok} OK · ${item.statusCount.highMultiplier} yüksek çarpan · ${item.statusCount.noLanded} landed yok · ${item.statusCount.invalidLanded} hatalı satır` + (item.maxRatio != null ? ` · en yüksek Landed/FOB ${fmt(item.maxRatio, 2)}, standart ${standardText()}` : ''),
+        `${item.statusCount.ok} OK · ${item.statusCount.highMultiplier} high multiplier · ${item.statusCount.noLanded} no landed · ${item.statusCount.invalidLanded} invalid rows` + (item.maxRatio != null ? ` · highest landed/FOB ${fmt(item.maxRatio, 2)}, standard ${standardText()}` : ''))
       : '';
     return `<td class="${classes.join(' ')}"${title ? ` title="${esc(title)}"` : ''}>${esc(format(ref.format, value))}</td>`;
   }
@@ -247,9 +255,10 @@
       kpi(`${total.below.toLocaleString(locale())}`, text('Hedef altı model', 'Models below target'), '', total.below ? 'trydAdvantageKpiBelow' : ''),
       kpi(format('pct', total.coverage), text('Landed kapsamı (YD adet)', 'Landed coverage (abroad qty)')),
       kpi(`${total.invalid} / ${total.noLanded}`, text('Hatalı / landed yok model', 'Invalid / no-landed models'),
-        result.bounds.upper != null
-          ? text(`Hatalı: landed < FOB veya Landed/FOB > ${fmt(result.bounds.upper, 3)} / < ${fmt(result.bounds.lower, 3)} (Q3 + 3×IQR, ${result.bounds.sample} YD satırı)`, `Invalid: landed < FOB or Landed/FOB > ${fmt(result.bounds.upper, 3)} / < ${fmt(result.bounds.lower, 3)} (Q3 + 3×IQR, ${result.bounds.sample} abroad rows)`)
-          : text('Hatalı: landed < FOB. Oran sınırı için en az 8 YD satırı gerekir.', 'Invalid: landed < FOB. At least 8 abroad rows are needed for a ratio bound.')),
+        text('Hatalı: landed < FOB (fiziksel olarak imkânsız). Hatalı ve landed yok satırlar avantaj hesabına girmez.', 'Invalid: landed < FOB (physically impossible). Invalid and no-landed rows are left out of the advantage.')),
+      kpi(`${total.high.toLocaleString(locale())}`, text('Yüksek çarpanlı model', 'High-multiplier models'),
+        text(`Landed/FOB standart YD landed çarpanının (${standardText()}) üstünde. Yükleme tipi (ör. uçak) çarpanı yükseltebilir; bu bir hata değildir ve avantaj hesabına girer.`, `Landed/FOB above the standard abroad landed multiplier (${standardText()}). The shipment mode (e.g. air) can raise it; this is not an error and is included in the advantage.`),
+        total.high ? 'trydAdvantageKpiWarning' : ''),
     ].join('');
     const values = VALUES();
     const sort = view().sort || {};
@@ -295,10 +304,10 @@
   const DETAIL_KEYS = ['_side', 'model', 'order', 'colour', 'originCountry', 'qty', 'fob', 'landedActual', 'landedForecast', '_ratio', '_status', 'mag', 'classification', 'buyerGroup', 'season', 'productName'];
   const detailLabel = key => DETAIL_LABELS[key] ? text(...DETAIL_LABELS[key]) : key;
   function annotate(rows) {
-    const bounds = state.analysis ? state.analysis.bounds : null;
+    const standard = state.analysis ? state.analysis.standard.value : state.standardMultiplier;
     return rows.map(row => {
       const side = engine.originClass(row);
-      const status = side === 'yd' ? engine.rowStatus(row, bounds, view().landedSource) : null;
+      const status = side === 'yd' ? engine.rowStatus(row, standard, view().landedSource) : null;
       return { ...row, _side: side === 'tr' ? 'TR' : 'YD', _status: status ? statusText(status) : '', _ratio: engine.rowRatio(row, view().landedSource) };
     });
   }
@@ -366,7 +375,7 @@
         summaryRow(text('Yalnız hedef altı', 'Below target only'), view().belowTargetOnly ? text('Evet', 'Yes') : text('Hayır', 'No')),
         ...(state.search ? [summaryRow(text('Arama', 'Search'), state.search)] : []),
         summaryRow(text('Kapsam', 'Scope'), text('TR = Türkiye; YD = diğer ülkeler, Fas ve Mısır hariç; yalnız TR+YD siparişi olan modeller', 'TR = Turkey; abroad = other countries except Morocco and Egypt; only models with both TR and abroad orders')),
-        summaryRow(text('Hatalı landed kuralı', 'Invalid landed rule'), result.bounds.upper != null ? `landed < FOB | Landed/FOB > ${round(result.bounds.upper)} | < ${round(result.bounds.lower)} (Q3 ± 3×IQR)` : 'landed < FOB'),
+        summaryRow(text('Landed durum kuralı', 'Landed status rule'), text(`Hatalı: landed < FOB (hesaba girmez) · Yüksek çarpan: Landed/FOB > standart ${standardText()} (hesaba girer)`, `Invalid: landed < FOB (excluded) · High multiplier: landed/FOB > standard ${standardText()} (included)`)),
         summaryRow(text('Yalnız TR / yalnız YD model', 'TR only / abroad only models'), `${result.skipped.trOnly} / ${result.skipped.ydOnly}`),
         ...(state.horizon ? [summaryRow(text('Veri Yönetimi ufku', 'Data Management horizon'), text('Uygulandı', 'Applied'))] : []),
         summaryRow(text('Son yenileme', 'Last refresh'), state.fetchedAt),
@@ -420,9 +429,16 @@
   const filterSummary = values => Object.keys(values || {}).filter(key => (values[key] || []).length).map(key => { const ref = state.filters.find(entry => entry.key === key); return `${ref ? text(ref.tr, ref.en) : key}: ${values[key].join(', ')}`; }).join(' · ');
 
   /* ---------- Veri ---------- */
+  // Ortak "Landed çarpanları" ayarının yurtdışı değeri; okunamazsa motor varsayılanı kullanılır ve UI bunu söyler.
+  async function loadStandardMultiplier() {
+    try {
+      const payload = await requestJson('/api/landed-multipliers');
+      state.standardMultiplier = payload && payload.multipliers ? payload.multipliers.overseas : null;
+    } catch (_) { state.standardMultiplier = null; }
+  }
   async function loadState() {
     try {
-      const payload = await requestJson('/api/postfob/tryd/state');
+      const [payload] = await Promise.all([requestJson('/api/postfob/tryd/state'), loadStandardMultiplier()]);
       state.view = engine.normalizePrefs(payload.view);
       state.filters = Array.isArray(payload.filters) ? payload.filters : [];
       state.connection = payload.connection || null;

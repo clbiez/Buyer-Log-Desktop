@@ -4042,9 +4042,10 @@ html[data-ui-system="manifest"] #postFobTable tr.postFobHasOutlier td:last-child
 html[data-ui-system="manifest"] .trydAdvantageTargetInput {font-variant-numeric:tabular-nums !important}
 html[data-ui-system="manifest"] #trydAdvantageTable td.trydAdvantageBelow,html[data-ui-system="manifest"] #trydAdvantageTable td.trydAdvantageInvalid {color:var(--ui-danger) !important;font-weight:650 !important}
 html[data-ui-system="manifest"] #trydAdvantageTable td.trydAdvantageAbove {color:var(--ui-success) !important}
-html[data-ui-system="manifest"] #trydAdvantageTable td.trydAdvantageNoLanded,html[data-ui-system="manifest"] #trydAdvantageNote.trydAdvantagePartial {color:var(--ui-warning) !important;font-weight:650 !important}
+html[data-ui-system="manifest"] #trydAdvantageTable td.trydAdvantageNoLanded,html[data-ui-system="manifest"] #trydAdvantageTable td.trydAdvantageHighMultiplier,html[data-ui-system="manifest"] #trydAdvantageNote.trydAdvantagePartial {color:var(--ui-warning) !important;font-weight:650 !important}
 html[data-ui-system="manifest"] #trydAdvantageTable tr.trydAdvantageBelowRow td.trydAdvantageLabelCell {color:var(--ui-danger) !important}
 html[data-ui-system="manifest"] .trydAdvantageKpiBelow .n {color:var(--ui-danger) !important}
+html[data-ui-system="manifest"] .trydAdvantageKpiWarning .n {color:var(--ui-warning) !important}
 html[data-ui-system="manifest"] .intakeFilterFieldOption {background:transparent !important;color:var(--ui-text) !important
 }
 html[data-ui-system="manifest"] .intakeFilterFieldOption:hover,html[data-ui-system="manifest"] .intakeFilterFieldOption:focus-visible {background:var(--ui-row-hover) !important
