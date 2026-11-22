@@ -7216,9 +7216,18 @@ function hydrateModelSnapshot(value) {
   const id = sourceUserId(value);
   return hydrateSnapshotPayload(id, loadModelSnapshot(id));
 }
+/* Açılış/ilk veri yüklemesi snapshot'ı KOOPERATİF okur: JSON parse, v3 çözme,
+   checksum ve tarih dönüşümü ~8 ms dilimlerle setImmediate'e döner (hesap
+   servisiyle aynı yardımcı). Sahada 321 MiB'lık snapshot tek blokta çözülürken
+   olay döngüsü 7-22 sn duruyor, /api/status ve giriş istekleri bekliyordu.
+   Yükleme süresince araya giren reset/yenileme/başka hydrate önbelleği
+   değiştirdiyse eski yükleme sonucu YAZILMAZ: güncel önbellek döner. */
+const yieldSnapshotLoad = () => new Promise(resolve => setImmediate(resolve));
 async function hydrateModelSnapshotAsync(value) {
-  const id = sourceUserId(value);
-  return hydrateSnapshotPayload(id, await loadModelSnapshotAsync(id));
+  const id = sourceUserId(value), generation = sourceCaches.get(id);
+  const snapshot = await loadModelSnapshotAsync(id, { yieldControl:yieldSnapshotLoad });
+  if (sourceCaches.get(id) !== generation) return cacheForUser(id);
+  return hydrateSnapshotPayload(id, snapshot);
 }
 
 
@@ -7282,7 +7291,10 @@ async function ensureDataLoaded(value){
   const id = sourceUserId(value), runtime = cacheForUser(id);
   if(runtime.loadedAt && Array.isArray(runtime.asasOrders) && runtime.lflLoadedAt) return runtime;
   if(!initialDataLoadPromises.has(id)) {
-    initialDataLoadPromises.set(id, loadInitialDataAndLfl(id).finally(()=>{ initialDataLoadPromises.delete(id); }));
+    // Yalnız kendi kaydını siler: reset sonrası başlayan yeni yüklemenin sözü
+    // eski yüklemenin finally'siyle düşerse üçüncü çağıran ikinci kez yükler.
+    const pending = loadInitialDataAndLfl(id).finally(()=>{ if(initialDataLoadPromises.get(id)===pending) initialDataLoadPromises.delete(id); });
+    initialDataLoadPromises.set(id, pending);
   }
   return initialDataLoadPromises.get(id);
 }
