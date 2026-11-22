@@ -429,6 +429,35 @@
       }
     },
     {
+      "id": "data-management-oab-cube-source",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri Yönetimi · OAB (Küp)",
+        "en": "Data Management · OAB (Cube)"
+      },
+      "title": {
+        "tr": "OAB (Küp) kaynağı Veri Yönetimi'nde; ufuk ayarlanabilir",
+        "en": "OAB (Cube) source in Data Management; horizon is configurable"
+      },
+      "body": {
+        "tr": "OAB_Cube bağlantısı INTAKE ve FOB Sonrası Maliyet gibi ayrı bir veritabanı olarak bağlantılar ve Corporate Integration Lab listesinde görünür; İncele canlı şemayı ve beklenen OAB alanlarını veri sorgusu atmadan doğrular. Mevcut kurulumlarda kayıtlı bağlantılar korunur: OAB_Cube daha önce Özel Database olarak eklendiyse yeni kayıt onun sunucusunu devralır, yoksa INTAKE sunucusunu kullanır; bağlantı listesi doluysa hiçbir kayıt silinmez. Horizon ve yenileme panelinde kendi satırı vardır: Filtreyi düzenle ile ortak ufuk tanımlanır. Ufuk widget sorgusuna eklenir; ufuk tanımlıysa widget'ta sezon seçmek zorunlu değildir, başlıkta ve Excel özetinde ufkun uygulandığı yazar. Ufuk yalnız küpte ölçülerle ilişkisi kanıtlı Data, DummyUrun ve Sezon alanlarıyla tanımlanabilir.",
+        "en": "The OAB_Cube connection appears as a separate database, like INTAKE and Post-FOB Cost, in the connections and Corporate Integration Lab lists; Inspect checks the live schema and the expected OAB fields without running a data query. Existing setups keep their saved connections: if OAB_Cube was added earlier as a Custom Database, the new record takes over its server, otherwise it uses the INTAKE server; when the connection list is full, no record is removed. It has its own row in the Horizon and refresh panel: Edit filter defines a shared horizon. The horizon is added to the widget query; with a horizon, selecting a season in the widget is no longer required, and the header and Excel summary state that the horizon was applied. The horizon can only use Data, DummyUrun and Sezon fields, whose relationship to the cube measures is proven."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-cube-data-management-light.png",
+        "alt": {
+          "tr": "Veri Yönetimi Horizon ve yenileme paneli: INTAKE ve FOB Sonrası Maliyet satırlarının altında OAB (Küp) satırı ve Filtreyi düzenle düğmesi",
+          "en": "Data Management Horizon and refresh panel: OAB (Cube) row with Edit filter below the INTAKE and Post-FOB Cost rows"
+        },
+        "caption": {
+          "tr": "Demo kurulumda OAB (Küp) kaynağı kendi ufuk satırıyla listelenir; ufuk yoksa sezon widget'ta seçilir.",
+          "en": "In the demo setup the OAB (Cube) source is listed with its own horizon row; without a horizon, the season is selected in the widget."
+        }
+      }
+    },
+    {
       "id": "backlog-handover-vs-loading",
       "type": "fix",
       "module": {

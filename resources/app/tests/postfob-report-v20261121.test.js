@@ -249,7 +249,7 @@ test('Veri Yönetimi ufku sorguya SUMMARIZECOLUMNS argümanı olarak girer ve se
 test('Veri Yönetimi ekranı postfob ufkunu ayrı satır ve çekmece grubu olarak sunar; widget ufukla sezonsuz sorgular', () => {
   const dm = fs.readFileSync(path.join(__dirname, '../public/data-management.js'), 'utf8');
   assert.match(dm, /horizonRow\(\{ id: 'postfob', targets: \['postfob'\] \}\)/);
-  assert.match(dm, /\{ id: 'postfob', targets: \['postfob'\] \}\];/);
+  assert.match(dm, /\{ id: 'postfob', targets: \['postfob'\] \}(?:, \{ id: '[a-z]+', targets: \['[a-z]+'\] \})*\];/);
   assert.match(dm, /postfob: \{\s*title: \{ tr: 'FOB Sonrası Maliyet', en: 'Post-FOB Cost' \}/);
   const ui = fs.readFileSync(path.join(__dirname, '../public/postfob.js'), 'utf8');
   assert.match(ui, /if \(!state\.horizon && !\(view\(\)\.filterValues\.season \|\| \[\]\)\.length\)/);
@@ -454,7 +454,7 @@ test('görünüm kaydı: ertelenen kayıtların sözü askıda kalmaz; sorgu sı
 
 test('Veri Yönetimi: FOB satırı ufuksuz "filtre gerekli" uyarısı göstermez, sezonun widget’ta seçildiğini söyler', () => {
   const dm = fs.readFileSync(path.join(__dirname, '../public/data-management.js'), 'utf8');
-  assert.match(dm, /const widgetBounded = group\.id === 'postfob';\s*const needsFilter = unbounded && !widgetBounded;/);
+  assert.match(dm, /const widgetBounded = \[[^\]]*'postfob'[^\]]*\]\.includes\(group\.id\);\s*const needsFilter = unbounded && !widgetBounded;/);
   assert.match(dm, /Ufuk yoksa widget’ta sezon seçilir', 'Without a horizon, a season is selected in the widget'/);
 });
 

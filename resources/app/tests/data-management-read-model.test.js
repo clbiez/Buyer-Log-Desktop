@@ -152,9 +152,9 @@ test('P2 yarım kalmış koşul sessizce "sınırlı" sayılmaz', () => {
 
 test('P2 özet gerçek sayıları verir', () => {
   const model = view();
-  // ASAS + IAS + varsayılan INTAKE + varsayılan FOB Sonrası Maliyet.
-  assert.equal(model.summary.sourceCount, 4);
-  assert.equal(model.summary.totalFedModules, 7);
+  // ASAS + IAS + varsayılan INTAKE + varsayılan FOB Sonrası Maliyet + varsayılan OAB (Küp).
+  assert.equal(model.summary.sourceCount, 5);
+  assert.equal(model.summary.totalFedModules, 8);
   assert.ok(model.summary.problemCount >= 1, 'filtresiz IAS sorun olarak sayılmalı');
   assert.equal(model.summary.localModuleCount, model.localModules.length);
 });
@@ -163,7 +163,7 @@ test('P2 projeksiyon veritabanına bağlanmadan çalışır', () => {
   // Erişilemez bir sunucu adıyla bile ekran açılabilmeli (CLAUDE.md §10):
   // build() sorgu atmaz, yalnız kayıtlı yapılandırmayı okur.
   const model = view({ asas: { server: 'erisilemez-sunucu', catalog: 'YOK' } });
-  assert.equal(model.sources.length, 4);
+  assert.equal(model.sources.length, 5);
   assert.ok(model.sources.some(entry => entry.connection.server === 'erisilemez-sunucu'));
 });
 

@@ -76,7 +76,14 @@ module.exports = function registerOabCubeRoutes(app, deps) {
       measures: Array.isArray(meta.measures) ? meta.measures : null, dimensions: Array.isArray(meta.dimensions) ? meta.dimensions : null,
       truncated: Boolean(meta.truncated), rowLimit: meta.rowLimit || report.OAB_CUBE_MAX_ROWS,
       dataDate: meta.dataDate || '', dataDateSource: meta.dataDateSource || '', etlTime: meta.etlTime || '',
+      horizonApplied: Boolean(meta.horizonApplied),
     };
+  }
+  const horizonOf = () => report.resolveHorizon(loadModelConnections().items);
+  /* Ufuk anahtarın parçası: Veri Yönetimi'nde filtre değişince önbellek eski
+     satırı dönmez. Ufuksuz anahtar (horizon: null) önceki sürümle aynıdır. */
+  function reportQueryKey(found, userId, built, horizon) {
+    return store.queryKey({ connection: { server: found.connection.server, catalog: found.connection.catalog, user: String(userId) }, measures: built.measures, rows: built.dimensions, filters: built.filterValues, horizon, options: { report: 'oab-cube', version: 2 } });
   }
   /* Veri tarihi ikincil bilgidir: okunamazsa rapor yine döner, tarih boş kalır. */
   async function readFreshness(found) {
@@ -94,6 +101,7 @@ module.exports = function registerOabCubeRoutes(app, deps) {
       res.set('Cache-Control', 'no-store').json({
         ok: true, view: storedView(req.currentUser.id), catalog: report.catalog(),
         connection: { name: target.name, server: target.server, catalog: target.catalog, source: target.source },
+        horizon: Boolean(horizonOf()),
         snapshot: snapshotPayload(store.loadSnapshot(req.currentUser.id)),
       });
     } catch (err) { logFailure('state', err); const out = failure(err); res.status(out.status).json(out); }
@@ -136,9 +144,10 @@ module.exports = function registerOabCubeRoutes(app, deps) {
     try {
       const view = saveView(userId, { ...storedView(userId), ...(req.body && req.body.view ? req.body.view : {}) });
       const found = await liveFields();
-      const built = report.buildQuery({ liveFields: found.fields, view });
-      const queryKey = store.queryKey({ connection: { server: found.connection.server, catalog: found.connection.catalog, user: String(userId) }, measures: built.measures, rows: built.dimensions, filters: built.filterValues, options: { report: 'oab-cube', version: 2 } });
-      const meta = { filterValues: built.filterValues, missing: built.missing, rowLimit: built.maxRows, measures: [...built.measures, ...(built.derived || [])], dimensions: built.dimensions };
+      const horizon = horizonOf();
+      const built = report.buildQuery({ liveFields: found.fields, view, horizon });
+      const queryKey = reportQueryKey(found, userId, built, horizon);
+      const meta = { filterValues: built.filterValues, missing: built.missing, rowLimit: built.maxRows, measures: [...built.measures, ...(built.derived || [])], dimensions: built.dimensions, horizonApplied: built.horizonApplied };
       if (!(req.body && req.body.forceRefresh)) {
         const cached = store.get(queryKey);
         if (cached && cached.fresh) {
@@ -163,10 +172,33 @@ module.exports = function registerOabCubeRoutes(app, deps) {
     }
   });
 
+  /* Veri Yönetimi › Corporate Integration Lab "İncele": canlı şema okunur ve
+     beklenen OAB alanları doğrulanır. Sezon/ufuk bilinmeden veri sorgusu
+     atılmaz (sınırsız sorgu yok); satır örneği kullanıcının son snapshot'ıdır. */
+  async function probe(req, item, probeRecord) {
+    const target = { server: String(item && item.server || ''), catalog: String(item && item.catalog || '') };
+    const schema = await modelQuery.discoverSchema(target);
+    const fields = intakeReport.allowedSchema(schema);
+    probeRecord.schema = {
+      columnCount: Array.isArray(schema && schema.columns) ? schema.columns.length : 0,
+      measureCount: Array.isArray(schema && schema.measures) ? schema.measures.length : 0,
+      errors: Array.isArray(schema && schema.errors) ? schema.errors.slice(0, 20) : [],
+      provider: String(schema && schema.provider || ''),
+    };
+    const resolved = report.resolveFields(fields);
+    const rows = snapshotRows(req.currentUser.id);
+    probeRecord.queryOk = true;
+    probeRecord.queryRowCount = rows.length;
+    probeRecord.queryError = '';
+    probeRecord.queryCode = '';
+    probeRecord.queryRuns = [{ id: 'oabcube', name: 'OAB (Küp)', targets: ['oabcube'], ok: true, mode: 'schema', generated: true, rowCount: rows.length, sampledRows: Math.min(5, rows.length), missing: resolved.missing }];
+    probeRecord.sample = rows.slice(0, 5);
+    return rows;
+  }
   function snapshotRows(userId) {
     const snapshot = store.loadSnapshot(userId);
     return snapshot && Array.isArray(snapshot.rows) ? snapshot.rows : [];
   }
 
-  return { store, storedView, saveView, snapshotRows };
+  return { store, storedView, saveView, probe, snapshotRows };
 };

@@ -432,6 +432,10 @@
       title: { tr: 'FOB Sonrası Maliyet', en: 'Post-FOB Cost' },
       hint: { tr: 'Bağımsız kaynak ve filtre; Genel Bakış widget’ından yenilenir.', en: 'Independent source and filter; refreshes from its Overview widget.' },
     },
+    oabcube: {
+      title: { tr: 'OAB (Küp)', en: 'OAB (Cube)' },
+      hint: { tr: 'Bağımsız kaynak ve filtre; Ticari › OAB (Küp) widget’ından yenilenir.', en: 'Independent source and filter; refreshes from the Commercial › OAB (Cube) widget.' },
+    },
   };
   const DEFAULT_HORIZON_GROUPS = [
     { id: 'cp', targets: ['cp'] },
@@ -487,9 +491,10 @@
         + connectables(module, group.targets.length > 1);
     }).join('');
     const unbounded = group.targets.some(moduleId => ((model.modules || []).find(entry => entry.id === moduleId) || {}).needsFilter);
-    /* FOB Sonrası Maliyet ufuksuz da çalışır: widget sorgusu sezon seçimiyle
-       sınırlanır. "Sınırsız sorgu çalıştırılamaz" uyarısı burada yanlış olurdu. */
-    const widgetBounded = group.id === 'postfob';
+    /* FOB Sonrası Maliyet ve OAB (Küp) ufuksuz da çalışır: widget sorgusu
+       sezon seçimiyle sınırlanır. "Sınırsız sorgu çalıştırılamaz" uyarısı
+       burada yanlış olurdu. */
+    const widgetBounded = ['postfob', 'oabcube'].includes(group.id);
     const needsFilter = unbounded && !widgetBounded;
     return `<div class="dmHorizonRow${needsFilter ? ' hasWarning' : ''}" data-horizon-row="${esc(group.id)}">
       <div class="dmHorizonHead">
@@ -554,6 +559,7 @@
       ${horizonGroupsOf().map(horizonRow).join('')}
       ${horizonRow({ id: 'intake', targets: ['intake'] })}
       ${horizonRow({ id: 'postfob', targets: ['postfob'] })}
+      ${horizonRow({ id: 'oabcube', targets: ['oabcube'] })}
       ${mergedNote(merged)}
       ${refreshSettings()}
     </div>`;
@@ -1881,7 +1887,7 @@
      hatırlama ve kayıt aynı yoldan geçer. Çekmece body'ye eklenir: panel
      yeniden çizildiğinde açık düzenleyici kaybolmaz. */
   let horizonDrawer = null;   // {groupId, moduleId, sourceId, opener}
-  const drawerGroups = () => [...horizonGroupsOf(), { id: 'intake', targets: ['intake'] }, { id: 'postfob', targets: ['postfob'] }];
+  const drawerGroups = () => [...horizonGroupsOf(), { id: 'intake', targets: ['intake'] }, { id: 'postfob', targets: ['postfob'] }, { id: 'oabcube', targets: ['oabcube'] }];
   const drawerGroup = groupId => drawerGroups().find(entry => entry.id === groupId)
     || drawerGroups().find(entry => entry.targets.includes(groupId)) || null;
 

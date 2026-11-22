@@ -23,7 +23,10 @@
 
 const horizon = require('../modelHorizon');
 // Genel Bakış widget'ı olan modüllerin module-registry kaydı yoktur; etiketleri burada.
-const UNREGISTERED_MODULE_LABELS = Object.freeze({ postfob: { tr: 'FOB Sonrası Maliyet', en: 'Post-FOB Cost' } });
+const UNREGISTERED_MODULE_LABELS = Object.freeze({
+  postfob: { tr: 'FOB Sonrası Maliyet', en: 'Post-FOB Cost' },
+  oabcube: { tr: 'OAB (Küp)', en: 'OAB (Cube)' },
+});
 const modelFields = require('../model-fields');
 const moduleRegistry = require('../module-registry');
 const sourceProfiles = require('./source-profiles');
