@@ -65,17 +65,24 @@ test('model satırları kararlı anahtarlara ve sayılara normalize edilir (onda
   assert.equal(report.toNumber('1,234.5'), 1234.5);
 });
 
-test('görünüm normalize edilir: bilinmeyen gruplama/kapsam varsayılana döner', () => {
-  const view = report.normalizeView({ groupBy: 'drop table', segment: 'x', filterValues: { season: ['S6'], bad: ['1'] }, sort: { key: 'fob', dir: 1 } });
-  assert.equal(view.groupBy, 'originCountry');
-  assert.equal(view.segment, 'all');
-  assert.deepEqual(view.filterValues, { season: ['S6'] });
-  assert.deepEqual(view.sort, { key: 'fob', dir: 1 });
+test('görünüm v2 normalize edilir: v1 groupBy satır eksenine taşınır, bilinmeyen alan/kapsam düşer', () => {
+  const legacy = report.normalizeView({ groupBy: 'mag', segment: 'x', filterValues: { season: ['S6'], bad: ['1'] }, sort: { key: 'fob', dir: 1 } });
+  assert.deepEqual(legacy.rows, [{ key: 'mag' }]);
+  assert.equal(legacy.segment, 'all');
+  assert.deepEqual(legacy.filterValues, { season: ['S6'] });
+  assert.deepEqual(legacy.display.sort, { key: 'fob', dir: 1 });
+  assert.equal(legacy.values.length, report.DEFAULT_VALUES.length);
+  const odd = report.normalizeView({ rows: ['drop table', { key: 'x_forged', source: 'DROP' }], values: [{ source: '[Urun].[UrunAd]' }] });
+  assert.deepEqual(odd.rows, [{ key: 'originCountry' }], 'geçersiz satır alanları düşer, varsayılan kalır');
+  assert.deepEqual(odd.values.map(ref => ref.key), report.DEFAULT_VALUES, 'ölçü olmayan kaynak değer olamaz');
+  const extra = report.normalizeView({ rows: [{ key: 'forged', source: '[Urun].[OptionTanim]', label: 'Opsiyon' }], values: [{ source: '[Measures].[Stok Tutma Maliyeti]', agg: 'wavg' }] });
+  assert.equal(extra.rows[0].key, report.extraKey('[Urun].[OptionTanim]'), 'anahtar istemciden değil kaynaktan türetilir');
+  assert.equal(extra.values[0].agg, 'WAVG');
 });
 
 test('dağıtık değer sorgusu metin alanında CONTAINSSTRING kullanır, tırnak kaçar', () => {
-  const item = report.resolveFields(liveSchema()).dimensions.find(entry => entry.key === 'mag');
-  const plan = report.distinctQuery(item, { search: 'CU"4', limit: 99999 });
+  const field = report.resolveFilterField(liveSchema(), { key: 'mag' });
+  const plan = report.distinctQuery(field, { search: 'CU"4', limit: 99999 });
   assert.equal(plan.limit, 5000);
   assert.match(plan.query, /CONTAINSSTRING\('Urun'\[MerchAltGrupKod\], "CU""4"\)/);
 });
@@ -181,4 +188,187 @@ test('kaynak kesintisinde son snapshot çevrimdışı olarak döner; snapshot yo
   assert.equal(failed.statusCode, 502);
   assert.equal(failed.body.code, 'POSTFOB_SOURCE_UNAVAILABLE');
   assert.doesNotMatch(JSON.stringify(failed.body), /boom|server/);
+});
+
+/* ---------- Veri Yönetimi bağlantısı ve ufuk (v2026-11-22) ---------- */
+test('postfob rolü INTAKE gibi ayrı veritabanı kaynağıdır: varsayılan kayıt, kapsam, profil', () => {
+  const db = require('../server/db');
+  const modelScopes = require('../server/lib/model-scopes');
+  const sourceProfiles = require('../server/lib/data-domain/source-profiles');
+  const modelFields = require('../server/lib/model-fields');
+  const items = db.normalizeModelConnections([]);
+  const item = items.find(entry => entry.role === 'postfob');
+  assert.ok(item, 'varsayılan postfob bağlantısı eklenir');
+  assert.equal(item.server, 'F5_S41');
+  assert.equal(item.catalog, 'FiyatMaliyetKontrolRapor');
+  assert.deepEqual(item.scopes[0].targets, ['postfob']);
+  assert.ok(items.some(entry => entry.role === 'intake'), 'INTAKE varsayılanı korunur');
+  assert.deepEqual(modelScopes.allowedTargets('postfob'), ['postfob']);
+  assert.equal(sourceProfiles.fromLegacyRole('postfob').id, 'postfob-cost');
+  assert.deepEqual(sourceProfiles.validate({ roleTargets: modelScopes.ROLE_TARGETS, fieldsForRole: modelFields.fieldsForRole, scopeTargets: modelScopes.SCOPE_TARGETS }), { ok: true, problems: [] });
+  // Kullanıcının kaydettiği postfob kaydı korunur; ikinci varsayılan eklenmez.
+  const saved = db.normalizeModelConnections([{ id: 'mine', name: 'Maliyet', role: 'postfob', server: 'lcwtabular_s41', catalog: 'FiyatMaliyetKontrolRapor' }]);
+  assert.equal(saved.filter(entry => entry.role === 'postfob').length, 1);
+  assert.equal(report.resolveConnection(saved).server, 'lcwtabular_s41');
+  // Global "Tümünü yenile" hedeflerine girmez.
+  assert.ok(!modelScopes.REFRESH_TARGETS.includes('postfob'));
+});
+
+test('Veri Yönetimi okuma modeli postfob kaynağını ve modülünü iki dilde listeler', () => {
+  const readModel = require('../server/lib/data-domain/read-model');
+  const db = require('../server/db');
+  const items = db.normalizeModelConnections([]);
+  const tr = readModel.build(items, { language: 'tr' });
+  const en = readModel.build(items, { language: 'en' });
+  const source = tr.sources.find(entry => entry.profileId === 'postfob-cost');
+  assert.ok(source, 'kaynak listede');
+  assert.equal(tr.modules.find(entry => entry.id === 'postfob').label, 'FOB Sonrası Maliyet');
+  assert.equal(en.modules.find(entry => entry.id === 'postfob').label, 'Post-FOB Cost');
+});
+
+test('Veri Yönetimi ufku sorguya SUMMARIZECOLUMNS argümanı olarak girer ve sezon zorunluluğunu karşılar', () => {
+  const horizon = { groups: [{ conditions: [{ field: 'SezonKod', table: 'Urun', name: 'SezonKod', op: 'in', values: ['S6', 'W6'] }] }] };
+  const items = [{ id: 'mc_postfob_default', role: 'postfob', server: 'F5_S41', catalog: 'FiyatMaliyetKontrolRapor', scopes: [{ id: 's', enabled: true, targets: ['postfob'], horizon }] }];
+  const resolved = report.resolveHorizon(items);
+  assert.ok(resolved);
+  const built = report.buildQuery({ liveFields: liveSchema(), filterValues: {}, horizon: resolved });
+  assert.equal(built.horizonApplied, true);
+  assert.match(built.query, /FILTER\(ALL\('Urun'\[SezonKod\]\)/);
+  assert.match(built.query, /"S6"/);
+  // Ufuk + widget filtresi VE ile birleşir.
+  const both = report.buildQuery({ liveFields: liveSchema(), filterValues: { mag: ['CU4C'] }, horizon: resolved });
+  assert.match(both.query, /FILTER\(ALL\('Urun'\[SezonKod\]\)[\s\S]*TREATAS\(\{ "CU4C" \}/);
+  // Ufuk yoksa sezon yine zorunlu.
+  assert.equal(report.resolveHorizon([{ role: 'postfob', server: 'x', catalog: 'FiyatMaliyetKontrolRapor', scopes: [{ targets: ['postfob'], horizon: {} }] }]), null);
+  // Veri Yönetimi'nin normalize ettiği boş ufuk (boş sezon/grup listeleri) sınır sayılmaz.
+  const db = require('../server/db');
+  assert.equal(report.resolveHorizon(db.normalizeModelConnections([])), null);
+});
+
+test('Veri Yönetimi ekranı postfob ufkunu ayrı satır ve çekmece grubu olarak sunar; widget ufukla sezonsuz sorgular', () => {
+  const dm = fs.readFileSync(path.join(__dirname, '../public/data-management.js'), 'utf8');
+  assert.match(dm, /horizonRow\(\{ id: 'postfob', targets: \['postfob'\] \}\)/);
+  assert.match(dm, /\{ id: 'postfob', targets: \['postfob'\] \}\];/);
+  assert.match(dm, /postfob: \{\s*title: \{ tr: 'FOB Sonrası Maliyet', en: 'Post-FOB Cost' \}/);
+  const ui = fs.readFileSync(path.join(__dirname, '../public/postfob.js'), 'utf8');
+  assert.match(ui, /if \(!state\.horizon && !\(view\(\)\.filterValues\.season \|\| \[\]\)\.length\)/);
+  const routes = fs.readFileSync(path.join(__dirname, '../server/routes/horizon-routes.js'), 'utf8');
+  assert.equal((routes.match(/target === 'postfob' \? connections\.find\(item => item && item\.role === 'postfob'\)/g) || []).length, 2);
+});
+
+/* ---------- Pivot düzenleme, model alanları ve arama (v2026-11-22) ---------- */
+function liveWithExtras() {
+  return liveSchema().concat(intakeReport.allowedSchema({
+    columns: [{ table: 'Urun', name: 'OptionTanim', kind: 'column', dataType: 'WChar' }, { table: 'Cari', name: 'Ad', kind: 'column', dataType: 'WChar' }],
+    measures: [{ table: 'Measures', name: 'Stok Tutma Maliyeti', kind: 'measure' }],
+  }));
+}
+
+test('modelden eklenen satır/sütun alanı gruplanır, filtre-yalnız alan gruplanmaz, eklenen ölçü sorguya girer', () => {
+  const view = report.normalizeView({
+    rows: [{ key: 'buyerGroup' }, { source: '[Urun].[OptionTanim]', label: 'Opsiyon' }],
+    filters: [{ key: 'season' }, { source: '[Cari].[Ad]', label: 'Üretici' }],
+    values: [{ key: 'qty' }, { source: '[Measures].[Stok Tutma Maliyeti]', agg: 'WAVG' }],
+    filterValues: { season: ['S6'] },
+  });
+  const cari = view.filters[1].key;
+  view.filterValues[cari] = ['DEMO TEDARİKÇİ'];
+  const built = report.buildQuery({ liveFields: liveWithExtras(), view: report.normalizeView(view) });
+  const option = report.extraKey('[Urun].[OptionTanim]');
+  const stock = report.extraKey('[Measures].[Stok Tutma Maliyeti]');
+  assert.ok(built.dimensions.includes(option));
+  assert.ok(!built.dimensions.includes(cari), 'yalnız filtrede kullanılan alan sorgu düzeyini değiştirmez');
+  assert.match(built.query, /'Urun'\[OptionTanim\]/);
+  assert.match(built.query, /TREATAS\(\{ "DEMO TEDARİKÇİ" \}, 'Cari'\[Ad\]\)/);
+  assert.match(built.query, new RegExp(`"${stock}", \\[Stok Tutma Maliyeti\\]`));
+  assert.equal(built.headerMap["'Urun'[OptionTanim]"], option);
+  // Canlı modelde olmayan eklenmiş alan sorguyu bozmaz, eksik olarak raporlanır.
+  const ghost = report.normalizeView({ rows: [{ source: '[Urun].[Yok]' }], filterValues: { season: ['S6'] } });
+  const ghostBuilt = report.buildQuery({ liveFields: liveSchema(), view: ghost });
+  assert.ok(ghostBuilt.missing.includes(report.extraKey('[Urun].[Yok]')));
+  assert.doesNotMatch(ghostBuilt.query, /\[Yok\]/);
+});
+
+test('pivot düzenleyici alan havuzu canlı modelden gelir; hazır alanlar baseKey ile işaretlenir', () => {
+  const meta = report.metadata(liveWithExtras());
+  assert.ok(meta.dimensions.some(field => field.source === '[Urun].[OptionTanim]' && !field.baseKey));
+  assert.equal(meta.dimensions.find(field => field.name === 'SezonKod').baseKey, 'season');
+  assert.ok(meta.measures.some(field => field.name === 'Stok Tutma Maliyeti'));
+  // Dağıtık değer: eklenmiş alan yalnız kaynak adı anahtarla eşleşirse çözülür.
+  const key = report.extraKey('[Cari].[Ad]');
+  assert.ok(report.resolveFilterField(liveWithExtras(), { key, source: '[Cari].[Ad]' }));
+  assert.equal(report.resolveFilterField(liveWithExtras(), { key: 'x_forged', source: '[Cari].[Ad]' }), null);
+});
+
+test('arama sipariş, model ve özel kodda VE ile çalışır; aykırı eşiği aramadan etkilenmez; eklenen ölçü özetlenir', () => {
+  const data = Array.from({ length: 10 }, (_, i) => ({ order: String(1000 + i), model: `DM${i}`, specialCode: i === 3 ? 'LCW KIDS 77' : '', originCountry: 'BD', qty: 10 + i, fob: 4, landedActual: i === 9 ? 9 : 4.4, x_s: i }));
+  const all = analysis.prepare(data, {});
+  const found = analysis.prepare(data, { search: 'kids 1003' });
+  assert.deepEqual(found.visible.map(row => row.order), ['1003']);
+  assert.deepEqual(found.bounds, all.bounds);
+  assert.equal(analysis.prepare(data, { search: 'kids 1004' }).visible.length, 0);
+  const metrics = analysis.groupMetrics(data, all.bounds, [{ key: 'x_s', agg: 'SUM' }]);
+  assert.equal(metrics.x_s, 45);
+  assert.equal(metrics.outliers, 1);
+  const weighted = analysis.groupMetrics(data.slice(0, 2), null, [{ key: 'x_s', agg: 'WAVG' }]);
+  assert.ok(Math.abs(weighted.x_s - 11 / 21) < 1e-9);
+});
+
+test('rapor yanıtı arama için yüklü ASAS verisinden özel kod ve model adını ekler; önbelleğe yazmaz', async () => {
+  const handlers = {};
+  const app = { get: (url, ...fns) => { handlers[`GET ${url}`] = fns; }, put: () => {}, post: (url, ...fns) => { handlers[`POST ${url}`] = fns; } };
+  const prefs = new Map();
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'postfob-enrich-'));
+  const store = createIntakeStore({ root });
+  require('../server/routes/postfob-routes')(app, {
+    express: { json: () => (req, res, next) => next() },
+    userAccess: { requireAnyArea: () => (req, res, next) => next(), requireCapability: () => (req, res, next) => next(), appendAudit: () => {} },
+    modelQuery: { discoverSchema: async () => ({ columns: [], measures: [] }), runModelRows: async () => ({ rows: [{ order: '1.235.868', qty: '10', fob: '4' }] }) },
+    userPreferences: { load: id => ({ entries: Object.fromEntries(prefs.get(id) || []) }), merge: (id, patch) => { prefs.set(id, Object.entries(patch)); return {}; } },
+    loadModelConnections: () => ({ items: [] }), BLBusinessRules: { compareChronologicalValues: (a, b) => String(a).localeCompare(String(b)) },
+    cacheForUser: () => ({ asasOrders: [{ 'Order Code': '1235868', 'Özel Kod 1': 'LCW KIDS', 'Model Name': 'DEMO TEE' }] }),
+    store,
+  });
+  const res = { statusCode: 200, body: null, set() { return this; }, status(code) { this.statusCode = code; return this; }, json(body) { this.body = body; return this; } };
+  const req = { currentUser: { id: 'u1' }, body: { view: { filterValues: { season: ['S6'] } } } };
+  let i = 0; const fns = handlers['POST /api/postfob/report'];
+  const next = async () => { const fn = fns[i++]; if (fn) await fn(req, res, next); };
+  await next();
+  assert.equal(res.statusCode, 200, JSON.stringify(res.body));
+  assert.equal(res.body.rows[0].specialCode, 'LCW KIDS');
+  assert.equal(res.body.rows[0].modelName, 'DEMO TEE');
+  assert.equal(store.loadSnapshot('u1').rows[0].specialCode, undefined, 'zenginleştirme önbelleğe yazılmaz');
+});
+
+test('pivot satırları INTAKE/OAB sınıflarını kullanır; toplam satırlarının hover rengi okunur kalır', () => {
+  const ui = fs.readFileSync(path.join(__dirname, '../public/postfob.js'), 'utf8');
+  for (const cls of ['oabPivotGrandTotalRow', 'oabPivotSubtotalRow', 'oabPivotGroupToggle', 'oabPivotSubtotalTag', 'oabSettingsModal', 'intakeFilterFieldPicker']) assert.ok(ui.includes(cls), cls);
+  const html = fs.readFileSync(path.join(__dirname, '../public/index.html'), 'utf8');
+  for (const id of ['postFobFieldsBtn', 'postFobSearch', 'postFobCollapseAllBtn', 'postFobExpandAllBtn', 'postFobResetBtn']) assert.match(html, new RegExp(`id="${id}"`));
+  const css = fs.readFileSync(path.join(__dirname, '../public/ui-components.css'), 'utf8');
+  assert.match(css, /\.miniTable tbody tr\.oabPivotGrandTotalRow:hover td \{background:[^}]*color:var\(--ui-surface\) !important/);
+  assert.match(css, /\.miniTable tbody tr:is\(\.oabPivotGroupRow,\.oabPivotSubtotalRow\):hover td \{[^}]*color:var\(--ui-text\) !important/);
+});
+
+test('Corporate Integration Lab İncele: canlı şema okunur, eksik alan raporlanır, veri sorgusu atılmaz', async () => {
+  const calls = [];
+  const routes = require('../server/routes/postfob-routes')({ get: () => {}, put: () => {}, post: () => {} }, {
+    express: { json: () => (req, res, next) => next() },
+    userAccess: { requireAnyArea: () => () => {}, requireCapability: () => () => {}, appendAudit: () => {} },
+    modelQuery: {
+      discoverSchema: async input => { calls.push(['schema', input]); return { columns: liveSchema().filter(f => f.fieldType === 'dimension').map(f => ({ table: f.table, name: f.name, kind: 'column' })), measures: liveSchema().filter(f => f.fieldType === 'measure').map(f => ({ table: 'Measures', name: f.name, kind: 'measure' })), provider: 'ADOMD' }; },
+      runModelRows: async () => { calls.push(['rows']); return { rows: [] }; },
+    },
+    userPreferences: { load: () => ({ entries: {} }), merge: () => ({}) },
+    loadModelConnections: () => ({ items: [] }), BLBusinessRules: { compareChronologicalValues: () => 0 },
+    store: createIntakeStore({ root: fs.mkdtempSync(path.join(os.tmpdir(), 'postfob-probe-')) }),
+  });
+  const probe = {};
+  const rows = await routes.probe({ currentUser: { id: 'u1' } }, { server: 'F5_S41', catalog: 'FiyatMaliyetKontrolRapor' }, probe);
+  assert.deepEqual(rows, []);
+  assert.equal(probe.queryOk, true);
+  assert.equal(probe.schema.provider, 'ADOMD');
+  assert.deepEqual(probe.queryRuns[0].missing, ['tpMultiplier']);
+  assert.deepEqual(calls.map(call => call[0]), ['schema'], 'İncele veri sorgusu atmaz');
+  assert.equal(calls[0][1].server, 'F5_S41');
 });

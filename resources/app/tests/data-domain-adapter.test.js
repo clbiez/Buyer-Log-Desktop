@@ -236,7 +236,7 @@ test('P0 kaynak beslemeyen modüller hiçbir profilin listesinde yoktur', () => 
       `${moduleId} bir kaynak profiline bağlanmış görünüyor`);
   }
   assert.deepEqual(sourceProfiles.feedableModules().slice().sort(),
-    ['backlog', 'cp', 'intake', 'lfl', 'orders', 'priceanalysis']);
+    ['backlog', 'cp', 'intake', 'lfl', 'orders', 'postfob', 'priceanalysis']);
 });
 
 test('P0 imkânsız hedef taşıyan kayıt sessizce düşürülmez, uyarı üretir', () => {

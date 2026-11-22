@@ -428,6 +428,10 @@
       title: { tr: 'INTAKE', en: 'INTAKE' },
       hint: { tr: 'Bağımsız kaynak ve filtre; kendi ekranından yenilenir.', en: 'Independent source and filter; refreshes from its own screen.' },
     },
+    postfob: {
+      title: { tr: 'FOB Sonrası Maliyet', en: 'Post-FOB Cost' },
+      hint: { tr: 'Bağımsız kaynak ve filtre; Genel Bakış widget’ından yenilenir.', en: 'Independent source and filter; refreshes from its Overview widget.' },
+    },
   };
   const DEFAULT_HORIZON_GROUPS = [
     { id: 'cp', targets: ['cp'] },
@@ -544,6 +548,7 @@
       </div>
       ${horizonGroupsOf().map(horizonRow).join('')}
       ${horizonRow({ id: 'intake', targets: ['intake'] })}
+      ${horizonRow({ id: 'postfob', targets: ['postfob'] })}
       ${mergedNote(merged)}
       ${refreshSettings()}
     </div>`;
@@ -1871,7 +1876,7 @@
      hatırlama ve kayıt aynı yoldan geçer. Çekmece body'ye eklenir: panel
      yeniden çizildiğinde açık düzenleyici kaybolmaz. */
   let horizonDrawer = null;   // {groupId, moduleId, sourceId, opener}
-  const drawerGroups = () => [...horizonGroupsOf(), { id: 'intake', targets: ['intake'] }];
+  const drawerGroups = () => [...horizonGroupsOf(), { id: 'intake', targets: ['intake'] }, { id: 'postfob', targets: ['postfob'] }];
   const drawerGroup = groupId => drawerGroups().find(entry => entry.id === groupId)
     || drawerGroups().find(entry => entry.targets.includes(groupId)) || null;
 

@@ -6179,8 +6179,9 @@ app.post('/api/intake/report', userAccess.requireAnyArea('overview'), userAccess
 });
 
 // ---- FOB Sonrası Maliyet (Genel Bakış widget'ı) → server/routes/postfob-routes.js ----
-require('./routes/postfob-routes')(app, {
+const postFobRoutes = require('./routes/postfob-routes')(app, {
   BLBusinessRules,
+  cacheForUser,
   express,
   loadModelConnections,
   modelQuery,
@@ -11794,6 +11795,7 @@ function integrationLabRowsForSource(source, runtime, userId) {
     const snapshot = intakeStore.loadSnapshot(userId);
     return snapshot && Array.isArray(snapshot.rows) ? snapshot.rows : [];
   }
+  if (source.profileId === 'postfob-cost') return postFobRoutes.snapshotRows(userId);
   if (!runtime) return [];
   if (source.profileId === 'asas-orders') return Array.isArray(runtime.asasOrders) ? runtime.asasOrders : [];
   if (source.profileId === 'ias-warehouse') {
@@ -12040,7 +12042,9 @@ async function integrationLabRunLiveProbe(req, source, storedItem) {
   try {
     liveRows = source.profileId === 'intake-budget'
       ? await integrationLabProbeIntake(req, source, storedItem, probe)
-      : await integrationLabProbeTabularSource(req, source, storedItem, probe);
+      : source.profileId === 'postfob-cost'
+        ? await postFobRoutes.probe(req, storedItem || { server: source.connection.server, catalog: source.connection.catalog }, probe)
+        : await integrationLabProbeTabularSource(req, source, storedItem, probe);
   } catch (error) {
     const failure = integrationLabProbeError(error);
     probe.queryOk = false;
@@ -12073,7 +12077,7 @@ app.post('/api/data-management/integration-lab/inspect', userAccess.requireArea(
     const rawSource = store.items.find(item => item && item.id === source.id) || {
       id: source.id,
       name: source.name,
-      role: source.profileId === 'intake-budget' ? 'intake' : (source.profileId === 'ias-warehouse' ? 'antrepo' : 'asas'),
+      role: source.profileId === 'intake-budget' ? 'intake' : (source.profileId === 'postfob-cost' ? 'postfob' : (source.profileId === 'ias-warehouse' ? 'antrepo' : 'asas')),
       server: source.connection.server,
       catalog: source.connection.catalog,
       mode: source.queryMode === 'manual' ? 'manual' : 'auto',

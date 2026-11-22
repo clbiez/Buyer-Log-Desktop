@@ -1421,6 +1421,11 @@ const MODEL_CONNECTION_DEFAULT_INTAKE = Object.freeze({
   id: 'mc_intake_default', name: 'INTAKE', server: 'lcwtabular_s20',
   catalog: 'WSSI_Intake_Raporu4', role: 'intake', refreshEnabled: true,
 });
+// FOB Sonrası Maliyet widget'ının kaynağı (S41 Fiyat Maliyet Kontrol Raporu Excel bağlantısı).
+const MODEL_CONNECTION_DEFAULT_POSTFOB = Object.freeze({
+  id: 'mc_postfob_default', name: 'FOB Sonrası Maliyet', server: 'F5_S41',
+  catalog: 'FiyatMaliyetKontrolRapor', role: 'postfob', refreshEnabled: true,
+});
 /* v2026-11-14 — Sunucudaki gerçek veritabanı adı alt çizgilidir; boşluklu eski
    varsayılanla kayıtlı bağlantı canlı sorguda düşüp hep eski snapshot'a dönerdi.
    Yalnız bu sunucudaki bu tam eski ad taşınır; kullanıcı seçimine dokunulmaz. */
@@ -1493,7 +1498,7 @@ function normalizeModelConnection(raw) {
   const id = String(item.id || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40)
     || `mc_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
   const legacyFabricRole = item.role === 'fabric';
-  const role = legacyFabricRole ? 'fabric' : (['antrepo', 'intake', 'custom'].includes(item.role) ? item.role : 'asas');
+  const role = legacyFabricRole ? 'fabric' : (['antrepo', 'intake', 'postfob', 'custom'].includes(item.role) ? item.role : 'asas');
   const horizon = modelHorizon.normalizeHorizon(item.horizon);
   // One-time v3.48 migration. Legacy untouched ASAS connections had no horizon,
   // so Refresh pulled the entire model. Apply the compact default only once and
@@ -1603,6 +1608,15 @@ function normalizeModelConnections(list) {
   if (!items.some(item => item.role === 'intake')) {
     if (items.length >= MODEL_CONNECTION_LIMIT) items.pop();
     items.push(normalizeModelConnection(MODEL_CONNECTION_DEFAULT_INTAKE));
+  }
+  if (!items.some(item => item.role === 'postfob')) {
+    // Sınırdaysa varsayılan INTAKE kaydı değil, sondaki kullanıcı kaydı düşer.
+    if (items.length >= MODEL_CONNECTION_LIMIT) {
+      let drop = items.length - 1;
+      while (drop > 0 && items[drop].role === 'intake') drop -= 1;
+      items.splice(drop, 1);
+    }
+    items.push(normalizeModelConnection(MODEL_CONNECTION_DEFAULT_POSTFOB));
   }
   // Refresh için her rolde yalnız bir aktif bağlantı bırakılır. Kullanıcı birden
   // fazla eski kayıtla yükseltme yaptıysa listedeki ilk kayıt güvenli varsayılandır.
