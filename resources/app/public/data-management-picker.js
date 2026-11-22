@@ -11,6 +11,9 @@
    =================================================================== */
 (() => {
   'use strict';
+  /* Veri Yönetimi grubu ve widget select yakalayıcısı aynı dosyayı yükleyebilir;
+     ikinci yürütme açık seçicinin durumunu ezmez. */
+  if (window.BLDataPicker) return;
 
   const en = () => typeof appLang !== 'undefined' && appLang === 'en';
   const T = (tr, enText) => (en() ? enText : tr);
@@ -20,9 +23,11 @@
 
   const ID = '_dmPicker';
   let cleanup = null;
+  let currentAnchor = null;
 
   function close() {
     document.getElementById(ID)?.remove();
+    currentAnchor = null;
     if (cleanup) { cleanup(); cleanup = null; }
   }
 
@@ -37,6 +42,9 @@
    *   keepOpen      true ise seçimden sonra pencere açık kalır (çoklu seçim)
    *   selectedValues önceden seçili değerler; keepOpen ile tekrar seçimi engeller
    *   limit         listede gösterilecek azami satır (varsayılan 300)
+   *   keepOrder     true ise gruplu liste çağıranın sırasıyla çizilir (sıralanmaz)
+   *   matchWidth    true ise liste en az anchor genişliğinde açılır
+   *   returnFocus   true ise seçim/Escape sonrası odak anchor'a döner
    * Öğe `group: ['Tablo', 'Klasör']` taşıyorsa liste hiyerarşik başlıklarla çizilir.
    */
   function open(anchor, items, onPick, options = {}) {
@@ -47,6 +55,7 @@
     const selected = new Set((Array.isArray(options.selectedValues) ? options.selectedValues : [])
       .map(value => String(value)));
     const limit = Number(options.limit) > 0 ? Number(options.limit) : 300;
+    currentAnchor = anchor;
 
     const picker = document.createElement('div');
     picker.id = ID;
@@ -63,7 +72,7 @@
        yüzen liste olarak kalır; başlıklar tıklanmaz, yalnız yön gösterir. */
     const pathOf = entry => (Array.isArray(entry.group) ? entry.group.map(part => String(part || '').trim()).filter(Boolean) : []);
     const grouped = list.some(entry => pathOf(entry).length);
-    if (grouped) {
+    if (grouped && !options.keepOrder) {
       const cmp = (a, b) => String(a).localeCompare(String(b), 'tr', { sensitivity: 'base', numeric: true });
       list.sort((a, b) => {
         const pa = pathOf(a), pb = pathOf(b);
@@ -105,9 +114,22 @@
     };
     draw(list);
 
+    /* Konum: altta yer yoksa üstte açılır (alt kenara sabitlenir; arama
+       listeyi kısaltınca anchor'dan kopmaz), her durumda ekranda kalır. */
+    const PAD = 8;
     const rect = anchor.getBoundingClientRect();
-    picker.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - 300))}px`;
-    picker.style.top = `${Math.min(window.innerHeight - 320, rect.bottom + 4)}px`;
+    if (options.matchWidth) picker.style.width = `${Math.min(window.innerWidth - PAD * 2, Math.max(288, Math.round(rect.width)))}px`;
+    const pw = picker.offsetWidth || 288, ph = picker.offsetHeight || 300;
+    picker.style.left = `${Math.max(PAD, Math.min(rect.left, window.innerWidth - pw - PAD))}px`;
+    if (rect.bottom + 4 + ph > window.innerHeight - PAD && rect.top - 4 - ph >= PAD) {
+      picker.style.top = 'auto';
+      picker.style.bottom = `${Math.round(window.innerHeight - rect.top + 4)}px`;
+    } else {
+      picker.style.top = `${Math.max(PAD, Math.min(rect.bottom + 4, window.innerHeight - ph - PAD))}px`;
+    }
+    listEl.querySelector('.dmfPickerItem.isSelected')?.scrollIntoView?.({ block: 'nearest' });
+    const visibleItems = () => [...listEl.querySelectorAll('.dmfPickerItem:not(:disabled)')];
+    const finish = () => { if (options.returnFocus && anchor.isConnected) anchor.focus({ preventScroll: true }); };
 
     const field = picker.querySelector('.dmfPickerSearch');
     if (field) {
@@ -115,6 +137,16 @@
         const needle = field.value.trim().toLocaleLowerCase('tr');
         /* Gruplu listede tablo/klasör adıyla da aranır (Excel alan listesi gibi). */
         draw(needle ? list.filter(entry => `${grouped ? pathOf(entry).join(' ') + ' ' + (entry.hint || '') + ' ' : ''}${entry.label}`.toLocaleLowerCase('tr').includes(needle)) : list);
+      });
+      /* Klavye: ↓ listeye iner; Enter (serbest değer yoksa) ilk eşleşmeyi seçer. */
+      field.addEventListener('keydown', event => {
+        if (event.key === 'ArrowDown') { event.preventDefault(); visibleItems()[0]?.focus(); return; }
+        if (event.key !== 'Enter' || options.allowFree || keepOpen) return;
+        const first = visibleItems()[0];
+        if (!first) return;
+        event.preventDefault();
+        const value = String(first.dataset.value || '');
+        close(); onPick(value); finish();
       });
       if (options.allowFree) {
         field.addEventListener('keydown', event => {
@@ -153,17 +185,57 @@
       }
       close();
       onPick(value);
+      finish();
     });
-
+    listEl.addEventListener('keydown', event => {
+      if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+      const list = visibleItems(), index = list.indexOf(document.activeElement);
+      if (index < 0) return;
+      event.preventDefault();
+      if (event.key === 'ArrowUp' && index === 0) { (field || list[0]).focus(); return; }
+      list[Math.max(0, Math.min(list.length - 1, index + (event.key === 'ArrowDown' ? 1 : -1)))].focus();
+    });
     const outside = event => { if (!picker.contains(event.target) && event.target !== anchor) close(); };
-    const escape = event => { if (event.key === 'Escape') close(); };
+    /* Escape capture aşamasında yalnız seçiciyi kapatır; odak anchor'da olsa
+       bile altta açık ayar penceresinin Escape işleyicisine ulaşmaz. */
+    const escape = event => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault(); event.stopPropagation();
+      close(); finish();
+    };
+    /* Yüzen liste fixed konumludur; altındaki pencere kayarsa anchor'dan kopmasın. */
+    const scroll = event => { if (!(event.target instanceof Node) || !picker.contains(event.target)) close(); };
     document.addEventListener('pointerdown', outside, true);
-    document.addEventListener('keydown', escape);
+    document.addEventListener('keydown', escape, true);
+    document.addEventListener('scroll', scroll, true);
+    window.addEventListener('resize', close);
     cleanup = () => {
       document.removeEventListener('pointerdown', outside, true);
-      document.removeEventListener('keydown', escape);
+      document.removeEventListener('keydown', escape, true);
+      document.removeEventListener('scroll', scroll, true);
+      window.removeEventListener('resize', close);
     };
   }
 
-  window.BLDataPicker = { open, close };
+  /* ---------- Uzun açılır listelere arama (widget'lar) ----------
+     ui-primitives.js'teki küçük eager yakalayıcı, widget ayar pencerelerindeki
+     ve Genel Bakış widget'larındaki uzun yerel <select>'e tıklanınca bu dosyayı
+     ilk kullanımda yükler ve openForSelect'i çağırır. <select> DOM'da kalır:
+     seçilen değer ona yazılır ve `input`/`change` olayı tetiklenir; modüllerin
+     kaydetme/okuma kodu değişmez. */
+  function openForSelect(select) {
+    const entries = [...select.options].filter(option => !option.disabled).map(option => {
+      const group = option.parentElement && option.parentElement.tagName === 'OPTGROUP' ? option.parentElement.label : '';
+      return { value: option.value, label: option.textContent.trim() || option.value, ...(group ? { group: [group] } : {}) };
+    });
+    open(select, entries, value => {
+      if (!select.isConnected || select.value === value) return;
+      select.value = value;
+      select.dispatchEvent(new Event('input', { bubbles: true }));
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    }, { selectedValues: [select.value], keepOrder: true, matchWidth: true, returnFocus: true, limit: 1000 });
+  }
+  const isOpenFor = anchor => Boolean(anchor) && currentAnchor === anchor && Boolean(document.getElementById(ID));
+
+  window.BLDataPicker = { open, close, openForSelect, isOpenFor };
 })();

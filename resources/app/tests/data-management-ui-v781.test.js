@@ -446,7 +446,7 @@ test('v7.81 şema okunamazsa düzenleyici kilitlenmez', () => {
 
 test('v7.81 seçici TEK bir ortak modüldür', () => {
   // §9: aynı işlev için ikinci bir component üretme.
-  assert.match(PICKER_UI, /window\.BLDataPicker = \{ open, close \}/);
+  assert.match(PICKER_UI, /window\.BLDataPicker = \{ open, close, openForSelect, isOpenFor \}/);
   const filterUi = read('public/data-management-filter.js');
   assert.match(filterUi, /window\.BLDataPicker\?\.open\?\./);
   // Filtre düzenleyicisinde yerel bir seçici kopyası KALMAMALI.
