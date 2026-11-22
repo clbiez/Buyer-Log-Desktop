@@ -2077,12 +2077,11 @@
       const old = S.pivotFilters[descriptor.key];
       const panel = document.createElement('div');
       panel.className = 'colFilterPanel oabPivotFilterPanel';
-      const rect = anchor.getBoundingClientRect();
-      panel.style.left = `${Math.max(4, rect.left - 130)}px`; panel.style.top = `${rect.bottom + 4}px`;
       panel.innerHTML = `<div class="cfpRange"><div class="cfpRangeHead">${oabEsc(oabT('Değer aralığı', 'Value range'))}</div>
         <div class="oabPivotRangeGrid"><label>${oabEsc(oabT('En az', 'Minimum'))}<input type="text" inputmode="decimal" data-min value="${oabEsc(old && old.kind === 'range' && old.min != null ? old.min : '')}"></label><label>${oabEsc(oabT('En çok', 'Maximum'))}<input type="text" inputmode="decimal" data-max value="${oabEsc(old && old.kind === 'range' && old.max != null ? old.max : '')}"></label></div>
         <div class="cfpApplyRow"><button type="button" class="cfpRangeApply">${oabEsc(oabT('Uygula', 'Apply'))}</button><button type="button" class="numFilterClear cfpRangeClear">${oabEsc(oabT('Filtreyi Kaldır', 'Remove Filter'))}</button></div></div>`;
       document.body.appendChild(panel);
+      window.BLFloatingPlacement?.place(panel, anchor, { left: rect => rect.left - 130 });
       const read = sel => { const raw = String(panel.querySelector(sel)?.value || '').trim().replace(',', '.'); return raw === '' ? null : (Number.isFinite(Number(raw)) ? Number(raw) : null); };
       const close = () => panel.remove();
       panel.querySelector('.cfpRangeApply')?.addEventListener('click', () => { let min = read('[data-min]'), max = read('[data-max]'); if (min != null && max != null && min > max) [min, max] = [max, min]; if (min == null && max == null) delete S.pivotFilters[descriptor.key]; else S.pivotFilters[descriptor.key] = { kind: 'range', min, max }; close(); oabRenderTable(); });
@@ -2720,11 +2719,7 @@
       const pin=()=>{if(typeof pinCheckedFilterChoices==='function')pinCheckedFilterChoices(panel);};
       panel.querySelector('.cfpList')?.addEventListener('change',event=>{if(event.target.matches('input[type="checkbox"]'))pin();});
       pin();
-      const rect = anchor.getBoundingClientRect();
-      const panelWidth = Math.min(380, Math.max(250, panel.offsetWidth || 280));
-      panel.style.left = `${Math.max(8, Math.min(window.innerWidth - panelWidth - 8, rect.right - panelWidth))}px`;
-      panel.style.top = `${Math.min(window.innerHeight - (panel.offsetHeight || 360) - 8, rect.bottom + 4)}px`;
-      if (parseFloat(panel.style.top) < 8) panel.style.top = '8px';
+      window.BLFloatingPlacement?.place(panel, anchor, { align: 'end' });
 
       const listItems = () => [...panel.querySelectorAll('.cfpItem')];
       const visibleChecks = () => listItems().filter(item => item.style.display !== 'none').map(item => item.querySelector('input')).filter(Boolean);
