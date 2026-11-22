@@ -76,6 +76,22 @@ function postRows(count) {
     await page.route('**/api/intake/metadata', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, fields: intake.defaultFields(), viewConfig: intakeView, connection: { server: 'demo', catalog: 'demo' }, offline: false }) }));
     await page.route('**/api/intake/settings', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, viewConfig: JSON.parse(route.request().postData() || '{}').viewConfig || intakeView }) }));
     if (WITH_CALC) await page.evaluate(calc => localStorage.setItem('bl.user.moderator.lcw.oab.pivotCalculated.v1', calc), JSON.stringify([{ id: 'pcv_a', label: 'A', formula: '[Toplam Onaylı Sipariş Miktarı::SUM] / [Toplam WSSI Sipariş Miktarı::SUM]', mode: 'aggregate' }, { id: 'pcv_b', label: 'B', formula: 'IF([WSSI Sipariş Miktarı] = 0, [Onaylı Sipariş Miktarı], 0)', mode: 'row' }])); // i18n-ignore: OAB kaynak alan adları
+    // TR/YD: 10.000 sipariş × renk satırı (her modelde TR + iki YD ülkesi); sorgu ucu taklit, görünüm kaydı gerçek.
+    if (wanted('tryd')) {
+      const trydRows = [];
+      for (let m = 0; m < 2500; m++) {
+        const attrs = { model: `DM${10000 + m}`, season: 'S6', buyerGroup: `DEMO GRUP ${m % 6}`, classification: `DEMO KLASMAN ${m % 40}`, mag: `DM${m % 30}`, productName: `DEMO ÜRÜN ${m}`, colour: 'C1' };
+        const fob = 3 + (m % 50) / 10;
+        trydRows.push({ ...attrs, order: `T${m}`, originCountry: 'TÜRKİYE', qty: 300 + (m % 200), fob: fob * 1.8, landedActual: fob * 1.85 });
+        trydRows.push({ ...attrs, order: `B${m}`, originCountry: 'BANGLADEŞ', qty: 900 + (m % 300), fob, landedActual: fob * (1.05 + (m % 9) / 100) });
+        trydRows.push({ ...attrs, order: `C${m}`, originCountry: 'ÇİN', qty: 400 + (m % 100), fob: fob + 0.2, landedActual: (fob + 0.2) * 1.08 });
+        trydRows.push({ ...attrs, order: `F${m}`, originCountry: 'FAS', qty: 100, fob: fob - 0.3, landedActual: (fob - 0.3) * 1.1 });
+      }
+      const trydEngine = require('../public/tryd-advantage-engine');
+      await page.route('**/api/postfob/tryd/report', route => { const body = JSON.parse(route.request().postData() || '{}'); route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, view: trydEngine.normalizePrefs(body.view), rows: trydRows, fetchedAt: new Date().toISOString(), missing: [], truncated: false, rowLimit: 10000, filterValues: body.view && body.view.filterValues }) }); });
+      const trydCalc = WITH_CALC ? [{ id: 'pcv_a', label: 'A', formula: '[landedAmount] / [fobTrAmount]', mode: 'aggregate' }, { id: 'pcv_b', label: 'B', formula: '[advantage] - [target]', mode: 'aggregate' }] : undefined;
+      await put('/api/postfob/tryd/view', { view: { filterValues: { season: ['S6'] }, ...(trydCalc ? { calculated: trydCalc } : {}) } });
+    }
     await page.waitForFunction(() => window.BLOverviewHome && document.getElementById('oabCubeSection'), null, { timeout: 60000 });
     await page.evaluate(() => window.BLOverviewHome.goToPage(1));
     if (WITH_CALC) await page.evaluate(() => window.BLPivotCalculatedValues && window.BLPivotCalculatedValues.ensureEngine(false));
@@ -101,6 +117,8 @@ function postRows(count) {
     if (wanted('oabCube')) out.oabCube = await measure('oabCubeSection', () => window.BLOabCube && window.BLOabCube.state.started && window.BLOabCube.state.catalog.dimensions.length > 0, 'oabCubeRefreshBtn', 'oabCubeTable', 'data-oab-cube-sort');
     if (wanted('postFob')) out.postFob = await measure('postFobSection', () => window.BLPostFob && window.BLPostFob.state.started && window.BLPostFob.state.catalog.dimensions.length > 0, 'postFobRefreshBtn', 'postFobTable', 'data-postfob-sort');
     if (wanted('intake')) out.intake = await measure('intakeSection', () => window.BLINTAKE && window.BLINTAKE.state.loaded, '', 'intakeTable', 'data-intake-sort', `#intakeTable thead th[data-intake-sort="${intakeView.query.measures[0].id}"]`);
+    // TR/YD: sayısal değer başlığına tıklama (sıralama) analiz + ağaç + çizimi yeniden kurar.
+    if (wanted('tryd')) out.tryd = await measure('trydAdvantageSection', () => window.BLTrydAdvantage && window.BLTrydAdvantage.state.started && window.BLTrydAdvantage.state.filters.length > 0, 'trydAdvantageRefreshBtn', 'trydAdvantageTable', 'data-tryd-sort');
     // OAB PASS: sayısal sütun başlığına tıklama (sıralama) pivotu yeniden kurar.
     if (wanted('oabPass')) out.oabPass = await measure('oabSection', () => Boolean(document.querySelector('#oabTable tr.oabPivotGrandTotalRow')), '', 'oabTable', 'data-oab-pivot-key', '#oabTable thead th:nth-child(5) .thLabel', 5);
     out.calcColumns = await page.$$eval('th.pcvHead', list => list.length);
