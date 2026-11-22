@@ -6204,7 +6204,7 @@ const postFobRoutes = require('./routes/postfob-routes')(app, {
 });
 
 // ---- OAB (Küp) (Genel Bakış widget'ı, OAB_Cube SSAS modeli) → server/routes/oab-cube-routes.js ----
-require('./routes/oab-cube-routes')(app, {
+const oabCubeRoutes = require('./routes/oab-cube-routes')(app, {
   BLBusinessRules,
   express,
   loadModelConnections,
@@ -11825,6 +11825,7 @@ function integrationLabRowsForSource(source, runtime, userId) {
     return snapshot && Array.isArray(snapshot.rows) ? snapshot.rows : [];
   }
   if (source.profileId === 'postfob-cost') return postFobRoutes.snapshotRows(userId);
+  if (source.profileId === 'oab-cube') return oabCubeRoutes.snapshotRows(userId);
   if (!runtime) return [];
   if (source.profileId === 'asas-orders') return Array.isArray(runtime.asasOrders) ? runtime.asasOrders : [];
   if (source.profileId === 'ias-warehouse') {
@@ -12073,7 +12074,9 @@ async function integrationLabRunLiveProbe(req, source, storedItem) {
       ? await integrationLabProbeIntake(req, source, storedItem, probe)
       : source.profileId === 'postfob-cost'
         ? await postFobRoutes.probe(req, storedItem || { server: source.connection.server, catalog: source.connection.catalog }, probe)
-        : await integrationLabProbeTabularSource(req, source, storedItem, probe);
+        : source.profileId === 'oab-cube'
+          ? await oabCubeRoutes.probe(req, storedItem || { server: source.connection.server, catalog: source.connection.catalog }, probe)
+          : await integrationLabProbeTabularSource(req, source, storedItem, probe);
   } catch (error) {
     const failure = integrationLabProbeError(error);
     probe.queryOk = false;
@@ -12106,7 +12109,7 @@ app.post('/api/data-management/integration-lab/inspect', userAccess.requireArea(
     const rawSource = store.items.find(item => item && item.id === source.id) || {
       id: source.id,
       name: source.name,
-      role: source.profileId === 'intake-budget' ? 'intake' : (source.profileId === 'postfob-cost' ? 'postfob' : (source.profileId === 'ias-warehouse' ? 'antrepo' : 'asas')),
+      role: source.profileId === 'intake-budget' ? 'intake' : (source.profileId === 'postfob-cost' ? 'postfob' : (source.profileId === 'oab-cube' ? 'oabcube' : (source.profileId === 'ias-warehouse' ? 'antrepo' : 'asas'))),
       server: source.connection.server,
       catalog: source.connection.catalog,
       mode: source.queryMode === 'manual' ? 'manual' : 'auto',

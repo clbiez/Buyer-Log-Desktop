@@ -27,6 +27,7 @@ const crypto = require('node:crypto');
 const intakeReport = require('./intake-report');
 const filterValueTypes = require('./filter-value-types');
 const PivotCalculated = require('../../public/pivot-calculated-values');
+const modelHorizon = require('./modelHorizon');
 
 const OAB_CUBE_CONNECTION = Object.freeze({
   server: 'lcwtabular_s20',
@@ -142,17 +143,77 @@ function deriveRow(row) {
 
 const measureByKey = key => MEASURES.find(item => item.key === key) || DERIVED_MEASURES.find(item => item.key === key);
 
-/* Bağlantı: bu kataloğa (OAB_Cube) Veri Yönetimi'nde tanımlanmış bir bağlantı
-   varsa o; yoksa INTAKE rolünün sunucusu (aynı SSAS sunucusu) + OAB_Cube;
-   o da yoksa kaynak Excel'deki bağlantı. */
+/* Bağlantı: Veri Yönetimi'ndeki 'oabcube' rolü (INTAKE / FOB gibi kendi
+   veritabanı kaydı) önce gelir. Yedek sıra (rol kaydı yoksa, ör. liste
+   sınırdaysa) değişmedi: bu kataloğa (OAB_Cube) tanımlanmış bir bağlantı;
+   yoksa INTAKE rolünün sunucusu (aynı SSAS sunucusu) + OAB_Cube; o da yoksa
+   kaynak Excel'deki bağlantı. */
+function connectionList(items) {
+  return (Array.isArray(items) ? items : []).filter(item => item && clean(item.server) && clean(item.catalog));
+}
+function roleItem(list) {
+  const byRole = list.filter(item => item.role === 'oabcube');
+  return byRole.find(item => item.refreshEnabled !== false) || byRole[0] || null;
+}
 function resolveConnection(items) {
-  const list = (Array.isArray(items) ? items : []).filter(item => item && clean(item.server) && clean(item.catalog));
-  const found = list.find(item => OAB_CUBE_CATALOG_PATTERN.test(clean(item.catalog)) && item.refreshEnabled !== false)
+  const list = connectionList(items);
+  const found = roleItem(list)
+    || list.find(item => OAB_CUBE_CATALOG_PATTERN.test(clean(item.catalog)) && item.refreshEnabled !== false)
     || list.find(item => OAB_CUBE_CATALOG_PATTERN.test(clean(item.catalog)));
   if (found) return { id: clean(found.id), name: clean(found.name) || OAB_CUBE_CONNECTION.catalog, server: clean(found.server), catalog: clean(found.catalog), model: OAB_CUBE_CONNECTION.model, source: 'settings' };
   const intake = list.find(item => item.role === 'intake');
   if (intake) return { id: '', name: OAB_CUBE_CONNECTION.catalog, server: clean(intake.server), catalog: OAB_CUBE_CONNECTION.catalog, model: OAB_CUBE_CONNECTION.model, source: 'intake-server' };
   return { id: '', name: OAB_CUBE_CONNECTION.catalog, server: OAB_CUBE_CONNECTION.server, catalog: OAB_CUBE_CONNECTION.catalog, model: OAB_CUBE_CONNECTION.model, source: 'default' };
+}
+
+/* Ufuk: Veri Yönetimi'nde 'oabcube' rol kaydının kapsamına yazılan ortak
+   filtre (FOB Sonrası Maliyet / INTAKE ile aynı kural; kişisel katman yoktur).
+   Özel Database kaydının kapsamı ufuk sayılmaz. */
+function resolveHorizon(items) {
+  const item = roleItem(connectionList(items));
+  if (!item || !Array.isArray(item.scopes)) return null;
+  const scope = item.scopes.find(entry => entry && entry.enabled !== false && Array.isArray(entry.targets) && entry.targets.includes('oabcube'));
+  const horizon = scope && scope.horizon;
+  return isBoundedHorizon(horizon) ? horizon : null;
+}
+
+/* Kayıtlarda ufuk nesnesi her zaman dolu yapıdadır (boş sezon/grup listeleri);
+   yalnız gerçekten sınırlayan bir koşul varsa ufuk sayılır. */
+function isBoundedHorizon(horizon) {
+  if (!horizon || typeof horizon !== 'object') return false;
+  const groups = Array.isArray(horizon.groups) ? horizon.groups : [];
+  return (Array.isArray(horizon.seasons) && horizon.seasons.length > 0)
+    || Boolean(clean(horizon.dateStart) || clean(horizon.dateEnd))
+    || groups.some(group => Array.isArray(group && group.conditions) && group.conditions.some(condition => condition && clean(condition.field)))
+    || Boolean(clean(horizon.extraExpression));
+}
+
+/* Ufuk SUMMARIZECOLUMNS filtre argümanlarına çevrilir (FOB Sonrası Maliyet ile
+   aynı modelHorizon yolu). Ufuk sezon zorunluluğunun yerine geçtiği için
+   yalnız ölçülerle ilişkisi kanıtlı tablolara (Data, DummyUrun, Sezon) başvuran
+   ufuk kabul edilir: ilişkisiz bir tablodaki filtre ölçüleri daraltmaz ve
+   sorgu sessizce bütün küpü tarardı. Her iki hata da kullanıcının Veri
+   Yönetimi'nde düzeltebileceği ufuk hatasıdır, kaynak kesintisi değil. */
+function horizonArgs(horizon, liveFields) {
+  if (!isBoundedHorizon(horizon)) return [];
+  let args;
+  try {
+    const filter = modelHorizon.buildHorizonFilter(horizon, null, { columnType: intakeReport.intakeColumnTypeIndex(liveFields) });
+    args = modelHorizon.summarizeFilterArgs(filter, '');
+  } catch (cause) {
+    throw error(`OAB küp ufku uygulanamadı: ${cause && cause.message || cause}`, 'OAB_CUBE_HORIZON_INVALID', 400);
+  }
+  const tables = new Set();
+  // Metin sabitleri atılır; tablo başvurusu tırnaklı ('Tablo'[Sütun]) veya tırnaksız (Tablo[Sütun]) olabilir.
+  args.forEach(arg => {
+    const code = String(arg).replace(/"(?:[^"]|"")*"/g, '""');
+    for (const match of code.matchAll(/'((?:[^']|'')+)'\s*\[|([A-Za-z_\u00C0-\u024F][\w\u00C0-\u024F]*)\s*\[/g)) tables.add((match[1] || match[2]).replace(/''/g, "'"));
+  });
+  const unproven = [...tables].filter(table => !PROVEN_TABLES.some(name => name.toLocaleLowerCase('tr-TR') === table.toLocaleLowerCase('tr-TR')));
+  if (args.length && (!tables.size || unproven.length)) {
+    throw error(`OAB küp ufku yalnız ${PROVEN_TABLES.join(', ')} tablolarındaki alanlarla tanımlanabilir${unproven.length ? ` (${unproven.join(', ')})` : ''}.`, 'OAB_CUBE_HORIZON_INVALID', 400);
+  }
+  return args;
 }
 
 /* Şema bir sütunun tipini vermezse filtre tipi addan tahmin edilir
@@ -324,9 +385,10 @@ function outputAliases(field) {
 /* Tek DAX sorgusu: SUMMARIZECOLUMNS model × renk düzeyinde (+ pivot
    eksenindeki isteğe bağlı boyutlar); çoklu Sezon × MAG × Buyer Grup seçimi
    TREATAS filtreleri olarak aynı argüman listesine girer (PASS'teki
-   kombinasyon batch'ine gerek yok). Sezon zorunludur: sorgu bütün küpü
-   taramaz. */
-function buildQuery({ liveFields = [], view = null, filterValues = {}, maxRows = OAB_CUBE_MAX_ROWS } = {}) {
+   kombinasyon batch'ine gerek yok). Sezon filtresi veya Veri Yönetimi ufku
+   zorunludur: sorgu bütün küpü taramaz. Ufuk ve widget filtreleri VE ile
+   birleşir. */
+function buildQuery({ liveFields = [], view = null, filterValues = {}, horizon = null, maxRows = OAB_CUBE_MAX_ROWS } = {}) {
   const current = normalizeView(view || { filterValues });
   const resolved = resolveFields(liveFields);
   const lookup = liveLookup(liveFields);
@@ -345,8 +407,9 @@ function buildQuery({ liveFields = [], view = null, filterValues = {}, maxRows =
     if (field) extraMeasures.push({ key: ref.key, field }); else missing.push(ref.key);
   }
   const filters = current.filterValues;
-  if (!filters.season || !filters.season.length) {
-    throw error('OAB küp sorgusu için en az bir sezon seçilmelidir.', 'OAB_CUBE_SEASON_REQUIRED', 400);
+  const horizonFilterArgs = horizonArgs(horizon, liveFields);
+  if ((!filters.season || !filters.season.length) && !horizonFilterArgs.length) {
+    throw error('OAB küp sorgusu için en az bir sezon seçilmeli veya Veri Yönetimi\'nde ufuk tanımlanmalıdır.', 'OAB_CUBE_SEASON_REQUIRED', 400);
   }
   const dimensionByKey = new Map(resolved.dimensions.map(item => [item.key, item.field]));
   extraFilterFields.forEach((field, key) => dimensionByKey.set(key, field));
@@ -375,7 +438,7 @@ function buildQuery({ liveFields = [], view = null, filterValues = {}, maxRows =
   const groupExpressions = groupFields.map(item => intakeReport.daxRef(item.field));
   const measureExpressions = measureFields.map(item => `${quoteAlias(item.key)}, ${intakeReport.daxRef(item.field)}`);
   const rowLimit = Math.min(OAB_CUBE_MAX_ROWS, Math.max(1, Math.floor(Number(maxRows) || OAB_CUBE_MAX_ROWS)));
-  const query = `EVALUATE\nTOPN(${rowLimit},\n  SUMMARIZECOLUMNS(\n    ${[...groupExpressions, ...filterExpressions, ...measureExpressions].join(',\n    ')}\n  )\n)`;
+  const query = `EVALUATE\nTOPN(${rowLimit},\n  SUMMARIZECOLUMNS(\n    ${[...groupExpressions, ...horizonFilterArgs, ...filterExpressions, ...measureExpressions].join(',\n    ')}\n  )\n)`;
   const headerMap = {};
   groupFields.forEach(item => outputAliases(item.field).forEach(alias => { headerMap[alias] = item.key; }));
   measureFields.forEach(item => { headerMap[item.key] = item.key; headerMap[`[${item.key}]`] = item.key; });
@@ -384,7 +447,7 @@ function buildQuery({ liveFields = [], view = null, filterValues = {}, maxRows =
   const queriedKeys = measureFields.map(item => item.key);
   const derivedKeys = ['wssi', 'approved'].every(key => queriedKeys.includes(key)) ? DERIVED_MEASURES.map(item => item.key) : [];
   return {
-    query, headerMap, maxRows: rowLimit, filterValues: filters,
+    query, headerMap, maxRows: rowLimit, filterValues: filters, horizonApplied: horizonFilterArgs.length > 0,
     dimensions: groupFields.map(item => item.key),
     measures: queriedKeys,
     derived: derivedKeys,
@@ -487,6 +550,6 @@ function catalog() {
 
 module.exports = {
   OAB_CUBE_CONNECTION, OAB_CUBE_MAX_ROWS, DIMENSIONS, MEASURES, DERIVED_MEASURES, PASS_ONLY_FIELDS, PROVEN_TABLES, FILTER_KEYS, DEFAULT_VALUES, DEFAULT_ROWS,
-  resolveConnection, resolveFields, normalizeRef, normalizeFilterValues, normalizeView, buildQuery, normalizeRows, toNumber,
+  resolveConnection, resolveHorizon, isBoundedHorizon, resolveFields, normalizeRef, normalizeFilterValues, normalizeView, buildQuery, normalizeRows, toNumber,
   freshnessQuery, normalizeFreshness, distinctQuery, resolveFilterField, metadata, extraKey, isProvenTable, catalog,
 };

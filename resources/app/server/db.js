@@ -1436,6 +1436,11 @@ const MODEL_CONNECTION_DEFAULT_POSTFOB = Object.freeze({
   id: 'mc_postfob_default', name: 'FOB Sonrası Maliyet', server: 'F5_S41',
   catalog: 'FiyatMaliyetKontrolRapor', role: 'postfob', refreshEnabled: true,
 });
+// OAB (Küp) widget'ının kaynağı (LCW OAB Excel pivotunun bağlı olduğu OAB_Cube SSAS modeli).
+const MODEL_CONNECTION_DEFAULT_OABCUBE = Object.freeze({
+  id: 'mc_oabcube_default', name: 'OAB (Küp)', server: 'lcwtabular_s20',
+  catalog: 'OAB_Cube', role: 'oabcube', refreshEnabled: true,
+});
 /* v2026-11-14 — Sunucudaki gerçek veritabanı adı alt çizgilidir; boşluklu eski
    varsayılanla kayıtlı bağlantı canlı sorguda düşüp hep eski snapshot'a dönerdi.
    Yalnız bu sunucudaki bu tam eski ad taşınır; kullanıcı seçimine dokunulmaz. */
@@ -1508,7 +1513,7 @@ function normalizeModelConnection(raw) {
   const id = String(item.id || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40)
     || `mc_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
   const legacyFabricRole = item.role === 'fabric';
-  const role = legacyFabricRole ? 'fabric' : (['antrepo', 'intake', 'postfob', 'custom'].includes(item.role) ? item.role : 'asas');
+  const role = legacyFabricRole ? 'fabric' : (['antrepo', 'intake', 'postfob', 'oabcube', 'custom'].includes(item.role) ? item.role : 'asas');
   const horizon = modelHorizon.normalizeHorizon(item.horizon);
   // One-time v3.48 migration. Legacy untouched ASAS connections had no horizon,
   // so Refresh pulled the entire model. Apply the compact default only once and
@@ -1638,6 +1643,23 @@ function normalizeModelConnections(list) {
     items.push(normalizeModelConnection(existing
       ? { ...MODEL_CONNECTION_DEFAULT_POSTFOB, server: existing.server, catalog: existing.catalog }
       : MODEL_CONNECTION_DEFAULT_POSTFOB));
+  }
+  if (!items.some(item => item.role === 'oabcube')) {
+    /* OAB (Küp) bugüne kadar rol kaydı olmadan çözülüyordu (oab-cube-report
+       resolveConnection): OAB_Cube kataloglu kayıt → INTAKE sunucusu + OAB_Cube.
+       Varsayılan aynı sırayla devralır; çalışan bağlantı sessizce başka sunucuya
+       dönmez. Kullanıcının özel kaydı silinmez. Liste sınırdaysa kullanıcı kaydı
+       DÜŞÜRÜLMEZ (bir sonraki Kaydet'te kalıcı silinirdi); varsayılan eklenmez,
+       widget yedek çözümle çalışmaya devam eder, yer açılınca eklenir. */
+    if (items.length < MODEL_CONNECTION_LIMIT) {
+      // Devralma sırası resolver ile aynı: önce etkin katalog kaydı, sonra herhangi biri.
+      const catalogMatches = items.filter(item => /^oab_?cube$/i.test(String(item.catalog || '').trim()));
+      const existing = catalogMatches.find(item => item.refreshEnabled !== false) || catalogMatches[0];
+      const intake = items.find(item => item.role === 'intake');
+      items.push(normalizeModelConnection(existing
+        ? { ...MODEL_CONNECTION_DEFAULT_OABCUBE, server: existing.server, catalog: existing.catalog }
+        : (intake ? { ...MODEL_CONNECTION_DEFAULT_OABCUBE, server: intake.server } : MODEL_CONNECTION_DEFAULT_OABCUBE)));
+    }
   }
   // Refresh için her rolde yalnız bir aktif bağlantı bırakılır. Kullanıcı birden
   // fazla eski kayıtla yükseltme yaptıysa listedeki ilk kayıt güvenli varsayılandır.
