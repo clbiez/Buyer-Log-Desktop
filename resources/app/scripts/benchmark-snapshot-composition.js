@@ -31,7 +31,13 @@ function arg(name, fallback) {
 }
 const rows = Number(arg('--rows', 30000)) || 30000;
 const mode = arg('--mode', 'model');
-const root = path.resolve(arg('--root', fs.mkdtempSync(path.join(os.tmpdir(), 'bl-snapshot-composition-'))));
+// --root verilirse içinde bu çalıştırmaya ait bir alt klasör açılır; temizlik yalnız onu siler
+// (var olan klasördeki ilgisiz dosyalar silinmez). --load-only alt süreci kendisine verilen
+// klasörü (ebeveynin açtığı alt klasör) olduğu gibi kullanır.
+const requestedRoot = arg('--root', null);
+const root = process.argv.includes('--load-only') && requestedRoot
+  ? path.resolve(requestedRoot)
+  : fs.mkdtempSync(path.join(requestedRoot ? (fs.mkdirSync(path.resolve(requestedRoot), { recursive: true }), path.resolve(requestedRoot)) : os.tmpdir(), 'bl-snapshot-composition-'));
 process.env.BUYER_LOG_LOCAL_DATA_ROOT = root;
 process.env.BUYER_LOG_DATA_ROOT = process.env.BUYER_LOG_DATA_ROOT || root;
 
