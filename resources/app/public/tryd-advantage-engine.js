@@ -32,18 +32,20 @@
    *  2) Grup toplamlarında oran, satır oranlarının ortalaması değil, tutarların
    *     toplamından yeniden hesaplanır (pivot hesaplanan alanıyla aynı).
    *
-   * "Landed hatalı" eşiği public/postfob-analysis.js aykırı mantığıyla aynı
-   * yöntemi kullanır (Landed/FOB satır oranı, aynı çeyreklik hesabı, en az 8
-   * örnek), ancak İÇ çit (1,5×IQR, "aykırı") yerine Tukey'in DIŞ çitini
-   * (3×IQR, "çok uzak") kullanır: aykırı satır yalnız işaretlenir, hatalı satır
-   * ise hesaptan çıkarılır; veriyi hesaptan atmak daha güçlü kanıt ister.
-   * Buna ek olarak landed < FOB fiziksel olarak mümkün değildir (landed = FOB +
-   * navlun + gümrük + ek maliyet); örnek küçük olsa da hatalı sayılır.
+   * YD satırının durumu (ürün kararı, 2026-11-22):
+   *  - Landed hatalı: landed < FOB. Fiziksel olarak mümkün değildir (landed =
+   *    FOB + navlun + gümrük + ek maliyet); hesaptan çıkar.
+   *  - Landed çarpanı yüksek: Landed/FOB, Buyer Log'un ortak standart yurtdışı
+   *    landed çarpanının (/api/landed-multipliers → overseas, varsayılan 1,11)
+   *    üstünde. Çarpan yükleme tipine göre değişir (gemi < gemi+uçak < uçak);
+   *    bu bir hata DEĞİLDİR, gerçek maliyettir: hesapta KALIR, yalnız uyarıdır.
+   *  - Landed yok: landed boş veya 0; hesaptan çıkar.
+   * Önceki istatistiksel çit (Q3 ± 3×IQR) uçak gibi gerçek maliyetleri hatalı
+   * sayıp hesaptan attığı ve avantajı şişirdiği için kaldırıldı.
    */
 
   const DEFAULT_TARGET = 0.36;
-  const MIN_SAMPLE = 8;
-  const INVALID_FENCE = 3;
+  const DEFAULT_STANDARD_MULTIPLIER = 1.11;
   const MIN_LANDED_TO_FOB = 1;
   const LANDED_SOURCES = Object.freeze(['actual', 'forecast']);
   /* Görünüm v2 (kalemle pivot düzenleme):
@@ -69,7 +71,7 @@
   const PREF_KEYS = Object.freeze(['version', 'rows', 'values', 'filters', 'filterValues', 'target', 'landedSource', 'belowTargetOnly', 'collapsedGroups', 'sort']);
   const SORT_KEYS = Object.freeze(['label', 'trFob', 'ydFob', 'ydLanded', 'advantage', 'fobAdvantage', 'gap', 'trQty', 'ydQty', 'coverage']);
   const MODEL_ATTRS = Object.freeze(['buyerGroup', 'classification', 'mag', 'season', 'productName']);
-  const STATUS = Object.freeze({ ok: 'ok', noLanded: 'noLanded', invalid: 'invalidLanded' });
+  const STATUS = Object.freeze({ ok: 'ok', high: 'highMultiplier', noLanded: 'noLanded', invalid: 'invalidLanded' });
   const TR_TOKENS = new Set(['TURKIYE', 'TURKEY', 'TR', 'TURKIYE CUMHURIYETI']);
   const EXCLUDED_TOKENS = new Set(['FAS', 'MOROCCO', 'MAROC', 'FAS MOROCCO', 'MISIR', 'EGYPT', 'EGIPT', 'MISIR EGYPT']);
 
@@ -97,23 +99,15 @@
     return landed != null && landed > 0 && fob != null && fob > 0 && qtyOf(row) > 0 ? landed / fob : null;
   }
 
-  function quantile(sorted, p) {
-    if (!sorted.length) return null;
-    const index = (sorted.length - 1) * p, low = Math.floor(index), high = Math.ceil(index);
-    return sorted[low] + (sorted[high] - sorted[low]) * (index - low);
+  /* Standart YD landed çarpanı: geçerli bir sayı verilmediyse varsayılan. */
+  function standardOf(value) {
+    const n = num(typeof value === 'string' ? Number(value) : value);
+    return n != null && n > 0 && n <= 10 ? { value: n, fallback: false } : { value: DEFAULT_STANDARD_MULTIPLIER, fallback: true };
   }
 
-  /* Hatalı landed sınırı: YD satırlarının Landed/FOB oranlarından Tukey dış çiti. */
-  function landedBounds(rows, source) {
-    const ratios = (Array.isArray(rows) ? rows : []).filter(row => originClass(row) === 'yd')
-      .map(row => rowRatio(row, source)).filter(value => value != null).sort((a, b) => a - b);
-    if (ratios.length < MIN_SAMPLE) return { sample: ratios.length, floor: MIN_LANDED_TO_FOB, upper: null, lower: null, q1: null, q3: null };
-    const q1 = quantile(ratios, 0.25), q3 = quantile(ratios, 0.75), iqr = q3 - q1;
-    return { sample: ratios.length, floor: MIN_LANDED_TO_FOB, q1, q3, upper: q3 + INVALID_FENCE * iqr, lower: q1 - INVALID_FENCE * iqr };
-  }
-
-  /* YD satırının veri kalitesi: 'ok' | 'noLanded' | 'invalidLanded' (adet/FOB yoksa null). */
-  function rowStatus(row, bounds, source) {
+  /* YD satırının durumu: 'ok' | 'highMultiplier' | 'noLanded' | 'invalidLanded'
+     (adet/FOB yoksa null). standard: standart YD landed çarpanı (sayı). */
+  function rowStatus(row, standard, source) {
     if (!qtyOf(row)) return null;
     const fob = num(row && row.fob);
     if (fob == null || fob <= 0) return null;
@@ -123,12 +117,11 @@
     if (landed < 0) return STATUS.invalid;
     const ratio = landed / fob;
     if (ratio < MIN_LANDED_TO_FOB) return STATUS.invalid;
-    if (bounds && bounds.upper != null && (ratio > bounds.upper || ratio < bounds.lower)) return STATUS.invalid;
-    return STATUS.ok;
+    return ratio > standardOf(standard).value ? STATUS.high : STATUS.ok;
   }
 
   function emptyAmounts() {
-    return { fobTrAmount: 0, landedAmount: 0, fobYdAmount: 0, trQty: 0, ydQty: 0, ydQtyAll: 0, noLandedQty: 0, invalidQty: 0 };
+    return { fobTrAmount: 0, landedAmount: 0, fobYdAmount: 0, trQty: 0, ydQty: 0, ydQtyAll: 0, noLandedQty: 0, invalidQty: 0, highMultiplierQty: 0 };
   }
   function addAmounts(target, source) {
     for (const key of Object.keys(emptyAmounts())) target[key] += source[key] || 0;
@@ -163,7 +156,7 @@
     const source = sourceOf(options);
     const target = num(options.target) == null ? DEFAULT_TARGET : num(options.target);
     const list = Array.isArray(rows) ? rows : [];
-    const bounds = landedBounds(list, source);
+    const standard = standardOf(options.standardMultiplier);
     const byModel = new Map();
     const counts = { rows: list.length, tr: 0, yd: 0, excluded: 0, unknown: 0, noModel: 0 };
     for (const row of list) {
@@ -201,42 +194,48 @@
       const trFob = trFobSum / trQty;
       const amounts = emptyAmounts();
       amounts.trQty = trQty;
-      const statusCount = { ok: 0, noLanded: 0, invalidLanded: 0 };
+      const statusCount = { ok: 0, highMultiplier: 0, noLanded: 0, invalidLanded: 0 };
+      let maxRatio = null;
       for (const row of ydActive) {
         const q = qtyOf(row);
-        const status = rowStatus(row, bounds, source);
+        const status = rowStatus(row, standard.value, source);
         statusCount[status] += 1;
         amounts.ydQtyAll += q;
         if (status === STATUS.noLanded) { amounts.noLandedQty += q; continue; }
         if (status === STATUS.invalid) { amounts.invalidQty += q; continue; }
+        // Yüksek çarpan gerçek maliyettir: hesapta kalır, ayrıca sayılır.
+        if (status === STATUS.high) amounts.highMultiplierQty += q;
+        const ratio = row[landedKey(source)] / row.fob;
+        if (maxRatio == null || ratio > maxRatio) maxRatio = ratio;
         amounts.ydQty += q;
         amounts.landedAmount += q * row[landedKey(source)];
         amounts.fobYdAmount += q * row.fob;
         amounts.fobTrAmount += trFob * q;
       }
-      const status = statusCount.invalidLanded ? STATUS.invalid : (statusCount.noLanded ? STATUS.noLanded : STATUS.ok);
+      const status = statusCount.invalidLanded ? STATUS.invalid : (statusCount.noLanded ? STATUS.noLanded : (statusCount.highMultiplier ? STATUS.high : STATUS.ok));
       models.push({
         model: entry.model,
         // entry.attrs MODEL_ATTRS sırasındadır.
         buyerGroup: modeOf(entry.attrs[0]), classification: modeOf(entry.attrs[1]), mag: modeOf(entry.attrs[2]), season: modeOf(entry.attrs[3]), productName: modeOf(entry.attrs[4]),
-        trFob, status, statusCount, amounts, ...ratios(amounts, target),
+        trFob, status, statusCount, maxRatio, amounts, ...ratios(amounts, target),
         rows: [...entry.tr, ...entry.yd],
       });
     }
-    return { models, bounds, counts, skipped, target, landedSource: source };
+    return { models, standard, counts, skipped, target, landedSource: source };
   }
 
   function summarize(models, target) {
     const amounts = emptyAmounts();
-    let below = 0, invalid = 0, noLanded = 0, compared = 0;
+    let below = 0, invalid = 0, noLanded = 0, high = 0, compared = 0;
     for (const model of models) {
       addAmounts(amounts, model.amounts);
       if (model.amounts.ydQty > 0) compared += 1;
       if (model.advantage != null && model.advantage < target) below += 1;
       if (model.status === STATUS.invalid) invalid += 1;
       else if (model.status === STATUS.noLanded) noLanded += 1;
+      else if (model.status === STATUS.high) high += 1;
     }
-    return { amounts, ...ratios(amounts, target), models: models.length, compared, below, invalid, noLanded };
+    return { amounts, ...ratios(amounts, target), models: models.length, compared, below, invalid, noLanded, high };
   }
 
   const isBelowTarget = (model, target) => model.advantage != null && model.advantage < target;
@@ -383,8 +382,8 @@
   }
 
   return Object.freeze({
-    DEFAULT_TARGET, MIN_SAMPLE, INVALID_FENCE, MIN_LANDED_TO_FOB, LANDED_SOURCES, FILTER_KEYS, LEVELS, STATUS,
+    DEFAULT_TARGET, DEFAULT_STANDARD_MULTIPLIER, MIN_LANDED_TO_FOB, LANDED_SOURCES, FILTER_KEYS, LEVELS, STATUS,
     ROW_FIELDS, DEFAULT_ROWS, VALUE_KEYS, DEFAULT_VALUES, DEFAULT_FILTERS, BLOCKED_FILTER_KEYS, REQUIRED_FILTER, PREF_VERSION, SORT_KEYS,
-    originClass, rowRatio, landedBounds, rowStatus, compareModels, summarize, analyze, buildTree, normalizePrefs, validatePrefs, isBelowTarget,
+    originClass, rowRatio, standardOf, rowStatus, compareModels, summarize, analyze, buildTree, normalizePrefs, validatePrefs, isBelowTarget,
   });
 });

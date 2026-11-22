@@ -23,10 +23,11 @@ function demoRows() {
     { buyerGroup: 'DEMO GRUP B', classification: 'DEMO KAZAK', mag: 'DMB1' },
   ];
   const plan = [
-    // [grup, model, TR FOB, YD FOB, landed/FOB]
-    [0, 'DM101', 7.2, 3.6, 1.18], [0, 'DM102', 6.8, 3.9, 1.16], [0, 'DM103', 6.1, 4.2, 1.17],
-    [1, 'DM201', 8.4, 4.4, 1.15], [1, 'DM202', 7.9, 5.3, 1.19],
-    [2, 'DM301', 9.1, 4.8, 1.17], [2, 'DM302', 8.2, 5.9, 1.2], [2, 'DM303', 7.6, 3.8, 1.16],
+    // [grup, model, TR FOB, YD FOB, landed/FOB] — gemi tipi oranlar standart 1,11'in
+    // altında; DM202 uçak tipi yüksek çarpan (hata değil, hesapta kalır).
+    [0, 'DM101', 7.2, 3.6, 1.08], [0, 'DM102', 6.8, 3.9, 1.07], [0, 'DM103', 6.1, 4.2, 1.07],
+    [1, 'DM201', 8.4, 4.4, 1.06], [1, 'DM202', 7.9, 5.3, 1.32],
+    [2, 'DM301', 9.1, 4.8, 1.08], [2, 'DM302', 8.2, 5.9, 1.08], [2, 'DM303', 7.6, 3.8, 1.05],
   ];
   for (const [g, model, trFob, ydFob, ratio] of plan) {
     push(model, groups[g], 'TÜRKİYE', 600, trFob, Math.round(trFob * 1.02 * 100) / 100);
@@ -54,6 +55,8 @@ function demoRows() {
       const values = key === 'season' ? ['S6', 'W6'] : [...new Set(rows.map(row => row[key]).filter(Boolean))].sort();
       route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, key, values }) });
     });
+    // Ortak "Landed çarpanları" ayarı: standart yurtdışı çarpanı 1,11.
+    await page.route('**/api/landed-multipliers', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ multipliers: { tr: 1.05, overseas: 1.11 }, revision: 1 }) }));
     await page.route('**/api/postfob/tryd/report', route => {
       reportBody = JSON.parse(route.request().postData() || '{}');
       route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, view: engine.normalizePrefs(reportBody.view), rows, fetchedAt: new Date().toISOString(), missing: [], truncated: process.argv.includes('--truncated'), rowLimit: 10000, fromCache: false }) });
@@ -76,7 +79,7 @@ function demoRows() {
     await page.waitForFunction(() => document.querySelectorAll('#trydAdvantageTable tr.oabPivotGrandTotalRow').length === 1, null, { timeout: 20000 });
     assert.deepEqual(reportBody.view.filterValues, { season: ['S6'] });
     // Hesap ekrandaki ile motor aynı: genel toplam avantaj tutarlardan.
-    const expected = engine.analyze(rows, { target: 0.36 });
+    const expected = engine.analyze(rows, { target: 0.36, standardMultiplier: 1.11 });
     assert.equal(expected.models.length, 8);
     const grandText = await page.$eval('#trydAdvantageTable tr.oabPivotGrandTotalRow', row => row.textContent);
     const pct = value => (lang === 'en' ? `${(value * 100).toFixed(1)}%` : `%${(value * 100).toFixed(1).replace('.', ',')}`);
@@ -89,6 +92,12 @@ function demoRows() {
     const statusOf = model => page.$$eval('#trydAdvantageTable tbody tr', (trs, m) => { const tr = trs.find(row => row.cells[3] && row.cells[3].textContent === m); return tr ? tr.cells[tr.cells.length - 1].textContent : ''; }, model);
     assert.match(await statusOf('DM102'), lang === 'en' ? /No landed/ : /Landed yok/);
     assert.match(await statusOf('DM302'), lang === 'en' ? /Invalid landed/ : /Landed hatalı/);
+    // Standardın üstündeki çarpan hata değildir: uyarı alır ve avantaj hesabına girer.
+    assert.match(await statusOf('DM202'), lang === 'en' ? /High landed multiplier/ : /Landed çarpanı yüksek/);
+    const dm202 = expected.models.find(model => model.model === 'DM202');
+    assert.equal(dm202.status, engine.STATUS.high);
+    assert.equal(dm202.amounts.ydQty, dm202.amounts.ydQtyAll, 'yüksek çarpanlı adet hesapta');
+    assert.equal(dm202.amounts.highMultiplierQty, dm202.amounts.ydQtyAll);
     const belowExpected = expected.models.filter(model => model.advantage < 0.36).map(model => model.model).sort();
     const highlighted = await page.$$eval('#trydAdvantageTable tbody tr.trydAdvantageBelowRow', trs => trs.map(tr => tr.cells[3]?.textContent).filter(value => /^DM/.test(value || '')).sort());
     assert.deepEqual(highlighted, belowExpected);
@@ -192,6 +201,9 @@ function demoRows() {
     });
     await page.waitForTimeout(500);
     await page.evaluate(() => { document.activeElement?.blur?.(); window.BLTrydAdvantage.state.status = null; document.getElementById('trydAdvantageStatus').hidden = true; });
+    // Durum sütunu ve bütün KPI'lar görünsün diye geniş görünüm; widget yapışkan sayfa başlığının altına kaydırılır.
+    await page.setViewportSize({ width: 1900, height: 1000 });
+    await page.waitForTimeout(400);
     await page.mouse.move(5, 5); await page.waitForTimeout(400);
     // Görsel: düzenlenmiş pivot + eklenen Model filtresiyle açık filtre paneli.
     // Panel sabit konumludur: önce widget yerleşir (belge kaydırması sıfır, başlık üst çubuğun altında kalmaz), sonra panel açılır.
@@ -207,10 +219,12 @@ function demoRows() {
     await page.waitForFunction(() => !document.getElementById('trydAdvantageFilterPanel').hidden, null, { timeout: 10000 });
     await page.mouse.move(5, 5); await page.waitForTimeout(400);
     const box = await page.$eval('#trydAdvantageSection', el => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });
+    const tableWrap = await page.$eval('#trydAdvantageTable', table => ({ scroll: table.parentElement.scrollWidth, client: table.parentElement.clientWidth }));
+    assert.ok(tableWrap.scroll <= tableWrap.client + 2, `tablo yatayda taşmamalı: ${JSON.stringify(tableWrap)}`);
     const name = `tryd-advantage-${theme}${lang === 'en' ? '-en' : ''}${process.argv.includes('--truncated') ? '-truncated' : ''}.png`;
     const screenshot = path.join(__dirname, '../public/release-notes/next-assets/' + name);
     fs.mkdirSync(path.dirname(screenshot), { recursive: true });
-    await page.screenshot({ path: screenshot, clip: { x: Math.max(0, box.x - 4), y: Math.max(0, box.y - 4), width: Math.min(1400, box.w + 8), height: Math.max(Math.ceil((box.w + 8) / 3), Math.min(760, box.h + 8)) } });
+    await page.screenshot({ path: screenshot, clip: { x: Math.max(0, box.x - 4), y: Math.max(0, box.y - 4), width: Math.min(1900, box.w + 8), height: Math.max(Math.ceil((box.w + 8) / 3), Math.min(820, box.h + 8)) } });
     // Pivot Varsayılanına Dön: eksen/değer/filtre alanları varsayılana döner; eklenen Model filtresi düşer.
     await page.keyboard.press('Escape');
     await page.click('#trydAdvantageFieldsBtn');
