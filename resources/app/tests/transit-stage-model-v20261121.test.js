@@ -218,3 +218,24 @@ test('fark kalemleri: Handover + ortalama + kalemler = Aşama ETA', () => {
   assert.deepEqual(slow.drivers.items[0], { kind: 'done', days: 4, from: 'handover', to: 'cutOff', actual: 8, expected: 4 });
   assert.deepEqual(SM.compact(slow).drivers, slow.drivers);
 });
+
+test('tam gün: kalemler kendi içinde tutarlı (sürdü − beklenen = fark); ondalıklı ortalama yuvarlanır', () => {
+  // Cut Off → Fiili Yükleme ortalaması 3,4 gün olacak şekilde karışık örneklem.
+  const list = [];
+  for (let i = 0; i < 10; i += 1) list.push(shipment(i * 3, { actualLoading: i < 4 ? 4 : 3 }));
+  const model = SM.buildModel(list, { today: '2026-12-31' });
+  const g = model.groups.find(x => x.scope === 'country');
+  assert.ok(Math.abs(g.stages['3'].mean - 3.4) < 1e-9, String(g.stages['3'].mean));
+  const p = SM.project({ loadingRequest: '2026-03-01', handover: '2026-03-04', cutOff: '2026-03-08', actualLoading: '2026-03-11' },
+    { model, country: 'Bangladesh', vehicle: 'Gemi', today: '2026-03-12' });
+  for (const item of p.drivers.items.filter(i => i.kind === 'done')) {
+    assert.ok(Number.isInteger(item.expected), JSON.stringify(item));
+    assert.equal(item.days, item.actual - item.expected, JSON.stringify(item));
+  }
+  const s3 = p.stages.find(s => s.code === '3');
+  assert.equal(s3.mean, 3);
+  assert.equal(s3.deviation, 0, '3 g sürdü, ortalama 3,4 → 3 g: fark 0');
+  // Toplam yine tutar.
+  const sum = p.drivers.base + p.drivers.items.reduce((a, i) => a + i.days, 0);
+  assert.equal(SM.dayOrdinal('2026-03-04') + sum, SM.dayOrdinal(p.etaMean));
+});

@@ -7047,7 +7047,8 @@ function cpStageWhyText(vsRule,why){
     en?'Why:':'Nedenleri:',
     modelLine];
   for(const item of why.items||[]){
-    if(item.kind==='done') lines.push(en?`• ${ms(item.from)} → ${ms(item.to)} took ${item.actual} ${g} (average ${Math.round(item.expected)} ${g}): ${eff(item.days)}`:`• ${ms(item.from)} → ${ms(item.to)} ${item.actual} ${g} sürdü (ortalama ${Math.round(item.expected)} ${g}): ${eff(item.days)}`);
+    // beklenen = modelin kalan-süre ortalamalarından (tam gün); sürdü − beklenen = fark.
+    if(item.kind==='done') lines.push(en?`• ${ms(item.from)} → ${ms(item.to)} took ${item.actual} ${g} (expected ${Math.round(item.expected)} ${g}): ${eff(item.days)}`:`• ${ms(item.from)} → ${ms(item.to)} ${item.actual} ${g} sürdü (beklenen ${Math.round(item.expected)} ${g}): ${eff(item.days)}`);
     else if(item.kind==='plan') lines.push(en?`• ${ms(item.milestone)} on the vessel schedule (IAS): ${eff(item.days)}`:`• Gemi tarifesindeki ${ms(item.milestone)} (IAS): ${eff(item.days)}`);
     else if(item.kind==='overrun') lines.push(en?`• Open stage over its average${item.stage?` (${item.stage}. ${CP_STAGE_SHORT_LABELS.en[item.stage]||''})`:''}: ${eff(item.days)}`:`• Ortalamasını aşan açık aşama${item.stage?` (${item.stage}. ${CP_STAGE_SHORT_LABELS.tr[item.stage]||''})`:''}: ${eff(item.days)}`);
     else if(item.kind==='today') lines.push(en?`• Not arrived yet (remaining time given the days elapsed; earliest today): ${eff(item.days)}`:`• Henüz varmadı (geçen güne göre kalan süre; en erken bugün): ${eff(item.days)}`);
