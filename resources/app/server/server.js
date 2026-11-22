@@ -6124,7 +6124,12 @@ app.post('/api/intake/distinct', userAccess.requireAnyArea('overview'), userAcce
     res.status(failure.status).json({ error: failure.message, code: failure.code, offline: failure.code === 'INTAKE_SOURCE_UNAVAILABLE', sourceError });
   }
 });
-app.post('/api/intake/export', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '512kb' }), async (req, res) => {
+/* 8 MB: istemcinin gönderdiği "Hesaplanan değerler" sayfası en fazla 5.000 satır
+   × 80 sütundur (intake-excel normalizeCalculatedSheet). Sayısal sütunlarla bu
+   ~5 MB eder; tipik 5.000 × 13 sayfa ~0,85 MB'tır ve 512 KB'ta 413 alıyordu.
+   Metin ağırlıklı yük istemcide 7 MB'ta kırpılır (INTAKE_CALC_SHEET_MAX_BYTES) ve
+   sayfa kırpıldığını yazar; görünüm (viewConfig) için ~1 MB pay kalır. */
+app.post('/api/intake/export', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '8mb' }), async (req, res) => {
   try {
     const found = await intakeLiveFields();
     const plan = intakeExcel.prepare({ fields: found.fields, viewConfig: req.body?.viewConfig || intakeStoredView(req.currentUser.id), horizon: intakeHorizon() });

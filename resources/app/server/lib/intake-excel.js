@@ -69,7 +69,9 @@ function normalizeCalculatedSheet(raw) {
     if (numeric.has(index)) return null;
     return typeof value === 'string' ? value.slice(0, CALCULATED_SHEET_LIMITS.text) : null;
   }));
-  return { headers, rows, numeric: [...numeric] };
+  // İstemci 7 MB yük sınırında kırptıysa sayfa bunu açıkça yazar.
+  const total = Number.isInteger(raw.total) && raw.total > rows.length ? raw.total : rows.length;
+  return { headers, rows, numeric: [...numeric], truncated: raw.truncated === true && total > rows.length, total };
 }
 
 function createWorkbook({ connection, plan, rows, language = 'tr', calculatedSheet = null }) {
@@ -107,7 +109,10 @@ function createWorkbook({ connection, plan, rows, language = 'tr', calculatedShe
      hesaplanan değerler en sona, düz değer sayfası olarak eklenir. */
   const calc = calculatedSheet && Array.isArray(calculatedSheet.headers) && calculatedSheet.headers.length ? calculatedSheet : null;
   if (calc) {
-    const sheet = XLSX.utils.aoa_to_sheet([calc.headers, ...calc.rows]);
+    const note = calc.truncated
+      ? [[en ? `Showing ${calc.rows.length.toLocaleString('en-GB')} of ${calc.total.toLocaleString('en-GB')} rows; narrow the filters for the rest.` : `${calc.total.toLocaleString('tr-TR')} satırın ${calc.rows.length.toLocaleString('tr-TR')} tanesi gösteriliyor; kalanı için filtreleri daraltın.`]]
+      : [];
+    const sheet = XLSX.utils.aoa_to_sheet([calc.headers, ...calc.rows, ...note]);
     sheet['!cols'] = calc.headers.map(() => ({ wch: 23 }));
     XLSX.utils.book_append_sheet(wb, sheet, en ? 'Calculated values' : 'Hesaplanan değerler');
   }

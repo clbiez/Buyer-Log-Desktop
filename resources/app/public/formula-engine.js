@@ -422,8 +422,10 @@
 
   /* ---------------- değerlendirici ---------------- */
 
-  function compare(op, left, right) {
-    const leftDate = toDate(left), rightDate = toDate(right);
+  function compare(op, left, right, numeric) {
+    // `numeric` (pivot): işlenenler sayıdır; YYYYMMDD'ye benzeyen adet toplamı
+    // tarihe çevrilmez (20250231 → 3 Mart kayması karşılaştırmayı bozardı).
+    const leftDate = numeric ? null : toDate(left), rightDate = numeric ? null : toDate(right);
     let a, b;
     if (leftDate && rightDate) { a = leftDate.getTime(); b = rightDate.getTime(); }
     else {
@@ -486,7 +488,7 @@
         const left = evaluateNode(node.left, context);
         const right = evaluateNode(node.right, context);
         if (op === '&') return toText(left) + toText(right);
-        if (['=', '==', '<>', '!=', '<', '<=', '>', '>='].includes(op)) return compare(op, left, right);
+        if (['=', '==', '<>', '!=', '<', '<=', '>', '>='].includes(op)) return compare(op, left, right, context.numeric === true);
         return arithmetic(op, left, right, context.numeric === true);
       }
       case 'call': {
@@ -512,8 +514,9 @@
 
   /* Formülü bir kez derler; satır başına yalnız değerlendirme kalır.
      Döner: { ok, error, columns, evaluate(row, options) }
-     options.numeric: true → çıkarma işleminde tarih kısayolu kapalıdır
-     (pivot toplamları gibi yalnız sayı taşıyan bağlamlar). */
+     options.numeric: true → çıkarma ve karşılaştırmada tarih zorlaması kapalıdır
+     (pivot toplamları gibi yalnız sayı taşıyan bağlamlar). Tarih fonksiyonları
+     (DAYS, YEAR…) açıkça istendiği için tarih okumaya devam eder. */
   function compile(source) {
     let ast = null, error = null;
     try { ast = parse(source); }

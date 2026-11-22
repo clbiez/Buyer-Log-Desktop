@@ -218,3 +218,47 @@ test('yükleme: ortak modül widget betiklerinden önce, yalnız widget yükleni
   }
   assert.doesNotMatch(read('public/index.html'), /pivot-calculated-values/, 'açılış kritik yoluna girmez');
 });
+
+/* ---------------- PR #1161 inceleme bulguları ---------------- */
+
+test('motor: numeric bağlamda karşılaştırma da tarih zorlamaz; varsayılan (CP/Backlog) davranış aynı kalır', () => {
+  const less = Engine.compile('IF([a] < [b], 1, 0)');
+  const equal = Engine.compile('[a] = [b]');
+  // 20250231 geçersiz tarih (31 Şubat → 3 Mart'a kayar); sayı olarak 20250302'den küçüktür.
+  assert.equal(less.evaluate({ a: 20250231, b: 20250302 }, { numeric: true }).value, 1);
+  assert.equal(less.evaluate({ a: 20250231, b: 20250302 }).value, 0, 'varsayılan: YYYYMMDD tarih olarak karşılaştırılır (eski davranış)');
+  // Varsayılan modda tarih metni ile YYYYMMDD sayısı aynı gün sayılır; numeric modda sayı ≠ metin.
+  assert.equal(equal.evaluate({ a: 20250301, b: '2025-03-01' }).value, true);
+  assert.equal(equal.evaluate({ a: 20250301, b: '2025-03-01' }, { numeric: true }).value, false);
+  // Sıradan sayılar her iki modda aynı.
+  for (const options of [{}, { numeric: true }]) {
+    assert.equal(less.evaluate({ a: 10, b: 12 }, options).value, 1);
+    assert.equal(equal.evaluate({ a: 5, b: 5 }, options).value, true);
+  }
+  // Pivot değerlendiricisi karşılaştırmada da numeric çalışır.
+  const evaluator = PCV.createEvaluator([def('cmp', 'IF([approved] < [wssi], 1, 0)')]);
+  assert.equal(evaluator.compute({ approved: 20250231, wssi: 20250302 }, []).values['calc:cmp'], 1);
+});
+
+test('INTAKE Excel: rota gövde sınırı normalize edilen sayfa boyutuyla tutarlı; istemci yükü boyutla sınırlı', () => {
+  const server = read('server/server.js');
+  const route = server.split('\n').find(line => line.includes("app.post('/api/intake/export'"));
+  assert.match(route, /express\.json\(\{ limit: '8mb' \}\)/, '5.000 satırlık sayfa 512 KB ile 413 alırdı');
+  const intakeUi = read('public/intake.js');
+  assert.match(intakeUi, /INTAKE_CALC_SHEET_MAX_BYTES = 7 \* 1024 \* 1024/);
+  const excel = require('../server/lib/intake-excel');
+  const XLSX = require('xlsx');
+  // Tipik 5.000 satır × 13 sütun yükü 512 KB'ı aşar, 8 MB'ın altında kalır.
+  const rows = Array.from({ length: 5000 }, (_, i) => ['Detay', `DEMO KLASMAN GRUBU ${i}`, `DEMO KLASMAN ${i}`, `DEMO DÖNEM ${i % 12}`, ...Array.from({ length: 8 }, (_, j) => 123456.789 + j), 0.123456]);
+  const bytes = Buffer.byteLength(JSON.stringify({ headers: [], rows }));
+  assert.ok(bytes > 512 * 1024 && bytes < 7 * 1024 * 1024, String(bytes));
+  // İstemci boyut sınırında kırptıysa sayfa bunu açıkça yazar (sessiz eksik veri yok).
+  const sheet = excel.normalizeCalculatedSheet({ headers: ['A', 'B'], rows: [['x', 1]], numeric: [1], truncated: true, total: 9000 });
+  assert.equal(sheet.truncated, true);
+  const intake = require('../server/lib/intake-report');
+  const fields = intake.defaultFields();
+  const plan = excel.prepare({ fields, viewConfig: intake.reconcileViewConfig(null, fields), horizon: null });
+  const book = XLSX.read(excel.createWorkbook({ connection: { server: 's', catalog: 'c' }, plan, rows: [], language: 'en', calculatedSheet: sheet }), { type: 'buffer' });
+  const text = JSON.stringify(XLSX.utils.sheet_to_json(book.Sheets['Calculated values'], { header: 1 }));
+  assert.match(text, /1 of 9,000 rows/);
+});

@@ -549,7 +549,10 @@
   }
 
   /* Excel: canlı OLAP pivotu Buyer Log formülünü bilemez; hesaplanan değerler
-     ekrandaki pivotla aynı satırlarda DEĞER sayfası olarak gönderilir. */
+     ekrandaki pivotla aynı satırlarda DEĞER sayfası olarak gönderilir. Yük
+     sunucu sınırının (8 MB, görünüm payıyla) altında tutulur; kırpılırsa sayfa
+     bunu yazar. */
+  const INTAKE_CALC_SHEET_MAX_BYTES = 7 * 1024 * 1024;
   function intakeCalculatedSheet() {
     const calcs = calcColumns();
     if (!calcs.length || !state.rows.length) return null;
@@ -565,7 +568,15 @@
       ...calcs.map(field => (item.kind === 'group' && !item.subtotal ? null : PCV().exportValue(item.row, field.calc))),
     ]);
     const first = 1 + dims.length;
-    return { headers, rows: body, numeric: Array.from({ length: measures.length + calcs.length }, (_, index) => first + index) };
+    const sheet = { headers, rows: body, numeric: Array.from({ length: measures.length + calcs.length }, (_, index) => first + index), total: rows.length, truncated: rows.length > body.length };
+    let size = JSON.stringify(sheet).length;
+    while (size > INTAKE_CALC_SHEET_MAX_BYTES && sheet.rows.length > 1) {
+      // Satır başına ortalama boyuta göre kırp; tek geçişte sınırın altına iner.
+      sheet.rows = sheet.rows.slice(0, Math.max(1, Math.floor(sheet.rows.length * (INTAKE_CALC_SHEET_MAX_BYTES / size) * 0.95)));
+      sheet.truncated = true;
+      size = JSON.stringify(sheet).length;
+    }
+    return sheet;
   }
 
   function renderOverviewChart(rows,columns){
