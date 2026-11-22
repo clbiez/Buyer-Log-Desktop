@@ -408,6 +408,7 @@ function expandSourceRow(row,source,index,resolver,deferPriority){
     rec.qty=Math.max(0,toNumber(segment.quantity));
     // Handover yalnız parsiyelin kendi IAS satırından gelir; başka parsiyelin tarihi ödünç alınmaz.
     rec.handover=dateText(segment.handover);
+    rec.basisDates=segment.basisDates&&typeof segment.basisDates==='object'?segment.basisDates:null;
     rec.eta=dateText(segment.arrival)||base.eta;
     rec.shipmentFile=clean(segment.importFile);rec.containerNo=clean(segment.containerNo);
     rec.vesselName=clean(segment.vesselName);rec.vesselKey=vesselKey(rec.vesselName);
@@ -560,7 +561,9 @@ function resolveRecordTransitDays(rec,rules){
   const br=(typeof globalThis!=='undefined'&&globalThis.BLBusinessRules)||null;
   if(br&&typeof br.resolveTransitDays==='function'&&rec){
     try{
-      const resolved=br.resolveTransitDays({delType:rec.modeRaw||rec.mode,exFactory:rec.handover||rec.exFactory,season:rec.season,country:rec.country,status:rec.status,rules:Array.isArray(rules)?rules:[],forceRules:true});
+      // Sevk edilmiş parsiyelde gün Handover'a eklenir; kural başka bir taştan sayılıyorsa (Uçtan Uca → Yükleme Talep) gün baz tarihiyle düzeltilir.
+      const basis=rec.handover&&rec.basisDates?{handover:rec.handover,loadingRequest:rec.basisDates.loadingRequest,actualLoading:rec.basisDates.actualLoading}:null;
+      const resolved=br.resolveTransitDays({delType:rec.modeRaw||rec.mode,exFactory:rec.handover||rec.exFactory,season:rec.season,country:rec.country,status:rec.status,rules:Array.isArray(rules)?rules:[],forceRules:true,anchor:basis?'handover':null,milestones:basis});
       if(resolved&&Number(resolved.days)>0)return Number(resolved.days);
     }catch(_){}
   }

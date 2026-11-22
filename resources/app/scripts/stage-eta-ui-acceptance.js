@@ -127,7 +127,8 @@ async function shot(page, top, bottom, file) {
   // Ekran görüntüsünde gerçek kişi adı görünmesin: demo moderatör adı.
   await api('/api/users/moderator', { displayName: 'Demo Moderatör', reason: 'demo' }, 'PUT');
   // Statik karşılaştırma ölçütü: taşıt başına tek kural günü (Handover + gün).
-  const rules = [['Gemi', 52], ['Tır', 24], ['Uçak', 9]].map(([delType, days], i) => ({ id: `demo-${i}`, exfStart: '', exfEnd: '', seasons: [], countries: [], delType, days }));
+  // Gemi kuralı Yol Süresi Analizi'nden Uçtan Uca aktarılmış gibi: gün Yükleme Talep'ten sayılır.
+  const rules = [['Gemi', 56, 'loadingRequest'], ['Tır', 24, 'handover'], ['Uçak', 9, 'handover']].map(([delType, days, basis], i) => ({ id: `demo-${i}`, exfStart: '', exfEnd: '', seasons: [], countries: [], delType, days, basis }));
   await api('/api/transit-rules', { rules }, 'PUT');
   // Priority Rules ile paralel: moderatör kuralı "Aşama gecikmesi ≥ 1σ → Bugün Aksiyon".
   await api('/api/cp-managed-rules', { rules: [{ id: 'stage-sigma-demo', kind: 'priority', name: 'Aşama gecikmesi ≥ 1σ', enabled: true, target: 'ACTION_TODAY', // i18n-ignore
@@ -190,6 +191,15 @@ async function shot(page, top, bottom, file) {
   assert.match(await model.textContent(), /Demo Moderatör/);
   assert.doesNotMatch(await model.textContent(), /Tahmini kalan/);
   await shot(page, '.trxStageModel', '.trxStageModel', path.join(outDir, 'transit-stage-model.png'));
+  // Kural listesi: her kuralın bazı (Gemi: Yükleme Talep — uçtan uca).
+  const rulesCard = page.locator('.trxRules');
+  await rulesCard.scrollIntoViewIfNeeded();
+  const basisTexts = await page.evaluate(() => [...document.querySelectorAll('.trxRules .trxRuleBasis')].map(e => e.textContent.trim()));
+  console.log('RULE_BASIS', JSON.stringify(basisTexts));
+  assert.ok(basisTexts.some(t => /Yükleme Talep/.test(t)), 'kural listesinde baz');
+  assert.equal(await page.locator('#_transitBasis option').count(), 3);
+  await page.waitForTimeout(300);
+  await shot(page, '.trxRules', '.trxRules', path.join(outDir, 'transit-rule-basis.png'));
   // CP Tracker: yeni sütunlar varsayılan gizli; kullanıcı açınca en geç parsiyel,
   // Ex→Retail hücresinde statik ETA farkı, alt detayda parsiyel bazında aşama.
   await page.evaluate(() => { document.querySelectorAll('.warnOverlay,.modalOverlay').forEach(e => e.remove()); });
@@ -279,12 +289,14 @@ async function shot(page, top, bottom, file) {
     });
     await page.waitForTimeout(2500);
     const info = await page.evaluate(() => ({
-      realized: [...document.querySelectorAll('.cpLogisticStage[title*="Handover → Antrepo"]')].map(e => ({ text: e.textContent.trim(), title: e.title })),
+      realized: [...document.querySelectorAll('.cpLogisticStage[title^="Gerçekleşen"]')].map(e => ({ text: e.textContent.trim(), title: e.title })),
       why: [...document.querySelectorAll('.cpLogisticStage .cpStageShift[title]')].map(e => ({ text: e.textContent.trim(), title: e.title })),
     }));
     console.log('REALIZED', JSON.stringify(info).slice(0, 1500));
     assert.ok(info.realized.length >= 1 && /^\d+ g/.test(info.realized[0].text), 'gerçekleşen süre');
     assert.ok(info.why.some(w => /Nedenleri:/.test(w.title) && /Model ortalaması/.test(w.title)), 'fark kalemleri tooltip');
+    assert.ok(info.why.some(w => /Planlanan ETA: Yükleme Talep/.test(w.title) && /Gerçekleşen Yükleme Talep → Handover/.test(w.title)) || info.why.some(w => /Planlanan ETA: Handover/.test(w.title)), 'planlanan ETA kuralın bazından');
+    assert.ok(!info.why.some(w => /[Ss]tatik/.test(w.title)), 'Statik terimi kalmadı');
     assert.ok(info.why.every(w => !/-\d/.test(w.text)), 'işaretsiz yön');
     await page.evaluate(() => { const t = document.getElementById('_toast'); if (t) t.remove(); const wrap = document.getElementById('cpTableWrap'); if (wrap) wrap.scrollLeft = 0; });
     await page.waitForTimeout(600);

@@ -180,6 +180,9 @@ function fromLegacy(items) {
       markers: {
         defaultSeasonsApplied: item.defaultSeasonsApplied === true,
         mappingEnhancementScanVersion: Number(item.mappingEnhancementScanVersion) || 0,
+        // IAS gerçekleşen tarih sütunları (otomatik eklenenler / bir kez çıkarıldı işareti).
+        iasMilestoneHeaders: Array.isArray(item.iasMilestoneHeaders) ? [...item.iasMilestoneHeaders] : [],
+        iasMilestonesDisabled: item.iasMilestonesDisabled === true,
         ...(Object.hasOwn(item, '_configVersion') ? { configVersion: item._configVersion } : {}),
       },
       lastRun: clone(item.lastRun) || null,
@@ -324,6 +327,8 @@ function toLegacy(domain) {
       refreshEnabled: source.enabled !== false,
       defaultSeasonsApplied: Boolean(source.markers && source.markers.defaultSeasonsApplied),
       mappingEnhancementScanVersion: Number(source.markers && source.markers.mappingEnhancementScanVersion) || 0,
+      iasMilestoneHeaders: Array.isArray(source.markers && source.markers.iasMilestoneHeaders) ? [...source.markers.iasMilestoneHeaders] : [],
+      iasMilestonesDisabled: Boolean(source.markers && source.markers.iasMilestonesDisabled),
       ...(Object.hasOwn(source.markers || {}, 'configVersion') ? { _configVersion: source.markers.configVersion } : {}),
       horizon: clone(defaultFilter.definition) || {},
       scopes,

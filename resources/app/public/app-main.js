@@ -613,7 +613,8 @@ function normalizeTransitRules(rules){
     if(!delType||!Number.isFinite(days)||days<0||days>3650) return;
     const key=[exfStart,exfEnd,seasons.map(turknorm).join('~'),countries.map(transitCountryKey).join('~'),BLBusinessRules.transitDelTypeKey?BLBusinessRules.transitDelTypeKey(delType):turknorm(delType)].join('|');
     if(seen.has(key)) return; seen.add(key);
-    out.push({id:String((r&&r.id)||('transit-rule-'+Date.now()+'-'+i)),exfStart,exfEnd,seasons,countries,delType,days});
+    // basis: kural gününün sayıldığı kilometre taşı (yoksa Handover — önceki davranış).
+    out.push({id:String((r&&r.id)||('transit-rule-'+Date.now()+'-'+i)),exfStart,exfEnd,seasons,countries,delType,days,basis:BLBusinessRules.transitRuleBasis(r)});
   });
   return out;
 }
@@ -7013,12 +7014,12 @@ function cpStageRunText(run){
   // Aralık tek aşamaya denk gelmiyorsa numara yazılmaz (Handover ≠ Cut Off; "4." yolda sanılırdı).
   return `${spanDiffers?'':`${run.code}. `}${label}${sigma}${span}${over}`;
 }
-// Statik ETA'ya göre fark: işaret yok, yön kelimeyle ("6 g geç"); eksi işareti
+// Planlanan ETA'ya (kural) göre fark: işaret yok, yön kelimeyle ("6 g geç"); eksi işareti
 // "erken" gibi okunuyordu.
 function cpStageShiftText(days){
   if(days==null||!Number.isFinite(Number(days)))return '';
   const n=Number(days),en=appLang==='en';
-  if(n===0)return en?'Same as static ETA':'Statik ETA ile aynı';
+  if(n===0)return en?'Same as planned ETA':'Planlanan ETA ile aynı';
   return n>0?(en?`${n} d early`:`${n} g erken`):(en?`${-n} d late`:`${-n} g geç`);
 }
 const CP_STAGE_MILESTONE_LABELS={
@@ -7026,22 +7027,28 @@ const CP_STAGE_MILESTONE_LABELS={
   en:{loadingRequest:'Loading Request',handover:'Handover',cutOff:'Cut-off',actualLoading:'Actual Loading',eta:'ETA',summaryDeclaration:'Summary Declaration',warehouseApproval:'Warehouse Approval',transitDeclaration:'Transit Declaration',warehouseEntry:'Antrepo Entry'}
 };
 /* Üzerine gelince: farkı oluşturan kalemler. Aşama ETA'sı = Handover + model
-   ortalaması + kalemler; statik ETA = Handover + kural günü. Kalemlerin toplamı
+   ortalaması + kalemler; planlanan ETA = kural bazı + kural günü. Kalemlerin toplamı
    gösterilen farka eşittir. */
 function cpStageWhyText(vsRule,why){
   const en=appLang==='en',g=en?'d':'g',lang=en?'en':'tr';
   const eff=d=>d>0?(en?`${d} d later`:`${d} g geç`):d<0?(en?`${-d} d earlier`:`${-d} g erken`):(en?'no effect':'etkisiz');
   const ms=m=>CP_STAGE_MILESTONE_LABELS[lang][m]||m;
   const date=v=>fmtDate(coerceDateLoose(v))||'—';
-  const head=en?`Stage ETA vs static ETA: ${cpStageShiftText(vsRule)}`:`Aşama ETA'sı statik ETA'ya göre: ${cpStageShiftText(vsRule)}`;
-  if(!why) return `${head}\n${en?'Static ETA = Handover + transit rule days. The Ex→Retail number is unchanged; delivery outcome and Priority Rules use the stage ETA.':'Statik ETA = Handover + yol süresi kuralı. Ex→Retail sayısı değişmez; teslimat sonucu ve Priority Rules aşama ETA\'sını kullanır.'}`;
+  const head=en?`Stage ETA vs planned ETA: ${cpStageShiftText(vsRule)}`:`Aşama ETA'sı planlanan ETA'ya göre: ${cpStageShiftText(vsRule)}`;
+  if(!why) return `${head}\n${en?'Planned ETA = the rule basis date (Handover, Loading Request or Actual Loading, as transferred from Transit Time Analysis) + transit rule days. The Ex→Retail number is unchanged; delivery outcome and Priority Rules use the stage ETA.':'Planlanan ETA = kuralın baz tarihi (Yol Süresi Analizi\'nden hangi ölçüyle aktarıldıysa: Handover, Yükleme Talep veya Fiili Yükleme) + yol süresi kuralı. Ex→Retail sayısı değişmez; teslimat sonucu ve Priority Rules aşama ETA\'sını kullanır.'}`;
+  // Kuralın bazı: Uçtan Uca kural Yükleme Talep'ten sayılır (eski özetlerde Handover).
+  const basis=why.basis||'handover',basisDate=why.basisDate||why.handover,gap=Number(why.basisToHandover)||0;
+  const modelLine=basis==='handover'
+    ?(en?`• Model average Handover → Antrepo ${why.base} ${g} (rule ${why.ruleDays} ${g}): ${eff(why.base-why.ruleDays)}`:`• Model ortalaması Handover → Antrepo ${why.base} ${g} (kural ${why.ruleDays} ${g}): ${eff(why.base-why.ruleDays)}`)
+    :(en?`• Realized ${ms(basis)} → Handover ${gap} ${g} + model average Handover → Antrepo ${why.base} ${g} = ${gap+why.base} ${g} (rule ${why.ruleDays} ${g}): ${eff(gap+why.base-why.ruleDays)}`
+      :`• Gerçekleşen ${ms(basis)} → Handover ${gap} ${g} + model ortalaması Handover → Antrepo ${why.base} ${g} = ${gap+why.base} ${g} (kural ${why.ruleDays} ${g}): ${eff(gap+why.base-why.ruleDays)}`);
   const lines=[head,
-    en?`Static ETA: Handover ${date(why.handover)} + ${why.ruleDays} ${g} rule = ${date(why.ruleEta)}`:`Statik ETA: Handover ${date(why.handover)} + ${why.ruleDays} ${g} kural = ${date(why.ruleEta)}`,
+    en?`Planned ETA: ${ms(basis)} ${date(basisDate)} + ${why.ruleDays} ${g} rule = ${date(why.ruleEta)}`:`Planlanan ETA: ${ms(basis)} ${date(basisDate)} + ${why.ruleDays} ${g} kural = ${date(why.ruleEta)}`,
     en?'Why:':'Nedenleri:',
-    en?`• Model average Handover → Antrepo ${why.base} ${g} (rule ${why.ruleDays} ${g}): ${eff(why.base-why.ruleDays)}`:`• Model ortalaması Handover → Antrepo ${why.base} ${g} (kural ${why.ruleDays} ${g}): ${eff(why.base-why.ruleDays)}`];
+    modelLine];
   for(const item of why.items||[]){
     if(item.kind==='done') lines.push(en?`• ${ms(item.from)} → ${ms(item.to)} took ${item.actual} ${g} (average ${Math.round(item.expected)} ${g}): ${eff(item.days)}`:`• ${ms(item.from)} → ${ms(item.to)} ${item.actual} ${g} sürdü (ortalama ${Math.round(item.expected)} ${g}): ${eff(item.days)}`);
-    else if(item.kind==='plan') lines.push(en?`• Planned ${ms(item.milestone)} date (schedule): ${eff(item.days)}`:`• Planlı ${ms(item.milestone)} tarihi (tarife): ${eff(item.days)}`);
+    else if(item.kind==='plan') lines.push(en?`• ${ms(item.milestone)} on the vessel schedule (IAS): ${eff(item.days)}`:`• Gemi tarifesindeki ${ms(item.milestone)} (IAS): ${eff(item.days)}`);
     else if(item.kind==='overrun') lines.push(en?`• Open stage over its average${item.stage?` (${item.stage}. ${CP_STAGE_SHORT_LABELS.en[item.stage]||''})`:''}: ${eff(item.days)}`:`• Ortalamasını aşan açık aşama${item.stage?` (${item.stage}. ${CP_STAGE_SHORT_LABELS.tr[item.stage]||''})`:''}: ${eff(item.days)}`);
     else if(item.kind==='today') lines.push(en?`• Not arrived yet (remaining time given the days elapsed; earliest today): ${eff(item.days)}`:`• Henüz varmadı (geçen güne göre kalan süre; en erken bugün): ${eff(item.days)}`);
   }
@@ -7096,31 +7103,41 @@ function cpSegmentRealized(row,segment){
   if(cached&&cached.rules===rules)return cached.value;
   // Gerçekleşen giriş tarihi varsa o; yoksa IAS antrepo tarihi (kaynak tooltip'te yazılır).
   const entry=segment.entry||segment.arrival,entrySource=segment.entry?'actual':'ias';
-  const h=dateOrdinal(segment.handover),a=dateOrdinal(entry);
+  /* Süre, kuralın sayıldığı kilometre taşından ölçülür (Uçtan Uca kural → Yükleme
+     Talep → Antrepo); kural yoksa ya da baz tarihi yoksa Handover → Antrepo. */
+  const resolved=resolveTransitDaysForValues(segment.delType,segment.handover,row&&row.Season,row&&row.Country,segment.status,true,rules);
+  const rule=resolved&&resolved.rule?resolved.rule:null;
+  const ruleBasis=rule?BLBusinessRules.transitRuleBasis(rule):'handover';
+  const basisDate=ruleBasis==='handover'?segment.handover:(segment.basisDates&&segment.basisDates[ruleBasis])||null;
+  const basisMissing=!!rule&&!basisDate;
+  const basis=basisMissing?'handover':ruleBasis,start=basisMissing?segment.handover:basisDate;
+  const b=dateOrdinal(start),a=dateOrdinal(entry);
   let value=null;
-  if(h!=null&&a!=null&&a>=h){
-    const days=a-h;
-    const resolved=resolveTransitDaysForValues(segment.delType,segment.handover,row&&row.Season,row&&row.Country,segment.status,true,rules);
-    const ruleDays=resolved&&resolved.rule&&Number.isFinite(Number(resolved.days))?Number(resolved.days):null;
-    value={days,handover:segment.handover,entry,entrySource,ruleDays,vsRule:ruleDays!=null?ruleDays-days:null};
+  if(b!=null&&a!=null&&a>=b){
+    const days=a-b;
+    const ruleDays=rule&&!basisMissing&&Number.isFinite(Number(rule.days))?Number(rule.days):null;
+    value={days,basis,start,ruleBasis:rule?ruleBasis:null,basisMissing,handover:segment.handover,entry,entrySource,ruleDays,vsRule:ruleDays!=null?ruleDays-days:null};
   }
   cpRealizedCache.set(segment,{rules,value});
   return value;
 }
 function cpRealizedWhyText(done){
-  const en=appLang==='en',g=en?'d':'g';
+  const en=appLang==='en',g=en?'d':'g',lang=en?'en':'tr';
   const date=v=>fmtDate(coerceDateLoose(v))||'—';
-  const lines=[en?`Realized Handover → Antrepo: ${done.days} ${g}`:`Gerçekleşen Handover → Antrepo: ${done.days} ${g}`,
+  const ms=m=>CP_STAGE_MILESTONE_LABELS[lang][m]||m;
+  const lines=[en?`Realized ${ms(done.basis)} → Antrepo: ${done.days} ${g}`:`Gerçekleşen ${ms(done.basis)} → Antrepo: ${done.days} ${g}`,
     done.entrySource==='actual'
-      ?(en?`Handover ${date(done.handover)} → Antrepo entry ${date(done.entry)}`:`Handover ${date(done.handover)} → Antrepo giriş ${date(done.entry)}`)
-      :(en?`Handover ${date(done.handover)} → ${date(done.entry)} (IAS estimated antrepo date; no actual entry date in the IAS data)`:`Handover ${date(done.handover)} → ${date(done.entry)} (IAS tahmini antrepo tarihi; IAS verisinde gerçekleşen giriş tarihi yok)`)];
-  if(done.ruleDays!=null) lines.push(en?`Transit rule ${done.ruleDays} ${g}: ${cpStageShiftText(done.vsRule)}`:`Yol süresi kuralı ${done.ruleDays} ${g}: ${cpStageShiftText(done.vsRule)}`);
+      ?(en?`${ms(done.basis)} ${date(done.start)} → Antrepo entry ${date(done.entry)}`:`${ms(done.basis)} ${date(done.start)} → Antrepo giriş ${date(done.entry)}`)
+      :(en?`${ms(done.basis)} ${date(done.start)} → ${date(done.entry)} (IAS antrepo date; the actual entry date is not in the CP/Backlog IAS query)`:`${ms(done.basis)} ${date(done.start)} → ${date(done.entry)} (IAS antrepo tarihi; gerçekleşen giriş tarihi CP/Backlog IAS sorgusunda yok)`)];
+  if(done.ruleDays!=null) lines.push(en?`Transit rule (basis: ${ms(done.ruleBasis)}) ${done.ruleDays} ${g}: ${cpStageShiftText(done.vsRule)}`:`Yol süresi kuralı (baz: ${ms(done.ruleBasis)}) ${done.ruleDays} ${g}: ${cpStageShiftText(done.vsRule)}`);
+  else if(done.basisMissing) lines.push(en?`The rule counts from ${ms(done.ruleBasis)}, but that date is missing for this partial; not compared.`:`Kuralın bazı ${ms(done.ruleBasis)}, ama bu parsiyelde o tarih yok; karşılaştırılmadı.`);
   else lines.push(en?'No transit rule defined for this partial.':'Bu parsiyel için tanımlı yol süresi kuralı yok.');
   return lines.join('\n');
 }
 function cpLogisticRealizedHtml(done){
-  const en=appLang==='en',n=Number(done.vsRule),shift=done.vsRule!=null?cpStageShiftText(n):'';
-  const label=en?'Realized · Handover → Antrepo':'Gerçekleşen · Handover → Antrepo';
+  const en=appLang==='en',lang=en?'en':'tr',n=Number(done.vsRule),shift=done.vsRule!=null?cpStageShiftText(n):'';
+  const from=CP_STAGE_MILESTONE_LABELS[lang][done.basis]||done.basis;
+  const label=en?`Realized · ${from} → Antrepo`:`Gerçekleşen · ${from} → Antrepo`;
   return `<div class="cpLogisticStage" title="${escapeHtml(cpRealizedWhyText(done))}" data-no-i18n><strong>${done.days} ${en?'d':'g'}</strong><small>${escapeHtml(label)}</small>${shift?`<small class="cpStageShift ${n>0?'is-early':n<0?'is-late':''}">${escapeHtml(shift)}</small>`:''}</div>`;
 }
 function cpLogisticStageHtml(segment,row){
@@ -7371,7 +7388,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
         const link = value => (oc && value!=null && value!=='')
           ? `<a class="lnk" title="${escapeHtml(appLang==='en'?'Double-click to open':'Açmak için çift tıklayın')}" target="_blank" rel="noopener" href="${SHIP_URL(oc)}">${escapeHtml(String(value))}</a>`
           : escapeHtml(value==null||value===''?'—':String(value));
-        // Aşama tahmini statik ETA'dan ayrıştıysa hücrede ikinci satır (Ex→Retail
+        // Aşama tahmini planlanan ETA'dan ayrıştıysa hücrede ikinci satır (Ex→Retail
         // değeri, filtresi, sıralaması ve Excel çıktısı değişmez).
         const shift=cpStageShiftHtml(r);
         if(rev) return `<td class="num">${revisionHtml(c.k, rev, value=>(value===rev.to?link(value):escapeHtml(value==null||value===''?'—':String(value))))}${shift}</td>`;
@@ -15357,6 +15374,9 @@ async function persistTransitRules(rules){
    Üst: İthalat Yol Süresi Analizi (lazy, IAS database). Alt: tek satır kompakt
    kural düzenleyici + aranabilir/filtrelenebilir kural listesi. Kurallar yalnız
    "Kuralları Kaydet" ile kalıcı olur (persistTransitRules). Tüm metinler TR/EN. */
+/* Yol süresi kuralının bazı (gün hangi tarihten sayılır). */
+function TRANSIT_RULE_BASIS_OPTIONS(){return [['handover',appLang==='en'?'Handover':'Handover'],['loadingRequest',appLang==='en'?'Loading Request (end-to-end)':'Yükleme Talep (uçtan uca)'],['actualLoading',appLang==='en'?'Actual Loading':'Fiili Yükleme']];}
+function transitRuleBasisLabel(rule){const basis=BLBusinessRules.transitRuleBasis(rule),hit=TRANSIT_RULE_BASIS_OPTIONS().find(([v])=>v===basis);return (appLang==='en'?'from ':'baz: ')+(hit?hit[1]:basis);}
 function openTransitRulesModal(){
   commitActiveTableEditor({refresh:false});
   document.getElementById('_transitRulesModal')?.remove();
@@ -15388,6 +15408,7 @@ function openTransitRulesModal(){
           <div class="trxField"><span>${tl('Sezon','Season')}</span><div class="trxPick" id="_transitSeasonPick"></div></div>
           <div class="trxField trxFieldDates"><span>Ex-Factory</span><div class="trxRange"><input id="_transitStart" class="trxInput" type="date" title="${tl('Başlangıç (boş = −∞)','Start (empty = −∞)')}"><i>→</i><input id="_transitEnd" class="trxInput" type="date" title="${tl('Bitiş (boş = +∞)','End (empty = +∞)')}"></div></div>
           <div class="trxField trxFieldDays"><span>${tl('Gün','Days')}</span><input id="_transitDays" class="trxInput" inputmode="numeric" type="number" min="0" max="3650" step="1"></div>
+          <div class="trxField trxFieldBasis" title="${escapeHtml(tl('Kural gününün sayıldığı tarih. Yol Süresi Analizi\'nden aktarılan kuralda analizdeki ölçüyle aynıdır (Uçtan Uca → Yükleme Talep). Sevk edilmiş parsiyelde planlanan ETA = bu tarih + gün; üretimdeki siparişte Ex-Factory + gün.','The date the rule days count from. For rules transferred from Transit Time Analysis it matches the analysis metric (End-to-end → Loading Request). For a shipped partial, planned ETA = this date + days; for an order in production, Ex-Factory + days.'))}"><span>${tl('Baz','Basis')}</span><select class="trxSelect" id="_transitBasis">${TRANSIT_RULE_BASIS_OPTIONS().map(([v,l])=>`<option value="${v}">${escapeHtml(l)}</option>`).join('')}</select></div>
           <div class="trxField trxFieldActions"><span>&nbsp;</span><div class="trxActions"><button type="button" class="trxBtn trxBtnPrimary" id="_transitAdd"><svg class="ic"><use href="#i-copy-plus"/></svg><span>${tl('Ekle','Add')}</span></button><button type="button" class="trxIconBtn" id="_transitClear" title="${tl('Formu temizle','Clear form')}"><svg class="ic"><use href="#i-x"/></svg></button></div></div>
         </div>
         <div class="trxToolbar trxListBar">
@@ -15452,7 +15473,7 @@ function openTransitRulesModal(){
   }
   function setType(value){formType=normalizeTransitDelType(value)||'Gemi';renderTypeOptions();}
   $('_transitType').addEventListener('change',e=>{const prev=formType;setType(e.target.value);const prevDefault=DEFAULT_TRANSIT_DAYS[normalizeTransitDelType(prev)],nextDefault=DEFAULT_TRANSIT_DAYS[formType];if(!editingId&&nextDefault!=null&&(!days.value||(prevDefault!=null&&Number(days.value)===prevDefault)))days.value=String(nextDefault);});
-  function clearForm(){editingId=null;start.value='';end.value='';setType('Gemi');days.value=String(DEFAULT_TRANSIT_DAYS.Gemi);seasonPick.set([]);countryPick.set([]);$('_transitAdd').querySelector('span').textContent=tl('Ekle','Add');$('_transitEditor').classList.remove('is-editing');renderRules();}
+  function clearForm(){editingId=null;$('_transitBasis').value='handover';start.value='';end.value='';setType('Gemi');days.value=String(DEFAULT_TRANSIT_DAYS.Gemi);seasonPick.set([]);countryPick.set([]);$('_transitAdd').querySelector('span').textContent=tl('Ekle','Add');$('_transitEditor').classList.remove('is-editing');renderRules();}
   const ruleSource=r=>String(r.id||'').startsWith('transit-analysis-')?'analysis':'manual';
   const typeOrder=t=>{const options=transitTypeOptions(),key=transitTypeKey(t),i=options.findIndex(v=>transitTypeKey(v)===key);return i<0?999:i;};
   function renderFilterChips(){
@@ -15473,19 +15494,19 @@ function openTransitRulesModal(){
       <td>${chips(r.countries,tl('Tüm ülkeler','All countries'))}${ruleSource(r)==='analysis'?`<span class="trxFlag" title="${escapeHtml(tl('İthalat Yol Süresi Analizi önerisinden','From an Import Lead Time Analysis suggestion'))}">${tl('Analiz','Analysis')}</span>`:''}</td>
       <td>${chips(r.seasons,tl('Tüm sezonlar','All seasons'))}</td>
       <td class="trxMuted">${escapeHtml(transitRuleDateLabel(r))}</td>
-      <td class="num"><strong>${Number(r.days).toLocaleString(numLoc,{maximumFractionDigits:0})}</strong></td>
+      <td class="num"><strong>${Number(r.days).toLocaleString(numLoc,{maximumFractionDigits:0})}</strong><small class="trxMuted trxRuleBasis">${escapeHtml(transitRuleBasisLabel(r))}</small></td>
       <td class="num trxMuted">${transitRuleMatchCount(r)}</td>
       <td class="trxRowActions"><button type="button" class="trxIconBtn editTransit" title="${tl('Düzenle','Edit')}"><svg class="ic"><use href="#i-pencil"/></svg></button><button type="button" class="trxIconBtn trxDanger deleteTransit" title="${tl('Sil','Delete')}"><svg class="ic"><use href="#i-trash"/></svg></button></td></tr>`).join('');
     empty.style.display=rows.length?'none':'block';
     empty.textContent=working.length?tl('Filtreye uyan kural yok.','No rules match the filter.'):tl('Henüz özel kural yok; varsayılan süreler kullanılıyor.','No custom rules yet; default times are used.');
-    body.querySelectorAll('.editTransit').forEach(btn=>btn.addEventListener('click',()=>{const r=working.find(x=>x.id===btn.closest('tr').dataset.id);if(!r)return;editingId=r.id;start.value=r.exfStart||'';end.value=r.exfEnd||'';setType(r.delType);days.value=String(r.days);seasonPick.set(r.seasons);countryPick.set(r.countries);$('_transitAdd').querySelector('span').textContent=tl('Güncelle','Update');$('_transitEditor').classList.add('is-editing');renderRules();days.focus();}));
+    body.querySelectorAll('.editTransit').forEach(btn=>btn.addEventListener('click',()=>{const r=working.find(x=>x.id===btn.closest('tr').dataset.id);if(!r)return;editingId=r.id;$('_transitBasis').value=BLBusinessRules.transitRuleBasis(r);start.value=r.exfStart||'';end.value=r.exfEnd||'';setType(r.delType);days.value=String(r.days);seasonPick.set(r.seasons);countryPick.set(r.countries);$('_transitAdd').querySelector('span').textContent=tl('Güncelle','Update');$('_transitEditor').classList.add('is-editing');renderRules();days.focus();}));
     body.querySelectorAll('.deleteTransit').forEach(btn=>btn.addEventListener('click',()=>{const id=btn.closest('tr').dataset.id;working=working.filter(x=>x.id!==id);if(editingId===id)clearForm();else renderRules();}));
     $('_transitCount').textContent=rows.length===working.length?tl(`${working.length} kural`,`${working.length} rule(s)`):tl(`${rows.length} / ${working.length} kural`,`${rows.length} of ${working.length} rules`);
     $('_transitStatus').textContent=tl(`${working.length} kural · kaydedilene kadar değişiklikler yalnız bu pencerede`,`${working.length} rule(s) · changes stay in this window until saved`);
   }
   $('_transitSearch').addEventListener('input',e=>{listFilter.q=e.target.value;renderRules();});
   $('_transitAdd').addEventListener('click',()=>{
-    const rule={id:editingId||('transit-rule-'+Date.now()+'-'+Math.round(Math.random()*10000)),exfStart:toISODate(start.value),exfEnd:toISODate(end.value),seasons:normalizeTransitList(seasonPick.get()),countries:normalizeTransitList(countryPick.get(),transitCountryKey),delType:normalizeTransitDelType(formType),days:Number(days.value)};
+    const rule={id:editingId||('transit-rule-'+Date.now()+'-'+Math.round(Math.random()*10000)),exfStart:toISODate(start.value),exfEnd:toISODate(end.value),seasons:normalizeTransitList(seasonPick.get()),countries:normalizeTransitList(countryPick.get(),transitCountryKey),delType:normalizeTransitDelType(formType),days:Number(days.value),basis:BLBusinessRules.transitRuleBasis({basis:$('_transitBasis').value})};
     if(rule.exfStart&&rule.exfEnd&&dateOrdinal(rule.exfStart)>dateOrdinal(rule.exfEnd)){showToast(tl('Ex-Factory bitiş tarihi başlangıç tarihinden önce olamaz.','Ex-Factory end date cannot be before the start date.'));return;}
     if(!rule.delType||!Number.isFinite(rule.days)||rule.days<0||rule.days>3650||!Number.isInteger(rule.days)){showToast(tl('Yol süresi 0–3650 arasında tam gün olmalıdır.','Transit time must be a whole number of days between 0 and 3650.'));days.focus();return;}
     const duplicate=working.find(x=>x.id!==editingId&&x.exfStart===rule.exfStart&&x.exfEnd===rule.exfEnd&&transitTypeKey(x.delType)===transitTypeKey(rule.delType)&&normalizeTransitList(x.seasons).map(turknorm).join('|')===rule.seasons.map(turknorm).join('|')&&normalizeTransitList(x.countries,transitCountryKey).map(transitCountryKey).join('|')===rule.countries.map(transitCountryKey).join('|'));
