@@ -112,12 +112,16 @@ function createComputePool(options={}){
   // Paylaşılan kafeste bir işçinin JS heap'i: etkin işçi ilk sonucunu bildirmeden de en az kendi
   // işinin ihtiyacı kadar sayılır (yeni işçi 0 değil).
   const slotHeap=s=>s.state==='idle'?(s.heapBytes||0):Math.max(s.heapBytes||0,s.job?.heapNeedBytes||0);
+  // İşçinin heap'i yalnız istenen kaynağı (önbellekte ya da uçuştaki işinde) tutuyorsa o kaynağın işinin
+  // ihtiyacına dahildir. Başka kaynakları da önbellekte tutuyorsa o kopyalar iş boyunca canlı kalır:
+  // heap'in tamamı sayılır (temkinli; ret sonrası boştaki büyük işçi bırakılır).
+  const holdsOnly=(s,key)=>Boolean(key)&&(s.cachedSources||[]).every(k=>k===key)&&Boolean(s.cachedSources?.includes(key)||s.job?.residentKey===key);
   // İş başlatılmadan hemen önce kafes yeniden denetlenir: şeritte beklerken önceki işin bıraktığı
   // heap ya da uçuştaki başka iş kafesi doldurmuş olabilir. Hedef işçi bu kaynağı tutuyorsa onun
   // kopyası işin ihtiyacına dahildir.
   function cageFits(job,target){
     if(!job.heapCage)return true;
-    const others=[...slots].reduce((sum,s)=>sum+(s===target?(job.residentKey&&s.cachedSources?.includes(job.residentKey)?0:(s.heapBytes||0)):slotHeap(s)),0);
+    const others=[...slots].reduce((sum,s)=>sum+(s===target?(holdsOnly(s,job.residentKey)?0:(s.heapBytes||0)):slotHeap(s)),0);
     return job.heapCage.usedBytes()+others+job.heapNeedBytes<=job.heapCage.limitBytes;
   }
   function start(job,slot,charged=job.estimatedBytes){
@@ -236,7 +240,7 @@ function createComputePool(options={}){
   // Paylaşılan kafes için: verilen kaynağı önbellekte tutmayan işçilerin son bildirilen JS heap'i.
   // Aynı kaynağı tutan ya da şu an işleyen işçi hariçtir: o kaynağın sonraki işi aynı şeritte bekleyip
   // o işçide koşar; kopyası işin ihtiyacına dahildir. Başlatma anı denetimi (cageFits) bunu doğrular.
-  function heapBytesExcluding(residentKey){return [...slots].reduce((sum,s)=>sum+(s.cachedSources?.includes(residentKey)||(residentKey&&s.job?.residentKey===residentKey)?0:slotHeap(s)),0);}
+  function heapBytesExcluding(residentKey){return [...slots].reduce((sum,s)=>sum+(holdsOnly(s,residentKey)?0:slotHeap(s)),0);}
   // Bu kadar bellek tutan boş işçileri emekli eder; çıkışları tamamlanınca çözülür.
   function releaseIdle(minResidentBytes=0){return Promise.all([...slots].filter(s=>s.state==='idle'&&s.worker&&s.residentBytes>=minResidentBytes).map(s=>retire(s))).then(()=>{});}
   function close(){

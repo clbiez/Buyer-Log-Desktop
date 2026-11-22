@@ -195,3 +195,27 @@ test('a second request for the same source is not refused because of its own in-
   assert.equal(workers[0].sent.length,2,'it runs warm on the worker that holds the source');
   workers[0].complete({retainedBytes:1400*MiB,heapUsedBytes:900*MiB,cachedSources:['["a","g1"]']});(await within(next)).release();
 });
+
+// Codex P1 (58a9241): hedef işçi istenen kaynağın yanında başka kaynaklar da tutuyorsa yalnız istenen
+// kaynağın payı işin ihtiyacına dahildir; diğer kopyalar iş boyunca canlı kalır ve kafese sayılır.
+test('a warm worker that also caches other sources still counts their heap against the cage',async t=>{
+  const {pool,workers}=fakePool({maxWorkers:1,memoryBudgetBytes:6*GiB,maxPendingBytes:GiB});t.after(()=>pool.close());
+  const need=96*MiB+Math.ceil(300*MiB*3.5),job=owner=>cageJob(owner,{residentBytes:1200*MiB,heapNeedBytes:need,heapCage:{limitBytes:3584*MiB,usedBytes:()=>2100*MiB}});
+  const first=pool.run('projections',{},job('a'));await turn();
+  workers[0].complete({retainedBytes:1400*MiB,heapUsedBytes:900*MiB,cachedSources:['["c","g1"]','["a","g1"]']});(await first).release();
+  // Kayıt dışı bırakılırsa 2100 + 0 + 1146 = 3246 MiB sığar; c'nin kopyası canlıyken 2100 + 900 + 1146 = 4146 MiB.
+  assert.equal(pool.heapBytesExcluding('["a","g1"]'),900*MiB,'other cached sources are not hidden by the requested one');
+  await assert.rejects(within(pool.run('projections',{},job('a'))),error=>error.code==='COMPUTE_JOB_TOO_LARGE'&&error.heapCage===true);
+  assert.equal(workers[0].sent.length,1,'the job is not dispatched to the worker');
+});
+
+test('a warm worker that caches only the requested source is still excluded from the cage sum',async t=>{
+  const {pool,workers}=fakePool({maxWorkers:1,memoryBudgetBytes:6*GiB,maxPendingBytes:GiB});t.after(()=>pool.close());
+  const need=96*MiB+Math.ceil(300*MiB*3.5),job=()=>cageJob('a',{residentBytes:1200*MiB,heapNeedBytes:need,heapCage:{limitBytes:3584*MiB,usedBytes:()=>2100*MiB}});
+  const first=pool.run('projections',{},job());await turn();
+  workers[0].complete({retainedBytes:1200*MiB,heapUsedBytes:450*MiB,cachedSources:['["a","g1"]']});(await first).release();
+  assert.equal(pool.heapBytesExcluding('["a","g1"]'),0);
+  const second=pool.run('projections',{},job());await turn();
+  assert.equal(workers[0].sent.length,2,'it runs warm on the worker');
+  workers[0].complete({retainedBytes:1200*MiB,heapUsedBytes:450*MiB,cachedSources:['["a","g1"]']});(await within(second)).release();
+});
