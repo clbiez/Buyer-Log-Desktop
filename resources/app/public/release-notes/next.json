@@ -7,8 +7,8 @@
     "en": "Collection colour options, stage forecast and CP redraw fixes"
   },
   "summary": {
-    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: INTAKE tipi pivot, alan ekleme ve sipariş aramasıyla landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder; kaynağı ve ufku Veri Yönetimi'nden yönetilir. Pivot toplam satırları fare üzerindeyken okunur kalır. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur. Aşama farkı yönüyle yazılır ve üzerine gelince nedenleri görünür; depodaki parsiyelde ve Kısmi Görünümde gerçekleşen yol süresi gösterilir. Veritabanından yenilenen veri, aynı sorguyu paylaşan sayfalar için artık bir kez işlenip tek kopya saklanır; açılış, yenileme kaydı ve bellek kullanımı belirgin biçimde azalır. Widget pivot ayarlarındaki uzun alan listeleri ve OAB \"Filtre ekle\" listesi artık arama kutusuyla açılır; OAB Genel Toplam hücresi fare üzerindeyken okunur kalır.",
-    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: with an INTAKE-style pivot, field picker and order search it analyses landed, Integral and forecast gap with quantity weighting; its source and horizon are managed in Data Management. Pivot total rows stay readable on hover. Starting directly on CP now completes the startup screen without an error. The stage gap shows its direction and its reasons on hover; partials in the warehouse and Partial View show the realized transit time. Data refreshed from the database is now processed once and stored as a single copy for pages that share the same query; startup, refresh saving and memory use drop markedly. Long field lists in widget pivot settings and the OAB \"Add filter\" list now open with a search box; the OAB Grand Total cell stays readable on hover."
+    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: INTAKE tipi pivot, alan ekleme ve sipariş aramasıyla landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder; kaynağı ve ufku Veri Yönetimi'nden yönetilir. Pivot toplam satırları fare üzerindeyken okunur kalır. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur. Aşama farkı yönüyle yazılır ve üzerine gelince nedenleri görünür; depodaki parsiyelde ve Kısmi Görünümde gerçekleşen yol süresi gösterilir. Veritabanından yenilenen veri, aynı sorguyu paylaşan sayfalar için artık bir kez işlenip tek kopya saklanır; açılış, yenileme kaydı ve bellek kullanımı belirgin biçimde azalır. Widget pivot ayarlarındaki uzun alan listeleri ve OAB \"Filtre ekle\" listesi artık arama kutusuyla açılır; OAB Genel Toplam hücresi fare üzerindeyken okunur kalır. Kullanıcı model snapshot'ı içerikçe aynı sayfa verisini artık bir kez saklar; snapshot küçülür ve açılışta daha hızlı okunur.",
+    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: with an INTAKE-style pivot, field picker and order search it analyses landed, Integral and forecast gap with quantity weighting; its source and horizon are managed in Data Management. Pivot total rows stay readable on hover. Starting directly on CP now completes the startup screen without an error. The stage gap shows its direction and its reasons on hover; partials in the warehouse and Partial View show the realized transit time. Data refreshed from the database is now processed once and stored as a single copy for pages that share the same query; startup, refresh saving and memory use drop markedly. Long field lists in widget pivot settings and the OAB \"Add filter\" list now open with a search box; the OAB Grand Total cell stays readable on hover. The user model snapshot now stores identical page data once; the snapshot is smaller and reads faster at startup."
   },
   "changes": [
     {
@@ -662,6 +662,29 @@
         "reason": {
           "tr": "Sunucu tarafındaki IAS sorgusu değişti; ekranda yeni öğe yok, mevcut alanlar gerçek tarihlerle dolar.",
           "en": "The server-side IAS query changed; there is no new screen element, existing fields fill with actual dates."
+        }
+      }
+    },
+    {
+      "id": "buyer-snapshot-content-alias",
+      "type": "improvement",
+      "module": {
+        "tr": "Sunucu · Model snapshot",
+        "en": "Server · Model snapshot"
+      },
+      "title": {
+        "tr": "Kullanıcı model snapshot'ı aynı sayfa verisini bir kez saklar",
+        "en": "User model snapshot stores identical page data once"
+      },
+      "body": {
+        "tr": "Siparişler, Backlog ve Fiyat & Üretici aynı veriyi taşıdığında kullanıcı snapshot'ı bu veriyi ayrı nesneler olduğu için üç kez yazıyordu (örneğin önceki sürümden kalan snapshot yeniden kaydedildiğinde). İçerikçe aynı sayfa verisi artık bir kez saklanır ve açılışta paylaşılır; sentetik 9.082 satırlık buyer snapshot'ında açık boyut 68 MiB'tan 29 MiB'a, açılışta snapshot okuma süresi yaklaşık 1,3 sn'den 0,35 sn'ye indi. Sayfalardaki veri ve sonuçlar aynıdır.",
+        "en": "When Orders, Backlog and Price & Supplier carried the same data, the user snapshot wrote it three times because the copies were separate objects (for example when a snapshot from an earlier version was saved again). Identical page data is now stored once and shared on startup; on a synthetic 9,082-row buyer snapshot the uncompressed size dropped from 68 MiB to 29 MiB and the snapshot read at startup from about 1.3 s to 0.35 s. Page data and results are unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Yalnız sunucu tarafı depolama ve açılış iyileştirmesi; ekranda değişen bir öğe yok.",
+          "en": "Server-side storage and startup improvement only; nothing changes on screen."
         }
       }
     }
