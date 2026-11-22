@@ -7,8 +7,8 @@
     "en": "Collection colour options, stage forecast and CP redraw fixes"
   },
   "summary": {
-    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: INTAKE tipi pivot, alan ekleme ve sipariş aramasıyla landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder; kaynağı ve ufku Veri Yönetimi'nden yönetilir. Pivot toplam satırları fare üzerindeyken okunur kalır. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur. Aşama farkı yönüyle yazılır ve üzerine gelince nedenleri görünür; depodaki parsiyelde ve Kısmi Görünümde gerçekleşen yol süresi gösterilir. Veritabanından yenilenen veri, aynı sorguyu paylaşan sayfalar için artık bir kez işlenip tek kopya saklanır; açılış, yenileme kaydı ve bellek kullanımı belirgin biçimde azalır. Widget pivot ayarlarındaki uzun alan listeleri ve OAB \"Filtre ekle\" listesi artık arama kutusuyla açılır; OAB Genel Toplam hücresi fare üzerindeyken okunur kalır. Kullanıcı model snapshot'ı içerikçe aynı sayfa verisini artık bir kez saklar; snapshot küçülür ve açılışta daha hızlı okunur. LFL ekranı artık ASAS sütunlarının tamamını indirmez; yalnız seçilen ASAS kırılım sütunu gelir, açılış hızlanır ve bellek kullanımı düşer. Büyük kayıtlı veri açılışta artık parça parça okunur; okuma sırasında uygulama donmaz, giriş ve durum istekleri beklemeden yanıtlanır.",
-    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: with an INTAKE-style pivot, field picker and order search it analyses landed, Integral and forecast gap with quantity weighting; its source and horizon are managed in Data Management. Pivot total rows stay readable on hover. Starting directly on CP now completes the startup screen without an error. The stage gap shows its direction and its reasons on hover; partials in the warehouse and Partial View show the realized transit time. Data refreshed from the database is now processed once and stored as a single copy for pages that share the same query; startup, refresh saving and memory use drop markedly. Long field lists in widget pivot settings and the OAB \"Add filter\" list now open with a search box; the OAB Grand Total cell stays readable on hover. The user model snapshot now stores identical page data once; the snapshot is smaller and reads faster at startup. The LFL screen no longer downloads every ASAS column; only the selected ASAS breakdown column is fetched, so it opens faster and uses less memory. Large saved data is now read in small steps at startup; the app no longer freezes while it loads, and sign-in and status requests are answered without waiting."
+    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: INTAKE tipi pivot, alan ekleme ve sipariş aramasıyla landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder; kaynağı ve ufku Veri Yönetimi'nden yönetilir. Pivot toplam satırları fare üzerindeyken okunur kalır. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur. Aşama farkı yönüyle yazılır ve üzerine gelince nedenleri görünür; depodaki parsiyelde ve Kısmi Görünümde gerçekleşen yol süresi gösterilir. Veritabanından yenilenen veri, aynı sorguyu paylaşan sayfalar için artık bir kez işlenip tek kopya saklanır; açılış, yenileme kaydı ve bellek kullanımı belirgin biçimde azalır. Widget pivot ayarlarındaki uzun alan listeleri ve OAB \"Filtre ekle\" listesi artık arama kutusuyla açılır; OAB Genel Toplam hücresi fare üzerindeyken okunur kalır. Kullanıcı model snapshot'ı içerikçe aynı sayfa verisini artık bir kez saklar; snapshot küçülür ve açılışta daha hızlı okunur. LFL ekranı artık ASAS sütunlarının tamamını indirmez; yalnız seçilen ASAS kırılım sütunu gelir, açılış hızlanır ve bellek kullanımı düşer. Büyük kayıtlı veri açılışta artık parça parça okunur; okuma sırasında uygulama donmaz, giriş ve durum istekleri beklemeden yanıtlanır. OAB (Küp) Plan başlangıç ayı artık 1–12 yerine ay adıyla (Ocak…Aralık) ve ay sırasıyla görünür; OAB (Küp), FOB Sonrası ve TR/YD pivot ayarlarında satırlar ⋮⋮ tutamağıyla sürüklenip sıralanabilir.",
+    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: with an INTAKE-style pivot, field picker and order search it analyses landed, Integral and forecast gap with quantity weighting; its source and horizon are managed in Data Management. Pivot total rows stay readable on hover. Starting directly on CP now completes the startup screen without an error. The stage gap shows its direction and its reasons on hover; partials in the warehouse and Partial View show the realized transit time. Data refreshed from the database is now processed once and stored as a single copy for pages that share the same query; startup, refresh saving and memory use drop markedly. Long field lists in widget pivot settings and the OAB \"Add filter\" list now open with a search box; the OAB Grand Total cell stays readable on hover. The user model snapshot now stores identical page data once; the snapshot is smaller and reads faster at startup. The LFL screen no longer downloads every ASAS column; only the selected ASAS breakdown column is fetched, so it opens faster and uses less memory. Large saved data is now read in small steps at startup; the app no longer freezes while it loads, and sign-in and status requests are answered without waiting. OAB (Cube) Plan start month now shows month names (January…December) in month order instead of 1–12; rows in OAB (Cube), Post-FOB and TR/YD pivot settings can be reordered by dragging the ⋮⋮ handle."
   },
   "changes": [
     {
@@ -934,6 +934,64 @@
         "caption": {
           "tr": "Demo veride aşama tahmini ve planlanan ETA farkı tam gün üzerinden.",
           "en": "On demo data, the stage forecast and the gap to the planned ETA in whole days."
+        }
+      }
+    },
+    {
+      "id": "oab-cube-plan-start-month-names",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış · OAB (Küp)",
+        "en": "Overview · OAB (Cube)"
+      },
+      "title": {
+        "tr": "OAB (Küp) Plan başlangıç ayı ay adıyla görünür",
+        "en": "OAB (Cube) Plan start month shows month names"
+      },
+      "body": {
+        "tr": "Küpten 1–12 olarak gelen Plan başlangıç ayı pivotta, filtre seçicisinde, alt detayda ve Excel'de Ocak…Aralık (İngilizcede January…December) olarak yazılır; dil değişince yeniden çizilir. Sıralama ay sırasıyla kalır, filtre ve kayıtlı görünümler ham 1–12 değerini saklar ve sorgular. 1–12 dışı veya boş değer olduğu gibi gösterilir.",
+        "en": "Plan start month, which the cube returns as 1–12, is now written as January…December (Ocak…Aralık in Turkish) in the pivot, filter picker, drill-down and Excel, and redraws when the language changes. Sorting stays in month order; filters and saved views keep and query the raw 1–12 value. Values outside 1–12 or blank are shown as they are."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-cube-plan-start-month.png",
+        "alt": {
+          "tr": "Demo veride OAB (Küp) pivotu: Plan başlangıç ayı grupları (boş), Ocak, Şubat, Ekim, Aralık sırasıyla",
+          "en": "OAB (Cube) pivot on demo data: Plan start month groups (blank), Ocak, Şubat, Ekim, Aralık in month order"
+        },
+        "caption": {
+          "tr": "Ay numarası yerine ay adı; sıra 1→12.",
+          "en": "Month name instead of the month number; order 1→12."
+        }
+      }
+    },
+    {
+      "id": "pivot-settings-drag-reorder",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış · OAB (Küp) · FOB Sonrası · TR/YD",
+        "en": "Overview · OAB (Cube) · Post-FOB · TR/YD"
+      },
+      "title": {
+        "tr": "Pivot ayarlarında sürükle-bırak sıralama çalışır",
+        "en": "Drag-and-drop reordering works in pivot settings"
+      },
+      "body": {
+        "tr": "OAB (Küp), FOB Sonrası ve TR/YD kalem penceresindeki satır, sütun, değer ve filtre listelerinde ⋮⋮ tutamağı görünüyor ama sürükleme çalışmıyordu. Artık satır tutamaktan sürüklenip aynı listede yeniden sıralanır; Kaydet sonrası yeni sıra tabloda ve Excel'de geçerlidir. OAB ve INTAKE aynı ortak davranışı kullanır; yukarı/aşağı düğmeleri çalışmaya devam eder.",
+        "en": "In the OAB (Cube), Post-FOB and TR/YD settings window, the row, column, value and filter lists showed a ⋮⋮ handle but dragging did nothing. Rows can now be dragged by the handle and reordered within the same list; after Save the new order applies to the table and to Excel. OAB and INTAKE use the same shared behaviour; the up/down buttons keep working."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-cube-plan-start-month-drag.png",
+        "alt": {
+          "tr": "OAB (Küp) Ayarları: Plan başlangıç ayı satırı sürüklenirken Ürün klasmanının altına taşınmış",
+          "en": "OAB (Cube) Settings: the Plan start month row moved below Product class while being dragged"
+        },
+        "caption": {
+          "tr": "Sürükleme sırasında satır yeni yerinde gösterilir.",
+          "en": "While dragging, the row is shown in its new place."
         }
       }
     }

@@ -42,10 +42,11 @@ test('INTAKE aggregate ve grouped görünüm ayarları reconcile sırasında kor
 
 test('OAB ve INTAKE pivot ayar satırları sürükle-bırak sıralamayı destekler', () => {
   assert.ok(oabUi.includes('oabConfigRow" draggable="true"'));
-  assert.ok(oabUi.includes("modal.addEventListener('dragstart'"));
-  assert.ok(oabUi.includes("modal.addEventListener('dragover'"));
-  assert.ok(oabUi.includes("modal.addEventListener('drop'"));
+  // Olaylar ortak modülde (public/pivot-config-reorder.js); iki widget aynı bind'i kullanır.
+  const reorder = fs.readFileSync(path.join(root, 'public', 'pivot-config-reorder.js'), 'utf8');
+  for (const event of ['dragstart', 'dragover', 'drop', 'dragend']) assert.ok(reorder.includes(`container.addEventListener('${event}'`), event);
+  assert.ok(oabUi.includes('BLPivotConfigReorder?.bind(modal'));
   assert.ok(intakeUi.includes('oabConfigRow intakeConfigRow" draggable="true"'));
-  assert.ok(intakeUi.includes("modal.addEventListener('dragstart'"));
+  assert.ok(intakeUi.includes('BLPivotConfigReorder?.bind(modal'));
   assert.ok(css.includes('.oabConfigRow[draggable="true"]{cursor:grab;'));
 });

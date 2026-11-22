@@ -81,7 +81,12 @@
   }
   const mainFilterValues = values => Object.fromEntries(Object.entries(values || {}).filter(([key]) => !isAttribute(key)));
   const isMulti = (key, value) => value === multiToken() && isAttribute(key);
-  const dimText = (key, value) => isMulti(key, value) ? text('Çoklu', 'Multiple') : value;
+  /* Ay numarası boyutu (Plan başlangıç ayı: küp 1–12 döndürür). Ham değer
+     satırda, filtrede ve sorguda kalır; ay adı yalnız görüntüde, aktif dilde
+     yazılır (BLDateDimension.monthNumberName). 1–12 dışı/boş değer aynen. */
+  const isMonthNumber = key => (baseDim(key) || {}).display === 'monthNumber';
+  const monthText = (key, value) => isMonthNumber(key) && window.BLDateDimension && window.BLDateDimension.monthNumberName ? window.BLDateDimension.monthNumberName(value, isEnglish() ? 'en' : 'tr') : value;
+  const dimText = (key, value) => isMulti(key, value) ? text('Çoklu', 'Multiple') : monthText(key, value);
   function multiValues(key, rows) {
     const set = new Set();
     (rows || []).forEach(row => { const list = row && row.attrMulti && row.attrMulti[key]; if (Array.isArray(list)) list.forEach(value => set.add(value)); });
@@ -365,7 +370,7 @@
     if (item.kind === 'grand') return `<td class="${index === 0 ? 'oabPivotGrandLabel' : ''}">${index === 0 ? `<strong>${esc(value)}</strong>` : ''}</td>`;
     if (display().grouped !== false && index >= 0 && index < item.level) return '<td></td>';
     if (isMulti(ref.key, value)) return `<td title="${esc(multiTitle(ref.key, item.rows))}">${esc(dimText(ref.key, value))}</td>`;
-    return `<td>${esc(value == null || value === '' ? text('(boş)', '(blank)') : value)}</td>`;
+    return `<td>${esc(value == null || value === '' ? text('(boş)', '(blank)') : dimText(ref.key, value))}</td>`;
   }
 
   function calcCellHtml(item, def) {
@@ -487,6 +492,8 @@
     const columns = keys.filter(key => rows.some(row => row[key] !== undefined)).map(key => ({
       key, label: detailLabel(key), type: numeric(key) ? 'number' : 'text',
       ...(numeric(key) ? { format: value => value == null || value === '' ? '' : formatDecimal(value) } : {}),
+      // Ay numarası çekmecede ve çekmece Excel'inde ay adıyla görünür; satırdaki ham değer değişmez.
+      ...(isMonthNumber(key) ? { format: value => dimText(key, clean(value)) } : {}),
     }));
     const dims = [...view().rows, ...view().columns];
     const context = item.kind === 'grand'
@@ -535,7 +542,8 @@
         out[text('Satır tipi', 'Row type')] = item.kind === 'grand' ? text('Genel toplam', 'Grand total') : (item.kind === 'group' ? text('Alt toplam', 'Subtotal') : text('Detay', 'Detail'));
         dims.forEach((ref, index) => {
           const raw = item.kind === 'group' ? (index === item.level ? item.dims[ref.key] : (index < item.level ? item.path[index] : '')) : (item.dims[ref.key] ?? '');
-          out[refLabel(ref)] = isMulti(ref.key, raw) ? `${text('Çoklu', 'Multiple')}: ${multiValues(ref.key, item.rows).join(', ')}` : raw;
+          // Satır sırası ham değerle (ay 1→12) kurulur; hücre görüntü metnini (ay adı) taşır.
+          out[refLabel(ref)] = isMulti(ref.key, raw) ? `${text('Çoklu', 'Multiple')}: ${multiValues(ref.key, item.rows).join(', ')}` : dimText(ref.key, raw);
         });
         values.forEach(ref => { out[refLabel(ref)] = round(item.metrics[ref.key]); });
         // Hesaplanan değer Excel'e DEĞER olarak yazılır; hatalı hücre boştur.
@@ -547,7 +555,7 @@
       // Boyutlar (kod alanları ve ürün özellikleri dahil) metin hücre olarak yazılır; sayıya çevrilmez.
       const source = rows.map(row => {
         const out = {};
-        rowKeys.forEach(key => { out[detailLabel(key)] = isAttribute(key) ? attributeCellText(key, row) : (baseDim(key) ? clean(row[key]) : round(row[key])); });
+        rowKeys.forEach(key => { out[detailLabel(key)] = isAttribute(key) ? attributeCellText(key, row) : (baseDim(key) ? dimText(key, clean(row[key])) : round(row[key])); });
         return out;
       });
       const field = text('Alan', 'Field'), valueLabel = text('Değer', 'Value');
@@ -790,6 +798,8 @@
     modal.addEventListener('pointerup', event => { if (event.target === modal && modal.dataset.backdropDown === '1') close(); modal.dataset.backdropDown = '0'; });
     const lists = ['oabCubeRowsList', 'oabCubeColsList', 'oabCubeValuesList', 'oabCubeFiltersList'].map(id => modal.querySelector(`#${id}`));
     lists.forEach(refreshOrderButtons);
+    // ⋮⋮ tutamağıyla sürükle-bırak sıralama: ortak modül (public/pivot-config-reorder.js).
+    window.BLPivotConfigReorder?.bind(modal, { onReorder: list => refreshOrderButtons(list) });
     /* Hesaplanan değerler: toplam modunda pencerede SEÇİLİ değer alanları,
        satır modunda kaynak satırın sayısal ölçüleri kullanılabilir. */
     const draftValueFields = () => [...lists[2].querySelectorAll('.oabPivotValueRow')].map(row => vals.find(item => item.id === row.querySelector('.oabCubeValueField').value))
@@ -937,7 +947,9 @@
     const local = isAttribute(key);
     const draw = () => {
       const needle = clean(search.value).toLocaleLowerCase(locale());
-      const visible = values.filter(value => !needle || String(dimText(key, value)).toLocaleLowerCase(locale()).includes(needle)).sort((a, b) => Number(selected.has(b)) - Number(selected.has(a)));
+      // Ay numarası listesi ay sırasıyla (1→12), alfabetik değil; checkbox değeri hamdır.
+      const ordered = isMonthNumber(key) ? values.slice().sort(compareText) : values;
+      const visible = ordered.filter(value => !needle || String(dimText(key, value)).toLocaleLowerCase(locale()).includes(needle)).sort((a, b) => Number(selected.has(b)) - Number(selected.has(a)));
       list.innerHTML = visible.length
         ? visible.map(value => `<label class="intakeFilterOption"${isMulti(key, value) ? ` title="${esc(multiTitle(key, state.rows))}"` : ''}><input type="checkbox" value="${esc(value)}"${selected.has(value) ? ' checked' : ''}><span>${esc(dimText(key, value))}</span></label>`).join('')
         : `<div class="intakeConfigEmpty">${esc(local && !values.length ? text('Değerler yüklü satırlardan gelir; önce Yenile’ye basın.', 'Values come from the loaded rows; press Refresh first.') : text('Eşleşen değer yok.', 'No matching value.'))}</div>`;
