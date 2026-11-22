@@ -32,8 +32,17 @@
     return String(value == null ? '' : value).replace(/[ıİ]/g, 'I').replace(/[şŞ]/g, 'S').replace(/[ğĞ]/g, 'G')
       .replace(/[üÜ]/g, 'U').replace(/[öÖ]/g, 'O').replace(/[çÇ]/g, 'C').toUpperCase();
   }
+  /* Vasıta etiketleri az sayıdadır (Gemi, Uçak, …): sonuç sınırlı bir önbellekte
+     tutulur; 10k satırlık TR/YD hesabında regex zinciri sipariş başına çalışmaz. */
+  const KEY_CACHE = new Map();
   function normalizeVehicleKey(value) {
-    return fold(value).replace(/\s*\+\s*/g, '+').replace(/[^A-Z0-9+]+/g, ' ').replace(/\s*\+\s*/g, '+').replace(/^\++|\++$/g, '').trim();
+    const raw = String(value == null ? '' : value);
+    const hit = KEY_CACHE.get(raw);
+    if (hit !== undefined) return hit;
+    const key = fold(raw).replace(/\s*\+\s*/g, '+').replace(/[^A-Z0-9+]+/g, ' ').replace(/\s*\+\s*/g, '+').replace(/^\++|\++$/g, '').trim();
+    if (KEY_CACHE.size >= 500) KEY_CACHE.clear();
+    KEY_CACHE.set(raw, key);
+    return key;
   }
   function multiplierOf(value) {
     if (value === null || value === '' || typeof value === 'boolean') return null;
@@ -83,14 +92,15 @@
   function orderStandard(parts, byVehicle, overseas) {
     const fallback = multiplierOf(overseas);
     const base = fallback == null ? 1.11 : fallback;
-    const known = (Array.isArray(parts) ? parts : []).filter(part => part && normalizeVehicleKey(part.key));
+    const known = [];
+    for (const part of Array.isArray(parts) ? parts : []) { const key = part ? normalizeVehicleKey(part.key) : ''; if (key) known.push({ ...part, key }); }
     if (!known.length) return { value: base, source: 'unknown', known: false, weighting: 'none', parts: [], label: '', labelEn: '' };
     const table = plainObject(byVehicle) ? byVehicle : {};
     const qtyWeighted = known.every(part => typeof part.qty === 'number' && Number.isFinite(part.qty) && part.qty > 0);
     const total = qtyWeighted ? known.reduce((sum, part) => sum + part.qty, 0) : known.length;
     let value = 0, configured = 0;
     const mix = known.map(part => {
-      const key = normalizeVehicleKey(part.key);
+      const key = part.key;
       const own = Object.prototype.hasOwnProperty.call(table, key) ? multiplierOf(table[key]) : null;
       const share = (qtyWeighted ? part.qty : 1) / total;
       if (own != null) configured += 1;

@@ -150,6 +150,7 @@
      options.vehicles: /api/postfob/tryd/* yanıtındaki vehicles.byOrder
      ({ [ham sipariş kodu]: [[anahtar, etiket, adet], ...] }); options.byVehicle:
      ortak ayarın vasıta standartları. Sipariş başına bir kez hesaplanır. */
+  const RESOLVER_CACHE = new WeakMap();
   function createStandardResolver(options = {}) {
     const overall = standardOf(options.standardMultiplier);
     const V = vehicleStandards();
@@ -157,25 +158,43 @@
     const byOrder = options.vehicles && typeof options.vehicles === 'object' ? options.vehicles : null;
     const generic = { value: overall.value, source: 'unknown', known: false, label: '', labelEn: '', parts: [] };
     if (!V || !byOrder) return () => generic;
-    const memo = new Map();
-    return row => {
-      const order = clean(row && row.order);
+    /* Çözümleyici vasıta eki nesnesine bağlı önbellektedir: sıralama, arama ve hedef
+       değişimi gibi yeniden çizimler aynı eki ve ayarı kullanır; siparişler yeniden
+       çözülmez. Ek (yeni sorgu) veya ayar değişince yeniden kurulur. */
+    const signature = `${overall.value}|${JSON.stringify(table)}`;
+    const cached = RESOLVER_CACHE.get(byOrder);
+    if (cached && cached.signature === signature) return cached.resolve;
+    // Sipariş başına bir kez; tek vasıtalı siparişler (çoğunluk) vasıta başına tek sonucu paylaşır.
+    const memo = new Map(), single = new Map();
+    const resolve = row => {
+      // Sunucu eki ham String(order) ile anahtarlıdır (server/lib/tryd-vehicle-index.js payloadFor).
+      const order = row == null || row.order == null ? '' : (typeof row.order === 'string' ? row.order : String(row.order));
       let hit = memo.get(order);
       if (!hit) {
         const raw = Object.prototype.hasOwnProperty.call(byOrder, order) && Array.isArray(byOrder[order]) ? byOrder[order] : [];
-        const parts = raw.map(item => Array.isArray(item) ? { key: item[0], label: item[1], qty: item[2] } : item);
-        hit = parts.length ? V.orderStandard(parts, table, overall.value) : generic;
+        if (raw.length === 1 && Array.isArray(raw[0])) {
+          const signature = `${raw[0][0]}\u0001${raw[0][1]}\u0001${typeof raw[0][2] === 'number' && raw[0][2] > 0 ? 1 : 0}`;
+          hit = single.get(signature);
+          if (!hit) { hit = V.orderStandard([{ key: raw[0][0], label: raw[0][1], qty: raw[0][2] }], table, overall.value); single.set(signature, hit); }
+        } else {
+          const parts = raw.map(item => Array.isArray(item) ? { key: item[0], label: item[1], qty: item[2] } : item);
+          hit = parts.length ? V.orderStandard(parts, table, overall.value) : generic;
+        }
         memo.set(order, hit);
       }
       return hit;
     };
+    RESOLVER_CACHE.set(byOrder, { signature, resolve });
+    return resolve;
   }
 
   function emptyAmounts() {
     return { fobTrAmount: 0, landedAmount: 0, fobYdAmount: 0, trQty: 0, ydQty: 0, ydQtyAll: 0, noLandedQty: 0, invalidQty: 0, highMultiplierQty: 0, vehicleKnownQty: 0, vehicleUnknownQty: 0 };
   }
+  // Sıcak yol (grup başına model sayısı kadar): anahtar listesi bir kez kurulur.
+  const AMOUNT_KEYS = Object.freeze(Object.keys(emptyAmounts()));
   function addAmounts(target, source) {
-    for (const key of Object.keys(emptyAmounts())) target[key] += source[key] || 0;
+    for (let index = 0; index < AMOUNT_KEYS.length; index += 1) { const key = AMOUNT_KEYS[index]; target[key] += source[key] || 0; }
     return target;
   }
   /* Oranlar her düzeyde tutarlardan yeniden hesaplanır (ortalama alınmaz). */
@@ -194,6 +213,15 @@
   }
 
   const modeOf = slot => slot.map ? mode(slot.map) : slot.value;
+  // [değer, ağırlık, …] dizisinde en ağır değer; eşitlikte Türkçe sıralamada önce gelen (mode ile aynı kural).
+  function pairMode(pairs) {
+    let best = '', weight = -1;
+    for (let index = 0; index < pairs.length; index += 2) {
+      const key = pairs[index], value = pairs[index + 1];
+      if (value > weight || (value === weight && key.localeCompare(best, 'tr') < 0)) { best = key; weight = value; }
+    }
+    return best;
+  }
   function mode(map) {
     let best = '', weight = -1;
     map.forEach((value, key) => { if (value > weight || (value === weight && key.localeCompare(best, 'tr') < 0)) { best = key; weight = value; } });
@@ -249,7 +277,8 @@
       amounts.trQty = trQty;
       const statusCount = { ok: 0, highMultiplier: 0, noLanded: 0, invalidLanded: 0 };
       let maxRatio = null, maxRatioVehicle = '', maxRatioStandard = null;
-      const vehicleSlot = { value: '', weight: 0, map: null };
+      // Model vasıtası: [etiket, adet] çiftleri (vasıta sayısı küçüktür; Map açılmaz).
+      const vehicleWeights = [];
       for (const row of ydActive) {
         const q = qtyOf(row);
         const rowStandard = standardFor(row);
@@ -259,11 +288,9 @@
         if (rowStandard.known) {
           amounts.vehicleKnownQty += q;
           const dominant = rowStandard.parts[0].label;
-          if (!vehicleSlot.map && (vehicleSlot.value === '' || vehicleSlot.value === dominant)) { vehicleSlot.value = dominant; vehicleSlot.weight += q; }
-          else {
-            if (!vehicleSlot.map) vehicleSlot.map = new Map([[vehicleSlot.value, vehicleSlot.weight]]);
-            vehicleSlot.map.set(dominant, (vehicleSlot.map.get(dominant) || 0) + q);
-          }
+          let found = false;
+          for (let index = 0; index < vehicleWeights.length; index += 2) if (vehicleWeights[index] === dominant) { vehicleWeights[index + 1] += q; found = true; break; }
+          if (!found) vehicleWeights.push(dominant, q);
         } else amounts.vehicleUnknownQty += q;
         if (status === STATUS.noLanded) { amounts.noLandedQty += q; continue; }
         if (status === STATUS.invalid) { amounts.invalidQty += q; continue; }
@@ -281,7 +308,7 @@
         model: entry.model,
         // entry.attrs MODEL_ATTRS sırasındadır.
         buyerGroup: modeOf(entry.attrs[0]), classification: modeOf(entry.attrs[1]), mag: modeOf(entry.attrs[2]), season: modeOf(entry.attrs[3]), productName: modeOf(entry.attrs[4]),
-        vehicle: vehicleActive ? modeOf(vehicleSlot) : '',
+        vehicle: vehicleActive ? pairMode(vehicleWeights) : '',
         trFob, status, statusCount, maxRatio, maxRatioVehicle, maxRatioStandard, amounts, ...ratios(amounts, target),
         rows: [...entry.tr, ...entry.yd],
       });
