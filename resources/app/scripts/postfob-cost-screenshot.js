@@ -103,6 +103,16 @@ function demoRows() {
     }
     await page.keyboard.press('Escape');
     await page.waitForFunction(() => !document.querySelector('#blSharedDetailDrawer.is-open'), null, { timeout: 10000 });
+    // Excel: pivot (ekrandaki düzen) + kaynak satırlar + filtre özeti.
+    const [download] = await Promise.all([page.waitForEvent('download', { timeout: 30000 }), page.click('#postFobExcelExportBtn')]);
+    const XLSX = require('xlsx');
+    const book = XLSX.read(fs.readFileSync(await download.path()));
+    assert.equal(book.SheetNames.length, 3);
+    const pivotRows = XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]]);
+    assert.equal(pivotRows.length, 4 + 8 + 1, 'alt toplam + detay + genel toplam');
+    const grandRow = pivotRows[pivotRows.length - 1];
+    assert.equal(Object.values(grandRow).includes(36000), true, 'genel toplam adedi ' + JSON.stringify(grandRow));
+    assert.equal(XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[1]]).length, 36);
     // + Filtre ekle: canlı modelin ek alanı listelenir.
     await page.click('#postFobFiltersBtn');
     await page.click('[data-postfob-add-filter]');

@@ -19,7 +19,7 @@
     view: null,
     rows: [], fetchedAt: '', missing: [], truncated: false, rowLimit: 10000,
     connection: null, horizon: false, horizonApplied: false, loaded: false, loading: false, started: false,
-    status: null, popover: null, viewRevision: 0, metadata: null, metadataPromise: null, search: '',
+    status: null, popover: null, viewRevision: 0, exporting: false, metadata: null, metadataPromise: null, search: '',
   };
 
   const byId = id => document.getElementById(id);
@@ -94,6 +94,7 @@
   const valueFormat = ref => ref.source ? FORMATS.extra : (FORMATS[(baseValue(ref.key) || {}).format] || FORMATS.extra);
   const VALUE_HINTS = {
     postFob: ['Adet ağırlıklı (Landed − FOB)', 'Quantity-weighted (Landed − FOB)'],
+    landedActual: ['Net sipariş adedine göre ağırlıklı ortalama. Küpün kendi landed toplamı teslim edilen adede göre ağırlıklı olabilir; satır değerleri küpten birebir gelir.', 'Average weighted by net order quantity. The cube’s own landed total may be weighted by delivered quantity; row values come straight from the cube.'],
     landedToFob: ['Σ(adet×landed) / Σ(adet×FOB)', 'Σ(qty×landed) / Σ(qty×FOB)'],
     integralToFob: ['Σ(adet×Integral son) / Σ(adet×FOB)', 'Σ(qty×Integral final) / Σ(qty×FOB)'],
     forecastGap: ['(Gerçekleşen − öngörü) / öngörü landed', '(Actual − forecast) / forecast landed'],
@@ -396,6 +397,63 @@
     });
   }
 
+  /* ---------- Excel (pivot + kaynak satırlar + filtre özeti) ---------- */
+  async function exportExcel() {
+    if (state.exporting || !state.rows.length) return;
+    state.exporting = true;
+    paintExportButton();
+    try {
+      if (!window.XLSX && window.BLPerf?.ensureLibrary) await window.BLPerf.ensureLibrary('xlsx');
+      const X = window.XLSX;
+      if (!X) throw new Error('XLSX');
+      const prepared = analysis.prepare(state.rows, { segment: view().segment, outliersOnly: view().outliersOnly, search: state.search });
+      const dims = [...view().rows, ...view().columns], values = view().values;
+      const round = value => typeof value === 'number' && Number.isFinite(value) ? Math.round(value * 10000) / 10000 : (value == null ? null : value);
+      // Pivot sayfası ekrandaki düzendir; 1.500 satır görüntü sınırı dosyaya uygulanmaz.
+      const pivot = displayRows(prepared).map(item => {
+        const out = {};
+        out[text('Satır tipi', 'Row type')] = item.kind === 'grand' ? text('Genel toplam', 'Grand total') : (item.kind === 'group' ? text('Alt toplam', 'Subtotal') : text('Detay', 'Detail'));
+        dims.forEach((ref, index) => {
+          const value = item.kind === 'group' ? (index === item.level ? item.dims[ref.key] : (index < item.level ? item.path[index] : '')) : (item.dims[ref.key] ?? '');
+          out[refLabel(ref)] = value;
+        });
+        values.forEach(ref => { out[refLabel(ref)] = round(ref.key === 'outliers' ? item.metrics.outliers : item.metrics[ref.key]); });
+        return out;
+      });
+      const rowKeys = [];
+      prepared.visible.slice(0, 200).forEach(row => Object.keys(row).forEach(key => { if (!rowKeys.includes(key)) rowKeys.push(key); }));
+      const source = prepared.visible.map(row => {
+        const out = {};
+        rowKeys.forEach(key => { out[detailLabel(key)] = round(row[key]); });
+        out[detailLabel('_landedToFob')] = round(analysis.rowRatio(row));
+        out[detailLabel('_outlier')] = analysis.isOutlier(row, prepared.bounds) ? text('Evet', 'Yes') : '';
+        return out;
+      });
+      const summary = [
+        ...view().filters.filter(ref => (view().filterValues[ref.key] || []).length).map(ref => ({ [text('Alan', 'Field')]: refLabel(ref), [text('Değer', 'Value')]: view().filterValues[ref.key].join(', ') })),
+        { [text('Alan', 'Field')]: text('Kapsam', 'Scope'), [text('Değer', 'Value')]: view().segment },
+        ...(state.search ? [{ [text('Alan', 'Field')]: text('Arama', 'Search'), [text('Değer', 'Value')]: state.search }] : []),
+        ...(state.horizon ? [{ [text('Alan', 'Field')]: text('Veri Yönetimi ufku', 'Data Management horizon'), [text('Değer', 'Value')]: text('Uygulandı', 'Applied') }] : []),
+        { [text('Alan', 'Field')]: text('Son yenileme', 'Last refresh'), [text('Değer', 'Value')]: state.fetchedAt },
+        { [text('Alan', 'Field')]: text('Kaynak', 'Source'), [text('Değer', 'Value')]: state.connection ? `${state.connection.server} / ${state.connection.catalog}` : '' },
+        ...(state.truncated ? [{ [text('Alan', 'Field')]: text('Uyarı', 'Warning'), [text('Değer', 'Value')]: text('Sorgu satır sınırına ulaştı; toplamlar eksik olabilir.', 'The query hit the row limit; totals may be incomplete.') }] : []),
+      ];
+      const book = X.utils.book_new();
+      X.utils.book_append_sheet(book, X.utils.json_to_sheet(pivot), 'Pivot');
+      X.utils.book_append_sheet(book, X.utils.json_to_sheet(source), text('Kaynak satırlar', 'Source rows').slice(0, 31));
+      X.utils.book_append_sheet(book, X.utils.json_to_sheet(summary), text('Filtreler', 'Filters'));
+      X.writeFile(book, `FOB_Sonrasi_Maliyet_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.xlsx`, { compression: true });
+    } catch (error) {
+      setStatus(() => text('Excel dosyası oluşturulamadı.', 'The Excel file could not be created.'), 'error');
+    } finally { state.exporting = false; paintExportButton(); }
+  }
+  function paintExportButton() {
+    const button = byId('postFobExcelExportBtn');
+    if (!button) return;
+    button.disabled = state.loading || state.exporting || !state.rows.length;
+    button.setAttribute('aria-busy', state.exporting ? 'true' : 'false');
+  }
+
   function render() {
     renderMeta();
     renderToolbar();
@@ -405,6 +463,7 @@
     const refresh = byId('postFobRefreshBtn');
     if (refresh) { refresh.disabled = state.loading; refresh.setAttribute('aria-busy', state.loading ? 'true' : 'false'); }
     byId('postFobBody')?.classList.toggle('isBusy', state.loading);
+    paintExportButton();
   }
 
   const widthStore = {
@@ -438,18 +497,24 @@
 
   /* Görünüm sunucuya kaydedilir; yanıt ancak gönderildiği revizyon hâlâ
      güncelse görünümün yerine geçer (INTAKE ile aynı yarış koruması). */
+  /* Art arda gelen kayıtlar birleşir; her çağıranın sözü en son kaydın
+     sonucuyla çözülür (önceki zamanlayıcı iptal edilince söz askıda kalmaz). */
   let saveTimer = 0;
+  let saveWaiters = [];
+  let pendingSaves = [];
+  function flushSaveWaiters(value) { const waiters = saveWaiters; saveWaiters = []; waiters.forEach(resolve => resolve(value)); }
   function saveView(options = {}) {
     state.viewRevision += 1;
     const revision = state.viewRevision;
     clearTimeout(saveTimer);
     return new Promise(resolve => {
+      saveWaiters.push(resolve);
       saveTimer = setTimeout(async () => {
         try {
           const result = await requestJson('/api/postfob/view', jsonBody('PUT', { view: view() }));
           if (revision === state.viewRevision && result.view) state.view = result.view;
-          resolve(result.view);
-        } catch (error) { if (!options.silent) setStatus(error.message || String(error), 'error'); resolve(null); }
+          flushSaveWaiters(result.view || null);
+        } catch (error) { if (!options.silent) setStatus(error.message || String(error), 'error'); flushSaveWaiters(null); }
       }, options.immediate ? 0 : 250);
     });
   }
@@ -465,16 +530,22 @@
     setStatus(() => text('FOB sonrası maliyet modeli sorgulanıyor…', 'Querying the post-FOB cost model…'), 'loading');
     render();
     try {
+      // Bekleyen görünüm kaydı rapor isteğine dahildir (sunucu görünümü kaydeder).
       clearTimeout(saveTimer);
+      const revision = state.viewRevision;
+      // Bu isteğe dahil edilen kayıtların bekleyenleri; sonradan başlayan kayıt kendi sözünü korur.
+      pendingSaves = saveWaiters; saveWaiters = [];
       const payload = await requestJson('/api/postfob/report', jsonBody('POST', { view: view(), forceRefresh: Boolean(force) }));
-      if (payload.view) state.view = payload.view;
+      pendingSaves.forEach(resolve => resolve(payload.view || null)); pendingSaves = [];
+      // Sorgu sürerken kullanıcının yaptığı görünüm değişikliği ezilmez.
+      if (payload.view && revision === state.viewRevision) state.view = payload.view;
       applyPayload(payload);
       state.loaded = true;
       if (payload.offline) setStatus(() => text('Model şu anda erişilemiyor; son kayıtlı sonuç gösteriliyor.', 'The model is unreachable; showing the last saved result.'), 'warning');
       else if (state.missing.length) setStatus(() => text(`Modelde bulunmayan alanlar boş gösterildi: ${missingLabels()}.`, `Fields missing from the model are shown blank: ${missingLabels()}.`), 'warning');
       else setStatus(payload.fromCache ? () => text('Son 30 dakikadaki aynı sorgunun sonucu gösteriliyor.', 'Showing the result of the same query from the last 30 minutes.') : null, payload.fromCache ? 'ok' : '');
     } catch (error) { setStatus(error.message || String(error), 'error'); }
-    finally { state.loading = false; render(); }
+    finally { pendingSaves.forEach(resolve => resolve(null)); pendingSaves = []; state.loading = false; render(); }
   }
 
   function loadMetadata() {
@@ -775,6 +846,7 @@
     new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
     byId('postFobRefreshBtn')?.addEventListener('click', () => void refresh(true));
     byId('postFobFieldsBtn')?.addEventListener('click', () => void openFields());
+    byId('postFobExcelExportBtn')?.addEventListener('click', () => void exportExcel());
     byId('postFobResetBtn')?.addEventListener('click', async () => {
       state.view = clone(state.catalog.defaults);
       state.search = '';

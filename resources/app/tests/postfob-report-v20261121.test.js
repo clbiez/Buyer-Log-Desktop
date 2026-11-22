@@ -33,7 +33,8 @@ test('sorgu sabit sipariş düzeyi boyutlar, TREATAS filtreleri ve mevcut ölç�
   const built = report.buildQuery({ liveFields: liveSchema(), filterValues: { season: ['S6'], mag: ['CU4C', 'CU4C', ''], unknown: ['x'] } });
   assert.match(built.query, /^EVALUATE\nTOPN\(10000,/);
   assert.match(built.query, /'Urun'\[sipariskod\]/);
-  assert.match(built.query, /'SatisUlke'\[Satış Ülkesi\]/);
+  // Satış ülkesi kaynak pivotta yalnız sayfa filtresi: varsayılan sorgu düzeyine girmez.
+  assert.doesNotMatch(built.query, /'SatisUlke'\[Satış Ülkesi\]/);
   assert.match(built.query, /TREATAS\(\{ "S6" \}, 'Urun'\[SezonKod\]\)/);
   assert.match(built.query, /TREATAS\(\{ "CU4C" \}, 'Urun'\[MerchAltGrupKod\]\)/);
   assert.match(built.query, /"landedActual", \[TR Antrepo Landed Gerceklesen USD\]/);
@@ -396,4 +397,72 @@ test('önceden Özel Database olarak tanımlı FiyatMaliyetKontrolRapor bağlant
 test('model alanı filtreden satıra taşınınca sorgu düzeyi değişmiş sayılır', () => {
   const ui = fs.readFileSync(path.join(__dirname, '../public/postfob.js'), 'utf8');
   assert.match(ui, /\[\.\.\.current\.rows, \.\.\.current\.columns\]\.filter\(ref => ref\.source\)[\s\S]{0,120}current\.filters\.filter\(ref => ref\.source\)/);
+});
+
+test('satış ülkesi yalnız pivot satır/sütununda gruplanır; filtre olarak her zaman TREATAS ile uygulanır', () => {
+  const grouped = report.buildQuery({ liveFields: liveSchema(), view: { rows: ['salesCountry'], filterValues: { season: ['S6'] } } });
+  assert.ok(grouped.dimensions.includes('salesCountry'));
+  assert.match(grouped.query, /'SatisUlke'\[Satış Ülkesi\],/);
+  const filtered = report.buildQuery({ liveFields: liveSchema(), view: { rows: ['mag'], filterValues: { season: ['S6'], salesCountry: ['TURKIYE'] } } });
+  assert.ok(!filtered.dimensions.includes('salesCountry'));
+  assert.match(filtered.query, /TREATAS\(\{ "TURKIYE" \}, 'SatisUlke'\[Satış Ülkesi\]\)/);
+});
+
+test('tek sorguya çevrilemeyen ufuk (çok tablolu VEYA grupları) kaynak kesintisi değil, ufuk hatasıdır', () => {
+  const horizon = { groups: [
+    { conditions: [{ field: 'SezonKod', table: 'Urun', name: 'SezonKod', op: 'in', values: ['S6'] }] },
+    { conditions: [{ field: 'Satış Ülkesi', table: 'SatisUlke', name: 'Satış Ülkesi', op: 'in', values: ['TURKIYE'] }] },
+  ] };
+  assert.throws(() => report.buildQuery({ liveFields: liveSchema(), view: { filterValues: {} }, horizon }), error => error.code === 'POSTFOB_HORIZON_INVALID' && error.statusCode === 400);
+});
+
+test('4xx doğrulama hatası kendi mesajıyla döner; yalnız kaynak hatası "ulaşılamıyor" olur', async () => {
+  const handlers = {};
+  const app = { get: () => {}, put: () => {}, post: (url, ...fns) => { handlers[url] = fns; } };
+  let failWith = null;
+  require('../server/routes/postfob-routes')(app, {
+    express: { json: () => (req, res, next) => next() },
+    userAccess: { requireAnyArea: () => (req, res, next) => next(), requireCapability: () => (req, res, next) => next(), appendAudit: () => {} },
+    modelQuery: { discoverSchema: async () => { if (failWith) throw failWith; return { columns: [], measures: [] }; }, runModelRows: async () => ({ rows: [] }) },
+    userPreferences: { load: () => ({ entries: {} }), merge: () => ({}) },
+    loadModelConnections: () => ({ items: [] }), BLBusinessRules: { compareChronologicalValues: () => 0 },
+    store: createIntakeStore({ root: fs.mkdtempSync(path.join(os.tmpdir(), 'postfob-fail-')) }),
+  });
+  const call = async () => {
+    const res = { statusCode: 200, body: null, set() { return this; }, status(code) { this.statusCode = code; return this; }, json(body) { this.body = body; return this; } };
+    const req = { currentUser: { id: 'u1' }, body: { view: { filterValues: { season: ['S6'] } } } };
+    let i = 0; const fns = handlers['/api/postfob/report'];
+    const next = async () => { const fn = fns[i++]; if (fn) await fn(req, res, next); };
+    await next(); return res;
+  };
+  failWith = Object.assign(new Error('"Sezon" alanı Int64 tipinde'), { code: 'INTAKE_FILTER_VALUE_TYPE', statusCode: 400 });
+  const invalid = await call();
+  assert.equal(invalid.statusCode, 400);
+  assert.match(invalid.body.error, /Int64/);
+  failWith = Object.assign(new Error('timeout'), { code: 'MODEL_QUERY_TIMEOUT', statusCode: 504 });
+  const outage = await call();
+  assert.equal(outage.body.code, 'POSTFOB_SOURCE_UNAVAILABLE');
+});
+
+test('görünüm kaydı: ertelenen kayıtların sözü askıda kalmaz; sorgu sırasında yapılan değişiklik ezilmez', () => {
+  const ui = fs.readFileSync(path.join(__dirname, '../public/postfob.js'), 'utf8');
+  assert.match(ui, /saveWaiters\.push\(resolve\)/);
+  assert.match(ui, /function flushSaveWaiters\(value\)/);
+  assert.match(ui, /if \(payload\.view && revision === state\.viewRevision\) state\.view = payload\.view;/);
+  assert.match(ui, /finally \{ pendingSaves\.forEach\(resolve => resolve\(null\)\)/);
+});
+
+test('Veri Yönetimi: FOB satırı ufuksuz "filtre gerekli" uyarısı göstermez, sezonun widget’ta seçildiğini söyler', () => {
+  const dm = fs.readFileSync(path.join(__dirname, '../public/data-management.js'), 'utf8');
+  assert.match(dm, /const widgetBounded = group\.id === 'postfob';\s*const needsFilter = unbounded && !widgetBounded;/);
+  assert.match(dm, /Ufuk yoksa widget’ta sezon seçilir', 'Without a horizon, a season is selected in the widget'/);
+});
+
+test('pivot Excel dışa aktarımı ekrandaki düzeni, kaynak satırları ve filtre özetini yazar', () => {
+  const ui = fs.readFileSync(path.join(__dirname, '../public/postfob.js'), 'utf8');
+  assert.match(ui, /async function exportExcel\(\)/);
+  assert.match(ui, /book_append_sheet\(book, X\.utils\.json_to_sheet\(pivot\), 'Pivot'\)/);
+  assert.match(ui, /ensureLibrary\('xlsx'\)/);
+  const html = fs.readFileSync(path.join(__dirname, '../public/index.html'), 'utf8');
+  assert.match(html, /id="postFobExcelExportBtn" disabled/);
 });

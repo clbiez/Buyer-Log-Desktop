@@ -42,7 +42,10 @@ const DIMENSIONS = Object.freeze([
   { key: 'buyerGroup', source: '[Urun].[BuyerGrupTanim]', tr: 'Buyer grup', en: 'Buyer group', filter: true },
   { key: 'classification', source: '[Urun].[UrunKlasmanTanim]', tr: 'Ürün klasmanı', en: 'Product class', filter: true },
   { key: 'originCountry', source: '[AnaData].[Uretici Ulke Adi]', tr: 'Üretici ülke', en: 'Origin country', filter: true },
-  { key: 'salesCountry', source: '[SatisUlke].[Satış Ülkesi]', tr: 'Satış ülkesi', en: 'Sales country', filter: true },
+  // Kaynak pivotta satış ülkesi yalnız sayfa filtresidir (All); sorgu düzeyine yalnız
+  // pivot satır/sütununa eklenince girer. Aksi hâlde satır sayısı ülke sayısıyla
+  // katlanır ve ülkeye bölünmeyen bir ölçü varsa adet çoğalırdı.
+  { key: 'salesCountry', source: '[SatisUlke].[Satış Ülkesi]', tr: 'Satış ülkesi', en: 'Sales country', filter: true, optionalGrain: true },
 ].map(Object.freeze));
 
 /* Ölçüler. Birim ölçüler (unit) tarayıcıda adet ağırlıklı ortalanır; oranlar da
@@ -135,13 +138,14 @@ function isBoundedHorizon(horizon) {
 
 function horizonArgs(horizon, liveFields) {
   if (!isBoundedHorizon(horizon)) return [];
-  let filter;
+  // Ufuk argümanı iki adımda üretilir; ikisi de (ör. çok tablolu VEYA grupları)
+  // kullanıcının düzeltebileceği bir ufuk hatasıdır, kaynak kesintisi değil.
   try {
-    filter = modelHorizon.buildHorizonFilter(horizon, null, { columnType: intakeReport.intakeColumnTypeIndex(liveFields) });
+    const filter = modelHorizon.buildHorizonFilter(horizon, null, { columnType: intakeReport.intakeColumnTypeIndex(liveFields) });
+    return modelHorizon.summarizeFilterArgs(filter, '');
   } catch (cause) {
     throw error(`FOB sonrası maliyet ufku uygulanamadı: ${cause && cause.message || cause}`, 'POSTFOB_HORIZON_INVALID', 400);
   }
-  return modelHorizon.summarizeFilterArgs(filter, '');
 }
 
 function definitionField(definition, fieldType) {
@@ -327,7 +331,8 @@ function buildQuery({ liveFields = [], view = null, filterValues = {}, horizon =
     catch (cause) { throw error(cause && cause.message || 'Filtre değeri geçersiz.', 'POSTFOB_FILTER_VALUE_TYPE', 400); }
     filterExpressions.push(`TREATAS({ ${literals.join(', ')} }, ${intakeReport.daxRef(field)})`);
   }
-  const groupFields = [...resolved.dimensions.map(item => ({ key: item.key, field: item.field })), ...extraDims];
+  const pivotKeys = new Set([...current.rows, ...current.columns].map(ref => ref.key));
+  const groupFields = [...resolved.dimensions.filter(item => !item.optionalGrain || pivotKeys.has(item.key)).map(item => ({ key: item.key, field: item.field })), ...extraDims];
   const measureFields = [...resolved.measures.map(item => ({ key: item.key, field: item.field })), ...extraMeasures];
   const groupExpressions = groupFields.map(item => intakeReport.daxRef(item.field));
   const measureExpressions = measureFields.map(item => `${quoteAlias(item.key)}, ${intakeReport.daxRef(item.field)}`);

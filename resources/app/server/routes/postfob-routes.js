@@ -56,6 +56,10 @@ module.exports = function registerPostFobRoutes(app, deps) {
   function failure(err) {
     const code = String(err && err.code || '');
     if (code.startsWith('POSTFOB_')) return { status: Number(err.statusCode) || 400, code, error: String(err.message || code) };
+    // Kullanıcının düzeltebileceği doğrulama hataları (ör. filtre değer tipi)
+    // "modele ulaşılamıyor" diye maskelenmez; kaynak kesintisi yalnız 5xx/bilinmeyendir.
+    const status = Number(err && err.statusCode);
+    if (status >= 400 && status < 500 && !code.startsWith('MODEL_')) return { status, code: code || 'POSTFOB_INVALID', error: String(err.message || code) };
     return { status: 502, code: 'POSTFOB_SOURCE_UNAVAILABLE', error: SOURCE_MESSAGE.tr, errorEn: SOURCE_MESSAGE.en };
   }
   function logFailure(route, err) {
