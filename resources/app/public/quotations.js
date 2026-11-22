@@ -1400,15 +1400,13 @@
     const current=tableState.filters[key];
     const orderedValues=values.slice().sort((a,b)=>Number(Boolean(current?.has(b)))-Number(Boolean(current?.has(a))));
     const panel=document.createElement('div'); panel.className='colFilterPanel quotationColFilterPanel';panel.dataset.uiMigrated='commercial';
-    const rect=anchor.getBoundingClientRect();
-    panel.style.left=Math.max(6,Math.min(window.innerWidth-306,rect.right-286))+'px';
-    panel.style.top=Math.max(6,Math.min(window.innerHeight-370,rect.bottom+4))+'px';
     panel.innerHTML=`<div class="cfpSortBar"><button type="button" class="cfpSortBtn" data-qdir="1">${qEsc(qLang('A→Z Sırala','Sort A→Z'))}</button><button type="button" class="cfpSortBtn" data-qdir="-1">${qEsc(qLang('Z→A Sırala','Sort Z→A'))}</button></div>
       <input type="text" class="cfpSearch" placeholder="${qEsc(qLang('Ara…','Search…'))}">
       <div class="cfpHeader"><button type="button" class="cfpAll" data-v="all">${qEsc(qLang('Tümü','All'))}</button><button type="button" class="cfpAll" data-v="none">${qEsc(qLang('Temizle','Clear'))}</button></div>
       <div class="cfpList">${orderedValues.map((value,index)=>{const checked=!current||current.has(value),display=value||qLang('(boş)','(blank)');return `<label class="cfpItem" data-filter-order="${values.indexOf(value)}" data-txt="${qEsc(display.toLocaleLowerCase('tr-TR'))}"><input type="checkbox" value="${qEsc(value)}" ${checked?'checked':''}> ${value?qEsc(value):`<i>${qEsc(display)}</i>`}</label>`;}).join('')}</div>
       <div class="cfpApplyRow"><button type="button" class="cfpApplySelection">${qEsc(qLang('Uygula','Apply'))}</button><button type="button" class="cfpAddSelection">${qEsc(qLang('Geçerli Seçime Ekle','Add to Current'))}</button><button type="button" class="numFilterClear cfpRemoveSelection">${qEsc(qLang('Filtreyi Kaldır','Remove Filter'))}</button></div>`;
     document.body.appendChild(panel); qTableFilterPanel=panel;
+    window.BLFloatingPlacement?.place(panel,anchor,{left:rect=>rect.right-286});
     const pin=()=>{if(typeof pinCheckedFilterChoices==='function')pinCheckedFilterChoices(panel);};
     panel.querySelector('.cfpList')?.addEventListener('change',event=>{if(event.target.matches('input[type="checkbox"]'))pin();});
     pin();

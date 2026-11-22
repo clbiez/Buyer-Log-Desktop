@@ -745,9 +745,7 @@
   /* Değerler yüklenince popover büyür; yeniden konumlandırma yalnız konumu
      düzeltir, giriş hareketini tekrarlamaz (ekran dışına taşmayı önler). */
   function placePopover(popover, button, animate = true) {
-    const rect = button.getBoundingClientRect();
-    popover.style.left = `${Math.max(8, Math.min(innerWidth - popover.offsetWidth - 8, rect.left))}px`;
-    popover.style.top = `${Math.max(8, Math.min(innerHeight - popover.offsetHeight - 8, rect.bottom + 4))}px`;
+    window.BLFloatingPlacement?.place(popover, button);
     if (animate) window.BLMotionPlus?.play?.('overlay', popover);
   }
   function localValues(key) {
