@@ -961,9 +961,8 @@
     document.body.appendChild(popover);
     state.popover = popover;
     button.setAttribute('aria-expanded', 'true');
-    const rect = button.getBoundingClientRect();
-    popover.style.left = `${Math.max(8, Math.min(window.innerWidth - popover.offsetWidth - 8, rect.left))}px`;
-    popover.style.top = `${Math.min(window.innerHeight - popover.offsetHeight - 8, rect.bottom + 4)}px`;
+    // Ortak yerleştirici: değerler yüklenip panel büyüyünce de pencere içinde kalır.
+    window.BLFloatingPlacement?.place(popover, button);
     const list = popover.querySelector('.intakeFilterValues'), search = popover.querySelector('.intakeFilterSearch');
     const draw = () => {
       const needle = clean(search.value).toLocaleLowerCase(isEnglish() ? 'en' : 'tr');
@@ -999,10 +998,8 @@
     document.body.appendChild(popover);
     state.popover = popover;
     button.setAttribute('aria-expanded', 'true');
-    const rect = button.getBoundingClientRect();
-    const left = Math.max(8, Math.min(window.innerWidth - popover.offsetWidth - 8, rect.left));
-    popover.style.left = `${left}px`;
-    popover.style.top = `${Math.min(window.innerHeight - popover.offsetHeight - 8, rect.bottom + 4)}px`;
+    // Ortak yerleştirici: değerler yüklenip panel büyüyünce de pencere içinde kalır.
+    window.BLFloatingPlacement?.place(popover, button);
     const list = popover.querySelector('.intakeFilterValues');
     const search = popover.querySelector('.intakeFilterSearch');
 

@@ -548,6 +548,35 @@
           "en": "Background server startup improvement; nothing on screen changes."
         }
       }
+    },
+    {
+      "id": "filter-popover-viewport-safe",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış · Filtre panelleri",
+        "en": "Overview · Filter panels"
+      },
+      "title": {
+        "tr": "Açılır filtre panelleri artık ekranın altına taşmıyor",
+        "en": "Filter dropdowns no longer spill below the screen"
+      },
+      "body": {
+        "tr": "Ekranın alt kısmındaki bir filtre açıldığında panel, değerler yüklenmeden önceki küçük boyutuna göre konumlanıyor; liste gelince pencerenin altına taşıyor, değer listesi ve Uygula düğmesi görünmüyordu. Filtre panelleri artık altta yer yoksa tetikleyicinin üstüne açılır, iki tarafta da yer yetmezse yalnız değer listesi kısalıp kaydırılır; arama, Temizle ve Uygula her zaman görünür kalır. Değerler sonradan yüklendiğinde veya pencere boyutu değiştiğinde panel yeniden konumlanır. Düzeltme Genel Bakış'taki INTAKE, OAB küpü, FOB Sonrası Maliyet ve TR/YD Landed Avantaj filtrelerini, Koleksiyon ve Teklifler sütun filtrelerini ve OAB pivot/detay filtrelerini kapsar.",
+        "en": "When a filter near the bottom of the screen was opened, the panel was positioned using its small size before values loaded; once the list arrived it spilled below the window and the value list and Apply button were out of sight. Filter panels now open above the trigger when there is no room below, and if neither side has enough room only the value list gets shorter and scrolls; search, Clear and Apply always stay visible. The panel repositions itself when values load later or the window is resized. The fix covers the INTAKE, OAB cube, Post-FOB Cost and TR/YD Landed Advantage filters on Overview, the Collection and Quotations column filters, and the OAB pivot/detail filters."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "filter-popover-viewport-dark.png",
+        "alt": {
+          "tr": "Demo veride TR/YD Landed Avantaj Sezon filtresi, ekranın altındaki tetikleyicinin üstüne açılmış; değer listesi ve Uygula düğmesi görünür",
+          "en": "On demo data the TR/YD Landed Advantage Season filter opens above its trigger near the bottom of the screen; the value list and Apply button are visible"
+        },
+        "caption": {
+          "tr": "Altta yer olmayınca filtre paneli yukarı açılır; liste ve Uygula görünür kalır.",
+          "en": "With no room below, the filter panel opens upward; the list and Apply stay visible."
+        }
+      }
     }
   ]
 }
