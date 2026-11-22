@@ -537,8 +537,12 @@
       if (down) down.disabled = index === rows.length - 1;
     });
   }
+  /* Sorgu düzeyi: satır/sütundaki model alanları gruplanır, yalnız filtredeki
+     alanlar gruplanmaz. İkisi ayrı izlenir; alan filtreden satıra taşınınca da
+     sorgu yenilenir, aksi hâlde yeni sütun boş görünürdü. */
   const queryShape = current => JSON.stringify([
-    [...current.rows, ...current.columns, ...current.filters].filter(ref => ref.source).map(ref => ref.source).sort(),
+    [...current.rows, ...current.columns].filter(ref => ref.source).map(ref => ref.source).sort(),
+    current.filters.filter(ref => ref.source).map(ref => ref.source).sort(),
     current.values.filter(ref => ref.source).map(ref => ref.source).sort(),
   ]);
 

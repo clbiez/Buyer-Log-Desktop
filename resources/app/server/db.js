@@ -1610,13 +1610,19 @@ function normalizeModelConnections(list) {
     items.push(normalizeModelConnection(MODEL_CONNECTION_DEFAULT_INTAKE));
   }
   if (!items.some(item => item.role === 'postfob')) {
+    /* Bu katalog daha önce Özel Database olarak tanımlandıysa varsayılan, o
+       kaydın sunucusunu ve kataloğunu devralır: çalışan bir bağlantı sessizce
+       F5_S41'e dönmez. Kullanıcının özel kaydı silinmez. */
+    const existing = items.find(item => /^fiyatmaliyetkontrolrapor$/i.test(String(item.catalog || '').trim()));
     // Sınırdaysa varsayılan INTAKE kaydı değil, sondaki kullanıcı kaydı düşer.
     if (items.length >= MODEL_CONNECTION_LIMIT) {
       let drop = items.length - 1;
-      while (drop > 0 && items[drop].role === 'intake') drop -= 1;
+      while (drop > 0 && (items[drop].role === 'intake' || items[drop] === existing)) drop -= 1;
       items.splice(drop, 1);
     }
-    items.push(normalizeModelConnection(MODEL_CONNECTION_DEFAULT_POSTFOB));
+    items.push(normalizeModelConnection(existing
+      ? { ...MODEL_CONNECTION_DEFAULT_POSTFOB, server: existing.server, catalog: existing.catalog }
+      : MODEL_CONNECTION_DEFAULT_POSTFOB));
   }
   // Refresh için her rolde yalnız bir aktif bağlantı bırakılır. Kullanıcı birden
   // fazla eski kayıtla yükseltme yaptıysa listedeki ilk kayıt güvenli varsayılandır.

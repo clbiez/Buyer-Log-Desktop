@@ -383,3 +383,17 @@ test('her pivot hücresi çift tıkla OAB ile aynı ortak alt detay çekmecesini
   const css = fs.readFileSync(path.join(__dirname, '../public/app.css'), 'utf8');
   assert.match(css, /#postFobTable tbody td\.oabPivotDrillCell\{cursor:zoom-in;\}/);
 });
+
+test('önceden Özel Database olarak tanımlı FiyatMaliyetKontrolRapor bağlantısının sunucusu korunur', () => {
+  const db = require('../server/db');
+  const items = db.normalizeModelConnections([{ id: 'mine', name: 'Maliyet', role: 'custom', server: 'lcwtabular_s41', catalog: 'FiyatMaliyetKontrolRapor' }]);
+  const postfob = items.find(entry => entry.role === 'postfob');
+  assert.equal(postfob.server, 'lcwtabular_s41');
+  assert.ok(items.some(entry => entry.id === 'mine' && entry.role === 'custom'), 'kullanıcının özel kaydı silinmez');
+  assert.equal(report.resolveConnection(items).server, 'lcwtabular_s41');
+});
+
+test('model alanı filtreden satıra taşınınca sorgu düzeyi değişmiş sayılır', () => {
+  const ui = fs.readFileSync(path.join(__dirname, '../public/postfob.js'), 'utf8');
+  assert.match(ui, /\[\.\.\.current\.rows, \.\.\.current\.columns\]\.filter\(ref => ref\.source\)[\s\S]{0,120}current\.filters\.filter\(ref => ref\.source\)/);
+});
