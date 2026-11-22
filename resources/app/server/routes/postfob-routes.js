@@ -252,7 +252,7 @@ module.exports = function registerPostFobRoutes(app, deps) {
   function trydPayload(record) {
     if (!record) return null;
     const meta = record.viewConfig && typeof record.viewConfig === 'object' ? record.viewConfig : {};
-    return { rows: record.rows, fetchedAt: record.fetchedAt, missing: meta.missing || [], truncated: Boolean(meta.truncated), rowLimit: meta.rowLimit || report.POSTFOB_MAX_ROWS, horizonApplied: Boolean(meta.horizonApplied), stale: record.fresh === false };
+    return { rows: record.rows, fetchedAt: record.fetchedAt, filterValues: meta.filterValues || {}, missing: meta.missing || [], truncated: Boolean(meta.truncated), rowLimit: meta.rowLimit || report.POSTFOB_MAX_ROWS, horizonApplied: Boolean(meta.horizonApplied), stale: record.fresh === false };
   }
 
   app.get('/api/postfob/tryd/state', ...guard, (req, res) => {
@@ -299,8 +299,12 @@ module.exports = function registerPostFobRoutes(app, deps) {
       res.json({ ok: true, view, ...trydPayload({ ...record, fresh: true }), fromCache: false });
     } catch (err) {
       logFailure('tryd-report', err);
-      // Şema okunamadıysa anahtar hesaplanamaz: filtre değişmediyse son başarılı sorgunun kaydı kullanılır.
-      const sameFilters = JSON.stringify(before.view.filterValues) === JSON.stringify(view.filterValues);
+      // Şema okunamadıysa anahtar hesaplanamaz: son başarılı sorgu yalnız İSTENEN
+      // filtreyle birebir aynıysa kullanılır. Görünüm (/tryd/view) Yenile'den önce
+      // kaydedildiği için before.view ile değil, son sorgunun filtresiyle kıyaslanır;
+      // iki taraf da sorgunun normalize biçimindedir.
+      const requested = report.normalizeView({ filterValues: view.filterValues }).filterValues;
+      const sameFilters = Boolean(before.lastQuery) && JSON.stringify(requested) === JSON.stringify(before.lastQuery.filterValues);
       const fallbackKey = queryKey || (sameFilters ? lastQueryKey(userId, before.lastQuery) : '');
       const previous = fallbackKey ? store.get(fallbackKey) : null;
       if (previous && RECOVERABLE_ERRORS.has(String(err && err.code || ''))) {

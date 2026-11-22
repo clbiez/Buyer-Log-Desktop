@@ -148,3 +148,23 @@ test('TR/YD: tercihe yazılmış başka kullanıcının önbellek anahtarı okun
   const own = await h.call('GET /api/postfob/tryd/state', { currentUser: { id: 'victim' } });
   assert.equal(own.body.data.rows.length, 2);
 });
+
+test('TR/YD: filtre /view ile değişip şema düşerse eski sorgunun satırları yeni filtre adına dönmez', async () => {
+  const h = harness(sample);
+  const first = await h.call('POST /api/postfob/tryd/report', { body: { view: { filterValues: { season: ['S6'] } } } });
+  assert.equal(first.body.rows.length, 2);
+  await h.call('PUT /api/postfob/tryd/view', { body: { view: { filterValues: { season: ['S7'] } } } });
+  h.schemaDown();
+  const refreshed = await h.call('POST /api/postfob/tryd/report', { body: { view: { filterValues: { season: ['S7'] } }, forceRefresh: true } });
+  assert.equal(refreshed.statusCode, 502);
+  assert.equal(refreshed.body.rows, undefined);
+  // state son çekilen sorgunun filtresini ayrıca bildirir; istemci farkı etiketler.
+  const state = await h.call('GET /api/postfob/tryd/state', {});
+  assert.deepEqual(state.body.view.filterValues, { season: ['S7'] });
+  assert.deepEqual(state.body.data.filterValues, { season: ['S6'] });
+  // Aynı filtreyle şema düşerse son başarılı sonuç çevrimdışı döner.
+  await h.call('PUT /api/postfob/tryd/view', { body: { view: { filterValues: { season: ['S6'] } } } });
+  const same = await h.call('POST /api/postfob/tryd/report', { body: { forceRefresh: true } });
+  assert.equal(same.body.offline, true);
+  assert.equal(same.body.rows.length, 2);
+});

@@ -18,7 +18,7 @@
   const state = {
     view: engine.normalizePrefs(null), filters: [], rows: [], fetchedAt: '', missing: [], truncated: false, rowLimit: 10000, stale: false,
     connection: null, horizon: false, loaded: false, loading: false, started: false, status: null, popover: null,
-    viewRevision: 0, exporting: false, search: '', displayItems: [], analysis: null,
+    viewRevision: 0, exporting: false, search: '', displayItems: [], analysis: null, dataFilters: null,
   };
 
   const byId = id => document.getElementById(id);
@@ -278,6 +278,7 @@
     const notes = [];
     if (state.truncated) notes.push(text(`Sorgu ${state.rowLimit.toLocaleString(locale())} satır sınırına ulaştı: bazı modellerin TR veya YD siparişleri eksik olabilir, avantaj oranları KISMİDİR. Sezon/MAG filtrelerini daraltıp Yenile’ye basın.`, `The query hit the ${state.rowLimit.toLocaleString(locale())} row limit: some models may miss TR or abroad orders, so the advantage ratios are PARTIAL. Narrow the season/MAG filters and press Refresh.`));
     if (isForecast()) notes.push(text('Öngörü landed kullanılıyor; bu gerçekleşmiş avantaj değildir.', 'Forecast landed is used; this is not the realized advantage.'));
+    if (dataFiltersDiffer()) notes.push(text(`Gösterilen sonuç son çekilen sorgunun filtresiyle (${filterSummary(state.dataFilters) || 'filtresiz'}); seçili filtreyle güncellemek için Yenile’ye basın.`, `The result shown is from the last fetched query (${filterSummary(state.dataFilters) || 'no filter'}); press Refresh to update it for the selected filters.`));
     if (state.stale) notes.push(text('Son kayıtlı sonuç gösteriliyor; güncellemek için Yenile’ye basın.', 'Showing the last saved result; press Refresh to update.'));
     if (total.coverage != null && total.coverage < 0.95) notes.push(text(`Landed değeri kıyaslanan modellerin YD adedinin %${fmt(total.coverage * 100, 0)} kısmında geçerli; oranlar yalnız bu kısımdan hesaplandı.`, `A valid landed exists for ${fmt(total.coverage * 100, 0)}% of the abroad quantity of compared models; ratios use only that part.`));
     if (items.length > shown.length) notes.push(text(`İlk ${MAX_TABLE_ROWS.toLocaleString(locale())} satır gösteriliyor; grupları daraltın veya filtreleyin.`, `Showing the first ${MAX_TABLE_ROWS.toLocaleString(locale())} rows; collapse groups or filter.`));
@@ -410,7 +411,13 @@
     state.truncated = Boolean(payload && payload.truncated);
     state.rowLimit = Number(payload && payload.rowLimit) || state.rowLimit;
     state.stale = Boolean(payload && payload.stale);
+    state.dataFilters = payload && payload.filterValues && typeof payload.filterValues === 'object' ? payload.filterValues : null;
   }
+  /* Gösterilen satırlar son çekilen sorgunun filtresindendir; seçili filtre
+     farklıysa (Yenile'ye basılmadı ya da kaynak erişilemedi) bu açıkça yazılır. */
+  const filterSignature = values => JSON.stringify(Object.keys(values || {}).filter(key => (values[key] || []).length).sort().map(key => [key, [...values[key]].sort()]));
+  const dataFiltersDiffer = () => state.dataFilters != null && filterSignature(state.dataFilters) !== filterSignature(view().filterValues);
+  const filterSummary = values => Object.keys(values || {}).filter(key => (values[key] || []).length).map(key => { const ref = state.filters.find(entry => entry.key === key); return `${ref ? text(ref.tr, ref.en) : key}: ${values[key].join(', ')}`; }).join(' · ');
 
   /* ---------- Veri ---------- */
   async function loadState() {
@@ -520,6 +527,7 @@
       closePopover();
       saveView();
       renderFilters();
+      renderBody();
       setStatus(() => text('Filtre değişti. Veriyi çekmek için Yenile’ye basın.', 'Filters changed. Press Refresh to query data.'), 'ok');
     });
     requestJson('/api/postfob/distinct', jsonBody('POST', { key }))
@@ -572,6 +580,7 @@
         state.view = { ...view(), filterValues: next };
         saveView();
         renderFilters();
+        renderBody();
         return;
       }
       const trigger = event.target.closest('[data-tryd-filter]');
