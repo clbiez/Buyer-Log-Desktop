@@ -2072,6 +2072,10 @@ function cpLogisticSegmentsForOrder(segments) {
       quantity: Math.max(0, Number(segment && segment.qty) || 0),
       status: norm(segment && segment._status) || 'Durum Belirsiz',
       arrival: toDateOnly(segment && segment._arr) || null,
+      // Depodaki IAS parsiyelinin GERÇEKLEŞEN giriş tarihi (varsa); gerçekleşen
+      // Handover → Antrepo süresi bununla, yoksa IAS antrepo tarihiyle hesaplanır.
+      entry: ias && ['DEPODA', 'RETAILE AKTARIM BEKLENIYOR'].includes(antrepoStatusKey(segment && segment._status))
+        ? (cpActualEntry(ias) || null) : null,
       delType: norm(segment && segment._delType),
       handover: ias ? (toDateOnly(ias.handover) || null) : null,
       sourceRow: ias && Number.isFinite(Number(ias._sourceRow)) ? Number(ias._sourceRow) : null,
@@ -2166,12 +2170,15 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
     const logistic = cpLogisticSummary(orderLogisticSegments, o.qty);
     // Aşama tahmini (kayıtlı aşama modeli varsa): parsiyel alt detayına ve satıra
     // en geç gelecek parsiyelin özeti olarak yazılır. Model yoksa alanlar boş kalır.
-    let latestStage = null, stageMaxSigma = null;
+    let latestStage = null, stageMaxSigma = null, stageUncovered = false;
     if (stageModel) {
       const stageById = new Map();
       orderLogisticSegments.forEach(segment => {
         const info = cpSegmentStageInfo(segment, o, ov, stageModel, stageToday);
         if (info) stageById.set(`partial-${Number(segment._segmentIndex) || 0}`, info);
+        // Yoldaki bir IAS parsiyeli modelle kapsanmıyorsa (ör. taşıt grubu yok),
+        // "en geç parsiyel" aşama ETA'sı siparişin ETA'sını eksik gösterebilir.
+        else if (segment && segment._segmentKind === 'ias' && !['DEPODA', 'RETAILE AKTARIM BEKLENIYOR'].includes(antrepoStatusKey(segment._status))) stageUncovered = true;
       });
       logistic.segments.forEach(item => {
         const info = item.kind === 'partial' ? stageById.get(item.id) : null;
@@ -2239,12 +2246,15 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       // Aşama tahmini (bilgi kolonları; varsayılan gizli). En geç gelecek parsiyel.
       'Stage ETA': latestStage ? toDateOnly(latestStage.eta) : null,
       'Current Stage': latestStage ? latestStage.code : '',
-      _stageRun: latestStage ? { code: latestStage.code, days: latestStage.days, mean: latestStage.mean, over: latestStage.over, sigma: latestStage.sigma } : null,
+      _stageRun: latestStage ? { code: latestStage.code, days: latestStage.days, mean: latestStage.mean, over: latestStage.over, sigma: latestStage.sigma, from: latestStage.from, to: latestStage.to } : null,
       _stageVsRule: latestStage ? latestStage.vsRule : null,
+      _stageWhy: latestStage ? (latestStage.why || null) : null,
       // Priority Rules (@stageDelaySigma): en çok geciken yoldaki parsiyelin σ değeri.
       _stageMaxSigma: stageMaxSigma,
-      // CP teslimat sonucu (@deliveryOutcome) aşama ETA'sını kullanır: en geç parsiyel.
-      _stageProjection: latestStage ? {
+      /* CP teslimat sonucu (@deliveryOutcome) aşama ETA'sını kullanır: en geç parsiyel.
+         Üretimde kalan miktar varsa ya da yoldaki bir parsiyel modelle kapsanmıyorsa
+         kullanılmaz: siparişin son varışı o miktarın/parsiyelin tarihine bağlıdır. */
+      _stageProjection: latestStage && !(Number(logistic.productionQty) > 0) && !stageUncovered ? {
         etaMean: latestStage.eta, etaP80: latestStage.etaP80, anchor: latestStage.anchor, plan: latestStage.plan,
         currentStage: latestStage.code, openOverrunDays: latestStage.over, overrunSigma: latestStage.sigma,
         pRetail: latestStage.pRetail, pInStore: latestStage.pInStore,
@@ -3503,6 +3513,10 @@ function buildBacklogTemplateRows(asasOrders, antrepoMap, overrides, filterOrOco
    taşları canlı analizle AYNI alan eşlemesinden okunur (döngüsel bağımlılık
    olmasın diye transit-analysis-source tembel yüklenir). */
 let _transitAnalysisSource = null;
+function cpActualEntry(ias) {
+  if (!_transitAnalysisSource) _transitAnalysisSource = require('./transit-analysis-source');
+  return _transitAnalysisSource.actualEntryIso(ias);
+}
 /* IAS durumunun kanıtladığı son geçilmiş kilometre taşı: "Yol Operasyonları"
    yüklendi demektir, "Gümrük-Liman Operasyonları" gemi vardı demektir. Tarih
    sütunu gelmese de bu adımlar tamamlanmış sayılır. */
@@ -3530,8 +3544,31 @@ function localIsoDate(d) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
+/* Aşama bilgisinde tanımlı kural günü (Handover + gün). Aynı kural kümesi için
+   aynı girdiler tekrar tekrar çözülmesin diye kural dizisi başına önbelleklenir
+   (kurallar değişince dizi kimliği değişir). Kural yoksa NaN. */
+const _stageRuleCache = new WeakMap();
+function stageRuleDays(ov, segment, order, handover, handoverIso) {
+  const rules = ov && ov.transitRules;
+  const resolve = () => {
+    const delType = normalizeTransitDelType(segment._delType) || norm(segment._delType);
+    const info = resolveTransitDays({ delType, exFactory: toDateOnly(handover), season: order.season, country: order.countryRaw, status: segment._status, rules, forceRules: true });
+    return info && info.rule ? Number(info.days) : NaN;
+  };
+  if (!rules || typeof rules !== 'object') return resolve();
+  let cache = _stageRuleCache.get(rules);
+  if (!cache) { cache = new Map(); _stageRuleCache.set(rules, cache); }
+  // Anahtar ham değerlerden (normalleştirme yalnız ıskalamada).
+  // Handover anahtarı ISO gün (iki çağıranda aynı ölçek).
+  const key = `${segment._delType || ''}|${handoverIso || ''}|${order.season || ''}|${order.countryRaw || ''}|${segment._status || ''}`;
+  let value = cache.get(key);
+  if (value === undefined) { value = resolve(); cache.set(key, value); }
+  return value;
+}
+
 /* CP / Siparişler: yüklenmiş ve henüz antrepoya girmemiş IAS parsiyelinin aşama
-   özeti (yalnız bilgi; hiçbir bayrak, öncelik veya kurala girmez).
+   özeti. Sütunlar ve alt detay bunu gösterir; sipariş düzeyinde en geç parsiyelin
+   özeti CP teslimat sonucunu ve Priority Rules aşama alanlarını besler.
    vsRule: tanımlı tek kural günüyle ETA (Handover + gün) − aşama ETA'sı;
    + erken, − geç. Kural tanımlı değilse null (varsayılan gün ölçüt sayılmaz). */
 function cpSegmentStageInfo(segment, order, ov, stageModel, todayIso) {
@@ -3542,28 +3579,33 @@ function cpSegmentStageInfo(segment, order, ov, stageModel, todayIso) {
   const projection = backlogStageProjection(ias, order, stageModel, todayIso, segment._status);
   if (!projection || !projection.etaMean) return null;
   const handover = toDateOnly(ias.handover);
-  let vsRule = null;
+  let vsRule = null, why = null;
   if (handover) {
-    const transitInfo = resolveTransitDays({
-      delType: normalizeTransitDelType(segment._delType) || norm(segment._delType),
-      exFactory: handover, season: order.season, country: order.countryRaw, status: segment._status,
-      rules: ov && ov.transitRules, forceRules: true,
-    });
-    const days = transitInfo && transitInfo.rule ? Number(transitInfo.days) : NaN;
+    const days = stageRuleDays(ov, segment, order, handover, localIsoDate(handover));
     const etaOrd = dateOrdinal(projection.etaMean), handoverOrd = dateOrdinal(handover);
-    if (Number.isFinite(days) && etaOrd != null && handoverOrd != null) vsRule = handoverOrd + days - etaOrd;
+    if (Number.isFinite(days) && etaOrd != null && handoverOrd != null) {
+      vsRule = handoverOrd + days - etaOrd;
+      /* Farkın özeti (tooltip): kural günü ile model ortalaması + kalemler.
+         geç gün = (base − ruleDays) + Σ kalem = −vsRule. */
+      const d = projection.drivers;
+      if (d && Number.isFinite(Number(d.base))) {
+        why = { handover: localIsoDate(handover), ruleDays: days, ruleEta: localIsoDate(new Date(handover.getTime() + days * 86400000)), base: d.base, items: Array.isArray(d.items) ? d.items : [] };
+      }
+    }
   }
-  const run = (projection.stages || []).find(item => item && item[3] === 'r') || null;
+  // Koşan aralık: etiket (kod) ve gün/ortalama aynı aralığı (from → to) anlatır.
+  const run = projection.running || null;
   return {
     eta: projection.etaMean, etaP80: projection.etaP80 || null,
-    code: run ? String(run[0]) : (projection.currentStage ? String(projection.currentStage) : ''),
-    days: run && Number.isFinite(Number(run[1])) ? Number(run[1]) : null,
-    mean: run && Number.isFinite(Number(run[2])) ? Math.round(Number(run[2])) : null,
+    code: run ? String(run.code) : (projection.currentStage ? String(projection.currentStage) : ''),
+    days: run && Number.isFinite(Number(run.days)) ? Number(run.days) : null,
+    mean: run && Number.isFinite(Number(run.mean)) ? Math.round(Number(run.mean)) : null,
+    from: run ? run.from || null : null, to: run ? run.to || null : null,
     over: Number(projection.openOverrunDays) > 0 ? Number(projection.openOverrunDays) : 0,
     sigma: Number.isFinite(Number(projection.overrunSigma)) && projection.overrunSigma !== null ? Number(projection.overrunSigma) : null,
     anchor: projection.anchor || null, plan: projection.plan || null,
     pRetail: projection.pRetail != null ? projection.pRetail : null, pInStore: projection.pInStore != null ? projection.pInStore : null,
-    vsRule,
+    vsRule, why,
   };
 }
 
