@@ -91,6 +91,9 @@ const contrast = (a, b) => { const [x, y] = [luminance(a), luminance(b)].sort((p
     await page.keyboard.type('zzz');
     assert.equal(await page.$eval('#_oabLocalFilterFieldPopover [data-oab-add-noresult]', el => el.hidden), false, 'Sonuç yok görünür');
     for (let i = 0; i < 3; i++) await page.keyboard.press('Backspace');
+    // ↓ ilk eşleşmeye odaklanır (ikinciye atlamaz); Enter onu ekler.
+    await page.keyboard.press('ArrowDown');
+    assert.equal(await page.evaluate(() => document.activeElement && document.activeElement.dataset.oabAddField), shown[0], '↓ ilk eşleşmeye iner');
     await page.keyboard.press('Enter');
     await page.waitForFunction(() => !document.getElementById('_oabLocalFilterFieldPopover'), null, { timeout: 5000 });
     const barText = await page.textContent('#oabLocalFilterBar');

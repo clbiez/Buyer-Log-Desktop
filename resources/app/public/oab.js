@@ -858,7 +858,8 @@
     }
     popover.addEventListener('keydown', event => {
       if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); oabCloseLocalFilterFieldPopover(); trigger.focus?.(); return; }
-      if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+      // Arama kutusu ↓'yi zaten işledi (ilk sonuca odak); ikinci kez ilerletme.
+      if (event.defaultPrevented || (event.key !== 'ArrowDown' && event.key !== 'ArrowUp')) return;
       const list = visibleChoices(), index = list.indexOf(document.activeElement);
       if (index < 0) return;
       event.preventDefault();

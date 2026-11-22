@@ -56,6 +56,8 @@ test('OAB "Filtre ekle" listesi arama kutusuyla süzülür (TR/EN)', () => {
   assert.match(addPopover, /oabT\('Alan ara…', 'Search fields…'\)/);
   assert.match(addPopover, /oabT\('Sonuç yok', 'No results'\)/);
   assert.match(addPopover, /visibleChoices\(\)\[0\]\?\.click\(\)/);
+  // Arama kutusunun işlediği ↓, popover dinleyicisinde ikinci kez ilerlemez.
+  assert.match(addPopover, /if \(event\.defaultPrevented \|\| \(event\.key !== 'ArrowDown' && event\.key !== 'ArrowUp'\)\) return;/);
   assert.match(read('public/app.css'), /\.oabLocalFilterAddPopover \[hidden\]\{display:none !important;\}/);
 });
 
