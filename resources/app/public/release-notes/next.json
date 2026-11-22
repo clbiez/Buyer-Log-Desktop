@@ -7,8 +7,8 @@
     "en": "Collection colour options, stage forecast and CP redraw fixes"
   },
   "summary": {
-    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: INTAKE tipi pivot, alan ekleme ve sipariş aramasıyla landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder; kaynağı ve ufku Veri Yönetimi'nden yönetilir. Pivot toplam satırları fare üzerindeyken okunur kalır. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur. Aşama farkı yönüyle yazılır ve üzerine gelince nedenleri görünür; depodaki parsiyelde ve Kısmi Görünümde gerçekleşen yol süresi gösterilir.",
-    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: with an INTAKE-style pivot, field picker and order search it analyses landed, Integral and forecast gap with quantity weighting; its source and horizon are managed in Data Management. Pivot total rows stay readable on hover. Starting directly on CP now completes the startup screen without an error. The stage gap shows its direction and its reasons on hover; partials in the warehouse and Partial View show the realized transit time."
+    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: INTAKE tipi pivot, alan ekleme ve sipariş aramasıyla landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder; kaynağı ve ufku Veri Yönetimi'nden yönetilir. Pivot toplam satırları fare üzerindeyken okunur kalır. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur. Aşama farkı yönüyle yazılır ve üzerine gelince nedenleri görünür; depodaki parsiyelde ve Kısmi Görünümde gerçekleşen yol süresi gösterilir. Veritabanından yenilenen veri, aynı sorguyu paylaşan sayfalar için artık bir kez işlenip tek kopya saklanır; açılış, yenileme kaydı ve bellek kullanımı belirgin biçimde azalır.",
+    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: with an INTAKE-style pivot, field picker and order search it analyses landed, Integral and forecast gap with quantity weighting; its source and horizon are managed in Data Management. Pivot total rows stay readable on hover. Starting directly on CP now completes the startup screen without an error. The stage gap shows its direction and its reasons on hover; partials in the warehouse and Partial View show the realized transit time. Data refreshed from the database is now processed once and stored as a single copy for pages that share the same query; startup, refresh saving and memory use drop markedly."
   },
   "changes": [
     {
@@ -477,6 +477,29 @@
         "reason": {
           "tr": "Ekranda değişiklik yok; yalnız büyük veride açılıştaki bekleme kısalır.",
           "en": "There is no change on screen; only the startup wait with large data is shorter."
+        }
+      }
+    },
+    {
+      "id": "model-refresh-shared-run-single-copy",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri Yönetimi · CP · Siparişler · Backlog · Fiyat Analizi",
+        "en": "Data Management · CP · Orders · Backlog · Price Analysis"
+      },
+      "title": {
+        "tr": "Aynı sorguyu paylaşan sayfalar için veri tek kopya tutulur; açılış ve yenileme kaydı hızlandı",
+        "en": "Pages sharing the same query keep a single copy of the data; startup and refresh saving are faster"
+      },
+      "body": {
+        "tr": "Veritabanı (Data Model) kaynağında tek kapsam CP, Siparişler, Backlog ve Fiyat Analizi'ni birlikte beslediğinde aynı sorgu sonucu her sayfa için ayrı ayrı işleniyordu; ASAS verisi bellekte ve kişisel model snapshot'ında dört, IAS verisi üç kez tutuluyordu. Sonuç artık bir kez işlenir ve sayfalar aynı kopyayı kullanır; Excel ve Dashboard kaynakları zaten böyle çalışıyordu. 30 bin siparişli sentetik veride snapshot 403 MiB'tan 144 MiB'a, açılışta snapshot yükleme 9,2 sn'den 2,6 sn'ye, yüklenen verinin belleği 557 MiB'tan 193 MiB'a, yenileme kaydı 18,9 sn'den 9,7 sn'ye indi. Sayfalardaki satırlar ve değerler aynıdır; farklı kapsamla beslenen sayfalar ayrı kalır. Var olan snapshot ilk tam yenilemeden sonra küçülür.",
+        "en": "With the database (Data Model) source, when one scope fed CP, Orders, Backlog and Price Analysis together, the same query result was processed separately for each page; ASAS data was kept four times and IAS data three times in memory and in the personal model snapshot. The result is now processed once and the pages share the same copy, as the Excel and Dashboard sources already did. On synthetic data with 30k orders the snapshot fell from 403 MiB to 144 MiB, snapshot loading at startup from 9.2 s to 2.6 s, memory of the loaded data from 557 MiB to 193 MiB and refresh saving from 18.9 s to 9.7 s. Rows and values on the pages are unchanged; pages fed by a different scope stay separate. An existing snapshot shrinks after the first full refresh."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; sayfalar aynı görünür, yalnız açılış, yenileme ve bellek kullanımı azalır.",
+          "en": "Nothing changes on screen; pages look the same, only startup, refresh time and memory use go down."
         }
       }
     }
