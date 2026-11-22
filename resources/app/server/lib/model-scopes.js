@@ -24,16 +24,18 @@ function stableScopeId(seed) {
  *   asas    → cp, orders, backlog, lfl, priceanalysis
  *   antrepo → cp, orders, backlog          (IAS yalnız bu üç sayfa için çalışır)
  *   intake  → intake                      (INTAKE kendi veritabanı bağlantısından gelir)
+ *   postfob → postfob                     (FOB Sonrası Maliyet, FiyatMaliyetKontrolRapor modeli)
  *
  * Kumaş bilgileri ayrı bir rol/hedef değildir; ana ASAS sorgusunun alanlarıdır.
  */
 
-const SCOPE_TARGETS = ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis', 'intake'];
+const SCOPE_TARGETS = ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis', 'intake', 'postfob'];
 
 const ROLE_TARGETS = {
   asas: ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'],
   antrepo: ['cp', 'orders', 'backlog'],
   intake: ['intake'],
+  postfob: ['postfob'],
   custom: [],
 };
 
@@ -44,6 +46,7 @@ const TARGET_LABELS = {
   lfl: 'LFL',
   priceanalysis: 'Price & Supplier Analysis',
   intake: 'INTAKE',
+  postfob: 'FOB Sonrası Maliyet',
 };
 
 function allowedTargets(role) {

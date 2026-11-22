@@ -106,6 +106,23 @@ const PROFILES = Object.freeze([
     capabilities: ['field-mapping', 'filters', 'schema-discovery'],
   },
   {
+    id: 'postfob-cost',
+    legacyRole: 'postfob',
+    label: { tr: 'Fiyat Maliyet Kontrol', en: 'Price Cost Control' },
+    summary: {
+      tr: 'FiyatMaliyetKontrolRapor modeli: sipariş × renk düzeyinde FOB, landed, Integral maliyet ve FOB sonrası oranlar. Genel Bakış › FOB Sonrası Maliyet widget\'ını besler.',
+      en: 'FiyatMaliyetKontrolRapor model: FOB, landed, Integral cost and post-FOB rates at order × colour level. Feeds the Overview › Post-FOB Cost widget.',
+    },
+    engine: 'tabular-dax',
+    shape: 'rows',
+    // Alanlar sabit rapor tanımından gelir (server/lib/postfob-report.js); alan eşlemesi yoktur.
+    fieldCatalogue: '',
+    feedableModules: ['postfob'],
+    // Tek hedefi budur; kapatmak kaynağı işlevsiz bırakırdı (kaldırmak istiyorsa siler).
+    requiredModules: ['postfob'],
+    capabilities: ['filters', 'schema-discovery'],
+  },
+  {
     id: 'custom-database',
     legacyRole: 'custom',
     label: { tr: 'Özel Database', en: 'Custom Database' },

@@ -2730,7 +2730,7 @@ td.qtxColourBridgeBusy{cursor:progress!important;}
 .ovPriorityReminder.isCollapsed .ovPriorityHeader{margin-bottom:0;align-items:center;}
 .ovPriorityReminder.isCollapsed .ovPriorityIntro,.ovPriorityReminder.isCollapsed .ovPriorityList,.ovPriorityReminder.isCollapsed .ovPriorityMethod{display:none!important;}
 #ovPriorityReminder + #oabSection{margin-top:0!important;}
-#oabTable tbody td.oabPivotDrillCell{cursor:zoom-in;}
+#oabTable tbody td.oabPivotDrillCell,#postFobTable tbody td.oabPivotDrillCell{cursor:zoom-in;}
 .autoModal.oabDrillModal{width:calc(100vw - 28px);max-width:none;height:calc(100vh - 28px);max-height:none;}
 .oabDrillModal .autoModalBody{flex:1;min-height:0;overflow:hidden;grid-template-rows:auto auto minmax(0,1fr) auto;}
 .oabDrillHeadText{min-width:0;}
@@ -2815,6 +2815,8 @@ td.qtxColourBridgeBusy{cursor:progress!important;}
 .intakeSettingsLegend span{padding:4px 7px;}
 .intakeInlineLabel{min-width:120px;width:100%;height:22px;padding:2px 5px;}
 /* FOB Sonrası Maliyet — INTAKE yüzeyini paylaşır; yalnız kontrol/KPI yerleşimi. */
+.postFobToolbar{display:flex;align-items:center;gap:var(--ui-space-2);flex-wrap:wrap;margin:0 0 var(--ui-space-2);}
+.postFobSearch{flex:1 1 280px;min-width:180px;max-width:520px;height:var(--ui-control-height);padding:2px 8px;}
 .postFobControl{display:inline-flex;align-items:center;gap:6px;}
 .postFobControl select{height:var(--ui-control-height);min-width:120px;padding:2px 6px;}
 .postFobToggle{display:inline-flex;align-items:center;gap:6px;cursor:pointer;}

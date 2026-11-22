@@ -7,8 +7,8 @@
     "en": "Collection colour options, stage forecast and CP redraw fixes"
   },
   "summary": {
-    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: FiyatMaliyetKontrolRapor modelinden landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur.",
-    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: it analyses landed, Integral and forecast gap from the FiyatMaliyetKontrolRapor model with quantity weighting. Starting directly on CP now completes the startup screen without an error."
+    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: INTAKE tipi pivot, alan ekleme ve sipariş aramasıyla landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder; kaynağı ve ufku Veri Yönetimi'nden yönetilir. Pivot toplam satırları fare üzerindeyken okunur kalır. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur.",
+    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: with an INTAKE-style pivot, field picker and order search it analyses landed, Integral and forecast gap with quantity weighting; its source and horizon are managed in Data Management. Pivot total rows stay readable on hover. Starting directly on CP now completes the startup screen without an error."
   },
   "changes": [
     {
@@ -129,24 +129,24 @@
         "en": "Overview · Commercial"
       },
       "title": {
-        "tr": "FOB Sonrası Maliyet widget'ı",
-        "en": "Post-FOB Cost widget"
+        "tr": "FOB Sonrası Maliyet: INTAKE tipi pivot, alan ekleme ve sipariş araması",
+        "en": "Post-FOB Cost: INTAKE-style pivot, field picker and order search"
       },
       "body": {
-        "tr": "INTAKE gibi doğrudan şirket modeline (FiyatMaliyetKontrolRapor) Windows kimliğinizle sorgu atar; Excel dosyası gerekmez. Sezon (zorunlu), MAG, buyer grup, klasman, üretici ve satış ülkesi filtreleriyle sipariş × renk düzeyinde FOB, landed (gerçekleşen/öngörü), Integral maliyet ve gümrük/navlun/ek maliyet oranlarını çeker. Birim değerler adet ağırlıklı ortalanır; Landed/FOB ve Integral/FOB aynı satır kümesinde hesaplanır. Üretici ülke, MAG, buyer grup, sezon, klasman, satış ülkesi, model veya siparişe göre gruplar; ithal/yerli ayrımı ve Landed/FOB oranına göre aykırı satırları (Q3 + 1,5×IQR) gösterir. Widget, Genel Bakış'taki widget çekmecesinden eklenebilir; yeni düzende Ticari sayfasındadır.",
-        "en": "Like INTAKE, it queries the company model (FiyatMaliyetKontrolRapor) directly with your Windows identity; no Excel file is needed. With season (required), MAG, buyer group, product class, origin and sales country filters it fetches FOB, landed (actual/forecast), Integral cost and customs/freight/extra cost rates at order × colour level. Unit values are quantity-weighted; Landed/FOB and Integral/FOB are computed on the same row set. It groups by origin country, MAG, buyer group, season, product class, sales country, model or order, separates import/domestic production and flags outlier rows by Landed/FOB (Q3 + 1.5×IQR). The widget can be added from the Overview widget drawer; in the default layout it is on the Commercial page."
+        "tr": "INTAKE gibi doğrudan şirket modeline (FiyatMaliyetKontrolRapor) Windows kimliğinizle sorgu atar; Excel dosyası gerekmez. Tablo INTAKE ve OAB pivotlarıyla aynı biçimdedir: gruplu satırlar, alt toplam ve genel toplam, tüm grupları daralt/genişlet. Kalem simgesiyle pivot satır, sütun, değer ve filtre alanları eklenip çıkarılır; modeldeki herhangi bir boyut veya ölçü (Toplam, adet ağırlıklı ortalama, ortalama, en küçük, en büyük) kullanılabilir. Filtre panelindeki + Filtre ekle ile modelin her alanı filtreye eklenir. Her hücreye çift tıklayınca o değeri oluşturan sipariş satırları OAB'deki ortak alt detay çekmecesinde açılır (arama, sütun seçimi, Excel). Excel düğmesi pivotu ekrandaki düzende, kaynak satırları ve uygulanan filtreleri tek dosyaya aktarır. Sorgu kaynak raporla aynı düzeydedir (sipariş × renk); satış ülkesi yalnız pivota eklenince kırılıma girer, filtre olarak her zaman kullanılabilir. Arama kutusu sipariş kodu, model, ürün adı ve özel kodla sipariş bazında süzer; özel kod ve model adı Buyer Log'a yüklü ASAS verisinden gelir. FOB, landed (gerçekleşen/öngörü) ve Integral maliyet adet ağırlıklı; Landed/FOB, Integral/FOB ve öngörü sapması aynı satır kümesinde hesaplanır. İthal/yerli kapsamı ve Landed/FOB'a göre aykırı satırlar (Q3 + 1,5×IQR) gösterilir. Widget, Genel Bakış'taki widget çekmecesinden eklenebilir; yeni düzende Ticari sayfasındadır.",
+        "en": "Like INTAKE, it queries the company model (FiyatMaliyetKontrolRapor) directly with your Windows identity; no Excel file is needed. The table matches the INTAKE and OAB pivots: grouped rows, subtotals and grand total, collapse/expand all groups. The pencil edits pivot row, column, value and filter fields; any model dimension or measure can be used (Sum, quantity-weighted average, average, min, max). + Add filter in the filter panel adds any model field as a filter. Double-clicking any cell opens the order rows behind that value in the same shared drill-down drawer as OAB (search, column picker, Excel). The Excel button exports the pivot as shown, the source rows and the applied filters to one file. The query uses the same level as the source report (order × colour); sales country only splits rows when added to the pivot and can always be used as a filter. The search box filters by order code, model, product name and special code for order-level checks; special code and model name come from the ASAS data loaded in Buyer Log. FOB, landed (actual/forecast) and Integral cost are quantity-weighted; Landed/FOB, Integral/FOB and forecast gap are computed on the same row set. Import/domestic scope and outlier rows by Landed/FOB (Q3 + 1.5×IQR) are shown. The widget can be added from the Overview widget drawer; in the default layout it is on the Commercial page."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
         "src": "postfob-cost-light.png",
         "alt": {
-          "tr": "Demo veriyle FOB Sonrası Maliyet widget'ı: üretici ülkeye göre FOB, landed, Landed/FOB, Integral/FOB ve öngörü sapması",
-          "en": "Post-FOB Cost widget with demo data: FOB, landed, Landed/FOB, Integral/FOB and forecast gap by origin country"
+          "tr": "Demo veriyle FOB Sonrası Maliyet pivotu: Üretici ülke › MAG grupları, alt toplamlar, arama kutusu ve kalem düğmesi",
+          "en": "Post-FOB Cost pivot with demo data: Origin country › MAG groups, subtotals, search box and pencil button"
         },
         "caption": {
-          "tr": "Anonim demo satırlarla: KPI şeridi adet ağırlıklı toplamları, tablo üretici ülke kırılımını ve aykırı sayısını gösterir.",
-          "en": "With anonymous demo rows: the KPI strip shows quantity-weighted totals, the table shows the origin-country breakdown and outlier counts."
+          "tr": "Anonim demo satırlarla: kalemle ikinci satır alanı (MAG) eklenmiş pivot, INTAKE ile aynı alt toplam satırları.",
+          "en": "With anonymous demo rows: pivot with a second row field (MAG) added via the pencil, with the same subtotal rows as INTAKE."
         }
       }
     },
@@ -222,6 +222,64 @@
         "caption": {
           "tr": "Demo veride /?module=cp açılışı \"Başlangıç ekranı hazır\" ile tamamlanır; uyarı gösterilmez.",
           "en": "On demo data, opening /?module=cp completes with \"The opening screen is ready\"; no warning is shown."
+        }
+      }
+    },
+    {
+      "id": "data-management-postfob-source",
+      "type": "feature",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "FOB Sonrası Maliyet veritabanı Veri Yönetimi'nde; ufuk ayarlanabilir",
+        "en": "Post-FOB Cost database in Data Management; horizon is configurable"
+      },
+      "body": {
+        "tr": "FiyatMaliyetKontrolRapor bağlantısı INTAKE gibi ayrı bir veritabanı olarak bağlantılar ve Corporate Integration Lab listesinde görünür; İncele canlı şemayı ve beklenen FOB/adet alanlarını doğrular. Horizon ve yenileme panelinde kendi satırı vardır: Filtreyi düzenle ile ortak ufuk tanımlanır. Ufuk widget sorgusuna eklenir; ufuk tanımlıysa widget'ta sezon seçmek zorunlu değildir.",
+        "en": "The FiyatMaliyetKontrolRapor connection appears as a separate database, like INTAKE, in the connections and Corporate Integration Lab lists; Inspect checks the live schema and the expected FOB/quantity fields. It has its own row in the Horizon and refresh panel: Edit filter defines a shared horizon. The horizon is added to the widget query; with a horizon, selecting a season in the widget is no longer required."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "postfob-data-management-light.png",
+        "alt": {
+          "tr": "Veri Yönetimi Horizon ve yenileme paneli: INTAKE satırının altında FOB Sonrası Maliyet satırı ve Filtreyi düzenle düğmesi",
+          "en": "Data Management Horizon and refresh panel: Post-FOB Cost row with Edit filter below the INTAKE row"
+        },
+        "caption": {
+          "tr": "Demo kurulumda FOB Sonrası Maliyet kaynağı INTAKE gibi bağımsız ufuk satırıyla listelenir.",
+          "en": "In the demo setup the Post-FOB Cost source is listed with its own independent horizon row, like INTAKE."
+        }
+      }
+    },
+    {
+      "id": "pivot-total-row-hover-contrast",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış · OAB · INTAKE · FOB Sonrası Maliyet",
+        "en": "Overview · OAB · INTAKE · Post-FOB Cost"
+      },
+      "title": {
+        "tr": "Pivot alt toplam ve genel toplam satırları fare üzerindeyken okunur",
+        "en": "Pivot subtotal and grand total rows stay readable on hover"
+      },
+      "body": {
+        "tr": "Aydınlık ve karanlık temada fare alt toplam veya genel toplam satırının üzerine geldiğinde satır zemini açılıyor, genel toplamın metni zeminle aynı renge düşüp okunmuyordu. Artık bu satırlar hover'da kendi zemin ve metin rengini korur, yalnız tonu koyulaşır; OAB, INTAKE ve FOB Sonrası Maliyet tablolarında aynı kural geçerlidir.",
+        "en": "In light and dark themes, hovering a subtotal or grand total row lightened the row background and the grand total text fell to the same colour, so it could not be read. These rows now keep their own background and text colour on hover and only darken their tone; the same rule applies to the OAB, INTAKE and Post-FOB Cost tables."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pivot-total-hover-dark.png",
+        "alt": {
+          "tr": "Karanlık temada fare Genel Toplam satırının üzerindeyken okunur metin ve alt toplam satırları",
+          "en": "Dark theme with the pointer on the Grand Total row: readable text and subtotal rows"
+        },
+        "caption": {
+          "tr": "Demo veride fare Genel Toplam satırındayken metin zeminden belirgin biçimde ayrılır (kontrast 9:1'in üzerinde).",
+          "en": "On demo data with the pointer on the Grand Total row the text stands out clearly from the background (contrast above 9:1)."
         }
       }
     }

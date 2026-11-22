@@ -22,6 +22,8 @@
    =================================================================== */
 
 const horizon = require('../modelHorizon');
+// Genel Bakış widget'ı olan modüllerin module-registry kaydı yoktur; etiketleri burada.
+const UNREGISTERED_MODULE_LABELS = Object.freeze({ postfob: { tr: 'FOB Sonrası Maliyet', en: 'Post-FOB Cost' } });
 const modelFields = require('../model-fields');
 const moduleRegistry = require('../module-registry');
 const sourceProfiles = require('./source-profiles');
@@ -350,7 +352,7 @@ function build(items, options = {}) {
     return {
       id: moduleId,
       // INTAKE'in module-registry'de kendi kaydı yok: Overview'un içinde yaşar.
-      label: registered ? (registered.label[language] || registered.label.tr) : moduleId.toUpperCase(),
+      label: registered ? (registered.label[language] || registered.label.tr) : (UNREGISTERED_MODULE_LABELS[moduleId] ? UNREGISTERED_MODULE_LABELS[moduleId][language] : moduleId.toUpperCase()),
       route: registered ? registered.route : null,
       feeds,
       connectedCount: feeds.filter(feed => feed.enabled).length,

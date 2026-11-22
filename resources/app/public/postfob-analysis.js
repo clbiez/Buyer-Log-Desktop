@@ -39,7 +39,7 @@
     return landed != null && fob != null && fob > 0 && qtyOf(row) > 0 ? landed / fob : null;
   }
 
-  function summarize(rows) {
+  function summarize(rows, extras) {
     const list = Array.isArray(rows) ? rows : [];
     const acc = { qty: 0, lines: 0, orders: new Set() };
     const unit = {}; UNIT_KEYS.forEach(key => { unit[key] = { sum: 0, weight: 0 }; });
@@ -71,6 +71,63 @@
     metrics.integralToFob = integralFob.den ? integralFob.num / integralFob.den : null;
     metrics.forecastGap = forecast.den ? forecast.num / forecast.den : null;
     metrics.landedCoverage = acc.qty ? landedFob.weight / acc.qty : null;
+    // Pivot düzenleyiciden eklenen ölçüler: SUM, adet ağırlıklı WAVG, AVG, MIN, MAX.
+    for (const extra of Array.isArray(extras) ? extras : []) metrics[extra.key] = aggregateExtra(list, extra);
+    return metrics;
+  }
+
+  function aggregateExtra(rows, extra) {
+    const agg = String(extra && extra.agg || 'SUM').toUpperCase();
+    let sum = 0, weighted = 0, weight = 0, count = 0, min = null, max = null;
+    for (const row of rows) {
+      const value = num(row && row[extra.key]);
+      if (value == null) continue;
+      count += 1; sum += value;
+      min = min == null ? value : Math.min(min, value);
+      max = max == null ? value : Math.max(max, value);
+      const q = qtyOf(row);
+      if (q) { weighted += q * value; weight += q; }
+    }
+    if (!count) return null;
+    if (agg === 'WAVG') return weight ? weighted / weight : null;
+    if (agg === 'AVG') return sum / count;
+    if (agg === 'MIN') return min;
+    if (agg === 'MAX') return max;
+    return sum;
+  }
+
+  /* Arama: sipariş, model, renk, ürün adı, özel kod ve satırdaki bütün metin
+     boyutları. Türkçe büyük/küçük harf duyarsız; boşlukla ayrılan her parça
+     aynı satırda bulunmalı (VE). */
+  // Türkçe küçük harf "KIDS" → "kıds" yapar; arama ı/i farkını yok sayar.
+  function fold(value) { return String(value == null ? '' : value).toLocaleLowerCase('tr-TR').replace(/ı/g, 'i'); }
+  function searchTokens(value) {
+    return fold(value).split(/\s+/).map(part => part.trim()).filter(Boolean);
+  }
+  function matchesSearch(row, tokens) {
+    if (!tokens.length) return true;
+    const haystack = Object.values(row || {}).filter(value => typeof value === 'string' && value).join(' \u0001 ');
+    const folded = fold(haystack);
+    return tokens.every(token => folded.includes(token));
+  }
+
+  /* Pivotun gördüğü satır kümesi: kapsam (ithal/yerli) → arama → aykırı süzgeci.
+     Aykırı sınırı aramadan ÖNCEKİ kapsamdan hesaplanır; arama eşiği değiştirmez. */
+  function prepare(rows, options = {}) {
+    const segment = ['import', 'domestic'].includes(options.segment) ? options.segment : 'all';
+    const scoped = (Array.isArray(rows) ? rows : []).filter(row => segment === 'all' || segmentOf(row) === segment);
+    const bounds = outlierBounds(scoped);
+    const tokens = searchTokens(options.search);
+    let visible = tokens.length ? scoped.filter(row => matchesSearch(row, tokens)) : scoped;
+    if (options.outliersOnly) visible = visible.filter(row => isOutlier(row, bounds));
+    const segments = { import: 0, domestic: 0, unknown: 0 };
+    for (const row of rows || []) segments[segmentOf(row)] += 1;
+    return { scoped, visible, bounds, segments, outlierCount: bounds ? scoped.filter(row => isOutlier(row, bounds)).length : 0 };
+  }
+
+  function groupMetrics(rows, bounds, extras) {
+    const metrics = summarize(rows, extras);
+    metrics.outliers = bounds ? rows.filter(row => isOutlier(row, bounds)).length : null;
     return metrics;
   }
 
@@ -140,5 +197,5 @@
     };
   }
 
-  return Object.freeze({ UNIT_KEYS, MIN_OUTLIER_SAMPLE, segmentOf, rowRatio, summarize, outlierBounds, isOutlier, analyze });
+  return Object.freeze({ UNIT_KEYS, MIN_OUTLIER_SAMPLE, segmentOf, rowRatio, summarize, outlierBounds, isOutlier, analyze, prepare, groupMetrics, matchesSearch, searchTokens });
 });
