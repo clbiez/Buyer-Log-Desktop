@@ -1,10 +1,15 @@
 (function (root, factory) {
   'use strict';
-  const api = factory();
+  const api = factory(root);
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.BLTrydAdvantageEngine = api;
-})(typeof window !== 'undefined' ? window : globalThis, function () {
+})(typeof window !== 'undefined' ? window : globalThis, function (root) {
   'use strict';
+  /* Hesaplanan değer doğrulaması ortak modüldedir (public/pivot-calculated-values.js).
+     Tarayıcıda modül bu betikten önce yüklenir (app-main TR/YD zinciri). */
+  const pivotCalculated = () => (typeof module === 'object' && module.exports && typeof require === 'function'
+    ? require('./pivot-calculated-values.js')
+    : (root && root.BLPivotCalculatedValues) || null);
 
   /* TR/YD LANDED AVANTAJ — saf hesap katmanı (tarayıcı + Node testi).
    *
@@ -68,7 +73,15 @@
   const BLOCKED_FILTER_KEYS = Object.freeze(['originCountry', 'order']);
   const REQUIRED_FILTER = 'season';
   const PREF_VERSION = 2;
-  const PREF_KEYS = Object.freeze(['version', 'rows', 'values', 'filters', 'filterValues', 'target', 'landedSource', 'belowTargetOnly', 'collapsedGroups', 'sort']);
+  const PREF_KEYS = Object.freeze(['version', 'rows', 'values', 'filters', 'filterValues', 'target', 'landedSource', 'belowTargetOnly', 'collapsedGroups', 'sort', 'calculated']);
+  /* ƒx hesaplanan değer alanları: her düzeyde (model, grup, genel toplam)
+     TUTARLARDAN gelen sayısal değerler. Durum metindir, hesaba girmez.
+     Yalnız "toplamlar üzerinden" mod vardır: kaynak satırlar sipariş × renk
+     düzeyindedir ve kıyas birimi modeldir (TR FOB aynı modelin YD adediyle
+     çarpılır); satır bazlı formül TR/YD ayrımını, Fas/Mısır dışlamasını ve
+     hatalı/landed yok kuralını aşardı. */
+  const CALC_FIELDS = Object.freeze(['trFob', 'ydFob', 'ydLanded', 'advantage', 'target', 'gap', 'fobAdvantage', 'trQty', 'ydQty', 'coverage', 'fobTrAmount', 'landedAmount', 'fobYdAmount', 'ydQtyAll']);
+  const CALC_ITEM_FIELDS = Object.freeze(['id', 'label', 'labelTr', 'labelEn', 'formula', 'mode', 'format', 'decimals', 'refs', 'group']);
   const SORT_KEYS = Object.freeze(['label', 'trFob', 'ydFob', 'ydLanded', 'advantage', 'fobAdvantage', 'gap', 'trQty', 'ydQty', 'coverage']);
   const MODEL_ATTRS = Object.freeze(['buyerGroup', 'classification', 'mag', 'season', 'productName']);
   const STATUS = Object.freeze({ ok: 'ok', high: 'highMultiplier', noLanded: 'noLanded', invalid: 'invalidLanded' });
@@ -262,10 +275,26 @@
     if (key === 'trQty' || key === 'ydQty') return node.amounts[key];
     return node[key];
   }
-  function compare(a, b, sort) {
+  /* Bir düğümün (model, grup, genel toplam) hesaplanan değer alanları. Grupta
+     TR FOB, YD adediyle ağırlıklıdır (FOB TR TUTAR / YD adet) — tablodaki
+     sütunla aynı. */
+  function calcFieldValues(node, target) {
+    const amounts = (node && node.amounts) || {};
+    const pick = value => (typeof value === 'number' && Number.isFinite(value) ? value : null);
+    return {
+      trFob: node && node.kind === 'model' ? pick(node.trFob) : (amounts.ydQty > 0 ? amounts.fobTrAmount / amounts.ydQty : null),
+      ydFob: pick(node && node.ydFob), ydLanded: pick(node && node.ydLanded), advantage: pick(node && node.advantage),
+      target: pick(num(target) == null ? DEFAULT_TARGET : num(target)), gap: pick(node && node.gap), fobAdvantage: pick(node && node.fobAdvantage),
+      trQty: pick(amounts.trQty), ydQty: pick(amounts.ydQty), coverage: pick(node && node.coverage),
+      fobTrAmount: pick(amounts.fobTrAmount), landedAmount: pick(amounts.landedAmount), fobYdAmount: pick(amounts.fobYdAmount), ydQtyAll: pick(amounts.ydQtyAll),
+    };
+  }
+  function compare(a, b, sort, custom) {
     const key = sort && sort.key || 'label';
     const dir = Number(sort && sort.dir) === 1 ? 1 : -1;
-    const left = sortValue(a, key), right = sortValue(b, key);
+    // Hesaplanan değer (calc:<id>) çağıranın değerlendiricisinden okunur.
+    const read = node => (custom && String(key).startsWith('calc:') ? custom(node, key) : sortValue(node, key));
+    const left = read(a), right = read(b);
     if (key === 'label') return dir * String(left == null ? '' : left).localeCompare(String(right == null ? '' : right), 'tr', { numeric: true, sensitivity: 'base' });
     if (left == null && right == null) return String(a.label).localeCompare(String(b.label), 'tr', { numeric: true });
     if (left == null) return 1;
@@ -281,10 +310,11 @@
     const target = num(options.target) == null ? DEFAULT_TARGET : num(options.target);
     const levels = Array.isArray(options.levels) ? [...new Set(options.levels.filter(key => ROW_FIELDS.includes(key)))] : DEFAULT_ROWS.slice();
     const sort = options.sort || { key: 'label', dir: 1 };
+    const custom = typeof options.sortValue === 'function' ? options.sortValue : null;
     const walk = (list, depth, path) => {
       if (depth >= levels.length) {
         return list.map(model => ({ kind: 'model', level: depth, label: model.model, path: [...path, model.model], model, ...model, amounts: model.amounts }))
-          .sort((a, b) => compare(a, b, sort));
+          .sort((a, b) => compare(a, b, sort, custom));
       }
       const key = levels[depth];
       const groups = new Map();
@@ -297,7 +327,7 @@
         const nextPath = [...path, value];
         const summary = summarize(members, target);
         return { kind: 'group', level: depth, field: key, label: value, path: nextPath, pathKey: JSON.stringify(nextPath), ...summary, children: walk(members, depth + 1, nextPath), modelsList: members };
-      }).sort((a, b) => compare(a, b, sort));
+      }).sort((a, b) => compare(a, b, sort, custom));
     };
     return walk(Array.isArray(models) ? models : [], 0, []);
   }
@@ -336,6 +366,9 @@
     const rawTarget = Number(source.target);
     const target = source.target !== null && source.target !== '' && Number.isFinite(rawTarget) ? Math.max(-1, Math.min(1, Math.round(rawTarget * 10000) / 10000)) : DEFAULT_TARGET;
     const sort = source.sort && typeof source.sort === 'object' ? source.sort : {};
+    const calculated = normalizeCalculated(source.calculated);
+    const calcKeys = new Set(calculated.map(item => `calc:${item.id}`));
+    const sortKey = SORT_KEYS.includes(clean(sort.key)) || calcKeys.has(clean(sort.key)) ? clean(sort.key) : 'label';
     return {
       version: PREF_VERSION,
       rows, values, filters,
@@ -344,8 +377,17 @@
       landedSource: LANDED_SOURCES.includes(source.landedSource) ? source.landedSource : 'actual',
       belowTargetOnly: source.belowTargetOnly === true,
       collapsedGroups: Array.isArray(source.collapsedGroups) ? [...new Set(source.collapsedGroups.map(clean).filter(Boolean))].slice(0, 2000) : [],
-      sort: { key: SORT_KEYS.includes(clean(sort.key)) ? clean(sort.key) : 'label', dir: Number(sort.dir) === -1 ? -1 : 1 },
+      sort: { key: sortKey, dir: Number(sort.dir) === -1 ? -1 : 1 },
+      // Tanım yoksa alan yazılmaz: eski tercihin şekli aynen kalır.
+      ...(calculated.length ? { calculated } : {}),
     };
+  }
+  function normalizeCalculated(raw) {
+    if (!Array.isArray(raw) || !raw.length) return [];
+    const PCV = pivotCalculated();
+    // Ortak modül yüklenmemişse tanımlar silinmez (kayıtta veri kaybı olmasın).
+    if (!PCV) return raw.filter(item => item && typeof item === 'object').slice(0, 20).map(item => JSON.parse(JSON.stringify(item)));
+    return PCV.normalizeList(raw, { allowRow: false, aggregateKeys: CALC_FIELDS });
   }
 
   /* İstemciden gelen görünümün sıkı denetimi (PUT /tryd/view, POST /tryd/report).
@@ -371,6 +413,7 @@
     checkRefs('rows', ROW_FIELDS, 'unknownRow');
     checkRefs('values', VALUE_KEYS, 'unknownValue');
     checkRefs('filters', FILTER_KEYS, 'unknownFilter');
+    if (raw.calculated !== undefined) validateCalculated(raw.calculated, add);
     if (raw.filterValues !== undefined) {
       if (!raw.filterValues || typeof raw.filterValues !== 'object' || Array.isArray(raw.filterValues)) add('invalidShape', 'filterValues');
       else for (const key of Object.keys(raw.filterValues)) {
@@ -381,9 +424,29 @@
     return problems;
   }
 
+  /* Hesaplanan değerlerin sıkı denetimi: bilinmeyen alan, satır modu,
+     tanınmayan başvuru ve ortak doğrulamadan geçmeyen tanım reddedilir. */
+  function validateCalculated(list, add) {
+    if (!Array.isArray(list)) { add('invalidShape', 'calculated'); return; }
+    const PCV = pivotCalculated();
+    if (PCV && list.length > PCV.LIMITS.max) { add('tooManyCalculated', list.length); return; }
+    const calcKeys = new Set(list.map(item => `calc:${clean(item && item.id)}`));
+    for (const item of list) {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) { add('invalidShape', 'calculated'); continue; }
+      const extra = Object.keys(item).filter(field => !CALC_ITEM_FIELDS.includes(field));
+      if (extra.length) { add('unknownCalcField', `${clean(item.id)}:${extra.join(',')}`); continue; }
+      if (item.mode !== undefined && item.mode !== 'aggregate') { add('calcRowMode', clean(item.id)); continue; }
+      const refs = item.refs && typeof item.refs === 'object' && !Array.isArray(item.refs) ? Object.keys(item.refs) : [];
+      const unknown = refs.filter(key => !CALC_FIELDS.includes(key) && !calcKeys.has(key));
+      if (unknown.length) { add('unknownCalcRef', `${clean(item.id)}:${unknown.join(',')}`); continue; }
+      if (PCV && PCV.normalizeList([item], { allowRow: false, aggregateKeys: CALC_FIELDS }).length !== 1) add('invalidCalculated', clean(item.id));
+    }
+  }
+
   return Object.freeze({
     DEFAULT_TARGET, DEFAULT_STANDARD_MULTIPLIER, MIN_LANDED_TO_FOB, LANDED_SOURCES, FILTER_KEYS, LEVELS, STATUS,
     ROW_FIELDS, DEFAULT_ROWS, VALUE_KEYS, DEFAULT_VALUES, DEFAULT_FILTERS, BLOCKED_FILTER_KEYS, REQUIRED_FILTER, PREF_VERSION, SORT_KEYS,
     originClass, rowRatio, standardOf, rowStatus, compareModels, summarize, analyze, buildTree, normalizePrefs, validatePrefs, isBelowTarget,
+    CALC_FIELDS, calcFieldValues,
   });
 });
