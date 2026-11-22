@@ -257,3 +257,15 @@ test('koşan aralık tek aşamaya denk gelmiyorsa etiket numarasız (Handover �
   const bda = read('public/backlog-delivery-analysis.js');
   assert.match(bda, /stageCurrent: p\.currentStage \? stageRunLabel\(p\) : ''/);
 });
+
+test('CP fark özeti sıra dışı IAS tarihini not olarak taşır; istemci notu yazar', () => {
+  const ov = { ...require('../server/db').defaultOverrides(), transitRules: rule, transitAnalysis: model() };
+  const map = parse.parseAntrepoRows([
+    ias({ 'İthalat Dosya No': 'F7', 'Supplier Portal Statü': 'Yükleme Operasyonları', 'Yükleme Talep Tarih': iso(-25), 'HANDOVER Tarihi': iso(-20), 'Cut Off Tarih': iso(-31) }), // i18n-ignore
+  ], ov);
+  const row = parse.buildCPRowsFromASAS([order()], map, ov)[0];
+  const st = row._logisticSegments.find(s => s.stage).stage;
+  assert.equal(st.why.ignored[0].milestone, 'cutOff');
+  assert.ok(!st.why.items.some(i => i.kind === 'done' && i.actual < 0));
+  assert.match(read('public/app-main.js'), /tutarsız IAS tarihi hesaba katılmadı/);
+});

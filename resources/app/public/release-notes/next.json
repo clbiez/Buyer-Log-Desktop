@@ -936,6 +936,35 @@
           "en": "On demo data, the stage forecast and the gap to the planned ETA in whole days."
         }
       }
+    },
+    {
+      "id": "stage-eta-date-order",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Siparişler · Backlog",
+        "en": "CP · Orders · Backlog"
+      },
+      "title": {
+        "tr": "Sıra dışı IAS tarihi aşama tahminini bozmaz",
+        "en": "An out-of-order IAS date no longer distorts the stage forecast"
+      },
+      "body": {
+        "tr": "Bir parsiyelde IAS tarihi kendinden önceki adımdan erken olduğunda (ör. Cut Off, Handover'dan 11 gün önce; IAS'ta kaçırılan geminin eski cut-off'u kalmış olabilir) tahmin bu tarihi kullanıyor, \"Handover → Cut Off −11 g sürdü: 14 g erken\" gibi sahte kazanç yazıyor ve aşımı yanlış tarihten ölçüyordu. Artık böyle tarih, model eğitimindeki gibi hesaba katılmaz; aşım son tutarlı tarihten ölçülür ve fark özetinde \"tutarsız IAS tarihi hesaba katılmadı\" notu görünür.",
+        "en": "When a partial's IAS date was earlier than the preceding step (e.g. Cut-off 11 days before Handover; IAS may still hold the cut-off of a missed vessel), the forecast used it, showed a false gain such as \"Handover → Cut-off took −11 d: 14 d earlier\" and measured the overrun from the wrong date. Such a date is now ignored, as in model training; the overrun is measured from the last consistent date and the gap summary notes \"inconsistent IAS date ignored\"."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-stage-date-order.png",
+        "alt": {
+          "tr": "Demo CP aşama sütunları",
+          "en": "Demo CP stage columns"
+        },
+        "caption": {
+          "tr": "Demo veride aşama tahmini; sıra dışı tarihli parsiyelde not fark özetinde görünür.",
+          "en": "Stage forecast on demo data; for a partial with an out-of-order date the note appears in the gap summary."
+        }
+      }
     }
   ]
 }

@@ -239,3 +239,18 @@ test('tam gün: kalemler kendi içinde tutarlı (sürdü − beklenen = fark); o
   const sum = p.drivers.base + p.drivers.items.reduce((a, i) => a + i.days, 0);
   assert.equal(SM.dayOrdinal('2026-03-04') + sum, SM.dayOrdinal(p.etaMean));
 });
+
+test('sıra dışı IAS tarihi (Cut Off, Handover\'dan önce) hesaba katılmaz ve not olarak taşınır', () => {
+  const model = sampleModel();
+  // Gerçek vaka: Handover 02.11, Cut Off 22.10 (11 gün önce), durum Yükleme Operasyonları.
+  const p = SM.project({ loadingRequest: '2026-10-28', handover: '2026-11-02', cutOff: '2026-10-22' },
+    { model, country: 'Bangladesh', vehicle: 'Gemi', today: '2026-11-22', notReached: 'actualLoading' });
+  assert.deepEqual(p.ignored, [{ milestone: 'cutOff', date: '2026-10-22', before: 'handover', beforeDate: '2026-11-02' }]);
+  assert.equal(p.anchor, 'handover', 'aşım Handover\'dan ölçülür');
+  assert.ok(!p.drivers.items.some(i => i.kind === 'done' && i.actual < 0), 'negatif "sürdü" kalemi yok');
+  assert.equal(p.stages.find(s => s.code === '2').status, 'running');
+  assert.deepEqual(SM.compact(p).ignored, p.ignored);
+  // Tutarlı zincirde not yok.
+  const ok = SM.project({ loadingRequest: '2026-10-28', handover: '2026-11-02', cutOff: '2026-11-05' }, { model, country: 'Bangladesh', vehicle: 'Gemi', today: '2026-11-06' });
+  assert.equal(SM.compact(ok).ignored, null);
+});

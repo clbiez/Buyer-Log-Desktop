@@ -333,6 +333,22 @@
       else if (PLANNABLE.has(m)) planned[m] = d;
     }
     if (actual.warehouseEntry != null) return null; // varmış: tahmin gerekmez
+    /* Sıra tutarlılığı (model eğitimiyle aynı ilke): gerçekleşen bir tarih,
+       zincirde kendinden ÖNCEKİ bir adımın gerçekleşen tarihinden erken olamaz
+       (ör. Cut Off, Handover'dan önce — IAS'ta kaçırılan geminin eski cut-off'u
+       kalmış olabilir). Böyle tarih hesaba katılmaz ve not olarak taşınır; aksi
+       halde "−11 g sürdü" kazanç sayılır, aşım da yanlış tarihten ölçülürdü. */
+    const ignored = [];
+    let lastM = null;
+    for (const m of MILESTONES) {
+      if (actual[m] == null) continue;
+      if (lastM != null && actual[m] < actual[lastM]) {
+        ignored.push({ milestone: m, date: isoFromOrdinal(actual[m]), before: lastM, beforeDate: isoFromOrdinal(actual[lastM]) });
+        delete actual[m];
+        continue;
+      }
+      lastM = m;
+    }
     let anchor = null;
     for (let i = MILESTONES.length - 2; i >= 0; i -= 1) {
       const m = MILESTONES[i];
@@ -557,7 +573,7 @@
       gainDays: baseline != null ? baseline - etaMean : null,
       docsLateDays,
       sample: dist0(group, plan || anchor), scope: group.scope,
-      stages, running, probability, drivers,
+      stages, running, probability, drivers, ignored,
     };
   }
   function dist0(group, m) { return group.remaining[m] ? group.remaining[m].n : 0; }
@@ -580,6 +596,8 @@
       drivers: projection.drivers || null,
       // Koşan aralık: { code, from, to, days, mean } — etiket ve gün aynı aralığı anlatır.
       running: projection.running || null,
+      // Sıra dışı (önceki adımdan erken) olduğu için hesaba katılmayan tarihler.
+      ignored: Array.isArray(projection.ignored) && projection.ignored.length ? projection.ignored : null,
     };
   }
 

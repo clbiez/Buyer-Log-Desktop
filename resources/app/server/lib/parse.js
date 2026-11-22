@@ -3656,7 +3656,8 @@ function cpSegmentStageInfo(segment, order, ov, stageModel, todayIso) {
       if (d && Number.isFinite(Number(d.base))) {
         const ruleEta = toDateOnly(basisIso); ruleEta.setDate(ruleEta.getDate() + days);
         why = { basis, basisDate: basisIso, handover: localIsoDate(handover), basisToHandover: handoverOrd - basisOrd,
-          ruleDays: days, ruleEta: localIsoDate(ruleEta), base: d.base, items: Array.isArray(d.items) ? d.items : [] };
+          ruleDays: days, ruleEta: localIsoDate(ruleEta), base: d.base, items: Array.isArray(d.items) ? d.items : [],
+          ignored: projection.ignored || null };
       }
     }
   }

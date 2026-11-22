@@ -7054,6 +7054,10 @@ function cpStageWhyText(vsRule,why){
     else if(item.kind==='today') lines.push(en?`• Not arrived yet (remaining time given the days elapsed; earliest today): ${eff(item.days)}`:`• Henüz varmadı (geçen güne göre kalan süre; en erken bugün): ${eff(item.days)}`);
   }
   if(!(why.items||[]).length) lines.push(en?'• No stage deviation measured since Handover (missing dates count as average)':'• Handover\'dan beri ölçülen aşama sapması yok (tarihi gelmeyen adım ortalama sayılır)');
+  // Sıra dışı IAS tarihi: hesaba katılmadı (veri kontrolü için görünür).
+  for(const bad of why.ignored||[]) lines.push(en
+    ?`Note: ${ms(bad.milestone)} ${date(bad.date)} is earlier than ${ms(bad.before)} ${date(bad.beforeDate)}; this inconsistent IAS date was ignored.`
+    :`Not: ${ms(bad.milestone)} ${date(bad.date)}, ${ms(bad.before)} ${date(bad.beforeDate)} tarihinden önce; tutarsız IAS tarihi hesaba katılmadı.`);
   return lines.join('\n');
 }
 function cpStageRunTitle(run){
