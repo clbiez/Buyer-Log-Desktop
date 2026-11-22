@@ -23,12 +23,13 @@ const SOURCE_INDEPENDENT_TASKS=new Set(['projection-envelope','cp-image-registry
 const exceedsWorkerSourceCache=(task,descriptor)=>!SOURCE_INDEPENDENT_TASKS.has(task)&&Number(descriptor?.bytes)>WORKER_SOURCE_CACHE_BYTES;
 const descriptorJobBytes=(task,bytes)=>Math.ceil(bytes*(task==='projections'?SOURCE_JOB_FACTOR:6)/DESCRIPTOR_BYTES_PER_SOURCE);
 /* Electron (BuyerLog.exe, ELECTRON_RUN_AS_NODE) pointer compression'ı paylaşılan kafesle kurar: sunucu
-   iş parçacığı ve TÜM işçilerin JS heap'i tek ~4 GB kafese sığmalıdır. Ölçüm (Electron 44.3.0):
-   toplam ≈3,45 GB'ta süreç "heap out of memory" ile abort eder; işçi resourceLimits'i bunu önlemez
-   (maxOldGenerationSizeMb uygulanmıyor) ve ERR_WORKER_OUT_OF_MEMORY kapasite ağı devreye girmez.
-   İşçi JS heap tepesi 658 MiB kaynakta ≈2,0 GB (≈3,1×kaynak); kabul 96 MiB + 3,5×kaynak varsayar.
-   Sunucu heap'i + diğer işçilerin heap'i + bu ihtiyaç 3 GiB'ı aşarsa iş kapasite yoluna gider. */
-const HEAP_CAGE_SAFE_BYTES=3072*MiB,HEAP_CAGE_PER_SOURCE=3.5,HEAP_CAGE_LARGE_BYTES=512*MiB;
+   iş parçacığı ve TÜM işçilerin JS heap'i tek ~4 GB kafese sığmalıdır; aşım tüm sunucuyu abort eder.
+   İşçi resourceLimits'i bunu önlemez (maxOldGenerationSizeMb uygulanmıyor), ERR_WORKER_OUT_OF_MEMORY
+   kapasite ağı devreye girmez. Ölçüm (Electron 44.3.0, 658 MiB kaynak, 'projections'): işçi JS heap
+   tepesi ≈2,0 GB (≈3,1×kaynak); sunucu heap'i 2040 MiB iken geçti, 2460 MiB iken süreç abort oldu;
+   yoğun canlı nesnelerle toplam ≈3,45 GB'ta abort. Kabul 96 MiB + 3,5×kaynak varsayar; sunucu heap'i
+   + diğer işçilerin heap'i + bu ihtiyaç 3,5 GiB'ı aşarsa iş kapasite yoluna gider. */
+const HEAP_CAGE_SAFE_BYTES=3584*MiB,HEAP_CAGE_PER_SOURCE=3.5,HEAP_CAGE_LARGE_BYTES=512*MiB;
 function detectHeapCage(){
   if(Number(process.config?.variables?.v8_enable_pointer_compression_shared_cage)!==1)return null;
   return {limitBytes:HEAP_CAGE_SAFE_BYTES,usedBytes:()=>require('node:v8').getHeapStatistics().total_heap_size};
