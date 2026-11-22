@@ -125,7 +125,8 @@ module.exports = function registerOabCubeRoutes(app, deps) {
       const values = [...new Set((result.rows || []).map(row => String(Object.values(row || {})[0] ?? '').trim()).filter(Boolean))]
         .filter(value => plan.searchInDax || !needle || value.toLocaleLowerCase('tr-TR').includes(needle))
         .sort(BLBusinessRules.compareChronologicalValues);
-      res.json({ ok: true, key, values });
+      // Sınıra ulaşıldıysa liste eksik olabilir; istemci aramayı daraltmayı söyler.
+      res.json({ ok: true, key, values, truncated: (result.rows || []).length >= plan.limit, limit: plan.limit });
     } catch (err) { logFailure('distinct', err); const out = failure(err); res.status(out.status).json(out); }
   });
 

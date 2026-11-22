@@ -218,6 +218,17 @@ test('rapor: sezonsuz istek reddedilir; sorgu + veri tarihi çalışır; önbell
   assert.equal([...h.prefs.get('u1')].some(([key]) => key === 'lcw.oab.cube.view.v1'), true);
 });
 
+test('değer listesi sınırda kesildiyse yanıt bunu söyler; arama metni küp sorgusuna girer', async () => {
+  const h = harness([{ v: 'DM0' }, { v: 'DM1' }, { v: 'DM2' }]);
+  const full = await h.call('POST /api/oab-cube/distinct', { body: { key: 'mag', search: 'dm', limit: 3 } });
+  assert.equal(full.statusCode, 200);
+  assert.deepEqual(full.body.values, ['DM0', 'DM1', 'DM2']);
+  assert.equal(full.body.truncated, true);
+  assert.match(h.calls[h.calls.length - 1].query, /CONTAINSSTRING\('DummyUrun'\[MerchAltGrupKod\], "dm"\)/);
+  const partial = await h.call('POST /api/oab-cube/distinct', { body: { key: 'mag', limit: 10 } });
+  assert.equal(partial.body.truncated, false);
+});
+
 test('veri tarihi okunamazsa rapor yine döner; tarih boş kalır', async () => {
   const h = harness([{ season: 'S6', modelCode: 'M1', colourCode: 'C1', approved: '1' }], { freshness: Object.assign(new Error('x'), { code: 'MODEL_QUERY_FAILED' }) });
   const res = await h.call('POST /api/oab-cube/report', { body: { view: { filterValues: { season: ['S6'] } } } });
@@ -325,7 +336,8 @@ test('istemci: pivot toplamları OABPivotEngine ile, görünür olunca yüklenir
   // Excel özeti veriyi üreten filtrelerle; değer araması küpe gider (ilk 1.000 ile sınırlı değil).
   assert.match(js, /const dataFilters = state\.dataFilterValues \|\| view\(\)\.filterValues/);
   assert.match(js, /search: needle, limit: 1000/);
-  assert.match(js, /seq === requestSeq/);
+  assert.match(js, /if \(seq !== requestSeq\) return;/);
+  assert.match(js, /`İlk \$\{[^}]+\} değer gösteriliyor; aramayı daraltın\.`, `Showing the first \$\{[^}]+\} values; narrow the search\.`/);
   assert.match(js, /hasValue\(ref\.key\) \? pivot\.verifyTotal/);
   assert.match(js, /book_append_sheet/);
   const main = read('public/app-main.js');

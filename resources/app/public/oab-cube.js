@@ -794,13 +794,21 @@
        geç gelen eski arama yanıtı yenisinin üzerine yazmaz. */
     const local = localValues(key);
     let requestSeq = 0, searchTimer = 0;
+    const note = document.createElement('div');
+    note.className = 'intakeConfigEmpty oabCubeDistinctNote';
+    note.hidden = true;
+    list.after(note);
     const fetchValues = needle => {
       const seq = ++requestSeq;
       return requestJson('/api/oab-cube/distinct', jsonBody('POST', { key, source: ref.source || '', search: needle, limit: 1000 }))
         .then(result => {
           if (state.popover !== popover) return;
           values = [...new Set([...values, ...(Array.isArray(result.values) ? result.values : []), ...local, ...selected])];
-          if (seq === requestSeq) { draw(); placePopover(popover, button, false); }
+          if (seq !== requestSeq) return;
+          const limit = Number(result.limit) || 1000;
+          note.hidden = !result.truncated;
+          note.textContent = result.truncated ? text(`İlk ${limit.toLocaleString(locale())} değer gösteriliyor; aramayı daraltın.`, `Showing the first ${limit.toLocaleString(locale())} values; narrow the search.`) : '';
+          draw(); placePopover(popover, button, false);
         })
         .catch(error => {
           if (state.popover !== popover || seq !== requestSeq) return;
