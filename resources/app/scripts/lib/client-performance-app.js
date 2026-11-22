@@ -14,7 +14,7 @@ async function start(options = {}) {
     const socket = net.createServer(); await new Promise(resolve => socket.listen(0, '127.0.0.1', resolve));
     const port = socket.address().port; await new Promise(resolve => socket.close(resolve));
     const base = 'http://127.0.0.1:' + port, source = path.join(root, 'source');
-    const generated = spawnSync(process.execPath, [path.join(app, 'scripts/generate-demo-data.js'), source, '--rows', '20', '--seed', '7'], { cwd: app, encoding: 'utf8' });
+    const generated = spawnSync(process.execPath, [path.join(app, 'scripts/generate-demo-data.js'), source, '--rows', String(Number(options.demoRows) > 0 ? Math.floor(Number(options.demoRows)) : 20), '--seed', '7'], { cwd: app, encoding: 'utf8' });
     assert.equal(generated.status, 0, generated.stderr); initializeBenchmarkState(root);
     const env = { ...process.env, BUYER_LOG_CENTRAL_IAM_ENABLED: '0', BUYER_LOG_SERVER_DATA_ROOT: path.join(root, 'data'), BUYER_LOG_AUTH_DATA_ROOT: path.join(root, 'data'), BUYER_LOG_DATA_ROOT: path.join(root, 'app'), BUYER_LOG_LOCAL_DATA_ROOT: path.join(root, 'local'), BUYER_LOG_LOCAL_DB: path.join(root, 'local/BuyerLogLocal.db'), BUYER_LOG_CONFIG_PATH: path.join(root, 'config.json'), BUYER_LOG_TEMP_ROOT: path.join(root, 'tmp') };
     fs.writeFileSync(env.BUYER_LOG_CONFIG_PATH, JSON.stringify({ port, host: '127.0.0.1', sourceFolder: source, updates: { enabled: false } }));

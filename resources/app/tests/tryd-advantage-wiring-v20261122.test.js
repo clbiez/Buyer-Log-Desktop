@@ -19,7 +19,8 @@ test('TR/YD widget kaydı: Ticari grubunda, varsayılan Ticari sayfasında, TR/E
 test('TR/YD widget tembel yüklenir: betik Genel Bakış\'ta, sunucu isteği yalnız görünürken', () => {
   const main = read('app-main.js');
   assert.match(main, /if\(tab==='overview'\)void ensureOverviewTrydAdvantageModule\(\);/);
-  assert.match(main, /loader\('tryd-advantage-engine\.js\?rev=\d+'\)\s*\.then\(\(\)=>loader\('tryd-advantage\.js\?rev=\d+'\)\)/);
+  // Sıra: motor → vasıta standart yardımcıları (hata widget'ı durdurmaz) → widget.
+  assert.match(main, /loader\('tryd-advantage-engine\.js\?rev=\d+'\)\s*\.then\(\(\)=>loader\('landed-vehicle-standards\.js\?rev=\d+'\)\.catch\(\(\)=>null\)\)\s*\.then\(\(\)=>loader\('tryd-advantage\.js\?rev=\d+'\)\)/);
   const widget = read('tryd-advantage.js');
   assert.match(widget, /new IntersectionObserver/);
   const boot = widget.slice(widget.indexOf('bind();\n  render();'), widget.indexOf('window.BLTrydAdvantage = '));

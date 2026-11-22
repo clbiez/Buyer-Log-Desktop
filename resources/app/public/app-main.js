@@ -15121,14 +15121,62 @@ function landedMultiplierInputValue(value){
 }
 async function persistLandedMultipliers(value){
   const clean=normalizeKolLandedMultipliers(value);
+  // byVehicle yalnız açıkça verildiğinde gönderilir; yoksa sunucu kayıtlı vasıta standartlarını korur.
+  const body=value&&value.byVehicle&&typeof value.byVehicle==='object'&&!Array.isArray(value.byVehicle)?{...clean,byVehicle:value.byVehicle}:clean;
   if(window.SERVER_BACKED){
-    const res=await fetch('/api/landed-multipliers',{method:'PUT',headers:{'Content-Type':'application/json','If-Match':String(state.storeRevisions.landedMultipliers||0)},body:JSON.stringify({multipliers:clean})});
-    const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||res.statusText);
+    const res=await fetch('/api/landed-multipliers',{method:'PUT',headers:{'Content-Type':'application/json','If-Match':String(state.storeRevisions.landedMultipliers||0)},body:JSON.stringify({multipliers:body})});
+    const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error((appLang==='en'&&data.errorEn)||data.error||res.statusText);
     state.storeRevisions.landedMultipliers=Number(data.revision)||state.storeRevisions.landedMultipliers||0;
     state.overrides.landedMultipliers=normalizeKolLandedMultipliers(data.multipliers||clean);
   }else state.overrides.landedMultipliers=clean;
   if(document.body.dataset.activeTab==='koleksiyon')renderKol();
+  // TR/YD Landed Avantaj standartları yeniden okusun (public/tryd-advantage.js).
+  window.dispatchEvent(new CustomEvent('bl:landed-multipliers-changed'));
   return state.overrides.landedMultipliers;
+}
+/* --- Vasıtaya göre yurtdışı standardı (TR/YD Landed Avantaj) -------------------
+ * Ortak ayar landedMultipliers.byVehicle. Vasıta listesi veriden gelir: IAS'ta
+ * görülen vasıtalar (GET /api/landed-multipliers → knownVehicles) + kayıtlı
+ * anahtarlar + öneri sonucu. Boş alan genel Overseas değerini kullanır. Öneri
+ * (GET /api/postfob/tryd/vehicle-suggestions) yalnız alanı doldurur; değer
+ * kullanıcı Kaydet'e basmadan yazılmaz. Koleksiyon landed hesabı değişmez. */
+function landedVehicleDate(value){
+  const date=value?new Date(`${value}T00:00:00`):null;
+  return date&&Number.isFinite(date.getTime())?date.toLocaleDateString(appLang==='en'?'en-GB':'tr-TR'):'';
+}
+function landedVehicleSuggestionHtml(item,en){
+  if(!item)return '';
+  const scope=`${item.count.toLocaleString(en?'en-GB':'tr-TR')} ${en?'rows':'satır'} / ${item.orders.toLocaleString(en?'en-GB':'tr-TR')} ${en?'orders':'sipariş'}${item.from?` · ${landedVehicleDate(item.from)}${item.to&&item.to!==item.from?`–${landedVehicleDate(item.to)}`:''}`:''}`;
+  if(!item.enough){
+    const why=item.reason==='fewOrders'?(en?`fewer than ${landedVehicleSuggestState.thresholds.orders} orders`:`${landedVehicleSuggestState.thresholds.orders} siparişten az`):(en?`fewer than ${landedVehicleSuggestState.thresholds.rows} rows`:`${landedVehicleSuggestState.thresholds.rows} satırdan az`);
+    return `<span class="landedVehicleSuggestionThin">${escapeHtml(en?`No suggestion: ${why} (${scope})`:`Öneri yok: ${why} (${scope})`)}</span>`;
+  }
+  return `<span class="landedVehicleSuggestionValue" title="${escapeHtml(en?`Quantity-weighted ${landedVehiclePercentileText(true)} landed/FOB of abroad rows with this shipment mode`:`Bu vasıtadaki YD satırlarının adet ağırlıklı Landed/FOB değeri (${landedVehiclePercentileText(false)})`)}">${escapeHtml(en?`Suggested (${landedVehiclePercentileText(true)})`:`Öneri (${landedVehiclePercentileText(false)})`)} ×${escapeHtml(landedMultiplierInputValue(item.suggestion))}</span><small>${escapeHtml(scope)}</small><small>${escapeHtml(landedVehiclePercentileNote(en))}</small><button type="button" class="tbtn" data-vehicle-apply="${escapeHtml(item.key)}">${escapeHtml(en?'Use':'Alana al')}</button>`;
+}
+const landedVehicleSuggestState={thresholds:{rows:20,orders:5},percentile:0.9};
+// Öneri yüzdeliği etiketi (sunucu sabiti SUGGEST_PERCENTILE): P50 = medyan.
+function landedVehiclePercentileText(en){const p=Math.round((Number(landedVehicleSuggestState.percentile)||0.9)*100);return p===50?(en?'P50 · median':'P50 · medyan'):`P${p}`;}
+// Öneri yanındaki açıklama: P90 — aynı vasıtadaki satırların ~%10'u uyarı alır.
+function landedVehiclePercentileNote(en){const p=Math.round((Number(landedVehicleSuggestState.percentile)||0.9)*100),rest=100-p;return en?`${landedVehiclePercentileText(true)} — about ${rest}% of rows with the same mode get the warning`:`${landedVehiclePercentileText(false)} — aynı vasıtadaki satırların ~%${rest} kadarı uyarı alır`;}
+function renderLandedVehicleRows(modal,model,en){
+  const list=modal.querySelector('#_landedVehicleList');if(!list)return;
+  const typed={};list.querySelectorAll('[data-vehicle-input]').forEach(input=>{typed[input.dataset.vehicleInput]=input.value;});
+  const keys=[...model.order];
+  if(!keys.length){list.innerHTML=`<div class="landedVehicleEmpty">${escapeHtml(en?'No shipment mode was found in the loaded IAS data. Refresh the data or use “Suggest from history”.':'Yüklü IAS verisinde vasıta bulunamadı. Veriyi yenileyin veya “Geçmiş veriden öner”i kullanın.')}</div>`;return;}
+  const general=landedMultiplierInputValue(model.overseas);
+  list.innerHTML=keys.map(key=>{
+    const item=model.items.get(key),value=Object.prototype.hasOwnProperty.call(typed,key)?typed[key]:(item.value!=null?landedMultiplierInputValue(item.value):'');
+    const meta=item.orders?`${item.orders.toLocaleString(en?'en-GB':'tr-TR')} ${en?'orders':'sipariş'} · ${item.parsiyels.toLocaleString(en?'en-GB':'tr-TR')} ${en?'shipments (IAS)':'parsiyel (IAS)'}`:(en?'Saved standard':'Kayıtlı standart');
+    return `<div class="landedVehicleRow" data-vehicle-key="${escapeHtml(key)}"><span class="landedVehicleName"><strong>${escapeHtml(item.label)}</strong><small>${escapeHtml(meta)}</small></span><div class="landedMultiplierInput"><i>×</i><input type="text" inputmode="decimal" data-vehicle-input="${escapeHtml(key)}" aria-label="${escapeHtml(`${item.label} ${en?'landed multiplier':'landed çarpanı'}`)}" placeholder="${escapeHtml(en?`general ${general}`:`genel ${general}`)}" value="${escapeHtml(value)}"></div><div class="landedVehicleSuggestion" data-vehicle-suggestion="${escapeHtml(key)}">${landedVehicleSuggestionHtml(item.suggestion,en)}</div></div>`;
+  }).join('');
+}
+function landedVehicleModel(payload){
+  const byVehicle=payload&&payload.multipliers&&payload.multipliers.byVehicle&&typeof payload.multipliers.byVehicle==='object'?payload.multipliers.byVehicle:{};
+  const model={items:new Map(),order:[],overseas:Number(payload&&payload.multipliers&&payload.multipliers.overseas)||KOL_YD_LANDED_MULT};
+  const add=(key,patch)=>{if(!key)return;if(!model.items.has(key)){model.items.set(key,{key,label:key,orders:0,parsiyels:0,value:null,suggestion:null});model.order.push(key);}Object.assign(model.items.get(key),patch);};
+  for(const item of Array.isArray(payload&&payload.knownVehicles)?payload.knownVehicles:[])add(item.key,{label:item.label||item.key,orders:Number(item.orders)||0,parsiyels:Number(item.parsiyels)||0});
+  for(const key of Object.keys(byVehicle))add(key,{value:Number(byVehicle[key])});
+  return model;
 }
 function openLandedMultipliersModal(){
   document.getElementById('_landedMultipliersModal')?.remove();
@@ -15141,6 +15189,11 @@ function openLandedMultipliersModal(){
       <label><span>${escapeHtml(en?'Overseas Landed default':'Overseas Landed varsayılanı')}</span><div class="landedMultiplierInput"><i>×</i><input id="_ydLandedMultiplier" type="text" inputmode="decimal" value="${escapeHtml(landedMultiplierInputValue(current.overseas))}"></div><small>${escapeHtml(en?'Used when the row’s Overseas multiplier is blank.':'Satırdaki Overseas çarpanı boşsa kullanılır.')}</small></label>
       <label><span>${escapeHtml(en?'TR Landed default':'TR Landed varsayılanı')}</span><div class="landedMultiplierInput"><i>×</i><input id="_trLandedMultiplier" type="text" inputmode="decimal" value="${escapeHtml(landedMultiplierInputValue(current.tr))}"></div><small>${escapeHtml(en?'Used when the row’s TR multiplier is blank.':'Satırdaki TR çarpanı boşsa kullanılır.')}</small></label>
       <div class="landedMultiplierNotice">${escapeHtml(en?'Changing a default recalculates Collection rows that do not have a manual multiplier. Existing manual multipliers are preserved.':'Varsayılan değiştiğinde manuel çarpanı olmayan Koleksiyon satırları yeni değerle yeniden hesaplanır. Mevcut manuel çarpanlar korunur.')}</div>
+      <section class="landedVehicleSection" aria-labelledby="_landedVehicleTitle">
+        <div class="landedVehicleHead"><div><strong id="_landedVehicleTitle">${escapeHtml(en?'Overseas standard by shipment mode':'Vasıtaya göre Overseas standardı')}</strong><small>${escapeHtml(en?'Used only by the TR/abroad “High landed multiplier” check. A blank field uses the Overseas default. Collection prices do not change.':'Yalnız TR/YD “Landed çarpanı yüksek” kontrolünde kullanılır. Boş alan Overseas varsayılanını kullanır. Koleksiyon fiyatları değişmez.')}</small></div><button type="button" class="tbtn" id="_landedVehicleSuggest"><svg class="ic"><use href="#i-chart-histogram"/></svg>${escapeHtml(en?'Suggest from history':'Geçmiş veriden öner')}</button></div>
+        <div class="landedVehicleList" id="_landedVehicleList"><div class="landedVehicleEmpty">${escapeHtml(en?'Loading shipment modes…':'Vasıtalar yükleniyor…')}</div></div>
+        <div class="landedVehicleSuggestNote" id="_landedVehicleSuggestNote" hidden></div>
+      </section>
     </div>
     <div class="landedMultiplierFoot"><span id="_landedMultiplierStatus"></span><button type="button" class="tbtn _landedMultiplierClose">${escapeHtml(en?'Cancel':'Vazgeç')}</button><button type="button" class="navActionBtn" id="_landedMultiplierSave"><svg class="ic"><use href="#i-device-floppy"/></svg>${escapeHtml(en?'Save Defaults':'Varsayılanları Kaydet')}</button></div>
   </div>`;
@@ -15149,11 +15202,65 @@ function openLandedMultipliersModal(){
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
   const status=modal.querySelector('#_landedMultiplierStatus'),trInput=modal.querySelector('#_trLandedMultiplier'),ydInput=modal.querySelector('#_ydLandedMultiplier');
   const close=()=>modal.remove();modal.querySelectorAll('._landedMultiplierClose').forEach(btn=>btn.addEventListener('click',close));modal.addEventListener('click',e=>{if(e.target===modal)close();});modal.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+  // Vasıta bölümü: ortak ayar sunucudan taze okunur. Okunamazsa byVehicle gönderilmez (kayıtlı değer korunur).
+  let vehicleModel=null,generalEdited=false;
+  [trInput,ydInput].forEach(input=>input.addEventListener('input',()=>{generalEdited=true;}));
+  const vehicleList=modal.querySelector('#_landedVehicleList'),suggestNote=modal.querySelector('#_landedVehicleSuggestNote'),suggestBtn=modal.querySelector('#_landedVehicleSuggest');
+  (async()=>{
+    try{
+      const res=await fetch('/api/landed-multipliers',{credentials:'same-origin',cache:'no-store'});const payload=await res.json().catch(()=>({}));if(!res.ok)throw new Error(payload.error||res.statusText);
+      if(!modal.isConnected)return;
+      if(!generalEdited&&payload.multipliers){
+        state.overrides.landedMultipliers=normalizeKolLandedMultipliers(payload.multipliers);state.storeRevisions.landedMultipliers=Number(payload.revision)||state.storeRevisions.landedMultipliers||0;
+        trInput.value=landedMultiplierInputValue(state.overrides.landedMultipliers.tr);ydInput.value=landedMultiplierInputValue(state.overrides.landedMultipliers.overseas);
+      }
+      vehicleModel=landedVehicleModel(payload);renderLandedVehicleRows(modal,vehicleModel,en);
+    }catch(err){if(vehicleList)vehicleList.innerHTML=`<div class="landedVehicleEmpty">${escapeHtml(en?'Shipment-mode standards could not be read; saved values are kept.':'Vasıta standartları okunamadı; kayıtlı değerler korunur.')}</div>`;if(suggestBtn)suggestBtn.disabled=true;}
+  })();
+  modal.addEventListener('input',event=>{if(event.target.matches('[data-vehicle-input]'))status.textContent='';});
+  modal.addEventListener('click',event=>{
+    const apply=event.target.closest('[data-vehicle-apply]');if(!apply||!vehicleModel)return;
+    const item=vehicleModel.items.get(apply.dataset.vehicleApply),input=[...modal.querySelectorAll('[data-vehicle-input]')].find(el=>el.dataset.vehicleInput===apply.dataset.vehicleApply);
+    // Yalnız alan doldurulur; kayıt Kaydet ile (alt not bunu söyler).
+    if(item&&item.suggestion&&input){input.value=landedMultiplierInputValue(item.suggestion.suggestion);input.focus();}
+  });
+  suggestBtn?.addEventListener('click',async()=>{
+    if(!vehicleModel)return;suggestBtn.disabled=true;suggestNote.hidden=false;suggestNote.textContent=en?'Reading the last TR/abroad data…':'Son TR/YD verisi okunuyor…';
+    try{
+      const res=await fetch('/api/postfob/tryd/vehicle-suggestions',{credentials:'same-origin',cache:'no-store'});const payload=await res.json().catch(()=>({}));
+      if(res.status===403)throw new Error(en?'You need the OAB view permission to read TR/abroad data.':'TR/YD verisini okumak için OAB görüntüleme yetkisi gerekir.');
+      if(!res.ok)throw new Error((en&&payload.errorEn)||payload.error||res.statusText);
+      if(!modal.isConnected)return;
+      const data=payload.data;
+      if(!data){suggestNote.textContent=en?'No TR/abroad data yet. Open Overview › TR/Abroad Landed Advantage and press Refresh, then try again.':'Henüz TR/YD verisi yok. Genel Bakış › TR/YD Landed Avantaj’da Yenile’ye basıp tekrar deneyin.';return;}
+      if(data.thresholds)landedVehicleSuggestState.thresholds=data.thresholds;
+      if(Number(data.percentile)>0&&Number(data.percentile)<1)landedVehicleSuggestState.percentile=Number(data.percentile);
+      const pctTr=landedVehiclePercentileText(false),pctEn=landedVehiclePercentileText(true),isMedian=landedVehicleSuggestState.percentile===0.5;
+      for(const item of data.items||[]){if(!vehicleModel.items.has(item.key)){vehicleModel.items.set(item.key,{key:item.key,label:item.label||item.key,orders:0,parsiyels:0,value:null,suggestion:null});vehicleModel.order.push(item.key);}vehicleModel.items.get(item.key).suggestion=item;}
+      renderLandedVehicleRows(modal,vehicleModel,en);
+      const seasons=(data.seasons||[]).join(', '),skipped=data.skipped||{};
+      suggestNote.textContent=en
+        ?`Quantity-weighted ${pctEn} landed/FOB of valid abroad rows (actual landed ≥ FOB) from the last TR/abroad query${seasons?` (seasons ${seasons})`:''}. Orders with mixed shipment modes (${skipped.mixedVehicle||0} rows) and without a mode (${skipped.unknownVehicle||0} rows) are left out. ${isMedian?'Being a median, about half of that mode’s rows lie above it and will show “High landed multiplier”. ':`About ${Math.round((1-landedVehicleSuggestState.percentile)*100)}% of that mode’s quantity lies above it. `}At least ${landedVehicleSuggestState.thresholds.rows} rows and ${landedVehicleSuggestState.thresholds.orders} orders are needed. Nothing is saved until you press Save.${data.iasLoaded?'':' No IAS data is loaded.'}`
+        :`Son TR/YD sorgusundaki geçerli YD satırlarının (gerçekleşen landed ≥ FOB) adet ağırlıklı Landed/FOB değeri (${pctTr})${seasons?` (sezon ${seasons})`:''}. Karışık vasıtalı (${skipped.mixedVehicle||0} satır) ve vasıtası bilinmeyen (${skipped.unknownVehicle||0} satır) siparişler dışarıda. ${isMedian?'Medyan olduğu için bu vasıtadaki satırların yaklaşık yarısı bu değerin üstünde kalır ve “Landed çarpanı yüksek” görünür. ':`Bu vasıtadaki adedin yaklaşık %${Math.round((1-landedVehicleSuggestState.percentile)*100)} kadarı bu değerin üstündedir. `}En az ${landedVehicleSuggestState.thresholds.rows} satır ve ${landedVehicleSuggestState.thresholds.orders} sipariş gerekir. Kaydet’e basmadan hiçbir değer kaydedilmez.${data.iasLoaded?'':' IAS verisi yüklü değil.'}`;
+      window.BLMotionPlus?.play?.('card',vehicleList);
+    }catch(err){suggestNote.textContent=err.message;}
+    finally{suggestBtn.disabled=false;}
+  });
   modal.querySelector('#_landedMultiplierSave').addEventListener('click',async e=>{
     const tr=kolParseMoneyNum(trInput.value),overseas=kolParseMoneyNum(ydInput.value);
     if(!Number.isFinite(tr)||tr<=0||tr>10||!Number.isFinite(overseas)||overseas<=0||overseas>10){status.textContent=en?'Enter positive multipliers between 0 and 10.':'0 ile 10 arasında pozitif çarpanlar girin.';return;}
+    let byVehicle;
+    if(vehicleModel){
+      byVehicle={};
+      for(const input of modal.querySelectorAll('[data-vehicle-input]')){
+        if(!input.value.trim())continue;
+        const value=kolParseMoneyNum(input.value),label=vehicleModel.items.get(input.dataset.vehicleInput)?.label||input.dataset.vehicleInput;
+        if(!Number.isFinite(value)||value<=0||value>10){status.textContent=en?`${label}: enter a positive multiplier between 0 and 10, or leave it blank.`:`${label}: 0 ile 10 arasında pozitif bir çarpan girin veya boş bırakın.`;input.focus();return;}
+        byVehicle[input.dataset.vehicleInput]=value;
+      }
+    }
     const btn=e.currentTarget;btn.disabled=true;status.textContent=en?'Saving…':'Kaydediliyor…';
-    try{const saved=await persistLandedMultipliers({tr,overseas});close();showToast(en?`Landed defaults saved: Overseas ×${landedMultiplierInputValue(saved.overseas)} · TR ×${landedMultiplierInputValue(saved.tr)}`:`Landed varsayılanları kaydedildi: Overseas ×${landedMultiplierInputValue(saved.overseas)} · TR ×${landedMultiplierInputValue(saved.tr)}`);}catch(err){btn.disabled=false;status.textContent=err.message;}
+    try{const saved=await persistLandedMultipliers(byVehicle?{tr,overseas,byVehicle}:{tr,overseas});close();const vehicleCount=byVehicle?Object.keys(byVehicle).length:null;showToast((en?`Landed defaults saved: Overseas ×${landedMultiplierInputValue(saved.overseas)} · TR ×${landedMultiplierInputValue(saved.tr)}`:`Landed varsayılanları kaydedildi: Overseas ×${landedMultiplierInputValue(saved.overseas)} · TR ×${landedMultiplierInputValue(saved.tr)}`)+(vehicleCount==null?'':(en?` · ${vehicleCount} shipment-mode standards`:` · ${vehicleCount} vasıta standardı`)));}catch(err){btn.disabled=false;status.textContent=err.message;}
   });
   setTimeout(()=>ydInput.focus(),0);
 }
@@ -20084,8 +20191,10 @@ function ensureOverviewTrydAdvantageModule(){
   if(typeof loader!=='function'||!document.getElementById('trydAdvantageSection'))return Promise.resolve(null);
   window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'trydAdvantage',mode:'after-ui'});
   // Pivot hesaplanan değerleri ortak modülü motordan önce gelir (normalizePrefs tanımları onunla doğrular).
-  overviewTrydAdvantageLoadPromise=loader('pivot-calculated-values.js?rev=20261122').catch(()=>null).then(()=>loader('tryd-advantage-engine.js?rev=20261123')
-    .then(()=>loader('tryd-advantage.js?rev=20261123')))
+  // Vasıtaya göre standart yardımcıları motor çağrısında okunur; yüklenemezse bütün satırlar genel standarda düşer.
+  overviewTrydAdvantageLoadPromise=loader('pivot-calculated-values.js?rev=20261122').catch(()=>null).then(()=>loader('tryd-advantage-engine.js?rev=20261124')
+    .then(()=>loader('landed-vehicle-standards.js?rev=20261124').catch(()=>null))
+    .then(()=>loader('tryd-advantage.js?rev=20261124')))
     .then(()=>{window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'trydAdvantage',mode:'after-ui'});return window.BLTrydAdvantage||null;})
     .catch(error=>{overviewTrydAdvantageLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'trydAdvantage',mode:'after-ui',failed:true});console.warn('TR/YD landed avantaj modülü yüklenemedi:',error);return null;});
   return overviewTrydAdvantageLoadPromise;
@@ -43180,6 +43289,8 @@ function refreshSharedMasterClient(area){
     return typeof loadFromServer==='function' ? loadFromServer(false) : Promise.resolve();
   }
   if(area==='nonDtrManufacturers')return loadFromServer(false).then(()=>window.reloadLflFromCache?.());
+  // Başka kullanıcının landed çarpanı değişikliği TR/YD vasıta standartlarını da yeniler.
+  if(area==='landedMultipliers')window.dispatchEvent(new CustomEvent('bl:landed-multipliers-changed'));
   if(['transitRules','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','asasFabricMode','lflSourceMode','noteColumnDefs','importanceSettings','systemSettings'].includes(area)){
     // Program davranışını belirleyen Master kuralları SYNC'ten yerel cache'e
     // uygulandığında çalışan ekran da aynı kanonik state'i yeniden okumalıdır.
