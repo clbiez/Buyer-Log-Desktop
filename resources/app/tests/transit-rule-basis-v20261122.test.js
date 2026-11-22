@@ -142,3 +142,17 @@ test('istemci: gerçekleşen süre kuralın bazından; Planlanan ETA terimi; kur
   assert.match(read('public/cp-readiness-engine.js'), /anchor: handoverValue && basisDates \? 'handover' : null,/);
   assert.match(read('public/overview-global-flow.js'), /anchor:basis\?'handover':null,milestones:basis/);
 });
+
+test('baz → Handover kural gününden uzunsa gün negatif kalır; planlanan ETA kaymaz', () => {
+  // Talep Handover'dan 80 gün önce, kural 60 gün → planlanan varış Handover − 20.
+  const r = BR.resolveTransitDays({ delType: 'Gemi', exFactory: iso(-10), status: 'Yolda', rules: e2eRule, forceRules: true,
+    anchor: 'handover', milestones: { handover: iso(-10), loadingRequest: iso(-90) } });
+  assert.equal(r.days, -20);
+  const fields = { 'Yükleme Talep Tarih': iso(-90), 'HANDOVER Tarihi': iso(-10) }; // i18n-ignore
+  const [row] = parse.backlogTemplateRowsFromSegments([partial(fields)], { transitRules: e2eRule }, new Map(), []);
+  assert.equal(row._backlogExcel.transitDays, -20);
+  assert.equal(row._backlogExcel.transitOverdue, true);
+  assert.equal(row._backlogExcel.transitOverdueDays, 30, 'bugün − (Talep + 60) = 30');
+  const risk = BR.computeBacklogRisk({ segmentKind: 'partial', status: 'Yolda', loadDate: iso(-10), transitDays: -20, retailDate: iso(60), today: iso(0) });
+  assert.ok(risk, 'negatif gün kabul edilir');
+});

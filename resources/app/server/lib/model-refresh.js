@@ -1845,7 +1845,35 @@ async function loadFromModelConnections(items, options = {}) {
   };
 }
 
+/* Yenilemede onarılan eşleme ve tarama işaretlerini kalıcı bağlantılara geri
+   yazar (kimlikle). Aynı bağlantının birden çok kapsamı varsa: sütunları kalıcı
+   çıkaran (iasMilestonesDisabled) kapsam önceliklidir; tarama sürümü en büyüğü. */
+function applyRunMappingRepairs(items, runs) {
+  const byId = new Map((Array.isArray(items) ? items : []).filter(item => item && item.id).map(item => [String(item.id), item]));
+  let changed = 0;
+  for (const run of Array.isArray(runs) ? runs : []) {
+    const source = run && run.mappingRepaired && run.item;
+    const target = source && byId.get(String(source.id || ''));
+    if (!target) continue;
+    if (source.mapping && typeof source.mapping === 'object') target.mapping = { ...source.mapping };
+    target.mappingEnhancementScanVersion = Math.max(Number(target.mappingEnhancementScanVersion) || 0, Number(source.mappingEnhancementScanVersion) || 0);
+    if (source.iasMilestonesDisabled === true || target.iasMilestonesDisabled === true) {
+      target.iasMilestonesDisabled = true;
+      for (const field of modelFields.IAS_MILESTONE_FIELDS) {
+        if (Array.isArray(target.iasMilestoneHeaders) && target.iasMilestoneHeaders.includes(field.header)) delete target.mapping[field.header];
+        if (Array.isArray(source.iasMilestoneHeaders) && source.iasMilestoneHeaders.includes(field.header)) delete target.mapping[field.header];
+      }
+      target.iasMilestoneHeaders = [];
+    } else if (Array.isArray(source.iasMilestoneHeaders)) {
+      target.iasMilestoneHeaders = [...new Set([...(target.iasMilestoneHeaders || []), ...source.iasMilestoneHeaders])];
+    }
+    changed += 1;
+  }
+  return changed;
+}
+
 module.exports = {
+  applyRunMappingRepairs,
   ModelRefreshError,
   DEFAULT_REFRESH_TIMEOUT_MS,
   connectionLabel,

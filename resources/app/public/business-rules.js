@@ -522,7 +522,9 @@
       const a = dateOrdinal(get(anchor)), b = dateOrdinal(get(basis));
       if (a != null && b != null) {
         const shift = a - b;
-        return { days: Math.max(0, ruleDays - shift), rule, dynamic: true, basis, ruleDays, basisShift: shift };
+        // İşaretli: baz → anchor kural gününden uzunsa gün negatiftir (planlanan
+        // varış anchor'dan öncedir). Sıfıra kırpmak planlanan ETA'yı kaydırırdı.
+        return { days: ruleDays - shift, rule, dynamic: true, basis, ruleDays, basisShift: shift };
       }
       return { days: ruleDays, rule, dynamic: true, basis, ruleDays, basisMissing: true };
     }
@@ -677,7 +679,8 @@
     const shipConfirmation = dateOrdinal(values.shipConfirmationDate);
     const handover = dateOrdinal(values.handoverDate);
     const days = values.transitDays == null || values.transitDays === '' ? NaN : Number(values.transitDays);
-    const hasTransit = Number.isFinite(days) && days >= 0;
+    // Kural bazı düzeltmesiyle gün negatif olabilir (baz + kural günü, yükleme tarihinden önce).
+    const hasTransit = Number.isFinite(days) && days > -3650;
     const inWarehouse = values.inWarehouse === true;
     const retailWaiting = values.retailWaiting === true;
     const stage = operationalStageOf(values.status);

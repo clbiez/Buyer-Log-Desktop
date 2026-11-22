@@ -3474,7 +3474,8 @@ function backlogTransitOverdueInfo({ isPartial, isInWarehouse, isRetailWaiting, 
   const loadOrdinal = dateOrdinal(loadDate);
   const todayOrdinal = dateOrdinal(todayValue);
   const days = Number(transitDays);
-  if (!load || loadOrdinal == null || todayOrdinal == null || !Number.isFinite(days) || days < 0) {
+  // Kural bazı düzeltmesiyle gün negatif olabilir (planlanan varış Handover'dan önce).
+  if (!load || loadOrdinal == null || todayOrdinal == null || !Number.isFinite(days) || days <= -3650) {
     return { overdue: false, expectedArrival: null, overdueDays: 0 };
   }
   const expectedOrdinal = loadOrdinal + days;

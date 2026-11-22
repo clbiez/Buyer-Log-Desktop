@@ -105,3 +105,27 @@ test('yenileme sorgusu yeni sütunları getirir; bozarsa sütunlar çıkarılıp
   assert.ok(outage.mapping['Cut Off Tarih'], 'geçici kesintide sütunlar kaybolmaz');
   assert.notEqual(outage.iasMilestonesDisabled, true);
 });
+
+test('kapsam kopyasındaki onarım kalıcı bağlantıya kimlikle yazılır; işaretler kayıtta korunur', () => {
+  const stored = [ias()];
+  const scoped = { ...stored[0], mapping: { ...stored[0].mapping, 'Cut Off Tarih': { table: 'Ithalat', name: 'Cut Off Tarihi', kind: 'column' } },
+    mappingEnhancementScanVersion: 5, iasMilestoneHeaders: ['Cut Off Tarih'] };
+  assert.equal(modelRefresh.applyRunMappingRepairs(stored, [{ item: scoped, mappingRepaired: true }, { item: { id: 'other' }, mappingRepaired: true }]), 1);
+  assert.equal(stored[0].mappingEnhancementScanVersion, 5);
+  assert.ok(stored[0].mapping['Cut Off Tarih']);
+  assert.deepEqual(stored[0].iasMilestoneHeaders, ['Cut Off Tarih']);
+  // Başka bir kapsam sütunları sorgu hatası yüzünden çıkardıysa çıkarma önceliklidir.
+  const disabled = { ...scoped, mapping: { ...stored[0].mapping }, iasMilestonesDisabled: true, iasMilestoneHeaders: [] };
+  delete disabled.mapping['Cut Off Tarih'];
+  modelRefresh.applyRunMappingRepairs(stored, [{ item: disabled, mappingRepaired: true }]);
+  assert.equal(stored[0].iasMilestonesDisabled, true);
+  assert.equal(stored[0].mapping['Cut Off Tarih'], undefined);
+  // Kalıcı kayıt normalizasyonu işaretleri silmez.
+  const db = require(path.join(__dirname, '..', 'server', 'db.js'));
+  const saved = db.normalizeModelConnection({ ...stored[0], iasMilestoneHeaders: ['Cut Off Tarih'] });
+  assert.equal(saved.mappingEnhancementScanVersion, 5);
+  assert.deepEqual(saved.iasMilestoneHeaders, ['Cut Off Tarih']);
+  assert.equal(saved.iasMilestonesDisabled, true);
+  // Sunucu kaydetmeden önce onarımları kalıcı kayda yazar.
+  assert.match(require('fs').readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8'), /applyRunMappingRepairs\(store\.items, result\.runs \|\| \[\]\);\n    try \{ replaceModelConnections\(store\.items, store\.revision\); \}/);
+});
