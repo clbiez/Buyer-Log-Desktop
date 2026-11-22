@@ -2832,6 +2832,8 @@ td.qtxColourBridgeBusy{cursor:progress!important;}
 #trydAdvantageTable tbody td.oabPivotDrillCell{cursor:zoom-in;}
 .trydAdvantageTargetInput{width:72px;height:var(--ui-control-height);padding:2px 6px;text-align:right;}
 .trydAdvantageFilterNote{flex-basis:100%;margin:4px 0 0;}
+/* Durum etiketleri ("Landed çarpanı yüksek" vb.) kesilmeden görünür. */
+#trydAdvantageTable td.trydAdvantageStatusCell{min-width:8.5rem;max-width:12rem;white-space:normal;overflow:visible;text-overflow:clip;}
 /* OAB (Küp) — INTAKE/OAB yüzeyini paylaşır; yalnız arama ve not yerleşimi. */
 .oabCubeToolbar{display:flex;align-items:center;gap:var(--ui-space-2);flex-wrap:wrap;margin:0 0 var(--ui-space-2);}
 .oabCubeSearch{flex:1 1 280px;min-width:180px;max-width:520px;height:var(--ui-control-height);padding:2px 8px;}
@@ -3577,7 +3579,8 @@ td.plmSampleCell .badge+.badge{margin-left:2px}
 .trxTable.trxMini td{padding:4px 6px;}
 .trxRowActions{text-align:right;white-space:nowrap;width:1%;}
 .trxFoot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-.trxEditor{display:grid;grid-template-columns:auto minmax(150px,1.2fr) minmax(130px,1fr) auto 76px auto;gap:10px;align-items:end;padding:10px;}
+.trxEditor{display:grid;grid-template-columns:auto minmax(150px,1.2fr) minmax(130px,1fr) auto 76px minmax(130px,auto) auto;gap:10px;align-items:end;padding:10px;}
+.trxRuleBasis{display:block;white-space:nowrap;}
 .trxField{display:flex;flex-direction:column;gap:4px;min-width:0;}
 .trxFieldDays .trxInput{width:100%;text-align:right;}
 .trxRange{display:flex;align-items:center;gap:4px;}

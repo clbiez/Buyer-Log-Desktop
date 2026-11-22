@@ -4042,9 +4042,10 @@ html[data-ui-system="manifest"] #postFobTable tr.postFobHasOutlier td:last-child
 html[data-ui-system="manifest"] .trydAdvantageTargetInput {font-variant-numeric:tabular-nums !important}
 html[data-ui-system="manifest"] #trydAdvantageTable td.trydAdvantageBelow,html[data-ui-system="manifest"] #trydAdvantageTable td.trydAdvantageInvalid {color:var(--ui-danger) !important;font-weight:650 !important}
 html[data-ui-system="manifest"] #trydAdvantageTable td.trydAdvantageAbove {color:var(--ui-success) !important}
-html[data-ui-system="manifest"] #trydAdvantageTable td.trydAdvantageNoLanded,html[data-ui-system="manifest"] #trydAdvantageNote.trydAdvantagePartial {color:var(--ui-warning) !important;font-weight:650 !important}
+html[data-ui-system="manifest"] #trydAdvantageTable td.trydAdvantageNoLanded,html[data-ui-system="manifest"] #trydAdvantageTable td.trydAdvantageHighMultiplier,html[data-ui-system="manifest"] #trydAdvantageNote.trydAdvantagePartial {color:var(--ui-warning) !important;font-weight:650 !important}
 html[data-ui-system="manifest"] #trydAdvantageTable tr.trydAdvantageBelowRow td.trydAdvantageLabelCell {color:var(--ui-danger) !important}
 html[data-ui-system="manifest"] .trydAdvantageKpiBelow .n {color:var(--ui-danger) !important}
+html[data-ui-system="manifest"] .trydAdvantageKpiWarning .n {color:var(--ui-warning) !important}
 html[data-ui-system="manifest"] .intakeFilterFieldOption {background:transparent !important;color:var(--ui-text) !important
 }
 html[data-ui-system="manifest"] .intakeFilterFieldOption:hover,html[data-ui-system="manifest"] .intakeFilterFieldOption:focus-visible {background:var(--ui-row-hover) !important
@@ -14360,6 +14361,7 @@ html[data-ui-system="manifest"] .cpLogisticDetailName small,html[data-ui-system=
 }
 html[data-ui-system="manifest"] .cpLogisticStage small,html[data-ui-system="manifest"] .cpStageShift {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
 }
+html[data-ui-system="manifest"] .trxRuleBasis {font-size:var(--ui-font-2xs) !important;font-weight:400 !important;line-height:1.2 !important;color:var(--ui-text-muted) !important;}
 html[data-ui-system="manifest"] .cpStageShift.is-early {color:var(--ui-success) !important
 }
 html[data-ui-system="manifest"] .cpStageShift.is-late,html[data-ui-system="manifest"] .cpStageOver,html[data-ui-system="manifest"] .cpLogisticStage.cpStageOver small:first-of-type {color:var(--ui-danger) !important

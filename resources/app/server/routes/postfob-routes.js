@@ -213,10 +213,12 @@ module.exports = function registerPostFobRoutes(app, deps) {
      FOB Sonrası görünümü ve snapshot'ı DEĞİŞMEZ; sorgu her zaman temel sipariş ×
      renk düzeyindedir (eklenen pivot alanı / satış ülkesi grain'i yok). Böylece
      FOB Sonrası varsayılan görünümüyle aynı filtrede önbellek kaydı paylaşılır.
-     Üretici ülke filtrelenmez: kıyas TR ve YD satırlarını birlikte ister.
-     Kişisel tercih lcw.postfob.tryd.v1: filtre, hedef, landed kaynağı ve son
-     sorgunun şekli (veri kopyası değil). Hesap tarayıcıda yapılır
-     (public/tryd-advantage-engine.js). */
+     Üretici ülke ve sipariş kodu filtrelenmez (istekte gelirse 400): kıyas TR ve
+     YD satırlarını birlikte ister. Eklenebilir filtreler FOB Sonrası boyutlarıdır
+     (trydEngine.FILTER_KEYS); sorgu düzeyine girmezler, yalnız TREATAS olur.
+     Kişisel tercih lcw.postfob.tryd.v1 (görünüm v2): satır ekseni, değer listesi,
+     filtre alanları/değerleri, hedef, landed kaynağı ve son sorgunun şekli (veri
+     kopyası değil). Hesap tarayıcıda yapılır (public/tryd-advantage-engine.js). */
   const TRYD_PREF_KEY = 'lcw.postfob.tryd.v1';
   const trydEngine = require('../../public/tryd-advantage-engine');
   /* Tercihte ham önbellek anahtarı DEĞİL, son sorgunun şekli (ölçü, boyut,
@@ -227,8 +229,22 @@ module.exports = function registerPostFobRoutes(app, deps) {
     const source = raw && typeof raw === 'object' ? raw : null;
     if (!source) return null;
     const list = value => (Array.isArray(value) ? value : []).map(item => String(item == null ? '' : item)).filter(Boolean).slice(0, 100);
-    return { measures: list(source.measures), dimensions: list(source.dimensions), filterValues: report.normalizeFilterValues(source.filterValues) };
+    return { measures: list(source.measures), dimensions: list(source.dimensions), filterValues: report.normalizeFilterValues(source.filterValues, trydEngine.FILTER_KEYS) };
   }
+  /* Yeni yazım sıkı denetlenir; kayıtlı (eski/senkronlanmış) tercih ise
+     normalizePrefs ile yumuşak taşınır. */
+  function assertTrydView(raw) {
+    const problems = trydEngine.validatePrefs(raw);
+    if (!problems.length) return;
+    const blocked = problems.find(item => item.code === 'blockedFilter');
+    if (blocked) throw Object.assign(new Error('TR/YD kıyası üretici ülke veya sipariş koduyla filtrelenemez: kıyas Türkiye ve yurtdışı siparişlerini birlikte ister.'), { code: 'POSTFOB_TRYD_FILTER_BLOCKED', statusCode: 400 });
+    throw Object.assign(new Error(`TR/YD görünümünde bilinmeyen alan: ${problems.map(item => item.detail).slice(0, 5).join(', ')}.`), { code: 'POSTFOB_TRYD_VIEW_INVALID', statusCode: 400 });
+  }
+  /* Sorgu görünümü: yalnız filtre alanları ve değerleri; eksen/değer seçimi
+     sorguyu değiştirmez (hep temel sipariş × renk düzeyi, FOB Sonrası ile aynı
+     önbellek anahtarı). */
+  const trydQueryView = view => report.normalizeView({ filters: view.filters, filterValues: view.filterValues });
+  const sameFilterValues = (left, right) => JSON.stringify(report.normalizeFilterValues(left, trydEngine.FILTER_KEYS)) === JSON.stringify(report.normalizeFilterValues(right, trydEngine.FILTER_KEYS));
   function trydEntry(userId) {
     const entry = userPreferences.load(userId).entries[TRYD_PREF_KEY];
     if (!entry || !entry.value) return { view: trydEngine.normalizePrefs(null), lastQuery: null };
@@ -261,7 +277,7 @@ module.exports = function registerPostFobRoutes(app, deps) {
       const entry = trydEntry(req.currentUser.id);
       res.set('Cache-Control', 'no-store').json({
         ok: true, view: entry.view, rowLimit: report.POSTFOB_MAX_ROWS,
-        filters: report.DIMENSIONS.filter(item => trydEngine.FILTER_KEYS.includes(item.key)).map(({ key, tr, en, required }) => ({ key, tr, en, required: Boolean(required) })),
+        filters: trydEngine.FILTER_KEYS.map(key => report.DIMENSIONS.find(item => item.key === key)).filter(Boolean).map(({ key, tr, en, required }) => ({ key, tr, en, required: Boolean(required) })),
         connection: { name: target.name, server: target.server, catalog: target.catalog, source: target.source },
         horizon: Boolean(report.resolveHorizon(loadModelConnections().items)),
         data: (key => key ? trydPayload(store.get(key)) : null)(lastQueryKey(req.currentUser.id, entry.lastQuery)),
@@ -270,8 +286,10 @@ module.exports = function registerPostFobRoutes(app, deps) {
   });
 
   app.put('/api/postfob/tryd/view', ...guard, express.json({ limit: '64kb' }), (req, res) => {
-    try { res.json({ ok: true, view: saveTryd(req.currentUser.id, req.body && req.body.view) }); }
-    catch (err) { logFailure('tryd-view', err); const out = failure(err); res.status(out.status).json(out); }
+    try {
+      assertTrydView(req.body && req.body.view);
+      res.json({ ok: true, view: saveTryd(req.currentUser.id, req.body && req.body.view) });
+    } catch (err) { logFailure('tryd-view', err); const out = failure(err); res.status(out.status).json(out); }
   });
 
   app.post('/api/postfob/tryd/report', ...guard, express.json({ limit: '64kb' }), async (req, res) => {
@@ -279,10 +297,11 @@ module.exports = function registerPostFobRoutes(app, deps) {
     const before = trydEntry(userId);
     let queryKey = '', view = before.view;
     try {
+      assertTrydView(req.body && req.body.view);
       view = saveTryd(userId, req.body && req.body.view);
       const found = await liveFields();
       const horizon = report.resolveHorizon(loadModelConnections().items);
-      const built = report.buildQuery({ liveFields: found.fields, view: report.normalizeView({ filterValues: view.filterValues }), horizon });
+      const built = report.buildQuery({ liveFields: found.fields, view: trydQueryView(view), horizon });
       queryKey = reportQueryKey(found, userId, built, horizon);
       const shape = { measures: built.measures, dimensions: built.dimensions, filterValues: built.filterValues };
       const meta = { filterValues: built.filterValues, missing: built.missing, rowLimit: built.maxRows, horizonApplied: built.horizonApplied };
@@ -303,8 +322,8 @@ module.exports = function registerPostFobRoutes(app, deps) {
       // filtreyle birebir aynıysa kullanılır. Görünüm (/tryd/view) Yenile'den önce
       // kaydedildiği için before.view ile değil, son sorgunun filtresiyle kıyaslanır;
       // iki taraf da sorgunun normalize biçimindedir.
-      const requested = report.normalizeView({ filterValues: view.filterValues }).filterValues;
-      const sameFilters = Boolean(before.lastQuery) && JSON.stringify(requested) === JSON.stringify(before.lastQuery.filterValues);
+      const requested = trydQueryView(view).filterValues;
+      const sameFilters = Boolean(before.lastQuery) && sameFilterValues(requested, before.lastQuery.filterValues);
       const fallbackKey = queryKey || (sameFilters ? lastQueryKey(userId, before.lastQuery) : '');
       const previous = fallbackKey ? store.get(fallbackKey) : null;
       if (previous && RECOVERABLE_ERRORS.has(String(err && err.code || ''))) {
