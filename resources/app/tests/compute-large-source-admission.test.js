@@ -140,3 +140,58 @@ test('an idle worker holding a large copy releases it after the idle period',asy
   assert.equal(pool.stats().workerCount,1,'a small idle worker stays warm');
   await pool.releaseIdle(0);assert.equal(pool.stats().workerCount,0);
 });
+
+// Codex P1: kafes yalnız serviste kabulde denetleniyordu. Şeritte bekleyen iş, önceki iş heap bırakınca
+// yeniden denetlenmiyor; yeni başlamış işçinin heap'i ilk sonuca kadar 0 sayılıyordu.
+const within=(promise,ms=2000)=>Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(Object.assign(Error('job was started instead of refused'),{code:'STILL_PENDING'})),ms).unref())]);
+const cageJob=(owner,extra={})=>({ownerKey:'source:'+owner,generation:'g1',estimatedBytes:1500*MiB,inputBytes:0,serializationKey:'source-heap-cage',
+  residentKey:JSON.stringify([owner,'g1']),residentBytes:1400*MiB,heapNeedBytes:96*MiB+Math.ceil(350*MiB*3.5),heapCage:{limitBytes:3584*MiB,usedBytes:()=>2000*MiB},...extra});
+
+test('a job waiting in the cage lane is re-checked at dispatch against the heap the previous job left behind',async t=>{
+  const {pool,workers}=fakePool({maxWorkers:2,memoryBudgetBytes:6*GiB,maxPendingBytes:GiB});t.after(()=>pool.close());
+  const a=pool.run('projections',{},cageJob('a')),b=pool.run('projections',{},cageJob('b'));await turn();
+  assert.equal(workers.length,1,'the second large job waits in the shared cage lane');
+  workers[0].complete({retainedBytes:1400*MiB,heapUsedBytes:700*MiB,cachedSources:['["a","g1"]']});(await a).release();
+  // 2000 (sunucu) + 700 (a'nın boş işçisi) + 1321 (b) = 4021 MiB > 3584: işçide başlatılmaz.
+  await assert.rejects(within(b),error=>error.code==='COMPUTE_JOB_TOO_LARGE'&&error.heapCage===true);
+  assert.equal(workers.length,1,'no worker is started for a job that could overflow the cage');
+});
+
+test('an active large job counts at least its heap need while its worker has not reported yet',async t=>{
+  const {pool,workers}=fakePool({maxWorkers:2,memoryBudgetBytes:6*GiB,maxPendingBytes:GiB});t.after(()=>pool.close());
+  const a=pool.run('projections',{},cageJob('a',{serializationKey:'lane-a'}));await turn();
+  assert.equal(pool.heapBytesExcluding('["b","g1"]'),96*MiB+Math.ceil(350*MiB*3.5),'in-flight heap is not reported as 0');
+  const b=pool.run('projections',{},cageJob('b',{serializationKey:'lane-b'}));
+  await assert.rejects(within(b),error=>error.code==='COMPUTE_JOB_TOO_LARGE'&&error.heapCage===true);
+  assert.equal(workers.length,1);
+  workers[0].complete({retainedBytes:1400*MiB,heapUsedBytes:700*MiB});(await a).release();
+});
+
+test('a dispatch-time cage refusal releases idle large workers and falls back to the capacity path',async t=>{
+  let released=0;const seen=[];
+  const pool={setGeneration(){},stats:()=>({maxWorkers:2}),close:async()=>{},heapBytesExcluding:()=>0,releaseIdle:async()=>{released++;},
+    run:async(task,payload,options)=>{seen.push(options);throw Object.assign(Error('cage'),{code:'COMPUTE_JOB_TOO_LARGE',heapCage:true});}};
+  const heapCage={limitBytes:3584*MiB,usedBytes:()=>100*MiB};
+  const service=createComputeService({pool,root,heapCage});t.after(()=>service.close());
+  await require('../server/lib/model-snapshot').saveModelSnapshotAsync('late',{loadedAt:'LATE',asasOrders:[],antrepoMap:{},lflRows:[]});
+  const descriptor=await service.coldSource({ownerId:'late',generation:'disk-1',loadedAt:'LATE',uncompressedBytes:658*MiB});
+  const lease=await service.run('source-info',descriptor,{});
+  try{assert.equal(lease.metrics.fallbackReason,'COMPUTE_JOB_TOO_LARGE');assert.equal(lease.value.loadedAt,'LATE');}finally{lease.release();}
+  assert.equal(seen[0].heapCage,heapCage,'the pool re-checks the same cage at dispatch');
+  assert.equal(seen[0].heapNeedBytes,96*MiB+Math.ceil(658*MiB*3.5));
+  assert.equal(released,1,'idle large copies are released before the server computes locally');
+  const again=await service.run('source-info',descriptor,{});again.release();
+  assert.equal(seen.length,2,'a cage refusal is not a worker overflow: the worker is tried again later');
+});
+
+test('a second request for the same source is not refused because of its own in-flight job',async t=>{
+  const {pool,workers}=fakePool({maxWorkers:2,memoryBudgetBytes:6*GiB,maxPendingBytes:GiB});t.after(()=>pool.close());
+  const a=pool.run('source-info',{},cageJob('a'));await turn();
+  // Aynı kaynağın sıradaki işi (ör. overview ve CP projeksiyonları) uçuştaki kendi kopyasını ikinci kez saymaz.
+  assert.equal(pool.heapBytesExcluding(JSON.stringify(['a','g1'])),0);
+  assert.equal(pool.heapBytesExcluding(JSON.stringify(['b','g1'])),96*MiB+Math.ceil(350*MiB*3.5));
+  const next=pool.run('projections',{},cageJob('a'));
+  workers[0].complete({retainedBytes:1400*MiB,heapUsedBytes:900*MiB,cachedSources:['["a","g1"]']});(await a).release();await turn();
+  assert.equal(workers[0].sent.length,2,'it runs warm on the worker that holds the source');
+  workers[0].complete({retainedBytes:1400*MiB,heapUsedBytes:900*MiB,cachedSources:['["a","g1"]']});(await within(next)).release();
+});

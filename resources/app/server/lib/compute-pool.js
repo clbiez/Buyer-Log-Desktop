@@ -109,6 +109,17 @@ function createComputePool(options={}){
   // Boş işçi bu işin kaynağını zaten önbellekte tutuyorsa o kopya slot.residentBytes içinde
   // ücretlidir; işin tahmini (kopyayı da içerir) yalnız artış kadar ücretlendirilir.
   const credit=(job,slot)=>job.residentKey&&slot.state==='idle'&&slot.cachedSources?.includes(job.residentKey)?Math.min(job.residentBytes,slot.residentBytes):0;
+  // Paylaşılan kafeste bir işçinin JS heap'i: etkin işçi ilk sonucunu bildirmeden de en az kendi
+  // işinin ihtiyacı kadar sayılır (yeni işçi 0 değil).
+  const slotHeap=s=>s.state==='idle'?(s.heapBytes||0):Math.max(s.heapBytes||0,s.job?.heapNeedBytes||0);
+  // İş başlatılmadan hemen önce kafes yeniden denetlenir: şeritte beklerken önceki işin bıraktığı
+  // heap ya da uçuştaki başka iş kafesi doldurmuş olabilir. Hedef işçi bu kaynağı tutuyorsa onun
+  // kopyası işin ihtiyacına dahildir.
+  function cageFits(job,target){
+    if(!job.heapCage)return true;
+    const others=[...slots].reduce((sum,s)=>sum+(s===target?(job.residentKey&&s.cachedSources?.includes(job.residentKey)?0:(s.heapBytes||0)):slotHeap(s)),0);
+    return job.heapCage.usedBytes()+others+job.heapNeedBytes<=job.heapCage.limitBytes;
+  }
   function start(job,slot,charged=job.estimatedBytes){
     job.startedAt=performance.now();clearTimeout(slot.idleTimer);slot.turns=(slot.turns||0)+1;
     removeQueued(job);job.slot=slot;slot.state='active';slot.job=job;slot.ownerKey=job.ownerKey;slot.generation=job.generation;slot.estimatedBytes=charged;
@@ -150,6 +161,11 @@ function createComputePool(options={}){
           // Aynı sahibin kaynağını önbellekte tutan boş işçi tercih edilir: ikinci işçi kopyayı yeniden çözmez.
           let slot=[...slots].find(s=>s.state==='idle'&&credit(job,s)>0&&fit(0,s))||[...slots].find(s=>s.state==='idle'&&s.ownerKey===job.ownerKey&&fit(0,s))||[...slots].find(s=>s.state==='idle'&&fit(0,s));
           if(!slot&&slots.size<maxWorkers&&fit(workerBase)){slot={state:'idle',worker:null,residentBytes:0,estimatedBytes:0,heapBytes:0,cachedSources:[],turns:0,job:null};slots.add(slot);}
+          if(slot&&!cageFits(job,slot)){
+            // Beklemez: çağıran kapasite yoluna geçer (önce boştaki büyük işçileri bırakır).
+            if(!slot.worker)slots.delete(slot);
+            removeQueued(job);rejectJob(job,Object.assign(failure('COMPUTE_JOB_TOO_LARGE'),{heapCage:true}));launched=true;break;
+          }
           if(slot){start(job,slot,job.estimatedBytes-credit(job,slot));launched=true;break;}
           // Yalnız gerçekten yer açacak idle cache emekli edilir. Sonuç lease'i
           // yüzünden sığmayan işi beklerken gereksiz worker yeniden kurulmaz.
@@ -192,6 +208,7 @@ function createComputePool(options={}){
       ||(jobOptions.signal!=null&&(typeof jobOptions.signal.aborted!=='boolean'||typeof jobOptions.signal.addEventListener!=='function'||typeof jobOptions.signal.removeEventListener!=='function'))
       ||(jobOptions.transferList!==undefined&&!Array.isArray(jobOptions.transferList)))code='COMPUTE_JOB_INVALID';
     else if(jobOptions.serializationKey!=null&&(typeof jobOptions.serializationKey!=='string'||jobOptions.serializationKey.length>200))code='COMPUTE_JOB_INVALID';
+    else if(jobOptions.heapCage!=null&&(typeof jobOptions.heapCage.usedBytes!=='function'||!bytes(jobOptions.heapCage.limitBytes)||!bytes(jobOptions.heapNeedBytes)))code='COMPUTE_JOB_INVALID';
     else if(jobOptions.residentKey!=null&&(typeof jobOptions.residentKey!=='string'||jobOptions.residentKey.length>400||!bytes(jobOptions.residentBytes)||jobOptions.residentBytes>estimated))code='COMPUTE_JOB_INVALID';
     else if(estimated+workerBase>budget)code='COMPUTE_JOB_TOO_LARGE';
     else if(jobOptions.signal?.aborted)code='COMPUTE_ABORTED';
@@ -202,7 +219,8 @@ function createComputePool(options={}){
     return new Promise((resolve,reject)=>{
       const job={id:nextId++,queuedAt:performance.now(),task,payload,resolve,reject,ownerKey,generation,estimatedBytes:estimated,inputBytes:input,priority:priority==='interactive'?0:1,
         signal:jobOptions.signal,transferList:jobOptions.transferList||[],serializationKey:jobOptions.serializationKey||'',timeoutMs,settled:false,
-        residentKey:jobOptions.residentKey||'',residentBytes:jobOptions.residentKey?jobOptions.residentBytes:0};
+        residentKey:jobOptions.residentKey||'',residentBytes:jobOptions.residentKey?jobOptions.residentBytes:0,
+        heapCage:jobOptions.heapCage||null,heapNeedBytes:jobOptions.heapCage?jobOptions.heapNeedBytes:0};
       job.onAbort=()=>{if(job.settled)return;if(job.slot){rejectJob(job,failure('COMPUTE_ABORTED'));void retire(job.slot);}else{removeQueued(job);rejectJob(job,failure('COMPUTE_ABORTED'));pump();}};
       // Admission wait and execution share one finite deadline. Waiting for a
       // held output lease cannot leave queued input alive indefinitely.
@@ -216,7 +234,9 @@ function createComputePool(options={}){
     });
   }
   // Paylaşılan kafes için: verilen kaynağı önbellekte tutmayan işçilerin son bildirilen JS heap'i.
-  function heapBytesExcluding(residentKey){return [...slots].reduce((sum,s)=>sum+(s.cachedSources?.includes(residentKey)?0:(s.heapBytes||0)),0);}
+  // Aynı kaynağı tutan ya da şu an işleyen işçi hariçtir: o kaynağın sonraki işi aynı şeritte bekleyip
+  // o işçide koşar; kopyası işin ihtiyacına dahildir. Başlatma anı denetimi (cageFits) bunu doğrular.
+  function heapBytesExcluding(residentKey){return [...slots].reduce((sum,s)=>sum+(s.cachedSources?.includes(residentKey)||(residentKey&&s.job?.residentKey===residentKey)?0:slotHeap(s)),0);}
   // Bu kadar bellek tutan boş işçileri emekli eder; çıkışları tamamlanınca çözülür.
   function releaseIdle(minResidentBytes=0){return Promise.all([...slots].filter(s=>s.state==='idle'&&s.worker&&s.residentBytes>=minResidentBytes).map(s=>retire(s))).then(()=>{});}
   function close(){

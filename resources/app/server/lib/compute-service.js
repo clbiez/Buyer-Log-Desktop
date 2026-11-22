@@ -55,6 +55,8 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB,heapCage=det
   pool??=createComputePool({maxPendingBytes:SERVICE_MAX_PENDING_BYTES,...(heapCage?{idleReleaseBytes:HEAP_CAGE_LARGE_BYTES,idleReleaseMs:30000}:{})});
   // true: işçideki ek kopya paylaşılan kafesi taşırabilir (sunucunun tamamı abort olurdu).
   const cageRefuses=(descriptorBytes,residentKey)=>Boolean(heapCage)&&heapCage.usedBytes()+(pool.heapBytesExcluding?.(residentKey)||0)+heapCageNeed(descriptorBytes)>heapCage.limitBytes;
+  // Havuz aynı kafesi işi başlatmadan hemen önce yeniden denetler (şeritte beklerken heap değişebilir).
+  const cageJob=descriptorBytes=>heapCage?{heapCage,heapNeedBytes:heapCageNeed(descriptorBytes)}:{};
   const sourceLane=(owner,descriptorBytes)=>heapCage&&heapCageNeed(descriptorBytes)>=HEAP_CAGE_LARGE_BYTES?'source-heap-cage':poolOwner(owner);
   const privateRoot=fs.mkdtempSync(path.join(root||os.tmpdir(),'buyerlog-source-replicas-'));
   fs.chmodSync(privateRoot,0o700);
@@ -164,7 +166,7 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB,heapCage=det
         try{
           if(cageRefuses(descriptor.bytes,null))throw Object.assign(Error('Shared heap cage capacity'),{code:'COMPUTE_JOB_TOO_LARGE'});
           lease=await pool.run('seed-source',{ownerId:owner,generation:version,source,antrepoMetadata:captureAntrepoMetadata(source),replicaFile,maxBytes:diskBytes},
-            {ownerKey:preparationOwner,generation:version,priority:'background',estimatedBytes:96*MiB+uncompressedBytes*SOURCE_JOB_FACTOR,inputBytes:uncompressedBytes*2});
+            {ownerKey:preparationOwner,generation:version,priority:'background',estimatedBytes:96*MiB+uncompressedBytes*SOURCE_JOB_FACTOR,inputBytes:uncompressedBytes*2,...cageJob(descriptor.bytes)});
         }catch(error){
           // Kuyruk yoğunluğu kalıcı yenileme yayımına yeni bir başarısızlık bağımlılığı getirmez: kapasite yolu.
           if(!['COMPUTE_JOB_TOO_LARGE','COMPUTE_QUEUE_BUSY'].includes(error?.code))throw error;
@@ -237,12 +239,14 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB,heapCage=det
           // Paylaşılan kafeste büyük kaynak işleri tek şeritte koşar: iki işçi aynı anda büyük geçici kopya tutmaz.
           lease=await pool.run(task,{ownerId:owner,source:record.descriptor,paramsBytes},{ownerKey:poolOwner(owner),generation:version,priority:'interactive',
             serializationKey:sourceTask?sourceLane(owner,record.descriptor.bytes):poolOwner(owner),...options,estimatedBytes:estimate,inputBytes,transferList:[paramsBytes],
-            ...(sourceTask?{residentKey,residentBytes:Math.min(record.descriptor.bytes,estimate)}:{})});
+            ...(sourceTask?{residentKey,residentBytes:Math.min(record.descriptor.bytes,estimate),...cageJob(record.descriptor.bytes)}:{})});
         }catch(error){
           // Tahmini aşan ya da işçi heap'ini tüketen görev: bu sürümde kapasite yolunda kalır (sonuç aynı motorla).
           const overflow=['COMPUTE_ESTIMATE_EXCEEDED','COMPUTE_SOURCE_TOO_LARGE'].includes(error?.code)||(error?.code==='COMPUTE_JOB_TOO_LARGE'&&error.workerOutOfMemory===true);
           if(error?.code!=='COMPUTE_JOB_TOO_LARGE'&&!overflow)throw error;
           if(overflow)(record.workerOverflow??=new Set()).add(task);
+          // Kafes reddi taşma değildir (işçi sonra yeniden denenir); sunucu kaynağı çözmeden önce boştaki büyük kopyalar bırakılır.
+          if(error.heapCage)await pool.releaseIdle?.(HEAP_CAGE_LARGE_BYTES);
           lease=await runLocal(task,record,jobParams,options);
         }
       }
@@ -341,7 +345,7 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB,heapCage=det
       const paramsSerializeMs=performance.now()-started,inputBytes=paramsBytes.byteLength+1024;
       pool.setGeneration(ownerKey,generation);
       const promise=exceedsWorkerSourceCache(task,descriptor)||cageRefuses(descriptor.bytes,key(descriptor.ownerId,descriptor.generation))?Promise.reject(Object.assign(Error('Worker source cache capacity'),{code:'COMPUTE_JOB_TOO_LARGE'})):pool.run(task,{ownerId:descriptor.ownerId,source:descriptor,paramsBytes},
-        {ownerKey,generation,priority:'interactive',estimatedBytes:96*MiB+descriptorJobBytes(task,descriptor.bytes)+inputBytes*3,inputBytes,transferList:[paramsBytes]});
+        {ownerKey,generation,priority:'interactive',estimatedBytes:96*MiB+descriptorJobBytes(task,descriptor.bytes)+inputBytes*3,inputBytes,transferList:[paramsBytes],...cageJob(descriptor.bytes)});
       // Attach a rejection handler during admission without holding the lane
       // until execution finishes.
       promise.catch(()=>{});return {promise,paramsSerializeMs,inputBytes};
