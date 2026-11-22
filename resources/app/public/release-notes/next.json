@@ -7,8 +7,8 @@
     "en": "Collection colour options, stage forecast and CP redraw fixes"
   },
   "summary": {
-    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: INTAKE tipi pivot, alan ekleme ve sipariş aramasıyla landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder; kaynağı ve ufku Veri Yönetimi'nden yönetilir. Pivot toplam satırları fare üzerindeyken okunur kalır. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur. Aşama farkı yönüyle yazılır ve üzerine gelince nedenleri görünür; depodaki parsiyelde ve Kısmi Görünümde gerçekleşen yol süresi gösterilir. Veritabanından yenilenen veri, aynı sorguyu paylaşan sayfalar için artık bir kez işlenip tek kopya saklanır; açılış, yenileme kaydı ve bellek kullanımı belirgin biçimde azalır.",
-    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: with an INTAKE-style pivot, field picker and order search it analyses landed, Integral and forecast gap with quantity weighting; its source and horizon are managed in Data Management. Pivot total rows stay readable on hover. Starting directly on CP now completes the startup screen without an error. The stage gap shows its direction and its reasons on hover; partials in the warehouse and Partial View show the realized transit time. Data refreshed from the database is now processed once and stored as a single copy for pages that share the same query; startup, refresh saving and memory use drop markedly."
+    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: INTAKE tipi pivot, alan ekleme ve sipariş aramasıyla landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder; kaynağı ve ufku Veri Yönetimi'nden yönetilir. Pivot toplam satırları fare üzerindeyken okunur kalır. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur. Aşama farkı yönüyle yazılır ve üzerine gelince nedenleri görünür; depodaki parsiyelde ve Kısmi Görünümde gerçekleşen yol süresi gösterilir. Veritabanından yenilenen veri, aynı sorguyu paylaşan sayfalar için artık bir kez işlenip tek kopya saklanır; açılış, yenileme kaydı ve bellek kullanımı belirgin biçimde azalır. Widget pivot ayarlarındaki uzun alan listeleri ve OAB \"Filtre ekle\" listesi artık arama kutusuyla açılır; OAB Genel Toplam hücresi fare üzerindeyken okunur kalır.",
+    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: with an INTAKE-style pivot, field picker and order search it analyses landed, Integral and forecast gap with quantity weighting; its source and horizon are managed in Data Management. Pivot total rows stay readable on hover. Starting directly on CP now completes the startup screen without an error. The stage gap shows its direction and its reasons on hover; partials in the warehouse and Partial View show the realized transit time. Data refreshed from the database is now processed once and stored as a single copy for pages that share the same query; startup, refresh saving and memory use drop markedly. Long field lists in widget pivot settings and the OAB \"Add filter\" list now open with a search box; the OAB Grand Total cell stays readable on hover."
   },
   "changes": [
     {
@@ -546,6 +546,64 @@
         "reason": {
           "tr": "Sunucu açılışındaki arka plan iyileştirmesi; ekranda değişen bir öğe yok.",
           "en": "Background server startup improvement; nothing on screen changes."
+        }
+      }
+    },
+    {
+      "id": "widget-field-list-search",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış · OAB · OAB (Küp) · INTAKE · FOB Sonrası Maliyet · Backlog",
+        "en": "Overview · OAB · OAB (Cube) · INTAKE · Post-FOB Cost · Backlog"
+      },
+      "title": {
+        "tr": "Widget alan listelerinde arama",
+        "en": "Search in widget field lists"
+      },
+      "body": {
+        "tr": "Widget pivot ayarlarında (satır, sütun, değer ve filtre alanı) ve Genel Bakış widget'larındaki uzun açılır listeler tıklanınca arama kutulu ortak seçici açılır: yazdıkça hazır ve küp/model alanları süzülür, ↓ ve Enter ile klavyeden seçilir, Escape yalnız listeyi kapatır. Kısa listeler (ör. Toplam/Ortalama) olduğu gibi kalır. OAB filtre panelindeki \"Filtre ekle\" listesi de arama kutusuyla açılır; Enter ilk eşleşen alanı ekler.",
+        "en": "In widget pivot settings (row, column, value and filter fields) and in Overview widgets, long dropdowns open the shared picker with a search box: typing filters built-in and cube/model fields, ↓ and Enter pick from the keyboard, and Escape closes only the list. Short lists (e.g. Sum/Average) stay as they are. The \"Add filter\" list in the OAB filter panel also opens with a search box; Enter adds the first matching field."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pivot-field-search-light.png",
+        "alt": {
+          "tr": "Demo OAB (Küp) Ayarları: pivot satır alanı listesinde 'klas' araması hazır ve küp alanlarını süzüyor",
+          "en": "Demo OAB (Cube) Settings: a 'klas' search in the pivot row field list filters built-in and cube fields"
+        },
+        "caption": {
+          "tr": "Demo veride pivot satır alanı arama kutusuyla seçilir.",
+          "en": "On demo data, the pivot row field is picked with a search box."
+        }
+      }
+    },
+    {
+      "id": "oab-total-drill-cell-hover",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış · OAB · OAB (Küp) · FOB Sonrası Maliyet",
+        "en": "Overview · OAB · OAB (Cube) · Post-FOB Cost"
+      },
+      "title": {
+        "tr": "Genel Toplam hücresi fare üzerindeyken okunur",
+        "en": "Grand Total cell stays readable on hover"
+      },
+      "body": {
+        "tr": "Fare alt detayı açılabilen Genel Toplam hücresinin üzerine geldiğinde hücre zemini tema dışı bir tona dönüyor, metin zeminle aynı renge düşüp okunmuyordu. Artık hücre satırın zemin ve metin çiftini korur, yalnız tonu değişir; alt toplam satırlarında da aynı kural geçerlidir.",
+        "en": "When the pointer was over a drillable Grand Total cell, its background switched to an off-theme tone and the text blended into it. The cell now keeps the row's background and text pair and only shifts its tone; subtotal rows follow the same rule."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-total-cell-hover-light.png",
+        "alt": {
+          "tr": "Demo OAB pivotu: fare Genel Toplam satırındaki 604 hücresinin üzerinde, değer okunur",
+          "en": "Demo OAB pivot: the pointer is over the 604 cell in the Grand Total row and the value is readable"
+        },
+        "caption": {
+          "tr": "Demo veride Genel Toplam hücresi hover'da tema tonunu korur.",
+          "en": "On demo data, the Grand Total cell keeps the theme tone on hover."
         }
       }
     }

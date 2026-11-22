@@ -11,7 +11,7 @@ const read = relative => fs.readFileSync(path.join(root, relative), 'utf8');
 test('Horizon değer seçicisi pencereyi açık tutarak çoklu seçime izin verir', () => {
   const picker = read('public/data-management-picker.js');
   const filter = read('public/data-management-filter.js');
-  const css = read('public/data-management.css');
+  const css = read('public/ui-components.css');
 
   assert.match(picker, /const keepOpen = options\.keepOpen === true;/);
   assert.match(picker, /const selected = new Set/);

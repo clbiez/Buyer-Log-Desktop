@@ -7511,7 +7511,28 @@ html[data-ui-system="manifest"] .dmfMessage.is-warn { color: var(--ui-warning) !
 }
 html[data-ui-system="manifest"] .dmfMessage.is-info { color: var(--ui-text-secondary) !important
 }
-html[data-ui-system="manifest"] .dmfPicker { z-index: var(--ui-z-modal-menu); background: var(--ui-surface) !important
+/* Ortak aranabilir seçici (data-management-picker.js) — yerleşim. Veri Yönetimi
+   ve widget ayar pencereleri (uzun <select> araması) birlikte kullanır. */
+.dmfPicker {
+  position: fixed; width: 288px; max-height: 300px; display: flex; flex-direction: column;
+}
+.dmfPickerSearch { height: var(--ui-control-height); padding: 0 8px;
+}
+.dmfPickerList { overflow-y: auto; display: flex; flex-direction: column; }
+/* Liste flex sütunu: satırlar ve başlıklar küçülmez. overflow:hidden taşıyan
+   başlığın min-height'ı 0 olduğundan uzun listede başlıklar eziliyordu. */
+.dmfPickerList > * { flex-shrink: 0; }
+.dmfPickerItem { text-align: left; padding: 4px 9px; cursor: pointer;
+}
+.dmfPickerItem.isSelected,.dmfPickerItem[aria-selected="true"] { cursor: default;
+}
+.dmfPickerItem:disabled { opacity: 1; }
+.dmfPickerEmpty { margin: 0; padding: 9px; }
+.dmfPickerGroup { flex: 0 0 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dmfPickerGroup.isTable { position: sticky; top: 0; }
+.dmfPickerList .dmfPickerItem[data-tree-depth] { padding-left: calc(9px + var(--tree-depth, 0) * 14px); }
+.dmfPickerHint { margin-left: 6px; }
+html[data-ui-system="manifest"] .dmfPicker { z-index: var(--ui-z-modal-menu); background: var(--ui-surface) !important; box-shadow: var(--ui-shadow-overlay) !important
 }
 html[data-ui-system="manifest"] .dmfPickerSearch {
   font: inherit !important; font-size: var(--ui-font-sm) !important; background: var(--ui-surface-soft) !important; color: var(--ui-text) !important
@@ -14584,6 +14605,13 @@ html[data-ui-system="manifest"] .oabPivotGroupToggle:hover {background:var(--ui-
 html[data-ui-system="manifest"] .oabPivotSubtotalTag {background:var(--ui-surface) !important;color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important;font-weight:700 !important
 }
 html[data-ui-system="manifest"] #oabTable tbody td.oabPivotDrillCell:hover {background:color-mix(in srgb,var(--ui-selected) 55%,var(--ui-surface)) !important
+}
+/* Alt detay hücresi hover'ı toplam satırlarında satırın zemin/metin çiftini
+   korur. Genel hücre kuralı (#oabTable) zemini açık seçim tonuna çekiyor, metin
+   ise Genel Toplam'ın yüzey rengi kaldığı için hücre okunmuyordu. */
+html[data-ui-system="manifest"] :is(#oabTable,#oabCubeTable,#postFobTable,#trydAdvantageTable) tbody tr:is(.oabPivotGroupRow,.oabPivotSubtotalRow) td.oabPivotDrillCell:hover {background:color-mix(in srgb,var(--ui-selected) 80%,var(--ui-surface)) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] :is(#oabTable,#oabCubeTable,#postFobTable,#trydAdvantageTable) tbody tr.oabPivotGrandTotalRow td.oabPivotDrillCell:hover {background:color-mix(in srgb,var(--ui-text-secondary) 72%,var(--ui-text)) !important;color:var(--ui-surface) !important
 }
 html[data-ui-system="manifest"] .colPanelItem.isFormulaCol .colPanelName {background:transparent !important;color:var(--ui-text) !important;font:inherit !important
 }
