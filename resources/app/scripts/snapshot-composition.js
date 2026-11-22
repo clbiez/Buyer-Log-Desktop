@@ -122,6 +122,28 @@ function addCategory(stats, name, bytes) {
   current.bytes += bytes; current.rows += 1;
   stats.categories.set(name, current);
 }
+// v3 (sütun sözlüklü) snapshot: _sourceFields [şemaNo, değer...] dizisidir; sütun
+// adları payload._bagColumns'tan okunur (analyzeFile her dosya için ayarlar).
+let bagColumns = null;
+function scanV3SourceFields(buf, e, stats) {
+  let index = -1, columns = null, count = 0;
+  for (const f of arrayItems(buf, e.start, e.end)) {
+    index += 1;
+    if (index === 0) { const id = Number(buf.toString('latin1', f.start, f.end)); columns = bagColumns && bagColumns[id]; continue; }
+    if (!columns) break; // -1 (dizi torba) ya da bilinmeyen şema
+    count += 1;
+    const name = JSON.stringify(String(columns[index - 1]));
+    const entryBytes = f.end - f.start + 1; // değer + virgül
+    stats.sfValueBytes += entryBytes;
+    const raw = f.end - f.start;
+    const blank = (raw === 4 && buf.toString('latin1', f.start, f.end) === 'null') || (raw === 2 && buf[f.start] === Q);
+    if (blank) stats.sfNullOrEmptyBytes += entryBytes;
+    const col = stats.columns.get(name) || { rows: 0, bytes: 0, keyBytes: 0, blankRows: 0 };
+    col.rows += 1; col.bytes += entryBytes; if (blank) col.blankRows += 1;
+    stats.columns.set(name, col);
+  }
+  return count;
+}
 function scanRow(buf, item, stats, hashRows) {
   stats.rows += 1;
   stats.bytes += item.end - item.start;
@@ -132,7 +154,15 @@ function scanRow(buf, item, stats, hashRows) {
     const key = keyOf(buf, e);
     const bag = ROW_BAGS.includes(key) ? key : (key.startsWith('_') ? '(diğer _ alanlar)' : '(işlenmiş alanlar)');
     addCategory(stats, bag, e.entryBytes);
-    if (key !== '_sourceFields' || buf[e.start] !== LB) continue;
+    if (key !== '_sourceFields') continue;
+    if (buf[e.start] === LS && bagColumns) {
+      stats.sfRows += 1;
+      const count = scanV3SourceFields(buf, e, stats);
+      stats.sfEntries += count;
+      if (count > stats.sfMaxColumns) stats.sfMaxColumns = count;
+      continue;
+    }
+    if (buf[e.start] !== LB) continue;
     stats.sfRows += 1;
     let count = 0;
     for (const f of objectEntries(buf, e.start, e.end)) {
@@ -197,6 +227,9 @@ function analyzeFile(file, options) {
   report.topLevel = [...payload.entries()].map(([key, e]) => ({ key, bytes: e.entryBytes }))
     .sort((a, b) => b.bytes - a.bytes);
 
+  const bagColumnsEntry = payload.get('_bagColumns');
+  bagColumns = bagColumnsEntry ? JSON.parse(raw.toString('utf8', bagColumnsEntry.start, bagColumnsEntry.end)) : null;
+  report.bagColumns = bagColumns ? { schemas: bagColumns.length, bytes: bagColumnsEntry.entryBytes } : null;
   const aliasesEntry = payload.get('targetAliases');
   report.targetAliases = aliasesEntry ? JSON.parse(raw.toString('utf8', aliasesEntry.start, aliasesEntry.end)) : {};
 
@@ -287,6 +320,7 @@ function formatReport(r) {
   for (const t of r.topLevel) out.push(`  ${t.key.padEnd(24)} ${mib(t.bytes).padStart(12)}  ${pct(t.bytes, total).padStart(6)}`);
   out.push(`  ${'(zarf / envelope)'.padEnd(24)} ${mib(r.envelopeBytes).padStart(12)}`);
   out.push(`  targetAliases: ${JSON.stringify(r.targetAliases)}`);
+  if (r.bagColumns) out.push(`  v3 sütun sözlüğü / column dictionary: ${r.bagColumns.schemas} şema, ${mib(r.bagColumns.bytes)} (satırlarda sütun adı yok)`);
   for (const [label, s] of Object.entries(r.sources)) {
     out.push('', `-- ${label.toUpperCase()} bölümleri / parts (identicalTo = bayt bayt aynı önceki bölüm)`);
     for (const p of s.parts) {

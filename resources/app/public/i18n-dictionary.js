@@ -96,6 +96,7 @@ pairs:[
 ["Sync paketi doğrulanamadı.","The sync package could not be verified."],
 ["Sync işlemi restore öncesinde tamamlanamadı.","The sync operation could not be completed before restore."],
 ["Delta checksum doğrulanamadı.","The delta checksum could not be verified."],
+["OAB (Küp)","OAB (Cube)"],
 ["OAB filtre metadata dosyası geçersiz.","The OAB filter metadata file is invalid."],
 ["OAB filtre metadata rapor kimliği beklenen raporla eşleşmiyor.","The OAB filter metadata report ID does not match the expected report."],
 ["OAB filtre metadata içinde seasons dizisi bulunamadı.","No seasons array was found in the OAB filter metadata."],

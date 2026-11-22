@@ -181,8 +181,9 @@ app.get('/api/horizon/fields', async (req, res) => {
     const sourceId = String(req.query && req.query.sourceId || '').trim();
     const connections = loadModelConnections().items || [];
     const explicitConnection = sourceId ? connections.find(item => item && String(item.id || '') === sourceId) || null
-      // FOB Sonrası Maliyet kendi bağlantısından beslenir (INTAKE gibi); kaynak verilmezse o bağlantı.
-      : (target === 'postfob' ? connections.find(item => item && item.role === 'postfob') || null : null);
+      // FOB Sonrası Maliyet ve OAB (Küp) kendi bağlantısından beslenir (INTAKE gibi); kaynak verilmezse o bağlantı.
+      : (target === 'postfob' ? connections.find(item => item && item.role === 'postfob') || null
+        : (target === 'oabcube' ? connections.find(item => item && item.role === 'oabcube') || null : null));
     let fields = horizonFields.FIELDS;
     let schemaError = '';
     const connection = explicitConnection || selectConnection(connections, target);
@@ -238,8 +239,9 @@ app.get('/api/horizon/values', async (req, res) => {
     if (!field) return res.status(400).json({ error: 'field zorunlu.', code: 'FIELD_REQUIRED' });
     const connections = loadModelConnections().items || [];
     const explicitConnection = sourceId ? connections.find(item => item && String(item.id || '') === sourceId) || null
-      // FOB Sonrası Maliyet kendi bağlantısından beslenir (INTAKE gibi); kaynak verilmezse o bağlantı.
-      : (target === 'postfob' ? connections.find(item => item && item.role === 'postfob') || null : null);
+      // FOB Sonrası Maliyet ve OAB (Küp) kendi bağlantısından beslenir (INTAKE gibi); kaynak verilmezse o bağlantı.
+      : (target === 'postfob' ? connections.find(item => item && item.role === 'postfob') || null
+        : (target === 'oabcube' ? connections.find(item => item && item.role === 'oabcube') || null : null));
     if (sourceId && !explicitConnection) return res.status(404).json({ error: 'Kaynak bulunamadı.', code: 'SOURCE_NOT_FOUND' });
     let databaseSource = null;
     if (table) {

@@ -123,6 +123,23 @@ const PROFILES = Object.freeze([
     capabilities: ['filters', 'schema-discovery'],
   },
   {
+    id: 'oab-cube',
+    legacyRole: 'oabcube',
+    label: { tr: 'OAB Küpü', en: 'OAB Cube' },
+    summary: {
+      tr: 'OAB_Cube modeli: sezon × model × renk düzeyinde WSSI, onaylı, plan ve PO adetleri (PASS\'li OAB ile aynı Order-Assortment-Budget verisi). Genel Bakış › OAB (Küp) widget\'ını besler.',
+      en: 'OAB_Cube model: WSSI, approved, plan and PO quantities at season × model × colour level (the same Order-Assortment-Budget data as PASS OAB). Feeds the Overview › OAB (Cube) widget.',
+    },
+    engine: 'tabular-dax',
+    shape: 'rows',
+    // Alanlar sabit rapor tanımından gelir (server/lib/oab-cube-report.js); alan eşlemesi yoktur.
+    fieldCatalogue: '',
+    feedableModules: ['oabcube'],
+    // Tek hedefi budur; kapatmak kaynağı işlevsiz bırakırdı (kaldırmak istiyorsa siler).
+    requiredModules: ['oabcube'],
+    capabilities: ['filters', 'schema-discovery'],
+  },
+  {
     id: 'custom-database',
     legacyRole: 'custom',
     label: { tr: 'Özel Database', en: 'Custom Database' },

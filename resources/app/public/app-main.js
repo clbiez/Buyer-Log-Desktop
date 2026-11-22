@@ -15322,11 +15322,12 @@ const MODEL_CONNECTION_PRESETS=[
   {name:'IAS',  server:'lcwtabular_p32', catalog:'IASv2', role:'antrepo', refreshEnabled:true},
   {name:'INTAKE', server:'lcwtabular_s20', catalog:'WSSI_Intake_Raporu4', role:'intake', refreshEnabled:true},
   {name:'FOB Sonrası Maliyet', server:'F5_S41', catalog:'FiyatMaliyetKontrolRapor', role:'postfob', refreshEnabled:true},
+  {name:'OAB (Küp)', server:'lcwtabular_s20', catalog:'OAB_Cube', role:'oabcube', refreshEnabled:true},
 ];
 const MODEL_CONNECTION_DEFAULT_SEASONS=Object.freeze(['W6','W7','S6','S7']);
-const MODEL_ROLE_TARGETS={asas:['cp','orders','backlog','lfl'],antrepo:['cp','orders','backlog'],intake:['intake'],postfob:['postfob']};
+const MODEL_ROLE_TARGETS={asas:['cp','orders','backlog','lfl'],antrepo:['cp','orders','backlog'],intake:['intake'],postfob:['postfob'],oabcube:['oabcube']};
 MODEL_ROLE_TARGETS.asas.push('priceanalysis');
-const MODEL_TARGET_LABELS={cp:'CP',orders:'Orders / Siparişler',backlog:'Backlog',lfl:'LFL',priceanalysis:'Price & Supplier Analysis',intake:'INTAKE',postfob:'FOB Sonrası Maliyet / Post-FOB Cost'};
+const MODEL_TARGET_LABELS={cp:'CP',orders:'Orders / Siparişler',backlog:'Backlog',lfl:'LFL',priceanalysis:'Price & Supplier Analysis',intake:'INTAKE',postfob:'FOB Sonrası Maliyet / Post-FOB Cost',oabcube:'OAB (Küp) / OAB (Cube)'};
 const MODEL_QUERY_PLACEHOLDER='// Once "Tablolari Listele" ile tablo adini bul, listeden tikla.\n// Sorgu buraya kendisi yazilir.';
 let modelConnState={items:[],revision:0,selectedId:null,supported:true,exportFolder:'',loaded:false};
 let modelConnFields={};      // rol → alan kataloğu (sunucudan bir kez alınır)
@@ -20208,7 +20209,7 @@ function ensureOverviewOabCubeModule(){
   window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'oabCube',mode:'after-ui'});
   // Pivot hesaplanan değerleri ortak modülü; oab-cube.js onu yalnız çizimde okur (aynı dize tek kez yüklenir).
   overviewOabCubeLoadPromise=Promise.all([loader('pivot-calculated-values.js?rev=20261122').catch(()=>null),Promise.resolve(ensureOverviewOabModule())
-    .then(()=>loader('oab-cube.js?rev=20261122'))]).then(([,loaded])=>loaded)
+    .then(()=>loader('oab-cube.js?rev=20261123'))]).then(([,loaded])=>loaded)
     .then(()=>{window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'oabCube',mode:'after-ui'});return window.BLOabCube||null;})
     .catch(error=>{overviewOabCubeLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'oabCube',mode:'after-ui',failed:true});console.warn('OAB (Küp) modülü yüklenemedi:',error);return null;});
   return overviewOabCubeLoadPromise;

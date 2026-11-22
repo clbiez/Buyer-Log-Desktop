@@ -46,9 +46,11 @@ test('snapshot body is written without a joined copy and stays byte-compatible w
   const saved = await snapshots.saveModelSnapshotAsync('heap', payload);
   const text = zlib.gunzipSync(fs.readFileSync(saved.file)).toString('utf8'), parsed = JSON.parse(text);
   const marker = '"payload":', body = text.slice(text.indexOf(marker) + marker.length, -1);
-  assert.equal(parsed.schemaVersion, 2);
+  assert.equal(parsed.schemaVersion, 3);
   assert.equal(crypto.createHash('sha256').update(body).digest('hex'), parsed.checksum);
-  assert.equal(saved.uncompressedBytes, Buffer.byteLength(text));
+  assert.equal(saved.fileBytes, Buffer.byteLength(text));
+  // uncompressedBytes işçi/bellek ayırmasıdır: v3'te çözülmüş (v2 eşdeğeri) boyut.
+  assert.equal(saved.uncompressedBytes, parsed.decodedBytes);
   const loaded = await snapshots.loadModelSnapshotAsync('heap');
   assert.equal(loaded.asasOrders.length, 400);
   assert.equal(loaded.asasOrders[7].model, 'ÖRNEK-ŞĞÜ-7');

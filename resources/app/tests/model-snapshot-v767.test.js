@@ -32,7 +32,7 @@ test('v7.67 snapshot stores shared target datasets once and restores identity al
   assert.ok(saved.uncompressedBytes < legacyBytes * 0.45, `expected compact snapshot; ${saved.uncompressedBytes}/${legacyBytes}`);
 
   const wrapper = JSON.parse(zlib.gunzipSync(fs.readFileSync(saved.file)).toString('utf8'));
-  assert.equal(wrapper.schemaVersion, 2);
+  assert.equal(wrapper.schemaVersion, 3);
   assert.match(wrapper.checksum, /^[a-f0-9]{64}$/);
   assert.deepEqual(wrapper.payload.targetAliases.asasOrdersByTarget, { cp:'asasOrders', orders:'asasOrders', backlog:'asasOrders' });
 
