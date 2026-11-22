@@ -137,8 +137,8 @@ module.exports = function registerOabCubeRoutes(app, deps) {
       const view = saveView(userId, { ...storedView(userId), ...(req.body && req.body.view ? req.body.view : {}) });
       const found = await liveFields();
       const built = report.buildQuery({ liveFields: found.fields, view });
-      const queryKey = store.queryKey({ connection: { server: found.connection.server, catalog: found.connection.catalog, user: String(userId) }, measures: built.measures, rows: built.dimensions, filters: built.filterValues, options: { report: 'oab-cube', version: 1 } });
-      const meta = { filterValues: built.filterValues, missing: built.missing, rowLimit: built.maxRows, measures: built.measures, dimensions: built.dimensions };
+      const queryKey = store.queryKey({ connection: { server: found.connection.server, catalog: found.connection.catalog, user: String(userId) }, measures: built.measures, rows: built.dimensions, filters: built.filterValues, options: { report: 'oab-cube', version: 2 } });
+      const meta = { filterValues: built.filterValues, missing: built.missing, rowLimit: built.maxRows, measures: [...built.measures, ...(built.derived || [])], dimensions: built.dimensions };
       if (!(req.body && req.body.forceRefresh)) {
         const cached = store.get(queryKey);
         if (cached && cached.fresh) {

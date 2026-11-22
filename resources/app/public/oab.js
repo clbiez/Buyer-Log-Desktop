@@ -833,9 +833,39 @@
     const choiceMarkup = choices.length
       ? choices.map(field => `<button type="button" role="menuitem" data-oab-add-field="${oabEsc(field)}">${oabEsc(field)}</button>`).join('')
       : `<div class="oabLocalFilterAddEmpty" role="status">${oabEsc(oabT('Eklenebilecek filtre alanı yok.', 'No additional filter fields available.'))}</div>`;
-    popover.innerHTML = `<div class="oabLocalFilterAddTitle">${oabEsc(oabT('Filtre alanı ekle', 'Add filter field'))}</div>${choiceMarkup}`;
+    /* Uzun alan listesi (80+ OAB alanı) arama kutusuyla süzülür; Enter ilk eşleşmeyi ekler. */
+    const searchMarkup = choices.length
+      ? `<input type="search" class="oabMultiSearch oabLocalFilterAddSearch" placeholder="${oabEsc(oabT('Alan ara…', 'Search fields…'))}" aria-label="${oabEsc(oabT('Filtre alanı ara', 'Search filter fields'))}" autocomplete="off"><div class="oabLocalFilterAddEmpty" data-oab-add-noresult hidden role="status">${oabEsc(oabT('Sonuç yok', 'No results'))}</div>`
+      : '';
+    popover.innerHTML = `<div class="oabLocalFilterAddTitle">${oabEsc(oabT('Filtre alanı ekle', 'Add filter field'))}</div>${searchMarkup}${choiceMarkup}`;
     document.body.appendChild(popover);
     oabPositionDropdown(popover, trigger);
+    const search = popover.querySelector('.oabLocalFilterAddSearch');
+    const visibleChoices = () => [...popover.querySelectorAll('[data-oab-add-field]')].filter(button => !button.hidden);
+    if (search) {
+      search.addEventListener('input', () => {
+        const needle = search.value.trim().toLocaleLowerCase('tr');
+        popover.querySelectorAll('[data-oab-add-field]').forEach(button => { button.hidden = Boolean(needle) && !button.dataset.oabAddField.toLocaleLowerCase('tr').includes(needle); });
+        popover.querySelector('[data-oab-add-noresult]').hidden = visibleChoices().length > 0;
+      });
+      search.addEventListener('keydown', event => {
+        if (event.key === 'ArrowDown') { event.preventDefault(); visibleChoices()[0]?.focus(); return; }
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        visibleChoices()[0]?.click();
+      });
+      setTimeout(() => search.focus(), 0);
+    }
+    popover.addEventListener('keydown', event => {
+      if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); oabCloseLocalFilterFieldPopover(); trigger.focus?.(); return; }
+      // Arama kutusu ↓'yi zaten işledi (ilk sonuca odak); ikinci kez ilerletme.
+      if (event.defaultPrevented || (event.key !== 'ArrowDown' && event.key !== 'ArrowUp')) return;
+      const list = visibleChoices(), index = list.indexOf(document.activeElement);
+      if (index < 0) return;
+      event.preventDefault();
+      if (event.key === 'ArrowUp' && index === 0) { search?.focus(); return; }
+      list[Math.max(0, Math.min(list.length - 1, index + (event.key === 'ArrowDown' ? 1 : -1)))].focus();
+    });
     popover.addEventListener('click', event => {
       const button = event.target.closest('[data-oab-add-field]');
       if (!button) return;
@@ -2077,12 +2107,11 @@
       const old = S.pivotFilters[descriptor.key];
       const panel = document.createElement('div');
       panel.className = 'colFilterPanel oabPivotFilterPanel';
-      const rect = anchor.getBoundingClientRect();
-      panel.style.left = `${Math.max(4, rect.left - 130)}px`; panel.style.top = `${rect.bottom + 4}px`;
       panel.innerHTML = `<div class="cfpRange"><div class="cfpRangeHead">${oabEsc(oabT('Değer aralığı', 'Value range'))}</div>
         <div class="oabPivotRangeGrid"><label>${oabEsc(oabT('En az', 'Minimum'))}<input type="text" inputmode="decimal" data-min value="${oabEsc(old && old.kind === 'range' && old.min != null ? old.min : '')}"></label><label>${oabEsc(oabT('En çok', 'Maximum'))}<input type="text" inputmode="decimal" data-max value="${oabEsc(old && old.kind === 'range' && old.max != null ? old.max : '')}"></label></div>
         <div class="cfpApplyRow"><button type="button" class="cfpRangeApply">${oabEsc(oabT('Uygula', 'Apply'))}</button><button type="button" class="numFilterClear cfpRangeClear">${oabEsc(oabT('Filtreyi Kaldır', 'Remove Filter'))}</button></div></div>`;
       document.body.appendChild(panel);
+      window.BLFloatingPlacement?.place(panel, anchor, { left: rect => rect.left - 130 });
       const read = sel => { const raw = String(panel.querySelector(sel)?.value || '').trim().replace(',', '.'); return raw === '' ? null : (Number.isFinite(Number(raw)) ? Number(raw) : null); };
       const close = () => panel.remove();
       panel.querySelector('.cfpRangeApply')?.addEventListener('click', () => { let min = read('[data-min]'), max = read('[data-max]'); if (min != null && max != null && min > max) [min, max] = [max, min]; if (min == null && max == null) delete S.pivotFilters[descriptor.key]; else S.pivotFilters[descriptor.key] = { kind: 'range', min, max }; close(); oabRenderTable(); });
@@ -2720,11 +2749,7 @@
       const pin=()=>{if(typeof pinCheckedFilterChoices==='function')pinCheckedFilterChoices(panel);};
       panel.querySelector('.cfpList')?.addEventListener('change',event=>{if(event.target.matches('input[type="checkbox"]'))pin();});
       pin();
-      const rect = anchor.getBoundingClientRect();
-      const panelWidth = Math.min(380, Math.max(250, panel.offsetWidth || 280));
-      panel.style.left = `${Math.max(8, Math.min(window.innerWidth - panelWidth - 8, rect.right - panelWidth))}px`;
-      panel.style.top = `${Math.min(window.innerHeight - (panel.offsetHeight || 360) - 8, rect.bottom + 4)}px`;
-      if (parseFloat(panel.style.top) < 8) panel.style.top = '8px';
+      window.BLFloatingPlacement?.place(panel, anchor, { align: 'end' });
 
       const listItems = () => [...panel.querySelectorAll('.cfpItem')];
       const visibleChecks = () => listItems().filter(item => item.style.display !== 'none').map(item => item.querySelector('input')).filter(Boolean);

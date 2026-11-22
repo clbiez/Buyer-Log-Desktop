@@ -32262,11 +32262,10 @@ function openKolCheckFilter(anchorEl){
   const existing = document.querySelector('.kolColFilterPanel'); if(existing) existing.remove();
   const panel = document.createElement('div');
   panel.className = 'colFilterPanel kolColFilterPanel';
-  const rect = anchorEl.getBoundingClientRect();
-  panel.style.left = rect.left+'px';
-  panel.style.top = (rect.bottom+4)+'px';
   panel.style.minWidth = '190px';
   document.body.appendChild(panel);
+  // Ortak yerleştirici: içerik dolunca da panel pencere içinde kalır.
+  window.BLFloatingPlacement?.place(panel, anchorEl);
   const en = appLang==='en';
   const active = normalizeCheckFilterMode(kolCheckFilter);
   const selectedCount = kolRows.reduce((n,r)=>n+(selectionHasId(kolSelected,r.id)?1:0),0);
@@ -32292,10 +32291,9 @@ function openKolHeaderFilter(key, anchorEl){
   const meta = kolFilterMeta(key); if(!meta) return;
   const panel = document.createElement('div');
   panel.className = 'colFilterPanel kolColFilterPanel';
-  const rect = anchorEl.getBoundingClientRect();
-  panel.style.left = Math.max(4, rect.left-170)+'px';
-  panel.style.top = (rect.bottom+4)+'px';
   document.body.appendChild(panel);
+  // Ortak yerleştirici: değer listesi dolunca da panel (liste + Uygula) pencere içinde kalır.
+  window.BLFloatingPlacement?.place(panel, anchorEl, { left: rect => rect.left-170 });
   // Diğer aktif sütun filtrelerine göre daralan (facet) değer listesi — uygulamanın geri
   // kalanındaki çapraz filtre ipucu mantığıyla tutarlı.
   const otherEntries = Object.keys(kolColFilters).filter(k=>k!==key).map(k=>[kolColFilters[k], k]);
