@@ -143,7 +143,7 @@
       const walk = (list, level, values) => {
         if (level >= dims.length) {
           const leaf = {}; dims.forEach((ref, index) => { leaf[ref.key] = values[index]; });
-          out.push({ kind: 'leaf', dims: leaf, metrics: analysis.groupMetrics(list, bounds, extras), level: fromLevel });
+          out.push({ kind: 'leaf', dims: leaf, metrics: analysis.groupMetrics(list, bounds, extras), level: fromLevel, rows: list });
           return;
         }
         sortSiblings(bucket(list, dims[level].key, bounds, extras), level).forEach(group => walk(group.rows, level + 1, [...values, group.value]));
@@ -159,13 +159,13 @@
           const isLeafLevel = level === rowRefs.length - 1 && colRefs.length === 0;
           if (isLeafLevel) {
             const leaf = {}; rowRefs.forEach((item, index) => { leaf[item.key] = nextPath[index]; });
-            out.push({ kind: 'leaf', dims: leaf, metrics: group.metrics, level });
+            out.push({ kind: 'leaf', dims: leaf, metrics: group.metrics, level, rows: group.rows });
             return;
           }
           const pathKey = groupKeyOf(nextPath);
           const isCollapsed = collapsed.has(pathKey);
           const groupDims = {}; groupDims[ref.key] = group.value;
-          out.push({ kind: 'group', dims: groupDims, metrics: showSubtotals ? group.metrics : {}, level, pathKey, collapsed: isCollapsed, subtotal: showSubtotals });
+          out.push({ kind: 'group', dims: groupDims, metrics: showSubtotals ? group.metrics : {}, level, pathKey, collapsed: isCollapsed, subtotal: showSubtotals, rows: group.rows, path: nextPath });
           if (isCollapsed) return;
           if (level < rowRefs.length - 1) walk(group.rows, level + 1, nextPath);
           else leafCombos(group.rows, level + 1, nextPath);
@@ -175,7 +175,7 @@
     }
     if (showSubtotals && prepared.visible.length) {
       const grand = {}; if (dims[0]) grand[dims[0].key] = text('Genel Toplam', 'Grand Total');
-      out.push({ kind: 'grand', dims: grand, metrics: analysis.groupMetrics(prepared.visible, bounds, extras), level: 0 });
+      out.push({ kind: 'grand', dims: grand, metrics: analysis.groupMetrics(prepared.visible, bounds, extras), level: 0, rows: prepared.visible });
     }
     return out;
   }
@@ -310,9 +310,12 @@
     const items = displayRows(prepared);
     const shown = items.length > MAX_TABLE_ROWS ? [...items.slice(0, MAX_TABLE_ROWS - 1), items[items.length - 1]] : items;
     const rowClass = item => item.kind === 'grand' ? 'oabPivotGrandTotalRow' : (item.kind === 'group' ? (item.subtotal ? 'oabPivotSubtotalRow' : 'oabPivotGroupRow') : '');
-    const bodyHtml = shown.map(item => `<tr class="${rowClass(item)}">${dims.map(ref => cellHtml(item, ref, dims, false)).join('')}${values.map(ref => cellHtml(item, ref, dims, true)).join('')}</tr>`).join('');
+    state.displayItems = shown;
+    const bodyHtml = shown.map((item, index) => `<tr class="${rowClass(item)}" data-postfob-row="${index}">${dims.map(ref => cellHtml(item, ref, dims, false)).join('')}${values.map(ref => cellHtml(item, ref, dims, true)).join('')}</tr>`).join('');
     table.innerHTML = `<thead><tr>${head}</tr></thead><tbody>${bodyHtml || `<tr><td class="intakeEmpty" colspan="${dims.length + values.length}">${esc(text('Aramayla eşleşen satır yok.', 'No rows match the search.'))}</td></tr>`}</tbody>`;
     updateGroupButtons(prepared);
+    const drillTitle = text('Alt detayı görmek için çift tıklayın', 'Double-click to see drill-down details');
+    table.querySelectorAll('tbody tr[data-postfob-row] > td').forEach(td => { td.classList.add('oabPivotDrillCell'); if (!td.title) td.title = drillTitle; });
     try {
       /* Sütun, başlığın en uzun kelimesinden dar olmaz: sığmayan tablo kelime
          ortasından kırılmak yerine kendi kabında yatay kayar. */
@@ -331,6 +334,66 @@
     if (state.truncated) notes.push(text(`Sorgu ${state.rowLimit.toLocaleString(locale())} satır sınırına ulaştı; toplamlar eksik olabilir. Filtreleri daraltın.`, `The query hit the ${state.rowLimit.toLocaleString(locale())} row limit; totals may be incomplete. Narrow the filters.`));
     if (total.landedCoverage != null && total.landedCoverage < 0.95) notes.push(text(`Landed değeri adetin %${fmt(total.landedCoverage * 100, 0)} kısmında var; oranlar yalnız bu kısımdan hesaplandı.`, `Landed is available for ${fmt(total.landedCoverage * 100, 0)}% of the quantity; ratios use only that part.`));
     if (note) { note.hidden = !notes.length; note.textContent = notes.join(' '); }
+  }
+
+  /* ---------- Alt detay (OAB ile aynı ortak sağ çekmece) ---------- */
+  const DETAIL_LABELS = {
+    specialCode: ['Özel kod', 'Special code'], modelName: ['Model adı', 'Model name'],
+    _postFob: ['FOB sonrası USD (satır)', 'Post-FOB USD (row)'], _landedToFob: ['Landed/FOB (satır)', 'Landed/FOB (row)'],
+    _outlier: ['Aykırı', 'Outlier'], _segment: ['Kapsam', 'Scope'],
+  };
+  const DEFAULT_DETAIL = ['order', 'model', 'colour', 'productName', 'specialCode', 'originCountry', 'salesCountry', 'qty', 'fob', 'landedActual', '_postFob', '_landedToFob', 'integralLast', '_outlier'];
+  function detailLabel(key) {
+    if (DETAIL_LABELS[key]) return text(...DETAIL_LABELS[key]);
+    const dim = baseDim(key); if (dim) return text(dim.tr, dim.en);
+    const measure = state.catalog.measures.find(item => item.key === key); if (measure) return text(measure.tr, measure.en);
+    const ref = [...view().rows, ...view().columns, ...view().filters, ...view().values].find(item => item.key === key);
+    return ref ? refLabel(ref) : key;
+  }
+  function openDetail(item, ref) {
+    const source = Array.isArray(item && item.rows) ? item.rows : [];
+    if (!source.length) { setStatus(() => text('Bu hücre için alt detay bulunamadı.', 'No drill-down detail was found for this cell.'), 'warning'); return; }
+    const prepared = analysis.prepare(state.rows, { segment: view().segment });
+    const segmentText = { import: text('İthal', 'Import'), domestic: text('Yerli', 'Domestic'), unknown: text('Bilinmiyor', 'Unknown') };
+    const rows = source.map(row => {
+      const ratio = analysis.rowRatio(row);
+      const landed = typeof row.landedActual === 'number' ? row.landedActual : null, fob = typeof row.fob === 'number' ? row.fob : null;
+      return { ...row, _postFob: landed != null && fob != null ? landed - fob : null, _landedToFob: ratio, _outlier: analysis.isOutlier(row, prepared.bounds) ? text('Evet', 'Yes') : '', _segment: segmentText[analysis.segmentOf(row)] };
+    });
+    const keys = [];
+    const add = key => { if (key && !keys.includes(key)) keys.push(key); };
+    DEFAULT_DETAIL.forEach(add);
+    rows.slice(0, 200).forEach(row => Object.keys(row).forEach(add));
+    const numeric = key => rows.some(row => typeof row[key] === 'number');
+    const formatOf = key => key === '_landedToFob' ? FORMATS.ratio : (key === 'qty' ? FORMATS.qty : (numeric(key) ? FORMATS.extra : null));
+    const columns = keys.filter(key => rows.some(row => row[key] !== undefined)).map(key => {
+      const format = formatOf(key);
+      return { key, label: detailLabel(key), type: numeric(key) ? 'number' : 'text', ...(format ? { format: value => value == null || value === '' ? '' : format(value) } : {}) };
+    });
+    const dims = [...view().rows, ...view().columns];
+    const context = item.kind === 'grand'
+      ? text('Genel Toplam', 'Grand Total')
+      : (item.kind === 'group' ? item.path : dims.map(entry => item.dims[entry.key]).filter(value => value != null))
+        .map((value, index) => `${refLabel(dims[index])}: ${value === '' ? text('(boş)', '(blank)') : value}`).join(' › ');
+    const metric = ref && (ref.key === 'outliers' ? item.metrics.outliers : item.metrics[ref.key]);
+    const note = [ref && metric != null ? `${refLabel(ref)}: ${valueFormat(ref)(metric)}` : '', `${rows.length.toLocaleString(locale())} ${text('kaynak satır', 'source rows')}`, state.search ? `${text('Arama', 'Search')}: ${state.search}` : ''].filter(Boolean).join(' · ');
+    if (!window.BLDetailDrawer || typeof window.BLDetailDrawer.open !== 'function') { setStatus(() => text('Alt detay çekmecesi yüklenemedi.', 'The drill-down drawer could not be loaded.'), 'error'); return; }
+    window.BLDetailDrawer.open({
+      storageKey: 'postfob.pivot.detail',
+      pageScope: 'overview.postfob',
+      moduleId: 'overview',
+      source: 'postfob',
+      title: `${text('FOB Sonrası Maliyet Alt Detay', 'Post-FOB Cost Drill-down')}${ref ? ` · ${refLabel(ref)}` : ''}`,
+      subtitle: context,
+      note,
+      rows,
+      columns,
+      defaultVisible: DEFAULT_DETAIL.filter(key => columns.some(column => column.key === key)),
+      exactDefaultVisible: true,
+      flatColumns: true,
+      images: false,
+      fileName: 'FOB_Sonrasi_Maliyet_Alt_Detay',
+    });
   }
 
   function render() {
@@ -747,6 +810,19 @@
       }
       const trigger = event.target.closest('[data-postfob-filter]');
       if (trigger) openFilter(trigger, trigger.dataset.postfobFilter);
+    });
+    byId('postFobTable')?.addEventListener('dblclick', event => {
+      if (event.target.closest('[data-postfob-group-key],thead')) return;
+      const cell = event.target.closest('td'), row = cell && cell.closest('tr[data-postfob-row]');
+      if (!row) return;
+      event.preventDefault();
+      const item = (state.displayItems || [])[Number(row.dataset.postfobRow)];
+      const dims = [...view().rows, ...view().columns];
+      // Değer sütunu: colspan'lı grup hücresi sonrası gerçek sütun indeksi hesaplanır.
+      let column = 0;
+      for (const td of row.cells) { if (td === cell) break; column += td.colSpan || 1; }
+      const ref = column >= dims.length ? view().values[column - dims.length] : null;
+      if (item) openDetail(item, ref);
     });
     byId('postFobTable')?.addEventListener('click', event => {
       const toggle = event.target.closest('[data-postfob-group-key]');

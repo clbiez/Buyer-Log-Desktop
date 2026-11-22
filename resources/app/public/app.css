@@ -2730,7 +2730,7 @@ td.qtxColourBridgeBusy{cursor:progress!important;}
 .ovPriorityReminder.isCollapsed .ovPriorityHeader{margin-bottom:0;align-items:center;}
 .ovPriorityReminder.isCollapsed .ovPriorityIntro,.ovPriorityReminder.isCollapsed .ovPriorityList,.ovPriorityReminder.isCollapsed .ovPriorityMethod{display:none!important;}
 #ovPriorityReminder + #oabSection{margin-top:0!important;}
-#oabTable tbody td.oabPivotDrillCell{cursor:zoom-in;}
+#oabTable tbody td.oabPivotDrillCell,#postFobTable tbody td.oabPivotDrillCell{cursor:zoom-in;}
 .autoModal.oabDrillModal{width:calc(100vw - 28px);max-width:none;height:calc(100vh - 28px);max-height:none;}
 .oabDrillModal .autoModalBody{flex:1;min-height:0;overflow:hidden;grid-template-rows:auto auto minmax(0,1fr) auto;}
 .oabDrillHeadText{min-width:0;}

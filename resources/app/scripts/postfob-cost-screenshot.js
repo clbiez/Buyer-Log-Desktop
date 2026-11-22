@@ -83,6 +83,26 @@ function demoRows() {
     await page.click('#_postFobFieldsModal [data-postfob-save]');
     await page.waitForFunction(() => document.querySelectorAll('#postFobTable tr.oabPivotSubtotalRow').length === 4, null, { timeout: 10000 });
     assert.equal(await page.$$eval('#postFobTable tbody tr:not(.oabPivotSubtotalRow):not(.oabPivotGrandTotalRow)', rows => rows.length), 8);
+    // Alt detay: MISIR alt toplamında FOB hücresine çift tık → OAB ile aynı ortak çekmece, 9 kaynak satır.
+    const fobColumn = await page.$$eval('#postFobTable thead th', ths => ths.findIndex(th => th.dataset.postfobSort === 'fob'));
+    const misir = await page.$$eval('#postFobTable tr.oabPivotSubtotalRow', rows => rows.findIndex(row => /MISIR/.test(row.textContent)));
+    // Grup hücresi colspan taşır: hücre indeksi = sütun − (colspan − 1).
+    await page.locator('#postFobTable tr.oabPivotSubtotalRow').nth(misir).locator('td').nth(fobColumn - 1).dblclick();
+    await page.waitForSelector('#blSharedDetailDrawer.is-open', { timeout: 10000 });
+    const drawerText = await page.textContent('#blSharedDetailDrawer');
+    assert.match(drawerText, /MISIR/);
+    assert.match(drawerText, /9 (kaynak satır|source rows)/);
+    assert.match(drawerText, /DEMO-101[0-8]/);
+    if (process.argv.includes('--detail-shot')) {
+      await page.waitForTimeout(500);
+      const detailShot = path.join(__dirname, `../public/release-notes/next-assets/postfob-drilldown-${theme}.png`);
+      const drawerBox = await page.$eval('#blSharedDetailDrawer', el => { const panel = el.querySelector('[role="dialog"]') || el.firstElementChild || el; const r = panel.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });
+      const width = Math.max(960, Math.min(1400, drawerBox.w));
+      await page.screenshot({ path: detailShot, clip: { x: Math.max(0, Math.min(drawerBox.x, 1440 - width)), y: Math.max(0, drawerBox.y), width, height: Math.min(560, Math.max(Math.ceil(width / 3), drawerBox.h)) } });
+      console.log(JSON.stringify({ detailShot, drawerBox }));
+    }
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(() => !document.querySelector('#blSharedDetailDrawer.is-open'), null, { timeout: 10000 });
     // + Filtre ekle: canlı modelin ek alanı listelenir.
     await page.click('#postFobFiltersBtn');
     await page.click('[data-postfob-add-filter]');

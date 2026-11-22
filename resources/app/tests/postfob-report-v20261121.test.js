@@ -372,3 +372,14 @@ test('Corporate Integration Lab İncele: canlı şema okunur, eksik alan raporla
   assert.deepEqual(calls.map(call => call[0]), ['schema'], 'İncele veri sorgusu atmaz');
   assert.equal(calls[0][1].server, 'F5_S41');
 });
+
+test('her pivot hücresi çift tıkla OAB ile aynı ortak alt detay çekmecesini kaynak satırlarla açar', () => {
+  const ui = fs.readFileSync(path.join(__dirname, '../public/postfob.js'), 'utf8');
+  assert.match(ui, /addEventListener\('dblclick'/);
+  assert.match(ui, /window\.BLDetailDrawer\.open\(\{\s*storageKey: 'postfob\.pivot\.detail'/);
+  assert.match(ui, /td\.classList\.add\('oabPivotDrillCell'\)/);
+  // Grup, yaprak ve genel toplam satırı kendi kaynak satırlarını taşır.
+  for (const kind of ["kind: 'leaf', dims: leaf, metrics: analysis.groupMetrics(list, bounds, extras), level: fromLevel, rows: list", "subtotal: showSubtotals, rows: group.rows, path: nextPath", "kind: 'grand', dims: grand, metrics: analysis.groupMetrics(prepared.visible, bounds, extras), level: 0, rows: prepared.visible"]) assert.ok(ui.includes(kind), kind);
+  const css = fs.readFileSync(path.join(__dirname, '../public/app.css'), 'utf8');
+  assert.match(css, /#postFobTable tbody td\.oabPivotDrillCell\{cursor:zoom-in;\}/);
+});
