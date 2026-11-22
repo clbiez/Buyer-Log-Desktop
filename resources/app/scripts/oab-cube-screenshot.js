@@ -7,6 +7,7 @@
 // bütün çizim gerçektir. Canlı küp doğrulaması değildir.
 const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
 const { start } = require('./lib/client-performance-app');
+const cubeReport = require('../server/lib/oab-cube-report');
 
 function demoRows() {
   const classes = [['DEMO TRİKO', ['DEMO KAZAK', 'DEMO HIRKA']], ['DEMO DOKUMA', ['DEMO GÖMLEK', 'DEMO PANTOLON']]];
@@ -20,14 +21,20 @@ function demoRows() {
           season: i % 2 ? 'W6' : 'S6', mag: seq % 3 ? 'DM1A' : 'DM2B', buyerGroup: 'DEMO GRUP', classGroup, classification,
           // "3E8" bilimsel gösterime kaymamalı: kod alanı metin kalır.
           modelCode: seq === 3 ? '3E8' : `DM${400 + seq}`, modelName: `DEMO MODEL ${seq}`, colourCode: seq === 3 ? '1E5' : `C${(i % 3) + 1}`, colourName: `DEMO RENK ${(i % 3) + 1}`,
-          wssi: 600 + seq * 40, approved: 500 + seq * 35, plan: 700 + seq * 50, unapproved: seq % 4 ? 80 + seq * 5 : 0, buyingPeriodQty: 300 + seq * 10,
+          // Her üçüncü option'da WSSI yok: onaylı adedi "onaylanmış - sipariş geçilmemiş" olur.
+          wssi: seq % 3 ? 600 + seq * 40 : 0, approved: 500 + seq * 35, plan: 700 + seq * 50, unapproved: seq % 4 ? 80 + seq * 5 : 0, buyingPeriodQty: 300 + seq * 10,
           reserveApproved: 0, fastApproved: seq % 5 ? 0 : 40, poQty: 450 + seq * 30, warehouseIn: 200 + seq * 20, eligibleBuy: null,
           plannedStores: 120 + (seq % 4) * 10, landedPrice: 4.1 + (seq % 3) * 0.35, markupYd: 2.4, markupYi: 2.1,
         });
       }
     }
   }
-  return rows;
+  // Türetilmiş ölçüler gerçek sunucu fonksiyonuyla hesaplanır (küp yanıtı taklit, formül değil).
+  return cubeReport.normalizeRows(rows, {
+    dimensions: Object.keys(rows[0]).filter(key => !cubeReport.MEASURES.some(item => item.key === key)),
+    measures: cubeReport.MEASURES.map(item => item.key),
+    derived: cubeReport.DERIVED_MEASURES.map(item => item.key),
+  });
 }
 
 (async () => {
@@ -90,6 +97,10 @@ function demoRows() {
     const fmt = value => value.toLocaleString(lang === 'en' ? 'en-GB' : 'tr-TR');
     assert.ok(grandText.includes(fmt(sum('wssi'))), `WSSI genel toplamı ${fmt(sum('wssi'))}: ${grandText}`);
     assert.ok(grandText.includes(fmt(sum('approved'))), 'Onaylı genel toplamı');
+    // Varsayılan görünümde "Onaylanmış - sipariş geçilmemiş" sütunu var; genel toplam satır formülünün toplamıdır.
+    assert.ok(sum('approvedNotOrdered') > 0, 'demo veride geçilmemiş onaylı adet var');
+    assert.ok(grandText.includes(fmt(sum('approvedNotOrdered'))), `Geçilmemiş onaylı genel toplamı ${fmt(sum('approvedNotOrdered'))}: ${grandText}`);
+    assert.match(await page.textContent('#oabCubeTable thead'), lang === 'en' ? /Approved - not yet ordered/i : /Onaylanmış - sipariş geçilmemiş/i);
     const meta = await page.textContent('#oabCubeStateMeta');
     assert.match(meta, lang === 'en' ? /Data date: / : /Veri tarihi: /);
     assert.match(await page.textContent('#oabCubePassGap'), lang === 'en' ? /Special code, Persona/ : /Özel Kod, Persona/);

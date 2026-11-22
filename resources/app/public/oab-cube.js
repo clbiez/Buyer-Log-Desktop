@@ -95,6 +95,7 @@
   const aggLabel = agg => text(...(AGG_LABELS[agg] || [agg, agg]));
   function valueHint(ref) {
     const measure = !ref.source && baseMeasure(ref.key);
+    if (measure && measure.derived) return text(measure.hintTr, measure.hintEn);
     if (measure && measure.kind !== 'quantity') return text(`Toplanabilir bir adet değildir; özetleme: ${aggLabel(ref.agg)} (satır değerleri küpten birebir gelir).`, `Not an additive quantity; summarization: ${aggLabel(ref.agg)} (row values come straight from the cube).`);
     if (ref.source) return `${ref.source} · ${aggLabel(ref.agg)}`;
     return text('Sıralamak için tıklayın', 'Click to sort');
