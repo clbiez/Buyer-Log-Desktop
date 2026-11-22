@@ -129,11 +129,17 @@ function deltaSeedPayload() {
      boş bir varsayılanı kayıt hâline getirip sonradan gelen gerçek veriyi
      gölgelemesin. Kullanıcıya özel dosyalar (görünümler, filtreler, döviz)
      ilk yazıldıklarında aynalanır; tohumlama yalnız mevcut ortak veriyi taşır. */
+  /* Değerler işlevdir: delta-store.seedMissing yalnız eksik kayıtlar için
+     çağırır. Zaten tohumlanmış store'lar (büyük overrides dahil) her açılışta
+     diskten okunup ayrıştırılmaz, derin kopyalanmaz. Okunamayan dosya işlevin
+     null döndürmesiyle yine tohumlanmaz. */
   const payload = {};
   for (const file of [OVERRIDES_FILE, SETTINGS_FILE, SHIP_FILE, OPEN_COSTING_FILE, VIEWS_FILE, FILTERS_FILE, HORIZON_TEMPLATES_FILE, AI_OUTPUT_TEMPLATES_FILE, LEGACY_FX_FILE]) {
     if (!fs.existsSync(file)) continue;
-    try { payload[deltaStoreId(file)] = toDocumentRecord(readJsonWithBackup(file, () => ({ _revision: 0 }))); }
-    catch (_) { /* okunamayan dosya tohumlanmaz; eski yolu kullanmaya devam eder */ }
+    payload[deltaStoreId(file)] = () => {
+      try { return toDocumentRecord(readJsonWithBackup(file, () => ({ _revision: 0 }))); }
+      catch (_) { return null; /* okunamayan dosya tohumlanmaz; eski yolu kullanmaya devam eder */ }
+    };
   }
   return payload;
 }
@@ -146,7 +152,9 @@ function readFromDelta(file) {
    fs.existsSync ile soruyordu; delta-only fazında eski dosya hiç yazılmadığı
    için o soru yanlış cevap verir ve store her açılışta boş görünürdü. */
 function storeExists(file) {
-  return Boolean(readFromDelta(file)) || fs.existsSync(file);
+  // Yalnız varlık sorulur: kaydın derin kopyası (büyük overrides'ta yüzlerce ms)
+  // alınıp atılmaz. readFromDelta ile aynı kapsam ve aynı "boş kayıt yok" kuralı.
+  return (!deltaMirrorExcluded(file) && Boolean(documents().read(deltaStoreId(file)))) || fs.existsSync(file);
 }
 
 class RevisionConflictError extends Error {

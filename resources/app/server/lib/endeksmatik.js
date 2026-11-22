@@ -348,11 +348,14 @@ async function seedMissing(deltaStore){
   // Varsayılan şablonu değil, yalnız gerçekten var olan kullanıcı verisini
   // tohumla. Böylece boş/yeni cihaz paylaşımdaki dolu snapshot'ı gölgelemez.
   if(!deltaStore)return {seeded:0,ids:[]};
+  // Değerler işlevdir: delta-store.seedMissing onları YALNIZ kayıt eksikse
+  // çağırır. Zaten tohumlanmış setler her açılışta gunzip+parse+indeks
+  // doğrulamasından geçmez. Doğrulanamayan dosya null döner ve tohumlanmaz.
   const records={};
-  if(fs.existsSync(PERSISTED_FILE)){const snapshot=readSnapshotFile(PERSISTED_FILE); buildRuntime(snapshot); records[DOCUMENT_ID]=toDocumentRecord(toSharedDocument(snapshot));}
+  if(fs.existsSync(PERSISTED_FILE))records[DOCUMENT_ID]=()=>{const snapshot=readSnapshotFile(PERSISTED_FILE); buildRuntime(snapshot); return toDocumentRecord(toSharedDocument(snapshot));};
   // Yerel diskteki çoklu setler de (delta öncesi yüklenmişse) ortak günlüğe taşınır.
-  try{fs.readdirSync(SETS_DIR).forEach(name=>{const m=/^(em-[0-9a-f]+)\.json\.gz$/.exec(name);if(!m)return;try{const set=readSnapshotFile(setFile(m[1]));buildSetRuntime(set);records[setDocumentId(m[1])]=toDocumentRecord({set,label:set.label||'',deleted:false,deletedAt:null});}catch(_){}});}catch(_){}
-  try{if(fs.existsSync(ACTIVE_FILE))records[ACTIVE_DOCUMENT_ID]=toDocumentRecord(JSON.parse(fs.readFileSync(ACTIVE_FILE,'utf8')));}catch(_){}
+  try{fs.readdirSync(SETS_DIR).forEach(name=>{const m=/^(em-[0-9a-f]+)\.json\.gz$/.exec(name);if(!m)return;records[setDocumentId(m[1])]=()=>{try{const set=readSnapshotFile(setFile(m[1]));buildSetRuntime(set);return toDocumentRecord({set,label:set.label||'',deleted:false,deletedAt:null});}catch(_){return null;}};});}catch(_){}
+  if(fs.existsSync(ACTIVE_FILE))records[ACTIVE_DOCUMENT_ID]=()=>{try{return toDocumentRecord(JSON.parse(fs.readFileSync(ACTIVE_FILE,'utf8')));}catch(_){return null;}};
   if(!Object.keys(records).length)return {seeded:0,ids:[]};
   return deltaStore.seedMissing(COLLECTION,records);
 }

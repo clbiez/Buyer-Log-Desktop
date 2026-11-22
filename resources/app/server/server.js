@@ -166,11 +166,9 @@ async function runLocalDbMaintenance() {
     const emailGroups = require('./lib/email-groups-store');
     const quotations = require('./lib/quotations-store');
     const endeksmatik = require('./lib/endeksmatik');
-    try { if (fs.existsSync(emailGroups.FILE)) payload['email-groups.json'] = toDocumentRecord(emailGroups.loadStore()); } catch (_) {}
-    try {
-      const quotationsFile = path.join(SERVER_DATA_ROOT, 'quotations.json');
-      if (fs.existsSync(quotationsFile)) payload['quotations.json'] = toDocumentRecord(quotations.loadStore());
-    } catch (_) {}
+    // İşlev değerleri yalnız delta'da eksik kayıt için çağrılır (seedMissing).
+    if (fs.existsSync(emailGroups.FILE)) payload['email-groups.json'] = () => toDocumentRecord(emailGroups.loadStore());
+    if (fs.existsSync(path.join(SERVER_DATA_ROOT, 'quotations.json'))) payload['quotations.json'] = () => toDocumentRecord(quotations.loadStore());
     const seededStores = await deltaStore.seedMissing(db.DELTA_STORE_COLLECTION, payload);
     if (seededStores.seeded) markStartup('DELTA_STORE_SEEDED', { collection: db.DELTA_STORE_COLLECTION, count: seededStores.seeded, ids: seededStores.ids });
     const seededEndeksmatik = await endeksmatik.seedMissing(deltaStore);

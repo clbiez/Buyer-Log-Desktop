@@ -369,6 +369,29 @@
           "en": "On demo data without the intermediate step columns, like the real IAS query: the partial stuck in customs is flagged with its delay and σ."
         }
       }
+    },
+    {
+      "id": "startup-seed-lazy-reads",
+      "type": "improvement",
+      "module": {
+        "tr": "Açılış · Veri motoru",
+        "en": "Startup · Data engine"
+      },
+      "title": {
+        "tr": "Büyük veride açılış daha hızlı: zaten eşitlenmiş veriler yeniden okunmuyor",
+        "en": "Faster startup on large data: already synchronized data is no longer re-read"
+      },
+      "body": {
+        "tr": "Her açılışta yerel veri motorunda zaten bulunan Endeksmatik setleri, ortak ayar/override dosyaları ve e-posta/teklif kayıtları diskten yeniden açılıp ayrıştırılıyor, Endeksmatik setleri baştan indeksleniyordu; büyük override belgesi de yalnız varlık kontrolü ve boş lisans kartı kuyruğu için fazladan kopyalanıyordu. Bu işler artık yalnız gerçekten eksik kayıt için yapılır. Veri ve eşitleme davranışı değişmedi; 30k satırlık sentetik veride sunucu açılışındaki veri motoru hazırlığı yaklaşık 4–5 sn kısaldı.",
+        "en": "On every startup, Endeksmatik sets, shared settings/override files and email/quotation records that the local data engine already held were reopened from disk and parsed, and the Endeksmatik sets were indexed again; the large override document was also copied extra times just for an existence check and an empty license-card queue. This work now runs only for records that are actually missing. Data and synchronization behaviour are unchanged; on 30k-row synthetic data the server's data-engine preparation at startup became about 4–5 s shorter."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Sunucu açılışındaki arka plan iyileştirmesi; ekranda değişen bir öğe yok.",
+          "en": "Background server startup improvement; nothing on screen changes."
+        }
+      }
     }
   ]
 }

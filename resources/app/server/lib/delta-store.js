@@ -356,15 +356,25 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
      koşul işaret değil kaydın kendisi: yalnız delta'da HİÇ bulunmayan (ve
      silinmemiş) kimlikler taşınır. Bu doğal olarak idempotenttir ve
      kullanıcının sonradan yaptığı bir değişikliği asla geri almaz. */
+  /* Değer bir işlev olabilir: yalnız kayıt gerçekten eksikse çağrılır. Açılış
+     tohumlaması böylece zaten tohumlanmış belgeleri (büyük Endeksmatik setleri,
+     overrides) her açılışta diskten okuyup ayrıştırmaz. İşlev fırlatırsa ya da
+     null/undefined döndürürse o kayıt tohumlanmaz (eski try/catch atlamasıyla
+     aynı). Düz değerler eskisi gibi olduğu gibi geçer. */
   async function seedMissing(collection, entries) {
     try {
       const state = await localDb.read();
       const missing = {};
-      for (const [id, value] of Object.entries(entries || {})) {
+      for (const [id, entry] of Object.entries(entries || {})) {
         if (!String(id || '').trim()) continue;
         const key = recordKey(collection, id);
         if (state.records && state.records[key]) continue;
         if (state.tombstones && state.tombstones[key]) continue;
+        let value = entry;
+        if (typeof entry === 'function') {
+          try { value = entry(); } catch (error) { value = null; report(`seedMissing:${collection}:${id}`, error); }
+          if (value == null) continue;
+        }
         missing[id] = value;
       }
       const ids = Object.keys(missing);

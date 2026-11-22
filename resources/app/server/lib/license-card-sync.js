@@ -156,7 +156,9 @@ function createLicenseCardSync({ deltaStore, loadOverrides, saveOverrides, trial
           catch(error){if(attempt||error.code!=='REVISION_CONFLICT'){retry();throw error;}}
         }
       }
-      const isPending=Object.keys(loadOverrides().licenseCardOutbox||{}).length>0;
+      // Outbox boşken yukarıda hiç await yok: ikinci tam overrides okuması
+      // (büyük veride yüzlerce ms derin kopya) aynı durumu görürdü, atlanır.
+      const isPending=Object.keys(pending).length?Object.keys(loadOverrides().licenseCardOutbox||{}).length>0:false;
       if(isPending)retry();
       else if(recovering){recovering=false;deps.onRecovered?.();}
       return {ok:!isPending,pending:isPending};
