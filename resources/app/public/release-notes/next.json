@@ -371,6 +371,35 @@
       }
     },
     {
+      "id": "overview-tryd-landed-advantage",
+      "type": "feature",
+      "module": {
+        "tr": "Genel Bakış › Ticari",
+        "en": "Overview › Commercial"
+      },
+      "title": {
+        "tr": "TR/YD Landed Avantaj widget'ı: aynı modelde Türkiye FOB'u ile yurtdışı gerçekleşen landed kıyası",
+        "en": "TR/YD Landed Advantage widget: same-model Turkey FOB versus abroad realized landed cost"
+      },
+      "body": {
+        "tr": "Hem Türkiye hem yurtdışı siparişi olan modellerde gerçekleşen avantaj = 1 − Σ(YD adet × YD landed) / (TR FOB × YD adet) hesaplanır; Fas ve Mısır kıyas dışıdır. Hedef varsayılan %36'dır ve widget'tan değiştirilip kişisel tercih olarak saklanır; fark hedefin altındaysa satır vurgulanır, \"Yalnız hedef altı\" ile süzülür. Buyer grup › Ürün klasmanı › MAG › Model kırılımında toplam oranları tutarlardan yeniden hesaplanır. Landed'i olmayan veya hatalı (landed < FOB ya da Landed/FOB aşırı uç) YD satırları kıyasa girmez ve durum sütununda görünür; öngörü landed yalnız açıkça seçilince ayrı etiketle kullanılır. Veri FOB Sonrası Maliyet sorgusu ve önbelleğinden gelir; satır sınırında kesilen sonuç \"kısmi\" diye işaretlenir. Çift tıkla kaynak satırlar, Excel'e pivot + kaynak + özet aktarılır.",
+        "en": "For models with both Turkey and abroad orders the realized advantage = 1 − Σ(abroad qty × abroad landed) / (TR FOB × abroad qty); Morocco and Egypt are excluded. The target defaults to 36%, can be changed in the widget and is saved as a personal preference; rows below the target are highlighted and \"Below target only\" filters them. In the Buying group › Product class › MAG › Model breakdown, total ratios are recomputed from amounts. Abroad rows with no or invalid landed (landed < FOB or an extreme Landed/FOB) are left out of the comparison and shown in the status column; forecast landed is used only when explicitly selected, with its own label. Data comes from the Post-FOB Cost query and cache; a result cut at the row limit is marked as partial. Double-click shows the source rows; Excel exports the pivot, source rows and a summary."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "tryd-advantage-light.png",
+        "alt": {
+          "tr": "Demo veride TR/YD Landed Avantaj widget'ı: KPI'lar, Buyer grup › Klasman › MAG › Model pivotu, hedef altı satırlar vurgulu",
+          "en": "TR/YD Landed Advantage widget on demo data: KPIs, Buying group › Class › MAG › Model pivot, rows below target highlighted"
+        },
+        "caption": {
+          "tr": "Demo veride gerçekleşen avantaj %29,6, hedef %36; hedefin altındaki model ve gruplar kırmızı ad ve farkla işaretli.",
+          "en": "On demo data the realized advantage is 29.6% against a 36% target; models and groups below target are marked with a red name and gap."
+        }
+      }
+    },
+    {
       "id": "overview-oab-cube-widget",
       "type": "feature",
       "module": {
