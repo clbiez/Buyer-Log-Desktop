@@ -75,20 +75,27 @@
   });
 
   /* --------------------------------------------------------- risk sebepleri */
+  /* Handover ≠ yükleme: Handover ürünün depoya teslimidir; ürün sonra cut-off'u
+     bekleyebilir, ardından gemiye yüklenir. LATE_LOADING kodu kayıtlı otomasyon
+     yönlendirmeleri bozulmasın diye korunur ama anlamı "Geç Handover"dır
+     (Handover, Ex-Factory'den geç / 1. aşama aşımı). Cut-off bekleme (2. aşama)
+     ve gemiye geç yükleme (3. aşama) ayrı sebeplerdir. */
   const RISK_CAUSES = Object.freeze([
-    'LATE_LOADING', 'NOT_YET_LOADED', 'PRODUCTION_DELAY', 'TRANSIT_DELAY', 'CUSTOMS_DELAY',
+    'LATE_LOADING', 'CUTOFF_WAIT', 'VESSEL_LOADING_DELAY', 'NOT_YET_LOADED', 'PRODUCTION_DELAY', 'TRANSIT_DELAY', 'CUSTOMS_DELAY',
     'RETAIL_TRANSFER_DELAY', 'INSUFFICIENT_TRANSIT_BUFFER', 'TARGET_DATE_PASSED',
     'MISSING_DATE', 'MISSING_TRANSIT_RULE', 'UNKNOWN',
   ]);
   const RISK_CAUSE_LABELS = Object.freeze({
     tr: {
-      LATE_LOADING: 'Geç Yükleme', NOT_YET_LOADED: 'Henüz Yüklenmedi', PRODUCTION_DELAY: 'Üretim Gecikmesi',
+      LATE_LOADING: 'Geç Handover', CUTOFF_WAIT: 'Cut-off Bekleme', VESSEL_LOADING_DELAY: 'Geç Yükleme',
+      NOT_YET_LOADED: 'Handover Bekleniyor', PRODUCTION_DELAY: 'Üretim Gecikmesi',
       TRANSIT_DELAY: 'Transit Gecikmesi', CUSTOMS_DELAY: 'Gümrük/Liman Gecikmesi',
       RETAIL_TRANSFER_DELAY: 'Retaile Aktarım Gecikmesi', INSUFFICIENT_TRANSIT_BUFFER: 'Yetersiz Transit Süresi',
       TARGET_DATE_PASSED: 'Hedef Tarih Geçti', MISSING_DATE: 'Eksik Tarih', MISSING_TRANSIT_RULE: 'Transit Süresi Yok', UNKNOWN: 'Belirsiz',
     },
     en: {
-      LATE_LOADING: 'Late Loading', NOT_YET_LOADED: 'Not Yet Loaded', PRODUCTION_DELAY: 'Production Delay',
+      LATE_LOADING: 'Late Handover', CUTOFF_WAIT: 'Cut-off Wait', VESSEL_LOADING_DELAY: 'Late Loading',
+      NOT_YET_LOADED: 'Awaiting Handover', PRODUCTION_DELAY: 'Production Delay',
       TRANSIT_DELAY: 'Transit Delay', CUSTOMS_DELAY: 'Customs Delay',
       RETAIL_TRANSFER_DELAY: 'Retail Transfer Delay', INSUFFICIENT_TRANSIT_BUFFER: 'Insufficient Transit Buffer',
       TARGET_DATE_PASSED: 'Target Date Passed', MISSING_DATE: 'Missing Date', MISSING_TRANSIT_RULE: 'No Transit Rule', UNKNOWN: 'Unknown',
@@ -98,8 +105,9 @@
   /* ------------------------------------------------------- yükleme başarımı */
   const LOADING_OUTCOMES = Object.freeze(['LOADED_ON_TIME', 'LOADED_LATE', 'NOT_LOADED_SAFE', 'NOT_LOADED_AT_RISK', 'NOT_LOADED_EXPECTED_LATE', 'UNKNOWN']);
   const LOADING_LABELS = Object.freeze({
-    tr: { LOADED_ON_TIME: 'Zamanında Yüklendi', LOADED_LATE: 'Geç Yüklendi', NOT_LOADED_SAFE: 'Yüklenmedi — Güvenli', NOT_LOADED_AT_RISK: 'Yüklenmedi — Riskli', NOT_LOADED_EXPECTED_LATE: 'Yüklenmedi — Gecikecek', UNKNOWN: 'Hesaplanamıyor' },
-    en: { LOADED_ON_TIME: 'Loaded On Time', LOADED_LATE: 'Loaded Late', NOT_LOADED_SAFE: 'Not Loaded — Safe', NOT_LOADED_AT_RISK: 'Not Loaded — At Risk', NOT_LOADED_EXPECTED_LATE: 'Not Loaded — Expected Late', UNKNOWN: 'Unknown' },
+    // Ölçülen tarih Handover'dır (Ex-Factory'ye göre); gemiye yükleme değil.
+    tr: { LOADED_ON_TIME: 'Zamanında Handover', LOADED_LATE: 'Geç Handover', NOT_LOADED_SAFE: 'Handover Yok — Güvenli', NOT_LOADED_AT_RISK: 'Handover Yok — Riskli', NOT_LOADED_EXPECTED_LATE: 'Handover Yok — Gecikecek', UNKNOWN: 'Hesaplanamıyor' },
+    en: { LOADED_ON_TIME: 'Handover On Time', LOADED_LATE: 'Late Handover', NOT_LOADED_SAFE: 'No Handover — Safe', NOT_LOADED_AT_RISK: 'No Handover — At Risk', NOT_LOADED_EXPECTED_LATE: 'No Handover — Expected Late', UNKNOWN: 'Unknown' },
   });
 
   /* ------------------------------------------------------------- boyutlar */
@@ -132,6 +140,12 @@
        parsiyellerin %80'i bu sürede varmış). Yalnız aşama projeksiyonu olan
        satırları etkiler; diğerleri tek kural gününe göre hesaplanır. */
     etaStat: 'mean',
+  });
+  const STAGE_LOADING_CAUSE = Object.freeze({ 1: 'LATE_LOADING', 2: 'CUTOFF_WAIT', 3: 'VESSEL_LOADING_DELAY' });
+  // Kilometre taşı kısa adları (koşan aralık etiketi; görünüm modeli yüklemeden kullanır).
+  const MILESTONE_SHORT_LABELS = Object.freeze({
+    tr: { loadingRequest: 'Yükleme Talep', handover: 'Handover', cutOff: 'Cut Off', actualLoading: 'Fiili Yükleme', eta: 'ETA', summaryDeclaration: 'Özet Beyan', warehouseApproval: 'Ambar Onay', transitDeclaration: 'Transit Beyanname', warehouseEntry: 'Antrepo Giriş' },
+    en: { loadingRequest: 'Loading Request', handover: 'Handover', cutOff: 'Cut-off', actualLoading: 'Actual Loading', eta: 'ETA', summaryDeclaration: 'Summary Declaration', warehouseApproval: 'Warehouse Approval', transitDeclaration: 'Transit Declaration', warehouseEntry: 'Antrepo Entry' },
   });
   const STAGE_GROUPS = Object.freeze({ 1: 'loading', 2: 'loading', 3: 'loading', 4: 'transit', 5: 'customs', 6: 'customs', 7: 'customs', 8: 'customs' });
   const STAGE_ANCHOR_HIGH = Object.freeze(new Set(['eta', 'summaryDeclaration', 'warehouseApproval', 'transitDeclaration']));
@@ -385,7 +399,8 @@
       if (today != null && targetDate != null && targetDate < today && !arrived) riskReasons.push('TARGET_DATE_PASSED');
       if (stage === 'AWAITING_RETAIL_TRANSFER' || signalCodes.has('ANTREPO_DELAY')) riskReasons.push('RETAIL_TRANSFER_DELAY');
       if (stage === 'CUSTOMS' || (stageOverrun && stageGroup === 'customs') || (stageProjection && Number(stageProjection.docsLateDays) > 0)) riskReasons.push('CUSTOMS_DELAY');
-      if (stageOverrun && stageGroup === 'loading') riskReasons.push('LATE_LOADING');
+      // Yükleme grubundaki aşım aşamaya göre: 1 Talep → Handover, 2 Handover → Cut Off (bekleme), 3 Cut Off → Fiili Yükleme.
+      if (stageOverrun && stageGroup === 'loading') riskReasons.push(STAGE_LOADING_CAUSE[stageProjection.currentStage] || 'LATE_LOADING');
       if (postProductionTransitOverdue || (!stageProjection && transitVarianceDays != null && transitVarianceDays > num(settings.transitToleranceDays))) riskReasons.push('TRANSIT_DELAY');
       if (loadingPerformance === 'LOADED_LATE' && !riskReasons.includes('LATE_LOADING')) riskReasons.push('LATE_LOADING');
       if (isProduction && plannedLoadDate != null && today != null && today - plannedLoadDate > num(settings.productionOverdueDays)) riskReasons.push('PRODUCTION_DELAY');
@@ -743,7 +758,7 @@
   return {
     FIELDS: F, STAGES, STAGE_LABELS, OUTCOMES, OUTCOME_LABELS, RISK_CAUSES, RISK_CAUSE_LABELS,
     LOADING_OUTCOMES, LOADING_LABELS, DIMENSIONS, DIMENSION_LABELS, DEFAULT_SETTINGS,
-    PRE_LOAD_STAGES, ARRIVED_STAGES, STAGE_SIGNALS, STAGE_STEP_LABELS, stageSignalKeys,
+    PRE_LOAD_STAGES, ARRIVED_STAGES, STAGE_SIGNALS, STAGE_STEP_LABELS, MILESTONE_SHORT_LABELS, STAGE_LOADING_CAUSE, stageSignalKeys,
     stageOf, analyzeOrder, analyze, needsAttention, defaultOrdinal, dimKey,
     DATE_FIELDS, projectRow, dateKey, rowDateValues, valueOfDateKey, analyzeDataset, parityTotals, selectOrders,
   };

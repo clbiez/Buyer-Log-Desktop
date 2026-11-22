@@ -122,7 +122,7 @@ function normalizeAnalysis(raw){
    sebeplerin hangi sorumluya yönleneceğini taşır. Bilinmeyen sebep anahtarı
    ya da bilinmeyen sorumlu sessizce ATILIR — uydurulmuş bir yönlendirme,
    yanlış kişiye giden bir mail demektir. */
-const BACKLOG_ROUTING_CAUSES=new Set(['LATE_LOADING','NOT_YET_LOADED','PRODUCTION_DELAY','TRANSIT_DELAY','CUSTOMS_DELAY','RETAIL_TRANSFER_DELAY','INSUFFICIENT_TRANSIT_BUFFER','TARGET_DATE_PASSED','MISSING_DATE','MISSING_TRANSIT_RULE','UNKNOWN']);
+const BACKLOG_ROUTING_CAUSES=new Set(['LATE_LOADING','CUTOFF_WAIT','VESSEL_LOADING_DELAY','NOT_YET_LOADED','PRODUCTION_DELAY','TRANSIT_DELAY','CUSTOMS_DELAY','RETAIL_TRANSFER_DELAY','INSUFFICIENT_TRANSIT_BUFFER','TARGET_DATE_PASSED','MISSING_DATE','MISSING_TRANSIT_RULE','UNKNOWN']);
 const BACKLOG_ROUTING_OWNERS=new Set(['supplier','merchandiser','buyer','import','none']);
 function normalizeBacklog(raw){
   const item=raw&&typeof raw==='object'?raw:{};
