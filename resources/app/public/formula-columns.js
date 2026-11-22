@@ -36,6 +36,9 @@
     orders: { tr: 'Siparişler', en: 'Orders' },
     ship: { tr: 'Nakliye Kıyaslama', en: 'Shipping Comparison' },
     backlog: { tr: 'Backlog Excel', en: 'Backlog Excel' },
+    // Genel Bakış pivot widget'ları (public/pivot-calculated-values.js) —
+    // yalnız adapter ile açılır; kendi depo/sütun listesi yoktur.
+    pivot: { tr: 'Pivot', en: 'Pivot' },
   };
   const KEY_PREFIX = 'bl.formulaColumns.';
   const COLUMN_KEY_PREFIX = '__f_';
@@ -1030,8 +1033,11 @@
       return { formula, refs: Object.fromEntries(adapter.columns.filter(c => used.includes(c.ref)).map(c => [c.ref, c.label])) };
     };
     const defs = definitions(tableKey);
-    const existing = editId ? defs.find(item => item.id === editId) : null;
-    const draft = existing ? { ...existing } : {
+    /* adapter.isNew: dil/kip değişiminde yeniden açılan YENİ taslak kendi
+       verisini taşır ama "düzenle" penceresine dönüşmez. */
+    const found = editId ? defs.find(item => item.id === editId) : null;
+    const existing = adapter?.isNew ? null : found;
+    const draft = found ? { ...found } : {
       id: `fc_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
       label: '', formula: '', format: 'auto', decimals: '',
     };
@@ -1069,8 +1075,14 @@
     if (!builder.operands.length) builder.operands = [{ kind: 'column', column: '', number: '' }];
     builder.advanced = existing ? shown(existing.formula) : '';
     if (adapter?.builder) Object.assign(builder, adapter.builder);
-    let labelTouched = Boolean(existing);
-    let formatTouched = Boolean(existing);
+    /* adapter.modes: bu tabloda anlamlı tarif kartları (ör. pivotta yalnız
+       sayısal kartlar). Liste dışı kip açılışta ilk izinli kipe döner. */
+    const allowedModes = Array.isArray(adapter?.modes) && adapter.modes.length ? adapter.modes : null;
+    if (allowedModes && !allowedModes.includes(builder.mode)) builder.mode = existing || found?.formula ? 'advanced' : allowedModes[0];
+    if (allowedModes && !allowedModes.includes(builder.mode)) builder.mode = allowedModes[0];
+    const allowedFormats = Array.isArray(adapter?.formats) && adapter.formats.length ? adapter.formats : null;
+    let labelTouched = Boolean(existing || clean(found?.label));
+    let formatTouched = Boolean(existing || (found && found.format && found.format !== 'auto'));
 
     /* v7.42 — üst başlık seçenekleri. Tabloda var olan gruplar EKRANDAKİ sırayla
        listelenir; varsayılan "Hesaplanan" listede yoksa eklenir ki yeni sütun
@@ -1108,6 +1120,7 @@
              ['ifelse', T('Koşula göre yaz', 'Label by condition'), T('Eğer … ise “…” yaz', 'If … then write “…”')],
              ['advanced', T('Gelişmiş', 'Advanced'), T('Formülü kendim yazarım (sözlüklü)', 'I will type the formula (with dictionary)')],
              ['ai', T('LCW AI’dan Destek Al', 'Get help from LCW AI'), T('Karmaşık iş: LCW AI (GPT-6 Sol) yazsın, Buyer Log denetlesin', 'Complex: LCW AI (GPT-6 Sol) writes, Buyer Log checks')]]
+            .filter(([id]) => !allowedModes || allowedModes.includes(id))
             .map(([id, label, tip]) => `<button type="button" id="fcMode-${id}" role="tab" class="fcMode fcRecipe${id === 'ai' ? ' fcRecipeAi' : ''}${builder.mode === id ? ' active' : ''}" data-fc-mode="${id}" title="${esc(tip)}" aria-controls="fcModePanel" aria-selected="${builder.mode === id}" tabindex="${builder.mode === id ? '0' : '-1'}"><b>${esc(label)}</b><small>${esc(tip)}</small></button>`).join('')}
         </div>
         <div class="fcStep" data-fc-step2></div>
@@ -1143,7 +1156,7 @@
           <summary>${esc(T('Görünüm ayarları (isteğe bağlı)', 'Display settings (optional)'))}</summary>
           <div class="fcFormatRow">
             <label class="fcField">${esc(T('Biçim', 'Format'))}
-              <select data-fc-format>${Object.entries(FORMATS).map(([id, item]) => `<option value="${id}"${draft.format === id ? ' selected' : ''}>${esc(en() ? item.en : item.tr)}</option>`).join('')}</select>
+              <select data-fc-format>${Object.entries(FORMATS).filter(([id]) => !allowedFormats || allowedFormats.includes(id)).map(([id, item]) => `<option value="${id}"${draft.format === id ? ' selected' : ''}>${esc(en() ? item.en : item.tr)}</option>`).join('')}</select>
             </label>
             <label class="fcField">${esc(T('Ondalık basamak', 'Decimals'))}
               <input type="number" min="0" max="6" data-fc-decimals value="${esc(draft.decimals)}" placeholder="${esc(T('otomatik', 'auto'))}">
@@ -1171,6 +1184,13 @@
       modal.querySelector('.fcMore .fcNote').textContent = T('Biçim, Excel hücresinin görünümünü belirler; kaynak veriyi değiştirmez.', 'The format controls how the Excel cell looks; it does not change source data.');
       const del = modal.querySelector('[data-fc-delete]');
       if (del) del.textContent = T('Formülü kaldır / varsayılana dön', 'Clear formula / restore default');
+      /* adapter.copy: Excel dışındaki çağıranın (ör. pivot) kendi metinleri.
+         Metinler çağıranda TR/EN hazırlanır. */
+      const copy = (typeof adapter.copy === 'function' ? adapter.copy() : adapter.copy) || {};
+      if (copy.title) modal.querySelector('#_fcTitle').textContent = copy.title;
+      if (copy.subtitle) modal.querySelector('.fcSub').textContent = copy.subtitle;
+      if (copy.formatNote) modal.querySelector('.fcMore .fcNote').textContent = copy.formatNote;
+      if (copy.deleteLabel && del) del.textContent = copy.deleteLabel;
       if (adapter.nativeFormula != null) {
         const native = document.createElement('details');native.className = 'fcMore';
         native.innerHTML = `<summary>${esc(T('Mevcut Excel formülü', 'Current Excel formula'))}</summary><p class="fcNote">${esc(T('Bu formül Excel hücre adreslerini kullanır. CP kurucusuyla yeni bir formül kaydedebilir veya mevcut Excel formülünü düzenleyebilirsiniz. {row} güncel satırdır.', 'This formula uses Excel cell addresses. Save a replacement with the CP builder or edit the existing Excel formula. {row} is the current row.'))}</p><label class="fcField">${esc(T('Excel formülü', 'Excel formula'))}<textarea data-fc-native rows="4" spellcheck="false">${esc(adapter.nativeFormula)}</textarea></label><button type="button" class="fcBtn" data-fc-native-save>${esc(T('Excel formülünü kullan', 'Use Excel formula'))}</button>`;
@@ -1708,10 +1728,10 @@
         return;
       }
       const refIndex = columnIndex(tableKey);
-      const results = rows.map(row => program.evaluate(row, { strictColumns: true }));
+      const results = rows.map(row => program.evaluate(row, { strictColumns: true, ...(adapter?.evaluateOptions || {}) }));
       const failed = results.find(result => !result.ok);
       const lines = results.map((result, rowIndex) => {
-        const label = rowLabel(tableKey, rows[rowIndex], rowIndex);
+        const label = (adapter?.rowLabel && adapter.rowLabel(rows[rowIndex], rowIndex)) || rowLabel(tableKey, rows[rowIndex], rowIndex);
         const value = result.ok ? formatValue(result.value, item) : '—';
         return `<div class="fcPreviewRow"><span>${esc(label)}</span><b>${esc(value || '—')}</b></div>`;
       }).join('');
@@ -1995,6 +2015,23 @@
       }
     });
     document.addEventListener('keydown', onKey, true);
+    /* adapter.extraPanel(host, api): çağıranın pencereye kendi adımını
+       eklemesi (ör. pivot hesap modu). api.reopen(next) taslağı ve kurucu
+       durumunu koruyarak pencereyi yeni adapter ile yeniden açar. */
+    if (adapter && typeof adapter.extraPanel === 'function') {
+      const host = document.createElement('div');
+      host.className = 'fcExtra';
+      modal.querySelector('.fcBody').prepend(host);
+      adapter.extraPanel(host, {
+        draft: () => currentDraft(),
+        reopen: next => {
+          const nextAdapter = typeof next === 'function' ? next(currentDraft()) : next;
+          if (!nextAdapter) return;
+          editorClosed = null;
+          open(tableKey, draft.id, onDone, { ...nextAdapter, builder: JSON.parse(JSON.stringify(builder)) });
+        },
+      });
+    }
     renderBuild();
     renderPreview();
     renderSourceAdd();

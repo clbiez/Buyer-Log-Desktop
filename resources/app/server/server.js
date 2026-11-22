@@ -5893,6 +5893,15 @@ function intakeSaveView(userId, viewConfig) {
 /* Rapor isteği görünümün SORGU kısmını kaydeder; görünüm (sıralama, etiket,
    genişlik) ayrıca /api/intake/settings ile kaydedilir. Uzun süren bir rapor
    yanıtı, o arada kaydedilmiş daha yeni görünüm ayarlarını ezmemelidir. */
+/* Pivot varsayılanına dönüş düzeni sıfırlar; kullanıcının kişisel hesaplanan
+   değer tanımları (display.calculated) silinmez — OAB (Küp) ve FOB Sonrası
+   ile aynı davranış. */
+function intakeResetKeepingCalculated(userId) {
+  const base = intakeReport.resetView();
+  const stored = intakeStoredView(userId);
+  const calculated = stored && stored.display && Array.isArray(stored.display.calculated) ? stored.display.calculated : [];
+  return calculated.length ? intakeReport.reconcileViewConfig({ ...base, display: { ...base.display, calculated } }, []) : base;
+}
 function intakeSaveReportView(userId, viewConfig, fields) {
   const stored = intakeStoredView(userId);
   const next = stored && stored.display && typeof stored.display === 'object'
@@ -6048,7 +6057,7 @@ app.put('/api/intake/settings', userAccess.requireAnyArea('overview'), userAcces
   try {
     const reset = Boolean(req.body && req.body.reset);
     const viewConfig = reset
-      ? intakeReport.resetView()
+      ? intakeResetKeepingCalculated(req.currentUser.id)
       : intakeReport.reconcileViewConfig(req.body && (req.body.viewConfig || req.body.config), []);
     // Reset is intentionally scoped to the caller’s local Overview state. It
     // must not change model-connections or invalidate another user’s cache.
@@ -6115,14 +6124,21 @@ app.post('/api/intake/distinct', userAccess.requireAnyArea('overview'), userAcce
     res.status(failure.status).json({ error: failure.message, code: failure.code, offline: failure.code === 'INTAKE_SOURCE_UNAVAILABLE', sourceError });
   }
 });
-app.post('/api/intake/export', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '512kb' }), async (req, res) => {
+/* 8 MB: istemcinin gönderdiği "Hesaplanan değerler" sayfası en fazla 5.000 satır
+   × 80 sütundur (intake-excel normalizeCalculatedSheet). Sayısal sütunlarla bu
+   ~5 MB eder; tipik 5.000 × 13 sayfa ~0,85 MB'tır ve 512 KB'ta 413 alıyordu.
+   Metin ağırlıklı yük istemcide 7 MB'ta kırpılır (INTAKE_CALC_SHEET_MAX_BYTES) ve
+   sayfa kırpıldığını yazar; görünüm (viewConfig) için ~1 MB pay kalır. */
+app.post('/api/intake/export', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '8mb' }), async (req, res) => {
   try {
     const found = await intakeLiveFields();
     const plan = intakeExcel.prepare({ fields: found.fields, viewConfig: req.body?.viewConfig || intakeStoredView(req.currentUser.id), horizon: intakeHorizon() });
     const result = await modelQuery.runModelRows({ server: found.connection.server, catalog: found.connection.catalog,
       query: plan.built.query, headerMap: plan.built.headerMap, generated: true, maxRows: plan.built.maxRows, timeoutMs: 180000 });
     const rows = intakeReport.normalizeRows(result.rows, plan.config);
-    const buffer = intakeExcel.createWorkbook({ connection: found.connection, plan, rows, language: req.body?.language });
+    // Hesaplanan değerler istemcide hesaplanır; yalnız sınırlandırılmış DEĞER sayfası olarak eklenir.
+    const calculated = intakeExcel.normalizeCalculatedSheet(req.body?.calculated);
+    const buffer = intakeExcel.createWorkbook({ connection: found.connection, plan, rows, language: req.body?.language, calculatedSheet: calculated });
     userAccess.appendAudit(req.currentUser, 'INTAKE_EXCEL_EXPORT', '', { rows: rows.length });
     res.set('Cache-Control', 'no-store').set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
       .attachment('INTAKE-Live-Pivot.xlsx').send(buffer);

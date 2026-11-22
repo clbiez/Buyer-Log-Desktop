@@ -422,8 +422,10 @@
 
   /* ---------------- değerlendirici ---------------- */
 
-  function compare(op, left, right) {
-    const leftDate = toDate(left), rightDate = toDate(right);
+  function compare(op, left, right, numeric) {
+    // `numeric` (pivot): işlenenler sayıdır; YYYYMMDD'ye benzeyen adet toplamı
+    // tarihe çevrilmez (20250231 → 3 Mart kayması karşılaştırmayı bozardı).
+    const leftDate = numeric ? null : toDate(left), rightDate = numeric ? null : toDate(right);
     let a, b;
     if (leftDate && rightDate) { a = leftDate.getTime(); b = rightDate.getTime(); }
     else {
@@ -442,10 +444,13 @@
     }
   }
 
-  function arithmetic(op, left, right) {
+  function arithmetic(op, left, right, numeric) {
     // Tarih − tarih = gün farkı. Kullanıcının en sık istediği işlem bu;
     // DAYS() yazmayı unutana da doğru cevabı verir.
-    if (op === '-' && looksLikeDate(left) && looksLikeDate(right)) {
+    /* `numeric` (pivot hesaplanan değerleri): işlenenler yalnız sayıdır.
+       20.251.215 gibi 8 haneli bir adet toplamı YYYYMMDD tarihine benzer;
+       bu kısayol iki toplamın farkını gün farkına çevirirdi. */
+    if (!numeric && op === '-' && looksLikeDate(left) && looksLikeDate(right)) {
       const leftDate = toDate(left), rightDate = toDate(right);
       if (leftDate && rightDate) return Math.round((leftDate.getTime() - rightDate.getTime()) / DAY_MS);
     }
@@ -483,8 +488,8 @@
         const left = evaluateNode(node.left, context);
         const right = evaluateNode(node.right, context);
         if (op === '&') return toText(left) + toText(right);
-        if (['=', '==', '<>', '!=', '<', '<=', '>', '>='].includes(op)) return compare(op, left, right);
-        return arithmetic(op, left, right);
+        if (['=', '==', '<>', '!=', '<', '<=', '>', '>='].includes(op)) return compare(op, left, right, context.numeric === true);
+        return arithmetic(op, left, right, context.numeric === true);
       }
       case 'call': {
         const definition = FUNCTIONS[node.name];
@@ -508,7 +513,10 @@
   }
 
   /* Formülü bir kez derler; satır başına yalnız değerlendirme kalır.
-     Döner: { ok, error, columns, evaluate(row, options) } */
+     Döner: { ok, error, columns, evaluate(row, options) }
+     options.numeric: true → çıkarma ve karşılaştırmada tarih zorlaması kapalıdır
+     (pivot toplamları gibi yalnız sayı taşıyan bağlamlar). Tarih fonksiyonları
+     (DAYS, YEAR…) açıkça istendiği için tarih okumaya devam eder. */
   function compile(source) {
     let ast = null, error = null;
     try { ast = parse(source); }
@@ -526,6 +534,7 @@
           : name => (row && Object.prototype.hasOwnProperty.call(row, name) ? row[name] : undefined);
         const missing = [];
         const context = {
+          numeric: options.numeric === true,
           lookup(name) {
             const value = resolve(name, row);
             if (value === undefined) { if (!missing.includes(name)) missing.push(name); return null; }
