@@ -429,8 +429,14 @@
         return out;
       });
       const field = text('Alan', 'Field'), valueLabel = text('Değer', 'Value');
+      // Özet, dışa aktarılan satırları ÜRETEN filtreleri yazar (ekrandaki seçim
+      // Yenile'den sonra değişmiş olabilir); uyuşmazlık ayrıca uyarı satırıdır.
+      const dataFilters = state.dataFilterValues || view().filterValues || {};
+      const filterLabel = key => { const ref = view().filters.find(item => item.key === key); return ref ? refLabel(ref) : refLabel({ key }); };
+      const stale = staleReason();
       const summary = [
-        ...view().filters.filter(ref => (view().filterValues[ref.key] || []).length).map(ref => ({ [field]: refLabel(ref), [valueLabel]: view().filterValues[ref.key].join(', ') })),
+        ...Object.entries(dataFilters).filter(([, values]) => Array.isArray(values) && values.length).map(([key, values]) => ({ [field]: filterLabel(key), [valueLabel]: values.join(', ') })),
+        ...(stale ? [{ [field]: text('Uyarı', 'Warning'), [valueLabel]: stale === 'filters' ? text('Ekrandaki filtre seçimi bu verinin çekildiği filtrelerden farklı; yukarıdaki filtreler dışa aktarılan satırlarındır.', 'The on-screen filter selection differs from the filters this data was queried with; the filters above belong to the exported rows.') : text('Görünümdeki bazı alanlar son sorguda yoktu.', 'Some fields in the view were not in the last query.') }] : []),
         ...(state.search ? [{ [field]: text('Arama', 'Search'), [valueLabel]: state.search }] : []),
         { [field]: text('Veri tarihi', 'Data date'), [valueLabel]: state.dataDate || text('Okunamadı', 'Unavailable') },
         { [field]: text('Son sorgu', 'Last query'), [valueLabel]: state.fetchedAt },
@@ -783,13 +789,31 @@
       setStatus(() => text('Filtre değişti. Veriyi çekmek için Yenile’ye basın.', 'Filters changed. Press Refresh to query data.'), 'ok');
     });
     search.focus();
-    void requestJson('/api/oab-cube/distinct', jsonBody('POST', { key, source: ref.source || '', limit: 1000 }))
-      .then(result => { values = [...new Set([...(Array.isArray(result.values) ? result.values : []), ...selected])]; if (state.popover === popover) { draw(); placePopover(popover, button, false); } })
-      .catch(error => {
-        if (state.popover !== popover) return;
-        if (values.length) { draw(); placePopover(popover, button, false); return; }
-        list.innerHTML = `<div class="intakeConfigEmpty">${esc(error.message || text('Değerler alınamadı.', 'Values could not be loaded.'))}</div>`;
-      });
+    /* İlk liste en fazla 1.000 değerdir (ör. model kodu bundan fazla olabilir);
+       yazılan arama küpte de aranır. Yanıtlar birleşir, hiçbir değer kaybolmaz;
+       geç gelen eski arama yanıtı yenisinin üzerine yazmaz. */
+    const local = localValues(key);
+    let requestSeq = 0, searchTimer = 0;
+    const fetchValues = needle => {
+      const seq = ++requestSeq;
+      return requestJson('/api/oab-cube/distinct', jsonBody('POST', { key, source: ref.source || '', search: needle, limit: 1000 }))
+        .then(result => {
+          if (state.popover !== popover) return;
+          values = [...new Set([...values, ...(Array.isArray(result.values) ? result.values : []), ...local, ...selected])];
+          if (seq === requestSeq) { draw(); placePopover(popover, button, false); }
+        })
+        .catch(error => {
+          if (state.popover !== popover || seq !== requestSeq) return;
+          if (values.length) { draw(); placePopover(popover, button, false); return; }
+          list.innerHTML = `<div class="intakeConfigEmpty">${esc(error.message || text('Değerler alınamadı.', 'Values could not be loaded.'))}</div>`;
+        });
+    };
+    search.addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      const needle = clean(search.value);
+      if (needle) searchTimer = setTimeout(() => void fetchValues(needle), 300);
+    });
+    void fetchValues('');
   }
   async function openFilterFieldPicker(button) {
     closePopover();

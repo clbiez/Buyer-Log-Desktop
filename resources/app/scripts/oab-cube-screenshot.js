@@ -37,9 +37,10 @@ function demoRows() {
   try {
     const { page } = app;
     const rows = demoRows();
-    const reports = [];
+    const reports = [], distincts = [];
     await page.route('**/api/oab-cube/distinct', route => {
       const body = JSON.parse(route.request().postData() || '{}');
+      distincts.push(body);
       const values = { season: ['S6', 'W6', 'S7'], mag: ['DM1A', 'DM2B'], buyerGroup: ['DEMO GRUP'] }[body.key] || [];
       route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, key: body.key, values }) });
     });
@@ -127,6 +128,20 @@ function demoRows() {
     await page.uncheck('.intakeFilterPopover input[value="DM2B"]');
     await page.click('[data-oab-cube-apply]');
     await page.waitForFunction(() => /farklı filtrelerle|different filters/.test(document.getElementById('oabCubeNote').textContent), null, { timeout: 10000 });
+    // Eski veri dışa aktarılırken özet, satırları üreten filtreleri ve uyarıyı yazar.
+    const [staleDownload] = await Promise.all([page.waitForEvent('download', { timeout: 30000 }), page.click('#oabCubeExcelExportBtn')]);
+    const staleSummary = JSON.stringify(XLSX.utils.sheet_to_json(XLSX.read(fs.readFileSync(await staleDownload.path())).Sheets[lang === 'en' ? 'Filters' : 'Filtreler']));
+    assert.match(staleSummary, /DM1A, DM2B/);
+    assert.match(staleSummary, /farklı|differs/);
+    // Filtre değer araması ilk 1.000 değerle sınırlı kalmaz: metin küpte aranır.
+    await page.click('#oabCubeFiltersBtn');
+    await page.waitForFunction(() => !document.getElementById('oabCubeFilterPanel').hidden, null, { timeout: 10000 });
+    await page.click('[data-oab-cube-filter="mag"]');
+    await page.waitForSelector('.intakeFilterPopover .intakeFilterSearch', { timeout: 10000 });
+    await page.fill('.intakeFilterPopover .intakeFilterSearch', 'dm2');
+    for (let i = 0; i < 40 && !distincts.some(body => body.key === 'mag' && body.search === 'dm2'); i++) await page.waitForTimeout(100);
+    assert.ok(distincts.some(body => body.key === 'mag' && body.search === 'dm2'), 'arama küpe gider');
+    await page.keyboard.press('Escape');
     await page.click('[data-oab-cube-filter="mag"]');
     await page.waitForSelector('.intakeFilterPopover input[value="DM2B"]', { timeout: 10000 });
     await page.check('.intakeFilterPopover input[value="DM2B"]');

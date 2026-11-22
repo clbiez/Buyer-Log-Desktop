@@ -322,6 +322,10 @@ test('istemci: pivot toplamları OABPivotEngine ile, görünür olunca yüklenir
   assert.match(js, /passOnlyFields/);
   assert.match(js, /BLDetailDrawer\.open/);
   assert.match(js, /function staleReason\(\)/);
+  // Excel özeti veriyi üreten filtrelerle; değer araması küpe gider (ilk 1.000 ile sınırlı değil).
+  assert.match(js, /const dataFilters = state\.dataFilterValues \|\| view\(\)\.filterValues/);
+  assert.match(js, /search: needle, limit: 1000/);
+  assert.match(js, /seq === requestSeq/);
   assert.match(js, /hasValue\(ref\.key\) \? pivot\.verifyTotal/);
   assert.match(js, /book_append_sheet/);
   const main = read('public/app-main.js');
