@@ -266,5 +266,43 @@
     return()=>{dialog.removeEventListener('keydown',keydown);if(previous?.isConnected)previous.focus();};
   }
 
+  /* Widget'lardaki uzun açılır listelere arama. Yalnız küçük bir yakalayıcıdır:
+     widget ayar pencereleri (OAB, OAB Küp, FOB Sonrası, INTAKE, Backlog pivot
+     alanları) ve Genel Bakış widget'larındaki ≥10 seçenekli tekil <select>
+     tıklanınca ortak aranabilir seçiciyi (data-management-picker.js, ilk
+     kullanımda lazy) açar. Kısa listeler ve `data-bl-native-select` yerel kalır. */
+  const LONG_SELECT_SCOPE='.oabSettingsModal, #ovDashboardGrid, [data-overview-widget]';
+  const LONG_SELECT_MIN_OPTIONS=10;
+  function searchableSelect(target){
+    const select=target&&typeof target.closest==='function'?target.closest('select'):null;
+    if(!select||select.multiple||select.disabled||Number(select.size)>1)return null;
+    if(!select.closest(LONG_SELECT_SCOPE)||select.closest('[data-bl-native-select]'))return null;
+    return select.options.length>=LONG_SELECT_MIN_OPTIONS?select:null;
+  }
+  function openSelectSearch(select){
+    const ready=globalThis.BLDataPicker?Promise.resolve():Promise.resolve(globalThis.BLPerf?._loadScript?.('data-management-picker.js?rev=2'));
+    ready.then(()=>{if(select.isConnected&&document.activeElement===select)globalThis.BLDataPicker?.openForSelect?.(select);}).catch(()=>{});
+  }
+  function bindLongSelectSearch(doc){
+    doc.addEventListener('mousedown',event=>{
+      if(event.button!==0)return;
+      const select=searchableSelect(event.target);if(!select)return;
+      event.preventDefault(); // yerel açılır listeyi engelle
+      select.focus({preventScroll:true});
+      if(globalThis.BLDataPicker?.isOpenFor?.(select)){globalThis.BLDataPicker.close();return;}
+      openSelectSearch(select);
+    },true);
+    doc.addEventListener('keydown',event=>{
+      const opens=event.key==='F4'||event.key===' '||event.key==='Enter'||(event.altKey&&(event.key==='ArrowDown'||event.key==='ArrowUp'));
+      if(!opens||event.target!==doc.activeElement)return;
+      const select=searchableSelect(event.target);
+      if(!select||globalThis.BLDataPicker?.isOpenFor?.(select))return;
+      event.preventDefault();
+      openSelectSearch(select);
+    },true);
+  }
+  // Yalnız gerçek tarayıcı penceresinde bağlanır (sahte DOM'lu birim testleri dinleyici sayar).
+  if(typeof window!=='undefined'&&typeof document!=='undefined'&&window.document===document)bindLongSelectSearch(document);
+
   return Object.freeze({STATE_KINDS,bindDialogKeyboard,orbHtml,stateView,renderState,persistenceView,progressView,renderProgress,createProgress,feedbackDuration,feedbackView,notify});
 });

@@ -278,25 +278,8 @@
 .dmfFoot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .dmfSpacer { flex: 1; }
 
-/* Alan ve değer seçici — yüzen katman, gölge burada meşru. */
-.dmfPicker {
-  position: fixed; width: 288px; max-height: 300px; display: flex; flex-direction: column;
-}
-.dmfPickerSearch { height: var(--ui-control-height); padding: 0 8px;
-}
-.dmfPickerList { overflow-y: auto; display: flex; flex-direction: column; }
-/* Liste flex sütunu: satırlar ve başlıklar küçülmez. overflow:hidden taşıyan
-   başlığın min-height'ı 0 olduğundan uzun listede başlıklar eziliyordu. */
-.dmfPickerList > * { flex-shrink: 0; }
-.dmfPickerItem { text-align: left; padding: 4px 9px; cursor: pointer;
-}
-.dmfPickerItem.isSelected,.dmfPickerItem[aria-selected="true"] { cursor: default;
-}
-.dmfPickerItem:disabled { opacity: 1; }
-.dmfPickerEmpty { margin: 0; padding: 9px; }
-.dmfPickerGroup { flex: 0 0 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dmfPickerGroup.isTable { position: sticky; top: 0; }
-.dmfPickerList .dmfPickerItem[data-tree-depth] { padding-left: calc(9px + var(--tree-depth, 0) * 14px); }
+/* Ortak seçici (.dmfPicker) yerleşimi ui-components.css'tedir: widget ayar
+   pencereleri de kullandığı için eager yüklenir. */
 
 @media (max-width: 900px) {
   .dmfRow { grid-template-columns: 1fr; }
@@ -333,7 +316,6 @@
 .dmmColumn { text-align: left; cursor: pointer; height: var(--ui-control-height); padding: 0 8px; }
 .dmmColumn:disabled { opacity: .5; cursor: default; }
 .dmmWhy { display: flex; flex-direction: column; gap: 1px; }
-.dmfPickerHint { margin-left: 6px; }
 
 @media (max-width: 900px) { .dmmRow { grid-template-columns: 18px 1fr; } }
 .dmMappingSlot:empty { display: none; }
