@@ -4033,10 +4033,18 @@ html[data-ui-system="manifest"] .intakeEmpty {color:var(--ui-text-muted) !import
 /* FOB Sonrası Maliyet: INTAKE yüzeyi + yalnız durum metni ve toplam satırı. */
 html[data-ui-system="manifest"] .postFobNote,html[data-ui-system="manifest"] .postFobRequired {color:var(--ui-text-secondary) !important;font-size:var(--ui-font-sm) !important;font-weight:400 !important
 }
+html[data-ui-system="manifest"] .oabCubeNote,html[data-ui-system="manifest"] .oabCubeRequired {color:var(--ui-text-secondary) !important;font-size:var(--ui-font-sm) !important;font-weight:400 !important}
 html[data-ui-system="manifest"] #postFobTable tfoot td {font-weight:650 !important;background:var(--ui-surface-soft) !important;font-variant-numeric:tabular-nums !important
 }
 html[data-ui-system="manifest"] #postFobTable tr.postFobHasOutlier td:last-child {color:var(--ui-warning) !important;font-weight:650 !important
 }
+/* TR/YD Landed Avantaj: hedef altı, veri kalitesi ve kısmi veri vurgusu (ortak durum tokenları). */
+html[data-ui-system="manifest"] .trydAdvantageTargetInput {font-variant-numeric:tabular-nums !important}
+html[data-ui-system="manifest"] #trydAdvantageTable td.trydAdvantageBelow,html[data-ui-system="manifest"] #trydAdvantageTable td.trydAdvantageInvalid {color:var(--ui-danger) !important;font-weight:650 !important}
+html[data-ui-system="manifest"] #trydAdvantageTable td.trydAdvantageAbove {color:var(--ui-success) !important}
+html[data-ui-system="manifest"] #trydAdvantageTable td.trydAdvantageNoLanded,html[data-ui-system="manifest"] #trydAdvantageNote.trydAdvantagePartial {color:var(--ui-warning) !important;font-weight:650 !important}
+html[data-ui-system="manifest"] #trydAdvantageTable tr.trydAdvantageBelowRow td.trydAdvantageLabelCell {color:var(--ui-danger) !important}
+html[data-ui-system="manifest"] .trydAdvantageKpiBelow .n {color:var(--ui-danger) !important}
 html[data-ui-system="manifest"] .intakeFilterFieldOption {background:transparent !important;color:var(--ui-text) !important
 }
 html[data-ui-system="manifest"] .intakeFilterFieldOption:hover,html[data-ui-system="manifest"] .intakeFilterFieldOption:focus-visible {background:var(--ui-row-hover) !important

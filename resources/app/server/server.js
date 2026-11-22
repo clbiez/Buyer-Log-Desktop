@@ -6189,6 +6189,16 @@ const postFobRoutes = require('./routes/postfob-routes')(app, {
   userPreferences,
 });
 
+// ---- OAB (Küp) (Genel Bakış widget'ı, OAB_Cube SSAS modeli) → server/routes/oab-cube-routes.js ----
+require('./routes/oab-cube-routes')(app, {
+  BLBusinessRules,
+  express,
+  loadModelConnections,
+  modelQuery,
+  userAccess,
+  userPreferences,
+});
+
 
 function currentUserIsModerator(req) { return Boolean(req.currentUser && userAccess.hasPermission(req.currentUser, 'manageAllOrders')); }
 /* Not yazarı damgası (v7.29). Kimlik SUNUCUDAKİ oturumdan alınır; istemcinin
