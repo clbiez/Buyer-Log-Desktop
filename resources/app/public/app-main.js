@@ -15151,11 +15151,13 @@ function landedVehicleSuggestionHtml(item,en){
     const why=item.reason==='fewOrders'?(en?`fewer than ${landedVehicleSuggestState.thresholds.orders} orders`:`${landedVehicleSuggestState.thresholds.orders} siparişten az`):(en?`fewer than ${landedVehicleSuggestState.thresholds.rows} rows`:`${landedVehicleSuggestState.thresholds.rows} satırdan az`);
     return `<span class="landedVehicleSuggestionThin">${escapeHtml(en?`No suggestion: ${why} (${scope})`:`Öneri yok: ${why} (${scope})`)}</span>`;
   }
-  return `<span class="landedVehicleSuggestionValue" title="${escapeHtml(en?`Quantity-weighted ${landedVehiclePercentileText(true)} landed/FOB of abroad rows with this shipment mode`:`Bu vasıtadaki YD satırlarının adet ağırlıklı Landed/FOB değeri (${landedVehiclePercentileText(false)})`)}">${escapeHtml(en?`Suggested (${landedVehiclePercentileText(true)})`:`Öneri (${landedVehiclePercentileText(false)})`)} ×${escapeHtml(landedMultiplierInputValue(item.suggestion))}</span><small>${escapeHtml(scope)}</small><button type="button" class="tbtn" data-vehicle-apply="${escapeHtml(item.key)}">${escapeHtml(en?'Use':'Alana al')}</button>`;
+  return `<span class="landedVehicleSuggestionValue" title="${escapeHtml(en?`Quantity-weighted ${landedVehiclePercentileText(true)} landed/FOB of abroad rows with this shipment mode`:`Bu vasıtadaki YD satırlarının adet ağırlıklı Landed/FOB değeri (${landedVehiclePercentileText(false)})`)}">${escapeHtml(en?`Suggested (${landedVehiclePercentileText(true)})`:`Öneri (${landedVehiclePercentileText(false)})`)} ×${escapeHtml(landedMultiplierInputValue(item.suggestion))}</span><small>${escapeHtml(scope)}</small><small>${escapeHtml(landedVehiclePercentileNote(en))}</small><button type="button" class="tbtn" data-vehicle-apply="${escapeHtml(item.key)}">${escapeHtml(en?'Use':'Alana al')}</button>`;
 }
-const landedVehicleSuggestState={thresholds:{rows:20,orders:5},percentile:0.5};
+const landedVehicleSuggestState={thresholds:{rows:20,orders:5},percentile:0.9};
 // Öneri yüzdeliği etiketi (sunucu sabiti SUGGEST_PERCENTILE): P50 = medyan.
-function landedVehiclePercentileText(en){const p=Math.round((Number(landedVehicleSuggestState.percentile)||0.5)*100);return p===50?(en?'P50 · median':'P50 · medyan'):`P${p}`;}
+function landedVehiclePercentileText(en){const p=Math.round((Number(landedVehicleSuggestState.percentile)||0.9)*100);return p===50?(en?'P50 · median':'P50 · medyan'):`P${p}`;}
+// Öneri yanındaki açıklama: P90 — aynı vasıtadaki satırların ~%10'u uyarı alır.
+function landedVehiclePercentileNote(en){const p=Math.round((Number(landedVehicleSuggestState.percentile)||0.9)*100),rest=100-p;return en?`${landedVehiclePercentileText(true)} — about ${rest}% of rows with the same mode get the warning`:`${landedVehiclePercentileText(false)} — aynı vasıtadaki satırların ~%${rest} kadarı uyarı alır`;}
 function renderLandedVehicleRows(modal,model,en){
   const list=modal.querySelector('#_landedVehicleList');if(!list)return;
   const typed={};list.querySelectorAll('[data-vehicle-input]').forEach(input=>{typed[input.dataset.vehicleInput]=input.value;});

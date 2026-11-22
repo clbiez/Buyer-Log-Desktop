@@ -127,7 +127,10 @@ test('öneri endpoint: son TR/YD sorgusundan tek vasıtalı geçerli YD satırla
   const gemi = out.body.data.items.find(item => item.key === 'GEMI');
   assert.equal(gemi.count, 24);
   assert.equal(gemi.enough, true);
-  assert.ok(Math.abs(gemi.suggestion - 1.06) < 1e-9, String(gemi.suggestion));
+  // P90 (ürün kararı): 1,05 / 1,06 / 1,07 eşit ağırlıkta → 1,07.
+  assert.ok(Math.abs(gemi.suggestion - 1.07) < 1e-9, String(gemi.suggestion));
+  assert.equal(gemi.percentile, 0.9);
+  assert.equal(out.body.data.percentile, 0.9);
   assert.equal(gemi.from, '2026-01-15');
   assert.equal(gemi.to, '2026-06-15');
   const ucak = out.body.data.items.find(item => item.key === 'UCAK');

@@ -32,6 +32,8 @@ test('pencere: vasıta listesi veriden; öneri Kaydet olmadan yazmaz; okunamazsa
   // TR + EN metinler
   assert.match(modal, /Geçmiş veriden öner/);
   assert.match(modal, /Suggest from history/);
+  assert.match(main, /aynı vasıtadaki satırların ~%\$\{rest\} kadarı uyarı alır/);
+  assert.match(main, /about \$\{rest\}% of rows with the same mode get the warning/);
 });
 
 test('uzak senkron: landedMultipliers alanı TR/YD standartlarını yeniler', () => {

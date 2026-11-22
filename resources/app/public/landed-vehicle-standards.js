@@ -26,10 +26,10 @@
      bağımsız örnek değildir. 20 satır / 5 sipariş, tek bir sevkiyatın (ör. tek
      acil uçak) medyanı belirlemesini önleyen en küçük makul tabandır. */
   const MIN_SAMPLE_ROWS = 20;
-  /* Öneri yüzdeliği (adet ağırlıklı): 0.5 = medyan (onaylı plan). P75 = 0.75, P90 = 0.9.
-     Medyanda o vasıtanın satırlarının ~yarısı standardın üstünde kalır ("yüksek" görünür);
-     üst yüzdelik uyarıyı seçici yapar. Ürün kararı bekleniyor; değişiklik yalnız bu sabittir. */
-  const SUGGEST_PERCENTILE = 0.5;
+  /* Öneri yüzdeliği (adet ağırlıklı). Ürün kararı (2026-11-22): P90 — aynı vasıtadaki
+     satırların (adet ağırlıklı) ~%10'u uyarı alır. Medyanda (0.5) yarısı "yüksek" görünür
+     ve uyarı seçiciliğini yitirirdi. Değiştirmek için yalnız bu sabit (0.5 / 0.75 / 0.9). */
+  const SUGGEST_PERCENTILE = 0.9;
   const MIN_SAMPLE_ORDERS = 5;
 
   function fold(value) {

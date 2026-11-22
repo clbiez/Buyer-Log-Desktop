@@ -97,7 +97,9 @@ test('öneri: o vasıtadaki satırların adet ağırlıklı Landed/FOB medyanı,
 
 test('öneri: adet ağırlıklı medyan eşit ağırlıkta orta değeri verir', () => {
   const samples = [1.1, 1.2, 1.3, 1.4, 1.5].flatMap((ratio, index) => Array.from({ length: 4 }, (_, j) => ({ key: 'UCAK', label: 'Uçak', order: `O${index}-${j}`, qty: 100, ratio })));
-  close(V.suggest(samples)[0].suggestion, 1.3);
+  close(V.suggest(samples, { percentile: 0.5 })[0].suggestion, 1.3);
+  // Ürün kararı P90: eşit ağırlıkta üst değerlerden biri.
+  close(V.suggest(samples)[0].suggestion, 1.5);
 });
 
 test('öneri: az örnekte öneri verilmez ve neden kodu döner', () => {
@@ -113,12 +115,12 @@ test('öneri: az örnekte öneri verilmez ve neden kodu döner', () => {
 });
 
 test('öneri yüzdeliği tek sabittir (varsayılan P50 = medyan); P90 seçilebilir ve sonuçta yazılır', () => {
-  assert.equal(V.SUGGEST_PERCENTILE, 0.5);
+  assert.equal(V.SUGGEST_PERCENTILE, 0.9);
   const samples = Array.from({ length: 10 }, (_, i) => ({ key: 'GEMI', label: 'Gemi', order: `O${i}`, qty: 100, ratio: 1.01 + i / 100 })).flatMap(item => [item, { ...item }]);
-  const p50 = V.suggest(samples)[0];
+  const p50 = V.suggest(samples, { percentile: 0.5 })[0];
   assert.equal(p50.percentile, 0.5);
   close(p50.suggestion, (1.05 + 1.06) / 2);
-  const p90 = V.suggest(samples, { percentile: 0.9 })[0];
+  const p90 = V.suggest(samples)[0];
   assert.equal(p90.percentile, 0.9);
   close(p90.suggestion, (1.09 + 1.1) / 2);
 });
