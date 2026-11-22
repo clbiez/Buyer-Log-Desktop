@@ -38,16 +38,18 @@ const ias = over => ({ 'Sipariş Kod': 93001, 'Ürün Adı': 'MODEL-CP', 'Renk K
   'Vasita Tanim': 'Gemi', 'Yükleme Toplam Adet': 100, 'Tahmini Antrepo Giriş Tarihi': iso(40), ...over }); // i18n-ignore
 const rule = [{ id: 'sea', exfStart: '', exfEnd: '', seasons: [], countries: [], delType: 'Gemi', days: 70 }];
 
-function cpRow(overrides) {
+function cpRow(overrides, orderOverrides, iasOverrides) {
   const ov = { ...require('../server/db').defaultOverrides(), transitRules: rule, ...overrides };
   const map = parse.parseAntrepoRows([
     // Parsiyel 1: 20 gün önce yüklendi, planlı ETA +30 → aşama ETA +35.
-    ias({ 'İthalat Dosya No': 'F1', 'Yükleme Talep Tarih': iso(-32), 'HANDOVER Tarihi': iso(-29), 'Fiili Yükleme Tarih': iso(-20), 'ETA Tarih': iso(30) }), // i18n-ignore
+    ias({ 'İthalat Dosya No': 'F1', 'Yükleme Talep Tarih': iso(-32), 'HANDOVER Tarihi': iso(-29), 'Fiili Yükleme Tarih': iso(-20), 'ETA Tarih': iso(30), ...(iasOverrides || {}) }), // i18n-ignore
     // Parsiyel 2: Handover 5 gün önce, henüz yüklenmedi → daha geç gelir.
-    ias({ 'İthalat Dosya No': 'F2', 'Yükleme Talep Tarih': iso(-8), 'HANDOVER Tarihi': iso(-5) }), // i18n-ignore
+    ias({ 'İthalat Dosya No': 'F2', 'Yükleme Talep Tarih': iso(-8), 'HANDOVER Tarihi': iso(-5), ...(iasOverrides || {}) }), // i18n-ignore
   ], ov);
-  return parse.buildCPRowsFromASAS([order()], map, ov)[0];
+  return parse.buildCPRowsFromASAS([{ ...order(), ...(orderOverrides || {}) }], map, ov)[0];
 }
+// Tamamı sevk edilmiş sipariş (üretimde kalan yok): teslimat sonucu aşama ETA'sını kullanabilir.
+const SHIPPED = { qty: 200 };
 
 test('satırda en geç gelecek parsiyel; alt detay parsiyel bazında; statik kural farkı', () => {
   const row = cpRow({ transitAnalysis: model() });
@@ -57,7 +59,7 @@ test('satırda en geç gelecek parsiyel; alt detay parsiyel bazında; statik kur
   const latest = partials.map(s => s.stage).sort((a, b) => (a.eta < b.eta ? 1 : -1))[0];
   assert.equal(ord(row['Stage ETA']), Math.round(Date.parse(latest.eta) / DAY), 'satır = en geç parsiyel');
   assert.equal(row['Current Stage'], latest.code);
-  assert.deepEqual(Object.keys(row._stageRun).sort(), ['code', 'days', 'mean', 'over', 'sigma']);
+  assert.deepEqual(Object.keys(row._stageRun).sort(), ['code', 'days', 'from', 'mean', 'over', 'sigma', 'to']);
   // Statik ölçüt: Handover + 70 gün (tanımlı kural) − aşama ETA'sı.
   const p1 = partials.find(s => s.stage.eta === partials.map(x => x.stage.eta).sort()[0]).stage;
   assert.equal(typeof p1.vsRule, 'number');
@@ -88,7 +90,7 @@ test('istemci sözleşmesi: sütunlar varsayılan gizli, Ex→Retail ikinci sat�
   assert.match(app, /const shift=cpStageShiftHtml\(r\);/);
   assert.match(app, /'Stage ETA':'Aşama ETA',\n  'Current Stage':'Koşan Aşama',/);
   assert.match(app, /'Stage ETA':'Stage ETA',\n  'Current Stage':'Current Stage',/);
-  assert.match(app, /\$\{hasStage\?cpLogisticStageHtml\(segment\):''\}/);
+  assert.match(app, /\$\{hasStage\?cpLogisticStageHtml\(segment,row\):''\}/);
   // Excel/pano metni: Ex→Retail sayısı değişmez (ikinci satır yalnız HTML).
   assert.match(app, /if\(c\.type==='num'\)\{ if\(c\.k==='Ex→Retail' && cf\) return cf\.exr==null\?'':String\(cf\.exr\);/);
   assert.match(app, /const CP_RM_CLIENT_TYPES=new Set\(\['formula','cpImage','privateNote','stageRun'\]\);/);
@@ -120,14 +122,14 @@ test('CP: @deliveryOutcome aşama ETA\'sını kullanır; @stageDelaySigma kural�
   const settings = { targetType: 'retail', requireTransitRule: true };
   const ctx = { transitRules: rule, settings };
   // Yoldaki parsiyeli olan sipariş + kayıtlı model.
-  const withModel = cpRow({ transitAnalysis: model() });
+  const withModel = cpRow({ transitAnalysis: model() }, SHIPPED);
   assert.equal(typeof withModel._stageMaxSigma, 'number');
   assert.ok(withModel._stageProjection && withModel._stageProjection.etaMean);
   const a = CPR.analyzeOrder(withModel, ctx);
   assert.equal(a.etaSource, 'stage', 'CP teslimat sonucu aşama ETA\'sından');
   assert.equal(a.stageDelaySigma, withModel._stageMaxSigma);
   // Model yok: σ boş, kural eşleşmez, ETA eski yoldan.
-  const plain = cpRow({});
+  const plain = cpRow({}, SHIPPED);
   const b = CPR.analyzeOrder(plain, ctx);
   assert.notEqual(b.etaSource, 'stage');
   assert.equal(b.stageDelaySigma, null);
@@ -143,12 +145,14 @@ test('durum iyileşmesi: statik kurala göre gecikecek sipariş aşama ETA\'sıy
   // Statik kural 200 gün → Handover + 200 retail\'i (+60) kaçırır; aşama modeli +35 der.
   const longRule = [{ id: 'sea-long', exfStart: '', exfEnd: '', seasons: [], countries: [], delType: 'Gemi', days: 200 }];
   const settings = { targetType: 'retail', requireTransitRule: true };
-  const noModel = cpRow({ transitRules: longRule });
+  // IAS tahmini geç (+90; retail +60): model olmadan gecikecek görünür.
+  const NO_ESTIMATE = { 'Tahmini Antrepo Giriş Tarihi': iso(90) }; // i18n-ignore
+  const noModel = cpRow({ transitRules: longRule }, SHIPPED, NO_ESTIMATE);
   const before = CPR.analyzeOrder(noModel, { transitRules: longRule, settings });
-  const withModel = cpRow({ transitRules: longRule, transitAnalysis: model() });
+  const withModel = cpRow({ transitRules: longRule, transitAnalysis: model() }, SHIPPED, NO_ESTIMATE);
   const after = CPR.analyzeOrder(withModel, { transitRules: longRule, settings });
   assert.equal(after.etaSource, 'stage');
-  assert.equal(before.deliveryOutcome, 'EXPECTED_LATE', 'statik kural: gecikecek');
+  assert.equal(before.deliveryOutcome, 'EXPECTED_LATE', 'IAS tahmini: gecikecek');
   assert.equal(after.deliveryOutcome, 'ON_TRACK', 'aşama ETA: yetişir (durum iyileşmesi)');
   assert.ok(after.scheduleBufferDays > 5);
   assert.ok(withModel._stageVsRule > 0, 'statik ETA\'dan erken');
@@ -158,4 +162,91 @@ test('Buyer Log üretimi parsiyel (üretimde/eksik) önceki parsiyelin yükleme 
   const src = read('public/app-main.js');
   assert.match(src, /\$\{segment\.synthetic\?'—':\(fmtDate\(loadingApproval\)\|\|'—'\)\}/);
   assert.match(read('server/lib/parse.js'), /synthetic: syntheticSegmentKind\(segment\)/);
+});
+
+// v20261122 — "-6 g geç" yanlış okunuyordu: işaretsiz yön; fark kalemleri
+// tooltip'te ve toplamı farka eşit; depoya girmiş parsiyelde gerçekleşen süre.
+test('statiğe göre fark kalemlere ayrılır; kalemlerin toplamı farka eşittir', () => {
+  const row = cpRow({ transitAnalysis: model() });
+  for (const seg of row._logisticSegments.filter(s => s.stage)) {
+    const st = seg.stage;
+    assert.ok(st.why, 'fark özeti');
+    const late = (st.why.base - st.why.ruleDays) + st.why.items.reduce((a, i) => a + i.days, 0);
+    assert.equal(late, -st.vsRule, JSON.stringify(st.why));
+    assert.equal(st.why.ruleDays, 70);
+  }
+  assert.deepEqual(row._stageWhy, row._logisticSegments.filter(s => s.stage).sort((a, b) => (a.stage.eta < b.stage.eta ? 1 : -1))[0].stage.why);
+  const p1 = row._logisticSegments.find(s => s.stage && s.stage.plan === 'eta').stage;
+  assert.ok(p1.why.items.some(i => i.kind === 'plan'), 'planlı ETA kalemi');
+});
+
+test('antrepoya girmiş parsiyel: gerçekleşen süre sunucuda hesaplanmaz (CP kurulum maliyeti yok); segment Handover ve antrepo tarihini taşır', () => {
+  const ov = { ...require('../server/db').defaultOverrides(), transitRules: rule, transitAnalysis: model() };
+  const map = parse.parseAntrepoRows([
+    ias({ 'İthalat Dosya No': 'F9', 'Supplier Portal Statü': 'Depoda', 'HANDOVER Tarihi': iso(-80), 'Tahmini Antrepo Giriş Tarihi': iso(-20) }), // i18n-ignore
+  ], ov);
+  const row = parse.buildCPRowsFromASAS([order()], map, ov)[0];
+  const seg = row._logisticSegments.find(s => s.kind === 'partial' && s.partialNo != null);
+  assert.ok(seg && seg.handover && seg.arrival, 'istemci hesabı için tarihler segmentte');
+  assert.equal(seg.stage, undefined, 'depodaki parsiyelde tahmin yok');
+  assert.equal(seg.realized, undefined);
+  const app = read('public/app-main.js');
+  assert.match(app, /const cpRealizedCache=new WeakMap\(\);/);
+  assert.match(app, /value=\{days,handover:segment\.handover,entry,entrySource,ruleDays,vsRule:ruleDays!=null\?ruleDays-days:null\};/);
+  assert.match(app, /const entry=segment\.entry\|\|segment\.arrival,entrySource=segment\.entry\?'actual':'ias';/);
+  // Gerçekleşen giriş sütunu yok: entry boş, istemci IAS tahminine düşer ve bunu yazar.
+  assert.equal(seg.entry, null);
+  const ov2 = { ...require('../server/db').defaultOverrides(), transitRules: rule };
+  const map2 = parse.parseAntrepoRows([
+    ias({ 'İthalat Dosya No': 'F9', 'Supplier Portal Statü': 'Depoda', 'HANDOVER Tarihi': iso(-80), 'Tahmini Antrepo Giriş Tarihi': iso(-20), 'Antrepo Giriş Tarih': iso(-22) }), // i18n-ignore
+  ], ov2);
+  const seg2 = parse.buildCPRowsFromASAS([order()], map2, ov2)[0]._logisticSegments.find(s => s.kind === 'partial' && s.partialNo != null);
+  assert.equal(seg2.entry.toISOString ? seg2.entry.toISOString().slice(0, 10) : seg2.entry, iso(-22), 'gerçekleşen giriş tarihi tahminden önceliklidir');
+  assert.match(app, /resolveTransitDaysForValues\(segment\.delType,segment\.handover,row&&row\.Season,row&&row\.Country,segment\.status,true,rules\)/);
+});
+
+test('istemci: işaretsiz yön metni, fark tooltip\'i ve gerçekleşen hücre', () => {
+  const app = read('public/app-main.js');
+  assert.match(app, /n>0\?\(en\?`\$\{n\} d early`:`\$\{n\} g erken`\):\(en\?`\$\{-n\} d late`:`\$\{-n\} g geç`\)/);
+  assert.match(app, /title="\$\{escapeHtml\(cpStageWhyText\(n,r\._stageWhy\)\)\}"/);
+  assert.match(app, /const done=st\?null:cpSegmentRealized\(row,segment\);\n  if\(done\)return cpLogisticRealizedHtml\(done\);/);
+  assert.match(app, /segments\.some\(segment=>segment&&\(segment\.stage\|\|cpSegmentRealized\(row,segment\)\)\)/);
+});
+
+test('Partial View: Ex→Retail ikinci satırı grubun kendi parsiyellerinden; depoda gerçekleşen süre', () => {
+  const app = read('public/app-main.js');
+  assert.match(app, /function cpStageShiftHtml\(r\)\{\n  if\(r&&r\._partialViewActive\)return cpPartialViewShiftHtml\(r\);/);
+  assert.match(app, /const text=`✓ \$\{d\.days\}/);
+  assert.match(app, /copy\['Stage ETA'\]=live\?coerceDateLoose\(live\.stage\.eta\):null;/);
+  // partialViewRows satır kopyasına yalnız grubun segmentlerini koyar.
+  assert.match(app, /_logisticSegments:segments,/);
+});
+
+test('üretimde kalan miktar varken sipariş teslimat sonucu sevk edilmiş parsiyelin aşama ETA\'sını almaz', () => {
+  // order(): 300 adet, 200 sevk edildi, 100 üretimde.
+  const row = cpRow({ transitAnalysis: model() });
+  assert.ok(row._logisticProductionQty > 0);
+  assert.ok(row['Stage ETA'], 'bilgi sütunu yine en geç yoldaki parsiyeli gösterir');
+  assert.equal(row._stageProjection, null, 'sipariş ETA\'sı kalan miktara bağlı');
+  const a = CPR.analyzeOrder(row, { transitRules: rule, settings: { targetType: 'retail', requireTransitRule: true } });
+  assert.notEqual(a.etaSource, 'stage');
+});
+
+test('motor: geçmişte kalmış IAS tahmini varış sayılmaz; üretim satırı aşama ETA\'sı almaz', () => {
+  const Engine = require('../public/backlog-delivery-engine.js');
+  const today = Math.round(todayUtc / DAY);
+  const isoOf = o => new Date(todayUtc + o * DAY).toISOString().slice(0, 10);
+  const proj = { etaMean: isoOf(45), etaP80: isoOf(50), anchor: 'handover', currentStage: '2', openOverrunDays: 20, overrunSigma: 5, stages: [] };
+  const base = { 'GÜNCEL DURUM\n(STATUS)': 'Yolda', 'ANTREPO GİRİŞ TARİHİ': isoOf(-10), RETAIL: isoOf(30) }; // i18n-ignore
+  const F = Engine.FIELDS;
+  const make = (status, meta) => ({ [F.status]: status, [F.antrepo]: isoOf(-10), [F.retail]: isoOf(30), [F.revisedLoad]: isoOf(-40), [F.plannedLoad]: isoOf(-40), [F.delType]: 'Gemi',
+    _backlogExcel: { transitDays: 70, transitRule: true, actualAntrepoDate: isoOf(-10), handoverDate: isoOf(-40), stageProjection: proj, ...meta } });
+  void base;
+  const transit = Engine.analyzeOrder(make('Yolda'), { today, dateOrdinal: Engine.defaultOrdinal });
+  assert.equal(transit.etaSource, 'stage', 'tahmini tarih geçmiş ama parsiyel yolda');
+  assert.equal(transit.eta, today + 45);
+  assert.equal(transit.deliveryOutcome, 'EXPECTED_LATE');
+  const prod = Engine.analyzeOrder(make('Üretimde', { actualAntrepoDate: null }), { today, dateOrdinal: Engine.defaultOrdinal }); // i18n-ignore
+  assert.notEqual(prod.etaSource, 'stage');
+  assert.equal(prod.stageOverrunDays, null);
 });
