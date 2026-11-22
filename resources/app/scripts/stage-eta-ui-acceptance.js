@@ -364,6 +364,27 @@ async function shot(page, top, bottom, file) {
     await page.waitForTimeout(1500);
     const dbox = await page.locator('#cpTableWrap').boundingBox();
     await page.screenshot({ path: path.join(outDir, 'cp-stage-status-floor.png'), clip: { x: dbox.x, y: dbox.y, width: dbox.width, height: Math.min(dbox.height, Math.max(480, Math.ceil(dbox.width / 3.2))) } });
+    // Backlog kök sebepleri: Handover ≠ yükleme — "Geç Handover", "Cut-off Bekleme" ayrı.
+    await page.evaluate(async () => { switchTab('backlog'); await BLPerf.ensureFeature('backlogAnalysis'); });
+    await page.locator('#backlogAnalysis [data-fold="cause"]').waitFor({ timeout: 60000 });
+    await page.evaluate(() => { const btn = document.querySelector('#backlogAnalysis [data-fold-toggle="cause"]'); if (btn && btn.getAttribute('aria-expanded') !== 'true') btn.click(); });
+    assert.doesNotMatch(await page.locator('#backlogAnalysis label.bdaControl[title*="Aşama modeli"] span').first().textContent(), /Tahmini kalan/, 'ETA etiketi çeviri ağınca bozulmaz');
+    const causeCard = page.locator('#backlogAnalysis .bdaCause').first();
+    await causeCard.waitFor({ timeout: 60000 }).catch(async err => {
+      console.log('BACKLOG_STATE', JSON.stringify(await page.evaluate(() => ({ tab: document.querySelector('.tab.active,[data-tab].active')?.textContent?.trim() || '', html: (document.getElementById('backlogAnalysis')?.innerText || '').slice(0, 600) }))));
+      throw err;
+    });
+    const causes = await page.evaluate(() => [...document.querySelectorAll('#backlogAnalysis .bdaCause .bdaCauseLabel')].map(e => e.textContent.trim()));
+    console.log('CAUSES', JSON.stringify(causes));
+    assert.ok(!causes.some(c => /Henüz Yüklenmedi/.test(c)), 'eski "Henüz Yüklenmedi" etiketi yok');
+    assert.ok(causes.some(c => /Cut-off Bekleme|Geç Handover|Handover Bekleniyor/.test(c)), 'Handover tabanlı sebep etiketleri');
+    const causeRow = page.locator('#backlogAnalysis [data-fold="cause"]');
+    await causeRow.scrollIntoViewIfNeeded();
+    await page.evaluate(() => { const t = document.getElementById('_toast'); if (t) t.remove(); });
+    await page.waitForTimeout(400);
+    const cbox = await causeRow.boundingBox();
+    const ch = Math.max(cbox.height + 16, Math.ceil((cbox.width + 16) / 3.1));
+    await page.screenshot({ path: path.join(outDir, 'backlog-handover-causes.png'), clip: { x: Math.max(0, cbox.x - 8), y: Math.max(0, cbox.y - 8), width: cbox.width + 16, height: ch } });
   }
   assert.deepEqual(errors, [], 'browser errors');
   console.log(`PASS model ${saved.analysis.stats.used} partials · ${projected.length} projected Backlog partials · signal cards ${counts.join('/')} · screenshots in ${outDir}`);
