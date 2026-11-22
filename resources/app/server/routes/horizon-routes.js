@@ -180,7 +180,9 @@ app.get('/api/horizon/fields', async (req, res) => {
     const target = String(req.query && req.query.target || 'cp').trim().toLowerCase();
     const sourceId = String(req.query && req.query.sourceId || '').trim();
     const connections = loadModelConnections().items || [];
-    const explicitConnection = sourceId ? connections.find(item => item && String(item.id || '') === sourceId) || null : null;
+    const explicitConnection = sourceId ? connections.find(item => item && String(item.id || '') === sourceId) || null
+      // FOB Sonrası Maliyet kendi bağlantısından beslenir (INTAKE gibi); kaynak verilmezse o bağlantı.
+      : (target === 'postfob' ? connections.find(item => item && item.role === 'postfob') || null : null);
     let fields = horizonFields.FIELDS;
     let schemaError = '';
     const connection = explicitConnection || selectConnection(connections, target);
@@ -235,7 +237,9 @@ app.get('/api/horizon/values', async (req, res) => {
     const sourceId = String(req.query && req.query.sourceId || '').trim();
     if (!field) return res.status(400).json({ error: 'field zorunlu.', code: 'FIELD_REQUIRED' });
     const connections = loadModelConnections().items || [];
-    const explicitConnection = sourceId ? connections.find(item => item && String(item.id || '') === sourceId) || null : null;
+    const explicitConnection = sourceId ? connections.find(item => item && String(item.id || '') === sourceId) || null
+      // FOB Sonrası Maliyet kendi bağlantısından beslenir (INTAKE gibi); kaynak verilmezse o bağlantı.
+      : (target === 'postfob' ? connections.find(item => item && item.role === 'postfob') || null : null);
     if (sourceId && !explicitConnection) return res.status(404).json({ error: 'Kaynak bulunamadı.', code: 'SOURCE_NOT_FOUND' });
     let databaseSource = null;
     if (table) {

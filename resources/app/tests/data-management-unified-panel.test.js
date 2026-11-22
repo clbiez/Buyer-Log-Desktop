@@ -40,11 +40,11 @@ function harness(language = 'tr', canManage = true) {
   return { api: window.testPanel, window, model, root, calls };
 }
 
-test('one panel renders CP, shared modules and independent INTAKE with one source chip each', () => {
+test('one panel renders CP, shared modules and independent INTAKE / Post-FOB Cost with one source chip each', () => {
   for (const language of ['tr', 'en']) {
     const { api } = harness(language);
     const html = api.horizonPanel();
-    assert.deepEqual([...html.matchAll(/data-horizon-row="([^"]+)"/g)].map(match => match[1]), ['cp', 'linked', 'intake']);
+    assert.deepEqual([...html.matchAll(/data-horizon-row="([^"]+)"/g)].map(match => match[1]), ['cp', 'linked', 'intake', 'postfob']);
     assert.equal((html.match(/data-open-filter=/g) || []).length, 5);
     assert.match(html, language === 'en' ? /Other modules/ : /Diğer modüller/);
     assert.doesNotMatch(html, /data-refresh-horizon="intake"/);

@@ -428,6 +428,10 @@
       title: { tr: 'INTAKE', en: 'INTAKE' },
       hint: { tr: 'Bağımsız kaynak ve filtre; kendi ekranından yenilenir.', en: 'Independent source and filter; refreshes from its own screen.' },
     },
+    postfob: {
+      title: { tr: 'FOB Sonrası Maliyet', en: 'Post-FOB Cost' },
+      hint: { tr: 'Bağımsız kaynak ve filtre; Genel Bakış widget’ından yenilenir.', en: 'Independent source and filter; refreshes from its Overview widget.' },
+    },
   };
   const DEFAULT_HORIZON_GROUPS = [
     { id: 'cp', targets: ['cp'] },
@@ -482,7 +486,11 @@
           aria-label="${esc(T(`${feed.sourceName} · ${module.label} bağlantısını kapat`, `Disconnect ${feed.sourceName} · ${module.label}`))}">${esc(feed.sourceName)} · ${esc(module.label)} ×</button>` : '').join('')
         + connectables(module, group.targets.length > 1);
     }).join('');
-    const needsFilter = group.targets.some(moduleId => ((model.modules || []).find(entry => entry.id === moduleId) || {}).needsFilter);
+    const unbounded = group.targets.some(moduleId => ((model.modules || []).find(entry => entry.id === moduleId) || {}).needsFilter);
+    /* FOB Sonrası Maliyet ufuksuz da çalışır: widget sorgusu sezon seçimiyle
+       sınırlanır. "Sınırsız sorgu çalıştırılamaz" uyarısı burada yanlış olurdu. */
+    const widgetBounded = group.id === 'postfob';
+    const needsFilter = unbounded && !widgetBounded;
     return `<div class="dmHorizonRow${needsFilter ? ' hasWarning' : ''}" data-horizon-row="${esc(group.id)}">
       <div class="dmHorizonHead">
         <span class="dmHorizonTitle">${esc(textOf(text.title))}</span>
@@ -501,6 +509,7 @@
       </div>
       <div class="dmHorizonFeeds">${feeds || `<span class="dmModuleEmpty">${esc(T('Hiçbir kaynağa bağlı değil', 'Not connected to any source'))}</span>`}${connections}
         ${needsFilter ? `<span class="dmWarn" title="${esc(T('Sınırsız sorgu çalıştırılamaz; bu ufuk yenilenmeden önce bir filtre gerekir.', 'An unbounded query cannot run; this horizon needs a filter before it can refresh.'))}">${esc(T('filtre gerekli', 'filter required'))}</span>` : ''}
+        ${unbounded && widgetBounded ? `<span class="dmModuleEmpty">${esc(T('Ufuk yoksa widget’ta sezon seçilir', 'Without a horizon, a season is selected in the widget'))}</span>` : ''}
       </div>
     </div>`;
   }
@@ -544,6 +553,7 @@
       </div>
       ${horizonGroupsOf().map(horizonRow).join('')}
       ${horizonRow({ id: 'intake', targets: ['intake'] })}
+      ${horizonRow({ id: 'postfob', targets: ['postfob'] })}
       ${mergedNote(merged)}
       ${refreshSettings()}
     </div>`;
@@ -1871,7 +1881,7 @@
      hatırlama ve kayıt aynı yoldan geçer. Çekmece body'ye eklenir: panel
      yeniden çizildiğinde açık düzenleyici kaybolmaz. */
   let horizonDrawer = null;   // {groupId, moduleId, sourceId, opener}
-  const drawerGroups = () => [...horizonGroupsOf(), { id: 'intake', targets: ['intake'] }];
+  const drawerGroups = () => [...horizonGroupsOf(), { id: 'intake', targets: ['intake'] }, { id: 'postfob', targets: ['postfob'] }];
   const drawerGroup = groupId => drawerGroups().find(entry => entry.id === groupId)
     || drawerGroups().find(entry => entry.targets.includes(groupId)) || null;
 

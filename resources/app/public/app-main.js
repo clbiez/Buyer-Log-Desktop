@@ -15200,11 +15200,12 @@ const MODEL_CONNECTION_PRESETS=[
   {name:'ASAS', server:'lcwtabular_s30', catalog:'ASAS_30', role:'asas', refreshEnabled:true},
   {name:'IAS',  server:'lcwtabular_p32', catalog:'IASv2', role:'antrepo', refreshEnabled:true},
   {name:'INTAKE', server:'lcwtabular_s20', catalog:'WSSI_Intake_Raporu4', role:'intake', refreshEnabled:true},
+  {name:'FOB Sonrası Maliyet', server:'F5_S41', catalog:'FiyatMaliyetKontrolRapor', role:'postfob', refreshEnabled:true},
 ];
 const MODEL_CONNECTION_DEFAULT_SEASONS=Object.freeze(['W6','W7','S6','S7']);
-const MODEL_ROLE_TARGETS={asas:['cp','orders','backlog','lfl'],antrepo:['cp','orders','backlog'],intake:['intake']};
+const MODEL_ROLE_TARGETS={asas:['cp','orders','backlog','lfl'],antrepo:['cp','orders','backlog'],intake:['intake'],postfob:['postfob']};
 MODEL_ROLE_TARGETS.asas.push('priceanalysis');
-const MODEL_TARGET_LABELS={cp:'CP',orders:'Orders / Siparişler',backlog:'Backlog',lfl:'LFL',priceanalysis:'Price & Supplier Analysis',intake:'INTAKE'};
+const MODEL_TARGET_LABELS={cp:'CP',orders:'Orders / Siparişler',backlog:'Backlog',lfl:'LFL',priceanalysis:'Price & Supplier Analysis',intake:'INTAKE',postfob:'FOB Sonrası Maliyet / Post-FOB Cost'};
 const MODEL_QUERY_PLACEHOLDER='// Once "Tablolari Listele" ile tablo adini bul, listeden tikla.\n// Sorgu buraya kendisi yazilir.';
 let modelConnState={items:[],revision:0,selectedId:null,supported:true,exportFolder:'',loaded:false};
 let modelConnFields={};      // rol → alan kataloğu (sunucudan bir kez alınır)
@@ -20036,8 +20037,8 @@ function ensureOverviewPostFobModule(){
   const loader=window.BLPerf?._loadScript;
   if(typeof loader!=='function'||!document.getElementById('postFobSection'))return Promise.resolve(null);
   window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'postfob',mode:'after-ui'});
-  overviewPostFobLoadPromise=loader('postfob-analysis.js?rev=20261121')
-    .then(()=>loader('postfob.js?rev=20261121'))
+  overviewPostFobLoadPromise=loader('postfob-analysis.js?rev=20261122')
+    .then(()=>loader('postfob.js?rev=20261122'))
     .then(()=>{window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'postfob',mode:'after-ui'});return window.BLPostFob||null;})
     .catch(error=>{overviewPostFobLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'postfob',mode:'after-ui',failed:true});console.warn('FOB sonrası maliyet modülü yüklenemedi:',error);return null;});
   return overviewPostFobLoadPromise;
