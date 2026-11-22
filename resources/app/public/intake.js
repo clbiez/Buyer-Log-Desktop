@@ -559,7 +559,9 @@
     const dims = [...(query().rows || []), ...(query().columns || [])];
     const measures = query().measures || [];
     const rows = intakeDisplayRows(intakeSortedRows([...activeColumns(), ...calcs]));
-    const headers = [text('Satır tipi', 'Row type'), ...dims.map(fieldLabel), ...measures.map(fieldLabel), ...calcs.map(fieldLabel)];
+    const baseHeaders = [text('Satır tipi', 'Row type'), ...dims.map(fieldLabel), ...measures.map(fieldLabel)];
+    // Hesaplanan değer başlığı boyut/ölçü/sabit başlıkla çakışırsa "(ƒx)" alır.
+    const headers = [...baseHeaders, ...PCV().uniqueHeaders(baseHeaders, calcs.map(field => field.calc))];
     const numberOrNull = value => { const number = typeof value === 'number' ? value : Number(String(value == null ? '' : value).replace(/\s/g, '').replace(',', '.')); return value === '' || value == null || !Number.isFinite(number) ? null : number; };
     const body = rows.slice(0, 5000).map(item => [
       item.kind === 'grand' ? text('Genel toplam', 'Grand total') : (item.kind === 'group' ? text('Alt toplam', 'Subtotal') : text('Detay', 'Detail')),
@@ -938,6 +940,8 @@
       rowNote: INTAKE_ROW_MODE_NOTE,
       widget: { tr: 'INTAKE', en: 'INTAKE' },
       isTextKey: key => dimensionPool.some(field => field.id === key),
+      // Boyut, ölçü ve Excel sabit başlıkları ayrılmıştır.
+      reserved: () => ['Satır tipi', 'Row type', ...dimensionPool.map(fieldLabel), ...valuePool.map(fieldLabel)], // i18n-ignore: ayrılmış ad listesi (iki dil birlikte)
       fields: () => draftMeasureFields(),
       samples: () => {
         if (!state.rows.length) return [];

@@ -362,6 +362,26 @@
     return typeof value === 'number' && Number.isFinite(value) ? Math.round(value * 1e6) / 1e6 : null;
   }
 
+  /* Excel başlığı: hesaplanan değerin adı bir boyut, değer ya da sabit başlıkla
+     (ör. "Model", "Satır tipi") aynıysa nesne anahtarlı satırda o sütunun
+     üzerine yazılır ve veri sessizce kaybolurdu. Çakışan başlık "(ƒx)", o da
+     doluysa "(ƒx 2)"… alır; karşılaştırma büyük/küçük harf duyarsızdır.
+     taken: Set (yerinde güncellenir). */
+  const headerKey = text => String(text == null ? '' : text).trim().toLocaleLowerCase('tr-TR');
+  function uniqueHeader(taken, label) {
+    const used = new Set([...taken].map(headerKey));
+    const base = String(label == null ? '' : label).trim() || 'ƒx';
+    let candidate = base;
+    for (let index = 1; used.has(headerKey(candidate)); index += 1) candidate = `${base} (ƒx${index > 1 ? ` ${index}` : ''})`;
+    taken.add(candidate);
+    return candidate;
+  }
+  // Tanım listesi için başlıklar (sırayla); existing: sabit + boyut + değer başlıkları.
+  function uniqueHeaders(existing, defs) {
+    const taken = new Set(existing instanceof Set ? existing : (Array.isArray(existing) ? existing : []));
+    return (Array.isArray(defs) ? defs : []).map(def => uniqueHeader(taken, labelOf(def)));
+  }
+
   /* ---------------- tembel yükleme ----------------
 
      Formül motoru ve editör uygulamanın ertelenmiş yüklemesindedir
@@ -462,6 +482,11 @@
             const clash = defs.some(def => def.id !== next.id && nameKey(labelOf(def)) === nameKey(labelOf(next)))
               || fields.some(field => nameKey(field.label) === nameKey(labelOf(next)));
             if (clash) { toast(T('Bu pivotta aynı adda bir değer var; farklı bir ad verin.', 'This pivot already has a value with that name; pick another name.')); return false; }
+            /* Boyut ve sabit başlık adları (ör. Model, Satır tipi) ayrılmıştır:
+               aynı ad tabloda ve Excel'de iki sütunu karıştırırdı. */
+            const reserved = typeof config.reserved === 'function' ? config.reserved() : (config.reserved || []);
+            const names = [labelOf(next), next.labelTr, next.labelEn].filter(Boolean).map(nameKey);
+            if (reserved.some(name => names.includes(nameKey(name)))) { toast(T('Bu ad pivotta bir alan ya da sabit başlık olarak kullanılıyor (ör. Model, Satır tipi); farklı bir ad verin.', 'This name is already used by a pivot field or a fixed heading (e.g. Model, Row type); pick another name.')); return false; }
             if (!existing && defs.length >= LIMITS.max) { toast(T(`En fazla ${LIMITS.max} hesaplanan değer eklenebilir.`, `At most ${LIMITS.max} calculated values are allowed.`)); return false; }
             const graph = graphError(list);
             if (graph) { toast(errorText(graph)); return false; }
@@ -573,7 +598,7 @@
     LIMITS, MODES, FORMATS, KEY_PREFIX,
     keyOf, isKey, idOfKey, labelOf, modeText,
     normalizeList, graphError, requiredRowKeys,
-    createEvaluator, errorOf, errorText, format, cell, exportValue,
+    createEvaluator, errorOf, errorText, format, cell, exportValue, uniqueHeader, uniqueHeaders,
     ensureEngine, openEditor, editorIndex, sectionHtml, mountSection,
   });
 });
