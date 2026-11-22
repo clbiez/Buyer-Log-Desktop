@@ -69,3 +69,11 @@ test('failed mirror retains durable outbox and later flush retries without losin
   assert.equal((await service.flushOutbox()).pending,false);assert.deepEqual(ov.licenseCardOutbox,{});
   assert.equal(ov.notesmap.extra.Notes,'new local edit');
 });
+
+test('empty outbox flush reads overrides once (startup: no second full large-document load)',async()=>{
+  let loads=0;
+  const confirmed={isConfirmed:()=>true};
+  const service=sync.createLicenseCardSync({deltaStore:{mirror:async()=>({ok:true})},loadOverrides:()=>{loads+=1;return {_revision:1,licenseCardOutbox:{}};},saveOverrides:()=>{throw Error('must not save');},trialPolicy:confirmed});
+  assert.deepEqual(await service.flushOutbox(),{ok:true,pending:false});
+  assert.equal(loads,1);
+});

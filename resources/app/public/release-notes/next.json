@@ -7,8 +7,8 @@
     "en": "Collection colour options, stage forecast and CP redraw fixes"
   },
   "summary": {
-    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: INTAKE tipi pivot, alan ekleme ve sipariş aramasıyla landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder; kaynağı ve ufku Veri Yönetimi'nden yönetilir. Pivot toplam satırları fare üzerindeyken okunur kalır. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur. Aşama farkı yönüyle yazılır ve üzerine gelince nedenleri görünür; depodaki parsiyelde ve Kısmi Görünümde gerçekleşen yol süresi gösterilir.",
-    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: with an INTAKE-style pivot, field picker and order search it analyses landed, Integral and forecast gap with quantity weighting; its source and horizon are managed in Data Management. Pivot total rows stay readable on hover. Starting directly on CP now completes the startup screen without an error. The stage gap shows its direction and its reasons on hover; partials in the warehouse and Partial View show the realized transit time."
+    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: INTAKE tipi pivot, alan ekleme ve sipariş aramasıyla landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder; kaynağı ve ufku Veri Yönetimi'nden yönetilir. Pivot toplam satırları fare üzerindeyken okunur kalır. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur. Aşama farkı yönüyle yazılır ve üzerine gelince nedenleri görünür; depodaki parsiyelde ve Kısmi Görünümde gerçekleşen yol süresi gösterilir. Veritabanından yenilenen veri, aynı sorguyu paylaşan sayfalar için artık bir kez işlenip tek kopya saklanır; açılış, yenileme kaydı ve bellek kullanımı belirgin biçimde azalır.",
+    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: with an INTAKE-style pivot, field picker and order search it analyses landed, Integral and forecast gap with quantity weighting; its source and horizon are managed in Data Management. Pivot total rows stay readable on hover. Starting directly on CP now completes the startup screen without an error. The stage gap shows its direction and its reasons on hover; partials in the warehouse and Partial View show the realized transit time. Data refreshed from the database is now processed once and stored as a single copy for pages that share the same query; startup, refresh saving and memory use drop markedly."
   },
   "changes": [
     {
@@ -390,6 +390,162 @@
         "caption": {
           "tr": "Demo veride, gerçek IAS sorgusu gibi ara adım sütunları olmadan: gümrükte takılan parsiyel gecikme ve σ ile işaretlenir.",
           "en": "On demo data without the intermediate step columns, like the real IAS query: the partial stuck in customs is flagged with its delay and σ."
+        }
+      }
+    },
+    {
+      "id": "overview-tryd-landed-advantage",
+      "type": "feature",
+      "module": {
+        "tr": "Genel Bakış › Ticari",
+        "en": "Overview › Commercial"
+      },
+      "title": {
+        "tr": "TR/YD Landed Avantaj widget'ı: aynı modelde Türkiye FOB'u ile yurtdışı gerçekleşen landed kıyası",
+        "en": "TR/YD Landed Advantage widget: same-model Turkey FOB versus abroad realized landed cost"
+      },
+      "body": {
+        "tr": "Hem Türkiye hem yurtdışı siparişi olan modellerde gerçekleşen avantaj = 1 − Σ(YD adet × YD landed) / (TR FOB × YD adet) hesaplanır; Fas ve Mısır kıyas dışıdır. Hedef varsayılan %36'dır ve widget'tan değiştirilip kişisel tercih olarak saklanır; fark hedefin altındaysa satır vurgulanır, \"Yalnız hedef altı\" ile süzülür. Buyer grup › Ürün klasmanı › MAG › Model kırılımında toplam oranları tutarlardan yeniden hesaplanır. Landed'i olmayan veya hatalı (landed < FOB ya da Landed/FOB aşırı uç) YD satırları kıyasa girmez ve durum sütununda görünür; öngörü landed yalnız açıkça seçilince ayrı etiketle kullanılır. Veri FOB Sonrası Maliyet sorgusu ve önbelleğinden gelir; satır sınırında kesilen sonuç \"kısmi\" diye işaretlenir. Çift tıkla kaynak satırlar, Excel'e pivot + kaynak + özet aktarılır.",
+        "en": "For models with both Turkey and abroad orders the realized advantage = 1 − Σ(abroad qty × abroad landed) / (TR FOB × abroad qty); Morocco and Egypt are excluded. The target defaults to 36%, can be changed in the widget and is saved as a personal preference; rows below the target are highlighted and \"Below target only\" filters them. In the Buying group › Product class › MAG › Model breakdown, total ratios are recomputed from amounts. Abroad rows with no or invalid landed (landed < FOB or an extreme Landed/FOB) are left out of the comparison and shown in the status column; forecast landed is used only when explicitly selected, with its own label. Data comes from the Post-FOB Cost query and cache; a result cut at the row limit is marked as partial. Double-click shows the source rows; Excel exports the pivot, source rows and a summary."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "tryd-advantage-light.png",
+        "alt": {
+          "tr": "Demo veride TR/YD Landed Avantaj widget'ı: KPI'lar, Buyer grup › Klasman › MAG › Model pivotu, hedef altı satırlar vurgulu",
+          "en": "TR/YD Landed Advantage widget on demo data: KPIs, Buying group › Class › MAG › Model pivot, rows below target highlighted"
+        },
+        "caption": {
+          "tr": "Demo veride gerçekleşen avantaj %29,6, hedef %36; hedefin altındaki model ve gruplar kırmızı ad ve farkla işaretli.",
+          "en": "On demo data the realized advantage is 29.6% against a 36% target; models and groups below target are marked with a red name and gap."
+        }
+      }
+    },
+    {
+      "id": "overview-oab-cube-widget",
+      "type": "feature",
+      "module": {
+        "tr": "Genel Bakış · Ticari",
+        "en": "Overview · Commercial"
+      },
+      "title": {
+        "tr": "OAB (Küp): OAB verisi doğrudan OAB_Cube SSAS küpünden",
+        "en": "OAB (Cube): OAB data straight from the OAB_Cube SSAS cube"
+      },
+      "body": {
+        "tr": "Genel Bakış › Ticari sayfasına OAB (Küp) widget'ı eklendi. PASS'li OAB widget'ı yerinde kalır; iki kaynak bir süre yan yana çalışır. Çoklu Sezon × MAG × Buyer grup seçimi tek sorguda filtre olarak gider (PASS'teki kombinasyon turuna gerek yok). Pivot OAB/INTAKE ile aynıdır: alt ve genel toplam, grup katlama, kalemle alan düzenleme, + Filtre ekle, çift tıkla alt detay, Excel ve model/renk araması. Başlıkta küpün veri tarihi görünür (küp ETL ile dolar, canlı değildir). Renk ve model kodları asla sayıya çevrilmez. PASS raporunda olup küpte bulunmayan alanlar (Özel Kod, Persona, Optionın Eşlendiği Diğer Linelar, Özel Onaylı Temiz Devir, Düşük Adetli FT WSSI) uydurulmaz; widget altında açıkça listelenir. Filtre değer listesinde yazılan arama küpte de yapılır; liste 1.000 değerde kesilirse \"İlk 1.000 değer gösteriliyor; aramayı daraltın\" uyarısı görünür. Yetki OAB görüntüleme ile aynıdır; sorgu sizin Windows kimliğinizle çalışır.",
+        "en": "An OAB (Cube) widget was added to Overview › Commercial. The PASS-based OAB widget stays in place; both sources run side by side for a while. A multi Season × MAG × Buyer group selection goes as filters in a single query (no PASS combination batch). The pivot matches OAB/INTAKE: subtotals and grand total, group collapse, field editing with the pencil, + Add filter, double-click drill-down, Excel and model/colour search. The header shows the cube's data date (the cube is loaded by ETL and is not live). Colour and model codes are never converted to numbers. Fields in the PASS report that the cube does not have (Special code, Persona, Other lines the option is mapped to, Special-approved clean carry-over, Low-quantity FT WSSI) are never invented and are listed under the widget. Searching a filter value list also searches the cube; when the list is cut at 1,000 values a \"Showing the first 1,000 values; narrow the search\" warning appears. Access matches the OAB view permission; the query runs with your Windows identity."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-cube-light.png",
+        "alt": {
+          "tr": "Demo veri: OAB (Küp) widget'ı klasman grup ve ürün klasmanına göre WSSI, onaylı, plan, onaysız ve PO adetleri, alt ve genel toplam, başlıkta veri tarihi",
+          "en": "Demo data: the OAB (Cube) widget with WSSI, approved, planned, unapproved and PO quantities by class group and product class, subtotals and grand total, data date in the header"
+        },
+        "caption": {
+          "tr": "Demo veride iki sezon ve iki MAG tek sorguda; başlıkta küpün veri tarihi, altta küpte olmayan PASS alanları.",
+          "en": "On demo data two seasons and two MAGs in a single query; the cube's data date in the header and the PASS fields missing in the cube below."
+        }
+      }
+    },
+    {
+      "id": "backlog-handover-vs-loading",
+      "type": "fix",
+      "module": {
+        "tr": "Backlog · CP · Siparişler",
+        "en": "Backlog · CP · Orders"
+      },
+      "title": {
+        "tr": "Handover ile yükleme ayrıldı: Geç Handover, Cut-off Bekleme ve Geç Yükleme ayrı sebepler",
+        "en": "Handover and loading are separated: Late Handover, Cut-off Wait and Late Loading are separate causes"
+      },
+      "body": {
+        "tr": "Handover ürünün depoya teslimidir; ürün sonrasında cut-off'u bekleyebilir ve ardından gemiye yüklenir. Teslimat Riski'nde Handover'ı Ex-Factory ile karşılaştıran göstergeler artık doğru adla görünür: \"Geç Yüklendi\" → \"Geç Handover\", \"Henüz Yüklenmedi\" → \"Handover Bekleniyor\", \"Yüklenmedi — …\" → \"Handover Yok — …\". Aşama aşımı sebebi aşamaya göre ayrılır: Talep → Handover \"Geç Handover\", Handover → Cut Off \"Cut-off Bekleme\" (yeni), Cut Off → Fiili Yükleme \"Geç Yükleme\" (yeni); yeni sebepler otomasyonda varsayılan olarak İthalat'a yönlenir, mevcut yönlendirmeler korunur. \"Yükleme Operasyonları\" durumundaki parsiyel, Cut Off / Fiili Yükleme tarihi gelmese de yolda gösterilmez. Aralık tek aşamaya denk gelmiyorsa koşan aşama etiketi numarasız yazılır (ör. \"Handover → ETA\"). Hesaplar değişmedi.",
+        "en": "Handover is the delivery of goods to the warehouse; the goods may then wait for the cut-off and are loaded onto the vessel afterwards. In Delivery Risk, indicators that compare Handover with Ex-Factory now carry the right name: \"Loaded Late\" → \"Late Handover\", \"Not Yet Loaded\" → \"Awaiting Handover\", \"Not Loaded — …\" → \"No Handover — …\". Stage overrun causes are split by stage: Request → Handover \"Late Handover\", Handover → Cut-off \"Cut-off Wait\" (new), Cut-off → Actual Loading \"Late Loading\" (new); the new causes route to Import by default in automations, existing routings are kept. A partial in \"Loading Operations\" is no longer shown as in transit when Cut-off / Actual Loading dates are missing. When the span is not a single stage, the running stage label has no number (e.g. \"Handover → ETA\"). Calculations are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-handover-causes.png",
+        "alt": {
+          "tr": "Demo Backlog Teslimat Riski: Neden riskli? kartlarında Handover Bekleniyor",
+          "en": "Demo Backlog Delivery Risk: Awaiting Handover in the Why at risk? cards"
+        },
+        "caption": {
+          "tr": "Demo veride Neden riskli? bölümü Handover'ı yükleme olarak değil, Handover olarak adlandırır.",
+          "en": "On demo data the Why at risk? section names Handover as Handover, not as loading."
+        }
+      }
+    },
+    {
+      "id": "capacity-path-snapshot-once",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Siparişler · Genel Bakış · Açılış",
+        "en": "CP · Orders · Overview · Startup"
+      },
+      "title": {
+        "tr": "Çok büyük veride açılışta veri her istekte yeniden okunmaz",
+        "en": "With very large data, startup no longer re-reads the data for every request"
+      },
+      "body": {
+        "tr": "Veri, hesap işçisinin belleğine sığmayacak kadar büyükse (yaklaşık 500 MiB üstü) hesaplar sunucuda yapılır. Bu durumda açılıştaki her ekran isteği kayıtlı model verisinin tamamını diskten yeniden okuyup çözüyor, sunucu her seferinde saniyelerce yanıt veremiyordu. Okunan veri artık aynı veri sürümü için bir kez okunup yeniden kullanılır; dosya değişirse yeniden okunur. Ekranlar ve sonuçlar aynıdır, açılış daha erken hazır olur.",
+        "en": "When the data is too large for the calculation worker (about 500 MiB and above), calculations run on the server. During startup every screen request then re-read and decoded the whole saved model data from disk, and the server stopped responding for seconds each time. The data is now read once per data version and reused; it is read again if the file changes. Screens and results are the same, and startup is ready sooner."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; yalnız büyük veride açılıştaki bekleme kısalır.",
+          "en": "There is no change on screen; only the startup wait with large data is shorter."
+        }
+      }
+    },
+    {
+      "id": "model-refresh-shared-run-single-copy",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri Yönetimi · CP · Siparişler · Backlog · Fiyat Analizi",
+        "en": "Data Management · CP · Orders · Backlog · Price Analysis"
+      },
+      "title": {
+        "tr": "Aynı sorguyu paylaşan sayfalar için veri tek kopya tutulur; açılış ve yenileme kaydı hızlandı",
+        "en": "Pages sharing the same query keep a single copy of the data; startup and refresh saving are faster"
+      },
+      "body": {
+        "tr": "Veritabanı (Data Model) kaynağında tek kapsam CP, Siparişler, Backlog ve Fiyat Analizi'ni birlikte beslediğinde aynı sorgu sonucu her sayfa için ayrı ayrı işleniyordu; ASAS verisi bellekte ve kişisel model snapshot'ında dört, IAS verisi üç kez tutuluyordu. Sonuç artık bir kez işlenir ve sayfalar aynı kopyayı kullanır; Excel ve Dashboard kaynakları zaten böyle çalışıyordu. 30 bin siparişli sentetik veride snapshot 403 MiB'tan 144 MiB'a, açılışta snapshot yükleme 9,2 sn'den 2,6 sn'ye, yüklenen verinin belleği 557 MiB'tan 193 MiB'a, yenileme kaydı 18,9 sn'den 9,7 sn'ye indi. Sayfalardaki satırlar ve değerler aynıdır; farklı kapsamla beslenen sayfalar ayrı kalır. Var olan snapshot ilk tam yenilemeden sonra küçülür.",
+        "en": "With the database (Data Model) source, when one scope fed CP, Orders, Backlog and Price Analysis together, the same query result was processed separately for each page; ASAS data was kept four times and IAS data three times in memory and in the personal model snapshot. The result is now processed once and the pages share the same copy, as the Excel and Dashboard sources already did. On synthetic data with 30k orders the snapshot fell from 403 MiB to 144 MiB, snapshot loading at startup from 9.2 s to 2.6 s, memory of the loaded data from 557 MiB to 193 MiB and refresh saving from 18.9 s to 9.7 s. Rows and values on the pages are unchanged; pages fed by a different scope stay separate. An existing snapshot shrinks after the first full refresh."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; sayfalar aynı görünür, yalnız açılış, yenileme ve bellek kullanımı azalır.",
+          "en": "Nothing changes on screen; pages look the same, only startup, refresh time and memory use go down."
+        }
+      }
+    },
+    {
+      "id": "startup-seed-lazy-reads",
+      "type": "improvement",
+      "module": {
+        "tr": "Açılış · Veri motoru",
+        "en": "Startup · Data engine"
+      },
+      "title": {
+        "tr": "Büyük veride açılış daha hızlı: zaten eşitlenmiş veriler yeniden okunmuyor",
+        "en": "Faster startup on large data: already synchronized data is no longer re-read"
+      },
+      "body": {
+        "tr": "Her açılışta yerel veri motorunda zaten bulunan Endeksmatik setleri, ortak ayar/override dosyaları ve e-posta/teklif kayıtları diskten yeniden açılıp ayrıştırılıyor, Endeksmatik setleri baştan indeksleniyordu; büyük override belgesi de yalnız varlık kontrolü ve boş lisans kartı kuyruğu için fazladan kopyalanıyordu. Bu işler artık yalnız gerçekten eksik kayıt için yapılır. Veri ve eşitleme davranışı değişmedi; 30k satırlık sentetik veride sunucu açılışındaki veri motoru hazırlığı yaklaşık 4–5 sn kısaldı.",
+        "en": "On every startup, Endeksmatik sets, shared settings/override files and email/quotation records that the local data engine already held were reopened from disk and parsed, and the Endeksmatik sets were indexed again; the large override document was also copied extra times just for an existence check and an empty license-card queue. This work now runs only for records that are actually missing. Data and synchronization behaviour are unchanged; on 30k-row synthetic data the server's data-engine preparation at startup became about 4–5 s shorter."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Sunucu açılışındaki arka plan iyileştirmesi; ekranda değişen bir öğe yok.",
+          "en": "Background server startup improvement; nothing on screen changes."
         }
       }
     }

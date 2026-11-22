@@ -305,7 +305,21 @@ function antrepoEntryConflicts(entry, target) {
   return false;
 }
 
+/* Saf fonksiyon; IAS'ta yalnız birkaç farklı durum metni vardır. Backlog/CP her
+   parsiyelde tekrar normalleştirmesin diye metin başına önbelleklenir (sıcak yol). */
+const ANTREPO_STATUS_KEY_CACHE = new Map();
 function antrepoStatusKey(value) {
+  if (typeof value === 'string') {
+    let hit = ANTREPO_STATUS_KEY_CACHE.get(value);
+    if (hit === undefined) {
+      hit = antrepoStatusKeyRaw(value);
+      if (ANTREPO_STATUS_KEY_CACHE.size < 5000) ANTREPO_STATUS_KEY_CACHE.set(value, hit);
+    }
+    return hit;
+  }
+  return antrepoStatusKeyRaw(value);
+}
+function antrepoStatusKeyRaw(value) {
   const key = turknorm(value);
   if (!key) return '';
   if (key.includes('YUKLEME')) return 'YUKLEME OPERASYONLARI';
@@ -3520,20 +3534,27 @@ function cpActualEntry(ias) {
 /* IAS durumunun kanıtladığı son geçilmiş kilometre taşı: "Yol Operasyonları"
    yüklendi demektir, "Gümrük-Liman Operasyonları" gemi vardı demektir. Tarih
    sütunu gelmese de bu adımlar tamamlanmış sayılır. */
-function stagePassedMilestone(status) {
-  const key = antrepoStatusKey(status);
+function stagePassedMilestone(status, statusKey) {
+  const key = statusKey != null ? statusKey : antrepoStatusKey(status);
   if (key === 'GUMRUK LIMAN OPERASYONLARI') return 'eta';
   if (key === 'YOL OPERASYONLARI' || key === 'YOLDA') return 'actualLoading';
   return null;
+}
+/* "Yükleme Operasyonları": Handover yapılmış olabilir ama ürün henüz yüklenmedi
+   (cut-off bekliyor ya da yükleniyor). Fiili Yükleme "bekleniyor" sayılır. */
+function stageNotReachedMilestone(status, statusKey) {
+  return (statusKey != null ? statusKey : antrepoStatusKey(status)) === 'YUKLEME OPERASYONLARI' ? 'actualLoading' : null;
 }
 function backlogStageProjection(ias, order, model, todayIso, status) {
   if (!ias || !model || !Array.isArray(model.groups)) return null;
   if (!_transitAnalysisSource) _transitAnalysisSource = require('./transit-analysis-source');
   const milestones = _transitAnalysisSource.milestonesFromEntry(ias);
   if (!milestones) return null;
+  const statusKey = antrepoStatusKey(status);
   const projection = BLTransitStageModel.project(milestones, {
     model, country: order && order.countryRaw, vehicle: ias.vasita || '', today: todayIso,
-    passed: stagePassedMilestone(status), observed: m => _transitAnalysisSource.hasMilestoneColumn(ias, m),
+    passed: stagePassedMilestone(status, statusKey), notReached: stageNotReachedMilestone(status, statusKey),
+    observed: m => _transitAnalysisSource.hasMilestoneColumn(ias, m),
   });
   if (!projection) return null;
   const iso = value => { const d = toDateOnly(value); return d ? localIsoDate(d) : null; };

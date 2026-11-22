@@ -278,8 +278,11 @@
     CUSTOMS_DELAY: Object.freeze({ actionFloor: 'ACTION_THIS_WEEK', tr: 'Gümrük/Liman gecikmesi', en: 'Customs delay' }),
     RETAIL_TRANSFER_DELAY: Object.freeze({ actionFloor: 'ACTION_THIS_WEEK', tr: 'Retaile aktarım gecikmesi', en: 'Retail transfer delay' }),
     INSUFFICIENT_TRANSIT_BUFFER: Object.freeze({ actionFloor: 'ACTION_THIS_WEEK', tr: 'Yetersiz transit süresi', en: 'Insufficient transit buffer' }),
-    LATE_LOADING: Object.freeze({ actionFloor: 'WATCH', tr: 'Geç yükleme', en: 'Late loading' }),
-    NOT_YET_LOADED: Object.freeze({ actionFloor: 'WATCH', tr: 'Henüz yüklenmedi', en: 'Not yet loaded' }),
+    // LATE_LOADING kodu korunur; ölçtüğü Handover'dır (Handover ≠ gemiye yükleme).
+    LATE_LOADING: Object.freeze({ actionFloor: 'WATCH', tr: 'Geç Handover', en: 'Late handover' }),
+    CUTOFF_WAIT: Object.freeze({ actionFloor: 'WATCH', tr: 'Cut-off bekleme', en: 'Cut-off wait' }),
+    VESSEL_LOADING_DELAY: Object.freeze({ actionFloor: 'WATCH', tr: 'Geç yükleme', en: 'Late loading' }),
+    NOT_YET_LOADED: Object.freeze({ actionFloor: 'WATCH', tr: 'Handover bekleniyor', en: 'Awaiting handover' }),
     UNKNOWN: Object.freeze({ actionFloor: 'WATCH', tr: 'Hesaplama için veri yetersiz', en: 'Insufficient data to calculate' }),
   });
 
