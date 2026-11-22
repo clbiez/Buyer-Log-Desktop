@@ -22,7 +22,7 @@
     catalog: { dimensions: [], measures: [], passOnlyFields: [], defaults: null, aggregates: ['SUM', 'AVG', 'MIN', 'MAX'] },
     view: null,
     rows: [], fetchedAt: '', missing: [], truncated: false, rowLimit: 20000, dataDate: '', dataDateSource: '',
-    dataFilterValues: null, dataMeasures: null, dataDimensions: null,
+    dataFilterValues: null, dataMeasures: null, dataDimensions: null, productAttributes: null,
     connection: null, horizon: false, horizonApplied: false, loaded: false, loading: false, started: false,
     status: null, popover: null, viewRevision: 0, exporting: false, metadata: null, metadataPromise: null, search: '', displayItems: [],
   };
@@ -52,6 +52,44 @@
     const ref = [...view().rows, ...view().columns, ...view().values, ...view().filters].find(item => item.key === key);
     return ref ? refLabel(ref) : refLabel({ key });
   }).join(', ');
+
+  /* ---------- Ürün özellikleri (FİT, Silüet, Kumaş-malzeme tipi) ----------
+     Sunucu ayrı bir özellik sorgusuyla model + renk satırlarına ekler (ana
+     sorgu ve ölçüler değişmez). Pivotta yerel metin boyutudur; filtreleri
+     yüklü satırlarda uygulanır, küp sorgusuna girmez. Birden çok değer dile
+     bağımsız işaretle gelir; "Çoklu" / "Multiple" yazılır, değerler ipucunda. */
+  const HIDDEN_ROW_KEYS = new Set(['attrMulti']);
+  const multiToken = () => state.catalog.productAttributeMulti || '__MULTI__';
+  const isAttribute = key => Boolean((baseDim(key) || {}).attribute);
+  const attributeItems = () => state.catalog.dimensions.filter(item => item.attribute);
+  function usedAttributes(current) {
+    const used = new Set();
+    ['rows', 'columns', 'filters'].forEach(axis => (current[axis] || []).forEach(ref => { if (ref && isAttribute(ref.key)) used.add(ref.key); }));
+    (current.detailAttributes || []).forEach(key => { if (isAttribute(key)) used.add(key); });
+    return attributeItems().map(item => item.key).filter(key => used.has(key));
+  }
+  function localFilterKeys() { return view().filters.filter(ref => isAttribute(ref.key)).map(ref => ref.key); }
+  /* Yerel filtre yalnız gerçekten okunmuş özelliğe uygulanır: özellik alınamadıysa
+     ya da şemada yoksa satırlardaki boş değer bütün tabloyu sessizce boşaltmasın
+     (uyarı notu ayrıca görünür). */
+  function attributeAvailable(key) {
+    const info = state.productAttributes;
+    return Boolean(state.dataDimensions && state.dataDimensions.includes(key) && info && info.ok !== false && !(info.missing || []).includes(key));
+  }
+  function activeLocalFilters() {
+    return localFilterKeys().filter(attributeAvailable).map(key => [key, view().filterValues[key] || []]).filter(([, list]) => list.length).map(([key, list]) => [key, new Set(list)]);
+  }
+  const mainFilterValues = values => Object.fromEntries(Object.entries(values || {}).filter(([key]) => !isAttribute(key)));
+  const isMulti = (key, value) => value === multiToken() && isAttribute(key);
+  const dimText = (key, value) => isMulti(key, value) ? text('Çoklu', 'Multiple') : value;
+  function multiValues(key, rows) {
+    const set = new Set();
+    (rows || []).forEach(row => { const list = row && row.attrMulti && row.attrMulti[key]; if (Array.isArray(list)) list.forEach(value => set.add(value)); });
+    return [...set].sort((a, b) => String(a).localeCompare(String(b), 'tr', { numeric: true }));
+  }
+  const multiTitle = (key, rows) => { const list = multiValues(key, rows); return list.length ? `${text('Birden çok değer', 'Multiple values')}: ${list.join(', ')}` : ''; };
+  // Alt detay ve Excel kaynak satırı: tek değer aynen, çoklu değer listesiyle birlikte metin.
+  const attributeCellText = (key, row) => isMulti(key, row && row[key]) ? `${text('Çoklu', 'Multiple')}: ${((row.attrMulti && row.attrMulti[key]) || []).join(', ')}` : clean(row && row[key]);
 
   const ERROR_COPY = {
     OAB_CUBE_SEASON_REQUIRED: ['Sorgu için en az bir sezon seçin veya Veri Yönetimi’nde ufuk tanımlayın.', 'Select at least one season or define a horizon in Data Management.'],
@@ -147,8 +185,11 @@
   const searchKeys = ['modelCode', 'modelName', 'colourCode', 'colourName'];
   function visibleRows() {
     const terms = state.search && window.BLTableSearch ? window.BLTableSearch.parseTerms(state.search) : [];
-    if (!terms.length) return state.rows;
-    return state.rows.filter(row => window.BLTableSearch.matches(searchKeys.map(key => clean(row && row[key])).join(' '), terms, { plainMode: 'contains' }));
+    // Ürün özelliği filtreleri yereldir (yüklü satırlarda); yoksa sıcak yol aynıdır.
+    const locals = activeLocalFilters();
+    if (!terms.length && !locals.length) return state.rows;
+    return state.rows.filter(row => locals.every(([key, allowed]) => allowed.has(clean(row && row[key])))
+      && (!terms.length || window.BLTableSearch.matches(searchKeys.map(key => clean(row && row[key])).join(' '), terms, { plainMode: 'contains' })));
   }
   const groupKeyOf = path => JSON.stringify(path.map(clean));
   const compareText = (a, b) => String(a).localeCompare(String(b), 'tr', { numeric: true, sensitivity: 'base' });
@@ -250,9 +291,12 @@
   const filterSignature = values => JSON.stringify(Object.keys(values || {}).sort().map(key => [key, [...(values[key] || [])].map(clean).sort()]).filter(([, list]) => list.length));
   function staleReason() {
     if (!state.loaded || !state.rows.length) return '';
-    if (state.dataFilterValues && filterSignature(state.dataFilterValues) !== filterSignature(view().filterValues)) return 'filters';
+    // Ürün özelliği filtresi yereldir; veriyi üreten filtrelerle karşılaştırılmaz.
+    if (state.dataFilterValues && filterSignature(mainFilterValues(state.dataFilterValues)) !== filterSignature(mainFilterValues(view().filterValues))) return 'filters';
     if (state.dataMeasures && view().values.some(ref => !state.dataMeasures.includes(ref.key))) return 'fields';
     if (state.dataDimensions && [...view().rows, ...view().columns].some(ref => !state.dataDimensions.includes(ref.key))) return 'fields';
+    // Filtrede veya alt detayda kullanılan ürün özelliği son sorguda yoksa.
+    if (state.dataDimensions && usedAttributes(view()).some(key => !state.dataDimensions.includes(key))) return 'fields';
     // Satır bazlı hesaplanan değerin okuduğu hazır ölçü son sorguda yoksa.
     if (state.dataMeasures && PCV() && PCV().requiredRowKeys(calcDefs()).some(key => (baseMeasure(key) && !baseMeasure(key).derived) && !state.dataMeasures.includes(key))) return 'fields';
     return '';
@@ -286,7 +330,7 @@
     if (!bar) return;
     const fields = view().filters.map(ref => {
       const selected = view().filterValues[ref.key] || [];
-      const label = selected.length > 1 ? `${selected.length} ${text('seçim', 'selected')}` : (selected[0] || text('Tümü', 'All'));
+      const label = selected.length > 1 ? `${selected.length} ${text('seçim', 'selected')}` : (selected[0] ? dimText(ref.key, selected[0]) : text('Tümü', 'All'));
       const required = ref.key === 'season' && !state.horizon ? ` <span class="oabCubeRequired">${esc(text('(zorunlu)', '(required)'))}</span>` : '';
       const removable = ref.key !== 'season';
       return `<div class="intakeFilterField"><span class="intakeFilterLabel">${esc(refLabel(ref))}${required}</span><div class="intakeFilterControl"><button type="button" class="oabMultiTrigger intakeFilterTrigger" data-oab-cube-filter="${esc(ref.key)}" aria-haspopup="listbox" aria-expanded="false"><span class="oabMultiLabel${selected.length ? ' hasValue' : ''}">${esc(label)}</span><span class="oabMultiChevron" aria-hidden="true">▾</span></button>${removable ? `<button type="button" class="intakeFilterRemove" data-oab-cube-filter-remove="${esc(ref.key)}" title="${esc(text('Filtreyi kaldır', 'Remove filter'))}" aria-label="${esc(text('Filtreyi kaldır', 'Remove filter'))}">×</button>` : ''}</div></div>`;
@@ -311,14 +355,16 @@
     if (item.kind === 'group') {
       if (index > item.level) return '';
       if (index === item.level) {
-        const label = value == null || value === '' ? text('(boş)', '(blank)') : value;
+        const label = value == null || value === '' ? text('(boş)', '(blank)') : dimText(ref.key, value);
         const span = Math.max(1, dims.length - item.level);
-        return `<td class="oabPivotGroupCell"${span > 1 ? ` colspan="${span}"` : ''} title="${esc(label)}"><button type="button" class="oabPivotGroupToggle" data-oab-cube-group-key="${esc(item.pathKey)}" title="${esc(item.collapsed ? text('Grubu genişlet', 'Expand group') : text('Grubu daralt', 'Collapse group'))}">${item.collapsed ? '▸' : '▾'}</button><strong>${esc(label)}</strong>${item.subtotal ? `<span class="oabPivotSubtotalTag">${esc(text('Alt toplam', 'Subtotal'))}</span>` : ''}</td>`;
+        const title = isMulti(ref.key, value) ? multiTitle(ref.key, item.rows) : label;
+        return `<td class="oabPivotGroupCell"${span > 1 ? ` colspan="${span}"` : ''} title="${esc(title)}"><button type="button" class="oabPivotGroupToggle" data-oab-cube-group-key="${esc(item.pathKey)}" title="${esc(item.collapsed ? text('Grubu genişlet', 'Expand group') : text('Grubu daralt', 'Collapse group'))}">${item.collapsed ? '▸' : '▾'}</button><strong>${esc(label)}</strong>${item.subtotal ? `<span class="oabPivotSubtotalTag">${esc(text('Alt toplam', 'Subtotal'))}</span>` : ''}</td>`;
       }
       return '<td></td>';
     }
     if (item.kind === 'grand') return `<td class="${index === 0 ? 'oabPivotGrandLabel' : ''}">${index === 0 ? `<strong>${esc(value)}</strong>` : ''}</td>`;
     if (display().grouped !== false && index >= 0 && index < item.level) return '<td></td>';
+    if (isMulti(ref.key, value)) return `<td title="${esc(multiTitle(ref.key, item.rows))}">${esc(dimText(ref.key, value))}</td>`;
     return `<td>${esc(value == null || value === '' ? text('(boş)', '(blank)') : value)}</td>`;
   }
 
@@ -334,6 +380,15 @@
     const fields = (state.catalog.passOnlyFields || []).map(item => text(item.tr, item.en));
     node.hidden = !fields.length;
     node.textContent = fields.length ? text(`PASS OAB raporunda olup bu küpte bulunmayan alanlar (gösterilmez, uydurulmaz): ${fields.join(', ')}.`, `Fields in the PASS OAB report that this cube does not have (not shown, never invented): ${fields.join(', ')}.`) : '';
+  }
+
+  /* Ürün özellikleri alınamadıysa / eksikse widget çalışır, not yazılır. */
+  function productAttributeNote() {
+    const info = state.productAttributes;
+    if (!info || !usedAttributes(view()).length) return '';
+    if (info.ok === false) return text('Ürün özellikleri (FİT, Silüet, Kumaş-malzeme tipi) alınamadı; bu alanlar boş gösteriliyor. Adetler etkilenmez.', 'Product attributes (Fit, Silhouette, Fabric-material type) could not be loaded; these fields are shown blank. Quantities are not affected.');
+    if (info.truncated) return text('Ürün özellikleri sorgusu satır sınırına ulaştı; bazı satırlarda özellik boş olabilir.', 'The product attribute query hit its row limit; attributes may be blank on some rows.');
+    return '';
   }
 
   function renderBody() {
@@ -389,8 +444,11 @@
     if (stale === 'filters') notes.push(text('Gösterilen veri farklı filtrelerle çekildi; seçili filtreler için Yenile’ye basın.', 'The data shown was queried with different filters; press Refresh for the selected filters.'));
     if (stale === 'fields') notes.push(text('Görünümdeki bazı alanlar son sorguda yoktu (boş görünür); Yenile’ye basın.', 'Some fields in the view were not in the last query (shown blank); press Refresh.'));
     if (state.search) notes.push(text(`Arama: ${rows.length.toLocaleString(locale())} / ${state.rows.length.toLocaleString(locale())} satır eşleşti.`, `Search: ${rows.length.toLocaleString(locale())} / ${state.rows.length.toLocaleString(locale())} rows match.`));
+    else if (activeLocalFilters().length) notes.push(text(`Yerel filtre: ${rows.length.toLocaleString(locale())} / ${state.rows.length.toLocaleString(locale())} satır.`, `Local filter: ${rows.length.toLocaleString(locale())} / ${state.rows.length.toLocaleString(locale())} rows.`));
     if (items.length > shown.length) notes.push(text(`İlk ${MAX_TABLE_ROWS.toLocaleString(locale())} satır gösteriliyor; grupları daraltın veya filtreleyin.`, `Showing the first ${MAX_TABLE_ROWS.toLocaleString(locale())} rows; collapse groups or filter.`));
     if (state.truncated) notes.push(text(`Sorgu ${state.rowLimit.toLocaleString(locale())} satır sınırına ulaştı; toplamlar eksik olabilir. Filtreleri daraltın.`, `The query hit the ${state.rowLimit.toLocaleString(locale())} row limit; totals may be incomplete. Narrow the filters.`));
+    const attributeNote = productAttributeNote();
+    if (attributeNote) notes.push(attributeNote);
     if (note) { note.hidden = !notes.length; note.textContent = notes.join(' '); }
   }
 
@@ -411,12 +469,20 @@
        kaynak satırda "toplam oranı" yoktur). */
     const calcRowDefs = calcDefs().filter(def => def.mode === 'row');
     const rowEval = calcRowDefs.length ? calcEvaluator() : null;
-    const rows = rowEval ? sourceRows.map(row => { const out = { ...row }; calcRowDefs.forEach(def => { out[PCV().keyOf(def)] = rowEval.rowValue(PCV().keyOf(def), row); }); return out; }) : sourceRows;
+    const attrKeys = attributeItems().map(entry => entry.key).filter(key => state.dataDimensions && state.dataDimensions.includes(key));
+    const rows = rowEval || attrKeys.length ? sourceRows.map(row => {
+      const out = { ...row };
+      if (rowEval) calcRowDefs.forEach(def => { out[PCV().keyOf(def)] = rowEval.rowValue(PCV().keyOf(def), row); });
+      // Çoklu değer çekmecede değerleriyle yazılır; iç liste sütun olmaz.
+      attrKeys.forEach(key => { out[key] = attributeCellText(key, row); });
+      delete out.attrMulti;
+      return out;
+    }) : sourceRows;
     if (!rows.length) { setStatus(() => text('Bu hücre için alt detay bulunamadı.', 'No drill-down detail was found for this cell.'), 'warning'); return; }
     const keys = [];
     const add = key => { if (key && !keys.includes(key)) keys.push(key); };
     DEFAULT_DETAIL.forEach(add);
-    rows.slice(0, 200).forEach(row => Object.keys(row).forEach(add));
+    rows.slice(0, 200).forEach(row => Object.keys(row).forEach(key => { if (!HIDDEN_ROW_KEYS.has(key)) add(key); }));
     const numeric = key => !baseDim(key) && rows.some(row => typeof row[key] === 'number');
     const columns = keys.filter(key => rows.some(row => row[key] !== undefined)).map(key => ({
       key, label: detailLabel(key), type: numeric(key) ? 'number' : 'text',
@@ -426,7 +492,7 @@
     const context = item.kind === 'grand'
       ? text('Genel Toplam', 'Grand Total')
       : (item.kind === 'group' ? item.path : dims.map(entry => item.dims[entry.key]).filter(value => value != null))
-        .map((value, index) => `${refLabel(dims[index])}: ${value === '' ? text('(boş)', '(blank)') : value}`).join(' › ');
+        .map((value, index) => `${refLabel(dims[index])}: ${value === '' ? text('(boş)', '(blank)') : dimText(dims[index] && dims[index].key, value)}`).join(' › ');
     const metric = ref && item.metrics[ref.key];
     const calcCell = ref && ref.calc ? PCV().cell(item.metrics, ref.calc) : null;
     const note = [calcCell ? `${PCV().labelOf(ref.calc)}: ${calcCell.error ? calcCell.title : calcCell.text}` : (ref && metric != null ? `${refLabel(ref)}: ${valueFormat(ref)(metric)}` : ''), `${rows.length.toLocaleString(locale())} ${text('kaynak satır', 'source rows')}`, dataDateText() ? `${text('Veri tarihi', 'Data date')}: ${dataDateText()}` : ''].filter(Boolean).join(' · ');
@@ -441,7 +507,7 @@
       note,
       rows,
       columns,
-      defaultVisible: DEFAULT_DETAIL.filter(key => columns.some(column => column.key === key)),
+      defaultVisible: [...DEFAULT_DETAIL, ...usedAttributes(view())].filter(key => columns.some(column => column.key === key)),
       exactDefaultVisible: true,
       flatColumns: true,
       images: false,
@@ -468,7 +534,8 @@
         const out = {};
         out[text('Satır tipi', 'Row type')] = item.kind === 'grand' ? text('Genel toplam', 'Grand total') : (item.kind === 'group' ? text('Alt toplam', 'Subtotal') : text('Detay', 'Detail'));
         dims.forEach((ref, index) => {
-          out[refLabel(ref)] = item.kind === 'group' ? (index === item.level ? item.dims[ref.key] : (index < item.level ? item.path[index] : '')) : (item.dims[ref.key] ?? '');
+          const raw = item.kind === 'group' ? (index === item.level ? item.dims[ref.key] : (index < item.level ? item.path[index] : '')) : (item.dims[ref.key] ?? '');
+          out[refLabel(ref)] = isMulti(ref.key, raw) ? `${text('Çoklu', 'Multiple')}: ${multiValues(ref.key, item.rows).join(', ')}` : raw;
         });
         values.forEach(ref => { out[refLabel(ref)] = round(item.metrics[ref.key]); });
         // Hesaplanan değer Excel'e DEĞER olarak yazılır; hatalı hücre boştur.
@@ -476,11 +543,11 @@
         return out;
       });
       const rowKeys = [];
-      rows.slice(0, 200).forEach(row => Object.keys(row).forEach(key => { if (!rowKeys.includes(key)) rowKeys.push(key); }));
-      // Boyutlar (kod alanları dahil) metin hücre olarak yazılır; sayıya çevrilmez.
+      rows.slice(0, 200).forEach(row => Object.keys(row).forEach(key => { if (!HIDDEN_ROW_KEYS.has(key) && !rowKeys.includes(key)) rowKeys.push(key); }));
+      // Boyutlar (kod alanları ve ürün özellikleri dahil) metin hücre olarak yazılır; sayıya çevrilmez.
       const source = rows.map(row => {
         const out = {};
-        rowKeys.forEach(key => { out[detailLabel(key)] = baseDim(key) ? clean(row[key]) : round(row[key]); });
+        rowKeys.forEach(key => { out[detailLabel(key)] = isAttribute(key) ? attributeCellText(key, row) : (baseDim(key) ? clean(row[key]) : round(row[key])); });
         return out;
       });
       const field = text('Alan', 'Field'), valueLabel = text('Değer', 'Value');
@@ -490,9 +557,12 @@
       const filterLabel = key => { const ref = view().filters.find(item => item.key === key); return ref ? refLabel(ref) : refLabel({ key }); };
       const stale = staleReason();
       const summary = [
-        ...Object.entries(dataFilters).filter(([, values]) => Array.isArray(values) && values.length).map(([key, values]) => ({ [field]: filterLabel(key), [valueLabel]: values.join(', ') })),
+        ...Object.entries(mainFilterValues(dataFilters)).filter(([, values]) => Array.isArray(values) && values.length).map(([key, values]) => ({ [field]: filterLabel(key), [valueLabel]: values.join(', ') })),
         // Dışa aktarılan satırları üreten sorguda ufuk uygulandıysa (ekrandaki ayar değil, verinin kendisi).
         ...(state.horizonApplied ? [{ [field]: text('Veri Yönetimi ufku', 'Data Management horizon'), [valueLabel]: text('Uygulandı', 'Applied') }] : []),
+        // Ürün özelliği filtreleri yereldir: dışa aktarılan satırlara bu seçimle uygulandı.
+        ...activeLocalFilters().map(([key]) => key).map(key => ({ [field]: `${filterLabel(key)} (${text('yerel filtre', 'local filter')})`, [valueLabel]: view().filterValues[key].map(value => dimText(key, value)).join(', ') })),
+        ...(productAttributeNote() ? [{ [field]: text('Uyarı', 'Warning'), [valueLabel]: productAttributeNote() }] : []),
         ...(stale ? [{ [field]: text('Uyarı', 'Warning'), [valueLabel]: stale === 'filters' ? text('Ekrandaki filtre seçimi bu verinin çekildiği filtrelerden farklı; yukarıdaki filtreler dışa aktarılan satırlarındır.', 'The on-screen filter selection differs from the filters this data was queried with; the filters above belong to the exported rows.') : text('Görünümdeki bazı alanlar son sorguda yoktu.', 'Some fields in the view were not in the last query.') }] : []),
         ...(state.search ? [{ [field]: text('Arama', 'Search'), [valueLabel]: state.search }] : []),
         { [field]: text('Veri tarihi', 'Data date'), [valueLabel]: state.dataDate || text('Okunamadı', 'Unavailable') },
@@ -547,6 +617,7 @@
     state.dataDimensions = Array.isArray(payload && payload.dimensions) ? payload.dimensions : null;
     state.dataDateSource = clean(payload && payload.dataDateSource);
     state.horizonApplied = Boolean(payload && payload.horizonApplied);
+    state.productAttributes = payload && payload.productAttributes && typeof payload.productAttributes === 'object' ? payload.productAttributes : null;
   }
 
   /* ---------- Veri ---------- */
@@ -604,6 +675,7 @@
       applyPayload(payload);
       state.loaded = true;
       if (payload.offline) setStatus(() => text('Küp şu anda erişilemiyor; son kayıtlı sonuç gösteriliyor.', 'The cube is unreachable; showing the last saved result.'), 'warning');
+      else if (productAttributeNote()) setStatus(() => productAttributeNote(), 'warning');
       else if (state.missing.length) setStatus(() => text(`Küpte bulunmayan alanlar boş gösterildi: ${missingLabels()}.`, `Fields missing from the cube are shown blank: ${missingLabels()}.`), 'warning');
       else setStatus(payload.fromCache ? () => text('Son 30 dakikadaki aynı sorgunun sonucu gösteriliyor.', 'Showing the result of the same query from the last 30 minutes.') : null, payload.fromCache ? 'ok' : '');
     } catch (error) {
@@ -627,7 +699,7 @@
   /* Pivot alan havuzu: hazır alanlar + canlı küpün diğer alanları. Boyutlar
      yalnız ilişkisi kanıtlı tablolardan gelir (sunucu filtreler ve doğrular). */
   function dimensionPool() {
-    const pool = state.catalog.dimensions.map(item => ({ id: item.key, ref: { key: item.key }, label: text(item.tr, item.en), group: text('Hazır alanlar', 'Built-in fields') }));
+    const pool = state.catalog.dimensions.map(item => ({ id: item.key, ref: { key: item.key }, label: text(item.tr, item.en), group: item.attribute ? text('Ürün özellikleri', 'Product attributes') : text('Hazır alanlar', 'Built-in fields') }));
     for (const ref of [...view().rows, ...view().columns, ...view().filters]) if (ref.source && !pool.some(entry => entry.id === ref.key)) pool.push({ id: ref.key, ref: clone(ref), label: refLabel(ref), group: text('Küp alanları', 'Cube fields') });
     for (const field of (state.metadata && state.metadata.dimensions) || []) {
       if (field.baseKey || pool.some(entry => entry.ref.source === field.source)) continue;
@@ -678,6 +750,8 @@
     current.values.filter(ref => ref.source).map(ref => ref.source).sort(),
     // Satır bazlı hesaplanan değerin okuduğu hazır ölçü sorguya girer.
     PCV() ? PCV().requiredRowKeys(current.calculated || []).filter(key => baseMeasure(key) && !baseMeasure(key).derived && !current.values.some(ref => ref.key === key)).sort() : [],
+    // Pivotta, filtrede veya alt detayda kullanılan ürün özelliği ayrı özellik sorgusunu açar.
+    usedAttributes(current).sort(),
   ]);
 
   async function openFields() {
@@ -701,7 +775,8 @@
         ${sectionHtml('oabCubeValuesList', text('Pivot Değerleri', 'Pivot Values'), text('Değer ekle', 'Add value'), draft.values.map(ref => valueRowHtml(poolIdOf(ref), ref.agg, vals)).join(''))}
         ${PCV() ? PCV().sectionHtml() : ''}
         ${sectionHtml('oabCubeFiltersList', text('Filtre Alanları', 'Filter Fields'), text('Alan ekle', 'Add field'), draft.filters.map(ref => axisRowHtml(poolIdOf(ref), dims)).join(''))}
-        <p class="oabSettingsHint">${esc(text('Satırları oklarla sıralayabilirsiniz. Adet ölçüleri toplanır; mağaza sayısı, landed fiyat ve markup toplanabilir değildir (varsayılan en büyük/ortalama). Küp alanı yalnız ölçülerle ilişkisi kanıtlı tablolardan (Data, DummyUrun, Sezon) eklenebilir; satır/sütuna eklenen alan sorgu düzeyini değiştirir ve kayıtta veri yeniden çekilir. Veri Yönetimi’nde ufuk yoksa sezon filtresi zorunludur.', 'Reorder rows with the arrows. Quantity measures are summed; store count, landed price and markup are not additive (default max/average). Cube fields can be added only from tables with a proven relationship to the measures (Data, DummyUrun, Sezon); a field added to rows/columns changes the query level and data is re-queried on save. Without a Data Management horizon, the season filter is required.'))}</p>
+        ${attributeItems().length ? `<div class="oabSettingsSection"><div class="oabSettingsSectionHead"><span>${esc(text('Alt detayda ürün özellikleri', 'Product attributes in drill-down'))}</span></div><div class="oabPivotBehaviorGrid">${attributeItems().map(item => `<label class="oabCheckField"><input type="checkbox" data-oab-cube-detail-attr="${esc(item.key)}"${(draft.detailAttributes || []).includes(item.key) ? ' checked' : ''}><span>${esc(text(item.tr, item.en))}</span></label>`).join('')}</div></div>` : ''}
+        <p class="oabSettingsHint">${esc(text('Satırları oklarla sıralayabilirsiniz. Adet ölçüleri toplanır; mağaza sayısı, landed fiyat ve markup toplanabilir değildir (varsayılan en büyük/ortalama). Küp alanı yalnız ölçülerle ilişkisi kanıtlı tablolardan (Data, DummyUrun, Sezon) eklenebilir; satır/sütuna eklenen alan sorgu düzeyini değiştirir ve kayıtta veri yeniden çekilir. FİT, Silüet ve Kumaş-malzeme tipi ayrı bir ürün özellikleri sorgusuyla model + renk satırlarına eklenir (adetler değişmez); filtreleri yüklü satırlarda uygulanır, bir model + renkte birden çok değer “Çoklu” görünür. Veri Yönetimi’nde ufuk yoksa sezon filtresi zorunludur.', 'Reorder rows with the arrows. Quantity measures are summed; store count, landed price and markup are not additive (default max/average). Cube fields can be added only from tables with a proven relationship to the measures (Data, DummyUrun, Sezon); a field added to rows/columns changes the query level and data is re-queried on save. Fit, Silhouette and Fabric-material type are added to model + colour rows by a separate product attribute query (quantities do not change); their filters apply to the loaded rows, and several values for one model + colour show as “Multiple”. Without a Data Management horizon, the season filter is required.'))}</p>
       </div>
       <footer><button type="button" class="tbtn" data-oab-cube-settings-reset>${esc(text('Pivot Varsayılanına Dön', 'Reset Pivot'))}</button><button type="button" class="tbtn" data-oab-cube-close>${esc(text('Vazgeç', 'Cancel'))}</button><button type="button" class="tbtn primary" data-oab-cube-save>${esc(text('Kaydet', 'Save'))}</button></footer>
     </div>`;
@@ -723,7 +798,8 @@
       ...state.catalog.measures.map(item => ({ key: item.key, label: text(item.tr, item.en) })),
       ...view().values.filter(ref => ref.source && ref.key).map(ref => ({ key: ref.key, label: refLabel(ref) })),
     ];
-    const sampleLabel = item => item.kind === 'grand' ? text('Genel Toplam', 'Grand Total') : (item.kind === 'group' ? item.path : [...view().rows, ...view().columns].map(entry => item.dims[entry.key])).map(value => value === '' ? text('(boş)', '(blank)') : value).join(' › ');
+    const sampleDims = [...view().rows, ...view().columns];
+    const sampleLabel = item => item.kind === 'grand' ? text('Genel Toplam', 'Grand Total') : (item.kind === 'group' ? item.path : sampleDims.map(entry => item.dims[entry.key])).map((value, index) => value === '' ? text('(boş)', '(blank)') : dimText(sampleDims[index] && sampleDims[index].key, value)).join(' › ');
     const calcSection = PCV() ? PCV().mountSection(modal.querySelector('[data-pcv-section]'), {
       defs: draft.calculated || [],
       allowRow: true,
@@ -793,6 +869,7 @@
       }).filter(Boolean);
       next.display = { ...(next.display || {}), grouped: modal.querySelector('#oabCubeGroupedInput').checked, showSubtotals: modal.querySelector('#oabCubeSubtotalsInput').checked, collapsedGroups: [] };
       if (calcSection) next.calculated = calcSection.value();
+      next.detailAttributes = [...modal.querySelectorAll('[data-oab-cube-detail-attr]')].filter(input => input.checked).map(input => input.dataset.oabCubeDetailAttr);
       if (!next.rows.length && !next.columns.length) { setStatus(() => text('En az bir satır veya sütun alanı seçin.', 'Select at least one row or column field.'), 'warning'); return; }
       state.view = next;
       close();
@@ -857,12 +934,13 @@
     button.setAttribute('aria-expanded', 'true');
     placePopover(popover, button);
     const list = popover.querySelector('.intakeFilterValues'), search = popover.querySelector('.intakeFilterSearch');
+    const local = isAttribute(key);
     const draw = () => {
       const needle = clean(search.value).toLocaleLowerCase(locale());
-      const visible = values.filter(value => !needle || value.toLocaleLowerCase(locale()).includes(needle)).sort((a, b) => Number(selected.has(b)) - Number(selected.has(a)));
+      const visible = values.filter(value => !needle || String(dimText(key, value)).toLocaleLowerCase(locale()).includes(needle)).sort((a, b) => Number(selected.has(b)) - Number(selected.has(a)));
       list.innerHTML = visible.length
-        ? visible.map(value => `<label class="intakeFilterOption"><input type="checkbox" value="${esc(value)}"${selected.has(value) ? ' checked' : ''}><span>${esc(value)}</span></label>`).join('')
-        : `<div class="intakeConfigEmpty">${esc(text('Eşleşen değer yok.', 'No matching value.'))}</div>`;
+        ? visible.map(value => `<label class="intakeFilterOption"${isMulti(key, value) ? ` title="${esc(multiTitle(key, state.rows))}"` : ''}><input type="checkbox" value="${esc(value)}"${selected.has(value) ? ' checked' : ''}><span>${esc(dimText(key, value))}</span></label>`).join('')
+        : `<div class="intakeConfigEmpty">${esc(local && !values.length ? text('Değerler yüklü satırlardan gelir; önce Yenile’ye basın.', 'Values come from the loaded rows; press Refresh first.') : text('Eşleşen değer yok.', 'No matching value.'))}</div>`;
     };
     search.addEventListener('input', draw);
     popover.addEventListener('change', event => { if (event.target.matches('input[type="checkbox"]')) { event.target.checked ? selected.add(event.target.value) : selected.delete(event.target.value); } });
@@ -874,13 +952,15 @@
       closePopover();
       void saveView();
       render();
-      setStatus(() => text('Filtre değişti. Veriyi çekmek için Yenile’ye basın.', 'Filters changed. Press Refresh to query data.'), 'ok');
+      // Ürün özelliği filtresi yüklü satırlarda hemen uygulanır; küp sorgusu gerekmez.
+      if (local) setStatus(() => text('Yerel filtre yüklü satırlara uygulandı.', 'Local filter applied to the loaded rows.'), 'ok');
+      else setStatus(() => text('Filtre değişti. Veriyi çekmek için Yenile’ye basın.', 'Filters changed. Press Refresh to query data.'), 'ok');
     });
     search.focus();
     /* İlk liste en fazla 1.000 değerdir (ör. model kodu bundan fazla olabilir);
        yazılan arama küpte de aranır. Yanıtlar birleşir, hiçbir değer kaybolmaz;
        geç gelen eski arama yanıtı yenisinin üzerine yazmaz. */
-    const local = localValues(key);
+    const loaded = localValues(key);
     let requestSeq = 0, searchTimer = 0;
     const note = document.createElement('div');
     note.className = 'intakeConfigEmpty oabCubeDistinctNote';
@@ -899,7 +979,7 @@
       return requestJson('/api/oab-cube/distinct', jsonBody('POST', { key, source: ref.source || '', search: needle, limit: 1000 }))
         .then(result => {
           if (state.popover !== popover) return;
-          values = [...new Set([...values, ...(Array.isArray(result.values) ? result.values : []), ...local, ...selected])];
+          values = [...new Set([...values, ...(Array.isArray(result.values) ? result.values : []), ...loaded, ...selected])];
           truncation.set(needle, { truncated: Boolean(result.truncated), limit: Number(result.limit) || 1000 });
           if (seq !== requestSeq) return;
           showNote(needle);
@@ -911,13 +991,15 @@
           list.innerHTML = `<div class="intakeConfigEmpty">${esc(error.message || text('Değerler alınamadı.', 'Values could not be loaded.'))}</div>`;
         });
     };
+    // Ürün özelliği küpte (distinct) aranmaz: değerler yüklü satırlardandır.
+    if (local) { draw(); placePopover(popover, button, false); return; }
     search.addEventListener('input', () => {
       clearTimeout(searchTimer);
       const needle = clean(search.value);
       if (needle) searchTimer = setTimeout(() => void fetchValues(needle), 300);
       else { requestSeq += 1; showNote(''); }
     });
-    void fetchValues('');
+    if (!isAttribute(key)) void fetchValues('');
   }
   async function openFilterFieldPicker(button) {
     closePopover();
@@ -953,6 +1035,8 @@
       await saveView({ immediate: true });
       render();
       const added = view().filters[view().filters.length - 1];
+      // Ürün özelliği son veride yoksa değer listesi için önce özellik sorgusu çalışır.
+      if (added && isAttribute(added.key) && state.loaded && staleReason() === 'fields') await refresh(false);
       const trigger = added && byId('oabCubeFilterBar')?.querySelector(`[data-oab-cube-filter="${CSS.escape(added.key)}"]`);
       if (trigger) openFilter(trigger, added.key);
     });

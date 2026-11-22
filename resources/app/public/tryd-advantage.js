@@ -26,6 +26,8 @@
     viewRevision: 0, exporting: false, search: '', displayItems: [], analysis: null, dataFilters: null,
     // Standart YD landed çarpanı (ortak ayar); okunamazsa motor varsayılanı (1,11) kullanılır.
     standardMultiplier: null,
+    // Vasıtaya göre standartlar (ortak ayar byVehicle) ve YD siparişlerinin IAS vasıtası (yanıt eki).
+    byVehicle: {}, vehicles: null, vehicleInfo: null,
   };
 
   const byId = id => document.getElementById(id);
@@ -41,7 +43,7 @@
   const FIELD_LABELS = {
     buyerGroup: ['Buyer grup', 'Buyer group'], classification: ['Ürün klasmanı', 'Product class'], mag: ['MAG', 'MAG'],
     season: ['Sezon', 'Season'], productName: ['Ürün adı', 'Product name'], model: ['Model', 'Model'],
-    colour: ['Renk', 'Colour'], salesCountry: ['Satış ülkesi', 'Sales country'],
+    colour: ['Renk', 'Colour'], salesCountry: ['Satış ülkesi', 'Sales country'], vehicle: ['Vasıta', 'Shipment mode'],
   };
   function fieldLabel(key) {
     if (FIELD_LABELS[key]) return text(...FIELD_LABELS[key]);
@@ -72,6 +74,22 @@
     return fmt(standard.value, 2) + (standard.fallback ? text(' (varsayılan; ortak ayar okunamadı)', ' (default; shared setting unavailable)') : '');
   };
   const statusText = status => STATUS_COPY[status] ? text(...STATUS_COPY[status]) : '';
+  /* Vasıta anahtarının görünen adı: TR/YD verisindeki IAS etiketi, yoksa anahtar. */
+  function vehicleLabels() {
+    const labels = {};
+    const byOrder = state.vehicles || {};
+    for (const order of Object.keys(byOrder)) for (const part of byOrder[order] || []) if (Array.isArray(part) && part[0] && !labels[part[0]]) labels[part[0]] = part[1] || part[0];
+    return labels;
+  }
+  /* Kural metni: vasıta standartları + genel standart (Excel özeti, KPI ipucu). */
+  const vehicleStandardsText = () => {
+    const labels = vehicleLabels();
+    const list = Object.keys(state.byVehicle || {}).sort().map(key => `${labels[key] || key} ${fmt(state.byVehicle[key], 2)}`);
+    return list.length
+      ? text(`vasıtaya göre: ${list.join(' · ')}; diğer/bilinmeyen vasıta: genel ${standardText()}`, `by shipment mode: ${list.join(' · ')}; other/unknown mode: general ${standardText()}`)
+      : text(`vasıta standardı tanımlı değil; bütün satırlar genel ${standardText()}`, `no shipment-mode standard set; all rows use the general ${standardText()}`);
+  };
+  const vehicleUnknownLabel = () => text('Vasıta bilinmiyor', 'Mode unknown');
 
   const ERROR_COPY = {
     POSTFOB_SEASON_REQUIRED: ['Sorgu için en az bir sezon seçin veya Veri Yönetimi’nde FOB Sonrası Maliyet ufku tanımlayın.', 'Select at least one season or define a Post-FOB Cost horizon in Data Management.'],
@@ -123,7 +141,7 @@
   // Hedef ve durum sütunu sıralanamaz (normalizePrefs bunları 'label'a çevirir).
   const treeSort = () => ({ key: view().sort && view().sort.key || 'label', dir: view().sort && view().sort.dir });
   function compute() {
-    state.analysis = engine.analyze(state.rows, { target: view().target, landedSource: view().landedSource, belowTargetOnly: view().belowTargetOnly, search: state.search, standardMultiplier: state.standardMultiplier });
+    state.analysis = engine.analyze(state.rows, { target: view().target, landedSource: view().landedSource, belowTargetOnly: view().belowTargetOnly, search: state.search, standardMultiplier: state.standardMultiplier, byVehicle: state.byVehicle, vehicles: state.vehicles, lang: isEnglish() ? 'en' : 'tr' });
     return state.analysis;
   }
   // Grup ve model satırının hücre değerleri; oranlar her düzeyde tutarlardan.
@@ -286,7 +304,7 @@
     if (item.kind === 'group') {
       if (dimIndex > item.level) return '';
       if (dimIndex < item.level) return '<td></td>';
-      const label = item.label === '' ? text('(boş)', '(blank)') : item.label;
+      const label = item.label === '' ? (item.field === 'vehicle' ? vehicleUnknownLabel() : text('(boş)', '(blank)')) : item.label;
       const span = axis.length - item.level;
       const count = `<span class="oabPivotSubtotalTag">${esc(`${item.models} ${text('model', 'models')}`)}</span>`;
       return `<td class="oabPivotGroupCell trydAdvantageLabelCell"${span > 1 ? ` colspan="${span}"` : ''} title="${esc(label)}"><button type="button" class="oabPivotGroupToggle" data-tryd-group-key="${esc(item.pathKey)}" title="${esc(item.collapsed ? text('Grubu genişlet', 'Expand group') : text('Grubu daralt', 'Collapse group'))}">${item.collapsed ? '▸' : '▾'}</button><strong>${esc(label)}</strong>${count}</td>`;
@@ -302,10 +320,24 @@
     if (ref.key === 'gap' && value != null && item.kind !== 'grand') classes.push(value < 0 ? 'trydAdvantageBelow' : 'trydAdvantageAbove');
     if (ref.key === 'status') { classes.splice(0, 1, 'trydAdvantageStatusCell'); if (item.kind === 'model' && item.status !== 'ok') classes.push(item.status === 'invalidLanded' ? 'trydAdvantageInvalid' : (item.status === 'highMultiplier' ? 'trydAdvantageHighMultiplier' : 'trydAdvantageNoLanded')); }
     const title = ref.key === 'status' && item.kind === 'model'
-      ? text(`${item.statusCount.ok} OK · ${item.statusCount.highMultiplier} yüksek çarpan · ${item.statusCount.noLanded} landed yok · ${item.statusCount.invalidLanded} hatalı satır` + (item.maxRatio != null ? ` · en yüksek Landed/FOB ${fmt(item.maxRatio, 2)}, standart ${standardText()}` : ''),
-        `${item.statusCount.ok} OK · ${item.statusCount.highMultiplier} high multiplier · ${item.statusCount.noLanded} no landed · ${item.statusCount.invalidLanded} invalid rows` + (item.maxRatio != null ? ` · highest landed/FOB ${fmt(item.maxRatio, 2)}, standard ${standardText()}` : ''))
+      ? text(`${item.statusCount.ok} OK · ${item.statusCount.highMultiplier} yüksek çarpan · ${item.statusCount.noLanded} landed yok · ${item.statusCount.invalidLanded} hatalı satır` + (item.maxRatio != null ? ` · en yüksek Landed/FOB ${fmt(item.maxRatio, 2)} (${item.maxRatioVehicle || vehicleUnknownLabel()}, standart ${fmt(item.maxRatioStandard, 2)})` : ''),
+        `${item.statusCount.ok} OK · ${item.statusCount.highMultiplier} high multiplier · ${item.statusCount.noLanded} no landed · ${item.statusCount.invalidLanded} invalid rows` + (item.maxRatio != null ? ` · highest landed/FOB ${fmt(item.maxRatio, 2)} (${item.maxRatioVehicle || vehicleUnknownLabel()}, standard ${fmt(item.maxRatioStandard, 2)})` : ''))
       : '';
     return `<td class="${classes.join(' ')}"${title ? ` title="${esc(title)}"` : ''}>${esc(format(ref.format, value))}</td>`;
+  }
+
+  /* Vasıta eşleşme kapsamı: kıyaslanan modellerdeki YD adedinin IAS vasıtası bulunan kısmı. */
+  function vehicleKpi(total) {
+    const amounts = total.amounts || {};
+    const all = (amounts.vehicleKnownQty || 0) + (amounts.vehicleUnknownQty || 0);
+    const info = state.vehicleInfo;
+    if (!info || !all) return '';
+    const share = amounts.vehicleKnownQty / all;
+    const qty = value => Math.round(value || 0).toLocaleString(locale());
+    const title = info.source && !info.source.loaded
+      ? text('Buyer Log’da IAS (antrepo) verisi yüklü değil; bütün satırlar genel yurtdışı standardını kullanır. Veriyi yenileyip TR/YD’yi tekrar açın.', 'No IAS (warehouse) data is loaded in Buyer Log; all rows use the general abroad standard. Refresh the data and reopen TR/abroad.')
+      : text(`Vasıtası bulunan YD adet: ${qty(amounts.vehicleKnownQty)} · bulunamayan: ${qty(amounts.vehicleUnknownQty)} (genel ${standardText()} kullanılır). Eşleşen YD sipariş: ${info.matched}/${info.ydOrders}. Kaynak: IAS vasıta tanımı.`, `Abroad qty with a shipment mode: ${qty(amounts.vehicleKnownQty)} · without: ${qty(amounts.vehicleUnknownQty)} (general ${standardText()} applies). Matched abroad orders: ${info.matched}/${info.ydOrders}. Source: IAS shipment mode.`);
+    return kpi(format('pct', share), text('Vasıta eşleşmesi (YD adet)', 'Shipment mode match (abroad qty)'), title, share < 0.95 ? 'trydAdvantageKpiWarning' : '');
   }
 
   function emptyMessage() {
@@ -341,8 +373,9 @@
       kpi(`${total.invalid} / ${total.noLanded}`, text('Hatalı / landed yok model', 'Invalid / no-landed models'),
         text('Hatalı: landed < FOB (fiziksel olarak imkânsız). Hatalı ve landed yok satırlar avantaj hesabına girmez.', 'Invalid: landed < FOB (physically impossible). Invalid and no-landed rows are left out of the advantage.')),
       kpi(`${total.high.toLocaleString(locale())}`, text('Yüksek çarpanlı model', 'High-multiplier models'),
-        text(`Landed/FOB standart YD landed çarpanının (${standardText()}) üstünde. Yükleme tipi (ör. uçak) çarpanı yükseltebilir; bu bir hata değildir ve avantaj hesabına girer.`, `Landed/FOB above the standard abroad landed multiplier (${standardText()}). The shipment mode (e.g. air) can raise it; this is not an error and is included in the advantage.`),
+        text(`Landed/FOB satırın standart YD landed çarpanının üstünde (${vehicleStandardsText()}). Bu bir hata değildir ve avantaj hesabına girer.`, `Landed/FOB above the row’s standard abroad landed multiplier (${vehicleStandardsText()}). This is not an error and is included in the advantage.`),
         total.high ? 'trydAdvantageKpiWarning' : ''),
+      vehicleKpi(total),
     ].join('');
     const values = selectedValues();
     const calcs = calcDefs();
@@ -377,6 +410,8 @@
     if (isForecast()) notes.push(text('Öngörü landed kullanılıyor; bu gerçekleşmiş avantaj değildir.', 'Forecast landed is used; this is not the realized advantage.'));
     if (dataFiltersDiffer()) notes.push(text(`Gösterilen sonuç son çekilen sorgunun filtresiyle (${filterSummary(state.dataFilters) || 'filtresiz'}); seçili filtreyle güncellemek için Yenile’ye basın.`, `The result shown is from the last fetched query (${filterSummary(state.dataFilters) || 'no filter'}); press Refresh to update it for the selected filters.`));
     if (state.stale) notes.push(text('Son kayıtlı sonuç gösteriliyor; güncellemek için Yenile’ye basın.', 'Showing the last saved result; press Refresh to update.'));
+    const vehicleAll = (total.amounts.vehicleKnownQty || 0) + (total.amounts.vehicleUnknownQty || 0);
+    if (state.vehicleInfo && vehicleAll && total.amounts.vehicleUnknownQty / vehicleAll > 0.05) notes.push(text(`YD adedinin %${fmt(total.amounts.vehicleUnknownQty / vehicleAll * 100, 0)} kısmında vasıta bilinmiyor; bu satırlar genel yurtdışı standardıyla (${standardText()}) değerlendirildi.`, `The shipment mode is unknown for ${fmt(total.amounts.vehicleUnknownQty / vehicleAll * 100, 0)}% of the abroad quantity; those rows were checked against the general abroad standard (${standardText()}).`));
     if (total.coverage != null && total.coverage < 0.95) notes.push(text(`Landed değeri kıyaslanan modellerin YD adedinin %${fmt(total.coverage * 100, 0)} kısmında geçerli; oranlar yalnız bu kısımdan hesaplandı.`, `A valid landed exists for ${fmt(total.coverage * 100, 0)}% of the abroad quantity of compared models; ratios use only that part.`));
     if (items.length > shown.length) notes.push(text(`İlk ${MAX_TABLE_ROWS.toLocaleString(locale())} satır gösteriliyor; grupları daraltın veya filtreleyin.`, `Showing the first ${MAX_TABLE_ROWS.toLocaleString(locale())} rows; collapse groups or filter.`));
     if (note) { note.hidden = !notes.length; note.textContent = notes.join(' '); note.classList.toggle('trydAdvantagePartial', state.truncated); }
@@ -384,19 +419,22 @@
 
   /* ---------- Alt detay (OAB ile aynı ortak sağ çekmece) ---------- */
   const DETAIL_LABELS = {
-    _side: ['Taraf', 'Side'], _status: ['Durum', 'Status'], _ratio: ['Landed/FOB', 'Landed/FOB'],
+    _side: ['Taraf', 'Side'], _status: ['Durum', 'Status'], _ratio: ['Landed/FOB', 'Landed/FOB'], _vehicle: ['Vasıta', 'Shipment mode'], _standard: ['Kullanılan standart', 'Standard used'],
     order: ['Sipariş', 'Order'], model: ['Model', 'Model'], colour: ['Renk', 'Colour'], productName: ['Ürün adı', 'Product name'], season: ['Sezon', 'Season'],
     mag: ['MAG', 'MAG'], buyerGroup: ['Buyer grup', 'Buyer group'], classification: ['Ürün klasmanı', 'Product class'], originCountry: ['Üretici ülke', 'Origin country'],
     qty: ['Net sipariş adedi', 'Net order quantity'], fob: ['FOB USD', 'FOB USD'], landedActual: ['Landed gerçekleşen USD', 'Actual landed USD'], landedForecast: ['Landed öngörü USD', 'Forecast landed USD'],
   };
-  const DETAIL_KEYS = ['_side', 'model', 'order', 'colour', 'originCountry', 'qty', 'fob', 'landedActual', 'landedForecast', '_ratio', '_status', 'mag', 'classification', 'buyerGroup', 'season', 'productName'];
+  const DETAIL_KEYS = ['_side', 'model', 'order', 'colour', 'originCountry', 'qty', 'fob', 'landedActual', 'landedForecast', '_ratio', '_status', '_vehicle', '_standard', 'mag', 'classification', 'buyerGroup', 'season', 'productName'];
   const detailLabel = key => DETAIL_LABELS[key] ? text(...DETAIL_LABELS[key]) : key;
   function annotate(rows) {
-    const standard = state.analysis ? state.analysis.standard.value : state.standardMultiplier;
+    // Satır durumu kendi standardıyla (vasıtaya göre veya genel); vasıta ve standart ayrı sütundur.
+    const standardFor = engine.createStandardResolver({ standardMultiplier: state.standardMultiplier, byVehicle: state.byVehicle, vehicles: state.vehicles });
     return rows.map(row => {
       const side = engine.originClass(row);
-      const status = side === 'yd' ? engine.rowStatus(row, standard, view().landedSource) : null;
-      return { ...row, _side: side === 'tr' ? 'TR' : 'YD', _status: status ? statusText(status) : '', _ratio: engine.rowRatio(row, view().landedSource) };
+      const standard = side === 'yd' ? standardFor(row) : null;
+      const status = standard ? engine.rowStatus(row, standard.value, view().landedSource) : null;
+      const vehicle = standard ? (standard.known ? (isEnglish() ? standard.labelEn : standard.label) : vehicleUnknownLabel()) : '';
+      return { ...row, _side: side === 'tr' ? 'TR' : 'YD', _status: status ? statusText(status) : '', _ratio: engine.rowRatio(row, view().landedSource), _vehicle: vehicle, _standard: standard ? standard.value : null };
     });
   }
   function openDetail(item, ref) {
@@ -407,7 +445,7 @@
     const numeric = key => rows.some(row => typeof row[key] === 'number');
     const columns = DETAIL_KEYS.filter(key => rows.some(row => row[key] !== undefined)).map(key => ({
       key, label: detailLabel(key), type: numeric(key) ? 'number' : 'text',
-      ...(numeric(key) ? { format: value => value == null || value === '' ? '' : (key === 'qty' ? FORMATS.qty(value) : (key === '_ratio' ? `${fmt(value, 3)}×` : fmt(value, 2))) } : {}),
+      ...(numeric(key) ? { format: value => value == null || value === '' ? '' : (key === 'qty' ? FORMATS.qty(value) : (key === '_ratio' || key === '_standard' ? `${fmt(value, 3)}×` : fmt(value, 2))) } : {}),
     }));
     const context = item.kind === 'grand' ? text('Genel Toplam', 'Grand Total')
       : (item.path || []).map((value, index) => `${fieldLabel(axisKeys()[index])}: ${value === '' ? text('(boş)', '(blank)') : value}`).join(' › ');
@@ -420,7 +458,8 @@
       storageKey: 'tryd.advantage.detail', pageScope: 'overview.trydAdvantage', moduleId: 'overview', source: 'trydAdvantage',
       title: text('TR/YD Landed Avantaj Alt Detay', 'TR/Abroad Landed Advantage Drill-down'),
       subtitle: context, note, rows, columns,
-      defaultVisible: DETAIL_KEYS.filter(key => columns.some(column => column.key === key)).slice(0, 11),
+      // Durum, vasıta ve kullanılan standart varsayılan görünür sütunlardadır (satır durumunun gerekçesi).
+      defaultVisible: DETAIL_KEYS.filter(key => columns.some(column => column.key === key)).slice(0, 13),
       exactDefaultVisible: true, flatColumns: true, images: false, fileName: 'TR_YD_Landed_Avantaj_Alt_Detay',
     });
   }
@@ -450,7 +489,8 @@
       const pivot = all.map(item => {
         const out = { [text('Satır tipi', 'Row type')]: item.kind === 'grand' ? text('Genel toplam', 'Grand total') : (item.kind === 'group' ? text('Alt toplam', 'Subtotal') : text('Model', 'Model')) };
         axis.forEach((key, index) => {
-          out[fieldLabel(key)] = item.kind === 'grand' ? '' : (item.kind === 'model' ? (index === axis.length - 1 ? item.model : item[key]) : (index <= item.level ? item.path[index] : ''));
+          const cell = item.kind === 'grand' ? '' : (item.kind === 'model' ? (index === axis.length - 1 ? item.model : item[key]) : (index <= item.level ? item.path[index] : ''));
+          out[fieldLabel(key)] = key === 'vehicle' && item.kind !== 'grand' && cell === '' ? vehicleUnknownLabel() : cell;
         });
         const metrics = metricsOf(item);
         values.forEach(ref => { out[text(ref.tr, ref.en)] = ref.key === 'status' ? metrics.status : round(metrics[ref.key]); });
@@ -473,7 +513,8 @@
         summaryRow(text('Yalnız hedef altı', 'Below target only'), view().belowTargetOnly ? text('Evet', 'Yes') : text('Hayır', 'No')),
         ...(state.search ? [summaryRow(text('Arama', 'Search'), state.search)] : []),
         summaryRow(text('Kapsam', 'Scope'), text('TR = Türkiye; YD = diğer ülkeler, Fas ve Mısır hariç; yalnız TR+YD siparişi olan modeller', 'TR = Turkey; abroad = other countries except Morocco and Egypt; only models with both TR and abroad orders')),
-        summaryRow(text('Landed durum kuralı', 'Landed status rule'), text(`Hatalı: landed < FOB (hesaba girmez) · Yüksek çarpan: Landed/FOB > standart ${standardText()} (hesaba girer)`, `Invalid: landed < FOB (excluded) · High multiplier: landed/FOB > standard ${standardText()} (included)`)),
+        summaryRow(text('Landed durum kuralı', 'Landed status rule'), text(`Hatalı: landed < FOB (hesaba girmez) · Yüksek çarpan: Landed/FOB > satırın standardı (hesaba girer) — ${vehicleStandardsText()}`, `Invalid: landed < FOB (excluded) · High multiplier: landed/FOB > the row’s standard (included) — ${vehicleStandardsText()}`)),
+        ...(state.vehicleInfo ? [summaryRow(text('Vasıta eşleşmesi', 'Shipment mode match'), text(`IAS vasıtası bulunan YD sipariş ${state.vehicleInfo.matched}/${state.vehicleInfo.ydOrders}; vasıtası bulunamayan sipariş genel standardı kullanır. Karışık siparişte standart parsiyellerin yükleme adediyle ağırlıklıdır.`, `Abroad orders with an IAS shipment mode ${state.vehicleInfo.matched}/${state.vehicleInfo.ydOrders}; orders without one use the general standard. For mixed orders the standard is weighted by the partial shipments’ loaded quantity.`))] : []),
         summaryRow(text('Yalnız TR / yalnız YD model', 'TR only / abroad only models'), `${result.skipped.trOnly} / ${result.skipped.ydOnly}`),
         ...(state.horizon ? [summaryRow(text('Veri Yönetimi ufku', 'Data Management horizon'), text('Uygulandı', 'Applied'))] : []),
         summaryRow(text('Son yenileme', 'Last refresh'), state.fetchedAt),
@@ -519,6 +560,9 @@
     state.rowLimit = Number(payload && payload.rowLimit) || state.rowLimit;
     state.stale = Boolean(payload && payload.stale);
     state.dataFilters = payload && payload.filterValues && typeof payload.filterValues === 'object' ? payload.filterValues : null;
+    const vehicles = payload && payload.vehicles && typeof payload.vehicles === 'object' ? payload.vehicles : null;
+    state.vehicles = vehicles && vehicles.byOrder && typeof vehicles.byOrder === 'object' ? vehicles.byOrder : null;
+    state.vehicleInfo = vehicles ? { source: vehicles.source || null, ydOrders: Number(vehicles.ydOrders) || 0, matched: Number(vehicles.matched) || 0 } : null;
   }
   /* Gösterilen satırlar son çekilen sorgunun filtresindendir; seçili filtre
      farklıysa (Yenile'ye basılmadı ya da kaynak erişilemedi) bu açıkça yazılır. */
@@ -532,6 +576,7 @@
     try {
       const payload = await requestJson('/api/landed-multipliers');
       state.standardMultiplier = payload && payload.multipliers ? payload.multipliers.overseas : null;
+      state.byVehicle = payload && payload.multipliers && payload.multipliers.byVehicle && typeof payload.multipliers.byVehicle === 'object' ? payload.multipliers.byVehicle : {};
     } catch (_) { /* Okunamazsa bilinen değer korunur; hiç okunmadıysa motor varsayılanı (UI bunu söyler). */ }
   }
   async function loadState() {
@@ -951,5 +996,17 @@
   bind();
   render();
   startWhenVisible();
+  /* Model durum ipucu ortak hızlı ipucuyla (public/ui-tooltip.js): data-tip yalnız fare
+     hücreye gelince eklenir (10k satırlık tabloda çizim HTML'i büyümez). Başlık durum,
+     açıklama satır sayıları + en yüksek oranlı satırın vasıtası ve kullanılan standart. */
+  section.addEventListener('pointerover', event => {
+    const cell = event.target.closest && event.target.closest('#trydAdvantageTable td.trydAdvantageStatusCell[title]');
+    if (cell && !cell.hasAttribute('data-tip')) cell.setAttribute('data-tip', cell.textContent.trim());
+  });
+  // Ortak "Landed çarpanları" değişince standartlar yeniden okunur; yüklü satırlar yeniden hesaplanır (sorgu yok).
+  window.addEventListener('bl:landed-multipliers-changed', () => {
+    if (!state.started) return;
+    void loadStandardMultiplier().then(() => { if (state.rows.length) renderBody(); });
+  });
   window.BLTrydAdvantage = Object.freeze({ state, refresh: () => refresh(true), reload: loadState, openFields });
 })();

@@ -77,6 +77,7 @@ module.exports = function registerOabCubeRoutes(app, deps) {
       truncated: Boolean(meta.truncated), rowLimit: meta.rowLimit || report.OAB_CUBE_MAX_ROWS,
       dataDate: meta.dataDate || '', dataDateSource: meta.dataDateSource || '', etlTime: meta.etlTime || '',
       horizonApplied: Boolean(meta.horizonApplied),
+      productAttributes: meta.productAttributes || null,
     };
   }
   const horizonOf = () => report.resolveHorizon(loadModelConnections().items);
@@ -84,6 +85,53 @@ module.exports = function registerOabCubeRoutes(app, deps) {
      satırı dönmez. Ufuksuz anahtar (horizon: null) önceki sürümle aynıdır. */
   function reportQueryKey(found, userId, built, horizon) {
     return store.queryKey({ connection: { server: found.connection.server, catalog: found.connection.catalog, user: String(userId) }, measures: built.measures, rows: built.dimensions, filters: built.filterValues, horizon, options: { report: 'oab-cube', version: 2 } });
+  }
+  /* Ürün özellikleri (FİT, Silüet, Kumaş-malzeme tipi) ayrı, ölçüsüz sorguyla
+     okunur ve ana satırlara eklenir (oab-cube-report productAttributeQueries /
+     mergeProductAttributes). Önbellek anahtarı ana sorgudan ayrıdır ve
+     kullanıcı, bağlantı, özellik listesi ve ana sonuçtaki ModelKod kümesinin
+     özetini içerir. İkincil bilgidir: şema yoksa ya da sorgu düşerse ana satırlar
+     özellikler boş olarak döner ve durum ok=false taşır (istemci uyarır). */
+  function attributeQueryKey(found, userId, attributes, plan) {
+    return store.queryKey({ connection: { server: found.connection.server, catalog: found.connection.catalog, user: String(userId) }, rows: attributes, filters: { modelSet: plan.modelSetHash }, options: { report: 'oab-cube-attributes', version: 1 } });
+  }
+  async function readAttributes(found, userId, rows, attributes, force) {
+    const started = Date.now();
+    const status = { requested: [...attributes], fetched: [], missing: [], ok: true, code: '', truncated: false, chunks: 0, matchedRows: 0, multiRows: 0, fromCache: false, elapsedMs: 0 };
+    const blank = () => report.mergeProductAttributes(rows, [], attributes).rows;
+    let plan;
+    try { plan = report.productAttributeQueries({ liveFields: found.fields, rows, attributes }); }
+    catch (err) {
+      logFailure('attributes', err);
+      return { rows: blank(), status: { ...status, ok: false, code: err && err.code === 'OAB_CUBE_ATTRIBUTES_SCHEMA' ? 'OAB_CUBE_ATTRIBUTES_SCHEMA' : 'OAB_CUBE_ATTRIBUTES_UNAVAILABLE', elapsedMs: Date.now() - started } };
+    }
+    status.fetched = plan.fetched; status.missing = plan.missing; status.chunks = plan.queries.length;
+    if (!plan.queries.length) return { rows: blank(), status: { ...status, elapsedMs: Date.now() - started } };
+    const key = attributeQueryKey(found, userId, plan.fetched, plan);
+    let attrRows = null, truncated = plan.truncatedModels;
+    const cached = force ? null : store.get(key);
+    if (cached && cached.fresh) {
+      attrRows = cached.rows;
+      truncated = Boolean(cached.viewConfig && cached.viewConfig.truncated);
+      status.fromCache = true;
+    } else {
+      try {
+        attrRows = [];
+        for (const item of plan.queries) {
+          // Parçalar sırayla çalışır: kullanıcının SSAS oturumuna eşzamanlı yük bindirilmez.
+          const result = await modelQuery.runModelRows({ server: found.connection.server, catalog: found.connection.catalog, query: item.query, headerMap: item.headerMap, generated: true, maxRows: item.maxRows, timeoutMs: 120000 });
+          const part = report.normalizeProductAttributeRows(result.rows, plan.fetched);
+          if (part.length >= item.maxRows) truncated = true;
+          attrRows.push(...part);
+        }
+      } catch (err) {
+        logFailure('attributes', err);
+        return { rows: blank(), status: { ...status, ok: false, code: 'OAB_CUBE_ATTRIBUTES_UNAVAILABLE', elapsedMs: Date.now() - started } };
+      }
+      store.set(key, { rows: attrRows, fields: [], viewConfig: { truncated, attributes: plan.fetched }, fetchedAt: new Date().toISOString() });
+    }
+    const merged = report.mergeProductAttributes(rows, attrRows, attributes);
+    return { rows: merged.rows, status: { ...status, truncated, matchedRows: merged.matchedRows, multiRows: merged.multiRows, elapsedMs: Date.now() - started } };
   }
   /* Veri tarihi ikincil bilgidir: okunamazsa rapor yine döner, tarih boş kalır. */
   async function readFreshness(found) {
@@ -153,21 +201,35 @@ module.exports = function registerOabCubeRoutes(app, deps) {
       const built = report.buildQuery({ liveFields: found.fields, view, horizon });
       const queryKey = reportQueryKey(found, userId, built, horizon);
       const meta = { filterValues: built.filterValues, missing: built.missing, rowLimit: built.maxRows, measures: [...built.measures, ...(built.derived || [])], dimensions: built.dimensions, horizonApplied: built.horizonApplied };
-      if (!(req.body && req.body.forceRefresh)) {
-        const cached = store.get(queryKey);
-        if (cached && cached.fresh) {
-          store.saveSnapshot(userId, { queryKey, rows: cached.rows, fields: [], viewConfig: cached.viewConfig || meta, fetchedAt: cached.fetchedAt });
-          return res.json({ ok: true, view, horizon: Boolean(horizon), ...snapshotPayload({ rows: cached.rows, fetchedAt: cached.fetchedAt, viewConfig: cached.viewConfig || meta }), fromCache: true });
-        }
+      const force = Boolean(req.body && req.body.forceRefresh);
+      /* Ana önbellek yalnız ana sorgunun satırlarını tutar (anahtar özelliklerden
+         bağımsızdır); ürün özellikleri her iki yolda da sonradan eklenir. */
+      let rows, stamped, fetchedAt, fromCache = false;
+      const cached = force ? null : store.get(queryKey);
+      if (cached && cached.fresh) {
+        rows = cached.rows; stamped = cached.viewConfig || meta; fetchedAt = cached.fetchedAt; fromCache = true;
+      } else {
+        const result = await modelQuery.runModelRows({ server: found.connection.server, catalog: found.connection.catalog, query: built.query, headerMap: built.headerMap, generated: true, maxRows: built.maxRows, timeoutMs: 180000 });
+        rows = report.normalizeRows(result.rows, built);
+        const freshness = await readFreshness(found);
+        stamped = { ...meta, ...freshness, truncated: rows.length >= built.maxRows };
+        fetchedAt = store.set(queryKey, { rows, fields: [], viewConfig: stamped, fetchedAt: new Date().toISOString() }).fetchedAt;
       }
-      const result = await modelQuery.runModelRows({ server: found.connection.server, catalog: found.connection.catalog, query: built.query, headerMap: built.headerMap, generated: true, maxRows: built.maxRows, timeoutMs: 180000 });
-      const rows = report.normalizeRows(result.rows, built);
-      const freshness = await readFreshness(found);
-      const stamped = { ...meta, ...freshness, truncated: rows.length >= built.maxRows };
-      const record = store.set(queryKey, { rows, fields: [], viewConfig: stamped, fetchedAt: new Date().toISOString() });
-      store.saveSnapshot(userId, { queryKey, rows, fields: [], viewConfig: stamped, fetchedAt: record.fetchedAt });
-      userAccess.appendAudit(req.currentUser, 'OAB_CUBE_REPORT_FETCH', queryKey, { rows: rows.length, forceRefresh: Boolean(req.body && req.body.forceRefresh) });
-      res.json({ ok: true, view, horizon: Boolean(horizon), ...snapshotPayload({ rows, fetchedAt: record.fetchedAt, viewConfig: stamped }), fromCache: false });
+      // Kullanılmayan özellik için ek sorgu yok; yanıt önceki sürümle aynıdır.
+      if (built.attributes.length) {
+        const attributes = await readAttributes(found, userId, rows, built.attributes, force);
+        rows = attributes.rows;
+        stamped = {
+          ...stamped,
+          dimensions: [...new Set([...(stamped.dimensions || []), ...attributes.status.requested])],
+          missing: [...new Set([...(stamped.missing || []), ...attributes.status.missing])],
+          productAttributes: attributes.status,
+        };
+      }
+      store.saveSnapshot(userId, { queryKey, rows, fields: [], viewConfig: stamped, fetchedAt });
+      if (fromCache) return res.json({ ok: true, view, horizon: Boolean(horizon), ...snapshotPayload({ rows, fetchedAt, viewConfig: stamped }), fromCache: true });
+      userAccess.appendAudit(req.currentUser, 'OAB_CUBE_REPORT_FETCH', queryKey, { rows: rows.length, forceRefresh: force, productAttributes: built.attributes.length });
+      res.json({ ok: true, view, horizon: Boolean(horizon), ...snapshotPayload({ rows, fetchedAt, viewConfig: stamped }), fromCache: false });
     } catch (err) {
       logFailure('report', err);
       if (previous && Array.isArray(previous.rows) && RECOVERABLE_ERRORS.has(String(err && err.code || ''))) {

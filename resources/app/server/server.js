@@ -949,6 +949,8 @@ function changedMasterEntities(remoteRecords, localRecords, ids) {
       for (const field of ['pricingRules','licenseCards','transitRules','transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoSourceMode','asasSourceMode','asasFabricMode','lflSourceMode','noteColumnDefs','importanceSettings','cpManagedRules','tableReportLayouts']) {
         if (different(before && before[field], after && after[field])) changed.add(field);
       }
+      // Vasıta standartları ayrı anahtarda saklanır; istemci için landedMultipliers alanıdır.
+      if (different(before && before.landedVehicleStandards, after && after.landedVehicleStandards)) changed.add('landedMultipliers');
       if (
         different(before && before.antrepoMatchRule, after && after.antrepoMatchRule) ||
         different(before && before.antrepoMatchConfig, after && after.antrepoMatchConfig) ||
@@ -10832,20 +10834,23 @@ app.get('/api/landed-multipliers', (req, res) => {
   const ov = loadOverrides();
   const revision = Number(ov._revisions && ov._revisions.landedMultipliers) || 0;
   res.set('ETag', `"${revision}"`);
-  res.json({ multipliers: ov.landedMultipliers || { tr: 1.05, overseas: 1.11 }, revision });
+  // knownVehicles: kullanıcının yüklü IAS verisinde görülen vasıtalar (vasıtaya göre standart alanları).
+  let knownVehicles = [];
+  try { knownVehicles = require('./lib/tryd-vehicle-index').knownVehicles(cacheForUser(req)); } catch (_) { knownVehicles = []; }
+  res.json({ multipliers: require('./db').landedMultipliersOf(ov), revision, knownVehicles });
 });
 app.put('/api/landed-multipliers', userAccess.requireArea('source'), userAccess.requirePermission('manageBusinessRules'), express.json({limit:'32kb'}), async (req, res) => {
   try {
     const raw = req.body && req.body.multipliers;
     let multipliers;
     try { multipliers=require('./lib/landed-multiplier-service').validateMultipliers(raw); }
-    catch(error){if(error.code!=='LANDED_MULTIPLIERS_INVALID')throw error;return res.status(400).json({ error:'TR ve Overseas Landed çarpanları 0 ile 10 arasında pozitif sayı olmalıdır.' });}
+    catch(error){if(error.code!=='LANDED_MULTIPLIERS_INVALID')throw error;return res.status(400).json({ error:'TR, Overseas ve vasıta Landed çarpanları 0 ile 10 arasında pozitif sayı olmalıdır.', errorEn:'TR, Overseas and shipment-mode landed multipliers must be positive numbers between 0 and 10.', code:'LANDED_MULTIPLIERS_INVALID' });}
     const receipt = await landedMultiplierService.replace(multipliers, {revision:requestRevision(req)}, {assertAuthority:()=>{
       const current=userAccess.profileById(req.currentUser.id);
       if(!current||current.enabled===false||!userAccess.hasArea(current,'source')||!userAccess.hasPermission(current,'manageBusinessRules'))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
     }});
     const saved={multipliers:receipt.multipliers,revision:receipt.revision};
-    userAccess.appendAudit(req.currentUser, 'LANDED_MULTIPLIERS_UPDATE', 'collection', { tr:saved.multipliers.tr, overseas:saved.multipliers.overseas, revision:saved.revision });
+    userAccess.appendAudit(req.currentUser, 'LANDED_MULTIPLIERS_UPDATE', 'collection', { tr:saved.multipliers.tr, overseas:saved.multipliers.overseas, byVehicle:saved.multipliers.byVehicle||{}, revision:saved.revision });
     publishSharedMasterChange('landedMultipliers', req);
     res.json(saved);
   } catch (err) { apiError(res, err, 'Landed çarpanları kaydedilemedi.'); }

@@ -265,10 +265,18 @@ module.exports = function registerPostFobRoutes(app, deps) {
     const horizon = report.resolveHorizon(loadModelConnections().items);
     return reportQueryKey({ connection: connection() }, userId, { measures: lastQuery.measures, dimensions: lastQuery.dimensions, filterValues: lastQuery.filterValues }, horizon);
   }
-  function trydPayload(record) {
+  /* Vasıta (yükleme tipi) eki: Buyer Log'un yüklü IAS verisinden sipariş kodu ile
+     eşlenir (server/lib/tryd-vehicle-index.js); yalnız yanıt anında yapılır,
+     önbelleğe yazılmaz. Runtime okunamazsa eşleme boş döner (vasıta bilinmiyor). */
+  const trydVehicles = require('../lib/tryd-vehicle-index');
+  function userCache(req) {
+    if (!req || typeof cacheForUser !== 'function') return null;
+    try { return cacheForUser(req); } catch (_) { return null; }
+  }
+  function trydPayload(record, req) {
     if (!record) return null;
     const meta = record.viewConfig && typeof record.viewConfig === 'object' ? record.viewConfig : {};
-    return { rows: record.rows, fetchedAt: record.fetchedAt, filterValues: meta.filterValues || {}, missing: meta.missing || [], truncated: Boolean(meta.truncated), rowLimit: meta.rowLimit || report.POSTFOB_MAX_ROWS, horizonApplied: Boolean(meta.horizonApplied), stale: record.fresh === false };
+    return { rows: record.rows, fetchedAt: record.fetchedAt, filterValues: meta.filterValues || {}, missing: meta.missing || [], truncated: Boolean(meta.truncated), rowLimit: meta.rowLimit || report.POSTFOB_MAX_ROWS, horizonApplied: Boolean(meta.horizonApplied), stale: record.fresh === false, vehicles: trydVehicles.payloadFor(record.rows, userCache(req)) };
   }
 
   app.get('/api/postfob/tryd/state', ...guard, (req, res) => {
@@ -280,7 +288,7 @@ module.exports = function registerPostFobRoutes(app, deps) {
         filters: trydEngine.FILTER_KEYS.map(key => report.DIMENSIONS.find(item => item.key === key)).filter(Boolean).map(({ key, tr, en, required }) => ({ key, tr, en, required: Boolean(required) })),
         connection: { name: target.name, server: target.server, catalog: target.catalog, source: target.source },
         horizon: Boolean(report.resolveHorizon(loadModelConnections().items)),
-        data: (key => key ? trydPayload(store.get(key)) : null)(lastQueryKey(req.currentUser.id, entry.lastQuery)),
+        data: (key => key ? trydPayload(store.get(key), req) : null)(lastQueryKey(req.currentUser.id, entry.lastQuery)),
       });
     } catch (err) { logFailure('tryd-state', err); const out = failure(err); res.status(out.status).json(out); }
   });
@@ -307,7 +315,7 @@ module.exports = function registerPostFobRoutes(app, deps) {
       const meta = { filterValues: built.filterValues, missing: built.missing, rowLimit: built.maxRows, horizonApplied: built.horizonApplied };
       if (!(req.body && req.body.forceRefresh)) {
         const cached = store.get(queryKey);
-        if (cached && cached.fresh) { saveTryd(userId, null, shape); return res.json({ ok: true, view, ...trydPayload({ ...cached, viewConfig: cached.viewConfig || meta }), fromCache: true }); }
+        if (cached && cached.fresh) { saveTryd(userId, null, shape); return res.json({ ok: true, view, ...trydPayload({ ...cached, viewConfig: cached.viewConfig || meta }, req), fromCache: true }); }
       }
       const result = await modelQuery.runModelRows({ server: found.connection.server, catalog: found.connection.catalog, query: built.query, headerMap: built.headerMap, generated: true, maxRows: built.maxRows, timeoutMs: 180000 });
       const rows = report.normalizeRows(result.rows, built);
@@ -315,7 +323,7 @@ module.exports = function registerPostFobRoutes(app, deps) {
       const record = store.set(queryKey, { rows, fields: [], viewConfig: stamped, fetchedAt: new Date().toISOString() });
       saveTryd(userId, null, shape);
       userAccess.appendAudit(req.currentUser, 'POSTFOB_TRYD_REPORT_FETCH', queryKey, { rows: rows.length, forceRefresh: Boolean(req.body && req.body.forceRefresh) });
-      res.json({ ok: true, view, ...trydPayload({ ...record, fresh: true }), fromCache: false });
+      res.json({ ok: true, view, ...trydPayload({ ...record, fresh: true }, req), fromCache: false });
     } catch (err) {
       logFailure('tryd-report', err);
       // Şema okunamadıysa anahtar hesaplanamaz: son başarılı sorgu yalnız İSTENEN
@@ -327,10 +335,24 @@ module.exports = function registerPostFobRoutes(app, deps) {
       const fallbackKey = queryKey || (sameFilters ? lastQueryKey(userId, before.lastQuery) : '');
       const previous = fallbackKey ? store.get(fallbackKey) : null;
       if (previous && RECOVERABLE_ERRORS.has(String(err && err.code || ''))) {
-        return res.json({ ok: true, view, ...trydPayload(previous), fromCache: true, offline: true, error: SOURCE_MESSAGE.tr, errorEn: SOURCE_MESSAGE.en });
+        return res.json({ ok: true, view, ...trydPayload(previous, req), fromCache: true, offline: true, error: SOURCE_MESSAGE.tr, errorEn: SOURCE_MESSAGE.en });
       }
       const out = failure(err); res.status(out.status).json(out);
     }
+  });
+
+  /* "Geçmiş veriden öner" (Landed çarpanları penceresi): kullanıcının son TR/YD
+     sorgusunun önbellek kaydı + IAS vasıtası. Canlı model sorgusu ATILMAZ ve
+     hiçbir şey kaydedilmez; değerler ancak kullanıcı Kaydet'e basınca yazılır. */
+  app.get('/api/postfob/tryd/vehicle-suggestions', ...guard, (req, res) => {
+    try {
+      const entry = trydEntry(req.currentUser.id);
+      const key = lastQueryKey(req.currentUser.id, entry.lastQuery);
+      const record = key ? store.get(key) : null;
+      if (!record || !Array.isArray(record.rows)) return res.set('Cache-Control', 'no-store').json({ ok: true, data: null });
+      const meta = record.viewConfig && typeof record.viewConfig === 'object' ? record.viewConfig : {};
+      res.set('Cache-Control', 'no-store').json({ ok: true, data: { ...trydVehicles.suggestions(record.rows, userCache(req)), fetchedAt: record.fetchedAt, filterValues: meta.filterValues || {}, truncated: Boolean(meta.truncated) } });
+    } catch (err) { logFailure('tryd-vehicle-suggestions', err); const out = failure(err); res.status(out.status).json(out); }
   });
 
   return { store, storedView, saveView, probe, snapshotRows };
