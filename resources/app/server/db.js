@@ -474,6 +474,8 @@ function transitRuleComparable(rule) {
     id: String(rule.id || ''), exfStart: rule.exfStart || '', exfEnd: rule.exfEnd || '',
     seasons: Array.isArray(rule.seasons) ? rule.seasons : [], countries: Array.isArray(rule.countries) ? rule.countries : [],
     delType: rule.delType || '', days: Number(rule.days),
+    // Yalnız bazı değişen kural da değişiklik sayılır (aksi halde birleştirmede kaybolurdu).
+    basis: rule.basis || 'handover',
   });
 }
 function mergeTransitRules(baseRules, incomingRules, currentRules, wanted, current) {
@@ -1581,6 +1583,11 @@ function normalizeModelConnection(raw) {
     // marker prevents the two schema DMV queries from repeating every refresh
     // when the source model legitimately does not contain those optional fields.
     mappingEnhancementScanVersion: Math.max(0, Number(item.mappingEnhancementScanVersion) || 0),
+    // IAS gerçekleşen tarih sütunları: otomatik eklenenler (sorgu bozarsa
+    // çıkarılacaklar) ve bir kez çıkarıldıysa bir daha eklenmeme işareti.
+    iasMilestoneHeaders: (Array.isArray(item.iasMilestoneHeaders) ? item.iasMilestoneHeaders : [])
+      .map(value => String(value || '').trim().slice(0, 80)).filter(Boolean).slice(0, 20),
+    iasMilestonesDisabled: item.iasMilestonesDisabled === true,
     horizon,
     // Hedef başına ufuk. Boşsa mevcut tek ufuktan üretilir; eski kayıtlar aynen çalışır.
     scopes,

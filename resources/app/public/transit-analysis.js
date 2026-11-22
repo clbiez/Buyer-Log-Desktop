@@ -603,7 +603,12 @@
   /* Yalnız "tarihsiz + sezonsuz + tek ülke + taşıt" kapsamlı kuralı günceller ya
      da ekler. Tarih/sezon kısıtlı elle girilmiş özel kurallara dokunmaz; onlar
      motor tarafından zaten daha özel sayılır. */
-  function applySuggestions(currentRules, suggestions) {
+  /* Kurala esas ölçü → kural gününün sayıldığı kilometre taşı. Aktarılan gün
+     bu tabandan uygulanır (Uçtan Uca kural Handover'a eklenirse Yükleme Talep →
+     Handover süresi hesap dışı kalırdı). */
+  const METRIC_BASIS = Object.freeze({ endToEnd: 'loadingRequest', handoverToWarehouse: 'handover', loadingToWarehouse: 'actualLoading' });
+  function applySuggestions(currentRules, suggestions, metric) {
+    const basis = METRIC_BASIS[metric] || 'handover';
     const next = (Array.isArray(currentRules) ? currentRules : []).map(r => ({ ...r }));
     let added = 0, updated = 0, unchanged = 0;
     (Array.isArray(suggestions) ? suggestions : []).forEach(s => {
@@ -613,13 +618,14 @@
       if (!delType || !cKey || !Number.isInteger(days) || days < 0 || days > 3650) return;
       const hit = next.find(r => isAnalysisScope(r, delType, cKey));
       if (hit) {
-        if (Number(hit.days) === days) unchanged += 1;
-        else { hit.days = days; updated += 1; }
+        const sameBasis = (hit.basis || 'handover') === basis;
+        if (Number(hit.days) === days && sameBasis) unchanged += 1;
+        else { hit.days = days; hit.basis = basis; updated += 1; }
         return;
       }
       next.push({
         id: 'transit-analysis-' + key(delType).replace(/[^A-Z0-9]+/g, '-').toLowerCase() + '-' + cKey.replace(/[^A-Z0-9]+/g, '-').toLowerCase(),
-        exfStart: '', exfEnd: '', seasons: [], countries: [s.country], delType, days,
+        exfStart: '', exfEnd: '', seasons: [], countries: [s.country], delType, days, basis,
       });
       added += 1;
     });
@@ -639,7 +645,7 @@
     VERSION, BASES, BASIS_LABELS, METRIC_LABELS, RULE_METRICS, RULE_STATS, LOW_SAMPLE_QTY, LOW_SAMPLE_PERIODS, LOW_SAMPLE_SHIPMENTS,
     WINDOW_KEYS, windowRange, windowLabel, isoWeekOf,
     buildFromShipments, labels, metricLabels, stepLabel, normalizeAnalysis, options, summarize,
-    ruleDays, suggestRules, applySuggestions, currentRuleDays, countryRuleName, vehicleType, ruleVehicle,
+    ruleDays, suggestRules, applySuggestions, METRIC_BASIS, currentRuleDays, countryRuleName, vehicleType, ruleVehicle,
     normalizeBuffer, applyBuffer, MAX_BUFFER_DAYS, MAX_BUFFER_PCT,
   };
 });
