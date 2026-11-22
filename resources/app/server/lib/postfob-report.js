@@ -19,6 +19,7 @@
  */
 
 const intakeReport = require('./intake-report');
+const PivotCalculated = require('../../public/pivot-calculated-values');
 const filterValueTypes = require('./filter-value-types');
 const modelHorizon = require('./modelHorizon');
 
@@ -254,6 +255,13 @@ function normalizeView(raw) {
       sort: { key: clean(sort.key).slice(0, 40), dir: Number(sort.dir) === 1 ? 1 : -1 },
       widths,
     },
+    /* Kişisel hesaplanan değerler (public/pivot-calculated-values.js). Bütün
+       hazır ölçüler zaten her sorguda gelir; tanımlar sorguyu değiştirmez. */
+    calculated: PivotCalculated.normalizeList(source.calculated, {
+      allowRow: true,
+      aggregateKeys: [...VALUE_KEYS, ...values.map(ref => ref.key)],
+      rowKeys: [...MEASURES.map(item => item.key), ...values.filter(ref => ref.source).map(ref => ref.key)],
+    }),
     segment: SEGMENTS.includes(clean(source.segment)) ? clean(source.segment) : 'all',
     outliersOnly: source.outliersOnly === true,
   };

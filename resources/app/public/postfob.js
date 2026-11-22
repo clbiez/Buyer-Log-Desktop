@@ -101,6 +101,36 @@
     outliers: ['Landed/FOB oranı Q3 + 1,5×IQR dışında kalan satır sayısı', 'Rows with Landed/FOB outside Q3 + 1.5×IQR'],
   };
 
+  /* ---------- Hesaplanan değerler (public/pivot-calculated-values.js) ----------
+     Tanım yoksa değerlendirici null'dır ve pivot sıcak yolu değişmez. Kaynak
+     satır sipariş × renk düzeyindedir; satır bazlı mod burada anlamlıdır.
+     Bütün hazır ölçüler her sorguda gelir; tanım sorguyu değiştirmez. */
+  const PCV = () => window.BLPivotCalculatedValues || null;
+  const calcDefs = () => (PCV() && Array.isArray(view().calculated) ? view().calculated : []);
+  let calcCache = { signature: '', evaluator: null };
+  let activeCalc = null;
+  let calcEnginePending = false;
+  function calcEvaluator() {
+    const defs = calcDefs();
+    if (!defs.length) return null;
+    const signature = `${window.BLFormulaEngine ? 1 : 0}|${isEnglish() ? 'en' : 'tr'}|${JSON.stringify(defs)}`;
+    if (calcCache.signature !== signature) {
+      calcCache = { signature, evaluator: PCV().createEvaluator(defs, { isTextKey: key => Boolean(baseDim(key)), label: key => detailLabel(key) }) };
+    }
+    if (!window.BLFormulaEngine && !calcEnginePending) {
+      calcEnginePending = true;
+      PCV().ensureEngine(false).then(ok => { calcEnginePending = false; if (ok) renderBody(); });
+    }
+    return calcCache.evaluator;
+  }
+  const withCalc = (metrics, rows) => (activeCalc ? activeCalc.apply(metrics, rows) : metrics);
+  const calcHeadKey = def => `pcv-${def.id}`;
+  function calcCellHtml(item, def) {
+    if (item.kind === 'group' && !item.subtotal) return '<td class="num"></td>';
+    const cell = PCV().cell(item.metrics, def);
+    return `<td class="num pcvCell${cell.error ? ' pcvError' : ''}" title="${esc(cell.title)}">${esc(cell.text)}</td>`;
+  }
+
   /* ---------- Pivot hesabı (INTAKE intakeDisplayRows ile aynı yapı) ---------- */
   const extraValues = () => view().values.filter(ref => ref.source).map(ref => ({ key: ref.key, agg: ref.agg }));
   const groupKeyOf = path => JSON.stringify(path.map(clean));
@@ -128,9 +158,10 @@
       if (!map.has(value)) map.set(value, []);
       map.get(value).push(row);
     }
-    return [...map.entries()].map(([value, list]) => ({ value, rows: list, metrics: analysis.groupMetrics(list, bounds, extras) }));
+    return [...map.entries()].map(([value, list]) => ({ value, rows: list, metrics: withCalc(analysis.groupMetrics(list, bounds, extras), list) }));
   }
   function displayRows(prepared) {
+    activeCalc = calcEvaluator();
     const rowRefs = view().rows, colRefs = view().columns;
     const dims = [...rowRefs, ...colRefs];
     const extras = extraValues();
@@ -145,6 +176,7 @@
         if (level >= dims.length) {
           const leaf = {}; dims.forEach((ref, index) => { leaf[ref.key] = values[index]; });
           out.push({ kind: 'leaf', dims: leaf, metrics: analysis.groupMetrics(list, bounds, extras), level: fromLevel, rows: list });
+          withCalc(out[out.length - 1].metrics, list);
           return;
         }
         sortSiblings(bucket(list, dims[level].key, bounds, extras), level).forEach(group => walk(group.rows, level + 1, [...values, group.value]));
@@ -177,6 +209,7 @@
     if (showSubtotals && prepared.visible.length) {
       const grand = {}; if (dims[0]) grand[dims[0].key] = text('Genel Toplam', 'Grand Total');
       out.push({ kind: 'grand', dims: grand, metrics: analysis.groupMetrics(prepared.visible, bounds, extras), level: 0, rows: prepared.visible });
+      withCalc(out[out.length - 1].metrics, prepared.visible);
     }
     return out;
   }
@@ -304,16 +337,18 @@
     ].join('');
     const dims = [...view().rows, ...view().columns];
     const values = view().values;
+    const calcs = calcDefs();
     const sort = display().sort || {};
     const arrow = key => sort.key === key ? (Number(sort.dir) === 1 ? ' ↑' : ' ↓') : '';
     const head = [...dims.map(ref => `<th data-postfob-sort="${esc(ref.key)}" title="${esc(text('Sıralamak için tıklayın', 'Click to sort'))}">${esc(refLabel(ref))}${arrow(ref.key)}</th>`),
-      ...values.map(ref => { const hint = VALUE_HINTS[ref.key]; return `<th class="num" data-postfob-sort="${esc(ref.key)}" title="${esc(hint ? text(hint[0], hint[1]) : (ref.source ? `${ref.source} · ${ref.agg}` : text('Sıralamak için tıklayın', 'Click to sort')))}">${esc(refLabel(ref))}${arrow(ref.key)}</th>`; })].join('');
+      ...values.map(ref => { const hint = VALUE_HINTS[ref.key]; return `<th class="num" data-postfob-sort="${esc(ref.key)}" title="${esc(hint ? text(hint[0], hint[1]) : (ref.source ? `${ref.source} · ${ref.agg}` : text('Sıralamak için tıklayın', 'Click to sort')))}">${esc(refLabel(ref))}${arrow(ref.key)}</th>`; }),
+      ...calcs.map(def => `<th class="num pcvHead" data-postfob-sort="${esc(PCV().keyOf(def))}" title="${esc(`${PCV().modeText(def.mode)} · ${text('Sıralamak için tıklayın', 'Click to sort')}`)}"><span class="pcvHeadMark" aria-hidden="true">ƒx</span> ${esc(PCV().labelOf(def))}${arrow(PCV().keyOf(def))}</th>`)].join('');
     const items = displayRows(prepared);
     const shown = items.length > MAX_TABLE_ROWS ? [...items.slice(0, MAX_TABLE_ROWS - 1), items[items.length - 1]] : items;
     const rowClass = item => item.kind === 'grand' ? 'oabPivotGrandTotalRow' : (item.kind === 'group' ? (item.subtotal ? 'oabPivotSubtotalRow' : 'oabPivotGroupRow') : '');
     state.displayItems = shown;
-    const bodyHtml = shown.map((item, index) => `<tr class="${rowClass(item)}" data-postfob-row="${index}">${dims.map(ref => cellHtml(item, ref, dims, false)).join('')}${values.map(ref => cellHtml(item, ref, dims, true)).join('')}</tr>`).join('');
-    table.innerHTML = `<thead><tr>${head}</tr></thead><tbody>${bodyHtml || `<tr><td class="intakeEmpty" colspan="${dims.length + values.length}">${esc(text('Aramayla eşleşen satır yok.', 'No rows match the search.'))}</td></tr>`}</tbody>`;
+    const bodyHtml = shown.map((item, index) => `<tr class="${rowClass(item)}" data-postfob-row="${index}">${dims.map(ref => cellHtml(item, ref, dims, false)).join('')}${values.map(ref => cellHtml(item, ref, dims, true)).join('')}${calcs.length ? calcs.map(def => calcCellHtml(item, def)).join('') : ''}</tr>`).join('');
+    table.innerHTML = `<thead><tr>${head}</tr></thead><tbody>${bodyHtml || `<tr><td class="intakeEmpty" colspan="${dims.length + values.length + calcs.length}">${esc(text('Aramayla eşleşen satır yok.', 'No rows match the search.'))}</td></tr>`}</tbody>`;
     updateGroupButtons(prepared);
     const drillTitle = text('Alt detayı görmek için çift tıklayın', 'Double-click to see drill-down details');
     table.querySelectorAll('tbody tr[data-postfob-row] > td').forEach(td => { td.classList.add('oabPivotDrillCell'); if (!td.title) td.title = drillTitle; });
@@ -327,7 +362,7 @@
         const groupExtra = index < view().rows.length - 1 || view().columns.length ? 120 : 0;
         return Math.min(360, Math.max(wordPx(refLabel(ref)), longest * 8 + 28 + groupExtra));
       };
-      window.BLTableColumnResize?.apply(table, { store: widthStore, columns: [...dims.map((ref, index) => ({ key: ref.key, label: refLabel(ref), type: 'text', minPx: dimPx(ref, index) })), ...values.map(ref => ({ key: ref.key, label: refLabel(ref), type: 'num', minPx: wordPx(refLabel(ref)) }))] });
+      window.BLTableColumnResize?.apply(table, { store: widthStore, columns: [...dims.map((ref, index) => ({ key: ref.key, label: refLabel(ref), type: 'text', minPx: dimPx(ref, index) })), ...values.map(ref => ({ key: ref.key, label: refLabel(ref), type: 'num', minPx: wordPx(refLabel(ref)) })), ...calcs.map(def => ({ key: calcHeadKey(def), label: PCV().labelOf(def), type: 'num', minPx: wordPx(PCV().labelOf(def)) + 18 }))] });
     } catch (error) { console.warn('FOB sonrası maliyet sütun genişliği uygulanamadı:', error); }
     const notes = [];
     if (state.search) notes.push(text(`Arama: ${prepared.visible.length.toLocaleString(locale())} / ${prepared.scoped.length.toLocaleString(locale())} satır eşleşti.`, `Search: ${prepared.visible.length.toLocaleString(locale())} / ${prepared.scoped.length.toLocaleString(locale())} rows match.`));
@@ -346,6 +381,8 @@
   const DEFAULT_DETAIL = ['order', 'model', 'colour', 'productName', 'specialCode', 'originCountry', 'salesCountry', 'qty', 'fob', 'landedActual', '_postFob', '_landedToFob', 'integralLast', '_outlier'];
   function detailLabel(key) {
     if (DETAIL_LABELS[key]) return text(...DETAIL_LABELS[key]);
+    const calc = PCV() && PCV().isKey(key) ? calcDefs().find(def => PCV().keyOf(def) === key) : null;
+    if (calc) return PCV().labelOf(calc);
     const dim = baseDim(key); if (dim) return text(dim.tr, dim.en);
     const measure = state.catalog.measures.find(item => item.key === key); if (measure) return text(measure.tr, measure.en);
     const ref = [...view().rows, ...view().columns, ...view().filters, ...view().values].find(item => item.key === key);
@@ -356,10 +393,15 @@
     if (!source.length) { setStatus(() => text('Bu hücre için alt detay bulunamadı.', 'No drill-down detail was found for this cell.'), 'warning'); return; }
     const prepared = analysis.prepare(state.rows, { segment: view().segment });
     const segmentText = { import: text('İthal', 'Import'), domestic: text('Yerli', 'Domestic'), unknown: text('Bilinmiyor', 'Unknown') };
+    // Satır bazlı hesaplanan değer çekmecede her kaynak satırın kendi değeridir.
+    const calcRowDefs = calcDefs().filter(def => def.mode === 'row');
+    const rowEval = calcRowDefs.length ? calcEvaluator() : null;
     const rows = source.map(row => {
       const ratio = analysis.rowRatio(row);
       const landed = typeof row.landedActual === 'number' ? row.landedActual : null, fob = typeof row.fob === 'number' ? row.fob : null;
-      return { ...row, _postFob: landed != null && fob != null ? landed - fob : null, _landedToFob: ratio, _outlier: analysis.isOutlier(row, prepared.bounds) ? text('Evet', 'Yes') : '', _segment: segmentText[analysis.segmentOf(row)] };
+      const out = { ...row, _postFob: landed != null && fob != null ? landed - fob : null, _landedToFob: ratio, _outlier: analysis.isOutlier(row, prepared.bounds) ? text('Evet', 'Yes') : '', _segment: segmentText[analysis.segmentOf(row)] };
+      if (rowEval) calcRowDefs.forEach(def => { out[PCV().keyOf(def)] = rowEval.rowValue(PCV().keyOf(def), row); });
+      return out;
     });
     const keys = [];
     const add = key => { if (key && !keys.includes(key)) keys.push(key); };
@@ -377,14 +419,15 @@
       : (item.kind === 'group' ? item.path : dims.map(entry => item.dims[entry.key]).filter(value => value != null))
         .map((value, index) => `${refLabel(dims[index])}: ${value === '' ? text('(boş)', '(blank)') : value}`).join(' › ');
     const metric = ref && (ref.key === 'outliers' ? item.metrics.outliers : item.metrics[ref.key]);
-    const note = [ref && metric != null ? `${refLabel(ref)}: ${valueFormat(ref)(metric)}` : '', `${rows.length.toLocaleString(locale())} ${text('kaynak satır', 'source rows')}`, state.search ? `${text('Arama', 'Search')}: ${state.search}` : ''].filter(Boolean).join(' · ');
+    const calcCell = ref && ref.calc ? PCV().cell(item.metrics, ref.calc) : null;
+    const note = [calcCell ? `${PCV().labelOf(ref.calc)}: ${calcCell.error ? calcCell.title : calcCell.text}` : (ref && metric != null ? `${refLabel(ref)}: ${valueFormat(ref)(metric)}` : ''), `${rows.length.toLocaleString(locale())} ${text('kaynak satır', 'source rows')}`, state.search ? `${text('Arama', 'Search')}: ${state.search}` : ''].filter(Boolean).join(' · ');
     if (!window.BLDetailDrawer || typeof window.BLDetailDrawer.open !== 'function') { setStatus(() => text('Alt detay çekmecesi yüklenemedi.', 'The drill-down drawer could not be loaded.'), 'error'); return; }
     window.BLDetailDrawer.open({
       storageKey: 'postfob.pivot.detail',
       pageScope: 'overview.postfob',
       moduleId: 'overview',
       source: 'postfob',
-      title: `${text('FOB Sonrası Maliyet Alt Detay', 'Post-FOB Cost Drill-down')}${ref ? ` · ${refLabel(ref)}` : ''}`,
+      title: `${text('FOB Sonrası Maliyet Alt Detay', 'Post-FOB Cost Drill-down')}${ref ? ` · ${ref.calc ? PCV().labelOf(ref.calc) : refLabel(ref)}` : ''}`,
       subtitle: context,
       note,
       rows,
@@ -418,6 +461,8 @@
           out[refLabel(ref)] = value;
         });
         values.forEach(ref => { out[refLabel(ref)] = round(ref.key === 'outliers' ? item.metrics.outliers : item.metrics[ref.key]); });
+        // Hesaplanan değer Excel'e DEĞER olarak yazılır; hatalı hücre boştur.
+        calcDefs().forEach(def => { out[PCV().labelOf(def)] = item.kind === 'group' && !item.subtotal ? null : PCV().exportValue(item.metrics, def); });
         return out;
       });
       const rowKeys = [];
@@ -636,6 +681,7 @@
         ${sectionHtml('postFobRowsList', text('Pivot Satırları', 'Pivot Rows'), text('Alan ekle', 'Add field'), draft.rows.map(ref => axisRowHtml(poolIdOf(ref), dims)).join(''))}
         ${sectionHtml('postFobColsList', text('Pivot Sütunları', 'Pivot Columns'), text('Alan ekle', 'Add field'), draft.columns.map(ref => axisRowHtml(poolIdOf(ref), dims)).join(''))}
         ${sectionHtml('postFobValuesList', text('Pivot Değerleri', 'Pivot Values'), text('Değer ekle', 'Add value'), draft.values.map(ref => valueRowHtml(poolIdOf(ref), ref.agg, vals)).join(''))}
+        ${PCV() ? PCV().sectionHtml() : ''}
         ${sectionHtml('postFobFiltersList', text('Filtre Alanları', 'Filter Fields'), text('Alan ekle', 'Add field'), draft.filters.map(ref => axisRowHtml(poolIdOf(ref), dims)).join(''))}
         <p class="oabSettingsHint">${esc(text('Satırları oklarla sıralayabilirsiniz. Hesaplanan değerler (FOB, landed, oranlar) adet ağırlıklıdır. Modelden eklenen ölçüler için özetleme seçin; birim fiyat/oran ölçülerinde “Adet ağırlıklı ort.” kullanın. Modelden eklenen satır/sütun alanı sorgu düzeyini değiştirir ve kayıtta veri yeniden çekilir; ilişkisiz bir tablo satırları çoğaltabilir.', 'Reorder rows with the arrows. Calculated values (FOB, landed, ratios) are quantity-weighted. Choose a summarization for measures added from the model; use “Qty-weighted avg.” for unit price/rate measures. A row/column field added from the model changes the query level and data is re-queried on save; an unrelated table can duplicate rows.'))}</p>
       </div>
@@ -651,6 +697,28 @@
     modal.addEventListener('pointerup', event => { if (event.target === modal && modal.dataset.backdropDown === '1') close(); modal.dataset.backdropDown = '0'; });
     const lists = ['postFobRowsList', 'postFobColsList', 'postFobValuesList', 'postFobFiltersList'].map(id => modal.querySelector(`#${id}`));
     lists.forEach(refreshOrderButtons);
+    /* Hesaplanan değerler: toplam modunda pencerede SEÇİLİ değer alanları,
+       satır modunda sipariş × renk satırının sayısal ölçüleri. */
+    const draftValueFields = () => [...lists[2].querySelectorAll('.oabPivotValueRow')].map(row => vals.find(item => item.id === row.querySelector('.postFobValueField').value))
+      .filter(entry => entry && entry.ref.key).map(entry => ({ key: entry.ref.key, label: entry.label }));
+    const rowValueFields = () => [
+      ...state.catalog.measures.map(item => ({ key: item.key, label: text(item.tr, item.en) })),
+      ...view().values.filter(ref => ref.source && ref.key).map(ref => ({ key: ref.key, label: refLabel(ref) })),
+    ];
+    const sampleLabel = item => item.kind === 'grand' ? text('Genel Toplam', 'Grand Total') : (item.kind === 'group' ? item.path : [...view().rows, ...view().columns].map(entry => item.dims[entry.key])).map(value => value === '' ? text('(boş)', '(blank)') : value).join(' › ');
+    const calcSection = PCV() ? PCV().mountSection(modal.querySelector('[data-pcv-section]'), {
+      defs: draft.calculated || [],
+      allowRow: true,
+      widget: { tr: 'FOB Sonrası Maliyet', en: 'Post-FOB Cost' },
+      isTextKey: key => Boolean(baseDim(key)),
+      fields: mode => (mode === 'row' ? rowValueFields() : draftValueFields()),
+      samples: mode => {
+        if (!state.rows.length) return [];
+        if (mode === 'row') return state.rows.slice(0, 6).map(row => ({ label: [row.order, row.colour].filter(Boolean).join(' · ') || text('Kaynak satır', 'Source row'), values: row }));
+        const items = displayRows(analysis.prepare(state.rows, { segment: view().segment, outliersOnly: view().outliersOnly, search: state.search })).filter(item => item.kind !== 'group' || item.subtotal);
+        return [...items.slice(0, 5), ...items.slice(-1)].filter((item, index, list) => list.indexOf(item) === index).map(item => ({ label: sampleLabel(item), values: item.metrics, rows: item.rows }));
+      },
+    }) : null;
     modal.addEventListener('click', event => {
       const add = event.target.closest('[data-postfob-add]');
       if (add) {
@@ -704,6 +772,7 @@
         return ref;
       }).filter(Boolean);
       next.display = { ...(next.display || {}), grouped: modal.querySelector('#postFobGroupedInput').checked, showSubtotals: modal.querySelector('#postFobSubtotalsInput').checked, collapsedGroups: [] };
+      if (calcSection) next.calculated = calcSection.value();
       if (!next.rows.length && !next.columns.length) { setStatus(() => text('En az bir satır veya sütun alanı seçin.', 'Select at least one row or column field.'), 'warning'); return; }
       state.view = next;
       close();
@@ -714,7 +783,8 @@
     });
     modal.querySelector('[data-postfob-settings-reset]').addEventListener('click', async () => {
       const keep = view().filterValues;
-      state.view = { ...clone(state.catalog.defaults), filterValues: Object.fromEntries(Object.entries(keep || {}).filter(([key]) => state.catalog.defaults.filters.some(ref => ref.key === key))) };
+      // Hesaplanan değerler kullanıcının tanımlarıdır; düzen sıfırlanınca silinmez.
+      state.view = { ...clone(state.catalog.defaults), filterValues: Object.fromEntries(Object.entries(keep || {}).filter(([key]) => state.catalog.defaults.filters.some(ref => ref.key === key))), calculated: clone(view().calculated || []) };
       close();
       await saveView({ immediate: true });
       render();
@@ -896,7 +966,9 @@
       // Değer sütunu: colspan'lı grup hücresi sonrası gerçek sütun indeksi hesaplanır.
       let column = 0;
       for (const td of row.cells) { if (td === cell) break; column += td.colSpan || 1; }
-      const ref = column >= dims.length ? view().values[column - dims.length] : null;
+      const values = view().values, calcs = calcDefs();
+      const calc = column >= dims.length + values.length ? calcs[column - dims.length - values.length] : null;
+      const ref = calc ? { key: PCV().keyOf(calc), calc } : (column >= dims.length ? values[column - dims.length] : null);
       if (item) openDetail(item, ref);
     });
     byId('postFobTable')?.addEventListener('click', event => {

@@ -11,6 +11,8 @@
 const crypto = require('node:crypto');
 const modelHorizon = require('./modelHorizon');
 const filterValueTypes = require('./filter-value-types');
+const PivotCalculated = require('../../public/pivot-calculated-values');
+const FormulaEngine = require('../../public/formula-engine');
 
 // Yeni kurulumda Bağlantı Ayarları ekranında gösterilen INTAKE varsayılanıdır.
 // Çalışma zamanında server/server.js aktif modelConnections kaydını kullanır;
@@ -328,14 +330,20 @@ function reconcileViewConfig(input, availableFields = []) {
     const label = clean(byFieldId(rawLabels, field.id));
     if (label && keyOf(label) !== keyOf(field.defaultLabel)) labels[field.id] = label.slice(0, 160);
   }
+  const calculated = intakeCalculated(sourceDisplay.calculated, measures, idAliases);
+  const calcKeys = new Set(calculated.map(PivotCalculated.keyOf));
   const widths = {};
   const rawWidths = sourceDisplay.widths && typeof sourceDisplay.widths === 'object' ? sourceDisplay.widths : {};
   for (const field of active) {
     const width = Number(byFieldId(rawWidths, field.id));
     if (Number.isFinite(width)) widths[field.id] = Math.max(60, Math.min(1000, Math.round(width)));
   }
+  for (const key of calcKeys) {
+    const width = Number(rawWidths[key]);
+    if (Number.isFinite(width)) widths[key] = Math.max(60, Math.min(1000, Math.round(width)));
+  }
   const rawSort = sourceDisplay.sort && typeof sourceDisplay.sort === 'object' ? sourceDisplay.sort : {};
-  const sortId = activeIds.has(clean(rawSort.id)) ? clean(rawSort.id)
+  const sortId = activeIds.has(clean(rawSort.id)) || calcKeys.has(clean(rawSort.id)) ? clean(rawSort.id)
     : ([...idAliases].find(([, alias]) => alias === clean(rawSort.id)) || [''])[0];
   const sort = sortId ? { id: sortId, dir: Number(rawSort.dir) === -1 ? -1 : 1 } : { id: '', dir: 1 };
   const collapsed = Array.isArray(sourceDisplay.collapsed) ? sourceDisplay.collapsed.map(clean).filter(id => activeIds.has(id)) : [];
@@ -366,8 +374,25 @@ function reconcileViewConfig(input, availableFields = []) {
   return {
     version: INTAKE_VIEW_VERSION,
     query: { rows, columns, measures, filters, filterValues },
-    display: { labels, widths, sort, collapsed, grouped, showSubtotals, collapsedGroups, hideZeroCurrentBudget, ...(overviewSync ? { overviewSync } : {}) },
+    display: { labels, widths, sort, collapsed, grouped, showSubtotals, collapsedGroups, hideZeroCurrentBudget, ...(overviewSync ? { overviewSync } : {}), ...(calculated.length ? { calculated } : {}) },
   };
+}
+
+/* Kişisel hesaplanan değerler (public/pivot-calculated-values.js) görünümün
+   display bölümündedir: sorgu imzasına ve önbellek anahtarına girmez. INTAKE
+   satırları sorgu düzeyinde toplanmış geldiği için yalnız "toplamlar
+   üzerinden" mod kabul edilir. Canlı şema bir ölçünün kimliğini değiştirdiyse
+   (idAliases) formüldeki eski kimlik yenisine taşınır; başvuru kopmaz. */
+function intakeCalculated(raw, measures, idAliases) {
+  if (!Array.isArray(raw) || !raw.length) return [];
+  const toCurrent = new Map([...idAliases].map(([current, saved]) => [saved, current]));
+  const moved = raw.map(item => {
+    if (!item || typeof item !== 'object' || !toCurrent.size) return item;
+    const formula = typeof item.formula === 'string' ? FormulaEngine.rewriteColumns(item.formula, key => toCurrent.get(key) || null) : item.formula;
+    const refs = item.refs && typeof item.refs === 'object' ? Object.fromEntries(Object.entries(item.refs).map(([key, name]) => [toCurrent.get(key) || key, name])) : item.refs;
+    return { ...item, formula, refs };
+  });
+  return PivotCalculated.normalizeList(moved, { allowRow: false, aggregateKeys: measures.map(field => field.id) });
 }
 
 function updateDisplayLabel(config, id, value) {
