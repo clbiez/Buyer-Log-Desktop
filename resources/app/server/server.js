@@ -375,7 +375,7 @@ const corporateIntegrationLab = require('./lib/corporate-integration-lab');
 const modelFields = require('./lib/model-fields');
 const plmFabricInfo = require('./lib/plm-fabric-info');
 const filterValueTypes = require('./lib/filter-value-types');
-const { loadFromModelConnections, ensureConnectionMapping, alignHorizonWithMapping, validateAntrepoIntegrity, resolveColumnTypes, effectiveScopes, buildConnectionQuery, isRelatedLookupError } = require('./lib/model-refresh');
+const { loadFromModelConnections, ensureConnectionMapping, alignHorizonWithMapping, validateAntrepoIntegrity, resolveColumnTypes, effectiveScopes, buildConnectionQuery, isRelatedLookupError, applyRunMappingRepairs } = require('./lib/model-refresh');
 const refreshErrorDiagnostics = require('./lib/refresh-error-diagnostics');
 const {
   POWER_BI_IMPORT_DASHBOARD_URL, PowerBiImportDashboardConnector,
@@ -8043,6 +8043,11 @@ async function loadFromModels(value, targets = null, options = {}) {
   // Refresh sırasında eski/bozuk eşlemeler model şemasından otomatik onarıldıysa
   // aynı düzeltmeyi kalıcı bağlantı ayarına da yaz.
   if (result.mappingRepairs > 0) {
+    /* Yenileme bağlantıların KLONLARIYLA çalışır (kişisel ufuk uygulanmış kopya,
+       kapsam başına sığ kopya). Onarılan eşleme ve tarama işaretleri kalıcı
+       kayda kimlikle geri yazılır; aksi halde kaydedilen store.items değişmemiş
+       olur ve tarama her yenilemede tekrarlanır. */
+    applyRunMappingRepairs(store.items, result.runs || []);
     try { replaceModelConnections(store.items, store.revision); }
     catch (err) { result.warnings = [...(result.warnings || []), `Otomatik eşleme onarımı çalıştı ancak ayarlara kaydedilemedi: ${err.message}`]; }
   }
@@ -8765,12 +8770,12 @@ function acceptComputedMetadata(profile,metadata,projectionKeys){
 }
 async function computeSnapshotByteEstimate(id,metrics=null){
   if(Number.isSafeInteger(metrics?.uncompressedBytes)&&metrics.uncompressedBytes>0)return metrics.uncompressedBytes;
-  const file=require('./lib/model-snapshot').snapshotPath(id);
+  // v2: gzip açık boyutu; v3: başlıktaki çözülmüş (v2 eşdeğeri) boyut. v3 açık
+  // dosyası sözlük yüzünden ~%40 küçüktür, ISIZE işçi belleğini eksik tahmin ederdi.
+  const {snapshotPath,snapshotByteEstimate}=require('./lib/model-snapshot'),file=snapshotPath(id);
   for(const candidate of [file,file+'.bak']){
-    let handle;
-    try{handle=await fs.promises.open(candidate,'r');const stat=await handle.stat();if(stat.size<4)continue;
-      const tail=Buffer.alloc(4);await handle.read(tail,0,4,stat.size-4);return Math.max(1024*1024,tail.readUInt32LE(0));
-    }catch(error){if(error.code!=='ENOENT')throw error;}finally{await handle?.close();}
+    const bytes=await snapshotByteEstimate(candidate);
+    if(bytes!=null)return Math.max(1024*1024,bytes);
   }
   return 1024*1024;
 }

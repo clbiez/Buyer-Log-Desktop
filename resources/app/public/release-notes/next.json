@@ -7,8 +7,8 @@
     "en": "Collection colour options, stage forecast and CP redraw fixes"
   },
   "summary": {
-    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: INTAKE tipi pivot, alan ekleme ve sipariş aramasıyla landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder; kaynağı ve ufku Veri Yönetimi'nden yönetilir. Pivot toplam satırları fare üzerindeyken okunur kalır. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur. Aşama farkı yönüyle yazılır ve üzerine gelince nedenleri görünür; depodaki parsiyelde ve Kısmi Görünümde gerçekleşen yol süresi gösterilir. Veritabanından yenilenen veri, aynı sorguyu paylaşan sayfalar için artık bir kez işlenip tek kopya saklanır; açılış, yenileme kaydı ve bellek kullanımı belirgin biçimde azalır. Widget pivot ayarlarındaki uzun alan listeleri ve OAB \"Filtre ekle\" listesi artık arama kutusuyla açılır; OAB Genel Toplam hücresi fare üzerindeyken okunur kalır.",
-    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: with an INTAKE-style pivot, field picker and order search it analyses landed, Integral and forecast gap with quantity weighting; its source and horizon are managed in Data Management. Pivot total rows stay readable on hover. Starting directly on CP now completes the startup screen without an error. The stage gap shows its direction and its reasons on hover; partials in the warehouse and Partial View show the realized transit time. Data refreshed from the database is now processed once and stored as a single copy for pages that share the same query; startup, refresh saving and memory use drop markedly. Long field lists in widget pivot settings and the OAB \"Add filter\" list now open with a search box; the OAB Grand Total cell stays readable on hover."
+    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: INTAKE tipi pivot, alan ekleme ve sipariş aramasıyla landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder; kaynağı ve ufku Veri Yönetimi'nden yönetilir. Pivot toplam satırları fare üzerindeyken okunur kalır. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur. Aşama farkı yönüyle yazılır ve üzerine gelince nedenleri görünür; depodaki parsiyelde ve Kısmi Görünümde gerçekleşen yol süresi gösterilir. Veritabanından yenilenen veri, aynı sorguyu paylaşan sayfalar için artık bir kez işlenip tek kopya saklanır; açılış, yenileme kaydı ve bellek kullanımı belirgin biçimde azalır. Widget pivot ayarlarındaki uzun alan listeleri ve OAB \"Filtre ekle\" listesi artık arama kutusuyla açılır; OAB Genel Toplam hücresi fare üzerindeyken okunur kalır. Kullanıcı model snapshot'ı içerikçe aynı sayfa verisini artık bir kez saklar; snapshot küçülür ve açılışta daha hızlı okunur.",
+    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: with an INTAKE-style pivot, field picker and order search it analyses landed, Integral and forecast gap with quantity weighting; its source and horizon are managed in Data Management. Pivot total rows stay readable on hover. Starting directly on CP now completes the startup screen without an error. The stage gap shows its direction and its reasons on hover; partials in the warehouse and Partial View show the realized transit time. Data refreshed from the database is now processed once and stored as a single copy for pages that share the same query; startup, refresh saving and memory use drop markedly. Long field lists in widget pivot settings and the OAB \"Add filter\" list now open with a search box; the OAB Grand Total cell stays readable on hover. The user model snapshot now stores identical page data once; the snapshot is smaller and reads faster at startup."
   },
   "changes": [
     {
@@ -295,8 +295,8 @@
         "en": "Stage gap shows its direction and reasons; realized time for partials in the warehouse"
       },
       "body": {
-        "tr": "Statik ETA'ya göre fark artık işaretsiz yazılır (\"6 g geç\", \"6 g erken\"); eksi işareti erken gibi okunuyordu. Üzerine gelince farkı oluşturan kalemler listelenir: statik ETA (Handover + kural günü), modelin Handover → Antrepo ortalaması ile kural farkı, tamamlanan aşamaların ortalamadan sapması, planlı ETA (tarife) ve ortalamayı aşan açık aşama; kalemlerin toplamı gösterilen farka eşittir. Koşan aşamadaki \"17/34 g\" ifadesinin anlamı (aşamada geçen gün / aşamanın ortalama süresi) de açıklanır. Lojistik akışında depoya girmiş parsiyeller gerçekleşen Handover → Antrepo süresini ve kurala göre farkını gösterir; IAS'ta gerçekleşen antrepo giriş tarihi varsa o, yoksa IAS antrepo tarihi kullanılır ve üzerine gelince hangisi olduğu yazar.",
-        "en": "The gap to the static ETA is now written without a sign (\"6 d late\", \"6 d early\"); the minus sign read like early. Hovering lists what makes up the gap: the static ETA (Handover + rule days), the model's Handover → Antrepo average versus the rule, completed stages' deviation from their averages, the planned ETA (schedule) and an open stage over its average; the items add up to the shown gap. The meaning of \"17/34 d\" in the running stage (days in the stage / its average duration) is explained too. In the logistics flow, partials in the warehouse show the realized Handover → Antrepo time and its gap to the rule; the actual antrepo entry date from IAS is used when present, otherwise the IAS antrepo date, and the hover text says which."
+        "tr": "Planlanan ETA'ya göre fark artık işaretsiz yazılır (\"6 g geç\", \"6 g erken\"); eksi işareti erken gibi okunuyordu. Üzerine gelince farkı oluşturan kalemler listelenir: planlanan ETA (Handover + kural günü), modelin Handover → Antrepo ortalaması ile kural farkı, tamamlanan aşamaların ortalamadan sapması, gemi tarifesindeki ETA ve ortalamayı aşan açık aşama; kalemlerin toplamı gösterilen farka eşittir. Koşan aşamadaki \"17/34 g\" ifadesinin anlamı (aşamada geçen gün / aşamanın ortalama süresi) de açıklanır. Lojistik akışında depoya girmiş parsiyeller gerçekleşen Handover → Antrepo süresini ve kurala göre farkını gösterir; IAS'ta gerçekleşen antrepo giriş tarihi varsa o, yoksa IAS antrepo tarihi kullanılır ve üzerine gelince hangisi olduğu yazar.",
+        "en": "The gap to the planned ETA is now written without a sign (\"6 d late\", \"6 d early\"); the minus sign read like early. Hovering lists what makes up the gap: the planned ETA (Handover + rule days), the model's Handover → Antrepo average versus the rule, completed stages' deviation from their averages, the ETA on the vessel schedule and an open stage over its average; the items add up to the shown gap. The meaning of \"17/34 d\" in the running stage (days in the stage / its average duration) is explained too. In the logistics flow, partials in the warehouse show the realized Handover → Antrepo time and its gap to the rule; the actual antrepo entry date from IAS is used when present, otherwise the IAS antrepo date, and the hover text says which."
       },
       "visual": {
         "kind": "screenshot",
@@ -307,8 +307,8 @@
           "en": "Demo CP logistics flow: 11 d realized time on a warehoused partial, 4 d late on an order in transit"
         },
         "caption": {
-          "tr": "Demo veride depodaki parsiyel gerçekleşen Handover → Antrepo süresini, yoldaki sipariş statik ETA'ya göre farkı yönüyle gösterir.",
-          "en": "On demo data, the warehoused partial shows its realized Handover → Antrepo time and the order in transit shows its gap to the static ETA with its direction."
+          "tr": "Demo veride depodaki parsiyel gerçekleşen Handover → Antrepo süresini, yoldaki sipariş planlanan ETA'ya göre farkı yönüyle gösterir.",
+          "en": "On demo data, the warehoused partial shows its realized Handover → Antrepo time and the order in transit shows its gap to the planned ETA with its direction."
         }
       }
     },
@@ -324,8 +324,8 @@
         "en": "In Partial View the Ex→Retail cell shows the partial's own timing"
       },
       "body": {
-        "tr": "Kısmi Görünümde her durum satırının Ex→Retail ikinci satırı artık o satırdaki parsiyellerden gelir: depodaki satırda gerçekleşen Handover → Antrepo süresi ve kurala göre farkı (\"✓ 11 g · 41 g erken\"), yoldaki satırda aşama tahmininin statik ETA'ya göre farkı. Üzerine gelince ayrıntı görünür. Aşama ETA ve Koşan Aşama sütunları da satırın kendi parsiyellerinden okunur; üretimdeki satırda boş kalır.",
-        "en": "In Partial View, the second line of each status row's Ex→Retail cell now comes from that row's partials: a warehoused row shows the realized Handover → Antrepo time and its gap to the rule (\"✓ 11 d · 41 d early\"), a row in transit shows the stage forecast's gap to the static ETA. Hovering shows the details. Stage ETA and Current Stage are also read from the row's own partials and stay empty on the production row."
+        "tr": "Kısmi Görünümde her durum satırının Ex→Retail ikinci satırı artık o satırdaki parsiyellerden gelir: depodaki satırda gerçekleşen Handover → Antrepo süresi ve kurala göre farkı (\"✓ 11 g · 41 g erken\"), yoldaki satırda aşama tahmininin planlanan ETA'ya göre farkı. Üzerine gelince ayrıntı görünür. Aşama ETA ve Koşan Aşama sütunları da satırın kendi parsiyellerinden okunur; üretimdeki satırda boş kalır.",
+        "en": "In Partial View, the second line of each status row's Ex→Retail cell now comes from that row's partials: a warehoused row shows the realized Handover → Antrepo time and its gap to the rule (\"✓ 11 d · 41 d early\"), a row in transit shows the stage forecast's gap to the planned ETA. Hovering shows the details. Stage ETA and Current Stage are also read from the row's own partials and stay empty on the production row."
       },
       "visual": {
         "kind": "screenshot",
@@ -382,20 +382,20 @@
         "en": "TR/YD Landed Advantage widget: same-model Turkey FOB versus abroad realized landed cost"
       },
       "body": {
-        "tr": "Hem Türkiye hem yurtdışı siparişi olan modellerde gerçekleşen avantaj = 1 − Σ(YD adet × YD landed) / (TR FOB × YD adet) hesaplanır; Fas ve Mısır kıyas dışıdır. Hedef varsayılan %36'dır ve widget'tan değiştirilip kişisel tercih olarak saklanır; fark hedefin altındaysa satır vurgulanır, \"Yalnız hedef altı\" ile süzülür. Buyer grup › Ürün klasmanı › MAG › Model kırılımında toplam oranları tutarlardan yeniden hesaplanır. Landed'i olmayan veya hatalı (landed < FOB ya da Landed/FOB aşırı uç) YD satırları kıyasa girmez ve durum sütununda görünür; öngörü landed yalnız açıkça seçilince ayrı etiketle kullanılır. Veri FOB Sonrası Maliyet sorgusu ve önbelleğinden gelir; satır sınırında kesilen sonuç \"kısmi\" diye işaretlenir. Çift tıkla kaynak satırlar, Excel'e pivot + kaynak + özet aktarılır.",
-        "en": "For models with both Turkey and abroad orders the realized advantage = 1 − Σ(abroad qty × abroad landed) / (TR FOB × abroad qty); Morocco and Egypt are excluded. The target defaults to 36%, can be changed in the widget and is saved as a personal preference; rows below the target are highlighted and \"Below target only\" filters them. In the Buying group › Product class › MAG › Model breakdown, total ratios are recomputed from amounts. Abroad rows with no or invalid landed (landed < FOB or an extreme Landed/FOB) are left out of the comparison and shown in the status column; forecast landed is used only when explicitly selected, with its own label. Data comes from the Post-FOB Cost query and cache; a result cut at the row limit is marked as partial. Double-click shows the source rows; Excel exports the pivot, source rows and a summary."
+        "tr": "Hem Türkiye hem yurtdışı siparişi olan modellerde gerçekleşen avantaj = 1 − Σ(YD adet × YD landed) / (TR FOB × YD adet) hesaplanır; Fas ve Mısır kıyas dışıdır. Hedef varsayılan %36'dır ve widget'tan değiştirilip kişisel tercih olarak saklanır; fark hedefin altındaysa satır vurgulanır, \"Yalnız hedef altı\" ile süzülür. Buyer grup › Ürün klasmanı › MAG › Model kırılımında toplam oranları tutarlardan yeniden hesaplanır. Landed'i olmayan veya hatalı (landed < FOB) YD satırları kıyasa girmez. Landed/FOB oranı Buyer Log'un standart yurtdışı landed çarpanının (Landed çarpanları ayarı, varsayılan 1,11) üstündeyse bu bir hata sayılmaz: yükleme tipi (ör. uçak) çarpanı yükseltebilir; satır \"Landed çarpanı yüksek\" uyarısı alır ve hesapta kalır. Durumlar ayrı bir KPI ve durum sütununda görünür; öngörü landed yalnız açıkça seçilince ayrı etiketle kullanılır. Veri FOB Sonrası Maliyet sorgusu ve önbelleğinden gelir; satır sınırında kesilen sonuç \"kısmi\" diye işaretlenir. Çift tıkla kaynak satırlar, Excel'e pivot + kaynak + özet aktarılır. FOB Sonrası Maliyet ve OAB küpündeki gibi \"+ Filtre ekle\" ile model, ürün adı, renk ve satış ülkesi filtresi eklenip kaldırılabilir (sezon zorunlu kalır; üretici ülke ve sipariş kodu kıyasın bir tarafını sildiği için filtrelenemez). Kalem düğmesiyle pivot satırları (Buyer grup, Ürün klasmanı, MAG, Sezon, Ürün adı; Model her zaman en alt kırılım) ve değer sütunları seçilir, sıralanır, gizlenir; \"Pivot Varsayılanına Dön\" eski düzeni geri getirir. Oranlar her düzende tutarlardan yeniden hesaplanır; Excel seçili düzeni izler, düzen kişisel tercih olarak saklanır.",
+        "en": "For models with both Turkey and abroad orders the realized advantage = 1 − Σ(abroad qty × abroad landed) / (TR FOB × abroad qty); Morocco and Egypt are excluded. The target defaults to 36%, can be changed in the widget and is saved as a personal preference; rows below the target are highlighted and \"Below target only\" filters them. In the Buying group › Product class › MAG › Model breakdown, total ratios are recomputed from amounts. Abroad rows with no or invalid landed (landed < FOB) are left out of the comparison. A Landed/FOB ratio above Buyer Log's standard abroad landed multiplier (Landed multipliers setting, 1.11 by default) is not treated as an error: the shipment mode (e.g. air) can raise it, so the row gets a \"High landed multiplier\" warning and stays in the calculation. Statuses appear in a separate KPI and the status column; forecast landed is used only when explicitly selected, with its own label. Data comes from the Post-FOB Cost query and cache; a result cut at the row limit is marked as partial. Double-click shows the source rows; Excel exports the pivot, source rows and a summary. As in Post-FOB Cost and the OAB cube, \"+ Add filter\" adds or removes model, product name, colour and sales country filters (season stays required; origin country and order code cannot be filtered because they remove one side of the comparison). The pencil button picks, orders and hides the pivot rows (Buying group, Product class, MAG, Season, Product name; Model is always the lowest level) and value columns; \"Reset Pivot\" restores the original layout. Ratios are recomputed from amounts in every layout; Excel follows the chosen layout, which is saved as a personal preference."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
         "src": "tryd-advantage-light.png",
         "alt": {
-          "tr": "Demo veride TR/YD Landed Avantaj widget'ı: KPI'lar, Buyer grup › Klasman › MAG › Model pivotu, hedef altı satırlar vurgulu",
-          "en": "TR/YD Landed Advantage widget on demo data: KPIs, Buying group › Class › MAG › Model pivot, rows below target highlighted"
+          "tr": "Demo veride TR/YD Landed Avantaj widget'ı: kalemle Sezon › MAG › Model olarak düzenlenmiş pivot, + Filtre ekle ile eklenmiş Model filtresi, durum sütununda landed çarpanı yüksek ve landed hatalı ayrı",
+          "en": "TR/YD Landed Advantage widget on demo data: pivot edited with the pencil to Season › MAG › Model, a Model filter added with + Add filter, high landed multiplier and invalid landed shown separately in the status column"
         },
         "caption": {
-          "tr": "Demo veride gerçekleşen avantaj %29,6, hedef %36; hedefin altındaki model ve gruplar kırmızı ad ve farkla işaretli.",
-          "en": "On demo data the realized advantage is 29.6% against a 36% target; models and groups below target are marked with a red name and gap."
+          "tr": "Demo veride pivot Sezon › MAG › Model düzeninde; gerçekleşen avantaj %33,6, hedef %36. Uçakla gelen tipteki DM202 \"Landed çarpanı yüksek\" uyarısıyla hesapta kalır, landed'i FOB'un altındaki DM302 \"Landed hatalı\". Filtre panelinde eklenen Model filtresi ve + Filtre ekle görünüyor.",
+          "en": "On demo data the pivot uses a Season › MAG › Model layout; the realized advantage is 33.6% against a 36% target. The air-freight-like DM202 stays in the calculation with a \"High landed multiplier\" warning, and DM302, whose landed is below FOB, is \"Invalid landed\". The filter panel shows the added Model filter and + Add filter."
         }
       }
     },
@@ -610,6 +610,81 @@
         "caption": {
           "tr": "Demo veride Genel Toplam hücresi hover'da tema tonunu korur.",
           "en": "On demo data, the Grand Total cell keeps the theme tone on hover."
+        }
+      }
+    },
+    {
+      "id": "transit-rule-basis",
+      "type": "fix",
+      "module": {
+        "tr": "Yol Süreleri · CP · Backlog",
+        "en": "Transit Times · CP · Backlog"
+      },
+      "title": {
+        "tr": "Yol süresi kuralı aktarıldığı ölçünün başlangıcından uygulanır; \"Statik ETA\" artık \"Planlanan ETA\"",
+        "en": "Transit rules apply from the start of the metric they were transferred from; \"Static ETA\" is now \"Planned ETA\""
+      },
+      "body": {
+        "tr": "Yol Süresi Analizi'nden \"Kurala esas\" Uçtan Uca (Yükleme Talep → Antrepo) ile aktarılan kural artık Yükleme Talep tarihinden sayılır; önce Handover'a ekleniyor ve Yükleme Talep → Handover aralığı hesap dışı kalıyordu. Kural bazı kayıtla saklanır (Handover / Yükleme Talep / Fiili Yükleme) ve kural düzenleyicide görülüp değiştirilebilir; eski kurallar Handover bazlı kalır. Sevk edilmiş parsiyelde planlanan ETA = baz tarihi + kural günü: Backlog yol aşımı ve ETA, CP aşama farkı ve teslimat sonucu, Global Flow ve depodaki parsiyelin gerçekleşen süre karşılaştırması aynı bazı kullanır. Üretimdeki siparişte gün yine Ex-Factory'ye eklenir. \"Statik ETA\" terimi her yerde \"Planlanan ETA\" oldu; gemi tarifesindeki IAS ETA'sı ayrı adlandırıldı.",
+        "en": "A rule transferred from Transit Time Analysis with the End-to-end (Loading Request → Antrepo) rule basis now counts from the Loading Request date; before, it was added to Handover and the Loading Request → Handover span was left out. The rule basis is stored with the rule (Handover / Loading Request / Actual Loading) and can be seen and changed in the rule editor; existing rules stay Handover-based. For a shipped partial, planned ETA = basis date + rule days: Backlog transit overrun and ETA, the CP stage gap and delivery outcome, Global Flow and the realized-time comparison of warehoused partials use the same basis. For an order in production the days are still added to Ex-Factory. The term \"Static ETA\" is now \"Planned ETA\" everywhere; the IAS ETA on the vessel schedule is named separately."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "transit-rule-basis.png",
+        "alt": {
+          "tr": "Demo yol süresi kuralları: Baz alanı ve Gemi kuralında baz Yükleme Talep (uçtan uca)",
+          "en": "Demo transit rules: the Basis field and the Sea rule based on Loading Request (end-to-end)"
+        },
+        "caption": {
+          "tr": "Demo veride kural düzenleyicisi: her kuralın günü hangi tarihten saydığı görünür ve değiştirilebilir.",
+          "en": "The rule editor on demo data: each rule shows which date its days count from, and it can be changed."
+        }
+      }
+    },
+    {
+      "id": "ias-refresh-actual-milestones",
+      "type": "improvement",
+      "module": {
+        "tr": "IAS yenilemesi · CP · Backlog",
+        "en": "IAS refresh · CP · Backlog"
+      },
+      "title": {
+        "tr": "IAS yenilemesi gerçekleşen antrepo girişi ve ara adım tarihlerini de getirir",
+        "en": "IAS refresh also brings the actual antrepo entry and intermediate step dates"
+      },
+      "body": {
+        "tr": "CP ve Backlog'u besleyen IAS yenilemesi artık gerçekleşen Antrepo / Tema Depo giriş, Cut Off, Fiili Yükleme ve gümrük adımlarının (Özet Beyan, Ambar Onay, Transit Beyanname, Evrak Teslim) tarihlerini de çeker. Sütunlar ilk yenilemede IAS modelinden bir kez, yalnız birebir sütun adıyla ve IAS tablosundan eklenir; tahmini antrepo tarihine bağlı sütun asla gerçekleşen giriş sayılmaz. Böylece depodaki parsiyelin gerçekleşen süresi gerçek giriş tarihinden hesaplanır ve aşama tahmini ara adımları görür. Eklenen sütunlar IAS sorgusunu bozarsa yenileme bunlar olmadan tamamlanır ve uyarı verir.",
+        "en": "The IAS refresh that feeds CP and Backlog now also fetches the actual Antrepo / Tema Warehouse entry, Cut-off, Actual Loading and customs step dates (Summary Declaration, Warehouse Approval, Transit Declaration, Document Delivery). The columns are added once on the first refresh from the IAS model, only by exact column name and only from IAS tables; the column bound to the estimated antrepo date is never taken as the actual entry. The realized time of warehoused partials is then calculated from the actual entry date, and the stage forecast sees the intermediate steps. If the added columns break the IAS query, the refresh completes without them and shows a warning."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Sunucu tarafındaki IAS sorgusu değişti; ekranda yeni öğe yok, mevcut alanlar gerçek tarihlerle dolar.",
+          "en": "The server-side IAS query changed; there is no new screen element, existing fields fill with actual dates."
+        }
+      }
+    },
+    {
+      "id": "buyer-snapshot-content-alias",
+      "type": "improvement",
+      "module": {
+        "tr": "Sunucu · Model snapshot",
+        "en": "Server · Model snapshot"
+      },
+      "title": {
+        "tr": "Kullanıcı model snapshot'ı aynı sayfa verisini bir kez saklar",
+        "en": "User model snapshot stores identical page data once"
+      },
+      "body": {
+        "tr": "Siparişler, Backlog ve Fiyat & Üretici aynı veriyi taşıdığında kullanıcı snapshot'ı bu veriyi ayrı nesneler olduğu için üç kez yazıyordu (örneğin önceki sürümden kalan snapshot yeniden kaydedildiğinde). İçerikçe aynı sayfa verisi artık bir kez saklanır ve açılışta paylaşılır; sentetik 9.082 satırlık buyer snapshot'ında açık boyut 68 MiB'tan 29 MiB'a, açılışta snapshot okuma süresi yaklaşık 1,3 sn'den 0,35 sn'ye indi. Sayfalardaki veri ve sonuçlar aynıdır.",
+        "en": "When Orders, Backlog and Price & Supplier carried the same data, the user snapshot wrote it three times because the copies were separate objects (for example when a snapshot from an earlier version was saved again). Identical page data is now stored once and shared on startup; on a synthetic 9,082-row buyer snapshot the uncompressed size dropped from 68 MiB to 29 MiB and the snapshot read at startup from about 1.3 s to 0.35 s. Page data and results are unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Yalnız sunucu tarafı depolama ve açılış iyileştirmesi; ekranda değişen bir öğe yok.",
+          "en": "Server-side storage and startup improvement only; nothing changes on screen."
         }
       }
     }

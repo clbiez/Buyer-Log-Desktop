@@ -328,10 +328,13 @@ function milestonesFromEntry(entry) {
 /* Gerçekleşen antrepo girişi (Antrepo / Tema Depo Giriş sütunu) — ISO veya ''.
    "Tahmini Antrepo Giriş Tarihi" bu değildir. Tek geçiş; CP depodaki parsiyelin
    gerçekleşen süresini bununla hesaplar. */
-function actualEntryIso(entry) {
+function actualEntryIso(entry) { return iasDateIso(entry, 'actualEntry'); }
+/* Tek alanın tarihi (ISO veya ''): SOURCE_FIELDS anahtarıyla, tek geçiş. Kural
+   bazı (Yükleme Talep / Fiili Yükleme) yalnız gerektiğinde bununla okunur. */
+function iasDateIso(entry, field) {
   const fields = entry && entry._sourceFields;
-  if (!fields || typeof fields !== 'object') return '';
-  const wanted = SOURCE_KEYS.actualEntry;
+  const wanted = SOURCE_KEYS[field];
+  if (!fields || typeof fields !== 'object' || !wanted) return '';
   for (const name in fields) {
     const value = fields[name];
     if (value != null && value !== '' && wanted.has(cachedHeaderKey(name))) return isoDate(value);
@@ -395,5 +398,5 @@ function buildLiveAnalysis({ orders, antrepoMap, overrides, today, sourceLabel, 
 module.exports = {
   SOURCE_FIELDS, COMPANY_EXTRA_FIELDS, headerKey, findSchemaColumn,
   collectShipments, collectAllShipments, applyReportRules, baseHorizonForCompany, queryCompanyIasRows, buildLiveAnalysis,
-  milestonesFromEntry, hasMilestoneColumn, actualEntryIso, buildStageModel,
+  milestonesFromEntry, hasMilestoneColumn, actualEntryIso, iasDateIso, buildStageModel,
 };
