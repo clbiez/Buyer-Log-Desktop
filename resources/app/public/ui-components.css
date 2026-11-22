@@ -4033,6 +4033,7 @@ html[data-ui-system="manifest"] .intakeEmpty {color:var(--ui-text-muted) !import
 /* FOB Sonrası Maliyet: INTAKE yüzeyi + yalnız durum metni ve toplam satırı. */
 html[data-ui-system="manifest"] .postFobNote,html[data-ui-system="manifest"] .postFobRequired {color:var(--ui-text-secondary) !important;font-size:var(--ui-font-sm) !important;font-weight:400 !important
 }
+html[data-ui-system="manifest"] .oabCubeNote,html[data-ui-system="manifest"] .oabCubeRequired {color:var(--ui-text-secondary) !important;font-size:var(--ui-font-sm) !important;font-weight:400 !important}
 html[data-ui-system="manifest"] #postFobTable tfoot td {font-weight:650 !important;background:var(--ui-surface-soft) !important;font-variant-numeric:tabular-nums !important
 }
 html[data-ui-system="manifest"] #postFobTable tr.postFobHasOutlier td:last-child {color:var(--ui-warning) !important;font-weight:650 !important

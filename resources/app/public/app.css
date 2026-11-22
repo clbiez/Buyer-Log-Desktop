@@ -2827,6 +2827,12 @@ td.qtxColourBridgeBusy{cursor:progress!important;}
 #trydAdvantageTable tbody td.oabPivotDrillCell{cursor:zoom-in;}
 .trydAdvantageTargetInput{width:72px;height:var(--ui-control-height);padding:2px 6px;text-align:right;}
 .trydAdvantageFilterNote{flex-basis:100%;margin:4px 0 0;}
+/* OAB (Küp) — INTAKE/OAB yüzeyini paylaşır; yalnız arama ve not yerleşimi. */
+.oabCubeToolbar{display:flex;align-items:center;gap:var(--ui-space-2);flex-wrap:wrap;margin:0 0 var(--ui-space-2);}
+.oabCubeSearch{flex:1 1 280px;min-width:180px;max-width:520px;height:var(--ui-control-height);padding:2px 8px;}
+.oabCubeNote{margin:0 0 var(--ui-space-2);}
+.oabCubePassGap{margin:var(--ui-space-2) 0 0;}
+#oabCubeTable tbody td.oabPivotDrillCell{cursor:zoom-in;}
 @media(max-width:700px){.intakeHeader{align-items:flex-start;flex-direction:column;}.intakeHeaderActions{width:100%;justify-content:flex-start;}.intakeFilterField{min-width:min(100%,220px);flex:1;}}
 .oabMultiHead{display:flex;flex-direction:column;gap:6px;padding:8px;}
 .oabMultiSearch{height:var(--ui-control-height);padding:0 8px;}

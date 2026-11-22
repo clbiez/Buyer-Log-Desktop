@@ -190,6 +190,11 @@
 .ovHome>#trydAdvantageSection>.intakeBody{flex:0 0 auto;min-height:0;display:flex;flex-direction:column;}
 .ovHome>#trydAdvantageSection>.intakeBody[hidden]{display:none;}
 .ovHome>#trydAdvantageSection .intakeTableWrap{flex:0 0 auto;height:auto;max-height:none;min-height:0;overflow-x:auto;overflow-y:hidden;}
+.ovHome:not(.isEditing)>#oabCubeSection[data-overview-widget]{height:auto;align-self:start;container-type:inline-size;overflow:visible;}
+.ovHome>#oabCubeSection{padding:12px 14px;}
+.ovHome>#oabCubeSection>.intakeBody{flex:0 0 auto;min-height:0;display:flex;flex-direction:column;}
+.ovHome>#oabCubeSection>.intakeBody[hidden]{display:none;}
+.ovHome>#oabCubeSection .intakeTableWrap{flex:0 0 auto;height:auto;max-height:none;min-height:0;overflow-x:auto;overflow-y:hidden;}
 .ovHome>#oabSection .oabFilterBar{flex-wrap:wrap;}
 @container ovw (max-width:760px){.oabTopActions{margin-left:0;}.intakeHeader{flex-direction:column;align-items:flex-start;}.intakeHeaderActions{flex-wrap:wrap;}}
 
