@@ -1542,10 +1542,17 @@ async function loadFromModelConnections(items, options = {}) {
   const asasOrdersByTarget = {};
   const fabricHeaderInfoByTarget = {};
   if (includeAsas) {
+    /* Aynı (bağlantı, kapsam) run'ı birden çok hedefi besliyorsa (runRoleScopes
+       tek sorgu atar) sonuç bir kez ayrıştırılır ve hedefler aynı diziyi paylaşır.
+       Hedef başına ayrı ayrıştırma bayt bayt aynı kopyalar üretiyordu: bellekte
+       dört dizi, snapshot'ta (kimlik tabanlı takma adlardan kaçtığı için) dört
+       kopya. Excel/Dashboard kaynakları zaten tek diziyi paylaşır. */
+    const parsedByRun = new Map();
     for (const target of ['cp', 'orders', 'backlog', 'priceanalysis']) {
       const entry = asasByTarget.get(target);
       if (!entry) continue;
-      const parsed = parseASASRows(entry.run.rows, options.matchRule);
+      let parsed = parsedByRun.get(entry.run);
+      if (!parsed) { parsed = parseASASRows(entry.run.rows, options.matchRule); parsedByRun.set(entry.run, parsed); }
       if (!parsed || !Array.isArray(parsed.orders)) {
         throw new ModelRefreshError(
           `${connectionLabel(selected.asas)} · ${modelScopes.scopeLabel(entry.scope)} sonucunda “Sipariş Kod” alanı bulunamadı.`,
@@ -1617,9 +1624,11 @@ async function loadFromModelConnections(items, options = {}) {
     if (antrepoResult) {
       connectionWarnings.push(...antrepoResult.warnings);
       const horizonGroups = new Map();
+      const mapByRun = new Map(); // ASAS ile aynı gerekçe: paylaşılan IAS run'ı tek harita
       for (const [target, entry] of antrepoResult.byTarget) {
         const run = entry.run;
-        const map = parseAntrepoRows(run.rows, options.matchRule);
+        let map = mapByRun.get(run);
+        if (!map) { map = parseAntrepoRows(run.rows, options.matchRule); mapByRun.set(run, map); }
         const outside = iasHorizonExcludedOrders(asasOrdersByTarget[target] || [], map, entry.scope && entry.scope.horizon, options.matchRule);
         if (outside && outside.excluded.length) {
           const key = JSON.stringify(outside.excluded.map(order => antrepoMatchKey(order.ocode, order.model, order.ccode)).sort());

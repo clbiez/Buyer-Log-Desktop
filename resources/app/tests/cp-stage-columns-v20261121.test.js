@@ -250,3 +250,10 @@ test('motor: geçmişte kalmış IAS tahmini varış sayılmaz; üretim satırı
   assert.notEqual(prod.etaSource, 'stage');
   assert.equal(prod.stageOverrunDays, null);
 });
+
+test('koşan aralık tek aşamaya denk gelmiyorsa etiket numarasız (Handover ≠ Cut Off)', () => {
+  const app = read('public/app-main.js');
+  assert.match(app, /return `\$\{spanDiffers\?'':`\$\{run\.code\}\. `\}\$\{label\}/);
+  const bda = read('public/backlog-delivery-analysis.js');
+  assert.match(bda, /stageCurrent: p\.currentStage \? stageRunLabel\(p\) : ''/);
+});

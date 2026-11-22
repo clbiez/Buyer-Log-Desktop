@@ -28,6 +28,11 @@ function failure(code){
    ayrı 512 MiB sınırı ≈256 MiB üstü kaynak kopyası hazırlığını (girdi 2×kaynak) COMPUTE_QUEUE_BUSY ile
    reddediyor ve yenileme yayımını düşürüyordu. Fiilî sınır bütçedir. */
 const SERVICE_MAX_PENDING_BYTES=4096*MiB;
+/* Kapasite yolunda (işçiye sığmayan kaynak, sunucu iş parçacığı) her istek 600+ MiB'lık
+   snapshot'ı diskten yeniden okuyup ayrıştırıyordu (gerçek kullanıcı: açılışta istek başına
+   10+ sn). Okunan kaynak aynı sürüm için kayıtta tutulur; boşta kalınca ya da sürüm
+   değişince bırakılır. Yerel işler sıralı koştuğundan bellekte tek kopya olur. */
+const LOCAL_SOURCE_IDLE_MS=120000;
 function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
   if(!Number.isSafeInteger(diskBudgetBytes)||diskBudgetBytes<1)throw Error('Invalid source replica byte budget');
   pool??=createComputePool({maxPendingBytes:SERVICE_MAX_PENDING_BYTES});
@@ -46,6 +51,21 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     const pending=localTail.then(async()=>{await new Promise(setImmediate);if(closed)throw failure('COMPUTE_POOL_CLOSED');return operation();}).finally(()=>{localPending--;});
     localTail=pending.then(()=>{},()=>{});return pending;
   }
+  function dropLocalSource(record){if(record.localSource){clearTimeout(record.localSource.timer);record.localSource=null;}}
+  function keepLocalSource(record,source,identity){
+    dropLocalSource(record);
+    const timer=setTimeout(()=>{if(record.localSource?.source===source)record.localSource=null;},LOCAL_SOURCE_IDLE_MS);timer.unref?.();
+    record.localSource={source,identity,timer};
+  }
+  // Kalıcı snapshot dosyasının kimliği: değiştirilmiş/yeniden yazılmış dosya eski kopyayla servis edilmez.
+  // Yükleyicinin okuduğu tüm dosyalar: ana dosya, yedeği ve meta yan dosyaları (yalnız meta
+  // değişen kayıt — aynı içerik, yeni loadedAt — ana dosyaya dokunmaz).
+  async function snapshotIdentity(owner){
+    const file=require('./model-snapshot').snapshotPath(owner);
+    const parts=await Promise.all([file,file+'.bak',file+'.meta.json',file+'.meta.json.bak'].map(candidate=>fs.promises.stat(candidate)
+      .then(stat=>`${stat.ino}:${stat.size}:${stat.mtimeMs}:${stat.ctimeMs}`,error=>error?.code==='ENOENT'?'-':null)));
+    return parts.includes(null)?null:parts.join('|');
+  }
   async function runLocal(task,record,params,options={}){
     const queuedAt=performance.now(),deadline=queuedAt+(options.timeoutMs??600000);
     const assertCurrent=()=>{
@@ -57,14 +77,25 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     return locally(async()=>{
       assertCurrent();const started=performance.now(),transfer=[];
       const sourceIndependent=SOURCE_INDEPENDENT_TASKS.has(task);
-      let source=record.liveSource||record.sourceRef?.deref();
+      let source=record.liveSource||record.sourceRef?.deref(),loaded=false,identity=null;
+      if(!source&&!sourceIndependent&&record.localSource){
+        const kept=record.localSource;
+        if(!kept.identity||kept.identity===await snapshotIdentity(record.owner)){source=kept.source;keepLocalSource(record,source,kept.identity);}
+        else dropLocalSource(record);
+      }
       if(!source&&!sourceIndependent&&record.descriptor.replicaFile){
-        source=require('./compute-source-codec').decode(await fs.promises.readFile(record.descriptor.replicaFile),record.descriptor);
+        source=require('./compute-source-codec').decode(await fs.promises.readFile(record.descriptor.replicaFile),record.descriptor);loaded=true;
       }else if(!source&&!sourceIndependent){
-        source=await require('./model-snapshot').loadModelSnapshotAsync(record.owner);
+        // Ayrıştırma olay döngüsüne söz verir (yerel yol sunucu iş parçacığındadır).
+        identity=await snapshotIdentity(record.owner);
+        source=await require('./model-snapshot').loadModelSnapshotAsync(record.owner,{yieldControl:()=>new Promise(setImmediate)});loaded=true;
       }
       assertCurrent();
       if(!sourceIndependent&&record.descriptor.loadedAt!=null&&String(source?.loadedAt||source?.savedAt||'')!==String(record.descriptor.loadedAt))throw failure('COMPUTE_STALE_GENERATION');
+      // Doğrulanmış sürüm kayıtta tutulur (emeklilikte bırakılır).
+      if(loaded&&source&&!record.retired&&(record.descriptor.replicaFile||identity))keepLocalSource(record,source,record.descriptor.replicaFile?null:identity);
+      // Sahada tanı: kaynak işçiye sığmadığında sunucu iş parçacığında hesaplanır; sürüm başına bir kez yazılır.
+      if(loaded)console.log(`[COMPUTE] capacity-path task=${task} sourceMiB=${Math.round((Number(record.descriptor.bytes)||0)/4/MiB)} loadMs=${Math.round(performance.now()-started)}`);
       const value=await require('../workers/compute-worker').execute(task,{ownerId:record.owner,source:record.descriptor,params:{...params}},transfer,source||{asasOrders:[],antrepoMap:{}});
       assertCurrent();
       const metadata=value.sourceMeta||value.runtimeMeta;
@@ -86,14 +117,14 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     current.set(owner,generation);pool.setGeneration(poolOwner(owner),generation);
     // Cached output leases may outlive a refresh; they must not keep the old
     // resident source alive. A running local task already holds its own reference.
-    for(const record of records.values())if(record.owner===owner&&record.generation!==generation){record.retired=true;record.liveSource=null;record.sourceRef=null;void discard(record);}
+    for(const record of records.values())if(record.owner===owner&&record.generation!==generation){record.retired=true;record.liveSource=null;record.sourceRef=null;dropLocalSource(record);void discard(record);}
   }
   function retireSource(ownerId){
     const owner=String(ownerId||'');if(!owner)return;
     preparing.delete(owner);current.delete(owner);
     const retired='retired:'+crypto.randomBytes(16).toString('hex');
     pool.setGeneration(poolOwner(owner),retired);pool.setGeneration('prepare:'+owner,retired);
-    for(const record of records.values())if(record.owner===owner){record.retired=true;record.liveSource=null;record.sourceRef=null;void discard(record);}
+    for(const record of records.values())if(record.owner===owner){record.retired=true;record.liveSource=null;record.sourceRef=null;dropLocalSource(record);void discard(record);}
   }
   async function seedSource({ownerId,generation,source,uncompressedBytes,publish=true}){
     if(closed)throw failure('COMPUTE_POOL_CLOSED');

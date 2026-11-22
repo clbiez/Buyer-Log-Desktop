@@ -3054,6 +3054,8 @@ function switchTab(tab){
   if(tab==='overview')void ensureOverviewOabModule();
   if(tab==='overview')void ensureOverviewIntakeModule();
   if(tab==='overview')void ensureOverviewPostFobModule();
+  if(tab==='overview')void ensureOverviewTrydAdvantageModule();
+  if(tab==='overview')void ensureOverviewOabCubeModule();
   /* v7.81 — Veri Yönetimi. Lazy: ilk geçişte yüklenir, açılışta değil.
      Sekmeden çıkılıp geri dönülürse modül zaten yüklüdür ve yalnız tazelenir. */
   if(tab==='source'){
@@ -7008,7 +7010,8 @@ function cpStageRunText(run){
   // Ekranda 10σ ve üstü "≥10σ" (okunabilirlik); kural ham değeri kullanır.
   const sigmaValue=Number(run.sigma);
   const sigma=sigmaValue>=1?` · ${sigmaValue>=10?'≥10':sigmaValue.toLocaleString(en?'en-GB':'tr-TR',{maximumFractionDigits:1})}σ`:'';
-  return `${run.code}. ${label}${sigma}${span}${over}`;
+  // Aralık tek aşamaya denk gelmiyorsa numara yazılmaz (Handover ≠ Cut Off; "4." yolda sanılırdı).
+  return `${spanDiffers?'':`${run.code}. `}${label}${sigma}${span}${over}`;
 }
 // Statik ETA'ya göre fark: işaret yok, yön kelimeyle ("6 g geç"); eksi işareti
 // "erken" gibi okunuyordu.
@@ -20043,6 +20046,45 @@ function ensureOverviewPostFobModule(){
     .catch(error=>{overviewPostFobLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'postfob',mode:'after-ui',failed:true});console.warn('FOB sonrası maliyet modülü yüklenemedi:',error);return null;});
   return overviewPostFobLoadPromise;
 }
+/* TR/YD Landed Avantaj widget'ı: FOB Sonrası sorgusunu paylaşır; sunucu isteği
+   widget görünür olana kadar tryd-advantage.js içinde bekletilir. */
+let overviewTrydAdvantageLoadPromise=null;
+function ensureOverviewTrydAdvantageModule(){
+  if(window.BLBootGuard&&!window.BL_STARTUP_COMPLETE){
+    if(window.BLBootGuard.autoContinue)return Promise.resolve(null);
+    return afterStartupReveal(ensureOverviewTrydAdvantageModule);
+  }
+  if(window.BLTrydAdvantage)return Promise.resolve(window.BLTrydAdvantage);
+  if(overviewTrydAdvantageLoadPromise)return overviewTrydAdvantageLoadPromise;
+  const loader=window.BLPerf?._loadScript;
+  if(typeof loader!=='function'||!document.getElementById('trydAdvantageSection'))return Promise.resolve(null);
+  window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'trydAdvantage',mode:'after-ui'});
+  overviewTrydAdvantageLoadPromise=loader('tryd-advantage-engine.js?rev=20261122')
+    .then(()=>loader('tryd-advantage.js?rev=20261122'))
+    .then(()=>{window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'trydAdvantage',mode:'after-ui'});return window.BLTrydAdvantage||null;})
+    .catch(error=>{overviewTrydAdvantageLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'trydAdvantage',mode:'after-ui',failed:true});console.warn('TR/YD landed avantaj modülü yüklenemedi:',error);return null;});
+  return overviewTrydAdvantageLoadPromise;
+}
+/* OAB (Küp) widget'ı: pivot/toplam motoru PASS OAB modülündeki
+   OABPivotEngine'dir (kopya motor yok), bu yüzden önce oab.js hazırlanır.
+   Sunucu isteği widget görünür olana kadar oab-cube.js içinde bekletilir. */
+let overviewOabCubeLoadPromise=null;
+function ensureOverviewOabCubeModule(){
+  if(window.BLBootGuard&&!window.BL_STARTUP_COMPLETE){
+    if(window.BLBootGuard.autoContinue)return Promise.resolve(null);
+    return afterStartupReveal(ensureOverviewOabCubeModule);
+  }
+  if(window.BLOabCube)return Promise.resolve(window.BLOabCube);
+  if(overviewOabCubeLoadPromise)return overviewOabCubeLoadPromise;
+  const loader=window.BLPerf?._loadScript;
+  if(typeof loader!=='function'||!document.getElementById('oabCubeSection'))return Promise.resolve(null);
+  window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'oabCube',mode:'after-ui'});
+  overviewOabCubeLoadPromise=Promise.resolve(ensureOverviewOabModule())
+    .then(()=>loader('oab-cube.js?rev=20261122'))
+    .then(()=>{window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'oabCube',mode:'after-ui'});return window.BLOabCube||null;})
+    .catch(error=>{overviewOabCubeLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'oabCube',mode:'after-ui',failed:true});console.warn('OAB (Küp) modülü yüklenemedi:',error);return null;});
+  return overviewOabCubeLoadPromise;
+}
 let postUiStartupScheduled=false;
 const EXCEL_ENGINE_LOAD_DEADLINE_MS=1500;
 function schedulePostUiStartupTasks(){
@@ -20054,6 +20096,8 @@ function schedulePostUiStartupTasks(){
     if(currentActiveTab()==='overview')void ensureOverviewOabModule();
     if(currentActiveTab()==='overview')void ensureOverviewIntakeModule();
     if(currentActiveTab()==='overview')void ensureOverviewPostFobModule();
+    if(currentActiveTab()==='overview')void ensureOverviewTrydAdvantageModule();
+    if(currentActiveTab()==='overview')void ensureOverviewOabCubeModule();
     const ensureFeature=window.BLPerf?.ensureFeature;
     if(typeof ensureFeature==='function'){
       void ensureFeature('deferredUi').then(()=>{

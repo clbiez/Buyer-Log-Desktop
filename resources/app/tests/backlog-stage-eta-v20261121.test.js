@@ -149,3 +149,39 @@ test('Yolda parsiyel: Cut Off / Fiili Yükleme sütunu gelmese de sahte Handover
   assert.equal(a.stageOverrunDays || 0, 0);
   assert.ok(!a.riskReasons.includes('LATE_LOADING'));
 });
+
+// v20261122 — Handover ≠ Cut Off: Handover ürünün depoya teslimidir; ürün sonra
+// cut-off'u bekleyebilir, ardından gemiye yüklenir. Gecikme sebebi aşamaya göre.
+test('aşama aşımı sebebi: 1 Geç Handover, 2 Cut-off Bekleme, 3 Geç Yükleme; etiketler Handover der', () => {
+  // Handover 20 gün önce, Cut Off yok (ortalama 4 gün) → 2. aşamada açık aşım.
+  const row = rowFor({ 'Yükleme Talep Tarih': iso(-23), 'HANDOVER Tarihi': iso(-20), 'Cut Off Tarih': '', 'Fiili Yükleme Tarih': '' }, undefined, 'Yükleme Operasyonları'); // i18n-ignore
+  const p = row._backlogExcel.stageProjection;
+  assert.equal(p.currentStage, '2');
+  assert.ok(p.openOverrunDays > 0);
+  const a = Engine.analyzeOrder(Engine.projectRow(row), { today: todayOrd, dateOrdinal: ord });
+  assert.ok(a.riskReasons.includes('CUTOFF_WAIT'), a.riskReasons.join(','));
+  assert.ok(!a.riskReasons.includes('VESSEL_LOADING_DELAY'));
+  assert.deepEqual(Engine.STAGE_LOADING_CAUSE, { 1: 'LATE_LOADING', 2: 'CUTOFF_WAIT', 3: 'VESSEL_LOADING_DELAY' });
+  assert.equal(Engine.RISK_CAUSE_LABELS.tr.LATE_LOADING, 'Geç Handover');
+  assert.equal(Engine.RISK_CAUSE_LABELS.tr.CUTOFF_WAIT, 'Cut-off Bekleme');
+  assert.equal(Engine.RISK_CAUSE_LABELS.en.VESSEL_LOADING_DELAY, 'Late Loading');
+  assert.equal(Engine.LOADING_LABELS.tr.LOADED_LATE, 'Geç Handover');
+  // Otomasyon yönlendirmesi yeni sebepleri tanır; eski LATE_LOADING kaydı korunur.
+  const BA = require('../server/lib/backlog-automation.js');
+  assert.equal(BA.ownerForCause('CUTOFF_WAIT', null), 'import');
+  assert.equal(BA.ownerForCause('LATE_LOADING', null), 'supplier');
+});
+
+test('Yükleme Operasyonları: Cut Off / Fiili Yükleme sütunu gelmese de parsiyel yolda (4. aşama) görünmez', () => {
+  // Sorgu şekli: Talep + Handover + ETA sütunu (boş); Cut Off / Fiili Yükleme sütunu yok.
+  const row = rowFor({ 'Yükleme Talep Tarih': iso(-12), 'HANDOVER Tarihi': iso(-9), 'ETA Tarih': '' }, undefined, 'Yükleme Operasyonları'); // i18n-ignore
+  const p = row._backlogExcel.stageProjection;
+  assert.equal(p.currentStage, '2', 'Handover sonrası ilk aşama: cut-off bekleme');
+  // Fiili Yükleme henüz yok (durum): aralık oraya kadar sayılır, ETA'ya atlamaz.
+  assert.deepEqual([p.running.from, p.running.to], ['handover', 'actualLoading']);
+  // Handover'dan 9 gün; Handover → Fiili Yükleme ortalaması 6 gün → 3 gün aşım.
+  assert.equal(p.openOverrunDays, 3);
+  // Yolda durumunda aynı tarihler 4. aşamadır (yükleme geçildi).
+  const transit = rowFor({ 'Yükleme Talep Tarih': iso(-12), 'HANDOVER Tarihi': iso(-9), 'ETA Tarih': '' }); // i18n-ignore
+  assert.equal(transit._backlogExcel.stageProjection.currentStage, '4');
+});
