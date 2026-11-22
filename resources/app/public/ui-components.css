@@ -14561,6 +14561,14 @@ html[data-ui-system="manifest"] .oabPivotSubtotalRow td {border-top:0 !important
 }
 html[data-ui-system="manifest"] .oabPivotGrandTotalRow td {background:var(--ui-text-secondary) !important;color:var(--ui-surface) !important;font-weight:800 !important;border-top:0 !important
 }
+/* Pivot (OAB · INTAKE · FOB Sonrası Maliyet) alt/genel toplam satırları fare
+   üzerindeyken kendi zemin ve metin rengini korur. Genel tablo hover'ı zemini
+   --ui-row-hover'a (satır ışığında --ui-surface) çekiyordu; metin rengi yüzey
+   rengi kalan Genel Toplam iki temada da okunmuyordu. Hover yalnız tonu koyulaştırır. */
+html[data-ui-system="manifest"] .miniTable tbody tr:is(.oabPivotGroupRow,.oabPivotSubtotalRow):hover td {background:color-mix(in srgb,var(--ui-selected) 80%,var(--ui-surface)) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .miniTable tbody tr.oabPivotGrandTotalRow:hover td {background:color-mix(in srgb,var(--ui-text-secondary) 88%,var(--ui-text)) !important;color:var(--ui-surface) !important
+}
 html[data-ui-system="manifest"] .oabPivotGroupToggle {background:transparent !important;color:inherit !important;font-weight:900 !important
 }
 html[data-ui-system="manifest"] .oabPivotGroupToggle:hover {background:var(--ui-selected) !important
