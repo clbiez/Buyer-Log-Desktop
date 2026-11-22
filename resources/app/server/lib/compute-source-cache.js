@@ -7,10 +7,8 @@ function sourceError(code){
     COMPUTE_STALE_GENERATION:['Kaynak sürümü değişti.','Source generation changed.',409]};
   const [tr,en,statusCode]=values[code];return Object.assign(Error(`${tr} / ${en}`),{code,statusCode,errorEn:en});
 }
-// İşçi içi kaynak önbelleği sınırı; hesap servisi kabulde aynı sınırı kontrol eder. descriptor.bytes
-// = 4×kaynak (yükleme sonrası GC'siz tutulan heap + ArrayBuffer ölçümü ≈4,0×). 3 GiB → ≤768 MiB kaynak;
-// 2 GiB 655 MiB saha kaynağını (2620 MiB) işçiden çıkarıyordu.
-const WORKER_SOURCE_CACHE_BYTES=3*1024*1024*1024;
+// İşçi içi kaynak önbelleği sınırı; hesap servisi kabulde aynı sınırı kontrol eder.
+const WORKER_SOURCE_CACHE_BYTES=2*1024*1024*1024;
 function createComputeSourceCache({maxBytes=WORKER_SOURCE_CACHE_BYTES,loadSnapshot}={}){
   if(!Number.isSafeInteger(maxBytes)||maxBytes<1)throw Error('Invalid source cache byte limit');
   const load=loadSnapshot||((owner)=>require('./model-snapshot').loadModelSnapshotAsync(owner));
@@ -75,8 +73,6 @@ function createComputeSourceCache({maxBytes=WORKER_SOURCE_CACHE_BYTES,loadSnapsh
   }
   function clear(){for(const owner of new Set([...held].map(entry=>entry.owner).concat([...loading.values()].map(record=>record.owner))))invalidate(owner);}
   function stats(){return {maxBytes,reservedBytes,entries:entries.size,loading:loading.size,pinnedEntries:[...held].filter(entry=>entry.pins>0).length,loads,hits,evictions};}
-  // Önbellekteki kaynak anahtarları (JSON [sahip, sürüm]); havuz aynı kopyayı iki kez ücretlendirmez.
-  function keys(){return [...entries.keys()];}
-  return {acquire,invalidate,clear,stats,keys};
+  return {acquire,invalidate,clear,stats};
 }
 module.exports={createComputeSourceCache,WORKER_SOURCE_CACHE_BYTES};
