@@ -7,8 +7,8 @@
     "en": "Collection colour options, stage forecast and CP redraw fixes"
   },
   "summary": {
-    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: INTAKE tipi pivot, alan ekleme ve sipariş aramasıyla landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder; kaynağı ve ufku Veri Yönetimi'nden yönetilir. Pivot toplam satırları fare üzerindeyken okunur kalır. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur. Aşama farkı yönüyle yazılır ve üzerine gelince nedenleri görünür; depodaki parsiyelde ve Kısmi Görünümde gerçekleşen yol süresi gösterilir. Veritabanından yenilenen veri, aynı sorguyu paylaşan sayfalar için artık bir kez işlenip tek kopya saklanır; açılış, yenileme kaydı ve bellek kullanımı belirgin biçimde azalır. Widget pivot ayarlarındaki uzun alan listeleri ve OAB \"Filtre ekle\" listesi artık arama kutusuyla açılır; OAB Genel Toplam hücresi fare üzerindeyken okunur kalır.",
-    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: with an INTAKE-style pivot, field picker and order search it analyses landed, Integral and forecast gap with quantity weighting; its source and horizon are managed in Data Management. Pivot total rows stay readable on hover. Starting directly on CP now completes the startup screen without an error. The stage gap shows its direction and its reasons on hover; partials in the warehouse and Partial View show the realized transit time. Data refreshed from the database is now processed once and stored as a single copy for pages that share the same query; startup, refresh saving and memory use drop markedly. Long field lists in widget pivot settings and the OAB \"Add filter\" list now open with a search box; the OAB Grand Total cell stays readable on hover."
+    "tr": "Yoldaki parsiyelin aşama tahmini IAS durumunu dikkate alır; Buyer Log'un açtığı üretimde satırları yükleme onayı devralmaz. Tabloyu yeniden çiz artık güncel hesaplanmış değerleri gösterir. Koleksiyon tablosunda satır numaraları kaldırıldı. Model satırı renk sayısını, her renk kaydı kendi renk karesini gösterir; model şeridi modeli tüm renkleriyle birlikte seçer. Genel Bakış › Ticari sayfasına FOB Sonrası Maliyet widget'ı eklendi: INTAKE tipi pivot, alan ekleme ve sipariş aramasıyla landed, Integral ve öngörü sapmasını adet ağırlıklı analiz eder; kaynağı ve ufku Veri Yönetimi'nden yönetilir. Pivot toplam satırları fare üzerindeyken okunur kalır. CP ile doğrudan açılışta başlangıç ekranı artık hata göstermeden hazır olur. Aşama farkı yönüyle yazılır ve üzerine gelince nedenleri görünür; depodaki parsiyelde ve Kısmi Görünümde gerçekleşen yol süresi gösterilir. Veritabanından yenilenen veri, aynı sorguyu paylaşan sayfalar için artık bir kez işlenip tek kopya saklanır; açılış, yenileme kaydı ve bellek kullanımı belirgin biçimde azalır. Widget pivot ayarlarındaki uzun alan listeleri ve OAB \"Filtre ekle\" listesi artık arama kutusuyla açılır; OAB Genel Toplam hücresi fare üzerindeyken okunur kalır. LFL ekranı artık ASAS sütunlarının tamamını indirmez; yalnız seçilen ASAS kırılım sütunu gelir, açılış hızlanır ve bellek kullanımı düşer.",
+    "en": "The stage forecast of a partial in transit follows its IAS status; production lines created by Buyer Log no longer inherit the loading approval. Redraw table now shows the current calculated values. Row numbers were removed from the Collection table. The model row shows its colour count and each colour record shows its own colour square; the model rail selects the model with all its colours. A Post-FOB Cost widget was added to Overview › Commercial: with an INTAKE-style pivot, field picker and order search it analyses landed, Integral and forecast gap with quantity weighting; its source and horizon are managed in Data Management. Pivot total rows stay readable on hover. Starting directly on CP now completes the startup screen without an error. The stage gap shows its direction and its reasons on hover; partials in the warehouse and Partial View show the realized transit time. Data refreshed from the database is now processed once and stored as a single copy for pages that share the same query; startup, refresh saving and memory use drop markedly. Long field lists in widget pivot settings and the OAB \"Add filter\" list now open with a search box; the OAB Grand Total cell stays readable on hover. The LFL screen no longer downloads every ASAS column; only the selected ASAS breakdown column is fetched, so it opens faster and uses less memory."
   },
   "changes": [
     {
@@ -610,6 +610,35 @@
         "caption": {
           "tr": "Demo veride Genel Toplam hücresi hover'da tema tonunu korur.",
           "en": "On demo data, the Grand Total cell keeps the theme tone on hover."
+        }
+      }
+    },
+    {
+      "id": "lfl-asas-column-on-demand",
+      "type": "improvement",
+      "module": {
+        "tr": "LFL Analizi",
+        "en": "LFL Analysis"
+      },
+      "title": {
+        "tr": "LFL yalnız seçilen ASAS kırılım sütununu indirir",
+        "en": "LFL downloads only the selected ASAS breakdown column"
+      },
+      "body": {
+        "tr": "LFL verisi her satırla birlikte ASAS sorgusunun bütün ham sütunlarını taşıyordu; büyük veride bu yanıtı birkaç kat büyütüyor, ekranın açılmasını ve belleği yavaşlatıyordu. Artık LFL yalnız sütun adlarını ve analiz kırılımında seçili ASAS sütunlarını alır. “ASAS’tan Ekle” ile yeni bir kırılım seçildiğinde yalnız o sütun indirilir; bu sırada kısa bir “ASAS sütunu yükleniyor…” durumu görünür. Analiz sonuçları ve yetki kapsamı değişmez.",
+        "en": "LFL data carried every raw column of the ASAS query with each row; with large data this made the response several times larger and slowed opening and memory. LFL now receives only the column names and the ASAS columns selected in the analysis breakdown. When a new breakdown is chosen with “Add From ASAS”, only that column is downloaded, with a brief “Loading ASAS column…” state. Analysis results and access scope are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lfl-asas-column-on-demand.png",
+        "alt": {
+          "tr": "Demo LFL ekranında yeni ASAS kırılımı için “ASAS sütunu yükleniyor…” durumu",
+          "en": "Demo LFL screen showing the “Loading ASAS column…” state for a new ASAS breakdown"
+        },
+        "caption": {
+          "tr": "Demo veride “ASAS’tan Ekle” ile seçilen kırılım için yalnız o ASAS sütunu indirilirken gösterilen durum.",
+          "en": "On demo data, the state shown while only the ASAS column chosen with “Add From ASAS” is downloaded."
         }
       }
     }
