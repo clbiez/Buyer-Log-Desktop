@@ -400,6 +400,35 @@
       }
     },
     {
+      "id": "overview-oab-cube-widget",
+      "type": "feature",
+      "module": {
+        "tr": "Genel Bakış · Ticari",
+        "en": "Overview · Commercial"
+      },
+      "title": {
+        "tr": "OAB (Küp): OAB verisi doğrudan OAB_Cube SSAS küpünden",
+        "en": "OAB (Cube): OAB data straight from the OAB_Cube SSAS cube"
+      },
+      "body": {
+        "tr": "Genel Bakış › Ticari sayfasına OAB (Küp) widget'ı eklendi. PASS'li OAB widget'ı yerinde kalır; iki kaynak bir süre yan yana çalışır. Çoklu Sezon × MAG × Buyer grup seçimi tek sorguda filtre olarak gider (PASS'teki kombinasyon turuna gerek yok). Pivot OAB/INTAKE ile aynıdır: alt ve genel toplam, grup katlama, kalemle alan düzenleme, + Filtre ekle, çift tıkla alt detay, Excel ve model/renk araması. Başlıkta küpün veri tarihi görünür (küp ETL ile dolar, canlı değildir). Renk ve model kodları asla sayıya çevrilmez. PASS raporunda olup küpte bulunmayan alanlar (Özel Kod, Persona, Optionın Eşlendiği Diğer Linelar, Özel Onaylı Temiz Devir, Düşük Adetli FT WSSI) uydurulmaz; widget altında açıkça listelenir. Yetki OAB görüntüleme ile aynıdır; sorgu sizin Windows kimliğinizle çalışır.",
+        "en": "An OAB (Cube) widget was added to Overview › Commercial. The PASS-based OAB widget stays in place; both sources run side by side for a while. A multi Season × MAG × Buyer group selection goes as filters in a single query (no PASS combination batch). The pivot matches OAB/INTAKE: subtotals and grand total, group collapse, field editing with the pencil, + Add filter, double-click drill-down, Excel and model/colour search. The header shows the cube's data date (the cube is loaded by ETL and is not live). Colour and model codes are never converted to numbers. Fields in the PASS report that the cube does not have (Special code, Persona, Other lines the option is mapped to, Special-approved clean carry-over, Low-quantity FT WSSI) are never invented and are listed under the widget. Access matches the OAB view permission; the query runs with your Windows identity."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-cube-light.png",
+        "alt": {
+          "tr": "Demo veri: OAB (Küp) widget'ı klasman grup ve ürün klasmanına göre WSSI, onaylı, plan, onaysız ve PO adetleri, alt ve genel toplam, başlıkta veri tarihi",
+          "en": "Demo data: the OAB (Cube) widget with WSSI, approved, planned, unapproved and PO quantities by class group and product class, subtotals and grand total, data date in the header"
+        },
+        "caption": {
+          "tr": "Demo veride iki sezon ve iki MAG tek sorguda; başlıkta küpün veri tarihi, altta küpte olmayan PASS alanları.",
+          "en": "On demo data two seasons and two MAGs in a single query; the cube's data date in the header and the PASS fields missing in the cube below."
+        }
+      }
+    },
+    {
       "id": "backlog-handover-vs-loading",
       "type": "fix",
       "module": {

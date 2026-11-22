@@ -87,6 +87,8 @@
     const boundaries=[...new Set([0,...items.flatMap(item=>[item.y,item.y+item.h])])].sort((a,b)=>a-b);
     const sizes=items.map(item=>({item,el:widgetEl(item.key),height:['oab','intake','postFob'].includes(item.key)?pivotContentHeight(widgetEl(item.key)):item.h*m.stepY-m.rowGap}));
     sizes.forEach(entry=>{if(entry.item.key==='trydAdvantage')entry.height=pivotContentHeight(entry.el);});
+    /* OAB (Küp) pivotu da doğal yüksekliğini taşır (OAB/INTAKE gibi). */
+    sizes.forEach(size=>{if(size.item.key==='oabCube')size.height=pivotContentHeight(size.el);});
     const signature=JSON.stringify([state.page,isNarrow(),boundaries,sizes.map(({item,height})=>[item.key,height])]);
     if(signature===contentSignature)return;
     contentSignature=signature;
@@ -552,6 +554,7 @@
     const pivotResize=new ResizeObserver(schedulePivotFit);
     g.querySelectorAll(':scope > :is(#oabSection,#intakeSection,#postFobSection) > *').forEach(el=>pivotResize.observe(el));
     g.querySelectorAll(':scope > #trydAdvantageSection > *').forEach(el=>pivotResize.observe(el));
+    g.querySelectorAll(':scope > #oabCubeSection > *').forEach(el=>pivotResize.observe(el));
     window.addEventListener('resize',schedulePivotFit,{passive:true});
     syncNarrow();
   }

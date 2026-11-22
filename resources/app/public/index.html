@@ -1014,6 +1014,34 @@
         <div class="cardBox intakeTableWrap"><table class="miniTable" id="trydAdvantageTable"></table></div>
       </div>
     </div>
+    <!-- OAB (Küp) — OAB_Cube SSAS modeli; PASS'li OAB widget'ıyla yan yana, INTAKE ile aynı doğrudan model sorgusu. -->
+    <div id="oabCubeSection" data-overview-widget="oabCube" class="cardBox intakeSection oabCubeSection">
+      <div class="oabHeader intakeHeader">
+        <div class="oabHeaderMain intakeHeaderMain">
+          <p class="cardTitle ovSectionTitle"><svg class="ic" aria-hidden="true"><use href="#i-chart-histogram"/></svg><span data-i18n-tr="OAB (Küp)" data-i18n-en="OAB (Cube)">OAB (Küp)</span></p>
+          <span id="oabCubeStateMeta" class="intakeStateMeta oabStateMeta"></span>
+        </div>
+        <div class="oabHeaderActions intakeHeaderActions">
+          <button type="button" class="navActionBtn" id="oabCubeResetBtn" data-i18n-tr="Varsayılana dön" data-i18n-en="Reset view">Varsayılana dön</button>
+          <button type="button" class="navActionBtn" id="oabCubeRefreshBtn" title="OAB küpünü sorgula" data-i18n-title-tr="OAB küpünü sorgula" data-i18n-title-en="Query the OAB cube"><svg class="ic"><use href="#i-refresh"/></svg><span data-i18n-tr="Yenile" data-i18n-en="Refresh">Yenile</span></button>
+          <button type="button" class="navActionBtn intakeFiltersBtn oabFiltersBtn" id="oabCubeFiltersBtn" aria-expanded="false" aria-controls="oabCubeFilterPanel" title="OAB (Küp) filtreleri" aria-label="Filtreler" data-i18n-title-tr="OAB (Küp) filtreleri" data-i18n-title-en="OAB (Cube) filters" data-i18n-aria-label-tr="Filtreler" data-i18n-aria-label-en="Filters"><svg class="ic" aria-hidden="true"><use href="#i-filter"/></svg></button>
+          <button type="button" class="navActionBtn oabGroupAction" id="oabCubeCollapseAllBtn" hidden title="Tüm grupları daralt" aria-label="Tüm grupları daralt" data-i18n-title-tr="Tüm grupları daralt" data-i18n-title-en="Collapse all groups" data-i18n-aria-label-tr="Tüm grupları daralt" data-i18n-aria-label-en="Collapse all groups"><svg class="ic"><use href="#i-chevrons-left"/></svg></button>
+          <button type="button" class="navActionBtn oabGroupAction" id="oabCubeExpandAllBtn" hidden title="Tüm grupları genişlet" aria-label="Tüm grupları genişlet" data-i18n-title-tr="Tüm grupları genişlet" data-i18n-title-en="Expand all groups" data-i18n-aria-label-tr="Tüm grupları genişlet" data-i18n-aria-label-en="Expand all groups"><svg class="ic"><use href="#i-chevrons-right"/></svg></button>
+          <button type="button" class="navActionBtn" id="oabCubeExcelExportBtn" disabled title="Pivotu ve kaynak satırları Excel’e aktar" aria-label="Excel’e Aktar" data-i18n-title-tr="Pivotu ve kaynak satırları Excel’e aktar" data-i18n-title-en="Export the pivot and source rows to Excel" data-i18n-aria-label-tr="Excel’e Aktar" data-i18n-aria-label-en="Export Excel"><svg class="ic" aria-hidden="true"><use href="#i-file-export"/></svg></button>
+          <button type="button" class="navActionBtn" id="oabCubeFieldsBtn" title="Pivot satır, sütun, değer ve filtre alanlarını düzenle" aria-label="Pivot ayarları" data-i18n-title-tr="Pivot satır, sütun, değer ve filtre alanlarını düzenle" data-i18n-title-en="Edit pivot rows, columns, values and filters" data-i18n-aria-label-tr="Pivot ayarları" data-i18n-aria-label-en="Pivot settings"><svg class="ic" aria-hidden="true"><use href="#i-pencil"/></svg></button>
+        </div>
+      </div>
+      <div class="oabCubeToolbar">
+        <input type="search" id="oabCubeSearch" class="oabCubeSearch" placeholder="Model kodu, model adı, renk ara…" aria-label="Model kodu, model adı veya renk ara" data-i18n-aria-label-tr="Model kodu, model adı veya renk ara" data-i18n-aria-label-en="Search model code, model name or colour">
+      </div>
+      <div id="oabCubeStatus" class="intakeStatus" hidden></div>
+      <div id="oabCubeFilterPanel" class="intakeFilterPanel oabFilterPanel" hidden><div id="oabCubeFilterBar" class="intakeFilterBar"></div></div>
+      <div id="oabCubeBody" class="intakeBody oabCubeBody" hidden>
+        <p id="oabCubeNote" class="oabCubeNote" hidden></p>
+        <div class="cardBox intakeTableWrap"><table class="miniTable" id="oabCubeTable"></table></div>
+        <p id="oabCubePassGap" class="oabCubeNote oabCubePassGap"></p>
+      </div>
+    </div>
     </div>
     <div id="ovHomeDots" class="ovHomeDots" aria-hidden="true"></div>
     <div class="kpirow" id="kpiOrders" hidden aria-hidden="true" style="display:none!important"></div>
