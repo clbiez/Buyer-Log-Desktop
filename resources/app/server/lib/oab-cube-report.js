@@ -14,10 +14,18 @@
  * kanıtlı tablolar (Data, DummyUrun, Sezon) gruplanır ve filtrelenir. Ürün
  * boyutu için kanıtlı tablo DummyUrun'dur; Urun tablosunun ölçülerle ilişkisi
  * doğrulanmadı ve SUMMARIZECOLUMNS'ta çapraz çarpım üretip adetleri
- * çoğaltabilir. Bu yüzden Urun (FİT, SİLÜET, KUMAŞ) ve PlanLine / Phase /
- * Dim_Supply / HizliSiparisStatu boyutları bu sürümde sorguya girmez;
- * pivot düzenleyicisi de bu tablolardan alan eklemeyi reddeder. Model
- * ölçüleri (Measures) satır düzeyini değiştirmediği için serbestçe eklenebilir.
+ * çoğaltabilir. Bu yüzden Urun ve PlanLine / Phase / Dim_Supply /
+ * HizliSiparisStatu boyutları ANA sorguya girmez; pivot düzenleyicisi de bu
+ * tablolardan serbest alan eklemeyi reddeder. Model ölçüleri (Measures) satır
+ * düzeyini değiştirmediği için serbestçe eklenebilir.
+ *
+ * Ürün özellikleri (Urun[FİT], Urun[SİLÜET], Urun[KUMAŞ-MALZEME TİPİ]) bu
+ * kuralı bozmadan gelir: ayrı ve ÖLÇÜSÜZ bir sorgu, ana sonuçtaki ModelKod
+ * listesiyle (TREATAS) Urun'un kendi ModelKod/RenkKod/özellik kombinasyonlarını
+ * okur; sunucu bunları ModelKod + RenkKod anahtarıyla ana satırlara metin
+ * olarak ekler. Ölçüler yalnız ana sorgudan gelir, satır sayısı değişmez.
+ * MAG / buyer grup Urun sütunlarına uygulanmaz (kodlamanın DummyUrun ile aynı
+ * olduğu doğrulanmadı). Bu alanlar pivotta yerel boyut/filtredir.
  *
  * Kod alanları (ModelKod, RenkKod, MerchAltGrupKod …) her zaman metindir;
  * "3E8" gibi değerler sayıya/bilimsel gösterime çevrilmez.
@@ -99,6 +107,33 @@ const FRESHNESS = Object.freeze([
   { key: 'dataDate', source: '[GuncellemeTarihi].[GuncellemeTarih]' },
   { key: 'etlTime', source: '[DummyUrun].[etl_time]' },
 ]);
+
+/* Ürün özellikleri (Urun tablosu). Ana sorgunun boyutu DEĞİLDİR; ayrı
+   özellik sorgusuyla model + renk satırlarına eklenir (productAttributeQueries
+   + mergeProductAttributes). Pivotta yerel metin boyutu ve yerel filtredir. */
+const PRODUCT_ATTRIBUTES = Object.freeze([
+  { key: 'fit', source: '[Urun].[FİT]', tr: 'FİT', en: 'Fit' }, // i18n-ignore: küp alan adı (TR etiketi)
+  { key: 'silhouette', source: '[Urun].[SİLÜET]', tr: 'Silüet', en: 'Silhouette' },
+  { key: 'fabricType', source: '[Urun].[KUMAŞ-MALZEME TİPİ]', tr: 'Kumaş-malzeme tipi', en: 'Fabric-material type' },
+].map(Object.freeze));
+const PRODUCT_ATTRIBUTE_JOIN = Object.freeze([
+  Object.freeze({ key: 'modelCode', source: '[Urun].[ModelKod]' }),
+  Object.freeze({ key: 'colourCode', source: '[Urun].[RenkKod]' }),
+]);
+const PRODUCT_ATTRIBUTE_KEYS = Object.freeze(PRODUCT_ATTRIBUTES.map(item => item.key));
+/* Bir model + renk için birden çok değer: dile bağımsız işaret; istemci
+   "Çoklu" / "Multiple" yazar, değerler satırın attrMulti alanındadır. */
+const PRODUCT_ATTRIBUTE_MULTI = '__MULTI__';
+/* Parça başına ModelKod literal sınırı. Gerekçe: (1) widget filtrelerinin
+   değer sınırı 500'dür, sipariş kodu filtreleri binlerce literal taşır; 1.000
+   SSAS TREATAS için alışılmış aralıktadır; (2) ~1.000 × ~12 karakter ≈ 15 KB
+   sorgu metni, üretilen sorgu sınırının (4 MB) çok altında; (3) model başına
+   birkaç renk × özellik kombinasyonuyla parça sonucu TOPN sınırının (20.000)
+   rahatça altında kalır, sınıra ulaşılırsa kesilme bildirilir. Ana sorgu en
+   fazla 20.000 satırdır: 20 parça bütün model kümesini kapsar. */
+const PRODUCT_ATTRIBUTE_CHUNK = 1000;
+const PRODUCT_ATTRIBUTE_MAX_CHUNKS = 20;
+const isAttributeKey = key => PRODUCT_ATTRIBUTE_KEYS.includes(key);
 
 const FILTER_KEYS = Object.freeze(DIMENSIONS.filter(item => item.filter).map(item => item.key));
 const DEFAULT_FILTERS = Object.freeze(['season', 'mag', 'buyerGroup', 'brandAgeGroup', 'supplyBasket', 'carryOver']);
@@ -276,12 +311,15 @@ function normalizeRef(raw, kind) {
   if (!entry) return null;
   const key = clean(entry.key);
   const agg = clean(entry.agg).toUpperCase();
-  if (kind === 'dimension' && DIMENSIONS.some(item => item.key === key)) return { key };
+  if (kind === 'dimension' && (DIMENSIONS.some(item => item.key === key) || isAttributeKey(key))) return { key };
   if (kind === 'value' && measureByKey(key)) return { key, agg: AGGREGATES.includes(agg) ? agg : measureByKey(key).agg };
   const source = clean(entry.source);
   if (!SOURCE_PATTERN.test(source)) return null;
   const isMeasure = /^\[measures\]/i.test(source);
   if ((kind === 'value') !== isMeasure) return null;
+  // Urun'un özellik alanı hazır anahtarına iner; diğer Urun alanları reddedilir.
+  const attribute = kind === 'dimension' && PRODUCT_ATTRIBUTES.find(item => intakeReport.sourceKey(item.source) === intakeReport.sourceKey(source));
+  if (attribute) return { key: attribute.key };
   if (kind === 'dimension' && !isProvenTable(source)) return null;
   const known = [...DIMENSIONS, ...MEASURES].find(item => intakeReport.sourceKey(item.source) === intakeReport.sourceKey(source));
   if (known) return kind === 'value' ? { key: known.key, agg: AGGREGATES.includes(agg) ? agg : known.agg } : { key: known.key };
@@ -344,7 +382,19 @@ function normalizeView(raw) {
       widths,
     },
     calculated: normalizeCalculated(source.calculated, values),
+    // Alt detay çekmecesinde gösterilecek ürün özellikleri (pivotta olmasa da sorgulanır).
+    detailAttributes: PRODUCT_ATTRIBUTE_KEYS.filter(key => Array.isArray(source.detailAttributes) && source.detailAttributes.includes(key)),
   };
+}
+
+/* Görünümde kullanılan ürün özellikleri: pivot satır/sütun/filtre ve alt detay.
+   Boşsa özellik sorgusu atılmaz (sıcak yol değişmez). */
+function usedProductAttributes(view) {
+  const current = view && typeof view === 'object' ? view : {};
+  const used = new Set();
+  for (const axis of ['rows', 'columns', 'filters']) for (const ref of current[axis] || []) if (ref && isAttributeKey(ref.key)) used.add(ref.key);
+  for (const key of current.detailAttributes || []) if (isAttributeKey(key)) used.add(key);
+  return PRODUCT_ATTRIBUTE_KEYS.filter(key => used.has(key));
 }
 
 /* Kişisel hesaplanan değerler (public/pivot-calculated-values.js). Sorguya
@@ -414,7 +464,9 @@ function buildQuery({ liveFields = [], view = null, filterValues = {}, horizon =
   const dimensionByKey = new Map(resolved.dimensions.map(item => [item.key, item.field]));
   extraFilterFields.forEach((field, key) => dimensionByKey.set(key, field));
   const filterExpressions = [];
-  for (const [key, values] of Object.entries(filters)) {
+  // Ürün özelliği filtresi yereldir: ana sorguya ve önbellek anahtarına girmez.
+  const mainFilters = Object.fromEntries(Object.entries(filters).filter(([key]) => !isAttributeKey(key)));
+  for (const [key, values] of Object.entries(mainFilters)) {
     const field = dimensionByKey.get(key);
     if (!field) throw error(`"${key}" filtresi canlı modelde bulunamadı.`, 'OAB_CUBE_FILTER_UNAVAILABLE', 422);
     let literals;
@@ -447,11 +499,12 @@ function buildQuery({ liveFields = [], view = null, filterValues = {}, horizon =
   const queriedKeys = measureFields.map(item => item.key);
   const derivedKeys = ['wssi', 'approved'].every(key => queriedKeys.includes(key)) ? DERIVED_MEASURES.map(item => item.key) : [];
   return {
-    query, headerMap, maxRows: rowLimit, filterValues: filters, horizonApplied: horizonFilterArgs.length > 0,
+    query, headerMap, maxRows: rowLimit, filterValues: mainFilters, horizonApplied: horizonFilterArgs.length > 0,
     dimensions: groupFields.map(item => item.key),
     measures: queriedKeys,
     derived: derivedKeys,
     missing,
+    attributes: usedProductAttributes(current),
   };
 }
 
@@ -523,6 +576,90 @@ function normalizeRows(rows, built) {
   });
 }
 
+/* Ürün özellikleri sorgusu (ana sorgudan ayrı, ölçüsüz). Urun'un ModelKod,
+   RenkKod ve istenen özellik sütunları ana sonuçtaki ModelKod listesiyle
+   (TREATAS) gruplanır; aynı tablonun sütunları olduğu için yalnız Urun'da var
+   olan kombinasyonlar döner. Liste PRODUCT_ATTRIBUTE_CHUNK literal parçalara
+   bölünür. Birleştirme anahtarı (ModelKod/RenkKod) yoksa ya da istenen
+   özelliklerin hiçbiri canlı şemada yoksa açık şema hatası verilir. */
+function productAttributeQueries({ liveFields = [], rows = [], attributes = [], chunkSize = PRODUCT_ATTRIBUTE_CHUNK, maxRows = OAB_CUBE_MAX_ROWS } = {}) {
+  const wanted = PRODUCT_ATTRIBUTE_KEYS.filter(key => Array.isArray(attributes) && attributes.includes(key));
+  const modelCodes = [...new Set((Array.isArray(rows) ? rows : []).map(row => clean(row && row.modelCode)).filter(Boolean))].sort();
+  const modelSetHash = crypto.createHash('sha256').update(modelCodes.join('\n'), 'utf8').digest('hex');
+  const empty = { queries: [], modelCodes, fetched: [], missing: [], modelSetHash, truncatedModels: false };
+  if (!wanted.length || !modelCodes.length) return { ...empty, fetched: wanted.length ? wanted : [] };
+  const lookup = liveLookup(liveFields);
+  const asText = field => (field && !field.dataType ? { ...field, dataType: 'WChar' } : field);
+  const join = PRODUCT_ATTRIBUTE_JOIN.map(item => ({ ...item, field: asText(lookup(item.source, 'dimension')) }));
+  const present = PRODUCT_ATTRIBUTES.filter(item => wanted.includes(item.key)).map(item => ({ ...item, field: asText(lookup(item.source, 'dimension')) }));
+  const fetched = present.filter(item => item.field);
+  const missing = present.filter(item => !item.field).map(item => item.key);
+  if (join.some(item => !item.field) || !fetched.length) {
+    const absent = [...join.filter(item => !item.field).map(item => item.source), ...present.filter(item => !item.field).map(item => item.source)];
+    throw error(`OAB küpünde ürün özellik alanları bulunamadı: ${absent.join(', ')}.`, 'OAB_CUBE_ATTRIBUTES_SCHEMA', 422);
+  }
+  const size = Math.max(1, Math.min(PRODUCT_ATTRIBUTE_CHUNK, Math.floor(Number(chunkSize) || PRODUCT_ATTRIBUTE_CHUNK)));
+  const limit = Math.min(OAB_CUBE_MAX_ROWS, Math.max(1, Math.floor(Number(maxRows) || OAB_CUBE_MAX_ROWS)));
+  const columns = [...join, ...fetched];
+  const headerMap = {};
+  columns.forEach(item => outputAliases(item.field).forEach(alias => { headerMap[alias] = item.key; }));
+  const groupExpressions = columns.map(item => intakeReport.daxRef(item.field));
+  const modelRef = intakeReport.daxRef(join[0].field);
+  const usable = modelCodes.slice(0, size * PRODUCT_ATTRIBUTE_MAX_CHUNKS);
+  const queries = [];
+  for (let start = 0; start < usable.length; start += size) {
+    const codes = usable.slice(start, start + size);
+    let literals;
+    try { literals = intakeReport.intakeFilterValues({ ...join[0].field, defaultLabel: 'ModelKod' }, codes); }
+    catch (cause) { throw error(cause && cause.message || 'ModelKod değeri geçersiz.', 'OAB_CUBE_ATTRIBUTES_SCHEMA', 422); }
+    queries.push({
+      query: `EVALUATE\nTOPN(${limit},\n  SUMMARIZECOLUMNS(\n    ${[...groupExpressions, `TREATAS({ ${literals.join(', ')} }, ${modelRef})`].join(',\n    ')}\n  )\n)`,
+      headerMap, maxRows: limit, modelCodes: codes,
+    });
+  }
+  return { queries, modelCodes, fetched: fetched.map(item => item.key), missing, modelSetHash, truncatedModels: usable.length < modelCodes.length };
+}
+
+/* Özellik sorgusu satırları: bütün alanlar metin (kod alanları sayıya çevrilmez). */
+function normalizeProductAttributeRows(rows, keys) {
+  const wanted = PRODUCT_ATTRIBUTE_KEYS.filter(key => Array.isArray(keys) && keys.includes(key));
+  return (Array.isArray(rows) ? rows : []).map(row => {
+    const out = { modelCode: clean(row && row.modelCode), colourCode: clean(row && row.colourCode) };
+    for (const key of wanted) out[key] = clean(row && row[key]);
+    return out;
+  });
+}
+
+/* Ana satırlara ModelKod + RenkKod anahtarıyla özellik ekler. Her ana satır
+   tek çıktı satırıdır (satır sayısı ve ölçüler değişmez). Bir anahtar için
+   boş olmayan tek değer yazılır; birden çok değer PRODUCT_ATTRIBUTE_MULTI ve
+   attrMulti listesiyle işaretlenir (sessizce biri seçilmez); eşleşmeyen boş. */
+function mergeProductAttributes(rows, attrRows, keys) {
+  const wanted = PRODUCT_ATTRIBUTE_KEYS.filter(key => Array.isArray(keys) && keys.includes(key));
+  const index = new Map();
+  for (const row of Array.isArray(attrRows) ? attrRows : []) {
+    const id = `${clean(row && row.modelCode)}\u0001${clean(row && row.colourCode)}`;
+    if (!index.has(id)) index.set(id, Object.fromEntries(wanted.map(key => [key, new Set()])));
+    const sets = index.get(id);
+    for (const key of wanted) { const value = clean(row[key]); if (value) sets[key].add(value); }
+  }
+  let matchedRows = 0, multiRows = 0;
+  const out = (Array.isArray(rows) ? rows : []).map(row => {
+    const next = { ...row };
+    const sets = index.get(`${clean(row && row.modelCode)}\u0001${clean(row && row.colourCode)}`);
+    let multi = null;
+    for (const key of wanted) {
+      const values = sets ? [...sets[key]].sort((a, b) => a.localeCompare(b, 'tr', { numeric: true })) : [];
+      if (values.length > 1) { next[key] = PRODUCT_ATTRIBUTE_MULTI; (multi = multi || {})[key] = values; }
+      else next[key] = values[0] || '';
+    }
+    if (multi) { next.attrMulti = multi; multiRows += 1; } else delete next.attrMulti;
+    if (sets) matchedRows += 1;
+    return next;
+  });
+  return { rows: out, matchedRows, multiRows };
+}
+
 function distinctQuery(item, { search = '', limit = 500 } = {}) {
   const field = item && item.field ? item.field : item;
   const column = intakeReport.daxRef(field);
@@ -536,7 +673,12 @@ function distinctQuery(item, { search = '', limit = 500 } = {}) {
 
 function catalog() {
   return {
-    dimensions: DIMENSIONS.map(({ key, tr, en, filter, required, code, optionalGrain }) => ({ key, tr, en, filter: Boolean(filter), required: Boolean(required), code: Boolean(code), optionalGrain: Boolean(optionalGrain) })),
+    dimensions: [
+      ...DIMENSIONS.map(({ key, tr, en, filter, required, code, optionalGrain }) => ({ key, tr, en, filter: Boolean(filter), required: Boolean(required), code: Boolean(code), optionalGrain: Boolean(optionalGrain) })),
+      // Ürün özellikleri: ayrı sorguyla gelen yerel metin boyutları.
+      ...PRODUCT_ATTRIBUTES.map(({ key, tr, en }) => ({ key, tr, en, filter: true, required: false, code: false, optionalGrain: false, attribute: true })),
+    ],
+    productAttributeMulti: PRODUCT_ATTRIBUTE_MULTI,
     measures: [
       ...MEASURES.map(({ key, tr, en, kind, agg, required }) => ({ key, tr, en, kind, agg, required: Boolean(required) })),
       ...DERIVED_MEASURES.map(({ key, tr, en, kind, agg, hintTr, hintEn }) => ({ key, tr, en, kind, agg, required: false, derived: true, hintTr, hintEn })),
@@ -550,6 +692,8 @@ function catalog() {
 
 module.exports = {
   OAB_CUBE_CONNECTION, OAB_CUBE_MAX_ROWS, DIMENSIONS, MEASURES, DERIVED_MEASURES, PASS_ONLY_FIELDS, PROVEN_TABLES, FILTER_KEYS, DEFAULT_VALUES, DEFAULT_ROWS,
+  PRODUCT_ATTRIBUTES, PRODUCT_ATTRIBUTE_MULTI, PRODUCT_ATTRIBUTE_CHUNK, PRODUCT_ATTRIBUTE_MAX_CHUNKS,
+  usedProductAttributes, productAttributeQueries, normalizeProductAttributeRows, mergeProductAttributes,
   resolveConnection, resolveHorizon, isBoundedHorizon, resolveFields, normalizeRef, normalizeFilterValues, normalizeView, buildQuery, normalizeRows, toNumber,
   freshnessQuery, normalizeFreshness, distinctQuery, resolveFilterField, metadata, extraKey, isProvenTable, catalog,
 };

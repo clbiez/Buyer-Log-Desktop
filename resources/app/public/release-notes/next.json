@@ -458,6 +458,35 @@
       }
     },
     {
+      "id": "oab-cube-product-attributes",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış · OAB (Küp)",
+        "en": "Overview · OAB (Cube)"
+      },
+      "title": {
+        "tr": "OAB (Küp): FİT, Silüet ve Kumaş-malzeme tipi alanları",
+        "en": "OAB (Cube): Fit, Silhouette and Fabric-material type fields"
+      },
+      "body": {
+        "tr": "OAB (Küp) pivotuna küpün Urun tablosundaki FİT, Silüet ve Kumaş-malzeme tipi alanları eklendi. Alanlar pivot satırı, sütunu ve filtresi olarak seçilebilir; ayarlardan alt detay sütunu olarak açılabilir ve Excel'e metin olarak aktarılır. Ana OAB sorgusu ve adetler değişmez: alanlardan biri kullanıldığında ayrı bir ürün özellikleri sorgusu, gösterilen modellerin özelliklerini okur ve model + renk satırlarına ekler; kullanılmadıklarında ek sorgu atılmaz. Bir model + renk için birden çok değer varsa \"Çoklu\" yazılır ve değerler ipucunda listelenir; eşleşmeyen satır boş kalır. Bu alanların filtresi yüklü satırlarda hemen uygulanır, küpü yeniden sorgulamaz. Özellikler okunamazsa widget çalışmaya devam eder ve \"ürün özellikleri alınamadı\" uyarısı görünür.",
+        "en": "The Fit, Silhouette and Fabric-material type fields from the cube's Urun table were added to the OAB (Cube) pivot. They can be used as pivot rows, columns and filters, turned on as drill-down columns in settings, and are exported to Excel as text. The main OAB query and the quantities do not change: when one of these fields is used, a separate product attribute query reads the attributes of the models shown and adds them to the model + colour rows; when none is used, no extra query runs. If a model + colour has several values, \"Multiple\" is shown and the values are listed in the tooltip; rows without a match stay blank. Filters on these fields apply to the loaded rows immediately without querying the cube again. If the attributes cannot be read, the widget keeps working and shows a \"product attributes could not be loaded\" warning."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-cube-product-attributes-light.png",
+        "alt": {
+          "tr": "Demo veri: OAB (Küp) pivotu Klasman grup › FİT satırları ve Silüet sütunuyla; bir FİT grubu Çoklu, filtre panelinde Kumaş-malzeme tipi = Örme yerel filtresi",
+          "en": "Demo data: OAB (Cube) pivot with Class group › Fit rows and a Silhouette column; one Fit group shows Çoklu (Multiple), and the filter panel has the local Fabric-material type = Örme filter"
+        },
+        "caption": {
+          "tr": "Demo veride iki FİT değeri olan option \"Çoklu\" grubunda; Kumaş-malzeme tipi filtresi yüklü satırlara uygulanır, genel toplam yalnız filtrelenen satırların adedidir.",
+          "en": "On demo data, the option with two Fit values falls under \"Çoklu\" (Multiple); the Fabric-material type filter applies to the loaded rows and the grand total is the quantity of the filtered rows only."
+        }
+      }
+    },
+    {
       "id": "backlog-handover-vs-loading",
       "type": "fix",
       "module": {
