@@ -143,8 +143,13 @@ module.exports = function registerOabCubeRoutes(app, deps) {
     const previous = store.loadSnapshot(userId);
     try {
       const view = saveView(userId, { ...storedView(userId), ...(req.body && req.body.view ? req.body.view : {}) });
-      const found = await liveFields();
       const horizon = horizonOf();
+      /* Sezon zorunluluğu sunucuda uygulanır (istemcinin ufuk bilgisi eskimiş
+         olabilir). Sezon da ufuk da yoksa küpe (şema keşfi dahil) gidilmez. */
+      if (!(view.filterValues && Array.isArray(view.filterValues.season) && view.filterValues.season.length) && !report.isBoundedHorizon(horizon)) {
+        return res.status(400).json({ ...failure(Object.assign(new Error('OAB küp sorgusu için en az bir sezon seçilmeli veya Veri Yönetimi\'nde ufuk tanımlanmalıdır.'), { code: 'OAB_CUBE_SEASON_REQUIRED', statusCode: 400 })), horizon: false });
+      }
+      const found = await liveFields();
       const built = report.buildQuery({ liveFields: found.fields, view, horizon });
       const queryKey = reportQueryKey(found, userId, built, horizon);
       const meta = { filterValues: built.filterValues, missing: built.missing, rowLimit: built.maxRows, measures: [...built.measures, ...(built.derived || [])], dimensions: built.dimensions, horizonApplied: built.horizonApplied };
@@ -152,7 +157,7 @@ module.exports = function registerOabCubeRoutes(app, deps) {
         const cached = store.get(queryKey);
         if (cached && cached.fresh) {
           store.saveSnapshot(userId, { queryKey, rows: cached.rows, fields: [], viewConfig: cached.viewConfig || meta, fetchedAt: cached.fetchedAt });
-          return res.json({ ok: true, view, ...snapshotPayload({ rows: cached.rows, fetchedAt: cached.fetchedAt, viewConfig: cached.viewConfig || meta }), fromCache: true });
+          return res.json({ ok: true, view, horizon: Boolean(horizon), ...snapshotPayload({ rows: cached.rows, fetchedAt: cached.fetchedAt, viewConfig: cached.viewConfig || meta }), fromCache: true });
         }
       }
       const result = await modelQuery.runModelRows({ server: found.connection.server, catalog: found.connection.catalog, query: built.query, headerMap: built.headerMap, generated: true, maxRows: built.maxRows, timeoutMs: 180000 });
@@ -162,7 +167,7 @@ module.exports = function registerOabCubeRoutes(app, deps) {
       const record = store.set(queryKey, { rows, fields: [], viewConfig: stamped, fetchedAt: new Date().toISOString() });
       store.saveSnapshot(userId, { queryKey, rows, fields: [], viewConfig: stamped, fetchedAt: record.fetchedAt });
       userAccess.appendAudit(req.currentUser, 'OAB_CUBE_REPORT_FETCH', queryKey, { rows: rows.length, forceRefresh: Boolean(req.body && req.body.forceRefresh) });
-      res.json({ ok: true, view, ...snapshotPayload({ rows, fetchedAt: record.fetchedAt, viewConfig: stamped }), fromCache: false });
+      res.json({ ok: true, view, horizon: Boolean(horizon), ...snapshotPayload({ rows, fetchedAt: record.fetchedAt, viewConfig: stamped }), fromCache: false });
     } catch (err) {
       logFailure('report', err);
       if (previous && Array.isArray(previous.rows) && RECOVERABLE_ERRORS.has(String(err && err.code || ''))) {

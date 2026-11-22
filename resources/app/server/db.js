@@ -1652,7 +1652,9 @@ function normalizeModelConnections(list) {
        DÜŞÜRÜLMEZ (bir sonraki Kaydet'te kalıcı silinirdi); varsayılan eklenmez,
        widget yedek çözümle çalışmaya devam eder, yer açılınca eklenir. */
     if (items.length < MODEL_CONNECTION_LIMIT) {
-      const existing = items.find(item => /^oab_?cube$/i.test(String(item.catalog || '').trim()));
+      // Devralma sırası resolver ile aynı: önce etkin katalog kaydı, sonra herhangi biri.
+      const catalogMatches = items.filter(item => /^oab_?cube$/i.test(String(item.catalog || '').trim()));
+      const existing = catalogMatches.find(item => item.refreshEnabled !== false) || catalogMatches[0];
       const intake = items.find(item => item.role === 'intake');
       items.push(normalizeModelConnection(existing
         ? { ...MODEL_CONNECTION_DEFAULT_OABCUBE, server: existing.server, catalog: existing.catalog }

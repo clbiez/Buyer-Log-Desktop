@@ -86,6 +86,20 @@ test('migrasyon: OAB_Cube önceden Özel Database ise varsayılan onun sunucu/ka
   assert.equal(variant.catalog, 'OABCube');
 });
 
+test('migrasyon: devre dışı + etkin iki OAB_Cube kaydında varsayılan ETKİN olanın sunucusunu devralır (resolver sırası)', () => {
+  const list = [
+    { id: 'retired', name: 'Eski küp', role: 'custom', server: 'retired-server', catalog: 'OAB_Cube', refreshEnabled: false },
+    { id: 'working', name: 'Küp', role: 'custom', server: 'working-server', catalog: 'OAB_Cube', refreshEnabled: true },
+  ];
+  assert.equal(report.resolveConnection(list).server, 'working-server', 'migrasyon öncesi çözüm');
+  const items = db.normalizeModelConnections(list);
+  assert.equal(items.find(entry => entry.role === 'oabcube').server, 'working-server');
+  assert.equal(report.resolveConnection(items).server, 'working-server', 'migrasyon sonrası aynı sunucu');
+  // Yalnız devre dışı kayıt varsa yine onu devralır (INTAKE sunucusundan önce).
+  const onlyRetired = db.normalizeModelConnections([list[0], { id: 'i', role: 'intake', server: 'lcwtabular_s21', catalog: 'WSSI_Intake_Raporu4' }]);
+  assert.equal(onlyRetired.find(entry => entry.role === 'oabcube').server, 'retired-server');
+});
+
 test('migrasyon: OAB_Cube kaydı yoksa varsayılan INTAKE sunucusunu devralır (bugünkü "intake-server" davranışı korunur)', () => {
   const before = report.resolveConnection([{ id: 'i', role: 'intake', server: 'lcwtabular_s21', catalog: 'WSSI_Intake_Raporu4' }]);
   const items = db.normalizeModelConnections([{ id: 'i', role: 'intake', server: 'lcwtabular_s21', catalog: 'WSSI_Intake_Raporu4' }]);
@@ -235,6 +249,20 @@ test('route: ufuk tanımlıysa sezonsuz sorgu çalışır; durum ve yanıt ufku 
   assert.equal((await h.call('GET /api/oab-cube/state', {})).body.horizon, false);
 });
 
+test('route: sezon da ufuk da yoksa küpe gitmeden reddeder; başarılı yanıt güncel ufuk durumunu taşır', async () => {
+  const h = harness([withHorizon({})]);
+  const res = await h.call('POST /api/oab-cube/report', { body: { view: { filterValues: {} } } });
+  assert.equal(res.statusCode, 400);
+  assert.equal(res.body.code, 'OAB_CUBE_SEASON_REQUIRED');
+  assert.equal(res.body.horizon, false);
+  assert.deepEqual(h.calls, [], 'şema keşfi veya sorgu çalışmaz');
+  // Widget açıkken Veri Yönetimi'nde ufuk tanımlanır: sayfa yenilemeden sezonsuz Yenile çalışır.
+  h.state.connections = [withHorizon(SEASON_HORIZON)];
+  const ok = await h.call('POST /api/oab-cube/report', { body: { view: { filterValues: {} } } });
+  assert.equal(ok.statusCode, 200, JSON.stringify(ok.body));
+  assert.equal(ok.body.horizon, true);
+});
+
 test('route: kullanıcının düzeltebileceği ufuk hatası kendi koduyla döner, "küpe ulaşılamıyor" diye maskelenmez', async () => {
   const h = harness([withHorizon({ groups: [{ conditions: [{ field: 'FİT', table: 'Urun', name: 'FİT', op: 'in', values: ['Slim'] }] }] })]);
   const res = await h.call('POST /api/oab-cube/report', { body: { view: { filterValues: {} } } });
@@ -286,7 +314,10 @@ test('Veri Yönetimi ekranı OAB (Küp) ufkunu ayrı satır ve çekmece grubu ol
 
 test('widget: ufuk varsa sezon zorunlu değildir; başlık ve Excel özeti ufku gösterir', () => {
   const ui = read('public/oab-cube.js');
-  assert.match(ui, /if \(!state\.horizon && !\(view\(\)\.filterValues\.season \|\| \[\]\)\.length\)/);
+  // Sezon zorunluluğu sunucuda: istemci eski (sayfa açılışındaki) ufuk bilgisiyle Yenile'yi engellemez.
+  assert.doesNotMatch(ui, /if \(!state\.horizon && !\(view\(\)\.filterValues\.season/);
+  assert.match(ui, /code === 'OAB_CUBE_SEASON_REQUIRED'\) \{ state\.horizon = false; setFilterPanelOpen\(true\);/);
+  assert.match(ui, /if \(typeof payload\.horizon === 'boolean'\) state\.horizon = payload\.horizon;/);
   assert.match(ui, /state\.horizon = Boolean\(payload\.horizon\);/);
   assert.match(ui, /state\.horizonApplied = Boolean\(payload && payload\.horizonApplied\);/);
   assert.match(ui, /if \(state\.horizon\) parts\.push\(text\('Veri Yönetimi ufku', 'Data Management horizon'\)\);/);

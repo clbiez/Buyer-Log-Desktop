@@ -588,11 +588,8 @@
 
   async function refresh(force) {
     if (state.loading) return;
-    if (!state.horizon && !(view().filterValues.season || []).length) {
-      setStatus(() => text('Sorgu için en az bir sezon seçin veya Veri Yönetimi’nde ufuk tanımlayın.', 'Select at least one season or define a horizon in Data Management.'), 'warning');
-      setFilterPanelOpen(true);
-      return;
-    }
+    /* Sezon/ufuk zorunluluğu sunucuda uygulanır: Veri Yönetimi'nde ufuk widget
+       açıkken tanımlanabilir. Sunucu sezon da ufuk da yoksa küpe gitmeden reddeder. */
     state.loading = true;
     setStatus(() => text('OAB küpü sorgulanıyor…', 'Querying the OAB cube…'), 'loading');
     render();
@@ -603,12 +600,17 @@
       const payload = await requestJson('/api/oab-cube/report', jsonBody('POST', { view: view(), forceRefresh: Boolean(force) }));
       pendingSaves.forEach(resolve => resolve(payload.view || null)); pendingSaves = [];
       if (payload.view && revision === state.viewRevision) state.view = payload.view;
+      if (typeof payload.horizon === 'boolean') state.horizon = payload.horizon;
       applyPayload(payload);
       state.loaded = true;
       if (payload.offline) setStatus(() => text('Küp şu anda erişilemiyor; son kayıtlı sonuç gösteriliyor.', 'The cube is unreachable; showing the last saved result.'), 'warning');
       else if (state.missing.length) setStatus(() => text(`Küpte bulunmayan alanlar boş gösterildi: ${missingLabels()}.`, `Fields missing from the cube are shown blank: ${missingLabels()}.`), 'warning');
       else setStatus(payload.fromCache ? () => text('Son 30 dakikadaki aynı sorgunun sonucu gösteriliyor.', 'Showing the result of the same query from the last 30 minutes.') : null, payload.fromCache ? 'ok' : '');
-    } catch (error) { setStatus(error.message || String(error), 'error'); }
+    } catch (error) {
+      const code = error && error.payload && error.payload.code;
+      if (code === 'OAB_CUBE_SEASON_REQUIRED') { state.horizon = false; setFilterPanelOpen(true); setStatus(() => errorText(error.payload, error.message), 'warning'); }
+      else setStatus(error.message || String(error), 'error');
+    }
     finally { pendingSaves.forEach(resolve => resolve(null)); pendingSaves = []; state.loading = false; render(); }
   }
 
