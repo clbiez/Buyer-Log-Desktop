@@ -216,19 +216,102 @@ function expandSnapshotPayload(snapshot) {
 // İçerik UTF-8 parçalarıyla üretilir; bütün kaynak için büyük bir V8 metni
 // oluşturmak, snapshot kaydında sunucuyu OOM ile kapatabiliyordu.
 // Gövde hash'i ve dosya baytları yalnız gerçekten yazılacaksa hazırlanır.
-/* İçerik görünümü: v3'te satır taşıyan bölümler tembel görünümlerdir; her satır
-   serileştirilirken kodlanır ve hemen bırakılır. Bütün satırların kodlanmış
-   kopyasını önceden kurmak üretim verisinde ~150-200 MiB geçici heap demekti
-   (OOM geçmişi: #1148/#1153). _bagColumns en son serileştirilir; o ana kadar
-   bütün şemalar toplanmıştır. format 'v2' yalnız test/geri dönüş aracıdır. */
+/* İçerik: v2'de içerik nesnesi olduğu gibi (jsonChunks) serileştirilir; v3'te
+   aynı içerik bir torba kodlayıcısıyla columnarContentJson'dan geçer. Bütün
+   satırların kodlanmış kopyası hiçbir anda tutulmaz (OOM geçmişi: #1148/#1153).
+   format 'v2' yalnız test/geri dönüş aracıdır. */
 function snapshotContent(compacted, format) {
   const { content, metadata } = splitCompactedPayload(compacted);
   const base = { metadata, savedAt:new Date().toISOString(), aliasCount:compacted.aliasCount };
   if (format === 'v2') return { ...base, content, encoder:null };
-  const encoder = rowBagEncoder();
-  const lazy = lazyRowContainers(content, encoder.encodeRow);
-  lazy[BAG_COLUMNS_KEY] = { toJSON:() => encoder.columns };
-  return { ...base, content:lazy, encoder };
+  return { ...base, content, encoder:rowBagEncoder() };
+}
+/* v3 içerik baytları. Satır bölümleri SERIALIZE_BATCH_ROWS'luk partiler hâlinde
+   yerel JSON.stringify ile yazılır: parti kodlanır, metne döner, bırakılır.
+   Satırı alan alan JS'te gezen önceki Proxy görünümüne göre sahaya benzer
+   veride kayıt ~2 kat hızlı ve örneklenen heap tepe noktası v2'nin altında (L2).
+   _bagColumns en son yazılır; o ana kadar bütün şemalar toplanmıştır. Çıktı,
+   JSON.stringify(içerik + _bagColumns) ile bayt bayt aynıdır. */
+const SERIALIZE_BATCH_ROWS = 256;
+const ROW_SECTIONS = Object.freeze({ asasOrders:'rows', lflRows:'rows', asasOrdersByTarget:'rowGroup', antrepoMap:'map', antrepoMapByTarget:'mapGroup' });
+function* rowsJson(rows, encodeRow) {
+  yield '[';
+  for (let i = 0; i < rows.length; i += SERIALIZE_BATCH_ROWS) {
+    const end = Math.min(rows.length, i + SERIALIZE_BATCH_ROWS), batch = new Array(end - i);
+    for (let j = i; j < end; j += 1) batch[j - i] = encodeRow(rows[j]);
+    const text = JSON.stringify(batch);
+    yield i ? `,${text.slice(1, -1)}` : text.slice(1, -1);
+  }
+  yield ']';
+}
+function* mapJson(map, encodeRow) {
+  yield '{';
+  let first = true, pending = [];
+  for (const key of Object.keys(map)) {
+    const value = map[key];
+    const text = JSON.stringify(Array.isArray(value) ? value.map(encodeRow) : encodeRow(value));
+    if (text === undefined) continue;
+    pending.push(`${first ? '' : ','}${JSON.stringify(key)}:${text}`); first = false;
+    if (pending.length >= SERIALIZE_BATCH_ROWS) { yield pending.join(''); pending = []; }
+  }
+  if (pending.length) yield pending.join('');
+  yield '}';
+}
+function* groupJson(group, section) {
+  yield '{';
+  let first = true;
+  for (const key of Object.keys(group)) {
+    const value = group[key];
+    if (jsonOmitted(resolveToJson(value, key))) continue;
+    yield `${first ? '' : ','}${JSON.stringify(key)}:`; first = false;
+    yield* section(value);
+  }
+  yield '}';
+}
+function* columnarContentJson(content, encoder) {
+  const { encodeRow } = encoder;
+  const rows = value => (Array.isArray(value) ? rowsJson(value, encodeRow) : [JSON.stringify(value)]);
+  const map = value => (value && typeof value === 'object' && !Array.isArray(value) ? mapJson(value, encodeRow) : [JSON.stringify(value)]);
+  const sections = {
+    rows,
+    map,
+    rowGroup:value => (value && typeof value === 'object' && !Array.isArray(value) ? groupJson(value, rows) : [JSON.stringify(value)]),
+    mapGroup:value => (value && typeof value === 'object' && !Array.isArray(value) ? groupJson(value, map) : [JSON.stringify(value)]),
+  };
+  yield '{';
+  for (const key of Object.keys(content)) {
+    const value = content[key];
+    if (jsonOmitted(resolveToJson(value, key))) continue;
+    yield `${JSON.stringify(key)}:`;
+    const kind = ROW_SECTIONS[key];
+    if (kind && value && typeof value === 'object' && typeof value.toJSON !== 'function') yield* sections[kind](value);
+    else yield JSON.stringify(value);
+    yield ',';
+  }
+  // _bagColumns en sondadır: o ana kadar bütün şemalar toplanmıştır.
+  yield `${JSON.stringify(BAG_COLUMNS_KEY)}:${JSON.stringify(encoder.columns)}}`;
+}
+const FLUSH_CHARS = 8 * 1024 * 1024;
+function contentBufferFrom(view) {
+  if (!view.encoder) return jsonToBuffer(view.content);
+  const parts = []; let batch = [], size = 0;
+  for (const chunk of columnarContentJson(view.content, view.encoder)) {
+    batch.push(chunk); size += chunk.length;
+    if (size >= FLUSH_CHARS) { parts.push(Buffer.from(batch.join(''), 'utf8')); batch = []; size = 0; }
+  }
+  if (batch.length) parts.push(Buffer.from(batch.join(''), 'utf8'));
+  return parts.length === 1 ? parts[0] : Buffer.concat(parts);
+}
+async function contentBufferFromAsync(view, yieldControl) {
+  if (!view.encoder) return jsonToBufferAsync(view.content, { yieldControl });
+  const parts = []; let batch = [], size = 0, deadline = performance.now() + 8;
+  for (const chunk of columnarContentJson(view.content, view.encoder)) {
+    batch.push(chunk); size += chunk.length;
+    if (size >= FLUSH_CHARS) { parts.push(Buffer.from(batch.join(''), 'utf8')); batch = []; size = 0; }
+    if (performance.now() >= deadline) { await yieldControl(); deadline = performance.now() + 8; }
+  }
+  if (batch.length) parts.push(Buffer.from(batch.join(''), 'utf8'));
+  return parts.length === 1 ? parts[0] : Buffer.concat(parts);
 }
 function preparedFrom({ content, encoder, ...rest }, contentBuffer, contentKey) {
   // v2 eşdeğeri payload = v3 payload − (",\"_bagColumns\":[...]") + torba farkı.
@@ -239,7 +322,7 @@ function preparedFrom({ content, encoder, ...rest }, contentBuffer, contentKey) 
 }
 function prepareSnapshot(payload, format = 'v3') {
   const view = snapshotContent(compactSnapshotPayload(payload), format);
-  const contentBuffer = jsonToBuffer(view.content);
+  const contentBuffer = contentBufferFrom(view);
   return preparedFrom(view, contentBuffer, checksum(contentBuffer));
 }
 /* Yenileme/kayıt yolu (saveModelSnapshotAsync) için kooperatif eşdeğerler.
@@ -262,7 +345,7 @@ async function hashPartsAsync(parts, yieldControl) {
 async function prepareSnapshotAsync(payload, yieldControl = yieldToEventLoop, format = 'v3') {
   // v3 kodlaması içerik eşitliği takma adlarından (compact, #1157) SONRA çalışır.
   const view = snapshotContent(await compactSnapshotPayloadAsync(payload, yieldControl), format);
-  const contentBuffer = await jsonToBufferAsync(view.content, { yieldControl });
+  const contentBuffer = await contentBufferFromAsync(view, yieldControl);
   return preparedFrom(view, contentBuffer, await hashPartsAsync([contentBuffer], yieldControl));
 }
 async function finishSnapshotAsync(prepared, yieldControl = yieldToEventLoop) {
@@ -336,10 +419,8 @@ function rowBagEncoder() {
     for (let i = 0; i < a.length; i += 1) if (a[i] !== b[i]) return false;
     return true;
   };
-  /* Ayırma bilinçli olarak en aza indirildi (L2: ilk sürüm kayıtta heap tepe
-     noktasını +146 MiB artırıyordu). Anahtarlar for-in ile, ara dizi kurulmadan
-     son şemayla karşılaştırılır; anahtar dizisi yalnız şema değişince kurulur.
-     Satır kopyalanmaz: torba alanlarını kodlayan bir Proxy görünümü döner. */
+  /* Anahtarlar for-in ile, ara dizi kurulmadan son şemayla karşılaştırılır;
+     anahtar dizisi yalnız şema değişince kurulur. */
   const encodeBag = (bag, name) => {
     const node = resolveToJson(bag, name);
     if (Array.isArray(node)) { delta -= node.length ? 3 : 2; return [ARRAY_BAG, ...node]; }
@@ -371,51 +452,26 @@ function rowBagEncoder() {
     delta += index ? keyBytes[id] - 1 - String(id).length : -String(id).length;
     return out;
   };
-  const BAG_NAMES = new Set(ROW_BAGS);
-  const rowView = {
-    get(target, key, receiver) {
-      const value = Reflect.get(target, key, receiver);
-      if (!BAG_NAMES.has(key) || !Object.prototype.propertyIsEnumerable.call(target, key) || !value || typeof value !== 'object') return value;
-      return encodeBag(value, key);
-    },
-  };
+  // Satırın sığ kopyası, torbaları kodlanmış olarak; parti serileştirilince bırakılır.
   const encodeRow = row => {
     if (!row || typeof row !== 'object' || Array.isArray(row)) return row;
+    let out = null;
     for (const name of ROW_BAGS) {
       const bag = row[name];
-      if (bag && typeof bag === 'object' && Object.prototype.propertyIsEnumerable.call(row, name)) return new Proxy(row, rowView);
+      if (!bag || typeof bag !== 'object' || !Object.prototype.propertyIsEnumerable.call(row, name)) continue;
+      out = out || { ...row };
+      out[name] = encodeBag(bag, name);
     }
-    return row;
+    return out || row;
   };
   return { encodeRow, columns, get delta() { return delta; } };
 }
-/* Tembel görünümler: serileştirici (large-json jsonChunks / JSON.stringify) her
-   öğeyi tam bir kez okur; satır o anda kodlanır. Kaynak diziler/haritalar
-   değiştirilmez. */
-const INDEX_KEY = /^(?:0|[1-9]\d*)$/;
-const lazyRows = (rows, fn) => (Array.isArray(rows) ? new Proxy(rows, {
-  get(target, key, receiver) { const value = Reflect.get(target, key, receiver); return typeof key === 'string' && INDEX_KEY.test(key) ? fn(value) : value; },
-}) : rows);
-const lazyMap = (map, fn) => (map && typeof map === 'object' && !Array.isArray(map) ? new Proxy(map, {
-  get(target, key, receiver) {
-    const value = Reflect.get(target, key, receiver);
-    if (typeof key !== 'string' || !Object.prototype.hasOwnProperty.call(target, key)) return value;
-    return Array.isArray(value) ? value.map(fn) : fn(value);
-  },
-}) : map);
-const lazyGroup = (group, view) => (group && typeof group === 'object' && !Array.isArray(group)
-  ? Object.fromEntries(Object.entries(group).map(([target, value]) => [target, view(value)])) : group);
-// Satır taşıyan bölümler; v2'de de aynı yapıdadır (hedef takma adları çözülmeden önce).
-function lazyRowContainers(content, row) {
-  const out = { ...content };
-  if ('asasOrders' in out) out.asasOrders = lazyRows(out.asasOrders, row);
-  if ('asasOrdersByTarget' in out) out.asasOrdersByTarget = lazyGroup(out.asasOrdersByTarget, rows => lazyRows(rows, row));
-  if ('antrepoMap' in out) out.antrepoMap = lazyMap(out.antrepoMap, row);
-  if ('antrepoMapByTarget' in out) out.antrepoMapByTarget = lazyGroup(out.antrepoMapByTarget, map => lazyMap(map, row));
-  if ('lflRows' in out) out.lflRows = lazyRows(out.lflRows, row);
-  return out;
-}
-function decodeRowBags(payload) {
+/* Satır torbalarını yerinde çözer. Üreteçtir: kooperatif yükleme yolu
+   (loadModelSnapshotAsync + yieldControl) DECODE_YIELD_ROWS satırda bir olay
+   döngüsüne dönebilir; senkron yol üreteci tek seferde tüketir. Sahadaki
+   ~160 bin satırlık çözme tek blokta ana thread'i saniyenin üzerinde tutabilirdi. */
+const DECODE_YIELD_ROWS = 512;
+function* decodeRowBagSteps(payload) {
   const columns = payload[BAG_COLUMNS_KEY];
   if (!Array.isArray(columns) || columns.some(keys => !Array.isArray(keys) || keys.some(key => typeof key !== 'string'))) {
     throw new Error('Snapshot v3 sütun sözlüğü geçersiz.');
@@ -438,13 +494,35 @@ function decodeRowBags(payload) {
     return row;
   };
   // Yerinde çözülür: JSON.parse'ın ürettiği satırlar zaten tekil nesnelerdir.
-  const each = rows => { if (Array.isArray(rows)) rows.forEach(decodeRow); };
-  const eachMap = map => { if (map && typeof map === 'object' && !Array.isArray(map)) Object.values(map).forEach(value => (Array.isArray(value) ? each(value) : decodeRow(value))); };
-  const eachGroup = (group, fn) => { if (group && typeof group === 'object' && !Array.isArray(group)) Object.values(group).forEach(fn); };
-  each(payload.asasOrders); eachGroup(payload.asasOrdersByTarget, each);
-  eachMap(payload.antrepoMap); eachGroup(payload.antrepoMapByTarget, eachMap);
-  each(payload.lflRows);
+  let done = 0;
+  function* each(rows) {
+    if (!Array.isArray(rows)) return;
+    for (let i = 0; i < rows.length; i += 1) { decodeRow(rows[i]); if (++done % DECODE_YIELD_ROWS === 0) yield; }
+  }
+  function* eachMap(map) {
+    if (!map || typeof map !== 'object' || Array.isArray(map)) return;
+    for (const value of Object.values(map)) {
+      if (Array.isArray(value)) yield* each(value);
+      else { decodeRow(value); if (++done % DECODE_YIELD_ROWS === 0) yield; }
+    }
+  }
+  function* eachGroup(group, fn) {
+    if (group && typeof group === 'object' && !Array.isArray(group)) for (const value of Object.values(group)) yield* fn(value);
+  }
+  yield* each(payload.asasOrders); yield* eachGroup(payload.asasOrdersByTarget, each);
+  yield* eachMap(payload.antrepoMap); yield* eachGroup(payload.antrepoMapByTarget, eachMap);
+  yield* each(payload.lflRows);
   return payload;
+}
+function drain(steps) { for (;;) { const step = steps.next(); if (step.done) return step.value; } }
+const DECODE_SLICE_MS = 8;
+async function drainAsync(steps, yieldControl) {
+  let sliceStart = Date.now();
+  for (;;) {
+    const step = steps.next();
+    if (step.done) return step.value;
+    if (Date.now() - sliceStart >= DECODE_SLICE_MS) { await yieldControl(); sliceStart = Date.now(); }
+  }
 }
 /* Sıkıştırılmamış dosya baytları (test, benchmark ve geri dönüş tanısı için).
    Kayıt yolu aynı prepare/finish fonksiyonlarını kullanır. */
@@ -460,40 +538,52 @@ function encodeLegacyV2Snapshot(payload) { assertSnapshotPayload(payload); retur
    metinler burada yeniden Date'e çevrilir; böylece hydrate edilen veri canlı
    yenilemeyle aynı tiptedir. Yalnız tam ISO-Z biçimi dönüştürülür. */
 const DATE_JSON = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
-function reviveDatesIn(root, seen = new WeakSet()) {
-  let revived = 0;
-  const visit = node => {
-    if (!node || typeof node !== 'object' || node instanceof Date || seen.has(node)) return;
+/* Üreteç + açık yığın: kooperatif yükleme yolu REVIVE_YIELD_NODES düğümde bir
+   olay döngüsüne dönebilir (sahada tarih dönüşümü tek blokta yüzlerce ms
+   sürüyordu); senkron yol üreteci tek seferde tüketir. Ziyaret sırası değişse de
+   her dönüşüm yerinde ve bağımsızdır; `seen` paylaşılan dizileri bir kez gezer. */
+const REVIVE_YIELD_NODES = 1024;
+const isDateJson = v => v.length === 24 && v.charCodeAt(10) === 84 && v.charCodeAt(23) === 90 && DATE_JSON.test(v);
+function* reviveDatesSteps(root, seen) {
+  let revived = 0, visited = 0;
+  const stack = [root];
+  while (stack.length) {
+    const node = stack.pop();
+    if (!node || typeof node !== 'object' || node instanceof Date || seen.has(node)) continue;
     seen.add(node);
     if (Array.isArray(node)) {
       for (let i = 0; i < node.length; i += 1) {
         const v = node[i];
-        if (typeof v === 'string') { if (v.length === 24 && v.charCodeAt(10) === 84 && v.charCodeAt(23) === 90 && DATE_JSON.test(v)) { node[i] = new Date(v); revived += 1; } }
-        else if (v && typeof v === 'object') visit(v);
+        if (typeof v === 'string') { if (isDateJson(v)) { node[i] = new Date(v); revived += 1; } }
+        else if (v && typeof v === 'object') stack.push(v);
       }
-      return;
+    } else {
+      for (const key of Object.keys(node)) {
+        const v = node[key];
+        if (typeof v === 'string') { if (isDateJson(v)) { node[key] = new Date(v); revived += 1; } }
+        else if (v && typeof v === 'object') stack.push(v);
+      }
     }
-    for (const key of Object.keys(node)) {
-      const v = node[key];
-      if (typeof v === 'string') { if (v.length === 24 && v.charCodeAt(10) === 84 && v.charCodeAt(23) === 90 && DATE_JSON.test(v)) { node[key] = new Date(v); revived += 1; } }
-      else if (v && typeof v === 'object') visit(v);
-    }
-  };
-  visit(root);
+    if (++visited % REVIVE_YIELD_NODES === 0) yield;
+  }
   return revived;
 }
-function reviveSnapshotDates(value) {
+function reviveDatesIn(root, seen = new WeakSet()) { return drain(reviveDatesSteps(root, seen)); }
+function* reviveSnapshotDateSteps(value) {
   if (!value || typeof value !== 'object') return 0;
   let total = 0;
   const seen = new WeakSet(); // hedef takma adları aynı diziyi paylaşır; bir kez gezilir
   for (const [baseKey, groupKey] of TARGET_GROUPS) {
-    total += reviveDatesIn(value[baseKey], seen);
-    total += reviveDatesIn(value[groupKey], seen);
+    total += yield* reviveDatesSteps(value[baseKey], seen);
+    total += yield* reviveDatesSteps(value[groupKey], seen);
   }
   return total;
 }
+function reviveSnapshotDates(value) { return drain(reviveSnapshotDateSteps(value)); }
 
-function decodeSnapshotRaw(raw, parsed = parseJsonBuffer(raw)) {
+/* Snapshot çözme adımları (üreteç). v3 satır torbası çözme dilimlenir; senkron
+   yol (decodeSnapshotRaw) aynı adımları tek seferde tüketir, sonuç birebir aynıdır. */
+function* decodeSnapshotSteps(raw, parsed) {
   let value;
   if (parsed && parsed.schemaVersion === LEGACY_SNAPSHOT_SCHEMA_VERSION) {
     value = parsed;
@@ -501,9 +591,9 @@ function decodeSnapshotRaw(raw, parsed = parseJsonBuffer(raw)) {
     const marker = Buffer.from('"payload":'), start = raw.indexOf(marker);
     if (start < 0 || raw[raw.length - 1] !== 0x7d) throw new Error('Snapshot payload biçimi geçersiz.');
     const payloadBytes = raw.subarray(start + marker.length, -1);
-    if (!parsed.checksum || checksum(payloadBytes) !== parsed.checksum) throw new Error('Snapshot checksum uyuşmuyor.');
+    if (!parsed.checksum || (yield* checksumSteps(payloadBytes)) !== parsed.checksum) throw new Error('Snapshot checksum uyuşmuyor.');
     const columnar = parsed.schemaVersion === COLUMNAR_SNAPSHOT_SCHEMA_VERSION;
-    value = expandSnapshotPayload(columnar ? decodeRowBags(parsed.payload) : parsed.payload);
+    value = expandSnapshotPayload(columnar ? yield* decodeRowBagSteps(parsed.payload) : parsed.payload);
     Object.defineProperty(value, '_baseChecksum', { value:parsed.checksum, enumerable:false });
     if (/^[0-9a-f]{64}$/.test(String(parsed.contentKey || ''))) Object.defineProperty(value, '_contentKey', { value:parsed.contentKey, enumerable:false });
     // Çözülmüş verinin v2 eşdeğeri bayt boyutu (bellek tahmini); v2'de dosyanın kendisi.
@@ -513,9 +603,20 @@ function decodeSnapshotRaw(raw, parsed = parseJsonBuffer(raw)) {
     throw new Error('Snapshot schema sürümü desteklenmiyor.');
   }
   if (!value || !Array.isArray(value.asasOrders)) throw new Error('Snapshot ana sipariş verisi eksik.');
-  reviveSnapshotDates(value);
+  yield* reviveSnapshotDateSteps(value);
   return value;
 }
+// sha256, HASH_SLICE_BYTES dilimlerle (sonuç tek update ile aynıdır).
+function* checksumSteps(buffer) {
+  const hash = crypto.createHash('sha256');
+  for (let offset = 0; offset < buffer.length; offset += HASH_SLICE_BYTES) {
+    hash.update(buffer.subarray(offset, Math.min(buffer.length, offset + HASH_SLICE_BYTES)));
+    yield;
+  }
+  return hash.digest('hex');
+}
+function decodeSnapshotRaw(raw, parsed = parseJsonBuffer(raw)) { return drain(decodeSnapshotSteps(raw, parsed)); }
+async function decodeSnapshotRawAsync(raw, parsed, yieldControl) { return drainAsync(decodeSnapshotSteps(raw, parsed), yieldControl); }
 
 function decodeSnapshotBuffer(buffer) {
   return decodeSnapshotRaw(zlib.gunzipSync(buffer));
@@ -607,7 +708,7 @@ async function loadModelSnapshotAsync(userId, {yieldControl} = {}) {
       const compressed = await fs.promises.readFile(candidate);
       const readMs = Date.now() - started, raw = await gunzip(compressed), inflateMs = Date.now() - started - readMs;
       const parseStarted = Date.now(), value = yieldControl
-        ? decodeSnapshotRaw(raw, await parseJsonBufferAsync(raw,{yieldControl}))
+        ? await decodeSnapshotRawAsync(raw, await parseJsonBufferAsync(raw,{yieldControl}), yieldControl)
         : decodeSnapshotRaw(raw);
       const decodedBytes = value._decodedBytes || raw.length;
       if (candidate === file) rememberSnapshot(userId, value._contentKey, value._baseChecksum, compressed, { uncompressedBytes:decodedBytes, fileBytes:raw.length });
@@ -659,7 +760,7 @@ async function snapshotByteEstimate(file) {
 
 module.exports = {
   SNAPSHOT_ROOT, SNAPSHOT_SCHEMA_VERSION, COLUMNAR_SNAPSHOT_SCHEMA_VERSION, snapshotPath,
-  LEGACY_V2_SCHEMA_VERSION, encodeColumnarSnapshot, encodeLegacyV2Snapshot, snapshotByteEstimate,
+  LEGACY_V2_SCHEMA_VERSION, encodeColumnarSnapshot, encodeLegacyV2Snapshot, snapshotByteEstimate, decodeSnapshotRawAsync,
   compactSnapshotPayload, expandSnapshotPayload, reviveSnapshotDates,
   saveModelSnapshot, saveModelSnapshotAsync, loadModelSnapshot, loadModelSnapshotAsync,
 };

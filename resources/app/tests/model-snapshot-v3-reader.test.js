@@ -230,3 +230,19 @@ test('snapshot-composition teşhisi v3 dosyasında sütun adlarını sözlükten
   assert.ok(sf.heaviestColumns.some(column => column.column === HEADERS[0]));
   assert.match(composition.formatReport(report), /v3 sütun sözlüğü/);
 });
+
+test('kooperatif yükleme: v3 satır torbası çözme olay döngüsüne döner ve senkron sonuçla aynıdır', async () => {
+  const big = payload(30000);
+  const raw = snapshots.encodeColumnarSnapshot(big).json;
+  const sync = JSON.parse(JSON.stringify(snapshots.loadModelSnapshot(writeRaw('coop-sync', raw) && 'coop-sync')));
+  let yields = 0, longest = 0, last = performance.now();
+  const yieldControl = () => new Promise(resolve => setImmediate(() => { const now = performance.now(); longest = Math.max(longest, now - last); last = now; yields += 1; resolve(); }));
+  last = performance.now();
+  const value = await snapshots.decodeSnapshotRawAsync(raw, JSON.parse(raw.toString('utf8')), yieldControl);
+  assert.ok(yields >= 3, `çözme dilimlenmeli (yield=${yields})`);
+  const { savedAt:a, ...left } = JSON.parse(JSON.stringify(value)), { savedAt:b, ...right } = sync;
+  assert.deepEqual(left, right);
+  // Kaynak sözleşmesi: yieldControl verilen yükleme yolu asenkron çözücüyü kullanır.
+  const source = fs.readFileSync(path.join(__dirname, '..', 'server', 'lib', 'model-snapshot.js'), 'utf8');
+  assert.match(source, /await decodeSnapshotRawAsync\(raw, await parseJsonBufferAsync\(raw,\{yieldControl\}\), yieldControl\)/);
+});
