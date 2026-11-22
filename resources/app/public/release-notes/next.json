@@ -456,6 +456,29 @@
           "en": "On demo data the Why at risk? section names Handover as Handover, not as loading."
         }
       }
+    },
+    {
+      "id": "capacity-path-snapshot-once",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Siparişler · Genel Bakış · Açılış",
+        "en": "CP · Orders · Overview · Startup"
+      },
+      "title": {
+        "tr": "Çok büyük veride açılışta veri her istekte yeniden okunmaz",
+        "en": "With very large data, startup no longer re-reads the data for every request"
+      },
+      "body": {
+        "tr": "Veri, hesap işçisinin belleğine sığmayacak kadar büyükse (yaklaşık 500 MiB üstü) hesaplar sunucuda yapılır. Bu durumda açılıştaki her ekran isteği kayıtlı model verisinin tamamını diskten yeniden okuyup çözüyor, sunucu her seferinde saniyelerce yanıt veremiyordu. Okunan veri artık aynı veri sürümü için bir kez okunup yeniden kullanılır; dosya değişirse yeniden okunur. Ekranlar ve sonuçlar aynıdır, açılış daha erken hazır olur.",
+        "en": "When the data is too large for the calculation worker (about 500 MiB and above), calculations run on the server. During startup every screen request then re-read and decoded the whole saved model data from disk, and the server stopped responding for seconds each time. The data is now read once per data version and reused; it is read again if the file changes. Screens and results are the same, and startup is ready sooner."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; yalnız büyük veride açılıştaki bekleme kısalır.",
+          "en": "There is no change on screen; only the startup wait with large data is shorter."
+        }
+      }
     }
   ]
 }
