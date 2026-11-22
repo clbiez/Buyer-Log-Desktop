@@ -577,6 +577,29 @@
           "en": "The rule editor on demo data: each rule shows which date its days count from, and it can be changed."
         }
       }
+    },
+    {
+      "id": "ias-refresh-actual-milestones",
+      "type": "improvement",
+      "module": {
+        "tr": "IAS yenilemesi · CP · Backlog",
+        "en": "IAS refresh · CP · Backlog"
+      },
+      "title": {
+        "tr": "IAS yenilemesi gerçekleşen antrepo girişi ve ara adım tarihlerini de getirir",
+        "en": "IAS refresh also brings the actual antrepo entry and intermediate step dates"
+      },
+      "body": {
+        "tr": "CP ve Backlog'u besleyen IAS yenilemesi artık gerçekleşen Antrepo / Tema Depo giriş, Cut Off, Fiili Yükleme ve gümrük adımlarının (Özet Beyan, Ambar Onay, Transit Beyanname, Evrak Teslim) tarihlerini de çeker. Sütunlar ilk yenilemede IAS modelinden bir kez, yalnız birebir sütun adıyla ve IAS tablosundan eklenir; tahmini antrepo tarihine bağlı sütun asla gerçekleşen giriş sayılmaz. Böylece depodaki parsiyelin gerçekleşen süresi gerçek giriş tarihinden hesaplanır ve aşama tahmini ara adımları görür. Eklenen sütunlar IAS sorgusunu bozarsa yenileme bunlar olmadan tamamlanır ve uyarı verir.",
+        "en": "The IAS refresh that feeds CP and Backlog now also fetches the actual Antrepo / Tema Warehouse entry, Cut-off, Actual Loading and customs step dates (Summary Declaration, Warehouse Approval, Transit Declaration, Document Delivery). The columns are added once on the first refresh from the IAS model, only by exact column name and only from IAS tables; the column bound to the estimated antrepo date is never taken as the actual entry. The realized time of warehoused partials is then calculated from the actual entry date, and the stage forecast sees the intermediate steps. If the added columns break the IAS query, the refresh completes without them and shows a warning."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Sunucu tarafındaki IAS sorgusu değişti; ekranda yeni öğe yok, mevcut alanlar gerçek tarihlerle dolar.",
+          "en": "The server-side IAS query changed; there is no new screen element, existing fields fill with actual dates."
+        }
+      }
     }
   ]
 }

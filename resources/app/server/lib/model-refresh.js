@@ -403,6 +403,35 @@ function requiredMissing(role, mapping, options = {}) {
   return missing.filter(header => !fabric.has(header));
 }
 
+/* IAS gerçekleşen kilometre taşı sütunları (Cut Off, Fiili Yükleme, Antrepo /
+   Tema Depo Giriş, gümrük adımları). Yalnız BİREBİR sütun adıyla, yalnız IAS
+   satır tablolarından (tahmini tarih / İthalat Dosya No tablosu ya da adı
+   İTHALAT/ANTREPO/IAS içeren tablo) ve zaten eşlenmiş fiziksel sütunlar
+   dışlanarak eklenir: "Tahmini Antrepo Giriş Tarihi" asla gerçekleşen giriş
+   sayılmaz, ilgisiz tablodan satır çoğaltan sütun alınmaz. */
+const IAS_MILESTONE_SCAN_VERSION = 5;
+function iasMilestoneColumns(mapping, schema, fallbackTable) {
+  const key = value => modelFields.fieldKey(value);
+  const entries = Object.values(mapping || {}).map(value => modelFields.normalizeMappingEntry(value, fallbackTable)).filter(entry => entry && entry.name);
+  const taken = new Set(entries.map(entry => `${key(entry.table)}|${key(entry.name)}`));
+  const preferred = ['Tahmini Antrepo Giriş Tarihi', 'İthalat Dosya No']
+    .map(header => modelFields.normalizeMappingEntry(mapping && mapping[header], fallbackTable))
+    .filter(entry => entry && entry.table).map(entry => key(entry.table));
+  const columns = Array.isArray(schema && schema.columns) ? schema.columns : [];
+  const out = {};
+  for (const field of modelFields.IAS_MILESTONE_FIELDS) {
+    if (mapping && mapping[field.header]) continue;
+    const names = new Set(field.names.map(key));
+    const candidates = columns.filter(column => column && column.name && names.has(key(column.name)) && !taken.has(`${key(column.table)}|${key(column.name)}`));
+    const hit = candidates.find(column => preferred.includes(key(column.table)))
+      || candidates.find(column => /ITHALAT|ANTREPO|IAS/.test(key(column.table)));
+    if (!hit) continue;
+    out[field.header] = { table: hit.table, name: hit.name, kind: 'column' };
+    taken.add(`${key(hit.table)}|${key(hit.name)}`);
+  }
+  return out;
+}
+
 async function ensureConnectionMapping(item, options = {}) {
   const role = normalizedRole(item);
   const normalized = normalizedConnectionMapping(item);
@@ -423,7 +452,11 @@ async function ensureConnectionMapping(item, options = {}) {
     .concat(role === 'asas' && mappingEnhancementScanVersion < 4 && !normalized.mapping[ORIGINAL_EXF_DATE] ? [ORIGINAL_EXF_DATE] : []);
   const productDescriptionRepairNeeded = role === 'asas' && modelFields.productDescriptionNeedsRepair(normalized.mapping);
   const brokenManualQuery = item && item.mode === 'manual' && /\[object Object\]/i.test(String(item.query || ''));
-  const needsRepair = normalized.invalidHeaders.length > 0 || missingBefore.length > 0 || missingEnhancements.length > 0 || productDescriptionRepairNeeded || brokenManualQuery;
+  // v5: IAS gerçekleşen kilometre taşı tarihleri bir kez taranır (otomatik sorgu modunda).
+  const milestoneScan = role === 'antrepo' && item && item.mode !== 'manual' && mappingEnhancementScanVersion < IAS_MILESTONE_SCAN_VERSION
+    && item.iasMilestonesDisabled !== true
+    && modelFields.IAS_MILESTONE_FIELDS.some(field => !normalized.mapping[field.header]);
+  const needsRepair = normalized.invalidHeaders.length > 0 || missingBefore.length > 0 || missingEnhancements.length > 0 || productDescriptionRepairNeeded || brokenManualQuery || milestoneScan;
   const softEnhancementOnly = needsRepair && !normalized.invalidHeaders.length && !missingBefore.length && !productDescriptionRepairNeeded && !brokenManualQuery
     && missingEnhancements.every(header => header === INITIAL_INSPECTION || header === ORIGINAL_EXF_DATE);
 
@@ -455,6 +488,31 @@ async function ensureConnectionMapping(item, options = {}) {
 
   const discoverSchema = options.discoverSchema || modelQuery.discoverSchema;
   const telemetry = typeof options.telemetry === 'function' ? options.telemetry : null;
+  /* Yalnız gerçekleşen tarih taraması gerekiyorsa eşleme olduğu gibi korunur;
+     şemadan yalnız bu sütunlar eklenir. Şema okunamazsa yenileme DURMAZ ve
+     tarama bir daha denenmez (alanlar Veri Yönetimi'nden elle eşlenebilir). */
+  const milestoneOnly = milestoneScan && !normalized.invalidHeaders.length && !missingBefore.length
+    && !missingEnhancements.length && !productDescriptionRepairNeeded && !brokenManualQuery;
+  if (milestoneOnly) {
+    let schemaForMilestones = null;
+    try {
+      schemaForMilestones = await discoverSchema({ server: item.server, catalog: item.catalog, timeoutMs: options.schemaTimeoutMs || 120000 }, options.queryOptions || {});
+    } catch (_) { schemaForMilestones = null; }
+    const fallbackTable = String(item && item.horizon && item.horizon.table || '').trim();
+    const added = schemaForMilestones ? iasMilestoneColumns(normalized.mapping, schemaForMilestones, fallbackTable) : {};
+    item.mapping = { ...normalized.mapping, ...added };
+    item.iasMilestoneHeaders = Object.keys(added);
+    item.mappingEnhancementScanVersion = Math.max(IAS_MILESTONE_SCAN_VERSION, mappingEnhancementScanVersion);
+    return {
+      repaired: true,
+      mapping: item.mapping,
+      repairedHeaders: Object.keys(added),
+      warnings: [
+        ...(Object.keys(added).length ? [`${connectionLabel(item)}: IAS gerçekleşen tarih sütunları eklendi: ${Object.keys(added).join(', ')}. / ${connectionLabel(item)}: IAS actual date columns added: ${Object.keys(added).join(', ')}.`] : []),
+        ...suspectWarnings,
+      ],
+    };
+  }
   const schemaStartedMs = Date.now();
   if (telemetry) telemetry({ type:'start', category:'query', connection:connectionLabel(item), operation:'schema-discovery', timestampMs:schemaStartedMs });
   let schema;
@@ -494,6 +552,12 @@ async function ensureConnectionMapping(item, options = {}) {
       { invalidHeaders: normalized.invalidHeaders, missingRequired: missingAfter, schemaErrors: schema.errors || [] });
   }
 
+  if (milestoneScan) {
+    const added = iasMilestoneColumns(repairedMapping, schema, String(item && item.horizon && item.horizon.table || '').trim());
+    Object.assign(repairedMapping, added);
+    item.iasMilestoneHeaders = Object.keys(added);
+    item.mappingEnhancementScanVersion = Math.max(IAS_MILESTONE_SCAN_VERSION, Number(item.mappingEnhancementScanVersion) || 0);
+  }
   item.mapping = repairedMapping;
   const productDescriptionRepaired = productDescriptionRepairNeeded
     && modelFields.fieldKey(repairedMapping['Ürün Tanım'] && repairedMapping['Ürün Tanım'].name) === modelFields.fieldKey('Ürün Ana Tanım');
@@ -1047,7 +1111,8 @@ async function queryConnectionRows(item, options = {}) {
   if (telemetry) telemetry({ type:'end', category:'wait', connection:label, operation:'mapping-check', timestampMs:Date.now(), durationMs:mappingMs });
   const columnType = await resolveColumnTypes(item, options);
   const liveHorizonRepair = repairHorizonAgainstSchema(item, columnType && columnType.schema);
-  let built = buildConnectionQuery(item, { extraExpression: options.extraExpression, matchRule: options.matchRule, columnType, iasLookup: options.iasLookup, asasFabricMode: options.asasFabricMode });
+  let iasLookupUsed = options.iasLookup;
+  let built = buildConnectionQuery(item, { extraExpression: options.extraExpression, matchRule: options.matchRule, columnType, iasLookup: iasLookupUsed, asasFabricMode: options.asasFabricMode });
   debugGeneratedDax(label, built.query, options);
   const runRows = options.runModelRows || modelQuery.runModelRows;
   const queryStartedMs = Date.now();
@@ -1091,13 +1156,40 @@ async function queryConnectionRows(item, options = {}) {
     } catch (error) {
       if (!(built.generated && built.role === 'antrepo' && isRelatedLookupError(error, built.query))) throw error;
       if (telemetry) telemetry({ type:'measure', category:'query', connection:label, operation:'model-query-related-fallback', timestampMs:queryStartedMs, durationMs:Date.now() - queryStartedMs, error:String(error && error.message || error) });
-      built = buildConnectionQuery(item, { extraExpression: options.extraExpression, matchRule: options.matchRule, columnType, iasLookup: 'selectedvalue', asasFabricMode: options.asasFabricMode });
+      iasLookupUsed = 'selectedvalue';
+      built = buildConnectionQuery(item, { extraExpression: options.extraExpression, matchRule: options.matchRule, columnType, iasLookup: iasLookupUsed, asasFabricMode: options.asasFabricMode });
       debugGeneratedDax(label, built.query, options);
       queryPlan = planFor(built);
       lookupWarnings.push(`${label}: IAS modelinde ilişki çoka-bir olmadığı için RELATED okuma reddedildi; sorgu eski CALCULATE(SELECTEDVALUE(...)) ifadesiyle yeniden çalıştırıldı (veri aynı, sunucu süresi daha uzun). / ${label}: the IAS model rejected RELATED because the relationship is not many-to-one; the query was re-run with the previous CALCULATE(SELECTEDVALUE(...)) form (same data, longer server time).`);
       result = await runBuilt(built);
     }
-  } catch (error) {
+  } catch (firstError) {
+    let error = firstError;
+    /* Otomatik eklenen IAS gerçekleşen tarih sütunları sorguyu bozuyorsa CP /
+       Backlog yenilemesi DURMAZ: bu sütunlar olmadan bir kez yeniden denenir.
+       Yeniden deneme başarılıysa sütunlar kalıcı olarak çıkarılır ve bir daha
+       eklenmez; o da başarısızsa sorun bu sütunlar değildir, eşleme geri konur. */
+    const milestoneHeaders = normalizedRole(item) === 'antrepo' && Array.isArray(item.iasMilestoneHeaders)
+      ? item.iasMilestoneHeaders.filter(header => item.mapping && item.mapping[header]) : [];
+    if (milestoneHeaders.length && !(options.signal && options.signal.aborted)) {
+      const saved = Object.fromEntries(milestoneHeaders.map(header => [header, item.mapping[header]]));
+      milestoneHeaders.forEach(header => { delete item.mapping[header]; });
+      try {
+        built = buildConnectionQuery(item, { extraExpression: options.extraExpression, matchRule: options.matchRule, columnType, iasLookup: iasLookupUsed, asasFabricMode: options.asasFabricMode });
+        queryPlan = planFor(built);
+        result = await runBuilt(built);
+        item.iasMilestoneHeaders = [];
+        item.iasMilestonesDisabled = true;
+        repair = { ...repair, repaired: true };
+        lookupWarnings.push(`${label}: IAS gerçekleşen tarih sütunları (${milestoneHeaders.join(', ')}) sorguyu bozduğu için çıkarıldı; yenileme bu sütunlar olmadan tamamlandı. / ${label}: the IAS actual date columns (${milestoneHeaders.join(', ')}) broke the query and were removed; the refresh completed without them.`);
+        error = null;
+      } catch (retryError) {
+        Object.assign(item.mapping, saved);
+        built = buildConnectionQuery(item, { extraExpression: options.extraExpression, matchRule: options.matchRule, columnType, iasLookup: iasLookupUsed, asasFabricMode: options.asasFabricMode });
+        queryPlan = planFor(built);
+      }
+    }
+    if (error) {
     if (telemetry) telemetry({ type:'measure', category:'query', connection:label, operation:'model-query-failed', timestampMs:queryStartedMs, durationMs:Date.now() - queryStartedMs, error:String(error && error.message || error) });
     const repairAction = fieldMappingRepairFromError(item, error);
     if (repairAction && repairAction.sourceId && repairAction.header) {
@@ -1112,6 +1204,7 @@ async function queryConnectionRows(item, options = {}) {
         });
     }
     throw error;
+    }
   }
   const providerMs = Number(result.elapsedMs) || 0;
   const parseMs = Number(result.parseMs) || 0;
