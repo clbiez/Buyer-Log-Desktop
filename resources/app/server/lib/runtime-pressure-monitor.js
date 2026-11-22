@@ -91,8 +91,15 @@ function defaultProfileDir() {
 }
 
 const SUSPEND_MS = 10 * 60000;
+// Opt-in profil eşiği: varsayılan 10 sn; sahadaki 4-10 sn'lik kilitler için
+// BL_STALL_PROFILE_MS ile düşürülebilir (en az 3 sn rapor eşiği, en çok 10 dk).
+function profileStallThreshold(raw = process.env.BL_STALL_PROFILE_MS) {
+  const value = Number(raw);
+  if (raw === undefined || raw === '' || !Number.isFinite(value)) return 10000;
+  return Math.min(600000, Math.max(3000, Math.round(value)));
+}
 function startRuntimePressureMonitor({ log = console.log, intervalMs = 5000, stallMs = 3000, pressureRatio = 0.8, pressureEveryMs = 60000, now = Date.now, cpu = () => { const usage = process.cpuUsage(); return usage.user + usage.system; },
-  profile = process.env.BL_STALL_PROFILE === '1', profileStallMs = 10000, profileDir } = {}) {
+  profile = process.env.BL_STALL_PROFILE === '1', profileStallMs = profileStallThreshold(), profileDir } = {}) {
   log(formatLine('heap-limit', heapNumbers()));
   const profiler = profile ? createStallProfiler({ log, dir: profileDir === undefined ? defaultProfileDir() : profileDir }) : null;
   if(!profile)log(formatLine('stall-profiler',{enabled:0,optIn:'BL_STALL_PROFILE=1'}));
@@ -118,4 +125,4 @@ function startRuntimePressureMonitor({ log = console.log, intervalMs = 5000, sta
   return { stop: () => { clearInterval(timer); return profiler?.stop(); } };
 }
 
-module.exports = { startRuntimePressureMonitor, formatLine, summarizeProfile };
+module.exports = { startRuntimePressureMonitor, formatLine, summarizeProfile, profileStallThreshold };
