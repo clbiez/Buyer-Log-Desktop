@@ -58,7 +58,12 @@ test('TR/YD: sezonsuz istek reddedilir; sorgu FOB sonrası görünümünü ve sn
   const missing = await h.call('POST /api/postfob/tryd/report', { body: { view: { filterValues: {} } } });
   assert.equal(missing.statusCode, 400);
   assert.equal(missing.body.code, 'POSTFOB_SEASON_REQUIRED');
-  const first = await h.call('POST /api/postfob/tryd/report', { body: { view: { filterValues: { season: ['S6'], originCountry: ['TR'] }, target: 0.4 } } });
+  // Üretici ülke filtresi açıkça reddedilir (önceden sessizce düşerdi); sorgu atılmaz.
+  const origin = await h.call('POST /api/postfob/tryd/report', { body: { view: { filterValues: { season: ['S6'], originCountry: ['TR'] }, target: 0.4 } } });
+  assert.equal(origin.statusCode, 400);
+  assert.equal(origin.body.code, 'POSTFOB_TRYD_FILTER_BLOCKED');
+  assert.equal(h.calls.length, 0);
+  const first = await h.call('POST /api/postfob/tryd/report', { body: { view: { filterValues: { season: ['S6'] }, target: 0.4 } } });
   assert.equal(first.statusCode, 200);
   assert.equal(first.body.fromCache, false);
   assert.equal(first.body.rows[1].landedActual, 3.5);

@@ -46,8 +46,29 @@
   const INVALID_FENCE = 3;
   const MIN_LANDED_TO_FOB = 1;
   const LANDED_SOURCES = Object.freeze(['actual', 'forecast']);
-  const FILTER_KEYS = Object.freeze(['season', 'buyerGroup', 'classification', 'mag']);
-  const LEVELS = Object.freeze(['buyerGroup', 'classification', 'mag', 'model']);
+  /* Görünüm v2 (kalemle pivot düzenleme):
+     - Satır ekseni model düzeyinde anlamlı alanlardan seçilir; Model her zaman
+       en alt kırılımdır. Kıyas birimi modeldir (TR FOB modelin TR satırlarından
+       ağırlıklanır ve aynı modelin YD adediyle çarpılır); modelin altında oran
+       üretilebilecek bir düzey yoktur ve model gizlenirse hedef altı satırın
+       kaynağı görünmez.
+     - Filtre: FOB Sonrası sorgusunun boyutları. Üretici ülke ve sipariş kodu
+       YASAK: ikisi de kıyasın bir tarafını (TR veya YD) siler.
+     - Değerler {key} referans dizisidir; ileride hesaplanan değer gibi yeni
+       referans türleri aynı diziye eklenebilir. */
+  const ROW_FIELDS = Object.freeze(['buyerGroup', 'classification', 'mag', 'season', 'productName']);
+  const DEFAULT_ROWS = Object.freeze(['buyerGroup', 'classification', 'mag']);
+  const LEVELS = Object.freeze([...ROW_FIELDS, 'model']);
+  const VALUE_KEYS = Object.freeze(['trFob', 'ydFob', 'ydLanded', 'advantage', 'target', 'gap', 'fobAdvantage', 'trQty', 'ydQty', 'coverage', 'status']);
+  const DEFAULT_VALUES = VALUE_KEYS;
+  const FILTER_KEYS = Object.freeze(['season', 'mag', 'buyerGroup', 'classification', 'productName', 'model', 'colour', 'salesCountry']);
+  const DEFAULT_FILTERS = Object.freeze(['season', 'mag', 'buyerGroup', 'classification']);
+  const BLOCKED_FILTER_KEYS = Object.freeze(['originCountry', 'order']);
+  const REQUIRED_FILTER = 'season';
+  const PREF_VERSION = 2;
+  const PREF_KEYS = Object.freeze(['version', 'rows', 'values', 'filters', 'filterValues', 'target', 'landedSource', 'belowTargetOnly', 'collapsedGroups', 'sort']);
+  const SORT_KEYS = Object.freeze(['label', 'trFob', 'ydFob', 'ydLanded', 'advantage', 'fobAdvantage', 'gap', 'trQty', 'ydQty', 'coverage']);
+  const MODEL_ATTRS = Object.freeze(['buyerGroup', 'classification', 'mag', 'season', 'productName']);
   const STATUS = Object.freeze({ ok: 'ok', noLanded: 'noLanded', invalid: 'invalidLanded' });
   const TR_TOKENS = new Set(['TURKIYE', 'TURKEY', 'TR', 'TURKIYE CUMHURIYETI']);
   const EXCLUDED_TOKENS = new Set(['FAS', 'MOROCCO', 'MAROC', 'FAS MOROCCO', 'MISIR', 'EGYPT', 'EGIPT', 'MISIR EGYPT']);
@@ -128,15 +149,16 @@
     };
   }
 
+  const modeOf = slot => slot.map ? mode(slot.map) : slot.value;
   function mode(map) {
     let best = '', weight = -1;
     map.forEach((value, key) => { if (value > weight || (value === weight && key.localeCompare(best, 'tr') < 0)) { best = key; weight = value; } });
     return best;
   }
 
-  /* Model düzeyi kıyas. Model kırılım alanları (buyer grup, klasman, MAG) model
-     satırlarında adet ağırlıklı en sık değerden alınır (küpte modelin tek
-     değeri olması beklenir; çelişki varsa kararlı seçim). */
+  /* Model düzeyi kıyas. Model kırılım alanları (buyer grup, klasman, MAG, sezon,
+     ürün adı) model satırlarında adet ağırlıklı en sık değerden alınır (küpte
+     modelin tek değeri olması beklenir; çelişki varsa kararlı seçim). */
   function compareModels(rows, options = {}) {
     const source = sourceOf(options);
     const target = num(options.target) == null ? DEFAULT_TARGET : num(options.target);
@@ -150,13 +172,18 @@
       if (origin !== 'tr' && origin !== 'yd') continue;
       const model = clean(row && row.model);
       if (!model) { counts.noModel += 1; continue; }
-      if (!byModel.has(model)) byModel.set(model, { model, tr: [], yd: [], attrs: { buyerGroup: new Map(), classification: new Map(), mag: new Map() } });
-      const entry = byModel.get(model);
+      let entry = byModel.get(model);
+      if (!entry) { entry = { model, tr: [], yd: [], attrs: MODEL_ATTRS.map(() => ({ value: '', weight: 0, map: null })) }; byModel.set(model, entry); }
       entry[origin].push(row);
       const weight = qtyOf(row) || 0.000001;
-      for (const key of ['buyerGroup', 'classification', 'mag']) {
-        const value = clean(row && row[key]);
-        if (value) entry.attrs[key].set(value, (entry.attrs[key].get(value) || 0) + weight);
+      // Sıcak yol: modelin alan değeri çoğunlukla tektir; Map yalnız ikinci farklı değerde açılır.
+      for (let index = 0; index < MODEL_ATTRS.length; index += 1) {
+        const value = clean(row[MODEL_ATTRS[index]]);
+        if (!value) continue;
+        const slot = entry.attrs[index];
+        if (!slot.map && (slot.value === '' || slot.value === value)) { slot.value = value; slot.weight += weight; continue; }
+        if (!slot.map) slot.map = new Map([[slot.value, slot.weight]]);
+        slot.map.set(value, (slot.map.get(value) || 0) + weight);
       }
     }
     const models = [];
@@ -190,7 +217,8 @@
       const status = statusCount.invalidLanded ? STATUS.invalid : (statusCount.noLanded ? STATUS.noLanded : STATUS.ok);
       models.push({
         model: entry.model,
-        buyerGroup: mode(entry.attrs.buyerGroup), classification: mode(entry.attrs.classification), mag: mode(entry.attrs.mag),
+        // entry.attrs MODEL_ATTRS sırasındadır.
+        buyerGroup: modeOf(entry.attrs[0]), classification: modeOf(entry.attrs[1]), mag: modeOf(entry.attrs[2]), season: modeOf(entry.attrs[3]), productName: modeOf(entry.attrs[4]),
         trFob, status, statusCount, amounts, ...ratios(amounts, target),
         rows: [...entry.tr, ...entry.yd],
       });
@@ -224,7 +252,7 @@
     let visible = result.models;
     if (options.belowTargetOnly) visible = visible.filter(model => isBelowTarget(model, target));
     if (tokens.length) visible = visible.filter(model => {
-      const hay = fold([model.model, model.buyerGroup, model.classification, model.mag].join(' '));
+      const hay = fold([model.model, ...MODEL_ATTRS.map(key => model[key])].join(' '));
       return tokens.every(part => hay.includes(part));
     });
     return { ...result, visible, total: summarize(visible, target), scopeTotal: summarize(result.models, target) };
@@ -246,11 +274,13 @@
     return dir * (left - right);
   }
 
-  /* Hiyerarşi: Buyer grup › Ürün klasmanı › MAG › Model. Her grup düğümü kendi
-     modellerinin tutar toplamından oran üretir. */
+  /* Hiyerarşi: seçili satır alanları › Model (varsayılan Buyer grup › Ürün
+     klasmanı › MAG › Model). Her grup düğümü kendi modellerinin tutar
+     toplamından oran üretir; eksen sırası oranı değiştirmez. levels: [] düz
+     model listesidir. */
   function buildTree(models, options = {}) {
     const target = num(options.target) == null ? DEFAULT_TARGET : num(options.target);
-    const levels = Array.isArray(options.levels) && options.levels.length ? options.levels.filter(key => LEVELS.includes(key) && key !== 'model') : LEVELS.slice(0, 3);
+    const levels = Array.isArray(options.levels) ? [...new Set(options.levels.filter(key => ROW_FIELDS.includes(key)))] : DEFAULT_ROWS.slice();
     const sort = options.sort || { key: 'label', dir: 1 };
     const walk = (list, depth, path) => {
       if (depth >= levels.length) {
@@ -273,12 +303,33 @@
     return walk(Array.isArray(models) ? models : [], 0, []);
   }
 
-  /* Kullanıcı tercihi (lcw.postfob.tryd.v1): sunucu ve istemci aynı normalize'ı kullanır. */
+  /* Kullanıcı tercihi (lcw.postfob.tryd.v1): sunucu ve istemci aynı normalize'ı
+     kullanır. v1 kaydında eksen/değer/filtre listesi yoktur; varsayılanlar
+     (eski sabit görünüm) atanır, diğer alanlar aynen taşınır. Bilinmeyen üst
+     anahtar, alan ve referans düşer. */
+  function refKey(item) { return typeof item === 'string' ? clean(item) : (item && typeof item === 'object' ? clean(item.key) : ''); }
+  function refList(raw, allowed, fallback, max) {
+    if (!Array.isArray(raw)) return fallback.map(key => ({ key }));
+    const out = [], seen = new Set();
+    for (const item of raw) {
+      const key = refKey(item);
+      if (!allowed.includes(key) || seen.has(key)) continue;
+      seen.add(key); out.push({ key });
+      if (out.length >= max) break;
+    }
+    return out;
+  }
   function normalizePrefs(raw) {
     const source = raw && typeof raw === 'object' ? raw : {};
+    const rows = refList(source.rows, ROW_FIELDS, DEFAULT_ROWS, ROW_FIELDS.length);
+    let values = refList(source.values, VALUE_KEYS, DEFAULT_VALUES, VALUE_KEYS.length);
+    if (!values.length) values = DEFAULT_VALUES.map(key => ({ key }));
+    const filters = refList(source.filters, FILTER_KEYS, DEFAULT_FILTERS, FILTER_KEYS.length);
+    // Sezon, Veri Yönetimi ufku yoksa sorgu için zorunludur; alan hiç kaldırılamaz.
+    if (!filters.some(ref => ref.key === REQUIRED_FILTER)) filters.unshift({ key: REQUIRED_FILTER });
     const filterValues = {};
     const rawFilters = source.filterValues && typeof source.filterValues === 'object' ? source.filterValues : {};
-    for (const key of FILTER_KEYS) {
+    for (const { key } of filters) {
       const values = Array.isArray(rawFilters[key]) ? rawFilters[key] : [];
       const list = [...new Set(values.map(clean).filter(Boolean))].slice(0, 500);
       if (list.length) filterValues[key] = list;
@@ -286,20 +337,54 @@
     const rawTarget = Number(source.target);
     const target = source.target !== null && source.target !== '' && Number.isFinite(rawTarget) ? Math.max(-1, Math.min(1, Math.round(rawTarget * 10000) / 10000)) : DEFAULT_TARGET;
     const sort = source.sort && typeof source.sort === 'object' ? source.sort : {};
-    const sortKeys = ['label', 'trFob', 'ydFob', 'ydLanded', 'advantage', 'fobAdvantage', 'gap', 'trQty', 'ydQty', 'coverage'];
     return {
-      version: 1,
+      version: PREF_VERSION,
+      rows, values, filters,
       filterValues,
       target,
       landedSource: LANDED_SOURCES.includes(source.landedSource) ? source.landedSource : 'actual',
       belowTargetOnly: source.belowTargetOnly === true,
       collapsedGroups: Array.isArray(source.collapsedGroups) ? [...new Set(source.collapsedGroups.map(clean).filter(Boolean))].slice(0, 2000) : [],
-      sort: { key: sortKeys.includes(clean(sort.key)) ? clean(sort.key) : 'label', dir: Number(sort.dir) === -1 ? -1 : 1 },
+      sort: { key: SORT_KEYS.includes(clean(sort.key)) ? clean(sort.key) : 'label', dir: Number(sort.dir) === -1 ? -1 : 1 },
     };
+  }
+
+  /* İstemciden gelen görünümün sıkı denetimi (PUT /tryd/view, POST /tryd/report).
+     normalizePrefs eski/senkronlanmış kayıtları yumuşak biçimde taşır; buradaki
+     denetim ise yeni yazımda bilinmeyen anahtarı, alanı ve yasak filtreyi açıkça
+     reddeder. Boş dizi = sorun yok. */
+  function validatePrefs(raw) {
+    const problems = [];
+    const add = (code, detail) => problems.push({ code, detail: String(detail) });
+    if (raw == null) return problems;
+    if (typeof raw !== 'object' || Array.isArray(raw)) { add('invalidShape', 'view'); return problems; }
+    for (const key of Object.keys(raw)) if (!PREF_KEYS.includes(key)) add('unknownKey', key);
+    const checkRefs = (name, allowed, code) => {
+      if (raw[name] === undefined) return;
+      if (!Array.isArray(raw[name])) { add('invalidShape', name); return; }
+      for (const item of raw[name]) {
+        if (item && typeof item === 'object' && Object.keys(item).some(field => field !== 'key')) { add('unknownRefField', `${name}:${refKey(item)}`); continue; }
+        const key = refKey(item);
+        if (name === 'filters' && BLOCKED_FILTER_KEYS.includes(key)) { add('blockedFilter', key); continue; }
+        if (!allowed.includes(key)) add(code, `${name}:${key}`);
+      }
+    };
+    checkRefs('rows', ROW_FIELDS, 'unknownRow');
+    checkRefs('values', VALUE_KEYS, 'unknownValue');
+    checkRefs('filters', FILTER_KEYS, 'unknownFilter');
+    if (raw.filterValues !== undefined) {
+      if (!raw.filterValues || typeof raw.filterValues !== 'object' || Array.isArray(raw.filterValues)) add('invalidShape', 'filterValues');
+      else for (const key of Object.keys(raw.filterValues)) {
+        if (BLOCKED_FILTER_KEYS.includes(key)) add('blockedFilter', key);
+        else if (!FILTER_KEYS.includes(key)) add('unknownFilter', key);
+      }
+    }
+    return problems;
   }
 
   return Object.freeze({
     DEFAULT_TARGET, MIN_SAMPLE, INVALID_FENCE, MIN_LANDED_TO_FOB, LANDED_SOURCES, FILTER_KEYS, LEVELS, STATUS,
-    originClass, rowRatio, landedBounds, rowStatus, compareModels, summarize, analyze, buildTree, normalizePrefs, isBelowTarget,
+    ROW_FIELDS, DEFAULT_ROWS, VALUE_KEYS, DEFAULT_VALUES, DEFAULT_FILTERS, BLOCKED_FILTER_KEYS, REQUIRED_FILTER, PREF_VERSION, SORT_KEYS,
+    originClass, rowRatio, landedBounds, rowStatus, compareModels, summarize, analyze, buildTree, normalizePrefs, validatePrefs, isBelowTarget,
   });
 });

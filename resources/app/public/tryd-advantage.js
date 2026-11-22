@@ -8,7 +8,12 @@
      public/tryd-advantage-engine.js içindedir. Görünüm OAB/INTAKE/FOB Sonrası
      pivot sınıflarını (oabPivot*, intake*) kullanır. Widget görünmeden sunucuya
      istek atılmaz; canlı model sorgusu yalnız Yenile ile çalışır. Hedef, landed
-     kaynağı, "yalnız hedef altı" ve arama yüklü satırlarda yeniden hesaplanır. */
+     kaynağı, "yalnız hedef altı" ve arama yüklü satırlarda yeniden hesaplanır.
+     FOB Sonrası / OAB Küp gibi "+ Filtre ekle" ve kalemle pivot düzenleme
+     (satır ekseni, değer listesi, filtre alanları) vardır; görünüm
+     lcw.postfob.tryd.v1 tercihinde sunucuda normalize edilerek saklanır.
+     Hedef ve landed kaynağı araç çubuğunda kalır: düzen değil hesap ayarıdır,
+     sık değişir ve KPI/not metinleri onlara bağlıdır. */
   const section = document.getElementById('trydAdvantageSection');
   if (!section || window.BLTrydAdvantage) return;
   const engine = window.BLTrydAdvantageEngine;
@@ -30,13 +35,20 @@
   const view = () => state.view;
   const isForecast = () => view().landedSource === 'forecast';
 
-  /* ---------- Etiketler ---------- */
-  const DIMS = [
-    { key: 'buyerGroup', tr: 'Buyer grup', en: 'Buyer group' },
-    { key: 'classification', tr: 'Ürün klasmanı', en: 'Product class' },
-    { key: 'mag', tr: 'MAG', en: 'MAG' },
-    { key: 'model', tr: 'Model', en: 'Model' },
-  ];
+  /* ---------- Etiketler ve eksenler ---------- */
+  const FIELD_LABELS = {
+    buyerGroup: ['Buyer grup', 'Buyer group'], classification: ['Ürün klasmanı', 'Product class'], mag: ['MAG', 'MAG'],
+    season: ['Sezon', 'Season'], productName: ['Ürün adı', 'Product name'], model: ['Model', 'Model'],
+    colour: ['Renk', 'Colour'], salesCountry: ['Satış ülkesi', 'Sales country'],
+  };
+  function fieldLabel(key) {
+    if (FIELD_LABELS[key]) return text(...FIELD_LABELS[key]);
+    const ref = state.filters.find(entry => entry.key === key);
+    return ref ? text(ref.tr, ref.en) : key;
+  }
+  // Satır ekseni: seçili grup alanları; Model her zaman en alt kırılımdır (engine.ROW_FIELDS notu).
+  const groupLevels = () => (view().rows || []).map(ref => ref.key).filter(key => engine.ROW_FIELDS.includes(key));
+  const axisKeys = () => [...groupLevels(), 'model'];
   const VALUES = () => [
     { key: 'trFob', tr: 'TR FOB USD', en: 'TR FOB USD', format: 'usd', hint: ['TR siparişlerinin adet ağırlıklı FOB’u. Grup satırında YD adediyle ağırlıklıdır (FOB TR TUTAR / YD adet).', 'Quantity-weighted FOB of the TR orders. On group rows it is weighted by YD quantity (TR FOB amount / YD qty).'] },
     { key: 'ydFob', tr: 'YD FOB USD', en: 'Abroad FOB USD', format: 'usd', hint: ['Kıyaslanan YD satırlarında Σ(adet×FOB) / Σadet', 'Σ(qty×FOB) / Σqty on the compared abroad rows'] },
@@ -50,6 +62,8 @@
     { key: 'coverage', tr: 'Landed kapsamı', en: 'Landed coverage', format: 'pct', hint: ['Kıyasa giren YD adedi / toplam YD adedi', 'Compared abroad qty / total abroad qty'] },
     { key: 'status', tr: 'Durum', en: 'Status', format: 'status' },
   ];
+  // Görünür değer sütunları view.values sırasıyla ({key} referansları; ileride yeni referans türü eklenebilir).
+  const selectedValues = () => { const catalog = VALUES(); return (view().values || []).map(ref => catalog.find(entry => entry.key === ref.key)).filter(Boolean); };
   const STATUS_COPY = { ok: ['OK', 'OK'], noLanded: ['Landed yok', 'No landed'], invalidLanded: ['Landed hatalı', 'Invalid landed'] };
   const statusText = status => STATUS_COPY[status] ? text(...STATUS_COPY[status]) : '';
 
@@ -60,6 +74,9 @@
     POSTFOB_SCHEMA_MISMATCH: ['Model beklenen FOB/adet alanlarını içermiyor; bağlantının kataloğunu kontrol edin.', 'The model does not contain the expected FOB/quantity fields; check the connection catalog.'],
     POSTFOB_FILTER_VALUE_TYPE: ['Filtre değeri alanın tipiyle uyuşmuyor; filtreyi yeniden seçin.', 'A filter value does not match the field type; select the filter again.'],
     CAPABILITY_REQUIRED: ['Bu rapor için OAB görüntüleme yetkisi gerekiyor.', 'This report requires the OAB view permission.'],
+    POSTFOB_FILTER_UNAVAILABLE: ['Eklenen filtre alanı canlı modelde bulunamadı; filtreyi kaldırıp Yenile’ye basın.', 'The added filter field was not found in the live model; remove the filter and press Refresh.'],
+    POSTFOB_TRYD_FILTER_BLOCKED: ['TR/YD kıyası üretici ülke veya sipariş koduyla filtrelenemez: kıyas Türkiye ve yurtdışı siparişlerini birlikte ister.', 'The TR/abroad comparison cannot be filtered by origin country or order code: it needs Turkey and abroad orders together.'],
+    POSTFOB_TRYD_VIEW_INVALID: ['TR/YD görünümünde bilinmeyen bir alan var; sayfayı yenileyip pivotu yeniden düzenleyin.', 'The TR/abroad view has an unknown field; reload the page and edit the pivot again.'],
   };
   function errorText(payload, fallback) {
     const copy = ERROR_COPY[payload && payload.code];
@@ -97,6 +114,8 @@
   const format = (key, value) => (key === 'pct' && isEnglish() ? pctEn : FORMATS[key])(value);
 
   /* ---------- Hesap ---------- */
+  // Hedef ve durum sütunu sıralanamaz (normalizePrefs bunları 'label'a çevirir).
+  const treeSort = () => ({ key: view().sort && view().sort.key || 'label', dir: view().sort && view().sort.dir });
   function compute() {
     state.analysis = engine.analyze(state.rows, { target: view().target, landedSource: view().landedSource, belowTargetOnly: view().belowTargetOnly, search: state.search });
     return state.analysis;
@@ -165,18 +184,33 @@
     if (search) search.placeholder = text('Model, MAG, klasman ara…', 'Search model, MAG, class…');
   }
 
+  /* Eklenebilir filtre alanları: sunucunun verdiği FOB Sonrası boyutları; üretici
+     ülke ve sipariş kodu hiçbir durumda listelenmez (kıyasın bir tarafını siler). */
+  function filterPool() {
+    const keys = state.filters.length ? state.filters.map(entry => entry.key) : engine.FILTER_KEYS;
+    return keys.filter(key => engine.FILTER_KEYS.includes(key) && !engine.BLOCKED_FILTER_KEYS.includes(key));
+  }
   function renderFilters() {
     const bar = byId('trydAdvantageFilterBar');
     if (!bar) return;
-    const filters = state.filters.length ? state.filters : engine.FILTER_KEYS.map(key => ({ key, tr: key, en: key, required: key === 'season' }));
-    bar.innerHTML = filters.map(ref => {
-      const selected = view().filterValues[ref.key] || [];
+    const fields = view().filters.map(ref => {
+      const key = ref.key;
+      const selected = view().filterValues[key] || [];
       const label = selected.length > 1 ? `${selected.length} ${text('seçim', 'selected')}` : (selected[0] || text('Tümü', 'All'));
-      const required = ref.key === 'season' && !state.horizon ? ` <span class="postFobRequired">${esc(text('(zorunlu)', '(required)'))}</span>` : '';
-      return `<div class="intakeFilterField"><span class="intakeFilterLabel">${esc(text(ref.tr, ref.en))}${required}</span><div class="intakeFilterControl"><button type="button" class="oabMultiTrigger intakeFilterTrigger" data-tryd-filter="${esc(ref.key)}" aria-haspopup="listbox" aria-expanded="false"><span class="oabMultiLabel${selected.length ? ' hasValue' : ''}">${esc(label)}</span><span class="oabMultiChevron" aria-hidden="true">▾</span></button>${selected.length ? `<button type="button" class="intakeFilterRemove" data-tryd-filter-clear="${esc(ref.key)}" title="${esc(text('Seçimi temizle', 'Clear selection'))}" aria-label="${esc(text('Seçimi temizle', 'Clear selection'))}">×</button>` : ''}</div></div>`;
-    }).join('') + `<p class="postFobNote trydAdvantageFilterNote">${esc(text('Üretici ülke filtrelenmez: kıyas Türkiye ve yurtdışı siparişlerini birlikte ister. Fas ve Mısır kıyas dışıdır.', 'Origin country is not filtered: the comparison needs Turkey and abroad orders together. Morocco and Egypt are excluded.'))}</p>`;
+      const isRequired = key === engine.REQUIRED_FILTER;
+      const required = isRequired && !state.horizon ? ` <span class="postFobRequired">${esc(text('(zorunlu)', '(required)'))}</span>` : '';
+      // Sezon alanı kaldırılamaz (ufuk yoksa sorgu için zorunlu); × yalnız seçimini temizler.
+      const action = isRequired
+        ? (selected.length ? `<button type="button" class="intakeFilterRemove" data-tryd-filter-clear="${esc(key)}" title="${esc(text('Seçimi temizle', 'Clear selection'))}" aria-label="${esc(text('Seçimi temizle', 'Clear selection'))}">×</button>` : '')
+        : `<button type="button" class="intakeFilterRemove" data-tryd-filter-remove="${esc(key)}" title="${esc(text('Filtreyi kaldır', 'Remove filter'))}" aria-label="${esc(text('Filtreyi kaldır', 'Remove filter'))}">×</button>`;
+      return `<div class="intakeFilterField"><span class="intakeFilterLabel">${esc(fieldLabel(key))}${required}</span><div class="intakeFilterControl"><button type="button" class="oabMultiTrigger intakeFilterTrigger" data-tryd-filter="${esc(key)}" aria-haspopup="listbox" aria-expanded="false"><span class="oabMultiLabel${selected.length ? ' hasValue' : ''}">${esc(label)}</span><span class="oabMultiChevron" aria-hidden="true">▾</span></button>${action}</div></div>`;
+    }).join('');
+    const used = new Set(view().filters.map(ref => ref.key));
+    const add = filterPool().some(key => !used.has(key)) ? `<button type="button" class="navActionBtn intakeFilterAdd" data-tryd-add-filter>+ ${esc(text('Filtre ekle', 'Add filter'))}</button>` : '';
+    bar.innerHTML = `${fields}${add}<p class="postFobNote trydAdvantageFilterNote">${esc(text('Üretici ülke filtrelenmez: kıyas Türkiye ve yurtdışı siparişlerini birlikte ister. Fas ve Mısır kıyas dışıdır.', 'Origin country is not filtered: the comparison needs Turkey and abroad orders together. Morocco and Egypt are excluded.'))}</p>`;
     const button = byId('trydAdvantageFiltersBtn');
     if (button) button.classList.toggle('hasActiveFilters', Object.keys(view().filterValues || {}).length > 0);
+    placeFilterPanel();
   }
 
   function kpi(value, label, title, cls) {
@@ -190,17 +224,17 @@
     if (collapse) { collapse.hidden = !keys.length; collapse.disabled = !keys.length; }
   }
 
-  function dimCell(item, dimIndex) {
-    if (item.kind === 'grand') return dimIndex === 0 ? `<td class="oabPivotGrandLabel" colspan="${DIMS.length}"><strong>${esc(text('Genel Toplam', 'Grand Total'))}</strong></td>` : '';
+  function dimCell(item, dimIndex, axis) {
+    if (item.kind === 'grand') return dimIndex === 0 ? `<td class="oabPivotGrandLabel" colspan="${axis.length}"><strong>${esc(text('Genel Toplam', 'Grand Total'))}</strong></td>` : '';
     if (item.kind === 'group') {
       if (dimIndex > item.level) return '';
       if (dimIndex < item.level) return '<td></td>';
       const label = item.label === '' ? text('(boş)', '(blank)') : item.label;
-      const span = DIMS.length - item.level;
+      const span = axis.length - item.level;
       const count = `<span class="oabPivotSubtotalTag">${esc(`${item.models} ${text('model', 'models')}`)}</span>`;
       return `<td class="oabPivotGroupCell trydAdvantageLabelCell"${span > 1 ? ` colspan="${span}"` : ''} title="${esc(label)}"><button type="button" class="oabPivotGroupToggle" data-tryd-group-key="${esc(item.pathKey)}" title="${esc(item.collapsed ? text('Grubu genişlet', 'Expand group') : text('Grubu daralt', 'Collapse group'))}">${item.collapsed ? '▸' : '▾'}</button><strong>${esc(label)}</strong>${count}</td>`;
     }
-    return dimIndex === DIMS.length - 1 ? `<td class="trydAdvantageLabelCell">${esc(item.label)}</td>` : '<td></td>';
+    return dimIndex === axis.length - 1 ? `<td class="trydAdvantageLabelCell">${esc(item.label)}</td>` : '<td></td>';
   }
 
   function valueCell(item, ref) {
@@ -251,12 +285,14 @@
           ? text(`Hatalı: landed < FOB veya Landed/FOB > ${fmt(result.bounds.upper, 3)} / < ${fmt(result.bounds.lower, 3)} (Q3 + 3×IQR, ${result.bounds.sample} YD satırı)`, `Invalid: landed < FOB or Landed/FOB > ${fmt(result.bounds.upper, 3)} / < ${fmt(result.bounds.lower, 3)} (Q3 + 3×IQR, ${result.bounds.sample} abroad rows)`)
           : text('Hatalı: landed < FOB. Oran sınırı için en az 8 YD satırı gerekir.', 'Invalid: landed < FOB. At least 8 abroad rows are needed for a ratio bound.')),
     ].join('');
-    const values = VALUES();
+    const values = selectedValues();
+    const axis = axisKeys();
     const sort = view().sort || {};
     const arrow = key => sort.key === key ? (Number(sort.dir) === 1 ? ' ↑' : ' ↓') : '';
-    const head = [...DIMS.map((dim, index) => `<th${index === DIMS.length - 1 ? ' data-tryd-sort="label"' : ''} title="${esc(index === DIMS.length - 1 ? text('Sıralamak için tıklayın', 'Click to sort') : '')}">${esc(text(dim.tr, dim.en))}${index === DIMS.length - 1 ? arrow('label') : ''}</th>`),
+    const last = axis.length - 1;
+    const head = [...axis.map((key, index) => `<th${index === last ? ' data-tryd-sort="label"' : ''} title="${esc(index === last ? text('Sıralamak için tıklayın', 'Click to sort') : '')}">${esc(fieldLabel(key))}${index === last ? arrow('label') : ''}</th>`),
       ...values.map(ref => `<th class="num" data-tryd-sort="${esc(ref.key)}" title="${esc(ref.hint ? text(ref.hint[0], ref.hint[1]) : text('Sıralamak için tıklayın', 'Click to sort'))}">${esc(text(ref.tr, ref.en))}${arrow(ref.key)}</th>`)].join('');
-    const tree = engine.buildTree(result.visible, { target: view().target, sort: { key: sort.key === 'target' || sort.key === 'status' ? 'label' : sort.key, dir: sort.dir } });
+    const tree = engine.buildTree(result.visible, { target: view().target, levels: groupLevels(), sort: treeSort() });
     const items = [...flatten(tree)];
     if (result.visible.length) items.push({ kind: 'grand', ...total, modelsList: result.visible });
     const shown = items.length > MAX_TABLE_ROWS ? [...items.slice(0, MAX_TABLE_ROWS - 1), items[items.length - 1]] : items;
@@ -265,15 +301,15 @@
       const base = item.kind === 'grand' ? 'oabPivotGrandTotalRow' : (item.kind === 'group' ? 'oabPivotSubtotalRow' : '');
       return engine.isBelowTarget(item, view().target) ? `${base} trydAdvantageBelowRow`.trim() : base;
     };
-    const bodyHtml = shown.map((item, index) => `<tr class="${rowClass(item)}" data-tryd-row="${index}">${DIMS.map((dim, dimIndex) => dimCell(item, dimIndex)).join('')}${values.map(ref => valueCell(item, ref)).join('')}</tr>`).join('');
+    const bodyHtml = shown.map((item, index) => `<tr class="${rowClass(item)}" data-tryd-row="${index}">${axis.map((key, dimIndex) => dimCell(item, dimIndex, axis)).join('')}${values.map(ref => valueCell(item, ref)).join('')}</tr>`).join('');
     const emptyCopy = view().belowTargetOnly ? text('Hedefin altında kalan model yok.', 'No model is below the target.') : (state.search ? text('Aramayla eşleşen model yok.', 'No model matches the search.') : text('Hem Türkiye hem yurtdışı siparişi olan model yok.', 'No model has both Turkey and abroad orders.'));
-    table.innerHTML = `<thead><tr>${head}</tr></thead><tbody>${bodyHtml || `<tr><td class="intakeEmpty" colspan="${DIMS.length + values.length}">${esc(emptyCopy)}</td></tr>`}</tbody>`;
+    table.innerHTML = `<thead><tr>${head}</tr></thead><tbody>${bodyHtml || `<tr><td class="intakeEmpty" colspan="${axis.length + values.length}">${esc(emptyCopy)}</td></tr>`}</tbody>`;
     updateGroupButtons(groupKeys(tree));
     const drillTitle = text('Kaynak satırları görmek için çift tıklayın', 'Double-click to see the source rows');
     table.querySelectorAll('tbody tr[data-tryd-row] > td').forEach(td => { td.classList.add('oabPivotDrillCell'); if (!td.title) td.title = drillTitle; });
     try {
       const wordPx = label => Math.max(...String(label).split(/\s+/).map(word => word.length)) * 10 + 28;
-      window.BLTableColumnResize?.apply(table, { store: widthStore, columns: [...DIMS.map((dim, index) => ({ key: `tryd_${dim.key}`, label: text(dim.tr, dim.en), type: 'text', minPx: index < DIMS.length - 1 ? 96 : 100 })), ...values.map(ref => ({ key: `tryd_${ref.key}`, label: text(ref.tr, ref.en), type: 'num', minPx: wordPx(text(ref.tr, ref.en)) }))] });
+      window.BLTableColumnResize?.apply(table, { store: widthStore, columns: [...axis.map((key, index) => ({ key: `tryd_${key}`, label: fieldLabel(key), type: 'text', minPx: index < last ? 96 : 100 })), ...values.map(ref => ({ key: `tryd_${ref.key}`, label: text(ref.tr, ref.en), type: 'num', minPx: wordPx(text(ref.tr, ref.en)) }))] });
     } catch (error) { console.warn('TR/YD avantaj sütun genişliği uygulanamadı:', error); }
     const notes = [];
     if (state.truncated) notes.push(text(`Sorgu ${state.rowLimit.toLocaleString(locale())} satır sınırına ulaştı: bazı modellerin TR veya YD siparişleri eksik olabilir, avantaj oranları KISMİDİR. Sezon/MAG filtrelerini daraltıp Yenile’ye basın.`, `The query hit the ${state.rowLimit.toLocaleString(locale())} row limit: some models may miss TR or abroad orders, so the advantage ratios are PARTIAL. Narrow the season/MAG filters and press Refresh.`));
@@ -313,7 +349,7 @@
       ...(numeric(key) ? { format: value => value == null || value === '' ? '' : (key === 'qty' ? FORMATS.qty(value) : (key === '_ratio' ? `${fmt(value, 3)}×` : fmt(value, 2))) } : {}),
     }));
     const context = item.kind === 'grand' ? text('Genel Toplam', 'Grand Total')
-      : (item.path || []).map((value, index) => `${text(DIMS[index].tr, DIMS[index].en)}: ${value === '' ? text('(boş)', '(blank)') : value}`).join(' › ');
+      : (item.path || []).map((value, index) => `${fieldLabel(axisKeys()[index])}: ${value === '' ? text('(boş)', '(blank)') : value}`).join(' › ');
     const metrics = metricsOf(item);
     const valueRef = ref && VALUES().find(entry => entry.key === ref);
     const note = [valueRef ? `${text(valueRef.tr, valueRef.en)}: ${format(valueRef.format, metrics[valueRef.key])}` : '', `${rows.length.toLocaleString(locale())} ${text('kaynak satır', 'source rows')}`].filter(Boolean).join(' · ');
@@ -336,17 +372,19 @@
       const X = window.XLSX;
       if (!X) throw new Error('XLSX');
       const result = compute();
-      const values = VALUES();
+      // Excel tablodaki eksen, değer seçimi ve sıralamayı izler (katlı gruplar dahil bütün satırlar).
+      const values = selectedValues();
+      const axis = axisKeys();
       const round = value => typeof value === 'number' && Number.isFinite(value) ? Math.round(value * 1000000) / 1000000 : (value == null ? null : value);
-      const tree = engine.buildTree(result.visible, { target: view().target });
+      const tree = engine.buildTree(result.visible, { target: view().target, levels: groupLevels(), sort: treeSort() });
       const all = [];
       const walk = nodes => nodes.forEach(node => { all.push(node); if (node.kind === 'group') walk(node.children); });
       walk(tree);
       if (result.visible.length) all.push({ kind: 'grand', ...result.total, modelsList: result.visible });
       const pivot = all.map(item => {
         const out = { [text('Satır tipi', 'Row type')]: item.kind === 'grand' ? text('Genel toplam', 'Grand total') : (item.kind === 'group' ? text('Alt toplam', 'Subtotal') : text('Model', 'Model')) };
-        DIMS.forEach((dim, index) => {
-          out[text(dim.tr, dim.en)] = item.kind === 'grand' ? '' : (item.kind === 'model' ? (index === DIMS.length - 1 ? item.model : item[dim.key]) : (index <= item.level ? item.path[index] : ''));
+        axis.forEach((key, index) => {
+          out[fieldLabel(key)] = item.kind === 'grand' ? '' : (item.kind === 'model' ? (index === axis.length - 1 ? item.model : item[key]) : (index <= item.level ? item.path[index] : ''));
         });
         const metrics = metricsOf(item);
         values.forEach(ref => { out[text(ref.tr, ref.en)] = ref.key === 'status' ? metrics.status : round(metrics[ref.key]); });
@@ -360,7 +398,8 @@
       const source = annotate(result.visible.flatMap(model => model.rows)).map(row => Object.fromEntries(DETAIL_KEYS.filter(key => row[key] !== undefined).map(key => [detailLabel(key), round(row[key])])));
       const summaryRow = (field, value) => ({ [text('Alan', 'Field')]: field, [text('Değer', 'Value')]: value });
       const summary = [
-        ...state.filters.filter(ref => (view().filterValues[ref.key] || []).length).map(ref => summaryRow(text(ref.tr, ref.en), view().filterValues[ref.key].join(', '))),
+        ...view().filters.filter(ref => (view().filterValues[ref.key] || []).length).map(ref => summaryRow(fieldLabel(ref.key), view().filterValues[ref.key].join(', '))),
+        summaryRow(text('Pivot satırları', 'Pivot rows'), axis.map(fieldLabel).join(' › ')),
         summaryRow(text('Landed kaynağı', 'Landed source'), isForecast() ? text('Öngörü (gerçekleşmemiş)', 'Forecast (not realized)') : text('Gerçekleşen', 'Actual')),
         summaryRow(text('Hedef', 'Target'), view().target),
         summaryRow(text('Yalnız hedef altı', 'Below target only'), view().belowTargetOnly ? text('Evet', 'Yes') : text('Hayır', 'No')),
@@ -417,7 +456,7 @@
      farklıysa (Yenile'ye basılmadı ya da kaynak erişilemedi) bu açıkça yazılır. */
   const filterSignature = values => JSON.stringify(Object.keys(values || {}).filter(key => (values[key] || []).length).sort().map(key => [key, [...values[key]].sort()]));
   const dataFiltersDiffer = () => state.dataFilters != null && filterSignature(state.dataFilters) !== filterSignature(view().filterValues);
-  const filterSummary = values => Object.keys(values || {}).filter(key => (values[key] || []).length).map(key => { const ref = state.filters.find(entry => entry.key === key); return `${ref ? text(ref.tr, ref.en) : key}: ${values[key].join(', ')}`; }).join(' · ');
+  const filterSummary = values => Object.keys(values || {}).filter(key => (values[key] || []).length).map(key => `${fieldLabel(key)}: ${values[key].join(', ')}`).join(' · ');
 
   /* ---------- Veri ---------- */
   async function loadState() {
@@ -480,28 +519,35 @@
     panel.hidden = !open;
     button.setAttribute('aria-expanded', open ? 'true' : 'false');
     if (open) {
-      const rect = button.getBoundingClientRect();
-      panel.style.top = `${Math.max(16, Math.min(rect.bottom + 6, innerHeight - panel.offsetHeight - 16))}px`;
-      panel.style.right = `${Math.max(16, Math.min(innerWidth - rect.right, innerWidth - panel.offsetWidth - 16))}px`;
+      placeFilterPanel();
       window.BLMotionPlus?.play?.('overlay', panel);
     }
+  }
+  /* Panel filtre eklenip/kaldırılınca büyür veya küçülür; her çizimde yeniden
+     konumlanır ki alt kenarı pencere içinde kalsın (#1150 ile aynı kural). */
+  function placeFilterPanel() {
+    const panel = byId('trydAdvantageFilterPanel'), button = byId('trydAdvantageFiltersBtn');
+    if (!panel || !button || panel.hidden) return;
+    const rect = button.getBoundingClientRect();
+    panel.style.top = `${Math.max(16, Math.min(rect.bottom + 6, innerHeight - panel.offsetHeight - 16))}px`;
+    panel.style.right = `${Math.max(16, Math.min(innerWidth - rect.right, innerWidth - panel.offsetWidth - 16))}px`;
   }
   function closePopover() {
     if (!state.popover) return;
     state.popover.remove();
     state.popover = null;
-    section.querySelectorAll('[data-tryd-filter][aria-expanded="true"]').forEach(button => button.setAttribute('aria-expanded', 'false'));
+    section.querySelectorAll('[data-tryd-filter][aria-expanded="true"],[data-tryd-add-filter][aria-expanded="true"]').forEach(button => button.setAttribute('aria-expanded', 'false'));
   }
   function openFilter(button, key) {
     closePopover();
-    const ref = state.filters.find(entry => entry.key === key) || { key, tr: key, en: key };
+    const label = fieldLabel(key);
     const selected = new Set(view().filterValues[key] || []);
     let values = [...new Set([...state.rows.map(row => clean(row && row[key])).filter(Boolean), ...selected])].sort((a, b) => a.localeCompare(b, 'tr', { numeric: true }));
     const popover = document.createElement('div');
     popover.className = 'oabLocalFilterAddPopover intakeFilterPopover';
     popover.setAttribute('role', 'dialog');
-    popover.setAttribute('aria-label', text(ref.tr, ref.en));
-    popover.innerHTML = `<div class="intakeFilterPopoverTitle">${esc(text(ref.tr, ref.en))}</div><input type="search" class="intakeFilterSearch" placeholder="${esc(text('Değerlerde ara…', 'Search values…'))}" aria-label="${esc(text('Değerlerde ara', 'Search values'))}"><div class="intakeFilterValues"><div class="intakeConfigEmpty">${esc(text('Değerler yükleniyor…', 'Loading values…'))}</div></div><div class="intakeFilterActions"><button type="button" class="tbtn" data-tryd-clear>${esc(text('Temizle', 'Clear'))}</button><button type="button" class="tbtn primary" data-tryd-apply>${esc(text('Uygula', 'Apply'))}</button></div>`;
+    popover.setAttribute('aria-label', label);
+    popover.innerHTML = `<div class="intakeFilterPopoverTitle">${esc(label)}</div><input type="search" class="intakeFilterSearch" placeholder="${esc(text('Değerlerde ara…', 'Search values…'))}" aria-label="${esc(text('Değerlerde ara', 'Search values'))}"><div class="intakeFilterValues"><div class="intakeConfigEmpty">${esc(text('Değerler yükleniyor…', 'Loading values…'))}</div></div><div class="intakeFilterActions"><button type="button" class="tbtn" data-tryd-clear>${esc(text('Temizle', 'Clear'))}</button><button type="button" class="tbtn primary" data-tryd-apply>${esc(text('Uygula', 'Apply'))}</button></div>`;
     document.body.appendChild(popover);
     state.popover = popover;
     button.setAttribute('aria-expanded', 'true');
@@ -521,7 +567,7 @@
     popover.querySelector('[data-tryd-clear]').addEventListener('click', () => { selected.clear(); draw(); });
     popover.querySelector('[data-tryd-apply]').addEventListener('click', () => {
       const next = { ...view().filterValues };
-      if (selected.size) next[key] = [...selected]; else delete next[key];
+      if (selected.size) next[key] = [...selected].slice(0, 500); else delete next[key];
       state.view = { ...view(), filterValues: next };
       closePopover();
       saveView();
@@ -529,10 +575,166 @@
       renderBody();
       setStatus(() => text('Filtre değişti. Veriyi çekmek için Yenile’ye basın.', 'Filters changed. Press Refresh to query data.'), 'ok');
     });
-    requestJson('/api/postfob/distinct', jsonBody('POST', { key }))
+    requestJson('/api/postfob/distinct', jsonBody('POST', { key, limit: 1000 }))
       .then(result => { values = [...new Set([...(Array.isArray(result.values) ? result.values : []), ...selected])]; if (state.popover === popover) draw(); })
       .catch(() => { if (state.popover === popover) draw(); });
     search.focus();
+  }
+
+  /* "+ Filtre ekle": FOB Sonrası ile aynı alan seçici; seçilen alanın değer seçicisi hemen açılır. */
+  function openFilterFieldPicker(button) {
+    closePopover();
+    const used = new Set(view().filters.map(ref => ref.key));
+    const fields = filterPool().filter(key => !used.has(key)).map(key => ({ key, label: fieldLabel(key) }));
+    const popover = document.createElement('div');
+    popover.className = 'oabLocalFilterAddPopover intakeFilterPopover intakeFilterFieldPicker';
+    popover.setAttribute('role', 'dialog');
+    popover.setAttribute('aria-label', text('Filtre alanı ekle', 'Add filter field'));
+    popover.innerHTML = `<div class="intakeFilterPopoverTitle">${esc(text('Filtre alanı ekle', 'Add filter field'))}</div><input type="search" class="intakeFilterSearch" placeholder="${esc(text('Alanlarda ara…', 'Search fields…'))}" aria-label="${esc(text('Alanlarda ara', 'Search fields'))}"><div class="intakeFilterValues"></div>`;
+    document.body.appendChild(popover);
+    state.popover = popover;
+    button.setAttribute('aria-expanded', 'true');
+    window.BLFloatingPlacement?.place(popover, button);
+    window.BLMotionPlus?.play?.('overlay', popover);
+    const list = popover.querySelector('.intakeFilterValues'), search = popover.querySelector('.intakeFilterSearch');
+    const draw = () => {
+      const needle = clean(search.value).toLocaleLowerCase(locale());
+      const visible = fields.filter(entry => !needle || entry.label.toLocaleLowerCase(locale()).includes(needle));
+      list.innerHTML = visible.length
+        ? visible.map(entry => `<button type="button" class="intakeFilterFieldOption" data-tryd-add-filter-key="${esc(entry.key)}"><span>${esc(entry.label)}</span><small>${esc(text('FOB Sonrası alanı', 'Post-FOB field'))}</small></button>`).join('')
+        : `<div class="intakeConfigEmpty">${esc(text('Eşleşen alan yok.', 'No matching field.'))}</div>`;
+    };
+    draw();
+    search.addEventListener('input', draw);
+    popover.addEventListener('click', event => {
+      const option = event.target.closest('[data-tryd-add-filter-key]');
+      if (!option) return;
+      // Belge düzeyindeki dış tıklama kapatıcısı yeni açılan değer seçicisini kapatmasın.
+      event.stopPropagation();
+      const key = option.dataset.trydAddFilterKey;
+      if (!fields.some(entry => entry.key === key)) return;
+      closePopover();
+      state.view = engine.normalizePrefs({ ...view(), filters: [...view().filters, { key }] });
+      saveView({ immediate: true });
+      renderFilters();
+      const trigger = byId('trydAdvantageFilterBar')?.querySelector(`[data-tryd-filter="${CSS.escape(key)}"]`);
+      if (trigger) openFilter(trigger, key);
+    });
+    search.focus();
+  }
+  function removeFilter(key) {
+    if (key === engine.REQUIRED_FILTER) return;
+    const hadValues = Boolean((view().filterValues[key] || []).length);
+    const filterValues = { ...view().filterValues };
+    delete filterValues[key];
+    state.view = engine.normalizePrefs({ ...view(), filters: view().filters.filter(ref => ref.key !== key), filterValues });
+    saveView();
+    renderFilters();
+    renderBody();
+    if (hadValues) setStatus(() => text('Filtre değişti. Veriyi çekmek için Yenile’ye basın.', 'Filters changed. Press Refresh to query data.'), 'ok');
+  }
+
+  /* ---------- Pivot düzenleyici (FOB Sonrası / INTAKE Ayarları ile aynı kabuk) ---------- */
+  const rowPool = () => engine.ROW_FIELDS.map(key => ({ id: key, label: fieldLabel(key) }));
+  const valuePool = () => VALUES().map(ref => ({ id: ref.key, label: text(ref.tr, ref.en) }));
+  const filterFieldPool = () => filterPool().map(key => ({ id: key, label: fieldLabel(key) }));
+  const optionsHtml = (pool, selectedId) => pool.map(entry => `<option value="${esc(entry.id)}"${entry.id === selectedId ? ' selected' : ''}>${esc(entry.label)}</option>`).join('');
+  const actionsHtml = locked => `<div class="oabConfigActions">
+      <button type="button" class="oabConfigIconBtn" data-tryd-config-move="-1" title="${esc(text('Yukarı taşı', 'Move up'))}" aria-label="${esc(text('Yukarı taşı', 'Move up'))}">↑</button>
+      <button type="button" class="oabConfigIconBtn" data-tryd-config-move="1" title="${esc(text('Aşağı taşı', 'Move down'))}" aria-label="${esc(text('Aşağı taşı', 'Move down'))}">↓</button>
+      <button type="button" class="oabConfigIconBtn danger" data-tryd-config-remove${locked ? ' disabled' : ''} title="${esc(locked ? text('Sezon filtresi kaldırılamaz', 'The season filter cannot be removed') : text('Sil', 'Remove'))}" aria-label="${esc(text('Sil', 'Remove'))}">×</button>
+    </div>`;
+  const axisRowHtml = (id, pool, locked) => `<div class="oabPivotAxisRow oabConfigRow intakeConfigRow"><span class="oabConfigDrag" aria-hidden="true">⋮⋮</span><select class="trydAxisField" aria-label="${esc(text('Alan', 'Field'))}"${locked ? ' disabled' : ''}>${optionsHtml(pool, id)}</select>${actionsHtml(locked)}</div>`;
+  // Değerler hazır hesaplardır; özetleme seçilmez (oranlar her düzeyde tutarlardan).
+  function valueRowHtml(id, pool) {
+    return `<div class="oabPivotValueRow oabConfigRow intakeConfigRow"><span class="oabConfigDrag" aria-hidden="true">⋮⋮</span><select class="trydValueField" aria-label="${esc(text('Değer', 'Value'))}">${optionsHtml(pool, id)}</select>${actionsHtml(false)}</div>`;
+  }
+  function refreshOrderButtons(list) {
+    const rows = [...list.querySelectorAll('.oabConfigRow')];
+    rows.forEach((row, index) => {
+      const up = row.querySelector('[data-tryd-config-move="-1"]'), down = row.querySelector('[data-tryd-config-move="1"]');
+      if (up) up.disabled = index === 0;
+      if (down) down.disabled = index === rows.length - 1;
+    });
+  }
+  function openFields() {
+    document.getElementById('_trydFieldsModal')?.remove();
+    closePopover();
+    setFilterPanelOpen(false);
+    const draft = view();
+    const rowsPool = rowPool(), valsPool = valuePool(), filtersPool = filterFieldPool();
+    const modal = document.createElement('div');
+    modal.className = 'autoModalOverlay';
+    modal.id = '_trydFieldsModal';
+    const sectionHtml = (id, title, addLabel, body, after) => `<div class="oabSettingsSection"><div class="oabSettingsSectionHead"><span>${esc(title)}</span><button type="button" class="navActionBtn" data-tryd-add="${id}">+ ${esc(addLabel)}</button></div><div class="oabPivotConfigList" id="${id}">${body}</div>${after || ''}</div>`;
+    modal.innerHTML = `<div class="autoModal oabSettingsModal intakeFieldsModal" role="dialog" aria-modal="true" aria-labelledby="_trydFieldsTitle">
+      <header><h3 id="_trydFieldsTitle">${esc(text('TR/YD Landed Avantaj Ayarları', 'TR/YD Landed Advantage Settings'))}</h3><button type="button" data-tryd-close aria-label="${esc(text('Kapat', 'Close'))}">×</button></header>
+      <div class="autoModalBody">
+        ${sectionHtml('trydRowsList', text('Pivot Satırları', 'Pivot Rows'), text('Alan ekle', 'Add field'), draft.rows.map(ref => axisRowHtml(ref.key, rowsPool)).join(''), `<p class="oabSettingsHint">${esc(text('Model her zaman en alt kırılımdır: kıyas birimi modeldir (TR FOB aynı modelin YD adediyle çarpılır). Satır alanı seçilmezse düz model listesi gösterilir.', 'Model is always the lowest level: the comparison unit is the model (TR FOB is multiplied by the same model’s abroad quantity). With no row field the pivot is a flat model list.'))}</p>`)}
+        ${sectionHtml('trydValuesList', text('Pivot Değerleri', 'Pivot Values'), text('Değer ekle', 'Add value'), draft.values.map(ref => valueRowHtml(ref.key, valsPool)).join(''))}
+        ${sectionHtml('trydFiltersList', text('Filtre Alanları', 'Filter Fields'), text('Alan ekle', 'Add field'), draft.filters.map(ref => axisRowHtml(ref.key, filtersPool, ref.key === engine.REQUIRED_FILTER)).join(''))}
+        <p class="oabSettingsHint">${esc(text('Satırları oklarla sıralayabilirsiniz. Avantaj, FOB avantajı ve fark her düzeyde tutarların toplamından yeniden hesaplanır; ortalama alınmaz. Sezon ve ürün adı modelin adet ağırlıklı en sık değeridir. Üretici ülke ve sipariş kodu filtrelenemez: kıyas Türkiye ve yurtdışı siparişlerini birlikte ister. Hedef ve landed kaynağı araç çubuğundadır.', 'Reorder rows with the arrows. Advantage, FOB advantage and gap are recomputed from summed amounts at every level; they are never averaged. Season and product name are the model’s most frequent value by quantity. Origin country and order code cannot be filtered: the comparison needs Turkey and abroad orders together. Target and landed source are in the toolbar.'))}</p>
+      </div>
+      <footer><button type="button" class="tbtn" data-tryd-settings-reset>${esc(text('Pivot Varsayılanına Dön', 'Reset Pivot'))}</button><button type="button" class="tbtn" data-tryd-close>${esc(text('Vazgeç', 'Cancel'))}</button><button type="button" class="tbtn primary" data-tryd-save>${esc(text('Kaydet', 'Save'))}</button></footer>
+    </div>`;
+    document.body.appendChild(modal);
+    const dialog = modal.querySelector('[role="dialog"]');
+    window.BLMotionPlus?.play?.('overlay', dialog);
+    const close = () => modal.remove();
+    modal.querySelectorAll('[data-tryd-close]').forEach(button => button.addEventListener('click', close));
+    modal.addEventListener('keydown', event => { if (event.key === 'Escape') { event.stopPropagation(); close(); } });
+    modal.addEventListener('pointerdown', event => { modal.dataset.backdropDown = event.target === modal ? '1' : '0'; });
+    modal.addEventListener('pointerup', event => { if (event.target === modal && modal.dataset.backdropDown === '1') close(); modal.dataset.backdropDown = '0'; });
+    const lists = { rows: modal.querySelector('#trydRowsList'), values: modal.querySelector('#trydValuesList'), filters: modal.querySelector('#trydFiltersList') };
+    const pools = { trydRowsList: rowsPool, trydValuesList: valsPool, trydFiltersList: filtersPool };
+    Object.values(lists).forEach(refreshOrderButtons);
+    modal.addEventListener('click', event => {
+      const add = event.target.closest('[data-tryd-add]');
+      if (add) {
+        const id = add.dataset.trydAdd, list = modal.querySelector(`#${id}`), pool = pools[id];
+        const used = new Set([...list.querySelectorAll('select')].map(select => select.value));
+        const next = pool.find(entry => !used.has(entry.id));
+        if (!next) { setStatus(() => text('Eklenebilecek başka alan yok.', 'There is no other field to add.'), 'warning'); return; }
+        list.insertAdjacentHTML('beforeend', id === 'trydValuesList' ? valueRowHtml(next.id, pool) : axisRowHtml(next.id, pool));
+        refreshOrderButtons(list);
+        return;
+      }
+      const remove = event.target.closest('[data-tryd-config-remove]');
+      if (remove) { if (remove.disabled) return; const row = remove.closest('.oabConfigRow'), list = row.parentElement; row.remove(); refreshOrderButtons(list); return; }
+      const move = event.target.closest('[data-tryd-config-move]');
+      if (move) {
+        const row = move.closest('.oabConfigRow'), list = row.parentElement;
+        if (Number(move.dataset.trydConfigMove) < 0 && row.previousElementSibling) list.insertBefore(row, row.previousElementSibling);
+        if (Number(move.dataset.trydConfigMove) > 0 && row.nextElementSibling) list.insertBefore(row.nextElementSibling, row);
+        refreshOrderButtons(list);
+      }
+    });
+    const collect = list => [...list.querySelectorAll('select')].map(select => ({ key: select.value }));
+    modal.querySelector('[data-tryd-save]').addEventListener('click', () => {
+      const before = view();
+      const next = engine.normalizePrefs({ ...before, rows: collect(lists.rows), values: collect(lists.values), filters: collect(lists.filters) });
+      // Eksen değişince eski grup anahtarları anlamsızdır; gizlenen değere göre sıralama etikete döner.
+      if (JSON.stringify(next.rows) !== JSON.stringify(before.rows)) next.collapsedGroups = [];
+      if (next.sort.key !== 'label' && !next.values.some(ref => ref.key === next.sort.key)) next.sort = { key: 'label', dir: 1 };
+      const filtersChanged = JSON.stringify(next.filterValues) !== JSON.stringify(before.filterValues);
+      state.view = next;
+      close();
+      saveView({ immediate: true });
+      render();
+      setStatus(filtersChanged ? () => text('Filtre değişti. Veriyi çekmek için Yenile’ye basın.', 'Filters changed. Press Refresh to query data.') : () => text('Pivot ayarları kaydedildi.', 'Pivot settings saved.'), 'ok');
+    });
+    modal.querySelector('[data-tryd-settings-reset]').addEventListener('click', () => {
+      const current = view();
+      // Satır, değer ve filtre alanları varsayılana döner; varsayılan filtrelerdeki seçimler, hedef ve landed kaynağı korunur.
+      const keep = Object.fromEntries(Object.entries(current.filterValues || {}).filter(([key]) => engine.DEFAULT_FILTERS.includes(key)));
+      state.view = engine.normalizePrefs({ target: current.target, landedSource: current.landedSource, belowTargetOnly: current.belowTargetOnly, filterValues: keep });
+      const filtersChanged = JSON.stringify(state.view.filterValues) !== JSON.stringify(current.filterValues);
+      close();
+      saveView({ immediate: true });
+      render();
+      setStatus(filtersChanged ? () => text('Pivot varsayılan düzenine döndü; filtre değişti, veriyi çekmek için Yenile’ye basın.', 'Pivot reset to defaults; filters changed, press Refresh to query data.') : () => text('Pivot varsayılan düzenine döndü.', 'Pivot reset to defaults.'), 'ok');
+    });
+    dialog.querySelector('select,button')?.focus();
   }
 
   /* ---------- Olaylar ---------- */
@@ -544,12 +746,13 @@
   }
   function currentTreeKeys() {
     if (!state.rows.length) return [];
-    return groupKeys(engine.buildTree(compute().visible, { target: view().target }));
+    return groupKeys(engine.buildTree(compute().visible, { target: view().target, levels: groupLevels() }));
   }
   function bind() {
     new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
     byId('trydAdvantageRefreshBtn')?.addEventListener('click', () => void refresh(true));
     byId('trydAdvantageExcelExportBtn')?.addEventListener('click', () => void exportExcel());
+    byId('trydAdvantageFieldsBtn')?.addEventListener('click', event => { event.stopPropagation(); openFields(); });
     byId('trydAdvantageFiltersBtn')?.addEventListener('click', event => {
       event.stopPropagation();
       const panel = byId('trydAdvantageFilterPanel');
@@ -582,6 +785,15 @@
         renderBody();
         return;
       }
+      const remove = event.target.closest('[data-tryd-filter-remove]');
+      if (remove) { removeFilter(remove.dataset.trydFilterRemove); return; }
+      const add = event.target.closest('[data-tryd-add-filter]');
+      if (add) {
+        event.stopPropagation();
+        if (state.popover && add.getAttribute('aria-expanded') === 'true') { closePopover(); return; }
+        openFilterFieldPicker(add);
+        return;
+      }
       const trigger = event.target.closest('[data-tryd-filter]');
       if (trigger) openFilter(trigger, trigger.dataset.trydFilter);
     });
@@ -593,7 +805,8 @@
       const item = state.displayItems[Number(row.dataset.trydRow)];
       let column = 0;
       for (const td of row.cells) { if (td === cell) break; column += td.colSpan || 1; }
-      const ref = column >= DIMS.length ? (VALUES()[column - DIMS.length] || {}).key : null;
+      const axisCount = axisKeys().length;
+      const ref = column >= axisCount ? (selectedValues()[column - axisCount] || {}).key : null;
       if (item) openDetail(item, ref);
     });
     byId('trydAdvantageTable')?.addEventListener('click', event => {
@@ -614,7 +827,7 @@
       renderBody();
     });
     document.addEventListener('click', event => {
-      if (state.popover && !state.popover.contains(event.target) && !event.target.closest('[data-tryd-filter]')) closePopover();
+      if (state.popover && !state.popover.contains(event.target) && !event.target.closest('[data-tryd-filter],[data-tryd-add-filter]')) closePopover();
       const panel = byId('trydAdvantageFilterPanel');
       if (panel && !panel.hidden && !panel.contains(event.target) && !event.target.closest('#trydAdvantageFiltersBtn,#trydAdvantageRefreshBtn,.intakeFilterPopover')) setFilterPanelOpen(false);
     });
@@ -638,5 +851,5 @@
   bind();
   render();
   startWhenVisible();
-  window.BLTrydAdvantage = Object.freeze({ state, refresh: () => refresh(true), reload: loadState });
+  window.BLTrydAdvantage = Object.freeze({ state, refresh: () => refresh(true), reload: loadState, openFields });
 })();
