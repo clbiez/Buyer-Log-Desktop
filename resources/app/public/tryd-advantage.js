@@ -505,9 +505,8 @@
     document.body.appendChild(popover);
     state.popover = popover;
     button.setAttribute('aria-expanded', 'true');
-    const rect = button.getBoundingClientRect();
-    popover.style.left = `${Math.max(8, Math.min(innerWidth - popover.offsetWidth - 8, rect.left))}px`;
-    popover.style.top = `${Math.max(8, Math.min(innerHeight - popover.offsetHeight - 8, rect.bottom + 4))}px`;
+    /* Ortak yerleştirici: değerler yüklenip panel büyüyünce de pencere içinde kalır. */
+    window.BLFloatingPlacement?.place(popover, button);
     window.BLMotionPlus?.play?.('overlay', popover);
     const list = popover.querySelector('.intakeFilterValues'), search = popover.querySelector('.intakeFilterSearch');
     const draw = () => {

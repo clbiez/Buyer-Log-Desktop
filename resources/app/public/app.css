@@ -2788,7 +2788,10 @@ td.qtxColourBridgeBusy{cursor:progress!important;}
 .intakeTableWrap .miniTable th{position:sticky;top:0;cursor:pointer;white-space:nowrap;}
 .intakeTableWrap .miniTable td.num{text-align:right;}
 .intakeEmpty{padding:18px!important;text-align:center;}
-.intakeFilterPopover{min-width:270px;max-width:min(390px,calc(100vw - 16px));padding:9px;}
+.intakeFilterPopover{min-width:270px;max-width:min(390px,calc(100vw - 16px));padding:9px;box-sizing:border-box;display:flex;flex-direction:column;max-height:calc(100vh - 16px);}
+/* Pencere alanı daralınca (BLFloatingPlacement max-height) yalnız liste küçülür; başlık, arama ve Uygula görünür kalır. */
+.intakeFilterPopover>*{flex:0 0 auto;}
+.intakeFilterPopover>.intakeFilterValues{flex:0 1 auto;min-height:72px;}
 .intakeFilterFieldOption{display:flex;width:100%;flex-direction:column;align-items:flex-start;gap:2px;padding:7px 8px;text-align:left;cursor:pointer;}
 .intakeFilterFieldOption small{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .intakeFilterPopoverTitle{padding:2px 2px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
