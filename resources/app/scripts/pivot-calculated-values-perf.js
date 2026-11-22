@@ -39,7 +39,17 @@ function postRows(count) {
 }
 
 (async () => {
-  const app = await start({});
+  const passMocks = async target => {
+    // OAB PASS: PASS uçları taklit (20.000 option satırı), pivot motoru ve çizim gerçek.
+    const passRows = Array.from({ length: 20000 }, (_, i) => ({ 'Klasman Grup Tanımı': `DEMO GRUP ${i % 12}`, 'Klasman Tanımı': `DEMO KLASMAN ${i % 60}`, 'Plan Başlangıç Ayı': 'Ocak', 'Option Adı': `DEMO OPT ${i}`, 'Renk Kodu': `C${i % 9}`, 'WSSI Sipariş Miktarı': i % 3 ? 500 + (i % 97) : 0, 'Onaylı Sipariş Miktarı': 300 + (i % 89) })); // i18n-ignore: OAB kaynak alan adları
+    const json = body => route => route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
+    await target.route('**/api/oab/seasons', json({ ok: true, seasons: [{ Name: 'S6', SeasonRef: 'S6' }] }));
+    await target.route('**/api/oab/mag', json({ ok: true, mag: [{ Name: 'DM1A', MerchSubGroupRef: 'M1' }] }));
+    await target.route('**/api/oab/buyer-groups', json({ ok: true, buyerGroups: [{ Name: 'DEMO GRUP', BuyerGroupRef: 'B1' }] }));
+    await target.route('**/api/oab/batch-status*', json({ ok: true, job: null }));
+    await target.route('**/api/oab/state', json({ ok: true, state: { selection: { seasonRefs: ['S6'], merchSubGroupRefs: ['M1'], buyerGroupRefs: ['B1'] }, snapshot: { rows: passRows, fields: Object.keys(passRows[0]), fetchedAt: '2026-11-22T08:00:00Z' } } }));
+  };
+  const app = await start({ beforeNavigate: passMocks });
   try {
     const { page } = app;
     const put = async (url, body) => { for (let attempt = 0; ; attempt++) { try { return await app.api(url, body, 'PUT'); } catch (error) { if (attempt >= 8) throw error; await new Promise(resolve => setTimeout(resolve, 500)); } } };
@@ -65,14 +75,6 @@ function postRows(count) {
     await page.route('**/api/intake/report', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, fields: intake.defaultFields(), viewConfig: intakeView, rows: intakeRows, fetchedAt: '2026-11-22T08:00:00Z', fromCache: true }) }));
     await page.route('**/api/intake/metadata', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, fields: intake.defaultFields(), viewConfig: intakeView, connection: { server: 'demo', catalog: 'demo' }, offline: false }) }));
     await page.route('**/api/intake/settings', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, viewConfig: JSON.parse(route.request().postData() || '{}').viewConfig || intakeView }) }));
-    // OAB PASS: PASS uçları taklit (20.000 option satırı), pivot motoru ve çizim gerçek.
-    const passRows = Array.from({ length: 20000 }, (_, i) => ({ 'Klasman Grup Tanımı': `DEMO GRUP ${i % 12}`, 'Klasman Tanımı': `DEMO KLASMAN ${i % 60}`, 'Plan Başlangıç Ayı': 'Ocak', 'Option Adı': `DEMO OPT ${i}`, 'Renk Kodu': `C${i % 9}`, 'WSSI Sipariş Miktarı': i % 3 ? 500 + (i % 97) : 0, 'Onaylı Sipariş Miktarı': 300 + (i % 89) })); // i18n-ignore: OAB kaynak alan adları
-    const json = body => route => route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
-    await page.route('**/api/oab/seasons', json({ ok: true, seasons: [{ Name: 'S6', SeasonRef: 'S6' }] }));
-    await page.route('**/api/oab/mag', json({ ok: true, mag: [{ Name: 'DM1A', MerchSubGroupRef: 'M1' }] }));
-    await page.route('**/api/oab/buyer-groups', json({ ok: true, buyerGroups: [{ Name: 'DEMO GRUP', BuyerGroupRef: 'B1' }] }));
-    await page.route('**/api/oab/batch-status*', json({ ok: true, job: null }));
-    await page.route('**/api/oab/state', json({ ok: true, state: { selection: { seasonRefs: ['S6'], merchSubGroupRefs: ['M1'], buyerGroupRefs: ['B1'] }, snapshot: { rows: passRows, fields: Object.keys(passRows[0]), fetchedAt: '2026-11-22T08:00:00Z' } } }));
     if (WITH_CALC) await page.evaluate(calc => localStorage.setItem('bl.user.moderator.lcw.oab.pivotCalculated.v1', calc), JSON.stringify([{ id: 'pcv_a', label: 'A', formula: '[Toplam Onaylı Sipariş Miktarı::SUM] / [Toplam WSSI Sipariş Miktarı::SUM]', mode: 'aggregate' }, { id: 'pcv_b', label: 'B', formula: 'IF([WSSI Sipariş Miktarı] = 0, [Onaylı Sipariş Miktarı], 0)', mode: 'row' }])); // i18n-ignore: OAB kaynak alan adları
     await page.waitForFunction(() => window.BLOverviewHome && document.getElementById('oabCubeSection'), null, { timeout: 60000 });
     await page.evaluate(() => window.BLOverviewHome.goToPage(1));
@@ -80,7 +82,7 @@ function postRows(count) {
 
     async function measure(sectionId, ready, refreshId, tableId, sortAttr, headerSelector, minRows = 50) {
       await page.evaluate(id => document.getElementById(id).scrollIntoView({ block: 'start' }), sectionId);
-      await page.waitForFunction(ready, null, { timeout: 60000 });
+      await page.waitForFunction(ready, null, { timeout: 60000 }).catch(error => { throw new Error(`${sectionId} hazır olmadı: ${error.message}`); });
       if (refreshId) await page.click(`#${refreshId}`);
       await page.waitForFunction(([id, min]) => document.querySelectorAll(`#${id} tbody tr`).length > min, [tableId, minRows], { timeout: 60000 });
       const samples = [];
