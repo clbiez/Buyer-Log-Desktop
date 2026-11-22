@@ -45,8 +45,8 @@
   ]);
   const INSIGHT_TYPE_LABELS = Object.freeze({
     tr: {
-      deliveryOutcome: 'Teslimat Sonucu', lateLoading: 'Geç Yükleme', transitDelay: 'Transit Gecikmesi',
-      notYetLoaded: 'Henüz Yüklenmedi', productionRisk: 'Üretim Riski', customsRisk: 'Gümrük Riski',
+      deliveryOutcome: 'Teslimat Sonucu', lateLoading: 'Geç Handover', transitDelay: 'Transit Gecikmesi',
+      notYetLoaded: 'Handover Bekleniyor', productionRisk: 'Üretim Riski', customsRisk: 'Gümrük Riski',
       retailTransferRisk: 'Retaile Aktarım Riski', supplierConcentration: 'Üretici Yoğunlaşması',
       countryRisk: 'Ülke Riski', buyerRisk: 'Buyer Riski', buyerGroupRisk: 'Buying Group Riski',
       magAnalysis: 'MAG Analizi', mmygAnalysis: 'MMYG Analizi', lineAnalysis: 'Line Analizi',
@@ -54,8 +54,8 @@
       dataQuality: 'Veri Kalitesi', positiveSummary: 'Olumlu / Zamanında Özeti', lowVolumeExceptions: 'Düşük Hacimli İstisnalar',
     },
     en: {
-      deliveryOutcome: 'Delivery Outcome', lateLoading: 'Late Loading', transitDelay: 'Transit Delay',
-      notYetLoaded: 'Not Yet Loaded', productionRisk: 'Production Risk', customsRisk: 'Customs Risk',
+      deliveryOutcome: 'Delivery Outcome', lateLoading: 'Late Handover', transitDelay: 'Transit Delay',
+      notYetLoaded: 'Awaiting Handover', productionRisk: 'Production Risk', customsRisk: 'Customs Risk',
       retailTransferRisk: 'Retail Transfer Risk', supplierConcentration: 'Supplier Concentration',
       countryRisk: 'Country Risk', buyerRisk: 'Buyer Risk', buyerGroupRisk: 'Buyer Group Risk',
       magAnalysis: 'MAG Analysis', mmygAnalysis: 'MMYG Analysis', lineAnalysis: 'Line Analysis',
@@ -140,8 +140,8 @@
           id: 'notYetLoaded.main', type: 'notYetLoaded', severity: notLoadedLate.length ? 'critical' : 'watch',
           orders: notLoadedLate.length ? notLoadedLate : notLoaded,
           message: f.en
-            ? `${f.n(distinctOrders(notLoaded))} orders are still in production or pre-loading. Given their loading type and target date, ${f.n(distinctOrders(notLoadedLate))} are not expected to arrive on time.`
-            : `${f.n(distinctOrders(notLoaded))} sipariş hâlâ üretim/depo öncesi aşamada. Mevcut yükleme tipi ve hedef tarih dikkate alındığında ${f.n(distinctOrders(notLoadedLate))} siparişin zamanında yetişmesi beklenmiyor.`,
+            ? `${f.n(distinctOrders(notLoaded))} orders are still in production or awaiting handover. Given their loading type and target date, ${f.n(distinctOrders(notLoadedLate))} are not expected to arrive on time.`
+            : `${f.n(distinctOrders(notLoaded))} sipariş hâlâ üretimde ya da Handover bekliyor. Mevcut yükleme tipi ve hedef tarih dikkate alındığında ${f.n(distinctOrders(notLoadedLate))} siparişin zamanında yetişmesi beklenmiyor.`,
         }));
       }
     }
@@ -186,8 +186,8 @@
           id: 'lateLoading.main', type: 'lateLoading', severity: lateRisky.length ? 'warning' : 'watch',
           orders: lateRisky.length ? lateRisky : late,
           message: f.en
-            ? `${f.n(distinctOrders(late))} orders were loaded later than planned; ${f.n(distinctOrders(lateRisky))} of them are at risk for the target date.`
-            : `${f.n(distinctOrders(late))} sipariş planlanan tarihten geç yüklendi; ${f.n(distinctOrders(lateRisky))} tanesi hedef tarih açısından risk taşıyor.`,
+            ? `${f.n(distinctOrders(late))} orders were handed over later than the Ex-Factory date; ${f.n(distinctOrders(lateRisky))} of them are at risk for the target date.`
+            : `${f.n(distinctOrders(late))} siparişin Handover'ı Ex-Factory tarihinden geç yapıldı; ${f.n(distinctOrders(lateRisky))} tanesi hedef tarih açısından risk taşıyor.`,
         }));
       }
     }

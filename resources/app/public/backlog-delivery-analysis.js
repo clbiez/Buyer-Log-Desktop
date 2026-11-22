@@ -64,6 +64,17 @@
   const dimLabel = key => Engine.DIMENSION_LABELS[lang()][key] || key;
   const measureOf = measure => (state.measure === 'orders' ? measure.orders : measure.qty);
   const stepLabel = code => (Engine.STAGE_STEP_LABELS && Engine.STAGE_STEP_LABELS[lang()][code]) || '';
+  /* Koşan aralık tek aşamaya denk gelmiyorsa (ara adım tarihi yok) numara
+     yazılmaz, sayılan aralık yazılır: "Handover → ETA" (Handover ≠ Cut Off). */
+  const STAGE_ENDS = { 1: ['loadingRequest', 'handover'], 2: ['handover', 'cutOff'], 3: ['cutOff', 'actualLoading'], 4: ['actualLoading', 'eta'], 5: ['eta', 'summaryDeclaration'], 6: ['summaryDeclaration', 'warehouseApproval'], 7: ['warehouseApproval', 'transitDeclaration'], 8: ['transitDeclaration', 'warehouseEntry'] };
+  const stageRunLabel = p => {
+    const run = p && p.running, ends = STAGE_ENDS[p.currentStage];
+    if (run && run.from && run.to && ends && (run.from !== ends[0] || run.to !== ends[1])) {
+      const ms = (Engine.MILESTONE_SHORT_LABELS && Engine.MILESTONE_SHORT_LABELS[lang()]) || {};
+      return `${ms[run.from] || run.from} → ${ms[run.to] || run.to}`;
+    }
+    return `${p.currentStage}. ${stepLabel(p.currentStage)}`;
+  };
   const signedDays = value => (value == null || !Number.isFinite(Number(value)) ? '' : `${Number(value) > 0 ? '+' : ''}${int(value)}`);
   const measureWord = () => (state.measure === 'orders' ? L('sipariş', 'orders') : L('adet', 'units'));
 
@@ -372,7 +383,7 @@
         .map(item => `${item[0]}: ${signedDays(item[4])}`).join(' · ');
       return { ...row,
         stageEta: (stat === 'p80' ? p.etaP80 : p.etaMean) || '',
-        stageCurrent: p.currentStage ? `${p.currentStage}. ${stepLabel(p.currentStage)}` : '',
+        stageCurrent: p.currentStage ? stageRunLabel(p) : '',
         stageOverrun: Number(p.openOverrunDays) > 0 ? Number(p.openOverrunDays) : '',
         stageVsRule: analysis.stageVsRuleDays == null ? '' : analysis.stageVsRuleDays,
         stageProbability: analysis.onTimeProbability == null ? '' : Math.round(analysis.onTimeProbability * 100),
@@ -609,7 +620,7 @@
             <option value="retail"${state.settings.targetType === 'retail' ? ' selected' : ''}>${esc(L('Retail Depo', 'Retail Warehouse'))}</option>
             <option value="inStore"${state.settings.targetType === 'inStore' ? ' selected' : ''}>${esc(L('Model Bütçe / In Store', 'Model Budget / In Store'))}</option>
           </select></label>
-        <label class="bdaControl" title="${esc(L('Aşama modeli ETA istatistiği. Ortalama: geçmiş parsiyellerin ortalama kalan süresi. P80: parsiyellerin %80\'inin vardığı süre (temkinli).', 'Stage model ETA statistic. Average: mean remaining time of past partials. P80: the time within which 80% of partials arrived (conservative).'))}"><span>${esc(L('ETA', 'ETA'))}</span>
+        <label class="bdaControl" title="${esc(L('Aşama modeli ETA istatistiği. Ortalama: geçmiş parsiyellerin ortalama kalan süresi. P80: parsiyellerin %80\'inin vardığı süre (temkinli).', 'Stage model ETA statistic. Average: mean remaining time of past partials. P80: the time within which 80% of partials arrived (conservative).'))}"><span data-no-i18n>${esc(L('Aşama ETA', 'Stage ETA'))}</span>
           <select data-control="etaStat">
             <option value="mean"${state.settings.etaStat !== 'p80' ? ' selected' : ''}>${esc(L('Ortalama', 'Average'))}</option>
             <option value="p80"${state.settings.etaStat === 'p80' ? ' selected' : ''}>${esc(L('P80 (temkinli)', 'P80 (conservative)'))}</option>
