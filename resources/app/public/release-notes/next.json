@@ -907,6 +907,35 @@
           "en": "On demo data the P90 suggestion is ×1.08 for GEMI (276 rows / 92 orders) and ×1.41 for UCAK (234 rows / 78 orders); each suggestion says \"P90 — about 10% of rows with the same mode get the warning\". TIR has only 9 rows / 3 orders, so there is no suggestion; the field stays blank and the general 1.11 applies. Values are stored with Save."
         }
       }
+    },
+    {
+      "id": "stage-eta-whole-days",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Siparişler · Backlog",
+        "en": "CP · Orders · Backlog"
+      },
+      "title": {
+        "tr": "Aşama tahmini tam gün hesaplanır; fark kalemleri kendi içinde tutarlı",
+        "en": "Stage forecast is calculated in whole days; gap items are consistent"
+      },
+      "body": {
+        "tr": "Aşama tahmini ondalıklı ortalamalarla hesaplanıp yalnız ekranda yuvarlandığı için fark özetinde \"3 g sürdü (ortalama 3 g): 1 g erken\" gibi çelişkili kalemler çıkabiliyordu. Artık ortalama ve P80 süreler hesaba tam gün olarak girer (normal yuvarlama: 3,4 → 3, 3,7 → 4); her kalemde sürdü − beklenen = fark birebir tutar ve kalemlerin toplamı gösterilen farka eşittir. Kalemdeki süre \"beklenen\" olarak adlandırıldı (modelin kalan süre ortalamalarından).",
+        "en": "The stage forecast used fractional averages and rounded only on screen, so the gap summary could show contradictory items such as \"took 3 d (average 3 d): 1 d earlier\". Average and P80 durations now enter the calculation as whole days (standard rounding: 3.4 → 3, 3.7 → 4); in every item, took − expected = difference exactly, and the items add up to the shown gap. The item duration is now labelled \"expected\" (from the model's remaining-time averages)."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-stage-whole-days.png",
+        "alt": {
+          "tr": "Demo CP: aşama sütunları ve Ex→Retail farkı tam gün",
+          "en": "Demo CP: stage columns and Ex→Retail gap in whole days"
+        },
+        "caption": {
+          "tr": "Demo veride aşama tahmini ve planlanan ETA farkı tam gün üzerinden.",
+          "en": "On demo data, the stage forecast and the gap to the planned ETA in whole days."
+        }
+      }
     }
   ]
 }
