@@ -72,6 +72,8 @@ module.exports = function registerOabCubeRoutes(app, deps) {
     const meta = snapshot.viewConfig && typeof snapshot.viewConfig === 'object' ? snapshot.viewConfig : {};
     return {
       rows: snapshot.rows, fetchedAt: snapshot.fetchedAt, filterValues: meta.filterValues || {}, missing: meta.missing || [],
+      // İstemci gösterilen verinin hangi filtre/alanlarla çekildiğini görünümle karşılaştırır.
+      measures: Array.isArray(meta.measures) ? meta.measures : null, dimensions: Array.isArray(meta.dimensions) ? meta.dimensions : null,
       truncated: Boolean(meta.truncated), rowLimit: meta.rowLimit || report.OAB_CUBE_MAX_ROWS,
       dataDate: meta.dataDate || '', dataDateSource: meta.dataDateSource || '', etlTime: meta.etlTime || '',
     };
@@ -135,7 +137,7 @@ module.exports = function registerOabCubeRoutes(app, deps) {
       const found = await liveFields();
       const built = report.buildQuery({ liveFields: found.fields, view });
       const queryKey = store.queryKey({ connection: { server: found.connection.server, catalog: found.connection.catalog, user: String(userId) }, measures: built.measures, rows: built.dimensions, filters: built.filterValues, options: { report: 'oab-cube', version: 1 } });
-      const meta = { filterValues: built.filterValues, missing: built.missing, rowLimit: built.maxRows };
+      const meta = { filterValues: built.filterValues, missing: built.missing, rowLimit: built.maxRows, measures: built.measures, dimensions: built.dimensions };
       if (!(req.body && req.body.forceRefresh)) {
         const cached = store.get(queryKey);
         if (cached && cached.fresh) {

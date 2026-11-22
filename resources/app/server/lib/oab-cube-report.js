@@ -56,7 +56,7 @@ const DIMENSIONS = Object.freeze([
   { key: 'brandDirectorate', source: '[DummyUrun].[MarkaMudurlukleri]', tr: 'Marka müdürlüğü', en: 'Brand directorate', filter: true, optionalGrain: true },
   { key: 'supplyBasket', source: '[Data].[Tedarik Sepeti]', tr: 'Tedarik sepeti', en: 'Supply basket', filter: true, optionalGrain: true },
   { key: 'carryOver', source: '[Data].[Devir Option Mu]', tr: 'Devir option', en: 'Carry-over option', filter: true, optionalGrain: true },
-  { key: 'planStartMonth', source: '[Data].[Plan Başlangıç Ay]', tr: 'Plan başlangıç ayı', en: 'Plan start month', filter: true, optionalGrain: true },
+  { key: 'planStartMonth', source: '[Data].[Plan Başlangıç Ay]', tr: 'Plan başlangıç ayı', en: 'Plan start month', filter: true, optionalGrain: true, nameTyped: true },
   { key: 'buyingPeriod', source: '[Data].[Alım Dönem]', tr: 'Alım dönemi', en: 'Buying period', filter: true, optionalGrain: true },
   { key: 'budgetType', source: '[Data].[ButceTipTanım]', tr: 'Bütçe tipi', en: 'Budget type', filter: true, optionalGrain: true },
 ].map(Object.freeze));
@@ -124,8 +124,14 @@ function resolveConnection(items) {
   return { id: '', name: OAB_CUBE_CONNECTION.catalog, server: OAB_CUBE_CONNECTION.server, catalog: OAB_CUBE_CONNECTION.catalog, model: OAB_CUBE_CONNECTION.model, source: 'default' };
 }
 
-function definitionField(definition, fieldType) {
-  return intakeReport.createField({ sourceUniqueName: definition.source, fieldType });
+/* Şema bir sütunun tipini vermezse filtre tipi addan tahmin edilir
+   (filter-value-types.typeFromName). Bu tahmin "MerchMarkaYasGrupKod"
+   ("kAYas") gibi kod/ad alanlarını tarih sanıp her filtre değerini
+   reddediyordu. Hazır boyutlar metindir; yalnız adı gerçekten tarih/ay olan
+   alan (nameTyped) tahmine bırakılır. Şemanın verdiği tip her zaman önce gelir. */
+function withTextFallback(definition, field) {
+  if (!field || field.dataType || definition.nameTyped) return field;
+  return { ...field, dataType: 'WChar' };
 }
 
 function liveLookup(liveFields) {
@@ -145,7 +151,7 @@ function resolveFields(liveFields) {
   const lookup = liveLookup(liveFields);
   const dimensions = [], measures = [], missing = [];
   for (const definition of DIMENSIONS) {
-    const field = lookup(definition.source, 'dimension');
+    const field = withTextFallback(definition, lookup(definition.source, 'dimension'));
     if (field) dimensions.push({ ...definition, field }); else missing.push(definition.key);
   }
   for (const definition of MEASURES) {
@@ -284,7 +290,8 @@ function buildQuery({ liveFields = [], view = null, filterValues = {}, maxRows =
   const resolved = resolveFields(liveFields);
   const lookup = liveLookup(liveFields);
   const extras = viewExtras(current);
-  const missing = [...resolved.missing];
+  const viewMeasureKeys = new Set(current.values.map(ref => ref.key));
+  const missing = resolved.missing.filter(key => !MEASURES.some(item => item.key === key) || viewMeasureKeys.has(key));
   const extraDims = [], extraMeasures = [], extraFilterFields = new Map();
   for (const ref of extras.dims.values()) {
     const field = lookup(ref.source, 'dimension');
@@ -313,7 +320,13 @@ function buildQuery({ liveFields = [], view = null, filterValues = {}, maxRows =
   }
   const pivotKeys = new Set([...current.rows, ...current.columns].map(ref => ref.key));
   const groupFields = [...resolved.dimensions.filter(item => !item.optionalGrain || pivotKeys.has(item.key)).map(item => ({ key: item.key, field: item.field })), ...extraDims];
-  const measureFields = [...resolved.measures.map(item => ({ key: item.key, field: item.field })), ...extraMeasures];
+  /* Yalnız görünümdeki ve zorunlu ölçüler sorgulanır. SUMMARIZECOLUMNS en az
+     bir ölçüsü dolu satırı tutar; ilişkisi doğrulanmamış bir ölçü (ör. başka
+     olgu tablosunda) gruplamaya kendiliğinden girmez ve satır sayısını
+     şişirmez. */
+  const wantedMeasures = new Set(current.values.filter(ref => !ref.source).map(ref => ref.key));
+  const queried = resolved.measures.filter(item => item.required || wantedMeasures.has(item.key));
+  const measureFields = [...queried.map(item => ({ key: item.key, field: item.field })), ...extraMeasures];
   const groupExpressions = groupFields.map(item => intakeReport.daxRef(item.field));
   const measureExpressions = measureFields.map(item => `${quoteAlias(item.key)}, ${intakeReport.daxRef(item.field)}`);
   const rowLimit = Math.min(OAB_CUBE_MAX_ROWS, Math.max(1, Math.floor(Number(maxRows) || OAB_CUBE_MAX_ROWS)));
@@ -367,7 +380,7 @@ function resolveFilterField(liveFields, { key = '', source = '' } = {}) {
   const wanted = clean(key);
   const base = DIMENSIONS.find(item => item.key === wanted);
   const lookup = liveLookup(liveFields);
-  if (base) return lookup(base.source, 'dimension');
+  if (base) return withTextFallback(base, lookup(base.source, 'dimension'));
   const ref = normalizeRef({ key: wanted, source }, 'dimension');
   return ref && ref.key === wanted && ref.source ? lookup(ref.source, 'dimension') : null;
 }

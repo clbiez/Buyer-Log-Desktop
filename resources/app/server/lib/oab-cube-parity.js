@@ -14,7 +14,12 @@
  *     ("KK.BDY,GARFIELD-1-YD"); önek atılmış ad da anahtar olarak denenir
  *     (model-image-identity-resolver ile aynı kural). Benzerlik eşleşmesi yok.
  *   - Boş adet 0 sayılmaz: bir tarafta değer hiç yoksa o ölçü "yok" kalır ve
- *     fark hesaplanmaz; uydurma sıfır üretilmez.
+ *     fark hesaplanmaz; uydurma sıfır üretilmez. İstisna: bir tarafta 0, diğer
+ *     tarafta boş ise (SUMMARIZECOLUMNS başka ölçü dolu olduğu için satırı
+ *     tutup bu ölçüyü boş döndürür) fark sayılmaz, `zeroVsBlank` olarak ayrıca
+ *     raporlanır.
+ *   - Model/renk anahtarı olmayan kapsam içi satırlar eşleştirilemez ama
+ *     toplamlardan düşmez (`keylessTotals`); eksik adet gizlenmez.
  *
  * Alan eşlemesi varsayılanları [Hipotez]: PASS "Option Adı" ↔ küp
  * DummyUrun[ModelTanim]. Canlı küp doğrulanmadan kesin sayılmaz; çağıran
@@ -69,13 +74,21 @@ function inScope(row, fields, scope) {
 
 function aggregate(rows, fields, measures, side, scope, includeSeason) {
   const groups = new Map();
+  const keylessValues = {};
   let inScopeCount = 0, keyless = 0;
   for (const row of Array.isArray(rows) ? rows : []) {
     if (!row || typeof row !== 'object' || !inScope(row, fields, scope)) continue;
     inScopeCount++;
     const model = modelKey(row[fields.model]);
     const colour = textKey(row[fields.colour]);
-    if (!model || !colour) { keyless++; continue; }
+    if (!model || !colour) {
+      keyless++;
+      for (const measure of measures) {
+        const value = quantity(row[side === 'pass' ? measure.pass : measure.key]);
+        if (value != null) keylessValues[measure.key] = (keylessValues[measure.key] || 0) + value;
+      }
+      continue;
+    }
     const season = includeSeason ? textKey(row[fields.season]) : '';
     const key = [season, model, colour].join('|');
     if (!groups.has(key)) groups.set(key, { key, season, model, colour, rows: 0, values: {} });
@@ -87,7 +100,7 @@ function aggregate(rows, fields, measures, side, scope, includeSeason) {
       group.values[measure.key] = (group.values[measure.key] || 0) + value;
     }
   }
-  return { groups, inScope: inScopeCount, keyless };
+  return { groups, inScope: inScopeCount, keyless, keylessValues };
 }
 
 const round = value => Math.round(value * 1e6) / 1e6;
@@ -109,7 +122,7 @@ function compare(input = {}) {
   const totals = {};
   measures.forEach(item => { totals[item.key] = { pass: 0, cube: 0, diff: 0, passPresent: false, cubePresent: false }; });
   const mismatches = [], passOnly = [], cubeOnly = [];
-  let matched = 0, equal = 0;
+  let matched = 0, equal = 0, zeroVsBlank = 0;
   const keys = new Set([...pass.groups.keys(), ...cube.groups.keys()]);
   for (const key of [...keys].sort()) {
     const left = pass.groups.get(key), right = cube.groups.get(key);
@@ -128,17 +141,30 @@ function compare(input = {}) {
     for (const item of measures) {
       const a = left.values[item.key], b = right.values[item.key];
       if (a == null && b == null) continue;
-      if (a == null || b == null) { diffs[item.key] = { pass: a == null ? null : a, cube: b == null ? null : b, diff: null }; continue; }
+      if (a == null || b == null) {
+        if ((a == null ? b : a) === 0) { zeroVsBlank++; continue; }
+        diffs[item.key] = { pass: a == null ? null : a, cube: b == null ? null : b, diff: null };
+        continue;
+      }
       const diff = round(b - a);
       if (Math.abs(diff) > tolerance) diffs[item.key] = { pass: a, cube: b, diff };
     }
     if (Object.keys(diffs).length) mismatches.push({ key, season: left.season, model: left.model, colour: left.colour, diffs });
     else equal++;
   }
+  for (const item of measures) {
+    const total = totals[item.key];
+    if (pass.keylessValues[item.key] != null) { total.pass += pass.keylessValues[item.key]; total.passPresent = true; }
+    if (cube.keylessValues[item.key] != null) { total.cube += cube.keylessValues[item.key]; total.cubePresent = true; }
+  }
   Object.values(totals).forEach(total => { total.pass = round(total.pass); total.cube = round(total.cube); total.diff = round(total.cube - total.pass); });
+  const keylessTotals = {
+    pass: Object.fromEntries(Object.entries(pass.keylessValues).map(([key, value]) => [key, round(value)])),
+    cube: Object.fromEntries(Object.entries(cube.keylessValues).map(([key, value]) => [key, round(value)])),
+  };
   const cap = list => list.slice(0, LIST_LIMIT);
   return {
-    ok: mismatches.length === 0 && passOnly.length === 0 && cubeOnly.length === 0,
+    ok: mismatches.length === 0 && passOnly.length === 0 && cubeOnly.length === 0 && pass.keyless === 0 && cube.keyless === 0,
     measures: measures.map(item => item.key),
     tolerance,
     summary: {
@@ -147,10 +173,11 @@ function compare(input = {}) {
       passInScope: pass.inScope, cubeInScope: cube.inScope,
       passKeyless: pass.keyless, cubeKeyless: cube.keyless,
       passKeys: pass.groups.size, cubeKeys: cube.groups.size,
-      matchedKeys: matched, equalKeys: equal,
+      matchedKeys: matched, equalKeys: equal, zeroVsBlank,
       mismatchedKeys: mismatches.length, passOnlyKeys: passOnly.length, cubeOnlyKeys: cubeOnly.length,
     },
     totals,
+    keylessTotals,
     mismatches: cap(mismatches), passOnly: cap(passOnly), cubeOnly: cap(cubeOnly),
     truncated: mismatches.length > LIST_LIMIT || passOnly.length > LIST_LIMIT || cubeOnly.length > LIST_LIMIT,
   };

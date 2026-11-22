@@ -120,6 +120,20 @@ function demoRows() {
     await page.waitForFunction(() => /1 \/ 16/.test(document.getElementById('oabCubeNote').textContent), null, { timeout: 10000 });
     await page.fill('#oabCubeSearch', '');
     await page.waitForFunction(() => document.getElementById('oabCubeNote').hidden, null, { timeout: 10000 });
+    // Filtre değişip Yenile'ye basılmadıysa eski veri sessizce yeni filtrenin altında görünmez.
+    await page.click('#oabCubeFiltersBtn');
+    await page.click('[data-oab-cube-filter="mag"]');
+    await page.waitForSelector('.intakeFilterPopover input[value="DM2B"]', { timeout: 10000 });
+    await page.uncheck('.intakeFilterPopover input[value="DM2B"]');
+    await page.click('[data-oab-cube-apply]');
+    await page.waitForFunction(() => /farklı filtrelerle|different filters/.test(document.getElementById('oabCubeNote').textContent), null, { timeout: 10000 });
+    await page.click('[data-oab-cube-filter="mag"]');
+    await page.waitForSelector('.intakeFilterPopover input[value="DM2B"]', { timeout: 10000 });
+    await page.check('.intakeFilterPopover input[value="DM2B"]');
+    await page.click('[data-oab-cube-apply]');
+    await page.waitForFunction(() => document.getElementById('oabCubeNote').hidden, null, { timeout: 10000 });
+    await page.keyboard.press('Escape');
+    assert.equal(reports.length, 1, 'filtre uygulaması sorgu atmaz');
     // Görünüm sunucuya kaydedilir (gerçek PUT route; rapor ucu taklit olduğu için
     // filtreler sıralama kaydıyla birlikte yazılır).
     await page.click('#oabCubeTable thead th[data-oab-cube-sort="approved"]');

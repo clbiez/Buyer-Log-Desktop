@@ -54,8 +54,9 @@ test('çoklu Sezon × MAG × Buyer grup tek DAX sorgusunda TREATAS filtresi olar
   assert.doesNotMatch(built.query, /'Urun'/);
   // Pivotta olmayan isteğe bağlı boyut gruplanmaz.
   assert.doesNotMatch(built.query, /'Data'\[Tedarik Sepeti\]/);
-  assert.deepEqual(built.missing, ['markupYi']);
-  assert.doesNotMatch(built.query, /Yurtiçi Markup/);
+  // Görünümde olmayan isteğe bağlı ölçü eksikse uyarı üretmez ve sorguya girmez.
+  assert.deepEqual(built.missing, []);
+  assert.doesNotMatch(built.query, /Markup|Landed Fiyat|Depo Giren/);
   assert.deepEqual(built.filterValues.season, ['S6', 'W6']);
   assert.equal(built.headerMap["'DummyUrun'[ModelKod]"], 'modelCode');
   assert.equal(built.headerMap['[approved]'], 'approved');
@@ -67,6 +68,22 @@ test('isteğe bağlı boyut filtre olarak her zaman uygulanır, yalnız pivot ek
   assert.equal(filtered.dimensions.includes('supplyBasket'), false);
   const grouped = report.buildQuery({ liveFields: liveSchema(), view: { rows: ['supplyBasket'], filterValues: { season: ['S6'] } } });
   assert.equal(grouped.dimensions.includes('supplyBasket'), true);
+});
+
+test('yalnız görünümdeki ve zorunlu ölçüler sorgulanır; görünümdeki eksik ölçü raporlanır', () => {
+  const built = report.buildQuery({ liveFields: liveSchema(), view: { values: ['landedPrice', 'markupYi'], filterValues: { season: ['S6'] } } });
+  assert.deepEqual(built.measures.sort(), ['approved', 'landedPrice', 'plan', 'wssi']);
+  assert.deepEqual(built.missing, ['markupYi']);
+});
+
+test('şema tipi gelmeyen kod/ad filtresi addan tarih sanılmaz (MerchMarkaYasGrupKod)', () => {
+  const built = report.buildQuery({ filterValues: { season: ['S6'], brandAgeGroup: ['LCW KIDS'] } });
+  assert.match(built.query, /TREATAS\(\{ "LCW KIDS" \}, 'DummyUrun'\[MerchMarkaYasGrupKod\]\)/);
+  const typed = report.resolveFilterField([], { key: 'brandAgeGroup' });
+  assert.equal(typed.dataType, 'WChar');
+  // Şemanın verdiği tip önce gelir.
+  const live = intakeReport.allowedSchema({ columns: [{ table: 'DummyUrun', name: 'MerchMarkaYasGrupKod', kind: 'column', dataType: '20' }], measures: [] });
+  assert.notEqual(report.resolveFilterField(live, { key: 'brandAgeGroup' }).dataType, 'WChar');
 });
 
 test('zorunlu ölçü (onaylı/WSSI/plan) veya model/renk alanı yoksa açık şema hatası verilir', () => {
@@ -194,6 +211,9 @@ test('rapor: sezonsuz istek reddedilir; sorgu + veri tarihi çalışır; önbell
   assert.equal(state.body.snapshot.dataDate, '2026-11-21T03:10:00');
   assert.deepEqual(state.body.view.filterValues, { season: ['S6'] });
   assert.equal(state.body.catalog.passOnlyFields.length, 5);
+  // Gösterilen verinin sorgu düzeyi istemciye döner (görünümle uyuşmazlık uyarısı için).
+  assert.deepEqual(state.body.snapshot.measures.sort(), ['approved', 'plan', 'poQty', 'unapproved', 'wssi']);
+  assert.ok(state.body.snapshot.dimensions.includes('modelCode'));
   // Görünüm mevcut lcw.oab. tercih öneki altında saklanır (senkron listesi değişmez).
   assert.equal([...h.prefs.get('u1')].some(([key]) => key === 'lcw.oab.cube.view.v1'), true);
 });
@@ -249,6 +269,21 @@ test('parity: aynı kapsam ve model+renk anahtarında adet farkı raporlanır; �
   assert.equal(result.totals.approved.diff, 7);
 });
 
+test('parity: 0 ile boş fark sayılmaz ama ayrı raporlanır; anahtarsız satırlar toplamlardan düşmez', () => {
+  const result = parity.compare({
+    passRows: [{ Sezon: 'S6', 'Option Adı': 'A,M1', 'Renk Kodu': 'C1', 'Onaylı Sipariş Miktarı': 5, 'PO Miktarı': '0' }, { Sezon: 'S6', 'Option Adı': '', 'Renk Kodu': 'C9', 'Onaylı Sipariş Miktarı': 7 }],
+    cubeRows: [{ season: 'S6', modelName: 'M1', colourCode: 'C1', approved: 5, poQty: null }],
+    measures: ['approved', 'poQty'],
+  });
+  assert.equal(result.summary.zeroVsBlank, 1);
+  assert.equal(result.mismatches.length, 0);
+  assert.equal(result.summary.passKeyless, 1);
+  assert.equal(result.totals.approved.pass, 12);
+  assert.equal(result.totals.approved.diff, -7);
+  assert.deepEqual(result.keylessTotals.pass, { approved: 7 });
+  assert.equal(result.ok, false, 'eşleştirilemeyen adet varken ok olmaz');
+});
+
 test('parity: tolerans ve kapsam dışı satırlar; tamamen eşleşen kümede ok=true', () => {
   const same = parity.compare({ passRows: PASS_ROWS.slice(0, 2), cubeRows: CUBE_ROWS.slice(0, 1), scope: { seasons: ['s6'] }, measures: ['approved'] });
   assert.equal(same.ok, true);
@@ -286,6 +321,8 @@ test('istemci: pivot toplamları OABPivotEngine ile, görünür olunca yüklenir
   assert.match(js, /Veri tarihi', 'Data date'/);
   assert.match(js, /passOnlyFields/);
   assert.match(js, /BLDetailDrawer\.open/);
+  assert.match(js, /function staleReason\(\)/);
+  assert.match(js, /hasValue\(ref\.key\) \? pivot\.verifyTotal/);
   assert.match(js, /book_append_sheet/);
   const main = read('public/app-main.js');
   assert.match(main, /function ensureOverviewOabCubeModule\(\)/);

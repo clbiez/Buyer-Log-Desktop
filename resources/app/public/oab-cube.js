@@ -22,6 +22,7 @@
     catalog: { dimensions: [], measures: [], passOnlyFields: [], defaults: null, aggregates: ['SUM', 'AVG', 'MIN', 'MAX'] },
     view: null,
     rows: [], fetchedAt: '', missing: [], truncated: false, rowLimit: 20000, dataDate: '', dataDateSource: '',
+    dataFilterValues: null, dataMeasures: null, dataDimensions: null,
     connection: null, loaded: false, loading: false, started: false,
     status: null, popover: null, viewRevision: 0, exporting: false, metadata: null, metadataPromise: null, search: '', displayItems: [],
   };
@@ -110,7 +111,10 @@
     const out = {};
     const pivot = engine();
     if (!pivot) return out;
-    view().values.forEach(ref => { out[ref.key] = pivot.verifyTotal(rows, ref.key, ref.agg || 'SUM'); });
+    // Hiç sayısal değeri olmayan grup boş kalır; motorun boş SUM/AVG sonucu (0) gösterilmez.
+    const numeric = window.OABDataUtils && window.OABDataUtils.fieldNumericValue;
+    const hasValue = key => rows.some(row => numeric ? numeric(row, key) != null : typeof (row && row[key]) === 'number');
+    view().values.forEach(ref => { out[ref.key] = hasValue(ref.key) ? pivot.verifyTotal(rows, ref.key, ref.agg || 'SUM') : null; });
     return out;
   }
   const searchKeys = ['modelCode', 'modelName', 'colourCode', 'colourName'];
@@ -210,6 +214,18 @@
     };
     walk(rows, 0, []);
     return keys;
+  }
+
+  /* Gösterilen veri görünümle aynı filtre ve alanlarla mı çekildi? Filtre
+     uygulama/kaldırma yalnız görünümü kaydeder; sayfa yenilenince eski
+     snapshot yeni filtrelerin altında sessizce görünmesin. */
+  const filterSignature = values => JSON.stringify(Object.keys(values || {}).sort().map(key => [key, [...(values[key] || [])].map(clean).sort()]).filter(([, list]) => list.length));
+  function staleReason() {
+    if (!state.loaded || !state.rows.length) return '';
+    if (state.dataFilterValues && filterSignature(state.dataFilterValues) !== filterSignature(view().filterValues)) return 'filters';
+    if (state.dataMeasures && view().values.some(ref => !state.dataMeasures.includes(ref.key))) return 'fields';
+    if (state.dataDimensions && [...view().rows, ...view().columns].some(ref => !state.dataDimensions.includes(ref.key))) return 'fields';
+    return '';
   }
 
   /* ---------- Çizim ---------- */
@@ -328,6 +344,9 @@
       window.BLTableColumnResize?.apply(table, { store: widthStore, columns: [...dims.map((ref, index) => ({ key: ref.key, label: refLabel(ref), type: 'text', minPx: dimPx(ref, index) })), ...values.map(ref => ({ key: ref.key, label: refLabel(ref), type: 'num', minPx: wordPx(refLabel(ref)) }))] });
     } catch (error) { console.warn('OAB (Küp) sütun genişliği uygulanamadı:', error); }
     const notes = [];
+    const stale = staleReason();
+    if (stale === 'filters') notes.push(text('Gösterilen veri farklı filtrelerle çekildi; seçili filtreler için Yenile’ye basın.', 'The data shown was queried with different filters; press Refresh for the selected filters.'));
+    if (stale === 'fields') notes.push(text('Görünümdeki bazı alanlar son sorguda yoktu (boş görünür); Yenile’ye basın.', 'Some fields in the view were not in the last query (shown blank); press Refresh.'));
     if (state.search) notes.push(text(`Arama: ${rows.length.toLocaleString(locale())} / ${state.rows.length.toLocaleString(locale())} satır eşleşti.`, `Search: ${rows.length.toLocaleString(locale())} / ${state.rows.length.toLocaleString(locale())} rows match.`));
     if (items.length > shown.length) notes.push(text(`İlk ${MAX_TABLE_ROWS.toLocaleString(locale())} satır gösteriliyor; grupları daraltın veya filtreleyin.`, `Showing the first ${MAX_TABLE_ROWS.toLocaleString(locale())} rows; collapse groups or filter.`));
     if (state.truncated) notes.push(text(`Sorgu ${state.rowLimit.toLocaleString(locale())} satır sınırına ulaştı; toplamlar eksik olabilir. Filtreleri daraltın.`, `The query hit the ${state.rowLimit.toLocaleString(locale())} row limit; totals may be incomplete. Narrow the filters.`));
@@ -449,7 +468,7 @@
 
   const widthStore = {
     get: id => { const px = Number(display().widths && display().widths[id]); return Number.isFinite(px) ? px : null; },
-    set: (id, px) => { const current = view(); current.display = current.display || {}; current.display.widths = { ...(current.display.widths || {}), [id]: Math.round(px) }; state.view = current; },
+    set: (id, px) => { const current = state.view || clone(view()); current.display = current.display || {}; current.display.widths = { ...(current.display.widths || {}), [id]: Math.round(px) }; state.view = current; },
     save: () => saveView({ silent: true }),
   };
 
@@ -460,6 +479,9 @@
     state.truncated = Boolean(payload && payload.truncated);
     state.rowLimit = Number(payload && payload.rowLimit) || state.rowLimit;
     state.dataDate = clean(payload && payload.dataDate);
+    state.dataFilterValues = payload && payload.filterValues && typeof payload.filterValues === 'object' ? payload.filterValues : null;
+    state.dataMeasures = Array.isArray(payload && payload.measures) ? payload.measures : null;
+    state.dataDimensions = Array.isArray(payload && payload.dimensions) ? payload.dimensions : null;
     state.dataDateSource = clean(payload && payload.dataDateSource);
   }
 
@@ -681,7 +703,7 @@
       close();
       const saved = await saveView({ immediate: true });
       render();
-      if (saved && queryShape(saved) !== before && state.loaded) void refresh(false);
+      if (saved && state.loaded && (queryShape(saved) !== before || staleReason())) void refresh(false);
       else setStatus(() => text('Pivot ayarları kaydedildi.', 'Pivot settings saved.'), 'ok');
     });
     modal.querySelector('[data-oab-cube-settings-reset]').addEventListener('click', async () => {
