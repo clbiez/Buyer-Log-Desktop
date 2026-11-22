@@ -12,12 +12,15 @@ const { jsonToBuffer, jsonToBufferAsync, parseJsonBuffer, parseJsonBufferAsync }
 
 const SNAPSHOT_ROOT = path.join(LOCAL_DATA_ROOT, 'model-snapshots');
 const LEGACY_SNAPSHOT_SCHEMA_VERSION = 1;
-const SNAPSHOT_SCHEMA_VERSION = 2;
+const LEGACY_V2_SCHEMA_VERSION = 2;
 /* v3 = v2 + sütun sözlüklü satır torbaları (yalnız disk biçimi; bellekteki şekil
-   aynıdır). FAZ 1: yalnız OKUNUR. Yazıcı v2'de kalır, çünkü 8.0.6 ve öncesi v3'ü
-   reddeder ve snapshot'ı yok sayar (Excel/yüklenen LFL kaynağında tek kalıcı
-   kopya snapshot'tır). v3 yazımı ayrı bir sürüm kararıdır (faz 2). */
+   aynıdır). FAZ 2: yazıcı v3 yazar. v3 okuyucusu (faz 1) bir önceki sürümde
+   yayında olmalıdır: 8.0.6 ve öncesi v3'ü reddeder ve snapshot'ı yok sayar
+   (Excel/yüklenen LFL kaynağında tek kalıcı kopya snapshot'tır). Bu yüzden faz 2,
+   faz 1'in TEST'e çıktığı sürümden SONRAKİ sürümle yayınlanır; bir sürüm geri
+   dönüş v3'ü okuyabilir. v2 dosyaları okunmaya devam eder; ilk kayıtta v3 olur. */
 const COLUMNAR_SNAPSHOT_SCHEMA_VERSION = 3;
+const SNAPSHOT_SCHEMA_VERSION = COLUMNAR_SNAPSHOT_SCHEMA_VERSION; // yazılan sürüm
 const ROW_BAGS = Object.freeze(['_sourceFields', '_asas', '_cpExtra', '_sourceValues', '_matchValues']);
 const BAG_COLUMNS_KEY = '_bagColumns';
 const ARRAY_BAG = -1;
@@ -126,11 +129,32 @@ function expandSnapshotPayload(snapshot) {
 // İçerik UTF-8 parçalarıyla üretilir; bütün kaynak için büyük bir V8 metni
 // oluşturmak, snapshot kaydında sunucuyu OOM ile kapatabiliyordu.
 // Gövde hash'i ve dosya baytları yalnız gerçekten yazılacaksa hazırlanır.
-function prepareSnapshot(payload) {
+/* İçerik görünümü: v3'te satır taşıyan bölümler tembel görünümlerdir; her satır
+   serileştirilirken kodlanır ve hemen bırakılır. Bütün satırların kodlanmış
+   kopyasını önceden kurmak üretim verisinde ~150-200 MiB geçici heap demekti
+   (OOM geçmişi: #1148/#1153). _bagColumns en son serileştirilir; o ana kadar
+   bütün şemalar toplanmıştır. format 'v2' yalnız test/geri dönüş aracıdır. */
+function snapshotContent(payload, format) {
   const compacted = compactSnapshotPayload(payload);
   const { content, metadata } = splitCompactedPayload(compacted);
-  const contentBuffer = jsonToBuffer(content);
-  return { contentBuffer, contentKey:checksum(contentBuffer), metadata, savedAt:new Date().toISOString(), aliasCount:compacted.aliasCount };
+  const base = { metadata, savedAt:new Date().toISOString(), aliasCount:compacted.aliasCount };
+  if (format === 'v2') return { ...base, content, encoder:null };
+  const encoder = rowBagEncoder();
+  const lazy = lazyRowContainers(content, encoder.encodeRow);
+  lazy[BAG_COLUMNS_KEY] = { toJSON:() => encoder.columns };
+  return { ...base, content:lazy, encoder };
+}
+function preparedFrom({ content, encoder, ...rest }, contentBuffer, contentKey) {
+  // v2 eşdeğeri payload = v3 payload − (",\"_bagColumns\":[...]") + torba farkı.
+  // Önündeki virgül her zaman vardır: metadata (savedAt) daima içerikten önce gelir.
+  const bag = encoder ? { delta:encoder.delta,
+    columnsEntryBytes:1 + Buffer.byteLength(`${JSON.stringify(BAG_COLUMNS_KEY)}:${JSON.stringify(encoder.columns)}`, 'utf8') } : null;
+  return { contentBuffer, contentKey, ...rest, bag };
+}
+function prepareSnapshot(payload, format = 'v3') {
+  const view = snapshotContent(payload, format);
+  const contentBuffer = jsonToBuffer(view.content);
+  return preparedFrom(view, contentBuffer, checksum(contentBuffer));
 }
 /* Yenileme/kayıt yolu (saveModelSnapshotAsync) için kooperatif eşdeğerler.
    Senkron prepare/finish 120 MiB sentetik veride ana thread'i ~6,6 sn tek
@@ -149,16 +173,14 @@ async function hashPartsAsync(parts, yieldControl) {
   }
   return hash.digest('hex');
 }
-async function prepareSnapshotAsync(payload, yieldControl = yieldToEventLoop) {
-  const compacted = compactSnapshotPayload(payload);
-  const { content, metadata } = splitCompactedPayload(compacted);
-  const contentBuffer = await jsonToBufferAsync(content, { yieldControl });
-  const contentKey = await hashPartsAsync([contentBuffer], yieldControl);
-  return { contentBuffer, contentKey, metadata, savedAt:new Date().toISOString(), aliasCount:compacted.aliasCount };
+async function prepareSnapshotAsync(payload, yieldControl = yieldToEventLoop, format = 'v3') {
+  const view = snapshotContent(payload, format);
+  const contentBuffer = await jsonToBufferAsync(view.content, { yieldControl });
+  return preparedFrom(view, contentBuffer, await hashPartsAsync([contentBuffer], yieldControl));
 }
 async function finishSnapshotAsync(prepared, yieldControl = yieldToEventLoop) {
   const bodyParts = snapshotBodyParts(prepared);
-  return assembleSnapshot(prepared, bodyParts, await hashPartsAsync(bodyParts, yieldControl));
+  return assembleVersioned(prepared, bodyParts, await hashPartsAsync(bodyParts, yieldControl));
 }
 // Gövde = metadata + içerik; çözücü gövdeyi olduğu gibi ayrıştırır.
 // Gövde parçalar halinde hash'lenir ve tek tampona yazılır. Eskiden parçalar
@@ -171,8 +193,8 @@ function snapshotBodyParts({ contentBuffer, metadata, savedAt }) {
     ? [Buffer.from(metadataJson,'utf8')]
     : [Buffer.from(`${metadataJson.slice(0, -1)},`,'utf8'),contentBuffer.subarray(1)];
 }
-function assembleSnapshot(prepared, bodyParts, digest, { schemaVersion = SNAPSHOT_SCHEMA_VERSION, extraHeader = '' } = {}) {
-  const { contentBuffer, ...rest } = prepared;
+function assembleSnapshot(prepared, bodyParts, digest, { schemaVersion, extraHeader = '' }) {
+  const { contentBuffer, bag, ...rest } = prepared;
   const parts = [Buffer.from(`{"schemaVersion":${schemaVersion},"checksum":"${digest}","contentKey":"${rest.contentKey}",${extraHeader}"payload":`,'utf8'), ...bodyParts, Buffer.from('}')];
   const json = Buffer.allocUnsafe(parts.reduce((sum, part) => sum + part.length, 0));
   let offset = 0;
@@ -180,12 +202,21 @@ function assembleSnapshot(prepared, bodyParts, digest, { schemaVersion = SNAPSHO
   if (offset !== json.length) throw new Error('Snapshot gövdesi yazılamadı.');
   return { ...rest, json, baseChecksum:digest };
 }
+/* decodedBytes: çözülmüş verinin v2 eşdeğeri payload baytı (işçi/bellek tahmini).
+   v2'de payload'ın kendisi; v3'te başlığa yazılır (snapshotByteEstimate okur). */
+function assembleVersioned(prepared, bodyParts, digest) {
+  const payloadBytes = bodyParts.reduce((sum, part) => sum + part.length, 0);
+  if (!prepared.bag) return { ...assembleSnapshot(prepared, bodyParts, digest, { schemaVersion:LEGACY_V2_SCHEMA_VERSION }), decodedBytes:payloadBytes };
+  const decodedBytes = payloadBytes - prepared.bag.columnsEntryBytes + prepared.bag.delta;
+  return { ...assembleSnapshot(prepared, bodyParts, digest,
+    { schemaVersion:COLUMNAR_SNAPSHOT_SCHEMA_VERSION, extraHeader:`"decodedBytes":${decodedBytes},` }), decodedBytes };
+}
 function finishSnapshot(prepared) {
   const bodyParts = snapshotBodyParts(prepared), hash = crypto.createHash('sha256');
   for (const part of bodyParts) hash.update(part);
-  return assembleSnapshot(prepared, bodyParts, hash.digest('hex'));
+  return assembleVersioned(prepared, bodyParts, hash.digest('hex'));
 }
-function encodeSnapshot(payload) { return finishSnapshot(prepareSnapshot(payload)); }
+function encodeSnapshot(payload, format = 'v3') { return finishSnapshot(prepareSnapshot(payload, format)); }
 
 /* ---- v3 satır torbası sözlüğü --------------------------------------------
    Her satırdaki ham kaynak torbaları (_sourceFields, LFL _asas, ...) aynı 40+
@@ -199,7 +230,7 @@ const jsonByteLength = value => Buffer.byteLength(JSON.stringify(value), 'utf8')
 const jsonOmitted = value => value === undefined || typeof value === 'function' || typeof value === 'symbol';
 const resolveToJson = (value, key) => (value && typeof value === 'object' && typeof value.toJSON === 'function' ? value.toJSON(key) : value);
 function rowBagEncoder() {
-  const schemaIds = new Map(), columns = [], keyBytes = [], encodedRows = new WeakMap();
+  const schemaIds = new Map(), columns = [], keyBytes = [], lastSchema = new Map();
   let delta = 0; // v2 (nesne) baytı − v3 (dizi) baytı; decodedBytes için kesin toplam
   const schemaFor = keys => {
     const signature = keys.join('\u0000');
@@ -210,51 +241,91 @@ function rowBagEncoder() {
     }
     return id;
   };
+  // Ardışık satırlar neredeyse her zaman aynı sütunları taşır: önce aynı torba
+  // adının son şemasıyla (anahtar anahtar, kimlik karşılaştırması) denenir;
+  // birleştirilmiş imza metni yalnız şema değiştiğinde üretilir.
+  const sameKeys = (a, b) => {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i += 1) if (a[i] !== b[i]) return false;
+    return true;
+  };
+  /* Ayırma bilinçli olarak en aza indirildi (L2: ilk sürüm kayıtta heap tepe
+     noktasını +146 MiB artırıyordu). Anahtarlar for-in ile, ara dizi kurulmadan
+     son şemayla karşılaştırılır; anahtar dizisi yalnız şema değişince kurulur.
+     Satır kopyalanmaz: torba alanlarını kodlayan bir Proxy görünümü döner. */
   const encodeBag = (bag, name) => {
     const node = resolveToJson(bag, name);
     if (Array.isArray(node)) { delta -= node.length ? 3 : 2; return [ARRAY_BAG, ...node]; }
     if (!node || typeof node !== 'object') return node;
-    const keys = [], values = [];
-    for (const key of Object.keys(node)) {
-      const value = resolveToJson(node[key], key);
+    const last = lastSchema.get(name), expected = last ? last.keys : null;
+    const out = [0];
+    let index = 0, matches = !!expected;
+    for (const key in node) {
+      if (!Object.prototype.hasOwnProperty.call(node, key)) continue;
+      let value = node[key];
+      if (value && typeof value === 'object' && typeof value.toJSON === 'function') value = value.toJSON(key);
       if (jsonOmitted(value)) continue;
-      keys.push(key); values.push(value);
+      if (matches && expected[index] !== key) matches = false;
+      index += 1;
+      out.push(value);
     }
-    const id = schemaFor(keys), idBytes = String(id).length;
-    delta += keys.length ? keyBytes[id] - 1 - idBytes : -idBytes;
-    return [id, ...values];
+    let id;
+    if (matches && index === expected.length) id = last.id;
+    else {
+      const keys = [];
+      for (const key in node) {
+        if (!Object.prototype.hasOwnProperty.call(node, key)) continue;
+        if (!jsonOmitted(resolveToJson(node[key], key))) keys.push(key);
+      }
+      id = schemaFor(keys);
+      lastSchema.set(name, { id, keys:columns[id] });
+    }
+    out[0] = id;
+    delta += index ? keyBytes[id] - 1 - String(id).length : -String(id).length;
+    return out;
+  };
+  const BAG_NAMES = new Set(ROW_BAGS);
+  const rowView = {
+    get(target, key, receiver) {
+      const value = Reflect.get(target, key, receiver);
+      if (!BAG_NAMES.has(key) || !Object.prototype.propertyIsEnumerable.call(target, key) || !value || typeof value !== 'object') return value;
+      return encodeBag(value, key);
+    },
   };
   const encodeRow = row => {
     if (!row || typeof row !== 'object' || Array.isArray(row)) return row;
-    if (encodedRows.has(row)) { delta += encodedRows.get(row).delta; return encodedRows.get(row).row; }
-    const before = delta;
-    let out = null;
     for (const name of ROW_BAGS) {
-      if (!Object.prototype.propertyIsEnumerable.call(row, name) || jsonOmitted(row[name])) continue;
       const bag = row[name];
-      if (!bag || typeof bag !== 'object') continue;
-      out = out || { ...row };
-      out[name] = encodeBag(bag, name);
+      if (bag && typeof bag === 'object' && Object.prototype.propertyIsEnumerable.call(row, name)) return new Proxy(row, rowView);
     }
-    const result = out || row;
-    encodedRows.set(row, { row:result, delta:delta - before });
-    return result;
+    return row;
   };
   return { encodeRow, columns, get delta() { return delta; } };
 }
-const mapRows = (rows, fn) => (Array.isArray(rows) ? rows.map(fn) : rows);
-const mapMapRows = (map, fn) => (map && typeof map === 'object' && !Array.isArray(map)
-  ? Object.fromEntries(Object.entries(map).map(([key, value]) => [key, Array.isArray(value) ? value.map(fn) : fn(value)])) : map);
-const mapGroup = (group, fn) => (group && typeof group === 'object' && !Array.isArray(group)
-  ? Object.fromEntries(Object.entries(group).map(([target, value]) => [target, fn(value)])) : group);
+/* Tembel görünümler: serileştirici (large-json jsonChunks / JSON.stringify) her
+   öğeyi tam bir kez okur; satır o anda kodlanır. Kaynak diziler/haritalar
+   değiştirilmez. */
+const INDEX_KEY = /^(?:0|[1-9]\d*)$/;
+const lazyRows = (rows, fn) => (Array.isArray(rows) ? new Proxy(rows, {
+  get(target, key, receiver) { const value = Reflect.get(target, key, receiver); return typeof key === 'string' && INDEX_KEY.test(key) ? fn(value) : value; },
+}) : rows);
+const lazyMap = (map, fn) => (map && typeof map === 'object' && !Array.isArray(map) ? new Proxy(map, {
+  get(target, key, receiver) {
+    const value = Reflect.get(target, key, receiver);
+    if (typeof key !== 'string' || !Object.prototype.hasOwnProperty.call(target, key)) return value;
+    return Array.isArray(value) ? value.map(fn) : fn(value);
+  },
+}) : map);
+const lazyGroup = (group, view) => (group && typeof group === 'object' && !Array.isArray(group)
+  ? Object.fromEntries(Object.entries(group).map(([target, value]) => [target, view(value)])) : group);
 // Satır taşıyan bölümler; v2'de de aynı yapıdadır (hedef takma adları çözülmeden önce).
-function transformRowContainers(content, row) {
+function lazyRowContainers(content, row) {
   const out = { ...content };
-  if ('asasOrders' in out) out.asasOrders = mapRows(out.asasOrders, row);
-  if ('asasOrdersByTarget' in out) out.asasOrdersByTarget = mapGroup(out.asasOrdersByTarget, rows => mapRows(rows, row));
-  if ('antrepoMap' in out) out.antrepoMap = mapMapRows(out.antrepoMap, row);
-  if ('antrepoMapByTarget' in out) out.antrepoMapByTarget = mapGroup(out.antrepoMapByTarget, map => mapMapRows(map, row));
-  if ('lflRows' in out) out.lflRows = mapRows(out.lflRows, row);
+  if ('asasOrders' in out) out.asasOrders = lazyRows(out.asasOrders, row);
+  if ('asasOrdersByTarget' in out) out.asasOrdersByTarget = lazyGroup(out.asasOrdersByTarget, rows => lazyRows(rows, row));
+  if ('antrepoMap' in out) out.antrepoMap = lazyMap(out.antrepoMap, row);
+  if ('antrepoMapByTarget' in out) out.antrepoMapByTarget = lazyGroup(out.antrepoMapByTarget, map => lazyMap(map, row));
+  if ('lflRows' in out) out.lflRows = lazyRows(out.lflRows, row);
   return out;
 }
 function decodeRowBags(payload) {
@@ -288,28 +359,10 @@ function decodeRowBags(payload) {
   each(payload.lflRows);
   return payload;
 }
-/* v3 dosya baytlarını üretir (sıkıştırılmamış). FAZ 1'de kayıt yolu bunu
-   ÇAĞIRMAZ; test, benchmark ve faz 2 hazırlığı içindir. decodedBytes, aynı yükün
-   v2 payload bayt uzunluğudur: bellek/işçi tahmini (snapshotByteEstimate) gzip
-   açık boyutu yerine bunu kullanır, çünkü çözülmüş veri v2 kadar yer tutar. */
-function encodeColumnarSnapshot(payload) {
-  assertSnapshotPayload(payload);
-  const compacted = compactSnapshotPayload(payload);
-  const { content, metadata } = splitCompactedPayload(compacted);
-  const encoder = rowBagEncoder();
-  const encoded = transformRowContainers(content, encoder.encodeRow);
-  encoded[BAG_COLUMNS_KEY] = encoder.columns;
-  const contentBuffer = jsonToBuffer(encoded);
-  const prepared = { contentBuffer, contentKey:checksum(contentBuffer), metadata, savedAt:new Date().toISOString(), aliasCount:compacted.aliasCount };
-  const bodyParts = snapshotBodyParts(prepared), hash = crypto.createHash('sha256');
-  for (const part of bodyParts) hash.update(part);
-  const payloadBytes = bodyParts.reduce((sum, part) => sum + part.length, 0);
-  const columnsEntryBytes = Buffer.byteLength(`,${JSON.stringify(BAG_COLUMNS_KEY)}:${JSON.stringify(encoder.columns)}`, 'utf8');
-  const decodedBytes = payloadBytes - columnsEntryBytes + encoder.delta;
-  const assembled = assembleSnapshot(prepared, bodyParts, hash.digest('hex'),
-    { schemaVersion:COLUMNAR_SNAPSHOT_SCHEMA_VERSION, extraHeader:`"decodedBytes":${decodedBytes},` });
-  return { ...assembled, decodedBytes };
-}
+/* Sıkıştırılmamış dosya baytları (test, benchmark ve geri dönüş tanısı için).
+   Kayıt yolu aynı prepare/finish fonksiyonlarını kullanır. */
+function encodeColumnarSnapshot(payload) { assertSnapshotPayload(payload); return encodeSnapshot(payload, 'v3'); }
+function encodeLegacyV2Snapshot(payload) { assertSnapshotPayload(payload); return encodeSnapshot(payload, 'v2'); }
 
 /* Model snapshot'ı düz JSON'dur: Date alanları "2026-03-09T21:00:00.000Z"
    metnine dönüşür (TR'de 10.03 gece yarısı). Canlı yenilemede ise aynı alanlar
@@ -357,7 +410,7 @@ function decodeSnapshotRaw(raw, parsed = parseJsonBuffer(raw)) {
   let value;
   if (parsed && parsed.schemaVersion === LEGACY_SNAPSHOT_SCHEMA_VERSION) {
     value = parsed;
-  } else if (parsed && (parsed.schemaVersion === SNAPSHOT_SCHEMA_VERSION || parsed.schemaVersion === COLUMNAR_SNAPSHOT_SCHEMA_VERSION) && parsed.payload) {
+  } else if (parsed && (parsed.schemaVersion === LEGACY_V2_SCHEMA_VERSION || parsed.schemaVersion === COLUMNAR_SNAPSHOT_SCHEMA_VERSION) && parsed.payload) {
     const marker = Buffer.from('"payload":'), start = raw.indexOf(marker);
     if (start < 0 || raw[raw.length - 1] !== 0x7d) throw new Error('Snapshot payload biçimi geçersiz.');
     const payloadBytes = raw.subarray(start + marker.length, -1);
@@ -399,8 +452,10 @@ function saveModelSnapshot(userId, payload) {
   assertRoundTrip(zlib.gunzipSync(buffer), encoded);
   const file = snapshotPath(userId);
   atomicWriteBuffer(file, buffer);
-  rememberSnapshot(userId, encoded.contentKey, encoded.baseChecksum, buffer, { uncompressedBytes:encoded.json.length });
-  return { file, savedAt: encoded.savedAt, bytes: buffer.length, uncompressedBytes: encoded.json.length, aliasCount: encoded.aliasCount, reused:false, totalMs: Date.now() - started };
+  rememberSnapshot(userId, encoded.contentKey, encoded.baseChecksum, buffer, { uncompressedBytes:encoded.decodedBytes, fileBytes:encoded.json.length });
+  // uncompressedBytes = çözülmüş (v2 eşdeğeri) boyut: işçi/bellek ayırması bunu kullanır.
+  // fileBytes = diskteki açık v3 dosyası (daha küçük).
+  return { file, savedAt: encoded.savedAt, bytes: buffer.length, uncompressedBytes: encoded.decodedBytes, fileBytes: encoded.json.length, aliasCount: encoded.aliasCount, reused:false, totalMs: Date.now() - started };
 }
 
 async function writeModelSnapshotAsync(userId, payload) {
@@ -417,7 +472,7 @@ async function writeModelSnapshotAsync(userId, payload) {
       const metadata = { savedAt:prepared.savedAt, ...prepared.metadata };
       const wrapper = { schemaVersion:1, baseChecksum:previous.baseChecksum, checksum:checksum(JSON.stringify(metadata)), payload:metadata };
       await atomicWriteBufferAsync(snapshotPath(userId)+'.meta.json', Buffer.from(JSON.stringify(wrapper)));
-      return { file:snapshotPath(userId), savedAt:metadata.savedAt, bytes:previous.bytes, uncompressedBytes:previous.uncompressedBytes,
+      return { file:snapshotPath(userId), savedAt:metadata.savedAt, bytes:previous.bytes, uncompressedBytes:previous.uncompressedBytes, fileBytes:previous.fileBytes,
         aliasCount:prepared.aliasCount, reused:true, totalMs:Date.now()-started };
     }
   }
@@ -428,9 +483,9 @@ async function writeModelSnapshotAsync(userId, payload) {
   { const raw = await gunzip(buffer); assertRoundTrip(raw, encoded); } // raw is released before the write
   const writeStarted = Date.now(), file = snapshotPath(userId);
   await atomicWriteBufferAsync(file, buffer);
-  rememberSnapshot(userId, encoded.contentKey, encoded.baseChecksum, buffer, { uncompressedBytes:encoded.json.length });
+  rememberSnapshot(userId, encoded.contentKey, encoded.baseChecksum, buffer, { uncompressedBytes:encoded.decodedBytes, fileBytes:encoded.json.length });
   return {
-    file, savedAt: encoded.savedAt, bytes: buffer.length, uncompressedBytes: encoded.json.length, aliasCount: encoded.aliasCount, reused:false,
+    file, savedAt: encoded.savedAt, bytes: buffer.length, uncompressedBytes: encoded.decodedBytes, fileBytes: encoded.json.length, aliasCount: encoded.aliasCount, reused:false,
     serializeMs: compressStarted - serializeStarted, compressMs: validateStarted - compressStarted,
     validateMs: writeStarted - validateStarted, writeMs: Date.now() - writeStarted, totalMs: Date.now() - started,
   };
@@ -468,7 +523,7 @@ async function loadModelSnapshotAsync(userId, {yieldControl} = {}) {
         ? decodeSnapshotRaw(raw, await parseJsonBufferAsync(raw,{yieldControl}))
         : decodeSnapshotRaw(raw);
       const decodedBytes = value._decodedBytes || raw.length;
-      if (candidate === file) rememberSnapshot(userId, value._contentKey, value._baseChecksum, compressed, { uncompressedBytes:decodedBytes });
+      if (candidate === file) rememberSnapshot(userId, value._contentKey, value._baseChecksum, compressed, { uncompressedBytes:decodedBytes, fileBytes:raw.length });
       applySnapshotMetadata(userId, value);
       Object.defineProperty(value, '_snapshotMetrics', {
         value:{ readMs, inflateMs, parseMs:Date.now() - parseStarted, totalMs:Date.now() - started, bytes:compressed.length, decodedBytes, fallback:candidate !== file },
@@ -517,7 +572,7 @@ async function snapshotByteEstimate(file) {
 
 module.exports = {
   SNAPSHOT_ROOT, SNAPSHOT_SCHEMA_VERSION, COLUMNAR_SNAPSHOT_SCHEMA_VERSION, snapshotPath,
-  encodeColumnarSnapshot, snapshotByteEstimate,
+  LEGACY_V2_SCHEMA_VERSION, encodeColumnarSnapshot, encodeLegacyV2Snapshot, snapshotByteEstimate,
   compactSnapshotPayload, expandSnapshotPayload, reviveSnapshotDates,
   saveModelSnapshot, saveModelSnapshotAsync, loadModelSnapshot, loadModelSnapshotAsync,
 };

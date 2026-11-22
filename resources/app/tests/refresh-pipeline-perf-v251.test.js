@@ -47,7 +47,8 @@ const payload = (model = 'DEMO', loadedAt = '2026-10-06T10:00:00.000Z') => {
 test('snapshot header carries the content key so a cold start can reuse unchanged data without re-hashing', async () => {
   const first = await snapshots.saveModelSnapshotAsync('cold', payload());
   const text = zlib.gunzipSync(fs.readFileSync(first.file)).toString('utf8');
-  assert.match(text, /^\{"schemaVersion":2,"checksum":"[0-9a-f]{64}","contentKey":"[0-9a-f]{64}","payload":\{/);
+  // v3 (faz 2): başlıkta çözülmüş boyut ipucu da vardır (model-snapshot-v3-reader.test.js).
+  assert.match(text, /^\{"schemaVersion":3,"checksum":"[0-9a-f]{64}","contentKey":"[0-9a-f]{64}","decodedBytes":\d+,"payload":\{/);
   const loaded = await snapshots.loadModelSnapshotAsync('cold');
   assert.ok(loaded.asasOrders[0].date instanceof Date);
   assert.equal(loaded.asasOrdersByTarget.cp, loaded.asasOrders);
