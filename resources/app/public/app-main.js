@@ -20126,6 +20126,23 @@ function hydrateUserPreferencesAfterUi(){
 }
 let overviewOabLoadPromise=null;
 let overviewIntakeLoadPromise=null;
+/* Pivot alanı ayarlarının ortak sürükle-bırak modülü (OAB, INTAKE, FOB Sonrası,
+   TR/YD, OAB Küp). Yalnız bu widget'lar yüklenirken istenir; bind kalem penceresi
+   açılınca çağrıldığı için widget betiğiyle sıralama bağımlılığı yoktur ve
+   yüklenemezse widget çalışmaya devam eder (yukarı/aşağı düğmeleri). */
+function ensurePivotConfigReorder(){
+  if(window.BLPivotConfigReorder?.loaded)return;
+  /* Modül gelmeden açılan kalem penceresi bağlanmadan kalmasın: bind çağrısı
+     bekleyen listeye alınır, modül yüklenince açık pencerelere bağlanır.
+     Yükleme başarısızsa pencere yine açılır, yukarı/aşağı düğmeleri çalışır. */
+  if(!window.BLPivotConfigReorder){
+    const pending=[];
+    window.BLPivotConfigReorder={loaded:false,pending,bind:(container,options)=>{if(container&&!pending.some(entry=>entry[0]===container))pending.push([container,options]);}};
+  }
+  const loader=window.BLPerf?._loadScript;
+  if(typeof loader!=='function')return;
+  loader('pivot-config-reorder.js?rev=20261124').catch(error=>console.warn('Pivot sürükle-bırak modülü yüklenemedi:',error));
+}
 function ensureOverviewOabModule(){
   if(window.BLBootGuard&&!window.BL_STARTUP_COMPLETE){
     // Automatic landing loads idle widgets after the primary screen.
@@ -20137,6 +20154,7 @@ function ensureOverviewOabModule(){
   const loader=window.BLPerf?._loadScript;
   if(typeof loader!=='function')return Promise.resolve(null);
   window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'oab',mode:'after-ui'});
+  ensurePivotConfigReorder();
   // Pivot hesaplanan değerleri ortak modülü (OAB/INTAKE/FOB Sonrası/OAB Küp) widget betiğinden önce gelir.
   overviewOabLoadPromise=loader('pivot-calculated-values.js?rev=20261122').then(()=>loader('oab.js?rev=20261117'))
     .then(()=>{window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'oab',mode:'after-ui'});return window.BLOAB||null;})
@@ -20153,6 +20171,7 @@ function ensureOverviewIntakeModule(){
   const loader=window.BLPerf?._loadScript;
   if(typeof loader!=='function')return Promise.resolve(null);
   window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'intake',mode:'after-ui'});
+  ensurePivotConfigReorder();
   overviewIntakeLoadPromise=loader('pivot-calculated-values.js?rev=20261122').then(()=>loader('intake.js?rev=20261116'))
     .then(()=>{window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'intake',mode:'after-ui'});return window.BLINTAKE||null;})
     .catch(error=>{overviewIntakeLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'intake',mode:'after-ui',failed:true});console.warn('INTAKE modülü yüklenemedi:',error);return null;});
@@ -20171,6 +20190,7 @@ function ensureOverviewPostFobModule(){
   const loader=window.BLPerf?._loadScript;
   if(typeof loader!=='function'||!document.getElementById('postFobSection'))return Promise.resolve(null);
   window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'postfob',mode:'after-ui'});
+  ensurePivotConfigReorder();
   overviewPostFobLoadPromise=loader('postfob-analysis.js?rev=20261122')
     .then(()=>loader('pivot-calculated-values.js?rev=20261122'))
     .then(()=>loader('postfob.js?rev=20261122'))
@@ -20191,6 +20211,7 @@ function ensureOverviewTrydAdvantageModule(){
   const loader=window.BLPerf?._loadScript;
   if(typeof loader!=='function'||!document.getElementById('trydAdvantageSection'))return Promise.resolve(null);
   window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'trydAdvantage',mode:'after-ui'});
+  ensurePivotConfigReorder();
   // Pivot hesaplanan değerleri ortak modülü motordan önce gelir (normalizePrefs tanımları onunla doğrular).
   // Vasıtaya göre standart yardımcıları motor çağrısında okunur; yüklenemezse bütün satırlar genel standarda düşer.
   overviewTrydAdvantageLoadPromise=loader('pivot-calculated-values.js?rev=20261122').catch(()=>null).then(()=>loader('tryd-advantage-engine.js?rev=20261124')
@@ -20214,6 +20235,7 @@ function ensureOverviewOabCubeModule(){
   const loader=window.BLPerf?._loadScript;
   if(typeof loader!=='function'||!document.getElementById('oabCubeSection'))return Promise.resolve(null);
   window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'oabCube',mode:'after-ui'});
+  ensurePivotConfigReorder();
   // Pivot hesaplanan değerleri ortak modülü; oab-cube.js onu yalnız çizimde okur (aynı dize tek kez yüklenir).
   overviewOabCubeLoadPromise=Promise.all([loader('pivot-calculated-values.js?rev=20261122').catch(()=>null),Promise.resolve(ensureOverviewOabModule())
     .then(()=>loader('oab-cube.js?rev=20261123'))]).then(([,loaded])=>loaded)

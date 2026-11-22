@@ -84,13 +84,14 @@ test('INTAKE UI OAB-parite pivot alanı, sürükleyerek sıralama, etiket ve fil
     'intakeHideZeroBudgetInput',
     'intakeCollapseAllGroups',
     'intakeExpandAllGroups',
-    'dragstart',
-    'dragover',
-    'drop',
+    // Sürükle-bırak olayları ortak modüldedir (public/pivot-config-reorder.js; aşağıda doğrulanır).
+    'BLPivotConfigReorder?.bind(modal',
     'data-intake-rename',
     'data-intake-filter',
     'data-intake-add-filter',
   ]) assert.ok(ui.includes(marker), `INTAKE UI marker missing: ${marker}`);
+  const reorder = fs.readFileSync(path.join(__dirname, '../public/pivot-config-reorder.js'), 'utf8');
+  for (const event of ['dragstart', 'dragover', 'drop', 'dragend']) assert.ok(reorder.includes(`addEventListener('${event}'`), `shared reorder event missing: ${event}`);
   assert.match(css, /\.intakeSection/);
   assert.match(css, /\.oabConfigRow\[draggable="true"\]\{cursor:grab/);
   assert.match(css, /\.intakeFilterPopover/);

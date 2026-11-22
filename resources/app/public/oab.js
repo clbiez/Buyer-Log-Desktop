@@ -3432,31 +3432,8 @@
         oabMoveConfigRow(row, Number(moveBtn.dataset.oabConfigMove));
       }
     });
-    let draggedConfigRow = null;
-    modal.addEventListener('dragstart', event => {
-      const row = event.target.closest && event.target.closest('.oabConfigRow');
-      if (!row || !modal.contains(row)) return;
-      draggedConfigRow = row;
-      row.classList.add('isDragging');
-      if (event.dataTransfer) { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', 'oab-config-row'); }
-    });
-    modal.addEventListener('dragover', event => {
-      const target = event.target.closest && event.target.closest('.oabConfigRow');
-      if (!draggedConfigRow || !target || target === draggedConfigRow || target.parentElement !== draggedConfigRow.parentElement) return;
-      event.preventDefault();
-      const rect = target.getBoundingClientRect();
-      target.parentElement.insertBefore(draggedConfigRow, event.clientY > rect.top + rect.height / 2 ? target.nextElementSibling : target);
-    });
-    modal.addEventListener('drop', event => {
-      if (!draggedConfigRow) return;
-      event.preventDefault();
-      oabRefreshConfigOrderButtons(draggedConfigRow.parentElement);
-    });
-    modal.addEventListener('dragend', () => {
-      if (draggedConfigRow) draggedConfigRow.classList.remove('isDragging');
-      draggedConfigRow = null;
-      refreshOrderButtons();
-    });
+    // Sürükle-bırak sıralama ortak modüldedir (public/pivot-config-reorder.js).
+    window.BLPivotConfigReorder?.bind(modal, { onReorder: () => refreshOrderButtons() });
 
     modal.addEventListener('change', event => {
       const fieldSelect = event.target.closest && event.target.closest('.oabPivotValueField');

@@ -700,6 +700,8 @@
     modal.addEventListener('pointerup', event => { if (event.target === modal && modal.dataset.backdropDown === '1') close(); modal.dataset.backdropDown = '0'; });
     const lists = ['postFobRowsList', 'postFobColsList', 'postFobValuesList', 'postFobFiltersList'].map(id => modal.querySelector(`#${id}`));
     lists.forEach(refreshOrderButtons);
+    // ⋮⋮ tutamağıyla sürükle-bırak sıralama: ortak modül (public/pivot-config-reorder.js).
+    window.BLPivotConfigReorder?.bind(modal, { onReorder: list => refreshOrderButtons(list) });
     /* Hesaplanan değerler: toplam modunda pencerede SEÇİLİ değer alanları,
        satır modunda sipariş × renk satırının sayısal ölçüleri. */
     const draftValueFields = () => [...lists[2].querySelectorAll('.oabPivotValueRow')].map(row => vals.find(item => item.id === row.querySelector('.postFobValueField').value))

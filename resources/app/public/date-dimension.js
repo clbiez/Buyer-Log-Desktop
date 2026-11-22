@@ -12,6 +12,17 @@
   const MONTHS_TR=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
   const MONTHS_EN=['January','February','March','April','May','June','July','August','September','October','November','December'];
   const pad2=value=>String(value).padStart(2,'0');
+  /* Ay numarası (1–12) gelen kod alanı için görüntü adı. Yalnız tam sayı
+     1–12 ("01", "9.0" dahil) çevrilir; boş, 1–12 dışı veya metin değer olduğu
+     gibi döner. Ham değer çağıranda kalır (sıralama/filtre/sorgu bozulmaz). */
+  function monthNumberName(value,lang){
+    if(value==null)return '';
+    const raw=String(value).trim();
+    const match=/^0*(\d{1,2})(?:\.0+)?$/.exec(raw);
+    const month=match?Number(match[1]):0;
+    if(month<1||month>12)return String(value);
+    return (lang==='en'?MONTHS_EN:MONTHS_TR)[month-1];
+  }
   let merch={active:false,weeks:[],byDate:new Map(),byWeek:new Map(),meta:null};
   // Takvim her yüklenip temizlendiğinde artar; dönem önbellekleri bununla geçersizleşir.
   let calendarRevision=0;
@@ -277,7 +288,7 @@
   }catch(_){/* A corrupt optional calendar must not stop Buyer Log boot. The route reports it. */}
 
   return {
-    MONTHS_TR,MONTHS_EN,parseDate,toISO,mondayOf,sundayOf,isoWeekYear,isoWeekNumber,mondayFromIsoWeek,mondayFromBusinessWeek,
+    MONTHS_TR,MONTHS_EN,monthNumberName,parseDate,toISO,mondayOf,sundayOf,isoWeekYear,isoWeekNumber,mondayFromIsoWeek,mondayFromBusinessWeek,
     setMerchCalendar,clearMerchCalendar,hasMerchCalendar,merchCalendarMeta,merchCalendarRevision,
     describe,businessWeekRange,businessMonthRange,previousBusinessMonthRange,weekPair,
     bucketKey,bucketLabel,monthLabel,weekLabel

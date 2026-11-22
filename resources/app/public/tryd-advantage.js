@@ -810,6 +810,8 @@
     const lists = { rows: modal.querySelector('#trydRowsList'), values: modal.querySelector('#trydValuesList'), filters: modal.querySelector('#trydFiltersList') };
     const pools = { trydRowsList: rowsPool, trydValuesList: valsPool, trydFiltersList: filtersPool };
     Object.values(lists).forEach(refreshOrderButtons);
+    // ⋮⋮ tutamağıyla sürükle-bırak sıralama: ortak modül (public/pivot-config-reorder.js).
+    window.BLPivotConfigReorder?.bind(modal, { onReorder: list => refreshOrderButtons(list) });
     /* Hesaplanan değerler: yalnız toplamlar üzerinden; alanlar her düzeyde
        tutarlardan gelen değerler (gizli değer sütunları da kullanılabilir).
        Önizleme ekrandaki ilk satırlar ve genel toplamdır. */

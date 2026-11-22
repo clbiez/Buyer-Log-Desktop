@@ -66,7 +66,7 @@ const DIMENSIONS = Object.freeze([
   { key: 'brandDirectorate', source: '[DummyUrun].[MarkaMudurlukleri]', tr: 'Marka müdürlüğü', en: 'Brand directorate', filter: true, optionalGrain: true },
   { key: 'supplyBasket', source: '[Data].[Tedarik Sepeti]', tr: 'Tedarik sepeti', en: 'Supply basket', filter: true, optionalGrain: true },
   { key: 'carryOver', source: '[Data].[Devir Option Mu]', tr: 'Devir option', en: 'Carry-over option', filter: true, optionalGrain: true },
-  { key: 'planStartMonth', source: '[Data].[Plan Başlangıç Ay]', tr: 'Plan başlangıç ayı', en: 'Plan start month', filter: true, optionalGrain: true, nameTyped: true },
+  { key: 'planStartMonth', source: '[Data].[Plan Başlangıç Ay]', tr: 'Plan başlangıç ayı', en: 'Plan start month', filter: true, optionalGrain: true, nameTyped: true, display: 'monthNumber' },
   { key: 'buyingPeriod', source: '[Data].[Alım Dönem]', tr: 'Alım dönemi', en: 'Buying period', filter: true, optionalGrain: true },
   { key: 'budgetType', source: '[Data].[ButceTipTanım]', tr: 'Bütçe tipi', en: 'Budget type', filter: true, optionalGrain: true },
 ].map(Object.freeze));
@@ -674,7 +674,8 @@ function distinctQuery(item, { search = '', limit = 500 } = {}) {
 function catalog() {
   return {
     dimensions: [
-      ...DIMENSIONS.map(({ key, tr, en, filter, required, code, optionalGrain }) => ({ key, tr, en, filter: Boolean(filter), required: Boolean(required), code: Boolean(code), optionalGrain: Boolean(optionalGrain) })),
+      // display: 'monthNumber' → küp 1–12 döndürür; istemci YALNIZ görüntüde ay adı yazar (ham değer sorgu/filtrede kalır).
+      ...DIMENSIONS.map(({ key, tr, en, filter, required, code, optionalGrain, display }) => ({ key, tr, en, filter: Boolean(filter), required: Boolean(required), code: Boolean(code), optionalGrain: Boolean(optionalGrain), ...(display ? { display } : {}) })),
       // Ürün özellikleri: ayrı sorguyla gelen yerel metin boyutları.
       ...PRODUCT_ATTRIBUTES.map(({ key, tr, en }) => ({ key, tr, en, filter: true, required: false, code: false, optionalGrain: false, attribute: true })),
     ],

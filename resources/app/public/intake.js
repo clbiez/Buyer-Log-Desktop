@@ -991,31 +991,8 @@
       }
     });
 
-    let draggedRow = null;
-    modal.addEventListener('dragstart', event => {
-      const row = event.target.closest && event.target.closest('.oabConfigRow');
-      if (!row || !modal.contains(row)) return;
-      draggedRow = row;
-      row.classList.add('isDragging');
-      if (event.dataTransfer) { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', 'intake-config-row'); }
-    });
-    modal.addEventListener('dragover', event => {
-      const target = event.target.closest && event.target.closest('.oabConfigRow');
-      if (!draggedRow || !target || target === draggedRow || target.parentElement !== draggedRow.parentElement) return;
-      event.preventDefault();
-      const rect = target.getBoundingClientRect();
-      target.parentElement.insertBefore(draggedRow, event.clientY > rect.top + rect.height / 2 ? target.nextElementSibling : target);
-    });
-    modal.addEventListener('drop', event => {
-      if (!draggedRow) return;
-      event.preventDefault();
-      intakeRefreshConfigOrderButtons(draggedRow.parentElement);
-    });
-    modal.addEventListener('dragend', () => {
-      if (draggedRow) draggedRow.classList.remove('isDragging');
-      draggedRow = null;
-      refreshOrderButtons();
-    });
+    // Sürükle-bırak sıralama ortak modüldedir (public/pivot-config-reorder.js).
+    window.BLPivotConfigReorder?.bind(modal, { onReorder: () => refreshOrderButtons() });
 
     const selectedAxis = list => {
       const result = [], seen = new Set();
