@@ -237,6 +237,35 @@ function demoRows() {
     const [calcDownload] = await Promise.all([page.waitForEvent('download', { timeout: 30000 }), page.click('#trydAdvantageExcelExportBtn')]);
     const calcRows = XLSX.utils.sheet_to_json(XLSX.read(fs.readFileSync(await calcDownload.path())).Sheets.Pivot);
     assert.ok(Math.abs(calcRows[calcRows.length - 1][calcLabel] - (1 - filtered.total.advantage)) < 1e-6, JSON.stringify(calcRows[calcRows.length - 1]));
+    // Ad çakışması: editör boyut/sabit başlık adını ("Model") reddeder.
+    await page.click('#trydAdvantageFieldsBtn');
+    await page.waitForSelector('#_trydFieldsModal [data-pcv-add]', { timeout: 10000 });
+    await page.click('#_trydFieldsModal [data-pcv-add]');
+    await page.waitForSelector('#_formulaColumnModal .pcvModes', { timeout: 15000 });
+    await page.click('#_formulaColumnModal [data-fc-mode="advanced"]');
+    await page.fill('#_formulaColumnModal [data-fc-formula]', L('[YD adet]', '[Abroad qty]'));
+    await page.fill(`#_formulaColumnModal ${lang === 'en' ? '[data-fc-label-en]' : '[data-fc-label]'}`, 'Model');
+    await page.waitForFunction(() => /isOk/.test(document.querySelector('#_formulaColumnModal [data-fc-preview]').className), null, { timeout: 10000 });
+    await page.click('#_formulaColumnModal [data-fc-save]');
+    await page.waitForTimeout(300);
+    assert.ok(await page.$('#_formulaColumnModal'), 'ayrılmış ad kaydedilmez; pencere açık kalır');
+    await page.click('#_formulaColumnModal [data-fc-close]');
+    await page.click('#_trydFieldsModal [data-tryd-close]');
+    // Eski/dış kaynaklı "Model" adlı tanım bile Excel'de model kodunu ezmez: başlık "Model (ƒx)" olur.
+    const beforeClash = await app.api('/api/postfob/tryd/state').then(response => response.json());
+    const clashView = { ...beforeClash.view, calculated: [...beforeClash.view.calculated, { id: 'pcv_model', label: 'Model', formula: '[ydQty]', mode: 'aggregate', refs: {} }] };
+    delete clashView.version;
+    await app.api('/api/postfob/tryd/view', { view: clashView }, 'PUT');
+    await page.evaluate(() => window.BLTrydAdvantage.reload());
+    await page.waitForFunction(() => document.querySelectorAll('#trydAdvantageTable thead th.pcvHead').length === 2, null, { timeout: 15000 });
+    const [clashDownload] = await Promise.all([page.waitForEvent('download', { timeout: 30000 }), page.click('#trydAdvantageExcelExportBtn')]);
+    const clashRows = XLSX.utils.sheet_to_json(XLSX.read(fs.readFileSync(await clashDownload.path())).Sheets.Pivot);
+    const dm201Excel = clashRows.find(row => row.Model === 'DM201');
+    assert.ok(dm201Excel, 'model kodu Excel\'de korunur');
+    assert.equal(dm201Excel['Model (ƒx)'], dm201.amounts.ydQty, 'hesaplanan değer ayrı sütunda');
+    await app.api('/api/postfob/tryd/view', { view: { calculated: beforeClash.view.calculated } }, 'PUT');
+    await page.evaluate(() => window.BLTrydAdvantage.reload());
+    await page.waitForFunction(() => document.querySelectorAll('#trydAdvantageTable thead th.pcvHead').length === 1, null, { timeout: 15000 });
     // Görselde hesaplanan sütun da görünür; sıralama etikete döner.
     await page.click('#trydAdvantageTable thead th[data-tryd-sort="label"]');
     // İlgisiz açılış bildirimi görüntüyü kapatmasın.

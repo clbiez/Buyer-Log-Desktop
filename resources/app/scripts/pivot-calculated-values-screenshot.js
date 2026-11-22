@@ -197,6 +197,19 @@ const numberEn = text => Number(String(text).replace(/[^\d.-]/g, ''));
     assert.equal(Math.round(grandExcel[ratioLabel] * 10) / 10, expectedRatio);
     assert.equal(grandExcel[rowLabel], sum(rows, 'approvedNotOrdered'));
 
+    // Ad çakışması (#1163): "Klasman grup" adlı tanım bile Excel'de boyut sütununu ezmez.
+    const clashLabel = L('Klasman grup', 'Class group');
+    await put('/api/oab-cube/view', { view: { ...saved.view, calculated: [...saved.view.calculated, { id: 'pcv_clash', label: clashLabel, formula: '[wssi]', mode: 'aggregate', refs: {} }] } });
+    await page.evaluate(() => window.BLOabCube.reload());
+    await page.waitForFunction(() => document.querySelectorAll('#oabCubeTable thead th.pcvHead').length === 3, null, { timeout: 15000 });
+    const [clashDownload] = await Promise.all([page.waitForEvent('download', { timeout: 30000 }), page.click('#oabCubeExcelExportBtn')]);
+    const clashPivot = XLSX.utils.sheet_to_json(XLSX.read(fs.readFileSync(await clashDownload.path())).Sheets.Pivot);
+    const groupRow = clashPivot.find(row => row[clashLabel] === 'DEMO TRİKO');
+    assert.ok(groupRow, 'boyut değeri korunur');
+    assert.equal(groupRow[`${clashLabel} (ƒx)`], sum(rows.filter(row => row.classGroup === 'DEMO TRİKO'), 'wssi'), 'hesaplanan değer ayrı sütunda');
+    await put('/api/oab-cube/view', { view: saved.view });
+    await page.evaluate(() => window.BLOabCube.reload());
+    await page.waitForFunction(() => document.querySelectorAll('#oabCubeTable thead th.pcvHead').length === 2, null, { timeout: 15000 });
     // Alt detay: hesaplanan hücreden açılır, notta değeri söyler.
     await page.locator('#oabCubeTable tr.oabPivotGrandTotalRow td.pcvCell').first().dblclick();
     await page.waitForSelector('#blSharedDetailDrawer.is-open', { timeout: 10000 });

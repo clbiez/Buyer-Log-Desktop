@@ -262,3 +262,26 @@ test('INTAKE Excel: rota gövde sınırı normalize edilen sayfa boyutuyla tutar
   const text = JSON.stringify(XLSX.utils.sheet_to_json(book.Sheets['Calculated values'], { header: 1 }));
   assert.match(text, /1 of 9,000 rows/);
 });
+
+/* ---------------- PR #1163 inceleme: Excel başlık çakışması ---------------- */
+
+test('Excel başlığı: hesaplanan değer boyut/sabit başlıkla aynı adı taşısa da sütun ezilmez', () => {
+  const taken = new Set(['Satır tipi', 'Model', 'Model (ƒx)']);
+  assert.equal(PCV.uniqueHeader(taken, 'Oran'), 'Oran');
+  assert.equal(PCV.uniqueHeader(taken, 'Model'), 'Model (ƒx 2)', 'çakışınca (ƒx), o da doluysa (ƒx 2)');
+  assert.equal(PCV.uniqueHeader(taken, 'model'), 'model (ƒx 3)', 'büyük/küçük harf duyarsız');
+  assert.ok(taken.has('Oran') && taken.has('Model (ƒx 2)'), 'verilen başlık ayrılır');
+  assert.deepEqual(PCV.uniqueHeaders(['Satır tipi', 'Klasman grup'], [def('a', '1', { label: 'Klasman grup' }), def('b', '1', { label: 'Klasman grup' })]), ['Klasman grup (ƒx)', 'Klasman grup (ƒx 2)']);
+});
+
+test('Excel: beş widget hesaplanan değer başlığını benzersizleştirir; editör boyut/sabit başlık adlarını ayırır', () => {
+  for (const file of ['public/oab-cube.js', 'public/postfob.js', 'public/tryd-advantage.js', 'public/intake.js', 'public/oab.js']) {
+    const source = read(file);
+    assert.match(source, /uniqueHeaders?\(/, `${file} — Excel başlığı benzersiz`);
+    assert.doesNotMatch(source, /out\[PCV\(\)\.labelOf\(def\)\]/, `${file} — etiket doğrudan anahtar olamaz`);
+    assert.match(source, /reserved: /, `${file} — editöre ayrılmış adlar`);
+  }
+  const module = read('public/pivot-calculated-values.js');
+  assert.match(module, /Bu ad pivotta bir alan ya da sabit başlık olarak kullanılıyor/);
+  assert.match(module, /This name is already used by a pivot field or a fixed heading/);
+});

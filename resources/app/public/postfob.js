@@ -453,6 +453,9 @@
       const dims = [...view().rows, ...view().columns], values = view().values;
       const round = value => typeof value === 'number' && Number.isFinite(value) ? Math.round(value * 10000) / 10000 : (value == null ? null : value);
       // Pivot sayfası ekrandaki düzendir; 1.500 satır görüntü sınırı dosyaya uygulanmaz.
+      // Hesaplanan değer başlığı boyut/değer/sabit başlıkla çakışırsa "(ƒx)" alır; sütun ezilmez.
+      const calcList = calcDefs();
+      const calcHeaders = calcList.length ? PCV().uniqueHeaders([text('Satır tipi', 'Row type'), ...dims.map(refLabel), ...values.map(refLabel)], calcList) : [];
       const pivot = displayRows(prepared).map(item => {
         const out = {};
         out[text('Satır tipi', 'Row type')] = item.kind === 'grand' ? text('Genel toplam', 'Grand total') : (item.kind === 'group' ? text('Alt toplam', 'Subtotal') : text('Detay', 'Detail'));
@@ -462,7 +465,7 @@
         });
         values.forEach(ref => { out[refLabel(ref)] = round(ref.key === 'outliers' ? item.metrics.outliers : item.metrics[ref.key]); });
         // Hesaplanan değer Excel'e DEĞER olarak yazılır; hatalı hücre boştur.
-        calcDefs().forEach(def => { out[PCV().labelOf(def)] = item.kind === 'group' && !item.subtotal ? null : PCV().exportValue(item.metrics, def); });
+        calcList.forEach((def, index) => { out[calcHeaders[index]] = item.kind === 'group' && !item.subtotal ? null : PCV().exportValue(item.metrics, def); });
         return out;
       });
       const rowKeys = [];
@@ -711,6 +714,8 @@
       allowRow: true,
       widget: { tr: 'FOB Sonrası Maliyet', en: 'Post-FOB Cost' },
       isTextKey: key => Boolean(baseDim(key)),
+      // Boyut, değer, ölçü ve Excel sabit başlıkları ayrılmıştır (TR + EN).
+      reserved: () => ['Satır tipi', 'Row type', ...[...state.catalog.dimensions, ...state.catalog.values, ...state.catalog.measures].flatMap(item => [item.tr, item.en]), ...[...view().rows, ...view().columns, ...view().filters, ...view().values].map(refLabel)], // i18n-ignore: ayrılmış ad listesi (iki dil birlikte)
       fields: mode => (mode === 'row' ? rowValueFields() : draftValueFields()),
       samples: mode => {
         if (!state.rows.length) return [];

@@ -3155,7 +3155,9 @@
   function oabPivotExportMatrix(rows) {
     const model = oabBuildPivotViewModel(rows, { respectCollapse: false });
     const descriptors = oabVisibleColumns('pivot', model.descriptors);
-    const headers = descriptors.map(d => d.label);
+    // Hesaplanan değer başlığı alan/değer başlığıyla çakışırsa "(ƒx)" alır.
+    const takenHeaders = new Set(descriptors.filter(d => !d.calc).map(d => d.label));
+    const headers = descriptors.map(d => (d.calc && oabPCV() ? oabPCV().uniqueHeader(takenHeaders, d.label) : d.label));
     const dataRows = model.displayRows.map(row => descriptors.map(d => oabExcelPreserveBlank(row[d.key])));
     const rowMeta = model.displayRows.map(row => ({ subtotal: Boolean(row.__oabSubtotal), grand: Boolean(row.__oabGrandTotal), level: row.__oabLevel || 0 }));
     return { model, descriptors, headers, dataRows, rowMeta };
@@ -3370,6 +3372,8 @@
       allowRow: true,
       widget: { tr: 'OAB', en: 'OAB' },
       isTextKey: oabCalcTextKey,
+      // OAB alan adları ve özetlemeli değer başlıkları ayrılmıştır.
+      reserved: () => [...(S.fields || []), ...[...valueList.querySelectorAll('.oabPivotValueRow')].map(row => oabValueResultKey({ field: row.querySelector('.oabPivotValueField')?.value, agg: row.querySelector('.oabPivotValueAgg')?.value }))],
       fields: mode => (mode === 'row' ? rowValueFields() : draftValueFields()),
       samples: mode => {
         if (!S.rows.length) return [];

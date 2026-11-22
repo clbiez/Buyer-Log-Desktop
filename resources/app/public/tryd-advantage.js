@@ -445,6 +445,8 @@
       const walk = nodes => nodes.forEach(node => { all.push(node); if (node.kind === 'group') walk(node.children); });
       walk(tree);
       if (result.visible.length) all.push({ kind: 'grand', ...result.total, modelsList: result.visible });
+      // Hesaplanan değer başlığı eksen/değer/tutar/sabit başlıkla çakışırsa "(ƒx)" alır; sütun ezilmez.
+      const calcHeaders = calcs.length ? PCV().uniqueHeaders([text('Satır tipi', 'Row type'), ...axis.map(fieldLabel), ...values.map(ref => text(ref.tr, ref.en)), ...['fobTrAmount', 'landedAmount', 'fobYdAmount', 'ydQtyAll'].map(calcFieldLabel)], calcs) : [];
       const pivot = all.map(item => {
         const out = { [text('Satır tipi', 'Row type')]: item.kind === 'grand' ? text('Genel toplam', 'Grand total') : (item.kind === 'group' ? text('Alt toplam', 'Subtotal') : text('Model', 'Model')) };
         axis.forEach((key, index) => {
@@ -453,7 +455,7 @@
         const metrics = metricsOf(item);
         values.forEach(ref => { out[text(ref.tr, ref.en)] = ref.key === 'status' ? metrics.status : round(metrics[ref.key]); });
         // Hesaplanan değer Excel'e DEĞER olarak yazılır; hatalı hücre boştur.
-        calcs.forEach(def => { out[PCV().labelOf(def)] = PCV().exportValue(calcMetricsOf(item), def); });
+        calcs.forEach((def, index) => { out[calcHeaders[index]] = PCV().exportValue(calcMetricsOf(item), def); });
         const amounts = item.amounts || {};
         out[text('FOB TR TUTAR', 'TR FOB amount')] = round(amounts.fobTrAmount);
         out[text('LANDED TUTAR', 'Landed amount')] = round(amounts.landedAmount);
@@ -771,6 +773,8 @@
       allowRow: false,
       rowNote: TRYD_ROW_MODE_NOTE,
       widget: { tr: 'TR/YD Landed Avantaj', en: 'TR/YD Landed Advantage' },
+      // Eksen, değer (iki landed kaynağı), tutar ve Excel sabit başlıkları ayrılmıştır (TR + EN).
+      reserved: () => ['Satır tipi', 'Row type', ...Object.values(FIELD_LABELS).flat(), ...Object.values(CALC_FIELD_LABELS).flat(), ...VALUES().flatMap(ref => [ref.tr, ref.en]), 'Gerçekleşen avantaj', 'Realized advantage', 'Öngörü avantajı', 'Forecast advantage', 'YD landed USD', 'Abroad landed USD', 'YD landed öngörü USD', 'Abroad forecast landed USD'], // i18n-ignore: ayrılmış ad listesi (iki dil birlikte)
       fields: () => engine.CALC_FIELDS.map(key => ({ key, label: calcFieldLabel(key) })),
       samples: () => {
         if (!state.rows.length) return [];
