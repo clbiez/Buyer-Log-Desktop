@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "8.0.12",
+      "publishedAt": "2026-11-21",
+      "title": {
+        "tr": "Koleksiyon renk opsiyonları, aşama tahmini ve CP yeniden çizim düzeltmeleri",
+        "en": "Collection colour options, stage forecast and CP redraw fixes"
+      },
+      "stats": {
+        "features": 5,
+        "improvements": 15,
+        "fixes": 16
+      },
+      "file": "release-notes/8.0.12/release.json"
+    },
+    {
       "version": "8.0.1",
       "publishedAt": "2026-11-18",
       "title": {
