@@ -293,8 +293,8 @@
     const key = sort && sort.key || 'label';
     const dir = Number(sort && sort.dir) === 1 ? 1 : -1;
     // Hesaplanan değer (calc:<id>) çağıranın değerlendiricisinden okunur.
-    const read = node => (custom && String(key).startsWith('calc:') ? custom(node, key) : sortValue(node, key));
-    const left = read(a), right = read(b);
+    const calc = custom != null && key.startsWith('calc:');
+    const left = calc ? custom(a, key) : sortValue(a, key), right = calc ? custom(b, key) : sortValue(b, key);
     if (key === 'label') return dir * String(left == null ? '' : left).localeCompare(String(right == null ? '' : right), 'tr', { numeric: true, sensitivity: 'base' });
     if (left == null && right == null) return String(a.label).localeCompare(String(b.label), 'tr', { numeric: true });
     if (left == null) return 1;
