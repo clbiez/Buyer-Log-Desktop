@@ -1507,23 +1507,19 @@ tr:hover .quotationOptions:not(.hasOptions),tr:focus-within .quotationOptions:no
 .landedMultiplierInput{height:37px;display:flex;align-items:center;gap:6px;padding:0 9px;}.landedMultiplierInput input{min-width:0;width:100%;}
 .landedMultiplierNotice{grid-column:1/-1;padding:9px 11px;}
 .landedMultiplierFoot{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:11px 18px;}.landedMultiplierFoot>span{margin-right:auto;}
-/* Vasıtaya göre Overseas standardı (TR/YD Landed Avantaj). Gövde kaydırılır; başlık ve alt çubuk sabit kalır. */
+/* Vasıtaya göre Overseas standardı (TR/YD Landed Avantaj). Gövde kaydırılır; başlık ve alt çubuk sabit kalır.
+   Yalnız yerleşim; görünüm ui-components.css (manifest) içindedir. */
 .landedMultiplierCard{width:min(720px,calc(100vw - 24px));display:flex;flex-direction:column;}
 .landedMultiplierBody{overflow:auto;min-height:0;}
-.landedVehicleSection{grid-column:1/-1;display:grid;gap:8px;padding:12px;border:1px solid var(--ui-group-divider);border-radius:var(--ui-radius);background:var(--ui-surface-soft);}
+.landedVehicleSection{grid-column:1/-1;display:grid;gap:8px;padding:12px 0 0;}
 .landedVehicleHead{display:flex;align-items:flex-start;gap:10px;}.landedVehicleHead>div{display:grid;gap:3px;min-width:0;}
-.landedVehicleHead strong{font-size:var(--ui-font-2xs,12px);color:var(--ui-text);}.landedVehicleHead small{font-size:var(--ui-font-2xs,11px);color:var(--ui-text-muted);line-height:1.4;}
 .landedVehicleHead .tbtn{margin-left:auto;flex:none;}
 .landedVehicleList{display:grid;gap:6px;}
-.landedVehicleRow{display:grid;grid-template-columns:minmax(120px,1fr) 150px minmax(170px,1.5fr);align-items:center;gap:10px;padding:6px 8px;border-radius:var(--ui-radius);background:var(--ui-surface);}
-.landedVehicleName{display:grid;gap:2px;min-width:0;}.landedVehicleName strong{font-size:var(--ui-font-xs,12px);color:var(--ui-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.landedVehicleName small,.landedVehicleSuggestion small{font-size:var(--ui-font-2xs,11px);color:var(--ui-text-muted);}
+.landedVehicleRow{display:grid;grid-template-columns:minmax(120px,1fr) 150px minmax(170px,1.5fr);align-items:center;gap:10px;padding:4px 0;}
+.landedVehicleName{display:grid;gap:2px;min-width:0;}.landedVehicleName strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .landedVehicleRow .landedMultiplierInput{height:32px;}
-.landedVehicleSuggestion{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;min-width:0;font-size:var(--ui-font-2xs,11px);}
-.landedVehicleSuggestionValue{font-weight:800;color:var(--ui-accent);}
-.landedVehicleSuggestionThin{color:var(--ui-text-muted);}
+.landedVehicleSuggestion{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;min-width:0;}
 .landedVehicleSuggestion .tbtn{height:24px;padding:0 8px;}
-.landedVehicleEmpty,.landedVehicleSuggestNote{font-size:var(--ui-font-2xs,11px);color:var(--ui-text-muted);line-height:1.45;}
 @media(max-width:620px){.landedVehicleSection{grid-column:1}.landedVehicleRow{grid-template-columns:1fr 110px}.landedVehicleSuggestion{grid-column:1/-1}}
 @media(max-width:620px){.landedMultiplierBody{grid-template-columns:1fr}.landedMultiplierNotice{grid-column:1}.landedMultiplierCard{width:calc(100vw - 12px)}}
 .modelConnAdvanced{padding:8px 10px;}
