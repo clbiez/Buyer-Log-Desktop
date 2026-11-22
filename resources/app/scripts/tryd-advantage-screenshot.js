@@ -4,6 +4,8 @@
 // SSAS modeline bu ortamdan erişilemediği için YALNIZ model yanıtı veren iki uç
 // (/api/postfob/tryd/report, /api/postfob/distinct) anonim sentetik satırlarla
 // taklit edilir; /api/postfob/tryd/state, tercih kaydı, hesap ve çizim gerçektir.
+// Kalemle pivot düzenleme (Sezon › MAG › Model, seçili değerler) ve "+ Filtre ekle"
+// (Model) de uçtan uca sürülür; görsel düzenlenmiş pivotu ve açık filtre panelini gösterir.
 const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
 const { start } = require('./lib/client-performance-app');
 const engine = require('../public/tryd-advantage-engine');
@@ -48,7 +50,11 @@ function demoRows() {
     const { page } = app;
     const rows = demoRows();
     let reportBody = null;
-    await page.route('**/api/postfob/distinct', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, key: 'season', values: ['S6', 'W6'] }) }));
+    await page.route('**/api/postfob/distinct', route => {
+      const key = JSON.parse(route.request().postData() || '{}').key || 'season';
+      const values = key === 'season' ? ['S6', 'W6'] : [...new Set(rows.map(row => row[key]).filter(Boolean))].sort();
+      route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, key, values }) });
+    });
     // Ortak "Landed çarpanları" ayarı: standart yurtdışı çarpanı 1,11.
     await page.route('**/api/landed-multipliers', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ multipliers: { tr: 1.05, overseas: 1.11 }, revision: 1 }) }));
     await page.route('**/api/postfob/tryd/report', route => {
@@ -129,6 +135,63 @@ function demoRows() {
     const grandRow = pivotRows[pivotRows.length - 1];
     const advKey = lang === 'en' ? 'Realized advantage' : 'Gerçekleşen avantaj';
     assert.ok(Math.abs(grandRow[advKey] - expected.total.advantage) < 1e-6, JSON.stringify(grandRow));
+    const L = (tr, en) => (lang === 'en' ? en : tr);
+    // "+ Filtre ekle": üretici ülke ve sipariş listelenmez; Model eklenir, değer seçici hemen açılır.
+    await page.click('#trydAdvantageFiltersBtn');
+    await page.waitForFunction(() => !document.getElementById('trydAdvantageFilterPanel').hidden, null, { timeout: 10000 });
+    await page.click('[data-tryd-add-filter]');
+    await page.waitForSelector('.intakeFilterFieldPicker [data-tryd-add-filter-key]', { timeout: 10000 });
+    const pickable = await page.$$eval('.intakeFilterFieldPicker [data-tryd-add-filter-key]', nodes => nodes.map(node => node.dataset.trydAddFilterKey));
+    assert.ok(pickable.includes('model') && pickable.includes('salesCountry'), pickable.join());
+    assert.ok(!pickable.includes('originCountry') && !pickable.includes('order') && !pickable.includes('season'), pickable.join());
+    await page.click('.intakeFilterFieldPicker [data-tryd-add-filter-key="model"]');
+    await page.waitForSelector('.intakeFilterPopover:not(.intakeFilterFieldPicker) input[value="DM101"]', { timeout: 10000 });
+    for (const model of ['DM101', 'DM102', 'DM201', 'DM301', 'DM302']) await page.check(`.intakeFilterPopover input[value="${model}"]`);
+    await page.click('[data-tryd-apply]');
+    assert.ok(await page.$('#trydAdvantageFilterPanel [data-tryd-filter="model"]'), 'Model filtresi panelde');
+    reportBody = null;
+    await page.click('#trydAdvantageRefreshBtn');
+    for (let i = 0; i < 100 && !reportBody; i++) await page.waitForTimeout(100);
+    await page.waitForFunction(() => !window.BLTrydAdvantage.state.loading, null, { timeout: 20000 });
+    assert.ok(reportBody, 'Yenile sorgusu gitti');
+    assert.deepEqual(reportBody.view.filterValues.model, ['DM101', 'DM102', 'DM201', 'DM301', 'DM302']);
+    assert.ok(reportBody.view.filters.some(ref => ref.key === 'model'));
+    // Kalemle pivot: satırlar Sezon › MAG (Model yaprak); değerler avantaj, hedef, fark, FOB avantajı, YD adet, durum.
+    await page.click('#trydAdvantageFieldsBtn');
+    await page.waitForSelector('#_trydFieldsModal #trydRowsList', { timeout: 10000 });
+    await page.evaluate(() => {
+      const modal = document.getElementById('_trydFieldsModal');
+      const setList = (id, keys) => {
+        const list = modal.querySelector(`#${id}`);
+        list.querySelectorAll('.oabConfigRow').forEach(row => row.remove());
+        keys.forEach(key => { modal.querySelector(`[data-tryd-add="${id}"]`).click(); const selects = list.querySelectorAll('select'); selects[selects.length - 1].value = key; });
+      };
+      setList('trydRowsList', ['season', 'mag']);
+      setList('trydValuesList', ['advantage', 'target', 'gap', 'fobAdvantage', 'ydLanded', 'ydQty', 'status']);
+    });
+    await page.click('[data-tryd-save]');
+    await page.waitForFunction(() => !document.getElementById('_trydFieldsModal'), null, { timeout: 10000 });
+    const heads = await page.$$eval('#trydAdvantageTable thead th', ths => ths.map(th => th.textContent.replace(/[↑↓]/g, '').trim()));
+    assert.deepEqual(heads.slice(0, 3), [L('Sezon', 'Season'), 'MAG', 'Model']);
+    assert.equal(heads.length, 3 + 7);
+    assert.ok(!heads.includes(L('TR FOB USD', 'TR FOB USD')));
+    const pivotExpected = engine.analyze(rows, { target: 0.36 });
+    const pivotSubtotals = await page.$$eval('#trydAdvantageTable tr.oabPivotSubtotalRow', trs => trs.length);
+    assert.equal(pivotSubtotals, 1 + 3, 'sezon + MAG alt toplamları');
+    const pivotGrand = await page.$eval('#trydAdvantageTable tr.oabPivotGrandTotalRow', row => row.textContent);
+    assert.ok(pivotGrand.includes(pct(pivotExpected.total.advantage)), 'eksen değişse de genel toplam tutarlardan aynı');
+    await page.waitForTimeout(700);
+    const savedPivot = await app.api('/api/postfob/tryd/state').then(response => response.json());
+    assert.deepEqual(savedPivot.view.rows, [{ key: 'season' }, { key: 'mag' }]);
+    assert.deepEqual(savedPivot.view.values.map(ref => ref.key), ['advantage', 'target', 'gap', 'fobAdvantage', 'ydLanded', 'ydQty', 'status']);
+    assert.deepEqual(savedPivot.view.filterValues.model, ['DM101', 'DM102', 'DM201', 'DM301', 'DM302']);
+    // Excel yeni eksen ve değer seçimini izler.
+    const [pivotDownload] = await Promise.all([page.waitForEvent('download', { timeout: 30000 }), page.click('#trydAdvantageExcelExportBtn')]);
+    const pivotBook = XLSX.read(fs.readFileSync(await pivotDownload.path()));
+    const editedRows = XLSX.utils.sheet_to_json(pivotBook.Sheets[pivotBook.SheetNames[0]]);
+    assert.equal(editedRows.length, 1 + 3 + 8 + 1);
+    assert.ok(L('Sezon', 'Season') in editedRows[0] && !(L('Buyer grup', 'Buyer group') in editedRows[0]) && !('TR FOB USD' in editedRows[0]), Object.keys(editedRows[0]).join());
+    assert.ok(Math.abs(editedRows[editedRows.length - 1][advKey] - expected.total.advantage) < 1e-6);
     // İlgisiz açılış bildirimi görüntüyü kapatmasın.
     await page.evaluate(() => {
       const hit = [...document.querySelectorAll('body *')].filter(el => /uyarı var|warnings —/.test(el.textContent || '') && !el.children.length)[0];
@@ -142,18 +205,37 @@ function demoRows() {
     await page.setViewportSize({ width: 1900, height: 1000 });
     await page.waitForTimeout(400);
     await page.mouse.move(5, 5); await page.waitForTimeout(400);
-    const box = await page.$eval('#trydAdvantageSection', el => {
-      el.scrollIntoView({ block: 'start' });
-      const header = [...document.querySelectorAll('header, .topbar, .appHeader')].map(node => node.getBoundingClientRect()).filter(r => r.top <= 0 && r.bottom > 0).reduce((max, r) => Math.max(max, r.bottom), 0);
-      if (header) window.scrollBy(0, -(header + 12));
-      const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height };
+    // Görsel: düzenlenmiş pivot + eklenen Model filtresiyle açık filtre paneli.
+    // Panel sabit konumludur: önce widget yerleşir (belge kaydırması sıfır, başlık üst çubuğun altında kalmaz), sonra panel açılır.
+    await page.evaluate(() => {
+      const section = document.getElementById('trydAdvantageSection');
+      section.scrollIntoView({ block: 'start' });
+      // Uygulama üst çubuğu sabittir; widget başlığı onun altında kalsın.
+      const bar = [...document.querySelectorAll('body *')].find(el => { const st = getComputedStyle(el); const r = el.getBoundingClientRect(); return (st.position === 'fixed' || st.position === 'sticky') && r.top <= 0 && r.height > 20 && r.height < 120 && r.width > innerWidth / 2; });
+      const offset = bar ? bar.getBoundingClientRect().bottom + 8 - section.getBoundingClientRect().top : 0;
+      if (offset > 0) { let el = section.parentElement; while (el && !(el.scrollHeight > el.clientHeight && /(auto|scroll)/.test(getComputedStyle(el).overflowY)) && el !== document.documentElement) el = el.parentElement; (el || document.scrollingElement).scrollTop -= offset; }
     });
+    await page.click('#trydAdvantageFiltersBtn');
+    await page.waitForFunction(() => !document.getElementById('trydAdvantageFilterPanel').hidden, null, { timeout: 10000 });
+    await page.mouse.move(5, 5); await page.waitForTimeout(400);
+    const box = await page.$eval('#trydAdvantageSection', el => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });
     const tableWrap = await page.$eval('#trydAdvantageTable', table => ({ scroll: table.parentElement.scrollWidth, client: table.parentElement.clientWidth }));
     assert.ok(tableWrap.scroll <= tableWrap.client + 2, `tablo yatayda taşmamalı: ${JSON.stringify(tableWrap)}`);
     const name = `tryd-advantage-${theme}${lang === 'en' ? '-en' : ''}${process.argv.includes('--truncated') ? '-truncated' : ''}.png`;
     const screenshot = path.join(__dirname, '../public/release-notes/next-assets/' + name);
     fs.mkdirSync(path.dirname(screenshot), { recursive: true });
     await page.screenshot({ path: screenshot, clip: { x: Math.max(0, box.x - 4), y: Math.max(0, box.y - 4), width: Math.min(1900, box.w + 8), height: Math.max(Math.ceil((box.w + 8) / 3), Math.min(820, box.h + 8)) } });
+    // Pivot Varsayılanına Dön: eksen/değer/filtre alanları varsayılana döner; eklenen Model filtresi düşer.
+    await page.keyboard.press('Escape');
+    await page.click('#trydAdvantageFieldsBtn');
+    await page.click('[data-tryd-settings-reset]');
+    await page.waitForFunction(() => !document.getElementById('_trydFieldsModal'), null, { timeout: 10000 });
+    await page.waitForTimeout(700);
+    const reset = await app.api('/api/postfob/tryd/state').then(response => response.json());
+    assert.deepEqual(reset.view.rows.map(ref => ref.key), engine.DEFAULT_ROWS);
+    assert.equal(reset.view.values.length, engine.VALUE_KEYS.length);
+    assert.deepEqual(reset.view.filterValues, { season: ['S6'] });
+    assert.equal(await page.$$eval('#trydAdvantageTable tr.oabPivotSubtotalRow', trs => trs.length), 2 + 2 + 3);
     assert.deepEqual(app.errors, []);
     console.log(JSON.stringify({ screenshot, total: expected.total.advantage, below: belowExpected, box }));
   } finally { await app.close(); }
