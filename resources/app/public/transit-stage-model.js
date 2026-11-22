@@ -352,7 +352,12 @@
     // observed: dizi ya da (tembel) milestone => boolean.
     const observedFn = typeof options.observed === 'function' ? options.observed : null;
     const observed = !observedFn && options.observed ? new Set(options.observed) : null;
-    const isObserved = m => actual[m] != null || planned[m] != null
+    /* notReached: IAS durumunun HENÜZ gerçekleşmediğini söylediği adım (ör.
+       "Yükleme Operasyonları" → Fiili Yükleme yok). Tarih sütunu kaynakta olmasa
+       da o adım "bekleniyor" sayılır; aralık onun ötesine atlayıp parsiyeli
+       yolda gibi göstermez. */
+    const notReached = options.notReached && MILESTONE_INDEX[options.notReached] != null ? options.notReached : null;
+    const isObserved = m => actual[m] != null || planned[m] != null || m === notReached
       || (observedFn ? observedFn(m) !== false : (!observed || observed.has(m)));
     const floorIdx = Math.max(anchorIdx, passedIdx);
 
@@ -440,9 +445,12 @@
        (çapadan aşama başlangıcına beklenen süre düşülür). Bu ara süre
        hesaplanamıyorsa sayım çapadan yapılır ve aralık (spanFrom → spanTo) açıkça
        taşınır; arayüz etiketi buna göre yazar. */
-    const runningStage = next
-      ? (STAGES.find(st => st.to === next) || null)
-      : (STAGES.find(st => MILESTONE_INDEX[st.from] >= floorIdx) || null);
+    /* Aşama kodu aralığın BAŞINDAN seçilir: parsiyelin bulunduğu aşama, geçilmiş
+       tabandan sonraki ilk aşamadır. Aralığın sonundan seçmek, Handover'ı yapılmış
+       ama yüklenmemiş parsiyeli "Yükleme → ETA" (yolda) gösterirdi; oysa Handover
+       ile Cut Off ayrıdır, ürün Handover'dan sonra cut-off'u bekleyebilir. */
+    const runningStage = STAGES.find(st => MILESTONE_INDEX[st.from] >= floorIdx
+      && (!next || MILESTONE_INDEX[st.to] <= MILESTONE_INDEX[next])) || null;
     let running = null;
     if (runningStage) {
       const offset = runningStage.from === anchor || MILESTONE_INDEX[runningStage.from] < anchorIdx ? 0 : spanMean(anchor, runningStage.from);

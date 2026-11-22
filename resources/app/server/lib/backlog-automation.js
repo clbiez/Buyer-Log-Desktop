@@ -58,8 +58,10 @@ const LOADING_LABELS_TR = Object.freeze({
    çağıran `routing` ile ezebilir. Burada bir iş kuralı üretilmiyor, yalnız
    "bu sebebi kim çözer" sorusunun varsayılan cevabı veriliyor. */
 const DEFAULT_OWNER_ROUTING = Object.freeze({
-  LATE_LOADING: 'supplier',
-  NOT_YET_LOADED: 'supplier',
+  LATE_LOADING: 'supplier',          // Geç Handover (Handover ≠ gemiye yükleme)
+  CUTOFF_WAIT: 'import',             // Handover → Cut Off beklemesi
+  VESSEL_LOADING_DELAY: 'import',    // Cut Off → Fiili Yükleme
+  NOT_YET_LOADED: 'supplier',        // Handover bekleniyor
   PRODUCTION_DELAY: 'supplier',
   TRANSIT_DELAY: 'import',
   CUSTOMS_DELAY: 'import',

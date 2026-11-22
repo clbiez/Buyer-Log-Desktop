@@ -7008,7 +7008,8 @@ function cpStageRunText(run){
   // Ekranda 10σ ve üstü "≥10σ" (okunabilirlik); kural ham değeri kullanır.
   const sigmaValue=Number(run.sigma);
   const sigma=sigmaValue>=1?` · ${sigmaValue>=10?'≥10':sigmaValue.toLocaleString(en?'en-GB':'tr-TR',{maximumFractionDigits:1})}σ`:'';
-  return `${run.code}. ${label}${sigma}${span}${over}`;
+  // Aralık tek aşamaya denk gelmiyorsa numara yazılmaz (Handover ≠ Cut Off; "4." yolda sanılırdı).
+  return `${spanDiffers?'':`${run.code}. `}${label}${sigma}${span}${over}`;
 }
 // Statik ETA'ya göre fark: işaret yok, yön kelimeyle ("6 g geç"); eksi işareti
 // "erken" gibi okunuyordu.
