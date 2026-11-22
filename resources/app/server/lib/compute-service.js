@@ -90,6 +90,8 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
       if(!sourceIndependent&&record.descriptor.loadedAt!=null&&String(source?.loadedAt||source?.savedAt||'')!==String(record.descriptor.loadedAt))throw failure('COMPUTE_STALE_GENERATION');
       // Doğrulanmış sürüm kayıtta tutulur (emeklilikte bırakılır).
       if(loaded&&source&&!record.retired&&(record.descriptor.replicaFile||identity))keepLocalSource(record,source,record.descriptor.replicaFile?null:identity);
+      // Sahada tanı: kaynak işçiye sığmadığında sunucu iş parçacığında hesaplanır; sürüm başına bir kez yazılır.
+      if(loaded)console.log(`[COMPUTE] capacity-path task=${task} sourceMiB=${Math.round((Number(record.descriptor.bytes)||0)/4/MiB)} loadMs=${Math.round(performance.now()-started)}`);
       const value=await require('../workers/compute-worker').execute(task,{ownerId:record.owner,source:record.descriptor,params:{...params}},transfer,source||{asasOrders:[],antrepoMap:{}});
       assertCurrent();
       const metadata=value.sourceMeta||value.runtimeMeta;
