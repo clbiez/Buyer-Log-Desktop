@@ -745,6 +745,29 @@
           "en": "With anonymous demo rows: a ratio on totals and a per-row conditional quantity; the grand total equals the PASS \"approved - not yet ordered\" total."
         }
       }
+    },
+    {
+      "id": "model-snapshot-v3-column-dictionary",
+      "type": "improvement",
+      "module": {
+        "tr": "Açılış · Yerel depolama · LFL",
+        "en": "Startup · Local storage · LFL"
+      },
+      "title": {
+        "tr": "Kayıtlı model verisi daha küçük; açılışta daha hızlı okunur",
+        "en": "Saved model data is smaller and loads faster at startup"
+      },
+      "body": {
+        "tr": "Kişisel model snapshot'ında her sipariş, IAS ve LFL satırı ham kaynak sütunlarının adlarını tekrar tekrar yazıyordu; büyük veride dosyanın yaklaşık üçte biri yalnız sütun adlarıydı. Sütun adları artık dosyada bir kez tutulur. Veriler ve ekranlardaki sonuçlar aynıdır; dosya küçülür, açılışta okunması kısalır. Eski biçimde kaydedilmiş veriler okunmaya devam eder ve bir sonraki kayıtta yeni biçime geçer.",
+        "en": "In the personal model snapshot every order, IAS and LFL row repeated the names of its raw source columns; with large data about a third of the file was column names alone. Column names are now stored once in the file. The data and on-screen results are unchanged; the file is smaller and reads faster at startup. Data saved in the old format still loads and moves to the new format on the next save."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Yalnız kayıt dosyası biçimi ve açılış performansı değişir; ekranda değişen bir öğe yok.",
+          "en": "Only the saved file format and startup performance change; nothing changes on screen."
+        }
+      }
     }
   ]
 }
