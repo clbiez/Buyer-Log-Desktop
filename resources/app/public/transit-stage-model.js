@@ -341,7 +341,11 @@
     if (!anchor) return null;
     const anchorIdx = MILESTONE_INDEX[anchor];
     const anchorDate = actual[anchor];
-    const rem = (m, stat) => (group.remaining[m] ? group.remaining[m][stat] : null);
+    /* Tahmin tam gün üzerinden yapılır: ortalama / P80 kalan süreler normal
+       yuvarlanır (3,4 → 3; 3,7 → 4). Ondalıklı ortalamalarla hesaplayıp yalnız
+       gösterimi yuvarlamak "3 g sürdü (ortalama 3 g): 1 g erken" gibi kendi
+       içinde çelişen kalemler üretiyordu. */
+    const rem = (m, stat) => (group.remaining[m] && Number.isFinite(group.remaining[m][stat]) ? Math.round(group.remaining[m][stat]) : null);
 
     /* Geçilmiş adım tabanı: IAS durumu (Yolda → yükleme, Gümrük-Liman → ETA
        geçildi) tarihi olmasa da o adımın gerçekleştiğini söyler. Gözlenebilirlik:
@@ -385,7 +389,7 @@
       if (fromM === toM) return 0;
       const list = spanList(fromM, toM);
       if (list.length && list.every(st => group.stages[st.code] && Number.isFinite(group.stages[st.code].mean))) {
-        return list.reduce((sum, st) => sum + group.stages[st.code].mean, 0);
+        return Math.round(list.reduce((sum, st) => sum + group.stages[st.code].mean, 0));
       }
       const a = rem(fromM, 'mean'), b = rem(toM, 'mean');
       return a != null && b != null ? Math.max(0, a - b) : null;
@@ -415,10 +419,10 @@
       if (!dist || !Array.isArray(dist.q) || dist.q.length !== QUANTILES.length) return null;
       const c = cdf(dist.q, elapsed);
       if (c == null || c >= 1) return null;
-      if (stat === 'p80') return quantileOf(dist.q, c + 0.8 * (1 - c));
+      if (stat === 'p80') return Math.round(quantileOf(dist.q, c + 0.8 * (1 - c)));
       let sum = 0;
       for (let k = 0; k < 20; k += 1) sum += quantileOf(dist.q, c + (1 - c) * (k + 0.5) / 20);
-      return sum / 20;
+      return Math.round(sum / 20);
     };
     const etaFor = stat => {
       let eta = plan ? planned[plan] + rem(plan, stat) : anchorDate + rem(anchor, stat);
@@ -466,17 +470,19 @@
     // Aşama sapmaları (yalnız kritik yol, ortalamaya göre).
     const stages = STAGES.map(st => {
       const a = actual[st.from], b = actual[st.to];
-      const ref = group.stages[st.code] ? group.stages[st.code].mean : null;
+      const ref = group.stages[st.code] && Number.isFinite(group.stages[st.code].mean) ? group.stages[st.code].mean : null;
+      const refDays = ref == null ? null : Math.round(ref);
       if (a != null && b != null) {
         const days = b - a;
-        return { code: st.code, status: 'done', days, mean: ref, deviation: ref == null ? null : round(days - ref) };
+        // Gerçekleşen tam gün − yuvarlanmış ortalama: gösterilen iki sayının farkı.
+        return { code: st.code, status: 'done', days, mean: ref == null ? null : Math.round(ref), deviation: ref == null ? null : days - Math.round(ref) };
       }
       // Durumla geçildiği bilinen ya da çapanın gerisinde kalan adım: tarihsiz ama tamam.
-      if (MILESTONE_INDEX[st.to] <= floorIdx) return { code: st.code, status: 'done', days: null, mean: ref, deviation: null };
+      if (MILESTONE_INDEX[st.to] <= floorIdx) return { code: st.code, status: 'done', days: null, mean: refDays, deviation: null };
       if (running && st.code === running.code) {
         return { code: st.code, status: 'running', days: running.days, mean: running.mean, deviation: openOverrun > 0 ? openOverrun : null };
       }
-      return { code: st.code, status: 'pending', days: null, mean: ref, deviation: null };
+      return { code: st.code, status: 'pending', days: null, mean: refDays, deviation: null };
     });
     const currentStage = running ? running.code : null;
     /* σ cinsinden açık gecikme: koşan aralıkta geçen gün beklenen süreyi kaç
