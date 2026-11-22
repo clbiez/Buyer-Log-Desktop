@@ -874,8 +874,8 @@
           "en": "TR/YD Landed Advantage widget on demo data in a Shipment mode › Model pivot; the GEMI and TIR groups are collapsed and UCAK is expanded; the status tooltip of an air model shows the highest landed/FOB, its shipment mode and the air standard"
         },
         "caption": {
-          "tr": "Demo veride vasıta standartları kaydedildikten sonra: ipucu \"en yüksek Landed/FOB 1,41 (UCAK, standart 1,36)\" diyor. KPI satırında vasıta eşleşmesi %99,9; IAS'ta bulunmayan tek demo sipariş genel 1,11 standardını kullanıyor.",
-          "en": "On demo data after the shipment-mode standards were saved: the tooltip says \"highest landed/FOB 1.41 (UCAK, standard 1.36)\". The KPI row shows a 99.9% shipment mode match; the one demo order missing from IAS uses the general 1.11 standard."
+          "tr": "Demo veride P90 vasıta standartları (GEMI 1,08 · UCAK 1,41) kaydedildikten sonra: ipucu \"en yüksek Landed/FOB 1,41 (UCAK, standart 1,41)\" diyor (oran 1,414, iki ondalığa yuvarlı). UCAK grubunda 20 modelden 15'i yüksek çarpanlı, KPI satırında toplam 34 yüksek çarpanlı model ve %99,9 vasıta eşleşmesi var; IAS'ta bulunmayan tek demo sipariş genel 1,11 standardını kullanıyor.",
+          "en": "On demo data after the P90 shipment-mode standards (GEMI 1.08 · UCAK 1.41) were saved: the tooltip says \"highest landed/FOB 1.41 (UCAK, standard 1.41)\" (ratio 1.414, rounded to two decimals). 15 of the 20 UCAK models have a high multiplier; the KPI row shows 34 high-multiplier models in total and a 99.9% shipment mode match; the one demo order missing from IAS uses the general 1.11 standard."
         }
       }
     },
@@ -887,8 +887,8 @@
         "en": "Data Management › Landed Multipliers"
       },
       "title": {
-        "tr": "Landed Çarpanları: vasıtaya göre Overseas standardı ve geçmiş veriden öneri",
-        "en": "Landed Multipliers: Overseas standard by shipment mode, with suggestions from history"
+        "tr": "Landed Çarpanları: vasıtaya göre Overseas standardı ve geçmiş veriden P90 önerisi",
+        "en": "Landed Multipliers: Overseas standard by shipment mode, with a P90 suggestion from history"
       },
       "body": {
         "tr": "Pencerede IAS verisinde görülen her vasıta için bir alan var; boş alan genel Overseas değerini kullanır ve başlangıçta hepsi boştur. \"Geçmiş veriden öner\", son TR/YD sorgusunda o vasıtayla gelen geçerli YD satırlarının adet ağırlıklı 90. yüzdelik (P90) Landed/FOB değerini; satır, sipariş sayısını ve tarih aralığını gösterir. 20 satırdan veya 5 siparişten az örnekte öneri verilmez, nedeni yazılır. Karışık vasıtalı siparişler örneğe girmez. P90 seçildiği için aynı vasıtadaki satırların yaklaşık %10'u uyarı alır. Öneri yalnız alanı doldurur; Kaydet'e basılmadan hiçbir değer kaydedilmez. Değerler yalnız TR/YD kontrolünde kullanılır, Koleksiyon fiyatları değişmez. Eski sürümden yapılan kayıt vasıta standartlarını silmez.",
@@ -899,12 +899,12 @@
         "capture": "post-change",
         "src": "landed-vehicle-standards-light.png",
         "alt": {
-          "tr": "Demo veride Landed Çarpanları penceresi: Overseas ve TR varsayılanlarının altında Vasıtaya göre Overseas standardı bölümü; GEMI ve UCAK için öneriler alana alınmış, TIR için az örnek nedeniyle öneri yok",
-          "en": "Landed Multipliers window on demo data: below the Overseas and TR defaults, the Overseas standard by shipment mode section; suggestions for GEMI and UCAK were placed in the fields, and TIR has no suggestion because of too few samples"
+          "tr": "Demo veride Landed Çarpanları penceresi: Overseas ve TR varsayılanlarının altında Vasıtaya göre Overseas standardı bölümü; GEMI ve UCAK için P90 önerileri alana alınmış, TIR için az örnek nedeniyle öneri yok",
+          "en": "Landed Multipliers window on demo data: below the Overseas and TR defaults, the Overseas standard by shipment mode section; P90 suggestions for GEMI and UCAK were placed in the fields, and TIR has no suggestion because of too few samples"
         },
         "caption": {
-          "tr": "Demo veride GEMI için öneri ×1,07 (276 satır / 92 sipariş), UCAK için ×1,36 (234 satır / 78 sipariş). TIR'da 9 satır / 3 sipariş olduğu için öneri yok; alan boş kalır ve genel 1,11 kullanılır. Değerler Kaydet ile yazılır.",
-          "en": "On demo data the suggestion for GEMI is ×1.07 (276 rows / 92 orders) and for UCAK ×1.36 (234 rows / 78 orders). TIR has only 9 rows / 3 orders, so there is no suggestion; the field stays blank and the general 1.11 applies. Values are stored with Save."
+          "tr": "Demo veride P90 önerisi GEMI için ×1,08 (276 satır / 92 sipariş), UCAK için ×1,41 (234 satır / 78 sipariş); her önerinin yanında \"P90 — aynı vasıtadaki satırların ~%10 kadarı uyarı alır\" yazıyor. TIR'da 9 satır / 3 sipariş olduğu için öneri yok; alan boş kalır ve genel 1,11 kullanılır. Değerler Kaydet ile yazılır.",
+          "en": "On demo data the P90 suggestion is ×1.08 for GEMI (276 rows / 92 orders) and ×1.41 for UCAK (234 rows / 78 orders); each suggestion says \"P90 — about 10% of rows with the same mode get the warning\". TIR has only 9 rows / 3 orders, so there is no suggestion; the field stays blank and the general 1.11 applies. Values are stored with Save."
         }
       }
     }
