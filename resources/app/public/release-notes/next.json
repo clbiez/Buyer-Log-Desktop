@@ -122,29 +122,6 @@
       }
     },
     {
-      "id": "very-large-data-worker-heap-cage",
-      "type": "improvement",
-      "module": {
-        "tr": "CP · Siparişler · Genel Bakış · Backlog",
-        "en": "CP · Orders · Overview · Backlog"
-      },
-      "title": {
-        "tr": "Çok büyük veride (≈650 MiB) hesaplar da arka planda yapılır",
-        "en": "Calculations also run in the background with very large data (≈650 MiB)"
-      },
-      "body": {
-        "tr": "16 GB bellekli bilgisayarlarda yaklaşık 500 MiB üstü model verisinde CP ve diğer ekranların hesapları hâlâ sunucunun ana iş parçacığında yapılıyor, açılıştan sonra sunucu 20–40 saniye yanıt veremiyordu. Arka plan işçisinin bellek sınırları ölçülen kullanıma göre ayarlandı ve işçinin bellekte tuttuğu veri artık iki kez sayılmıyor; 650 MiB veride hesaplar arka planda yapılır, ekranlar beklemez. Uygulamanın tüm bileşenleri tek bir ortak bellek alanını paylaştığı için işçi, sunucuya yer kalmadığında kullanılmaz ve önceki güvenli yol seçilir; sonuçlar aynıdır.",
-        "en": "On computers with 16 GB of memory, with model data above about 500 MiB the calculations for CP and other screens still ran on the server main thread and the server could not respond for 20–40 seconds after startup. The background worker's memory limits now follow the measured usage and data the worker keeps in memory is no longer counted twice; with 650 MiB of data the calculations run in the background and screens do not wait. Because all parts of the app share one common memory area, the worker is not used when it would leave the server without room, and the previous safe path is chosen instead; results are the same."
-      },
-      "visual": {
-        "kind": "none",
-        "reason": {
-          "tr": "Ekranda değişiklik yok; yalnız çok büyük veride açılış sonrası donma kalkar.",
-          "en": "There is no change on screen; only the freeze after startup with very large data is gone."
-        }
-      }
-    },
-    {
       "id": "overview-postfob-cost",
       "type": "feature",
       "module": {
@@ -405,20 +382,20 @@
         "en": "TR/YD Landed Advantage widget: same-model Turkey FOB versus abroad realized landed cost"
       },
       "body": {
-        "tr": "Hem Türkiye hem yurtdışı siparişi olan modellerde gerçekleşen avantaj = 1 − Σ(YD adet × YD landed) / (TR FOB × YD adet) hesaplanır; Fas ve Mısır kıyas dışıdır. Hedef varsayılan %36'dır ve widget'tan değiştirilip kişisel tercih olarak saklanır; fark hedefin altındaysa satır vurgulanır, \"Yalnız hedef altı\" ile süzülür. Buyer grup › Ürün klasmanı › MAG › Model kırılımında toplam oranları tutarlardan yeniden hesaplanır. Landed'i olmayan veya hatalı (landed < FOB ya da Landed/FOB aşırı uç) YD satırları kıyasa girmez ve durum sütununda görünür; öngörü landed yalnız açıkça seçilince ayrı etiketle kullanılır. Veri FOB Sonrası Maliyet sorgusu ve önbelleğinden gelir; satır sınırında kesilen sonuç \"kısmi\" diye işaretlenir. Çift tıkla kaynak satırlar, Excel'e pivot + kaynak + özet aktarılır.",
-        "en": "For models with both Turkey and abroad orders the realized advantage = 1 − Σ(abroad qty × abroad landed) / (TR FOB × abroad qty); Morocco and Egypt are excluded. The target defaults to 36%, can be changed in the widget and is saved as a personal preference; rows below the target are highlighted and \"Below target only\" filters them. In the Buying group › Product class › MAG › Model breakdown, total ratios are recomputed from amounts. Abroad rows with no or invalid landed (landed < FOB or an extreme Landed/FOB) are left out of the comparison and shown in the status column; forecast landed is used only when explicitly selected, with its own label. Data comes from the Post-FOB Cost query and cache; a result cut at the row limit is marked as partial. Double-click shows the source rows; Excel exports the pivot, source rows and a summary."
+        "tr": "Hem Türkiye hem yurtdışı siparişi olan modellerde gerçekleşen avantaj = 1 − Σ(YD adet × YD landed) / (TR FOB × YD adet) hesaplanır; Fas ve Mısır kıyas dışıdır. Hedef varsayılan %36'dır ve widget'tan değiştirilip kişisel tercih olarak saklanır; fark hedefin altındaysa satır vurgulanır, \"Yalnız hedef altı\" ile süzülür. Buyer grup › Ürün klasmanı › MAG › Model kırılımında toplam oranları tutarlardan yeniden hesaplanır. Landed'i olmayan veya hatalı (landed < FOB) YD satırları kıyasa girmez. Landed/FOB oranı Buyer Log'un standart yurtdışı landed çarpanının (Landed çarpanları ayarı, varsayılan 1,11) üstündeyse bu bir hata sayılmaz: yükleme tipi (ör. uçak) çarpanı yükseltebilir; satır \"Landed çarpanı yüksek\" uyarısı alır ve hesapta kalır. Durumlar ayrı bir KPI ve durum sütununda görünür; öngörü landed yalnız açıkça seçilince ayrı etiketle kullanılır. Veri FOB Sonrası Maliyet sorgusu ve önbelleğinden gelir; satır sınırında kesilen sonuç \"kısmi\" diye işaretlenir. Çift tıkla kaynak satırlar, Excel'e pivot + kaynak + özet aktarılır. FOB Sonrası Maliyet ve OAB küpündeki gibi \"+ Filtre ekle\" ile model, ürün adı, renk ve satış ülkesi filtresi eklenip kaldırılabilir (sezon zorunlu kalır; üretici ülke ve sipariş kodu kıyasın bir tarafını sildiği için filtrelenemez). Kalem düğmesiyle pivot satırları (Buyer grup, Ürün klasmanı, MAG, Sezon, Ürün adı; Model her zaman en alt kırılım) ve değer sütunları seçilir, sıralanır, gizlenir; \"Pivot Varsayılanına Dön\" eski düzeni geri getirir. Oranlar her düzende tutarlardan yeniden hesaplanır; Excel seçili düzeni izler, düzen kişisel tercih olarak saklanır.",
+        "en": "For models with both Turkey and abroad orders the realized advantage = 1 − Σ(abroad qty × abroad landed) / (TR FOB × abroad qty); Morocco and Egypt are excluded. The target defaults to 36%, can be changed in the widget and is saved as a personal preference; rows below the target are highlighted and \"Below target only\" filters them. In the Buying group › Product class › MAG › Model breakdown, total ratios are recomputed from amounts. Abroad rows with no or invalid landed (landed < FOB) are left out of the comparison. A Landed/FOB ratio above Buyer Log's standard abroad landed multiplier (Landed multipliers setting, 1.11 by default) is not treated as an error: the shipment mode (e.g. air) can raise it, so the row gets a \"High landed multiplier\" warning and stays in the calculation. Statuses appear in a separate KPI and the status column; forecast landed is used only when explicitly selected, with its own label. Data comes from the Post-FOB Cost query and cache; a result cut at the row limit is marked as partial. Double-click shows the source rows; Excel exports the pivot, source rows and a summary. As in Post-FOB Cost and the OAB cube, \"+ Add filter\" adds or removes model, product name, colour and sales country filters (season stays required; origin country and order code cannot be filtered because they remove one side of the comparison). The pencil button picks, orders and hides the pivot rows (Buying group, Product class, MAG, Season, Product name; Model is always the lowest level) and value columns; \"Reset Pivot\" restores the original layout. Ratios are recomputed from amounts in every layout; Excel follows the chosen layout, which is saved as a personal preference."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
         "src": "tryd-advantage-light.png",
         "alt": {
-          "tr": "Demo veride TR/YD Landed Avantaj widget'ı: KPI'lar, Buyer grup › Klasman › MAG › Model pivotu, hedef altı satırlar vurgulu",
-          "en": "TR/YD Landed Advantage widget on demo data: KPIs, Buying group › Class › MAG › Model pivot, rows below target highlighted"
+          "tr": "Demo veride TR/YD Landed Avantaj widget'ı: kalemle Sezon › MAG › Model olarak düzenlenmiş pivot, + Filtre ekle ile eklenmiş Model filtresi, durum sütununda landed çarpanı yüksek ve landed hatalı ayrı",
+          "en": "TR/YD Landed Advantage widget on demo data: pivot edited with the pencil to Season › MAG › Model, a Model filter added with + Add filter, high landed multiplier and invalid landed shown separately in the status column"
         },
         "caption": {
-          "tr": "Demo veride gerçekleşen avantaj %29,6, hedef %36; hedefin altındaki model ve gruplar kırmızı ad ve farkla işaretli.",
-          "en": "On demo data the realized advantage is 29.6% against a 36% target; models and groups below target are marked with a red name and gap."
+          "tr": "Demo veride pivot Sezon › MAG › Model düzeninde; gerçekleşen avantaj %33,6, hedef %36. Uçakla gelen tipteki DM202 \"Landed çarpanı yüksek\" uyarısıyla hesapta kalır, landed'i FOB'un altındaki DM302 \"Landed hatalı\". Filtre panelinde eklenen Model filtresi ve + Filtre ekle görünüyor.",
+          "en": "On demo data the pivot uses a Season › MAG › Model layout; the realized advantage is 33.6% against a 36% target. The air-freight-like DM202 stays in the calculation with a \"High landed multiplier\" warning, and DM302, whose landed is below FOB, is \"Invalid landed\". The filter panel shows the added Model filter and + Add filter."
         }
       }
     },

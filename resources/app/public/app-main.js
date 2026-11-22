@@ -20080,8 +20080,8 @@ function ensureOverviewTrydAdvantageModule(){
   const loader=window.BLPerf?._loadScript;
   if(typeof loader!=='function'||!document.getElementById('trydAdvantageSection'))return Promise.resolve(null);
   window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'trydAdvantage',mode:'after-ui'});
-  overviewTrydAdvantageLoadPromise=loader('tryd-advantage-engine.js?rev=20261122')
-    .then(()=>loader('tryd-advantage.js?rev=20261122'))
+  overviewTrydAdvantageLoadPromise=loader('tryd-advantage-engine.js?rev=20261123')
+    .then(()=>loader('tryd-advantage.js?rev=20261123'))
     .then(()=>{window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'trydAdvantage',mode:'after-ui'});return window.BLTrydAdvantage||null;})
     .catch(error=>{overviewTrydAdvantageLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'trydAdvantage',mode:'after-ui',failed:true});console.warn('TR/YD landed avantaj modülü yüklenemedi:',error);return null;});
   return overviewTrydAdvantageLoadPromise;

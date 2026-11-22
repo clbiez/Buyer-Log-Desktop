@@ -52,11 +52,11 @@ test('a busy queue never fails a refreshed source copy; it uses the capacity pat
 });
 
 test('a source larger than the worker source cache uses the capacity path instead of failing',async t=>{
-  // 6 GiB bütçede 800 MiB kaynak 6× tahminle kabul edilir; işçi önbelleği (3 GiB, 4×kaynak) ise reddeder.
-  const pool=createComputePool({maxWorkers:1,memoryBudgetBytes:6144*MiB}),service=createComputeService({pool,root,heapCage:null});t.after(()=>service.close());
+  // 4 GiB bütçede 550 MiB kaynak 6× tahminle kabul edilir; işçi önbelleği (2 GiB, 4×kaynak) ise reddeder.
+  const pool=createComputePool({maxWorkers:1,memoryBudgetBytes:4096*MiB}),service=createComputeService({pool,root});t.after(()=>service.close());
   const snapshots=require('../server/lib/model-snapshot');
   await snapshots.saveModelSnapshotAsync('big',source('BIG'));
-  const descriptor=await service.coldSource({ownerId:'big',generation:'disk-1',loadedAt:'BIG',uncompressedBytes:800*MiB});
+  const descriptor=await service.coldSource({ownerId:'big',generation:'disk-1',loadedAt:'BIG',uncompressedBytes:550*MiB});
   const lease=await service.run('source-info',descriptor,{});
   try{assert.equal(lease.metrics.fallbackReason,'COMPUTE_JOB_TOO_LARGE');assert.equal(lease.value.loadedAt,'BIG');}finally{lease.release();}
   assert.equal(pool.stats().workerCount,0,'no worker is started for a source the worker cache cannot hold');

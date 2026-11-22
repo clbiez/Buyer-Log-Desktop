@@ -40,3 +40,21 @@ test('TR/YD widget HTML: OAB/INTAKE başlık yapısı, TR/EN etiketleri ve Excel
   assert.match(block, /data-i18n-tr="TR\/YD Landed Avantaj" data-i18n-en="TR\/YD Landed Advantage"/);
   assert.match(block, /data-i18n-tr="Yalnız hedef altı" data-i18n-en="Below target only"/);
 });
+
+test('TR/YD widget standart YD landed çarpanını ortak ayardan okur ve motora verir; yüksek çarpan ayrı durumdur', () => {
+  const widget = read('tryd-advantage.js');
+  assert.match(widget, /requestJson\('\/api\/landed-multipliers'\)/);
+  assert.match(widget, /payload\.multipliers\.overseas/);
+  assert.match(widget, /standardMultiplier: state\.standardMultiplier/);
+  assert.match(widget, /highMultiplier: \['Landed çarpanı yüksek', 'High landed multiplier'\]/);
+  assert.doesNotMatch(widget, /bounds\.upper|3×IQR/);
+  assert.match(read('ui-components.css'), /#trydAdvantageTable td\.trydAdvantageHighMultiplier/);
+});
+
+test('TR/YD Yenile standart landed çarpanını yeniden okur; okuma hatasında bilinen değer korunur', () => {
+  const widget = read('tryd-advantage.js');
+  const refresh = widget.slice(widget.indexOf('async function refresh('), widget.indexOf('async function refresh(') + 1800);
+  assert.match(refresh, /Promise\.all\(\[requestJson\('\/api\/postfob\/tryd\/report'[^\]]*, loadStandardMultiplier\(\)\]\)/);
+  const loader = widget.slice(widget.indexOf('async function loadStandardMultiplier('), widget.indexOf('async function loadState('));
+  assert.doesNotMatch(loader, /catch \(_\) \{ state\.standardMultiplier = null; \}/);
+});
