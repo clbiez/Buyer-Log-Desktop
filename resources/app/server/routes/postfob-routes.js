@@ -99,6 +99,12 @@ module.exports = function registerPostFobRoutes(app, deps) {
     return { rows: req ? enrich(req, snapshot.rows) : snapshot.rows, fetchedAt: snapshot.fetchedAt, filterValues: meta.filterValues || {}, missing: meta.missing || [], truncated: Boolean(meta.truncated), rowLimit: meta.rowLimit || report.POSTFOB_MAX_ROWS, horizonApplied: Boolean(meta.horizonApplied) };
   }
 
+  /* Ufuk anahtarın parçası: Veri Yönetimi'nde filtre değişince önbellek eski satırı dönmez.
+     TR/YD Landed Avantaj aynı anahtarı kullanır; aynı sorgu iki kez çalışmaz. */
+  function reportQueryKey(found, userId, built, horizon) {
+    return store.queryKey({ connection: { server: found.connection.server, catalog: found.connection.catalog, user: String(userId) }, measures: built.measures, rows: built.dimensions, filters: built.filterValues, horizon, options: { report: 'postfob', version: 2 } });
+  }
+
   app.get('/api/postfob/state', ...guard, (req, res) => {
     try {
       const target = connection();
@@ -148,8 +154,7 @@ module.exports = function registerPostFobRoutes(app, deps) {
       const found = await liveFields();
       const horizon = report.resolveHorizon(loadModelConnections().items);
       const built = report.buildQuery({ liveFields: found.fields, view, horizon });
-      // Ufuk anahtarın parçası: Veri Yönetimi'nde filtre değişince önbellek eski satırı dönmez.
-      const queryKey = store.queryKey({ connection: { server: found.connection.server, catalog: found.connection.catalog, user: String(userId) }, measures: built.measures, rows: built.dimensions, filters: built.filterValues, horizon, options: { report: 'postfob', version: 2 } });
+      const queryKey = reportQueryKey(found, userId, built, horizon);
       const meta = { filterValues: built.filterValues, missing: built.missing, rowLimit: built.maxRows, horizonApplied: built.horizonApplied };
       if (!(req.body && req.body.forceRefresh)) {
         const cached = store.get(queryKey);
@@ -202,6 +207,108 @@ module.exports = function registerPostFobRoutes(app, deps) {
     const snapshot = store.loadSnapshot(userId);
     return snapshot && Array.isArray(snapshot.rows) ? snapshot.rows : [];
   }
+
+  /* ---------- TR/YD Landed Avantaj (Genel Bakış › Ticari widget'ı) ----------
+     Aynı FiyatMaliyetKontrolRapor sorgusu, aynı önbellek ve aynı yetki. Fark:
+     FOB Sonrası görünümü ve snapshot'ı DEĞİŞMEZ; sorgu her zaman temel sipariş ×
+     renk düzeyindedir (eklenen pivot alanı / satış ülkesi grain'i yok). Böylece
+     FOB Sonrası varsayılan görünümüyle aynı filtrede önbellek kaydı paylaşılır.
+     Üretici ülke filtrelenmez: kıyas TR ve YD satırlarını birlikte ister.
+     Kişisel tercih lcw.postfob.tryd.v1: filtre, hedef, landed kaynağı ve son
+     sorgunun şekli (veri kopyası değil). Hesap tarayıcıda yapılır
+     (public/tryd-advantage-engine.js). */
+  const TRYD_PREF_KEY = 'lcw.postfob.tryd.v1';
+  const trydEngine = require('../../public/tryd-advantage-engine');
+  /* Tercihte ham önbellek anahtarı DEĞİL, son sorgunun şekli (ölçü, boyut,
+     filtre) tutulur; anahtar her okumada oturumdaki kullanıcıyla yeniden
+     hesaplanır. Tercih istemci senkronuyla yazılabildiği için başka bir
+     kullanıcının önbellek kaydına işaret eden bir değer işe yaramaz. */
+  function lastQueryOf(raw) {
+    const source = raw && typeof raw === 'object' ? raw : null;
+    if (!source) return null;
+    const list = value => (Array.isArray(value) ? value : []).map(item => String(item == null ? '' : item)).filter(Boolean).slice(0, 100);
+    return { measures: list(source.measures), dimensions: list(source.dimensions), filterValues: report.normalizeFilterValues(source.filterValues) };
+  }
+  function trydEntry(userId) {
+    const entry = userPreferences.load(userId).entries[TRYD_PREF_KEY];
+    if (!entry || !entry.value) return { view: trydEngine.normalizePrefs(null), lastQuery: null };
+    try {
+      const parsed = JSON.parse(entry.value);
+      return { view: trydEngine.normalizePrefs(parsed), lastQuery: lastQueryOf(parsed.lastQuery) };
+    } catch (_) { return { view: trydEngine.normalizePrefs(null), lastQuery: null }; }
+  }
+  function saveTryd(userId, view, lastQuery) {
+    const current = trydEntry(userId);
+    const next = trydEngine.normalizePrefs({ ...current.view, ...(view && typeof view === 'object' ? view : {}) });
+    const shape = lastQuery === undefined ? current.lastQuery : lastQueryOf(lastQuery);
+    userPreferences.merge(userId, { [TRYD_PREF_KEY]: { value: JSON.stringify({ ...next, lastQuery: shape }), updatedAt: new Date().toISOString() } });
+    return next;
+  }
+  function lastQueryKey(userId, lastQuery) {
+    if (!lastQuery || !lastQuery.measures.length) return '';
+    const horizon = report.resolveHorizon(loadModelConnections().items);
+    return reportQueryKey({ connection: connection() }, userId, { measures: lastQuery.measures, dimensions: lastQuery.dimensions, filterValues: lastQuery.filterValues }, horizon);
+  }
+  function trydPayload(record) {
+    if (!record) return null;
+    const meta = record.viewConfig && typeof record.viewConfig === 'object' ? record.viewConfig : {};
+    return { rows: record.rows, fetchedAt: record.fetchedAt, missing: meta.missing || [], truncated: Boolean(meta.truncated), rowLimit: meta.rowLimit || report.POSTFOB_MAX_ROWS, horizonApplied: Boolean(meta.horizonApplied), stale: record.fresh === false };
+  }
+
+  app.get('/api/postfob/tryd/state', ...guard, (req, res) => {
+    try {
+      const target = connection();
+      const entry = trydEntry(req.currentUser.id);
+      res.set('Cache-Control', 'no-store').json({
+        ok: true, view: entry.view, rowLimit: report.POSTFOB_MAX_ROWS,
+        filters: report.DIMENSIONS.filter(item => trydEngine.FILTER_KEYS.includes(item.key)).map(({ key, tr, en, required }) => ({ key, tr, en, required: Boolean(required) })),
+        connection: { name: target.name, server: target.server, catalog: target.catalog, source: target.source },
+        horizon: Boolean(report.resolveHorizon(loadModelConnections().items)),
+        data: (key => key ? trydPayload(store.get(key)) : null)(lastQueryKey(req.currentUser.id, entry.lastQuery)),
+      });
+    } catch (err) { logFailure('tryd-state', err); const out = failure(err); res.status(out.status).json(out); }
+  });
+
+  app.put('/api/postfob/tryd/view', ...guard, express.json({ limit: '64kb' }), (req, res) => {
+    try { res.json({ ok: true, view: saveTryd(req.currentUser.id, req.body && req.body.view) }); }
+    catch (err) { logFailure('tryd-view', err); const out = failure(err); res.status(out.status).json(out); }
+  });
+
+  app.post('/api/postfob/tryd/report', ...guard, express.json({ limit: '64kb' }), async (req, res) => {
+    const userId = req.currentUser.id;
+    const before = trydEntry(userId);
+    let queryKey = '', view = before.view;
+    try {
+      view = saveTryd(userId, req.body && req.body.view);
+      const found = await liveFields();
+      const horizon = report.resolveHorizon(loadModelConnections().items);
+      const built = report.buildQuery({ liveFields: found.fields, view: report.normalizeView({ filterValues: view.filterValues }), horizon });
+      queryKey = reportQueryKey(found, userId, built, horizon);
+      const shape = { measures: built.measures, dimensions: built.dimensions, filterValues: built.filterValues };
+      const meta = { filterValues: built.filterValues, missing: built.missing, rowLimit: built.maxRows, horizonApplied: built.horizonApplied };
+      if (!(req.body && req.body.forceRefresh)) {
+        const cached = store.get(queryKey);
+        if (cached && cached.fresh) { saveTryd(userId, null, shape); return res.json({ ok: true, view, ...trydPayload({ ...cached, viewConfig: cached.viewConfig || meta }), fromCache: true }); }
+      }
+      const result = await modelQuery.runModelRows({ server: found.connection.server, catalog: found.connection.catalog, query: built.query, headerMap: built.headerMap, generated: true, maxRows: built.maxRows, timeoutMs: 180000 });
+      const rows = report.normalizeRows(result.rows, built);
+      const stamped = { ...meta, truncated: rows.length >= built.maxRows };
+      const record = store.set(queryKey, { rows, fields: [], viewConfig: stamped, fetchedAt: new Date().toISOString() });
+      saveTryd(userId, null, shape);
+      userAccess.appendAudit(req.currentUser, 'POSTFOB_TRYD_REPORT_FETCH', queryKey, { rows: rows.length, forceRefresh: Boolean(req.body && req.body.forceRefresh) });
+      res.json({ ok: true, view, ...trydPayload({ ...record, fresh: true }), fromCache: false });
+    } catch (err) {
+      logFailure('tryd-report', err);
+      // Şema okunamadıysa anahtar hesaplanamaz: filtre değişmediyse son başarılı sorgunun kaydı kullanılır.
+      const sameFilters = JSON.stringify(before.view.filterValues) === JSON.stringify(view.filterValues);
+      const fallbackKey = queryKey || (sameFilters ? lastQueryKey(userId, before.lastQuery) : '');
+      const previous = fallbackKey ? store.get(fallbackKey) : null;
+      if (previous && RECOVERABLE_ERRORS.has(String(err && err.code || ''))) {
+        return res.json({ ok: true, view, ...trydPayload(previous), fromCache: true, offline: true, error: SOURCE_MESSAGE.tr, errorEn: SOURCE_MESSAGE.en });
+      }
+      const out = failure(err); res.status(out.status).json(out);
+    }
+  });
 
   return { store, storedView, saveView, probe, snapshotRows };
 };
