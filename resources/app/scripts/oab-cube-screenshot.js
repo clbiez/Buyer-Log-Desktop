@@ -42,7 +42,10 @@ function demoRows() {
       const body = JSON.parse(route.request().postData() || '{}');
       distincts.push(body);
       const values = { season: ['S6', 'W6', 'S7'], mag: ['DM1A', 'DM2B'], buyerGroup: ['DEMO GRUP'] }[body.key] || [];
-      route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, key: body.key, values }) });
+      // MAG listesi ilk açılışta ve 'dm2' aramasında sınıra ulaşmış gibi döner; daha
+      // dar 'dm2b' araması tamdır. Seçici "aramayı daraltın" notunu buna göre göstermeli.
+      const truncated = body.key === 'mag' && body.search !== 'dm2b';
+      route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, key: body.key, values, truncated, limit: 1000 }) });
     });
     await page.route('**/api/oab-cube/metadata', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true,
       dimensions: [{ source: '[Data].[Hedef PSF]', table: 'Data', name: 'Hedef PSF', label: 'Hedef PSF', baseKey: '' }],
@@ -141,6 +144,13 @@ function demoRows() {
     await page.fill('.intakeFilterPopover .intakeFilterSearch', 'dm2');
     for (let i = 0; i < 40 && !distincts.some(body => body.key === 'mag' && body.search === 'dm2'); i++) await page.waitForTimeout(100);
     assert.ok(distincts.some(body => body.key === 'mag' && body.search === 'dm2'), 'arama küpe gider');
+    const noteShown = () => { const n = document.querySelector('.intakeFilterPopover .oabCubeDistinctNote'); return Boolean(n && !n.hidden && /aramayı daraltın|narrow the search/.test(n.textContent)); };
+    await page.waitForFunction(noteShown, null, { timeout: 10000 });
+    // Dar arama tam dönünce not gizlenir; arama silinince ilk (kesik) listenin notu geri gelir.
+    await page.fill('.intakeFilterPopover .intakeFilterSearch', 'dm2b');
+    await page.waitForFunction(() => { const n = document.querySelector('.intakeFilterPopover .oabCubeDistinctNote'); return Boolean(n && n.hidden); }, null, { timeout: 10000 });
+    await page.fill('.intakeFilterPopover .intakeFilterSearch', '');
+    await page.waitForFunction(noteShown, null, { timeout: 10000 });
     await page.keyboard.press('Escape');
     await page.click('[data-oab-cube-filter="mag"]');
     await page.waitForSelector('.intakeFilterPopover input[value="DM2B"]', { timeout: 10000 });
@@ -151,8 +161,11 @@ function demoRows() {
     assert.equal(reports.length, 1, 'filtre uygulaması sorgu atmaz');
     // Görünüm sunucuya kaydedilir (gerçek PUT route; rapor ucu taklit olduğu için
     // filtreler sıralama kaydıyla birlikte yazılır).
-    await page.click('#oabCubeTable thead th[data-oab-cube-sort="approved"]');
-    await page.waitForTimeout(800);
+    // Sabit bekleme yerine kayıt yanıtı beklenir (zamanlamaya bağlı yanlış hata olmasın).
+    await Promise.all([
+      page.waitForResponse(response => /\/api\/oab-cube\/view$/.test(response.url()) && response.request().method() === 'PUT' && response.ok(), { timeout: 15000 }),
+      page.click('#oabCubeTable thead th[data-oab-cube-sort="approved"]'),
+    ]);
     const saved = await app.api('/api/oab-cube/state').then(response => response.json());
     assert.deepEqual(saved.view.filterValues, { season: ['S6', 'W6'], mag: ['DM1A', 'DM2B'] });
     assert.deepEqual(saved.view.rows.map(ref => ref.key), ['classGroup', 'classification']);
