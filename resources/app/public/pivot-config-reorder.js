@@ -18,7 +18,11 @@
 (function (root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
-  if (root) root.BLPivotConfigReorder = api;
+  if (!root) return;
+  // Modülden önce açılan pencereler (app-main bekleyen bind listesi) hâlâ açıksa şimdi bağlanır.
+  const pending = root.BLPivotConfigReorder && Array.isArray(root.BLPivotConfigReorder.pending) ? root.BLPivotConfigReorder.pending : [];
+  root.BLPivotConfigReorder = api;
+  pending.forEach(([container, options]) => { if (container && container.isConnected) api.bind(container, options); });
 }(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   const ROW = '.oabConfigRow';
@@ -77,5 +81,5 @@
     });
   }
 
-  return { bind, placement };
+  return { loaded: true, bind, placement };
 }));

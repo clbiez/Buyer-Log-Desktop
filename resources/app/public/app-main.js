@@ -20131,8 +20131,16 @@ let overviewIntakeLoadPromise=null;
    açılınca çağrıldığı için widget betiğiyle sıralama bağımlılığı yoktur ve
    yüklenemezse widget çalışmaya devam eder (yukarı/aşağı düğmeleri). */
 function ensurePivotConfigReorder(){
+  if(window.BLPivotConfigReorder?.loaded)return;
+  /* Modül gelmeden açılan kalem penceresi bağlanmadan kalmasın: bind çağrısı
+     bekleyen listeye alınır, modül yüklenince açık pencerelere bağlanır.
+     Yükleme başarısızsa pencere yine açılır, yukarı/aşağı düğmeleri çalışır. */
+  if(!window.BLPivotConfigReorder){
+    const pending=[];
+    window.BLPivotConfigReorder={loaded:false,pending,bind:(container,options)=>{if(container&&!pending.some(entry=>entry[0]===container))pending.push([container,options]);}};
+  }
   const loader=window.BLPerf?._loadScript;
-  if(window.BLPivotConfigReorder||typeof loader!=='function')return;
+  if(typeof loader!=='function')return;
   loader('pivot-config-reorder.js?rev=20261124').catch(error=>console.warn('Pivot sürükle-bırak modülü yüklenemedi:',error));
 }
 function ensureOverviewOabModule(){

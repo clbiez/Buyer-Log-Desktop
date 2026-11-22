@@ -40,7 +40,11 @@ function cubeRows() {
   const oabPivot = { rows: ['Season', 'Class'], columns: [], values: [{ field: 'Amount', agg: 'SUM' }], grouped: true, showSubtotals: true };
   const oabRows = ['A', 'B'].map((name, i) => ({ Season: 'S7', Class: `DEMO ${name}`, Amount: i + 1 }));
   const rows = cubeRows();
+  // Ortak sürükle-bırak modülü bilerek geciktirilir: pencere modülden ÖNCE açılır (Codex bulgusu, PR #1177).
+  let releaseReorder;
+  const reorderGate = new Promise(resolve => { releaseReorder = resolve; });
   const app = await start({ deviceScaleFactor: shot ? 2 : 1, beforeNavigate: async page => {
+    await page.route('**/pivot-config-reorder.js*', async route => { await reorderGate; await route.continue(); });
     await page.route('**/api/oab/**', async route => {
       const ep = new URL(route.request().url()).pathname.split('/').pop();
       const payload = { seasons: { seasons: [{ SeasonRef: 1, Name: 'S7' }] }, mag: { mag: [] }, 'buyer-groups': { buyerGroups: [] }, settings: { settings: { pivotConfig: oabPivot } }, state: { state: { selection: {}, snapshot: { rows: oabRows, fields: ['Season', 'Class', 'Amount'] } } } }[ep] || {};
@@ -111,10 +115,20 @@ function cubeRows() {
       { name: 'TR/YD', key: 'trydAdvantage', section: 'trydAdvantageSection', ready: () => window.BLTrydAdvantage, btn: '#trydAdvantageFieldsBtn', list: 'trydRowsList' },
     ]) {
       await show(w.key, w.section, w.ready);
-      await page.waitForFunction(() => window.BLPivotConfigReorder, null, { timeout: 30000 });
       await page.waitForTimeout(800);
       await page.click(w.btn);
       await page.waitForSelector(`#${w.list}`, { timeout: 10000 });
+      if (w.key === 'oab') {
+        // Pencere açıkken modül henüz yok; yukarı/aşağı düğmesi yine çalışır.
+        assert.equal(await page.evaluate(() => Boolean(window.BLPivotConfigReorder && window.BLPivotConfigReorder.loaded)), false, 'modül gecikmeli');
+        const before = await listOrder(w.list);
+        await page.locator(`#${w.list} .oabConfigRow`).nth(1).locator('.oabConfigActions button').first().click();
+        assert.deepEqual((await listOrder(w.list)).slice(0, 2), [before[1], before[0]], 'modülsüz Yukarı düğmesi');
+        await page.locator(`#${w.list} .oabConfigRow`).nth(1).locator('.oabConfigActions button').first().click();
+        releaseReorder();
+        await page.waitForFunction(() => window.BLPivotConfigReorder && window.BLPivotConfigReorder.loaded, null, { timeout: 30000 });
+        results.push('OAB (PASS): modül pencereden sonra yüklenince açık pencere bağlanır');
+      }
       await assertDrag(w.name, w.list);
       await closeModal();
     }

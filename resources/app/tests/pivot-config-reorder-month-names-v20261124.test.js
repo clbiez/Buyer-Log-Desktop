@@ -96,3 +96,20 @@ test('pivot-config-reorder: tutamaktan başlar, aynı listede kalır, reduced-mo
   assert.match(src, /isDragging/);
   assert.doesNotMatch(src, /\.animate\(|requestAnimationFrame/, 'kendi animasyon motoru yok');
 });
+
+test('pivot-config-reorder: modülden önce açılan pencere, modül yüklenince bağlanır', () => {
+  const main = pub('app-main.js');
+  assert.match(main, /window\.BLPivotConfigReorder=\{loaded:false,pending,bind:/, 'bekleyen bind listesi');
+  assert.match(main, /if\(window\.BLPivotConfigReorder\?\.loaded\)return;/);
+  assert.match(main, /loader\('pivot-config-reorder\.js\?rev=20261124'\)\.catch\(/, 'yükleme hatası pencereyi bozmaz');
+  // Modül yüklendiğinde bekleyen ve hâlâ açık pencerelere bağlanır.
+  const bound = [];
+  const open = { isConnected: true, addEventListener: type => bound.push(['open', type]) };
+  const closed = { isConnected: false, addEventListener: type => bound.push(['closed', type]) };
+  const root = { BLPivotConfigReorder: { loaded: false, pending: [[open, {}], [closed, {}]], bind() {} } };
+  const src = pub('pivot-config-reorder.js');
+  new Function('globalThis', 'module', src)(root, undefined);
+  assert.equal(root.BLPivotConfigReorder.loaded, true);
+  assert.ok(bound.some(([who, type]) => who === 'open' && type === 'dragstart'), 'açık pencere bağlandı');
+  assert.ok(!bound.some(([who]) => who === 'closed'), 'kapanmış pencere bağlanmaz');
+});
