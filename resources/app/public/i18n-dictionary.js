@@ -980,6 +980,7 @@ pairs:[
 ["Antrepo Excel dosyası boş veya çok büyük.","The Antrepo Excel file is empty or too large."],
 ["Antrepo Excel dosyası yüklenemedi.","The Antrepo Excel file could not be uploaded."],
 ["TR ve Overseas Landed çarpanları 0 ile 10 arasında pozitif sayı olmalıdır.","TR and Overseas Landed multipliers must be positive numbers between 0 and 10."],
+["TR, Overseas ve vasıta Landed çarpanları 0 ile 10 arasında pozitif sayı olmalıdır.","TR, Overseas and shipment-mode landed multipliers must be positive numbers between 0 and 10."],
 ["Landed çarpanları kaydedilemedi.","Landed multipliers could not be saved."],
 ["En az bir navlun ücreti tanımlanmalıdır.","At least one freight rate must be defined."],
 ["En fazla 20 navlun ücreti tanımlanabilir.","At most 20 freight rates can be defined."],

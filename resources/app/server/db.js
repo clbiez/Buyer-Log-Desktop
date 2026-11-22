@@ -257,6 +257,9 @@ function normalizeLandedMultipliers(value) {
   return {
     tr: Number.isFinite(tr) && tr > 0 ? tr : 1.05,
     overseas: Number.isFinite(overseas) && overseas > 0 ? overseas : 1.11,
+    // Vasıtaya göre yurtdışı standardı (TR/YD Landed Avantaj). Boşsa alan yazılmaz:
+    // eski kaydın şekli ve parmak izi aynen kalır (public/landed-vehicle-standards.js).
+    ...(byVehicle => Object.keys(byVehicle).length ? { byVehicle } : {})(require('../public/landed-vehicle-standards').normalizeByVehicle(raw.byVehicle)),
   };
 }
 

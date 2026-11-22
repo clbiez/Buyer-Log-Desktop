@@ -10,6 +10,11 @@
   const pivotCalculated = () => (typeof module === 'object' && module.exports && typeof require === 'function'
     ? require('./pivot-calculated-values.js')
     : (root && root.BLPivotCalculatedValues) || null);
+  /* Vasıtaya göre standart (public/landed-vehicle-standards.js). Tarayıcıda bu
+     betikten önce yüklenir; yüklenemezse bütün satırlar genel standarda düşer. */
+  const vehicleStandards = () => (typeof module === 'object' && module.exports && typeof require === 'function'
+    ? require('./landed-vehicle-standards.js')
+    : (root && root.BLLandedVehicleStandards) || null);
 
   /* TR/YD LANDED AVANTAJ — saf hesap katmanı (tarayıcı + Node testi).
    *
@@ -40,10 +45,13 @@
    * YD satırının durumu (ürün kararı, 2026-11-22):
    *  - Landed hatalı: landed < FOB. Fiziksel olarak mümkün değildir (landed =
    *    FOB + navlun + gümrük + ek maliyet); hesaptan çıkar.
-   *  - Landed çarpanı yüksek: Landed/FOB, Buyer Log'un ortak standart yurtdışı
-   *    landed çarpanının (/api/landed-multipliers → overseas, varsayılan 1,11)
-   *    üstünde. Çarpan yükleme tipine göre değişir (gemi < gemi+uçak < uçak);
-   *    bu bir hata DEĞİLDİR, gerçek maliyettir: hesapta KALIR, yalnız uyarıdır.
+   *  - Landed çarpanı yüksek: Landed/FOB, SATIRIN KENDİ standart yurtdışı landed
+   *    çarpanının üstünde. Çarpan yükleme tipine göre değişir (gemi < gemi+uçak <
+   *    uçak): siparişin IAS vasıtası için ortak ayarda (/api/landed-multipliers →
+   *    byVehicle) standart varsa o, parsiyeller farklı vasıtayla gittiyse yükleme
+   *    adediyle ağırlıklı ortalaması; vasıta bilinmiyor veya standardı boşsa genel
+   *    overseas (varsayılan 1,11). Bu bir hata DEĞİLDİR, gerçek maliyettir:
+   *    hesapta KALIR, yalnız uyarıdır.
    *  - Landed yok: landed boş veya 0; hesaptan çıkar.
    * Önceki istatistiksel çit (Q3 ± 3×IQR) uçak gibi gerçek maliyetleri hatalı
    * sayıp hesaptan attığı ve avantajı şişirdiği için kaldırıldı.
@@ -63,7 +71,10 @@
        YASAK: ikisi de kıyasın bir tarafını (TR veya YD) siler.
      - Değerler {key} referans dizisidir; ileride hesaplanan değer gibi yeni
        referans türleri aynı diziye eklenebilir. */
-  const ROW_FIELDS = Object.freeze(['buyerGroup', 'classification', 'mag', 'season', 'productName']);
+  /* vehicle: model düzeyi vasıta (YD adediyle ağırlıklı en sık vasıta; karışık
+     siparişte en büyük paylı vasıta). Model tek gruba düştüğü için kıyas birimi
+     bozulmaz. Sorgu filtresi DEĞİLDİR: FOB Sonrası küpünde vasıta yoktur. */
+  const ROW_FIELDS = Object.freeze(['buyerGroup', 'classification', 'mag', 'season', 'productName', 'vehicle']);
   const DEFAULT_ROWS = Object.freeze(['buyerGroup', 'classification', 'mag']);
   const LEVELS = Object.freeze([...ROW_FIELDS, 'model']);
   const VALUE_KEYS = Object.freeze(['trFob', 'ydFob', 'ydLanded', 'advantage', 'target', 'gap', 'fobAdvantage', 'trQty', 'ydQty', 'coverage', 'status']);
@@ -107,6 +118,7 @@
     return 'yd';
   }
 
+  const isEnglishLabel = options => options && options.lang === 'en';
   function rowRatio(row, source) {
     const landed = num(row && row[landedKey(source)]), fob = num(row && row.fob);
     return landed != null && landed > 0 && fob != null && fob > 0 && qtyOf(row) > 0 ? landed / fob : null;
@@ -121,6 +133,7 @@
   /* YD satırının durumu: 'ok' | 'highMultiplier' | 'noLanded' | 'invalidLanded'
      (adet/FOB yoksa null). standard: standart YD landed çarpanı (sayı). */
   function rowStatus(row, standard, source) {
+    if (standard && typeof standard === 'object') standard = standard.value;
     if (!qtyOf(row)) return null;
     const fob = num(row && row.fob);
     if (fob == null || fob <= 0) return null;
@@ -133,8 +146,33 @@
     return ratio > standardOf(standard).value ? STATUS.high : STATUS.ok;
   }
 
+  /* Satırın standardı: (row) => { value, source, known, label, labelEn, parts }.
+     options.vehicles: /api/postfob/tryd/* yanıtındaki vehicles.byOrder
+     ({ [ham sipariş kodu]: [[anahtar, etiket, adet], ...] }); options.byVehicle:
+     ortak ayarın vasıta standartları. Sipariş başına bir kez hesaplanır. */
+  function createStandardResolver(options = {}) {
+    const overall = standardOf(options.standardMultiplier);
+    const V = vehicleStandards();
+    const table = V ? V.normalizeByVehicle(options.byVehicle) : {};
+    const byOrder = options.vehicles && typeof options.vehicles === 'object' ? options.vehicles : null;
+    const generic = { value: overall.value, source: 'unknown', known: false, label: '', labelEn: '', parts: [] };
+    if (!V || !byOrder) return () => generic;
+    const memo = new Map();
+    return row => {
+      const order = clean(row && row.order);
+      let hit = memo.get(order);
+      if (!hit) {
+        const raw = Object.prototype.hasOwnProperty.call(byOrder, order) && Array.isArray(byOrder[order]) ? byOrder[order] : [];
+        const parts = raw.map(item => Array.isArray(item) ? { key: item[0], label: item[1], qty: item[2] } : item);
+        hit = parts.length ? V.orderStandard(parts, table, overall.value) : generic;
+        memo.set(order, hit);
+      }
+      return hit;
+    };
+  }
+
   function emptyAmounts() {
-    return { fobTrAmount: 0, landedAmount: 0, fobYdAmount: 0, trQty: 0, ydQty: 0, ydQtyAll: 0, noLandedQty: 0, invalidQty: 0, highMultiplierQty: 0 };
+    return { fobTrAmount: 0, landedAmount: 0, fobYdAmount: 0, trQty: 0, ydQty: 0, ydQtyAll: 0, noLandedQty: 0, invalidQty: 0, highMultiplierQty: 0, vehicleKnownQty: 0, vehicleUnknownQty: 0 };
   }
   function addAmounts(target, source) {
     for (const key of Object.keys(emptyAmounts())) target[key] += source[key] || 0;
@@ -170,6 +208,8 @@
     const target = num(options.target) == null ? DEFAULT_TARGET : num(options.target);
     const list = Array.isArray(rows) ? rows : [];
     const standard = standardOf(options.standardMultiplier);
+    const standardFor = createStandardResolver(options);
+    const vehicleActive = Boolean(options.vehicles && typeof options.vehicles === 'object' && vehicleStandards());
     const byModel = new Map();
     const counts = { rows: list.length, tr: 0, yd: 0, excluded: 0, unknown: 0, noModel: 0 };
     for (const row of list) {
@@ -208,18 +248,29 @@
       const amounts = emptyAmounts();
       amounts.trQty = trQty;
       const statusCount = { ok: 0, highMultiplier: 0, noLanded: 0, invalidLanded: 0 };
-      let maxRatio = null;
+      let maxRatio = null, maxRatioVehicle = '', maxRatioStandard = null;
+      const vehicleSlot = { value: '', weight: 0, map: null };
       for (const row of ydActive) {
         const q = qtyOf(row);
-        const status = rowStatus(row, standard.value, source);
+        const rowStandard = standardFor(row);
+        const status = rowStatus(row, rowStandard.value, source);
         statusCount[status] += 1;
         amounts.ydQtyAll += q;
+        if (rowStandard.known) {
+          amounts.vehicleKnownQty += q;
+          const dominant = rowStandard.parts[0].label;
+          if (!vehicleSlot.map && (vehicleSlot.value === '' || vehicleSlot.value === dominant)) { vehicleSlot.value = dominant; vehicleSlot.weight += q; }
+          else {
+            if (!vehicleSlot.map) vehicleSlot.map = new Map([[vehicleSlot.value, vehicleSlot.weight]]);
+            vehicleSlot.map.set(dominant, (vehicleSlot.map.get(dominant) || 0) + q);
+          }
+        } else amounts.vehicleUnknownQty += q;
         if (status === STATUS.noLanded) { amounts.noLandedQty += q; continue; }
         if (status === STATUS.invalid) { amounts.invalidQty += q; continue; }
         // Yüksek çarpan gerçek maliyettir: hesapta kalır, ayrıca sayılır.
         if (status === STATUS.high) amounts.highMultiplierQty += q;
         const ratio = row[landedKey(source)] / row.fob;
-        if (maxRatio == null || ratio > maxRatio) maxRatio = ratio;
+        if (maxRatio == null || ratio > maxRatio) { maxRatio = ratio; maxRatioVehicle = isEnglishLabel(options) ? rowStandard.labelEn : rowStandard.label; maxRatioStandard = rowStandard.value; }
         amounts.ydQty += q;
         amounts.landedAmount += q * row[landedKey(source)];
         amounts.fobYdAmount += q * row.fob;
@@ -230,11 +281,12 @@
         model: entry.model,
         // entry.attrs MODEL_ATTRS sırasındadır.
         buyerGroup: modeOf(entry.attrs[0]), classification: modeOf(entry.attrs[1]), mag: modeOf(entry.attrs[2]), season: modeOf(entry.attrs[3]), productName: modeOf(entry.attrs[4]),
-        trFob, status, statusCount, maxRatio, amounts, ...ratios(amounts, target),
+        vehicle: vehicleActive ? modeOf(vehicleSlot) : '',
+        trFob, status, statusCount, maxRatio, maxRatioVehicle, maxRatioStandard, amounts, ...ratios(amounts, target),
         rows: [...entry.tr, ...entry.yd],
       });
     }
-    return { models, standard, counts, skipped, target, landedSource: source };
+    return { models, standard, counts, skipped, target, landedSource: source, vehicleActive };
   }
 
   function summarize(models, target) {
@@ -264,7 +316,7 @@
     let visible = result.models;
     if (options.belowTargetOnly) visible = visible.filter(model => isBelowTarget(model, target));
     if (tokens.length) visible = visible.filter(model => {
-      const hay = fold([model.model, ...MODEL_ATTRS.map(key => model[key])].join(' '));
+      const hay = fold([model.model, ...MODEL_ATTRS.map(key => model[key]), model.vehicle].join(' '));
       return tokens.every(part => hay.includes(part));
     });
     return { ...result, visible, total: summarize(visible, target), scopeTotal: summarize(result.models, target) };
@@ -446,7 +498,7 @@
   return Object.freeze({
     DEFAULT_TARGET, DEFAULT_STANDARD_MULTIPLIER, MIN_LANDED_TO_FOB, LANDED_SOURCES, FILTER_KEYS, LEVELS, STATUS,
     ROW_FIELDS, DEFAULT_ROWS, VALUE_KEYS, DEFAULT_VALUES, DEFAULT_FILTERS, BLOCKED_FILTER_KEYS, REQUIRED_FILTER, PREF_VERSION, SORT_KEYS,
-    originClass, rowRatio, standardOf, rowStatus, compareModels, summarize, analyze, buildTree, normalizePrefs, validatePrefs, isBelowTarget,
+    originClass, rowRatio, standardOf, rowStatus, createStandardResolver, compareModels, summarize, analyze, buildTree, normalizePrefs, validatePrefs, isBelowTarget,
     CALC_FIELDS, calcFieldValues,
   });
 });

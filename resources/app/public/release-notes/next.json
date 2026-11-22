@@ -745,6 +745,64 @@
           "en": "With anonymous demo rows: a ratio on totals and a per-row conditional quantity; the grand total equals the PASS \"approved - not yet ordered\" total."
         }
       }
+    },
+    {
+      "id": "overview-tryd-vehicle-landed-standard",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış › Ticari",
+        "en": "Overview › Commercial"
+      },
+      "title": {
+        "tr": "TR/YD: \"Landed çarpanı yüksek\" kontrolü yükleme tipine (vasıta) göre",
+        "en": "TR/YD: \"High landed multiplier\" check by shipment mode"
+      },
+      "body": {
+        "tr": "Her yurtdışı satır artık kendi standardıyla değerlendirilir. Siparişin vasıtası Buyer Log'a yüklü IAS verisinden sipariş koduyla eşlenir (Gemi, Gemi+Uçak, Uçak, Tır…). Parsiyeller farklı vasıtayla gittiyse standart, yükleme adediyle ağırlıklı ortalamadır. Vasıtası bulunamayan sipariş veya standardı tanımlı olmayan vasıta genel Overseas değerini kullanır. Durum ipucu en yüksek oranlı satırın vasıtasını ve kullanılan standardı gösterir. Alt detayda Vasıta ve Kullanılan standart sütunları vardır. Yeni \"Vasıta eşleşmesi\" KPI'ı bulunan ve bulunamayan YD adedini söyler. Vasıta, pivot satır alanı olarak da seçilebilir. Excel özetindeki kural satırı vasıta standartlarını listeler.",
+        "en": "Every abroad row is now checked against its own standard. The order's shipment mode comes from the IAS data already loaded in Buyer Log, matched by order code (Sea, Sea+Air, Air, Truck…). If an order's partial shipments used different modes, the standard is their average weighted by loaded quantity. Orders without a mode, and modes without a standard, use the general Overseas value. The status tooltip shows the mode of the highest-ratio row and the standard used. The drill-down has Shipment mode and Standard used columns. A new \"Shipment mode match\" KPI shows the abroad quantity with and without a mode. Shipment mode can also be picked as a pivot row field. The rule line of the Excel summary lists the shipment-mode standards."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "tryd-vehicle-standard-light.png",
+        "alt": {
+          "tr": "Demo veride TR/YD Landed Avantaj widget'ı Vasıta › Model pivotunda; GEMI ve TIR grupları daraltılmış, UCAK grubu açık; bir uçak modelinin durum ipucu en yüksek Landed/FOB değerini, vasıtasını ve uçak standardını gösteriyor",
+          "en": "TR/YD Landed Advantage widget on demo data in a Shipment mode › Model pivot; the GEMI and TIR groups are collapsed and UCAK is expanded; the status tooltip of an air model shows the highest landed/FOB, its shipment mode and the air standard"
+        },
+        "caption": {
+          "tr": "Demo veride vasıta standartları kaydedildikten sonra: ipucu \"en yüksek Landed/FOB 1,41 (UCAK, standart 1,36)\" diyor. KPI satırında vasıta eşleşmesi %99,9; IAS'ta bulunmayan tek demo sipariş genel 1,11 standardını kullanıyor.",
+          "en": "On demo data after the shipment-mode standards were saved: the tooltip says \"highest landed/FOB 1.41 (UCAK, standard 1.36)\". The KPI row shows a 99.9% shipment mode match; the one demo order missing from IAS uses the general 1.11 standard."
+        }
+      }
+    },
+    {
+      "id": "landed-multipliers-by-vehicle",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri Yönetimi › Landed Çarpanları",
+        "en": "Data Management › Landed Multipliers"
+      },
+      "title": {
+        "tr": "Landed Çarpanları: vasıtaya göre Overseas standardı ve geçmiş veriden öneri",
+        "en": "Landed Multipliers: Overseas standard by shipment mode, with suggestions from history"
+      },
+      "body": {
+        "tr": "Pencerede IAS verisinde görülen her vasıta için bir alan var; boş alan genel Overseas değerini kullanır ve başlangıçta hepsi boştur. \"Geçmiş veriden öner\", son TR/YD sorgusunda o vasıtayla gelen geçerli YD satırlarının adet ağırlıklı Landed/FOB medyanını; satır, sipariş sayısını ve tarih aralığını gösterir. 20 satırdan veya 5 siparişten az örnekte öneri verilmez, nedeni yazılır. Karışık vasıtalı siparişler örneğe girmez. Öneri yalnız alanı doldurur; Kaydet'e basılmadan hiçbir değer kaydedilmez. Değerler yalnız TR/YD kontrolünde kullanılır, Koleksiyon fiyatları değişmez. Eski sürümden yapılan kayıt vasıta standartlarını silmez.",
+        "en": "The window has a field for every shipment mode seen in the IAS data. A blank field uses the general Overseas value, and all fields start blank. \"Suggest from history\" shows the quantity-weighted median landed/FOB of valid abroad rows with that mode from the last TR/YD query, with the row and order counts and the date range. Below 20 rows or 5 orders no suggestion is given and the reason is shown. Orders with mixed modes are left out of the sample. A suggestion only fills the field; nothing is stored until Save is pressed. The values are used only by the TR/YD check; Collection prices do not change. A save from an older version does not remove the shipment-mode standards."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "landed-vehicle-standards-light.png",
+        "alt": {
+          "tr": "Demo veride Landed Çarpanları penceresi: Overseas ve TR varsayılanlarının altında Vasıtaya göre Overseas standardı bölümü; GEMI ve UCAK için öneriler alana alınmış, TIR için az örnek nedeniyle öneri yok",
+          "en": "Landed Multipliers window on demo data: below the Overseas and TR defaults, the Overseas standard by shipment mode section; suggestions for GEMI and UCAK were placed in the fields, and TIR has no suggestion because of too few samples"
+        },
+        "caption": {
+          "tr": "Demo veride GEMI için öneri ×1,07 (276 satır / 92 sipariş), UCAK için ×1,36 (234 satır / 78 sipariş). TIR'da 9 satır / 3 sipariş olduğu için öneri yok; alan boş kalır ve genel 1,11 kullanılır. Değerler Kaydet ile yazılır.",
+          "en": "On demo data the suggestion for GEMI is ×1.07 (276 rows / 92 orders) and for UCAK ×1.36 (234 rows / 78 orders). TIR has only 9 rows / 3 orders, so there is no suggestion; the field stays blank and the general 1.11 applies. Values are stored with Save."
+        }
+      }
     }
   ]
 }

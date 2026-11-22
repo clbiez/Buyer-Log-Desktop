@@ -11,6 +11,9 @@ const { start } = require('./lib/client-performance-app');
 const arg = (name, fallback) => { const index = process.argv.indexOf(name); return index >= 0 ? Number(process.argv[index + 1]) : fallback; };
 const REPEAT = arg('--repeat', 9);
 const WITH_CALC = process.argv.includes('--calc');
+// --vehicles: TR/YD yanıtına vasıta eki (YD siparişlerinin ~%90'ı; %10'u iki vasıtalı) ve
+// ortak ayara vasıta standartları eklenir (Main bu alanları yok sayar; aynı girdi).
+const WITH_VEHICLES = process.argv.includes('--vehicles');
 // --only oabCube,postFob,intake,oabPass: yalnız seçilen widget'lar ölçülür.
 const ONLY = (() => { const index = process.argv.indexOf('--only'); return index >= 0 ? new Set(String(process.argv[index + 1]).split(',')) : null; })();
 const wanted = name => !ONLY || ONLY.has(name);
@@ -88,7 +91,9 @@ function postRows(count) {
         trydRows.push({ ...attrs, order: `F${m}`, originCountry: 'FAS', qty: 100, fob: fob - 0.3, landedActual: (fob - 0.3) * 1.1 });
       }
       const trydEngine = require('../public/tryd-advantage-engine');
-      await page.route('**/api/postfob/tryd/report', route => { const body = JSON.parse(route.request().postData() || '{}'); route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, view: trydEngine.normalizePrefs(body.view), rows: trydRows, fetchedAt: new Date().toISOString(), missing: [], truncated: false, rowLimit: 10000, filterValues: body.view && body.view.filterValues }) }); });
+      const vehicles = WITH_VEHICLES ? { byOrder: Object.fromEntries(trydRows.filter(row => row.originCountry !== 'TÜRKİYE' && row.originCountry !== 'FAS').map((row, i) => [row.order, i % 10 === 9 ? null : (i % 10 === 8 ? [['GEMI', 'Gemi', 700], ['UCAK', 'Uçak', 300]] : [[i % 3 ? 'GEMI' : 'UCAK', i % 3 ? 'Gemi' : 'Uçak', 500]])]).filter(([, parts]) => parts)), source: { loaded: true, parsiyels: 30000, loadedAt: '' }, ydOrders: 5000, matched: 4500 } : undefined;
+      if (WITH_VEHICLES) await app.api('/api/landed-multipliers', { multipliers: { tr: 1.05, overseas: 1.11, byVehicle: { GEMI: 1.07, UCAK: 1.36 } } }, 'PUT');
+      await page.route('**/api/postfob/tryd/report', route => { const body = JSON.parse(route.request().postData() || '{}'); route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, ...(vehicles ? { vehicles } : {}), view: trydEngine.normalizePrefs(body.view), rows: trydRows, fetchedAt: new Date().toISOString(), missing: [], truncated: false, rowLimit: 10000, filterValues: body.view && body.view.filterValues }) }); });
       const trydCalc = WITH_CALC ? [{ id: 'pcv_a', label: 'A', formula: '[landedAmount] / [fobTrAmount]', mode: 'aggregate' }, { id: 'pcv_b', label: 'B', formula: '[advantage] - [target]', mode: 'aggregate' }] : undefined;
       await put('/api/postfob/tryd/view', { view: { filterValues: { season: ['S6'] }, ...(trydCalc ? { calculated: trydCalc } : {}) } });
     }
@@ -122,6 +127,7 @@ function postRows(count) {
     // OAB PASS: sayısal sütun başlığına tıklama (sıralama) pivotu yeniden kurar.
     if (wanted('oabPass')) out.oabPass = await measure('oabSection', () => Boolean(document.querySelector('#oabTable tr.oabPivotGrandTotalRow')), '', 'oabTable', 'data-oab-pivot-key', '#oabTable thead th:nth-child(5) .thLabel', 5);
     out.calcColumns = await page.$$eval('th.pcvHead', list => list.length);
+    if (WITH_VEHICLES && wanted('tryd')) out.trydVehicleActive = await page.evaluate(() => Boolean(window.BLTrydAdvantage.state.analysis && window.BLTrydAdvantage.state.analysis.vehicleActive));
     if (WITH_CALC && !ONLY) assert.ok(out.calcColumns >= 4);
     assert.deepEqual(app.errors, []);
     console.log(JSON.stringify(out));
