@@ -17,6 +17,8 @@ test.after(async () => { await closeProjectionRewritePool(); fs.rmSync(cacheRoot
 
 // server.js rewriteProjectionCacheForRowPatches transform'u (eski yol, #1096 sonrası hâli) — birebir.
 function legacyTransform(clean, overrides, cpRows) {
+  // server.js: legacyContext={...overrides,cpRowStored:shared} (CP satır kaydı base'i; burada paylaşılan belge = overrides).
+  const legacyContext = { ...overrides, cpRowStored: overrides };
   return (_module, payload) => {
     if (!payload || typeof payload !== 'object') return payload;
     const lists = [];
@@ -24,7 +26,7 @@ function legacyTransform(clean, overrides, cpRows) {
     if (Array.isArray(payload.orderSummary)) lists.push(payload.orderSummary);
     for (const rows of lists) for (const row of rows) for (const item of clean) {
       if (projectionPatchMatches(row, item)) {
-        applyIncrementalProjectionPatch(row, item.patch, overrides, _module !== 'orders');
+        applyIncrementalProjectionPatch(row, item.patch, legacyContext, _module !== 'orders', { cpStored: _module === 'cp' && rows === payload.rows });
         if (cpRows && _module === 'cp' && rows === payload.rows && !cpRows.includes(row)) cpRows.push(row);
       }
     }
@@ -216,7 +218,7 @@ test('server.js: satır yaması yeniden yazımı varsayılan olarak artımlı yo
   const server = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
   const body = server.slice(server.indexOf('async function rewriteProjectionCacheForRowPatches('), server.indexOf('function queueProjectionCacheRowPatches('));
   assert.match(body, /if \(String\(process\.env\.BL_PROJECTION_REWRITE_INCREMENTAL \?\? ''\) !== '0'\) \{/);
-  assert.match(body, /pageProjectionCache\.rewriteRowPatches\(afterContext\.id,\{[\s\S]*?context:require\('\.\/lib\/projection-rewrite'\)\.rowPatchContext\(overrides,clean\)/);
+  assert.match(body, /pageProjectionCache\.rewriteRowPatches\(afterContext\.id,\{[\s\S]*?context:require\('\.\/lib\/projection-rewrite'\)\.rowPatchContext\(overrides,clean,shared\)/);
   // CP okuma modeli doğrulaması (cp-row-patch-log) her kaydın CP satırlarını aynı serileştirmeyle alır.
   assert.match(body, /cpRows\.json=require\('\.\/lib\/compute-tasks'\)\.serialize\(cpRows,'projection'\)/);
   // Eski yol (geri dönüş) aynen durur.

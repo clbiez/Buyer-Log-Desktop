@@ -92,13 +92,13 @@ function virtualDataset(spec,{cache,engine},loads){
   const index=orderIndexOf(base),rows=base.rows.slice(),working=new Map();
   for(const step of Array.isArray(spec.virtual.steps)?spec.virtual.steps:[]){
     const context=step&&step.context||{};
-    const overrides={notesmap:context.notesmap||{},noteColumnDefs:context.noteColumnDefs||[],transitRules:context.transitRules||[]};
+    const overrides={notesmap:context.notesmap||{},noteColumnDefs:context.noteColumnDefs||[],transitRules:context.transitRules||[],cpRowStored:context.cpRowStored||null};
     for(const item of Array.isArray(step&&step.items)?step.items:[]){
       for(const i of index.get(parseLib.orderCodeKey(item&&item.orderCode))||[]){
         const current=working.has(i)?working.get(i):rows[i];
         if(!projectionPatchMatches(current,item))continue;
         const raw=working.has(i)?JSON.parse(diskJson(current)):diskRow(current);
-        applyIncrementalProjectionPatch(raw,item.patch,overrides,true);
+        applyIncrementalProjectionPatch(raw,item.patch,overrides,true,{cpStored:true});
         working.set(i,raw);
       }
     }

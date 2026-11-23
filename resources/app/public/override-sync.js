@@ -38,6 +38,8 @@ function enqueueOverrideMutation(kind,url,opts={}){
       if(Number.isInteger(Number(data.revision)))state.storeRevisions[revisionKey]=Number(data.revision);
       if(data.revisions&&typeof data.revisions==='object')Object.entries(data.revisions).forEach(([key,value])=>{if(Number.isInteger(Number(value)))state.storeRevisions[key]=Number(value);});
       if(data.overrides&&Number.isInteger(Number(data.overrides._revision)))state.storeRevisions.overrides=Number(data.overrides._revision);
+      // CP satır kaydı base'i (`_cpStored`): yamanın yazdığı alanların kayıtlı değeri yanıttaki belgeden alınır.
+      try{if(kind==='orders'&&typeof window!=='undefined')window.BLCpRowSave?.legacyAcked?.(url,opts.body,data);}catch(_){}
       try{if(kind==='orders'&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('buyerlog:cp-write-ack'));}catch(_){}
       return data;
     }catch(err){

@@ -7,8 +7,8 @@
     "en": "Collection date column names updated"
   },
   "summary": {
-    "tr": "Koleksiyon tablosunda Ex→Retail sütunu Türkçe arayüzde Yükleme Onay→Antrepo, Retail sütunu ise Retail Date / Retail Tarihi olarak görünür. Moderatör bilgisayarında senkron ve kural yayımı sırasındaki birkaç saniyelik takılmalar giderildi.",
-    "en": "In the Collection table, the Ex→Retail column appears as Yükleme Onay→Antrepo in the Turkish interface, and the Retail column is now Retail Date / Retail Tarihi. Stalls of a few seconds during sync and rule publishing on the Moderator's computer are fixed."
+    "tr": "Koleksiyon tablosunda Ex→Retail sütunu Türkçe arayüzde Yükleme Onay→Antrepo, Retail sütunu ise Retail Date / Retail Tarihi olarak görünür. Moderatör bilgisayarında senkron ve kural yayımı sırasındaki birkaç saniyelik takılmalar giderildi. CP'de daha önce kaydedilmiş tarih veya notu olan satırda düzenleme, kimse satırı değiştirmemişken \"başka bir kullanıcı değiştirdi\" uyarısıyla reddedilmiyor.",
+    "en": "In the Collection table, the Ex→Retail column appears as Yükleme Onay→Antrepo in the Turkish interface, and the Retail column is now Retail Date / Retail Tarihi. Stalls of a few seconds during sync and rule publishing on the Moderator's computer are fixed. In CP, editing a row that already has a saved date or note is no longer rejected with an \"another user changed this row\" warning when nobody else changed it."
   },
   "changes": [
     {
@@ -112,6 +112,29 @@
         "reason": {
           "tr": "Ekranda değişiklik yok; yalnız senkron ve yayım sırasındaki takılma kalkar.",
           "en": "There is no change on screen; only the stall during sync and publishing is gone."
+        }
+      }
+    },
+    {
+      "id": "cp-row-save-false-conflict",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Kayıtlı tarihi veya notu olan satırda düzenleme artık kaydedilir",
+        "en": "Edits on rows with a saved date or note are now saved"
+      },
+      "body": {
+        "tr": "Daha önce revize edilmiş bir tarihi (ör. Yükleme Termini / Ex-factory 09.11.26 → 23.11.26) ya da kayıtlı notu, Del. Type'ı, alt üreticisi veya not sütunu değeri olan bir satırı yeniden düzenlediğinizde, satırı kimse değiştirmemişken \"Bu satır bu arada başka bir kullanıcı tarafından değiştirildi\" uyarısı çıkıyor ve değişiklik kaydedilmiyordu. Satır artık ekranda gördüğünüz kayıtlı değerle karşılaştırılır; düzenleme ilk denemede kaydedilir. Başka bir kullanıcı aynı alanı gerçekten değiştirdiyse uyarı eskisi gibi gösterilir ve onun değeri ezilmez.",
+        "en": "When you edited a row that already had a revised date (e.g. Yükleme Termini / Ex-factory 09.11.26 → 23.11.26) or a saved note, Del. Type, sub-manufacturer or note column value, the warning \"Another user changed this row in the meantime\" appeared even though nobody had changed the row, and the change was not saved. The row is now compared with the saved value you see on screen, so the edit is saved on the first try. If another user really changed the same field, the warning still appears as before and their value is not overwritten."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda yeni bir öğe yok; yalnız yanlış uyarı çıkmaz ve düzenleme kaydedilir.",
+          "en": "Nothing new appears on screen; the false warning simply no longer shows and the edit is saved."
         }
       }
     }

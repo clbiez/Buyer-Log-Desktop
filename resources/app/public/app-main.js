@@ -16152,12 +16152,13 @@ function cpEditsBlockServerPaths(includePending=false){
   return Boolean(state.cpDirty&&state.cpDirty.size)||(includePending&&pendingOverrideWriteCount()>0);
 }
 const cpRowIsObject=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
-function cpRowStoredRecord(mapName,key,orderCode){
-  const map=state.overrides&&state.overrides[mapName]||{},oc=String(orderCode);
+// Override belgesinden (sunucu yanıtındaki tam belge) satırın kayıtlı değeri: sunucu cp-row-stored ile aynı birleştirme.
+function cpRowStoredRecord(doc,mapName,key,orderCode){
+  const map=cpRowIsObject(doc&&doc[mapName])?doc[mapName]:{},oc=String(orderCode);
   return {...(key!==oc&&cpRowIsObject(map[oc])?map[oc]:{}),...(cpRowIsObject(map[key])?map[key]:{})};
 }
-function cpRowStoredValue(mapName,key,orderCode){
-  const map=state.overrides&&state.overrides[mapName]||{},oc=String(orderCode);
+function cpRowStoredValue(doc,mapName,key,orderCode){
+  const map=cpRowIsObject(doc&&doc[mapName])?doc[mapName]:{},oc=String(orderCode);
   if(Object.hasOwn(map,key))return map[key];
   return key!==oc&&Object.hasOwn(map,oc)?map[oc]:undefined;
 }
@@ -16168,15 +16169,46 @@ const CP_ROW_COLUMN_UNITS={'Notes':'notes:Notes','NotesHtml':'notes:Notes','Ek N
   'Ex-factory':'dates:exFactory','Retail Date':'dates:retailDate','In-Store (Model Budget)':'dates:inStoreDate'};
 // Fiyatla bağlı alanlar (Licensor haritası markDirty'den önce değişir, Supp. FOB) bugünkü atomik yolda kalır.
 const CP_ROW_LEGACY_COLUMNS=new Set(['Licensor','Supp. FOB']);
-// Satırın kayıtlı değerleri (sunucunun karşılaştırdığı biçimde).
-function cpRowSnapshot(key,orderCode){
-  const notes=cpRowStoredRecord('notesmap',key,orderCode),dates=cpRowStoredRecord('datemap',key,orderCode);
+/* Satırın kayıtlı değerleri (sunucunun karşılaştırdığı biçimde). Kaynak satırın `_cpStored` kaydıdır: sunucu
+   projeksiyonu kayıtlı değeri olan her CP satırına yazar (tam override belgesi istemciye gelmez); bu sekmenin
+   onay / çakışma yanıtları, eski yoldaki kayıt onayları ve uzak canlı yamalar onu güncel tutar. Yerel override
+   haritaları KAYNAK DEĞİLDİR: oturum başında boştur ve düzenlemede ekrandaki (kaynaktan gelen dahil) değerle
+   dolar; base oradan okunursa önceki oturumda kaydedilmiş değeri olan satır sahte çakışma alırdı. */
+function cpRowStoredOf(row){return cpRowIsObject(row&&row._cpStored)?row._cpStored:{};}
+function cpRowSnapshot(row){
+  const stored=cpRowStoredOf(row),notes=cpRowIsObject(stored.notes)?stored.notes:{},dates=cpRowIsObject(stored.dates)?stored.dates:{};
   return {
     notes:Object.fromEntries(['Notes','NotesHtml','EkNot','EkNotHtml'].map(name=>[name,notes[name]==null?'':String(notes[name])])),
-    delType:cpRowStoredValue('delmap',key,orderCode),subManufacturer:cpRowStoredValue('submap',key,orderCode),licensor:cpRowStoredValue('licensormap',key,orderCode),
-    noteColumns:cpRowStoredRecord('noteColumnValues',key,orderCode),
+    delType:stored.delType,subManufacturer:stored.subManufacturer,licensor:stored.licensor,
+    noteColumns:cpRowIsObject(stored.noteColumns)?{...stored.noteColumns}:{},
+    dates:Object.fromEntries(Object.keys(CP_ROW_DATE_FIELDS).map(field=>[field,dates[field]||null])),
+  };
+}
+// Tam override belgesinden satırın kayıtlı değerleri (`current` biçimi; sunucu currentOrderLineValues).
+function cpRowStoredFromDoc(doc,key,orderCode){
+  const notes=cpRowStoredRecord(doc,'notesmap',key,orderCode),dates=cpRowStoredRecord(doc,'datemap',key,orderCode),out={
+    notes:Object.fromEntries(['Notes','NotesHtml','EkNot','EkNotHtml'].map(name=>[name,notes[name]==null?'':String(notes[name])])),
+    noteColumns:cpRowStoredRecord(doc,'noteColumnValues',key,orderCode),
     dates:Object.fromEntries(Object.entries(CP_ROW_DATE_FIELDS).map(([field,stored])=>[field,dates[stored]||null])),
   };
+  for(const [field,mapName] of Object.entries(CP_ROW_SCALARS)){const value=cpRowStoredValue(doc,mapName,key,orderCode);if(value!==undefined)out[field]=value;}
+  return out;
+}
+// Satırın `_cpStored` kaydına yalnız verilen birimlerin kayıtlı değerini yazar (başka birimler görülmemiş olabilir).
+function cpRowStoredWrite(row,current,units){
+  if(!row||!cpRowIsObject(current)||!units||!units.length)return;
+  const stored={...cpRowStoredOf(row)};
+  for(const unit of units){
+    const [group,name]=cpRowUnitParts(unit),value=cpRowUnitValue(current,unit);
+    if(group==='notes'){const notes={...(cpRowIsObject(stored.notes)?stored.notes:{})};CP_ROW_NOTE_PAIRS[name].forEach((field,i)=>{notes[field]=value[i];});stored.notes=notes;}
+    else if(group==='noteColumns')stored.noteColumns={...(cpRowIsObject(stored.noteColumns)?stored.noteColumns:{}),[name]:value};
+    else if(group==='dates'){
+      const dates={...(cpRowIsObject(stored.dates)?stored.dates:{})};
+      if(value)dates[name]=value;else delete dates[name];
+      if(Object.keys(dates).length)stored.dates=dates;else delete stored.dates;
+    }else if(value===undefined)delete stored[group];else stored[group]=value;
+  }
+  row._cpStored=stored;
 }
 function cpRowUnitParts(unit){const at=unit.indexOf(':');return at<0?[unit,'']:[unit.slice(0,at),unit.slice(at+1)];}
 // Birimin değeri (cpRowSnapshot / sunucu `current` biçimindeki kayıttan).
@@ -16205,7 +16237,7 @@ function cpRowCaptureBase(row){
   if(!cpRowSaveEnabled()||!row)return;
   const orderCode=row['Order Code'];if(orderCode==null)return;
   const key=overrideSyncKey(row,orderCode);
-  if(!cpRowSave.pre.has(key))cpRowSave.pre.set(key,cpRowSnapshot(key,orderCode));
+  if(!cpRowSave.pre.has(key))cpRowSave.pre.set(key,cpRowSnapshot(row));
 }
 /* Kullanıcının bu satırda dokunduğu sütunlar (geri al kaydı / geri al-yinele / tarih kaydı). Yalnız bunlar gider:
    ekranda kaynak değeriyle ya da bayat duran dokunulmamış alan asla yazılmaz. dates=true: tarih birimleri
@@ -16221,7 +16253,7 @@ function cpRowTouch(row,columns,dates=false){
     if(unit&&unit.startsWith('dates:')===dates)units.add(unit);
   }
   if(!units.size)return;
-  const pre=cpRowSave.pre.get(key)||cpRowSnapshot(key,orderCode);
+  const pre=cpRowSave.pre.get(key)||cpRowSnapshot(row);
   if(!dates)cpRowSave.pre.delete(key);
   let entries=cpRowSave.units.get(key);if(!entries)cpRowSave.units.set(key,entries=new Map());
   for(const unit of units){const entry=entries.get(unit);if(entry)entry.dirty++;else entries.set(unit,{base:cpRowUnitValue(pre,unit),dirty:1,sent:0});}
@@ -16287,6 +16319,7 @@ function cpRowSaveDatePlan(row,orderCode,dates){
   return units.length?{patch,units}:{skip:true};
 }
 // Sunucunun kayıtlı değerlerini istemci haritalarına yazar (yalnız gönderilen birimler; bekleyen yerel düzenlemeye dokunmaz).
+// Satırın `_cpStored` kaydı (base kaynağı) ayrıca cpRowStoredWrite ile güncellenir.
 function cpRowApplyStored(key,current,units){
   if(!current||!state.overrides)return;
   const ov=state.overrides;
@@ -16352,10 +16385,11 @@ function cpRowSaveSend(row,orderCode,patch,units){
     // Onay: yalnız yeni düzenlemesi beklemeyen birimler haritaya yazılır; bekleyen yerel değer (sonraki kaydın
     // gövdesi buradan kurulur, ör. not sütunları) eski onaylı değerle ezilmez.
     const settledUnits=()=>{const entries=cpRowSave.units.get(key);return sent.filter(({unit,dirty})=>!entries?.get(unit)||entries.get(unit).dirty<=dirty).map(({unit})=>unit);};
-    for(const applied of data.applied||[]){cpRowApplyStored(key,applied.current,settledUnits());settle(applied.current,true);}
+    // `_cpStored`: gönderilen bütün birimler sunucunun kayıtlı değerine taşınır (bekleyen birimin base'i kendi kaydında durur).
+    for(const applied of data.applied||[]){cpRowStoredWrite(row,applied.current,units);cpRowApplyStored(key,applied.current,settledUnits());settle(applied.current,true);}
     let reload=false;
     for(const conflict of data.conflicts||[]){
-      cpRowApplyStored(key,conflict.current,units);settle(conflict.current,false);
+      cpRowStoredWrite(row,conflict.current,units);cpRowApplyStored(key,conflict.current,units);settle(conflict.current,false);
       reload=cpRowApplyConflict(row,conflict.current||{},units)||reload;
       invalidateUnifiedPriorityDecisions('cp-row-conflict',['cp']);
       showToast(appLang==='en'
@@ -16383,28 +16417,66 @@ function cpRowSaveSettled(){
   // Kayıt için iptal edilen hesaplanmış sütun isteği yeniden (sonuç gelince tablo kendini çizer).
   if(cpRowSave.computedAborted){cpRowSave.computedAborted=false;_unifiedPriorityCache.cp=null;void scheduleUnifiedPrioritiesForTable('cp');}
 }
-// Uzak canlı yama: istemci kayıt haritaları da güncellenir. Bekleyen yerel düzenlemenin base'i DEĞİŞMEZ:
-// aynı birimi başkası değiştirdiyse bizim kaydımız çakışma alır (sessiz ezme yok).
-function cpRowSaveRemoteApplied(row,patch){
-  if(!cpRowSaveEnabled()||!row||!patch)return;
-  const orderCode=row['Order Code'];if(orderCode==null)return;
-  const key=overrideSyncKey(row,orderCode),current={},units=[];
+/* Yamanın kayıtlı değerini değiştirdiği birimler ve yamadan okunan değerleri (sunucu applyOrderPatch kuralları:
+   delType / subManufacturer null ise yazılmaz). */
+function cpRowPatchUnits(patch){
+  const current={},units=[];
+  if(!cpRowIsObject(patch))return {current,units};
   if(cpRowIsObject(patch.notes)){
     current.notes=patch.notes;
     for(const [name,pair] of Object.entries(CP_ROW_NOTE_PAIRS))if(pair.some(field=>Object.hasOwn(patch.notes,field)))units.push(`notes:${name}`);
   }
   if(patch.delType!=null){current.delType=String(patch.delType);units.push('delType');}
-  if(Object.hasOwn(patch,'subManufacturer')){current.subManufacturer=patch.subManufacturer;units.push('subManufacturer');}
+  if(patch.subManufacturer!=null){current.subManufacturer=patch.subManufacturer;units.push('subManufacturer');}
   if(Object.hasOwn(patch,'licensor')){current.licensor=patch.licensor;units.push('licensor');}
   if(cpRowIsObject(patch.noteColumns)){current.noteColumns=patch.noteColumns;Object.keys(patch.noteColumns).forEach(id=>units.push(`noteColumns:${id}`));}
   if(cpRowIsObject(patch.dates)){current.dates=patch.dates;Object.keys(patch.dates).filter(field=>Object.hasOwn(CP_ROW_DATE_FIELDS,field)).forEach(field=>units.push(`dates:${field}`));}
-  cpRowApplyStored(key,current,units);
+  return {current,units};
+}
+// Uzak canlı yama: satırın kayıtlı değeri (`_cpStored`) ve istemci kayıt haritaları güncellenir. Bekleyen yerel
+// düzenlemenin base'i DEĞİŞMEZ: aynı birimi başkası değiştirdiyse bizim kaydımız çakışma alır (sessiz ezme yok).
+function cpRowSaveRemoteApplied(row,patch){
+  if(!row||!patch)return;
+  const orderCode=row['Order Code'];if(orderCode==null)return;
+  const {current,units}=cpRowPatchUnits(patch);
+  cpRowStoredWrite(row,current,units);
+  if(cpRowSaveEnabled())cpRowApplyStored(overrideSyncKey(row,orderCode),current,units);
+}
+/* Bu sekmenin eski yoldaki kaydı (PATCH /api/overrides/:kod, /api/overrides/batch) onaylandı: yamanın yazdığı
+   birimlerin kayıtlı değeri yanıttaki override belgesinden satırın `_cpStored` kaydına taşınır (ör. Licensor
+   kaydı notu ve Del. Type'ı da yazar). Belge yoksa kayıt bayat kalır: sonraki satır kaydı çakışma alır, sessiz
+   ezme olmaz. */
+function cpRowLegacyAcked(url,bodyText,data){
+  const doc=data&&data.overrides;if(!cpRowIsObject(doc)||typeof url!=='string')return;
+  let items;
+  try{
+    const body=typeof bodyText==='string'?JSON.parse(bodyText):bodyText;
+    if(url.split('?')[0]==='/api/overrides/batch')items=Array.isArray(body&&body.items)?body.items:[];
+    else if(url.startsWith('/api/overrides/'))items=[{orderCode:decodeURIComponent(url.slice('/api/overrides/'.length).split('?')[0]),patch:body}];
+    else return;
+  }catch(_){return;}
+  const work=items.map(item=>({item,units:cpRowPatchUnits(item&&item.patch).units})).filter(entry=>entry.units.length);
+  if(!work.length)return;
+  // Toplu kayıt (yüzlerce satır) 30k satırı her öğe için taramaz: sipariş kodu dizini bir kez kurulur.
+  const byCode=new Map();
+  for(const row of state.cp&&state.cp.rows||[]){
+    if(!row||row['Order Code']==null)continue;
+    const code=String(row['Order Code']);let list=byCode.get(code);if(!list)byCode.set(code,list=[]);list.push(row);
+  }
+  const matches=typeof remotePatchMatches==='function'?remotePatchMatches:(row,item)=>String(row['Order Code'])===String(item.orderCode);
+  for(const {item,units} of work){
+    for(const row of byCode.get(String(item.orderCode))||[]){
+      if(!matches(row,item))continue;
+      cpRowStoredWrite(row,cpRowStoredFromDoc(doc,overrideSyncKey(row,row['Order Code']),row['Order Code']),units);
+    }
+  }
 }
 window.BLCpRowSave={
   isEnabled:()=>cpRowSaveEnabled(),
   setEnabled(value){try{(window.BLStorage||localStorage).setItem(CP_ROW_SAVE_STORAGE_KEY,value?'1':'0');}catch(_){}cpRowSave.enabled=Boolean(value);return cpRowSaveEnabled();},
   status:()=>({enabled:cpRowSaveEnabled(),pendingRows:cpRowSave.inFlight.size,unitRows:cpRowSave.units.size}),
   settled:()=>cpRowSave.queue,
+  legacyAcked:cpRowLegacyAcked,
 };
 
 function syncOverrideToServer(orderCode,notes,row){

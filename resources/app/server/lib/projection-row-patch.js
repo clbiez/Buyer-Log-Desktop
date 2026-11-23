@@ -5,6 +5,7 @@
    modeli sessizce farklı değer hesaplar. Gövde server.js'ten değiştirilmeden taşındı. */
 const parseLib = require('./parse');
 const BLBusinessRules = require('../../public/business-rules');
+const cpRowStored = require('./cp-row-stored');
 
 /* Yama öğesinin satırı: sipariş kodu + (varsa) model adı ve renk kodu birebir. */
 function projectionPatchMatches(row, item) {
@@ -16,7 +17,8 @@ function projectionPatchMatches(row, item) {
   return true;
 }
 
-function applyIncrementalProjectionPatch(row, patch, overrides, includePriority = true) {
+/* options.cpStored: satır CP modülünün satırıdır (Orders / sipariş özeti satırı `_cpStored` taşımaz). */
+function applyIncrementalProjectionPatch(row, patch, overrides, includePriority = true, options = null) {
   if (patch.notes && typeof patch.notes === 'object') {
     if (Object.prototype.hasOwnProperty.call(patch.notes,'Notes')) row.Notes=patch.notes.Notes==null?'':String(patch.notes.Notes);
     if (Object.prototype.hasOwnProperty.call(patch.notes,'EkNot')) row['Ek Not']=patch.notes.EkNot==null?'':String(patch.notes.EkNot);
@@ -63,6 +65,9 @@ function applyIncrementalProjectionPatch(row, patch, overrides, includePriority 
   }
   if (Object.prototype.hasOwnProperty.call(patch,'importance')) parseLib.applyImportanceToRow(row, overrides);
   if (patch.delType != null || patch.dates) parseLib.applyFormulas(row, overrides.transitRules, includePriority);
+  /* CP satır kaydı base'i (`_cpStored`): bağlam paylaşılan belgenin kayıtlı değer haritalarını
+     (overrides.cpRowStored, kayıt anında) taşıyorsa satırın kimliğiyle yeniden hesaplanır. */
+  if (options && options.cpStored && overrides && overrides.cpRowStored && cpRowStored.patchTouchesCpRowStored(patch)) cpRowStored.setRowStored(row, overrides.cpRowStored);
   return row;
 }
 
