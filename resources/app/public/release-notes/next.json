@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-23",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon Ex→Retail sütununun Türkçe adı güncellendi",
+    "en": "Turkish name of the Collection Ex→Retail column updated"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon tablosunda Ex→Retail sütunu Türkçe arayüzde artık Yükleme Onay→Antrepo olarak görünür.",
+    "en": "In the Collection table, the Ex→Retail column now appears as Yükleme Onay→Antrepo in the Turkish interface."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "collection-ex-retail-tr-label",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Ex→Retail sütununun Türkçe adı Yükleme Onay→Antrepo oldu",
+        "en": "Turkish name of the Ex→Retail column is now Yükleme Onay→Antrepo"
+      },
+      "body": {
+        "tr": "Koleksiyon tablosunda Türkçe arayüzde Ex→Retail başlığı artık Sevk→Perakende yerine Yükleme Onay→Antrepo olarak görünür. Hesaplama ve değerler değişmedi; İngilizce arayüzde başlık Ex→Retail olarak kalır.",
+        "en": "In the Collection table, the Ex→Retail header in the Turkish interface now reads Yükleme Onay→Antrepo instead of Sevk→Perakende. The calculation and values are unchanged; the English interface still shows Ex→Retail."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-ex-retail-tr-label.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: Tarihler & Sevkiyat grubunda Yükleme Onay→Antrepo başlıklı gün farkı sütunu",
+          "en": "Demo Collection table: day-difference column titled Yükleme Onay→Antrepo in the Dates & Shipment group"
+        },
+        "caption": {
+          "tr": "Demo veride Türkçe arayüzde sütun başlığı Yükleme Onay→Antrepo olarak görünür.",
+          "en": "On demo data, the Turkish interface shows the column header as Yükleme Onay→Antrepo."
+        }
+      }
+    }
+  ]
 }
