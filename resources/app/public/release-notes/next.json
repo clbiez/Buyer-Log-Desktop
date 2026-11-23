@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-23",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Artwork Detayı bölge kartlarıyla görünür",
-    "en": "Artwork Detail now shows region chips"
+    "tr": "Koleksiyon hücreleri ortak kart diliyle görünür",
+    "en": "Collection cells share one chip language"
   },
   "summary": {
-    "tr": "Koleksiyon tablosunda Artwork Detayı düz metin yerine bölge kartları, teknik etiketi ve toplam baskı sayısıyla gösterilir; dil ve bölge sırası her satırda tutarlıdır.",
-    "en": "In the Collection table, Artwork Detail shows region chips, a technique tag and the total print count instead of plain text; language and region order are consistent on every row."
+    "tr": "Artwork Detayı, Kumaş ve Durum hücreleri aynı çerçeveli kart diliyle gösterilir; bilgi kesilmeden ve göz gezdirirken okunur.",
+    "en": "Artwork Detail, Fabric and Status cells use the same bordered chip language, so information is readable at a glance without being cut off."
   },
   "changes": [
     {
@@ -37,6 +37,64 @@
         "caption": {
           "tr": "Demo veride Artwork Detayı hücreleri bölge kartları, teknik etiketi ve toplam sayıyla görünür.",
           "en": "On demo data, Artwork Detail cells show region chips, a technique tag and the total count."
+        }
+      }
+    },
+    {
+      "id": "collection-status-badge",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Durum hücresi çerçeveli rozet olarak görünür",
+        "en": "Status cell is shown as a bordered badge"
+      },
+      "body": {
+        "tr": "Durum artık tüm hücreyi renkle doldurmaz; durum kataloğundaki renkle açık zeminli ve çerçeveli bir rozet olarak görünür. Rozet etiket kadar geniştir, sığmazsa kısalır ve tam ad tooltip'te gösterilir. Açılır listeden durum seçimi eskisi gibi çalışır.",
+        "en": "Status no longer floods the whole cell with colour; it appears as a light, bordered badge in the status catalogue colour. The badge is as wide as its label, shortens when it does not fit and shows the full name in a tooltip. Choosing a status from the dropdown works as before."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-status-badge.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: Durum sütununda Pending File, Fiyatlamada, Capacity Request ve Siparişe Hazır renkli çerçeveli rozetleri",
+          "en": "Demo Collection table: Status column with Pending File, In Pricing, Capacity Request and Ready for Order bordered badges"
+        },
+        "caption": {
+          "tr": "Demo veride durumlar kendi renginde çerçeveli rozet olarak görünür.",
+          "en": "On demo data, statuses appear as bordered badges in their own colour."
+        }
+      }
+    },
+    {
+      "id": "collection-fabric-cards",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon, CP, Siparişler",
+        "en": "Collection, CP, Orders"
+      },
+      "title": {
+        "tr": "Kumaş hücresi kod, tip, gramaj ve karışım kartlarıyla görünür",
+        "en": "Fabric cell shows code, type, weight and composition chips"
+      },
+      "body": {
+        "tr": "Kumaş kartı olan hücrelerde kod mavi kartta, tip ve gramaj tek kartta, karışım ayrı kartta gösterilir; BCI gibi sürdürülebilirlik bilgisi yeşil etiketle görünür. Tek kumaşta karışım alt satırda tam görünür; Set Style A/B kumaşlarında her parça kendi satırındadır. İplik bilgisi tooltip'te ve kumaş kartındadır. Çift tıklama kumaş kartını açmaya, kopyalama PLM metnini vermeye devam eder.",
+        "en": "In cells with a fabric card, the code appears in a blue chip, type and weight share one chip and composition has its own chip; sustainability such as BCI appears as a green tag. For a single fabric the composition is shown in full on the second line; Set Style A/B fabrics keep one line per part. Yarn is in the tooltip and on the fabric card. Double-click still opens the fabric card and copy still returns the PLM text."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-fabric-cards.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: Kumaş sütununda 3859 Süprem 150 gsm %100 Pamuk gibi kod, tip, gramaj ve karışım kartları",
+          "en": "Demo Collection table: Fabric column with code, type, weight and composition chips such as 3859 Single Jersey 150 gsm 100% Cotton"
+        },
+        "caption": {
+          "tr": "Demo veride kumaş kodu, tip | gramaj ve karışım ayrı kartlarda görünür.",
+          "en": "On demo data, fabric code, type | weight and composition appear in separate chips."
         }
       }
     }

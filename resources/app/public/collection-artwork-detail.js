@@ -198,8 +198,8 @@
     return (hash % 5) + 1;
   }
   function partHtml(part, en) {
-    const tag = part.label ? `<span class="kolArtworkPart">${esc(part.label)}</span>` : '';
-    if (!part.total) return `<div class="kolArtworkLine">${tag}<span class="kolArtworkNone">— ${en ? 'No print' : 'Baskı yok'}</span></div>`;
+    const tag = part.label ? `<span class="blCellPart">${esc(part.label)}</span>` : '';
+    if (!part.total) return `<div class="blCellLine">${tag}<span class="blCellNone">— ${en ? 'No print' : 'Baskı yok'}</span></div>`;
     const techOf = group => [...group.techniques].join(' + ');
     /* Bölgeler tekniğe göre gruplanır (ilk bölgenin kanonik sırasıyla); her
        grubun kartlarını kendi teknik etiketi izler. Tek teknikte tek grup olur. */
@@ -210,9 +210,9 @@
       byTech.get(tech).push(group);
     }
     const body = [...byTech].map(([tech, groups]) => groups
-      .map(group => `<span class="kolArtworkChip"><b>${esc(en ? group.en : group.tr)}</b><i>${group.count}</i></span>`).join('')
-      + (tech ? `<span class="kolArtworkTech" data-tone="${toneOf([...groups[0].techniques][0])}">${esc(tech)}</span>` : '')).join('');
-    return `<div class="kolArtworkLine">${tag}<span class="kolArtworkBody">${body}</span><span class="kolArtworkTotal">${part.total}</span></div>`;
+      .map(group => `<span class="blCellChip"><b>${esc(en ? group.en : group.tr)}</b><i>${group.count}</i></span>`).join('')
+      + (tech ? `<span class="blCellTag" data-tone="${toneOf([...groups[0].techniques][0])}">${esc(tech)}</span>` : '')).join('');
+    return `<div class="blCellLine">${tag}<span class="blCellBody">${body}</span><span class="blCellTotal">${part.total}</span></div>`;
   }
   const cardCache = new WeakMap();
   /* app-main renderKol çağırır. PLM'e ait ve önbellekte modeli olan değer için

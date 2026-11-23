@@ -27500,9 +27500,11 @@ function kolStatusRenderSnapshot(){
   const entries=kolStatusEntries(),key=name=>KOL_STATUS_API?KOL_STATUS_API.key(name):String(name||'');
   const colors=new Map(entries.map(entry=>[key(entry.name),entry.color]));
   const options=entries.map(entry=>({name:entry.name,value:escapeHtml(entry.name),label:escapeHtml(entry.builtin?(KOL_STATUS_API?.label?KOL_STATUS_API.label(entry.name,appLang):L(entry.name)):entry.name)}));
-  const htmlBySelection=new Map();
+  const htmlBySelection=new Map(),labels=new Map(options.map(entry=>[entry.name,entry.label]));
   return {
     color:name=>colors.get(key(name))||'#667085',
+    // Rozet tooltip'i: katalog etiketi (escape edilmiş); katalog dışı değer olduğu gibi.
+    title:name=>{const selected=kolStatusCanonicalName(name);return labels.get(selected)??escapeHtml(selected);},
     options:name=>{
       const selected=kolStatusCanonicalName(name);
       if(!htmlBySelection.has(selected))htmlBySelection.set(selected,options.map(entry=>`<option value="${entry.value}" ${selected===entry.name?'selected':''}>${entry.label}</option>`).join(''));
@@ -27517,6 +27519,8 @@ function kolApplyStatusCellAppearance(el,name){
   if(!el)return;
   const color=kolStatusColor(kolStatusCanonicalName(name));
   el.style?.setProperty?.('--kol-status-color',color);
+  // Rozet dar sütunda üç noktayla kısalır; tam ad tooltip'te güncel kalır.
+  if(el.tagName==='SELECT')el.title=kolStatusDisplayLabel(name);
   const td=el.closest?.('td.kolStatusTd');
   td?.style?.setProperty?.('--kol-status-color',color);
 }
@@ -33384,7 +33388,7 @@ function renderKol(){
         html+=`<td class="num kolRuleReadonly${fobFallback?' kolFobFallback':''}${ruleMissing?' kolRuleMissing':''}"${rc} title="${escapeHtml(cellTitle)}" style="text-align:right;font-family:var(--ui-font-mono);background:var(--ui-surface-soft);color:${ruleMissing?'var(--ui-warning)':(fobFallback?'var(--ui-text-muted)':'var(--ui-text-secondary)')};">${ruleMissing?'<span class="kolRuleMissingMark" aria-hidden="true">⚠</span> ':''}${escapeHtml(display)}</td>`;
       }else if(c.status){
         const statusValue=kolStatusCanonicalName(val),statusColor=statusRender.color(statusValue);
-        html+=`<td class="editTd kolStatusTd"${rc} style="--kol-status-color:${escapeHtml(statusColor)}"><select class="editCell kolStatusNoArrow" data-id="${r.id}" data-k="${c.k}" style="--kol-status-color:${escapeHtml(statusColor)}">${statusRender.options(statusValue)}</select></td>`;
+        html+=`<td class="editTd kolStatusTd"${rc} style="--kol-status-color:${escapeHtml(statusColor)}"><select class="editCell kolStatusNoArrow" data-id="${r.id}" data-k="${c.k}" title="${statusRender.title(statusValue)}" style="--kol-status-color:${escapeHtml(statusColor)}">${statusRender.options(statusValue)}</select></td>`;
       }else if(c.select){
         html+=`<td class="editTd"${rc}><select class="editCell" data-id="${r.id}" data-k="${c.k}">${c.select.map(opt=>`<option value="${escapeHtml(opt)}" ${val===opt?'selected':''}>${escapeHtml(c.k==='delType'?transitDelTypeDisplay(opt):L(opt))}</option>`).join('')}</select></td>`;
       }else if(c.exToRetail){
@@ -36205,13 +36209,35 @@ function kolFabricDisplay(raw){
   kolFabricDisplayCache.set(key,text);
   return text;
 }
+/* Kart özeti dört parçalıysa (tip · iplik · gramaj · karışım) hücre kartları
+   {head, mix}; değilse null (eski düz özet satırı). Artwork "bölge | adet"
+   kartına paralel: tip | gramaj; karışım ayrı kart; iplik tooltip'te. */
+function fabricCardChipsHtml(card,summary){
+  const pieces=window.BLFabricSegments?.parse?.(summary);
+  if(!pieces)return null;
+  const piece=text=>{const value=norm(text);return value&&value!=='-'&&value!=='—'?value:'';};
+  const type=piece(pieces[0]),weight=piece(pieces[2]),mix=piece(pieces[3]),eco=norm(card?.details?.sustainability);
+  const typeChip=type||weight?`<span class="blCellChip"><b>${escapeHtml(type||weight)}</b>${type&&weight?`<i>${escapeHtml(weight)}</i>`:''}</span>`:'';
+  return {
+    head:typeChip+(eco?`<span class="blCellTag" data-tone="eco">${escapeHtml(eco)}</span>`:''),
+    mix:mix?`<span class="blCellChip isShrink"><b>${escapeHtml(mix)}</b></span>`:'',
+  };
+}
 /* Kumaş hücresinin içi: Koleksiyon, CP ve Orders aynı görünümü kullanır. */
 function fabricCardCellParts(val){
   const en=appLang==='en',raw=String(val||''),list=kolFabricParts(raw);
   const allCards=list.every(part=>kolFabricCards.has(part.code));
   const lines=list.map(part=>{
     const card=kolFabricCards.get(part.code),summary=kolFabricSummary(card);
-    return {part,card,summary,html:`<div class="kolFabricLine${card?' hasCard':''}">${part.label?`<span class="kolFabricLabel">${escapeHtml(part.label)}</span>`:''}<span class="kolFabricCode">${escapeHtml(part.code)}</span><span class="kolFabricText">${escapeHtml(card?summary:part.raw)}</span></div>`};
+    const chips=card?fabricCardChipsHtml(card,summary):null;
+    const label=part.label?`<span class="blCellPart">${escapeHtml(part.label)}</span>`:'';
+    const code=`<span class="blCellChip isCode"><b>${escapeHtml(part.code)}</b></span>`;
+    return {part,card,summary,html:chips
+      // Tek kumaş: üstte kod + tip|gramaj, altta karışım. A/B: parça başına tek satır.
+      ?(list.length===1
+        ?`<div class="kolFabricLine hasCard blCellLine">${label}<span class="blCellBody">${code}${chips.head}</span></div>${chips.mix?`<div class="kolFabricLine hasCard blCellLine"><span class="blCellBody">${chips.mix}</span></div>`:''}`
+        :`<div class="kolFabricLine hasCard blCellLine">${label}<span class="blCellBody">${code}${chips.head}${chips.mix}</span></div>`)
+      :`<div class="kolFabricLine${card?' hasCard':''}">${part.label?`<span class="kolFabricLabel">${escapeHtml(part.label)}</span>`:''}<span class="kolFabricCode">${escapeHtml(part.code)}</span><span class="kolFabricText">${escapeHtml(card?summary:part.raw)}</span></div>`};
   });
   const tip=lines.map(({part,card,summary})=>{
     const name=`${part.label?part.label+' · ':''}${part.code}`;

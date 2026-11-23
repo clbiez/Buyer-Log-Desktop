@@ -8733,30 +8733,35 @@ html[data-ui-system="manifest"] #kolTable tbody .kolFabricLine:not(.hasCard) .ko
 }
 html[data-ui-system="manifest"] #kolTable tbody td.kolFabricTd:hover .kolFabricCell,html[data-ui-system="manifest"] #cpTable tbody td.kolFabricTd:hover .kolFabricCell,html[data-ui-system="manifest"] #ordersTable tbody td.kolFabricTd:hover .kolFabricCell {background:color-mix(in srgb,var(--ui-accent) 8%,transparent) !important
 }
-/* Koleksiyon Artwork Detayı bölge kartları (yerleşim: collection-spreadsheet.css). */
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkPart {font:600 var(--ui-font-2xs)/1 var(--ui-font-mono);background:var(--ui-text-secondary);color:var(--ui-surface)
+/* Ortak hücre kartları: Artwork, Kumaş (yerleşim: app.css). Bölge/parça kartı
+   nötr çerçeveli; teknik/etiket kendi tonunda çerçeveli. */
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellPart {font:600 var(--ui-font-2xs)/1 var(--ui-font-mono);background:var(--ui-text-secondary);color:var(--ui-surface)
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkChip {font-size:var(--ui-font-2xs);line-height:14px;background:var(--ui-surface);border:1px solid var(--ui-group-divider)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellChip {font-size:var(--ui-font-2xs);line-height:14px;background:var(--ui-surface);border:1px solid var(--ui-group-divider)
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkChip b {font-weight:500;color:var(--ui-text)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellChip b {font-weight:500;color:var(--ui-text)
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkChip i {font-style:normal;font-family:var(--ui-font-mono);color:var(--ui-selected-ink);background:var(--ui-selected);border-inline-start:1px solid var(--ui-group-divider)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellChip i {font-style:normal;font-family:var(--ui-font-mono);color:var(--ui-selected-ink);background:var(--ui-selected);border-inline-start:1px solid var(--ui-group-divider)
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech {font-size:var(--ui-font-2xs);line-height:14px
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellChip.isCode b {font-family:var(--ui-font-mono);font-weight:600;color:var(--ui-selected-ink);background:var(--ui-selected)
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="1"] {color:var(--ui-chart-3);background:color-mix(in srgb,var(--ui-chart-3) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-3) 45%,var(--ui-surface))
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag {font-size:var(--ui-font-2xs);line-height:14px
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="2"] {color:var(--ui-chart-4);background:color-mix(in srgb,var(--ui-chart-4) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-4) 45%,var(--ui-surface))
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag[data-tone="1"] {color:var(--ui-chart-3);background:color-mix(in srgb,var(--ui-chart-3) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-3) 45%,var(--ui-surface))
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="3"] {color:var(--ui-chart-5);background:color-mix(in srgb,var(--ui-chart-5) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-5) 45%,var(--ui-surface))
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag[data-tone="2"] {color:var(--ui-chart-4);background:color-mix(in srgb,var(--ui-chart-4) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-4) 45%,var(--ui-surface))
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="4"] {color:var(--ui-chart-8);background:color-mix(in srgb,var(--ui-chart-8) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-8) 45%,var(--ui-surface))
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag[data-tone="3"] {color:var(--ui-chart-5);background:color-mix(in srgb,var(--ui-chart-5) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-5) 45%,var(--ui-surface))
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="5"] {color:var(--ui-accent);background:color-mix(in srgb,var(--ui-accent) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-accent) 45%,var(--ui-surface))
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag[data-tone="4"] {color:var(--ui-chart-8);background:color-mix(in srgb,var(--ui-chart-8) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-8) 45%,var(--ui-surface))
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTotal {font:600 var(--ui-font-xs) var(--ui-font-mono);font-variant-numeric:tabular-nums;color:var(--ui-text)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag[data-tone="5"] {color:var(--ui-accent);background:color-mix(in srgb,var(--ui-accent) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-accent) 45%,var(--ui-surface))
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkNone {font-size:var(--ui-font-2xs);color:var(--ui-text-muted)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag[data-tone="eco"] {color:var(--ui-success);background:color-mix(in srgb,var(--ui-success) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-success) 45%,var(--ui-surface))
+}
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTotal {font:600 var(--ui-font-xs) var(--ui-font-mono);font-variant-numeric:tabular-nums;color:var(--ui-text)
+}
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellNone {font-size:var(--ui-font-2xs);color:var(--ui-text-muted)
 }
 html[data-ui-system="manifest"] #kolTable tbody td.kolArtworkManual::after {font-size:var(--ui-font-2xs);line-height:14px;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-warning);background:var(--ui-warning-bg)
 }
@@ -11815,11 +11820,13 @@ html[data-ui-system="manifest"] .quotationPriceDelta.isAtOrBelowTarget {color:va
 }
 html[data-ui-system="manifest"] .quotationPriceDelta.isAboveTarget {color:var(--ui-danger) !important
 }
-html[data-ui-system="manifest"] #kolTable select.kolStatusNoArrow {
-  border:0 !important;
+html[data-ui-system="manifest"] #kolTable td.kolStatusTd select.kolStatusNoArrow {
+  border:1px solid color-mix(in srgb,var(--kol-status-color) 45%,var(--ui-surface)) !important;
   border-radius:var(--ui-radius) !important;
-  background-color:color-mix(in srgb,var(--kol-status-color) 11%,var(--ui-surface)) !important;
-  color:var(--ui-text) !important;
+  background-color:color-mix(in srgb,var(--kol-status-color) 12%,var(--ui-surface)) !important;
+  color:color-mix(in srgb,var(--kol-status-color) 72%,var(--ui-text)) !important;
+  font-size:var(--ui-font-xs) !important;
+  line-height:18px !important;
   font-weight:650 !important
 }
 html[data-ui-system="manifest"] #kolTable .kolBuyingSampleInput {background:transparent !important
@@ -12243,10 +12250,6 @@ html[data-ui-system="manifest"] .kolStatusUsage {font-size:var(--ui-font-2xs) !i
 html[data-ui-system="manifest"] .kolStatusSwatch {background:var(--swatch) !important
 }
 html[data-ui-system="manifest"] .kolStatusReplacement span {font-size:var(--ui-font-2xs) !important;font-weight:700 !important;color:var(--ui-text-muted) !important
-}
-html[data-ui-system="manifest"] #kolTable td.kolStatusTd {background-color:color-mix(in srgb,var(--kol-status-color) 18%,var(--ui-surface))!important
-}
-html[data-ui-system="manifest"] #kolTable td.kolStatusTd select.kolStatusNoArrow {background-color:color-mix(in srgb,var(--kol-status-color) 8%,transparent) !important
 }
 html[data-ui-system="manifest"] .kolChecklistStatusBtn {background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font:inherit !important;font-size:var(--ui-font-2xs) !important;font-weight:600 !important
 }

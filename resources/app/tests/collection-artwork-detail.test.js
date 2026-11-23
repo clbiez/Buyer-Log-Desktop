@@ -325,12 +325,12 @@ test('cellCards renders region chips, technique tag and total only for PLM-owned
   assert.match(single.cls, /kolArtworkTd/);
   assert.match(single.inner, /aria-hidden="true"/);
   // Karışık teknik: bölgeler tekniğe göre gruplanır, her grubu kendi etiketi izler.
-  assert.match(single.inner, /<b>Ön<\/b><i>1<\/i><\/span><span class="kolArtworkTech" data-tone="\d">Pigment<\/span><span class="kolArtworkChip"><b>Kollar<\/b><i>2<\/i><\/span><span class="kolArtworkTech" data-tone="\d">Transfer</);
-  assert.match(single.inner, /<\/span><\/span><span class="kolArtworkTotal">/, 'total sits outside the clipped body');
-  assert.match(single.inner, /kolArtworkTotal">3</);
+  assert.match(single.inner, /<b>Ön<\/b><i>1<\/i><\/span><span class="blCellTag" data-tone="\d">Pigment<\/span><span class="blCellChip"><b>Kollar<\/b><i>2<\/i><\/span><span class="blCellTag" data-tone="\d">Transfer</);
+  assert.match(single.inner, /<\/span><\/span><span class="blCellTotal">/, 'total sits outside the clipped body');
+  assert.match(single.inner, /blCellTotal">3</);
   const set = api.cellCards(rows[1], rows[1].artworkDetail);
   assert.match(set.cls, /isMulti/);
-  assert.match(set.inner, /kolArtworkPart">A[\s\S]*kolArtworkPart">B[\s\S]*Baskı yok/);
+  assert.match(set.inner, /blCellPart">A[\s\S]*blCellPart">B[\s\S]*Baskı yok/);
   assert.match(set.inner, /&lt;b&gt;Pigment&lt;\/b&gt;/, 'PLM text is escaped');
   assert.equal(api.cellCards(rows[2], rows[2].artworkDetail), null, 'manual value stays plain text');
   assert.equal(api.cellCards({ id: 9, plmId: '99' }, 'x'), null, 'no BOM record → plain text');
@@ -342,7 +342,8 @@ test('Collection cell keeps the textarea editor under the card layer (edit/copy 
   const css = read('public/collection-spreadsheet.css');
   assert.match(css, /td\.kolArtworkTd:not\(\.kolSpreadsheetEditing\):not\(:focus-within\) \.editCell\{opacity:0\}/);
   assert.match(css, /\.kolArtworkCards\{[^}]*pointer-events:none/);
-  assert.match(read('public/ui-components.css'), /#kolTable tbody \.kolArtworkTech\[data-tone="1"\] \{color:var\(--ui-chart-3\)/, 'appearance lives in the Manifest layer');
+  assert.match(read('public/ui-components.css'), /:is\(#kolTable,#cpTable,#ordersTable\) tbody \.blCellTag\[data-tone="1"\] \{color:var\(--ui-chart-3\)/, 'appearance lives in the Manifest layer');
+  assert.match(read('public/app.css'), /:is\(#kolTable,#cpTable,#ordersTable\) tbody \.blCellChip\{flex:none;display:inline-flex/, 'shared card layout is global (CP/Orders reuse it)');
 });
 
 test('BOM batch summary carries slim Set Style parts for the card view', () => {
