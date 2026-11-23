@@ -27500,9 +27500,11 @@ function kolStatusRenderSnapshot(){
   const entries=kolStatusEntries(),key=name=>KOL_STATUS_API?KOL_STATUS_API.key(name):String(name||'');
   const colors=new Map(entries.map(entry=>[key(entry.name),entry.color]));
   const options=entries.map(entry=>({name:entry.name,value:escapeHtml(entry.name),label:escapeHtml(entry.builtin?(KOL_STATUS_API?.label?KOL_STATUS_API.label(entry.name,appLang):L(entry.name)):entry.name)}));
-  const htmlBySelection=new Map();
+  const htmlBySelection=new Map(),labels=new Map(options.map(entry=>[entry.name,entry.label]));
   return {
     color:name=>colors.get(key(name))||'#667085',
+    // Rozet tooltip'i: katalog etiketi (escape edilmiş); katalog dışı değer olduğu gibi.
+    title:name=>{const selected=kolStatusCanonicalName(name);return labels.get(selected)??escapeHtml(selected);},
     options:name=>{
       const selected=kolStatusCanonicalName(name);
       if(!htmlBySelection.has(selected))htmlBySelection.set(selected,options.map(entry=>`<option value="${entry.value}" ${selected===entry.name?'selected':''}>${entry.label}</option>`).join(''));
@@ -27517,6 +27519,8 @@ function kolApplyStatusCellAppearance(el,name){
   if(!el)return;
   const color=kolStatusColor(kolStatusCanonicalName(name));
   el.style?.setProperty?.('--kol-status-color',color);
+  // Rozet dar sütunda üç noktayla kısalır; tam ad tooltip'te güncel kalır.
+  if(el.tagName==='SELECT')el.title=kolStatusDisplayLabel(name);
   const td=el.closest?.('td.kolStatusTd');
   td?.style?.setProperty?.('--kol-status-color',color);
 }
@@ -28108,8 +28112,9 @@ function endeksmatikCellHtml(row){
   const usd=usdRaw!=null&&usdRaw!==''&&Number.isFinite(Number(usdRaw))?endeksmatikMoney(usdRaw,'USD'):'';
   const tr=trRaw!=null&&trRaw!==''&&Number.isFinite(Number(trRaw))?endeksmatikMoney(trRaw,'TRY'):'';
   const indexText=`YD ${endeksmatikPct(result.indexes&&result.indexes.targetUsd)} · TR ${endeksmatikPct(result.indexes&&result.indexes.targetTl)}`;
-  const priceText=[usd&&`YD ${usd}`,tr&&`TR ${tr}`].filter(Boolean).join(' · ')||indexText;
-  return `<button type="button" class="endeksmatikCellBtn${stale?' isStale':''}" data-endeksmatik-id="${Number(row.id)||0}" title="${escapeHtml(appLang==='en'?'Open Endeksmatik details':'Endeksmatik detayını aç')}"><strong>${escapeHtml(priceText)}</strong><small>${escapeHtml(indexText)}</small>${stale?`<em>${escapeHtml(appLang==='en'?'Update available':'Yeni veri var')}</em>`:''}</button>`;
+  // Ortak kart dili, alt alta: YD fiyat + hedef endeks %, TR fiyat + hedef endeks %.
+  const line=(label,price,pct)=>`<span class="blCellStackLabel">${label}</span><b class="blCellValue">${escapeHtml(price||'—')}</b><span class="blCellTag" data-tone="4">${escapeHtml(endeksmatikPct(pct))}</span>`;
+  return `<button type="button" class="endeksmatikCellBtn${stale?' isStale':''}" data-endeksmatik-id="${Number(row.id)||0}" title="${escapeHtml(appLang==='en'?'Open Endeksmatik details':'Endeksmatik detayını aç')}"><span class="blCellStack">${line(appLang==='en'?'OS':'YD',usd,result.indexes&&result.indexes.targetUsd)}${line('TR',tr,result.indexes&&result.indexes.targetTl)}</span><small hidden>${escapeHtml(indexText)}</small>${stale?`<em>${escapeHtml(appLang==='en'?'Update available':'Yeni veri var')}</em>`:''}</button>`;
 }
 async function refreshEndeksmatikStatus({silent=true}={}){
   if(endeksmatikStatusPromise)return endeksmatikStatusPromise;
@@ -31919,17 +31924,22 @@ function kolPriceStripCellHtml(row,rc,{showFob=true}={}){
   if(m.fob!=null)tipLines.push(`FOB: ${money(m.fob)}`);
   if(m.status&&m.status.waiting)tipLines.push(en?`${m.status.waiting} quotation(s) awaiting a reply`:`${m.status.waiting} teklif cevap bekliyor`);
   tipLines.push(en?'Double-click: open the price drawer':'Çift tık: fiyat çekmecesini aç');
-  const deltaHtml=m.delta?`<span class="kolBestDelta ${m.delta.meetsTarget?'isAtOrBelowTarget':'isAboveTarget'}">${escapeHtml(m.delta.text)}</span>`:'';
-  const who=m.main?`<span class="kolPsMfr${m.confirmed?' isConfirmed':''}">${m.confirmed?'✓ ':''}${escapeHtml(m.main.name)}</span>`:`<span class="kolPsEmpty">${escapeHtml(en?'No quotation':'Teklif yok')}</span>`;
-  const prices=m.offers.map(o=>o.price).sort((a,b)=>a-b),mid=Math.floor(prices.length/2),median=prices.length?(prices.length%2?prices[mid]:(prices[mid-1]+prices[mid])/2):null;
-  const marker=(value,cls)=>value!=null?`<i class="${cls}" style="--at:${m.pos(value).toFixed(1)}%"></i>`:'';
-  const track=(prices.length||m.target!=null)?`<span class="kolPsTrack" aria-hidden="true">${prices.length?`<i class="kolPsBand" style="--start:${m.pos(prices[0]).toFixed(1)}%;--end:${m.pos(prices[prices.length-1]).toFixed(1)}%"></i>`:''}${marker(median,'kolPsMedian')}${marker(m.target,'kolPsTarget')}${marker(m.best?.price,'kolPsDot isBest')}${marker(m.confirmed?.price,'kolPsDot isConfirmed')}</span>`:'';
-  const meta=[];
-  if(m.offers.length)meta.push(en?`${m.offers.length} quote${m.offers.length===1?'':'s'}`:`${m.offers.length} teklif`);
-  if(m.status&&m.status.waiting)meta.push(`<span class="kolPsWaiting">${escapeHtml(en?`${m.status.waiting} waiting`:`${m.status.waiting} bekliyor`)}</span>`);
-  if(showFob&&m.fob!=null)meta.push(`FOB ${escapeHtml(money(m.fob))}`);
-  const metaHtml=meta.length?`<span class="kolPsMeta">${meta.map(item=>item.startsWith('<span')?item:escapeHtml(item)).join(' · ')}</span>`:'';
-  return `<td class="kolPriceStripTd${m.confirmed?' isConfirmed':''}" data-kol-drawer="${row.id}"${rc} title="${escapeHtml(tipLines.join('\n'))}"><div class="kolPs"><div class="kolPsLine">${m.main?`<b class="kolPsPrice">${escapeHtml(money(m.main.price))}</b>`:''}${deltaHtml}${who}</div>${track||metaHtml?`<div class="kolPsLine kolPsSub">${track}${metaHtml}</div>`:''}</div><button type="button" class="kolManualBtn kolPsOpenBtn" data-kol-drawer-open="${row.id}" title="${escapeHtml(en?'Open price drawer':'Fiyat çekmecesini aç')}" aria-label="${escapeHtml(en?'Open price drawer':'Fiyat çekmecesini aç')}">⤢</button></td>`;
+  /* Ortak kart dili, alt alta: 1) Supp. FOB (Onaylı → Best) + hedefe fark %,
+     2) FOB — yalnız royalty/hologram gibi masraf Supp. FOB'u değiştiriyorsa,
+     3) üretici kutusu (onaylı yeşil ✓ / onaysız "Öneri"), bekleyen teklif ve teklif sayısı. */
+  const label=text=>`<span class="blCellStackLabel">${escapeHtml(text)}</span>`;
+  const deltaHtml=m.delta?`<span class="blCellTag" data-tone="${m.delta.meetsTarget?'good':'bad'}">${escapeHtml(m.delta.text)}</span>`:'<span></span>';
+  const supp=m.main
+    ?`${label('Supp. FOB')}<b class="blCellValue${m.confirmed?' isStrong':' isSoft'}">${escapeHtml(money(m.main.price))}</b>${deltaHtml}`
+    :`${label('Supp. FOB')}<span class="blCellNone">${escapeHtml(en?'No quotation':'Teklif yok')}</span><span></span>`;
+  const fobDiffers=showFob&&m.fob!=null&&(!m.main||Math.abs(m.fob-m.main.price)>0.004);
+  const fobNote=m.main?(en?'+ costs':'+ masraf'):(en?'target':'hedef');
+  const fob=fobDiffers?`${label('FOB')}<b class="blCellValue">${escapeHtml(money(m.fob))}</b><span class="blCellNone">${escapeHtml(fobNote)}</span>`:'';
+  const waiting=m.status&&m.status.waiting?`<span class="blCellTag" data-tone="4">${escapeHtml(en?`${m.status.waiting} waiting`:`${m.status.waiting} bekliyor`)}</span>`:'';
+  const mfr=m.main?`<span class="blCellMfr${m.confirmed?' isConfirmed':''}"><em>${escapeHtml(m.confirmed?(en?'✓ Approved':'✓ Onaylı'):(en?'Best':'Öneri'))}</em><b>${escapeHtml(m.main.name)}</b></span>`:'';
+  const count=m.offers.length?`<span class="blCellTotal" title="${escapeHtml(en?'Quotations':'Teklif sayısı')}">${m.offers.length}</span>`:'';
+  const who=mfr||waiting||count?`<div class="blCellLine">${mfr}${waiting}${count}</div>`:'';
+  return `<td class="kolPriceStripTd${m.confirmed?' isConfirmed':''}" data-kol-drawer="${row.id}"${rc} title="${escapeHtml(tipLines.join('\n'))}"><div class="kolPs blCellCol"><div class="blCellStack">${supp}${fob}</div>${who}</div><button type="button" class="kolManualBtn kolPsOpenBtn" data-kol-drawer-open="${row.id}" title="${escapeHtml(en?'Open price drawer':'Fiyat çekmecesini aç')}" aria-label="${escapeHtml(en?'Open price drawer':'Fiyat çekmecesini aç')}">⤢</button></td>`;
 }
 function kolPriceDetailCellHtml(d,row,rc){
   const field=d.field,en=appLang==='en';
@@ -31964,7 +31974,9 @@ function kolLandedSummaryCellHtml(row,rc){
   const tip=[k.ruleInvalid?kolPricingRuleInvalidText():k.ruleMissing?kolLicenseRuleMissingText(row):`Overseas Landed: ${yd}`,k.trRuleInvalid?kolPricingRuleInvalidText(true):k.trRuleMissing?kolTrLicenseRuleMissingText(row):`TR Landed: ${tr}`];
   if(profit!=null)tip.push(en?`Overseas advantage: ${profit}%`:`Overseas avantajı: %${profit}`);
   tip.push(en?'Double-click: open the price drawer to edit TR price, multipliers and FX':'Çift tık: TR fiyatı, çarpanlar ve kur için fiyat çekmecesini aç');
-  return `<td class="kolLandedSumTd${missing?' kolRuleMissing':''}" data-kol-drawer="${row.id}"${rc}${kolLandedCopyAttrs(k.ydLanded,profit)} title="${escapeHtml(tip.join('\n'))}"><div class="kolLs"><span class="kolLsRow"><i>${escapeHtml(en?'OS':'YD')}</i><b>${escapeHtml(yd)}</b></span><span class="kolLsRow"><i>TR</i><b>${escapeHtml(tr)}</b>${profit==null?'':`<em class="kolProfit ${profitCls}">${(profit>0?'+':'')+profit.toLocaleString(en?'en-GB':'tr-TR',{maximumFractionDigits:1})}%</em>`}</span></div></td>`;
+  // Alt alta YD / TR; YD satırındaki etiket TR'ye göre yurtdışı avantajı ((TR − YD) / TR).
+  const profitTag=profit==null?'<span></span>':`<span class="blCellTag" data-tone="${profit>0?'good':profit<0?'bad':'4'}">${(profit>0?'+':'')+profit.toLocaleString(en?'en-GB':'tr-TR',{maximumFractionDigits:1})}%</span>`;
+  return `<td class="kolLandedSumTd${missing?' kolRuleMissing':''}" data-kol-drawer="${row.id}"${rc}${kolLandedCopyAttrs(k.ydLanded,profit)} title="${escapeHtml(tip.join('\n'))}"><div class="kolLs blCellStack"><span class="blCellStackLabel">${escapeHtml(en?'OS':'YD')}</span><b class="blCellValue">${escapeHtml(yd)}</b>${profitTag}<span class="blCellStackLabel">TR</span><b class="blCellValue">${escapeHtml(tr)}</b><span></span></div></td>`;
 }
 function kolSourceCpRow(row){
   if(!row || !row._sourceOrderCode || !state.cp || !Array.isArray(state.cp.rows)) return null;
@@ -33412,7 +33424,7 @@ function renderKol(){
         html+=`<td class="num kolRuleReadonly${fobFallback?' kolFobFallback':''}${ruleMissing?' kolRuleMissing':''}"${rc} title="${escapeHtml(cellTitle)}" style="text-align:right;font-family:var(--ui-font-mono);background:var(--ui-surface-soft);color:${ruleMissing?'var(--ui-warning)':(fobFallback?'var(--ui-text-muted)':'var(--ui-text-secondary)')};">${ruleMissing?'<span class="kolRuleMissingMark" aria-hidden="true">⚠</span> ':''}${escapeHtml(display)}</td>`;
       }else if(c.status){
         const statusValue=kolStatusCanonicalName(val),statusColor=statusRender.color(statusValue);
-        html+=`<td class="editTd kolStatusTd"${rc} style="--kol-status-color:${escapeHtml(statusColor)}"><select class="editCell kolStatusNoArrow" data-id="${r.id}" data-k="${c.k}" style="--kol-status-color:${escapeHtml(statusColor)}">${statusRender.options(statusValue)}</select></td>`;
+        html+=`<td class="editTd kolStatusTd"${rc} style="--kol-status-color:${escapeHtml(statusColor)}"><select class="editCell kolStatusNoArrow" data-id="${r.id}" data-k="${c.k}" title="${statusRender.title(statusValue)}" style="--kol-status-color:${escapeHtml(statusColor)}">${statusRender.options(statusValue)}</select></td>`;
       }else if(c.select){
         html+=`<td class="editTd"${rc}><select class="editCell" data-id="${r.id}" data-k="${c.k}">${c.select.map(opt=>`<option value="${escapeHtml(opt)}" ${val===opt?'selected':''}>${escapeHtml(c.k==='delType'?transitDelTypeDisplay(opt):L(opt))}</option>`).join('')}</select></td>`;
       }else if(c.exToRetail){
@@ -33521,7 +33533,11 @@ function renderKol(){
       }else if(c.custom){
         const schema=columnSchemaFor(c),display=schema?schema.format(val,{row:r}):String(val);
         html+=`<td class="editTd"${rc} data-copy-text="${escapeHtml(display)}"><textarea class="editCell kolTextCell kolCustomSchemaCell" data-id="${r.id}" data-k="${c.k}" data-raw-value="${escapeHtml(String(val))}" data-display-value="${escapeHtml(display)}">${escapeHtml(display)}</textarea></td>`;
-      }else{html+=`<td class="editTd"${rc}><textarea class="editCell kolTextCell" data-id="${r.id}" data-k="${c.k}">${escapeHtml(String(val))}</textarea></td>`;}
+      }else{
+        // Artwork Detayı: PLM'e ait değer bölge kartlarıyla gösterilir; aynı
+        // textarea düzenleme/kopyalama için hücrede kalır (manuel değer düz metin).
+        const art=c.k==='artworkDetail'?window.BLCollectionArtworkDetail?.cellCards?.(r,val):null;
+        html+=`<td class="editTd${art?' '+art.cls:''}"${rc}>${art?art.inner:''}<textarea class="editCell kolTextCell" data-id="${r.id}" data-k="${c.k}">${escapeHtml(String(val))}</textarea></td>`;}
     });
     tr.innerHTML=html;
     tr.querySelectorAll('td[data-kol-summary-title]').forEach(td=>{
@@ -36229,13 +36245,35 @@ function kolFabricDisplay(raw){
   kolFabricDisplayCache.set(key,text);
   return text;
 }
+/* Kart özeti dört parçalıysa (tip · iplik · gramaj · karışım) hücre kartları
+   {head, mix}; değilse null (eski düz özet satırı). Artwork "bölge | adet"
+   kartına paralel: tip | gramaj; karışım ayrı kart; iplik tooltip'te. */
+function fabricCardChipsHtml(card,summary){
+  const pieces=window.BLFabricSegments?.parse?.(summary);
+  if(!pieces)return null;
+  const piece=text=>{const value=norm(text);return value&&value!=='-'&&value!=='—'?value:'';};
+  const type=piece(pieces[0]),weight=piece(pieces[2]),mix=piece(pieces[3]),eco=norm(card?.details?.sustainability);
+  const typeChip=type||weight?`<span class="blCellChip"><b>${escapeHtml(type||weight)}</b>${type&&weight?`<i>${escapeHtml(weight)}</i>`:''}</span>`:'';
+  return {
+    head:typeChip+(eco?`<span class="blCellTag" data-tone="eco">${escapeHtml(eco)}</span>`:''),
+    mix:mix?`<span class="blCellChip isShrink"><b>${escapeHtml(mix)}</b></span>`:'',
+  };
+}
 /* Kumaş hücresinin içi: Koleksiyon, CP ve Orders aynı görünümü kullanır. */
 function fabricCardCellParts(val){
   const en=appLang==='en',raw=String(val||''),list=kolFabricParts(raw);
   const allCards=list.every(part=>kolFabricCards.has(part.code));
   const lines=list.map(part=>{
     const card=kolFabricCards.get(part.code),summary=kolFabricSummary(card);
-    return {part,card,summary,html:`<div class="kolFabricLine${card?' hasCard':''}">${part.label?`<span class="kolFabricLabel">${escapeHtml(part.label)}</span>`:''}<span class="kolFabricCode">${escapeHtml(part.code)}</span><span class="kolFabricText">${escapeHtml(card?summary:part.raw)}</span></div>`};
+    const chips=card?fabricCardChipsHtml(card,summary):null;
+    const label=part.label?`<span class="blCellPart">${escapeHtml(part.label)}</span>`:'';
+    const code=`<span class="blCellChip isCode"><b>${escapeHtml(part.code)}</b></span>`;
+    return {part,card,summary,html:chips
+      // Tek kumaş: üstte kod + tip|gramaj, altta karışım. A/B: parça başına tek satır.
+      ?(list.length===1
+        ?`<div class="kolFabricLine hasCard blCellLine">${label}<span class="blCellBody">${code}${chips.head}</span></div>${chips.mix?`<div class="kolFabricLine hasCard blCellLine"><span class="blCellBody">${chips.mix}</span></div>`:''}`
+        :`<div class="kolFabricLine hasCard blCellLine">${label}<span class="blCellBody">${code}${chips.head}${chips.mix}</span></div>`)
+      :`<div class="kolFabricLine${card?' hasCard':''}">${part.label?`<span class="kolFabricLabel">${escapeHtml(part.label)}</span>`:''}<span class="kolFabricCode">${escapeHtml(part.code)}</span><span class="kolFabricText">${escapeHtml(card?summary:part.raw)}</span></div>`};
   });
   const tip=lines.map(({part,card,summary})=>{
     const name=`${part.label?part.label+' · ':''}${part.code}`;

@@ -268,3 +268,89 @@ test('Artwork Detail drops All Over (fabric carries it) and writes per-placement
   ] }), 'Front: 1 • Back: 1 | Pigment | Total: 2');
   assert.equal(api.summaryFor({ hasPrint: true, totalPrintCount: 1, placements: [place('all_over', 'All Over', 'Allover')] }), 'No print');
 });
+
+/* ---- Bölge kartları + dil/sıra tutarlılığı ---- */
+const placeOf = (placement, tr, en, printType, count = 1) => ({ placement, placementTr: tr, placementEn: en, count, printType });
+
+test('Artwork summary uses canonical region order regardless of PLM component order', () => {
+  const { api } = loadModule({ lang: 'tr' });
+  const entry = { hasPrint: true, placements: [placeOf('back_body', 'Arka', 'Back', 'Pigment'), placeOf('front_body', 'Ön', 'Front', 'Pigment')] };
+  assert.equal(api.summaryFor(entry), 'Ön: 1 • Arka: 1 | Pigment | Toplam: 2');
+  assert.equal(api.summaryFor(entry, 'en'), 'Front: 1 • Back: 1 | Pigment | Total: 2');
+});
+
+test('client region order mirrors the server PLACEMENTS order', () => {
+  const { PLACEMENTS } = require('../server/lib/corenectum-bom-api');
+  const match = COLUMN.match(/const PLACEMENT_ORDER = (\[[^\]]+\]);/);
+  assert.ok(match, 'PLACEMENT_ORDER sabiti bulunmalı');
+  assert.deepEqual(JSON.parse(match[1].replace(/'/g, '"')), Object.keys(PLACEMENTS));
+});
+
+test('Set Style summary is built from structured parts in the active language, A before B', () => {
+  const entry = { isSetStyle: true, hasPrint: true, artworkSummary: 'B - Ön: 1 | Pigment | Toplam: 1\nA - Ön: 1 • Arka: 1 | Pigment | Toplam: 2', setParts: [
+    { label: 'B', placements: [placeOf('front_body', 'Ön', 'Front', 'Pigment')] },
+    { label: 'A', placements: [placeOf('back_body', 'Arka', 'Back', 'Pigment'), placeOf('front_body', 'Ön', 'Front', 'Pigment')] },
+  ] };
+  const { api } = loadModule({ lang: 'en' });
+  assert.equal(api.summaryFor(entry), 'A - Front: 1 • Back: 1 | Pigment | Total: 2\nB - Front: 1 | Pigment | Total: 1');
+  assert.equal(api.summaryFor(entry, 'tr'), 'A - Ön: 1 • Arka: 1 | Pigment | Toplam: 2\nB - Ön: 1 | Pigment | Toplam: 1');
+  // BOM detay penceresinin tam kaydı setComponents taşır; aynı sonuç çıkmalı.
+  const full = { ...entry, setParts: undefined, setComponents: entry.setParts };
+  assert.equal(api.summaryFor(full), api.summaryFor(entry));
+});
+
+test('PLM text in the other language or legacy order stays PLM-owned; real manual text is kept', async () => {
+  const entry = { plmId: '7', hasPrint: true, placements: [placeOf('back_body', 'Arka', 'Back', 'Pigment'), placeOf('front_body', 'Ön', 'Front', 'Pigment')] };
+  const rows = [
+    { id: 1, plmId: '7', artworkDetail: 'Front: 1 • Back: 1 | Pigment | Total: 2', artworkDetailPlm: 'something else' },
+    { id: 2, plmId: '7', artworkDetail: 'Arka: 1 • Ön: 1 | Pigment | Toplam: 2', artworkDetailPlm: 'stale' },
+    { id: 3, plmId: '7', artworkDetail: 'Pigment Print', artworkDetailPlm: 'stale' },
+  ];
+  const { api } = loadModule({ rows, entries: { 7: entry }, lang: 'tr' });
+  await api.ensureFresh({ force: true, silent: true });
+  assert.equal(rows[0].artworkDetail, 'Ön: 1 • Arka: 1 | Pigment | Toplam: 2');
+  assert.equal(rows[1].artworkDetail, 'Ön: 1 • Arka: 1 | Pigment | Toplam: 2');
+  assert.equal(rows[2].artworkDetail, 'Pigment Print', 'manual value must survive');
+});
+
+test('cellCards renders region chips, technique tag and total only for PLM-owned values', async () => {
+  const entry = { plmId: '7', hasPrint: true, placements: [placeOf('front_body', 'Ön', 'Front', 'Pigment'), placeOf('both_sleeves', 'Kollar', 'Sleeves', 'Transfer', 2)] };
+  const setEntry = { plmId: '8', isSetStyle: true, hasPrint: true, setParts: [
+    { label: 'A', placements: [placeOf('front_body', 'Ön', 'Front', '<b>Pigment</b>')] }, { label: 'B', placements: [] },
+  ] };
+  const rows = [{ id: 1, plmId: '7', artworkDetail: '' }, { id: 2, plmId: '8', artworkDetail: '' }, { id: 3, plmId: '7', artworkDetail: 'Pigment Print', artworkDetailPlm: 'x' }];
+  const { api } = loadModule({ rows, entries: { 7: entry, 8: setEntry } });
+  await api.ensureFresh({ force: true, silent: true });
+  const single = api.cellCards(rows[0], rows[0].artworkDetail);
+  assert.match(single.cls, /kolArtworkTd/);
+  assert.match(single.inner, /aria-hidden="true"/);
+  // Karışık teknik: bölgeler tekniğe göre gruplanır, her grubu kendi etiketi izler.
+  assert.match(single.inner, /<b>Ön<\/b><i>1<\/i><\/span><span class="blCellTag" data-tone="\d">Pigment<\/span><span class="blCellChip"><b>Kollar<\/b><i>2<\/i><\/span><span class="blCellTag" data-tone="\d">Transfer</);
+  assert.match(single.inner, /<\/span><\/span><span class="blCellTotal">/, 'total sits outside the clipped body');
+  assert.match(single.inner, /blCellTotal">3</);
+  const set = api.cellCards(rows[1], rows[1].artworkDetail);
+  assert.match(set.cls, /isMulti/);
+  assert.match(set.inner, /blCellPart">A[\s\S]*blCellPart">B[\s\S]*Baskı yok/);
+  assert.match(set.inner, /&lt;b&gt;Pigment&lt;\/b&gt;/, 'PLM text is escaped');
+  assert.equal(api.cellCards(rows[2], rows[2].artworkDetail), null, 'manual value stays plain text');
+  assert.equal(api.cellCards({ id: 9, plmId: '99' }, 'x'), null, 'no BOM record → plain text');
+});
+
+test('Collection cell keeps the textarea editor under the card layer (edit/copy path unchanged)', () => {
+  assert.match(APP, /c\.k==='artworkDetail'\?window\.BLCollectionArtworkDetail\?\.cellCards\?\.\(r,val\):null/);
+  assert.match(APP, /\$\{art\?art\.inner:''\}<textarea class="editCell kolTextCell"/);
+  const css = read('public/collection-spreadsheet.css');
+  assert.match(css, /td\.kolArtworkTd:not\(\.kolSpreadsheetEditing\):not\(:focus-within\) \.editCell\{opacity:0\}/);
+  assert.match(css, /\.kolArtworkCards\{[^}]*pointer-events:none/);
+  assert.match(read('public/ui-components.css'), /:is\(#kolTable,#cpTable,#ordersTable\) tbody \.blCellTag\[data-tone="1"\] \{color:var\(--ui-chart-3\)/, 'appearance lives in the Manifest layer');
+  assert.match(read('public/app.css'), /:is\(#kolTable,#cpTable,#ordersTable\) tbody \.blCellChip\{flex:none;display:inline-flex/, 'shared card layout is global (CP/Orders reuse it)');
+});
+
+test('BOM batch summary carries slim Set Style parts for the card view', () => {
+  const { summaryEntry } = require('../server/lib/plm-bom-store');
+  const summary = summaryEntry({ plmId: '1', isSetStyle: true, setComponents: [
+    { label: 'A', components: [{ x: 1 }], placements: [{ placement: 'front_body', placementTr: 'Ön', placementEn: 'Front', count: 1, printType: 'Pigment', description: 'long' }] },
+  ] });
+  assert.deepEqual(summary.setParts, [{ label: 'A', placements: [{ placement: 'front_body', placementTr: 'Ön', placementEn: 'Front', count: 1, printType: 'Pigment' }] }]);
+  assert.deepEqual(summaryEntry({ plmId: '2', placements: [] }).setParts, []);
+});

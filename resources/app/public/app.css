@@ -1191,6 +1191,8 @@ tr:hover .quotationOptions:not(.hasOptions),tr:focus-within .quotationOptions:no
   -moz-appearance:none;
   padding:3px 9px;
 }
+/* Durum rozeti: hücreyi doldurmaz, etiket kadar geniş; sığmazsa üç nokta. */
+#kolTable td.kolStatusTd select.kolStatusNoArrow{padding:0 7px;width:auto;max-width:100%;height:20px;min-height:20px;text-overflow:ellipsis;}
 #kolTable tbody .kolThumb,#kolImgPopupImg{
   object-fit:contain;
   aspect-ratio:auto;
@@ -3839,3 +3841,27 @@ button.ovNoteCount{cursor:pointer;}
 .fcModes.pcvModes>.fcMode:disabled{opacity:.6;cursor:not-allowed;}
 td.pcvCell.pcvError{cursor:help;}
 @media (max-width:640px){.fcModes.pcvModes[data-bl-tabs][role="tablist"]{grid-template-columns:1fr;}}
+
+/* Ortak hücre kartları (Artwork, Kumaş; Koleksiyon/CP/Siparişler). Yalnız
+   yerleşim; görünüm ui-components.css manifest katmanında. */
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellLine{display:flex;align-items:center;gap:4px;min-width:0;white-space:nowrap;overflow:hidden}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellBody{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:4px;overflow:hidden}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellPart{flex:none;display:grid;place-items:center;width:16px;height:16px}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellChip{flex:none;display:inline-flex;align-items:stretch}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellChip b{padding:0 5px}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellChip.isShrink{flex:0 1 auto;min-width:0}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellChip.isShrink b{overflow:hidden;text-overflow:ellipsis}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellChip i{padding:0 4px}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag{flex:none;padding:0 5px}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellTotal{margin-left:auto;flex:none;padding-left:6px}
+/* Ortak kart dili — fiyat özetleri (Teklif & Onay, referanslar, Endeksmatik,
+   Landed): etiket · değer · etiket(%) satırları alt alta, sütunlar hizalı. */
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellCol{display:flex;flex-direction:column;justify-content:center;gap:3px;min-width:0}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellStack{display:grid;grid-template-columns:auto auto auto;align-items:center;justify-content:start;gap:2px 6px;min-width:0}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellStackRow{display:contents}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellStackLabel{white-space:nowrap}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellValue{white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellStackTail{display:inline-flex;align-items:center;gap:4px;min-width:0;white-space:nowrap}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellMfr{flex:0 1 auto;min-width:0;display:inline-flex;align-items:stretch}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellMfr em{flex:none;padding:0 5px}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellMfr b{min-width:0;padding:0 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

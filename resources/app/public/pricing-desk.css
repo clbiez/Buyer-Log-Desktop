@@ -241,12 +241,9 @@
 .kolPsLine .kolBestDelta{margin-right:0}
 .kolPsMfr{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .kolPsSub{gap:8px}
-.kolPsTrack{position:relative;flex:0 0 64px;height:8px}
-.kolPsTrack>i{position:absolute;top:50%;left:var(--at);transform:translate(-50%,-50%)}
 .kolPsDot{width:6px;height:6px;opacity:.55}
 .kolPsDot.isBest{width:8px;height:8px;opacity:1}
 .kolPsDot.isConfirmed{width:8px;height:8px;opacity:1}
-.kolPsTarget{width:2px;height:12px}
 .kolPsMeta{min-width:0;overflow:hidden;text-overflow:ellipsis}
 td.kolPriceStripTd:hover .kolManualBtn,td.kolPriceStripTd:focus-within .kolManualBtn{opacity:1}
 .kolLs{display:flex;flex-direction:column;justify-content:center;gap:1px}
@@ -314,8 +311,6 @@ td.kolPriceStripTd:hover .kolManualBtn,td.kolPriceStripTd:focus-within .kolManua
 .pdRoundModelHead>span{margin-left:auto}
 .pdRoundChips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
 .pdRoundQuote{display:inline-flex;align-items:center;gap:5px;padding:3px 5px}
-.kolPsTrack>.kolPsBand{left:var(--start);width:calc(var(--end) - var(--start));min-width:2px;height:5px;transform:translateY(-50%)}
-.kolPsMedian{width:1px;height:10px}
 
 /* Collection context and per-user column selection. */
 .pdMatrix .pdSummary{position:sticky;left:200px}

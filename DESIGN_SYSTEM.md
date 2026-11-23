@@ -109,6 +109,20 @@ diğer grafik işaretçilerine veya kart/kontrol köşelerine uygulanmaz.
 6. Panel, modül ve kontrol sınırları: yalnız ortak `ui-components.css`
    üzerinde `--ui-group-divider` ile 1px sınır; giriş alanları `--ui-field-border` (§5). Checkbox'ta durum
    okunabilirliği, kullanıcı avatarında logo ile eşit `--ui-mark-radius` köşe uygulanır.
+   Ürün sahibi kararıyla tablo içi istisna — ortak hücre kartları (`blCell*`;
+   Artwork Detayı ve Kumaş, Koleksiyon/CP/Siparişler): kart (`.blCellChip`) 1px
+   `--ui-group-divider` sınır ve sayı/değer bölmesinde aynı tokenla iç ayraç;
+   etiket (`.blCellTag[data-tone]`) kendi grafik tonunun (sürdürülebilirlikte
+   `--ui-success`) %45 karışımıyla 1px sınır. Koleksiyon Durum rozeti
+   (`td.kolStatusTd select.kolStatusNoArrow`) hücreyi doldurmaz; durum renginin
+   %12 zemini ve %45 karışımlı 1px sınırıyla etiket kadar geniş rozettir.
+   Fiyat özetleri (Teklif & Onay, Previous Season/LFL/Sezon Etkisi, Endeksmatik,
+   Landed Özeti) aynı bileşenle alt alta `.blCellStack` satırları kullanır; üretici
+   kutusu (`.blCellMfr`) 1px `--ui-group-divider`, onaylıda `--ui-success` %55
+   karışımlı sınır taşır; fark etiketleri `good`/`bad` tonudur. Kullanıcının yazdığı
+   alanlar (Hedef Fiyat, FOB girişi, TR fiyatı, kur) kart olmaz, düz sayı kalır.
+   İstisnalar `tests/ui-manifest-contract.test.js` içinde tam selector/değerle
+   sabitlenir; başka hücre bileşenine genişletilmez.
 7. Basılı/dışa aktarılan belge kendi sabit çıktı sözleşmesini korur (§8).
 Satır seçicileri mevcut sade `--ui-group-divider` konturunu kullanır; boş zemin şeffaftır. Akış dolgusu Motion+ içinde merkezden açılır. Turuncu değişiklik çizgisi mavi seçim dolgusunun üzerinde ayrı kalır. Tüm satırın yumuşak aydınlatma katmanı yalnız fareyle girilen satırda oluşturulur ve çıkış geçişi bitince kaldırılır.
 
