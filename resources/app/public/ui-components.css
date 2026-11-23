@@ -8763,6 +8763,34 @@ html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCe
 }
 html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellNone {font-size:var(--ui-font-2xs);color:var(--ui-text-muted)
 }
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag[data-tone="good"] {color:var(--ui-success);background:color-mix(in srgb,var(--ui-success) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-success) 45%,var(--ui-surface))
+}
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag[data-tone="bad"] {color:var(--ui-danger);background:color-mix(in srgb,var(--ui-danger) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-danger) 45%,var(--ui-surface))
+}
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag {font-family:var(--ui-font-mono);font-variant-numeric:tabular-nums
+}
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellStackLabel {font-size:var(--ui-font-2xs);color:var(--ui-text-muted)
+}
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellValue {font:500 var(--ui-font-xs) var(--ui-font-mono);font-variant-numeric:tabular-nums;color:var(--ui-text)
+}
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellValue.isStrong {font-weight:700;color:var(--ui-text)
+}
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellValue.isSoft {font-weight:400;color:var(--ui-text-secondary)
+}
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellValue.isEmpty {font-family:var(--ui-font-body);color:var(--ui-text-muted)
+}
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellMfr {font-size:var(--ui-font-2xs);line-height:14px;background:var(--ui-surface);border:1px solid var(--ui-group-divider)
+}
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellMfr em {font-style:normal;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-text-muted);border-inline-end:1px solid var(--ui-group-divider)
+}
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellMfr b {font-weight:500;color:var(--ui-text-secondary)
+}
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellMfr.isConfirmed {background:color-mix(in srgb,var(--ui-success) 12%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-success) 55%,var(--ui-surface))
+}
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellMfr.isConfirmed em {color:var(--ui-surface);background:var(--ui-success);border-inline-end:0
+}
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellMfr.isConfirmed b {font-weight:600;color:var(--ui-success)
+}
 html[data-ui-system="manifest"] #kolTable tbody td.kolArtworkManual::after {font-size:var(--ui-font-2xs);line-height:14px;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-warning);background:var(--ui-warning-bg)
 }
 html[data-ui-system="manifest"] .kolFabricSource {font-size:var(--ui-font-xs) !important;font-weight:600 !important;color:var(--ui-text-secondary) !important
@@ -9336,17 +9364,11 @@ html[data-ui-system="manifest"] .kolPsMfr.isConfirmed {color:var(--ui-success) !
 }
 html[data-ui-system="manifest"] .kolPsEmpty {color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important
 }
-html[data-ui-system="manifest"] .kolPsTrack {background:var(--ui-surface-soft) !important
-}
-html[data-ui-system="manifest"] .kolPsTrack>i {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
-}
 html[data-ui-system="manifest"] .kolPsDot {background:var(--ui-text-secondary) !important
 }
 html[data-ui-system="manifest"] .kolPsDot.isBest {background:var(--ui-accent) !important
 }
 html[data-ui-system="manifest"] .kolPsDot.isConfirmed {background:var(--ui-success) !important
-}
-html[data-ui-system="manifest"] .kolPsTarget {background:var(--ui-warning) !important
 }
 html[data-ui-system="manifest"] .kolPsMeta {color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important
 }
@@ -9447,7 +9469,7 @@ html[data-ui-system="manifest"] .cpdCountryList {background:var(--ui-surface) !i
 html[data-ui-system="manifest"] .cpdCountryList label:hover {background:var(--ui-surface-soft) !important
 }
 @media (prefers-reduced-motion:reduce) {
-html[data-ui-system="manifest"] .kolPsTrack>i,html[data-ui-system="manifest"] .kolHealthChip,html[data-ui-system="manifest"] .cpdOffer {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+html[data-ui-system="manifest"] .kolHealthChip,html[data-ui-system="manifest"] .cpdOffer {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 }
 @media (prefers-reduced-motion:reduce) {
@@ -9463,10 +9485,6 @@ html[data-ui-system="manifest"] .pdRoundQuote {background:var(--ui-surface-soft)
 html[data-ui-system="manifest"] .pdRoundQuote.isBest {background:var(--ui-success-bg) !important
 }
 html[data-ui-system="manifest"] .pdRoundQuote s {color:var(--ui-text-muted) !important
-}
-html[data-ui-system="manifest"] .kolPsTrack>.kolPsBand {background:var(--ui-accent) !important
-}
-html[data-ui-system="manifest"] .kolPsMedian {background:var(--ui-text-secondary) !important
 }
 html[data-ui-system="manifest"] .pdMfrHead small.isGood {color:var(--ui-success) !important
 }

@@ -7,8 +7,8 @@
     "en": "Collection cells share one chip language"
   },
   "summary": {
-    "tr": "Artwork Detayı, Kumaş ve Durum hücreleri aynı çerçeveli kart diliyle gösterilir; bilgi kesilmeden ve göz gezdirirken okunur.",
-    "en": "Artwork Detail, Fabric and Status cells use the same bordered chip language, so information is readable at a glance without being cut off."
+    "tr": "Artwork Detayı, Kumaş, Durum ve fiyat özeti hücreleri aynı çerçeveli kart diliyle gösterilir; bilgi kesilmeden ve göz gezdirirken okunur.",
+    "en": "Artwork Detail, Fabric, Status and pricing summary cells use the same bordered chip language, so information is readable at a glance without being cut off."
   },
   "changes": [
     {
@@ -95,6 +95,35 @@
         "caption": {
           "tr": "Demo veride kumaş kodu, tip | gramaj ve karışım ayrı kartlarda görünür.",
           "en": "On demo data, fabric code, type | weight and composition appear in separate chips."
+        }
+      }
+    },
+    {
+      "id": "collection-pricing-cards",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Fiyat özetleri alt alta, kart diliyle görünür",
+        "en": "Pricing summaries are stacked in the chip language"
+      },
+      "body": {
+        "tr": "Teklif & Onay hücresi alt alta Supp. FOB ve hedefe farkını, royalty/hologram gibi masraf varsa FOB'u ve üreticiyi gösterir; onaylı üretici yeşil ✓ kutuda, onaysız en iyi teklif gri \"Öneri\" kutusundadır. Previous Season, LFL ve Sezon Etkisi satırlarının her biri kendi fiyatını ve yüzdesini gösterir. Endeksmatik ve Landed Özeti YD ve TR değerlerini alt alta yüzdeleriyle gösterir. Fiyat çekmecesi ve çift tıklama davranışı değişmedi.",
+        "en": "The Quotes & Approval cell stacks Supp. FOB with its difference to target, FOB when costs such as royalty/hologram apply, and the manufacturer; the approved manufacturer sits in a green ✓ box and the unapproved best quote in a grey \"Best\" box. Previous Season, LFL and Season Impact each show their own price and percentage. Endeksmatik and Landed Summary stack Overseas and TR values with their percentages. The price drawer and double-click behaviour are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-pricing-cards.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: Teklif & Onay sütununda Supp. FOB, hedefe fark ve onaylı/öneri üretici kutuları; Endeksmatik ve Landed Özeti'nde alt alta YD ve TR değerleri",
+          "en": "Demo Collection table: Quotes & Approval column with Supp. FOB, difference to target and approved/best manufacturer boxes; Endeksmatik and Landed Summary with stacked Overseas and TR values"
+        },
+        "caption": {
+          "tr": "Demo veride fiyat özetleri alt alta ve kart diliyle görünür.",
+          "en": "On demo data, pricing summaries are stacked in the chip language."
         }
       }
     }

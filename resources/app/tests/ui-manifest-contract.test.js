@@ -111,13 +111,15 @@ const sharedNotificationBorder = d => d.file==='ui-components.css' && classicSel
 // kart/etiket/rozet kenarlığı yalnız bu tam selector'larda ve tasarım tokenlarıyla.
 // Genel bir modül istisnası değildir.
 const CELL_CARD_SCOPE=':is(#kolTable,#cpTable,#ordersTable) tbody ';
-const CELL_TAG_TONES={'1':'--ui-chart-3','2':'--ui-chart-4','3':'--ui-chart-5','4':'--ui-chart-8','5':'--ui-accent','eco':'--ui-success'};
+const CELL_TAG_TONES={'1':'--ui-chart-3','2':'--ui-chart-4','3':'--ui-chart-5','4':'--ui-chart-8','5':'--ui-accent','eco':'--ui-success','good':'--ui-success','bad':'--ui-danger'};
 const tonedBorder=token=>`1px solid color-mix(in srgb,var(${token}) 45%,var(--ui-surface))`;
 const cellCardBorder = d => {
  if(d.file!=='ui-components.css')return false;
  const selector=classicSelector(d.selector);
  if(selector===CELL_CARD_SCOPE+'.blCellChip')return d.prop==='border'&&d.value==='1px solid var(--ui-group-divider)';
  if(selector===CELL_CARD_SCOPE+'.blCellChip i')return d.prop==='border-inline-start'&&d.value==='1px solid var(--ui-group-divider)';
+ if(selector===CELL_CARD_SCOPE+'.blCellMfr'||selector===CELL_CARD_SCOPE+'.blCellMfr em')return (d.prop==='border'||d.prop==='border-inline-end')&&d.value==='1px solid var(--ui-group-divider)';
+ if(selector===CELL_CARD_SCOPE+'.blCellMfr.isConfirmed')return d.prop==='border'&&d.value==='1px solid color-mix(in srgb,var(--ui-success) 55%,var(--ui-surface))';
  if(selector==='#kolTable td.kolStatusTd select.kolStatusNoArrow')return d.prop==='border'&&d.value===tonedBorder('--kol-status-color');
  const tone=selector.startsWith(CELL_CARD_SCOPE+'.blCellTag[data-tone="')&&selector.match(/\[data-tone="(\w+)"\]$/);
  return Boolean(tone&&CELL_TAG_TONES[tone[1]]&&selector===CELL_CARD_SCOPE+`.blCellTag[data-tone="${tone[1]}"]`&&d.prop==='border'&&d.value===tonedBorder(CELL_TAG_TONES[tone[1]]));

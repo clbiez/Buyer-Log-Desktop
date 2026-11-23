@@ -3854,3 +3854,14 @@ td.pcvCell.pcvError{cursor:help;}
 :is(#kolTable,#cpTable,#ordersTable) tbody .blCellChip i{padding:0 4px}
 :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag{flex:none;padding:0 5px}
 :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTotal{margin-left:auto;flex:none;padding-left:6px}
+/* Ortak kart dili — fiyat özetleri (Teklif & Onay, referanslar, Endeksmatik,
+   Landed): etiket · değer · etiket(%) satırları alt alta, sütunlar hizalı. */
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellCol{display:flex;flex-direction:column;justify-content:center;gap:3px;min-width:0}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellStack{display:grid;grid-template-columns:auto auto auto;align-items:center;justify-content:start;gap:2px 6px;min-width:0}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellStackRow{display:contents}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellStackLabel{white-space:nowrap}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellValue{white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellStackTail{display:inline-flex;align-items:center;gap:4px;min-width:0;white-space:nowrap}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellMfr{flex:0 1 auto;min-width:0;display:inline-flex;align-items:stretch}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellMfr em{flex:none;padding:0 5px}
+:is(#kolTable,#cpTable,#ordersTable) tbody .blCellMfr b{min-width:0;padding:0 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

@@ -116,6 +116,11 @@ diğer grafik işaretçilerine veya kart/kontrol köşelerine uygulanmaz.
    `--ui-success`) %45 karışımıyla 1px sınır. Koleksiyon Durum rozeti
    (`td.kolStatusTd select.kolStatusNoArrow`) hücreyi doldurmaz; durum renginin
    %12 zemini ve %45 karışımlı 1px sınırıyla etiket kadar geniş rozettir.
+   Fiyat özetleri (Teklif & Onay, Previous Season/LFL/Sezon Etkisi, Endeksmatik,
+   Landed Özeti) aynı bileşenle alt alta `.blCellStack` satırları kullanır; üretici
+   kutusu (`.blCellMfr`) 1px `--ui-group-divider`, onaylıda `--ui-success` %55
+   karışımlı sınır taşır; fark etiketleri `good`/`bad` tonudur. Kullanıcının yazdığı
+   alanlar (Hedef Fiyat, FOB girişi, TR fiyatı, kur) kart olmaz, düz sayı kalır.
    İstisnalar `tests/ui-manifest-contract.test.js` içinde tam selector/değerle
    sabitlenir; başka hücre bileşenine genişletilmez.
 7. Basılı/dışa aktarılan belge kendi sabit çıktı sözleşmesini korur (§8).
