@@ -8538,16 +8538,12 @@ async function buildAndWritePageProjectionCache(currentUser, runtime = null) {
       throw Object.assign(new Error('Veri veya yetki sürümü değişti. / The data or permission generation changed.'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});
     }
   };
-  /* Girdi anahtarları işçide (projection-plan): tam kaynak hash'i 60k satırda
-     ana iş parçacığında 1,5–2,3 sn'lik tek blok tutuyordu. Sayfa açılışı
-     (ensureComputedProjection) aynı görevi kullanır; iki yazar aynı manifestte
-     aynı anahtar formülünü paylaşır. */
-  const descriptor=await computeSourceFor(currentUser||id);assertCurrent();
-  const plan=await serverCompute().run('projection-plan',descriptor,computeParamsFor(currentUser,descriptor,'projection-plan',{projectionContextHash:ctx.contextHash,appVersion:APP_VERSION}),{priority:'background'});
-  let inputKeys;
-  try{assertCurrent();if(plan.value.sourceMeta)acceptComputedMetadata(currentUser||id,plan.value.sourceMeta,plan.value.sourceProjectionKeys);inputKeys=plan.value.inputKeys;}
-  finally{plan.release();}
-  const {backlog:backlogInputKey,...moduleInputKeys}=inputKeys;
+  const overrides = effectiveOverridesForUser(id);
+  /* Tam kaynak hash'i 60k satırda ana iş parçacığında 1,5–2,3 sn'lik tek blok
+     tutuyordu. keysAsync keys() ile aynı anahtarı parça parça üretir ve olay
+     döngüsüne döner; ayrı bir işçi adımı (kaynağın yeniden çözülmesi) eklemez. */
+  const {backlog:backlogInputKey,...moduleInputKeys}=await derivedInputKeys.keysAsync(active,ctx.contextHash,overrides,{version:APP_VERSION});
+  assertCurrent();
   const reused=await pageProjectionCache.readReusableProjections(id,ctx.contextHash,moduleInputKeys);
   assertCurrent();
   const wanted=new Set(Object.keys(moduleInputKeys).filter(module=>!reused.projections[module]));

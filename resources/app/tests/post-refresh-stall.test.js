@@ -64,6 +64,55 @@ test('derived-input-keys.inputKey: tek hedef anahtarı keys() ile birebir aynı;
   assert.equal(inputKey(active, 'ctx', overrides, 'backlog', opts), keys(active, 'ctx', overrides, opts).backlog);
 });
 
+test('derived-input-keys.keysAsync: keys() ile bayt bayt aynı anahtar (büyük, seyrek, tarihli, düz olmayan girdiler)', async () => {
+  const { keys, keysAsync } = require('../server/lib/derived-input-keys');
+  const opts = { version: '8.0.12', day: '2026-11-20' };
+  class Box { constructor() { this.a = 1; this.skip = undefined; } }
+  const big = Array.from({ length: 1300 }, (_, i) => ({ ocode: String(1000 + i), qty: i, ex: new Date(Date.UTC(2026, i % 12, 1 + (i % 27))),
+    fn: () => i, sym: Symbol('x'), undef: undefined, nested: { deep: [i, null, undefined, 'ş"ğ\\\n'] }, nan: NaN, neg: -0,
+    _sourceFields: { 'Özel Alan': `v${i}` } }));
+  const sparse = new Array(400); sparse[3] = { a: 1 }; sparse[399] = 'son';
+  const wideMap = Object.fromEntries(Array.from({ length: 700 }, (_, i) => [i % 3 ? `K${i}` : String(i), [{ qty: i, at: new Date(2026, 1, 1 + (i % 20)) }]]));
+  const nullProto = Object.assign(Object.create(null), Object.fromEntries(Array.from({ length: 300 }, (_, i) => [`n${i}`, i])));
+  const overrides = { notesmap: Object.fromEntries(Array.from({ length: 900 }, (_, i) => [`O${i}`, { Notes: `not ${i}` }])),
+    datemap: {}, weird: [new Box(), new Map([[1, 2]]), { toJSON: () => 'custom' }, undefined, () => 1], nullProto, sparse };
+  const runtimes = [
+    { asasOrders: big, antrepoMap: wideMap },
+    { asasOrders: [], asasOrdersByTarget: { cp: big, orders: big.slice(0, 600), backlog: sparse }, antrepoMap: {}, antrepoMapByTarget: { backlog: wideMap },
+      modelRefresh: { appliedHorizons: { cp: { season: 'W26' } } }, cpupdateOverrides: { submap: wideMap } },
+    {},
+  ];
+  // Gerçekçi satırlar: demo ASAS kitabı gerçek ayrıştırıcıdan geçer.
+  const { build } = require('../scripts/generate-demo-data');
+  const demo = build({ rows: 700, seed: 7, today: new Date(Date.UTC(2026, 10, 5)) });
+  const header = demo.asas[2], records = demo.asas.slice(3).map(row => Object.fromEntries(header.map((name, i) => [name, row[i] ?? null])));
+  const parsed = require('../server/lib/parse').parseASASRows(records).orders;
+  runtimes.push({ asasOrders: parsed, asasOrdersByTarget: { cp: parsed, orders: parsed, backlog: parsed }, antrepoMap: {} });
+  for (const [index, active] of runtimes.entries()) {
+    assert.deepEqual(await keysAsync(active, 'ctx', overrides, opts), keys(active, 'ctx', overrides, opts), `runtime ${index}`);
+    assert.deepEqual(await keysAsync(active, 'ctx', null, opts), keys(active, 'ctx', null, opts), `runtime ${index} null overrides`);
+  }
+  // Kimlik önbelleği yok: yerinde mutasyon anahtarı değiştirir.
+  const active = runtimes[0], before = await keysAsync(active, 'ctx', overrides, opts);
+  big[700].nested.deep[0] = 'changed';
+  const after = await keysAsync(active, 'ctx', overrides, opts);
+  assert.notEqual(after.cp, before.cp);
+  assert.deepEqual(after, keys(active, 'ctx', overrides, opts));
+  // Döngüsel yapı JSON.stringify gibi hata verir.
+  const cyclic = Array.from({ length: 300 }, () => ({})); cyclic.push(cyclic);
+  await assert.rejects(keysAsync({ asasOrders: cyclic }, 'ctx', {}, opts), TypeError);
+});
+
+test('derived-input-keys.keysAsync olay döngüsüne döner (tek blok bütçeyi aşmaz)', async () => {
+  const { keysAsync } = require('../server/lib/derived-input-keys');
+  const rows = Array.from({ length: 40000 }, (_, i) => ({ ocode: String(i), model: `M${i}`, qty: i, retail: new Date(2026, 1, 1 + (i % 25)), text: 'x'.repeat(40) }));
+  let turns = 0, done = false;
+  const ticker = (async () => { while (!done) { await new Promise(resolve => setImmediate(resolve)); turns += 1; } })();
+  await keysAsync({ asasOrders: rows, antrepoMap: {} }, 'ctx', {}, { version: 'v', day: 'd' }, { budgetMs: 5 });
+  done = true; await ticker;
+  assert.ok(turns > 3, `olay döngüsü hesap sırasında dönmeli (tur: ${turns})`);
+});
+
 // ---------------------------------------------------------------- 2) arşiv
 async function tempDir(t, prefix) {
   const dir = await fsp.mkdtemp(path.join(os.tmpdir(), prefix));
@@ -241,4 +290,7 @@ test('sunucu: bağlam damgaları klonsuz overrides görünümünü, capture comp
   assert.match(capture, /atomicWriteBufferAsync\(/);
   assert.doesNotMatch(capture, /derivedInputKeys\.keys\(/, 'capture ana iş parçacığında tam girdi hash\'i almaz');
   assert.doesNotMatch(capture, /buildBacklogTemplateRows\(/, 'Backlog satırları işçide üretilir');
+  const pageCache = body('async function buildAndWritePageProjectionCache(');
+  assert.match(pageCache, /await derivedInputKeys\.keysAsync\(/, 'sayfa önbelleği anahtarları kooperatif hash\'lenir');
+  assert.doesNotMatch(pageCache, /derivedInputKeys\.keys\(/);
 });

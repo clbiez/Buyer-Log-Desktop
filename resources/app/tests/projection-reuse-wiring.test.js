@@ -37,9 +37,7 @@ test('actual server orchestration skips unchanged builders and rebuilds only cha
   context.computeSourceToken=()=>currentRuntime.loadedAt;
   context.computeSourceFor=async()=>({runtime:currentRuntime});
   context.computeParamsFor=(_profile,descriptor,_task,parts)=>({...parts,runtime:descriptor.runtime});
-  context.serverCompute=()=>({run:async(task,_descriptor,params)=>{
-    // Girdi anahtarları işçide (projection-plan) hesaplanır; işçi aynı derived-input-keys formülünü kullanır.
-    if(task==='projection-plan')return {value:{inputKeys:derivedInputKeys.keys(params.runtime,params.projectionContextHash,{},{version:params.appVersion})},metrics:{},release(){}};
+  context.serverCompute=()=>({run:async(_task,_descriptor,params)=>{
     const r=params.runtime,cp=r.asasOrdersByTarget?.cp||r.asasOrders,orders=r.asasOrdersByTarget?.orders||r.asasOrders,values={},wanted=new Set(params.modules);
     if(wanted.has('cp'))values.cp={rows:build(cp).map(row=>({...row,_canEdit:true})),cpModelColumns:[]};
     if(wanted.has('orders'))values.orders={rows:build(orders).map(row=>({...row,_canEdit:false}))};
