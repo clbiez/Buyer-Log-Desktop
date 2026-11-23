@@ -7,19 +7,31 @@ const crypto = require('node:crypto');
 const zlib = require('node:zlib');
 const { promisify } = require('node:util');
 const { withFileLeaseAsync, replaceFileWithRetry } = require('./shared-file-transaction');
+const { stableJson, stableSha256Pair } = require('./stable-digest');
 const gzip = promisify(zlib.gzip), gunzip = promisify(zlib.gunzip);
 const DEFAULT_KEEP = 30;
 const DEFAULT_COMPRESSED_BYTES = 32 * 1024 * 1024;
 const DEFAULT_DECODED_BYTES = 128 * 1024 * 1024;
 
 function failure(code, statusCode = 503) { return Object.assign(new Error(code), { code, statusCode }); }
-// This convention intentionally matches shared-hub.js:stableJson exactly.
-function stableJson(value) {
-  if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
-  if (value && typeof value === 'object') return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(',')}}`;
-  return JSON.stringify(value);
+// stableJson intentionally matches shared-hub.js exactly (shared module).
+// Checkpoint and payload digests come from ONE cooperative streaming pass:
+// the payload is not serialised twice and the event loop is not blocked.
+async function checkpointDigests(checkpoint) {
+  const { outer, inner } = await stableSha256Pair(checkpoint, 'payload');
+  return { checkpointSha256: outer, payloadSha256: inner };
 }
-function digest(value) { return crypto.createHash('sha256').update(stableJson(value), 'utf8').digest('hex'); }
+// Exact archive identity without re-serialising the checkpoint: a validated
+// archive's checkpointSha256 is the digest of its checkpoint content.
+function archiveIdentity(value) { return stableJson({ ...value, checkpoint: value.checkpointSha256 }); }
+async function signatureOf(file) {
+  try { const stat = await fsp.stat(file); return stat.isFile() ? `${stat.size}:${stat.mtimeMs}:${stat.ino}:${stat.ctimeMs}` : null; }
+  catch (error) { if (error.code === 'ENOENT') return null; throw error; }
+}
+/* Stat imzası: shared-hub, doğruladığı arşivin değişmediğini tam okuma
+   yapmadan bilmek için kullanır. İmza değişirse (silinme, başka cihazın
+   yazması, bozulma) arşiv yeniden okunup doğrulanır. */
+async function archiveSignature(root, version) { return signatureOf(releaseFile(root, version)); }
 function versionNumber(value) {
   if (typeof value !== 'number' && (typeof value !== 'string' || !/^[1-9]\d{0,15}$/.test(value))) throw failure('MASTER_RELEASE_VERSION_INVALID', 400);
   const version = Number(value);
@@ -42,11 +54,13 @@ function summary(envelope) {
   return raw ? { version, note: raw.note, publishedBy: raw.publishedBy, publishedAt: raw.publishedAt, changedEntities: [...raw.changedEntities] } :
     { version, note: '', publishedBy: String(envelope.actorId || ''), publishedAt: String(envelope.createdAt || ''), changedEntities: [] };
 }
-function validateArchive(value, expectedVersion) {
+async function validateArchive(value, expectedVersion, known = null) {
   if (!value || value.schemaVersion !== 1 || value.version !== expectedVersion || !value.checkpoint || value.checkpoint.schemaVersion !== 1 || value.checkpoint.revision !== expectedVersion) throw failure('MASTER_RELEASE_INVALID');
   const payload = value.checkpoint.payload;
   if (!payload || payload.authority !== 'moderator') throw failure('MASTER_RELEASE_AUTHORITY_INVALID', 403);
-  if (value.payloadSha256 !== digest(payload) || value.checkpointSha256 !== digest(value.checkpoint)) throw failure('MASTER_RELEASE_CHECKSUM_INVALID');
+  // `known` is passed only for digests computed from this same object moments ago.
+  const digests = known || await checkpointDigests(value.checkpoint);
+  if (value.payloadSha256 !== digests.payloadSha256 || value.checkpointSha256 !== digests.checkpointSha256) throw failure('MASTER_RELEASE_CHECKSUM_INVALID');
   if (stableJson(value.release) !== stableJson(summary(value.checkpoint))) throw failure('MASTER_RELEASE_METADATA_INVALID');
   return value;
 }
@@ -76,7 +90,7 @@ async function readRelease(root, version, options = {}) {
     let value;
     try { value = JSON.parse((await gunzip(compressed, { maxOutputLength: maxDecoded })).toString('utf8')); }
     catch (_) { throw failure('MASTER_RELEASE_DECODE_INVALID'); }
-    return validateArchive(value, expected);
+    return await validateArchive(value, expected);
   } catch (error) {
     if (error.code === 'ENOENT') throw failure('MASTER_RELEASE_NOT_FOUND', 404);
     throw error;
@@ -120,10 +134,10 @@ async function archiveRelease(root, { head, envelope } = {}, options = {}) {
   if (!envelope || envelope.schemaVersion !== 1 || !envelope.payload || envelope.payload.authority !== 'moderator') throw failure('MASTER_RELEASE_AUTHORITY_INVALID', 403);
   const version = versionNumber(envelope.revision);
   if (head && versionNumber(head.revision) !== version) throw failure('MASTER_RELEASE_VERSION_INVALID', 400);
-  const payloadSha256 = digest(envelope.payload);
+  const digests = await checkpointDigests(envelope), { payloadSha256, checkpointSha256 } = digests;
   if (head && head.payloadSha256 && head.payloadSha256 !== payloadSha256) throw failure('MASTER_RELEASE_CHECKSUM_INVALID');
-  const value = { schemaVersion: 1, version, release: summary(envelope), checkpoint: envelope, payloadSha256, checkpointSha256: digest(envelope) };
-  validateArchive(value, version);
+  const value = { schemaVersion: 1, version, release: summary(envelope), checkpoint: envelope, payloadSha256, checkpointSha256 };
+  await validateArchive(value, version, digests);
   const decoded = Buffer.from(JSON.stringify(value), 'utf8');
   if (decoded.length > boundedOption(options.maxDecodedBytes, DEFAULT_DECODED_BYTES)) throw failure('MASTER_RELEASE_FILE_INVALID');
   const compressed = await gzip(decoded, { level: zlib.constants.Z_BEST_SPEED });
@@ -134,9 +148,9 @@ async function archiveRelease(root, { head, envelope } = {}, options = {}) {
     try { existing = await readRelease(root, version, options); }
     catch (error) { if (error.code !== 'MASTER_RELEASE_NOT_FOUND') throw error; }
     if (existing) {
-      if (stableJson(existing) !== stableJson(value)) throw failure('MASTER_RELEASE_REVISION_CONFLICT', 409);
+      if (archiveIdentity(existing) !== archiveIdentity(value)) throw failure('MASTER_RELEASE_REVISION_CONFLICT', 409);
       await pruneUnlocked(root, options);
-      return { archived: false, unchanged: true, version, release: existing.release };
+      return { archived: false, unchanged: true, version, release: existing.release, signature: await signatureOf(file) };
     }
     await fsp.mkdir(area, { recursive: true });
     const temporary = `${file}.${process.pid}.${crypto.randomUUID()}.tmp`;
@@ -146,12 +160,13 @@ async function archiveRelease(root, { head, envelope } = {}, options = {}) {
       // Verify the exact staged bytes before publication; no checkpoint gzip
       // checksum is compared because this is a separate archive envelope.
       const verified = JSON.parse((await gunzip(await fsp.readFile(temporary), { maxOutputLength: boundedOption(options.maxDecodedBytes, DEFAULT_DECODED_BYTES) })).toString('utf8'));
-      validateArchive(verified, version);
+      await validateArchive(verified, version);
       await replaceFileWithRetry(temporary, file);
     } finally { await fsp.unlink(temporary).catch(error => { if (error.code !== 'ENOENT') throw error; }); }
+    const signature = await signatureOf(file);
     const pruned = await pruneUnlocked(root, options);
-    return { archived: true, unchanged: false, version, release: value.release, pruned: pruned.removed };
+    return { archived: true, unchanged: false, version, release: value.release, pruned: pruned.removed, signature };
   }, { timeoutMs: 15000, staleMs: 120000 });
 }
 
-module.exports = { archiveRelease, readRelease, listReleases, pruneReleases };
+module.exports = { archiveRelease, readRelease, listReleases, pruneReleases, archiveSignature };

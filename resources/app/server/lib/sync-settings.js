@@ -200,10 +200,34 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
     const next = canonicalize(value);
     return { ...next, localDbFolder: path.dirname(next.localDbPath), sharedSyncFolder: next.sharedSyncRoot };
   }
+  /* read() sunucunun her yerinden (ortak kök çözümleyicileri, lisans görseli
+     dağıtımı, koleksiyon replikasyonu, durum uçları) sık çağrılır; her çağrı
+     dosyayı açıp okuyordu. Metin, dosyanın stat imzasıyla (boyut + mtime +
+     inode + ctime) önbelleğe alınır: dış yazım imzayı değiştirir, kendi
+     write() çağrımız nesli artırıp önbelleği düşürür. Her çağıran kendi
+     JSON.parse kopyasını alır (çağıranlar sonucu değiştirir). */
+  let settingsText = null, settingsSignature = '', settingsGeneration = 0, settingsTextRead = null;
+  const signatureOf = stat => `${stat.size}:${stat.mtimeMs}:${stat.ino}:${stat.ctimeMs}`;
+  function invalidateSettingsText() { settingsGeneration++; settingsText = null; settingsSignature = ''; settingsTextRead = null; }
+  function readSettingsText() {
+    if (settingsTextRead && settingsTextRead.generation === settingsGeneration) return settingsTextRead.promise;
+    const generation = settingsGeneration;
+    const flight = { generation, promise: null };
+    flight.promise = (async () => {
+      const signature = signatureOf(await fsp.stat(file));
+      if (settingsText != null && signature === settingsSignature && generation === settingsGeneration) return settingsText;
+      const text = await fsp.readFile(file, 'utf8');
+      // Cache only when the file did not change while it was being read.
+      if (generation === settingsGeneration && signatureOf(await fsp.stat(file)) === signature) { settingsText = text; settingsSignature = signature; }
+      return text;
+    })().finally(() => { if (settingsTextRead === flight) settingsTextRead = null; });
+    settingsTextRead = flight;
+    return flight.promise;
+  }
   async function read() {
     const defaults = makeDefaults();
     try {
-      const stored = JSON.parse(await fsp.readFile(file, 'utf8')) || {};
+      const stored = JSON.parse(await readSettingsText()) || {};
       const value = canonicalize(stored), legacyPresent = [...LEGACY_LOCAL_KEYS, ...LEGACY_SHARED_KEYS].some(key => Object.hasOwn(stored, key));
       if (legacyPresent || stored.localDbPath !== value.localDbPath || stored.sharedSyncRoot !== value.sharedSyncRoot) {
         try { await write(value); } catch (error) { emit('SYNC_SETTINGS_MIGRATION_FAILED', { error: error && error.message || String(error) }); }
@@ -215,6 +239,7 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
   }
   async function write(value) {
     const canonical = canonicalize(value);
+    invalidateSettingsText();
     return withFileLeaseAsync(file, async () => {
       await fsp.mkdir(path.dirname(file), { recursive: true });
       const tmp = `${file}.${process.pid}.${Date.now()}.${crypto.randomBytes(4).toString('hex')}.tmp`;
@@ -225,6 +250,7 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
           try { await handle.sync(); } catch (_) { /* best effort on local filesystem filters */ }
         } finally { await handle.close(); }
         await replaceFileWithRetry(tmp, file);
+        invalidateSettingsText();
         return canonical;
       } finally { try { await fsp.unlink(tmp); } catch (_) {} }
     });
