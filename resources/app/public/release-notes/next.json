@@ -1,14 +1,38 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-23",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Yenileme sonrası daha akıcı sunucu",
+    "en": "Smoother server after a refresh"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Veri yenilemesinden sonraki Planlanan & Gerçekleşen işareti ve sayfa önbelleği hazırlığı arka plandaki hesap işçisine taşındı; ekran okumaları büyük override kaydını her istekte kopyalamaz. Büyük veride uygulama yenilemeden sonra donmadan yanıt verir.",
+    "en": "The Planned & Actual marker and page-cache preparation after a data refresh moved to the background compute worker; screen reads no longer copy the large overrides record on every request. With large data the app keeps responding after a refresh instead of freezing."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "post-refresh-stall-worker",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri Yenileme",
+        "en": "Data Refresh"
+      },
+      "title": {
+        "tr": "Yenileme sonrası uygulama donmaz",
+        "en": "The app no longer freezes after a refresh"
+      },
+      "body": {
+        "tr": "Veri yenilemesinden hemen sonra yapılan Planlanan & Gerçekleşen zaman işareti ve sayfa önbelleği anahtarları artık arka plandaki hesap işçisinde hazırlanıyor; ekran okumaları da her istekte büyük override kaydını kopyalamıyor. Büyük veride yenilemeden sonraki saniyelerde uygulama yanıt vermeye devam eder. Analiz geçmişi ve kayıtlı düzenlemeler aynen korunur.",
+        "en": "The Planned & Actual time marker and the page-cache keys prepared right after a data refresh are now built in the background compute worker, and screen reads no longer copy the large overrides record on every request. With large data the app stays responsive in the seconds after a refresh. Analysis history and saved edits are unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Arayüzde değişiklik yok; iyileştirme yenileme sonrası sunucu işinin nerede ve kaç kez yapıldığındadır.",
+          "en": "No UI change; the improvement is in where and how often the server does its post-refresh work."
+        }
+      }
+    }
+  ]
 }

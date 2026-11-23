@@ -11,7 +11,10 @@ function setup(change){
     userAccess:{hasArea:()=>true,profileById:()=>profile,computeAccessContext:()=>({accessHash:'authority'})},
     computeSourceFor:async()=>({ownerId:'a',generation:'g1'}),computeSourceToken:()=>sourceToken,
     computeParamsFor:(_profile,_descriptor,_task,parts)=>parts,
-    serverCompute:()=>({run:async(task,_source,params)=>{calls++;assert.equal(task,'projections');assert.deepEqual(Array.from(params.modules).sort(),['cp','overview']);change?.({context:()=>contextHash='changed',source:()=>sourceToken='g2'});return {value:{compressed:{cp:{buffer:new ArrayBuffer(3),uncompressedBytes:30},overview:{buffer:new ArrayBuffer(2),uncompressedBytes:20}}},metrics:{executionMs:1},release:()=>released++};}}),
+    serverCompute:()=>({run:async(task,_source,params)=>{
+      // Girdi anahtarları işçideki projection-plan görevinden gelir (ana iş parçacığı kaynak hash'lemez).
+      if(task==='projection-plan')return {value:{inputKeys:context.derivedInputKeys.keys()},metrics:{},release(){}};
+      calls++;assert.equal(task,'projections');assert.deepEqual(Array.from(params.modules).sort(),['cp','overview']);change?.({context:()=>contextHash='changed',source:()=>sourceToken='g2'});return {value:{compressed:{cp:{buffer:new ArrayBuffer(3),uncompressedBytes:30},overview:{buffer:new ArrayBuffer(2),uncompressedBytes:20}}},metrics:{executionMs:1},release:()=>released++};}}),
     ordersForTarget:()=>{throw Error('Main thread source traversal is forbidden');},logRuntimeFailure:(_key,error)=>{throw error;}};
   const names=['buildAndWritePageProjectionCache'];if(server.includes('function buildAndWriteComputedPageProjectionCache('))names.push('buildAndWriteComputedPageProjectionCache');
   vm.createContext(context);vm.runInContext(names.map(name=>extractFunction(server,name)).join('\n')+';globalThis.run=buildAndWritePageProjectionCache;',context);
@@ -30,7 +33,8 @@ test('a fully reusable cache still rejects source changes, changed permissions a
     const profile={id:'a',enabled:true,status:'ACTIVE'},runtime={loadedAt:'r1',asasOrders:[]};let sourceToken='g1',hash='ctx',published=false;
     const c={Object,Array,Set,Map,Buffer,APP_VERSION:'test',userAccess:{profileById:()=>profile},
       pageProjectionContext:()=>({id:'a',contextHash:hash,filterStatus:{ready:true}}),computeSourceToken:()=>sourceToken,
-      effectiveOverridesForUser:()=>({}),derivedInputKeys:{keys:()=>({cp:'key',backlog:'backlog'})},
+      effectiveOverridesForUser:()=>({}),computeSourceFor:async()=>({ownerId:'a',generation:'g1'}),computeParamsFor:(_p,_d,_t,parts)=>parts,
+      serverCompute:()=>({run:async task=>{assert.equal(task,'projection-plan');return {value:{inputKeys:{cp:'key',backlog:'backlog'}},metrics:{},release(){}};}}),
       pageCacheRuntimeMeta:()=>({}),projectionSourceRevision:()=> 'r1',
       pageProjectionCache:{readReusableProjections:async()=>({manifest:{activeGeneration:'existing'},projections:{cp:{buffer:Buffer.from('gzip')}}}),
         reuseGeneration:async(_id,options)=>{await new Promise(setImmediate);if(kind==='source')sourceToken='g2';else if(kind==='context')hash='changed';else profile.enabled=false;options.assertCurrent();published=true;return {};}}
