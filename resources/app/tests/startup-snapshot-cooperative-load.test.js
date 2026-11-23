@@ -107,8 +107,17 @@ test('startup snapshot load yields to the event loop and hydrates exactly what t
   // Isınma: modül/JIT ilk çağrı maliyeti ölçümü kirletmesin.
   serverRuntime().hydrateModelSnapshot('moderator');
 
-  const reference = serverRuntime();
-  const expected = reference.hydrateModelSnapshot('moderator');
+  /* Beklenen sonuç ölçümden ÖNCE Date tipini koruyan sha256 özetlerine indirgenir
+     ve referans önbellek bırakılır. Kök neden ([Doğrulandı], perf_hooks 'gc'
+     gözlemcisi): referans kopya canlıyken ölçülen en uzun blok her koşuda
+     yükleme penceresine düşen bir major GC (mark-compact) duraklamasıydı
+     (117-298 ms, heap ~430 MB). Referans, sahada açılışta hiç olmayan ikinci
+     tam snapshot kopyasıdır; bırakılınca pencereye düşen GC'ler 21-60 ms, heap
+     ~216 MB ve en uzun blok GC dışı ~60-90 ms oldu. Eşdeğerlik sözleşmesi aynı
+     özetlerle aynen denetlenir; 200 ms sınırı değişmez. */
+  let expected = serverRuntime().hydrateModelSnapshot('moderator');
+  const want = { alias:aliasShape(expected), loadedAt:expected.loadedAt, lflLoadedAt:expected.lflLoadedAt, digest:cacheDigest(expected) };
+  expected = null;
 
   const runtime = serverRuntime();
   await new Promise(resolve => setTimeout(resolve, 20));
@@ -120,10 +129,10 @@ test('startup snapshot load yields to the event loop and hydrates exactly what t
   assert.ok(loaded === runtime.cacheForUser('moderator'), 'yüklenen önbellek aktif önbellektir');
   assert.equal(loaded.asasOrders.length, ROWS);
   assert.ok(loaded.asasOrders[0].opd instanceof Date, 'tarih alanları Date olarak geri gelir');
-  assert.deepEqual(aliasShape(loaded), aliasShape(expected));
-  assert.equal(loaded.loadedAt, expected.loadedAt);
-  assert.equal(loaded.lflLoadedAt, expected.lflLoadedAt);
-  assert.deepEqual(cacheDigest(loaded), cacheDigest(expected));
+  assert.deepEqual(aliasShape(loaded), want.alias);
+  assert.equal(loaded.loadedAt, want.loadedAt);
+  assert.equal(loaded.lflLoadedAt, want.lflLoadedAt);
+  assert.deepEqual(cacheDigest(loaded), want.digest);
 });
 
 test('concurrent requests during the cooperative load share one load promise', async () => {
