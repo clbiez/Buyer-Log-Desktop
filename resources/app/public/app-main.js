@@ -27530,7 +27530,7 @@ const KOL_COLS = [
   {k:'country', label:'Country', w:120, suggest:'country', group:'Tarihler & Sevkiyat'},
   {k:'delType', label:'Del. Type', w:110, select:DELTYPE_OPTS, group:'Tarihler & Sevkiyat'},
   {k:'exFactory', label:'Ex-Factory', w:110, date:true, group:'Tarihler & Sevkiyat'},
-  {k:'retail', label:'Retail', w:110, date:true, group:'Tarihler & Sevkiyat'},
+  {k:'retail', label:'Retail Date', w:110, date:true, group:'Tarihler & Sevkiyat'},
   {k:'exToRetail', label:'Ex→Retail', w:90, exToRetail:true, group:'Tarihler & Sevkiyat'},
   // MB Date (Model Budget tarihi): MB Week/Month bu tarihten LCW Merch Calendar ile türetilir.
   {k:'inStore', label:'MB Date', w:110, date:true, group:'Tarihler & Sevkiyat'},
@@ -44658,7 +44658,7 @@ const KOL_DURUM_EN = {
 const KOL_EN_TR_DICT = {
   'Picture':'Görsel','Model Name':'Model Adı','Product Main Definition':'Ürün Ana Tanım','License':'Lisans','Category':'Kategori','Special Code':'Özel Kod','Line':'Line',
   'Order Type':'Sipariş Tipi','Colour Code':'Renk Kodu','Colour':'Renk','Fabric':'Kumaş','Fabric Supplier S6':'Kumaşçı S6','Fabric Price S6':'Kumaş Fiyatı S6','Fabric Supplier S7':'Kumaşçı S7','Fabric Price S7':'Kumaş Fiyatı S7','Fit':'Kalıp','Buying Sample':'Buying Numunesi','Quantity':'Adet','Licensor':'Lisans Veren',
-  'Season':'Sezon','Ex-Factory':'Sevk Tarihi','Retail':'Perakende','Ex→Retail':'Sevk→Perakende',
+  'Season':'Sezon','Ex-Factory':'Sevk Tarihi','Retail Date':'Retail Tarihi','Ex→Retail':'Yükleme Onay→Antrepo',
   'MB Date':'MB Tarihi','In Store':'Mağazaya Giriş','In Store Week':'Model Bütçe Hafta','In Store Month':'Model Bütçe Ayı','Model Budget Week':'Model Bütçe Hafta','Model Budget Month':'Model Bütçe Ayı','Previous Season FOB':'Önceki Sezon FOB','Target Price':'Hedef Fiyat',
   'Supp. FOB':'Tedarikçi FOB','Royalty':'Royalti','Hologram Cost':'Hologram Maliyeti','FOB':'FOB',
   'Notes':'Notlar','Durum':'Durum','Status':'Durum',

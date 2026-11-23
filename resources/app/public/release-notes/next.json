@@ -3,14 +3,95 @@
   "publishedAt": "2026-11-23",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Yenileme sonrası daha akıcı sunucu",
-    "en": "Smoother server after a refresh"
+    "tr": "Koleksiyon tarih sütunlarının adları güncellendi; yenileme sonrası daha akıcı sunucu",
+    "en": "Collection date column names updated; smoother server after a refresh"
   },
   "summary": {
-    "tr": "Veri yenilemesinden sonraki Planlanan & Gerçekleşen işareti ve sayfa önbelleği hazırlığı arka plandaki hesap işçisine taşındı; ekran okumaları büyük override kaydını her istekte kopyalamaz. Büyük veride uygulama yenilemeden sonra donmadan yanıt verir.",
-    "en": "The Planned & Actual marker and page-cache preparation after a data refresh moved to the background compute worker; screen reads no longer copy the large overrides record on every request. With large data the app keeps responding after a refresh instead of freezing."
+    "tr": "Koleksiyon tablosunda Ex→Retail sütunu Türkçe arayüzde Yükleme Onay→Antrepo, Retail sütunu ise Retail Date / Retail Tarihi olarak görünür. Veri yenilemesinden sonraki Planlanan & Gerçekleşen işareti ve sayfa önbelleği hazırlığı arka plandaki hesap işçisine taşındı; ekran okumaları büyük override kaydını her istekte kopyalamaz. Büyük veride uygulama yenilemeden sonra donmadan yanıt verir.",
+    "en": "In the Collection table, the Ex→Retail column appears as Yükleme Onay→Antrepo in the Turkish interface, and the Retail column is now Retail Date / Retail Tarihi. The Planned & Actual marker and page-cache preparation after a data refresh moved to the background compute worker; screen reads no longer copy the large overrides record on every request. With large data the app keeps responding after a refresh instead of freezing."
   },
   "changes": [
+    {
+      "id": "collection-ex-retail-tr-label",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Ex→Retail sütununun Türkçe adı Yükleme Onay→Antrepo oldu",
+        "en": "Turkish name of the Ex→Retail column is now Yükleme Onay→Antrepo"
+      },
+      "body": {
+        "tr": "Koleksiyon tablosunda Türkçe arayüzde Ex→Retail başlığı artık Sevk→Perakende yerine Yükleme Onay→Antrepo olarak görünür. Hesaplama ve değerler değişmedi; İngilizce arayüzde başlık Ex→Retail olarak kalır.",
+        "en": "In the Collection table, the Ex→Retail header in the Turkish interface now reads Yükleme Onay→Antrepo instead of Sevk→Perakende. The calculation and values are unchanged; the English interface still shows Ex→Retail."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-ex-retail-tr-label.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: Tarihler & Sevkiyat grubunda Yükleme Onay→Antrepo başlıklı gün farkı sütunu",
+          "en": "Demo Collection table: day-difference column titled Yükleme Onay→Antrepo in the Dates & Shipment group"
+        },
+        "caption": {
+          "tr": "Demo veride Türkçe arayüzde sütun başlığı Yükleme Onay→Antrepo olarak görünür.",
+          "en": "On demo data, the Turkish interface shows the column header as Yükleme Onay→Antrepo."
+        }
+      }
+    },
+    {
+      "id": "collection-retail-date-label",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Retail sütununun adı Retail Tarihi oldu",
+        "en": "Retail column renamed to Retail Date"
+      },
+      "body": {
+        "tr": "Koleksiyon tablosunda Retail sütunu Türkçe arayüzde Perakende yerine Retail Tarihi, İngilizce arayüzde Retail yerine Retail Date olarak görünür. Değerler değişmedi; eski Retail veya Perakende başlıklı Excel dosyaları içe aktarılmaya devam eder.",
+        "en": "In the Collection table, the Retail column now reads Retail Tarihi in the Turkish interface instead of Perakende, and Retail Date in the English interface instead of Retail. Values are unchanged; Excel files with the old Retail or Perakende header can still be imported."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-retail-date-label.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: Tarihler & Sevkiyat grubunda Retail Tarihi başlıklı tarih sütunu",
+          "en": "Demo Collection table: date column titled Retail Tarihi in the Dates & Shipment group"
+        },
+        "caption": {
+          "tr": "Demo veride Türkçe arayüzde sütun başlığı Retail Tarihi olarak görünür.",
+          "en": "On demo data, the Turkish interface shows the column header as Retail Tarihi."
+        }
+      }
+    },
+    {
+      "id": "model-refresh-parse-no-stall",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri Yenileme",
+        "en": "Data Refresh"
+      },
+      "title": {
+        "tr": "Büyük veride model yenilemesi uygulamayı dondurmuyor",
+        "en": "Model refresh no longer freezes the app with large data"
+      },
+      "body": {
+        "tr": "Database (model) yenilemesinde ASAS, LFL ve IAS sonuçları artık küçük parçalar halinde işlenir; eşleştirme kuralı satır başına yeniden hazırlanmaz. 60 bin satırlık ölçümde yenileme sırasında uygulamanın tepkisiz kaldığı en uzun süre yaklaşık 5,3 saniyeden 0,2 saniyenin altına indi, ayrıştırma da yaklaşık iki kat hızlandı. Yenilenen veri birebir aynıdır.",
+        "en": "During a Database (model) refresh, ASAS, LFL and IAS results are now processed in small chunks, and the match rule is no longer prepared again for every row. In a 60k-row measurement, the longest time the app stayed unresponsive during a refresh dropped from about 5.3 seconds to under 0.2 seconds, and parsing became about twice as fast. The refreshed data is exactly the same."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; yalnız yenileme sırasında uygulama donmadan yanıt vermeye devam eder.",
+          "en": "There is no change on screen; the app simply keeps responding during a refresh instead of freezing."
+        }
+      }
+    },
     {
       "id": "post-refresh-stall-worker",
       "type": "improvement",
