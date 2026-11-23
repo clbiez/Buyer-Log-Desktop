@@ -2,6 +2,7 @@
 // (fonksiyon isimleri ve davranışları korunarak) Node.js tarafına taşınmış halidir.
 // Amaç: Excel dosyalarını tarayıcıya yüklemek yerine doğrudan ağ sürücüsünden okumak.
 
+const { STEP_MASK, runStepsSync, runStepsAsync } = require('./cooperative-steps');
 const BLDateDimension = require('../../public/date-dimension');
 
 let _xlsx = null;
@@ -349,14 +350,25 @@ function mergeAntrepoEntries(current, incoming) {
 
 const ANTREPO_LOOKUP_CACHE = new WeakMap();
 function buildAntrepoLookup(antrepoMap, ruleValue) {
+  return runStepsSync(buildAntrepoLookupSteps(antrepoMap, ruleValue));
+}
+// Arama tablosunu işbirlikçi kurar ve önbelleğe koyar; sonraki findAntrepoHit(s)
+// çağrıları aynı tabloyu kullanır. Sonuç buildAntrepoLookup ile birebir aynıdır.
+// findAntrepoHit(s) ile aynı yapılandırma çözümü (matchRuleOf) kullanılır.
+function warmAntrepoLookup(antrepoMap, ruleValue, options = {}) {
+  return runStepsAsync(buildAntrepoLookupSteps(antrepoMap, matchRuleOf(ruleValue)), options);
+}
+function* buildAntrepoLookupSteps(antrepoMap, ruleValue) {
   if (!antrepoMap || typeof antrepoMap !== 'object') return { byLine: new Map() };
-  const signature = antrepoMatchConfigSignature(ruleValue);
+  const config = preparedMatchConfig(ruleValue);
+  const signature = preparedMatchInfo(config).signature;
   let cache = ANTREPO_LOOKUP_CACHE.get(antrepoMap);
   if (!cache) { cache = new Map(); ANTREPO_LOOKUP_CACHE.set(antrepoMap, cache); }
   if (cache.has(signature)) return cache.get(signature);
-  const config = normalizeAntrepoMatchConfig(ruleValue);
   const byLine = new Map();
+  let step = 0;
   for (const value of Object.values(antrepoMap)) {
+    if ((++step & STEP_MASK) === 0) yield;
     if (!value || typeof value !== 'object') continue;
     const key = dynamicAntrepoMatchKey(value, 'ias', config);
     if (!key) continue;
@@ -608,10 +620,104 @@ function normalizeAntrepoMatchConfig(value) {
 function normalizeAntrepoMatchRule() {
   return DEFAULT_ANTREPO_MATCH_RULE;
 }
+/* HAZIRLANMIŞ EŞLEŞTİRME YAPILANDIRMASI.
+   Yapılandırma bir yenileme boyunca değişmez; fakat findAntrepoHit(s),
+   dynamicAntrepoMatchKey ve buildAntrepoLookup onu HER SATIRDA yeniden
+   normalleştiriyor, imzasını yeniden hesaplıyordu (62 bin satırlık sahada ~1,6 sn
+   ana iş parçacığı). normalizeAntrepoMatchConfig yalnız `conditions` ve `sources`
+   alanlarını okur; sonuç bu iki alanın içerik parmak iziyle bir kez üretilir,
+   DERİN DONDURULUR (paylaşılan nesneyi hiçbir çağıran değiştiremez) ve imza,
+   ikili koşullar ve "varsayılan mı" bilgisi yanında tutulur. Çıktı birebir aynıdır.
+   Genel API normalizeAntrepoMatchConfig her çağrıda yine taze ve değiştirilebilir
+   nesne döndürür; bu önbellek yalnız iç sıcak yolu kullanır. */
+const PREPARED_MATCH_CONFIGS = new WeakMap();
+const PREPARED_MATCH_CONFIG_BY_FINGERPRINT = new Map();
+const PREPARED_MATCH_CONFIG_LIMIT = 64;
+// Aynı (dondurulmamış) girdi nesnesi tekrar gelirse pahalı kayıpsızlık taraması
+// yerine yerel JSON.stringify ile değişmediği doğrulanır; değiştiyse yeniden hazırlanır.
+const PREPARED_MATCH_CONFIG_BY_INPUT = new WeakMap();
+function matchConfigInputText(raw) {
+  return JSON.stringify([Array.isArray(raw.conditions) ? raw.conditions : null, raw.sources === undefined ? null : raw.sources]);
+}
+function deepFreezeMatchConfig(value) {
+  if (!value || typeof value !== 'object' || Object.isFrozen(value)) return value;
+  Object.values(value).forEach(deepFreezeMatchConfig);
+  return Object.freeze(value);
+}
+function matchConfigFingerprint(value) {
+  const raw = value && typeof value === 'object' && !Array.isArray(value) ? value : null;
+  if (!raw) return 'default';
+  // Yalnız düz nesne/dizi ve JSON'da kayıpsız temsil edilen ilkel değerler önbelleğe
+  // girer. Date, NaN, fonksiyon, toJSON vb. JSON'da başka bir değerle çakışabilir;
+  // böyle bir girdi her seferinde eski yolla normalleştirilir.
+  let lossless = true;
+  let text;
+  try {
+    text = JSON.stringify([Array.isArray(raw.conditions) ? raw.conditions : null, raw.sources === undefined ? null : raw.sources], function replacer(key, current) {
+      const original = this[key];
+      const type = typeof original;
+      if (type === 'function' || type === 'symbol' || type === 'bigint') lossless = false;
+      else if (type === 'number' && !Number.isFinite(original)) lossless = false;
+      else if (original && type === 'object') {
+        const proto = Object.getPrototypeOf(original);
+        if (!Array.isArray(original) && proto !== Object.prototype && proto !== null) lossless = false;
+        else if (typeof original.toJSON === 'function') lossless = false;
+      }
+      return current;
+    });
+  } catch (_) { return null; }
+  return lossless ? text : null;
+}
+function preparedMatchConfig(value) {
+  const isInputObject = Boolean(value && typeof value === 'object' && !Array.isArray(value));
+  if (isInputObject && PREPARED_MATCH_CONFIGS.has(value)) return value;
+  if (isInputObject) {
+    const known = PREPARED_MATCH_CONFIG_BY_INPUT.get(value);
+    if (known) {
+      let text = null;
+      try { text = matchConfigInputText(value); } catch (_) { text = null; }
+      if (text === known.text) return known.config;
+    }
+  }
+  const fingerprint = matchConfigFingerprint(value);
+  let config = fingerprint != null ? PREPARED_MATCH_CONFIG_BY_FINGERPRINT.get(fingerprint) : undefined;
+  if (!config) {
+    config = deepFreezeMatchConfig(normalizeAntrepoMatchConfig(value));
+    PREPARED_MATCH_CONFIGS.set(config, { pairConditions: undefined, signature: undefined, isDefault: undefined, sides: new Map() });
+    if (fingerprint != null) {
+      if (PREPARED_MATCH_CONFIG_BY_FINGERPRINT.size >= PREPARED_MATCH_CONFIG_LIMIT) PREPARED_MATCH_CONFIG_BY_FINGERPRINT.clear();
+      PREPARED_MATCH_CONFIG_BY_FINGERPRINT.set(fingerprint, config);
+    }
+  }
+  if (isInputObject && fingerprint != null) PREPARED_MATCH_CONFIG_BY_INPUT.set(value, { text: fingerprint, config });
+  return config;
+}
+function preparedMatchInfo(config) {
+  const info = PREPARED_MATCH_CONFIGS.get(config);
+  if (info.signature === undefined) info.signature = computeMatchConfigSignature(config);
+  if (info.isDefault === undefined) info.isDefault = computeIsDefaultMatchConfig(config);
+  if (info.pairConditions === undefined) info.pairConditions = matchConditionsForPair(config, 'asas', 'antrepo');
+  return info;
+}
+// Koşul başına rol operandı satır başına yeniden aranmaz.
+function preparedPairSides(config, role) {
+  const info = preparedMatchInfo(config);
+  let sides = info.sides.get(role);
+  if (!sides) {
+    sides = info.pairConditions.map(condition => matchOperandForRole(condition, role) || emptyMatchSide());
+    info.sides.set(role, sides);
+  }
+  return sides;
+}
+/** Salt okunur, paylaşılan (dondurulmuş) normalleştirilmiş yapılandırma. Döngüde
+    findAntrepoHit(s)/dynamicAntrepoMatchKey çağıran kod bunu bir kez alıp geçirir. */
+function prepareAntrepoMatchConfig(value) {
+  return preparedMatchConfig(value);
+}
 function matchRuleOf(value) {
-  if (value && typeof value === 'object' && Array.isArray(value.conditions)) return normalizeAntrepoMatchConfig(value);
-  if (value && typeof value === 'object' && value.antrepoMatchConfig) return normalizeAntrepoMatchConfig(value.antrepoMatchConfig);
-  return defaultAntrepoMatchConfig();
+  if (value && typeof value === 'object' && Array.isArray(value.conditions)) return preparedMatchConfig(value);
+  if (value && typeof value === 'object' && value.antrepoMatchConfig) return preparedMatchConfig(value.antrepoMatchConfig);
+  return preparedMatchConfig({ version: 2, conditions: DEFAULT_ANTREPO_MATCH_CONDITIONS });
 }
 function matchOperandLabel(operand, fallback = '') {
   if (!operand) return fallback;
@@ -624,7 +730,9 @@ function antrepoMatchConfigLabel(value) {
     .join(' = ')).join(' + ');
 }
 function antrepoMatchConfigSignature(value) {
-  const config = normalizeAntrepoMatchConfig(value);
+  return preparedMatchInfo(preparedMatchConfig(value)).signature;
+}
+function computeMatchConfigSignature(config) {
   // İmza SIRALIDIR ve operand başına kaynak kimliğini de taşır: aynı sütun adı
   // farklı kaynaklardan geldiğinde arama tablosu yeniden kurulmalıdır.
   return JSON.stringify(config.conditions.map(condition => [
@@ -640,7 +748,9 @@ function antrepoMatchConfigSignature(value) {
   ]));
 }
 function isDefaultAntrepoMatchConfig(value) {
-  const config = normalizeAntrepoMatchConfig(value);
+  return preparedMatchInfo(preparedMatchConfig(value)).isDefault;
+}
+function computeIsDefaultMatchConfig(config) {
   const expected = [
     ['Sipariş Kod', 'Sipariş Kod'],
     ['Model Adı', 'Ürün Ad'],
@@ -701,7 +811,9 @@ function normalizedConditionMatchValue(value, condition, side) {
 function matchValueFor(record, role, condition) {
   // Taraf, sabit bir alan adından değil OPERANDIN ROLÜNDEN bulunur; böylece
   // aynı motor üçüncü bir kaynak eklendiğinde de çalışır.
-  const side = matchOperandForRole(condition, role) || emptyMatchSide();
+  return matchValueForSide(record, role, condition, matchOperandForRole(condition, role) || emptyMatchSide());
+}
+function matchValueForSide(record, role, condition, side) {
   const canonicalHeader = side.canonicalHeader || side.header || '';
   const canonicalKey = turknorm(canonicalHeader);
   const conditionId = String(condition && condition.id || '').toLowerCase();
@@ -726,14 +838,15 @@ function matchValueFor(record, role, condition) {
   return normalizedConditionMatchValue(canonicalMatchValue(record, role, canonicalHeader), condition, side);
 }
 function dynamicAntrepoMatchKey(record, role, value) {
-  const config = normalizeAntrepoMatchConfig(value);
+  const config = preparedMatchConfig(value);
   // Yalnız BU İKİLİYİ (sipariş satırları ↔ antrepo satırları) kısıtlayan koşullar
   // anahtara girer. Başka bir kaynak çiftine ait koşul burada kısıt üretmez; ikili
   // için hiç koşul kalmadıysa anahtar boştur ve HİÇBİR ŞEY eşleşmez — koşulsuz bir
   // kural her satırı her siparişe bağlardı.
-  const conditions = matchConditionsForPair(config, 'asas', 'antrepo');
+  const conditions = preparedMatchInfo(config).pairConditions;
   if (!conditions.length) return '';
-  const values = conditions.map(condition => matchValueFor(record, role, condition));
+  const sides = preparedPairSides(config, role);
+  const values = conditions.map((condition, index) => matchValueForSide(record, role, condition, sides[index]));
   if (values.some(v => !v)) return '';
   return JSON.stringify(values);
 }
@@ -1018,17 +1131,33 @@ function findAnchorRow(rows, anchors, maxScan) {
 }
 
 function objectRowsToMatrix(records) {
+  return runStepsSync(objectRowsToMatrixSteps(records));
+}
+// Adımlı (yield eden) sürüm; çıktı eski `[headers, ...rows.map(...)]` ile birebir
+// aynıdır (seyrek dizideki boşluk, yayma sonrası olduğu gibi `undefined` kalır).
+function* objectRowsToMatrixSteps(records) {
   const rows = Array.isArray(records) ? records : [];
   const headers = [];
   const seen = new Set();
-  rows.forEach(record => {
-    if (!record || typeof record !== 'object' || Array.isArray(record)) return;
-    Object.keys(record).forEach(key => {
+  for (let i = 0; i < rows.length; i++) {
+    if ((i & STEP_MASK) === STEP_MASK) yield;
+    if (!(i in rows)) continue;
+    const record = rows[i];
+    if (!record || typeof record !== 'object' || Array.isArray(record)) continue;
+    for (const key of Object.keys(record)) {
       const name = norm(key);
       if (name && !seen.has(name)) { seen.add(name); headers.push(name); }
-    });
-  });
-  return [headers, ...rows.map(record => headers.map(header => record && Object.prototype.hasOwnProperty.call(record, header) ? record[header] : null))];
+    }
+  }
+  const out = new Array(rows.length + 1);
+  out[0] = headers;
+  for (let i = 0; i < rows.length; i++) {
+    if ((i & STEP_MASK) === STEP_MASK) yield;
+    if (!(i in rows)) { out[i + 1] = undefined; continue; }
+    const record = rows[i];
+    out[i + 1] = headers.map(header => record && Object.prototype.hasOwnProperty.call(record, header) ? record[header] : null);
+  }
+  return out;
 }
 
 function isMainFabricFlag(value) {
@@ -1042,6 +1171,12 @@ function isMainFabricFlag(value) {
 }
 
 function parseASASMatrix(rows, ruleValue) {
+  return runStepsSync(parseASASMatrixSteps(rows, ruleValue));
+}
+// Tek uygulama: senkron sürücü (parseASASMatrix) ile işbirlikçi sürücü
+// (parseASASRowsAsync) aynı generator'ı çalıştırır; yalnız `yield` noktalarında
+// olay döngüsüne dönülebilir, çıktı birebir aynıdır.
+function* parseASASMatrixSteps(rows, ruleValue) {
   const hIdx = findAnchorRow(rows, ['Sipariş Kod'], 25);
   if (hIdx < 0) return null;
   const header = rows[hIdx].map(h => norm(h));
@@ -1164,6 +1299,7 @@ function parseASASMatrix(rows, ruleValue) {
   const duplicateMainDetailByKey = new Map();
   let mainFabricRows = 0, ignoredNonMainRows = 0, duplicateMainRows = 0, sourceRowCount = 0;
   for (let r = hIdx + 1; r < rows.length; r++) {
+    if ((r & STEP_MASK) === STEP_MASK) yield;
     const row = rows[r]; if (!row) continue;
     const oc = g(row, 'Sipariş Kod'); if (oc == null || oc === '') continue;
     sourceRowCount++;
@@ -1240,12 +1376,14 @@ function parseASASMatrix(rows, ruleValue) {
       }
     }
   }
-  const orders = [...seen.values()].map(order => {
+  const orders = [];
+  for (const order of seen.values()) {
+    if ((orders.length & STEP_MASK) === STEP_MASK) yield;
     const out = { ...order };
     delete out._isMainFabric;
     delete out._sourceRow;
-    return out;
-  });
+    orders.push(out);
+  }
   const warnings = [];
   const warningDetails = [];
   if (idx['Net Alım Sipariş Miktarı'] == null) {
@@ -1369,6 +1507,12 @@ function parseASASWorkbook(wb, ruleValue) {
 
 function parseASASRows(records, ruleValue) {
   return parseASASMatrix(objectRowsToMatrix(records), ruleValue);
+}
+// parseASASRows ile birebir aynı çıktı; büyük model sonuçlarında olay döngüsünü
+// uzun süre kilitlememek için süre bütçesi dolunca yield eder.
+async function parseASASRowsAsync(records, ruleValue, options = {}) {
+  const matrix = await runStepsAsync(objectRowsToMatrixSteps(records), options);
+  return runStepsAsync(parseASASMatrixSteps(matrix, ruleValue), options);
 }
 
 
@@ -1711,6 +1855,9 @@ function antrepoParseMeta(map) {
 }
 
 function parseAntrepoMatrix(rows, ruleValue) {
+  return runStepsSync(parseAntrepoMatrixSteps(rows, ruleValue));
+}
+function* parseAntrepoMatrixSteps(rows, ruleValue) {
   const list = Array.isArray(rows) ? rows : [];
   const activeConfig = matchRuleOf(ruleValue);
   const usesColourDescription = activeConfig.conditions.some(condition => condition.normalization === 'colour');
@@ -1776,6 +1923,7 @@ function parseAntrepoMatrix(rows, ruleValue) {
   // SUMMARIZECOLUMNS'ın ilişkisiz satırları elemesi).
   const statusCounts = new Map();
   for (let r = hIdx + 1; r < list.length; r++) {
+    if ((r & STEP_MASK) === STEP_MASK) yield;
     const row = list[r]; if (!row) continue;
     const oc = cell(row, 'ocode');
     if (oc == null || oc === '') continue;
@@ -1875,6 +2023,11 @@ function parseAntrepoWorkbook(wb, ruleValue) {
 
 function parseAntrepoRows(records, ruleValue) {
   return parseAntrepoMatrix(objectRowsToMatrix(records), ruleValue);
+}
+// parseAntrepoRows ile birebir aynı çıktı; süre bütçesi dolunca yield eder.
+async function parseAntrepoRowsAsync(records, ruleValue, options = {}) {
+  const matrix = await runStepsAsync(objectRowsToMatrixSteps(records), options);
+  return runStepsAsync(parseAntrepoMatrixSteps(matrix, ruleValue), options);
 }
 
 
@@ -3939,13 +4092,13 @@ module.exports = {
   prepareBacklogQuery, buildBacklogFilterValues,
   calculateSuppFobByRule, findSuppFobRule, pricingLicensorForLicense, automaticRuleMeta,
   countryEN,
-  parseASASWorkbook, parseASASRows, parseFabricWorkbook, applyFabricEntries, applyFabricEntriesToLflRows, parseAntrepoWorkbook, parseAntrepoRows, parseCPUpdateWorkbook,
+  parseASASWorkbook, parseASASRows, parseASASRowsAsync, parseFabricWorkbook, applyFabricEntries, applyFabricEntriesToLflRows, parseAntrepoWorkbook, parseAntrepoRows, parseAntrepoRowsAsync, warmAntrepoLookup, parseCPUpdateWorkbook,
   buildCPRowsFromASAS, buildOrdersRowsFromASAS, buildSharedOrderProjectionRowsFromASAS, buildOverviewSummaryRowsFromASAS, buildOrderSummaryRowsFromASAS, buildBacklogOperationalRows, buildBacklogGrouped, buildBacklogDetailRows, buildBacklogTemplateRows, backlogCustomDimensionContext, computeFlags, applyFormulas, deriveOperationalStatus, shouldWaitForRetail, isShortageStatus, isWarehouseShortageStatus, backlogRemainderStatus, findAntrepoHit, findAntrepoHits, backlogOrderQuantityFromAntrepo, backlogProductionRemainder, PRODUCTION_REMAINDER_TOLERANCE_RATE, SHORTAGE_REMAINDER_RATE, SHORTAGE_STATUS, WAREHOUSE_STATUS, WAREHOUSE_SHORTAGE_STATUS, BACKLOG_DIM_LABELS,
   orderCodeKey, toOrderCodeNumber, antrepoParseMeta, dateOrdinal,
   orderLineKey, orderLineKeyOf, rowLineKey, normalizePlmImageId, normalizeCpImageColourCode, plmImageKey, plmColourImageKey, plmColourImageNameKey, plmImageRef, plmImageNamedIndex, plmImageLazyNamedIndex, plmImageKeysFor, plmImageDeleted, plmImageUsable, overrideKeyOf, overrideHas, overrideGet,
   antrepoEntryConflicts, backlogNodeAtPath,
   ANTREPO_MATCH_RULES, ANTREPO_MATCH_RULE_LABELS, DEFAULT_ANTREPO_MATCH_RULE, normalizeAntrepoMatchRule,
-  DEFAULT_ANTREPO_MATCH_CONDITIONS, defaultAntrepoMatchConfig, normalizeAntrepoMatchConfig, antrepoMatchConfigLabel, antrepoMatchConfigSignature, isDefaultAntrepoMatchConfig,
+  DEFAULT_ANTREPO_MATCH_CONDITIONS, defaultAntrepoMatchConfig, normalizeAntrepoMatchConfig, prepareAntrepoMatchConfig, antrepoMatchConfigLabel, antrepoMatchConfigSignature, isDefaultAntrepoMatchConfig,
   MATCH_ROLE_ALIASES, matchRoleKey, defaultMatchSourceId, normalizeMatchOperand, matchOperandForRole, matchOperandForSource, matchOperandLabel, matchConditionsForPair, unresolvedMatchOperands,
   dynamicAntrepoMatchKey, matchValueFor, orderCodeMatchValue,
   antrepoMatchKey, exactMatchValue, exactOrderCodeKey, exactModelKey, exactCcodeKey,

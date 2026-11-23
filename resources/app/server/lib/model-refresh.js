@@ -10,8 +10,9 @@ const { createSourceQueryCoordinator } = require('./horizon-source-planner');
 
 const DEFAULT_REFRESH_TIMEOUT_MS = 5 * 60 * 1000;
 const filterValueTypes = require('./filter-value-types');
-const { parseASASRows, parseAntrepoRows, antrepoParseMeta, findAntrepoHit, findAntrepoHits, orderCodeKey, orderLineKey, antrepoMatchKey, normalizeAntrepoMatchRule, normalizeAntrepoMatchConfig, antrepoMatchConfigLabel, dynamicAntrepoMatchKey, auditAntrepoMatching, ANTREPO_MATCH_RULE_LABELS, matchOperandForRole, matchOperandForSource, matchConditionsForPair } = require('./parse');
-const { parseLFLRows, withFabricDimensions } = require('./lfl');
+const { parseASASRowsAsync, parseAntrepoRowsAsync, warmAntrepoLookup, antrepoParseMeta, findAntrepoHit, findAntrepoHits, orderCodeKey, orderLineKey, antrepoMatchKey, normalizeAntrepoMatchRule, normalizeAntrepoMatchConfig, prepareAntrepoMatchConfig, antrepoMatchConfigLabel, dynamicAntrepoMatchKey, auditAntrepoMatching, ANTREPO_MATCH_RULE_LABELS, matchOperandForRole, matchOperandForSource, matchConditionsForPair } = require('./parse');
+const { parseLFLRowsAsync, withFabricDimensions } = require('./lfl');
+const { STEP_MASK, yieldToEventLoop, runStepsAsync } = require('./cooperative-steps');
 
 class ModelRefreshError extends Error {
   constructor(message, code = 'MODEL_REFRESH_FAILED', statusCode = 500, extra = {}) {
@@ -1077,7 +1078,9 @@ function iasHorizonExcludedOrders(orders, map, horizon, ruleValue) {
   const list = Array.isArray(orders) ? orders : [];
   const evaluable = evaluableIasHorizon(horizon, list);
   if (!evaluable) return null;
-  const excluded = list.filter(order => !findAntrepoHits(map || {}, order, { rule: ruleValue }).length
+  // Yapılandırma sipariş başına yeniden normalleştirilmez (salt okunur, paylaşılan).
+  const rule = prepareAntrepoMatchConfig(ruleValue);
+  const excluded = list.filter(order => !findAntrepoHits(map || {}, order, { rule }).length
     && !horizonFields.matchesHorizon(order, evaluable.horizon));
   return { excluded, fields: evaluable.fields };
 }
@@ -1456,12 +1459,17 @@ async function runConnectionScopes(item, options = {}, perScopeOptions = () => (
  * sütunların hangi model sütunlarından okunduğu ve kaç siparişin eşleştiği
  * bildirimde görünür.
  */
-function describeAntrepoMatch(target, map, orders, run, ruleValue) {
+function describeAntrepoMatch(target, map, orders, run, ruleValue, cooperative = {}) {
+  return runStepsAsync(describeAntrepoMatchSteps(target, map, orders, run, ruleValue), cooperative);
+}
+// Sipariş döngüsü süre bütçesiyle olay döngüsüne döner; uyarılar birebir aynıdır.
+function* describeAntrepoMatchSteps(target, map, orders, run, ruleValue) {
   const label = String(target || '').toUpperCase();
   const meta = antrepoParseMeta(map) || {};
   const warnings = [];
   const columns = Array.isArray(meta.columns) ? meta.columns : [];
-  const config = normalizeAntrepoMatchConfig(ruleValue);
+  // Salt okunur, paylaşılan yapılandırma: sipariş döngüsünde yeniden normalleştirilmez.
+  const config = prepareAntrepoMatchConfig(ruleValue);
 
   if (meta.ok === false) {
     warnings.push(
@@ -1473,7 +1481,9 @@ function describeAntrepoMatch(target, map, orders, run, ruleValue) {
   const diag = {};
   let matched = 0;
   const unmatchedSamples = [];
+  let step = 0;
   for (const order of Array.isArray(orders) ? orders : []) {
+    if ((++step & STEP_MASK) === 0) yield;
     const hit = findAntrepoHit(map, order, { rule: config, diag });
     if (hit) matched++;
     else if (unmatchedSamples.length < 5) {
@@ -1632,6 +1642,10 @@ async function loadFromModelConnections(items, options = {}) {
   }
 
   const connectionWarnings = [...asasResult.warnings];
+  // Ayrıştırma aşamaları süre bütçesiyle olay döngüsüne döner (cooperative-steps.js).
+  // `cooperativeParse` yalnız test/ölçüm içindir: { budgetMs, yieldControl }.
+  const cooperative = options.cooperativeParse && typeof options.cooperativeParse === 'object' ? options.cooperativeParse : {};
+  const yieldStage = typeof cooperative.yieldControl === 'function' ? cooperative.yieldControl : yieldToEventLoop;
   const asasOrdersByTarget = {};
   const fabricHeaderInfoByTarget = {};
   if (includeAsas) {
@@ -1645,7 +1659,9 @@ async function loadFromModelConnections(items, options = {}) {
       const entry = asasByTarget.get(target);
       if (!entry) continue;
       let parsed = parsedByRun.get(entry.run);
-      if (!parsed) { parsed = parseASASRows(entry.run.rows, options.matchRule); parsedByRun.set(entry.run, parsed); }
+      // 60 bin satırlık sonuçta senkron ayrıştırma ana iş parçacığını saniyelerce
+      // kilitliyordu; işbirlikçi sürüm aynı çıktıyı süre bütçesiyle üretir.
+      if (!parsed) { parsed = await parseASASRowsAsync(entry.run.rows, options.matchRule, cooperative); parsedByRun.set(entry.run, parsed); }
       if (!parsed || !Array.isArray(parsed.orders)) {
         throw new ModelRefreshError(
           `${connectionLabel(selected.asas)} · ${modelScopes.scopeLabel(entry.scope)} sonucunda “Sipariş Kod” alanı bulunamadı.`,
@@ -1672,7 +1688,7 @@ async function loadFromModelConnections(items, options = {}) {
     const lflEntry = wantsLfl ? (asasByTarget.get('lfl') || asasByTarget.get('cp') || asasByTarget.get('backlog')) : null;
     if (!lflEntry) parsedLfl = { rows: null, meta: null };
     else
-    try { parsedLfl = parseLFLRows(lflEntry.run.rows, connectionLabel(selected.asas)); }
+    try { parsedLfl = await parseLFLRowsAsync(lflEntry.run.rows, connectionLabel(selected.asas), cooperative); }
     catch (err) {
       connectionWarnings.push(`LFL verisi model sonucundan üretilemedi; son başarılı LFL verisi korundu. / LFL could not be parsed from the model result; the last successful LFL data was preserved: ${err.message}`);
       parsedLfl = { rows: null, meta: null };
@@ -1681,6 +1697,7 @@ async function loadFromModelConnections(items, options = {}) {
   // null means this refresh has no LFL replacement (for example CP-only).
   // Turning it into [] would erase the last successful LFL source on publish.
   if (Array.isArray(parsedLfl.rows)) {
+    await yieldStage();
     parsedLfl = { ...parsedLfl, meta: withFabricDimensions(parsedLfl.meta, parsedLfl.rows) };
   }
 
@@ -1721,17 +1738,26 @@ async function loadFromModelConnections(items, options = {}) {
       for (const [target, entry] of antrepoResult.byTarget) {
         const run = entry.run;
         let map = mapByRun.get(run);
-        if (!map) { map = parseAntrepoRows(run.rows, options.matchRule); mapByRun.set(run, map); }
+        // Aşamalar arasında olay döngüsüne dönülür; her aşama kendi içinde kısa kalır.
+        if (!map) {
+          map = await parseAntrepoRowsAsync(run.rows, options.matchRule, cooperative);
+          // Eşleştirme tablosu burada işbirlikçi kurulur; aşağıdaki aşamalar önbellekten okur.
+          await warmAntrepoLookup(map, options.matchRule, cooperative);
+          mapByRun.set(run, map);
+        }
+        await yieldStage();
         const outside = iasHorizonExcludedOrders(asasOrdersByTarget[target] || [], map, entry.scope && entry.scope.horizon, options.matchRule);
         if (outside && outside.excluded.length) {
           const key = JSON.stringify(outside.excluded.map(order => antrepoMatchKey(order.ocode, order.model, order.ccode)).sort());
           if (!horizonGroups.has(key)) horizonGroups.set(key, { targets: [], ...outside });
           horizonGroups.get(key).targets.push(target);
         }
+        await yieldStage();
         connectionWarnings.push(...validateAntrepoIntegrity(target, map, asasOrdersByTarget[target] || [], options.matchRule));
         antrepoMapByTarget[target] = map && typeof map === 'object' ? map : {};
         antrepoRuns.push(run);
-        connectionWarnings.push(...describeAntrepoMatch(target, map, asasOrdersByTarget[target] || [], run, options.matchRule));
+        await yieldStage();
+        connectionWarnings.push(...await describeAntrepoMatch(target, map, asasOrdersByTarget[target] || [], run, options.matchRule, cooperative));
       }
       for (const group of horizonGroups.values()) {
         const label = group.targets.map(target => target.toUpperCase()).join(', ');
