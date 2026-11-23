@@ -109,11 +109,12 @@ test('startup snapshot load yields to the event loop and hydrates exactly what t
 
   /* Beklenen sonuç ölçümden ÖNCE Date tipini koruyan sha256 özetlerine indirgenir
      ve referans önbellek bırakılır. Kök neden ([Doğrulandı], perf_hooks 'gc'
-     gözlemcisi): ölçülen en uzun blok her koşuda bir major GC (mark-compact)
-     duraklamasıydı; referans kopya canlı tutulduğunda yükleme sırasında heap
-     sahada hiç olmayan ikinci bir tam snapshot kopyası taşıyor, duraklama
-     ~2 katına çıkıp 200 ms'yi aşıyordu. Sahadaki açılışta canlı olan yalnız
-     yüklenen kopyadır; eşdeğerlik sözleşmesi aynı özetlerle aynen denetlenir. */
+     gözlemcisi): referans kopya canlıyken ölçülen en uzun blok her koşuda
+     yükleme penceresine düşen bir major GC (mark-compact) duraklamasıydı
+     (117-298 ms, heap ~430 MB). Referans, sahada açılışta hiç olmayan ikinci
+     tam snapshot kopyasıdır; bırakılınca pencereye düşen GC'ler 21-60 ms, heap
+     ~216 MB ve en uzun blok GC dışı ~60-90 ms oldu. Eşdeğerlik sözleşmesi aynı
+     özetlerle aynen denetlenir; 200 ms sınırı değişmez. */
   let expected = serverRuntime().hydrateModelSnapshot('moderator');
   const want = { alias:aliasShape(expected), loadedAt:expected.loadedAt, lflLoadedAt:expected.lflLoadedAt, digest:cacheDigest(expected) };
   expected = null;
