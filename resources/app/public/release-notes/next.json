@@ -68,6 +68,29 @@
           "en": "On demo data, the Turkish interface shows the column header as Retail Tarihi."
         }
       }
+    },
+    {
+      "id": "model-refresh-parse-no-stall",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri Yenileme",
+        "en": "Data Refresh"
+      },
+      "title": {
+        "tr": "Büyük veride model yenilemesi uygulamayı dondurmuyor",
+        "en": "Model refresh no longer freezes the app with large data"
+      },
+      "body": {
+        "tr": "Database (model) yenilemesinde ASAS, LFL ve IAS sonuçları artık küçük parçalar halinde işlenir; eşleştirme kuralı satır başına yeniden hazırlanmaz. 60 bin satırlık ölçümde yenileme sırasında uygulamanın tepkisiz kaldığı en uzun süre yaklaşık 5,3 saniyeden 0,2 saniyenin altına indi, ayrıştırma da yaklaşık iki kat hızlandı. Yenilenen veri birebir aynıdır.",
+        "en": "During a Database (model) refresh, ASAS, LFL and IAS results are now processed in small chunks, and the match rule is no longer prepared again for every row. In a 60k-row measurement, the longest time the app stayed unresponsive during a refresh dropped from about 5.3 seconds to under 0.2 seconds, and parsing became about twice as fast. The refreshed data is exactly the same."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; yalnız yenileme sırasında uygulama donmadan yanıt vermeye devam eder.",
+          "en": "There is no change on screen; the app simply keeps responding during a refresh instead of freezing."
+        }
+      }
     }
   ]
 }
