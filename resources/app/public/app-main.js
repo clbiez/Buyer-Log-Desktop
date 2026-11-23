@@ -32327,6 +32327,31 @@ function kolAverageFooter(weightedValue,arithmeticValue,label){
   const title=[weightedTitle,arithmeticTitle,hasWeightedChange?changeTitle:''].filter(Boolean).join('\n');
   return `<td class="collectionWeightedAverage${hasWeightedChange?' hasWeightedChange':''}" title="${escapeHtml(title)}"><span class="collectionAverageLine"><span class="collectionFooterCaption">${appLang==='en'?'W.Avg':'Ağ.Ort.'}</span><strong>${money(weightedValue)}</strong></span><span class="collectionAverageLine"><span class="collectionFooterCaption">${appLang==='en'?'Avg':'Ort.'}</span><strong>${money(arithmeticValue)}</strong></span>${change}</td>`;
 }
+/* Teklif & Onay alt satırı: hücrede gösterilen fiyatın (Onaylı, yoksa Best) adet
+   ağırlıklı ve aritmetik ortalaması + Target'a göre ağırlıklı % fark. Yüzde yalnız
+   fiyatı, Target'ı ve adedi olan satırlarda: Σ(fiyat×adet) / Σ(target×adet) − 1. */
+// pricingByRow: renderKolSummaryFooter'ın satır başına bir kez çözdüğü {best,confirmed}.
+function kolPriceStripFooter(rows,pricingByRow=null){
+  const display=row=>{const p=pricingByRow&&pricingByRow.get(row);return p?(p.confirmed||p.best||null):kolConfirmedDisplay(row);};
+  const en=appLang==='en',items=(rows||[]).map(row=>{const m=display(row),target=kolParseMoneyNum(kolEffectiveValue(row,'targetPrice'));return {row,price:m?m.price:null,target:Number.isFinite(target)&&target>0?target:null};});
+  const byRow=new Map(items.map(item=>[item.row,item.price]));
+  const getter=row=>byRow.get(row)??'';
+  const weighted=kolWeightedAverage(rows,getter),arithmetic=kolArithmeticAverage(rows,getter);
+  let priceValue=0,targetValue=0,paired=0;
+  items.forEach(({row,price,target})=>{const qty=tableNumericValue(row&&row.quantity);if(!(qty>0)||price==null||target==null)return;priceValue+=price*qty;targetValue+=target*qty;paired++;});
+  const percent=targetValue>0?(priceValue/targetValue-1)*100:null;
+  const money=value=>Number.isFinite(value)?`$${escapeHtml(kolFormatMoneyDisplay(String(value)))}`:'—';
+  const line=(caption,value)=>`<span class="collectionAverageLine"><span class="collectionFooterCaption">${escapeHtml(caption)}</span><strong>${value}</strong></span>`;
+  let deltaHtml='';
+  if(Number.isFinite(percent)){
+    const rounded=Math.abs(percent)<0.05?0:Math.round(percent*10)/10,text=`${rounded>0?'+':''}${rounded.toLocaleString(en?'en-GB':'tr-TR',{maximumFractionDigits:1})}%`;
+    deltaHtml=line(en?'W.% Δ Target':'Ağ.% Δ Target',`<span class="kolBestDelta ${rounded<=0?'isAtOrBelowTarget':'isAboveTarget'}">${escapeHtml(text)}</span>`);
+  }
+  const title=en
+    ?`Approved price (Best Price if not approved): quantity-weighted and arithmetic averages of filtered rows. % change vs Target Price = weighted price / weighted Target − 1 across ${paired} rows with a price, Target Price and quantity.`
+    :`Onaylı fiyat (onay yoksa Best Price): filtrelenmiş satırların adet ağırlıklı ve aritmetik ortalaması. Target Price'a göre % fark = ağırlıklı fiyat / ağırlıklı Target − 1; fiyatı, Target Price'ı ve adedi olan ${paired} satır.`;
+  return `<td class="collectionWeightedAverage" title="${escapeHtml(title)}">${line(en?'W.Avg':'Ağ.Ort.',money(weighted))}${line(en?'Avg':'Ort.',money(arithmetic))}${deltaHtml}</td>`;
+}
 function kolWeightedLandedChange(rows,landedByRow){
   let ydWeighted=0,trWeighted=0,totalQty=0;
   (rows||[]).forEach(row=>{
@@ -32373,8 +32398,10 @@ function renderKolSummaryFooter(table,rows,descriptors,{pictureVisible=false}={}
   if(!table)return;
   let foot=table.tFoot;if(!foot)foot=table.createTFoot();
   const targetGetter=row=>row.targetPrice;
-  const bestGetter=row=>{const best=kolBestPricing(row);return best?best.price:'';};
-  const confirmedGetter=row=>{const confirmed=kolConfirmedPricing(row);return confirmed?confirmed.price:'';};
+  // Best/Onaylı fiyat satır başına bir kez çözülür; ortalamalar ve Teklif & Onay alt satırı paylaşır.
+  const pricingByRow=new Map((rows||[]).map(row=>[row,{best:kolBestPricing(row),confirmed:kolConfirmedPricing(row)}]));
+  const bestGetter=row=>pricingByRow.get(row)?.best?.price??'';
+  const confirmedGetter=row=>pricingByRow.get(row)?.confirmed?.price??'';
   const fobGetter=row=>row.fob;
   const landedByRow=new Map((rows||[]).map(row=>[row,kolLandedCalc(row)]));
   const ydLandedGetter=row=>landedByRow.get(row)?.ydLanded;
@@ -32393,10 +32420,11 @@ function renderKolSummaryFooter(table,rows,descriptors,{pictureVisible=false}={}
   const cells=[selectionFooterCellHtml(selectedCount)];
   let modelPlaced=false;
   if(pictureVisible)cells.push('<td class="quantityTotalSpacer"></td>');
-  const metricDescriptor=d=>d.kind==='best'||d.kind==='confirmedPrice'||(d.kind==='base'&&['targetPrice','fob','ydLanded','trLanded','quantity'].includes(d.k));
+  const metricDescriptor=d=>d.kind==='priceStrip'||d.kind==='best'||d.kind==='confirmedPrice'||(d.kind==='base'&&['targetPrice','fob','ydLanded','trLanded','quantity'].includes(d.k));
   descriptors.forEach(d=>{
     if(referenceFooters.has(d.k)){cells.push(referenceFooters.get(d.k));return;}
     if(d.kind==='base'&&d.k==='targetPrice'){cells.push(kolAverageFooter(targetAvg,targetArithmetic,L('Target Price')));return;}
+    if(d.kind==='priceStrip'){cells.push(kolPriceStripFooter(rows,pricingByRow));return;}
     if(d.kind==='best'){cells.push(kolAverageFooter(bestAvg,bestArithmetic,L('Best Price')));return;}
     if(d.kind==='confirmedPrice'){cells.push(kolAverageFooter(confirmedAvg,confirmedArithmetic,L('Approved Mfr. Price')));return;}
     if(d.kind==='base'&&d.k==='fob'){cells.push(kolAverageFooter(fobAvg,fobArithmetic,'FOB'));return;}

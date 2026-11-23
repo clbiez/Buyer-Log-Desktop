@@ -46,7 +46,7 @@ function harness(owners={}){
  const names={'buyer-a':'Demo Buyer A','buyer-b':'Demo Buyer B'};
  const context={window:null,appLang:'tr',state:{currentUser:{id:'buyer-a'}},document:{body:{dataset:{activeTab:'overview'}}},BLCollectionLflEngine:Engine,BLCanonicalFields:require('../public/canonical-fields'),
   escapeHtml:value=>String(value).replace(/[&<>"']/g,'_'),kolFormatMoneyDisplay:value=>Number(value).toFixed(2),
-  kolEffectiveValue:(row,key)=>row[key],kolSuppFob:row=>({price:Number(row.targetPrice),source:'target'}),
+  kolEffectiveValue:(row,key)=>row[key],kolSuppFob:row=>({price:Number(row.targetPrice),source:'target'}),kolParseMoneyNum:value=>value===''||value==null?NaN:Number(String(value).replace(',','.')),
   kolLflCountryRuleFor:row=>{const ownerId=state.mode==='multi'?row._collectionOwnerId:state.ownerId;return {ownerId,ownerName:names[ownerId]||ownerId,countries:state.owners[ownerId]||[],canEdit:state.mode!=='multi'&&state.canEdit};},
   kolSetLflCountryExclusions:countries=>{if(state.mode==='multi'||!state.canEdit)return false;state.owners[state.ownerId]=[...countries];saves.push([...countries]);return true;},
   fetch:async(url,options)=>{
@@ -63,7 +63,7 @@ const ALL=(1000+2000+8000)/400;
 
 test('cells, footer and details follow the row owner rule, not the viewer',async()=>{
  const {ui,context,state,requests}=harness({'buyer-a':['MA','EG']});await ui.ensure();
- const row={id:1,...candidate,targetPrice:12};
+ const row={id:1,...candidate,targetPrice:12,fob:'12,00'};
  assert.equal(ui.model(row,'season').reference.average,10);
  assert.match(ui.model(row,'season').detail,/Hariç ülkeler: .*EG.*MA/);
  assert.equal(ui.model(row,'impact').impact.before,10);
@@ -72,7 +72,7 @@ test('cells, footer and details follow the row owner rule, not the viewer',async
  assert.deepEqual([...requests[0].excludedCountries],['EG','MA']);assert.deepEqual(report.rows.map(item=>item.orderCode),['DEMO-1']);
  // Buyer A views buyer B's models: B's rule (none) applies, not A's own rule.
  state.mode='multi';
- const ofB={id:-1,...candidate,targetPrice:12,_collectionOwnerId:'buyer-b',_collectionOwnerName:'Demo Buyer B'},ofA={...ofB,id:-2,_collectionOwnerId:'buyer-a'};
+ const ofB={id:-1,...candidate,targetPrice:12,fob:'12,00',_collectionOwnerId:'buyer-b',_collectionOwnerName:'Demo Buyer B'},ofA={...ofB,id:-2,_collectionOwnerId:'buyer-a'};
  assert.equal(ui.model(ofB,'season').reference.average,ALL);
  assert.equal(ui.model(ofA,'season').reference.average,10);
  assert.equal(ui.footerSummaries([ofA,ofB],['season']).get('season').weightedBefore,(10*100+ALL*100)/200,'each row uses its owner rule');
@@ -83,7 +83,7 @@ test('cells, footer and details follow the row owner rule, not the viewer',async
 
 test('drawer toggles countries in one collapsed checkbox list, including saved countries absent from the source',async()=>{
  const {ui,state,saves}=harness({'buyer-a':['MA','BD']});await ui.ensure();
- const row={id:1,...candidate,targetPrice:12};
+ const row={id:1,...candidate,targetPrice:12,fob:'12,00'};
  let html=ui.drawer(row);
  assert.match(html,/<details class="cpdCountryPicker">/);
  assert.doesNotMatch(html,/cpdCountryChip|country-add|country-remove|<select/);
@@ -186,7 +186,7 @@ test('reference endpoint returns a saved legacy summary when its source cannot u
 test('legacy summaries without country sums are never presented as filtered',async()=>{
  const {ui,context}=harness({rules:[{buyer:'Demo Buyer',countries:['MA']}]});
  context.fetch=async()=>({ok:true,json:async()=>({version:'v0',references:Engine.buildReferences(source).map(({byCountry,...item})=>item)})});
- await ui.ensure();const row={id:9,...candidate,buyer:'Demo Buyer',targetPrice:12};
+ await ui.ensure();const row={id:9,...candidate,buyer:'Demo Buyer',targetPrice:12,fob:'12,00'};
  assert.equal(ui.model(row,'season').reference.average,(1000+2000+8000)/400);
  assert.doesNotMatch(ui.model(row,'season').detail,/Hariç ülkeler/);
  assert.match(ui.drawer(row),/Referansları yenile düğmesini kullanın/);

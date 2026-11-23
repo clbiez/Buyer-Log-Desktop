@@ -53,7 +53,7 @@ function uiHarness(){
  const state={version:'v1',referenceRequests:0,detailRequests:0,fail:false,gate:null,referenceGate:null,referenceFailure:null};
  const context={window:null,appLang:'tr',state:{currentUser:{id:'buyer'}},document:{body:{dataset:{activeTab:'overview'}}},
   BLCollectionLflEngine:Engine,BLCanonicalFields:require('../public/canonical-fields'),escapeHtml:value=>String(value).replace(/[&<>"']/g,'_'),kolFormatMoneyDisplay:value=>Number(value).toFixed(2),
-  kolEffectiveValue:(row,key)=>row.effective?.[key]??row[key],kolSuppFob:row=>({price:Number(row.targetPrice),source:'target'}),
+  kolEffectiveValue:(row,key)=>row.effective?.[key]??row[key],kolSuppFob:row=>({price:Number(row.targetPrice),source:'target'}),kolParseMoneyNum:value=>value===''||value==null?NaN:Number(String(value).replace(',','.')),
   fetch:async(url,options)=>{
    const references=Engine.buildReferences(source);
    if(url.startsWith('/api/collection-lfl-reference')){
@@ -73,7 +73,7 @@ function uiHarness(){
  context.window=context;vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/collection-lfl.js'),'utf8'),context);
  return {ui:context.BLCollectionLfl,context,state};
 }
-const candidate={id:1,season:'S7',mag:'CU4E',urunTipi:'K',inStoreMonth:'FEBRUARY 2027',quantity:200,targetPrice:15};
+const candidate={id:1,season:'S7',mag:'CU4E',urunTipi:'K',inStoreMonth:'FEBRUARY 2027',quantity:200,targetPrice:15,fob:'15,00'};
 
 test('detail reports load on click, coalesce by reference and reuse the shared report UI with numeric contribution columns',async()=>{
  const {ui,context,state}=uiHarness();await ui.ensure();

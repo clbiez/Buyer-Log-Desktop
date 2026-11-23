@@ -18,17 +18,20 @@ test('footer cells use effective fields, preserve compact folds and summarize in
  const orders=['A','B'].flatMap((mag,i)=>[{season:'S6',mag,classification:'K',inStoreMonth:'2026-02',fob:10+i*10,quantity:9000-i*8995,country:'CHINA',orderCode:mag+'-OLD'},{season:'S7',mag,classification:'K',inStoreMonth:'2027-01',fob:10+i*10,quantity:i?500:1000,country:'CHINA',orderCode:mag+'-NEW'}]);
  const references=Engine.buildReferences(orders);let requests=0;
  const context={window:null,appLang:'tr',state:{currentUser:{id:'footer-demo'}},document:{body:{dataset:{activeTab:'overview'}}},BLCollectionLflEngine:Engine,
-  escapeHtml:value=>String(value).replace(/[<>&"]/g,'_'),kolFormatMoneyDisplay:value=>Number(value).toFixed(2),kolEffectiveValue:(row,key)=>row.effective?.[key]??row[key],kolSuppFob:row=>Number(row.targetPrice)>0?{price:Number(row.targetPrice),source:'target'}:null,
+  escapeHtml:value=>String(value).replace(/[<>&"]/g,'_'),kolFormatMoneyDisplay:value=>Number(value).toFixed(2),kolEffectiveValue:(row,key)=>row.effective?.[key]??row[key],kolSuppFob:row=>Number(row.targetPrice)>0?{price:Number(row.targetPrice),source:'target'}:null,kolParseMoneyNum:value=>value===''||value==null?NaN:Number(String(value).replace(',','.')),
   fetch:async()=>{requests++;return {ok:true,json:async()=>({references})};}};
  context.window=context;vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/collection-lfl.js'),'utf8'),context);
  const ui=context.BLCollectionLfl;await ui.ensure();
- const rows=[{id:1,season:'S7',mag:'A',urunTipi:'K',inStoreMonth:'FEBRUARY 2027',quantity:100,targetPrice:20},{id:2,season:'S7',mag:'B',urunTipi:'K',inStoreMonth:'FEBRUARY 2027',quantity:300,targetPrice:10}];
+ const rows=[{id:1,season:'S7',mag:'A',urunTipi:'K',inStoreMonth:'FEBRUARY 2027',quantity:100,targetPrice:20,fob:'20,00'},{id:2,season:'S7',mag:'B',urunTipi:'K',inStoreMonth:'FEBRUARY 2027',quantity:300,targetPrice:10,fob:'10,00'}];
  const descriptors=[{kind:'previousSeason',k:'__previousSeason__'},{kind:'lfl',k:'__lfl__'},{kind:'seasonImpact',k:'__seasonImpact__'},{kind:'priceReferences',k:'__referenceSummary__',folds:['__previousSeason__','__lfl__','__seasonImpact__']}];
  const cells=ui.footerCells(rows,descriptors);
  assert.match(cells.get('__previousSeason__'),/17\.50/);assert.match(cells.get('__lfl__'),/17\.50/);
  const summaries=ui.footerSummaries(rows,['impact']),impact=summaries.get('impact');
  assert.equal(impact.weightedBefore,17.5);assert.ok(Math.abs(impact.weightedAfter-((12000/1100)*100+16.25*300)/400)<1e-9);
  assert.match(cells.get('__seasonImpact__'),/→/);assert.match(cells.get('__referenceSummary__'),/Previous Season/);assert.match(cells.get('__referenceSummary__'),/LFL/);
+ // Compact column: each fold shows its own weighted % next to the average: (20×100+10×300)/(10×100+20×300) − 1.
+ assert.match(cells.get('__referenceSummary__'),/LFL · Ağ\.Ort\..*\$17\.50 <span class="kolBestDelta isAtOrBelowTarget">-28[,.]57%/);
+ assert.equal((cells.get('__referenceSummary__').match(/kolBestDelta/g)||[]).length,3,'Previous Season, LFL and Season Impact each show a %');
  assert.match(cells.get('__referenceSummary__'),/Sezon Etkisi/);assert.match(cells.get('__referenceSummary__'),/→/);
  assert.match(ui.combinedCell(rows[0],'',['__previousSeason__','__lfl__','__seasonImpact__']),/Sezon Etkisi.*10\.00 → \$10\.91/);
  assert.match(ui.footerCells([{...rows[1],effective:{quantity:100}}],descriptors).get('__lfl__'),/20\.00/);
@@ -39,8 +42,10 @@ test('footer cells use effective fields, preserve compact folds and summarize in
  assert.match(compactOnly,/LFL/);assert.ok(!compactOnly.includes('Previous Season'));
  context.BLCollectionModelGroups=require('../public/collection-model-groups');
  const parent={...rows[0],modelGroupId:'G',modelGroupRole:'parent',pricing:{SUP:30},confirmedManufacturer:'SUP'};
- const child={...rows[1],modelGroupId:'G',modelGroupRole:'variant'};context.kolRows=[parent,child];
+ const child={...rows[1],modelGroupId:'G',modelGroupRole:'variant',fob:'30,00'};context.kolRows=[parent,child];
  const grouped=ui.footerSummaries([child],['month']).get('month');assert.equal(grouped.weightedBefore,10);assert.equal(grouped.weightedAfter,30);
  assert.equal(grouped.quantity,300,'use the child colour quantity and the filtered-out parent model fields');
+ assert.equal(ui.footerSummaries([{...child,fob:'40,50'}],['month']).get('month').weightedAfter,40.5,'footer uses the FOB column (Supp. FOB 30 + royalty + hologram)');
+ assert.equal(ui.footerSummaries([{...child,fob:''}],['month']).get('month').weightedAfter,null,'empty FOB (missing rule) is excluded, not replaced by Supp. FOB');
  assert.equal(requests,1,'footer rendering and filtering must not fetch historical orders');
 });
