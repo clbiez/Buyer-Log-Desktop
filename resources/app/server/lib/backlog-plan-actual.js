@@ -202,8 +202,7 @@ function projectSnapshot(orders, templateRows, meta = {}) {
 function emptyArchive() {
   return { schemaVersion: SCHEMA_VERSION, base: null, deltas: [] };
 }
-async function readArchive(userId) {
-  const file = archivePath(userId);
+async function readArchiveFile(file) {
   for (const candidate of [file, file + '.bak']) {
     try {
       const raw = await gunzip(await fs.promises.readFile(candidate));
@@ -217,11 +216,16 @@ async function readArchive(userId) {
   }
   return emptyArchive();
 }
-async function writeArchive(userId, archive) {
+async function readArchive(userId) { return readArchiveFile(archivePath(userId)); }
+async function encodeArchive(archive) {
   const body = Buffer.from(JSON.stringify(archive), 'utf8');
   const compressed = await gzip(body, { level: 6 });
+  return { compressed, bytes: compressed.length, uncompressedBytes: body.length };
+}
+async function writeArchive(userId, archive) {
+  const { compressed, bytes, uncompressedBytes } = await encodeArchive(archive);
   await atomicWriteBufferAsync(archivePath(userId), compressed);
-  return { bytes: compressed.length, uncompressedBytes: body.length };
+  return { bytes, uncompressedBytes };
 }
 function rowsMap(rows) {
   return new Map((Array.isArray(rows) ? rows : []).filter(row => row && row.id).map(row => [row.id, row]));
@@ -277,31 +281,56 @@ function pruneArchive(archive, nowMs = Date.now()) {
   };
 }
 
-async function appendSnapshot(userId, snapshot) {
+/* Arşive tek bir zaman işareti ekler (saf; dosyaya dokunmaz). reuse: girdi
+   anahtarı arşivdekiyle aynı → içerik değişmedi, boş delta işareti. */
+function appendToArchive(archive, snapshot, { reuse = false, inputKey = '' } = {}) {
+  if (!archive.base) {
+    archive.base = { capturedAt: snapshot.capturedAt, sourceGenerationId: snapshot.sourceGenerationId || '', rows: snapshot.rows || [] };
+  } else {
+    const delta = reuse ? { upserts: [], removed: [] } : deltaBetween(latestRows(archive), snapshot.rows || []);
+    archive.deltas.push({
+      capturedAt: snapshot.capturedAt,
+      sourceGenerationId: snapshot.sourceGenerationId || '',
+      upserts: delta.upserts,
+      removed: delta.removed,
+    });
+  }
+  if (inputKey) archive.inputKey = String(inputKey);
+  else if (!reuse) delete archive.inputKey;
+  return pruneArchive(archive);
+}
+/* Kullanıcı başına arşiv yazımlarını sıralar. Ana iş parçacığındaki bütün
+   okuma-değiştirme-yazma akışları (appendSnapshot ve işçide hazırlanan
+   capture) aynı kuyruktan geçer; iki işaret birbirini ezemez. */
+function withArchiveLock(userId, work) {
   const key = safeUserId(userId);
   const previous = writeTails.get(key) || Promise.resolve();
-  const next = previous.catch(() => {}).then(async () => {
+  const next = previous.catch(() => {}).then(() => work());
+  writeTails.set(key, next);
+  return next.finally(() => { if (writeTails.get(key) === next) writeTails.delete(key); });
+}
+async function appendSnapshot(userId, snapshot) {
+  return withArchiveLock(userId, async () => {
     let archive = await readArchive(userId);
     if(snapshot.reuseInputKey&&(!archive.base||archive.inputKey!==snapshot.reuseInputKey))return null;
-    if (!archive.base) {
-      archive.base = { capturedAt: snapshot.capturedAt, sourceGenerationId: snapshot.sourceGenerationId || '', rows: snapshot.rows || [] };
-    } else {
-      const delta = snapshot.reuseInputKey?{upserts:[],removed:[]}:deltaBetween(latestRows(archive), snapshot.rows || []);
-      archive.deltas.push({
-        capturedAt: snapshot.capturedAt,
-        sourceGenerationId: snapshot.sourceGenerationId || '',
-        upserts: delta.upserts,
-        removed: delta.removed,
-      });
-    }
-    if(snapshot.inputKey)archive.inputKey=String(snapshot.inputKey);
-    else if(!snapshot.reuseInputKey)delete archive.inputKey;
-    archive = pruneArchive(archive);
+    archive = appendToArchive(archive, snapshot, { reuse: Boolean(snapshot.reuseInputKey), inputKey: snapshot.inputKey });
     const saved = await writeArchive(userId, archive);
     return { ...saved, snapshots: markerList(archive).length, capturedAt: snapshot.capturedAt, reused:Boolean(snapshot.reuseInputKey) };
   });
-  writeTails.set(key, next);
-  return next.finally(() => { if (writeTails.get(key) === next) writeTails.delete(key); });
+}
+/* Yenileme sonrası capture (compute işçisinde koşar): arşiv BİR kez okunur;
+   girdi anahtarı aynıysa satır üretilmez, değilse buildRows() satırları verir.
+   Sonuç sıkıştırılmış yeni arşivdir; dosyaya yazmak çağıranın işidir
+   (ana iş parçacığı, withArchiveLock içinde, atomik). Davranış eski iki adımlı
+   appendSnapshot(reuseInputKey) → appendSnapshot(rows) akışıyla aynıdır. */
+async function prepareCapture(file, meta, buildRows) {
+  let archive = await readArchiveFile(file);
+  const inputKey = String(meta.inputKey || '');
+  const reuse = Boolean(inputKey && archive.base && archive.inputKey === inputKey);
+  const snapshot = { capturedAt: meta.capturedAt, sourceGenerationId: meta.sourceGenerationId || '', rows: reuse ? [] : await buildRows() };
+  archive = appendToArchive(archive, snapshot, { reuse, inputKey });
+  const encoded = await encodeArchive(archive);
+  return { ...encoded, snapshots: markerList(archive).length, capturedAt: meta.capturedAt, reused: reuse };
 }
 
 function resolveMarker(archive, requestedAt, side) {
@@ -743,7 +772,7 @@ function catalogsFromRows(rows) {
 module.exports = {
   ROOT, SCHEMA_VERSION, RETENTION_MS, MAX_SNAPSHOTS,
   archivePath, lineId, dateIso, dayOrdinal, projectSnapshot,
-  readArchive, writeArchive, appendSnapshot, markerList, rowsAtMarker, resolveRange,
+  readArchive, readArchiveFile, writeArchive, appendSnapshot, prepareCapture, withArchiveLock, markerList, rowsAtMarker, resolveRange,
   collapseHistory, compareSnapshots, catalogsFromRows, categoryForField,
   PLAN_OUTCOMES, summarizePlan,
   _test: { deltaBetween, latestRows, pruneArchive, rowsMap, bucketAdded, mapText, openQty, periodLoads, markerDayOffsets, repairedRowsAtMarker, calendarDay },

@@ -6,7 +6,7 @@ function setup(change){
   const context={Object,Array,Set,Map,Buffer,process,APP_VERSION:'test',COLLECTION_CATALOG_SCHEMA_VERSION:3,
     pageProjectionContext:()=>({id:'a',contextHash,filterStatus:{ready:true}}),cacheForUser:()=>active,
     effectiveOverridesForUser:()=>({}),pageCacheRuntimeMeta:()=>({loadedAt:'r1'}),projectionSourceRevision:()=> 'r1',
-    derivedInputKeys:{keys:()=>({cp:'cp-key',orders:'orders-key',overview:'overview-key',backlog:'backlog-key'})},
+    derivedInputKeys:{keysAsync:async()=>({cp:'cp-key',orders:'orders-key',overview:'overview-key',backlog:'backlog-key'})},
     pageProjectionCache:{readReusableProjections:async()=>({projections:{orders:{buffer:reusedBuffer}},manifest:{activeGeneration:'existing'}}),writeCompressedGeneration:async(_id,options)=>{options.assertCurrent();written=options;return {activeGeneration:'new'};}},
     userAccess:{hasArea:()=>true,profileById:()=>profile,computeAccessContext:()=>({accessHash:'authority'})},
     computeSourceFor:async()=>({ownerId:'a',generation:'g1'}),computeSourceToken:()=>sourceToken,
@@ -30,7 +30,7 @@ test('a fully reusable cache still rejects source changes, changed permissions a
     const profile={id:'a',enabled:true,status:'ACTIVE'},runtime={loadedAt:'r1',asasOrders:[]};let sourceToken='g1',hash='ctx',published=false;
     const c={Object,Array,Set,Map,Buffer,APP_VERSION:'test',userAccess:{profileById:()=>profile},
       pageProjectionContext:()=>({id:'a',contextHash:hash,filterStatus:{ready:true}}),computeSourceToken:()=>sourceToken,
-      effectiveOverridesForUser:()=>({}),derivedInputKeys:{keys:()=>({cp:'key',backlog:'backlog'})},
+      effectiveOverridesForUser:()=>({}),derivedInputKeys:{keysAsync:async()=>({cp:'key',backlog:'backlog'})},
       pageCacheRuntimeMeta:()=>({}),projectionSourceRevision:()=> 'r1',
       pageProjectionCache:{readReusableProjections:async()=>({manifest:{activeGeneration:'existing'},projections:{cp:{buffer:Buffer.from('gzip')}}}),
         reuseGeneration:async(_id,options)=>{await new Promise(setImmediate);if(kind==='source')sourceToken='g2';else if(kind==='context')hash='changed';else profile.enabled=false;options.assertCurrent();published=true;return {};}}

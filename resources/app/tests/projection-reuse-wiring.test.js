@@ -66,15 +66,28 @@ test('actual server orchestration skips unchanged builders and rebuilds only cha
   assert.equal((await pageProjectionCache.readProjection('u','orders',scope)).data.rows[0].qty,3);
   scope='new-authorized-context';await context.run(null,copy);assert.equal(builds,11);
 });
-test('actual Backlog capture stores the input key and preserves a new marker without rebuilding identical records',async()=>{
-  let builds=0;const context={APP_VERSION:'test',derivedInputKeys,backlogPlanActual,
-    effectiveOverridesForUser:()=>({}),ordersForTarget:r=>r.asasOrders,antrepoForTarget:r=>r.antrepoMap,
-    buildBacklogTemplateRows:()=>{builds++;return [{'Sipariş Kod':'O','Model Adı':'M','Renk Kod':'C',Renk:'Blue'}];}};
-  vm.createContext(context);vm.runInContext(fn('captureBacklogPlanActualSnapshot')+'\nglobalThis.capture=captureBacklogPlanActualSnapshot;',context);
-  const runtime={loadedAt:'first',asasOrders:[{ocode:'O',model:'M',ccode:'C',colour:'Blue',qty:10}],antrepoMap:{}};
-  await context.capture('b',runtime);assert.equal(builds,1);assert.ok((await backlogPlanActual.readArchive('b')).inputKey);
-  const clone=JSON.parse(JSON.stringify(runtime));clone.loadedAt='second';
-  const second=await context.capture('b',clone);assert.equal(builds,1);assert.equal(second.reused,true);
-  const archive=await backlogPlanActual.readArchive('b');assert.equal(backlogPlanActual.markerList(archive).length,2);assert.deepEqual(archive.deltas[0].upserts,[]);
-  clone.asasOrders[0].qty=20;await context.capture('b',clone);assert.equal(builds,2);
+for(const path_ of ['worker','local']){
+test(`actual Backlog capture stores the input key and preserves a new marker without rebuilding identical records (${path_})`,async()=>{
+  // Capture işçide koşar (plan-actual-capture); runtime değişmişse aynı hesap yerel yoldan.
+  // Her iki yol da aynı captureFromSource'u çağırır; satır üretimi sayaçla izlenir.
+  const parse=require('../server/lib/parse'),original=parse.buildBacklogTemplateRows,worker=require('../server/workers/compute-worker');
+  let builds=0,current=null,workerRuns=0;
+  parse.buildBacklogTemplateRows=()=>{builds++;return [{'Sipariş Kod':'O','Model Adı':'M','Renk Kod':'C',Renk:'Blue'}];};
+  try{
+    const user='b-'+path_;
+    const context={APP_VERSION:'test',backlogPlanActual,planActualCapture:require('../server/lib/backlog-plan-actual-capture'),Buffer,
+      effectiveOverridesForUser:()=>({}),cacheForUser:()=>path_==='worker'?current:{},computeSourceFor:async()=>({}),
+      atomicWriteBufferAsync:require('../server/user-data').atomicWriteBufferAsync,logRuntimeFailure:(_name,e)=>{throw e;},
+      serverCompute:()=>({run:async(task,_descriptor,params)=>{workerRuns++;const transfer=[];const value=await worker.execute(task,{ownerId:user,source:{},params:{...params}},transfer,current);return {value,release(){}};}})};
+    vm.createContext(context);vm.runInContext(fn('captureBacklogPlanActualSnapshot')+'\nglobalThis.capture=captureBacklogPlanActualSnapshot;',context);
+    const run=(runtime)=>{current=runtime;return context.capture(user,runtime);};
+    const runtime={loadedAt:'first',asasOrders:[{ocode:'O',model:'M',ccode:'C',colour:'Blue',qty:10}],antrepoMap:{}};
+    await run(runtime);assert.equal(builds,1);assert.ok((await backlogPlanActual.readArchive(user)).inputKey);
+    const clone=JSON.parse(JSON.stringify(runtime));clone.loadedAt='second';
+    const second=await run(clone);assert.equal(builds,1);assert.equal(second.reused,true);
+    const archive=await backlogPlanActual.readArchive(user);assert.equal(backlogPlanActual.markerList(archive).length,2);assert.deepEqual(archive.deltas[0].upserts,[]);
+    clone.asasOrders[0].qty=20;await run(clone);assert.equal(builds,2);
+    assert.equal(workerRuns,path_==='worker'?3:0);
+  }finally{parse.buildBacklogTemplateRows=original;}
 });
+}
