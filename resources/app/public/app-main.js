@@ -44658,7 +44658,7 @@ const KOL_DURUM_EN = {
 const KOL_EN_TR_DICT = {
   'Picture':'Görsel','Model Name':'Model Adı','Product Main Definition':'Ürün Ana Tanım','License':'Lisans','Category':'Kategori','Special Code':'Özel Kod','Line':'Line',
   'Order Type':'Sipariş Tipi','Colour Code':'Renk Kodu','Colour':'Renk','Fabric':'Kumaş','Fabric Supplier S6':'Kumaşçı S6','Fabric Price S6':'Kumaş Fiyatı S6','Fabric Supplier S7':'Kumaşçı S7','Fabric Price S7':'Kumaş Fiyatı S7','Fit':'Kalıp','Buying Sample':'Buying Numunesi','Quantity':'Adet','Licensor':'Lisans Veren',
-  'Season':'Sezon','Ex-Factory':'Sevk Tarihi','Retail':'Perakende','Ex→Retail':'Sevk→Perakende',
+  'Season':'Sezon','Ex-Factory':'Sevk Tarihi','Retail':'Perakende','Ex→Retail':'Yükleme Onay→Antrepo',
   'MB Date':'MB Tarihi','In Store':'Mağazaya Giriş','In Store Week':'Model Bütçe Hafta','In Store Month':'Model Bütçe Ayı','Model Budget Week':'Model Bütçe Hafta','Model Budget Month':'Model Bütçe Ayı','Previous Season FOB':'Önceki Sezon FOB','Target Price':'Hedef Fiyat',
   'Supp. FOB':'Tedarikçi FOB','Royalty':'Royalti','Hologram Cost':'Hologram Maliyeti','FOB':'FOB',
   'Notes':'Notlar','Durum':'Durum','Status':'Durum',
