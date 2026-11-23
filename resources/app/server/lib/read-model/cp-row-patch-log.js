@@ -27,14 +27,15 @@ function createCpRowPatchLog({now=()=>Date.now(),maxEntries=MAX_ENTRIES,ttlMs=TT
     return list;
   }
   /* items: [{orderCode,patch}] (yazılan, no-op olmayan). safe: öğe artımlı uygulanabilir mi.
-     context: {notesmap,noteColumnDefs,transitRules}. Dönen: girdi ya da null (kaydedilmedi). */
+     context: {notesmap,noteColumnDefs,transitRules,cpRowStored?}. Dönen: girdi ya da null (kaydedilmedi). */
   function record({userId,before,after,items,context,safe}){
     if(userId==null||!before||!after||String(before)===String(after)||!Array.isArray(items)||!items.length)return null;
     if(typeof safe!=='function'||items.some(item=>!item||!Number.isFinite(Number(item.orderCode))||!safe(item.patch))){counters.unsafe++;return null;}
     const key=String(userId),list=listFor(userId);
     const entry={seq:++seq,at:now(),before:String(before),after:String(after),
       items:items.map(item=>({orderCode:Number(item.orderCode),patch:item.patch})),
-      context:{notesmap:context&&context.notesmap||{},noteColumnDefs:context&&context.noteColumnDefs||[],transitRules:context&&context.transitRules||[]},
+      context:{notesmap:context&&context.notesmap||{},noteColumnDefs:context&&context.noteColumnDefs||[],transitRules:context&&context.transitRules||[],
+        ...(context&&context.cpRowStored?{cpRowStored:context.cpRowStored}:{})},
       settled:null};
     list.push(entry);while(list.length>maxEntries)list.shift();
     users.set(key,list);counters.recorded++;

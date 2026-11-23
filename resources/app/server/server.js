@@ -386,6 +386,7 @@ const { saveModelSnapshotAsync, loadModelSnapshot, loadModelSnapshotAsync, SNAPS
 const pageProjectionCache = require('./lib/page-projection-cache');
 const derivedInputKeys = require('./lib/derived-input-keys');
 const { runProjectionWorker } = require('./lib/projection-worker-client');
+const cpRowStoredLib = require('./lib/cp-row-stored');
 const { getComputeService:serverCompute, closeComputeService, retireComputeSource } = require('./lib/compute-runtime');
 const { createComputeReadGuard } = require('./lib/compute-read-guard');
 const { createComputeReadService } = require('./lib/compute-read-service');
@@ -8393,6 +8394,8 @@ function pageProjectionContext(currentUser = null) {
   const contextHash = stableHashValue({
     schema: pageProjectionCache.CACHE_SCHEMA_VERSION,
     exFactoryApprovalVersion: 2,
+    // CP satırları satır kaydı base'i için kayıtlı değerleri (`_cpStored`) taşır; eski önbellek taşımaz.
+    cpRowStoredVersion: 1,
     userId: id,
     resolvedAccessHash: currentUser ? userAccess.computeAccessContext(currentUser).accessHash : null,
     profile: profile ? {
@@ -8697,7 +8700,7 @@ async function buildResponse(currentUser = null, options = {}) {
   } else if (!sourceFilterRequired) {
     if (!active.asasOrders) await ensureDataLoaded(id);
     active = cacheForUser(id);
-    const overridesForBuild = effectiveOverridesForUser(id);
+    const sharedForBuild = loadOverrides(), overridesForBuild = effectiveOverridesForUser(id, sharedForBuild);
     const cpDataAllowed = !currentUser || ['overview','cp','orders','koleksiyon','shipping','source'].some(area => userAccess.hasArea(currentUser, area));
     const orderSummaryDataAllowed = !currentUser || ['overview','backlog','source'].some(area => userAccess.hasArea(currentUser, area));
     const scoped = (target,rows) => currentUser ? userAccess.filterRowsByScope(currentUser, filterRowsByEffectiveHorizon(currentUser,target,rows)) : rows;
@@ -8705,7 +8708,8 @@ async function buildResponse(currentUser = null, options = {}) {
     const scopedOrdersSource = scoped('orders',ordersForTarget(active, 'orders', overridesForBuild));
     const cpAntrepo=antrepoForTarget(active,'cp'),ordersAntrepo=antrepoForTarget(active,'orders');
     const projected=startup?null:buildCpAndOrdersProjectionRows(scopedCpSource,scopedOrdersSource,cpAntrepo,ordersAntrepo,overridesForBuild,cpDataAllowed);
-    cp = startup ? null : projected.cpRows;
+    // CP satır kaydı base'i: paylaşılan belgedeki kayıtlı değerler (compute-tasks buildProjections ile aynı).
+    cp = startup ? null : cpRowStoredLib.attachCpRowStored(projected.cpRows, sharedForBuild);
     orders = startup ? null : projected.ordersRows;
     orderSummary = startup ? null : (orderSummaryDataAllowed ? buildOrderSummaryRowsFromASAS(scopedCpSource, antrepoForTarget(active, 'cp'), overridesForBuild) : []);
     overviewSummary = startup && orderSummaryDataAllowed ? buildOverviewSummaryRowsFromASAS(scopedCpSource, overridesForBuild) : null;
@@ -10335,7 +10339,7 @@ async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, i
   if (!beforeContext || !clean.length || clean.length !== (Array.isArray(items)?items.length:0)) return false;
   const afterContext=pageProjectionContext(currentUser);
   if (String(beforeContext.contextHash)===String(afterContext.contextHash)) return false;
-  const overrides=effectiveOverridesForUser(afterContext.id);
+  const shared=loadOverrides(),overrides=effectiveOverridesForUser(afterContext.id,shared);
   /* #1078 takip (WS7b): ağır JSON işi projection-rewrite işçisinde, yalnız değişen modül yazılır,
      kuyrukta ardışık bekleyen yeniden yazımlar birleşir; sonuç aşağıdaki eski yolla birebir aynıdır
      (parite: tests/projection-rewrite-incremental.test.js, scripts/parity-projection-rewrite.js).
@@ -10343,11 +10347,12 @@ async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, i
   if (String(process.env.BL_PROJECTION_REWRITE_INCREMENTAL ?? '') !== '0') {
     const result=await pageProjectionCache.rewriteRowPatches(afterContext.id,{
       fromContextHash:beforeContext.contextHash,toContextHash:afterContext.contextHash,
-      items:clean,context:require('./lib/projection-rewrite').rowPatchContext(overrides,clean),collectCpRows:Boolean(cpRows),
+      items:clean,context:require('./lib/projection-rewrite').rowPatchContext(overrides,clean,shared),collectCpRows:Boolean(cpRows),
     });
     if (result && cpRows) { cpRows.push(...(result.cpRows||[])); cpRows.json=require('./lib/compute-tasks').serialize(cpRows,'projection'); }
     return Boolean(result && result.manifest);
   }
+  const legacyContext={...overrides,cpRowStored:shared};
   const manifest=await pageProjectionCache.rewriteGeneration(afterContext.id,{
     fromContextHash:beforeContext.contextHash,toContextHash:afterContext.contextHash,
     transform:(_module,payload)=>{
@@ -10357,7 +10362,7 @@ async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, i
       if (Array.isArray(payload.orderSummary)) lists.push(payload.orderSummary);
       for (const rows of lists) for (const row of rows) for (const item of clean) {
         if (projectionPatchMatches(row,item)) {
-          applyIncrementalProjectionPatch(row,item.patch,overrides,_module!=='orders');
+          applyIncrementalProjectionPatch(row,item.patch,legacyContext,_module!=='orders',{cpStored:_module==='cp'&&rows===payload.rows});
           if (cpRows && _module==='cp' && rows===payload.rows && !cpRows.includes(row)) cpRows.push(row);
         }
       }
@@ -10393,13 +10398,14 @@ let cpRowPatchLogInstance=null;
 function cpRowPatchLog(){return cpRowPatchLogInstance||(cpRowPatchLogInstance=require('./lib/read-model/cp-row-patch-log').createCpRowPatchLog());}
 function recordCpRowPatches({user,before,items}){
   try{
-    const read=computeReadContext(user),overrides=effectiveOverridesForUser(read.id),notes=overrides.notesmap||{},notesmap={};
+    const read=computeReadContext(user),shared=loadOverrides(),overrides=effectiveOverridesForUser(read.id,shared),notes=overrides.notesmap||{},notesmap={};
     for(const item of items){
       const patch=item.patch||{};
       for(const key of [parseLib.orderLineKey(item.orderCode,patch.model,patch.ccode),parseLib.orderCodeKey(item.orderCode)])if(notes[key])notesmap[key]=notes[key];
     }
     return cpRowPatchLog().record({userId:String(user.id),before,after:read.contextHash,items,safe:rowPatchIncrementalSafe,
-      context:{notesmap,noteColumnDefs:overrides.noteColumnDefs||[],transitRules:overrides.transitRules||[]}});
+      context:{notesmap,noteColumnDefs:overrides.noteColumnDefs||[],transitRules:overrides.transitRules||[],
+        cpRowStored:cpRowStoredLib.pickCpRowStoredMaps(shared,items)}});
   }catch(error){logRuntimeFailure('cpRowPatchLog',error);return null;}
 }
 

@@ -17,6 +17,7 @@
 const parseLib = require('./parse');
 const { stringifyWithDates } = require('./json-dates');
 const { applyIncrementalProjectionPatch, projectionPatchMatches } = require('./projection-row-patch');
+const cpRowStored = require('./cp-row-stored');
 
 function dateOnlyISO(d) {
   const p = n => String(n).padStart(2, '0');
@@ -31,7 +32,9 @@ function dateOnlyISO(d) {
    Eşleşen satırın sipariş kodu anahtarı yamanın sipariş kodu anahtarına eşittir; satır anahtarları
    orderCodeKey ile başlar. Bu yüzden ilk "|" öncesi parçası aynı sipariş koduna çözülen her anahtar
    alınır: aranabilecek her anahtarın üst kümesidir. */
-function rowPatchContext(overrides, items) {
+/* shared: paylaşılan override belgesi (loadOverrides). CP satırının `_cpStored` değeri sunucu karşılaştırmasıyla
+   aynı kaynaktan (CP-update alt üreticisi katmanı olmadan) yeniden hesaplanır. */
+function rowPatchContext(overrides, items, shared = null) {
   const ov = overrides || {}, codes = new Set((Array.isArray(items) ? items : []).map(item => parseLib.orderCodeKey(item && item.orderCode)).filter(Boolean));
   const pick = map => {
     if (!map || typeof map !== 'object') return map;
@@ -45,6 +48,7 @@ function rowPatchContext(overrides, items) {
   return {
     notesmap: pick(ov.notesmap), importancemap: pick(ov.importancemap), importanceSettings: ov.importanceSettings,
     noteColumnDefs: ov.noteColumnDefs, transitRules: ov.transitRules,
+    cpRowStored: cpRowStored.pickCpRowStoredMaps(shared || ov, items),
   };
 }
 
@@ -65,7 +69,7 @@ function applyStep(module, payload, step) {
       const row = rows[index];
       for (const item of step.items) {
         if (!projectionPatchMatches(row, item)) continue;
-        applyIncrementalProjectionPatch(row, item.patch, step.context, includePriority);
+        applyIncrementalProjectionPatch(row, item.patch, step.context, includePriority, { cpStored: module === 'cp' && rows === payload.rows });
         (touched || (touched = new Set())).add(index);
         if (result.cpRows && rows === payload.rows && !result.cpRows.includes(row)) result.cpRows.push(row);
       }

@@ -103,7 +103,7 @@ test('a unit keeps its own base until its own ack: a date edit is not lost when 
 test('consecutive saves of the same unit rebase on ack and never conflict with themselves; a second unit waits for its own ack',async()=>{
   const r=row();const server={delType:'Gemi',notes:{},dates:{exFactory:null,retailDate:null,inStoreDate:null}};
   const {api,ctx,requests}=load({rows:[r],responses:[ack(server),ack(server)]});
-  ctx.state.overrides.delmap[key]='Gemi';
+  r._cpStored={delType:'Gemi'};                    // projeksiyon satırının kayıtlı değeri (base kaynağı)
   edit(ctx,api,r,{'Del. Type':'Uçak'});
   const p1=api.cpRowSavePlan(r,123,fullBody(r,ctx));
   const first=api.cpRowSaveSend(r,123,p1.patch,p1.units);
@@ -124,7 +124,7 @@ test('conflict: server values of the sent units go back to the row and maps; the
   const conflict=()=>({applied:[],conflicts:[{orderCode:123,key,fields:['delType'],
     current:{delType:'Tren',notes:{Notes:'',NotesHtml:'',EkNot:'',EkNotHtml:''},dates:{exFactory:null,retailDate:null,inStoreDate:null}}}],revisions:{orders:9}});
   const {api,ctx,toasts,refreshed,requests}=load({rows:[r],responses:[conflict,conflict]});
-  ctx.state.overrides.delmap[key]='Gemi';
+  r._cpStored={delType:'Gemi'};                    // projeksiyon satırının kayıtlı değeri (base kaynağı)
   edit(ctx,api,r,{'Del. Type':'Uçak',Notes:'benim'});
   const p1=api.cpRowSavePlan(r,123,fullBody(r,ctx));
   const first=api.cpRowSaveSend(r,123,p1.patch,p1.units);
@@ -144,12 +144,12 @@ test('conflict: server values of the sent units go back to the row and maps; the
   assert.equal(ctx2.reloaded,1);
 });
 
-test('remote live patch updates maps but not the base of a pending edit: the same unit then conflicts instead of overwriting',async()=>{
+test('remote live patch updates the stored record and maps but not the base of a pending edit: the same unit then conflicts instead of overwriting',async()=>{
   const r=row();const {api,ctx,requests}=load({rows:[r],responses:[()=>({applied:[],conflicts:[],revisions:{}})]});
   edit(ctx,api,r,{nc_a:'benim'});
   const plan=api.cpRowSavePlan(r,123,fullBody(r,ctx));     // gövde hazır, kayıt sırada
   api.cpRowSaveRemoteApplied(r,{model:'M1',ccode:'C1',noteColumns:{nc_a:'uzak'},notes:{Notes:'uzak not',NotesHtml:''},dates:{retailDate:'2027-01-05'}});
-  const snap=api.cpRowSnapshot(key,123);
+  const snap=api.cpRowSnapshot(r);
   assert.equal(snap.noteColumns.nc_a,'uzak');assert.equal(snap.notes.Notes,'uzak not');assert.equal(snap.dates.retailDate,'2027-01-05');
   assert.deepEqual([...plan.units],['noteColumns:nc_a']);
   await api.cpRowSaveSend(r,123,plan.patch,plan.units);
@@ -244,7 +244,7 @@ test('an ack without current values (old server / no-op) keeps the pending base 
   const r=row();let release;const gate=new Promise(resolve=>{release=resolve;});
   const bare=body=>({applied:body.items.map(item=>({orderCode:item.orderCode,key,noop:true})),conflicts:[]});
   const {api,ctx,requests}=load({rows:[r],responses:[async body=>{await gate;return bare(body);},bare]});
-  ctx.state.overrides.delmap[key]='Gemi';
+  r._cpStored={delType:'Gemi'};                    // projeksiyon satırının kayıtlı değeri (base kaynağı)
   edit(ctx,api,r,{'Del. Type':'Uçak'});const p1=api.cpRowSavePlan(r,123,fullBody(r,ctx));
   const first=api.cpRowSaveSend(r,123,p1.patch,p1.units);
   edit(ctx,api,r,{'Del. Type':'Kamyon'});const p2=api.cpRowSavePlan(r,123,fullBody(r,ctx));

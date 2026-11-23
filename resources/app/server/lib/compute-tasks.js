@@ -2,6 +2,7 @@
 const parse=require('./parse'),access=require('./compute-access'),horizon=require('./horizon-fields');
 const {buildCollectionCatalogs,COLLECTION_CATALOG_SCHEMA_VERSION}=require('./collection-catalog');
 const {stringifyWithDates}=require('./json-dates');
+const cpRowStored=require('./cp-row-stored');
 function apiDate(d){
   if(!(d instanceof Date)||isNaN(d))return null;
   const local=d.getHours()===0&&d.getMinutes()===0&&d.getSeconds()===0&&d.getMilliseconds()===0;
@@ -26,6 +27,8 @@ function scopedOrders(source,target,data){
 }
 function sameRows(a,b){return a===b||(a.length===b.length&&a.every((row,index)=>row===b[index]));}
 function buildProjections(source,data){
+  // CP satır kaydının base'i paylaşılan belgedeki kayıtlı değerdir (CP-update alt üreticisi katmanı değil).
+  const sharedOverrides=data.overrides||{};
   data=withSourceOverrides(source,data);
   const wanted=new Set(data.modules||['cp','orders','overview','order-summary','collection-catalog']),out={},overrides=data.overrides||{};
   const cpSource=scopedOrders(source,'cp',data),ordersSource=scopedOrders(source,'orders',data),cpAntrepo=antrepoFor(source,'cp'),ordersAntrepo=antrepoFor(source,'orders');
@@ -37,6 +40,7 @@ function buildProjections(source,data){
     :{cp:allowed&&needCp?parse.buildCPRowsFromASAS(cpSource,cpAntrepo,overrides):[],orders:allowed&&needOrders?parse.buildOrdersRowsFromASAS(ordersSource,ordersAntrepo,overrides):[]};
   const editable=new Map(),canEdit=row=>{const code=row&&row['Order Code'],key=String(code??'');if(!editable.has(key))editable.set(key,data.access?access.canEditCode(data.access,code):true);return editable.get(key);};
   pair.cp.forEach(row=>{row._canEdit=canEdit(row);});pair.orders.forEach(row=>{row._canEdit=false;});
+  cpRowStored.attachCpRowStored(pair.cp,sharedOverrides);
   if(needCp)out.cp={rows:data.sharedHints&&data.access?access.sharedRows(data.access,pair.cp):pair.cp,cpModelColumns:data.cpModelColumns||[]};
   if(wanted.has('orders'))out.orders={rows:pair.orders};
   let overview=[];

@@ -52,6 +52,9 @@ test('cold worker uses the selected owner snapshot CP-update overrides beneath s
   const data={access:context(source,true),horizons:{},overrides:{submap:{100:'Manual supplier'}},modules:['cp'],mergeSourceOverrides:true};
   const effective={...data.overrides,submap:{...source.cpupdateOverrides.submap,...data.overrides.submap},suppfobmap:source.cpupdateOverrides.suppfobmap,suppfobmetamap:source.cpupdateOverrides.suppfobmetamap};
   const expected=parse.buildCPRowsFromASAS(source.asasOrders,{},effective);expected.forEach(row=>row._canEdit=true);
+  // CP satır kaydı base'i (`_cpStored`) paylaşılan belgedendir: CP-update katmanı ('Imported supplier') kayıtlı değer değildir.
+  require('../server/lib/cp-row-stored').attachCpRowStored(expected,data.overrides);
+  assert.deepEqual(expected[0]._cpStored,{subManufacturer:'Manual supplier'});
   assert.deepEqual(tasks.buildProjections(source,data).cp.rows,expected);
 });
 test('snapshot applied horizon takes precedence over newly edited preferences until source refresh',()=>{

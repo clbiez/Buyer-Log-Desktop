@@ -1129,17 +1129,8 @@ function patchOrderOverrides(items, expectedRevision = null, expectedSuppFobRevi
    denenir: karşılaştırma her denemede güncel belgeyle yapılır. Supp. FOB, fiyat geri
    yükleme, görsel, önem ve eksik adet bu yola girmez (kendi revizyon/kural zincirleri). */
 const CP_ROW_SAVE_FIELDS=Object.freeze(['notes','delType','subManufacturer','licensor','noteColumns','dates']);
-const CP_ROW_NOTE_PAIRS=Object.freeze([['Notes','NotesHtml'],['EkNot','EkNotHtml']]);
-const cpRowText=value=>value==null?'':String(value);
-function cpRowStored(ov,orderCode,key,mapName){
-  const map=ov[mapName]||{};
-  if(Object.hasOwn(map,key))return map[key];
-  return key!==orderCode&&Object.hasOwn(map,orderCode)?map[orderCode]:undefined;
-}
-function cpRowRecord(ov,orderCode,key,mapName){
-  const map=ov[mapName]||{};
-  return {...(key!==orderCode&&map[orderCode]&&typeof map[orderCode]==='object'?map[orderCode]:{}),...(map[key]&&typeof map[key]==='object'?map[key]:{})};
-}
+// Kayıtlı değer okuma TEK tanım: CP projeksiyon satırının `_cpStored` değeri (istemci base'i) aynı fonksiyonlardan gelir.
+const {CP_ROW_NOTE_PAIRS,cpRowText,cpRowStored,cpRowRecord,currentOrderLineValues}=require('./lib/cp-row-stored');
 /* Alanları karşılaştırma birimlerine böler: [{field, unit, base, next, current, apply(patch)}]. */
 function cpRowUnits(ov,orderCode,key,patch,base){
   const units=[];
@@ -1210,17 +1201,6 @@ function patchOrderOverrideRows(items, options = null) {
     for(const item of applied)item.current=currentOrderLineValues(saved,item.orderCode,item.key);
     return {applied,conflicts,revision:saved._revisions.orders,revisions:{orders:saved._revisions.orders,suppFob:saved._revisions.suppFob},updated:writes.length};
   }
-}
-/* Satırın kayıtlı (geçersiz kılınmış) değerleri; çakışmada istemciye döner. Kayıt yoksa alan yazılmaz. */
-function currentOrderLineValues(ov,orderCode,key){
-  const out={};
-  const notes=cpRowRecord(ov,orderCode,key,'notesmap');
-  if(Object.keys(notes).length)out.notes=Object.fromEntries(CP_ROW_NOTE_PAIRS.flat().map(name=>[name,cpRowText(notes[name])]));
-  for(const [field,map]of [['delType','delmap'],['subManufacturer','submap'],['licensor','licensormap']]){const value=cpRowStored(ov,orderCode,key,map);if(value!==undefined)out[field]=value;}
-  const columns=cpRowRecord(ov,orderCode,key,'noteColumnValues');if(Object.keys(columns).length)out.noteColumns=columns;
-  const dates=cpRowRecord(ov,orderCode,key,'datemap');
-  out.dates=Object.fromEntries(Object.entries(DATE_OVERRIDE_FIELDS).map(([field,stored])=>[field,dates[stored]||null]));
-  return out;
 }
 
 function patchPlmImageLinks(items, expectedRevision = null) {
