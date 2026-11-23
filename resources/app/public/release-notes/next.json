@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-23",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Artwork Detayı bölge kartlarıyla görünür",
+    "en": "Artwork Detail now shows region chips"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon tablosunda Artwork Detayı düz metin yerine bölge kartları, teknik etiketi ve toplam baskı sayısıyla gösterilir; dil ve bölge sırası her satırda tutarlıdır.",
+    "en": "In the Collection table, Artwork Detail shows region chips, a technique tag and the total print count instead of plain text; language and region order are consistent on every row."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "collection-artwork-region-cards",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Artwork Detayı bölge kartlarıyla özetlenir",
+        "en": "Artwork Detail is summarized with region chips"
+      },
+      "body": {
+        "tr": "PLM'den gelen baskı bilgisi her bölge için adet rozetli bir kart, renkli teknik etiketi ve sağda toplam sayı olarak görünür. Set Style parçaları A, B sırasıyla ayrı satırlarda listelenir. Bölgeler her zaman Ön, Arka, Kollar sırasıyla yazılır ve metin arayüz diline göre üretilir; böylece aynı içerik tek bir filtre değeri olur. Elle yazılmış değerler düz metin olarak kalır ve Manuel rozetiyle işaretlenir. Çift tıklama, kopyalama ve dışa aktarma eskisi gibi düz metinle çalışır.",
+        "en": "Print information from PLM appears as a chip with a count badge for each region, a coloured technique tag and the total count on the right. Set Style parts are listed on separate lines in A, B order. Regions are always written in Front, Back, Sleeves order and the text follows the interface language, so identical content becomes a single filter value. Manually typed values stay as plain text with a Manual badge. Double-click, copy and export still work with the plain text."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-artwork-region-cards.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: Artwork Detayı sütununda Ön/Arka/Kollar bölge kartları, Pigment teknik etiketi, Set Style A/B satırları ve toplam sayılar",
+          "en": "Demo Collection table: Artwork Detail column with Front/Back/Sleeves region chips, Pigment technique tags, Set Style A/B lines and totals"
+        },
+        "caption": {
+          "tr": "Demo veride Artwork Detayı hücreleri bölge kartları, teknik etiketi ve toplam sayıyla görünür.",
+          "en": "On demo data, Artwork Detail cells show region chips, a technique tag and the total count."
+        }
+      }
+    }
+  ]
 }

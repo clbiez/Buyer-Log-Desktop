@@ -212,6 +212,20 @@ function summaryEntry(entry) {
       count: item.count,
       printType: item.printType,
     })),
+    /* Set Style parçalarının yapısal placement'ları: istemci Artwork kartlarını
+       ve dile göre özeti bunlardan kurar (sunucu artworkSummary yalnız TR). */
+    setParts: entry.isSetStyle && Array.isArray(entry.setComponents)
+      ? entry.setComponents.map(part => ({
+        label: part && part.label || '',
+        placements: (Array.isArray(part && part.placements) ? part.placements : []).map(item => ({
+          placement: item.placement,
+          placementTr: item.placementTr,
+          placementEn: item.placementEn,
+          count: item.count,
+          printType: item.printType,
+        })),
+      }))
+      : [],
   };
 }
 

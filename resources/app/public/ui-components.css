@@ -8733,6 +8733,33 @@ html[data-ui-system="manifest"] #kolTable tbody .kolFabricLine:not(.hasCard) .ko
 }
 html[data-ui-system="manifest"] #kolTable tbody td.kolFabricTd:hover .kolFabricCell,html[data-ui-system="manifest"] #cpTable tbody td.kolFabricTd:hover .kolFabricCell,html[data-ui-system="manifest"] #ordersTable tbody td.kolFabricTd:hover .kolFabricCell {background:color-mix(in srgb,var(--ui-accent) 8%,transparent) !important
 }
+/* Koleksiyon Artwork Detayı bölge kartları (yerleşim: collection-spreadsheet.css). */
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkPart {font:600 var(--ui-font-2xs)/1 var(--ui-font-mono);background:var(--ui-text-secondary);color:var(--ui-surface)
+}
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkChip {font-size:var(--ui-font-2xs);line-height:16px;background:var(--ui-surface-soft)
+}
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkChip b {font-weight:500;color:var(--ui-text);background:var(--ui-surface-strong)
+}
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkChip i {font-style:normal;font-family:var(--ui-font-mono);color:var(--ui-text-secondary);background:var(--ui-selected)
+}
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech {font-size:var(--ui-font-2xs);line-height:16px
+}
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="1"] {color:var(--ui-chart-3);background:color-mix(in srgb,var(--ui-chart-3) 13%,var(--ui-surface))
+}
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="2"] {color:var(--ui-chart-4);background:color-mix(in srgb,var(--ui-chart-4) 13%,var(--ui-surface))
+}
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="3"] {color:var(--ui-chart-5);background:color-mix(in srgb,var(--ui-chart-5) 13%,var(--ui-surface))
+}
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="4"] {color:var(--ui-chart-8);background:color-mix(in srgb,var(--ui-chart-8) 13%,var(--ui-surface))
+}
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="5"] {color:var(--ui-accent);background:color-mix(in srgb,var(--ui-accent) 13%,var(--ui-surface))
+}
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTotal {font:600 var(--ui-font-xs) var(--ui-font-mono);font-variant-numeric:tabular-nums;color:var(--ui-text)
+}
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkNone {font-size:var(--ui-font-2xs);color:var(--ui-text-muted)
+}
+html[data-ui-system="manifest"] #kolTable tbody td.kolArtworkManual::after {font-size:var(--ui-font-2xs);line-height:14px;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-warning);background:var(--ui-warning-bg)
+}
 html[data-ui-system="manifest"] .kolFabricSource {font-size:var(--ui-font-xs) !important;font-weight:600 !important;color:var(--ui-text-secondary) !important
 }
 html[data-ui-system="manifest"] .kolFabricSource.is-ai {color:var(--ui-selected-ink) !important;background:var(--ui-selected) !important

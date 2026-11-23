@@ -33493,7 +33493,11 @@ function renderKol(){
       }else if(c.custom){
         const schema=columnSchemaFor(c),display=schema?schema.format(val,{row:r}):String(val);
         html+=`<td class="editTd"${rc} data-copy-text="${escapeHtml(display)}"><textarea class="editCell kolTextCell kolCustomSchemaCell" data-id="${r.id}" data-k="${c.k}" data-raw-value="${escapeHtml(String(val))}" data-display-value="${escapeHtml(display)}">${escapeHtml(display)}</textarea></td>`;
-      }else{html+=`<td class="editTd"${rc}><textarea class="editCell kolTextCell" data-id="${r.id}" data-k="${c.k}">${escapeHtml(String(val))}</textarea></td>`;}
+      }else{
+        // Artwork Detayı: PLM'e ait değer bölge kartlarıyla gösterilir; aynı
+        // textarea düzenleme/kopyalama için hücrede kalır (manuel değer düz metin).
+        const art=c.k==='artworkDetail'?window.BLCollectionArtworkDetail?.cellCards?.(r,val):null;
+        html+=`<td class="editTd${art?' '+art.cls:''}"${rc}>${art?art.inner:''}<textarea class="editCell kolTextCell" data-id="${r.id}" data-k="${c.k}">${escapeHtml(String(val))}</textarea></td>`;}
     });
     tr.innerHTML=html;
     tr.querySelectorAll('td[data-kol-summary-title]').forEach(td=>{

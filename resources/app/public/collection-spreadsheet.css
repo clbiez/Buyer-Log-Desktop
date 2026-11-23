@@ -262,3 +262,21 @@
 
 #view-koleksiyon.blPlmDragOver{position:relative;}
 #view-koleksiyon:is(.blPlmDragOver,.blPlmDragBusy)::after{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);padding:var(--ui-space-4) var(--ui-space-6);pointer-events:none;}
+/* Artwork Detayı bölge kartları (yalnız yerleşim; görünüm ui-components.css
+   manifest katmanında). PLM'e ait değerde textarea hücrede kalır
+   (seçim/düzenleme/kopyalama aynı yol); dinlenme hâlinde kart katmanı onun
+   üstünde görünür, düzenleme/odakta kartlar gizlenir ve metin görünür. */
+#kolTable tbody td.kolArtworkTd,#kolTable tbody td.kolArtworkManual{position:relative}
+#kolTable tbody td.kolArtworkTd:not(.kolSpreadsheetEditing):not(:focus-within) .editCell{opacity:0}
+#kolTable tbody td.kolArtworkTd.kolSpreadsheetEditing .kolArtworkCards,#kolTable tbody td.kolArtworkTd:focus-within .kolArtworkCards{display:none}
+#kolTable tbody .kolArtworkCards{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:2px 8px;pointer-events:none;user-select:none;overflow:hidden}
+#kolTable tbody .kolArtworkLine{display:flex;align-items:center;gap:4px;min-width:0;white-space:nowrap;overflow:hidden}
+#kolTable tbody .kolArtworkBody{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:4px;overflow:hidden}
+#kolTable tbody .kolArtworkPart{flex:none;display:grid;place-items:center;width:16px;height:16px}
+#kolTable tbody .kolArtworkChip{flex:none;display:inline-flex;align-items:stretch}
+#kolTable tbody .kolArtworkChip b{padding:0 5px}
+#kolTable tbody .kolArtworkChip i{padding:0 4px}
+#kolTable tbody .kolArtworkTech{flex:none;padding:0 5px}
+#kolTable tbody .kolArtworkTotal{margin-left:auto;flex:none;padding-left:6px}
+#kolTable tbody td.kolArtworkManual::after{content:attr(data-manual-label);position:absolute;top:3px;right:4px;padding:0 4px;pointer-events:none}
+#kolTable tbody td.kolArtworkManual.kolSpreadsheetEditing::after,#kolTable tbody td.kolArtworkManual:focus-within::after{display:none}
