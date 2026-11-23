@@ -1,10 +1,25 @@
+const { STEP_MASK, runStepsSync, runStepsAsync } = require('./cooperative-steps');
 const BLDateDimension = require('../../public/date-dimension');
 const BLBusinessRules = require('../../public/business-rules');
 let _xlsx = null;
 function getXLSX() { if (!_xlsx) { _xlsx = require('xlsx'); try { require('../../public/excel-date-utils').installSheetJsHooks(_xlsx); } catch (_) {} } return _xlsx; }
 
 function norm(value) { return String(value == null ? '' : value).trim(); }
+// Saf fonksiyon. LFL tekilleştirme anahtarı satır başına 20 alanı normalleştirir;
+// sezon, MAG, üretici, ülke, fiyat gibi değerler on binlerce satırda tekrar eder
+// (62 bin satırda ~0,9 sn). Kısa metinler sınırlı bir bellekte tutulur; sonuç
+// birebir aynıdır. Anahtar norm() girdisidir: null/undefined ile '' aynı sonucu verir.
+const TURKNORM_CACHE = new Map();
+const TURKNORM_CACHE_LIMIT = 50000;
 function turknorm(value) {
+  const raw = value == null ? '' : String(value);
+  const cacheable = raw.length <= 160;
+  if (cacheable) { const hit = TURKNORM_CACHE.get(raw); if (hit !== undefined) return hit; }
+  const out = turknormUncached(raw);
+  if (cacheable) { if (TURKNORM_CACHE.size >= TURKNORM_CACHE_LIMIT) TURKNORM_CACHE.clear(); TURKNORM_CACHE.set(raw, out); }
+  return out;
+}
+function turknormUncached(value) {
   return norm(value)
     .toUpperCase()
     .replace(/İ/g, 'I').replace(/I/g, 'I')
@@ -188,6 +203,10 @@ function isMainFabricFlag(value) {
   return key === 'EVET' || key === 'YES' || key === 'TRUE';
 }
 function parseDetectedSheet(detected) {
+  return runStepsSync(parseDetectedSheetSteps(detected));
+}
+// Senkron ve işbirlikçi sürücüler aynı generator'ı çalıştırır (cooperative-steps.js).
+function* parseDetectedSheetSteps(detected) {
   const rows = [];
   let skippedMissingPrice = 0, skippedMissingQuantity = 0, skippedEmpty = 0, skippedMissingDimensions = 0;
   let mainFabricRows = 0, ignoredNonMainFabricRows = 0;
@@ -195,6 +214,7 @@ function parseDetectedSheet(detected) {
   const { matrix, rowIndex, map, name } = detected;
   const hasMainFabricColumn = map.mainFabric >= 0;
   for (let i = rowIndex + 1; i < matrix.length; i++) {
+    if ((i & STEP_MASK) === STEP_MASK) yield;
     const source = matrix[i] || [];
     if (!source.some(v => norm(v))) { skippedEmpty++; continue; }
     const fob = parseNumber(valueAt(source, map.fob), 'price');
@@ -288,27 +308,73 @@ function parseDetectedSheet(detected) {
   };
 }
 function objectRowsToMatrix(records) {
+  return runStepsSync(objectRowsToMatrixSteps(records));
+}
+// Çıktı eski `[headers, ...rows.map(...)]` ile birebir aynıdır (seyrek dizideki
+// boşluk, yayma sonrası olduğu gibi `undefined` kalır).
+function* objectRowsToMatrixSteps(records) {
   const rows = Array.isArray(records) ? records : [];
   const headers = [];
   const seen = new Set();
-  rows.forEach(record => {
-    if (!record || typeof record !== 'object' || Array.isArray(record)) return;
-    Object.keys(record).forEach(key => {
+  for (let i = 0; i < rows.length; i++) {
+    if ((i & STEP_MASK) === STEP_MASK) yield;
+    if (!(i in rows)) continue;
+    const record = rows[i];
+    if (!record || typeof record !== 'object' || Array.isArray(record)) continue;
+    for (const key of Object.keys(record)) {
       const name = norm(key);
       if (name && !seen.has(name)) { seen.add(name); headers.push(name); }
-    });
-  });
-  return [headers, ...rows.map(record => headers.map(header => record && Object.prototype.hasOwnProperty.call(record, header) ? record[header] : null))];
+    }
+  }
+  const out = new Array(rows.length + 1);
+  out[0] = headers;
+  for (let i = 0; i < rows.length; i++) {
+    if ((i & STEP_MASK) === STEP_MASK) yield;
+    if (!(i in rows)) { out[i + 1] = undefined; continue; }
+    const record = rows[i];
+    out[i + 1] = headers.map(header => record && Object.prototype.hasOwnProperty.call(record, header) ? record[header] : null);
+  }
+  return out;
 }
 
+const LFL_DIMENSION_FIELDS = Object.freeze([
+  ['seasons', 'season'],
+  ['mags', 'mag'],
+  ['mmygs', 'mmyg'],
+  ['brandDirectorates', 'brandDirectorate'],
+  ['classifications', 'classification'],
+  ['productDescriptions', 'productDescription'],
+  ['manufacturers', 'manufacturer'],
+  ['countries', 'country'],
+  ['buyers', 'buyer'],
+  ['buyingGroups', 'buyingGroup'],
+  ['licenses', 'license'],
+  ['licensors', 'licensor'],
+  ['dtrTypes', 'dtrType'],
+  ['lines', 'line'],
+  ['fabricCategories', 'fabricCategory'],
+  ['fabricSupplierCountries', 'fabricSupplierCountry'],
+  ['fabricSuppliers', 'fabricSupplier'],
+  ['fabricTypes', 'kumasTipi'],
+  ['yarnCounts', 'iplikNo'],
+  ['fabricWeights', 'fabricWeight'],
+  ['fabricBlends', 'karisim'],
+  ['inStoreMonths', 'inStoreMonth'],
+  ['opdMonths', 'opdMonth'],
+  ['retailDateMonths', 'retailDateMonth'],
+]);
+
 function finalizeParsedSheets(eligible) {
+  return runStepsSync(finalizeParsedSheetsSteps(eligible));
+}
+function* finalizeParsedSheetsSteps(eligible) {
   const allRows = [];
   const sheets = [];
   let skippedMissingPrice = 0, skippedMissingQuantity = 0, skippedEmpty = 0, skippedMissingDimensions = 0;
   let mainFabricRows = 0, ignoredNonMainFabricRows = 0, missingMainFabricSheets = 0;
   const missingDimensionCounts = {};
   for (const item of eligible) {
-    const parsed = parseDetectedSheet(item);
+    const parsed = yield* parseDetectedSheetSteps(item);
     // Tek çağrıya yüz binlerce argüman vermek (push(...rows)) V8 yığınını
     // taşırıyordu: kumaşlı ASAS 139 bin satırda LFL hiç güncellenmiyordu.
     for (const row of parsed.rows) allRows.push(row);
@@ -326,7 +392,9 @@ function finalizeParsedSheets(eligible) {
   }
   const fabricFields = ['fabricCategory', 'fabricSupplierCountry', 'fabricSupplier', 'kumasTipi', 'iplikNo', 'fabricWeight', 'karisim'];
   const seen = new Map();
+  let dedupIndex = 0;
   for (const row of allRows) {
+    if ((++dedupIndex & STEP_MASK) === 0) yield;
     const key = [row.orderCode, row.modelName, row.colourCode, row.season, row.inStore, row.opd, row.retailDate, row.fob, row.quantity, row.mag, row.mmyg, row.brandDirectorate, row.classification, row.manufacturer, row.country, row.buyingGroup, row.buyer, row.license, row.licensor, row.dtrType].map(turknorm).join('|');
     const current = seen.get(key);
     if (!current) { seen.set(key, row); continue; }
@@ -337,11 +405,14 @@ function finalizeParsedSheets(eligible) {
       current._mainFabric = true;
     }
   }
-  const rows = [...seen.values()].map(row => {
+  const rows = [];
+  for (const row of seen.values()) {
+    if ((rows.length & STEP_MASK) === STEP_MASK) yield;
     const out = { ...row };
     delete out._mainFabric;
-    return out;
-  });
+    rows.push(out);
+  }
+  yield;
   const warnings = [];
   if (skippedMissingPrice) warnings.push(`${skippedMissingPrice} satır geçerli FOB bulunamadığı için dışarıda bırakıldı.`);
   if (skippedMissingQuantity) warnings.push(`${skippedMissingQuantity} satır geçerli miktar bulunamadığı için dışarıda bırakıldı.`);
@@ -349,6 +420,12 @@ function finalizeParsedSheets(eligible) {
   if (missingMainFabricSheets) warnings.push(`${missingMainFabricSheets} ASAS sonucunda "Ana Kumaş Mı" alanı bulunamadı; LFL kumaş bilgileri uygulanmadı. Alanı ana ASAS bağlantısında eşleyin.`);
   if (ignoredNonMainFabricRows) warnings.push(`${ignoredNonMainFabricRows} yan kumaş satırı Ana Kumaş Mı = 0 olduğu için kumaş detaylarında dikkate alınmadı.`);
   if (!rows.some(r => r.inStore)) warnings.push('In-Store tarih sütunu bulunamadı veya tarihler okunamadı; dönem karşılaştırması sezon bazında çalışacaktır.');
+  // Boyut listeleri anahtar sırası korunarak tek tek üretilir; aralarda yield edilir.
+  const dimensions = {};
+  for (const [name, field] of LFL_DIMENSION_FIELDS) {
+    dimensions[name] = uniqueSorted(rows, field);
+    yield;
+  }
   return {
     rows,
     meta: {
@@ -365,32 +442,7 @@ function finalizeParsedSheets(eligible) {
       ignoredNonMainFabricRows,
       missingMainFabricSheets,
       warnings,
-      dimensions: {
-        seasons: uniqueSorted(rows, 'season'),
-        mags: uniqueSorted(rows, 'mag'),
-        mmygs: uniqueSorted(rows, 'mmyg'),
-        brandDirectorates: uniqueSorted(rows, 'brandDirectorate'),
-        classifications: uniqueSorted(rows, 'classification'),
-        productDescriptions: uniqueSorted(rows, 'productDescription'),
-        manufacturers: uniqueSorted(rows, 'manufacturer'),
-        countries: uniqueSorted(rows, 'country'),
-        buyers: uniqueSorted(rows, 'buyer'),
-        buyingGroups: uniqueSorted(rows, 'buyingGroup'),
-        licenses: uniqueSorted(rows, 'license'),
-        licensors: uniqueSorted(rows, 'licensor'),
-        dtrTypes: uniqueSorted(rows, 'dtrType'),
-        lines: uniqueSorted(rows, 'line'),
-        fabricCategories: uniqueSorted(rows, 'fabricCategory'),
-        fabricSupplierCountries: uniqueSorted(rows, 'fabricSupplierCountry'),
-        fabricSuppliers: uniqueSorted(rows, 'fabricSupplier'),
-        fabricTypes: uniqueSorted(rows, 'kumasTipi'),
-        yarnCounts: uniqueSorted(rows, 'iplikNo'),
-        fabricWeights: uniqueSorted(rows, 'fabricWeight'),
-        fabricBlends: uniqueSorted(rows, 'karisim'),
-        inStoreMonths: uniqueSorted(rows, 'inStoreMonth'),
-        opdMonths: uniqueSorted(rows, 'opdMonth'),
-        retailDateMonths: uniqueSorted(rows, 'retailDateMonth'),
-      },
+      dimensions,
     },
   };
 }
@@ -416,7 +468,14 @@ function withFabricDimensions(meta, rows) {
 }
 
 function parseLFLRows(records, sourceName = 'Data Model') {
-  const matrix = objectRowsToMatrix(records);
+  return finalizeParsedSheets([detectRecordsSheet(objectRowsToMatrix(records), sourceName)]);
+}
+// parseLFLRows ile birebir aynı çıktı; süre bütçesi dolunca olay döngüsüne döner.
+async function parseLFLRowsAsync(records, sourceName = 'Data Model', options = {}) {
+  const matrix = await runStepsAsync(objectRowsToMatrixSteps(records), options);
+  return runStepsAsync(finalizeParsedSheetsSteps([detectRecordsSheet(matrix, sourceName)]), options);
+}
+function detectRecordsSheet(matrix, sourceName) {
   const headers = matrix[0] || [];
   const map = mapHeaders(headers);
   const detected = { name: sourceName, matrix, rowIndex: 0, headers, map, score: headerScore(map) };
@@ -424,7 +483,7 @@ function parseLFLRows(records, sourceName = 'Data Model') {
     const found = headers.filter(Boolean).slice(0, 30).join(' | ') || 'Sütun bulunamadı';
     throw new Error(`LFL model alanları tanınamadı. En az Sezon, FOB ve miktar alanları gerekli. Bulunan başlıklar: ${found}`);
   }
-  return finalizeParsedSheets([detected]);
+  return detected;
 }
 
 /* LFL MODEL GÖRSEL KİMLİĞİ KÖPRÜSÜ.
@@ -498,4 +557,4 @@ function parseLFLWorkbook(workbook) {
   return finalizeParsedSheets(eligible);
 }
 
-module.exports = { parseLFLWorkbook, parseLFLRows, withFabricDimensions, attachModelImageIdentities, parseNumber, parseDateOnly, dateIso, headerKey };
+module.exports = { parseLFLWorkbook, parseLFLRows, parseLFLRowsAsync, withFabricDimensions, attachModelImageIdentities, parseNumber, parseDateOnly, dateIso, headerKey };

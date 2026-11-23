@@ -4898,7 +4898,7 @@ pairs:[
 ["İptal","Dropped"],
 ["Sevk Tarihi","Ex-Factory"],
 ["Perakende","Retail"],
-["Sevk→Perakende","Ex→Retail"],
+["Yükleme Onay→Antrepo","Ex→Retail"],
 ["Tedarikçi FOB","Supp. FOB"],
 ["Royalti","Royalty"],
 ["Hologram Maliyeti","Hologram Cost"],
