@@ -41,6 +41,8 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 // server.js rewriteProjectionCacheForRowPatches transform'u (eski yol) — birebir.
 function legacyTransform(clean, overrides, cpRows) {
+  // server.js: legacyContext={...overrides,cpRowStored:shared} (CP satır kaydı base'i; burada paylaşılan belge = overrides).
+  const legacyContext = { ...overrides, cpRowStored: overrides };
   return (_module, payload) => {
     if (!payload || typeof payload !== 'object') return payload;
     const lists = [];
@@ -48,7 +50,7 @@ function legacyTransform(clean, overrides, cpRows) {
     if (Array.isArray(payload.orderSummary)) lists.push(payload.orderSummary);
     for (const rows of lists) for (const row of rows) for (const item of clean) {
       if (projectionPatchMatches(row, item)) {
-        applyIncrementalProjectionPatch(row, item.patch, overrides, _module !== 'orders');
+        applyIncrementalProjectionPatch(row, item.patch, legacyContext, _module !== 'orders', { cpStored: _module === 'cp' && rows === payload.rows });
         if (cpRows && _module === 'cp' && rows === payload.rows && !cpRows.includes(row)) cpRows.push(row);
       }
     }

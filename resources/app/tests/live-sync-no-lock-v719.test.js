@@ -271,7 +271,7 @@ test('v7.19 istemci yaması sunucudaki artımlı yamayla aynı alanları yazar',
   const client = blockOf(APP, 'function applyRemoteRowPatch(row,patch)', 'function remoteEditingRowIds()');
   // #1078: sunucu yaması tek tanımı lib/projection-row-patch.js (server.js require eder).
   assert.match(SERVER, /require\('\.\/lib\/projection-row-patch'\)/);
-  const server = blockOf(fs.readFileSync(path.join(ROOT,'server','lib','projection-row-patch.js'),'utf8'), 'function applyIncrementalProjectionPatch(row, patch, overrides, includePriority = true)', 'module.exports');
+  const server = blockOf(fs.readFileSync(path.join(ROOT,'server','lib','projection-row-patch.js'),'utf8'), 'function applyIncrementalProjectionPatch(row, patch, overrides, includePriority = true, options = null)', 'module.exports');
   const fields = ["row.Notes", "row['Ek Not']", "row['Supp. FOB']", "row['Del. Type']", 'row._suppFobManual', 'row._suppFobOverride', 'row._suppFobRule', 'row._suppFobMeta', 'row._imageRef', 'row._imageUrl'];
   fields.forEach(field => {
     assert.ok(client.includes(field), `istemci yaması ${field} alanını yazmalı`);
