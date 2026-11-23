@@ -8,6 +8,7 @@ const zlib = require('zlib');
 const { promisify } = require('util');
 const { replaceFileWithRetry, withFileLeaseAsync } = require('./shared-file-transaction');
 const masterReleases = require('./master-releases');
+const { stableSha256 } = require('./stable-digest');
 
 const gzipAsync = promisify(zlib.gzip);
 const gunzipAsync = promisify(zlib.gunzip);
@@ -25,10 +26,11 @@ const BOOTSTRAP_STATE_VERSION = 1;
 function clean(value, max = 1000) { return String(value == null ? '' : value).trim().slice(0, max); }
 function error(message, code, statusCode = 400, extra = {}) { return Object.assign(new Error(message), { code, statusCode, ...extra }); }
 function sha256(buffer) { return crypto.createHash('sha256').update(buffer).digest('hex'); }
-function stableJson(value) {
-  if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
-  if (value && typeof value === 'object') return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(',')}}`;
-  return JSON.stringify(value);
+// Content digests use the shared stableJson convention (server/lib/stable-digest.js),
+// streamed and cooperatively yielding: identical hex to sha256(stableJson(value)).
+async function fileSignature(file) {
+  try { const stat = await fsp.stat(file); return stat.isFile() ? `${stat.size}:${stat.mtimeMs}:${stat.ino}:${stat.ctimeMs}` : null; }
+  catch (err) { if (err && err.code === 'ENOENT') return null; throw err; }
 }
 function safePath(root, ...parts) {
   const base = path.resolve(root), target = path.resolve(base, ...parts);
@@ -198,6 +200,39 @@ function createSharedHub({ localDataRoot, appVersion = '', networkTimeoutMs = 15
       try { await fsp.unlink(safePath(root, area, rel)); } catch (_) {}
     }
   }
+  /* Doğrulanmış Master head belleği (kök başına). Eskiden HER yayım — içerik
+     değişmemiş olsa bile — mevcut checkpoint'i okuyup açıyor, arşivi yeniden
+     okuyup tüm payload'ı defalarca kanonik JSON'a çevirerek doğruluyordu
+     (saha: dakikada bir saniyeler süren ana iş parçacığı donması). Aynı head
+     (revision + sha256 + dosya) ve diskteki checkpoint/arşiv dosyalarının stat
+     imzası değişmediyse doğrulama sonucu yeniden kullanılır. Başka cihazın
+     yayımı current.json'u değiştirir (her yayımda yeniden okunur) → bellek
+     eşleşmez; arşivin silinmesi/değişmesi imzayı değiştirir → yeniden onarım.
+     Bellek yalnız başarılı doğrulamadan sonra yazılır. */
+  const verifiedMasterHeads = new Map();
+  const ruleContent = value => { const copy = { ...value }; delete copy.release; return copy; };
+  const sameHead = (memo, head) => Boolean(memo && head && memo.revision === head.revision && memo.sha256 === head.sha256 && memo.file === head.file);
+  async function verifiedMasterHead(root, head, schemaVersion) {
+    const memo = verifiedMasterHeads.get(root);
+    if (sameHead(memo, head)
+      && await fileSignature(safePath(root, 'master', head.file)) === memo.checkpointSignature
+      && (!memo.authority || await masterReleases.archiveSignature(root, head.revision) === memo.archiveSignature)) return memo;
+    verifiedMasterHeads.delete(root);
+    // A head may have committed before its archive failed. Repair that exact
+    // revision before equality checks or advancing; never lose rule history.
+    const envelope = (await readCheckpointFile(root, head, schemaVersion, 'master')).envelope;
+    const checkpointSignature = await fileSignature(safePath(root, 'master', head.file));
+    const authority = Boolean(envelope.payload && envelope.payload.authority === 'moderator');
+    const archived = authority ? await masterReleases.archiveRelease(root, { head, envelope }) : null;
+    const next = { revision:head.revision, sha256:head.sha256, file:head.file, checkpointSignature, authority,
+      archiveSignature:archived ? archived.signature : null,
+      release:envelope.payload ? envelope.payload.release : undefined,
+      rulesSha256:head.rulesSha256 || (authority ? await stableSha256(ruleContent(envelope.payload)) : null) };
+    // Never remember a state whose files could not be fingerprinted: a null
+    // signature would later match a deleted file.
+    if (next.checkpointSignature && (!authority || next.archiveSignature)) verifiedMasterHeads.set(root, next);
+    return next;
+  }
   async function publishCheckpoint(root, area, schemaVersion, payload, { actorId = '', previousRevision = null, note = '', forceRevision = false, changedEntities = [] } = {}) {
     const checked = await validate(root, { requireWrite: true });
     const currentFile = safePath(checked.root, area, 'current.json');
@@ -205,34 +240,28 @@ function createSharedHub({ localDataRoot, appVersion = '', networkTimeoutMs = 15
     return withFileLeaseAsync(currentFile, async () => {
       const current = await readCheckpointHead(checked.root, area, schemaVersion);
       const actualRevision = current ? current.revision : 0;
-      let currentEnvelope = null;
-      if (area === 'master' && current) {
-        // A head may have committed before its archive failed. Repair that exact
-        // revision before equality checks or advancing; never lose rule history.
-        currentEnvelope = (await readCheckpointFile(checked.root, current, schemaVersion, area)).envelope;
-        if (currentEnvelope.payload && currentEnvelope.payload.authority === 'moderator') {
-          await masterReleases.archiveRelease(checked.root, { head:current, envelope:currentEnvelope });
-        }
-      }
+      const verifiedCurrent = area === 'master' && current ? await verifiedMasterHead(checked.root, current, schemaVersion) : null;
       if (previousRevision != null && Number(previousRevision) !== actualRevision) throw error('Checkpoint başka bir istemci tarafından güncellendi.', 'CHECKPOINT_REVISION_CONFLICT', 409, { currentRevision: actualRevision, area });
       const sourcePayload = payload && typeof payload === 'object' ? payload : {};
       const versionedRules = area === 'master' && sourcePayload.authority === 'moderator';
-      const ruleContent = value => { const copy = { ...value }; delete copy.release; return copy; };
-      const rulesSha256 = versionedRules ? sha256(Buffer.from(stableJson(ruleContent(sourcePayload)), 'utf8')) : null;
-      const currentRulesSha256 = current && (current.rulesSha256 || (currentEnvelope && currentEnvelope.payload && currentEnvelope.payload.authority === 'moderator'
-        ? sha256(Buffer.from(stableJson(ruleContent(currentEnvelope.payload)), 'utf8')) : null));
+      const rulesSha256 = versionedRules ? await stableSha256(ruleContent(sourcePayload)) : null;
+      const currentRulesSha256 = current && (current.rulesSha256 || (verifiedCurrent ? verifiedCurrent.rulesSha256 : null));
       const releaseNote = clean(note, 2000);
       const explicitRevision = versionedRules && (forceRevision === true || Boolean(releaseNote));
-      const originalPayloadSha256 = sha256(Buffer.from(stableJson(sourcePayload), 'utf8'));
+      // Versioned rules compare release-free rule content only; the full payload digest
+      // is needed solely for unversioned areas (and is then the stored payload digest).
+      const originalPayloadSha256 = versionedRules ? null : await stableSha256(sourcePayload);
       if (current && !explicitRevision && (versionedRules ? currentRulesSha256 === rulesSha256 : current.payloadSha256 === originalPayloadSha256)) {
-        const release = currentEnvelope && currentEnvelope.payload && currentEnvelope.payload.release;
-        return { ...current, ...(release ? { release } : {}), unchanged:true };
+        const release = verifiedCurrent && verifiedCurrent.release;
+        return { ...current, ...(release ? { release:structuredClone(release) } : {}), unchanged:true };
       }
       const revision = actualRevision + 1, at = new Date().toISOString();
+      // Release metadata only: computed lazily so an unchanged publish never diffs every entity.
+      const changedList = versionedRules ? (typeof changedEntities === 'function' ? await changedEntities() : changedEntities) : [];
       const release = versionedRules ? { version:revision, note:releaseNote, publishedBy:clean(actorId,160), publishedAt:at,
-        changedEntities:[...new Set((Array.isArray(changedEntities) ? changedEntities : []).filter(item => typeof item === 'string').map(item => clean(item,100)).filter(Boolean))].slice(0,100) } : null;
+        changedEntities:[...new Set((Array.isArray(changedList) ? changedList : []).filter(item => typeof item === 'string').map(item => clean(item,100)).filter(Boolean))].slice(0,100) } : null;
       const normalizedPayload = versionedRules ? { ...ruleContent(sourcePayload), release } : sourcePayload;
-      const payloadSha256 = sha256(Buffer.from(stableJson(normalizedPayload), 'utf8'));
+      const payloadSha256 = versionedRules ? await stableSha256(normalizedPayload) : originalPayloadSha256;
       const envelope = { schemaVersion, revision, parentRevision: actualRevision, createdAt: at, actorId: clean(actorId, 160), payload: normalizedPayload };
       const raw = Buffer.from(JSON.stringify(envelope), 'utf8'), compressed = await gzipAsync(raw, { level: zlib.constants.Z_BEST_SPEED }), digest = sha256(compressed);
       const fileName = `${String(revision).padStart(16, '0')}-${digest.slice(0, 16)}.json.gz`;
@@ -244,7 +273,14 @@ function createSharedHub({ localDataRoot, appVersion = '', networkTimeoutMs = 15
       const head = { schemaVersion, revision, file: path.posix.join('checkpoints', fileName), sha256: digest, payloadSha256, updatedAt: at,
         ...(versionedRules ? { rulesSha256, release } : {}), ...(previous ? { previous } : {}) };
       await atomicWriteJson(currentFile, head);
-      if (versionedRules) await masterReleases.archiveRelease(checked.root, { head, envelope });
+      verifiedMasterHeads.delete(checked.root);
+      if (area === 'master') {
+        const archived = versionedRules ? await masterReleases.archiveRelease(checked.root, { head, envelope }) : null;
+        const checkpointSignature = await fileSignature(checkpointFile);
+        // The bytes were verified against `digest` above; the archive was verified by archiveRelease.
+        if (checkpointSignature && (!versionedRules || (archived && archived.signature))) verifiedMasterHeads.set(checked.root, { revision, sha256:digest, file:head.file, checkpointSignature, authority:versionedRules,
+          archiveSignature:archived ? archived.signature : null, release:normalizedPayload.release, rulesSha256:rulesSha256 || null });
+      }
       void cleanupCheckpointFiles(checked.root, area, [head.file, previous && previous.file]).catch(()=>{});
       return head;
     }, { timeoutMs:15000, staleMs:120000 });

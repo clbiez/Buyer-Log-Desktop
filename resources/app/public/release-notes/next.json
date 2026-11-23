@@ -1,14 +1,38 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-23",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Senkron ve kural yayımında takılma giderildi",
+    "en": "Stalls during sync and rule publishing fixed"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Moderatör bilgisayarında senkron ve kural yayımı sırasında yaşanan birkaç saniyelik takılmalar giderildi; başka bilgisayarların değişiklikleri eskisi gibi algılanır.",
+    "en": "Stalls of a few seconds during sync and rule publishing on the Moderator's computer are fixed; changes from other computers are still detected as before."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "sync-publish-no-freeze",
+      "type": "improvement",
+      "module": {
+        "tr": "Sync · Ortak Klasör · Master Kurallar",
+        "en": "Sync · Shared Folder · Master Rules"
+      },
+      "title": {
+        "tr": "Senkron ve kural yayımı sırasında uygulama takılmaz",
+        "en": "The app no longer stalls during sync and rule publishing"
+      },
+      "body": {
+        "tr": "Moderatör bilgisayarında kurallar ortak klasöre yayımlanırken, içerik değişmemiş olsa bile tüm Master verisi defalarca baştan okunup karşılaştırılıyor ve uygulama birkaç saniye yanıt vermiyordu. Değişmeyen yayım artık önceden doğrulanmış kaydı yeniden kullanır, büyük karşılaştırmalar küçük adımlara bölünür ve senkron ayarları gereksiz yere tekrar okunmaz. Başka bir bilgisayarın yaptığı değişiklik eskisi gibi algılanır; yalnız bekleme kalkar.",
+        "en": "On the Moderator's computer, publishing rules to the shared folder re-read and compared all Master data several times even when nothing had changed, and the app stopped responding for a few seconds. An unchanged publish now reuses the already verified record, large comparisons are split into small steps and sync settings are no longer re-read needlessly. Changes made on another computer are still detected as before; only the wait is gone."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; yalnız senkron ve yayım sırasındaki takılma kalkar.",
+          "en": "There is no change on screen; only the stall during sync and publishing is gone."
+        }
+      }
+    }
+  ]
 }
