@@ -42,7 +42,9 @@ test('Collection footer shows filtered model count and quantity-weighted Target,
   assert.match(html, /const qty=tableNumericValue\(qtyOf\(row\)\)/);
   assert.match(html, /weighted\+=price\*qty;totalQty\+=qty/);
   assert.match(html, /const targetGetter=row=>row\.targetPrice/);
-  assert.match(html, /const confirmedGetter=row=>\{const confirmed=kolConfirmedPricing\(row\)/);
+  // Onaylı fiyat satır başına bir kez kolConfirmedPricing ile çözülür (Teklif & Onay alt satırıyla paylaşılır).
+  assert.match(html, /\{best:kolBestPricing\(row\),confirmed:kolConfirmedPricing\(row\)\}/);
+  assert.match(html, /const confirmedGetter=row=>pricingByRow\.get\(row\)\?\.confirmed\?\.price\?\?''/);
   assert.match(html, /const fobGetter=row=>row\.fob/);
   assert.match(html, /const targetAvg=kolWeightedAverage\(rows,targetGetter\)/);
   assert.match(html, /const confirmedAvg=kolWeightedAverage\(rows,confirmedGetter\)/);

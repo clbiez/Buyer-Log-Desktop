@@ -196,6 +196,7 @@
     const columns=(descriptors||[]).filter(d=>footerKinds.has(d.kind));if(!columns.length)return new Map();
     const keys=d=>d.kind==='priceReferences'?d.folds||[]:[d.k],summaries=footerSummaries(rows,columns.flatMap(d=>keys(d).map(modeForKey))),cells=new Map();
     const money=value=>Number.isFinite(value)?`$${esc(kolFormatMoneyDisplay(String(value)))}`:'—';
+    const delta=percent=>{const rounded=Math.abs(percent)<0.005?0:percent,text=`${rounded>0?'+':''}${rounded.toLocaleString(en()?'en-GB':'tr-TR',{maximumFractionDigits:2})}%`;return `<span class="kolBestDelta ${rounded<=0?'isAtOrBelowTarget':'isAboveTarget'}">${esc(text)}</span>`;};
     const line=(caption,value)=>`<span class="collectionAverageLine"><span class="collectionFooterCaption">${esc(caption)}</span><strong>${value}</strong></span>`;
     const value=(s,mode,arithmetic=false)=>{const before=arithmetic?s.arithmeticBefore:s.weightedBefore,after=arithmetic?s.arithmeticAfter:s.weightedAfter;return mode==='impact'&&Number.isFinite(before)&&Number.isFinite(after)?`${money(before)} → ${money(after)}`:money(before);};
     const title=(s,mode)=>T(`Filtrelenmiş satırların model/renk adediyle ağırlıklı ortalaması. Ağırlıklı hesaba dahil: ${s.usedRows}/${s.totalRows} satır · ${s.quantity} adet. Eksik referans veya sıfır/eksik adet ağırlıklı hesaba katılmaz.`,`Quantity-weighted average of filtered model/colour rows. Included in weighted average: ${s.usedRows}/${s.totalRows} rows · ${s.quantity} units. Missing references and zero/missing quantities are excluded.`)+' '+(mode==='impact'?T('Satırların bağımsız sezon simülasyonlarının önce → sonra özeti.','Before → after summary of independent row-level season simulations.'):T(`Yüzde değişimi, fiyat ve referansı birlikte olan ${s.pairedRows} satırda ağırlıklı güncel fiyat / ağırlıklı referans − 1 ile hesaplanır.`,`Percentage change uses weighted current price / weighted reference − 1 across ${s.pairedRows} rows with both a price and a reference.`));
@@ -204,12 +205,10 @@
       for(const key of keys(d)){
         const mode=modeForKey(key),s=summaries.get(mode);if(!s)continue;
         titles.push(`${labelFor(key)}: ${title(s,mode)}`);
-        if(d.kind==='priceReferences'){content+=line(`${labelFor(key)} · ${T('Ağ.Ort.','W.Avg')}`,value(s,mode));continue;}
+        // Kompakt sütunda her kıyas kendi ağırlıklı % değişimini aynı satırda gösterir.
+        if(d.kind==='priceReferences'){content+=line(`${labelFor(key)} · ${T('Ağ.Ort.','W.Avg')}`,value(s,mode)+(Number.isFinite(s.percent)?' '+delta(s.percent):''));continue;}
         content+=line(T('Ağ.Ort.','W.Avg'),value(s,mode))+line(T('Ort.','Avg'),value(s,mode,true));
-        if(Number.isFinite(s.percent)){
-          const rounded=Math.abs(s.percent)<0.005?0:s.percent,text=`${rounded>0?'+':''}${rounded.toLocaleString(en()?'en-GB':'tr-TR',{maximumFractionDigits:2})}%`;
-          content+=line(T('Ağ.% Δ','W.% Δ'),`<span class="kolBestDelta ${rounded<=0?'isAtOrBelowTarget':'isAboveTarget'}">${esc(text)}</span>`);
-        }
+        if(Number.isFinite(s.percent))content+=line(T('Ağ.% Δ','W.% Δ'),delta(s.percent));
       }
       cells.set(d.k,`<td class="collectionWeightedAverage" data-kol-footer-key="${esc(d.k)}" title="${esc(titles.join('\n'))}">${content}</td>`);
     }

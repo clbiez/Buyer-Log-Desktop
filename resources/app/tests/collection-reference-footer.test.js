@@ -29,6 +29,9 @@ test('footer cells use effective fields, preserve compact folds and summarize in
  const summaries=ui.footerSummaries(rows,['impact']),impact=summaries.get('impact');
  assert.equal(impact.weightedBefore,17.5);assert.ok(Math.abs(impact.weightedAfter-((12000/1100)*100+16.25*300)/400)<1e-9);
  assert.match(cells.get('__seasonImpact__'),/→/);assert.match(cells.get('__referenceSummary__'),/Previous Season/);assert.match(cells.get('__referenceSummary__'),/LFL/);
+ // Compact column: each fold shows its own weighted % next to the average: (20×100+10×300)/(10×100+20×300) − 1.
+ assert.match(cells.get('__referenceSummary__'),/LFL · Ağ\.Ort\..*\$17\.50 <span class="kolBestDelta isAtOrBelowTarget">-28[,.]57%/);
+ assert.equal((cells.get('__referenceSummary__').match(/kolBestDelta/g)||[]).length,3,'Previous Season, LFL and Season Impact each show a %');
  assert.match(cells.get('__referenceSummary__'),/Sezon Etkisi/);assert.match(cells.get('__referenceSummary__'),/→/);
  assert.match(ui.combinedCell(rows[0],'',['__previousSeason__','__lfl__','__seasonImpact__']),/Sezon Etkisi.*10\.00 → \$10\.91/);
  assert.match(ui.footerCells([{...rows[1],effective:{quantity:100}}],descriptors).get('__lfl__'),/20\.00/);
