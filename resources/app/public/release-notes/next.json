@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-23",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Koleksiyon tarih sütunlarının adları güncellendi",
-    "en": "Collection date column names updated"
+    "tr": "Koleksiyon tarih sütunlarının adları güncellendi; yenileme sonrası daha akıcı sunucu",
+    "en": "Collection date column names updated; smoother server after a refresh"
   },
   "summary": {
-    "tr": "Koleksiyon tablosunda Ex→Retail sütunu Türkçe arayüzde Yükleme Onay→Antrepo, Retail sütunu ise Retail Date / Retail Tarihi olarak görünür. Moderatör bilgisayarında senkron ve kural yayımı sırasındaki birkaç saniyelik takılmalar giderildi. CP'de daha önce kaydedilmiş tarih veya notu olan satırda düzenleme, kimse satırı değiştirmemişken \"başka bir kullanıcı değiştirdi\" uyarısıyla reddedilmiyor.",
-    "en": "In the Collection table, the Ex→Retail column appears as Yükleme Onay→Antrepo in the Turkish interface, and the Retail column is now Retail Date / Retail Tarihi. Stalls of a few seconds during sync and rule publishing on the Moderator's computer are fixed. In CP, editing a row that already has a saved date or note is no longer rejected with an \"another user changed this row\" warning when nobody else changed it."
+    "tr": "Koleksiyon tablosunda Ex→Retail sütunu Türkçe arayüzde Yükleme Onay→Antrepo, Retail sütunu ise Retail Date / Retail Tarihi olarak görünür. Moderatör bilgisayarında senkron ve kural yayımı sırasındaki birkaç saniyelik takılmalar giderildi. Veri yenilemesinden sonraki Planlanan & Gerçekleşen işareti ve sayfa önbelleği hazırlığı arka plandaki hesap işçisine taşındı; ekran okumaları büyük override kaydını her istekte kopyalamaz. Büyük veride uygulama yenilemeden sonra donmadan yanıt verir. CP'de daha önce kaydedilmiş tarih veya notu olan satırda düzenleme, kimse satırı değiştirmemişken \"başka bir kullanıcı değiştirdi\" uyarısıyla reddedilmiyor.",
+    "en": "In the Collection table, the Ex→Retail column appears as Yükleme Onay→Antrepo in the Turkish interface, and the Retail column is now Retail Date / Retail Tarihi. Stalls of a few seconds during sync and rule publishing on the Moderator's computer are fixed. The Planned & Actual marker and page-cache preparation after a data refresh moved to the background compute worker; screen reads no longer copy the large overrides record on every request. With large data the app keeps responding after a refresh instead of freezing. In CP, editing a row that already has a saved date or note is no longer rejected with an \"another user changed this row\" warning when nobody else changed it."
   },
   "changes": [
     {
@@ -112,6 +112,29 @@
         "reason": {
           "tr": "Ekranda değişiklik yok; yalnız senkron ve yayım sırasındaki takılma kalkar.",
           "en": "There is no change on screen; only the stall during sync and publishing is gone."
+        }
+      }
+    },
+    {
+      "id": "post-refresh-stall-worker",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri Yenileme",
+        "en": "Data Refresh"
+      },
+      "title": {
+        "tr": "Yenileme sonrası uygulama donmaz",
+        "en": "The app no longer freezes after a refresh"
+      },
+      "body": {
+        "tr": "Veri yenilemesinden hemen sonra yapılan Planlanan & Gerçekleşen zaman işareti ve sayfa önbelleği anahtarları artık arka plandaki hesap işçisinde hazırlanıyor; ekran okumaları da her istekte büyük override kaydını kopyalamıyor. Büyük veride yenilemeden sonraki saniyelerde uygulama yanıt vermeye devam eder. Analiz geçmişi ve kayıtlı düzenlemeler aynen korunur.",
+        "en": "The Planned & Actual time marker and the page-cache keys prepared right after a data refresh are now built in the background compute worker, and screen reads no longer copy the large overrides record on every request. With large data the app stays responsive in the seconds after a refresh. Analysis history and saved edits are unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Arayüzde değişiklik yok; iyileştirme yenileme sonrası sunucu işinin nerede ve kaç kez yapıldığındadır.",
+          "en": "No UI change; the improvement is in where and how often the server does its post-refresh work."
         }
       }
     },

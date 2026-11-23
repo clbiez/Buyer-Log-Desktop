@@ -35,7 +35,7 @@ const {
   getUserDataInventory, exportBackupToFile,
   saveCollectionImage, collectionImageOptimizationStatus, completeCollectionImageOptimization,
   getModelImageSettings, saveModelImageSettings,
-  getCollectionImage, deleteCollectionImage, deleteAllCollectionImages, purgeExpiredModelFiles, resolveStoredFile, atomicWriteJson, atomicWriteBuffer,
+  getCollectionImage, deleteCollectionImage, deleteAllCollectionImages, purgeExpiredModelFiles, resolveStoredFile, atomicWriteJson, atomicWriteBuffer, atomicWriteBufferAsync,
 } = require('./user-data');
 const holidayService = require('./lib/holiday-service').createHolidayService({
   cacheFile: path.join(LOCAL_DATA_ROOT, 'holidays', 'world-clock.json'),
@@ -427,10 +427,11 @@ const collectionImageSyncPolicy = require('./lib/collection-image-sync-policy');
 const modelImageRefreshLeases = require('./lib/model-image-refresh-leases');
 const refreshHistoryDiff = require('./lib/refresh-history-diff');
 const backlogPlanActual = require('./lib/backlog-plan-actual');
+const planActualCapture = require('./lib/backlog-plan-actual-capture');
 const modelImageRegistry = require('./lib/model-image-registry');
 const { scopedCpImageRegistry } = require('./lib/cp-image-startup-registry');
 const {
-  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceAsasFabricMode, replaceLflSourceMode, replaceNoteColumnDefs, replaceImportanceSettings, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, getUserSourceFolder, setUserSourceFolder,
+  loadOverrides, loadOverridesStamp, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceAsasFabricMode, replaceLflSourceMode, replaceNoteColumnDefs, replaceImportanceSettings, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, getUserSourceFolder, setUserSourceFolder,
   loadViews, addView, updateView, deleteView, setFavoriteView, markUsedView,
   loadFilterProfiles, addFilterProfile, updateFilterProfile, deleteFilterProfile, setFavoriteFilterProfile, markUsedFilterProfile,
   loadShipping, addShippingRows, patchShippingRow, deleteShippingRows,
@@ -8383,7 +8384,9 @@ function stableHashValue(value) {
   return crypto.createHash('sha256').update(JSON.stringify(normalize(value))).digest('hex');
 }
 function pageProjectionContext(currentUser = null) {
-  const id = sourceUserId(currentUser), shared = loadOverrides(), connections = loadModelConnections();
+  // Bağlam yalnız revizyonları/kaynak modlarını okur: her damgada overrides'ın
+  // derin kopyası alınmaz (compute-read guard bunu istek başına birkaç kez çağırır).
+  const id = sourceUserId(currentUser), shared = loadOverridesStamp(), connections = loadModelConnections();
   const roleEntries = userAccess.roleWorkspaceEntries(currentUser || id);
   const effectiveConnections = userPreferences.applyHorizonOverrides(connections.items, id, null, roleEntries);
   const profile = currentUser ? userAccess.publicProfile(currentUser) : null;
@@ -8550,7 +8553,11 @@ async function buildAndWritePageProjectionCache(currentUser, runtime = null) {
     }
   };
   const overrides = effectiveOverridesForUser(id);
-  const {backlog:backlogInputKey,...moduleInputKeys}=derivedInputKeys.keys(active,ctx.contextHash,overrides,{version:APP_VERSION});
+  /* Tam kaynak hash'i 60k satırda ana iş parçacığında 1,5–2,3 sn'lik tek blok
+     tutuyordu. keysAsync keys() ile aynı anahtarı parça parça üretir ve olay
+     döngüsüne döner; ayrı bir işçi adımı (kaynağın yeniden çözülmesi) eklemez. */
+  const {backlog:backlogInputKey,...moduleInputKeys}=await derivedInputKeys.keysAsync(active,ctx.contextHash,overrides,{version:APP_VERSION});
+  assertCurrent();
   const reused=await pageProjectionCache.readReusableProjections(id,ctx.contextHash,moduleInputKeys);
   assertCurrent();
   const wanted=new Set(Object.keys(moduleInputKeys).filter(module=>!reused.projections[module]));
@@ -8859,7 +8866,7 @@ async function computeSourceFor(profile){
 }
 // context: önceden hesaplanmış pageProjectionContext (satır kaydı aynı anın bağlamını iki kez hesaplamaz).
 function computeReadContext(profile,context=pageProjectionContext(profile)){
-  const shared=loadOverrides(),day=new Date();
+  const shared=loadOverridesStamp(),day=new Date();
   return {...context,contextHash:stableHashValue([context.contextHash,shared._revision||0,shared._revisions||null,require('./lib/merch-calendar-store').fingerprint(),day.getFullYear(),day.getMonth(),day.getDate()])};
 }
 const computeReadGuard=createComputeReadGuard({sessionProfile:req=>userAccess.sessionProfile(req),profileById:id=>userAccess.profileById(id),
@@ -9375,17 +9382,32 @@ async function captureBacklogPlanActualSnapshot(id, runtime, overrides, options 
   const active = runtime || cacheForUser(id);
   if (!active || !active.loadedAt || !Array.isArray(active.asasOrders)) return null;
   const effective = overrides || effectiveOverridesForUser(id);
-  const inputKey=derivedInputKeys.keys(active,id,effective,{version:APP_VERSION}).backlog;
   const capturedAt=options.capturedAt||new Date().toISOString(),sourceGenerationId=active.modelRefresh&&active.modelRefresh.sourceGenerationId||active.loadedAt||'';
-  const reused=await backlogPlanActual.appendSnapshot(id,{capturedAt,sourceGenerationId,reuseInputKey:inputKey});
-  if(reused)return reused;
-  const orders = ordersForTarget(active, 'backlog', effective);
-  const antrepo = antrepoForTarget(active, 'backlog');
-  const templateRows = buildBacklogTemplateRows(orders, antrepo, effective, {}, [], {});
-  const snapshot = backlogPlanActual.projectSnapshot(orders, templateRows, {
-    capturedAt,sourceGenerationId,inputKey,
+  const archiveFile=backlogPlanActual.archivePath(id);
+  const params={archiveFile,contextHash:id,appVersion:APP_VERSION,overrides:effective,capturedAt,sourceGenerationId};
+  /* Girdi anahtarı, arşiv okuma, Backlog satırları, delta ve gzip compute
+     işçisinde koşar (60k satırda ana iş parçacığında 10+ sn kilit). Ana iş
+     parçacığı yalnız kullanıcı kilidi altında sonucu atomik yazar. İşçi kaynağı
+     bu runtime'a ait değilse (araya yeni yenileme girdi) ya da işçi yolu
+     kullanılamazsa aynı hesap yerel yoldan yapılır; her yenileme yine bir işaret üretir. */
+  return backlogPlanActual.withArchiveLock(id, async () => {
+    let prepared=null;
+    if (cacheForUser(id) === active) {
+      try {
+        const descriptor=await computeSourceFor(id);
+        if (cacheForUser(id) === active) {
+          const lease=await serverCompute().run('plan-actual-capture',descriptor,params,{priority:'background'});
+          try { prepared={...lease.value,compressed:Buffer.from(lease.value.buffer)}; } finally { lease.release(); }
+        }
+      } catch (error) {
+        if (error && error.code !== 'COMPUTE_STALE_GENERATION') logRuntimeFailure('backlogPlanActualWorker', error);
+        prepared=null;
+      }
+    }
+    if (!prepared) prepared=await planActualCapture.captureFromSource(active, params);
+    await atomicWriteBufferAsync(archiveFile, prepared.compressed);
+    return { bytes:prepared.bytes, uncompressedBytes:prepared.uncompressedBytes, snapshots:prepared.snapshots, capturedAt:prepared.capturedAt, reused:prepared.reused };
   });
-  return backlogPlanActual.appendSnapshot(id, {...snapshot,inputKey});
 }
 
 /* Planlanan & Gerçekleşen zaman işareti yenilemenin bitmesini BEKLETMEZ.

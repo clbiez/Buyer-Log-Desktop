@@ -109,6 +109,13 @@ async function execute(task,data,transfer,sourceOverride,options={}){
       const response=params.legacyModule?await compress(legacyValue(params.legacyModule,values,params,source),'api',transfer):null;
       return {compressed,sourceMeta:projectionRuntimeMeta(source),sourceProjectionKeys:projectionSourceKeys(source),...(response?{response}:{})};
     }
+    // Planlanan & Gerçekleşen yenileme işareti: anahtar, Backlog satırları,
+    // delta ve gzip işçide; arşiv baytları kopyasız döner, yazma ana iş parçacığında.
+    if(task==='plan-actual-capture'){
+      const result=await require('../lib/backlog-plan-actual-capture').captureFromSource(source,params);
+      const bytes=new Uint8Array(result.compressed.buffer,result.compressed.byteOffset,result.compressed.byteLength).slice();transfer.push(bytes.buffer);
+      return {buffer:bytes.buffer,bytes:result.bytes,uncompressedBytes:result.uncompressedBytes,snapshots:result.snapshots,capturedAt:result.capturedAt,reused:result.reused};
+    }
     if(task==='backlog-workbook'){
       const report=tasks.buildBacklog('export',source,params);
       const result=await require('./excel-worker').execute('writeBacklogWorkbook',{headers:report.headers,detailRows:report.rows,

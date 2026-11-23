@@ -378,6 +378,47 @@ function backfillLegacyNoteAuthors(notesmap) {
   return map;
 }
 
+/* Salt okunur kayıt: loadOverrides'ın okuduğu aynı belge, derin kopya
+   ALINMADAN. Yalnız bu modülün içinden, döndürülen nesneyi asla değiştirmeyen
+   özet okuyucularına verilir (loadOverridesStamp). Delta yetkili fazda bellek
+   kaydı, aksi hâlde boyut+mtime imzalı ayrıştırma önbelleği kullanılır. */
+function readOverridesRecordReadOnly() {
+  if (!deltaMirrorExcluded(OVERRIDES_FILE)) {
+    const record = documents().read(deltaStoreId(OVERRIDES_FILE));
+    if (record) return record;
+  }
+  if (!fs.existsSync(OVERRIDES_FILE)) return null;
+  try {
+    const stat = fs.statSync(OVERRIDES_FILE), cached = jsonReadCache.get(OVERRIDES_FILE);
+    if (cached && cached.tag === `${stat.size}-${stat.mtimeMs}`) return cached.value;
+  } catch (_) {}
+  return readJsonWithBackup(OVERRIDES_FILE, defaultOverrides);
+}
+/* Bağlam/önbellek damgası için overrides özeti (compute-read guard,
+   sayfa projeksiyonu bağlamı). Bu çağıranlar yalnız revizyonları, kaynak
+   modlarını ve Non-DTR üretici listesini okur; her damgada büyük overrides
+   kaydının (notlar, tarihler, görseller…) derin kopyası ve cp-order
+   overlay'i alınmaz. Alanlar loadOverrides() ile birebir aynı kuralla üretilir
+   ve her çağrıda yeni, bağımsız nesnelerdir. */
+function loadOverridesStamp() {
+  ensureDataDir();
+  const parsed = readOverridesRecordReadOnly();
+  const source = parsed && typeof parsed === 'object' ? parsed : {};
+  const baseRevisions = defaultOverrides()._revisions;
+  const antrepoSourceMode = String(source.antrepoSourceMode || 'excel').toLowerCase();
+  const directory = require('./lib/email-groups-store');
+  const legacyNonDtr = Object.hasOwn(source, 'nonDtrManufacturers') ? source.nonDtrManufacturers : [];
+  const cards = directory.migrateNonDtrManufacturers(legacyNonDtr);
+  return {
+    _revision: revisionOf(parsed),
+    _revisions: { ...baseRevisions, ...(source._revisions || {}) },
+    asasSourceMode: String(source.asasSourceMode || 'excel').toLowerCase() === 'database' ? 'database' : 'excel',
+    antrepoSourceMode: ['database', 'dashboard'].includes(antrepoSourceMode) ? antrepoSourceMode : 'excel',
+    lflSourceMode: String(source.lflSourceMode || 'excel').toLowerCase() === 'database' ? 'database' : 'excel',
+    nonDtrManufacturers: directory.nonDtrManufacturers(legacyNonDtr, cards),
+  };
+}
+
 function loadOverrides({ projectManufacturers = true } = {}) {
   ensureDataDir();
   // readJsonWithBackup delta yetkili fazda kaydı motordan, aksi hâlde eski
@@ -2256,7 +2297,7 @@ module.exports = {
   mutateSharedResource,mutateSettings,mutateModelConnections,attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores, cpExFactoryRevisionSnapshot, restoreCpExFactoryRevisions,
   RevisionConflictError, revisionOf, expectedNumber, applyDatePatch, overrideWriteKey, normalizeLandedMultipliers, landedMultipliersOf, landedVehicleStandardsOf,
   NOTE_AUTHOR_FIELDS, LEGACY_NOTE_AUTHOR_ID, LEGACY_NOTE_AUTHOR_NAME, backfillLegacyNoteAuthors,
-  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceCpManagedRules, normalizeCpManagedRules, replaceTableReportLayout, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceAsasFabricMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, replaceImportanceSettings, patchOrderOverride, patchOrderOverrides, patchOrderOverrideRows, CP_ROW_SAVE_FIELDS, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
+  loadOverrides, loadOverridesStamp, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceCpManagedRules, normalizeCpManagedRules, replaceTableReportLayout, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceAsasFabricMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, replaceImportanceSettings, patchOrderOverride, patchOrderOverrides, patchOrderOverrideRows, CP_ROW_SAVE_FIELDS, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
   normalizeMapping, normalizeCustomFields, normalizeCpModelColumns, normalizeModelConnection, normalizeModelConnections, loadModelConnections, replaceModelConnections, recordModelConnectionRun, MODEL_CONNECTION_LIMIT, MODEL_CONNECTION_DEFAULT_SEASONS,
   loadRefreshGroups, replaceRefreshGroups,
   loadHorizonFieldPairs, upsertHorizonFieldPairs,
