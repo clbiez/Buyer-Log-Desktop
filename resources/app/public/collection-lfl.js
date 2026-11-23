@@ -201,8 +201,9 @@
   const combinedText=(row,keys)=>keys.map(key=>`${labelFor(key)}: ${model(row,modeForKey(key)).text||'—'}`).join(' | ');
   function cell(row,attributes,mode='month'){const m=model(row,mode);return `<td class="kolBestCell kolPriceStripTd" data-kol-drawer="${esc(row.id)}"${attributes} title="${esc(m.detail)}">${content(row,m)}</td>`;}
   function combinedCell(row,attributes,keys){
-    const rows=keys.map(key=>{const m=model(row,modeForKey(key));return `<div class="kolPsLine" title="${esc(m.detail)}"><span class="kolPsMeta">${esc(labelFor(key))}</span><b class="${m.reference?'kolPsPrice':'kolPsEmpty'}">${esc(m.averageText||m.emptyText)}</b>${m.percentText?`<span class="kolBestDelta ${m.percent<=0?'isAtOrBelowTarget':'isAboveTarget'}">${esc(m.percentText)}</span>`:''}${m.compactWarning?`<span class="kolPsMeta kolPsWaiting" title="${esc(m.warning)}">${esc(m.compactWarning)}</span>`:''}</div>`;}).join('');
-    return `<td class="kolBestCell kolPriceStripTd" data-kol-drawer="${esc(row.id)}"${attributes}><div class="kolPs">${rows}</div></td>`;
+    /* Ortak kart dili: etiketli satırlar; her referansın kendi fiyatı ve kendi % etkisi. */
+    const rows=keys.map(key=>{const m=model(row,modeForKey(key));const tag=m.percentText?`<span class="blCellTag" data-tone="${m.percent<=0?'good':'bad'}">${esc(m.percentText)}</span>`:'';const warn=m.compactWarning?`<span class="blCellNone kolPsWaiting" title="${esc(m.warning)}">${esc(m.compactWarning)}</span>`:'';return `<span class="blCellStackRow" title="${esc(m.detail)}"><span class="blCellStackLabel">${esc(labelFor(key))}</span><b class="blCellValue${m.reference?'':' isEmpty'}">${esc(m.averageText||m.emptyText)}</b><span class="blCellStackTail">${tag}${warn}</span></span>`;}).join('');
+    return `<td class="kolBestCell kolPriceStripTd" data-kol-drawer="${esc(row.id)}"${attributes}><div class="kolPs blCellStack">${rows}</div></td>`;
   }
   function detailError(code){
     const messages={

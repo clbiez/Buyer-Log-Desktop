@@ -1,14 +1,131 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-23",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon hücreleri ortak kart diliyle görünür",
+    "en": "Collection cells share one chip language"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Artwork Detayı, Kumaş, Durum ve fiyat özeti hücreleri aynı çerçeveli kart diliyle gösterilir; bilgi kesilmeden ve göz gezdirirken okunur.",
+    "en": "Artwork Detail, Fabric, Status and pricing summary cells use the same bordered chip language, so information is readable at a glance without being cut off."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "collection-artwork-region-cards",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Artwork Detayı bölge kartlarıyla özetlenir",
+        "en": "Artwork Detail is summarized with region chips"
+      },
+      "body": {
+        "tr": "PLM'den gelen baskı bilgisi her bölge için adet rozetli, çerçeveli bir kart, renkli teknik etiketi ve sağda toplam sayı olarak görünür. Set Style parçaları A, B sırasıyla ayrı satırlarda listelenir. Bölgeler her zaman Ön, Arka, Kollar sırasıyla yazılır ve metin arayüz diline göre üretilir; böylece aynı içerik tek bir filtre değeri olur. Elle yazılmış değerler düz metin olarak kalır ve Manuel rozetiyle işaretlenir. Çift tıklama, kopyalama ve dışa aktarma eskisi gibi düz metinle çalışır.",
+        "en": "Print information from PLM appears as a bordered chip with a count badge for each region, a coloured technique tag and the total count on the right. Set Style parts are listed on separate lines in A, B order. Regions are always written in Front, Back, Sleeves order and the text follows the interface language, so identical content becomes a single filter value. Manually typed values stay as plain text with a Manual badge. Double-click, copy and export still work with the plain text."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-artwork-region-cards.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: Artwork Detayı sütununda Ön/Arka/Kollar bölge kartları, Pigment teknik etiketi, Set Style A/B satırları ve toplam sayılar",
+          "en": "Demo Collection table: Artwork Detail column with Front/Back/Sleeves region chips, Pigment technique tags, Set Style A/B lines and totals"
+        },
+        "caption": {
+          "tr": "Demo veride Artwork Detayı hücreleri bölge kartları, teknik etiketi ve toplam sayıyla görünür.",
+          "en": "On demo data, Artwork Detail cells show region chips, a technique tag and the total count."
+        }
+      }
+    },
+    {
+      "id": "collection-status-badge",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Durum hücresi çerçeveli rozet olarak görünür",
+        "en": "Status cell is shown as a bordered badge"
+      },
+      "body": {
+        "tr": "Durum artık tüm hücreyi renkle doldurmaz; durum kataloğundaki renkle açık zeminli ve çerçeveli bir rozet olarak görünür. Rozet etiket kadar geniştir, sığmazsa kısalır ve tam ad tooltip'te gösterilir. Açılır listeden durum seçimi eskisi gibi çalışır.",
+        "en": "Status no longer floods the whole cell with colour; it appears as a light, bordered badge in the status catalogue colour. The badge is as wide as its label, shortens when it does not fit and shows the full name in a tooltip. Choosing a status from the dropdown works as before."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-status-badge.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: Durum sütununda Pending File, Fiyatlamada, Capacity Request ve Siparişe Hazır renkli çerçeveli rozetleri",
+          "en": "Demo Collection table: Status column with Pending File, In Pricing, Capacity Request and Ready for Order bordered badges"
+        },
+        "caption": {
+          "tr": "Demo veride durumlar kendi renginde çerçeveli rozet olarak görünür.",
+          "en": "On demo data, statuses appear as bordered badges in their own colour."
+        }
+      }
+    },
+    {
+      "id": "collection-fabric-cards",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon, CP, Siparişler",
+        "en": "Collection, CP, Orders"
+      },
+      "title": {
+        "tr": "Kumaş hücresi kod, tip, gramaj ve karışım kartlarıyla görünür",
+        "en": "Fabric cell shows code, type, weight and composition chips"
+      },
+      "body": {
+        "tr": "Kumaş kartı olan hücrelerde kod mavi kartta, tip ve gramaj tek kartta, karışım ayrı kartta gösterilir; BCI gibi sürdürülebilirlik bilgisi yeşil etiketle görünür. Tek kumaşta karışım alt satırda tam görünür; Set Style A/B kumaşlarında her parça kendi satırındadır. İplik bilgisi tooltip'te ve kumaş kartındadır. Çift tıklama kumaş kartını açmaya, kopyalama PLM metnini vermeye devam eder.",
+        "en": "In cells with a fabric card, the code appears in a blue chip, type and weight share one chip and composition has its own chip; sustainability such as BCI appears as a green tag. For a single fabric the composition is shown in full on the second line; Set Style A/B fabrics keep one line per part. Yarn is in the tooltip and on the fabric card. Double-click still opens the fabric card and copy still returns the PLM text."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-fabric-cards.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: Kumaş sütununda 3859 Süprem 150 gsm %100 Pamuk gibi kod, tip, gramaj ve karışım kartları",
+          "en": "Demo Collection table: Fabric column with code, type, weight and composition chips such as 3859 Single Jersey 150 gsm 100% Cotton"
+        },
+        "caption": {
+          "tr": "Demo veride kumaş kodu, tip | gramaj ve karışım ayrı kartlarda görünür.",
+          "en": "On demo data, fabric code, type | weight and composition appear in separate chips."
+        }
+      }
+    },
+    {
+      "id": "collection-pricing-cards",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Fiyat özetleri alt alta, kart diliyle görünür",
+        "en": "Pricing summaries are stacked in the chip language"
+      },
+      "body": {
+        "tr": "Teklif & Onay hücresi alt alta Supp. FOB ve hedefe farkını, royalty/hologram gibi masraf varsa FOB'u ve üreticiyi gösterir; onaylı üretici yeşil ✓ kutuda, onaysız en iyi teklif gri \"Öneri\" kutusundadır. Previous Season, LFL ve Sezon Etkisi satırlarının her biri kendi fiyatını ve yüzdesini gösterir. Endeksmatik ve Landed Özeti YD ve TR değerlerini alt alta yüzdeleriyle gösterir. Fiyat çekmecesi ve çift tıklama davranışı değişmedi.",
+        "en": "The Quotes & Approval cell stacks Supp. FOB with its difference to target, FOB when costs such as royalty/hologram apply, and the manufacturer; the approved manufacturer sits in a green ✓ box and the unapproved best quote in a grey \"Best\" box. Previous Season, LFL and Season Impact each show their own price and percentage. Endeksmatik and Landed Summary stack Overseas and TR values with their percentages. The price drawer and double-click behaviour are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-pricing-cards.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: Teklif & Onay sütununda Supp. FOB, hedefe fark ve onaylı/öneri üretici kutuları; Endeksmatik ve Landed Özeti'nde alt alta YD ve TR değerleri",
+          "en": "Demo Collection table: Quotes & Approval column with Supp. FOB, difference to target and approved/best manufacturer boxes; Endeksmatik and Landed Summary with stacked Overseas and TR values"
+        },
+        "caption": {
+          "tr": "Demo veride fiyat özetleri alt alta ve kart diliyle görünür.",
+          "en": "On demo data, pricing summaries are stacked in the chip language."
+        }
+      }
+    }
+  ]
 }

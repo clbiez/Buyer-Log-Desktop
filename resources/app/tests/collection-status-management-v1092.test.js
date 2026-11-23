@@ -64,20 +64,21 @@ test('Excel status validation and colors resolve from the canonical catalog',()=
   assert.match(APP,/kolStatusExcelArgb\(raw\)/);
 });
 
-test('status pill/dashboard styling is theme-token based and uses status color only as semantic accent',()=>{
+test('status badge is theme-token based and uses status color only as a semantic tint and border',()=>{
   assert.match(CSS,/#kolTable select\.kolStatusNoArrow/);
-  assert.match(CSS,/background-color:color-mix\(in srgb,var\(--kol-status-color\) 11%,var\(--ui-surface\)\)/);
-  assert.match(CSS,/color:var\(--ui-text\)/);
   assert.match(CSS,/\.ovCollectionStatusCard/);
   assert.match(CSS,/color-mix\(in srgb,var\(--ui-series-color\) 7%,var\(--ui-surface\)\)/);
-  assert.match(CSS,/#kolTable td\.kolStatusTd/);
-  assert.match(CSS,/background-color:color-mix\(in srgb,var\(--kol-status-color\) 18%,var\(--ui-surface\)\)/);
-  const tdStart=CSS.indexOf('#kolTable td.kolStatusTd{');
-  const tdBlock=CSS.slice(tdStart,CSS.indexOf('}',tdStart)+1);
-  const selectStart=CSS.indexOf('#kolTable select.kolStatusNoArrow{');
-  const selectBlock=CSS.slice(selectStart,CSS.indexOf('}',selectStart)+1);
-  assert.doesNotMatch(tdBlock,/box-shadow/,'status cell must not draw a thick left accent line');
-  assert.doesNotMatch(selectBlock,/radial-gradient|background-image/,'status select must not draw a leading status dot');
-  assert.match(selectBlock,/padding:3px 9px;/,'status text uses symmetric padding after dot removal');
+  // Ürün kararı (2026-11): durum hücreyi doldurmaz; açılır liste, Artwork teknik
+  // etiketiyle aynı yapıda çerçeveli bir rozettir (açık zemin + kendi renginde kenar).
+  const badgeStart=CSS.indexOf('#kolTable td.kolStatusTd select.kolStatusNoArrow{border:');
+  assert.ok(badgeStart>=0,'status badge rule');
+  const badge=CSS.slice(badgeStart,CSS.indexOf('}',badgeStart)+1);
+  assert.match(badge,/border:1px solid color-mix\(in srgb,var\(--kol-status-color\) 45%,var\(--ui-surface\)\)/);
+  assert.match(badge,/background-color:color-mix\(in srgb,var\(--kol-status-color\) 12%,var\(--ui-surface\)\)/);
+  assert.match(badge,/color:color-mix\(in srgb,var\(--kol-status-color\) 72%,var\(--ui-text\)\)/);
+  assert.doesNotMatch(badge,/radial-gradient|background-image|box-shadow/);
+  assert.doesNotMatch(CSS,/#kolTable td\.kolStatusTd\{background-color/,'status cell must not flood the whole cell');
+  const layout=fs.readFileSync(path.join(ROOT,'public','app.css'),'utf8');
+  assert.match(layout,/#kolTable td\.kolStatusTd select\.kolStatusNoArrow\{padding:0 7px;width:auto;max-width:100%;[^}]*text-overflow:ellipsis/);
   assert.match(APP,/class="editTd kolStatusTd"\$\{rc\} style="--kol-status-color:/);
 });

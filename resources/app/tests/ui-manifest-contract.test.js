@@ -107,6 +107,23 @@ const sharedFieldBorder = d => d.file==='ui-components.css' && SHARED_FIELD_SELE
 // User-chosen subtle selector boundary; exact shared selector/token only.
 const sharedRowSelectionBorder = d => d.file==='ui-components.css' && d.selector==='html:root[data-ui-system="manifest"] body[data-ui-migrated] table input[type="checkbox"]:is(.rowChk,.shipCompareChk,.shipRowChk,[data-tr-check],[data-ship-chk-all],[data-fabric-pick],[data-bin-id],[data-cpa-queue-check],[data-dc-item],[data-dc-toggle-all],[data-ta-pick],[data-ta-all],[data-act="selectRow"],[data-act="selectAll"],[data-xim="include"],#kolSelAll,#shipChkAll,[id$="_selAll"])' && d.prop==='border' && d.value==='1px solid var(--ui-group-divider)';
 const sharedNotificationBorder = d => d.file==='ui-components.css' && classicSelector(d.selector)==='.uiFeedback' && d.prop==='border' && d.value==='1px solid var(--ui-group-divider)';
+// Ürün sahibi kararı (ortak hücre kartları: Artwork, Kumaş; Koleksiyon Durum rozeti):
+// kart/etiket/rozet kenarlığı yalnız bu tam selector'larda ve tasarım tokenlarıyla.
+// Genel bir modül istisnası değildir.
+const CELL_CARD_SCOPE=':is(#kolTable,#cpTable,#ordersTable) tbody ';
+const CELL_TAG_TONES={'1':'--ui-chart-3','2':'--ui-chart-4','3':'--ui-chart-5','4':'--ui-chart-8','5':'--ui-accent','eco':'--ui-success','good':'--ui-success','bad':'--ui-danger'};
+const tonedBorder=token=>`1px solid color-mix(in srgb,var(${token}) 45%,var(--ui-surface))`;
+const cellCardBorder = d => {
+ if(d.file!=='ui-components.css')return false;
+ const selector=classicSelector(d.selector);
+ if(selector===CELL_CARD_SCOPE+'.blCellChip')return d.prop==='border'&&d.value==='1px solid var(--ui-group-divider)';
+ if(selector===CELL_CARD_SCOPE+'.blCellChip i')return d.prop==='border-inline-start'&&d.value==='1px solid var(--ui-group-divider)';
+ if(selector===CELL_CARD_SCOPE+'.blCellMfr'||selector===CELL_CARD_SCOPE+'.blCellMfr em')return (d.prop==='border'||d.prop==='border-inline-end')&&d.value==='1px solid var(--ui-group-divider)';
+ if(selector===CELL_CARD_SCOPE+'.blCellMfr.isConfirmed')return d.prop==='border'&&d.value==='1px solid color-mix(in srgb,var(--ui-success) 55%,var(--ui-surface))';
+ if(selector==='#kolTable td.kolStatusTd select.kolStatusNoArrow')return d.prop==='border'&&d.value===tonedBorder('--kol-status-color');
+ const tone=selector.startsWith(CELL_CARD_SCOPE+'.blCellTag[data-tone="')&&selector.match(/\[data-tone="(\w+)"\]$/);
+ return Boolean(tone&&CELL_TAG_TONES[tone[1]]&&selector===CELL_CARD_SCOPE+`.blCellTag[data-tone="${tone[1]}"]`&&d.prop==='border'&&d.value===tonedBorder(CELL_TAG_TONES[tone[1]]));
+};
 // Exact shared grid-range rectangle: no new module shadows or broad exemptions.
 const sharedGridRangePerimeter = d => d.file==='ui-components.css'
  && classicSelector(d.selector)===':is(#cpTable,#ordersTable,.blDetailDrawer .blDetailTable) tbody td.blGridRangeCell, table[role="grid"] tbody td.blGridRangeCell'
@@ -129,7 +146,7 @@ test('Manifest permits only shared classic frames and existing table/print borde
    const group=['#cpTable','#ordersTable','#kolTable'].some(id=>d.selector===groupSeparator(id))&&d.prop==='border-inline-start'&&d.value==='1px solid var(--ui-group-divider)';
    const headerColumns=d.selector===':is(#cpTable,#ordersTable,#kolTable) thead tr.colRow th:not(:last-child)'&&d.prop==='border-inline-end'&&d.value==='1px solid var(--ui-row-divider)';
    const printRule=isPrint(d)&&d.selector==='.shipCompare tbody td'&&d.prop==='border-bottom'&&d.value==='1px solid var(--ui-print-rule)';
-   if(!row&&!group&&!headerColumns&&!printRule&&!classicBorder(d)&&!sharedFieldBorder(d)&&!sharedRowSelectionBorder(d)&&!sharedNotificationBorder(d))failures.push(d); // explicit shared-surface restoration
+   if(!row&&!group&&!headerColumns&&!printRule&&!classicBorder(d)&&!sharedFieldBorder(d)&&!sharedRowSelectionBorder(d)&&!sharedNotificationBorder(d)&&!cellCardBorder(d))failures.push(d); // explicit shared-surface restoration
   }
   if(d.prop==='outline'&&!/^(?:none|0)$/.test(d.value)){
    const cursor=['.blDetailDrawer .blDetailTable td.blGridActiveCell','#cpTable td.blGridActiveCell,#ordersTable td.blGridActiveCell','[data-ui-migrated] .blDetailTable .blGridActiveCell','#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody .kolActiveGridCell,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody .kolSpreadsheetActiveCell'].includes(d.selector);
@@ -181,7 +198,7 @@ test('Main column separators cover both header tiers; classic frames do not add 
  }
  const additional=entries.filter(d=>d.prop.startsWith('border')&&d.value==='1px solid var(--ui-group-divider)'&&!rules.includes(d));
  assert.ok(additional.length>0,'Restored surfaces must be bordered');
- assert.ok(additional.every(d=>classicBorder(d)||sharedRowSelectionBorder(d)||sharedNotificationBorder(d)),'Only approved shared surfaces may add another group divider');
+ assert.ok(additional.every(d=>classicBorder(d)||sharedRowSelectionBorder(d)||sharedNotificationBorder(d)||cellCardBorder(d)),'Only approved shared surfaces may add another group divider');
 });
 test('Shared button contract covers interaction states and restricts explicit variants',()=>{
  const source=read('ui-components.css');
