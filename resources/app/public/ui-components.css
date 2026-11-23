@@ -8736,23 +8736,23 @@ html[data-ui-system="manifest"] #kolTable tbody td.kolFabricTd:hover .kolFabricC
 /* Koleksiyon Artwork Detayı bölge kartları (yerleşim: collection-spreadsheet.css). */
 html[data-ui-system="manifest"] #kolTable tbody .kolArtworkPart {font:600 var(--ui-font-2xs)/1 var(--ui-font-mono);background:var(--ui-text-secondary);color:var(--ui-surface)
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkChip {font-size:var(--ui-font-2xs);line-height:16px;background:var(--ui-surface-soft)
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkChip {font-size:var(--ui-font-2xs);line-height:14px;background:var(--ui-surface);border:1px solid var(--ui-group-divider)
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkChip b {font-weight:500;color:var(--ui-text);background:var(--ui-surface-strong)
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkChip b {font-weight:500;color:var(--ui-text)
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkChip i {font-style:normal;font-family:var(--ui-font-mono);color:var(--ui-text-secondary);background:var(--ui-selected)
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkChip i {font-style:normal;font-family:var(--ui-font-mono);color:var(--ui-selected-ink);background:var(--ui-selected);border-inline-start:1px solid var(--ui-group-divider)
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech {font-size:var(--ui-font-2xs);line-height:16px
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech {font-size:var(--ui-font-2xs);line-height:14px
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="1"] {color:var(--ui-chart-3);background:color-mix(in srgb,var(--ui-chart-3) 13%,var(--ui-surface))
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="1"] {color:var(--ui-chart-3);background:color-mix(in srgb,var(--ui-chart-3) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-3) 45%,var(--ui-surface))
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="2"] {color:var(--ui-chart-4);background:color-mix(in srgb,var(--ui-chart-4) 13%,var(--ui-surface))
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="2"] {color:var(--ui-chart-4);background:color-mix(in srgb,var(--ui-chart-4) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-4) 45%,var(--ui-surface))
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="3"] {color:var(--ui-chart-5);background:color-mix(in srgb,var(--ui-chart-5) 13%,var(--ui-surface))
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="3"] {color:var(--ui-chart-5);background:color-mix(in srgb,var(--ui-chart-5) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-5) 45%,var(--ui-surface))
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="4"] {color:var(--ui-chart-8);background:color-mix(in srgb,var(--ui-chart-8) 13%,var(--ui-surface))
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="4"] {color:var(--ui-chart-8);background:color-mix(in srgb,var(--ui-chart-8) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-8) 45%,var(--ui-surface))
 }
-html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="5"] {color:var(--ui-accent);background:color-mix(in srgb,var(--ui-accent) 13%,var(--ui-surface))
+html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTech[data-tone="5"] {color:var(--ui-accent);background:color-mix(in srgb,var(--ui-accent) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-accent) 45%,var(--ui-surface))
 }
 html[data-ui-system="manifest"] #kolTable tbody .kolArtworkTotal {font:600 var(--ui-font-xs) var(--ui-font-mono);font-variant-numeric:tabular-nums;color:var(--ui-text)
 }

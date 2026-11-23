@@ -23,8 +23,8 @@
         "en": "Artwork Detail is summarized with region chips"
       },
       "body": {
-        "tr": "PLM'den gelen baskı bilgisi her bölge için adet rozetli bir kart, renkli teknik etiketi ve sağda toplam sayı olarak görünür. Set Style parçaları A, B sırasıyla ayrı satırlarda listelenir. Bölgeler her zaman Ön, Arka, Kollar sırasıyla yazılır ve metin arayüz diline göre üretilir; böylece aynı içerik tek bir filtre değeri olur. Elle yazılmış değerler düz metin olarak kalır ve Manuel rozetiyle işaretlenir. Çift tıklama, kopyalama ve dışa aktarma eskisi gibi düz metinle çalışır.",
-        "en": "Print information from PLM appears as a chip with a count badge for each region, a coloured technique tag and the total count on the right. Set Style parts are listed on separate lines in A, B order. Regions are always written in Front, Back, Sleeves order and the text follows the interface language, so identical content becomes a single filter value. Manually typed values stay as plain text with a Manual badge. Double-click, copy and export still work with the plain text."
+        "tr": "PLM'den gelen baskı bilgisi her bölge için adet rozetli, çerçeveli bir kart, renkli teknik etiketi ve sağda toplam sayı olarak görünür. Set Style parçaları A, B sırasıyla ayrı satırlarda listelenir. Bölgeler her zaman Ön, Arka, Kollar sırasıyla yazılır ve metin arayüz diline göre üretilir; böylece aynı içerik tek bir filtre değeri olur. Elle yazılmış değerler düz metin olarak kalır ve Manuel rozetiyle işaretlenir. Çift tıklama, kopyalama ve dışa aktarma eskisi gibi düz metinle çalışır.",
+        "en": "Print information from PLM appears as a bordered chip with a count badge for each region, a coloured technique tag and the total count on the right. Set Style parts are listed on separate lines in A, B order. Regions are always written in Front, Back, Sleeves order and the text follows the interface language, so identical content becomes a single filter value. Manually typed values stay as plain text with a Manual badge. Double-click, copy and export still work with the plain text."
       },
       "visual": {
         "kind": "screenshot",

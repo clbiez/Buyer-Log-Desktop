@@ -109,6 +109,11 @@ diğer grafik işaretçilerine veya kart/kontrol köşelerine uygulanmaz.
 6. Panel, modül ve kontrol sınırları: yalnız ortak `ui-components.css`
    üzerinde `--ui-group-divider` ile 1px sınır; giriş alanları `--ui-field-border` (§5). Checkbox'ta durum
    okunabilirliği, kullanıcı avatarında logo ile eşit `--ui-mark-radius` köşe uygulanır.
+   Ürün sahibi kararıyla tek tablo içi istisna: Koleksiyon Artwork Detayı bölge
+   kartı (`.kolArtworkChip`) 1px `--ui-group-divider` sınır ve adet bölmesinde
+   aynı tokenla iç ayraç; teknik etiketi (`.kolArtworkTech`) kendi grafik
+   tonunun %45 karışımıyla 1px sınır taşır. İstisna `tests/ui-manifest-contract.test.js`
+   içinde tam selector/değerle sabitlenir; başka hücre bileşenine genişletilmez.
 7. Basılı/dışa aktarılan belge kendi sabit çıktı sözleşmesini korur (§8).
 Satır seçicileri mevcut sade `--ui-group-divider` konturunu kullanır; boş zemin şeffaftır. Akış dolgusu Motion+ içinde merkezden açılır. Turuncu değişiklik çizgisi mavi seçim dolgusunun üzerinde ayrı kalır. Tüm satırın yumuşak aydınlatma katmanı yalnız fareyle girilen satırda oluşturulur ve çıkış geçişi bitince kaldırılır.
 
