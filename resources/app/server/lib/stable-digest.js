@@ -7,8 +7,10 @@
    yol tek senkron blokta onlarca MB string kurup hash'liyordu (saha profili:
    publish başına saniyeler süren donma + GC). Burada ~10 ms'lik dilimlerden
    sonra setImmediate ile olay döngüsüne dönülür.
-   Sözleşme: özet alınırken değer DEĞİŞTİRİLMEMELİDİR (çağıranlar ayrık kopya
-   verir: masterRecordsFromState/businessRecordsFromState derin kopyadır). */
+   Sözleşme: özet alınırken değer DEĞİŞTİRİLMEMELİDİR. Çağıranlar kayıtların
+   ayrık kopyasını verir (masterRecordsFromState/businessRecordsFromState kayıt
+   değerlerini kopyalar; _fieldWriters girdileri referanstır ama yerinde
+   değiştirilmez, birleştirmede yenisiyle değiştirilir). */
 const crypto = require('node:crypto');
 
 const DEFAULT_SLICE_MS = 10;

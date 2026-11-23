@@ -942,7 +942,7 @@ function masterCheckpointHasModeratorAuthority(snapshot) {
 }
 /* Varlık başına karşılaştırma büyük Master kümesinde tek blokta saniyeler
    sürüyordu; kayıtlar arasında zaman bütçeli olarak olay döngüsüne dönülür.
-   Girdiler ayrık kopyalardır (checkpoint ayrıştırması / masterRecordsFromState). */
+   Yalnız okur; girdiler checkpoint ayrıştırması / masterRecordsFromState çıktısıdır. */
 async function changedMasterEntities(remoteRecords, localRecords, ids) {
   const remote = remoteRecords && typeof remoteRecords === 'object' ? remoteRecords : {};
   const local = localRecords && typeof localRecords === 'object' ? localRecords : {};

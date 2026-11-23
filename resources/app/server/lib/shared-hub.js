@@ -211,7 +211,8 @@ function createSharedHub({ localDataRoot, appVersion = '', networkTimeoutMs = 15
      Bellek yalnız başarılı doğrulamadan sonra yazılır. */
   const verifiedMasterHeads = new Map();
   const ruleContent = value => { const copy = { ...value }; delete copy.release; return copy; };
-  const sameHead = (memo, head) => Boolean(memo && head && memo.revision === head.revision && memo.sha256 === head.sha256 && memo.file === head.file);
+  const sameHead = (memo, head) => Boolean(memo && head && memo.revision === head.revision && memo.sha256 === head.sha256 && memo.file === head.file
+    && memo.payloadSha256 === (head.payloadSha256 || null) && memo.headRulesSha256 === (head.rulesSha256 || null));
   async function verifiedMasterHead(root, head, schemaVersion) {
     const memo = verifiedMasterHeads.get(root);
     if (sameHead(memo, head)
@@ -220,11 +221,14 @@ function createSharedHub({ localDataRoot, appVersion = '', networkTimeoutMs = 15
     verifiedMasterHeads.delete(root);
     // A head may have committed before its archive failed. Repair that exact
     // revision before equality checks or advancing; never lose rule history.
+    // Fingerprint before AND after the verified read: a file replaced in between is not remembered.
+    const signatureBefore = await fileSignature(safePath(root, 'master', head.file));
     const envelope = (await readCheckpointFile(root, head, schemaVersion, 'master')).envelope;
-    const checkpointSignature = await fileSignature(safePath(root, 'master', head.file));
+    const signatureAfter = await fileSignature(safePath(root, 'master', head.file));
+    const checkpointSignature = signatureBefore && signatureBefore === signatureAfter ? signatureAfter : null;
     const authority = Boolean(envelope.payload && envelope.payload.authority === 'moderator');
     const archived = authority ? await masterReleases.archiveRelease(root, { head, envelope }) : null;
-    const next = { revision:head.revision, sha256:head.sha256, file:head.file, checkpointSignature, authority,
+    const next = { revision:head.revision, sha256:head.sha256, file:head.file, payloadSha256:head.payloadSha256 || null, headRulesSha256:head.rulesSha256 || null, checkpointSignature, authority,
       archiveSignature:archived ? archived.signature : null,
       release:envelope.payload ? envelope.payload.release : undefined,
       rulesSha256:head.rulesSha256 || (authority ? await stableSha256(ruleContent(envelope.payload)) : null) };
@@ -278,7 +282,7 @@ function createSharedHub({ localDataRoot, appVersion = '', networkTimeoutMs = 15
         const archived = versionedRules ? await masterReleases.archiveRelease(checked.root, { head, envelope }) : null;
         const checkpointSignature = await fileSignature(checkpointFile);
         // The bytes were verified against `digest` above; the archive was verified by archiveRelease.
-        if (checkpointSignature && (!versionedRules || (archived && archived.signature))) verifiedMasterHeads.set(checked.root, { revision, sha256:digest, file:head.file, checkpointSignature, authority:versionedRules,
+        if (checkpointSignature && (!versionedRules || (archived && archived.signature))) verifiedMasterHeads.set(checked.root, { revision, sha256:digest, file:head.file, payloadSha256, headRulesSha256:head.rulesSha256 || null, checkpointSignature, authority:versionedRules,
           archiveSignature:archived ? archived.signature : null, release:normalizedPayload.release, rulesSha256:rulesSha256 || null });
       }
       void cleanupCheckpointFiles(checked.root, area, [head.file, previous && previous.file]).catch(()=>{});
