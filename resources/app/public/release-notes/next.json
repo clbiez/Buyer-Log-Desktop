@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-23",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Koleksiyon Ex→Retail sütununun Türkçe adı güncellendi",
-    "en": "Turkish name of the Collection Ex→Retail column updated"
+    "tr": "Koleksiyon tarih sütunlarının adları güncellendi",
+    "en": "Collection date column names updated"
   },
   "summary": {
-    "tr": "Koleksiyon tablosunda Ex→Retail sütunu Türkçe arayüzde artık Yükleme Onay→Antrepo olarak görünür.",
-    "en": "In the Collection table, the Ex→Retail column now appears as Yükleme Onay→Antrepo in the Turkish interface."
+    "tr": "Koleksiyon tablosunda Ex→Retail sütunu Türkçe arayüzde Yükleme Onay→Antrepo, Retail sütunu ise Retail Date / Retail Tarihi olarak görünür.",
+    "en": "In the Collection table, the Ex→Retail column appears as Yükleme Onay→Antrepo in the Turkish interface, and the Retail column is now Retail Date / Retail Tarihi."
   },
   "changes": [
     {
@@ -37,6 +37,35 @@
         "caption": {
           "tr": "Demo veride Türkçe arayüzde sütun başlığı Yükleme Onay→Antrepo olarak görünür.",
           "en": "On demo data, the Turkish interface shows the column header as Yükleme Onay→Antrepo."
+        }
+      }
+    },
+    {
+      "id": "collection-retail-date-label",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Retail sütununun adı Retail Tarihi oldu",
+        "en": "Retail column renamed to Retail Date"
+      },
+      "body": {
+        "tr": "Koleksiyon tablosunda Retail sütunu Türkçe arayüzde Perakende yerine Retail Tarihi, İngilizce arayüzde Retail yerine Retail Date olarak görünür. Değerler değişmedi; eski Retail veya Perakende başlıklı Excel dosyaları içe aktarılmaya devam eder.",
+        "en": "In the Collection table, the Retail column now reads Retail Tarihi in the Turkish interface instead of Perakende, and Retail Date in the English interface instead of Retail. Values are unchanged; Excel files with the old Retail or Perakende header can still be imported."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-retail-date-label.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: Tarihler & Sevkiyat grubunda Retail Tarihi başlıklı tarih sütunu",
+          "en": "Demo Collection table: date column titled Retail Tarihi in the Dates & Shipment group"
+        },
+        "caption": {
+          "tr": "Demo veride Türkçe arayüzde sütun başlığı Retail Tarihi olarak görünür.",
+          "en": "On demo data, the Turkish interface shows the column header as Retail Tarihi."
         }
       }
     }
