@@ -77,6 +77,24 @@
     const active=session();active.detailRows=new Map();active.invalidated=true;
     if(document.body.dataset.activeTab==='koleksiyon')void ensure({rebuild:false});
   }
+  /* LFL / Previous Season / Sezon Etkisi kıyası FOB sütunundaki Final FOB ile yapılır:
+     Supp. FOB (Confirmed → Best → Target) + License Royalty + Hologram. ASAS referans
+     FOB'u da Final FOB olduğundan ham Supp. FOB lisanslı modelleri sistematik düşük
+     gösterirdi. Değer FOB sütununun kendisidir (row.fob): renderKol çizimden önce
+     kolSyncRulePricing ile tüm satırlarda yeniler; kural eksik/belirsizse FOB boştur
+     ve kıyas da yapılmaz (price=null). Kural burada yeniden çözülmez. */
+  function finalFobValue(row){
+    const value=global.kolParseMoneyNum(row?.fob);
+    return Number.isFinite(value)&&value>0?value:null;
+  }
+  function finalFob(row,supp){
+    if(!supp||!Number.isFinite(supp.price)||supp.price<=0)return null;
+    return {...supp,suppPrice:supp.price,price:finalFobValue(row)};
+  }
+  const sourceName=price=>price?({confirmed:'Confirmed Price',best:'Best Price',target:'Target Price'}[price.source]||''):'';
+  const sourceLabel=price=>price?.price!=null?`Final FOB · ${sourceName(price)}`:'';
+  const finalFobBreakdown=price=>price?.price!=null?`Final FOB $${kolFormatMoneyDisplay(String(price.price))} = ${sourceName(price)} $${kolFormatMoneyDisplay(String(price.suppPrice))} + Royalty + Hologram`:'';
+  const ruleMissingText=()=>T('Final FOB hesaplanamadı: eşleşen License Royalty / Hologram kuralı yok veya Licensor belirsiz.','Final FOB could not be calculated: no matching License Royalty / Hologram rule or the Licensor is unresolved.');
   function projectRow(row,read=kolEffectiveValue){
     const projected={...row};
     for(const key of ['season','mag','urunTipi','inStoreMonth','quantity','targetPrice','confirmedManufacturer'])projected[key]=read(row,key);
@@ -93,7 +111,7 @@
   }
   function impactModel(row){
     const active=session(),projected=projectRow(row);
-    const excluded=excludedFor(row),price=kolSuppFob(projected),result=active.status==='ready'?Engine.seasonImpact(active.timelines,projected,price?.price,excluded):{status:active.status};
+    const excluded=excludedFor(row),price=finalFob(row,kolSuppFob(projected)),result=active.status==='ready'?Engine.seasonImpact(active.timelines,projected,price?.price,excluded):{status:active.status};
     const reference=result.status==='ready'?result.reference:null,quality=sampleWarning(reference),month=Engine.budgetMonth(projected,'collection'),season=String(projected.season||''),period=[season,month].filter(Boolean).join(' · ');
     const messages={
       dimensions:T('Sezon, MAG ve Klasman gerekli.','Season, MAG and Classification are required.'),
@@ -101,7 +119,7 @@
       'no-prior':T('Sezonun ilk ayında veya önceki MB aylarında eşleşen USD siparişi yoksa sezon etkisi hesaplanmaz.','Season impact is unavailable in the first season month or when earlier MB months have no matching USD orders.'),
       'linked-order':T('Satır bir siparişe bağlı; sezona ikinci kez eklenmez.','This row is linked to an order and is not added to the season twice.'),
       quantity:T('Sezon etkisi için sıfırdan büyük adet gerekli.','A positive quantity is required for season impact.'),
-      price:T('Sezon etkisi için geçerli Onaylı, Best veya Target fiyatı gerekli.','A valid Confirmed, Best or Target price is required for season impact.'),
+      price:price&&price.price==null?ruleMissingText():T('Sezon etkisi için Final FOB gerekli: geçerli Onaylı, Best veya Target fiyatı.','Season impact requires a Final FOB: a valid Confirmed, Best or Target price.'),
       forbidden:T('LFL verisi için erişim yetkisi gerekli.','Access to LFL data is required.'),
       filter:T('Kaynak Veride LFL filtresini tamamlayın.','Complete the LFL filter in Source Data.'),
       error:T('Sezon referansı yüklenemedi.','Could not load the season reference.'),
@@ -110,11 +128,11 @@
     const emptyText=({'no-prior':T('Önceki ay verisi yok','No earlier-month data'),quantity:T('Adet gerekli','Quantity required'),price:T('Fiyat gerekli','Price required'),'linked-order':T('Siparişe bağlı','Linked to an order'),month:T('MB ayı gerekli','MB month required')})[result.status]||'—';
     const money=value=>`$${kolFormatMoneyDisplay(String(value))}`,rounded=reference?(Math.abs(result.percent)<0.005?0:result.percent):null;
     const percentText=rounded==null?'':`${rounded>0?'+':''}${rounded.toLocaleString(en()?'en-GB':'tr-TR',{maximumFractionDigits:2})}%`;
-    const averageText=reference?`${money(result.before)} → ${money(result.after)}`:'',source=price?({confirmed:'Confirmed Price',best:'Best Price',target:'Target Price'}[price.source]||''):'';
+    const averageText=reference?`${money(result.before)} → ${money(result.after)}`:'',source=sourceLabel(price);
     const undated=reference?.undatedCount?T(`${reference.undatedCount} kaynak satırının MB ayı eksik; kapsama alınmadı.`,`${reference.undatedCount} source row(s) have no MB month and were excluded.`):'';
     const scope=reference?T(`${reference.firstMonth}–${reference.throughMonth} · ${reference.quantity} adet`,`${reference.firstMonth}–${reference.throughMonth} · ${reference.quantity} units`):'';
     const addition=reference?T(`Model: ${result.quantity} adet × ${money(result.price)} · ${source}`,`Model: ${result.quantity} units × ${money(result.price)} · ${source}`):'';
-    const formula=T('Yeni ortalama = (mevcut tutar + model fiyatı × model adedi) / (mevcut adet + model adedi). Etki = (yeni ortalama / mevcut ortalama − 1) × 100. Aynı sezon, MAG, Klasman ve USD; yalnız modelin MB ayından önceki aylar. Her satır tek başına simüle edilir.','New average = (existing value + model price × model quantity) / (existing quantity + model quantity). Impact = (new average / existing average − 1) × 100. Same season, MAG, Classification and USD; only months before the model MB month. Each row is simulated independently.');
+    const formula=T('Yeni ortalama = (mevcut tutar + model Final FOB × model adedi) / (mevcut adet + model adedi). Etki = (yeni ortalama / mevcut ortalama − 1) × 100. Aynı sezon, MAG, Klasman ve USD; yalnız modelin MB ayından önceki aylar. Her satır tek başına simüle edilir.','New average = (existing value + model Final FOB × model quantity) / (existing quantity + model quantity). Impact = (new average / existing average − 1) × 100. Same season, MAG, Classification and USD; only months before the model MB month. Each row is simulated independently.');
     const countries=exclusionText(excluded);
     const detail=reference?[period,`${projected.mag} · ${projected.urunTipi}`,scope,addition,`${averageText} · ${percentText}`,quality.orderInfo,quality.warning,undated,countries,formula].filter(Boolean).join('\n'):[message,countries].filter(Boolean).join('\n');
     return {reference,season,month,period,percent:result.percent,percentText,averageText,source,message,detail,noData,emptyText,excluded,...quality,text:reference?[period,averageText,percentText,addition,quality.warning,undated,countries].filter(Boolean).join(' · '):message,impact:result};
@@ -125,8 +143,8 @@
     const season=Engine.previousSeason(projected.season),valid=Boolean(season&&String(projected.mag||'').trim()&&String(projected.urunTipi||'').trim());
     const month=mode==='month'?Engine.previousMonth(Engine.budgetMonth(projected,'collection')):'',period=[season,month].filter(Boolean).join(' · ');
     const excluded=excludedFor(row),reference=valid&&active.status==='ready'?Engine.reference(active.index,projected,mode,excluded):null;
-    const price=kolSuppFob(projected),percent=reference?Engine.changePercent(price?.price,reference.average):null;
-    const source=price?({confirmed:'Confirmed Price',best:'Best Price',target:'Target Price'}[price.source]||''):'';
+    const price=finalFob(row,kolSuppFob(projected)),percent=reference?Engine.changePercent(price?.price,reference.average):null;
+    const source=sourceLabel(price);
     const rounded=percent==null?null:Math.abs(percent)<0.05?0:percent;
     const percentText=rounded==null?'':`${rounded>0?'+':''}${rounded.toLocaleString(en()?'en-GB':'tr-TR',{maximumFractionDigits:1})}%`;
     const averageText=reference?`$${kolFormatMoneyDisplay(String(reference.average))}`:'';
@@ -141,9 +159,9 @@
     else if(active.status==='error')message=T('LFL referansı yüklenemedi.','Could not load the LFL reference.');
     else if(active.status!=='ready')message=T('LFL referansı yükleniyor…','Loading LFL reference…');
     else if(!reference)message=T(`Kıyaslanacak veri yok. ${period} için MAG + Klasman ile eşleşen USD siparişi bulunamadı.`,`No comparison data. No USD orders matching MAG + Classification were found for ${period}.`);
-    const explanation=(mode==='month'?T('Önceki yılın aynı MB ayı + MAG + Klasman için adet ağırlıklı FOB ortalaması.','Quantity-weighted FOB average for the same MB month last year + MAG + Classification.'):T('Önceki sezonun tüm ayları + MAG + Klasman için adet ağırlıklı FOB ortalaması.','Quantity-weighted FOB average for all months of the previous season + MAG + Classification.'))+' '+T('Yalnız USD siparişleri. Fark = (geçerli fiyat / ortalama − 1) × 100.','USD orders only. Change = (applicable price / average − 1) × 100.');
+    const explanation=(mode==='month'?T('Önceki yılın aynı MB ayı + MAG + Klasman için adet ağırlıklı FOB ortalaması.','Quantity-weighted FOB average for the same MB month last year + MAG + Classification.'):T('Önceki sezonun tüm ayları + MAG + Klasman için adet ağırlıklı FOB ortalaması.','Quantity-weighted FOB average for all months of the previous season + MAG + Classification.'))+' '+T('Yalnız USD siparişleri. Fark = (Final FOB / ortalama − 1) × 100; Final FOB = Supp. FOB + Royalty + Hologram (FOB sütunu).','USD orders only. Change = (Final FOB / average − 1) × 100; Final FOB = Supp. FOB + Royalty + Hologram (FOB column).');
     const countries=exclusionText(excluded);
-    const detail=reference?[`${period} · ${projected.mag} · ${projected.urunTipi}`,`${orderInfo?orderInfo+' · ':''}${reference.count} ${T('kayıt','records')} · ${reference.quantity.toLocaleString(en()?'en-GB':'tr-TR')} ${T('adet','units')}`,source+(price?`: $${kolFormatMoneyDisplay(String(price.price))}`:''),warning,countries,explanation].filter(Boolean).join('\n'):[message,countries].filter(Boolean).join('\n');
+    const detail=reference?[`${period} · ${projected.mag} · ${projected.urunTipi}`,`${orderInfo?orderInfo+' · ':''}${reference.count} ${T('kayıt','records')} · ${reference.quantity.toLocaleString(en()?'en-GB':'tr-TR')} ${T('adet','units')}`,finalFobBreakdown(price)||(price?ruleMissingText():''),warning,countries,explanation].filter(Boolean).join('\n'):[message,countries].filter(Boolean).join('\n');
     const text=reference?[period,averageText,percentText,source,orderInfo,warning,countries].filter(Boolean).join(' · '):noData?`${period} · ${emptyText}`:'';
     return {reference,season,month,period,percent,percentText,averageText,source,message,detail,text,noData,emptyText,excluded,lowSample,warning,warningShort,compactWarning};
   }
@@ -160,10 +178,9 @@
     // Index all model parents once, including parents outside the active filter.
     const read=groups?.createValueReader?groups.createValueReader(typeof kolRows!=='undefined'?kolRows:rows):kolEffectiveValue;
     const items=(rows||[]).map(row=>{
-      const projected=projectRow(row,read);let price;
-      if(groups){const pricing=read(row,'pricing')||{},selected=groups.confirmedPricing(projected,pricing,groups.kolParseMoneyNum)||groups.bestPricing(pricing,groups.kolParseMoneyNum),target=groups.kolParseMoneyNum(projected.targetPrice);price=selected?.price??(Number.isFinite(target)&&target>0?target:null);}
-      else price=kolSuppFob(projected)?.price;
-      return {row:projected,price,quantity:projected.quantity,excluded:excludedFor(row)};
+      // Final FOB (row.fob) zaten Confirmed → Best → Target fiyatından türetilmiştir.
+      const projected=projectRow(row,read);
+      return {row:projected,price:finalFobValue(row),quantity:projected.quantity,excluded:excludedFor(row)};
     });
     for(const mode of new Set(modes)){
       const observations=items.map(item=>{

@@ -67,16 +67,26 @@ test('Price uses live confirmed/best/target values, grouped dimensions and one r
  const context={window:null,appLang:'tr',state:{currentUser:{id:'demo'}},document:{body:{dataset:{activeTab:'overview'}}},BLCollectionLflEngine:Engine,
   escapeHtml:value=>String(value).replace(/[<>&"]/g,'_'),kolFormatMoneyDisplay:value=>Number(value).toFixed(2),kolEffectiveValue:(row,key)=>row.effective?.[key]??row[key],
   kolSuppFob:row=>Groups.confirmedPricing(row,row.pricing||{},Groups.kolParseMoneyNum)||Groups.bestPricing(row.pricing||{},Groups.kolParseMoneyNum)||(Number(row.targetPrice)>0?{price:Number(row.targetPrice),source:'target'}:null),
+  kolParseMoneyNum:Groups.kolParseMoneyNum,
   fetch:async()=>{requests++;return {ok:true,json:async()=>({references:refs})};}};
  context.window=context;vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/collection-lfl.js'),'utf8'),context);
  const ui=context.BLCollectionLfl;
  await Promise.all([ui.ensure(),ui.ensure()]);await ui.ensure();assert.equal(requests,1);
- const row={id:1,season:'S7',mag:'CU4E',urunTipi:'K.KOL LİSANS',inStoreMonth:'FEBRUARY 2027',targetPrice:8,pricing:{}};
+ // Stands in for renderKol → kolSyncRulePricing: the FOB column value is stored on the row (DTR: FOB = Supp. FOB).
+ const sync=item=>{item.fob=context.kolSuppFob(item)?.price??'';return item;};
+ const row=sync({id:1,season:'S7',mag:'CU4E',urunTipi:'K.KOL LİSANS',inStoreMonth:'FEBRUARY 2027',targetPrice:8,pricing:{}});
  assert.equal(ui.model(row).percent,-20);
  assert.equal(ui.model(row).lowSample,true);assert.match(ui.model(row).warning,/1.*sipariş/);
  assert.match(ui.cell(row,''),/Yalnız 1 sipariş/);assert.match(ui.combinedCell(row,'',['__lfl__']),/⚠ 1 sipariş/);
- row.pricing={A:9,B:12};assert.equal(ui.model(row).percent,-10);
- row.confirmedManufacturer='B';assert.equal(ui.model(row).percent,20);
+ // Licensed model: Supp. FOB 8 + 20% royalty + $0.50 hologram = FOB column 10.50 vs reference 10.
+ const licensed={...row,fob:'10,50'};
+ assert.ok(Math.abs(ui.model(licensed).percent-5)<1e-9,'LFL compares Final FOB, not Supp. FOB');
+ assert.ok(Math.abs(ui.model(licensed,'season').percent-5)<1e-9,'Previous Season compares Final FOB');
+ assert.match(ui.model(licensed).source,/Final FOB/);assert.match(ui.model(licensed).detail,/Final FOB \$10\.50 = Target Price \$8\.00/);
+ assert.equal(ui.model({...row,fob:''}).percent,null,'empty FOB (missing royalty rule) stops the comparison like the FOB column');
+ assert.match(ui.model({...row,fob:''}).detail,/Final FOB hesaplanamadı/);
+ row.pricing={A:9,B:12};sync(row);assert.equal(ui.model(row).percent,-10);
+ row.confirmedManufacturer='B';sync(row);assert.equal(ui.model(row).percent,20);
  assert.equal(ui.model({...row,effective:{mag:'OTHER'}}).reference,null);
  assert.equal(ui.model({...row,season:'S8'}).reference,null);
  const noData={...row,season:'S8'};
@@ -86,7 +96,7 @@ test('Price uses live confirmed/best/target values, grouped dimensions and one r
  assert.equal(ui.model({...row,inStoreMonth:''}).reference,null);
  assert.equal(ui.model({...row,inStoreMonth:''}).noData,false);
  assert.equal(ui.model({...row,inStoreMonth:''},'season').reference.average,10);
- row.pricing={};row.targetPrice='';assert.equal(ui.model(row).percent,null);assert.equal(ui.model(row).reference.average,10);
+ row.pricing={};row.targetPrice='';sync(row);assert.equal(ui.model(row).percent,null);assert.equal(ui.model(row).reference.average,10);
  refs=Engine.buildReferences([1,2,3].map(number=>order({orderCode:'DEMO-'+number})));
  ui.invalidate();await ui.ensure();assert.equal(ui.model(row).lowSample,true);assert.match(ui.model(row).warning,/3.*sipariş/);
  refs=Engine.buildReferences([1,2,3,4].map(number=>order({orderCode:'DEMO-'+number})));
@@ -95,11 +105,12 @@ test('Price uses live confirmed/best/target values, grouped dimensions and one r
  refs=Engine.buildReferences([order({orderCode:''})]);ui.invalidate();await ui.ensure();assert.match(ui.model(row).warning,/cannot be verified/);
  context.state.currentUser={id:'another-user'};await ui.ensure();assert.equal(requests,5);
  refs=Engine.buildReferences([order({season:'S7',inStoreMonth:'2027-01'})]);ui.invalidate();await ui.ensure();
- row.quantity='100';row.targetPrice='20';
+ row.quantity='100';row.targetPrice='20';sync(row);
+ assert.equal(ui.model({...row,fob:'25'},'impact').impact.after,17.5,'season impact adds the Final FOB');
  assert.equal(ui.model(row,'impact').impact.before,10);assert.equal(ui.model(row,'impact').impact.after,15);
  assert.match(ui.cell(row,'','impact'),/50%/);assert.equal(ui.model(row,'impact').lowSample,true);
  row.quantity='300';assert.equal(ui.model(row,'impact').impact.after,17.5);
- row.targetPrice='5';assert.equal(ui.model(row,'impact').impact.after,6.25);
+ row.targetPrice='5';sync(row);assert.equal(ui.model(row,'impact').impact.after,6.25);
  assert.equal(ui.model({...row,effective:{quantity:100}},'impact').impact.after,7.5);
  assert.match(ui.cell({...row,inStoreMonth:'JANUARY 2027'},'','impact'),/No earlier-month data/);
  assert.equal(ui.model({...row,_sourceOrderCode:'DEMO-1'},'impact').impact.status,'linked-order');

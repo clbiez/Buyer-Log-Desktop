@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-23",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon LFL kıyasları Final FOB ile hesaplanıyor",
+    "en": "Collection LFL comparisons use Final FOB"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon'da LFL, Previous Season ve Sezon Etkisi kıyasları artık Supp. FOB yerine royalty ve hologram eklenmiş Final FOB ile yapılıyor; lisanslı modellerde önceki sezona göre fark doğru görünür.",
+    "en": "In Collection, the LFL, Previous Season and Season Impact comparisons now use Final FOB including royalty and hologram instead of Supp. FOB, so licensed models show the correct difference to the previous season."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "collection-lfl-final-fob",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "LFL, Previous Season ve Sezon Etkisi artık Final FOB ile hesaplanıyor",
+        "en": "LFL, Previous Season and Season Impact now use Final FOB"
+      },
+      "body": {
+        "tr": "Koleksiyon'daki LFL, Previous Season ve Sezon Etkisi kıyasları önceki sezon siparişlerini modelin Supp. FOB fiyatıyla karşılaştırıyordu. Lisanslı modellerde royalty ve hologram maliyeti eklenmediği için fark olduğundan düşük görünüyordu. Kıyaslar artık FOB sütunundaki Final FOB ile (Supp. FOB + Royalty + Hologram) yapılıyor; alt satırdaki ortalamalar da aynı değeri kullanıyor. Eşleşen lisans kuralı yoksa FOB sütununda olduğu gibi hesap yapılmaz ve uyarı gösterilir. DTR modellerinde sonuç değişmez.",
+        "en": "In Collection, the LFL, Previous Season and Season Impact comparisons were comparing previous-season orders with the model's Supp. FOB price. For licensed models, royalty and hologram costs were missing, so the difference looked lower than it is. The comparisons now use the Final FOB shown in the FOB column (Supp. FOB + Royalty + Hologram), and the footer averages use the same value. If no license rule matches, nothing is calculated and a warning is shown, the same as in the FOB column. Results for DTR models do not change."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-lfl-final-fob.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: lisanslı DM100 modelinde Supp. FOB 8,40 ve FOB 10,55; Previous Season, LFL ve Sezon Etkisi kıyasları 10,55 üzerinden",
+          "en": "Demo Collection table: licensed model DM100 with Supp. FOB 8.40 and FOB 10.55; Previous Season, LFL and Season Impact compare against 10.55"
+        },
+        "caption": {
+          "tr": "Demo veride lisanslı model, royalty ve hologram eklenmiş FOB $10,55 ile önceki sezonla kıyaslanır; DTR modelinde değer değişmez.",
+          "en": "On demo data, the licensed model is compared with the previous season using FOB $10.55 including royalty and hologram; the DTR model is unchanged."
+        }
+      }
+    }
+  ]
 }
