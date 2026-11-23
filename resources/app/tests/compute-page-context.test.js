@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),vm=require(
 const {extractFunction}=require('./helpers/app-main-functions'),source=require('./helpers/server-source')();
 test('persisted page context includes resolved view/edit scope and authoritative order generation',()=>{
   let accessHash='view-scope-1',cpRemote=0;
-  const context={sourceUserId:()=> 'a',loadOverrides:()=>({}),loadModelConnections:()=>({items:[],revision:1}),
+  const context={sourceUserId:()=> 'a',loadOverridesStamp:()=>({}),loadModelConnections:()=>({items:[],revision:1}),
     userAccess:{roleWorkspaceEntries:()=>[],publicProfile:()=>({id:'a',role:'buyer',status:'ACTIVE',scopes:{buyers:['Same legacy scope']}}),computeAccessContext:()=>({accessHash})},
     userPreferences:{applyHorizonOverrides:()=>[]},sourceFilterReadiness:()=>({ready:true}),sourceFolderForUser:()=>'',cpSharedStore:{remoteRevision:()=>cpRemote},pageProjectionCache:{CACHE_SCHEMA_VERSION:2},stableHashValue:value=>crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex')};
   vm.createContext(context);vm.runInContext(extractFunction(source,'pageProjectionContext')+';globalThis.read=pageProjectionContext;',context);

@@ -31,7 +31,7 @@ async function fixture(t){
   require:require('node:module').createRequire(path.join(__dirname,'../server/server.js')),
   userAccess:{sessionProfile:req=>req.currentUser===profile?profile:null,profileById:key=>key===id?profile:null,hasArea:(p,area)=>p.areas.has(area),roleWorkspaceEntries:()=>[],publicProfile:p=>({id:p.id,systemRole:p.systemRole,status:p.status}),computeAccessContext:()=>access},
   userPreferences:{applyHorizonOverrides:()=>[]},sourceUserId:value=>value?.currentUser?.id||value?.id||value,sourceFolderForUser:()=>'',cpSharedStore:{remoteRevision:()=>0},sourceFilterReadiness:()=>({ready:true}),
-  assertSourceFilters(){},loadOverrides:()=>shared,loadModelConnections:()=>({revision:1,items:[]}),cacheForUser:()=>runtime,
+  assertSourceFilters(){},loadOverrides:()=>shared,loadOverridesStamp:()=>shared,loadModelConnections:()=>({revision:1,items:[]}),cacheForUser:()=>runtime,
   effectiveHorizonForTarget:(_p,target)=>horizons[target],computeSourceFor:async()=>descriptor,computeSourceToken:()=>descriptor.capability,
   serverCompute:()=>compute,publishedComputeSources:new Map([[id,{descriptor}]]),
   projectionRuntimeMeta:require('../server/lib/projection-runtime-meta').projectionRuntimeMeta};
