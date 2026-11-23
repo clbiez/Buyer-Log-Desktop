@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "8.0.14",
+      "publishedAt": "2026-11-23",
+      "title": {
+        "tr": "Koleksiyon kart dili, Final FOB ile LFL kıyasları ve alt satırda % farklar",
+        "en": "Collection chip language, LFL comparisons with Final FOB and % changes in the footer"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 5,
+        "fixes": 1
+      },
+      "file": "release-notes/8.0.14/release.json"
+    },
+    {
       "version": "8.0.13",
       "publishedAt": "2026-11-23",
       "title": {
