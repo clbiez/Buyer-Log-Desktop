@@ -49,6 +49,7 @@ const { createSyncTransportGuard } = require('./lib/sync-transport-guard');
 const { createOneDriveControl } = require('./lib/onedrive-control');
 const { createSharedHub } = require('./lib/shared-hub');
 const masterReleases = require('./lib/master-releases');
+const { createYielder } = require('./lib/stable-digest');
 const { createRefreshPerformance } = require('./lib/refresh-performance');
 const sharedSyncPolicy = require('./lib/shared-sync-policy');
 const { filterCollectionWorkspaceDeltas, quarantineLegacyCollectionDeltas, createCollectionReplication } = require('./lib/collection-replication');
@@ -926,11 +927,13 @@ function checkpointRecoverableIds(remoteRecords, localRecords, tombstones) {
 async function guardCheckpointPublish(area, root, state, localRecords) {
   const read = area === 'master' ? sharedHub.readMaster : sharedHub.readBusiness;
   const remote = await read(root, null);
-  if (!remote || remote.unchanged) return { safe:true, missing:[], stale:[], remoteRecords:0 };
+  if (!remote || remote.unchanged) return { safe:true, missing:[], stale:[], remoteRecords:0, remote:remote || null };
   const remoteRecords = sharedSyncPolicy.scopeCheckpointRecords(area, checkpointRecords(remote));
   const missing = checkpointUnaccountedIds(remoteRecords, localRecords, state && state.tombstones);
   const stale = checkpointRemoteAheadIds(remoteRecords, localRecords, state && state.tombstones);
-  return { safe:missing.length === 0 && stale.length === 0, missing, stale, remoteRecords:Object.keys(remoteRecords).length, head:remote.head, moderatorAuthority:masterCheckpointHasModeratorAuthority(remote) };
+  // `remote` is returned so the publisher reuses this exact read instead of
+  // downloading and parsing the same checkpoint a second time.
+  return { safe:missing.length === 0 && stale.length === 0, missing, stale, remoteRecords:Object.keys(remoteRecords).length, head:remote.head, moderatorAuthority:masterCheckpointHasModeratorAuthority(remote), remote };
 }
 /* Moderatörün yayımladığı Master checkpoint bunu açıkça taşır. Eski sürümlerin
    ya da açılış onarımının yazdığı checkpoint otorite sayılmaz. */
@@ -938,12 +941,17 @@ function masterCheckpointHasModeratorAuthority(snapshot) {
   const payload = snapshot && snapshot.envelope && snapshot.envelope.payload;
   return Boolean(payload && payload.authority === 'moderator');
 }
-function changedMasterEntities(remoteRecords, localRecords, ids) {
+/* Varlık başına karşılaştırma büyük Master kümesinde tek blokta saniyeler
+   sürüyordu; kayıtlar arasında zaman bütçeli olarak olay döngüsüne dönülür.
+   Yalnız okur; girdiler checkpoint ayrıştırması / masterRecordsFromState çıktısıdır. */
+async function changedMasterEntities(remoteRecords, localRecords, ids) {
   const remote = remoteRecords && typeof remoteRecords === 'object' ? remoteRecords : {};
   const local = localRecords && typeof localRecords === 'object' ? localRecords : {};
   const changed = new Set();
   const different = (a, b) => JSON.stringify(a == null ? null : a) !== JSON.stringify(b == null ? null : b);
+  const tick = createYielder();
   for (const id of Array.isArray(ids) ? ids : []) {
+    await tick();
     const before = local[id], after = remote[id];
     if (!different(before, after)) continue;
     if (id === 'store:overrides.json') {
@@ -999,7 +1007,7 @@ async function applyMissingCheckpointRecords(area, root, hub, state, remote) {
   const staleIds = checkpointRemoteAheadIds(remoteRecords, localRecords, state && state.tombstones);
   const recoverIds = [...new Set([...missingIds, ...staleIds])];
   if (!recoverIds.length) return { applied:0, missing:0, stale:0, head:remote.head, remoteRecords:Object.keys(remoteRecords).length };
-  const recoveredMasterEntities = area === 'master' ? changedMasterEntities(remoteRecords, localRecords, recoverIds) : [];
+  const recoveredMasterEntities = area === 'master' ? await changedMasterEntities(remoteRecords, localRecords, recoverIds) : [];
   // Recovery is a cache repair, not a new local edit. Copy the authoritative
   // checkpoint record directly so it does not create an outgoing journal item
   // that would simply echo the same recovery data back to Shared Hub.
@@ -1531,9 +1539,12 @@ async function publishMasterCheckpoint(actorId = '', { note = '', restoredSnapsh
       markStartup('SHARED_CHECKPOINT_PUBLISH_PROTECTED', { area:'master', missing:guard.missing.length, stale:guard.stale.length, localRecords:Object.keys(records).length, remoteRecords:guard.remoteRecords });
       return { published:false, protected:true, reason:'local-master-incomplete', head, hub:checked.manifest, records:Object.keys(records).length, missingRecords:guard.missing.slice(0,50), staleRecords:guard.stale.slice(0,50) };
     }
-    const previous = head ? await sharedHub.readMaster(checked.root, null) : null;
+    // The guard already read the current checkpoint; reuse it (same call, same head).
+    const previous = !head ? null : Object.hasOwn(guard, 'remote') ? guard.remote : await sharedHub.readMaster(checked.root, null);
     const beforeRecords = previous ? sharedSyncPolicy.scopeCheckpointRecords('master', checkpointRecords(previous)) : {};
-    const changedEntities = changedMasterEntities(records, beforeRecords, [...new Set([...Object.keys(records), ...Object.keys(beforeRecords)])]);
+    // Release metadata only. Evaluated by publishMaster solely when a new
+    // revision is created; an unchanged publish no longer diffs every entity.
+    const changedEntities = () => changedMasterEntities(records, beforeRecords, [...new Set([...Object.keys(records), ...Object.keys(beforeRecords)])]);
     const saved = await sharedHub.publishMaster(checked.root, {
       ...(restoredSnapshot || {}), records, inventory:prewipeMasterRecovery.masterCoverage(records), authority:'moderator',
     }, { actorId:actor.id, previousRevision:head && head.revision || 0, note:releaseNote, forceRevision:Boolean(restoredSnapshot) || Boolean(releaseNote), changedEntities });
@@ -1697,7 +1708,7 @@ async function applyModeratorMasterCheckpoint(remote, hubId, { notify = true } =
   // olarak Moderatör kopyasıyla değiştirilmez.
   const ids = Object.keys(remoteRecords).filter(id => !sharedSyncPolicy.peerChannelAllows(id));
   const before = await localDb.read();
-  const changedEntities = changedMasterEntities(remoteRecords, sharedSyncPolicy.masterRecordsFromState(before), ids);
+  const changedEntities = await changedMasterEntities(remoteRecords, sharedSyncPolicy.masterRecordsFromState(before), ids);
   const at = new Date().toISOString();
   const result = await localDb.transaction(async next => {
     localDb.mergeCheckpointClockState(next, Object.fromEntries(ids.map(id => [id, remoteRecords[id]])));

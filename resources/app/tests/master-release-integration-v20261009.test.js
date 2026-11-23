@@ -17,6 +17,7 @@ const { compare:compareHlc } = require(path.join(actualApp, 'server/lib/hlc'));
 const sharedSyncPolicy = require(path.join(actualApp, 'server/lib/shared-sync-policy'));
 const prewipeMasterRecovery = require(path.join(actualApp, 'server/lib/prewipe-master-recovery'));
 const { atomicWriteJson } = require(path.join(actualApp, 'server/user-data'));
+const { createYielder } = require(path.join(actualApp, 'server/lib/stable-digest'));
 
 // Evaluate the real declarations without starting unrelated HTTP/auth providers.
 // All persistence, merge, scope, publication and archive dependencies are real.
@@ -51,7 +52,7 @@ async function device(root, shared, hubId, name, moderator, clock = null) {
   const sharedHub = createSharedHub({ localDataRoot:localRoot, appVersion:'test' });
   await sharedHub.markBootstrap({ root:shared, hubId, completed:true });
   const notifications = [];
-  const context = vm.createContext({ fs, atomicWriteJson, localDb, deltaStore, sharedHub,
+  const context = vm.createContext({ fs, atomicWriteJson, createYielder, localDb, deltaStore, sharedHub,
     masterReleases:releases, sharedSyncPolicy, prewipeMasterRecovery,
     MODERATOR_MASTER_STATE_FILE:path.join(localRoot, 'moderator-master-state.json'),
     moderatorActiveOnThisDevice:() => moderator,
