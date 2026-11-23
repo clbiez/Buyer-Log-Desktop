@@ -470,12 +470,9 @@
     // FRESH_MS süresi) PLM SYNC'in yazdığı yeni BOM özetlerini okur.
     global.addEventListener('bl:plm-operation-started', () => { state.fetchedAt = 0; });
     // Özet metni dile bağlıdır (Toplam/Total); dil değişince önbellekten yeniden yazılır.
-    // Kartlar ve metin aktif dilde üretilir; değişen hücreler varsa tablo yeniden çizilir.
-    document.addEventListener('bl:language-changed', () => {
-      if (project() && typeof global.renderKol === 'function' && document.getElementById('kolTable')) {
-        try { global.renderKol(); } catch (_) {}
-      }
-    });
+    // Özet metni dile bağlıdır (Toplam/Total). applyLanguage aktif Koleksiyon'u
+    // renderKol ile yeniden çizer; sarmalanmış render önce project() çalıştırır.
+    document.addEventListener('bl:language-changed', () => { project(); });
   }
 
   global.BLCollectionArtworkDetail = {
