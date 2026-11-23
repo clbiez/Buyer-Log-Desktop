@@ -10383,7 +10383,7 @@ function recordCpRowPatches({user,before,items}){
     }
     return cpRowPatchLog().record({userId:String(user.id),before,after:read.contextHash,items,safe:rowPatchIncrementalSafe,
       context:{notesmap,noteColumnDefs:overrides.noteColumnDefs||[],transitRules:overrides.transitRules||[],
-        cpRowStored:cpRowStoredLib.pickCpRowStoredMaps(shared,items.map(item=>item.orderCode))}});
+        cpRowStored:cpRowStoredLib.pickCpRowStoredMaps(shared,items)}});
   }catch(error){logRuntimeFailure('cpRowPatchLog',error);return null;}
 }
 

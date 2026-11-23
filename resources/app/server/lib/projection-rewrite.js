@@ -48,7 +48,7 @@ function rowPatchContext(overrides, items, shared = null) {
   return {
     notesmap: pick(ov.notesmap), importancemap: pick(ov.importancemap), importanceSettings: ov.importanceSettings,
     noteColumnDefs: ov.noteColumnDefs, transitRules: ov.transitRules,
-    cpRowStored: cpRowStored.pickCpRowStoredMaps(shared || ov, codes),
+    cpRowStored: cpRowStored.pickCpRowStoredMaps(shared || ov, items),
   };
 }
 

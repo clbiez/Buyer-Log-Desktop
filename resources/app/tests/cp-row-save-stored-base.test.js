@@ -171,6 +171,11 @@ test('projection cache row patch keeps _cpStored current (CP module only; contex
   const context=rowPatchContext({...shared,submap:{...shared.submap,7008:'Dosyadan'}},items,shared);
   assert.deepEqual(Object.keys(context.cpRowStored.datemap),[lineKey(7008)],'yalnız yamalanan sipariş');
   assert.equal(Object.hasOwn(context.cpRowStored.submap,'7008'),false,'CP-update katmanı kayıtlı değer değil');
+  // Sipariş bazlı öğe (model / renk kodu yok) siparişin bütün satırlarına eşleşir: o siparişin bütün anahtarları alınır.
+  const wide=stored.pickCpRowStoredMaps({datemap:{[lineKey(7008)]:{mb:'x'},[db.overrideWriteKey(7008,{model:'B',ccode:'K02'})]:{ex:'y'},'7008':{retail:'z'},'70080':{ex:'n'}}},[{orderCode:7008,patch:{}}]);
+  assert.deepEqual(Object.keys(wide.datemap).sort(),[lineKey(7008),db.overrideWriteKey(7008,{model:'B',ccode:'K02'}),'7008'].sort());
+  const narrow=stored.pickCpRowStoredMaps({datemap:{[lineKey(7008)]:{mb:'x'},[db.overrideWriteKey(7008,{model:'B',ccode:'K02'})]:{ex:'y'},'7008':{retail:'z'}}},items);
+  assert.deepEqual(Object.keys(narrow.datemap).sort(),[lineKey(7008),'7008'].sort(),'satır öğesi: yalnız kendi anahtarı + eski sipariş kodu anahtarı');
   const fresh=()=>({_id:0,'Order Code':7008,'Model Name':'Model A','C.Code':'K01','In-Store (Model Budget)':'2027-01-01'});
   const cp={rows:[fresh()]},orders={rows:[fresh()]};
   applyStep('cp',cp,{items,context});applyStep('orders',orders,{items,context});
@@ -193,7 +198,7 @@ test('wiring: projection builders, row patch paths and the page-cache context ha
   assert.match(tasks,/cpRowStored\.attachCpRowStored\(pair\.cp,sharedOverrides\);/);
   assert.match(server,/cp = startup \? null : cpRowStoredLib\.attachCpRowStored\(projected\.cpRows, sharedForBuild\);/);
   assert.match(server,/rowPatchContext\(overrides,clean,shared\)/);
-  assert.match(server,/cpRowStored:cpRowStoredLib\.pickCpRowStoredMaps\(shared,items\.map\(item=>item\.orderCode\)\)/);
+  assert.match(server,/cpRowStored:cpRowStoredLib\.pickCpRowStoredMaps\(shared,items\)\}\}\);/);
   assert.match(server,/cpRowStoredVersion: 1,/,'eski önbellek satırları _cpStored taşımaz: bağlam değişir');
   assert.match(read('server/lib/read-model/cp-computed-task.js'),/applyIncrementalProjectionPatch\(raw,item\.patch,overrides,true,\{cpStored:true\}\)/);
   assert.match(read('public/override-sync.js'),/window\.BLCpRowSave\?\.legacyAcked\?\.\(url,opts\.body,data\)/);

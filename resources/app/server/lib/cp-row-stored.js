@@ -50,15 +50,31 @@ function cpRowStoredIdentity(row) {
   return { orderCode, key: model && ccode ? parseLib.orderLineKey(orderCode, model, ccode) : orderCode };
 }
 /* Kompakt kayıtlı değerler; kayıtlı hiçbir değer yoksa null. Boş değer (''/null) karşılaştırmada
-   "kayıt yok" ile aynıdır (cpRowText / tarih null), bu yüzden atlanır. */
+   "kayıt yok" ile aynıdır (cpRowText / tarih null), bu yüzden atlanır. Sonuç currentOrderLineValues'in
+   boş alanları atılmış hâliyle birebir aynıdır (parite testi); 30k satırda nesne üretmemek için yalnız
+   anahtarı bulunan haritalar okunur. */
 function cpRowStoredValues(ov, orderCode, key) {
-  const current = currentOrderLineValues(ov || {}, orderCode, key), out = {};
-  if (current.notes && CP_ROW_NOTE_PAIRS.flat().some(name => current.notes[name] !== '')) out.notes = current.notes;
-  for (const [field] of CP_ROW_SCALAR_MAPS) if (Object.hasOwn(current, field)) out[field] = current[field];
-  if (current.noteColumns) out.noteColumns = current.noteColumns;
-  const dates = Object.fromEntries(Object.entries(current.dates).filter(([, value]) => value));
-  if (Object.keys(dates).length) out.dates = dates;
+  const source = ov || {}, out = {};
+  const has = map => isRecord(map) && (Object.hasOwn(map, key) || (key !== orderCode && Object.hasOwn(map, orderCode)));
+  if (has(source.notesmap)) {
+    const notes = cpRowRecord(source, orderCode, key, 'notesmap'), fields = CP_ROW_NOTE_PAIRS.flat();
+    if (fields.some(name => cpRowText(notes[name]) !== '')) out.notes = Object.fromEntries(fields.map(name => [name, cpRowText(notes[name])]));
+  }
+  for (const [field, map] of CP_ROW_SCALAR_MAPS) if (has(source[map])) { const value = cpRowStored(source, orderCode, key, map); if (value !== undefined) out[field] = value; }
+  if (has(source.noteColumnValues)) { const columns = cpRowRecord(source, orderCode, key, 'noteColumnValues'); if (Object.keys(columns).length) out.noteColumns = columns; }
+  if (has(source.datemap)) {
+    const record = cpRowRecord(source, orderCode, key, 'datemap'), dates = {};
+    for (const [field, stored] of Object.entries(CP_ROW_DATE_FIELDS)) if (record[stored]) dates[field] = record[stored];
+    if (Object.keys(dates).length) out.dates = dates;
+  }
   return Object.keys(out).length ? out : null;
+}
+// Anahtarın sipariş kodu parçası. Yazılan anahtarlar zaten kanoniktir (orderCodeKey / Number); yalnız
+// kanonik olmayan eski biçimler orderCodeKey'den geçer (sonuç aynı, 30k anahtarda düzenli ifade yok).
+const CANONICAL_CODE = /^(?:0|[1-9]\d*)$/;
+function codeOfKey(key) {
+  const text = String(key), bar = text.indexOf('|'), head = bar < 0 ? text : text.slice(0, bar);
+  return CANONICAL_CODE.test(head) ? head : parseLib.orderCodeKey(head);
 }
 // Kayıtlı değer taşıyabilecek sipariş kodları (anahtarın ilk "|" öncesi parçası): satırların çoğu hızlıca atlanır.
 function storedOrderCodes(ov) {
@@ -66,7 +82,7 @@ function storedOrderCodes(ov) {
   for (const name of CP_ROW_STORED_MAPS) {
     const map = ov && ov[name];
     if (!isRecord(map)) continue;
-    for (const key of Object.keys(map)) codes.add(parseLib.orderCodeKey(String(key).split('|')[0]));
+    for (const key of Object.keys(map)) codes.add(codeOfKey(key));
   }
   return codes;
 }
@@ -83,7 +99,7 @@ function attachCpRowStored(rows, sharedOverrides) {
   const codes = storedOrderCodes(sharedOverrides);
   for (const row of list) {
     if (!row) continue;
-    if (codes.has(parseLib.orderCodeKey(row['Order Code']))) setRowStored(row, sharedOverrides);
+    if (codes.has(codeOfKey(row['Order Code']))) setRowStored(row, sharedOverrides);
     else if (Object.hasOwn(row, '_cpStored')) delete row._cpStored;
   }
   return list;
@@ -92,13 +108,26 @@ function attachCpRowStored(rows, sharedOverrides) {
 function patchTouchesCpRowStored(patch) {
   return isRecord(patch) && CP_ROW_STORED_PATCH_FIELDS.some(field => Object.hasOwn(patch, field));
 }
-// Yamalanan siparişlerin kayıtlı değer haritaları (satır yaması bağlamı; tam belge taşınmaz).
-function pickCpRowStoredMaps(ov, orderCodes) {
-  const codes = new Set([...(orderCodes || [])].map(code => parseLib.orderCodeKey(code)).filter(Boolean)), out = {};
+/* Yamalanan satırların kayıtlı değer haritaları (satır yaması bağlamı; tam belge taşınmaz).
+   items: [{orderCode, patch}]. Model + renk kodu taşıyan öğe yalnız kendi satırına eşleşir
+   (projectionPatchMatches): o satırın anahtarı ve eski sipariş kodu anahtarı doğrudan okunur — her kayıtta
+   bütün haritaları taramak ana iş parçacığında on milisaniyeler sürer. Sipariş bazlı öğe (eski içe aktarma)
+   siparişin bütün satırlarına eşleşir: yalnız o durumda haritalar taranır. */
+function pickCpRowStoredMaps(ov, items) {
+  const exact = new Set(), scanCodes = new Set(), out = {};
+  for (const item of Array.isArray(items) ? items : []) {
+    const code = parseLib.orderCodeKey(item && item.orderCode);
+    if (!code) continue;
+    const patch = item && item.patch || {};
+    const model = String(patch.modelName ?? patch.model ?? '').trim(), ccode = String(patch.ccode ?? patch.colourCode ?? patch.colorCode ?? '').trim();
+    exact.add(code);
+    if (model && ccode) exact.add(parseLib.orderLineKey(code, model, ccode)); else scanCodes.add(code);
+  }
   for (const name of CP_ROW_STORED_MAPS) {
     const map = ov && ov[name], picked = {};
-    if (isRecord(map)) for (const key of Object.keys(map)) {
-      if (key !== '__proto__' && codes.has(parseLib.orderCodeKey(String(key).split('|')[0]))) picked[key] = map[key];
+    if (isRecord(map)) {
+      for (const key of exact) if (key !== '__proto__' && Object.hasOwn(map, key)) picked[key] = map[key];
+      if (scanCodes.size) for (const key of Object.keys(map)) if (key !== '__proto__' && scanCodes.has(codeOfKey(key))) picked[key] = map[key];
     }
     out[name] = picked;
   }
