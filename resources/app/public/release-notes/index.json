@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "8.0.13",
+      "publishedAt": "2026-11-23",
+      "title": {
+        "tr": "Koleksiyon tarih sütunlarının adları güncellendi; yenileme sonrası daha akıcı sunucu",
+        "en": "Collection date column names updated; smoother server after a refresh"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 5,
+        "fixes": 1
+      },
+      "file": "release-notes/8.0.13/release.json"
+    },
+    {
       "version": "8.0.12",
       "publishedAt": "2026-11-21",
       "title": {
