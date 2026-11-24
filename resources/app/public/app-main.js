@@ -29324,7 +29324,8 @@ function kolWriteGroupedStorageValue(row,key,value){
     kolRows=kolNormalizeModelGroups(api.setSharedValue(kolRows,row.modelGroupId,key,value));
   }else{
     // Native colour fields and ungrouped rows remain ordinary row-owned data.
-    row[key]=value;
+    // Tek kalan satırdaki eski grup/override katmanı yeni değeri gölgelemesin.
+    api?.writeOwnValue?api.writeOwnValue(row,key,value):row[key]=value;
   }
   return kolRows.find(item=>String(item?.id)===String(row.id))||row;
 }
@@ -31867,7 +31868,15 @@ function kolBestPriceTargetDelta(row,best=kolBestPricing(row)){
 }
 // Onaylı üretici/fiyat, fiyat hücresindeki tik seçimine göre belirlenir. Satırda yalnızca
 // bir üretici onaylanabilir. Seçili üreticinin fiyatı geçerli değilse sonuç boş döner.
-function kolConfirmedPricing(row){return window.BLCollectionModelGroups.confirmedPricing(row,kolEffectivePricing(row),kolParseMoneyNum,norm);}
+// Onaylı üretici de fiyat gibi model kalıtımıyla okunur; alt opsiyon ana rengin onayını görür.
+function kolApprovedManufacturer(row){
+  const api=window.BLCollectionModelGroups;
+  if(!row||!api?.approvedManufacturer)return row?.confirmedManufacturer??'';
+  return api.approvedManufacturer(row,kolParentRowOf);
+}
+// Ana satır yalnız onayı boş alt opsiyonda, revizyon indeksinden O(1) çözülür.
+function kolParentRowOf(row){return window.BLCollectionModelGroups?.valueReaderForRevision?.(kolRows,kolWorkspaceRevision)?.parentOf?.(row)||null;}
+function kolConfirmedPricing(row){if(!row)return null;return window.BLCollectionModelGroups.confirmedPricing(String(kolApprovedManufacturer(row)??''),kolEffectivePricing(row),kolParseMoneyNum,norm);}
 // Koleksiyon görünümünde onay henüz verilmediyse Best Price / üreticisi yalnız
 // referans olarak gösterilir. Bu değer onay sayılmaz; ancak FOB sütunu kendi
 // Confirmed → Best → Target önceliğiyle hesaplanmaya devam eder.
@@ -33903,9 +33912,21 @@ function kolToggleConfirmedManufacturer(row,m,rawPrice){
   if(!Number.isFinite(n)||n<=0){showToast(appLang==='en'?'Enter a valid price for this manufacturer before confirming.':'Onaylamak için önce bu üreticiye geçerli bir fiyat gir.');return null;}
   kolPushUndo();
   row=kolWriteGroupedStorageValue(row,'pricing',{...effectivePricing,[m]:raw});
-  row.confirmedManufacturer=norm(row.confirmedManufacturer)===norm(m)?'':m;
-  kolApplyRulePricing(row);saveKolRows();renderKol();showToast(row.confirmedManufacturer?(appLang==='en'?`${m} confirmed as the final manufacturer.`:`${m} nihai üretici olarak onaylandı.`):(appLang==='en'?'Manufacturer confirmation removed.':'Üretici onayı kaldırıldı.'));
-  return Boolean(row.confirmedManufacturer);
+  // Onay da fiyatla aynı kanonik yoldan yazılır: ana renkte model ortak değeri
+  // olur ve bağlı alt opsiyonlara yayılır; renk özel onay override'ı korunur.
+  const groupApi=window.BLCollectionModelGroups;
+  const currentConfirmed=norm(kolApprovedManufacturer(row)),nextConfirmed=currentConfirmed===norm(m)?'':m;
+  let groupMembers=groupApi?.groupFor?.(kolRows,row.modelGroupId)||[];
+  if(groupMembers.length>1&&row.modelGroupRole==='parent'&&groupApi?.setVariantOverride){
+    // Ana renkten farklı, alt opsiyonun kendi verdiği onay yayılımda ezilmez.
+    groupMembers.filter(member=>member!==row&&!kolHasVariantOverride(member,'confirmedManufacturer')&&norm(member.confirmedManufacturer)&&norm(member.confirmedManufacturer)!==currentConfirmed)
+      .forEach(member=>{kolRows=groupApi.setVariantOverride(kolRows,member.id,'confirmedManufacturer',member.confirmedManufacturer,{inPlace:true});});
+  }
+  row=kolWriteGroupedStorageValue(row,'confirmedManufacturer',nextConfirmed);
+  groupMembers=groupApi?.groupFor?.(kolRows,row.modelGroupId)||[];
+  (groupMembers.length>1?groupMembers:[row]).forEach(member=>kolApplyRulePricing(member));
+  saveKolRows();renderKol();showToast(nextConfirmed?(appLang==='en'?`${m} confirmed as the final manufacturer.`:`${m} nihai üretici olarak onaylandı.`):(appLang==='en'?'Manufacturer confirmation removed.':'Üretici onayı kaldırıldı.'));
+  return Boolean(nextConfirmed);
 }
 function kolApplyCollectionCellChange(change,options={}){
   const editor=change?.editor||null;

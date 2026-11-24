@@ -126,6 +126,35 @@
           "en": "Supplier A's average falls due to mix, yet prices on shared classifications are +10%; supplier C is not compared because it worked on different classifications."
         }
       }
+    },
+    {
+      "id": "collection-variant-approval-and-lone-model-date",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Ana renk onayı alt opsiyonlarda onaylı görünür; tek kalan modelde MB tarihi güncellenir",
+        "en": "Main colour approval shows as approved on colour options; MB date updates on a model left on its own"
+      },
+      "body": {
+        "tr": "Ana renkte bir üreticinin fiyatı onaylandığında bağlı alt opsiyonlar artık aynı üreticiyi ✓ Onaylı olarak gösterir; en düşük teklif yalnız öneri olarak kalmaz ve FOB onaylı fiyattan hesaplanır. Alt opsiyonun kendi verdiği farklı onay korunur. Alt opsiyonları silinen ya da modelden ayrılan satırda MB tarihi ve diğer model alanlarına girilen yeni değer (ör. 2027) eski değerin (2026) gerisinde kalmadan görünür.",
+        "en": "When a manufacturer's price is approved on the main colour, linked colour options now show the same manufacturer as ✓ Approved; the lowest quote no longer remains a mere suggestion and FOB is calculated from the approved price. A different approval given on the colour option itself is kept. On a row whose colour options were deleted or that was detached from its model, a new MB date or other model field value (e.g. 2027) is shown instead of the old value (2026)."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-variant-approval.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: DM600 modelinin üç rengi DEMO MFR A ile onaylı, tek kalan DM500 satırında MB tarihi 04.01.27 ve ay Ocak 2027",
+          "en": "Demo Collection table: three colours of model DM600 approved with DEMO MFR A, the lone DM500 row shows MB date 04.01.27 and month January 2027"
+        },
+        "caption": {
+          "tr": "Demo veride ana renk onayı tüm alt opsiyonlara geçer; tek kalan modelde yeni MB tarihi görünür.",
+          "en": "On demo data, the main colour approval carries over to all colour options; the lone model shows its new MB date."
+        }
+      }
     }
   ]
 }
