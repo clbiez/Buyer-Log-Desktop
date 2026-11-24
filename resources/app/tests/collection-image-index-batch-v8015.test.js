@@ -117,7 +117,10 @@ test('flush öncesi çökme: indeks bozulmaz, yetim dosyalar sonraki süreçte g
     out({lost});
     // Güç kesintisi: exit kancaları çalışmaz.
     process.kill(process.pid,'SIGKILL');`);
-  assert.equal(first.result.signal, 'SIGKILL');
+  // Ani sonlanma (çıkış kancaları çalışmaz). POSIX'te sinyal SIGKILL olarak görünür; Windows'ta
+  // process.kill(pid,'SIGKILL') TerminateProcess ile sonlandırır: signal null, status 0 dışı (normal çıkış değil).
+  if (process.platform === 'win32') { assert.equal(first.result.signal, null); assert.notEqual(first.result.status, 0); }
+  else assert.equal(first.result.signal, 'SIGKILL');
   const [{ lost }] = first.outputs;
   const restarted = run('crash', `
     const items=data.readCollectionImageIndex();
