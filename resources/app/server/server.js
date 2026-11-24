@@ -36,6 +36,7 @@ const {
   saveCollectionImage, collectionImageOptimizationStatus, completeCollectionImageOptimization,
   getModelImageSettings, saveModelImageSettings,
   getCollectionImage, deleteCollectionImage, deleteAllCollectionImages, purgeExpiredModelFiles, resolveStoredFile, atomicWriteJson, atomicWriteBuffer, atomicWriteBufferAsync,
+  saveCollectionImageDeferred, deleteCollectionImageDeferred, flushCollectionImageIndex,
 } = require('./user-data');
 const holidayService = require('./lib/holiday-service').createHolidayService({
   cacheFile: path.join(LOCAL_DATA_ROOT, 'holidays', 'world-clock.json'),
@@ -4352,8 +4353,11 @@ function canonicalPlmImageIngest(owner) {
     owner,
     ownership: plmImageOwnership,
     getImage: ref => getCollectionImage(ref),
-    saveImage: payload => saveCollectionImage(payload),
-    deleteImage: ref => deleteCollectionImage(ref),
+    // Toplu yol: dosya asenkron yazılır, indeks bağlantıdan önce TEK kez
+    // kalıcılaşır (flushImages). Görsel başına indeks yazması yok.
+    saveImage: payload => saveCollectionImageDeferred(payload),
+    deleteImage: ref => deleteCollectionImageDeferred(ref),
+    flushImages: () => flushCollectionImageIndex(),
     patchLinks: links => patchPlmImageLinks(links),
     readImageBytes: found => fs.readFileSync(found.full),
   });
@@ -4381,8 +4385,9 @@ const modelImageDistribution = modelImageDistributionLib.createModelImageDistrib
   writeState: value => { atomicWriteJson(MODEL_IMAGE_SYNC_STATE_FILE, value); return value; },
   getImage: ref => getCollectionImage(ref),
   readImageBytes: found => fs.readFileSync(found.full),
-  saveImage: payload => saveCollectionImage(payload),
-  deleteImage: ref => deleteCollectionImage(ref),
+  saveImage: payload => saveCollectionImageDeferred(payload),
+  deleteImage: ref => deleteCollectionImageDeferred(ref),
+  flushImages: () => flushCollectionImageIndex(),
   patchLinks: links => patchPlmImageLinks(links),
   onTrace: (event, detail) => plmImageRefreshLog(event, detail),
 });
@@ -4536,11 +4541,11 @@ async function syncCollectionWorkspaceImagesForUser(userId, ownerId) {
     } else {
       const buffer = await sharedModelImageStore.readObject(record);
       if (!buffer) { missing += 1; continue; }
-      const stored = saveCollectionImage({
+      const stored = await saveCollectionImageDeferred({
         rowId:'collection-shared:' + owner + ':' + String(item.recordId || entry.normalized.key),
         filename:collectionSharedFilename(item, record),
         mimeType:record.mimeType,
-        base64:buffer.toString('base64'),
+        buffer,
       });
       imageRef = stored.id;
       cache.entries[cacheKey] = {
@@ -4556,6 +4561,8 @@ async function syncCollectionWorkspaceImagesForUser(userId, ownerId) {
     replacements.set(cacheKey, imageRef);
   }
 
+  // Önbellek kaydı yeni görsellere işaret eder: önce indeks kalıcılaşır.
+  if (installed) await flushCollectionImageIndex();
   writeCollectionSharedImageCache(cache);
   return { ownerId:owner, requested:items.length, available, installed, reused, missing, workspaceUpdated:false };
 }
@@ -5203,7 +5210,7 @@ app.post('/api/model-images/import-asas', userAccess.requireAnyArea('cp', 'order
         // Eşleşme yalnız ASAS kaydındaki gerçek PLM Kod + Teknik Görsel alanından
         // yapılır. PLM Kodunu PIM Style ID sanarak tahmini URL üretilmez.
         const run = await asasTechnicalImages.syncAsasTechnicalImages({orders:runtime.asasOrders||[],overrides:first.overrides||overrides,mode,forceRetry:true,keys,
-          getImage:ref=>getCollectionImage(ref),saveImage:payload=>saveCollectionImage(payload),deleteImage:ref=>deleteCollectionImage(ref),
+          getImage:ref=>getCollectionImage(ref),saveImage:payload=>saveCollectionImageDeferred(payload),deleteImage:ref=>deleteCollectionImageDeferred(ref),flushImages:()=>flushCollectionImageIndex(),
           collect:items=>agentBrowserConnector.collectAsasTechnicalImages(req.currentUser.id,items,{...getModelImageSettings(),onProgress:progress=>reportImageProgress(req,imageJobRef,progress)}),patchLinks:links=>patchPlmImageLinks(links)});
         /* KÖKEN KAYDI. ASAS görselleri eskiden hiçbir sahiplik izi
            bırakmıyordu; hangi kaynaktan geldikleri hiçbir yerde yazmıyordu ve
@@ -5407,15 +5414,16 @@ app.post('/api/plm-style-links/sync', userAccess.requireAnyArea('cp', 'orders', 
       const image = link && link.image;
       if (!image || !image.base64) continue;
       try {
-        const stored = saveCollectionImage({ rowId: key, filename: image.filename, mimeType: image.mimeType, base64: image.base64 });
+        const stored = await saveCollectionImageDeferred({ rowId: key, filename: image.filename, mimeType: image.mimeType, base64: image.base64 });
         storedImages.push({ plmId: link.plmId, colourCode, imageRef: stored.id, url: stored.url, mimeType: stored.mimeType, size: stored.size, imageVersion: stored.updatedAt, existing: false });
         imageLinks.push({ plmId: link.plmId, colourCode, imageRef: stored.id });
       } catch (imageError) { imageStorageFailed.push({ plmId: link.plmId, colourCode, error: imageError.message, code: 'PLM_IMAGE_STORAGE_FAILED' }); }
     }
     try {
+      if (imageLinks.length) await flushCollectionImageIndex();
       imageSaved = imageLinks.length ? patchPlmImageLinks(imageLinks) : imageSaved;
     } catch (imageError) {
-      storedImages.filter(item => !item.existing).forEach(item => { try { deleteCollectionImage(item.imageRef); } catch (_) {} });
+      for (const item of storedImages.filter(entry => !entry.existing)) { try { await deleteCollectionImageDeferred(item.imageRef); } catch (_) {} }
       storedImages.splice(0, storedImages.length, ...storedImages.filter(item => item.existing));
       imageStorageFailed.push({ plmId: '', error: imageError.message, code: imageError.code || 'PLM_IMAGE_LINK_FAILED' });
       imageSaved = { overrides: beforeImages, updated: 0 };
@@ -12838,6 +12846,7 @@ require('./routes/collection-image-routes')(app, {
   loadOverrides,
   modelImageRegistry,
   saveCollectionImage,
+  flushCollectionImageIndex,
   userAccess,
 
 });
@@ -12937,7 +12946,7 @@ app.get('/api/collection-images/:id', userAccess.requireAnyArea('source','koleks
    sonunda sayımla DOĞRULANIR; doğrulama geçmezse başarı DÖNMEZ. Yeniden
    çalıştırmak güvenlidir (idempotent). maxKb gibi görsel AYARLARI ayrı
    dosyadadır ve korunur. */
-app.delete('/api/model-images/all', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), (req, res) => {
+app.delete('/api/model-images/all', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), async (req, res) => {
   if (modelImageResetInProgress) {
     return res.status(409).json({ error:'Model görseli sıfırlama işlemi zaten sürüyor.', code:'MODEL_IMAGE_RESET_BUSY', stage:'lock' });
   }
@@ -12947,6 +12956,9 @@ app.delete('/api/model-images/all', userAccess.requireArea('source'), userAccess
   modelImageResetInProgress = true;
   let stage = 'assets';
   try {
+    // Ertelenmiş görsel indeksi önce kalıcılaşır; uçuşta yazma varken
+    // sıfırlama .bak'ı eski içerikle yeniden oluşturabilirdi.
+    await flushCollectionImageIndex();
     const assets = deleteAllCollectionImages();
     stage = 'registry';
     const registry = clearAllModelImageLinks();
@@ -13007,6 +13019,7 @@ require('./routes/cp-image-routes')(app, {
   fs,
   getCollectionImage,
   saveCollectionImage,
+  flushCollectionImageIndex,
   userAccess,
 
 });
@@ -13463,7 +13476,7 @@ function shutdownComputeRuntime(){
   const deadline=setTimeout(()=>process.exit(1),10000);deadline.unref();
   httpServer.close();computeReads.clear();
   computeShutdownPromise=Promise.resolve().then(async()=>{
-    const results=await Promise.allSettled([closeComputeService(),runtimePressureMonitor?.stop()]);
+    const results=await Promise.allSettled([closeComputeService(),runtimePressureMonitor?.stop(),flushCollectionImageIndex().catch(error=>logRuntimeFailure('collectionImageIndexFlush',error))]);
     const failure=results.find(result=>result.status==='rejected');if(failure)throw failure.reason;
   }).catch(error=>{
     process.exitCode=1;logRuntimeFailure('computePoolShutdown',error);

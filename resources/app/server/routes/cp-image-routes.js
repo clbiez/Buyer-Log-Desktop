@@ -14,6 +14,7 @@ module.exports = function registerCpImageRoutes(app, deps) {
     fs,
     getCollectionImage,
     saveCollectionImage,
+    flushCollectionImageIndex,
     userAccess,
   } = deps;
 
@@ -21,11 +22,13 @@ module.exports = function registerCpImageRoutes(app, deps) {
 // ---- CP görselleri ----
 // Fiziksel dosyalar Koleksiyon görselleriyle aynı yedeklenebilir depoda tutulur;
 // bağlantı PLM ID + Colour Code anahtarıyla overrides.imagemap'e yazılır.
-app.post('/api/cp-images', userAccess.requireArea('cp'), (req, res) => {
+app.post('/api/cp-images', userAccess.requireArea('cp'), async (req, res) => {
   try {
     assertModelImageMutable();
     const body = req.body || {};
     const stored = saveCollectionImage({ rowId: `cp:${body.rowId || ''}`, filename: body.filename, mimeType: body.mimeType, base64: body.base64 });
+    // Toplu bir indeks yazması uçuştaysa kayıt onu bekler; onay dayanıklıdır.
+    await flushCollectionImageIndex();
     res.json({ ok: true, image: { ...stored, url: `/api/cp-images/${encodeURIComponent(stored.id)}` } });
   } catch (err) { apiError(res, err, 'CP görseli kaydedilemedi.'); }
 });

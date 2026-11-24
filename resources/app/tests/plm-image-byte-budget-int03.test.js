@@ -153,7 +153,7 @@ test('INT-03: staged single commit preserves exact content, hash dedup, manual o
   let seq = 0;
   const input = inputFor(5, live.ingest, async () => image(1024 + (seq++ % 2), 7));
   const oldEntries = input.requests.slice(0, 4).map((item, index) => ({ ...item, ...image(2048, 2 + index), sourceType: 'STYLE_LIST', sourceIdentity: 'old' }));
-  for (const fixture of [live, eager]) fixture.ingest.commit(oldEntries, { ...fixture.state() });
+  for (const fixture of [live, eager]) await fixture.ingest.commit(oldEntries, { ...fixture.state() });
   // An unknown ownership record means a user-owned image and must be skipped.
   const manual = input.requests[4];
   for (const fixture of [live, eager]) {
@@ -170,7 +170,7 @@ test('INT-03: staged single commit preserves exact content, hash dedup, manual o
     return originalCommit(entries, options);
   };
   const result = await service.runPlmImageSync({ ...input, ...live.state(), dropOldFiles: true });
-  const baseline = eager.ingest.commit(baselineEntries, { ...eager.state(), dropOldFiles: true });
+  const baseline = await eager.ingest.commit(baselineEntries, { ...eager.state(), dropOldFiles: true });
   assert.equal(result.counts.manualPreserved, 1);
   assert.equal(result.outcomes.length, 4);
   assert.deepEqual(result.outcomes, baseline.outcomes);
@@ -185,7 +185,7 @@ test('INT-03: staged single commit preserves exact content, hash dedup, manual o
 test('INT-03: failed commit releases budget and staging; registry failure keeps originals', async () => {
   const live = canonical();
   const input = inputFor(3, live.ingest, async () => image(2048));
-  live.ingest.commit(input.requests.map(item => ({ ...item, ...image(1024), sourceIdentity: 'old', sourceType: 'STYLE_LIST' })), live.state());
+  await live.ingest.commit(input.requests.map(item => ({ ...item, ...image(1024), sourceIdentity: 'old', sourceType: 'STYLE_LIST' })), live.state());
   const before = live.snapshot();
   live.failPatch = true;
   await assert.rejects(service.runPlmImageSync({ ...input, ...live.state(), dropOldFiles: true }), /synthetic registry failure/);

@@ -155,6 +155,29 @@
           "en": "On demo data, the main colour approval carries over to all colour options; the lone model shows its new MB date."
         }
       }
+    },
+    {
+      "id": "plm-image-index-batch",
+      "type": "improvement",
+      "module": {
+        "tr": "Model görselleri (CP, Siparişler, Koleksiyon)",
+        "en": "Model images (CP, Orders, Collection)"
+      },
+      "title": {
+        "tr": "PLM görselleri kaydedilirken uygulama donmaz",
+        "en": "The app no longer freezes while PLM images are saved"
+      },
+      "body": {
+        "tr": "PLM'den gelen model görselleri artık tek tek değil, iş başına tek seferde görsel dizinine kaydedilir ve dosya yazımı arka planda yapılır. Arka planda eksik görselleri tamamlama ya da binlerce görsellik yenileme sürerken CP ve Siparişler'de satır seçmek, filtrelemek ve kaydırmak beklemeden çalışır. Kesinti veya elektrik kesilmesinde dizin bozulmaz; yarıda kalan görseller bir sonraki eksik görsel taramasında yeniden alınır.",
+        "en": "Model images coming from PLM are now saved to the image index once per job instead of one by one, and file writes run in the background. While missing images are completed in the background or thousands of images are refreshed, selecting, filtering and scrolling rows in CP and Orders keep working without waiting. A crash or power cut does not corrupt the index; images that were cut off are fetched again on the next missing-image pass."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; görseller ve tablolar aynı görünür, yalnız görsel kaydı sırasında yaşanan donma kalkar.",
+          "en": "Nothing changes on screen; images and tables look the same, only the freeze during image saving is removed."
+        }
+      }
     }
   ]
 }

@@ -344,11 +344,12 @@ function createModelImageDistribution(deps = {}) {
           continue;
         }
         const reuse = byHash.get(hash);
-        const stored = reuse || saveImage({
+        const stored = reuse || await saveImage({
           rowId: `shared:${entry.key}`,
           filename: sharedFilename(entry, mimeType),
           mimeType,
-          base64: buffer.toString('base64'),
+          buffer,
+          get base64() { return buffer.toString('base64'); },
         });
         if (!reuse) { created.push(stored.id); byHash.set(hash, stored); }
         links.push({ plmId: entry.plmId, colourCode: entry.colourCode, colour: entry.colour, imageRef: stored.id });
@@ -364,10 +365,14 @@ function createModelImageDistribution(deps = {}) {
 
     let patched = { overrides: { imagemap }, updated: 0 };
     if (links.length) {
-      try { patched = patchLinks(links); }
+      try {
+        // Ertelenmiş indeks, bağlantı yazılmadan önce tek kez kalıcılaşır.
+        if (typeof deps.flushImages === 'function' && created.length) await deps.flushImages();
+        patched = await patchLinks(links);
+      }
       catch (error) {
         // Kayıt yazılamadıysa bu turda oluşturulan dosyalar yetim kalmasın.
-        if (typeof deps.deleteImage === 'function') for (const id of created) { try { deps.deleteImage(id); } catch (_) {} }
+        if (typeof deps.deleteImage === 'function') for (const id of created) { try { await deps.deleteImage(id); } catch (_) {} }
         throw error;
       }
     }

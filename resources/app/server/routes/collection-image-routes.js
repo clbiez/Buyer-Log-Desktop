@@ -15,16 +15,19 @@ module.exports = function registerCollectionImageRoutes(app, deps) {
     loadOverrides,
     modelImageRegistry,
     saveCollectionImage,
+    flushCollectionImageIndex,
     userAccess,
   } = deps;
 
 
 // ---- Koleksiyon görselleri ----
-app.post('/api/collection-images', userAccess.requireArea('koleksiyon'), express.json({ limit: '70mb' }), (req, res) => {
+app.post('/api/collection-images', userAccess.requireArea('koleksiyon'), express.json({ limit: '70mb' }), async (req, res) => {
   try {
     assertModelImageMutable();
     const body = req.body || {};
     const image = saveCollectionImage({ rowId: body.rowId, filename: body.filename, mimeType: body.mimeType, base64: body.base64 });
+    // Toplu bir indeks yazması uçuştaysa kayıt onu bekler; onay dayanıklıdır.
+    await flushCollectionImageIndex();
     res.json({ ok: true, image });
   } catch (err) { apiError(res, err, 'Koleksiyon görseli kaydedilemedi.'); }
 });
