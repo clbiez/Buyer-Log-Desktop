@@ -178,6 +178,35 @@
           "en": "Nothing changes on screen; images and tables look the same, only the freeze during image saving is removed."
         }
       }
+    },
+    {
+      "id": "page-loading-redesign",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker ve Siparişler",
+        "en": "CP Tracker and Orders"
+      },
+      "title": {
+        "tr": "Yükleme ekranı yeniden tasarlandı",
+        "en": "Loading screen redesigned"
+      },
+      "body": {
+        "tr": "CP ve Siparişler yüklenirken artık büyük ve net bir bekleme göstergesi ile yalın \"Siparişler yükleniyor…\" başlığı görünür; \"gerektiğinde\" ibaresi kaldırıldı. Biliyor muydunuz kartı tek parça hâline getirildi: kategori tek satırda, metin başlıkla hizalı, ilerleme çubuğu ve gezinme düğmeleri aynı satırda.",
+        "en": "While CP and Orders load, a large, clear progress indicator and a plain \"Loading Orders…\" title are shown; the \"on demand\" wording was removed. The Did you know card is now a single unit: the category sits on one line, the text aligns with the title, and the progress bar shares a row with the navigation buttons."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "page-loading-redesign.png",
+        "alt": {
+          "tr": "Siparişler yükleniyor ekranı: büyük bekleme göstergesi ve altında Biliyor muydunuz kartı",
+          "en": "Orders loading screen: large progress indicator with the Did you know card below"
+        },
+        "caption": {
+          "tr": "Demo ortamında Siparişler yüklenirken yeni bekleme ekranı.",
+          "en": "The new loading screen while Orders loads in the demo environment."
+        }
+      }
     }
   ]
 }

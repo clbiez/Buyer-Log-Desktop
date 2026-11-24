@@ -104,3 +104,30 @@
 .blTriviaHoldFoot{display:flex;justify-content:flex-end;padding-top:14px}
 .blTriviaHoldContinue{max-width:100%;white-space:normal;overflow-wrap:anywhere;padding:11px 22px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
 @media(max-height:480px){.blTriviaHold{padding:12px}.blTriviaHoldCard{padding:12px;gap:10px}.blTriviaHoldHead,.blTriviaHoldFoot{padding:0}}
+/* Sayfa bekleme ekranı (kompakt kart) · yalnız yerleşim; görünüm ui-components.css'tedir.
+   Üstte büyük durum göstergesi + modül adı, altında tek parça bilgi kartı: solda tonlu
+   sahne, sağda tek satır "Biliyor muydunuz? · Kategori", başlık, metin ve ilerleme
+   çubuğuyla aynı satırdaki gezinme. */
+/* Tema katmanı .blOrb'u .55 ölçekler; büyük bekleme göstergesi tam boyutta çizilir. */
+html[data-ui-system] .uiState--loading .uiStateOrb.blOrb--lg{--orb-size:44px;width:44px;height:44px;flex:0 0 44px;margin:0;transform:none!important}
+html[data-ui-system] .uiState.hasTrivia{align-items:center!important;gap:var(--ui-space-4) var(--ui-space-4)!important;padding:var(--ui-space-5) var(--ui-space-6)!important;width:min(1040px,calc(100% - 24px))}
+html[data-ui-system] .uiState.hasTrivia>.blTriviaPanel{margin-top:var(--ui-space-3);padding-top:0}
+html[data-ui-system] .blTriviaCard--compact{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:var(--ui-space-6);align-items:stretch}
+html[data-ui-system] .blTriviaCard--compact .blTriviaFigure{align-self:stretch;display:flex}
+html[data-ui-system] .blTriviaCard--compact .blTriviaVisual{flex:1;display:flex;align-items:flex-end}
+html[data-ui-system] .blTriviaCard--compact .blTriviaVisual svg{aspect-ratio:2/1}
+html[data-ui-system] .blTriviaCard--compact .blTriviaVisual figcaption{display:none}
+/* Sahnedeki güneş/ay konumu kategoriye göre değişir; emoji rozeti çakışmasın diye açılış perdesindeki gibi gizlenir. */
+html[data-ui-system] .blTriviaCard--compact .blTriviaIcon{display:none}
+html[data-ui-system] .blTriviaCard--compact .blTriviaSide{justify-content:flex-start;gap:var(--ui-space-3);padding:var(--ui-space-1) 0}
+html[data-ui-system] .blTriviaKicker{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--ui-space-2)}
+html[data-ui-system] .blTriviaKicker .blTriviaHeading{margin:0}
+html[data-ui-system] .blTriviaKickerCat:not(:empty)::before{content:'·';margin-right:var(--ui-space-2)}
+html[data-ui-system] .blTriviaCard--compact .blTriviaCopy .blGuideEyebrow{display:none}
+html[data-ui-system] .blTriviaCard--compact .blTriviaCopy h2{margin:0 0 var(--ui-space-2)}
+html[data-ui-system] .blTriviaCard--compact .blTriviaCopy p{margin:0;padding-left:0;max-width:60ch}
+html[data-ui-system] .blTriviaCard--compact .blTriviaNav{display:flex;align-items:center;gap:var(--ui-space-4);margin-top:auto;padding-top:var(--ui-space-4)}
+html[data-ui-system] .blTriviaCard--compact .blTriviaProgress{flex:1;min-width:0}
+html[data-ui-system] .blTriviaCard--compact .blTriviaNavRow{flex:0 0 auto}
+@container(max-width:600px){html[data-ui-system] .blTriviaCard--compact{grid-template-columns:minmax(0,1fr);gap:var(--ui-space-4)}html[data-ui-system] .blTriviaCard--compact .blTriviaFigure{max-width:none}}
+@media(max-width:900px){html[data-ui-system] .uiState.hasTrivia{padding:var(--ui-space-4)!important}}

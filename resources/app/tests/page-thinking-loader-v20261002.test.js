@@ -15,8 +15,9 @@ function block(start,end){
 
 test('core page loading states use the shared status marker loader',()=>{
   const helper=block('function renderCorePageLoadingState','function ensureUnifiedPrioritiesForTable');
-  assert.match(helper,/BLUI\.renderState\(empty,\{kind:'loading',title\}\)/);
-  assert.match(helper,/class="uiStateSpinner blOrb uiStateOrb" data-state="thinking"/);
+  // Tam sayfa bekleme ortak yükleyicinin büyük göstergesini kullanır (loading-trivia-redesign.test.js).
+  assert.match(helper,/BLUI\.renderState\(empty,\{kind:'loading',title,size:'lg'\}\)/);
+  assert.match(helper,/class="uiStateSpinner blOrb uiStateOrb blOrb--lg" data-state="thinking"/);
   assert.doesNotMatch(helper,/empty\.textContent=.*Preparing unified priorities/);
 
   const orders=block('function setOrdersLoadingState','async function ensureOrdersLoaded');
