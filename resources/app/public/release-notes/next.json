@@ -68,6 +68,35 @@
           "en": "On demo data only the ticked OLIVE is added; DM700’s deleted options do not come back."
         }
       }
+    },
+    {
+      "id": "collection-fabric-card-picker",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Kumaş hücresine kayıtlı kartlardan seçim ve set parçaları",
+        "en": "Choose saved fabric cards and set pieces in the Fabric cell"
+      },
+      "body": {
+        "tr": "Koleksiyon’da boş kumaş hücresine çift tıklayınca Kumaş seç penceresi açılır; kayıtlı kumaş kartını kod ya da özetle arayıp seçersiniz. Kartı olan hücrede Kumaş Kartı penceresindeki “Kumaşı değiştir / set parçaları” ile PLM SYNC’ten gelen kumaşı başka bir kayıtlı kartla değiştirebilirsiniz. Takım modellerde her parça ayrı satıra eklenir ve A, B gibi harfi elle girilir; “Kartı düzenle” seçili kartı açar. Değişiklik tek adımda geri alınabilir.",
+        "en": "In Collection, double-clicking an empty Fabric cell opens the Choose fabric window; search a saved fabric card by code or summary and pick it. On a cell that already has a card, use “Change fabric / set pieces” in the Fabric Card window to replace the fabric that came from PLM SYNC with another saved card. For set models every piece is added on its own row and you type its letter, such as A or B; “Edit card” opens the selected card. The change can be undone in one step."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-fabric-card-picker.png",
+        "alt": {
+          "tr": "Demo Koleksiyon: Kumaş seç penceresinde A ve B set parçaları için seçilmiş kayıtlı kumaş kartları",
+          "en": "Demo Collection: Choose fabric window with saved fabric cards picked for set pieces A and B"
+        },
+        "caption": {
+          "tr": "Demo takım modelde A ve B parçalarına ayrı kayıtlı kumaş kartı seçildi.",
+          "en": "On a demo set model, separate saved fabric cards are picked for pieces A and B."
+        }
+      }
     }
   ]
 }

@@ -26,7 +26,7 @@ test('CP and Orders render Fabric (PLM) with the Collection fabric-card cell and
   assert.match(shared,/#cpTable td\.cpFabricTd\[data-cp-fabric\],#ordersTable td\.cpFabricTd\[data-cp-fabric\]/);
   assert.match(shared,/openFabricCardDialog\(raw,\{trigger:cell\}\)/);
   // Koleksiyon aynı pencereyi kullanır; kart kaydı/silinmesi üç tabloyu da yeniler.
-  assert.match(APP,/openFabricCardDialog\(String\(kolEffectiveValue\(row,'fabric'\)\?\?''\),\{trigger,code,collection:true\}\)/);
+  assert.match(APP,/openFabricCardDialog\(String\(kolEffectiveValue\(row,'fabric'\)\?\?''\),\{trigger,code,collection:true,pickRowId:row\.id\}\)/);
   assert.match(APP,/await kolFabricCardsSave\(\[card\]\);close\(\);fabricCardsRepaintTables\(\);/);
   // Shared cards now require the observed per-card revision before deletion.
   // Preserve the original repaint guard while also requiring its CAS argument.
