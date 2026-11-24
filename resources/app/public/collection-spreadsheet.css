@@ -223,6 +223,14 @@
 .kolFabricBatchRaw{max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:720px){.kolFabricBatchRaw{display:none}}
 .kolFabricParts{margin:0 0 4px}
+/* Kumaş seçici: kayıtlı kart seçimi ve takım (A/B…) parçaları. */
+.kolFabricPickRows{display:grid;gap:var(--ui-space-2,8px);margin:0 0 var(--ui-space-3,12px)}
+.kolFabricPickRow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 8px}
+.kolFabricPickRow.isMulti{grid-template-columns:3rem minmax(0,1fr) auto auto}
+.kolFabricPickRow input{min-width:0;width:100%;box-sizing:border-box;min-height:var(--ui-control-height,32px);padding:4px 8px}
+.kolFabricPickLabel{text-align:center}
+.kolFabricPickSummary{grid-column:1/-1;overflow-wrap:anywhere}
+.kolFabricPickRow.isMulti .kolFabricPickSummary{grid-column:2/-1}
 
 /* Fabric Card: structured facets inside the existing Fabric column filter.
    Uses Buyer Log's shared theme tokens in both light and dark modes. */

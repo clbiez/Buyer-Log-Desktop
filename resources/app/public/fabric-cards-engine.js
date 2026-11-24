@@ -446,6 +446,59 @@
     return code ? rawForCode(code, bodyOf(text), cards) : original;
   }
 
+  /* Kumaş seçici: kayıtlı kartlarda kod (önek) ya da TR/EN özet/PLM metni
+     (içerir) araması. Kod önekleri önce, sonra koda göre sıralanır. */
+  function searchCards(cards, query, lang, max) {
+    var key = matchKey(query), out = [];
+    var size = Number.isFinite(max) && max > 0 ? max : 50;
+    eachCard(cards, function (card) {
+      var code = normalizeCode(card && card.code);
+      if (!code) return;
+      var rank = !key || code.indexOf(key) === 0 ? 0 : -1;
+      if (rank < 0) {
+        var hay = [card.summary, card.summaryEn, summaryFor(card, 'tr'), summaryFor(card, 'en'), bodyOf(card.raw)].map(matchKey).join(' | ');
+        if (hay.indexOf(key) >= 0) rank = 1;
+      }
+      if (rank >= 0) out.push({ rank: rank, code: code, card: card });
+    });
+    out.sort(function (a, b) { return a.rank - b.rank || a.code.localeCompare(b.code, 'en', { numeric: true }); });
+    return out.slice(0, size).map(function (item) { return { code: item.code, summary: summaryFor(item.card, lang), card: item.card }; });
+  }
+
+  /* Seçici parçalarından kanonik hücre metni. Tek parça etiketsiz PLM metni;
+     takımda "A - 1234-… / B - 5678-…". Kartı olmayan kod yalnız hücredeki
+     PLM metniyle (part.raw) yazılabilir; tahmin yapılmaz. */
+  function composeParts(list, cards) {
+    var items = (Array.isArray(list) ? list : []).map(function (part, index) {
+      return { index: index, label: clean(part && part.label).toUpperCase(), codeText: clean(part && part.code), raw: clean(part && part.raw) };
+    }).filter(function (part) { return part.codeText; });
+    if (!items.length) return { ok: true, value: '' };
+    var used = new Set(), pieces = [];
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i], code = normalizeCode(item.codeText);
+      if (!code) return { ok: false, error: 'invalid-code', index: item.index };
+      var raw = '', card = cardOf(cards, code);
+      var cardRaw = clean(card && card.raw).replace(/\s*[\/;,|]\s*$/, ''), lead = LEAD_RX.exec(cardRaw);
+      if (lead && lead[1] === code) raw = cardRaw;
+      else if (item.raw && codeOf(item.raw) === code) raw = item.raw.replace(/\s*[\/;,|]\s*$/, '');
+      else if (card && clean(card.summary)) raw = code + '-' + clean(card.summary).replace(/\s*·\s*/g, ', ');
+      if (!raw) return { ok: false, error: 'missing-card', index: item.index, code: code };
+      if (items.length > 1 && item.label && !/^[A-Z]$/.test(item.label)) return { ok: false, error: 'invalid-label', index: item.index };
+      if (item.label && used.has(item.label)) return { ok: false, error: 'duplicate-label', index: item.index };
+      if (item.label) used.add(item.label);
+      pieces.push({ label: item.label, raw: raw });
+    }
+    if (pieces.length === 1) return { ok: true, value: pieces[0].raw };
+    // Harfi boş bırakılan parça sıradaki boş harfi alır.
+    var next = 0;
+    pieces.forEach(function (piece) {
+      if (piece.label) return;
+      while (used.has(String.fromCharCode(65 + next))) next++;
+      piece.label = String.fromCharCode(65 + next); used.add(piece.label);
+    });
+    return { ok: true, value: pieces.map(function (piece) { return piece.label + ' - ' + piece.raw; }).join(' / ') };
+  }
+
   /* Satırlardan kartı olmayan kodları toplar (kod başına ilk PLM metni). */
   function missingCodes(rows, cards) {
     var out = [], seen = new Set();
@@ -485,5 +538,7 @@
     missingCodes: missingCodes,
     resolveInput: resolveInput,
     rawForCode: rawForCode,
+    searchCards: searchCards,
+    composeParts: composeParts,
   });
 }));
