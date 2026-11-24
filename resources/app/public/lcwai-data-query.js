@@ -1042,7 +1042,7 @@
       lines.push(`${T(lang, 'Güncel dönem', 'Current period')}: ${spec.comparison.currentFilters.map(f => filterText(dataset, f, lang)).join(' · ')}`);
       lines.push(`${T(lang, 'Kıyas kaynağı', 'Reference source')}: ${spec.comparison.referenceDataset}; ${spec.comparison.referenceFilters.map(f => filterText(dataset, f, lang)).join(' · ')}`);
       const s = result && result.comparisonStats;
-      if (s) lines.push(T(lang, `Karşılaştırılabilir kayıt: güncel ${s.currentComparable}/${result.matched}, kıyas ${s.referenceComparable}/${s.referenceMatched}. Genel FOB değişimi: ${s.change == null ? '—' : n.format(s.change) + '%'}. Ortak çift yoksa fiyat değişimi hesaplanmaz.`, `Comparable records: current ${s.currentComparable}/${result.matched}, reference ${s.referenceComparable}/${s.referenceMatched}. Overall FOB change: ${s.change == null ? '—' : n.format(s.change) + '%'}. Without shared pairs, price change is unavailable.`));
+      if (s) lines.push(T(lang, `Karşılaştırılabilir kayıt: güncel ${s.currentComparable}/${result.matched}, kıyas ${s.referenceComparable}/${s.referenceMatched}. Genel FOB değişimi (Fisher LFL, ürün karmasından arındırılmış): ${s.change == null ? '—' : n.format(s.change) + '%'}; ağırlıklı ortalama: ${s.weightedChange == null ? '—' : n.format(s.weightedChange) + '%'}. Ortak çift yoksa fiyat değişimi hesaplanmaz.`, `Comparable records: current ${s.currentComparable}/${result.matched}, reference ${s.referenceComparable}/${s.referenceMatched}. Overall FOB change (Fisher LFL, mix-neutral): ${s.change == null ? '—' : n.format(s.change) + '%'}; weighted average: ${s.weightedChange == null ? '—' : n.format(s.weightedChange) + '%'}. Without shared pairs, price change is unavailable.`));
     }
     return lines;
   }

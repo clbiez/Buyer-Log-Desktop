@@ -67,10 +67,11 @@ test('Fisher detail reports Paasche and Laspeyres and never mixes currencies', (
   assert.ok(Math.abs(detail.change - expected) < 1e-9);
 });
 
-test('KPI shows the selected method and the alternative value; default stays weighted average', () => {
+test('KPI shows the selected method and the alternative value; default is Fisher LFL', () => {
   const api = loadApi();
-  assert.equal(api.normalizeLflMethod(undefined), 'weighted');
-  assert.equal(api.normalizeLflMethod('fisher'), 'fisher');
+  assert.equal(api.normalizeLflMethod(undefined), 'fisher');
+  assert.equal(api.normalizeLflMethod('weighted'), 'weighted');
+  assert.equal(api.normalizeLflMethod('bogus'), 'fisher');
   const a = { lflMethod: 'weighted', priceChange: -23, weightedPriceChange: -23, fisherPriceChange: 10 };
   const html = api.fobChangeKpi(a);
   assert.match(html, /data-lfl-method="weighted" aria-pressed="true"/);
@@ -87,9 +88,9 @@ test('method preference is persisted, part of the scenario cache key and registe
   assert.match(LFL, /lflMethod:normalizeLflMethod\(state\.lflMethod\),\n\s*\}\);/);
   // Regresyon: ana analiz önbelleği yöntemi anahtara katmazsa seçim değişince eski sonuç döner.
   const api = loadApi(), period = { season: 'W7', dateField: 'inStore', selectedPeriods: new Set() };
-  const weightedKey = api.lflAnalysisCacheKey(period, period, {});
-  api.setLflMethodForTest('fisher');
-  assert.notEqual(api.lflAnalysisCacheKey(period, period, {}), weightedKey);
+  const fisherKey = api.lflAnalysisCacheKey(period, period, {});
+  api.setLflMethodForTest('weighted');
+  assert.notEqual(api.lflAnalysisCacheKey(period, period, {}), fisherKey);
   assert.match(CSS, /\.lflMethodSeg,\.cpaSeg\) > button:is\(/);
   assert.match(MOTION, /\.lflMethodSeg'/);
 });
@@ -98,14 +99,15 @@ test('independent scenarios follow the selected LFL method', () => {
   const api = loadApi();
   const scenario = { name: 'S', currentSeason: 'W7', compareSeason: 'W6', currentMonths: [], compareMonths: [], filters: {}, inheritGlobal: false };
   const rows = [...current, ...previous];
-  const weighted = api.scenarioComparisonResult(rows, scenario, {});
-  assert.equal(weighted.lflMethod, 'weighted');
-  assert.ok(Math.abs(weighted.priceChange - weighted.weightedPriceChange) < 1e-12);
-  api.setLflMethodForTest('fisher');
   const fisher = api.scenarioComparisonResult(rows, scenario, {});
   assert.equal(fisher.lflMethod, 'fisher');
   assert.ok(Math.abs(fisher.priceChange - 10) < 1e-9, `fisher ${fisher.priceChange}`);
   assert.ok(Math.abs(fisher.improvement + 10) < 1e-9);
+  api.setLflMethodForTest('weighted');
+  const weighted = api.scenarioComparisonResult(rows, scenario, {});
+  assert.equal(weighted.lflMethod, 'weighted');
+  assert.ok(Math.abs(weighted.priceChange - ((1.925 / 2.5 - 1) * 100)) < 1e-9);
+  assert.ok(Math.abs(weighted.fisherPriceChange - 10) < 1e-9);
 });
 
 test('group-summary Fisher (main report path) equals the row-based Fisher', () => {
@@ -119,7 +121,44 @@ test('group-summary Fisher (main report path) equals the row-based Fisher', () =
   assert.deepEqual(Object.keys(fromSummaries.byCurrency).sort(), ['TRY', 'USD']);
 });
 
-test('main analysis feeds Fisher from group summaries without an extra row scan', () => {
-  assert.match(LFL, /fisherDetailFromSummaries\(groupBy\.length\?groups\.map\(g=>\(\{current:g\.current,reference:g\.previous\}\)\)/);
-  assert.match(LFL, /method==='fisher'\?fisherChangeRows\(/);
+test('single-pass comparable totals match summary-based weighted and row-based Fisher', () => {
+  const helpers = { rowMeta: r => ({ valid: r.fob > 0 && r.quantity > 0, fob: r.fob, quantity: r.quantity, currency: engine.currencyForRow(r), order: r.orderCode, model: r.modelName }), groupValue: (r, dims) => dims.map(d => r[d]).join('|'), dtrTypeForRow: () => 'DTR' };
+  const cur = [...current, row('t1', 'BODY', 22, 100, 'W7', 'TURKIYE'), row('z', 'BODY', 0, 100, 'W7')];
+  const ref = [...previous, row('t3', 'BODY', 20, 300, 'W6', 'TURKIYE')];
+  const comparable = engine.comparablePeriodRows(cur, ref, DIMS, helpers);
+  assert.deepEqual(comparable.currentRows.map(r => r.id), ['c1', 'c2', 't1']);
+  const both = engine.comparableChanges(comparable);
+  const weighted = engine.metricBetween(engine.summary(comparable.currentRows, helpers), engine.summary(comparable.referenceRows, helpers));
+  assert.ok(Math.abs(both.weighted - weighted) < 1e-9);
+  assert.ok(Math.abs(both.fisher - engine.fisherDetail(cur, ref, DIMS, helpers).change) < 1e-9);
+});
+
+test('manufacturer FOB change follows the LFL rule: shared breakdowns only, selected method, blank otherwise', () => {
+  const api = loadApi();
+  const mfr = (r, m) => ({ ...r, manufacturer: m });
+  const cur = [mfr(current[0], 'MIX'), mfr(current[1], 'MIX'), mfr(row('n1', 'NEW', 1, 500, 'W7'), 'NO-SHARED')];
+  const ref = [mfr(previous[0], 'MIX'), mfr(previous[1], 'MIX'), mfr(row('n2', 'OLD', 9, 500, 'W6'), 'NO-SHARED')];
+  const byName = rows => Object.fromEntries(rows.map(r => [r.manufacturer, r]));
+  const fisher = byName(api.manufacturerVolumes(cur, ref, DIMS));
+  assert.ok(Math.abs(fisher.MIX.fobChange - 10) < 1e-9);
+  assert.ok(Math.abs(fisher.MIX.weightedFobChange - ((1.925 / 2.5 - 1) * 100)) < 1e-9);
+  assert.equal(fisher['NO-SHARED'].fobChange, null);
+  api.setLflMethodForTest('weighted');
+  const weighted = byName(api.manufacturerVolumes(cur, ref, DIMS));
+  assert.ok(Math.abs(weighted.MIX.fobChange - ((1.925 / 2.5 - 1) * 100)) < 1e-9);
+  assert.equal(weighted['NO-SHARED'].fobChange, null);
+});
+
+test('LCW AI LFL query reports Fisher LFL as overall change and keeps the weighted average', () => {
+  const Q = require('../public/lcwai-data-query');
+  const rec = (season, classification, quantity, fob) => ({ season, mag: 'CU4E', mmyg: 'KIDS', classification, country: 'CHINA', manufacturer: 'Alpha', quantity, fob });
+  const data = Q.datasetFromRecords({ id: 'lfl', module: 'lfl', label: 'lfl', rows: [
+    rec('S6', 'Body', 100, 1), rec('S6', 'Sweat', 100, 4), rec('S7', 'Body', 300, 1.1), rec('S7', 'Sweat', 100, 4.4),
+  ] });
+  const norm = Q.normalizeSpec({ dataset: 'lfl', comparison: { type: 'lfl' } }, [data], { request: 'LFL analizi' });
+  assert.equal(norm.ok, true, norm.errors.join());
+  const r = Q.execute(norm.spec, data, { reference: norm.reference });
+  assert.ok(Math.abs(r.comparisonStats.change - 10) < 1e-9, `change ${r.comparisonStats.change}`);
+  assert.ok(Math.abs(r.comparisonStats.weightedChange - ((1.925 / 2.5 - 1) * 100)) < 1e-9);
+  assert.match(Q.describe(norm.spec, data, r).join('\n'), /Fisher LFL/);
 });
