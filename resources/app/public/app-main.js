@@ -36252,7 +36252,7 @@ function fabricCardChipsHtml(card,summary){
   const pieces=window.BLFabricSegments?.parse?.(summary);
   if(!pieces)return null;
   const piece=text=>{const value=norm(text);return value&&value!=='-'&&value!=='—'?value:'';};
-  const type=piece(pieces[0]),weight=piece(pieces[2]),mix=piece(pieces[3]),eco=norm(card?.details?.sustainability);
+  const type=piece(pieces[0]),weight=piece(pieces[2]),mix=piece(pieces[3]),eco=norm(window.BLFabricCards?.summarySustainability?.(card?.details?.sustainability)??card?.details?.sustainability);
   const typeChip=type||weight?`<span class="blCellChip"><b>${escapeHtml(type||weight)}</b>${type&&weight?`<i>${escapeHtml(weight)}</i>`:''}</span>`:'';
   return {
     head:typeChip+(eco?`<span class="blCellTag" data-tone="eco">${escapeHtml(eco)}</span>`:''),

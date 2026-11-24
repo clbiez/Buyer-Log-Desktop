@@ -96,6 +96,12 @@
   var CATEGORY_RX = /^(?:[öo]rme|knit|knitted|dokuma|woven|triko|sweater|denim)$/i; // i18n-ignore
   var FINISH_RX = /(reaktif|reactive|dispers|pigment|bask[ıi]|print|boya|dyed|enzim|enzyme|silikon|silicone|apre|finish|y[ıi]kama|wash|sardon|brushed|melanj|melange)/i; // i18n-ignore
   var SUSTAIN_RX = /(s[üu]rd[üu]r[üu]lebilir|sustainab|organi[ck]|recycled|geri d[öo]n[üu][şs][üu]ml[üu]|bci)/i; // i18n-ignore
+  // "Sürdürülebilir İçerik Yok" gibi olumsuz ibare kartta detay olarak kalır, özete girmez.
+  var NO_SUSTAIN_RX = /(?:^|[^a-zçğıöşü])(?:yok|none|no|not|without|de[ğg]il|i[çc]ermez|bulunmaz|n\/a)(?:$|[^a-zçğıöşü])/i; // i18n-ignore
+  function summarySustainability(value) {
+    return String(value == null ? '' : value).split(/\s*[,;]\s*/).map(clean)
+      .filter(function (part) { return part && !NO_SUSTAIN_RX.test(part.toLocaleLowerCase('tr-TR')); }).join(', ');
+  }
 
   /* Kural kartının iki dilli özeti için kumaş terimleri sözlüğü.
      [Türkçe, İngilizce]; uzun terim önce eşleşir. */
@@ -474,6 +480,7 @@
     normalizeSummaryPolyester: normalizeSummaryPolyester,
     normalizeComposition: normalizeComposition,
     summaryFor: summaryFor,
+    summarySustainability: summarySustainability,
     displayText: displayText,
     missingCodes: missingCodes,
     resolveInput: resolveInput,
