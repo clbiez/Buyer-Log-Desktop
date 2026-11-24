@@ -1313,6 +1313,8 @@ function renderFilters(){
     filterOptions('country',L('Ülke','Country'))+filterOptions('line','Line')+filterOptions('category',L('Kategori','Category'))+filterOptions('license',L('Lisans','License'))+
     filterOptions('mode',L('Taşıma','Transport'))+filterOptions('status',L('Statü','Status'))+filterOptions('priority',L('Öncelik etiketi','Priority tag'))+
     '<button type="button" class="tbtn" data-gf-clear>'+esc(L('Filtreleri temizle','Clear filters'))+'</button>';
+  // MAG/MMYG: kodun altında hiyerarşi bağlamı; liste araması etiket metnini okuduğu için adla da eşleşir.
+  ['mag','mmyg'].forEach(key=>window.BLMerchHierarchy?.decorate?.(panel.querySelector('[data-gf-multi="'+key+'"] .gfMultiList'),key,{item:'label',text:'span',searchAttr:'blMerchSearch'}));
 }
 function updateFilterSummaries(){
   const panel=$('globalFlowFilters');if(!panel||panel.hidden)return;

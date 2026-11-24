@@ -185,6 +185,9 @@
     if (!host) return;
     host.querySelectorAll('[data-qfg-col]').forEach(el => {
       el.style.cursor = 'pointer';
+      // MAG/MMYG çipleri: dar şeritte iki satır yerine ipucu olarak MMYG adı ve müdürlük.
+      const merchField = window.BLMerchHierarchy?.fieldOf?.(el.dataset.qfgCol);
+      if (merchField && el.dataset.qfgValue !== '—') window.BLMerchHierarchy.ensure().then(() => { el.title = window.BLMerchHierarchy.optionText(merchField, el.dataset.qfgValue); });
       el.addEventListener('click', () => {
         const module = MODULES[moduleKey];
         const key = el.dataset.qfgCol, value = el.dataset.qfgValue;

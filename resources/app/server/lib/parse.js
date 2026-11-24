@@ -12,6 +12,9 @@ function getXLSX() { if (!_xlsx) { _xlsx = require('xlsx'); try { require('../..
 const BLBusinessRules = require('../../public/business-rules');
 const BLOrderImportance = require('../../public/order-importance');
 const BLCanonicalFields = require('./canonical-fields');
+const merchHierarchy = require('./merch-hierarchy');
+// MMYG ad sütununun kabul edilen başlıkları (büyük harf, Türkçe karaktersiz, tek boşluk).
+const MMYG_NAME_HEADER_KEYS = new Set(['MERCH MARKA YAS GRUP', 'MERCH MARKA YAS GRUP TANIM', 'MERCH MARKA YAS GRUP TANIMI', 'MERCH MARKA YAS GRUP ADI', 'MERCH BRAND AGE GROUP', 'MERCH BRAND AGE GROUP NAME']); // i18n-ignore
 const BLCpReadinessEngine = require('../../public/cp-readiness-engine');
 const BLTransitStageModel = require('../../public/transit-stage-model');
 
@@ -1225,6 +1228,12 @@ function* parseASASMatrixSteps(rows, ruleValue) {
     karisim: resolveHeader(['Karışım'], [['KARISIM'], ['KOMPOZISYON'], ['COMPOSITION'], ['BLEND']]),
   };
   const gFuzzy = (row, realHeader) => realHeader != null && idx[realHeader] != null ? row[idx[realHeader]] : null;
+  // Merch hiyerarşisi (Marka Müdürlüğü › MMYG › MAG) her ayrıştırmada aynı satırlardan
+  // gözlenir; elle tutulan tablo yoktur. Ad sütunu yalnız birebir adla aranır: bulanık
+  // arama "Merch Marka Yaş Grup Kod" kod sütununu yakalardı.
+  const mmygNameHeader = headerKeys.find(k => MMYG_NAME_HEADER_KEYS.has(canonHeader(k))) || null; // i18n-ignore
+  const directorateHeader = resolveHeader(['Marka Müdürlükleri', 'Marka Müdürlüğü'], [['MARKA','MUDURLU'], ['BRAND','DIRECTORATE']]); // i18n-ignore
+  const merchCollector = merchHierarchy.createCollector({ name: Boolean(mmygNameHeader), directorate: Boolean(directorateHeader) });
   const cpExtraHeaders = header.filter(name => /^__CPX_/i.test(name));
   const matchHeaders = header.filter(name => /^__MATCH_/i.test(name));
   const activeConfig = matchRuleOf(ruleValue);
@@ -1273,7 +1282,8 @@ function* parseASASMatrixSteps(rows, ruleValue) {
       _sourceRow: Number(sourceRow) || null,
       _cpExtra: Object.fromEntries(cpExtraHeaders.map(name => [name, g(row, name)])),
       _sourceValues: Object.fromEntries(matchSourceHeaders.map(name => [name, g(row, name)])),
-      _sourceFields: Object.fromEntries(header.map((name, index) => [name, row[index]]).filter(([name]) => !!name)),
+      // MMYG adı yalnız merch hiyerarşisini besler; her siparişe kopyalanmaz (snapshot/yük baytı artmasın).
+      _sourceFields: Object.fromEntries(header.map((name, index) => [name, row[index]]).filter(([name]) => !!name && name !== mmygNameHeader)),
       _matchValues: Object.fromEntries(matchHeaders.map(name => [name.replace(/^__MATCH_/i, ''), g(row, name)])),
     };
   };
@@ -1304,6 +1314,7 @@ function* parseASASMatrixSteps(rows, ruleValue) {
     const oc = g(row, 'Sipariş Kod'); if (oc == null || oc === '') continue;
     sourceRowCount++;
     const order = toOrder(row, r + 1);
+    merchCollector.observe(order.merch, order.ageGroup, gFuzzy(row, mmygNameHeader), gFuzzy(row, directorateHeader));
     if (fabricHeaders.main) {
       if (order._isMainFabric) mainFabricRows++;
       else ignoredNonMainRows++;
@@ -1451,6 +1462,7 @@ function* parseASASMatrixSteps(rows, ruleValue) {
     header,
     orders: filteredOrders,
     exFactoryInherited,
+    merchHierarchy: merchCollector.result(),
     fabricHeaderInfo: {
       source: 'ASAS',
       matchingRule: 'Sipariş Kod + Model Adı + Renk Kod; yalnız Ana Kumaş Mı = 1',

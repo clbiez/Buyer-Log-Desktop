@@ -4,6 +4,7 @@ const modelQuery = require('./modelQuery');
 const modelHorizon = require('./modelHorizon');
 const modelScopes = require('./model-scopes');
 const modelFields = require('./model-fields');
+const merchHierarchy = require('./merch-hierarchy');
 const horizonFields = require('./horizon-fields');
 const horizonFilterMapping = require('./horizon-filter-mapping');
 const { createSourceQueryCoordinator } = require('./horizon-source-planner');
@@ -433,6 +434,22 @@ function iasMilestoneColumns(mapping, schema, fallbackTable) {
   return out;
 }
 
+/* MMYG adı (v5, yalnız ASAS): kayıtlı bağlantılara bir kez, yalnız birebir adla ve
+   yalnız MMYG kodunun tablosundan eklenir (bkz. modelFields.MMYG_NAME_FIELD). */
+const ASAS_MMYG_NAME_SCAN_VERSION = 5;
+function asasMmygNameColumn(mapping, schema, fallbackTable) {
+  const field = modelFields.MMYG_NAME_FIELD;
+  if (mapping && mapping[field.header]) return {};
+  const key = value => modelFields.fieldKey(value);
+  const code = modelFields.normalizeMappingEntry(mapping && mapping[field.codeHeader], fallbackTable);
+  if (!code || !code.name || !code.table || code.kind === 'measure') return {};
+  const names = new Set(field.names.map(key));
+  const columns = Array.isArray(schema && schema.columns) ? schema.columns : [];
+  const hit = columns.find(column => column && column.name && key(column.table) === key(code.table)
+    && names.has(key(column.name)) && key(column.name) !== key(code.name));
+  return hit ? { [field.header]: { table: hit.table, name: hit.name, kind: 'column' } } : {};
+}
+
 async function ensureConnectionMapping(item, options = {}) {
   const role = normalizedRole(item);
   const normalized = normalizedConnectionMapping(item);
@@ -457,9 +474,17 @@ async function ensureConnectionMapping(item, options = {}) {
   const milestoneScan = role === 'antrepo' && item && item.mode !== 'manual' && mappingEnhancementScanVersion < IAS_MILESTONE_SCAN_VERSION
     && item.iasMilestonesDisabled !== true
     && modelFields.IAS_MILESTONE_FIELDS.some(field => !normalized.mapping[field.header]);
-  const needsRepair = normalized.invalidHeaders.length > 0 || missingBefore.length > 0 || missingEnhancements.length > 0 || productDescriptionRepairNeeded || brokenManualQuery || milestoneScan;
+  // v5: MMYG adı merch hiyerarşisi (filtre bağlamı) için bir kez taranır (otomatik sorgu modunda).
+  const mmygNameScan = role === 'asas' && item && item.mode !== 'manual' && mappingEnhancementScanVersion < ASAS_MMYG_NAME_SCAN_VERSION
+    && !normalized.mapping[modelFields.MMYG_NAME_FIELD.header] && Boolean(normalized.mapping[modelFields.MMYG_NAME_FIELD.codeHeader]);
+  const needsRepair = normalized.invalidHeaders.length > 0 || missingBefore.length > 0 || missingEnhancements.length > 0 || productDescriptionRepairNeeded || brokenManualQuery || milestoneScan || mmygNameScan;
   const softEnhancementOnly = needsRepair && !normalized.invalidHeaders.length && !missingBefore.length && !productDescriptionRepairNeeded && !brokenManualQuery
     && missingEnhancements.every(header => header === INITIAL_INSPECTION || header === ORIGINAL_EXF_DATE);
+  const markMmygNameScanned = () => { if (mmygNameScan) item.mappingEnhancementScanVersion = Math.max(ASAS_MMYG_NAME_SCAN_VERSION, Number(item.mappingEnhancementScanVersion) || 0); };
+  const mmygNameAdded = mapping => Object.keys(mapping || {}).length
+    ? [`${connectionLabel(item)}: MMYG adı sütunu eklendi (${modelFields.MMYG_NAME_FIELD.header}); filtrelerde kodların yanında gösterilecek. / ${connectionLabel(item)}: MMYG name column added; filters will show it next to codes.`]
+    : [];
+
 
   // Eşleme "eksiksiz" olsa bile kimlik alanları yanlış sütuna bağlanmış olabilir;
   // bu durumda sorgu sorunsuz çalışır ama hiçbir satır birebir eşleşmez.
@@ -471,6 +496,20 @@ async function ensureConnectionMapping(item, options = {}) {
   if (!needsRepair) {
     item.mapping = normalized.mapping;
     return { repaired: false, mapping: item.mapping, warnings: suspectWarnings };
+  }
+
+  // Yalnız MMYG adı taraması gerekiyorsa eşleme olduğu gibi korunur; şema okunamazsa
+  // yenileme DURMAZ ve tarama bir daha denenmez.
+  if (mmygNameScan && softEnhancementOnly && !missingEnhancements.length && !milestoneScan) {
+    const discover = options.discoverSchema || modelQuery.discoverSchema;
+    let schemaForName = null;
+    try {
+      schemaForName = await discover({ server: item.server, catalog: item.catalog, timeoutMs: options.schemaTimeoutMs || 120000 }, options.queryOptions || {});
+    } catch (_) { schemaForName = null; }
+    const added = schemaForName ? asasMmygNameColumn(normalized.mapping, schemaForName, String(item && item.horizon && item.horizon.table || '').trim()) : {};
+    item.mapping = { ...normalized.mapping, ...added };
+    markMmygNameScanned();
+    return { repaired: Object.keys(added).length > 0, mapping: item.mapping, repairedHeaders: Object.keys(added), warnings: [...mmygNameAdded(added), ...suspectWarnings] };
   }
 
   // Eşleme sağlam fakat eski üretilmiş manuel DAX bozuksa yeniden şema taramaya
@@ -531,6 +570,7 @@ async function ensureConnectionMapping(item, options = {}) {
     if (softEnhancementOnly) {
       item.mapping = normalized.mapping;
       item.mappingEnhancementScanVersion = Math.max(missingEnhancements.includes(ORIGINAL_EXF_DATE) ? 4 : 3, Number(item.mappingEnhancementScanVersion) || 0);
+      markMmygNameScanned();
       return { repaired: false, mapping: item.mapping, warnings: suspectWarnings };
     }
     throw new ModelRefreshError(
@@ -559,6 +599,8 @@ async function ensureConnectionMapping(item, options = {}) {
     item.iasMilestoneHeaders = Object.keys(added);
     item.mappingEnhancementScanVersion = Math.max(IAS_MILESTONE_SCAN_VERSION, Number(item.mappingEnhancementScanVersion) || 0);
   }
+  const mmygNameMapping = mmygNameScan ? asasMmygNameColumn(repairedMapping, schema, String(item && item.horizon && item.horizon.table || '').trim()) : {};
+  Object.assign(repairedMapping, mmygNameMapping);
   item.mapping = repairedMapping;
   const productDescriptionRepaired = productDescriptionRepairNeeded
     && modelFields.fieldKey(repairedMapping['Ürün Tanım'] && repairedMapping['Ürün Tanım'].name) === modelFields.fieldKey('Ürün Ana Tanım');
@@ -566,6 +608,7 @@ async function ensureConnectionMapping(item, options = {}) {
   if (missingEnhancements.includes(INITIAL_INSPECTION)) item.mappingEnhancementScanVersion = Math.max(3, Number(item.mappingEnhancementScanVersion) || 0);
   if (missingEnhancements.includes(ORIGINAL_EXF_DATE)) item.mappingEnhancementScanVersion = Math.max(4, Number(item.mappingEnhancementScanVersion) || 0);
   if (productDescriptionRepaired) item.mappingEnhancementScanVersion = Math.max(2, Number(item.mappingEnhancementScanVersion) || 0);
+  markMmygNameScanned();
   if (brokenManualQuery) {
     item.mode = 'auto';
     item.query = '';
@@ -575,6 +618,7 @@ async function ensureConnectionMapping(item, options = {}) {
     ...missingBefore,
     ...missingEnhancements.filter(header => repairedMapping[header]),
     ...(productDescriptionRepaired ? ['Ürün Tanım'] : []),
+    ...Object.keys(mmygNameMapping),
   ])];
   return {
     repaired: true,
@@ -1648,6 +1692,7 @@ async function loadFromModelConnections(items, options = {}) {
   const yieldStage = typeof cooperative.yieldControl === 'function' ? cooperative.yieldControl : yieldToEventLoop;
   const asasOrdersByTarget = {};
   const fabricHeaderInfoByTarget = {};
+  const merchHierarchyParts = [];
   if (includeAsas) {
     /* Aynı (bağlantı, kapsam) run'ı birden çok hedefi besliyorsa (runRoleScopes
        tek sorgu atar) sonuç bir kez ayrıştırılır ve hedefler aynı diziyi paylaşır.
@@ -1669,6 +1714,7 @@ async function loadFromModelConnections(items, options = {}) {
       }
       asasOrdersByTarget[target] = parsed.orders;
       fabricHeaderInfoByTarget[target] = parsed.fabricHeaderInfo || null;
+      if (parsed.merchHierarchy) merchHierarchyParts.push(parsed.merchHierarchy);
     }
   } else {
     const preset = options.presetAsasOrdersByTarget || {};
@@ -1850,6 +1896,7 @@ async function loadFromModelConnections(items, options = {}) {
     antrepoMapByTarget,
     fabricHeaderInfo: fabricHeaderInfoByTarget.cp || fabricHeaderInfoByTarget.orders || fabricHeaderInfoByTarget.backlog || null,
     fabricHeaderInfoByTarget,
+    merchHierarchy: merchHierarchy.combine(merchHierarchyParts),
     lflRows: parsedLfl.rows,
     lflMeta: parsedLfl.meta,
     lflLoadedAt: new Date().toISOString(),

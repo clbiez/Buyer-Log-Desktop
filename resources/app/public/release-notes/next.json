@@ -207,6 +207,35 @@
           "en": "The new loading screen while Orders loads in the demo environment."
         }
       }
+    },
+    {
+      "id": "merch-filter-context",
+      "type": "feature",
+      "module": {
+        "tr": "Tüm filtreler (CP, Siparişler, Backlog, LFL, OAB, Fiyat, Ufuk, Kullanıcılar)",
+        "en": "All filters (CP, Orders, Backlog, LFL, OAB, Pricing, Horizon, Users)"
+      },
+      "title": {
+        "tr": "MAG ve MMYG filtrelerinde MMYG adı ve Marka Müdürlüğü görünür",
+        "en": "MAG and MMYG filters show the MMYG name and Brand Directorate"
+      },
+      "body": {
+        "tr": "MAG filtresinde her kodun altında bağlı olduğu MMYG kodu ve adı ile Marka Müdürlüğü, MMYG filtresinde ise grubun adı ve müdürlüğü yazar. Arama kutusuna MMYG adı veya müdürlük yazınca ilgili kodlar listede kalır. Filtrelenen değer yine koddur; kayıtlı görünümler ve Excel çıktıları değişmez. Eşleme her ASAS yenilemesinde kaynaktan kendiliğinden güncellenir, elle tablo tutmak gerekmez.",
+        "en": "In the MAG filter each code shows its MMYG code, MMYG name and Brand Directorate underneath; the MMYG filter shows the group name and directorate. Typing an MMYG name or directorate in the search box keeps the matching codes in the list. The filtered value is still the code, so saved views and Excel exports do not change. The mapping updates itself from the source on every ASAS refresh; no table needs to be maintained by hand."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "merch-filter-context.png",
+        "alt": {
+          "tr": "Demo CP tablosunda MAG sütun filtresi: her MAG kodunun altında MMYG kodu, adı ve Marka Müdürlüğü",
+          "en": "MAG column filter on the demo CP table: MMYG code, name and Brand Directorate under each MAG code"
+        },
+        "caption": {
+          "tr": "Demo veride MAG filtresi kodun hangi MMYG ve müdürlüğe ait olduğunu gösteriyor.",
+          "en": "On demo data, the MAG filter shows which MMYG and directorate each code belongs to."
+        }
+      }
     }
   ]
 }

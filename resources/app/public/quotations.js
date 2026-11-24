@@ -1410,6 +1410,7 @@
     const pin=()=>{if(typeof pinCheckedFilterChoices==='function')pinCheckedFilterChoices(panel);};
     panel.querySelector('.cfpList')?.addEventListener('change',event=>{if(event.target.matches('input[type="checkbox"]'))pin();});
     pin();
+    window.BLMerchHierarchy?.decorate?.(panel.querySelector('.cfpList'),col.label||key);
     const visibleBoxes=()=>[...panel.querySelectorAll('.cfpItem')].filter(item=>item.style.display!=='none').map(item=>item.querySelector('input'));
     panel.querySelectorAll('.cfpSortBtn').forEach(btn=>btn.addEventListener('click',()=>qSortTable(req,key,Number(btn.dataset.qdir)||1)));
     panel.querySelectorAll('.cfpAll').forEach(btn=>btn.addEventListener('click',()=>{visibleBoxes().forEach(box=>box.checked=btn.dataset.v==='all');pin();}));

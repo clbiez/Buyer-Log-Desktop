@@ -375,6 +375,7 @@ const databaseConnector = require('./lib/database-connector');
 const databaseCredentialStore = require('./lib/database-credential-store');
 const corporateIntegrationLab = require('./lib/corporate-integration-lab');
 const modelFields = require('./lib/model-fields');
+const merchHierarchy = require('./lib/merch-hierarchy');
 const plmFabricInfo = require('./lib/plm-fabric-info');
 const filterValueTypes = require('./lib/filter-value-types');
 const { loadFromModelConnections, ensureConnectionMapping, alignHorizonWithMapping, validateAntrepoIntegrity, resolveColumnTypes, effectiveScopes, buildConnectionQuery, isRelatedLookupError, applyRunMappingRepairs } = require('./lib/model-refresh');
@@ -4096,6 +4097,23 @@ app.get('/api/plm-style-links', userAccess.requireAnyArea('source', 'koleksiyon'
 });
 // PLM ana renk (elle düzeltme). Ön+arka model görseli yalnız ana renge
 // yazılır; kural ve öncelik plm-main-colour.js içindedir.
+// Merch hiyerarşisi (Marka Müdürlüğü › MMYG › MAG). Filtre listeleri kodun yanında ad ve
+// müdürlüğü göstermek için ister; veri kullanıcının kendi ASAS yenilemesinden gelir,
+// elle bakım yoktur. Eski snapshot'ta hiyerarşi yoksa yüklü satırlardan bir kez kurulur.
+app.get('/api/merch-hierarchy', async (req, res) => {
+  try {
+    const id = req.currentUser && req.currentUser.id;
+    await ensureDataLoaded(id);
+    const runtime = cacheForUser(id);
+    if (!merchHierarchy.isHierarchy(runtime.merchHierarchy) && (Array.isArray(runtime.asasOrders) && runtime.asasOrders.length || Array.isArray(runtime.lflRows) && runtime.lflRows.length)) {
+      runtime.merchHierarchy = merchHierarchy.fromRuntimeRows(runtime.asasOrders, runtime.lflRows, { at: runtime.loadedAt || undefined });
+    }
+    res.set('Cache-Control', 'no-store').json(merchHierarchy.publicView(runtime.merchHierarchy));
+  } catch (err) {
+    logRuntimeFailure('merchHierarchy', err);
+    res.status(500).json({ error: String(err && err.message || err) });
+  }
+});
 app.get('/api/plm-main-colours', userAccess.requireAnyArea('koleksiyon', 'cp', 'orders'), (_req, res) => {
   const store = plmMainColour.loadStore(), models = {};
   for (const [plmId, entry] of Object.entries(store.models)) models[plmId] = { mainColourCode: entry.mainColourCode || '', colourCodes: entry.colourCodes || null };
@@ -7006,7 +7024,7 @@ function emptySourceCache() {
   return {
     loadedAt: null, sources: null, asasOrders: null, asasOrdersByTarget: null,
     antrepoMap: {}, antrepoMapByTarget: null, antrepoHeaderInfo: null,
-    lflRows: null, lflMeta: null, lflLoadedAt: null, fabricHeaderInfo: null,
+    lflRows: null, lflMeta: null, lflLoadedAt: null, fabricHeaderInfo: null, merchHierarchy: null,
     refreshWarnings: [], refreshWarningDetails: [],
     cpupdateOverrides: { submap: {}, suppfobmap: {}, suppfobmetamap: {} },
   };
@@ -7215,6 +7233,8 @@ function hydrateSnapshotPayload(value, snapshot, options = {}) {
     antrepoMapByTarget: snapshot.antrepoMapByTarget || null,
     antrepoHeaderInfo: snapshot.antrepoHeaderInfo || null,
     fabricHeaderInfo: snapshot.fabricHeaderInfo || null,
+    // Doğrulama okuma ucunda (isHierarchy) yapılır; hidrasyon modül bağımlılığı taşımaz.
+    merchHierarchy: snapshot.merchHierarchy && typeof snapshot.merchHierarchy === 'object' ? snapshot.merchHierarchy : null,
     lflRows: hydratedLflRows,
     lflMeta: hydratedLflMeta,
     lflLoadedAt: collectionLflSourceVersion(snapshot) || new Date().toISOString(),
@@ -7265,6 +7285,7 @@ async function saveRuntimeModelSnapshot(id, runtime) {
     antrepoMapByTarget: runtime.antrepoMapByTarget || null,
     antrepoHeaderInfo: runtime.antrepoHeaderInfo || null,
     fabricHeaderInfo: runtime.fabricHeaderInfo || null,
+    merchHierarchy: runtime.merchHierarchy || null,
     lflRows: runtime.lflRows || [],
     lflMeta: runtime.lflMeta || null,
     lflLoadedAt: runtime.lflLoadedAt || null,
@@ -7539,6 +7560,7 @@ async function loadFromDisk(value, withExcelRefresh) {
     cpupdateInfo,
     cpupdateOverrides,
     fabricHeaderInfo: parsedAsas.fabricHeaderInfo || null,
+    merchHierarchy: merchHierarchy.merge(runtime.merchHierarchy, parsedAsas.merchHierarchy),
     refreshWarnings: [
       ...(excelRefresh.warnings || []),
       ...excelQuantityInfo.warnings,
@@ -7873,6 +7895,7 @@ async function loadAsasFromExcel(value, matchRule = null, options = {}) {
   return {
     orders: parsedAsas.orders,
     fabricHeaderInfo: parsedAsas.fabricHeaderInfo || null,
+    merchHierarchy: parsedAsas.merchHierarchy || null,
     lflRows: parsedLfl ? parsedLfl.rows : null,
     lflMeta: parsedLfl ? withFabricDimensions(parsedLfl.meta, parsedLfl.rows) : null,
     lflError: (parsed && parsed.lflError) || '',
@@ -8016,6 +8039,7 @@ async function loadFromModels(value, targets = null, options = {}) {
     if (asasMode === 'excel') result.sources.asas = `Excel: ${asasExcel.file}`;
     if (needsLfl && lflMode === 'excel') result.sources.lfl = `Excel: ${asasExcel.file}`;
     if (asasMode === 'excel' && asasExcel.fabricHeaderInfo) result.fabricHeaderInfo = asasExcel.fabricHeaderInfo;
+    if (asasMode === 'excel' && asasExcel.merchHierarchy) result.merchHierarchy = asasExcel.merchHierarchy;
     result._asasExcelRefresh = asasExcel.excelRefresh || null;
     if (asasExcel.refreshFailureWarning) {
       result.warnings = [...(result.warnings || []), asasExcel.refreshFailureWarning];
@@ -8162,6 +8186,9 @@ async function loadFromModels(value, targets = null, options = {}) {
     cpupdateInfo: null,
     cpupdateOverrides: previousCpupdate,
     fabricHeaderInfo: result.fabricHeaderInfo || runtime.fabricHeaderInfo || null,
+    // Merch hiyerarşisi her ASAS ayrıştırmasında kendiliğinden yenilenir; bu tur ASAS
+    // ayrıştırmadıysa (ör. yalnız LFL) önceki hiyerarşi aynen korunur.
+    merchHierarchy: merchHierarchy.merge(runtime.merchHierarchy, result.merchHierarchy),
     refreshWarnings: result.warnings || [],
     refreshWarningDetails: result.warningDetails || [],
     excelRefresh: (() => {
@@ -8765,6 +8792,7 @@ async function buildResponse(currentUser = null, options = {}) {
     sourceFolder: sourceFolderForUser(id),
     cpupdateInfo: active.cpupdateInfo,
     fabricHeaderInfo: active.fabricHeaderInfo || null,
+    merchHierarchyVersion: active.merchHierarchy && active.merchHierarchy.builtAt || null,
     antrepoHeaderInfo: active.antrepoHeaderInfo || null,
     antrepoSourceMode: ['database', 'dashboard'].includes(overrides.antrepoSourceMode) ? overrides.antrepoSourceMode : 'excel',
     asasSourceMode: overrides.asasSourceMode === 'database' ? 'database' : 'excel',

@@ -443,7 +443,7 @@ function openColumnFilter(key,anchor){
     if(rowPassesFilters(row,key))activeValues.add(value);
   });
   openPanel({
-    anchorEl:anchor,title:col.label,values:[...values].sort(filterValueSort),activeValues,
+    anchorEl:anchor,title:col.label,columnKey:col.key||key,values:[...values].sort(filterValueSort),activeValues,
     selected:new Set(active.filters.get(key)||[]),
     labelFor:value=>value===''?L('(boş)','(blank)'):value,
     onApply:selected=>setColumnFilter(key,selected),

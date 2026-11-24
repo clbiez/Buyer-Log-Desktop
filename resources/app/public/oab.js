@@ -2191,6 +2191,7 @@
       openValueFilterPanel({
         anchorEl: anchor,
         title: descriptor.label,
+        columnKey: descriptor.key,
         values,
         selected: existing && existing.kind === 'values' ? existing.values : new Set(),
         labelFor: value => value === '' ? oabT('(boş)', '(blank)') : value,

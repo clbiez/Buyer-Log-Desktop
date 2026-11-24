@@ -1158,6 +1158,8 @@
       <div class="pdKpis"><div class="pricingMetric isHistory"><span>${esc(L('Model','Models'))}</span><b>${result.models}</b></div><div class="pricingMetric isHistory"><span>${esc(L('Teklif','Offers'))}</span><b>${result.count}</b></div><div class="pricingMetric isHistory"><span>${esc(L('Üretici','Manufacturers'))}</span><b>${result.suppliers.length}</b></div><div class="pricingMetric isHistory"><span>${esc(L('Ortalama','Average'))}</span><b>${esc(money(result.avg))}</b></div><div class="pricingMetric isHistory"><span>${esc(L('En geniş yayılım','Widest spread'))}</span><b title="${esc(spread?spread.label:'')}">${spread?esc(`${pctText(spread.spreadPct)} · ${spread.label}`):'—'}</b></div></div>
       <div class="pdAnalysisGrid"><div class="pdAnalysisMain" data-pd-amain></div><aside class="pdDrill" data-pd-drill aria-live="polite"></aside></div>
     </div>`;
+    // MAG/MMYG süzgeç listeleri kodun altında hiyerarşi bağlamını gösterir (değer ham kod kalır).
+    body.querySelectorAll('.pdFilterList').forEach(list=>{const dim=list.querySelector('[data-pd-afilter]')?.dataset.pdAfilter;if(dim)window.BLMerchHierarchy?.decorate?.(list,dim,{item:'.pdCheck',text:'span'});});
     const main=body.querySelector('[data-pd-amain]');
     if(view==='scorecard')main.innerHTML=scorecardHtml(result);
     else if(view==='buyers')main.innerHTML=buyersHtml(observations);

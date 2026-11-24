@@ -7574,6 +7574,8 @@ function openValueFilterPanel(opts){
   const selected = new Set(opts.selected || []);
   const single = !!opts.single;
   const labelFor = typeof opts.labelFor==='function' ? opts.labelFor : (v=>v);
+  // MAG/MMYG/Marka Müdürlüğü listeleri kodun altında hiyerarşi bağlamını gösterir (değer ham kod kalır).
+  const merchField = isDate || !window.BLMerchHierarchy ? '' : ([opts.merchField,opts.columnKey,opts.title].map(ref=>window.BLMerchHierarchy.fieldOf(ref||'')).find(Boolean)||'');
   const valuesFor = gran => (typeof opts.values==='function' ? opts.values(gran) : (opts.values||[]));
   const activeFor = gran => {
     const a = typeof opts.activeValues==='function' ? opts.activeValues(gran) : opts.activeValues;
@@ -7626,6 +7628,7 @@ function openValueFilterPanel(opts){
   }
 
   function wireList(bodyEl, gran){
+    if(merchField) window.BLMerchHierarchy.decorate(bodyEl, merchField);
     const visibleCbs = ()=>[...bodyEl.querySelectorAll('.cfpItem')].filter(it=>it.style.display!=='none').map(it=>it.querySelector('input'));
     bodyEl.querySelector('.cfpList')?.addEventListener('change',e=>{if(e.target.matches('input[type="checkbox"]'))pinCheckedFilterChoices(bodyEl);});
     pinCheckedFilterChoices(bodyEl);
@@ -8160,6 +8163,7 @@ function openHeaderFilter(tableKey, key, anchorEl, rerenderOuter){
       <div class="cfpApplyRow"><button type="button" class="cfpApplySelection">${appLang==='en'?'Apply':'Uygula'}</button><button type="button" class="cfpAddSelection">${appLang==='en'?'Add to Current':'Geçerli Seçime Ekle'}</button><button type="button" class="numFilterClear cfpRemoveSelection">${appLang==='en'?'Remove Filter':'Filtreyi Kaldır'}</button></div>`;
   }
   function wireList(bodyEl, gran){
+    if(!isDate) window.BLMerchHierarchy?.decorate?.(bodyEl, key);
     const allBtn = bodyEl.querySelector('[data-v="all"]'), noneBtn = bodyEl.querySelector('[data-v="none"]');
     function visibleItems(){ return [...bodyEl.querySelectorAll('.cfpItem')].filter(it=>it.style.display!=='none'); }
     function visibleCbs(){ return visibleItems().map(it=>it.querySelector('input')); }
@@ -18391,6 +18395,7 @@ async function waitForRefreshJob(expectedJob=null){
     state.modelScopes=(data.modelRefresh&&Array.isArray(data.modelRefresh.scopes))?data.modelRefresh.scopes:[];
     state.modelHorizons=(data.modelRefresh&&data.modelRefresh.appliedHorizons&&typeof data.modelRefresh.appliedHorizons==='object')?data.modelRefresh.appliedHorizons:{};
     renderHorizonBadges();
+    window.BLMerchHierarchy?.noteVersion?.(data.merchHierarchyVersion||null);
     // Arka-plan reload yanıtı gelirken kullanıcı CP'de yazıyor/yerel değişiklik
     // taşıyorsa mevcut satır nesneleri korunur. Kullanıcı-visible refresh bu
     // noktaya gelmeden önce editörü commit edip bekleyen yazmaları settle eder.
@@ -22006,7 +22011,7 @@ function openBacklogPivotSettings(){
       if(dim==='antrepoDate'){
         openValueFilterPanel({anchorEl:valuesBtn,title:backlogDimLabelUI(dim),granularities:['year','month','week','day'],currentGran:draft.dateFilter.granularity||'month',values:gran=>((backlogDimValues.antrepoDate&&backlogDimValues.antrepoDate[gran])||[]),activeValues:gran=>new Set((backlogDimValuesActive.antrepoDate&&backlogDimValuesActive.antrepoDate[gran])||[]),selected:draft.dateFilter.granularity?new Set(draft.dateFilter.values||[]):new Set(),labelFor:(v,gran)=>dateBucketLabel(v,gran),onApply:(vals,gran)=>{draft.dateFilter=vals.size?{granularity:gran,values:[...vals]}:{};renderFilters();},onRemove:()=>{draft.dateFilter={};renderFilters();}});
       }else{
-        openValueFilterPanel({anchorEl:valuesBtn,title:backlogDimLabelUI(dim),values:backlogValuesFor(dim),activeValues:backlogActiveSetFor(dim),selected:draft.filters[dim]||new Set(),onApply:vals=>{draft.filters[dim]=new Set(vals);renderFilters();},onRemove:()=>{delete draft.filters[dim];renderFilters();}});
+        openValueFilterPanel({anchorEl:valuesBtn,title:backlogDimLabelUI(dim),columnKey:dim,values:backlogValuesFor(dim),activeValues:backlogActiveSetFor(dim),selected:draft.filters[dim]||new Set(),onApply:vals=>{draft.filters[dim]=new Set(vals);renderFilters();},onRemove:()=>{delete draft.filters[dim];renderFilters();}});
       }
     }
   });
@@ -22081,6 +22086,7 @@ async function openBacklogDimFilterPanel(dim, btnEl){
   openValueFilterPanel({
     anchorEl: btnEl,
     title: backlogDimLabelUI(dim),
+    columnKey: dim,
     values: backlogValuesFor(dim),
     activeValues: backlogActiveSetFor(dim),
     selected: dim==='buyerGrup' ? backlogBuyerGrupSelected : (backlogDimFilters[dim] || new Set()),
@@ -32565,9 +32571,12 @@ function openKolHeaderFilter(key, anchorEl){
   const allVals=allEntries.map(entry=>entry.display);
   const rawByDisplay=new Map(allEntries.map(entry=>[entry.display,entry.raw]));
   const current = kolColFilters[key];
+  // MAG/MMYG: arama kodun MMYG adı ve müdürlüğüyle de eşleşir; liste iki satırlı bağlam gösterir.
+  const kolMerchField=window.BLMerchHierarchy?.fieldOf?.(key)||'';
+  const kolSearchText=v=>kolMerchField?`${v} ${window.BLMerchHierarchy.searchText(kolMerchField,rawByDisplay.get(v)??v)}`:v;
   function renderList(query){
     const terms=parseTableSearchTerms(query);
-    const filtered = terms.length ? allVals.filter(v=>tableSearchMatches(v,terms,{plainMode:'contains'})) : allVals;
+    const filtered = terms.length ? allVals.filter(v=>tableSearchMatches(v,terms,{plainMode:'contains'})||(kolMerchField&&tableSearchMatches(kolSearchText(v),terms,{plainMode:'contains'}))) : allVals;
     return filtered.map(v=>{
       const raw = rawByDisplay.get(v) ?? v;
       const checked = !current || current.has(raw);
@@ -32590,8 +32599,10 @@ function openKolHeaderFilter(key, anchorEl){
     releaseKolTransientTopRow();kolSort={key,dir:Number(button.dataset.kolFilterSort)||1};panel.remove();renderKol();
   }));
   if(key==='fabric')kolFabricDetailPanel(panel);
+  const kolDecorate=()=>{if(kolMerchField)window.BLMerchHierarchy.decorate(panel.querySelector('.cfpList'),kolMerchField);};
+  kolDecorate();
   const searchInput=panel.querySelector('.cfpSearch');
-  searchInput.addEventListener('input', e=>{panel.querySelector('.cfpList').innerHTML = renderList(e.target.value);});
+  searchInput.addEventListener('input', e=>{panel.querySelector('.cfpList').innerHTML = renderList(e.target.value);kolDecorate();});
   panel.querySelectorAll('.cfpAll').forEach(b=> b.addEventListener('click', ()=>{panel.querySelectorAll('.cfpList input[type=checkbox]').forEach(chk=> chk.checked = (b.dataset.v==='all'));}));
   const applyKolFilter=add=>{
     const boxes=[...panel.querySelectorAll('.cfpList input[type=checkbox]')];
