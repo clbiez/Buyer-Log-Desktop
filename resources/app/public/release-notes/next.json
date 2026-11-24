@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-24",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Kumaş özetinde olumsuz sürdürülebilirlik ibaresi gösterilmez",
-    "en": "Negative sustainability statement hidden from the fabric summary"
+    "tr": "LFL'de Fisher yöntemi, like-for-like üretici kıyası ve tasarım güncellemeleri",
+    "en": "Fisher method and like-for-like manufacturer comparison in LFL, plus design updates"
   },
   "summary": {
-    "tr": "\"Sürdürülebilir İçerik Yok\" gibi ibareler kumaş özetinde etiket olarak görünmez; kart detayında korunur.",
-    "en": "Statements such as \"No sustainable content\" no longer appear as a tag in the fabric summary; they are kept in the card details."
+    "tr": "LFL FOB değişimi varsayılan olarak ürün karmasından arındırılmış Fisher LFL ile hesaplanır ve Üretici tablosu yalnız ortak kırılımları kıyaslar; modüller kenarlıklı görünür, kumaş özetinde olumsuz sürdürülebilirlik ibaresi gösterilmez.",
+    "en": "LFL FOB change uses the mix-neutral Fisher LFL by default and the Manufacturer table compares shared breakdowns only; modules are shown with borders, and negative sustainability statements no longer appear in the fabric summary."
   },
   "changes": [
     {
@@ -66,6 +66,64 @@
         "caption": {
           "tr": "Demo veride Üreticiler modülünün yüzeyleri ve KPI kartları ince kenarlıkla ayrılır.",
           "en": "On demo data, the Manufacturers module surfaces and KPI cards are separated by a thin border."
+        }
+      }
+    },
+    {
+      "id": "lfl-fisher-method",
+      "type": "feature",
+      "module": {
+        "tr": "LFL Analizi",
+        "en": "LFL Analysis"
+      },
+      "title": {
+        "tr": "LFL'de varsayılan Fisher LFL, isteğe bağlı ağırlıklı ortalama",
+        "en": "Fisher LFL by default in LFL, weighted average optional"
+      },
+      "body": {
+        "tr": "FOB Değişimi artık varsayılan olarak Fisher LFL ile hesaplanır. Yalnız her iki dönemde bulunan kırılımlarda, ürün karmasındaki değişimin etkisini ayırır; güncel ve kıyas adet karmalı fiyat endekslerinin geometrik ortalamasıdır. Böylece her kırılımda fiyat artmışken ucuz ürünlere kayan adet yüzünden ortalama \"iyileşmiş\" görünmez. Karttan Ağırlıklı ort. yöntemine geçilebilir; kart diğer yöntemin sonucunu da gösterir. Seçim Bağımsız Kıyaslar, Üretici tablosu ve Excel'e yansır, kullanıcı başına saklanır. LCW AI LFL yanıtındaki genel değişim de Fisher LFL ile verilir; ağırlıklı ortalama yanında yazılır.",
+        "en": "FOB Change is now calculated with Fisher LFL by default. On breakdowns present in both periods only, it removes the effect of product-mix shifts; it is the geometric mean of the current-mix and comparison-mix price indices. The average no longer looks \"improved\" just because volume moved to cheaper items while every breakdown got more expensive. The card can switch to Weighted avg. and also shows the other method's result. The choice applies to Independent Comparisons, the Manufacturer table and the Excel export and is saved per user. The overall change in LCW AI LFL answers also uses Fisher LFL, with the weighted average shown alongside."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lfl-fisher-method.png",
+        "alt": {
+          "tr": "Demo LFL Analizi: FOB Değişimi kartında varsayılan Fisher LFL +%10,0, ağırlıklı ortalama -%25,6",
+          "en": "Demo LFL Analysis: FOB Change card with default Fisher LFL +10.0% and weighted average -25.6%"
+        },
+        "caption": {
+          "tr": "Demo veride her klasmanda fiyat %10 artıyor; adet ucuz ürüne kaydığı için ağırlıklı ortalama -%25,6 gösterirken Fisher LFL +%10 gösterir.",
+          "en": "On demo data every classification's price rises 10%; because volume shifts to cheaper items, the weighted average shows -25.6% while Fisher LFL shows +10%."
+        }
+      }
+    },
+    {
+      "id": "lfl-manufacturer-like-for-like",
+      "type": "fix",
+      "module": {
+        "tr": "LFL Analizi",
+        "en": "LFL Analysis"
+      },
+      "title": {
+        "tr": "Üretici tablosunda FOB değişimi like-for-like hesaplanır",
+        "en": "Manufacturer table FOB change is calculated like-for-like"
+      },
+      "body": {
+        "tr": "Üretici Sipariş Hacimleri tablosundaki FOB değişimi, üreticinin tüm siparişlerinin ham ortalamasını karşılaştırıyordu; farklı klasmanlar birbirine kıyaslanabiliyordu. Artık yalnız üreticinin her iki dönemde de bulunan kırılımları seçili LFL yöntemiyle karşılaştırılır. Ortak kırılımı olmayan üreticide değişim boş kalır.",
+        "en": "FOB change in the Manufacturer Order Volumes table compared the raw average of all of a manufacturer's orders, so different classifications could be compared with each other. It now compares only the manufacturer's breakdowns present in both periods with the selected LFL method. It stays blank for a manufacturer with no shared breakdown."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lfl-manufacturer-like-for-like.png",
+        "alt": {
+          "tr": "Demo Üretici Sipariş Hacimleri: A üreticisi +%10,0, ortak klasmanı olmayan C üreticisinde değişim boş",
+          "en": "Demo Manufacturer Order Volumes: supplier A +10.0%, change blank for supplier C with no shared classification"
+        },
+        "caption": {
+          "tr": "A üreticisinin ortalaması karma nedeniyle düşse de ortak klasmanlarda fiyat +%10; C üreticisi farklı klasmanlarda çalıştığı için kıyaslanmaz.",
+          "en": "Supplier A's average falls due to mix, yet prices on shared classifications are +10%; supplier C is not compared because it worked on different classifications."
         }
       }
     }

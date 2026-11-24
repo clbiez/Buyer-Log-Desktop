@@ -17,7 +17,7 @@ test('LFL known without asking for its definition; same engine, default same-pre
   const usd=r.rows.find(row=>row.includes('USD')),tryRow=r.rows.find(row=>row.includes('TRY'));
   assert.deepEqual(usd.slice(3),['USD',300,100,3,4,-25,25]);
   assert.deepEqual(tryRow.slice(3),['TRY',100,200,110,100,10,-10]);
-  assert.equal(r.comparisonStats.currentComparable,2);assert.equal(r.comparisonStats.change,-16.25);
+  assert.equal(r.comparisonStats.currentComparable,2);assert.ok(Math.abs(r.comparisonStats.change+16.25)<1e-9,String(r.comparisonStats.change));assert.equal(r.comparisonStats.weightedChange,-16.25);
   assert.match(Q.describe(norm.spec,data,r).join('\n'),/LFL: Like-for-Like/);
   assert.equal(Q.toWorkbook(r).sheets[0].rows.length,2);
   assert.match(K.moduleKnowledge('lfl','en'),/LFL = Like-for-Like/);

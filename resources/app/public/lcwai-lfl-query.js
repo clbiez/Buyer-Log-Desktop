@@ -80,8 +80,10 @@
     }
     result.rows.sort((a,b)=>b[c.matchBy.length+1]-a[c.matchBy.length+1]);
     yield;
-    const cur=LFL.summary(paired.currentRows,helpers),prev=LFL.summary(paired.referenceRows,helpers);
-    result.comparisonStats={referenceMatched:referenceMatched.length,currentComparable:paired.currentRows.length,referenceComparable:paired.referenceRows.length,change:LFL.metricBetween(cur,prev),improvement:LFL.metricBetween(cur,prev,'improvement')};
+    // Genel değişim LFL modülünün varsayılanıyla aynıdır: Fisher LFL (ürün karmasından arındırılmış);
+    // her dönemin kendi adet karmasıyla ağırlıklı ortalama ayrıca raporlanır.
+    const overall=LFL.comparableChanges(paired);
+    result.comparisonStats={referenceMatched:referenceMatched.length,currentComparable:paired.currentRows.length,referenceComparable:paired.referenceRows.length,change:overall.fisher,improvement:overall.fisher==null?null:-overall.fisher,weightedChange:overall.weighted};
     if(spec.limit)result.rows=result.rows.slice(0,spec.limit);
     return result;
   }
