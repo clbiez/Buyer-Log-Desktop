@@ -91,5 +91,5 @@ test('bütün filtre yüzeyleri aynı modülü kullanır', () => {
     for (const pattern of patterns) assert.match(src, pattern, `${file}: ${pattern}`);
   }
   assert.match(read('index.html'), /<script src="merch-hierarchy\.js\?v=__BL_ASSET_VERSION__/);
-  assert.match(read('app.css'), /\.blMerchCtx\{[^}]*var\(--ui-text-muted\)/, 'renk token üzerinden');
+  assert.match(read('ui-components.css'), /\.blMerchCtx \{[^}]*var\(--ui-text-muted\)/, 'görünüm ortak bileşen dosyasında, renk token üzerinden');
 });

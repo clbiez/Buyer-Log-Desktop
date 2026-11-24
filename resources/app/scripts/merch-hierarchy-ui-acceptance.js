@@ -94,6 +94,13 @@ async function refresh(){
   const sample=items.find(item=>item.value===firstMag);
   assert.ok(sample&&sample.ctx.includes(h1.mmyg[magEntry.mmyg].name),'MAG altında MMYG adı görünür');
   assert.ok(/Md\.$/.test(sample.ctx),'müdürlük kısaltılmış görünür');
+  // Görünüm ortak bileşen dosyasından gelir: kod mono, bağlam ikincil (gri, küçük).
+  const style=await page.evaluate(()=>{const code=document.querySelector('.colFilterPanel .blMerchCode'),ctx=document.querySelector('.colFilterPanel .blMerchCtx'),c=getComputedStyle(code),x=getComputedStyle(ctx);
+    const probe=document.createElement('span');probe.style.color='var(--ui-text-muted)';document.body.appendChild(probe);const muted=getComputedStyle(probe).color;probe.remove();
+    return {codeFont:c.fontFamily,codeWeight:c.fontWeight,ctxColor:x.color,muted,ctxSize:parseFloat(x.fontSize),codeSize:parseFloat(c.fontSize)};});
+  assert.match(style.codeFont,/Mono/i,'kod mono yazı tipinde');
+  assert.equal(style.ctxColor,style.muted,'bağlam ikincil metin renginde');
+  assert.ok(style.ctxSize<style.codeSize,'bağlam koddan küçük');
   // Adla arama: MMYG adını yazınca o gruba bağlı MAG'ler listede kalır, değer yine ham kod.
   await page.fill('.colFilterPanel:has(.blMerchItem) .cfpSearch',h1.mmyg[magEntry.mmyg].name.toLocaleLowerCase('tr-TR'));
   const visible=await page.$$eval('.colFilterPanel:has(.blMerchItem) .cfpItem',els=>els.filter(el=>el.style.display!=='none').map(el=>el.querySelector('input').value));
