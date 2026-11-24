@@ -211,3 +211,48 @@ test('admission still permits a smaller fitting job to drain input before an old
  const active=pool.run('active',{},taskOptions({estimatedBytes:100})),large=pool.run('large',{},taskOptions({estimatedBytes:900})),small=pool.run('small',{},taskOptions({estimatedBytes:100,inputBytes:100}));
  workers[0].complete();(await active).release();await turn();assert.equal(workers[0].sent.at(-1).task,'small');workers[0].complete();(await small).release();await turn();assert.equal(workers[0].sent.at(-1).task,'large');workers[0].complete();(await large).release();assert.equal(pool.stats().queuedInputBytes,0);
 });
+/* Post-refresh OOM (8.0.14, Electron paylaşılan kafes): kaynağı çözülmüş tutan işçi son işin
+   ownerKey'iyle değil, gerçekten önbelleğe aldığı kaynakla izlenir. Aynı kaynağın ikinci kopyası
+   başka işçide çözülmez; yeni kaynak nesli yayımlanınca eski kopyayı tutan işçi emekli edilir. */
+const sourceJob=extra=>taskOptions({ownerKey:'source:x',generation:'g1',cachesSource:true,estimatedBytes:512,...extra});
+test('a source job waits for the busy worker that caches its source instead of decoding a second copy',async t=>{
+  const {pool,workers}=fakePool({maxWorkers:2,memoryBudgetBytes:4096});t.after(()=>pool.close());
+  const first=pool.run('projections',{},sourceJob());workers[0].complete({}, {retainedBytes:300});(await first).release();
+  const other=pool.run('local-db-snapshot',{},taskOptions({ownerKey:'local-db-snapshot',generation:'1'}));
+  assert.equal(workers.length,1);assert.equal(workers[0].sent.at(-1).task,'local-db-snapshot');
+  const capture=pool.run('plan-actual-capture',{},sourceJob({priority:'background'}));capture.catch(()=>{});await turn();
+  assert.equal(workers.length,1,'ikinci işçi kaynağın ikinci kopyasını çözmemeli');assert.equal(pool.stats().pending,1);
+  workers[0].complete();(await other).release();await turn();
+  assert.equal(workers[0].sent.at(-1).task,'plan-actual-capture');workers[0].complete({}, {retainedBytes:300});(await capture).release();
+});
+test('publishing a new source generation retires a worker that still caches the old copy after another owner used it',async t=>{
+  const {pool,workers}=fakePool({maxWorkers:2,memoryBudgetBytes:4096});t.after(()=>pool.close());
+  const first=pool.run('projections',{},sourceJob());workers[0].complete({}, {retainedBytes:300});(await first).release();
+  const other=pool.run('local-db-snapshot',{},taskOptions({ownerKey:'local-db-snapshot',generation:'1'}));workers[0].complete();(await other).release();
+  pool.setGeneration('source:x','g2');await turn();
+  assert.equal(workers[0].terminated,true,'eski kaynak kopyası işçide kalmamalı');assert.equal(pool.stats().retainedWorkerBytes,0);
+});
+test('a stale source copy busy with another owner job finishes that job and then retires',async t=>{
+  const {pool,workers}=fakePool({maxWorkers:2,memoryBudgetBytes:4096});t.after(()=>pool.close());
+  const first=pool.run('projections',{},sourceJob());workers[0].complete({}, {retainedBytes:300});(await first).release();
+  const other=pool.run('local-db-snapshot',{},taskOptions({ownerKey:'local-db-snapshot',generation:'1'}));
+  pool.setGeneration('source:x','g2');await turn();
+  assert.equal(workers[0].terminated,undefined,'ilgisiz iş kesilmemeli');
+  workers[0].complete({ok:true});const lease=await other;assert.equal(lease.value.ok,true);lease.release();await turn();
+  assert.equal(workers[0].terminated,true);
+  const next=pool.run('projections',{},sourceJob({generation:'g2'}));await turn();await turn();
+  assert.equal(workers.at(-1).sent.at(-1).task,'projections');assert.notEqual(workers.at(-1),workers[0]);workers.at(-1).complete();(await next).release();
+});
+test('work without a source prefers an idle worker that does not hold a decoded source',async t=>{
+  const {pool,workers}=fakePool({maxWorkers:2,memoryBudgetBytes:4096});t.after(()=>pool.close());
+  const plain=pool.run('local-db-snapshot',{},taskOptions({ownerKey:'local-db-snapshot',generation:'1'}));
+  const source=pool.run('projections',{},sourceJob());
+  workers[0].complete();(await plain).release();workers[1].complete({}, {retainedBytes:300});(await source).release();
+  const again=pool.run('local-db-snapshot',{},taskOptions({ownerKey:'local-db-snapshot',generation:'1'}));
+  assert.equal(workers[0].sent.at(-1).task,'local-db-snapshot');assert.equal(workers[0].sent.length,2);assert.equal(workers[1].sent.length,1);
+  workers[0].complete();(await again).release();
+});
+test('invalid cachesSource flags are refused before starting any worker',async t=>{
+  const {pool,workers}=fakePool();t.after(()=>pool.close());
+  await assert.rejects(pool.run('x',{},taskOptions({cachesSource:'yes'})),{code:'COMPUTE_JOB_INVALID'});assert.equal(workers.length,0);
+});
