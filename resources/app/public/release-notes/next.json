@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-24",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon durum etiketlerinde eşit yükseklik",
+    "en": "Equal height for Collection status badges"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon tablosunda Durum etiketleri ana model ve renk satırlarında aynı yükseklikte görünür.",
+    "en": "In the Collection table, Status badges have the same height on main model and colour rows."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "collection-status-badge-height",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Durum etiketleri renk satırlarında da aynı yükseklikte",
+        "en": "Status badges keep the same height on colour rows"
+      },
+      "body": {
+        "tr": "Koleksiyon tablosunda bir modelin renk satırlarındaki Durum etiketi artık hücre boyuna uzamıyor; ana model satırı ve tüm renk satırlarında etiketler aynı sabit yükseklikte görünür.",
+        "en": "In the Collection table, the Status badge on a model's colour rows no longer stretches to the cell height; badges on the main model row and every colour row now share the same fixed height."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-status-badge-height.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: ana model ve renk satırlarında eşit yükseklikte Durum etiketleri",
+          "en": "Demo Collection table: Status badges with equal height on the main model and colour rows"
+        },
+        "caption": {
+          "tr": "Demo veride Sipariş Geçildi ve Dosya Teslimi Alındı etiketleri aynı boyda.",
+          "en": "On demo data, Order Placed and File Received badges have the same size."
+        }
+      }
+    }
+  ]
 }
