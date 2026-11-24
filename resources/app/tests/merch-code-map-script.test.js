@@ -32,3 +32,21 @@ test('dosya analizi kod→başlık, ad ve üst MMYG eşlemesini çıkarır, çak
   assert.ok(res.conflicts.some(c => /CU4E/.test(c.detail) && /MMYG/.test(c.type)));
   assert.equal(codeKey('123.0'), '123');
 });
+
+test('müdürlük bağlamı eklenir; aynı adı taşıyan farklı MMYG kodları uyarılır', () => {
+  const headers = ['Merch Marka Yaş Grup Kod', 'Merch Alt Grup Kod', 'Merch Marka Yaş Grup', 'Marka Müdürlükleri'];
+  const rows = [
+    ['CK1', 'CK1B', 'KIZ BEBEK AKSESUAR', 'BEBEK MARKA DİREKTÖRLÜĞÜ'],
+    ['CKC1', 'CK1K', 'KIZ BEBEK AKSESUAR', 'ÇOCUK AKSESUAR MARKA DİREKTÖRLÜĞÜ'],
+    ['CUW4', 'CU4E', 'ERKEK ÇOCUK', 'ERKEK ÇOCUK (8-14 YAŞ) MARKA DİREKTÖRLÜĞÜ'],
+  ];
+  const res = analyze({ headers, rows }, {});
+  assert.equal(res.columns.find(c => c.header === 'Marka Müdürlükleri').kind, 'text');
+  assert.equal(res.columns.find(c => c.header === 'Merch Marka Yaş Grup').kind, 'name');
+  const cu4e = res.codes.find(c => c.field === 'mag' && c.code === 'CU4E');
+  assert.deepEqual([...cu4e.parents], ['CUW4']);
+  assert.deepEqual([...cu4e.context], ['ERKEK ÇOCUK (8-14 YAŞ) MARKA DİREKTÖRLÜĞÜ']);
+  const dup = res.conflicts.filter(c => /KIZ BEBEK AKSESUAR/.test(c.detail));
+  assert.equal(dup.length, 1);
+  assert.match(dup[0].detail, /CK1 .*CKC1/);
+});

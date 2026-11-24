@@ -25,6 +25,8 @@ const path = require('path');
 const CF = require('../server/lib/canonical-fields.js');
 
 const MERCH_FIELDS = ['mag', 'mmyg'];
+// Hiyerarşide MMYG'nin bağlı olduğu üst kırılım; yalnız bağlam olarak eklenir.
+const CONTEXT_FIELDS = ['brandDirectorate'];
 // Kod sütununun yanındaki açıklama/ad sütununu tanımak için son ekler (ör. "Merch Alt Grup Tanım").
 const NAME_SUFFIXES = ['TANIM', 'TANIMI', 'AD', 'ADI', 'ACIKLAMA', 'ACIKLAMASI', 'NAME', 'DESC', 'DESCRIPTION']; // i18n-ignore — başlık token'ları
 const CODE_SUFFIXES = ['KOD', 'KODU', 'CODE']; // i18n-ignore — başlık token'ları
@@ -57,7 +59,11 @@ function resolveHeader(header) {
   const generic = CF.canonicalId('', header);
   if (generic) ids.add(generic);
   for (const m of modules) { const id = CF.canonicalId(m, header); if (id) ids.add(id); }
-  if (ids.size) return { field: ids.size === 1 ? [...ids][0] : null, candidates: [...ids], kind: 'code', how: 'registry' };
+  if (ids.size) {
+    const one = ids.size === 1 ? [...ids][0] : null;
+    const kind = one && CF.field(one).type !== 'code' ? 'text' : 'code';
+    return { field: one, candidates: [...ids], kind, how: 'registry' };
+  }
 
   // Registry'de yoksa: "<alias> Tanım/Adı" → aynı alanın ad sütunu; "<alias> Kod" → kod sütunu.
   const tok = CF.token(header);
@@ -119,6 +125,7 @@ function analyze(table, opts) {
   const columns = table.headers.map((header, index) => ({ index, header, ...resolveHeader(header) }))
     .filter(c => c.header);
   const wanted = c => c.field && (opts.all || MERCH_FIELDS.includes(c.field));
+  const contextCols = columns.filter(c => CONTEXT_FIELDS.includes(c.field));
   // Registry'de olmayan "Kod"suz başlık (ör. "Merch Marka Yaş Grup"): değerleri aynı alanın
   // kod sütunlarıyla çoğunlukla örtüşüyorsa kod, değilse ad/tanım sütunu sayılır.
   for (const c of columns.filter(x => x.kind === 'base')) {
@@ -155,7 +162,7 @@ function analyze(table, opts) {
       if (!key) continue;
       (rowCodes[c.field] = rowCodes[c.field] || {})[c.index] = key;
       const id = `${c.field}|${key}`;
-      if (!codes.has(id)) codes.set(id, { field: c.field, code: key, raw: new Set(), headers: new Set(), names: new Set(), parents: new Set(), rows: 0 });
+      if (!codes.has(id)) codes.set(id, { field: c.field, code: key, raw: new Set(), headers: new Set(), names: new Set(), parents: new Set(), context: new Set(), rows: 0 });
       const e = codes.get(id);
       e.raw.add(raw); e.headers.add(c.header); e.rows++;
       if (!byCode.has(key)) byCode.set(key, new Set());
@@ -165,6 +172,11 @@ function analyze(table, opts) {
       const key = n.pair != null && rowCodes[n.field] ? rowCodes[n.field][n.pair] : '';
       const name = String(row[n.index] ?? '').trim();
       if (key && name) codes.get(`${n.field}|${key}`).names.add(name);
+    }
+    for (const x of contextCols) {
+      const v = String(row[x.index] ?? '').trim();
+      if (!v) continue;
+      for (const f of Object.keys(rowCodes)) for (const k of new Set(Object.values(rowCodes[f]))) codes.get(`${f}|${k}`).context.add(v);
     }
     if (rowCodes.mag && rowCodes.mmyg) {
       const parents = new Set(Object.values(rowCodes.mmyg));
@@ -188,8 +200,17 @@ function analyze(table, opts) {
   for (const [code, fields] of byCode) if (fields.size > 1) conflicts.push({ type: L('Kod birden çok alanda', 'Code in multiple fields'), detail: `${code}: ${[...fields].map(fieldLabel).join(' + ')}` });
   for (const e of codes.values()) {
     if (e.names.size > 1) conflicts.push({ type: L('Kodun birden çok adı var', 'Code has multiple names'), detail: `${fieldLabel(e.field)} ${e.code}: ${[...e.names].join(' | ')}` });
+    if (e.context.size > 1) conflicts.push({ type: L('Kod birden çok müdürlükte', 'Code in multiple directorates'), detail: `${fieldLabel(e.field)} ${e.code}: ${[...e.context].join(' | ')}` });
     if (e.parents.size > 1) conflicts.push({ type: L('MAG birden çok MMYG altında', 'MAG under multiple MMYGs'), detail: `MAG ${e.code}: ${[...e.parents].join(', ')}` });
   }
+  // Aynı ad birden çok koda verilmişse (ör. iki farklı MMYG aynı "KIZ BEBEK AKSESUAR" adını taşıyor) uyar.
+  const byName = new Map();
+  for (const e of codes.values()) for (const n of e.names) {
+    const k = `${e.field}|${CF.token(n)}`;
+    if (!byName.has(k)) byName.set(k, { field: e.field, name: n, codes: [] });
+    byName.get(k).codes.push(e.code + (e.context.size ? ` (${[...e.context].join(' | ')})` : ''));
+  }
+  for (const v of byName.values()) if (v.codes.length > 1) conflicts.push({ type: L('Aynı ad, birden çok kod', 'Same name, multiple codes'), detail: `${fieldLabel(v.field)} "${v.name}": ${v.codes.join(', ')}` });
   return { columns, colStats, codes: [...codes.values()].sort((a, b) => a.field.localeCompare(b.field) || a.code.localeCompare(b.code)), conflicts };
 }
 
@@ -242,12 +263,12 @@ function main() {
   const res = analyze(table, opts);
   console.log(`\n${L('Dosya', 'File')}: ${path.basename(opts.file)} · ${L('sayfa', 'sheet')}: ${table.sheet} · ${L('başlık satırı', 'header row')}: ${table.headerRow + 1} · ${table.rows.length} ${L('satır', 'rows')}`);
 
-  const colRows = res.columns.filter(c => c.field && (opts.all || MERCH_FIELDS.includes(c.field)) || /MERCH|MAG|MMYG|YAS GRUP/.test(CF.token(c.header))).map(c => {
+  const colRows = res.columns.filter(c => c.field && (opts.all || MERCH_FIELDS.includes(c.field) || CONTEXT_FIELDS.includes(c.field)) || /MERCH|MAG|MMYG|YAS GRUP/.test(CF.token(c.header))).map(c => {
     const st = res.colStats.get(c.index);
     return {
       column: XLSXcol(c.index), header: c.header,
       field: c.field ? fieldLabel(c.field) : (c.candidates.length > 1 ? L('BELİRSİZ: ', 'AMBIGUOUS: ') + c.candidates.join('/') : L('TANINMADI', 'UNRECOGNIZED')),
-      kind: (c.kind === 'name' ? L('ad/tanım', 'name') : c.kind ? L('kod', 'code') : '') + (String(c.how).startsWith('unregistered') ? L(' (registry dışı, veriden)', ' (not in registry, inferred)') : ''),
+      kind: ({ name: L('ad/tanım', 'name'), text: L('metin', 'text'), code: L('kod', 'code') }[c.kind] || '') + (String(c.how).startsWith('unregistered') ? L(' (registry dışı, veriden)', ' (not in registry, inferred)') : ''),
       distinct: st.distinct.size, sample: [...st.distinct].slice(0, 4).join(', '),
     };
   });
@@ -257,16 +278,21 @@ function main() {
     { key: 'kind', title: L('Tür', 'Kind') }, { key: 'distinct', title: L('Farklı', 'Distinct') }, { key: 'sample', title: L('Örnek', 'Sample') },
   ]);
 
+  const mmygName = k => { const m = res.codes.find(x => x.field === 'mmyg' && x.code === k); return m && m.names.size ? `${k} ${[...m.names].join(' | ')}` : k; };
   const codeRows = res.codes.map(e => ({
-    field: e.field.toUpperCase(), code: e.code, name: [...e.names].join(' | '), mmyg: [...e.parents].join(', '),
+    field: e.field.toUpperCase(), code: e.code, name: [...e.names].join(' | '), mmyg: [...e.parents].map(mmygName).join(', '),
+    directorate: [...e.context].join(' | '),
     headers: [...e.headers].join(' / '), raw: [...e.raw].slice(0, 3).join(', '), rows: e.rows,
   }));
   const find = opts.find ? codeKey(opts.find) : '';
-  const shown = find ? codeRows.filter(r => r.code === find || r.mmyg.split(', ').includes(find)) : codeRows;
+  // --find kodla (MAG/MMYG) ya da adla (ör. "ERKEK ÇOCUK") arar.
+  const findTok = opts.find ? CF.token(opts.find) : '';
+  const shown = find ? codeRows.filter(r => r.code === find || [...(res.codes.find(x => x.code === r.code && x.field.toUpperCase() === r.field) || { parents: [] }).parents].includes(find)
+    || CF.token(r.name) === findTok || r.mmyg.split(', ').some(m => CF.token(m.replace(/^\S+\s*/, '')) === findTok)) : codeRows;
   console.log(`\n${find ? L(`"${opts.find}" kodunun geçtiği yerler`, `Where "${opts.find}" appears`) : L('Kod sözlüğü', 'Code dictionary')} (${shown.length})`);
   printTable(find ? shown : shown.slice(0, 200), [
     { key: 'field', title: L('Alan', 'Field') }, { key: 'code', title: L('Kod', 'Code') }, { key: 'name', title: L('Ad/Tanım', 'Name') },
-    { key: 'mmyg', title: L('Üst MMYG', 'Parent MMYG') }, { key: 'headers', title: L('Geçtiği başlık', 'Found in header') }, { key: 'rows', title: L('Satır', 'Rows') },
+    { key: 'mmyg', title: L('Üst MMYG', 'Parent MMYG') }, { key: 'directorate', title: L('Marka Müdürlüğü', 'Brand Directorate') }, { key: 'headers', title: L('Geçtiği başlık', 'Found in header') }, { key: 'rows', title: L('Satır', 'Rows') },
   ]);
   if (!find && shown.length > 200) console.log('  … ' + L(`${shown.length - 200} kod daha; tamamı için --out kullanın.`, `${shown.length - 200} more; use --out for the full list.`));
 
