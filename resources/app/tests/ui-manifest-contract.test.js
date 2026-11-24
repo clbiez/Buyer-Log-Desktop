@@ -69,6 +69,7 @@ const classicFrame = d => {
    '.rail .brandMark--image',
    '#currentUserBtn',
    '.topRefreshMenu button',
+   ':is(.toolbarMoreMenu,.railAppearanceMenu,#corporateConnections) :is(',
    '.topRefreshDetail',
    'thead tr.groupRow th',
    'thead tr.colRow th.groupBoundary'
@@ -186,6 +187,14 @@ test('Manifest fonts scale and only transform/opacity may animate',()=>{
  assert.deepEqual(failures,[]);
  for(const file of ['ui-components.css','ui-startup.css','giris.css'])assert.match(read(file),/prefers-reduced-motion:reduce/);
  for(const file of ['overview-global-flow.js','overview-global-flow-earth.js'])assert.match(read(file),/function (?:wantsAnimation|animationWanted)\(\)\{return document.documentElement.dataset.uiSystem!=='manifest'/);
+});
+// Ürün sahibi kararı: modül kapsayıcıları, KPI kartları, boş durumlar ve menü
+// öğeleri ortak 1px --ui-group-divider sınırı taşır; yalnız ortak çerçeve kuralından.
+test('Module containers, KPI cards, empty states and menu items carry the shared frame',()=>{
+ const css=read('ui-components.css');
+ const frame=css.slice(css.indexOf(':is(.panel,.cardBox,.modalCard,'),css.indexOf('border:1px solid var(--ui-group-divider) !important;',css.indexOf(':is(.panel,.cardBox,.modalCard,')));
+ for(const cls of ['.mfpCard','.mfpTile','.psaCard','.psaKpi','.pricingMetric','.ocWorkspace','.dmPanel','.autoWorkspace','.lcwaiChatMain','.lcTable','.uiState','.kpiGroup','.gfKpi'])assert.ok(frame.includes(cls),cls);
+ assert.match(css,/:is\(\.toolbarMoreMenu,\.railAppearanceMenu,#corporateConnections\) :is\([^)]*\) \{border:1px solid var\(--ui-group-divider\) !important;box-shadow:none !important/);
 });
 test('Main column separators cover both header tiers; classic frames do not add a body grid',()=>{
  const ids=['#cpTable','#ordersTable','#kolTable'];

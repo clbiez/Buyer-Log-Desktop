@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-24",
   "bootstrapVisual": false,
   "title": {
-    "tr": "LFL'de varsayılan Fisher yöntemi ve like-for-like üretici kıyası",
-    "en": "Default Fisher method and like-for-like manufacturer comparison in LFL"
+    "tr": "LFL'de Fisher yöntemi, like-for-like üretici kıyası ve tasarım güncellemeleri",
+    "en": "Fisher method and like-for-like manufacturer comparison in LFL, plus design updates"
   },
   "summary": {
-    "tr": "LFL FOB değişimi varsayılan olarak ürün karmasından arındırılmış Fisher LFL ile hesaplanır; Üretici tablosu yalnız ortak kırılımları kıyaslar; kumaş özetinde olumsuz sürdürülebilirlik ibaresi gösterilmez.",
-    "en": "LFL FOB change uses the mix-neutral Fisher LFL by default; the Manufacturer table compares shared breakdowns only; negative sustainability statements no longer appear in the fabric summary."
+    "tr": "LFL FOB değişimi varsayılan olarak ürün karmasından arındırılmış Fisher LFL ile hesaplanır ve Üretici tablosu yalnız ortak kırılımları kıyaslar; modüller kenarlıklı görünür, kumaş özetinde olumsuz sürdürülebilirlik ibaresi gösterilmez.",
+    "en": "LFL FOB change uses the mix-neutral Fisher LFL by default and the Manufacturer table compares shared breakdowns only; modules are shown with borders, and negative sustainability statements no longer appear in the fabric summary."
   },
   "changes": [
     {
@@ -37,6 +37,35 @@
         "caption": {
           "tr": "Demo veride olumsuz sürdürülebilirlik ibaresi özete girmez, organik içerik etiketi kalır.",
           "en": "On demo data, the negative sustainability statement stays out of the summary while the organic content tag remains."
+        }
+      }
+    },
+    {
+      "id": "module-borders",
+      "type": "improvement",
+      "module": {
+        "tr": "Tüm modüller",
+        "en": "All modules"
+      },
+      "title": {
+        "tr": "Modül kartları, KPI'lar ve menü öğeleri kenarlıklı",
+        "en": "Module cards, KPIs and menu items are bordered"
+      },
+      "body": {
+        "tr": "Üreticiler, Fiyat & Üretici Analizi, Fiyat Masası, Ön Maliyet, Veri Yönetimi, Otomasyonlar, LCW AI ve Lisans kartları ekranlarındaki paneller, kenar listeleri, çalışma alanları ve KPI kartları ince bir kenarlıkla ayrılır. Boş durum kutuları ve açılır menü öğeleri de aynı kenarlığı taşır. Veri, filtre ve davranış değişmez.",
+        "en": "Panels, side lists, workspaces and KPI cards in Manufacturers, Price & Manufacturer Analysis, Pricing Desk, Pre-Costing, Data Management, Automations, LCW AI and License cards are now separated by a thin border. Empty-state boxes and dropdown menu items carry the same border. Data, filters and behaviour are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "module-borders.png",
+        "alt": {
+          "tr": "Demo Üreticiler ekranı: filtre çubuğu, üretici listesi, üretici kartı ve KPI kutuları kenarlıklı",
+          "en": "Demo Manufacturers screen: filter bar, manufacturer list, manufacturer card and KPI boxes with borders"
+        },
+        "caption": {
+          "tr": "Demo veride Üreticiler modülünün yüzeyleri ve KPI kartları ince kenarlıkla ayrılır.",
+          "en": "On demo data, the Manufacturers module surfaces and KPI cards are separated by a thin border."
         }
       }
     },
