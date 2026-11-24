@@ -107,11 +107,30 @@ const mq=require(path.join(process.env.BL_BENCH_APP_ROOT,'server','lib','modelQu
 const src=process.env.BL_BENCH_SOURCE_DIR;
 mq.discoverSchema=async()=>({columns:[],measures:[]});
 mq.runModelRows=async plan=>{const rows=JSON.parse(fs.readFileSync(path.join(src,/'Ithalat'/.test(plan.query)?'ias.json':'asas.json'),'utf8'));return {rows,rowCount:rows.length};};
-const out=process.env.BL_BENCH_LOOP_FILE,TICK=5;let prev=performance.now();const blocks=[];let heapPeak=0,rssPeak=0,samples=[];
+// NODE_OPTIONS --require işçi thread'lerinde de koşar: ölçüm yalnız sunucu ana iş parçacığında.
+const wt=require('node:worker_threads');
+if(wt.isMainThread){
+const out=process.env.BL_BENCH_LOOP_FILE,TICK=5;let prev=performance.now();const blocks=[];let samples=[];
 const t=setInterval(()=>{const now=performance.now(),gap=now-prev-TICK;prev=now;if(gap>=50)blocks.push([Date.now()-Math.round(gap),Math.round(gap)]);},TICK);t.unref();
 const m=setInterval(()=>{const u=process.memoryUsage();samples.push([Date.now(),Math.round(u.heapUsed/1048576),Math.round(u.rss/1048576)]);if(samples.length>20000)samples.shift();},250);m.unref();
-const flush=()=>{try{fs.writeFileSync(out,JSON.stringify({blocks,samples}));}catch(_){}};
+/* Electron'da ana iş parçacığı ve tüm işçiler tek işaretçi sıkıştırma kafesini (~4 GB) paylaşır.
+   Node'da kafes yok; vekil ölçü: ana + canlı tüm işçilerin JS heap'i (used ve committed) aynı anda. */
+const workers=new Set(),tasks=[],heap=[];const Base=wt.Worker;
+wt.Worker=class extends Base{constructor(...a){super(...a);const id=this.threadId,file=String(a[0]).split(/[\\\\/]/).pop();workers.add(this);this.once('exit',()=>workers.delete(this));
+  this.on('message',msg=>{if(msg&&msg.type==='result')tasks.push([Date.now(),id,file,'end',msg.id]);});this.__file=file;}
+  postMessage(msg,...r){if(msg&&msg.type==='run')tasks.push([Date.now(),this.threadId,this.__file,msg.task,msg.id]);return super.postMessage(msg,...r);}};
+// Worker sınıfı değiştirildikten SONRA: compute-pool Worker'ı yüklenirken yakalar.
+/* İsteğe bağlı: BL_BENCH_POOL_BUDGET_MIB havuz bütçesini değiştirir (ürün kodu değişmez). Node'da işaretçi
+   sıkıştırma yok; aynı veri Electron'dakinden ~1,5–1,7× büyük heap ölçer ve havuz kaynağı tutan işçiyi
+   Electron'un yapmayacağı yerde emekli eder. Bütçeyi aynı oranda büyütmek Electron kabul kararlarını taklit eder. */
+const budgetMiB=Number(process.env.BL_BENCH_POOL_BUDGET_MIB);
+if(budgetMiB>0){const cp=require(path.join(process.env.BL_BENCH_APP_ROOT,'server','lib','compute-pool'));const original=cp.createComputePool;cp.createComputePool=(o={})=>original({...o,memoryBudgetBytes:budgetMiB*1048576});}
+const v8=require('node:v8');let sampling=false;
+const h=setInterval(async()=>{if(sampling)return;sampling=true;try{const mh=v8.getHeapStatistics();const ws=await Promise.all([...workers].map(w=>w.getHeapStatistics().then(s=>[w.threadId,s.used_heap_size,s.total_heap_size],()=>null)));
+  const live=ws.filter(Boolean);heap.push([Date.now(),Math.round(mh.used_heap_size/1048576),Math.round(mh.total_heap_size/1048576),live.map(([id,u,c])=>[id,Math.round(u/1048576),Math.round(c/1048576)])]);if(heap.length>40000)heap.shift();}finally{sampling=false;}},100);h.unref();
+const flush=()=>{try{fs.writeFileSync(out,JSON.stringify({blocks,samples,tasks,heap}));}catch(_){}};
 const f=setInterval(flush,1000);f.unref();process.on('exit',flush);
+}
 `;
 
 function readMarkers(file) {
@@ -225,6 +244,24 @@ async function runOnce({ appRoot, label, source, opts, log }) {
       const perf = file && JSON.parse(fs.readFileSync(file, 'utf8')).performance;
       if (perf) pageCacheWorker = { queueWaitMs: round(perf.queueWaitMs), durationMs: round(perf.durationMs), reusedModules: perf.reusedModules };
     } catch (_) {}
+    // Kafes vekili: aynı örnekte ana + tüm işçi heap'leri (used / committed), yenileme SONRASI pencere.
+    const heapSamples = (loop.heap || []).filter(([at]) => at >= postStart && at <= windowEnd);
+    const sumOf = (sample, index) => sample[index === 1 ? 1 : 2] + sample[3].reduce((sum, w) => sum + w[index], 0);
+    const peakSample = heapSamples.reduce((best, s) => (!best || sumOf(s, 2) > sumOf(best, 2) ? s : best), null);
+    const windowTasks = (loop.tasks || []).filter(([at]) => at >= postStart && at <= windowEnd);
+    const activeAt = at => { const open = new Map(); for (const [t, id, file, task, job] of loop.tasks || []) { if (t > at) break; const key = id + ':' + job; if (task === 'end') open.delete(key); else open.set(key, `${file}#${id}:${task}`); } return [...open.values()]; };
+    result.cage = {
+      postRefreshPeakUsedMiB: heapSamples.length ? Math.max(...heapSamples.map(s => sumOf(s, 1))) : null,
+      postRefreshPeakCommittedMiB: peakSample ? sumOf(peakSample, 2) : null,
+      atPeak: peakSample ? { mainUsedMiB: peakSample[1], mainCommittedMiB: peakSample[2], workers: peakSample[3], activeTasks: activeAt(peakSample[0]) } : null,
+      maxLiveWorkers: heapSamples.length ? Math.max(...heapSamples.map(s => s[3].length)) : null,
+      workerPeakCommittedMiB: heapSamples.length ? Math.max(0, ...heapSamples.flatMap(s => s[3].map(w => w[2]))) : null,
+      // Görev başına: o görev etkinken görülen en yüksek ana + işçi committed toplamı.
+      byTask: heapSamples.reduce((acc, s) => { for (const name of new Set(activeAt(s[0]).map(v => v.split(':').pop()))) { const total = sumOf(s, 2);
+        if (!acc[name] || total > acc[name].peakCommittedMiB) acc[name] = { peakCommittedMiB: total, mainCommittedMiB: s[2], workers: s[3] }; } return acc; }, {}),
+      postRefreshTasks: windowTasks.filter(r => r[3] !== 'end').map(r => `${new Date(r[0]).toISOString().slice(11, 23)} ${r[2]}#${r[1]} ${r[3]}`).slice(0, 60),
+    };
+    result.cagePeakCommittedMiB = result.cage.postRefreshPeakCommittedMiB; result.cagePeakUsedMiB = result.cage.postRefreshPeakUsedMiB;
     Object.assign(result, {
       status: 'ok', refreshMs: measured.ended - measured.started, pageCacheWriteMs: pageCache ? Number(pageCache[1]) : null, pageCacheWorker,
       captureMs: markerAt - measured.ended, windowMs: windowEnd - measured.started,
@@ -256,7 +293,7 @@ async function main() {
       for (const [label, appRoot] of order) { const r = await runOnce({ appRoot, label, source, opts, log }); r.pair = pair; runs.push(r); log(JSON.stringify(r)); }
     }
   } finally { if (!opts.keepFixture) removeTemp(source.holder); }
-  const metrics = ['longestPostRefreshBlockMs', 'postRefreshBlocksOver200', 'postRefreshBlockedOver200Ms', 'longestBlockMs', 'blocksOver200', 'blockedOver200Ms', 'refreshMs', 'pageCacheWriteMs', 'captureMs', 'windowMs', 'heapPeakMiB', 'rssPeakMiB'];
+  const metrics = ['longestPostRefreshBlockMs', 'postRefreshBlocksOver200', 'postRefreshBlockedOver200Ms', 'longestBlockMs', 'blocksOver200', 'blockedOver200Ms', 'refreshMs', 'pageCacheWriteMs', 'captureMs', 'windowMs', 'heapPeakMiB', 'rssPeakMiB', 'cagePeakCommittedMiB', 'cagePeakUsedMiB'];
   const summary = Object.fromEntries(arms.map(([label]) => [label, Object.fromEntries(metrics.map(m => [m, { median: median(runs.filter(r => r.label === label && r.status === 'ok').map(r => r[m])), samples: runs.filter(r => r.label === label).map(r => r[m]) }]))]));
   const report = { schemaVersion: 1, synthetic: true, source: 'model', lfl: 'cp-run', rows: opts.rows, notes: opts.notes, pairs: opts.pairs, summary, runs };
   if (opts.out) fs.writeFileSync(opts.out, JSON.stringify(report, null, 2) + '\n');
