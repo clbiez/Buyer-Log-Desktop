@@ -37115,6 +37115,54 @@ function kolPlmSyncStampStatus(targetRows,summary,{applied}){
 }
 // Koleksiyon alan anahtarından ASAS çeviri alanına — yalnız çevrilen üçü.
 const KOL_PLM_SYNC_TRANSLATION_FIELD_BY_KEY={line:'line',urunTipi:'category',lisans:'license',productMainDefinition:'productMainDefinition'};
+/* PLM Sync'te Koleksiyon'da zaten var olan bir modele PLM'den yeni renk
+   (alt opsiyon) geliyorsa kullanıcı UYARILIR ve renkler MODEL MODEL tek tek
+   seçtirilir. Varsayılan hiçbir renk işaretli değildir: sipariş olmayacağı
+   için bilerek silinmiş alt opsiyonlar açık onay olmadan geri gelmez. */
+function kolPlmSyncGroupNewColours(newColours){
+  const groups=new Map();
+  (newColours||[]).forEach((parsed,index)=>{
+    const key=kolPlmNormalizeId(parsed&&parsed.plmId);if(!key)return;
+    if(!groups.has(key)){
+      const existing=kolRows.filter(row=>kolPlmNormalizeId(row.plmId)===key);
+      groups.set(key,{key,plmId:parsed.plmId,modelKod:norm(parsed.modelKod)||norm(existing[0]&&existing[0].modelKod),existing,items:[]});
+    }
+    groups.get(key).items.push({parsed,index});
+  });
+  return [...groups.values()];
+}
+function kolPlmSyncColourLabel(row){
+  const colour=norm(row&&row.colour),code=norm(row&&row.colourCode);
+  return colour&&code?`${colour} (${code})`:(colour||code||'—');
+}
+function kolPlmSyncNewColourWarning(newColours,en){
+  const groups=kolPlmSyncGroupNewColours(newColours);
+  if(!groups.length)return '';
+  const count=groups.reduce((sum,group)=>sum+group.items.length,0);
+  return `<div class="plmSyncColourWarn" role="alert" data-plmsync-colourwarn>${escapeHtml(en
+    ?`Warning: ${groups.length} model(s) already in Collection have ${count} new option(s) in PLM. Nothing is added unless you tick it below.`
+    :`Uyarı: Koleksiyon’da zaten bulunan ${groups.length} modelde PLM’den ${count} yeni opsiyon geliyor. Aşağıda işaretlemediğiniz hiçbir opsiyon eklenmez.`)}</div>`;
+}
+function kolPlmSyncNewColourSection(newColours,en){
+  const groups=kolPlmSyncGroupNewColours(newColours);
+  if(!groups.length)return '';
+  const blocks=groups.map(group=>{
+    const model=escapeHtml(group.key);
+    const current=group.existing.map(kolPlmSyncColourLabel).join(' · ');
+    const boxes=group.items.map(({parsed,index})=>`<label class="plmImportCheck"><input type="checkbox" data-plmsync-colour="${index}" data-plmsync-model="${model}"> ${escapeHtml(kolPlmSyncColourLabel(parsed))}</label>`).join('');
+    return `<div class="plmSyncModelBlock plmSyncColourModel" data-plmsync-colourmodel="${model}">
+      <div class="plmSyncModelHead"><strong>PLM ${escapeHtml(group.plmId||'—')}</strong><span class="muted">${escapeHtml(group.modelKod||'')}</span></div>
+      <div class="muted">${escapeHtml((en?'In Collection: ':'Koleksiyon’da: ')+(current||'—'))}</div>
+      <div class="plmSyncColActions"><button type="button" class="tbtn" data-plmsync-colourall="1" data-plmsync-model="${model}">${escapeHtml(en?'Select all':'Tümünü seç')}</button><button type="button" class="tbtn" data-plmsync-colourall="0" data-plmsync-model="${model}">${escapeHtml(en?'None':'Hiçbiri')}</button></div>
+      ${boxes}
+    </div>`;
+  }).join('');
+  return `<h4>${escapeHtml(en?'New PLM options for existing models — choose per model':'Mevcut modellere PLM’den gelen yeni opsiyonlar — model model seçin')}</h4>${blocks}`;
+}
+function kolPlmSyncPickedNewColours(modal,newColours){
+  const list=Array.isArray(newColours)?newColours:[];
+  return [...modal.querySelectorAll('[data-plmsync-colour]')].filter(box=>box.checked).map(box=>list[Number(box.dataset.plmsyncColour)]).filter(Boolean);
+}
 /* "X modeline Y modelinin license bilgisi geliyordu" hatasının kökü: eski
    onaylı bir kural (approved-rule), kısa/belirsiz bir marka önekine (ör.
    "FB") sahip FARKLI bir model için sessizce yeniden kullanılıyordu.
@@ -37253,12 +37301,11 @@ function showPlmSyncPreview(mode,summary){
         <div class="kolPlanStat"><span>${escapeHtml(en?'Not found':'Bulunamadı')}</span><strong>${summary.notFound.length}</strong></div>
         <div class="kolPlanStat"><span>${escapeHtml(en?'Errors':'Hatalar')}</span><strong>${summary.errors.length}</strong></div>
       </div>
+      ${kolPlmSyncNewColourWarning(summary.newColours,en)}
       <div class="plmImportBody">
         ${summary.changed.length?`<h4>${escapeHtml(en?'Changes to apply':'Uygulanacak değişiklikler')}</h4>${modelRows}`
           :`<div class="plmExistingNotice">${escapeHtml(en?'No field changes were found.':'Alan değişikliği bulunamadı.')}</div>`}
-        ${(summary.newColours||[]).length?`<h4>${escapeHtml(en?'Colours in PLM that are missing in Collection':'PLM’de olup Koleksiyon’da olmayan renkler')}</h4>
-          <label class="plmSyncNewColours"><input type="checkbox" data-plmsync-newcolours checked> ${escapeHtml(en?`Add ${summary.newColours.length} colour row(s) to their existing models`:`${summary.newColours.length} renk satırını mevcut modellerine ekle`)}</label>
-          <div class="muted">${escapeHtml(summary.newColours.map(item=>`PLM ${item.plmId} · ${item.colour||item.colourCode}${item.colour&&item.colourCode?` (${item.colourCode})`:''}`).join(' · '))}</div>`:''}
+        ${kolPlmSyncNewColourSection(summary.newColours,en)}
         ${(summary.colourMissing||[]).length?`<h4>${escapeHtml(en?'Collection colours not found in PLM':'Koleksiyon’da olup PLM’de bulunmayan renkler')}</h4><div class="muted">${escapeHtml((en?'Model fields are still updated; the colour is kept. ':'Model alanları yine güncellenir; renk korunur. ')+summary.colourMissing.map(item=>`PLM ${item.plmId} · ${item.colour||item.colourCode}`).join(' · '))}</div>`:''}
         ${summary.notFound.length?`<h4>${escapeHtml(en?'PLM record not found':'PLM kaydı bulunamadı')}</h4><div class="muted">${escapeHtml(summary.notFound.map(item=>item.plmId).join(', '))}</div>`:''}
         ${summary.errors.length?`<h4>${escapeHtml(en?'Errors':'Hatalar')}</h4><div class="muted">${escapeHtml(summary.errors.map(item=>`${item.plmId}: ${item.error}`).join(' · '))}</div>`:''}
@@ -37270,8 +37317,12 @@ function showPlmSyncPreview(mode,summary){
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
     let settled=false;
     const key=event=>{if(event.key==='Escape')finish(false);};
-    const finish=ok=>{if(settled)return;settled=true;const addColours=Boolean(modal.querySelector('[data-plmsync-newcolours]')?.checked);document.removeEventListener('keydown',key);modal.remove();resolve(ok?{ok:true,addColours}:false);};
-    modal.addEventListener('click',event=>{const btn=event.target.closest('[data-plmsyncact]');if(btn)finish(btn.dataset.plmsyncact==='apply');else if(event.target===modal)finish(false);});
+    const finish=ok=>{if(settled)return;settled=true;const colours=kolPlmSyncPickedNewColours(modal,summary.newColours);document.removeEventListener('keydown',key);modal.remove();resolve(ok?{ok:true,colours}:false);};
+    modal.addEventListener('click',event=>{
+      const bulk=event.target.closest('[data-plmsync-colourall]');
+      if(bulk){const on=bulk.dataset.plmsyncColourall==='1';modal.querySelectorAll(`[data-plmsync-colour][data-plmsync-model="${CSS.escape(bulk.dataset.plmsyncModel)}"]`).forEach(box=>{box.checked=on;});return;}
+      const btn=event.target.closest('[data-plmsyncact]');if(btn)finish(btn.dataset.plmsyncact==='apply');else if(event.target===modal)finish(false);
+    });
     document.addEventListener('keydown',key);
   });
 }
@@ -37352,7 +37403,8 @@ async function kolPlmSyncRun(mode,button,options={}){
   kolPushUndo();
   summary.changed.forEach(kolApplyApprovedPlmUpdate);
   kolPlmSyncStampStatus(targetRows,summary,{applied:true});
-  const addedColours=approved.addColours?kolPlmSyncAddNewColours(summary.newColours):[];
+  // Yalnız kullanıcının model model işaretlediği renkler eklenir (varsayılan: hiçbiri).
+  const addedColours=kolPlmSyncAddNewColours(approved.colours);
   // PLM Excel importer'ıyla BİREBİR AYNI kayıt/çizim adımları — davranış
   // farkı oluşmasın diye burada FAZLADAN bir adım (ör. fiyat kuralı
   // yeniden hesaplama) eklenmez.
