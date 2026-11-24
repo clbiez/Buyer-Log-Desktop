@@ -88,12 +88,12 @@ test('eşzamanlı okuyucu dosyası olmayan kayıt görmez; uçuştaki yazmayla �
   const { result, outputs } = run('concurrent', `
     let stop=false,checks=0,violations=0;
     const reader=(async()=>{while(!stop){for(const item of data.readCollectionImageIndex()){checks++;if(!fs.existsSync(path.join(data.COLLECTION_IMAGES_ROOT,item.storedName)))violations++;}await new Promise(r=>setImmediate(r));}})();
-    const ids=[];
+    const ids=[];let manual;
     try {
     for(let i=0;i<30;i++) ids.push((await data.saveCollectionImageDeferred({rowId:'plm:c'+i,filename:'c.png',mimeType:'image/png',buffer:png(i)})).id);
     const flushing=data.flushCollectionImageIndex();
     // Uçuştaki asenkron yazma sırasında senkron (elle) kayıt ikinci yazıcı açmaz.
-    const manual=data.saveCollectionImage({rowId:'manual:1',filename:'m.png',mimeType:'image/png',base64:png(99).toString('base64')});
+    manual=data.saveCollectionImage({rowId:'manual:1',filename:'m.png',mimeType:'image/png',base64:png(99).toString('base64')});
     assert.ok(data.getCollectionImage(manual.id),'elle kayıt hemen okunur');
     await flushing; await data.flushCollectionImageIndex();
     } finally { stop=true; await reader; }
