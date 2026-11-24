@@ -46,7 +46,11 @@ boştur; UI CSS dosyalarında ham renk borcu yoktur.
 
 7.0.294'ün kullanıcı tarafından tercih edilen belirgin yüzey hiyerarşisi korunur:
 ortak paneller, kartlar, modüller ve düğmeler `--ui-group-divider` ile ince 1px
-sınıra sahiptir. Araç çubuğu ve tablo satırı ayraçları `--ui-row-divider`
+sınıra sahiptir. **Ürün sahibi kararı: modüller varsayılan olarak kenarlıklıdır.**
+Modülün kapsayıcıları (panel, kenar listesi, çalışma alanı, bölüm), KPI kartları,
+boş durum kutuları ve menü öğeleri aynı 1px `--ui-group-divider` sınırını taşır;
+kenarlıksız modül yüzeyi tasarım hedefi değildir. Sınır yalnız `ui-components.css`
+içindeki ortak çerçeve listesinden gelir; yeni modül yüzeyi o listeye eklenir. Araç çubuğu ve tablo satırı ayraçları `--ui-row-divider`
 kullanır. Gölge yalnız geçici, üstte duran yüzey için
 `--ui-shadow-overlay` değeridir. Geçici genişleyen navigasyon `--ui-shadow-rail`
 geometrisini kullanır; ikisi aynı `--ui-shadow-color` rengini paylaşır. Bu renk
@@ -107,7 +111,8 @@ diğer grafik işaretçilerine veya kart/kontrol köşelerine uygulanmaz.
    dokunmaz.
 5. Grafik eksen/kılavuzları veri okumak içindir; `--ui-chart-grid` kullanır.
 6. Panel, modül ve kontrol sınırları: yalnız ortak `ui-components.css`
-   üzerinde `--ui-group-divider` ile 1px sınır; giriş alanları `--ui-field-border` (§5). Checkbox'ta durum
+   üzerinde `--ui-group-divider` ile 1px sınır (modül kapsayıcıları, KPI kartları,
+   boş durumlar ve menü öğeleri dahil; §2); giriş alanları `--ui-field-border` (§5). Checkbox'ta durum
    okunabilirliği, kullanıcı avatarında logo ile eşit `--ui-mark-radius` köşe uygulanır.
    Ürün sahibi kararıyla tablo içi istisna — ortak hücre kartları (`blCell*`;
    Artwork Detayı ve Kumaş, Koleksiyon/CP/Siparişler): kart (`.blCellChip`) 1px
@@ -186,16 +191,16 @@ seçim, düzenleme ve kayıt değişmez. Tercih tablo ve kullanıcı başına sa
   dönem/boyut seçici) aynı sınırı ortak listeden alır; yeni seçici o listeye
   eklenir. Gerçek uygulama kabulü: `scripts/form-field-border-ui-acceptance.js`. Görünür label, placeholder, disabled ve hata durumu.
   `aria-invalid` yalnız renk dışında hata açıklamasıyla birlikte kullanılır.
-- KPI: küçük açıklama, tabular sayısal değer ve alt bağlam. Her KPI ayrı
-  çerçeveli/gölgeli kart değildir.
+- KPI: küçük açıklama, tabular sayısal değer ve alt bağlam. Her KPI 1px
+  `--ui-group-divider` sınırlı karttır; KPI'ya gölge verilmez.
 - Boş/hata/bekleme: kısa başlık, neyin eksik olduğunu anlatan metin, uygun
   eylem. Yükleme için sabit kare durum işareti; emoji ve dekoratif spinner yok.
 - Modal/çekmece: adlandırılmış dialog, ilk odak, Tab/Shift+Tab sınırı, Escape
   ve tetikleyiciye odak dönüşü. İç içe pencerede yalnız üst katman kapanır.
 - Yenileme kapsam menüsü: kullanıcı tercihiyle üst çubuktan aşağı ince hatlarla dallanan, kısa kodlu ayrı karelerdir. Kareler ve odak ipucu ortak yüzey, sınır ve gölge tokenlarını kullanır; arka planda kapsayıcı panel yoktur. Hat Motion+ `branch`, kareler `overlay` ile açılır.
 - Popover/menü: ortak yüzey; ok/Home/End, disabled öğe atlama ve Escape.
-  Çerçeve ve gölge yalnız menü kabındadır; öğeler çerçevesiz satırdır, hover
-  `--ui-surface-strong`. Aynı işi yapan eylemler tek çekmecede toplanır (ör.
+  Gölge yalnız menü kabındadır; öğeler 1px `--ui-group-divider` sınırlı satırdır,
+  hover `--ui-surface-strong`. Aynı işi yapan eylemler tek çekmecede toplanır (ör.
   CP/Koleksiyon **Excel** çekmecesi: "Excel oluştur" / "İçe aktar ve şablonlar").
 - Seçim çubuğu (`selection-action-bar.js`): CP/Siparişler/Koleksiyon'da satır
   işaretlenince altta görünür; sayı + Kopyala/Excel/Araçlar. Kendi iş mantığı
@@ -359,7 +364,8 @@ silinmez.
 ## 9. Ortak CSS maliyeti
 
 Sıfır kenarlık/köşe/gölge tanımları her bileşende yinelenmez; tek `:where(body,body *)`
-sıfırlamasından gelir. Tabloya özel sıfır çizgi tanımları, yoğun tablo ayırıcılarını
+sıfırlamasından gelir. Bu teknik bir sıfırlamadır, kenarlıksız tasarım kuralı değildir:
+modül yüzeyleri ortak çerçeve listesinden 1px sınırı geri alır (§2). Tabloya özel sıfır çizgi tanımları, yoğun tablo ayırıcılarını
 bilinçli olarak bastırdığı yerlerde korunur. Bu, export iframe’inin içine uygulanmaz.
 
 Eşit özgüllüğe sahip basit `:is()` listeleri aynı seçicilerin virgüllü listesine
