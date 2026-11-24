@@ -2317,6 +2317,8 @@ tfoot .collectionWeightedAverage strong{display:inline-block;min-width:0;max-wid
 .plmSyncModelBlock{display:grid;gap:5px;}
 .plmSyncModelHead{display:flex;align-items:baseline;gap:8px;}
 .plmSyncTranslationHint{margin-top:3px;}
+.plmSyncColourWarn{margin:0 18px;padding:10px 12px;}
+.plmSyncColourModel{padding:8px 0;}
 .plmSyncColActions{display:flex;gap:6px;margin-bottom:8px;}
 .plmSyncColList{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px;}
 .plmSyncColItem{display:flex;align-items:center;gap:8px;padding:6px 8px;cursor:pointer;}

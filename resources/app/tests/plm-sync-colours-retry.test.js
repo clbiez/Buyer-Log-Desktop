@@ -78,11 +78,43 @@ test('Koleksiyon PLM Sync satır bazında eşler, PLM’de olmayan rengi hata sa
   // Excel, seçili ve liste içe aktarmaları da yeni renk satırını mevcut modele bağlar;
   // satır referansları kullanıldıktan sonra, kayıttan hemen önce.
   assert.equal((app.match(/kolPlmJoinColourRowsToModels\(kolPlmNewColourRowIds\(created\)\);\s*saveKolRows\(\);/g) || []).length, 3);
-  assert.match(app, /data-plmsync-newcolours checked/);
-  assert.match(app, /const addedColours=approved\.addColours\?kolPlmSyncAddNewColours\(summary\.newColours\):\[\];/);
+  assert.match(app, /const addedColours=kolPlmSyncAddNewColours\(approved\.colours\);/, 'yalnız seçilen renkler eklenir');
   assert.match(app, /if\(!summary\.changed\.length&&!\(summary\.newColours\|\|\[\]\)\.length\)\{/);
-  assert.match(app, /'PLM’de olup Koleksiyon’da olmayan renkler'/);
-  assert.match(app, /'Colours in PLM that are missing in Collection'/);
+});
+
+test('PLM Sync mevcut modele gelen yeni opsiyonda uyarır ve renkleri model model, varsayılan işaretsiz seçtirir', () => {
+  const app = read('public/app-main.js');
+  const start = app.indexOf('function kolPlmSyncGroupNewColours(');
+  const block = app.slice(start, app.indexOf('function showPlmSyncPreview(', start));
+  assert.ok(start > 0);
+  // Model bazında gruplama ve her renk için ayrı onay kutusu.
+  assert.match(block, /data-plmsync-colour="\$\{index\}" data-plmsync-model="\$\{model\}">/);
+  assert.doesNotMatch(block, /data-plmsync-colour="[^"]*"[^>]*checked/, 'bilerek silinmiş opsiyon açık onay olmadan geri gelmez');
+  assert.match(block, /data-plmsync-colourall="1"/);
+  assert.match(block, /data-plmsync-colourall="0"/);
+  // Koleksiyon'da var olan modele yeni opsiyon gelirken uyarı, TR + EN.
+  assert.match(block, /role="alert" data-plmsync-colourwarn/);
+  assert.match(block, /Uyarı: Koleksiyon’da zaten bulunan \$\{groups\.length\} modelde PLM’den \$\{count\} yeni opsiyon geliyor/);
+  assert.match(block, /Warning: \$\{groups\.length\} model\(s\) already in Collection have \$\{count\} new option\(s\) in PLM/);
+  assert.match(block, /'Mevcut modellere PLM’den gelen yeni opsiyonlar — model model seçin'/);
+  assert.match(block, /'New PLM options for existing models — choose per model'/);
+  const preview = app.slice(app.indexOf('function showPlmSyncPreview('), app.indexOf('async function kolPlmSyncImageStep('));
+  assert.match(preview, /\$\{kolPlmSyncNewColourWarning\(summary\.newColours,en\)\}/);
+  assert.match(preview, /\$\{kolPlmSyncNewColourSection\(summary\.newColours,en\)\}/);
+  assert.match(preview, /const colours=kolPlmSyncPickedNewColours\(modal,summary\.newColours\);/);
+  assert.doesNotMatch(preview, /data-plmsync-newcolours/, 'eski tek ve önceden işaretli toplu kutu kalmadı');
+});
+
+test('seçilen renk kutuları yalnız işaretli PLM renklerini döndürür', () => {
+  const app = read('public/app-main.js');
+  const start = app.indexOf('function kolPlmSyncPickedNewColours(');
+  const src = app.slice(start, app.indexOf('\n}', start) + 2);
+  const pick = new Function(`${src}; return kolPlmSyncPickedNewColours;`)();
+  const box = (index, checked) => ({ checked, dataset: { plmsyncColour: String(index) } });
+  const modal = { querySelectorAll: () => [box(0, false), box(1, true), box(2, true), box(9, true)] };
+  const colours = [{ colourCode: 'A' }, { colourCode: 'B' }, { colourCode: 'C' }];
+  assert.deepEqual(pick(modal, colours).map(item => item.colourCode), ['B', 'C']);
+  assert.deepEqual(pick({ querySelectorAll: () => [] }, colours), [], 'hiçbiri seçilmezse renk eklenmez');
 });
 
 test('yeni renk satırı model düzeyindeki Buyer Log değerlerini mevcut modelden devralır; kalıcı boş fark oluşmaz', () => {

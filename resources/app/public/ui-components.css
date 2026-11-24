@@ -15978,6 +15978,7 @@ html[data-ui-system="manifest"] .trFocusPicture:disabled{opacity:1}
 html[data-ui-system="manifest"] .trFocusIdentity h2{color:var(--ui-text)}
 html[data-ui-system="manifest"] .trFocusAi>.trAi{background:transparent!important}
 html[data-ui-system="manifest"] .trFocusNotice{background:var(--ui-warning-bg);color:var(--ui-warning)}
+html[data-ui-system="manifest"] .plmSyncColourWarn{background:var(--ui-warning-bg);color:var(--ui-warning);font-weight:600}
 html[data-ui-system="manifest"] .trFocusDecision{background:var(--ui-surface-soft);}
 html[data-ui-system="manifest"] .trFocusTabs{background:var(--ui-surface);}
 html[data-ui-system="manifest"] .trFocusTabs button{background:none;color:var(--ui-text-muted)}
