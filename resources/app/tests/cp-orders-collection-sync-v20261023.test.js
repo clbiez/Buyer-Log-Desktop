@@ -381,6 +381,8 @@ test('B5 · ocMetaFromKolRow onaylı üreticiyi, hedef fiyatı ve model grubunda
   vm.runInContext(`
     ${extractFunction(APP, 'kolEffectiveValue')}
     ${extractFunction(APP, 'kolEffectivePricing')}
+    ${extractFunction(APP, 'kolApprovedManufacturer')}
+    ${extractFunction(APP, 'kolParentRowOf')}
     ${extractFunction(APP, 'kolConfirmedPricing')}
     ${extractFunction(APP, 'kolEffectiveProjection')}
     ${extractFunction(APP, 'ocMetaFromKolRow')}

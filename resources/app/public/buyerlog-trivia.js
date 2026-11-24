@@ -184,7 +184,9 @@
     const doc=host.ownerDocument||global.document,lang=options.lang||currentLang,tt=(tr,en)=>lang()==='en'?en:tr;
     const history=[];let index=-1,elapsed=0,paused=false,timer=null,destroyed=false,detached=0;
     host.classList.add('blTriviaHost');
-    host.innerHTML=`<div class="blTriviaCard${options.compact?' blTriviaCard--compact':''}">${options.heading?`<div class="blTriviaHeading" data-trivia-heading></div>`:''}<div class="blTriviaFigure" data-trivia-visual></div><div class="blTriviaSide"><div class="blGuideCopy blTriviaCopy" data-trivia-copy></div><div class="blTriviaNav"><div class="blTriviaProgress" aria-hidden="true"><i data-trivia-progress></i></div><div class="blTriviaNavRow"><div class="blTriviaBtns"><button type="button" class="blTriviaBtn" data-trivia-prev>‹</button><button type="button" class="blTriviaBtn" data-trivia-pause aria-pressed="false">❚❚</button><button type="button" class="blTriviaBtn blTriviaBtn--next" data-trivia-next>›</button></div></div></div></div></div>`;
+    // Kompakt kartta başlık ve kategori tek satırda, metnin hemen üstünde durur.
+    const headHtml=options.heading?(options.compact?`<div class="blTriviaKicker"><span class="blTriviaHeading" data-trivia-heading></span><span class="blTriviaKickerCat" data-trivia-cat></span></div>`:`<div class="blTriviaHeading" data-trivia-heading></div>`):'';
+    host.innerHTML=`<div class="blTriviaCard${options.compact?' blTriviaCard--compact':''}">${options.compact?'':headHtml}<div class="blTriviaFigure" data-trivia-visual></div><div class="blTriviaSide">${options.compact?headHtml:''}<div class="blGuideCopy blTriviaCopy" data-trivia-copy></div><div class="blTriviaNav"><div class="blTriviaProgress" aria-hidden="true"><i data-trivia-progress></i></div><div class="blTriviaNavRow"><div class="blTriviaBtns"><button type="button" class="blTriviaBtn" data-trivia-prev>‹</button><button type="button" class="blTriviaBtn" data-trivia-pause aria-pressed="false">❚❚</button><button type="button" class="blTriviaBtn blTriviaBtn--next" data-trivia-next>›</button></div></div></div></div></div>`;
     const q=sel=>host.querySelector(sel),card=q('.blTriviaCard');
     function labels(){
       const set=(sel,label)=>{const b=q(sel);if(b){b.setAttribute('aria-label',label);b.title=label;}};
@@ -200,6 +202,7 @@
       const cat=categoryFor(item.category);card.dataset.tone=cat.tone;
       q('[data-trivia-visual]').innerHTML=visual(item,lang());
       q('[data-trivia-copy]').innerHTML=copyHtml(item,lang());
+      const catEl=q('[data-trivia-cat]');if(catEl)catEl.textContent=pick(cat.label,lang());
       labels();progress();options.onChange?.(item);
     }
     function next(){if(index<history.length-1)index++;else{history.push(nextUnseen(history[index]?.category));index=history.length-1;}elapsed=0;paint();}
@@ -259,7 +262,7 @@
       panel.setAttribute('aria-label',tl('Biliyor muydunuz?','Did you know?'));
       state.dataset.blTrivia='on';state.classList.add('hasTrivia');state.appendChild(panel);
       const info={state,panel,section:sectionOf(state),shownAt:now,holding:false};
-      info.ctl=mount(panel,{compact:true,heading:()=>info.holding?tl('BİLİYOR MUYDUNUZ?','DID YOU KNOW?'):tl('BEKLERKEN · BİLİYOR MUYDUNUZ?','WHILE YOU WAIT · DID YOU KNOW?')});
+      info.ctl=mount(panel,{compact:true,heading:()=>tl('BİLİYOR MUYDUNUZ?','DID YOU KNOW?')});
       tracked.add(info);
     }
     for(const info of [...tracked]){

@@ -128,6 +128,87 @@
       }
     },
     {
+      "id": "collection-variant-approval-and-lone-model-date",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Ana renk onayı alt opsiyonlarda onaylı görünür; tek kalan modelde MB tarihi güncellenir",
+        "en": "Main colour approval shows as approved on colour options; MB date updates on a model left on its own"
+      },
+      "body": {
+        "tr": "Ana renkte bir üreticinin fiyatı onaylandığında bağlı alt opsiyonlar artık aynı üreticiyi ✓ Onaylı olarak gösterir; en düşük teklif yalnız öneri olarak kalmaz ve FOB onaylı fiyattan hesaplanır. Alt opsiyonun kendi verdiği farklı onay korunur. Alt opsiyonları silinen ya da modelden ayrılan satırda MB tarihi ve diğer model alanlarına girilen yeni değer (ör. 2027) eski değerin (2026) gerisinde kalmadan görünür.",
+        "en": "When a manufacturer's price is approved on the main colour, linked colour options now show the same manufacturer as ✓ Approved; the lowest quote no longer remains a mere suggestion and FOB is calculated from the approved price. A different approval given on the colour option itself is kept. On a row whose colour options were deleted or that was detached from its model, a new MB date or other model field value (e.g. 2027) is shown instead of the old value (2026)."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-variant-approval.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: DM600 modelinin üç rengi DEMO MFR A ile onaylı, tek kalan DM500 satırında MB tarihi 04.01.27 ve ay Ocak 2027",
+          "en": "Demo Collection table: three colours of model DM600 approved with DEMO MFR A, the lone DM500 row shows MB date 04.01.27 and month January 2027"
+        },
+        "caption": {
+          "tr": "Demo veride ana renk onayı tüm alt opsiyonlara geçer; tek kalan modelde yeni MB tarihi görünür.",
+          "en": "On demo data, the main colour approval carries over to all colour options; the lone model shows its new MB date."
+        }
+      }
+    },
+    {
+      "id": "plm-image-index-batch",
+      "type": "improvement",
+      "module": {
+        "tr": "Model görselleri (CP, Siparişler, Koleksiyon)",
+        "en": "Model images (CP, Orders, Collection)"
+      },
+      "title": {
+        "tr": "PLM görselleri kaydedilirken uygulama donmaz",
+        "en": "The app no longer freezes while PLM images are saved"
+      },
+      "body": {
+        "tr": "PLM'den gelen model görselleri artık tek tek değil, iş başına tek seferde görsel dizinine kaydedilir ve dosya yazımı arka planda yapılır. Arka planda eksik görselleri tamamlama ya da binlerce görsellik yenileme sürerken CP ve Siparişler'de satır seçmek, filtrelemek ve kaydırmak beklemeden çalışır. Kesinti veya elektrik kesilmesinde dizin bozulmaz; yarıda kalan görseller bir sonraki eksik görsel taramasında yeniden alınır.",
+        "en": "Model images coming from PLM are now saved to the image index once per job instead of one by one, and file writes run in the background. While missing images are completed in the background or thousands of images are refreshed, selecting, filtering and scrolling rows in CP and Orders keep working without waiting. A crash or power cut does not corrupt the index; images that were cut off are fetched again on the next missing-image pass."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranda değişiklik yok; görseller ve tablolar aynı görünür, yalnız görsel kaydı sırasında yaşanan donma kalkar.",
+          "en": "Nothing changes on screen; images and tables look the same, only the freeze during image saving is removed."
+        }
+      }
+    },
+    {
+      "id": "page-loading-redesign",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker ve Siparişler",
+        "en": "CP Tracker and Orders"
+      },
+      "title": {
+        "tr": "Yükleme ekranı yeniden tasarlandı",
+        "en": "Loading screen redesigned"
+      },
+      "body": {
+        "tr": "CP ve Siparişler yüklenirken artık büyük ve net bir bekleme göstergesi ile yalın \"Siparişler yükleniyor…\" başlığı görünür; \"gerektiğinde\" ibaresi kaldırıldı. Biliyor muydunuz kartı tek parça hâline getirildi: kategori tek satırda, metin başlıkla hizalı, ilerleme çubuğu ve gezinme düğmeleri aynı satırda.",
+        "en": "While CP and Orders load, a large, clear progress indicator and a plain \"Loading Orders…\" title are shown; the \"on demand\" wording was removed. The Did you know card is now a single unit: the category sits on one line, the text aligns with the title, and the progress bar shares a row with the navigation buttons."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "page-loading-redesign.png",
+        "alt": {
+          "tr": "Siparişler yükleniyor ekranı: büyük bekleme göstergesi ve altında Biliyor muydunuz kartı",
+          "en": "Orders loading screen: large progress indicator with the Did you know card below"
+        },
+        "caption": {
+          "tr": "Demo ortamında Siparişler yüklenirken yeni bekleme ekranı.",
+          "en": "The new loading screen while Orders loads in the demo environment."
+        }
+      }
+    },
+    {
       "id": "post-refresh-worker-oom",
       "type": "fix",
       "module": {

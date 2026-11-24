@@ -33,7 +33,7 @@
     const action=options.actionLabel
       ?`<button type="button" class="navActionBtn uiStateAction${options.actionPrimary?' primary':''}" data-ui-state-action>${escapeHtml(options.actionLabel)}</button>`:'';
     const visual=kind==='loading'
-      ?'<span class="uiStateSpinner blOrb uiStateOrb" data-state="thinking" aria-hidden="true"></span>'
+      ?`<span class="uiStateSpinner blOrb uiStateOrb${options.size==='lg'?' blOrb--lg':''}" data-state="thinking" aria-hidden="true"></span>`
       :`<svg class="ic uiStateIcon" aria-hidden="true"><use href="#i-${icon}"/></svg>`;
     return `<div class="uiState uiState--${kind}" role="${role}" aria-live="${kind==='error'?'assertive':'polite'}" aria-atomic="true"${kind==='loading'?' aria-busy="true"':''}>${visual}<div class="uiStateBody"><b>${title}</b>${detail?`<span>${detail}</span>`:''}${action}</div></div>`;
   }

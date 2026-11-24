@@ -336,7 +336,21 @@ function createDurableFileRecovery({ recoveryRoot, allowedRoots = [] } = {}) {
   }
   function replaceSync(target, buffer, options) { return commitPreparedSync(prepareSync(target, buffer, options)); }
   async function replace(target, buffer, options) { return commitPrepared(await prepare(target, buffer, options)); }
-  return { root, prepareSync, prepare, commitPreparedSync, commitPrepared, replaceSync, replace, recoverSync };
+  /* YENİ, BENZERSİZ ADLI dosya için asenkron dayanıklı oluşturma.
+     Hedef daha önce hiç yoktu (ör. ci_<ms>_<rastgele>.jpg): "önce/sonra"
+     parmak izi ve niyet kaydı korunacak eski bir içerik olmadığı için bir
+     şey kazandırmaz. Geçici dosya → fsync → atomik rename → klasör fsync
+     yeterlidir: çökmede ya tam dosya ya da yok sayılan .tmp kalır.
+     Var olan dosyanın üzerine yazmak için replace kullanılmalıdır. */
+  async function createNew(target, buffer) {
+    await assertHeldFileLeasesAsync();
+    const resolved = path.resolve(target); ensureAllowed(resolved, roots);
+    let exists = true;
+    try { await fsp.access(resolved); } catch (error) { if (error && error.code === 'ENOENT') exists = false; else throw error; }
+    if (exists) throw integrityError(`Durable create target already exists: ${resolved}`);
+    await writeNew(resolved, Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer));
+  }
+  return { root, prepareSync, prepare, commitPreparedSync, commitPrepared, replaceSync, replace, createNew, recoverSync };
 }
 
 module.exports = { VERSION, createDurableFileRecovery, integrityError };

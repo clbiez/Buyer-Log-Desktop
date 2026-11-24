@@ -54,7 +54,7 @@ test('aynı model görseli renk başına ayrı dosya olarak kopyalanmaz', () => 
   // Paylaşılan varlık YENİ kaydedilmiş sayılmaz: geri alma yolu yalnız bu
   // turda gerçekten oluşturulan dosyaları siler.
   assert.match(ingest, /const created = \[\];/);
-  assert.match(ingest, /for \(const id of created\) \{ try \{ deleteImage\(id\); \}/);
+  assert.match(ingest, /for \(const id of created\) \{ try \{ await deleteImage\(id\); \}/);
   // Aynı Attachment birden çok renkte seçilse bile BAYT bir kez indirilir.
   const service = fs.readFileSync(path.join(root, 'server', 'lib', 'plm-image-sync-service.js'), 'utf8');
   assert.match(service, /const byUrl = new Map\(\);/);
@@ -65,7 +65,7 @@ test('paylaşılan referans başka bir renk hâlâ kullanıyorsa silinmez', () =
   const ingest = fs.readFileSync(path.join(root, 'server', 'lib', 'plm-image-ingest.js'), 'utf8');
   assert.match(ingest, /const activeRefs = new Set\(Object\.values\(\(patched\.overrides && patched\.overrides\.imagemap\) \|\| \{\}\)/);
   assert.match(ingest, /if \(activeRefs\.has\(outcome\.currentRef\)\) continue;/);
-  assert.match(ingest, /if \(deleteImage\(outcome\.currentRef\)\) removedFiles \+= 1;/);
+  assert.match(ingest, /if \(await deleteImage\(outcome\.currentRef\)\) removedFiles \+= 1;/);
 });
 
 /* v11.00 — KORUMA GÜÇLENDİ. Eskiden manuel görsel yalnız "eksikleri
