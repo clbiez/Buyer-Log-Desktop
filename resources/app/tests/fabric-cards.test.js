@@ -300,3 +300,19 @@ test('human-edited bilingual style transfers without copying another fabric meas
   assert.deepEqual(engine.applyLearnedStyle(base,noBrush,new Map([['18942',saved]])),base,
     'brushed user preference must not spread to non-brushed fabric');
 });
+
+test('negative sustainability ("Sürdürülebilir İçerik Yok") stays a detail but never reaches the summary tag',()=>{
+  const engine=require('../public/fabric-cards-engine');
+  assert.equal(engine.summarySustainability('Sürdürülebilir İçerik Yok'),''); // i18n-ignore
+  assert.equal(engine.summarySustainability('No sustainable content'),'');
+  assert.equal(engine.summarySustainability('SÜRDÜRÜLEBİLİR İÇERİK YOK, Organik Pamuk'),'Organik Pamuk'); // i18n-ignore
+  assert.equal(engine.summarySustainability('BCI Pamuk'),'BCI Pamuk'); // i18n-ignore
+  assert.equal(engine.summarySustainability('Recycled Polyester'),'Recycled Polyester');
+  assert.equal(engine.summarySustainability(''),'');
+  const card=engine.ruleCard('4207-Örme,Süprem,24 Ne Compact Penye Pamuk,180 gsm,%100 Pamuk,Reaktif,Sürdürülebilir İçerik Yok'); // i18n-ignore
+  assert.equal(card.details.sustainability,'Sürdürülebilir İçerik Yok'); // i18n-ignore
+  assert.doesNotMatch(card.summary+card.summaryEn,/Sürdürülebilir|Sustainab/i); // i18n-ignore
+  const fs=require('node:fs'),path=require('node:path');
+  const app=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8');
+  assert.match(app,/eco=norm\(window\.BLFabricCards\?\.summarySustainability\?\.\(card\?\.details\?\.sustainability\)/);
+});

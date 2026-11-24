@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-24",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Kumaş özetinde olumsuz sürdürülebilirlik ibaresi gösterilmez",
+    "en": "Negative sustainability statement hidden from the fabric summary"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "\"Sürdürülebilir İçerik Yok\" gibi ibareler kumaş özetinde etiket olarak görünmez; kart detayında korunur.",
+    "en": "Statements such as \"No sustainable content\" no longer appear as a tag in the fabric summary; they are kept in the card details."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "fabric-sustainability-summary",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon, CP, Siparişler",
+        "en": "Collection, CP, Orders"
+      },
+      "title": {
+        "tr": "\"Sürdürülebilir İçerik Yok\" kumaş özetinde gösterilmez",
+        "en": "\"No sustainable content\" is no longer shown in the fabric summary"
+      },
+      "body": {
+        "tr": "Kumaş kartında sürdürülebilirlik bilgisi \"Sürdürülebilir İçerik Yok\" gibi olumsuz bir ibareyse Koleksiyon, CP ve Siparişler tablolarındaki kumaş özetine yeşil etiket olarak eklenmez. Bilgi kartın detaylarında ve PLM metninde aynen korunur; Organik, Recycled veya BCI gibi gerçek sürdürülebilir içerik etiket olarak görünmeye devam eder.",
+        "en": "When a fabric card's sustainability value is a negative statement such as \"No sustainable content\", it is no longer added as a green tag to the fabric summary in the Collection, CP and Orders tables. The value is kept unchanged in the card details and the PLM text; real sustainable content such as Organic, Recycled or BCI is still shown as a tag."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "fabric-sustainability-summary.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: 9101 kumaşı etiketsiz, 9102 kumaşı Organik Pamuk etiketiyle",
+          "en": "Demo Collection table: fabric 9101 without a tag, fabric 9102 with an Organic Cotton tag"
+        },
+        "caption": {
+          "tr": "Demo veride olumsuz sürdürülebilirlik ibaresi özete girmez, organik içerik etiketi kalır.",
+          "en": "On demo data, the negative sustainability statement stays out of the summary while the organic content tag remains."
+        }
+      }
+    }
+  ]
 }
