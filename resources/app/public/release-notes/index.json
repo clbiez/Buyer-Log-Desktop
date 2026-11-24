@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "8.0.16",
+      "publishedAt": "2026-11-24",
+      "title": {
+        "tr": "LFL'de Fisher yöntemi, like-for-like üretici kıyası ve tasarım güncellemeleri",
+        "en": "Fisher method and like-for-like manufacturer comparison in LFL, plus design updates"
+      },
+      "stats": {
+        "features": 2,
+        "improvements": 3,
+        "fixes": 4
+      },
+      "file": "release-notes/8.0.16/release.json"
+    },
+    {
       "version": "8.0.14",
       "publishedAt": "2026-11-23",
       "title": {
