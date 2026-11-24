@@ -126,15 +126,21 @@ test('flush öncesi çökme: indeks bozulmaz, yetim dosyalar sonraki süreçte g
     const fresh=await data.saveCollectionImageDeferred({rowId:'plm:fresh',filename:'f.png',mimeType:'image/png',buffer:png(50)});
     await data.flushCollectionImageIndex();
     const sweep=await data.reconcileCollectionImageOrphans({startedBeforeMs:Date.now()-1});
-    out({indexed:items.map(i=>i.rowId).sort(),filesBefore:files.length,sweep,filesAfter:data.listStoredCollectionImageFiles().length,fresh:Boolean(data.getCollectionImage(fresh.id))});`);
+    const quarantineRoot=path.join(data.COLLECTION_IMAGES_ROOT,'.orphans');
+    const quarantined=fs.readdirSync(quarantineRoot).flatMap(day=>fs.readdirSync(path.join(quarantineRoot,day)));
+    out({indexed:items.map(i=>i.rowId).sort(),filesBefore:files.length,sweep,filesAfter:data.listStoredCollectionImageFiles().length,fresh:Boolean(data.getCollectionImage(fresh.id)),quarantined,days:fs.readdirSync(quarantineRoot)});`);
   assert.equal(restarted.result.status, 0, restarted.result.stderr);
   const [value] = restarted.outputs;
   assert.deepEqual(value.indexed, ['plm:keep0', 'plm:keep1', 'plm:keep2'], 'indeks son kalıcı sürümde, bozulmamış');
   assert.equal(value.filesBefore, 3 + lost.length, 'kalıcılaşmamış görseller yetim dosya olarak kalır');
   // fresh, startedBeforeMs'ten SONRA yazıldığı için aday değildir.
-  assert.equal(value.sweep.removed, lost.length);
+  assert.equal(value.sweep.quarantined, lost.length);
   assert.equal(value.filesAfter, 4);
   assert.equal(value.fresh, true);
+  // Yetimler SİLİNMEZ: aynı adla gün klasörü altındaki karantinaya taşınır.
+  assert.equal(value.days.length, 1);
+  assert.match(value.days[0], /^\d{8}$/);
+  assert.deepEqual(value.quarantined.sort(), lost.map(id => id + '.png').sort());
 });
 
 test('yetim taraması indeks .bak kaynaklıysa ya da bekleyen yazma varken hiçbir şey silmez', () => {
@@ -198,4 +204,33 @@ test('kanonik alım: N görsel commit başına tek flush, olay döngüsüne düz
   assert.equal(result.counts.written, 120);
   assert.equal(flushes, 1);
   assert.ok(ticks > 0, 'commit olay döngüsünü kilitlemez');
+});
+
+test('yetim sayısı şüpheli eşiği aşarsa hiçbir dosya taşınmaz; karantina 30 günden eskiyse temizlenir', () => {
+  const { result, outputs } = run('sweep-bound', `
+    data.saveCollectionImage({rowId:'a',filename:'a.png',mimeType:'image/png',base64:png(1).toString('base64')});
+    // Küçük indekste eşik 50: 51 yetim şüphelidir.
+    const names=Array.from({length:51},(_,i)=>'ci_1_'+i.toString(16).padStart(12,'0')+'.png');
+    for(const name of names) fs.writeFileSync(path.join(data.COLLECTION_IMAGES_ROOT,name),png(7));
+    const errors=[];const origError=console.error;console.error=(...args)=>errors.push(args.join(' '));
+    const over=await data.reconcileCollectionImageOrphans({startedBeforeMs:Date.now()+60000});
+    console.error=origError;
+    const stillThere=names.filter(name=>fs.existsSync(path.join(data.COLLECTION_IMAGES_ROOT,name))).length;
+    const quarantineRoot=path.join(data.COLLECTION_IMAGES_ROOT,'.orphans');
+    // Eşik altına inince taşınır; eski gün klasörü 30 gün sonra temizlenir, yenisi kalır.
+    for(const name of names.slice(1)) fs.unlinkSync(path.join(data.COLLECTION_IMAGES_ROOT,name));
+    const oldDay=path.join(quarantineRoot,'20000101');fs.mkdirSync(oldDay,{recursive:true});fs.writeFileSync(path.join(oldDay,'ci_1_ffffffffffff.png'),png(8));
+    const recentDay=path.join(quarantineRoot,'29991231');fs.mkdirSync(recentDay,{recursive:true});
+    const moved=await data.reconcileCollectionImageOrphans({startedBeforeMs:Date.now()+60000});
+    out({over,stillThere,logged:errors.some(line=>line.includes('[DATA_INTEGRITY]')&&line.includes('51')),quarantineExists:fs.existsSync(quarantineRoot)&&fs.readdirSync(quarantineRoot).some(d=>d!=='20000101'&&d!=='29991231'),moved,oldPurged:!fs.existsSync(oldDay),recentKept:fs.existsSync(recentDay)});`);
+  assert.equal(result.status, 0, result.stderr);
+  const [value] = outputs;
+  assert.equal(value.over.skipped, 'suspicious-orphan-count');
+  assert.equal(value.over.limit, 50);
+  assert.equal(value.stillThere, 51, 'eşik aşılınca hiçbir dosya taşınmaz');
+  assert.equal(value.logged, true);
+  assert.equal(value.moved.quarantined, 1);
+  assert.equal(value.quarantineExists, true);
+  assert.equal(value.oldPurged, true);
+  assert.equal(value.recentKept, true);
 });

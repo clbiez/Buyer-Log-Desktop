@@ -735,7 +735,8 @@ const COLLECTION_IMAGES_OPTIMIZATION = path.join(COLLECTION_IMAGES_ROOT, 'optimi
      Dosyası yazılıp indekse kalıcılaşamamış görsellere hiçbir imagemap
      bağlantısı işaret etmez (bağlantı flush'tan sonra yazılır); bu kimlikler
      bir sonraki "eksikleri tamamla" turunda yeniden alınır. Yetim kalan
-     dosyalar sonraki süreçte reconcileCollectionImageOrphans ile temizlenir. */
+     dosyalar sonraki süreçte reconcileCollectionImageOrphans ile karantinaya
+     taşınır (silinmez; 30 gün sonra temizlenir). */
 const COLLECTION_IMAGE_INDEX_MAX_DELAY_MS = 5000;
 const COLLECTION_IMAGE_INDEX_RETRY_MAX_MS = 60000;
 const COLLECTION_IMAGE_PROCESS_STARTED_AT = Date.now();
@@ -877,41 +878,85 @@ function writeCollectionImageIndex(items) {
   });
 }
 /* Önceki süreçten kalan yetim görsel dosyaları (dosya yazıldı, indeks
-   kalıcılaşmadan çöktü) temizlenir. Bilerek dar tutulur:
+   kalıcılaşmadan çöktü) SİLİNMEZ, karantinaya taşınır:
+   COLLECTION_IMAGES_ROOT/.orphans/<YYYYMMDD>/ (aynı birimde rename). Birincil
+   indeks geçerli ama dosyalardan eskiyse (yedek geri yükleme, elle kopya,
+   gelecekteki bir hata) dosya böylece geri alınabilir kalır. Karantina
+   girdileri ancak COLLECTION_IMAGE_ORPHAN_RETENTION_DAYS günden eskiyse
+   temizlenir. Aday seçimi bilerek dar tutulur:
    - yalnız ci_<ms>_<12 hex>.<uzantı> adlı depo dosyaları,
    - yalnız bu süreç başlamadan ÖNCE değişmiş dosyalar (bu süreçte yazılan
      her dosya yazıldığı anda belleğe girer; geri yükleme yeni mtime yazar),
    - yalnız indeks temiz ve birincil dosyadan okunmuşken (.bak'a düşüş ya da
      bozuk indeks gerçek görselleri yetim gösterebilir),
-   - yetim sayısı şüpheli derecede büyükse hiçbir şey silinmez. */
-async function reconcileCollectionImageOrphans({ startedBeforeMs = COLLECTION_IMAGE_PROCESS_STARTED_AT - 60000 } = {}) {
+   - yetim sayısı şüpheli derecede büyükse (indeksin ~%2'si, 50–500 arası)
+     hiçbir şey taşınmaz, [DATA_INTEGRITY] olarak loglanır. */
+const COLLECTION_IMAGE_ORPHAN_DIR = path.join(COLLECTION_IMAGES_ROOT, '.orphans');
+const COLLECTION_IMAGE_ORPHAN_RETENTION_DAYS = 30;
+function orphanSuspiciousLimit(indexedCount) {
+  return Math.min(500, Math.max(50, Math.ceil(Number(indexedCount || 0) * 0.02)));
+}
+function orphanDayFolder(nowMs) {
+  const d = new Date(nowMs);
+  return `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(d.getUTCDate()).padStart(2, '0')}`;
+}
+async function purgeExpiredCollectionImageOrphans(nowMs = Date.now()) {
+  let days = [];
+  try { days = await fsp.readdir(COLLECTION_IMAGE_ORPHAN_DIR, { withFileTypes: true }); }
+  catch (error) { if (error && error.code === 'ENOENT') return 0; throw error; }
+  const cutoff = nowMs - COLLECTION_IMAGE_ORPHAN_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+  let purged = 0;
+  for (const entry of days) {
+    const match = /^(\d{4})(\d{2})(\d{2})$/.exec(entry.name);
+    if (!entry.isDirectory() || !match) continue;
+    // Gün klasörünün SONU saklama süresinden eskiyse temizlenir.
+    const dayEnd = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + 1);
+    if (!(dayEnd <= cutoff)) continue;
+    await fsp.rm(path.join(COLLECTION_IMAGE_ORPHAN_DIR, entry.name), { recursive: true, force: true });
+    purged += 1;
+  }
+  return purged;
+}
+async function reconcileCollectionImageOrphans({ startedBeforeMs = COLLECTION_IMAGE_PROCESS_STARTED_AT - 60000, nowMs = Date.now() } = {}) {
   if (collectionImageIndexPending()) return { skipped: 'pending' };
   const state = cachedCollectionImageIndex();
   if (state.source !== 'primary') return { skipped: 'index-not-primary' };
   const known = new Set(state.items.map(item => String(item && item.storedName || '')).filter(Boolean));
   let names = [];
-  try { names = await fsp.readdir(COLLECTION_IMAGES_ROOT); } catch (error) { if (error && error.code === 'ENOENT') return { removed: 0 }; throw error; }
+  try { names = await fsp.readdir(COLLECTION_IMAGES_ROOT); } catch (error) { if (error && error.code === 'ENOENT') return { quarantined: 0 }; throw error; }
   const candidates = [];
   for (const name of names) {
     if (!COLLECTION_IMAGE_STORED_NAME.test(name) || known.has(name)) continue;
     try { const st = await fsp.stat(path.join(COLLECTION_IMAGES_ROOT, name)); if (st.isFile() && st.mtimeMs < startedBeforeMs) candidates.push(name); }
     catch (_) {}
   }
-  if (candidates.length > Math.max(200, state.items.length)) return { skipped: 'suspicious-orphan-count', orphans: candidates.length };
+  const limit = orphanSuspiciousLimit(state.items.length);
+  if (candidates.length > limit) {
+    console.error(`[DATA_INTEGRITY] Şüpheli sayıda yetim model görseli (${candidates.length} > ${limit}); hiçbiri taşınmadı. / Suspicious orphan collection image count (${candidates.length} > ${limit}); nothing moved.`);
+    return { skipped: 'suspicious-orphan-count', orphans: candidates.length, limit };
+  }
   // Tarama sırasında araya giren bir yazma indeksi değiştirmiş olabilir.
   if (collectionImageIndexPending() || cachedCollectionImageIndex() !== state) return { skipped: 'changed' };
-  let removed = 0;
-  for (const name of candidates) {
-    try { await fsp.unlink(path.join(COLLECTION_IMAGES_ROOT, name)); removed += 1; } catch (error) { if (error && error.code !== 'ENOENT') throw error; }
+  let quarantined = 0;
+  if (candidates.length) {
+    const folder = path.join(COLLECTION_IMAGE_ORPHAN_DIR, orphanDayFolder(nowMs));
+    await fsp.mkdir(folder, { recursive: true });
+    for (const name of candidates) {
+      let target = path.join(folder, name);
+      try { await fsp.access(target); target = path.join(folder, `${Date.now()}-${crypto.randomBytes(3).toString('hex')}-${name}`); } catch (_) {}
+      try { await fsp.rename(path.join(COLLECTION_IMAGES_ROOT, name), target); quarantined += 1; }
+      catch (error) { if (error && error.code !== 'ENOENT') throw error; }
+    }
   }
-  return { removed, orphans: candidates.length };
+  const purgedDays = await purgeExpiredCollectionImageOrphans(nowMs);
+  return { quarantined, orphans: candidates.length, purgedDays };
 }
 function scheduleOrphanSweepOnce() {
   if (orphanSweepScheduled) return;
   orphanSweepScheduled = true;
   const timer = setTimeout(() => {
     reconcileCollectionImageOrphans().then(result => {
-      if (result && result.removed) console.warn(`[DATA_INTEGRITY] ${result.removed} yetim model görseli dosyası temizlendi. / orphan collection image file(s) removed.`);
+      if (result && result.quarantined) console.warn(`[DATA_INTEGRITY] ${result.quarantined} yetim model görseli karantinaya taşındı (${path.basename(COLLECTION_IMAGE_ORPHAN_DIR)}). / orphan collection image file(s) moved to quarantine.`);
     }).catch(error => console.error('[DATA_INTEGRITY] Yetim görsel taraması başarısız. / Orphan image sweep failed:', error && error.message || error));
   }, 30000);
   if (typeof timer.unref === 'function') timer.unref();
@@ -1094,6 +1139,8 @@ function deleteAllCollectionImages() {
   for (const file of [COLLECTION_IMAGES_INDEX + '.bak', COLLECTION_IMAGES_OPTIMIZATION, COLLECTION_IMAGES_OPTIMIZATION + '.bak']) {
     try { fs.unlinkSync(file); } catch (err) { if (err.code !== 'ENOENT') throw err; }
   }
+  // Sıfırlama "Buyer Log hiç görsel tutmuyor" demektir: karantinadaki yetimler de gider.
+  fs.rmSync(COLLECTION_IMAGE_ORPHAN_DIR, { recursive: true, force: true });
   return { deleted, requested: index.length, orphansRemoved, remainingFiles: listStoredCollectionImageFiles().length, remainingIndexed: readCollectionImageIndex().length };
 }
 
