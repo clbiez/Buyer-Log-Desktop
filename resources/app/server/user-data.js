@@ -701,37 +701,220 @@ const COLLECTION_IMAGES_OPTIMIZATION = path.join(COLLECTION_IMAGES_ROOT, 'optimi
    planı, ingest kararı, hover). Eskiden her çağrı index.json'u diskten okuyup
    parse ediyordu: 20.000 görsellik depoda 129 modelin yerel planı ~2,8 sn,
    1.000 model ~21 sn sunucu olay döngüsünü kilitliyordu. Artık dosya kimliği
-   (inode + boyut + mtime) değişmedikçe tek parse yapılır; kendi yazmalarımız
-   önbelleği ayrıca hemen düşürür. Önbellek yalnız birincil dosya geçerliyken
-   tutulur; .bak'a düşüş eskisi gibi her seferinde diskten okunur. */
-let collectionImageIndexCache = null;
+   (inode + boyut + mtime) değişmedikçe tek parse yapılır. Önbellek yalnız
+   birincil dosya geçerliyken tutulur; .bak'a düşüş eskisi gibi her seferinde
+   diskten okunur. */
+/* v8.0.15 — BELLEK OTORİTER İNDEKS + TEK UÇUŞLU ASENKRON KALICILAŞTIRMA.
+   Saha profili (8.0.14): PLM görsel alımında HER görsel için bütün
+   index.json parse ediliyor, pretty-print yazılıyor, fsync + iki rename +
+   tam dosyayı geri okuyup SHA-256 yapılıyordu; hepsi ana iş parçacığında.
+   Maliyet O(görsel × indeks boyutu): 4.708 indirme 2.000 sn, 3 indirmelik
+   sessiz parti 11,7 sn olay döngüsünü kilitledi.
+
+   SÖZLEŞME
+   - Bellekteki indeks (imageIndexState) tek doğruluk kaynağıdır; kalıcı
+     dosyadan yalnız temizken (bekleyen yazma yokken) ve dosya kimliği
+     değiştiyse yeniden okunur. Kendi yazmalarımızdan sonra kimlik güncellenir:
+     görsel başına yeniden parse yok.
+   - Bir kayıt belleğe ANCAK görsel dosyası diske dayanıklı yazıldıktan sonra
+     girer: eşzamanlı okuyucular (getCollectionImage, dağıtım planı, hover)
+     dosyası olmayan bir kayıt görmez.
+   - Senkron çağıranlar (elle yükleme, silme, sıfırlama) eskisi gibi dönmeden
+     önce SENKRON ve dayanıklı yazar. Tek istisna: o anda asenkron bir yazma
+     uçuştaysa aynı hedefe ikinci yazıcı açılmaz (kurtarma niyeti çakışır);
+     değişiklik belleğe uygulanır ve uçuştaki yazma bitince aynı döngüde
+     kalıcılaşır. Onay veren rotalar flushCollectionImageIndex'i bekler.
+   - Toplu yollar (PLM alımı, paylaşılan/ASAS kurulum) dosyayı asenkron yazar,
+     indeksi bellekte günceller ve imagemap bağlantısından ÖNCE bir kez
+     flushCollectionImageIndex bekler. Unutulursa ya da iş yarıda kalırsa
+     sınırlı gecikmeli güvenlik yazması (COLLECTION_IMAGE_INDEX_MAX_DELAY_MS)
+     devreye girer.
+   - Kalıcı yazma durable-file-recovery replace (asenkron) ile yapılır:
+     .bak ve hazırlanmış-niyet (prepared-commit) güvenceleri aynen geçerli.
+   - Çökme kurtarma: indeks ya eski ya yeni sürümdedir (niyet kurtarma).
+     Dosyası yazılıp indekse kalıcılaşamamış görsellere hiçbir imagemap
+     bağlantısı işaret etmez (bağlantı flush'tan sonra yazılır); bu kimlikler
+     bir sonraki "eksikleri tamamla" turunda yeniden alınır. Yetim kalan
+     dosyalar sonraki süreçte reconcileCollectionImageOrphans ile temizlenir. */
+const COLLECTION_IMAGE_INDEX_MAX_DELAY_MS = 5000;
+const COLLECTION_IMAGE_INDEX_RETRY_MAX_MS = 60000;
+const COLLECTION_IMAGE_PROCESS_STARTED_AT = Date.now();
+const COLLECTION_IMAGE_STORED_NAME = /^ci_\d+_[0-9a-f]{12}\.(?:jpg|png|webp|gif|img)$/;
+let imageIndexState = null;
+let indexDirtyGen = 0, indexPersistedGen = 0;
+let indexFlushPromise = null, indexFlushTimer = null, indexFlushFailures = 0;
+let orphanSweepScheduled = false;
+const collectionImageIndexStats = { syncWrites: 0, asyncWrites: 0, diskLoads: 0 };
 function collectionImageIndexSignature() {
   try { const st = fs.statSync(COLLECTION_IMAGES_INDEX); return `${st.ino}:${st.size}:${st.mtimeMs}`; }
   catch (_) { return ''; }
 }
-function cachedCollectionImageIndex() {
-  ensureDir(COLLECTION_IMAGES_ROOT);
-  const signature = collectionImageIndexSignature();
-  if (signature && collectionImageIndexCache && collectionImageIndexCache.signature === signature) return collectionImageIndexCache;
-  collectionImageIndexCache = null;
+async function collectionImageIndexSignatureAsync() {
+  try { const st = await fsp.stat(COLLECTION_IMAGES_INDEX); return `${st.ino}:${st.size}:${st.mtimeMs}`; }
+  catch (_) { return ''; }
+}
+function collectionImageIndexPending() { return indexDirtyGen > indexPersistedGen || Boolean(indexFlushPromise); }
+function indexStateFrom(items, signature, source) {
+  return { signature, source, items, byId: new Map(items.filter(item => item && item.id).map(item => [item.id, item])) };
+}
+function loadCollectionImageIndexFromDisk(signature) {
+  collectionImageIndexStats.diskLoads += 1;
   for (const file of [COLLECTION_IMAGES_INDEX, COLLECTION_IMAGES_INDEX + '.bak']) {
     if (!fs.existsSync(file)) continue;
     try {
       const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
       if (!Array.isArray(parsed)) continue;
-      const entry = { signature, items: parsed, byId: new Map(parsed.filter(item => item && item.id).map(item => [item.id, item])) };
-      if (signature && file === COLLECTION_IMAGES_INDEX) collectionImageIndexCache = entry;
-      return entry;
+      // Önbellek kimliği yalnız birincil dosya geçerliyken tutulur; .bak'a
+      // düşüşte her okuma (temizken) eskisi gibi diskten yapılır.
+      const primary = file === COLLECTION_IMAGES_INDEX;
+      return indexStateFrom(parsed, primary ? signature : '', primary ? 'primary' : 'bak');
     } catch (_) {}
   }
-  return { signature: '', items: [], byId: new Map() };
+  return indexStateFrom([], '', 'none');
+}
+function cachedCollectionImageIndex() {
+  ensureDir(COLLECTION_IMAGES_ROOT);
+  if (imageIndexState && collectionImageIndexPending()) return imageIndexState;
+  const signature = collectionImageIndexSignature();
+  if (imageIndexState && signature && imageIndexState.signature === signature) return imageIndexState;
+  imageIndexState = loadCollectionImageIndexFromDisk(signature);
+  return imageIndexState;
 }
 // Çağıranlar diziyi değiştirip yazar: önbellek paylaşılmaz, sığ kopya döner.
 function readCollectionImageIndex() { return cachedCollectionImageIndex().items.slice(); }
+function scheduleCollectionImageIndexFlush(delayMs = COLLECTION_IMAGE_INDEX_MAX_DELAY_MS) {
+  if (indexFlushTimer || indexFlushPromise) return;
+  indexFlushTimer = setTimeout(() => {
+    indexFlushTimer = null;
+    startCollectionImageIndexFlush().catch(error => {
+      console.error('[DATA_INTEGRITY] Model görseli indeksi kalıcılaştırılamadı; yeniden denenecek. / Collection image index flush failed; will retry:', error && error.message || error);
+    });
+  }, Math.max(0, delayMs));
+  if (typeof indexFlushTimer.unref === 'function') indexFlushTimer.unref();
+}
+function startCollectionImageIndexFlush() {
+  if (indexFlushTimer) { clearTimeout(indexFlushTimer); indexFlushTimer = null; }
+  if (indexFlushPromise) return indexFlushPromise;
+  const run = (async () => {
+    while (indexDirtyGen > indexPersistedGen) {
+      // Bekleyen istekler stringify'dan önce araya girebilsin.
+      await new Promise(resolve => setImmediate(resolve));
+      const state = imageIndexState, gen = indexDirtyGen;
+      const buffer = Buffer.from(JSON.stringify(state.items, null, 2), 'utf8');
+      await atomicWriteBufferAsync(COLLECTION_IMAGES_INDEX, buffer);
+      collectionImageIndexStats.asyncWrites += 1;
+      indexPersistedGen = Math.max(indexPersistedGen, gen);
+      const signature = await collectionImageIndexSignatureAsync();
+      if (imageIndexState === state) { state.signature = signature; state.source = 'primary'; }
+    }
+  })();
+  indexFlushPromise = run.then(() => {
+    indexFlushFailures = 0;
+    indexFlushPromise = null;
+  }, error => {
+    indexFlushPromise = null;
+    indexFlushFailures += 1;
+    if (indexDirtyGen > indexPersistedGen) {
+      scheduleCollectionImageIndexFlush(Math.min(COLLECTION_IMAGE_INDEX_RETRY_MAX_MS, 1000 * (2 ** Math.min(6, indexFlushFailures - 1))));
+    }
+    throw error;
+  });
+  return indexFlushPromise;
+}
+/* Çağrı anına kadarki bütün indeks değişiklikleri diske dayanıklı yazılınca
+   çözülür. Başka bir yazma uçuştaysa onu bekler, ikinci yazıcı açmaz. */
+async function flushCollectionImageIndex() {
+  const target = indexDirtyGen;
+  while (indexPersistedGen < target) await startCollectionImageIndexFlush();
+}
+function flushCollectionImageIndexSyncBestEffort() {
+  if (!imageIndexState || indexFlushPromise || indexDirtyGen <= indexPersistedGen) return false;
+  try {
+    const gen = indexDirtyGen;
+    atomicWriteJson(COLLECTION_IMAGES_INDEX, imageIndexState.items);
+    collectionImageIndexStats.syncWrites += 1;
+    indexPersistedGen = Math.max(indexPersistedGen, gen);
+    return true;
+  } catch (error) {
+    console.error('[DATA_INTEGRITY] Kapanışta model görseli indeksi yazılamadı. / Collection image index could not be written on exit:', error && error.message || error);
+    return false;
+  }
+}
+process.once('exit', flushCollectionImageIndexSyncBestEffort);
+/* Tek değişiklik kapısı. mutate(draft) draft.items/draft.byId üzerinde çalışır.
+   defer=false (varsayılan): uçuşta yazma yoksa taslak SENKRON yazılır, başarı
+   sonrası belleğe alınır; yazma hata verirse bellek değişmez (eski davranış).
+   defer=true ya da uçuşta yazma varsa: bellek yerinde değişir, sınırlı
+   gecikmeyle kalıcılaşır; çağıran gerekiyorsa flushCollectionImageIndex bekler. */
+function mutateCollectionImageIndex(mutate, { defer = false } = {}) {
+  const state = cachedCollectionImageIndex();
+  if (defer || indexFlushPromise) {
+    mutate(state);
+    indexDirtyGen += 1;
+    scheduleCollectionImageIndexFlush();
+    return { durable: false };
+  }
+  const draft = { items: state.items.slice(), byId: new Map(state.byId) };
+  mutate(draft);
+  const gen = indexDirtyGen + 1;
+  atomicWriteJson(COLLECTION_IMAGES_INDEX, draft.items);
+  collectionImageIndexStats.syncWrites += 1;
+  imageIndexState = { items: draft.items, byId: draft.byId, signature: collectionImageIndexSignature(), source: 'primary' };
+  indexDirtyGen = gen; indexPersistedGen = gen;
+  if (indexFlushTimer) { clearTimeout(indexFlushTimer); indexFlushTimer = null; }
+  return { durable: true };
+}
+function addIndexItem(draft, item) { draft.items.push(item); draft.byId.set(item.id, item); }
+function removeIndexItem(draft, id) {
+  const position = draft.items.findIndex(item => item && item.id === id);
+  if (position >= 0) draft.items.splice(position, 1);
+  draft.byId.delete(id);
+}
 function writeCollectionImageIndex(items) {
-  collectionImageIndexCache = null;
-  try { atomicWriteJson(COLLECTION_IMAGES_INDEX, items); }
-  finally { collectionImageIndexCache = null; }
+  mutateCollectionImageIndex(draft => {
+    draft.items = items.slice();
+    draft.byId = new Map(draft.items.filter(item => item && item.id).map(item => [item.id, item]));
+  });
+}
+/* Önceki süreçten kalan yetim görsel dosyaları (dosya yazıldı, indeks
+   kalıcılaşmadan çöktü) temizlenir. Bilerek dar tutulur:
+   - yalnız ci_<ms>_<12 hex>.<uzantı> adlı depo dosyaları,
+   - yalnız bu süreç başlamadan ÖNCE değişmiş dosyalar (bu süreçte yazılan
+     her dosya yazıldığı anda belleğe girer; geri yükleme yeni mtime yazar),
+   - yalnız indeks temiz ve birincil dosyadan okunmuşken (.bak'a düşüş ya da
+     bozuk indeks gerçek görselleri yetim gösterebilir),
+   - yetim sayısı şüpheli derecede büyükse hiçbir şey silinmez. */
+async function reconcileCollectionImageOrphans({ startedBeforeMs = COLLECTION_IMAGE_PROCESS_STARTED_AT - 60000 } = {}) {
+  if (collectionImageIndexPending()) return { skipped: 'pending' };
+  const state = cachedCollectionImageIndex();
+  if (state.source !== 'primary') return { skipped: 'index-not-primary' };
+  const known = new Set(state.items.map(item => String(item && item.storedName || '')).filter(Boolean));
+  let names = [];
+  try { names = await fsp.readdir(COLLECTION_IMAGES_ROOT); } catch (error) { if (error && error.code === 'ENOENT') return { removed: 0 }; throw error; }
+  const candidates = [];
+  for (const name of names) {
+    if (!COLLECTION_IMAGE_STORED_NAME.test(name) || known.has(name)) continue;
+    try { const st = await fsp.stat(path.join(COLLECTION_IMAGES_ROOT, name)); if (st.isFile() && st.mtimeMs < startedBeforeMs) candidates.push(name); }
+    catch (_) {}
+  }
+  if (candidates.length > Math.max(200, state.items.length)) return { skipped: 'suspicious-orphan-count', orphans: candidates.length };
+  // Tarama sırasında araya giren bir yazma indeksi değiştirmiş olabilir.
+  if (collectionImageIndexPending() || cachedCollectionImageIndex() !== state) return { skipped: 'changed' };
+  let removed = 0;
+  for (const name of candidates) {
+    try { await fsp.unlink(path.join(COLLECTION_IMAGES_ROOT, name)); removed += 1; } catch (error) { if (error && error.code !== 'ENOENT') throw error; }
+  }
+  return { removed, orphans: candidates.length };
+}
+function scheduleOrphanSweepOnce() {
+  if (orphanSweepScheduled) return;
+  orphanSweepScheduled = true;
+  const timer = setTimeout(() => {
+    reconcileCollectionImageOrphans().then(result => {
+      if (result && result.removed) console.warn(`[DATA_INTEGRITY] ${result.removed} yetim model görseli dosyası temizlendi. / orphan collection image file(s) removed.`);
+    }).catch(error => console.error('[DATA_INTEGRITY] Yetim görsel taraması başarısız. / Orphan image sweep failed:', error && error.message || error));
+  }, 30000);
+  if (typeof timer.unref === 'function') timer.unref();
 }
 // SVG bilerek dışarıda bırakılır: içine gömülü <script> barındırabilir ve
 // tarayıcı doğrudan /api/collection-images/:id üzerinden image/svg+xml olarak
@@ -745,32 +928,45 @@ function imageExtension(mimeType) {
 function publicCollectionImage(item) {
   return { id: item.id, rowId: item.rowId, filename: item.filename, mimeType: item.mimeType, size: item.size, createdAt: item.createdAt, updatedAt: item.updatedAt, url: `/api/collection-images/${encodeURIComponent(item.id)}` };
 }
-function saveCollectionImage({ rowId, filename, mimeType, base64 }) {
+function saveCollectionImage(payload) {
+  const { data, item, storedPath } = collectionImagePayload(payload || {});
+  atomicWriteBuffer(storedPath, data);
+  // Önceki görsel burada silinmez: çoğaltılmış bir Koleksiyon satırı aynı referansı
+  // kullanıyor olabilir. Tarayıcı yeni referansı satıra yazdıktan sonra yalnız gerçekten
+  // kullanılmayan eski referansı DELETE endpoint'iyle temizler.
+  try { mutateCollectionImageIndex(draft => addIndexItem(draft, item)); }
+  catch (error) {
+    try { fs.unlinkSync(storedPath); } catch (_) {}
+    throw error;
+  }
+  return publicCollectionImage(item);
+}
+function collectionImagePayload({ rowId, filename, mimeType, base64, buffer }) {
   const rowKey = String(rowId == null ? '' : rowId).trim().slice(0, 160);
   if (!rowKey) throw new Error('Koleksiyon satır kimliği zorunlu.');
   if (!Object.prototype.hasOwnProperty.call(ALLOWED_COLLECTION_IMAGE_TYPES, String(mimeType || '').toLowerCase())) {
     throw new Error('Yalnız JPEG, PNG, WEBP veya GIF görsel dosyaları kabul edilir.');
   }
-  const data = Buffer.from(String(base64 || ''), 'base64');
+  const data = Buffer.isBuffer(buffer) ? buffer : Buffer.from(String(base64 || ''), 'base64');
   if (!data.length) throw new Error('Görsel içeriği boş.');
   if (data.length > RAW_COLLECTION_IMAGE_MAX_BYTES) throw new Error('Ham model görseli 50 MB boyut sınırını aşamaz.');
   ensureDir(COLLECTION_IMAGES_ROOT);
-  const index = readCollectionImageIndex();
   const id = `ci_${Date.now()}_${crypto.randomBytes(6).toString('hex')}`;
   const storedName = id + imageExtension(mimeType);
-  const storedPath = path.join(COLLECTION_IMAGES_ROOT, storedName);
-  atomicWriteBuffer(storedPath, data);
-  // Önceki görsel burada silinmez: çoğaltılmış bir Koleksiyon satırı aynı referansı
-  // kullanıyor olabilir. Tarayıcı yeni referansı satıra yazdıktan sonra yalnız gerçekten
-  // kullanılmayan eski referansı DELETE endpoint'iyle temizler.
   const now = new Date().toISOString();
   const item = { id, rowId: rowKey, filename: safeFilename(filename, `collection-${rowKey}${imageExtension(mimeType)}`), mimeType: String(mimeType), size: data.length, storedName, createdAt: now, updatedAt: now, storageMode: 'original' };
-  const next = [...index, item];
-  try { writeCollectionImageIndex(next); }
-  catch (error) {
-    try { fs.unlinkSync(storedPath); } catch (_) {}
-    throw error;
-  }
+  return { data, item, storedPath: path.join(COLLECTION_IMAGES_ROOT, storedName) };
+}
+/* Toplu yol: dosya asenkron ve dayanıklı yazılır, kayıt belleğe ANCAK
+   dosya diskteyken girer, indeks kalıcılaşması ertelenir. Çağıran, görsele
+   işaret eden bağlantıyı (imagemap) yazmadan önce flushCollectionImageIndex
+   beklemelidir. base64 yerine doğrudan buffer kabul eder (gidiş-dönüş
+   kodlama yok). */
+async function saveCollectionImageDeferred(payload) {
+  const { data, item, storedPath } = collectionImagePayload(payload || {});
+  await durableWriterFor(storedPath).createNew(storedPath, data);
+  mutateCollectionImageIndex(draft => addIndexItem(draft, item), { defer: true });
+  scheduleOrphanSweepOnce();
   return publicCollectionImage(item);
 }
 // Rota bağlı DEĞİL (bkz. server.js PUT /api/model-images/:id/optimize → 410):
@@ -833,12 +1029,22 @@ function getCollectionImage(id) {
 }
 function deleteCollectionImage(id) {
   const clean = String(id || '').replace(/[^A-Za-z0-9_-]/g, '');
-  const index = readCollectionImageIndex();
-  const item = index.find(x => x.id === clean);
+  const item = cachedCollectionImageIndex().byId.get(clean);
   if (!item) return false;
   const full = resolveStoredFile(COLLECTION_IMAGES_ROOT, item.storedName);
   try { fs.unlinkSync(full); } catch (err) { if (err.code !== 'ENOENT') throw err; }
-  writeCollectionImageIndex(index.filter(x => x.id !== clean));
+  mutateCollectionImageIndex(draft => removeIndexItem(draft, clean));
+  return true;
+}
+// Toplu yolun silme karşılığı (geri alma, eski dosyayı düşürme): indeks
+// kalıcılaşması ertelenir; dosya kaydı bellekten düştükten sonra silinir.
+async function deleteCollectionImageDeferred(id) {
+  const clean = String(id || '').replace(/[^A-Za-z0-9_-]/g, '');
+  const item = cachedCollectionImageIndex().byId.get(clean);
+  if (!item) return false;
+  const full = resolveStoredFile(COLLECTION_IMAGES_ROOT, item.storedName);
+  mutateCollectionImageIndex(draft => removeIndexItem(draft, clean), { defer: true });
+  try { await fsp.unlink(full); } catch (err) { if (err.code !== 'ENOENT') throw err; }
   return true;
 }
 /* v10.90 — GERÇEK DEPO SIFIRLAMASI.
@@ -864,6 +1070,9 @@ function listStoredCollectionImageFiles() {
     .map(entry => entry.name);
 }
 function deleteAllCollectionImages() {
+  // Uçuştaki asenkron indeks yazması bitmeden sıfırlama .bak'ı eski içerikle
+  // yeniden oluşturabilirdi; çağıran önce flushCollectionImageIndex bekler.
+  if (indexFlushPromise) throw Object.assign(new Error('Model görseli indeksi yazılıyor; birkaç saniye sonra yeniden deneyin. / The model image index is being written; try again in a few seconds.'), { code: 'MODEL_IMAGE_INDEX_BUSY', statusCode: 409 });
   const index = readCollectionImageIndex();
   const known = new Set();
   let deleted = 0;
@@ -894,6 +1103,7 @@ module.exports = {
   saveCollectionImage, replaceCollectionImage, collectionImageOptimizationStatus, completeCollectionImageOptimization,
   getModelImageSettings, saveModelImageSettings,
   getCollectionImage, deleteCollectionImage, deleteAllCollectionImages, readCollectionImageIndex, listStoredCollectionImageFiles, purgeExpiredModelFiles,
+  saveCollectionImageDeferred, deleteCollectionImageDeferred, flushCollectionImageIndex, reconcileCollectionImageOrphans, collectionImageIndexStats,
   atomicWriteBuffer, atomicWriteJson, atomicWriteBufferAsync, atomicWriteJsonAsync, resolveStoredFile,
   durableFileRecovery, startupWriteRecovery,
 };

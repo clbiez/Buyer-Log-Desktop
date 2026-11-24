@@ -111,7 +111,7 @@ async function syncAsasTechnicalImages(options = {}) {
       continue;
     }
     const oldRef = String(parse.plmImageRef(overrides.imagemap, { plm: candidate.plmId, ccode: '' }) || '').trim();
-    const saved = options.saveImage({ rowId: `asas:${candidate.key}`, filename: image.filename || `asas-${candidate.plmId}.jpg`, mimeType: image.mimeType, base64: image.base64 });
+    const saved = await options.saveImage({ rowId: `asas:${candidate.key}`, filename: image.filename || `asas-${candidate.plmId}.jpg`, mimeType: image.mimeType, base64: image.base64 });
     stored.push(saved.id);
     if (replaceExisting && oldRef && oldRef !== saved.id) replacedRefs.push(oldRef);
     links.push({ plmId: candidate.plmId, colourCode: '', imageRef: saved.id });
@@ -119,12 +119,18 @@ async function syncAsasTechnicalImages(options = {}) {
   }
 
   let patched = null;
-  try { if (links.length) patched = options.patchLinks(links); }
-  catch (error) { stored.forEach(ref => { try { options.deleteImage(ref); } catch (_) {} }); throw error; }
+  try {
+    // Ertelenmiş indeks, bağlantı yazılmadan önce tek kez kalıcılaşır.
+    if (links.length && typeof options.flushImages === 'function') await options.flushImages();
+    if (links.length) patched = await options.patchLinks(links);
+  }
+  catch (error) { for (const ref of stored) { try { await options.deleteImage(ref); } catch (_) {} } throw error; }
   if (patched && patched.overrides) options.onOverrides && options.onOverrides(patched.overrides);
   const activeMap = patched && patched.overrides && patched.overrides.imagemap || overrides.imagemap || {};
   const activeRefs = new Set(Object.values(activeMap).map(value => String(value || '').trim()).filter(Boolean));
-  replacedRefs.forEach(ref => { if (!activeRefs.has(ref)) { try { options.deleteImage(ref); } catch (_) {} } });
+  let removedOld = 0;
+  for (const ref of replacedRefs) { if (!activeRefs.has(ref)) { try { if (await options.deleteImage(ref)) removedOld += 1; } catch (_) {} } }
+  if (removedOld && typeof options.flushImages === 'function') { try { await options.flushImages(); } catch (_) {} }
   saveState(state);
   return { mode: replaceExisting?'all':'missing', candidates: candidates.length + analysis.conflicts.length, requested: pending.length + conflictFailures.length, saved: links.length, failed: pending.length + conflictFailures.length - links.length, failedItems, images: links, overrides: patched && patched.overrides || overrides };
 }
