@@ -1710,9 +1710,9 @@ function renderCorePageLoadingState(tableKey,message){
     ?(appLang==='en'?'Loading CP…':'CP yükleniyor…')
     :(appLang==='en'?'Loading Orders…':'Siparişler yükleniyor…'));
   if(window.BLUI&&typeof window.BLUI.renderState==='function'){
-    window.BLUI.renderState(empty,{kind:'loading',title});
+    window.BLUI.renderState(empty,{kind:'loading',title,size:'lg'});
   }else{
-    empty.innerHTML='<div class="uiState uiState--loading" role="status" aria-live="polite" aria-atomic="true" aria-busy="true"><span class="uiStateSpinner blOrb uiStateOrb" data-state="thinking" aria-hidden="true"></span><div class="uiStateBody"><b>'+escapeHtml(title)+'</b></div></div>';
+    empty.innerHTML='<div class="uiState uiState--loading" role="status" aria-live="polite" aria-atomic="true" aria-busy="true"><span class="uiStateSpinner blOrb uiStateOrb blOrb--lg" data-state="thinking" aria-hidden="true"></span><div class="uiStateBody"><b>'+escapeHtml(title)+'</b></div></div>';
     empty.setAttribute('aria-busy','true');
   }
   empty.style.display='flex';content.style.display='none';
