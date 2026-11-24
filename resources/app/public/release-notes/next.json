@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-24",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Kumaş özetinde olumsuz sürdürülebilirlik ibaresi gösterilmez",
-    "en": "Negative sustainability statement hidden from the fabric summary"
+    "tr": "LFL'de Fisher yöntemi ve kumaş özeti düzeltmesi",
+    "en": "Fisher method in LFL and fabric summary fix"
   },
   "summary": {
-    "tr": "\"Sürdürülebilir İçerik Yok\" gibi ibareler kumaş özetinde etiket olarak görünmez; kart detayında korunur.",
-    "en": "Statements such as \"No sustainable content\" no longer appear as a tag in the fabric summary; they are kept in the card details."
+    "tr": "LFL'de ağırlıklı ortalama ile karma etkisinden arındırılmış Fisher LFL arasında seçim yapılabilir; \"Sürdürülebilir İçerik Yok\" gibi ibareler kumaş özetinde etiket olarak görünmez.",
+    "en": "LFL can switch between weighted average and the mix-neutral Fisher LFL; statements such as \"No sustainable content\" no longer appear as a tag in the fabric summary."
   },
   "changes": [
     {
@@ -37,6 +37,35 @@
         "caption": {
           "tr": "Demo veride olumsuz sürdürülebilirlik ibaresi özete girmez, organik içerik etiketi kalır.",
           "en": "On demo data, the negative sustainability statement stays out of the summary while the organic content tag remains."
+        }
+      }
+    },
+    {
+      "id": "lfl-fisher-method",
+      "type": "feature",
+      "module": {
+        "tr": "LFL Analizi",
+        "en": "LFL Analysis"
+      },
+      "title": {
+        "tr": "LFL'de Ağırlıklı ortalama / Fisher LFL seçimi",
+        "en": "Weighted average / Fisher LFL choice in LFL"
+      },
+      "body": {
+        "tr": "FOB Değişimi kartından LFL hesaplama yöntemi seçilebilir. Ağırlıklı ortalama, her iki dönemde bulunan kırılımlarda her dönemin kendi adet ağırlıklı FOB'unu karşılaştırır; ürün karmasındaki değişim de sonuca yansır. Fisher LFL aynı kırılımlarda karma etkisini ayırır; güncel ve kıyas adet karmalı fiyat endekslerinin geometrik ortalamasıdır. Kart diğer yöntemin sonucunu da gösterir. Seçim Bağımsız Kıyaslar tablosuna ve Excel'e yansır, kullanıcı başına saklanır. Varsayılan yöntem ağırlıklı ortalamadır.",
+        "en": "The LFL calculation method can be chosen on the FOB Change card. Weighted average compares each period's quantity-weighted FOB on breakdowns present in both periods, so product-mix shifts affect the result. Fisher LFL removes the mix effect on the same breakdowns; it is the geometric mean of the current-mix and comparison-mix price indices. The card also shows the other method's result. The choice applies to Independent Comparisons and the Excel export and is saved per user. Weighted average stays the default."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lfl-fisher-method.png",
+        "alt": {
+          "tr": "Demo LFL Analizi: FOB Değişimi kartında Fisher LFL seçili, +%10,0 ve ağırlıklı ortalama -%18,7",
+          "en": "Demo LFL Analysis: Fisher LFL selected on the FOB Change card, +10.0% and weighted average -18.7%"
+        },
+        "caption": {
+          "tr": "Demo veride her klasmanda fiyat %10 artıyor; karma ucuz ürüne kaydığı için ağırlıklı ortalama düşüş gösterirken Fisher LFL +%10 gösterir.",
+          "en": "On demo data every classification's price rises 10%; because the mix shifts to cheaper items, the weighted average shows a decline while Fisher LFL shows +10%."
         }
       }
     }
