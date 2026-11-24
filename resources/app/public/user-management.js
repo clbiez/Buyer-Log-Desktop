@@ -320,6 +320,23 @@
 
   /* ===================== 5 · Çizim ===================== */
 
+  /* MAG / MMYG seçimleri hiyerarşi bağlamını gösterir: açılır listelerde seçenek
+     metni "KOD — MMYG adı · Müdürlük" olur, çiplerde aynı bilgi ipucudur. Kaydedilen
+     değer yine ham koddur. */
+  function decorateMerch(rootEl) {
+    const H = window.BLMerchHierarchy;
+    if (!H || !rootEl) return;
+    rootEl.querySelectorAll('select[data-um-filter="mag"],select[data-um-filter="mmyg"]').forEach(select => H.decorateSelect(select, select.dataset.umFilter));
+    const fields = [...rootEl.querySelectorAll('fieldset[data-um-chipfield="mag"],fieldset[data-um-chipfield="mmyg"]')];
+    if (rootEl.matches && rootEl.matches('fieldset[data-um-chipfield="mag"],fieldset[data-um-chipfield="mmyg"]')) fields.push(rootEl);
+    if (!fields.length) return;
+    fields.forEach(fieldEl => { const picker = fieldEl.querySelector('[data-um-chippick]'); if (picker) H.decorateSelect(picker, fieldEl.dataset.umChipfield); });
+    H.ensure().then(() => fields.forEach(fieldEl => fieldEl.querySelectorAll('[data-um-chip]').forEach(chip => {
+      const text = chip.querySelector('.umChipText');
+      if (text) text.title = H.optionText(fieldEl.dataset.umChipfield, chip.dataset.umChip);
+    })));
+  }
+
   function render() {
     if (!shell) return;
     shell.querySelector('[data-um-nav]').innerHTML = navHtml();
@@ -331,6 +348,7 @@
       users: usersSection, roles: rolesSection, templates: templatesSection, organization: organizationSection,
       copy: copySection, history: historySection, compare: compareSection, bundles: bundlesSection, transfer: transferSection,
     })[store.section]() + '</fieldset>';
+    decorateMerch(main);
     restoreFocus();
   }
   /* v20261009 — "SALT OKUNUR / ÇEVRİMDIŞI" ARTIK NEDENİNİ SÖYLER.
@@ -677,6 +695,7 @@
     picker.innerHTML = `<option value="">${esc(body
       ? T('Veri tabanından seç…', 'Pick from the database…')
       : T('Veri tabanında seçenek yok — “ASAS’tan Tazele” ile okuyun', 'No database option — read them with “Refresh from ASAS”'))}</option>` + body;
+    decorateMerch(field);
   }
   function chipAdd(field, value) {
     const text = clean(value);
@@ -687,6 +706,7 @@
     holder.querySelector('.umChipEmpty')?.remove();
     const name = field.dataset.umChipfield;
     holder.insertAdjacentHTML('beforeend', chipRowHtml(name, text));
+    decorateMerch(field);
     return true;
   }
 
@@ -1727,6 +1747,7 @@
       </form>
     </div>`;
     document.body.appendChild(dialog);
+    decorateMerch(dialog);
     dialog.addEventListener('mousedown', event => { if (event.target === dialog) closeDialog(); });
     dialog.addEventListener('click', event => {
       if (event.target.closest('[data-act="dialogClose"]')) { closeDialog(); return; }

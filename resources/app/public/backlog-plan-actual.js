@@ -450,7 +450,13 @@ function breakdownSection(rows){
     ${list.length?`<div class="bpaBreakdown"><div class="bpaBreakdownHead">${esc(labels[key]||key)}</div><div class="bpaBreakdownHead">${esc(L('Değişen','Changed'))}</div><div class="bpaBreakdownHead bpaOptional">${esc(L('Geç yüklenen adet','Late-loaded qty'))}</div><div class="bpaBreakdownHead bpaOptional">${esc(L('Revizyon hareketi','Revision activity'))}</div>${cells}</div>`:`<div class="bpaEmpty">${esc(L('Kırılım için veri yok.','No data for breakdown.'))}</div>`}
   </div>`;
 }
-function render(){
+function render(){renderBody();decorateMerchSelects();}
+// MAG/MMYG açılır listeleri: seçenek metnine MMYG adı ve Marka Müdürlüğü eklenir; değer ham kod kalır.
+function decorateMerchSelects(){
+  const host=$('backlogPlanActual');if(!host||!window.BLMerchHierarchy)return;
+  host.querySelectorAll('select[data-bpa-filter="mag"],select[data-bpa-filter="mmyg"]').forEach(select=>window.BLMerchHierarchy.decorateSelect(select,select.dataset.bpaFilter));
+}
+function renderBody(){
   const host=$('backlogPlanActual');if(!host||!state.open)return;
   bindHost(host);
   tips=new Map();openers=new Map();hideTip();

@@ -199,7 +199,7 @@
         <input type="search" class="psaMultiSearch" data-ps-filter-search="${dim}" value="${esc(query)}" placeholder="${esc(t('filterSearch'))}" autocomplete="off">
         <div class="cfpHeader"><button type="button" class="cfpAll" data-ps-filter-bulk="all" data-ps-filter-dim="${dim}">${esc(t('selectAll'))}</button><button type="button" class="cfpAll" data-ps-filter-bulk="clear" data-ps-filter-dim="${dim}">${esc(t('clear'))}</button></div>
         <div class="psaMultiList" role="listbox" aria-multiselectable="true">
-          ${ordered.map(value=>{const key=E.keyOf(value),label=valueLabel(dim,value),search=label===value?key:`${key} ${E.keyOf(label)}`,hidden=queryKey&&!search.includes(queryKey);return `<label class="psaMultiOption" data-ps-filter-option data-search="${esc(search)}"${hidden?' hidden':''}><input type="checkbox" data-ps-filter-value="${dim}" value="${esc(value)}"${selectedKeys.has(key)?' checked':''}><span>${esc(label)}</span></label>`;}).join('')}
+          ${ordered.map(value=>{const key=E.keyOf(value),label=valueLabel(dim,value),merchSearch=globalThis.BLMerchHierarchy?.fieldOf?.(dim)?` ${E.keyOf(globalThis.BLMerchHierarchy.searchText(globalThis.BLMerchHierarchy.fieldOf(dim),value))}`:'',search=(label===value?key:`${key} ${E.keyOf(label)}`)+merchSearch,hidden=queryKey&&!search.includes(queryKey);return `<label class="psaMultiOption" data-ps-filter-option data-search="${esc(search)}"${hidden?' hidden':''}><input type="checkbox" data-ps-filter-value="${dim}" value="${esc(value)}"${selectedKeys.has(key)?' checked':''}><span>${esc(label)}</span></label>`;}).join('')}
           <p class="psaMultiEmpty" data-ps-filter-empty${shown.length?' hidden':''}>${esc(t('noFilterMatch'))}</p>
         </div>
       </div>
@@ -262,6 +262,8 @@
     else body=`${tabs()}<div class="psaPanel" id="psaPanel" role="tabpanel" aria-labelledby="psaTab-${state.tab}" tabindex="0"><p class="psaHint">${esc(t('hint_'+state.tab))}</p><div data-ps-tools>${tools()}</div><div data-ps-list>${content()}</div></div>`;
     root.innerHTML=`<div class="psa">${head}${loading||error?'':controls()}${body}</div>`;
     root.querySelectorAll?.('[data-ps-filter-menu]')?.forEach(menu=>{
+      // MAG/MMYG: kodun altında hiyerarşi bağlamı (arama metni şablonda zaten genişletildi).
+      window.BLMerchHierarchy?.decorate?.(menu.querySelector('.psaMultiList'),menu.dataset.psFilterMenu,{item:'.psaMultiOption',text:'span',searchAttr:'blMerchSearch'});
       const oldTop=scrollByDim.get(menu.dataset.psFilterMenu);
       if(oldTop!=null){const list=menu.querySelector('.psaMultiList');if(list)list.scrollTop=oldTop;}
       if(menu.dataset.psFilterMenu===focusedFilter)menu.querySelector('[data-ps-filter-search]')?.focus({preventScroll:true});

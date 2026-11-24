@@ -163,6 +163,17 @@ const IAS_MILESTONE_FIELDS = Object.freeze([
   { header: 'Evrak Teslim Tarih', names: ['Evrak Teslim Tarih', 'Evrak Teslim Tarihi', 'Gümrük Müşavirine Evrak Teslim Tarihi'] },
 ]);
 
+/* MMYG adı (Merch Marka Yaş Grup) isteğe bağlı ASAS sütunudur. Katalogda DEĞİLDİR:
+   otomatik eşlemenin içerme adımı "Merch Marka Yaş Grup Kod" kod sütununu ad diye
+   alabilirdi. model-refresh yalnız BİREBİR adla ve yalnız MMYG kodunun bulunduğu
+   tabloda arar; aynı boyut tablosundaki ad sütunu koda bağımlı olduğu için sorgu
+   satır sayısını değiştirmez. Değer merch hiyerarşisini (filtre bağlamı) besler. */
+const MMYG_NAME_FIELD = Object.freeze({
+  header: 'Merch Marka Yaş Grup', // i18n-ignore — ASAS başlığı
+  codeHeader: 'Merch Marka Yaş Grup Kod', // i18n-ignore — ASAS başlığı
+  names: Object.freeze(['Merch Marka Yaş Grup', 'Merch Marka Yaş Grup Tanım', 'Merch Marka Yaş Grup Tanımı', 'Merch Marka Yaş Grup Adı']), // i18n-ignore
+});
+
 function fieldsForRole(role) {
   if (role === 'antrepo') return FIELD_CATALOGUE.antrepo.slice();
   if (role === 'asas') return FIELD_CATALOGUE.asas.concat(FIELD_CATALOGUE.lfl);
@@ -531,7 +542,7 @@ function mappingHealth(role, mapping) {
 const FABRIC_HEADERS = Object.freeze(['Ana Kumaş Mı', 'Kumaş Kategorisi', 'Kumaşçı Ülkesi', 'Kumaşçı', 'Kumaş Tipi', 'İplik No', 'Gramaj', 'Karışım']); // i18n-ignore
 
 module.exports = {
-  FIELD_CATALOGUE, DERIVED_FIELDS, MAPPING_STATUSES, FABRIC_HEADERS, IAS_MILESTONE_FIELDS,
+  FIELD_CATALOGUE, DERIVED_FIELDS, MAPPING_STATUSES, FABRIC_HEADERS, IAS_MILESTONE_FIELDS, MMYG_NAME_FIELD,
   fieldKey, fieldsForRole, intakeFieldsForMapping, autoMapColumns, autoMapSchema,
   normalizeMappingEntry, mappingHasInvalidEntries, missingRequired, suspectIdentityMappings,
   productDescriptionNeedsRepair, repairAsasProductDescriptionMapping,

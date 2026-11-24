@@ -16,6 +16,7 @@
     "test:collection": "node tests/run-tests.js collection",
     "test:image-return": "node scripts/model-image-return-acceptance.js",
     "i18n:check": "node scripts/i18n-coverage.js",
+    "merch:map": "node scripts/merch-code-map.js",
     "i18n:baseline": "node scripts/i18n-coverage.js --shrink-baseline",
     "github:sync": "node scripts/github-source-sync.js",
     "github:sync:patch": "node scripts/github-source-sync.js --bump patch",

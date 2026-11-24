@@ -1486,7 +1486,11 @@
     } catch (_) {
       note = T('Değerler okunamadı; elle yazabilirsiniz.', 'Values could not be read; you can type them.');
     }
-    const entries = values.map(value => ({ value, label: value }));
+    /* MAG/MMYG koşullarında seçenek metni MMYG adı ve Marka Müdürlüğünü de taşır
+       (aranabilir); koşula yazılan değer yine ham koddur. */
+    const merchField = window.BLMerchHierarchy?.fieldOf?.(condition.field) || '';
+    if (merchField) { try { await window.BLMerchHierarchy.ensure(); } catch (_) { /* bağlamsız devam */ } }
+    const entries = values.map(value => ({ value, label: merchField ? window.BLMerchHierarchy.optionText(merchField, value) : value }));
     openPicker(anchor, entries, value => {
       if (!condition.values.includes(value)) condition.values.push(value);
       message = note; messageTone = note ? 'warn' : 'info';

@@ -1671,6 +1671,15 @@ html[data-ui-system="manifest"] .cfpItem {font-size:var(--ui-font-xs) !important
 }
 html[data-ui-system="manifest"] .cfpItem:hover {background:var(--ui-surface-strong) !important
 }
+/* Merch bağlamı (BLMerchHierarchy): kod belirgin, MMYG adı ve Marka Müdürlüğü ikincil metin. */
+html[data-ui-system="manifest"] .blMerchCode {font-family:var(--ui-font-mono);font-weight:600
+}
+html[data-ui-system="manifest"] .blMerchCtx {font-weight:400;font-size:var(--ui-font-2xs);line-height:1.3;color:var(--ui-text-muted)
+}
+html[data-ui-system="manifest"] .blMerchCtxSub {opacity:.85
+}
+html[data-ui-system="manifest"] .blMerchCtxMissing,html[data-ui-system="manifest"] .blMerchCtxStale {font-style:italic
+}
 html[data-ui-system="manifest"] .cfpDrawerHead {font-size:var(--ui-font-xs) !important;font-weight:600 !important;color:var(--ui-text-secondary) !important
 }
 html[data-ui-system="manifest"] .cfpDrawerHead:hover {color:var(--ui-text) !important
