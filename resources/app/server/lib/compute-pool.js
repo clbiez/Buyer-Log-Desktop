@@ -22,6 +22,7 @@ const messages={
 };
 function failure(code){const [tr,en,statusCode]=messages[code];return Object.assign(Error(`${tr} / ${en}`),{code,statusCode,errorEn:en});}
 const bytes=value=>Number.isSafeInteger(value)&&value>=0;
+const holdsSource=(slot,job)=>Boolean(job.cachesSource)&&slot.cached.get(job.ownerKey)===job.generation;
 function createComputePool(options={}){
   const constrained=typeof process.constrainedMemory==='function'?process.constrainedMemory():0;
   const machineMemory=Math.min(os.totalmem(),constrained||Infinity);
@@ -82,11 +83,16 @@ function createComputePool(options={}){
     // Havuz value'yu saklamaz. Tüketici, yanıt/disk kaydı bitince lease'i
     // bırakır; aynı release'in iki kez gelmesi sayacı negatife düşürmez.
     const release=()=>{if(released)return;released=true;leasedOutputBytes-=output;pump();};
-    slot.worker.unref?.();peak();job.resolve({value:message.value,metrics:{...metrics,...timing(job)},release});pump();
+    slot.worker.unref?.();peak();job.resolve({value:message.value,metrics:{...metrics,...timing(job)},release});
+    // Yeni kaynak nesli bu iş sürerken yayımlandı: eski kopya işçide kalmaz.
+    if(slot.retireWhenIdle){void retire(slot);return;}
+    pump();
   }
   function start(job,slot){
     job.startedAt=performance.now();
     removeQueued(job);job.slot=slot;slot.state='active';slot.job=job;slot.ownerKey=job.ownerKey;slot.generation=job.generation;slot.estimatedBytes=job.estimatedBytes;
+    // İşçi içi kaynak önbelleği sahip+nesil başına bir kopya tutar; slot son işin ownerKey'inden bağımsız izlenir.
+    if(job.cachesSource)slot.cached.set(job.ownerKey,job.generation);
     if(!slot.worker){
       let setupError;
       try{
@@ -122,13 +128,22 @@ function createComputePool(options={}){
           if(generations.get(job.ownerKey)!==job.generation){removeQueued(job);rejectJob(job,failure('COMPUTE_STALE_GENERATION'));launched=true;break;}
           if(job.serializationKey&&[...slots].some(slot=>slot.state!=='idle'&&slot.job?.serializationKey===job.serializationKey))continue;
           const fit=extra=>reserved()-job.inputBytes+job.estimatedBytes+extra<=budget;
-          // Aynı sahibin kaynağını önbellekte tutan boş işçi tercih edilir: ikinci işçi kopyayı yeniden çözmez.
-          let slot=[...slots].find(s=>s.state==='idle'&&s.ownerKey===job.ownerKey&&fit(0))||[...slots].find(s=>s.state==='idle'&&fit(0));
-          if(!slot&&slots.size<maxWorkers&&fit(workerBase)){slot={state:'idle',worker:null,residentBytes:0,estimatedBytes:0,job:null};slots.add(slot);}
+          /* Kaynağı çözülmüş tutan işçi (önbellekteki kopya) son işin ownerKey'iyle değil, cached
+             kaydıyla bulunur. O işçi canlıyken kaynak işi başka işçide ikinci bir kopya ÇÖZMEZ:
+             meşgulse (ör. local-db-snapshot) bekler. Electron'da ana iş parçacığı ve işçiler tek
+             işaretçi kafesini paylaşır; iki kopya + ana heap kafesi taşırıp süreci düşürür (8.0.14). */
+          const holder=job.cachesSource?[...slots].find(s=>s.state!=='retiring'&&!s.retireWhenIdle&&holdsSource(s,job)):null;
+          if(holder&&holder.state!=='idle')continue;
+          const idleFit=s=>s.state==='idle'&&!s.retireWhenIdle&&fit(0);
+          // Kaynaksız iş, kaynak tutan işçiyi meşgul etmemek için önce kopya tutmayan boş işçiyi seçer.
+          let slot=holder?(fit(0)?holder:null)
+            :[...slots].find(s=>idleFit(s)&&s.ownerKey===job.ownerKey)||[...slots].find(s=>idleFit(s)&&!s.cached.size)||[...slots].find(idleFit);
+          if(!slot&&!holder&&slots.size<maxWorkers&&fit(workerBase)){slot={state:'idle',worker:null,residentBytes:0,estimatedBytes:0,job:null,cached:new Map()};slots.add(slot);}
           if(slot){start(job,slot);launched=true;break;}
           // Yalnız gerçekten yer açacak idle cache emekli edilir. Sonuç lease'i
           // yüzünden sığmayan işi beklerken gereksiz worker yeniden kurulmaz.
-          const idle=[...slots].filter(s=>s.state==='idle');
+          // İşin kendi kaynağını tutan işçi en son emekli edilir.
+          const idle=[...slots].filter(s=>s.state==='idle').sort((a,b)=>Number(holdsSource(a,job))-Number(holdsSource(b,job)));
           const reclaimable=idle.reduce((sum,s)=>sum+s.residentBytes+workerBase,0);
           const victim=reserved()-reclaimable-job.inputBytes+job.estimatedBytes+workerBase<=budget
             ?idle.find(s=>s.residentBytes+workerBase>0):null;
@@ -141,7 +156,14 @@ function createComputePool(options={}){
   function setGeneration(ownerKey,generation){
     ownerKey=String(ownerKey);generation=String(generation);generations.set(ownerKey,generation);
     for(const job of pending.slice())if(job.ownerKey===ownerKey&&job.generation!==generation){removeQueued(job);rejectJob(job,failure('COMPUTE_STALE_GENERATION'));}
-    for(const slot of slots)if(slot.ownerKey===ownerKey&&slot.generation!==generation)void retire(slot,slot.job?failure('COMPUTE_STALE_GENERATION'):null);
+    for(const slot of slots){
+      if(slot.ownerKey===ownerKey&&slot.generation!==generation){void retire(slot,slot.job?failure('COMPUTE_STALE_GENERATION'):null);continue;}
+      // Son işi başka sahibe ait olsa da eski nesil kaynak kopyasını tutan işçi emekli edilir;
+      // ilgisiz bir iş sürüyorsa önce o iş tamamlanır (kesilmez).
+      const cached=slot.cached.get(ownerKey);
+      if(cached===undefined||cached===generation||slot.state==='retiring')continue;
+      if(slot.state==='idle')void retire(slot);else slot.retireWhenIdle=true;
+    }
     pump();
   }
   function queueCanProgress(estimatedBytes,inputBytes){
@@ -167,6 +189,7 @@ function createComputePool(options={}){
       ||(jobOptions.signal!=null&&(typeof jobOptions.signal.aborted!=='boolean'||typeof jobOptions.signal.addEventListener!=='function'||typeof jobOptions.signal.removeEventListener!=='function'))
       ||(jobOptions.transferList!==undefined&&!Array.isArray(jobOptions.transferList)))code='COMPUTE_JOB_INVALID';
     else if(jobOptions.serializationKey!=null&&(typeof jobOptions.serializationKey!=='string'||jobOptions.serializationKey.length>200))code='COMPUTE_JOB_INVALID';
+    else if(jobOptions.cachesSource!=null&&typeof jobOptions.cachesSource!=='boolean')code='COMPUTE_JOB_INVALID';
     else if(estimated+workerBase>budget)code='COMPUTE_JOB_TOO_LARGE';
     else if(jobOptions.signal?.aborted)code='COMPUTE_ABORTED';
     else if(generations.has(ownerKey)&&generations.get(ownerKey)!==generation)code='COMPUTE_STALE_GENERATION';
@@ -175,7 +198,7 @@ function createComputePool(options={}){
     if(!generations.has(ownerKey))generations.set(ownerKey,generation);
     return new Promise((resolve,reject)=>{
       const job={id:nextId++,queuedAt:performance.now(),task,payload,resolve,reject,ownerKey,generation,estimatedBytes:estimated,inputBytes:input,priority:priority==='interactive'?0:1,
-        signal:jobOptions.signal,transferList:jobOptions.transferList||[],serializationKey:jobOptions.serializationKey||'',timeoutMs,settled:false};
+        signal:jobOptions.signal,transferList:jobOptions.transferList||[],serializationKey:jobOptions.serializationKey||'',cachesSource:jobOptions.cachesSource===true,timeoutMs,settled:false};
       job.onAbort=()=>{if(job.settled)return;if(job.slot){rejectJob(job,failure('COMPUTE_ABORTED'));void retire(job.slot);}else{removeQueued(job);rejectJob(job,failure('COMPUTE_ABORTED'));pump();}};
       // Admission wait and execution share one finite deadline. Waiting for a
       // held output lease cannot leave queued input alive indefinitely.

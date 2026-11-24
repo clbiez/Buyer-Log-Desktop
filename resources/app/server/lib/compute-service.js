@@ -208,8 +208,9 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
         try{
           // Bir sahibin kaynak işleri sırayla koşar (önceki büyük tahminin fiili davranışı): eşzamanlı
           // ikinci iş başka işçide kaynağın ikinci kopyasını çözüp CPU ve bellek için yarışmaz.
+          // cachesSource: işçi bu kaynağı önbelleğine çözer; havuz kopyayı tutan işçiyi izler ve ikinci kopya çözdürmez.
           lease=await pool.run(task,{ownerId:owner,source:record.descriptor,paramsBytes},{ownerKey:poolOwner(owner),generation:version,priority:'interactive',
-            serializationKey:poolOwner(owner),...options,estimatedBytes:estimate,inputBytes,transferList:[paramsBytes]});
+            serializationKey:poolOwner(owner),...options,cachesSource:!SOURCE_INDEPENDENT_TASKS.has(task),estimatedBytes:estimate,inputBytes,transferList:[paramsBytes]});
         }catch(error){
           // Tahmini aşan ya da işçi heap'ini tüketen görev: bu sürümde kapasite yolunda kalır (sonuç aynı motorla).
           const overflow=['COMPUTE_ESTIMATE_EXCEEDED','COMPUTE_SOURCE_TOO_LARGE'].includes(error?.code)||(error?.code==='COMPUTE_JOB_TOO_LARGE'&&error.workerOutOfMemory===true);
@@ -313,7 +314,7 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
       const paramsSerializeMs=performance.now()-started,inputBytes=paramsBytes.byteLength+1024;
       pool.setGeneration(ownerKey,generation);
       const promise=exceedsWorkerSourceCache(task,descriptor)?Promise.reject(Object.assign(Error('Worker source cache capacity'),{code:'COMPUTE_JOB_TOO_LARGE'})):pool.run(task,{ownerId:descriptor.ownerId,source:descriptor,paramsBytes},
-        {ownerKey,generation,priority:'interactive',estimatedBytes:96*MiB+descriptorJobBytes(task,descriptor.bytes)+inputBytes*3,inputBytes,transferList:[paramsBytes]});
+        {ownerKey,generation,priority:'interactive',cachesSource:true,estimatedBytes:96*MiB+descriptorJobBytes(task,descriptor.bytes)+inputBytes*3,inputBytes,transferList:[paramsBytes]});
       // Attach a rejection handler during admission without holding the lane
       // until execution finishes.
       promise.catch(()=>{});return {promise,paramsSerializeMs,inputBytes};

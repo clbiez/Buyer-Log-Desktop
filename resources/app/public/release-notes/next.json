@@ -209,6 +209,29 @@
       }
     },
     {
+      "id": "post-refresh-worker-oom",
+      "type": "fix",
+      "module": {
+        "tr": "Model yenileme, Planlanan & Gerçekleşen",
+        "en": "Model refresh, Planned & Actual"
+      },
+      "title": {
+        "tr": "Model yenilemesinden sonra sunucunun bellek yetersizliğiyle kapanması önlendi",
+        "en": "Server no longer shuts down on low memory after a model refresh"
+      },
+      "body": {
+        "tr": "Büyük veri kümelerinde model yenilemesinden kısa süre sonra arka plan hesaplaması aynı kaynağın ikinci bir kopyasını açabiliyor ve Buyer Log sunucusu bellek yetersizliğiyle kapanabiliyordu. Hesaplama artık kaynağı zaten tutan işçide sırasını bekler; yenileme yayımlanınca eski veri kopyasını tutan işçi kapatılır. Veriler, Planlanan & Gerçekleşen işaretleri ve ekranlar değişmez.",
+        "en": "With large data sets, background computation shortly after a model refresh could open a second copy of the same source and the Buyer Log server could shut down because it ran out of memory. Computation now waits for the worker that already holds the source, and a worker holding the previous data copy is closed once the refresh is published. Data, Planned & Actual markers and screens are unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Sunucu arka plan bellek yönetimi düzeltmesi; ekranda değişen bir şey yok.",
+          "en": "Server background memory management fix; nothing changes on screen."
+        }
+      }
+    },
+    {
       "id": "merch-filter-context",
       "type": "feature",
       "module": {

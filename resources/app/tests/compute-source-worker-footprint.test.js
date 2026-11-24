@@ -123,6 +123,16 @@ test('source jobs of one owner are serialized so a second worker does not decode
   assert.deepEqual(seen,['source:a','source:a','source:b']);
 });
 
+test('source-loading jobs mark the worker source copy; source-independent jobs do not',async t=>{
+  const seen=[];
+  const pool={setGeneration(){},stats:()=>({maxWorkers:2}),close:async()=>{},
+    run:async(task,payload,options)=>{seen.push([task,options.cachesSource]);return {value:{loadedAt:'X'},metrics:{threadId:1},release(){}};}};
+  const service=createComputeService({pool,root});t.after(()=>service.close());
+  const descriptor=await service.coldSource({ownerId:'a',generation:'disk-1',uncompressedBytes:MiB});
+  for(const task of ['plan-actual-capture','projections','source-info','projection-envelope'])(await service.run(task,descriptor,task==='projections'?params():{})).release();
+  assert.deepEqual(seen,[['plan-actual-capture',true],['projections',true],['source-info',true],['projection-envelope',false]]);
+});
+
 for(const [label,overflow] of [['out-of-memory',{code:'COMPUTE_JOB_TOO_LARGE',workerOutOfMemory:true}],['memory estimate overflow',{code:'COMPUTE_ESTIMATE_EXCEEDED'}]])
 test(`after a worker ${label} that task stays on the capacity path for the same source generation`,async t=>{
   const snapshots=require('../server/lib/model-snapshot');
