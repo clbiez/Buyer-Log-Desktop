@@ -126,6 +126,11 @@ function createPlmImageIngest(deps = {}) {
   const deleteImage = typeof deps.deleteImage === 'function' ? deps.deleteImage : () => false;
   const patchLinks = typeof deps.patchLinks === 'function' ? deps.patchLinks : null;
   const readImageBytes = typeof deps.readImageBytes === 'function' ? deps.readImageBytes : null;
+  /* Toplu yazma bariyeri. saveImage/deleteImage ertelenmiş (indeks bellekte)
+     olabilir; flushImages, imagemap bağlantısı yazılmadan ÖNCE indeksi bir
+     kez diske dayanıklı yazar. Böylece kalıcı bir bağlantı hiçbir zaman
+     kalıcı indekste olmayan bir görsele işaret etmez. */
+  const flushImages = typeof deps.flushImages === 'function' ? deps.flushImages : null;
   const ownership = deps.ownership || ownershipStore;
   const owner = clean(deps.owner, 20) || ownership.OWNER_PLM;
 
@@ -185,7 +190,7 @@ function createPlmImageIngest(deps = {}) {
      indirilip DOĞRULANIP depoya yazılana kadar kayıtta durur. Araya kırık
      bir ara durum girmez. Eski dosya yalnız kayıt güncellendikten ve başka
      hiçbir kimlik onu kullanmadığı doğrulandıktan sonra silinir. */
-  function commit(entries, options = {}) {
+  async function commit(entries, options = {}) {
     if (!saveImage || !patchLinks) throw new Error('Kanonik görsel deposu bağlanmadı (saveImage/patchLinks).');
     const store = options.store || ownership.loadOwnership();
     const overwriteManual = options.overwriteManual === true;
@@ -200,8 +205,12 @@ function createPlmImageIngest(deps = {}) {
     // başına kopyalanmaz. Silme yolları zaten "başka anahtar bu referansı
     // kullanıyor mu" kontrolü yapıyor.
     const storedByHash = new Map();
+    let sliceStartedAt = Date.now();
 
     for (const entry of Array.isArray(entries) ? entries : []) {
+      // Ertelenmiş yazma her görselde zaten olay döngüsüne döner; aynı/paylaşılan
+      // baytlı uzun seriler için de süre bütçesi dolunca dön.
+      if (Date.now() - sliceStartedAt >= COMMIT_SLICE_MS) { await yieldToEventLoop(); sliceStartedAt = Date.now(); }
       const item = normalizeRequest(entry);
       const currentRef = clean(entry.currentRef, 120) || currentRefFor(imagemap, item);
       try {
@@ -237,12 +246,15 @@ function createPlmImageIngest(deps = {}) {
           continue;
         }
 
-        const stored = saveImage({
+        const stored = await saveImage({
           rowId: `plm:${item.key}`,
           filename: clean(entry.filename, 160) || defaultFilename(item, mimeType),
           mimeType,
-          base64: buffer.toString('base64'),
+          // Depo baytları doğrudan alır; base64 yalnız eski arayüz okursa üretilir.
+          buffer,
+          get base64() { return buffer.toString('base64'); },
         });
+        sliceStartedAt = Date.now();
         created.push(stored.id);
         storedByHash.set(hash, { id: stored.id, url: stored.url, mimeType: stored.mimeType, size: stored.size, updatedAt: stored.updatedAt });
         links.push({ plmId: item.plmId, colourCode: item.colourCode, colour: item.colour, imageRef: stored.id });
@@ -255,11 +267,14 @@ function createPlmImageIngest(deps = {}) {
 
     let patched = { overrides: { imagemap }, updated: 0 };
     if (links.length) {
-      try { patched = patchLinks(links); }
+      try {
+        if (flushImages && created.length) await flushImages();
+        patched = await patchLinks(links);
+      }
       catch (error) {
         // Kayıt yazılamadıysa bu turda OLUŞTURULAN dosyalar geri alınır:
         // aksi hâlde hiçbir kimliğin işaret etmediği yetim dosyalar kalırdı.
-        for (const id of created) { try { deleteImage(id); } catch (_) {} }
+        for (const id of created) { try { await deleteImage(id); } catch (_) {} }
         throw error;
       }
     }
@@ -284,8 +299,11 @@ function createPlmImageIngest(deps = {}) {
         if (!outcome.currentRef || outcome.currentRef === outcome.imageRef) continue;
         if (outcome.status !== COMMIT_WRITTEN && outcome.status !== COMMIT_SHARED) continue;
         if (activeRefs.has(outcome.currentRef)) continue;
-        try { if (deleteImage(outcome.currentRef)) removedFiles += 1; } catch (_) {}
+        try { if (await deleteImage(outcome.currentRef)) removedFiles += 1; } catch (_) {}
       }
+      // Düşürülen eski kayıtlar da tek yazmayla kalıcılaşır. Hata işi
+      // düşürmez: bellek doğru, güvenlik yazması yeniden dener.
+      if (flushImages && removedFiles) { try { await flushImages(); } catch (_) {} }
     }
 
     return {
@@ -301,6 +319,9 @@ function createPlmImageIngest(deps = {}) {
 
   return { decideBeforeFetch, decideBeforeWrite, commit, canonicalKeyFor, currentRefFor, normalizeRequest, hasStoredFile };
 }
+
+const COMMIT_SLICE_MS = 25;
+function yieldToEventLoop() { return new Promise(resolve => setImmediate(resolve)); }
 
 function defaultFilename(item, mimeType) {
   const extension = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : mimeType === 'image/gif' ? 'gif' : 'jpg';

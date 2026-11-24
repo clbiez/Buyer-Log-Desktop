@@ -467,7 +467,7 @@ async function runPackageImport(input = {}) {
     }
     // Bellek tavanı: biriken baytlar eşiği aşarsa ara yazma yapılır.
     if (counts.bytesDownloaded && ready.length >= (Number(input.commitBatchSize) || 200)) {
-      const flushed = commitBatch(ingest, ready.splice(0, ready.length), input, counts, fail, checkpoint);
+      const flushed = await commitBatch(ingest, ready.splice(0, ready.length), input, counts, fail, checkpoint);
       if (flushed) input.imagemap = (flushed.overrides && flushed.overrides.imagemap) || input.imagemap;
       if (flushed && flushed.store) input.store = flushed.store;
       if (processed < entries.length) reportReading();
@@ -475,7 +475,7 @@ async function runPackageImport(input = {}) {
   }
 
   let last = null;
-  if (ready.length) last = commitBatch(ingest, ready, input, counts, fail, checkpoint);
+  if (ready.length) last = await commitBatch(ingest, ready, input, counts, fail, checkpoint);
 
   const cancelled = isCancelled();
   const status = cancelled ? jobStore.STATUS_CANCELLED : failures.length ? jobStore.STATUS_PARTIAL : jobStore.STATUS_COMPLETED;
@@ -491,9 +491,9 @@ async function runPackageImport(input = {}) {
   };
 }
 
-function commitBatch(ingest, batch, input, counts, fail, checkpoint) {
+async function commitBatch(ingest, batch, input, counts, fail, checkpoint) {
   if (typeof input.onProgress === 'function') input.onProgress({ stage: 'committing', phase: 'Görseller ve model bağlantıları kaydediliyor', model: '' });
-  const result = ingest.commit(batch, {
+  const result = await ingest.commit(batch, {
     store: input.store,
     imagemap: input.imagemap || {},
     overwriteManual: input.overwriteManual === true,

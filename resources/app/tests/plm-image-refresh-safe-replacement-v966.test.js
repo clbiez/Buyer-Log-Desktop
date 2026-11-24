@@ -50,7 +50,10 @@ test('failed PLM link patch cleans only newly staged assets', () => {
   assert.match(ingest, /const created = \[\];/);
   assert.match(ingest, /created\.push\(stored\.id\);/);
   // Kayıt yazımı patlarsa yalnız onlar silinir ve hata yukarı taşınır.
-  assert.match(ingest, /catch \(error\) \{[\s\S]{0,400}for \(const id of created\) \{ try \{ deleteImage\(id\); \}[\s\S]{0,200}throw error;/);
+  assert.match(ingest, /catch \(error\) \{[\s\S]{0,400}for \(const id of created\) \{ try \{ await deleteImage\(id\); \}[\s\S]{0,200}throw error;/);
+  // v8.0.15: ertelenmiş indeks, bağlantı yazılmadan ÖNCE kalıcılaşır; flush
+  // hatası da aynı geri alma yolundan geçer (try bloğunun içinde).
+  assert.match(ingest, /try \{\s*if \(flushImages && created\.length\) await flushImages\(\);\s*patched = await patchLinks\(links\);/);
   // Eski dosya yalnız BAŞKA hiçbir kimlik onu kullanmıyorsa silinir.
   assert.match(ingest, /const activeRefs = new Set\(Object\.values\(/);
   assert.match(ingest, /if \(activeRefs\.has\(outcome\.currentRef\)\) continue;/);
@@ -62,8 +65,12 @@ test('failed PLM link patch cleans only newly staged assets', () => {
 test('stored image writes remain temporary-file atomic and index failure-safe', () => {
   const block = USER_DATA.slice(USER_DATA.indexOf('function saveCollectionImage'), USER_DATA.indexOf('function replaceCollectionImage'));
   assert.match(block, /atomicWriteBuffer\(/);
-  assert.match(block, /writeCollectionImageIndex/);
+  // v8.0.15: indeks tek değişiklik kapısından yazılır; senkron yolda yazma
+  // hatası belleği değiştirmez ve yeni dosya geri silinir.
+  assert.match(block, /mutateCollectionImageIndex\(draft => addIndexItem\(draft, item\)\)/);
   assert.match(block, /catch[^{]*\{[\s\S]*unlinkSync/);
+  // Toplu yol: dosya dayanıklı yazılmadan kayıt belleğe girmez.
+  assert.match(block, /await durableWriterFor\(storedPath\)\.createNew\(storedPath, data\);\s*mutateCollectionImageIndex\(draft => addIndexItem\(draft, item\), \{ defer: true \}\);/);
 });
 
 test('changed PLM assets expose a stable versioned URL while unchanged assets keep their ref', () => {

@@ -30,7 +30,7 @@ const { createModelImageCache } = require('../public/model-image-cache.js');
 
 const PNG = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
 
-function writeOne({ plmId, colourCode, colour }) {
+async function writeOne({ plmId, colourCode, colour }) {
   const files = new Map();
   const imagemap = {};
   let store = ownership.emptyStore();
@@ -51,14 +51,14 @@ function writeOne({ plmId, colourCode, colour }) {
       return { overrides: { imagemap }, updated: links.length };
     },
   });
-  const result = ingest.commit([{ plmId, colourCode, colour, sourceType: 'OPTION', sourceIdentity: 'option:1:2', buffer: PNG, mimeType: 'image/png' }], { store, imagemap });
+  const result = await ingest.commit([{ plmId, colourCode, colour, sourceType: 'OPTION', sourceIdentity: 'option:1:2', buffer: PNG, mimeType: 'image/png' }], { store, imagemap });
   return { files, imagemap, result };
 }
 
 const MODEL = { plmId: '2123595', colourCode: 'CVL', colour: 'NEW BLACK' };
 
-test('kanonik alım yolunun yazdığı kayıt sunucu çözümleyicisinden okunur', () => {
-  const { imagemap, files } = writeOne(MODEL);
+test('kanonik alım yolunun yazdığı kayıt sunucu çözümleyicisinden okunur', async () => {
+  const { imagemap, files } = await writeOne(MODEL);
   const ref = parse.plmImageRef(imagemap, { plm: MODEL.plmId, ccode: MODEL.colourCode, colour: MODEL.colour });
   assert.equal(ref, 'ci_1');
   assert.ok(files.has(ref));
@@ -71,8 +71,8 @@ test('kanonik alım yolunun yazdığı kayıt sunucu çözümleyicisinden okunur
   assert.equal(usable.ref, 'ci_1');
 });
 
-test('renk ADI bilinmeyen CP/Orders satırı da aynı görseli çözer', () => {
-  const { imagemap } = writeOne(MODEL);
+test('renk ADI bilinmeyen CP/Orders satırı da aynı görseli çözer', async () => {
+  const { imagemap } = await writeOne(MODEL);
   // CP/Orders satırında renk adı olmayabilir; yalnız C.Code vardır.
   // Kanonik yazım isim anahtarını kullanır, bu yüzden isim anahtarı öncelikli
   // okunur; isim yoksa kod anahtarına düşülür.
@@ -92,8 +92,8 @@ test('renk ADI bilinmeyen CP/Orders satırı da aynı görseli çözer', () => {
   );
 });
 
-test('istemci görsel önbelleği sunucuyla AYNI anahtar biçimini kullanır', () => {
-  const { imagemap } = writeOne(MODEL);
+test('istemci görsel önbelleği sunucuyla AYNI anahtar biçimini kullanır', async () => {
+  const { imagemap } = await writeOne(MODEL);
   const cache = createModelImageCache(globalThis, {});
   cache.setRegistryMap(imagemap);
   const source = cache.resolveRegistrySource(MODEL.plmId, MODEL.colourCode, '/api/collection-images', MODEL.colour);
@@ -103,8 +103,8 @@ test('istemci görsel önbelleği sunucuyla AYNI anahtar biçimini kullanır', (
   assert.equal(cache.resolveRegistrySource('02123595', 'cvl', '/api/collection-images', 'new black'), '/api/collection-images/ci_1');
 });
 
-test('kanonik kayıt ikinci bir görsel deposu üretmez', () => {
-  const { imagemap } = writeOne(MODEL);
+test('kanonik kayıt ikinci bir görsel deposu üretmez', async () => {
+  const { imagemap } = await writeOne(MODEL);
   // Tek anahtar, tek referans: renk başına kopya kayıt yok.
   assert.equal(Object.keys(imagemap).length, 1);
   assert.match(Object.keys(imagemap)[0], /^plm:2123595\|colour:CVL\|name:NEW BLACK$/);

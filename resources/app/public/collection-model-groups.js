@@ -177,7 +177,23 @@
     // Salt okunur işlem varsayılan olarak kendi taze indeksini kurar. Revizyon
     // okuyucusu, açık override/renk alanı okuması için ikinci bir tarama yapmaz.
     const lookup=lazy?{get:key=>index().get(key)}:index();
-    return (row,key)=>effectiveValue(row,key,null,lookup);
+    const reader=(row,key)=>effectiveValue(row,key,null,lookup);
+    reader.parentOf=row=>row?lookup.get(String(row.modelGroupId))||null:null;
+    return reader;
+  }
+
+  /* Onaylı üretici model düzeyinde bir karardır. Okuma sırası: açık renk
+     override'ı → satırın kendi onayı (eski yolla yazılmış renk özel onaylar
+     korunur) → onayı boş alt opsiyonda ana rengin onayı. Böylece ana renkte
+     verilen onay alt opsiyonda "öneri" (Best Price) olarak kalmaz. */
+  // parent: ana satır ya da onu tembel çözen fonksiyon (yalnız gerekince aranır).
+  function approvedManufacturer(row, parentOrResolve) {
+    if (!row) return '';
+    if (hasVariantOverride(row, 'confirmedManufacturer')) return row.variantOverrides.confirmedManufacturer ?? '';
+    if (text(row.confirmedManufacturer)) return row.confirmedManufacturer;
+    const parent = row.modelGroupRole === 'variant' ? (typeof parentOrResolve === 'function' ? parentOrResolve(row) : parentOrResolve) : null;
+    if (parent && parent !== row) return approvedManufacturer(parent, null);
+    return row.confirmedManufacturer ?? '';
   }
 
   // Bir canlı satır dizisi için yalnız son revizyon tutulur. Eski owner/undo
@@ -245,6 +261,25 @@
     return changed;
   }
 
+  /* Satırın kendi (ham) değerini yazar ve bu alan için artık grup değeri
+     olmayan eski katmanları kaldırır. Alt opsiyonları silinmiş/ayrılmış tek
+     satırda eski modelSharedValues veya variantOverrides kaydı kalırsa
+     effectiveValue() onu ham değerin önüne koyar ve yeni giriş görünmez kalırdı
+     (ör. MB tarihi 2027 yazılınca 2026 görünmeye devam etmesi). */
+  function writeOwnValue(row, key, value) {
+    if (!row || !key) return row;
+    row[key] = clone(value);
+    if (row.modelSharedValues && Object.prototype.hasOwnProperty.call(row.modelSharedValues, key)) {
+      const { [key]: _stale, ...rest } = row.modelSharedValues;
+      row.modelSharedValues = rest;
+    }
+    if (hasVariantOverride(row, key)) {
+      const { [key]: _staleOverride, ...rest } = row.variantOverrides;
+      row.variantOverrides = rest;
+    }
+    return row;
+  }
+
   function writeGroupedValue(rows,id,key,value) {
     const row=rows.find(item=>String(item.id)===String(id));
     if(!row)return rows;
@@ -252,7 +287,7 @@
       if(hasVariantOverride(row,key)||fieldMetadata(key).inheritance==='model'&&row.modelGroupRole!=='parent')return setVariantOverride(rows,id,key,value,{inPlace:true});
       if(fieldMetadata(key).inheritance==='model')return setSharedValue(rows,row.modelGroupId,key,value,{inPlace:true});
     }
-    row[key]=clone(value);return rows;
+    writeOwnValue(row,key,value);return rows;
   }
 
   function clearVariantOverride(rows, id, key) {
@@ -449,7 +484,7 @@
   }
 
   function bestPricing(pricing,parse){let best=null;Object.entries(pricing||{}).forEach(([name,value])=>{const number=parse(value);if(value!==''&&value!=null&&Number.isFinite(number)&&number>0&&(!best||number<best.price))best={name,price:number};});return best;}
-  function confirmedPricing(row,pricing,parse,normalize=text){const name=normalize(row&&row.confirmedManufacturer),raw=pricing&&pricing[name],number=parse(raw);return name&&raw!==''&&raw!=null&&Number.isFinite(number)&&number>0?{name,price:number}:null;}
+  function confirmedPricing(row,pricing,parse,normalize=text){const name=normalize(typeof row==='string'?row:row&&row.confirmedManufacturer),raw=pricing&&pricing[name],number=parse(raw);return name&&raw!==''&&raw!=null&&Number.isFinite(number)&&number>0?{name,price:number}:null;}
 function kolImportMatchKey(plmId, modelKod,helpers){
   const {norm,turknorm}=helpers;
   const plm=turknorm(norm(plmId)), model=turknorm(norm(modelKod));
@@ -657,5 +692,5 @@ function colourSwatch(row){
   return best.hex;
 }
 
-  return { writeGroupedValue,adoptImportedValue,kolImportReadTargetField,kolParseQuantityNum,kolParseMoneyNum,kolApplyApprovedPlmUpdate,kolImportMatchKey,kolImportReadField,kolPlmCodePrefix,kolPlmSeason,kolPlmBrandToken,kolPlmImportTouchedKeys,kolPlmImportColourKey,kolPlmNormalizeDirectRecord,kolBuildPlmImportPlan,bestPricing,confirmedPricing,colourSwatch,identityOf, colourIdentity, fieldMetadata, normalizeRows, linkImportedColourVariants, inheritModelValues, groupFor, hasVariantOverride, effectiveValue, createValueReader, valueReaderForRevision, invalidateValueReader, setSharedValue, setVariantOverride, clearVariantOverride, clearAllVariantOverrides, setPricingOverrides, visibleRows, mergeGroups, detachVariant, relinkVariant, summary };
+  return { approvedManufacturer,writeOwnValue,writeGroupedValue,adoptImportedValue,kolImportReadTargetField,kolParseQuantityNum,kolParseMoneyNum,kolApplyApprovedPlmUpdate,kolImportMatchKey,kolImportReadField,kolPlmCodePrefix,kolPlmSeason,kolPlmBrandToken,kolPlmImportTouchedKeys,kolPlmImportColourKey,kolPlmNormalizeDirectRecord,kolBuildPlmImportPlan,bestPricing,confirmedPricing,colourSwatch,identityOf, colourIdentity, fieldMetadata, normalizeRows, linkImportedColourVariants, inheritModelValues, groupFor, hasVariantOverride, effectiveValue, createValueReader, valueReaderForRevision, invalidateValueReader, setSharedValue, setVariantOverride, clearVariantOverride, clearAllVariantOverrides, setPricingOverrides, visibleRows, mergeGroups, detachVariant, relinkVariant, summary };
 });
