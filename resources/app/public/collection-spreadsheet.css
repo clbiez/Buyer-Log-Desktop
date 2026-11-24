@@ -46,7 +46,8 @@
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody tr.kolModelGroupVariant>td{
   height:var(--kol-variant-row-h,27px)!important;
 }
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody tr.kolModelGroupVariant .editCell{
+/* Durum rozeti sabit 20px kalır; ana satır ve renk satırında aynı boy. */
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody tr.kolModelGroupVariant .editCell:not(.kolStatusNoArrow){
   min-height:22px!important;
   height:calc(var(--kol-variant-row-h,27px) - 2px)!important;
   padding-top:2px!important;
