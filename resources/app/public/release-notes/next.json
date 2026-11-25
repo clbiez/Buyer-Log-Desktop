@@ -479,6 +479,29 @@
           "en": "On demo data an editor changed the DM-O2-2 image; the owner's open screen updated without a refresh."
         }
       }
+    },
+    {
+      "id": "pricing-multiuser-save-integrity",
+      "type": "fix",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Aynı talepte birlikte çalışan kullanıcıların fiyatları ve üreticileri artık kaybolmuyor",
+        "en": "Prices and manufacturers entered by people working on the same request are no longer lost"
+      },
+      "body": {
+        "tr": "Bir kullanıcının ekranı henüz yenilenmeden kaydettiği not veya üretici değişikliği, başka bir kullanıcının o arada eklediği üreticiyi, satırları, girdiği fiyatı ve alternatif fiyatları artık silmiyor. Toplu fiyat aktarımı veya ortak veri klasörünü kullanan başka bir kurulum yazarken girilen tek fiyat reddedilmek yerine kısa süre bekleyip kaydediliyor; yine de kaydedilemezse ekran sunucudaki güncel değere döner. Koleksiyon'a yansıyan fiyat ve onay, aynı model ve üretici için daha yeni bir değişiklik varsa eski bir editör değişikliğiyle geri alınmıyor. Cihazlar arası birleşimde eşzamanlı eklenen üreticiler ve pazarlık turları korunuyor.",
+        "en": "A note or manufacturer change saved by someone whose screen had not refreshed yet no longer deletes the manufacturer, lines, prices and alternative prices another person added in the meantime. A single price entered while a bulk price import or another installation using the shared data folder is writing now waits briefly and is saved instead of being rejected; if it still cannot be saved, the screen returns to the current server value. A price or approval projected to Collection is no longer rolled back by an older editor change when a newer change exists for the same model and manufacturer. When copies from different devices are merged, manufacturers added at the same time and negotiation rounds are kept."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Kayıt ve senkron düzeltmesi; ekranda görünen arayüz değişmedi.",
+          "en": "Save and sync fix; the visible interface did not change."
+        }
+      }
     }
   ]
 }
