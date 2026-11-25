@@ -118,6 +118,9 @@
 .pdCell .pdApprove,.pdCell .pdDrop{position:absolute;right:20px;width:20px;height:24px;opacity:0;pointer-events:none}
 .pdCell .pdDrop{right:0}
 .pdCell:hover .pdApprove,.pdCell:hover .pdDrop,.pdCell:focus-within .pdApprove,.pdCell:focus-within .pdDrop{opacity:1;pointer-events:auto}
+/* Genel `button:disabled{opacity:.5}` (0,2,1) gizli durumu ezmesin: devre dışı eylem yalnız hücre üzerindeyken soluk görünür. */
+.pdCell .pdApprove:disabled,.pdCell .pdDrop:disabled{opacity:0}
+.pdCell:hover .pdApprove:disabled,.pdCell:hover .pdDrop:disabled,.pdCell:focus-within .pdApprove:disabled,.pdCell:focus-within .pdDrop:disabled{opacity:.45}
 .pdCell:hover .pdCellInput,.pdCell:focus-within .pdCellInput{padding-right:42px}
 @media (hover:none){.pdCell:focus-within .pdCellTop{display:flex}}
 .pdOther button{display:block;width:100%;cursor:pointer;text-align:right}
