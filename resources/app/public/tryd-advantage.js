@@ -278,7 +278,7 @@
       const action = isRequired
         ? (selected.length ? `<button type="button" class="intakeFilterRemove" data-tryd-filter-clear="${esc(key)}" title="${esc(text('Seçimi temizle', 'Clear selection'))}" aria-label="${esc(text('Seçimi temizle', 'Clear selection'))}">×</button>` : '')
         : `<button type="button" class="intakeFilterRemove" data-tryd-filter-remove="${esc(key)}" title="${esc(text('Filtreyi kaldır', 'Remove filter'))}" aria-label="${esc(text('Filtreyi kaldır', 'Remove filter'))}">×</button>`;
-      return `<div class="intakeFilterField"><span class="intakeFilterLabel">${esc(fieldLabel(key))}${required}</span><div class="intakeFilterControl"><button type="button" class="oabMultiTrigger intakeFilterTrigger" data-tryd-filter="${esc(key)}" aria-haspopup="listbox" aria-expanded="false"><span class="oabMultiLabel${selected.length ? ' hasValue' : ''}">${esc(label)}</span><span class="oabMultiChevron" aria-hidden="true">▾</span></button>${action}</div></div>`;
+      return `<div class="intakeFilterField"><span class="intakeFilterLabel">${esc(fieldLabel(key))}${required}</span><div class="intakeFilterControl"><button type="button" class="oabMultiTrigger intakeFilterTrigger" data-tryd-filter="${esc(key)}"${selected.length === 1 ? ` data-merch-field="${esc(fieldLabel(key))}" data-merch-value="${esc(selected[0])}"` : ''} aria-haspopup="listbox" aria-expanded="false"><span class="oabMultiLabel${selected.length ? ' hasValue' : ''}">${esc(label)}</span><span class="oabMultiChevron" aria-hidden="true">▾</span></button>${action}</div></div>`;
     }).join('');
     const used = new Set(view().filters.map(ref => ref.key));
     const add = filterPool().some(key => !used.has(key)) ? `<button type="button" class="navActionBtn intakeFilterAdd" data-tryd-add-filter>+ ${esc(text('Filtre ekle', 'Add filter'))}</button>` : '';
@@ -676,12 +676,16 @@
     window.BLFloatingPlacement?.place(popover, button);
     window.BLMotionPlus?.play?.('overlay', popover);
     const list = popover.querySelector('.intakeFilterValues'), search = popover.querySelector('.intakeFilterSearch');
+    // MAG/MMYG/Marka Müdürlüğü: değerin altında hiyerarşi bağlamı; arama ad ve müdürlükle de eşleşir.
+    const merchField = [key, label].map(ref => window.BLMerchHierarchy?.fieldOf?.(ref) || '').find(Boolean) || '';
+    const merchHay = value => merchField ? ' ' + window.BLMerchHierarchy.searchText(merchField, value) : '';
     const draw = () => {
       const needle = clean(search.value).toLocaleLowerCase(locale());
-      const visible = values.filter(value => !needle || value.toLocaleLowerCase(locale()).includes(needle)).sort((a, b) => Number(selected.has(b)) - Number(selected.has(a)));
+      const visible = values.filter(value => !needle || (value + merchHay(value)).toLocaleLowerCase(locale()).includes(needle)).sort((a, b) => Number(selected.has(b)) - Number(selected.has(a)));
       list.innerHTML = visible.length
         ? visible.map(value => `<label class="intakeFilterOption"><input type="checkbox" value="${esc(value)}"${selected.has(value) ? ' checked' : ''}><span>${esc(value)}</span></label>`).join('')
         : `<div class="intakeConfigEmpty">${esc(text('Değer bulunamadı.', 'No values found.'))}</div>`;
+      if (merchField) window.BLMerchHierarchy.decorate(list, merchField, { item: '.intakeFilterOption', text: 'span', searchAttr: 'blMerchSearch' });
     };
     search.addEventListener('input', draw);
     popover.addEventListener('change', event => { if (event.target.matches('input[type="checkbox"]')) { if (event.target.checked) selected.add(event.target.value); else selected.delete(event.target.value); } });

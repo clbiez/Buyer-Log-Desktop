@@ -874,7 +874,9 @@
     const selected = new Set((condition.values || []).map(String));
     const pool = [...new Set([...(condition.values || []).map(String), ...entry.values])];
     const fq = foldText(q);
-    const matched = pool.filter(value => !fq || foldText(value).includes(fq))
+    // MAG/MMYG/Marka Müdürlüğü koşullarında arama MMYG adı ve müdürlükle de eşleşir.
+    const merchField = window.BLMerchHierarchy?.fieldOf?.(condition.field) || '';
+    const matched = pool.filter(value => !fq || foldText(value).includes(fq) || (merchField && foldText(window.BLMerchHierarchy.searchText(merchField, value)).includes(fq)))
       .sort((a, b) => Number(selected.has(b)) - Number(selected.has(a)));
     return { entry, base, q, selected, matched, visible: matched.slice(0, VISIBLE_LIMIT) };
   }
@@ -890,7 +892,7 @@
         <button type="button" data-dmf-all-visible="${esc(listKey)}">${esc(T('Görünenleri seç', 'Select visible'))}</button>
         <button type="button" data-dmf-none="${esc(listKey)}">${esc(T('Seçimi kaldır', 'Clear selection'))}</button>
       </div>
-      <div class="blvFilterValues dmfValueList">${rows
+      <div class="blvFilterValues dmfValueList"${window.BLMerchHierarchy?.fieldOf?.(condition.field) ? ` data-merch-field="${esc(condition.field)}" data-merch-item=".blvFilterValue" data-merch-text="span"` : ''}>${rows
         || `<div class="blvFilterNoValue">${esc(loading ? T('Değerler database\'den okunuyor…', 'Reading values from the database…') : T('Eşleşen değer yok.', 'No matching values.'))}</div>`}</div>
       <label class="dmfFreeValue"><span>${esc(T('Listede yoksa yazın, Enter ile ekleyin', 'Not in the list? Type it and press Enter'))}</span>
         <input type="text" data-dmf-free="${esc(listKey)}" autocomplete="off" placeholder="${esc(T('değer', 'value'))}"></label>
@@ -1302,6 +1304,7 @@
       if (!next) return false;
       const scrollTop = current.scrollTop;
       current.replaceWith(next);
+      window.BLMerchHierarchy?.decorateAll?.(next);
       next.scrollTop = scrollTop;
       let hint = free.nextElementSibling;
       while (hint?.matches('.blvFilterRangeHint')) {
@@ -1453,6 +1456,7 @@
       const body = host.querySelector('.dmfBody');
       if (body) body.scrollTop = scroll.body;
     }
+    window.BLMerchHierarchy?.decorateAll?.(host);
     restoreFocus(focus);
   }
 
