@@ -4060,15 +4060,19 @@ let modelImageRegistryRefreshRun=null,modelImageRegistryRefreshAgain=false;
 function applyScopedModelImageRegistry(payload){
   if(!payload||payload.ok!==true||!payload.imagemap||typeof payload.imagemap!=='object'||!Array.isArray(payload.scopeKeys))return 0;
   state.overrides=state.overrides||{};
-  const before=state.overrides.imagemap||{},next={...before},scope=new Set(payload.scopeKeys);
-  for(const key of Object.keys(next)){const at=key.indexOf('|name:'),base=at>=0?key.slice(0,at):key;if(scope.has(base))delete next[key];}
-  Object.assign(next,payload.imagemap);
-  const staleUrls=[];let changed=0;
-  for(const key of new Set([...Object.keys(before),...Object.keys(next)])){
-    if(before[key]===next[key])continue;
+  // Önce yalnız farkı bul; değişiklik yoksa (sinyallerin çoğu) büyük kaydı kopyalama.
+  const before=state.overrides.imagemap||{},incoming=payload.imagemap,scope=new Set(payload.scopeKeys),removed=[],staleUrls=[];let changed=0;
+  for(const key of Object.keys(before)){
+    if(Object.prototype.hasOwnProperty.call(incoming,key))continue;
+    const at=key.indexOf('|name:'),base=at>=0?key.slice(0,at):key;
+    if(scope.has(base)){removed.push(key);changed++;if(before[key])staleUrls.push(modelImageRefUrl(before[key]));}
+  }
+  for(const key of Object.keys(incoming)){
+    if(before[key]===incoming[key])continue;
     changed++;if(before[key])staleUrls.push(modelImageRefUrl(before[key]));
   }
   if(!changed)return 0;
+  const next={...before};for(const key of removed)delete next[key];Object.assign(next,incoming);
   state.overrides.imagemap=next;syncModelImageRegistry();
   if(staleUrls.length)BLImageRuntime.invalidate(staleUrls);
   return changed;

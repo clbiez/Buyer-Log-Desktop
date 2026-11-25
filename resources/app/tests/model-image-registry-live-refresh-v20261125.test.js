@@ -175,6 +175,16 @@ test('istemci: sinyalde açık Koleksiyon sahiplerinin kapsamı tazelenir, yaln�
   assert.deepEqual(calls.render, ['kol']);
 });
 
+test('istemci: kapsamdaki silinen görsel (ad varyantı dahil) kayıttan düşer ve eski URL geçersiz kılınır; kapsam dışı anahtar kalır', async () => {
+  const { ctx, calls } = clientContext({ registry: { own: { ok: true, imagemap: {}, scopeKeys: ['plm:PLM-LIVE-1|colour:BLK'] } } });
+  ctx.state.overrides.imagemap['plm:PLM-LIVE-1|colour:BLK|name:Demo Navy'] = 'ci_named_demo';
+  const result = await ctx.refreshModelImageRegistryFromServer();
+  assert.equal(result.changed, 2);
+  assert.deepEqual(Object.keys(ctx.state.overrides.imagemap), ['plm:PLM-OTHER|colour:RED']);
+  assert.deepEqual(calls.invalidated.sort(), ['/api/collection-images/ci_named_demo', '/api/collection-images/ci_old_demo']);
+  assert.deepEqual(calls.render, ['kol']);
+});
+
 test('istemci: çoklu görünüm her seçili sahibi, CP açık kullanıcı CP kapsamını tazeler; eşzamanlı sinyaller birleşir', async () => {
   const { ctx, calls } = clientContext({ multi: ['own', 'oth'], cpRows: [{ 'PLM ID': 'PLM-LIVE-1' }], activeTab: 'cp', cpRegistry: { 'plm:PLM-CP|colour:NAV': 'ci_cp_new' } });
   await Promise.all([ctx.refreshModelImageRegistryFromServer(), ctx.refreshModelImageRegistryFromServer(), ctx.refreshModelImageRegistryFromServer()]);
