@@ -24,3 +24,22 @@ The three counterexamples are now ordinary passing regressions. Foreign malforme
 The fix does not rewrite historically uploaded events automatically. Final validation: 6,278 passed / 66 skipped / zero failures or TODOs; targeted simulation 11 passed / 1 soak skip. Existing WAL, checkpoint and idempotency tests pass.
 
 A restored old pending retry cannot reduce the existing publication frontier; a delayed genuine published event still blocks the checkpoint until delivered (seed 4409).
+
+## Collection: 20 installations (v20261125)
+
+`tests/helpers/collection-sync-sim.js` runs 20 isolated installations (two installs of the owner, ten editors, five viewers, three users without access). Each installation loads its own copy of the real `collection-workspaces`/`collection-recycle-bin` modules (own `SERVER_DATA_ROOT`), its own real permission cache and its own real replication state. Installations only meet in one shared hub directory (SMB model: the file lease really serialises). The thin server glue (refresh permissions → edit check → local row write → publish; 5 s live poll that does not refresh permissions) mirrors `server.js` and `routes/oab-batch-routes.js`.
+
+Seeded faults: shuffled/partial/duplicated polls, offline installations accumulating edits, a corrupt final envelope window, half-written `.tmp` files and OneDrive `<owner>-PCn.json` side files. Within an epoch each (row, field) — for `pricing`/`pricingSent` each (row, manufacturer) — has one writer, so every deviation is a lost or wrong merge. After each epoch all authorised installations must reach the hub copy within three full poll rounds, keep every accepted value, never resurrect a deleted row, keep added rows, report no false conflicts and give users without access nothing. A final quiet round must do no workspace read, replace, merge or publish.
+
+```sh
+node --test tests/collection-sync-simulation-v20261125.test.js        # 3 seeds × 120 operations
+node --test tests/collection-sync-multi-device-v20261125.test.js      # targeted scenarios
+BUYERLOG_COLLECTION_SIM_SOAK=1 node --test tests/collection-sync-simulation-v20261125.test.js
+BUYERLOG_COLLECTION_SIM_SERIAL=1 …                                     # exact sequential replay of a seed
+```
+
+A failing seed writes its synthetic operation log and prints `COLLECTION_SYNC_SIM_REPRO`. The seed fixes the operation plan; without `SERIAL` the I/O interleaving inside one tick is real concurrency. `BUYERLOG_COLLECTION_SIM_APP_ROOT` points the same simulator at another checkout for A/B measurement.
+
+Findings fixed in the same change (RED first, then one independent review round whose findings were also fixed RED→GREEN: base/conflicts are recorded right after the under-lease local write; price-map conflict resolution applies only the losing manufacturer keys to the current row; a view-downgraded installation keeps its unpublished local copy in `collection-replication-state.json.readonly-preserved/` before adopting; the merge-under-lease fallback is limited to envelopes ≤ 2 MB because at 30k rows / 6.7 MB it extends the hub lease by ~1.08 s against the 3 s cross-machine lease wait): concurrent publishers lost the CAS race outside the lease and waited for later polls (12 writers → 10 rounds, false "same revision, different copies" toast for 9 of 12 users); a revoked or view-downgraded editor's offline write was published by the live poll from the stale permission cache; `pricing`/`pricingSent` maps were merged as one value, dropping another manufacturer's price on every installation (server merge and client rebase).
+
+Executed RED/TODO, not a convergence proof: with separate OneDrive mirrors a concurrently displaced publication is lost without a merge conflict (the loser's merge base is its own displaced envelope). Fixing it needs envelope ancestry (protocol work). Limits: cross-machine lock contention timing (`SHARED_WRITE_BUSY` after 3 s) is not modelled because one process serialises leases in memory; the recycle bin is per installation and is not replicated.
