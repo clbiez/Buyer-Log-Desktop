@@ -67,6 +67,7 @@ function clientHarness(requests, { directory = [] } = {}) {
     mfrKey,
     functionSource(QUOTES, 'qNormalizeOptions'),
     functionSource(QUOTES, 'qManufacturerSuggestions'),
+    functionSource(QUOTES, 'qPruneModels'),
     functionSource(QUOTES, 'qAddManufacturerLines'),
     functionSource(QUOTES, 'qSaveLineOptions'),
     functionSource(QUOTES, 'qPromoteLineOption'),

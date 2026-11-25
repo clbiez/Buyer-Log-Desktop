@@ -42793,7 +42793,7 @@ function renderKolMfrModal(ctx){
     <div class="verHistFoot">
       <span style="flex:1;"></span>
       <button type="button" class="tbtn" id="kolMfrCancel">${escapeHtml(L('Vazgeç'))}</button>
-      ${pricingTaskV2?`<button type="button" class="tbtn" id="kolMfrDeskOnly" title="${escapeHtml(appLang==='en'?'Creates only a Pricing Desk request for the selected models and manufacturers; no e-mail draft is prepared.':'Seçili modeller ve üreticiler için yalnız Fiyat Masası kaydı açar; e-posta taslağı hazırlanmaz.')}"><svg class="ic"><use href="#i-bl-quotes"/></svg><span>${escapeHtml(appLang==='en'?'Send to Pricing Desk Only':'Yalnız Fiyat Masası’na Gönder')}</span></button>`:''}
+      ${pricingTaskV2?`<button type="button" class="tbtn" id="kolMfrDeskOnly" title="${escapeHtml(appLang==='en'?'Creates only a Pricing Desk request for the selected models; no e-mail draft is prepared. Manufacturers are optional and can be added later on the Pricing Desk.':'Seçili modeller için yalnız Fiyat Masası kaydı açar; e-posta taslağı hazırlanmaz. Üretici seçimi isteğe bağlıdır; üreticiler sonra Fiyat Masası’ndan eklenebilir.')}"><svg class="ic"><use href="#i-bl-quotes"/></svg><span>${escapeHtml(appLang==='en'?'Send to Pricing Desk Only':'Yalnız Fiyat Masası’na Gönder')}</span></button>`:''}
       <button type="button" class="tbtn primary" id="kolMfrConfirm"><svg class="ic"><use href="#i-file-export"/></svg><span id="kolMfrConfirmLabel">${escapeHtml(_mfrPicked.size>1?(pricingTaskV2?(appLang==='en'?`Create Request · ${_mfrPicked.size} manufacturers`:`Fiyat Talebi Oluştur · ${_mfrPicked.size} üretici`):(appLang==='en'?`Create ${_mfrPicked.size} Separate Draft E-Mails`:`${_mfrPicked.size} Ayrı Taslak E-Posta Oluştur`)):(pricingTaskV2?(appLang==='en'?'Create Quotation Request':'Fiyat Talebi Oluştur'):L('Taslak E-Posta Oluştur')))}</span></button>
     </div>
   </div>`;
@@ -43053,13 +43053,13 @@ function renderKolMfrModal(ctx){
   modal.querySelector('#kolMfrCancel').addEventListener('click', close);
   modal.addEventListener('click', e=>{ if(e.target===modal) close(); });
   // Send to Pricing: e-posta taslağı hazırlamadan yalnız Fiyat Masası kaydı açar.
-  // Alıcı e-postası gerekmez; üretici seçimi yine zorunludur çünkü talep satırları
-  // model × üretici olarak oluşturulur. Ekler/Excel bu yolda kullanılmaz.
+  // Alıcı e-postası ve üretici seçimi gerekmez: üretici seçilmezse talep yalnız
+  // modellerle açılır, üreticiler sonra Fiyat Masası'ndan (ASAS dışı ad dahil)
+  // elle eklenir. Ekler/Excel bu yolda kullanılmaz.
   modal.querySelector('#kolMfrDeskOnly')?.addEventListener('click', async ()=>{
     if(editingMfrIndex>=0 && !commitInlineMfrEdit(editingMfrIndex)) return;
     prepareEmailFillFromShared();
     const checked=[..._mfrPicked].sort((a,b)=>a-b).map(i=>kolManufacturers[i]).filter(Boolean);
-    if(!checked.length){ showToast(appLang==='en'?'Select at least one manufacturer.':'En az bir üretici seç.'); return; }
     const deskRows=getRows();
     if(!deskRows.length){ showToast(appLang==='en'?'The selected models could not be found.':'Seçili modeller bulunamadı.'); return; }
     if(!window.BL_QUOTATIONS?.recordRequest){ showToast(appLang==='en'?'Pricing Desk is not available.':'Fiyat Masası kullanılamıyor.'); return; }
@@ -43071,11 +43071,15 @@ function renderKolMfrModal(ctx){
     // recordRequest hata/yetki durumunu kendisi bildirir; pencere açık kalır.
     if(!request){ if(deskBtn) deskBtn.disabled=false; return; }
     close();
-    if(SRC.persist){
+    if(SRC.persist&&checked.length){
       kolPushUndo();
       checked.forEach(m=>deskRows.forEach(r=>{ if(!r.pricing) r.pricing={}; if(r.pricing[m.name]==null||r.pricing[m.name]==='') r.pricing[m.name]='Fiyatlamada'; })); // i18n-ignore
       saveKolRows(); renderKol(); updateKolSendBtnState();
     }else if(typeof updateShippingBtnVisibility==='function') updateShippingBtnVisibility();
+    if(!checked.length){
+      showToast(appLang==='en'?`Sent to Pricing Desk · ${deskRows.length} model(s), no manufacturer yet. Add manufacturers on the Pricing Desk with “+ Manufacturer”.`:`Fiyat Masası’na gönderildi · ${deskRows.length} model, henüz üretici yok. Üreticileri Fiyat Masası’nda “+ Üretici” ile ekle.`);
+      return;
+    }
     showToast(appLang==='en'?`Sent to Pricing Desk · ${deskRows.length} model(s) × ${checked.length} manufacturer(s). No e-mail draft was created.`:`Fiyat Masası’na gönderildi · ${deskRows.length} model × ${checked.length} üretici. E-posta taslağı oluşturulmadı.`);
   });
   modal.querySelector('#kolMfrConfirm').addEventListener('click', async ()=>{

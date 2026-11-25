@@ -94,6 +94,11 @@
       if(!model){model={modelKey:item.modelKey,first:item,cells:new Map()};models.set(item.modelKey,model);}
       model.cells.set(keyOf(item.manufacturer),item);
     });
+    // Üretici seçilmeden açılan talepte modeller request.models ile gelir; hücreleri boştur.
+    (request&&request.models||[]).forEach(seed=>{
+      const modelKey=clean(seed&&seed.modelKey);if(!modelKey||models.has(modelKey))return;
+      models.set(modelKey,{modelKey,first:seed,cells:new Map()});
+    });
     return {manufacturers,models:[...models.values()].map(model=>({modelKey:model.modelKey,first:model.first,cell:name=>model.cells.get(keyOf(name))||null,lines:[...model.cells.values()]}))};
   }
   /* Bir model satırının istatistiği: en iyi (en düşük) teklif, medyan ve

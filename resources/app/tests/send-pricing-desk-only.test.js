@@ -19,7 +19,9 @@ test('desk-only action records the quotation request without creating e-mail dra
   assert.ok(handlerStart>0,'desk-only handler must exist');
   assert.match(handler,/BL_QUOTATIONS\.recordRequest\(SRC\.persist\?'collection':'cp',deskRows,checked\)/);
   assert.doesNotMatch(handler,/kolCreatePricingEmailDraft|kolCreatePreparedEmailDraft|pricingPrepareAttachmentPlans|prepareEmailBuildTopicTableWorkbook/);
-  assert.match(handler,/if\(!checked\.length\)/,'a manufacturer is still required for model × manufacturer lines');
+  assert.doesNotMatch(handler,/Select at least one manufacturer|En az bir üretici seç/,'manufacturers are optional; they can be added later on the Pricing Desk');
+  assert.match(handler,/no manufacturer yet/,'empty-manufacturer request gets its own TR/EN notice');
+  assert.match(handler,/henüz üretici yok/);
   assert.match(handler,/if\(!request\)\{[^}]*deskBtn\.disabled=false; return; \}/,'failed save keeps the dialog open');
   assert.ok(handler.indexOf('if(!request)')<handler.indexOf('close();'),'dialog closes only after the request is saved');
   assert.match(handler,/r\.pricing\[m\.name\]='Fiyatlamada'/,'Collection status matches the e-mail flow');

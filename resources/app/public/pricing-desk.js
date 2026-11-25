@@ -189,6 +189,8 @@
     if(!req)return 'list';
     const saved=state.detailViews[req.id];
     if(saved==='matrix'||saved==='list')return saved;
+    // Üretici seçilmeden açılan talepte liste boştur; modeller yalnız matriste görünür.
+    if(!(req.items||[]).length&&(req.models||[]).length)return 'matrix';
     return req.source==='collection'?'matrix':'list';
   }
   function setDetailView(req,view){if(!req)return;state.detailViews[req.id]=view==='list'?'list':'matrix';store.set(VIEW_KEY,state.detailViews);}
@@ -523,7 +525,7 @@
     return Q()?.withCollectionRead?Q().withCollectionRead(()=>refreshModelRowContent(host,req,modelKey)):refreshModelRowContent(host,req,modelKey);
   }
   function refreshModelRowContent(host,req,modelKey){
-    const model=E.requestMatrix({...req,items:req.items.filter(item=>item.modelKey===modelKey)}).models[0];
+    const model=E.requestMatrix({...req,models:[],items:req.items.filter(item=>item.modelKey===modelKey)}).models[0];
     const tr=host.querySelector(`tr[data-pd-model="${CSS.escape(modelKey)}"]`);
     if(!model)return;
     infoCache=new WeakMap();
@@ -648,7 +650,7 @@
     const present=new Map(E.supplierScorecards(req).map(card=>[card.key,card])),models=E.requestMatrix(req).models.length;
     const suggestions=api.manufacturerSuggestions().filter(item=>{const card=present.get(E.keyOf(item.name));return !card||card.models<models;});
     const listId=`pdMfrList-${String(req.id).replace(/[^A-Za-z0-9_-]/g,'_')}`;
-    panel.innerHTML=`<div class="pdPanelHead"><b>${esc(L('Tabloya üretici ekle','Add a manufacturer to the table'))}</b><span>${esc(L(`Send to Pricing kullanmadan fiyat veren üreticiyi ekle. Bu talepteki ${models} model için boş fiyat hücresi açılır; fiyatı doğrudan matrise yazarsın.`,`Add a manufacturer that quoted without Send to Pricing. Empty price cells open for the ${models} models of this request; type prices straight into the matrix.`))}</span></div>
+    panel.innerHTML=`<div class="pdPanelHead"><b>${esc(L('Tabloya üretici ekle','Add a manufacturer to the table'))}</b><span>${esc(L(`Listeden seç ya da listede olmayan yeni bir üretici adı yaz. Bu talepteki ${models} model için boş fiyat hücresi açılır; fiyatı doğrudan matrise yazarsın.`,`Pick from the list or type a new manufacturer name that is not listed. Empty price cells open for the ${models} models of this request; type prices straight into the matrix.`))}</span></div>
       <div class="pdMfrFields">
         <label class="pdField"><span>${esc(L('Üretici','Manufacturer'))}</span><input type="text" maxlength="240" list="${esc(listId)}" data-pd-mfr-name autocomplete="off" placeholder="${esc(L('Üretici adı','Manufacturer name'))}"></label>
         <label class="pdField"><span>${esc(L('E-posta (isteğe bağlı)','E-mail (optional)'))}</span><input type="email" maxlength="320" data-pd-mfr-email autocomplete="off" placeholder="name@example.com"></label>
@@ -662,10 +664,11 @@
     const apply=()=>{
       const typed=clean(name.value);
       if(!typed){toast(L('Üretici adını yaz ya da listeden seç.','Type a manufacturer name or pick one from the list.'));name.focus();return;}
+      const isNew=!suggestions.some(item=>E.keyOf(item.name)===E.keyOf(typed))&&!present.has(E.keyOf(typed));
       const result=api.addManufacturer(req,{name:typed,email:clean(email.value)});
       if(!result)return;
       if(!result.added.length){toast(L(`${result.manufacturer.name} bu talepteki bütün modellerde zaten var.`,`${result.manufacturer.name} is already on every model of this request.`));return;}
-      toast(L(`${result.manufacturer.name} eklendi; ${result.added.length} model için fiyat girebilirsin.`,`${result.manufacturer.name} added; enter prices for ${result.added.length} models.`));
+      toast(isNew?L(`Yeni üretici ${result.manufacturer.name} bu talebe eklendi; ${result.added.length} model için fiyat girebilirsin.`,`New manufacturer ${result.manufacturer.name} added to this request; enter prices for ${result.added.length} models.`):L(`${result.manufacturer.name} eklendi; ${result.added.length} model için fiyat girebilirsin.`,`${result.manufacturer.name} added; enter prices for ${result.added.length} models.`));
       focusAdded(req,result);
     };
     panel.querySelector('[data-pd-mfr-apply]').addEventListener('click',apply);
@@ -991,7 +994,7 @@
   }
   function roundCardHtml(req,multi){
     const api=Q(),rates=E.responseRates(req),priced=rates.reduce((a,r)=>a+r.priced,0),total=rates.reduce((a,r)=>a+r.total,0),rate=total?Math.round(priced/total*100):0;
-    const waiting=rates.filter(r=>r.priced<r.total).length,gain=E.requestGain(req),models=new Set((req.items||[]).map(item=>item.modelKey)).size,round=Math.max(1,Number(req.round)||1);
+    const waiting=rates.filter(r=>r.priced<r.total).length,gain=E.requestGain(req),models=E.requestMatrix(req).models.length,round=Math.max(1,Number(req.round)||1);
     const canEdit=api.canEdit(req);
     return `<div role="button" tabindex="0" class="pdCard${req.id===state.roundsSelected?' isActive':''}" data-pd-req="${esc(req.id)}">
       <div class="pdCardHead"><div><b title="${esc(api.workspaceTitle(req))}">${esc(api.workspaceTitle(req))}</b><span>${esc(api.date(req.createdAt,false))} · ${esc(L(`${models} model`,`${models} models`))}${round>1?` · ${esc(L(`Tur ${round}`,`Round ${round}`))}`:''}</span></div><span class="pdRing isLarge" style="--pd-rate:${rate}%" title="${esc(L(`${priced}/${total} satır fiyatlı`,`${priced}/${total} lines priced`))}" aria-hidden="true"></span></div>

@@ -76,6 +76,25 @@ function normalizeItem(value) {
     history: ledger.normalizeHistory(src.history),
   };
 }
+/* Üreticisi henüz seçilmemiş modeller: Send to Pricing üretici seçmeden talep
+   açabildiği için model kimliği satırdan (model × üretici) ayrı taşınır. Bir
+   modele ilk üretici satırı eklendiğinde bekleyen kayıt düşer (pruneModels). */
+const MODEL_FIELDS = ['modelKey','rowId','orderCode','plmId','modelCode','license','category','colour','fabric','season','picture','inStoreMonth','quantity','targetPrice'];
+function normalizeModels(value) {
+  const seen = new Set(), out = [];
+  for (const raw of (Array.isArray(value) ? value : []).slice(0, MAX_ITEMS)) {
+    const item = normalizeItem(raw);
+    if (!item.modelKey || seen.has(item.modelKey)) continue;
+    seen.add(item.modelKey);
+    out.push(Object.fromEntries(MODEL_FIELDS.map(key => [key, item[key]])));
+  }
+  return out;
+}
+function pruneModels(request) {
+  const lined = new Set((request.items || []).map(item => item.modelKey));
+  request.models = (request.models || []).filter(model => !lined.has(model.modelKey));
+  return request;
+}
 function normalizeRequest(value, defaults = {}) {
   const src = cleanObject(value);
   const createdAt = clean(src.createdAt, 80) || now();
@@ -97,6 +116,7 @@ function normalizeRequest(value, defaults = {}) {
     capacityConfirmed: Boolean(src.capacityConfirmed),
     manufacturers: (Array.isArray(src.manufacturers) ? src.manufacturers : []).slice(0, MAX_MANUFACTURERS).map(normalizeManufacturer).filter(item => item.name),
     items: (Array.isArray(src.items) ? src.items : []).slice(0, MAX_ITEMS).map(normalizeItem).filter(item => item.modelKey && item.manufacturer),
+    models: normalizeModels(src.models),
     sortOrder: Number.isFinite(Number(src.sortOrder)) ? Number(src.sortOrder) : 0,
     archived: Boolean(src.archived),
     archiveReason: clean(src.archiveReason, 120),
@@ -268,6 +288,7 @@ function createRequest(profile, payload,options={}) {
   request.round = 1; request.rounds = [];
   // İlk fiyatlar (ör. Koleksiyon'dan elle girilen fiyat) deftere ilk olay olarak yazılır.
   request.items = request.items.map(item => seedLine({ ...item, history: [], rev: 0, updatedAt: '', updatedBy: '' }, profile, request));
+  pruneModels(request);
   store.requests.unshift(request);
   saveStore(store,options);
   return request;
@@ -298,6 +319,9 @@ function updateRequest(profile, id, payload,options={}) {
   incoming.round = current.round || 1;
   incoming.rounds = current.rounds || [];
   incoming.items = reconcileLines(current, incoming.items, rawItems(payload), profile);
+  // models alanını tanımayan eski istemcinin tam kaydı bekleyen modelleri silmez.
+  if (!Array.isArray(payload && payload.models)) incoming.models = normalizeModels(current.models);
+  pruneModels(incoming);
   const index = store.requests.findIndex(item => item.id === current.id);
   store.requests[index] = incoming;
   saveStore(store,options);
@@ -515,6 +539,8 @@ function mergeRequests(profile, sourceId, targetId) {
   target.capacityConfirmed = Boolean(target.capacityConfirmed || source.capacityConfirmed);
   target.manufacturers = [...manufacturers.values()];
   target.items = [...items.values()];
+  target.models = normalizeModels([...(target.models || []), ...(source.models || [])]);
+  pruneModels(target);
   target.round = Math.max(target.round || 1, source.round || 1);
   target.rounds = ledger.normalizeRounds([...(target.rounds || []), ...(source.rounds || [])]);
   target.updatedAt = now();

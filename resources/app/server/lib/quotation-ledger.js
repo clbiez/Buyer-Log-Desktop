@@ -167,7 +167,15 @@ function newerRequest(a, b) {
 function mergeRequestCopies(a, b) {
   if (!a || typeof a !== 'object') return b;
   if (!b || typeof b !== 'object') return a;
-  const newer = newerRequest(a, b), other = newer === a ? b : a;
+  let newer = newerRequest(a, b);
+  const other = newer === a ? b : a;
+  /* Üreticisiz talebin bekleyen modelleri (request.models) yeni sürüm alanıdır.
+     Alanı tanımayan eski sürüm kopyası (anahtar hiç yok) seçilirse modeller
+     kaybolmasın: diğer kopyadakiler, satırı açılmamış olanlarla taşınır. */
+  if (!Array.isArray(newer.models) && Array.isArray(other.models) && other.models.length) {
+    const lined = new Set((Array.isArray(newer.items) ? newer.items : []).map(item => item && item.modelKey));
+    newer = { ...newer, models: other.models.filter(model => model && !lined.has(model.modelKey)) };
+  }
   const otherItems = new Map((Array.isArray(other.items) ? other.items : []).filter(item => item && item.id).map(item => [String(item.id), item]));
   if (!otherItems.size || !Array.isArray(newer.items)) return newer;
   let changed = false;
