@@ -89,15 +89,16 @@ function check(name, ok, detail) { report.checks.push({ name, ok: Boolean(ok), d
         }, { ownerKey, ownerIndex, rowsPer: ROWS_PER_OWNER, colours: Array.from({ length: ROWS_PER_OWNER }, (_, i) => colourOf(ownerIndex, i)) });
         const editorIds = Object.values(accounts).filter(a => new RegExp('qedit:' + ownerKey + '\\b').test(a.roles)).map(a => a.id);
         // Send to Pricing'in oluşturduğu kayıtla aynı biçim (kol:<rowId>), fiyatsız.
-        const requestId = await page.evaluate(async ({ mfrs, editorIds }) => {
+        const created = await page.evaluate(async ({ mfrs, editorIds }) => {
           // picture: Send to Pricing ile aynı kaynak (qCollectionImageSrc → desk.imageSrc).
           const picture = row => String(window.BL_QUOTATIONS?.desk?.imageSrc?.(row, null) || row.img || '');
           const items = kolRows.flatMap(row => mfrs.map((m, mi) => ({ id: `line-${row.id}-${mi}`, modelKey: 'kol:' + row.id, rowId: row.id, plmId: row.plmId, modelCode: row.modelKod, colour: row.colour, colourCode: row.colourCode, license: row.lisans, category: row.urunTipi, season: row.season, picture: picture(row), quantity: Number(row.quantity), targetPrice: row.targetPrice, manufacturer: m, price: '', approved: false, dropped: false })));
           const r = await fetch('/api/quotations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source: 'collection', status: 'active', manufacturers: mfrs.map(name => ({ name, email: '' })), items }) });
           const data = await r.json(); if (!r.ok) throw new Error(JSON.stringify(data));
           if (editorIds.length) { const e = await fetch('/api/quotations/' + encodeURIComponent(data.request.id) + '/editors', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ editorIds }) }); if (!e.ok) throw new Error('editors ' + e.status); }
-          return data.request.id;
+          return { id: data.request.id, pictures: kolRows.map(picture) };
         }, { mfrs: MFRS, editorIds });
+        const requestId = created.id, pictures = created.pictures;
         requestOwner[requestId] = ownerKey;
         // Talep açıldıktan sonra sahip bir modelin hedef fiyatını Koleksiyon'da değiştirir:
         // Fiyat Masası "Hedef/Δ Hedef" herkeste bu güncel değeri göstermelidir.
@@ -118,7 +119,7 @@ function check(name, ok, detail) { report.checks.push({ name, ok: Boolean(ok), d
         await page.locator('[data-pd-approve="line-1-1"]').dispatchEvent('click'); // satır 1: en ucuz olmayan üretici onaylı
         await page.waitForFunction(() => document.querySelector('[data-pd-approve="line-1-1"]')?.getAttribute('aria-pressed') === 'true', null, { timeout: 30000 });
         await page.waitForTimeout(1500);
-        golden[ownerKey] = { requestId, desk: await readDesk(page) };
+        golden[ownerKey] = { requestId, pictures, desk: await readDesk(page) };
         check(`${ownerKey}: sahibin masasında güncel hedef`, golden[ownerKey].desk.rows['kol:2']?.target === '$3,95', golden[ownerKey].desk.rows);
         await page.evaluate(() => switchTab('koleksiyon'));
         await page.waitForFunction(n => document.querySelectorAll('#kolTable tbody tr td[data-key="modelKod"]').length >= n, ROWS_PER_OWNER, { timeout: 60000 });
@@ -259,10 +260,10 @@ function check(name, ok, detail) { report.checks.push({ name, ok: Boolean(ok), d
         note: 'Koleksiyon "edit" izni olan kullanıcı başka sahibin Koleksiyonunu UI\'da yalnız salt okunur çoklu görünümde açabiliyor ("Kendi kayıtlarınız her zaman görünür"; kendi onay kutusu devre dışı). Tek-sahip düzenleme moduna UI yolu yok; yalnız eski localStorage kapsam tercihiyle açılıyor.' });
       report.findings.push({ id: 'quotation-edit-separate-from-collection-edit', evidence: ['E1b', 'E3a'].map(k => ({ user: k, roles: accounts[k].roles })),
         note: 'Fiyat Masası düzenleme yetkisi Koleksiyon "edit" izninden değil talebin editorIds listesinden gelir; Koleksiyon edit izinli kullanıcı talep sahibi düzenleyici eklemedikçe girişleri devre dışı görür (sunucu quotations-store.canEdit ile aynı).' });
-      const probe = await server.login(accounts.N1.id), img = golden.O1.saved[0].img;
+      const probe = await server.login(accounts.N1.id), img = golden.O1.pictures.find(url => /^\/api\/collection-images\//.test(url)) || '';
       const direct = img ? await server.api(img, { cookie: probe }) : { status: null };
       report.findings.push({ id: 'collection-image-direct-url-unauthorized', evidence: { user: 'N1', url: img, status: direct.status },
-        note: direct.status === 200 ? 'İzinsiz kullanıcı, ref bilinirse sahibin Koleksiyon görselini doğrudan URL ile alabiliyor (görsel modül kaynağı; collection-image-authority yalnız "collection-shared:" replikalarını denetler). UI\'da görünmez; ref tahmin edilemez (zaman + rastgele). Sunucu erişim paritesi işçisine (A) bildirildi.' : 'İzinsiz doğrudan görsel isteği reddedildi.' });
+        note: direct.status == null ? 'Ölçülemedi: sahibin satırında sunucu görsel URL\'si bulunamadı.' : direct.status === 200 ? 'İzinsiz kullanıcı, ref bilinirse sahibin Koleksiyon görselini doğrudan URL ile alabiliyor (görsel modül kaynağı; collection-image-authority yalnız "collection-shared:" replikalarını denetler). UI\'da görünmez; ref tahmin edilemez (zaman + rastgele). Sunucu erişim paritesi işçisine (A) bildirildi.' : 'İzinsiz doğrudan görsel isteği reddedildi.' });
     }
 
     /* ---------- 3. Canlı güncelleme: E1a (düzenleyici) O1 talebinde fiyat girer ve onaylar ---------- */
