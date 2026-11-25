@@ -947,6 +947,69 @@ function listOwnerIds() {
   }
   return [...ids];
 }
+/* Görsel kimliğini satırlarında (img / imgRef) kullanan sahipler. Silme yetkisi
+   için çağrılır; skipOwner (aktörün zaten düzenleyebildiği sahip) yalnız
+   görseli kullanan sahip için sorulur. Her silmede başka sahiplerin çok MB'lık sayfalarını yeniden okumak
+   ölçülebilir gecikme ekliyordu: dosyadaki sayfa için görsel kimlikleri bir kez
+   ham bayttan çıkarılır ve dosya kimliğiyle (ino/boyut/mtime/ctime) anahtarlı
+   tutulur; atomik yazım (rename) anahtarı değiştirir. Ham tarama satır dışındaki
+   aynı adlı alanları da kapsar (yalnız daha korumacı). Delta
+   belgesi bellekte olduğundan doğrudan satırlardan okunur. */
+const IMAGE_URL_PATTERN = /\/api\/(?:collection|cp)-images\/([A-Za-z0-9_-]+)/;
+const IMAGE_KEY = Buffer.from('"img');
+const workspaceImageTokenCache = new Map();
+function addImageTokens(tokens, value) {
+  const text = String(value == null ? '' : value).trim();
+  // Gömülü data: görselleri kimlik değildir; büyük base64 metni bellekte tutulmaz.
+  if (!text || text.length > 2048 || text.startsWith('data:')) return;
+  const url = text.includes('-images/') ? IMAGE_URL_PATTERN.exec(text) : null;
+  tokens.add(url ? url[1] : text);
+}
+// "img" / "imgRef" anahtarlarının değerleri UTF-8 çözümü olmadan bayt üzerinde bulunur.
+function scanImageTokens(buffer, tokens) {
+  const space = byte => byte === 32 || byte === 9 || byte === 10 || byte === 13;
+  for (let at = buffer.indexOf(IMAGE_KEY); at >= 0; at = buffer.indexOf(IMAGE_KEY, at + IMAGE_KEY.length)) {
+    let i = at + IMAGE_KEY.length;
+    if (buffer[i] === 82 && buffer[i + 1] === 101 && buffer[i + 2] === 102) i += 3; // Ref
+    if (buffer[i] !== 34) continue; i += 1; // "
+    while (space(buffer[i])) i += 1;
+    if (buffer[i] !== 58) continue; i += 1; // :
+    while (space(buffer[i])) i += 1;
+    if (buffer[i] !== 34) continue; i += 1;
+    const end = buffer.indexOf(34, i);
+    if (end < 0) break;
+    // Görsel kimlikleri ASCII'dir; latin1 dilimi çözüm maliyetini atlar.
+    if (end > i && end - i <= 2048 && buffer[i] !== 100 /* d(ata:) */) addImageTokens(tokens, buffer.toString('latin1', i, end));
+    at = end;
+  }
+  return tokens;
+}
+function workspaceImageTokens(ownerId) {
+  const delta = documents.read(documentId(ownerId));
+  if (delta) {
+    const tokens = new Set();
+    for (const row of normalizeWorkspace(ownerId, delta).rows) for (const field of ROW_IMAGE_FIELDS) addImageTokens(tokens, row && row[field]);
+    return tokens;
+  }
+  const file = workspaceFile(ownerId);
+  let stat;
+  try { stat = fs.statSync(file, { bigint: true }); }
+  catch (error) { if (error.code === 'ENOENT') return new Set(); throw error; }
+  const key = `${stat.ino}:${stat.size}:${stat.mtimeNs}:${stat.ctimeNs}`;
+  const cached = workspaceImageTokenCache.get(ownerId);
+  if (cached && cached.key === key) return cached.tokens;
+  const tokens = scanImageTokens(fs.readFileSync(file), new Set());
+  workspaceImageTokenCache.set(ownerId, { key, tokens });
+  return tokens;
+}
+function ownersReferencingImage(ref, { skipOwner = () => false, actorId = '' } = {}) {
+  const token = String(ref == null ? '' : ref).trim();
+  if (!token) return [];
+  // Aktörün kendi sayfası (her kayıtta değişir, zaten düzenleyebilir) okunmaz;
+  // önce ucuz küme sorgusu, yetki hesabı yalnız görseli kullanan sahip için.
+  const self = safeId(actorId);
+  return listOwnerIds().filter(ownerId => (!self || safeId(ownerId) !== self) && workspaceImageTokens(ownerId).has(token) && !skipOwner(ownerId));
+}
 function countRowImages() {
   let rows = 0, refs = 0;
   for (const ownerId of listOwnerIds()) {
@@ -979,7 +1042,7 @@ function clearAllRowImages() {
 
 module.exports = {
   attachDeltaStore,
-  listOwnerIds, countRowImages, clearAllRowImages,
+  listOwnerIds, countRowImages, clearAllRowImages, ownersReferencingImage,
   loadWorkspace, saveWorkspace, saveWorkspaceAsync, diffWorkspaceRows, normalizeLflCountryExclusions,
   applyRowChanges, applyRowChangesAsync, rowRev, rowId,
   normalizeWorkspace,documentId,defaultWorkspace, normalizeStatusCatalog, safeId, workspaceFile, replaceWorkspaceReplica, MAX_PATCH_ROWS,

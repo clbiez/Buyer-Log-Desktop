@@ -9,6 +9,7 @@ module.exports = function registerCpImageRoutes(app, deps) {
   const imageAuthority=require('../lib/collection-image-authority');
   const {
     apiError,
+    assertCollectionImageDeleteAllowed,
     assertModelImageMutable,
     deleteCollectionImage,
     fs,
@@ -51,7 +52,7 @@ app.get('/api/cp-images/:id', userAccess.requireAnyArea('cp','orders','backlog',
   } catch (err) { apiError(res, err, 'CP görseli okunamadı.'); }
 });
 app.delete('/api/cp-images/:id', userAccess.requireArea('cp'), (req, res) => {
-  try { imageAuthority.assertAccess(userAccess,req.currentUser,getCollectionImage(req.params.id),{write:true});res.json({ ok: true, deleted: deleteCollectionImage(req.params.id) }); }
+  try { const found=getCollectionImage(req.params.id);imageAuthority.assertAccess(userAccess,req.currentUser,found,{write:true});assertCollectionImageDeleteAllowed(req.currentUser,found);res.json({ ok: true, deleted: deleteCollectionImage(req.params.id) }); }
   catch (err) { apiError(res, err, 'CP görseli silinemedi.'); }
 });
 

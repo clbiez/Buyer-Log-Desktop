@@ -3654,6 +3654,18 @@ function collectionWorkspaceEditAllowed(profile, ownerId) {
   // global Collection EDIT yetkisi de gerekir.
   return String(profile && profile.id || '') === String(ownerId || '') || userAccess.hasCapability(profile, 'COLLECTIONS.EDIT');
 }
+/* Görsel deposu modüller arası ortaktır; bir Koleksiyon satırında kullanılan
+   görseli ise yalnız o sayfayı düzenleyebilen (sahip ya da edit izinli) silebilir.
+   Önceden view izinli ya da hiç izni olmayan kullanıcı, kimliğini bildiği
+   sahibin satır görselini /api/collection-images veya /api/cp-images üzerinden
+   silebiliyordu. Hiçbir Koleksiyon satırında kullanılmayan görselin davranışı
+   değişmez. */
+function assertCollectionImageDeleteAllowed(profile, found) {
+  const id = found && found.item && found.item.id;
+  if (!id) return;
+  const blocked = collectionWorkspaces.ownersReferencingImage(id, { actorId: profile && profile.id, skipOwner: ownerId => collectionWorkspaceEditAllowed(profile, ownerId) });
+  if (blocked.length) throw Object.assign(new Error('Bu görsel düzenleme yetkiniz olmayan bir Koleksiyon sayfasında kullanılıyor. / This image is used on a Collection page you cannot edit.'), { code: 'COLLECTION_EDIT_DENIED', statusCode: 403 });
+}
 async function afterSharedCollectionSave() {
   // Legacy call sites remain harmless. Owner workspaces publish through
   // collectionReplication below; Shared Hub itself never owns Collection rows.
@@ -13041,13 +13053,14 @@ app.delete('/api/model-images/all', userAccess.requireArea('source'), userAccess
   }
 });
 app.delete('/api/collection-images/:id', userAccess.requireArea('koleksiyon'), (req, res) => {
-  try { require('./lib/collection-image-authority').assertAccess(userAccess,req.currentUser,getCollectionImage(req.params.id),{write:true});res.json({ ok: true, deleted: deleteCollectionImage(req.params.id) }); }
+  try { const found=getCollectionImage(req.params.id);require('./lib/collection-image-authority').assertAccess(userAccess,req.currentUser,found,{write:true});assertCollectionImageDeleteAllowed(req.currentUser,found);res.json({ ok: true, deleted: deleteCollectionImage(req.params.id) }); }
   catch (err) { apiError(res, err, 'Koleksiyon görseli silinemedi.'); }
 });
 
 // ---- CP görselleri route'ları → server/routes/cp-image-routes.js ----
 require('./routes/cp-image-routes')(app, {
   apiError,
+  assertCollectionImageDeleteAllowed,
   assertModelImageMutable,
   deleteCollectionImage,
   fs,
