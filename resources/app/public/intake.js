@@ -232,7 +232,7 @@
     const filterFields = filters.map(field => {
       const selected = Array.isArray(query().filterValues && query().filterValues[field.id]) ? query().filterValues[field.id] : [];
       const label = selected.length > 1 ? `${selected.length} ${text('seçim', 'selected')}` : (selected[0] || text('Tümü', 'All'));
-      return `<div class="intakeFilterField"><span class="intakeFilterLabel">${esc(fieldLabel(field))}</span><div class="intakeFilterControl"><button type="button" class="oabMultiTrigger intakeFilterTrigger" data-intake-filter="${esc(field.id)}" aria-haspopup="listbox" aria-expanded="false"><span class="oabMultiLabel${selected.length ? ' hasValue' : ''}">${esc(label)}</span><span class="oabMultiChevron" aria-hidden="true">▾</span></button><button type="button" class="intakeFilterRemove" data-intake-filter-remove="${esc(field.id)}" title="${esc(text('Filtreyi kaldır', 'Remove filter'))}" aria-label="${esc(text('Filtreyi kaldır', 'Remove filter'))}">×</button></div></div>`;
+      return `<div class="intakeFilterField"><span class="intakeFilterLabel">${esc(fieldLabel(field))}</span><div class="intakeFilterControl"><button type="button" class="oabMultiTrigger intakeFilterTrigger" data-intake-filter="${esc(field.id)}"${selected.length === 1 ? ` data-merch-field="${esc(fieldLabel(field))}" data-merch-value="${esc(selected[0])}"` : ''} aria-haspopup="listbox" aria-expanded="false"><span class="oabMultiLabel${selected.length ? ' hasValue' : ''}">${esc(label)}</span><span class="oabMultiChevron" aria-hidden="true">▾</span></button><button type="button" class="intakeFilterRemove" data-intake-filter-remove="${esc(field.id)}" title="${esc(text('Filtreyi kaldır', 'Remove filter'))}" aria-label="${esc(text('Filtreyi kaldır', 'Remove filter'))}">×</button></div></div>`;
     }).join('');
     const available = availableFor('filters', state.viewConfig).length;
     bar.innerHTML = `${filterFields}<button type="button" class="navActionBtn intakeFilterAdd" data-intake-add-filter${available ? '' : ' disabled'}>+ ${esc(text('Filtre ekle', 'Add filter'))}</button>`;
@@ -1099,12 +1099,16 @@
     const list = popover.querySelector('.intakeFilterValues');
     const search = popover.querySelector('.intakeFilterSearch');
 
+    // MAG/MMYG/Marka Müdürlüğü: değerin altında hiyerarşi bağlamı; arama ad ve müdürlükle de eşleşir.
+    const merchField = [field.id, field.name, fieldLabel(field)].map(ref => window.BLMerchHierarchy?.fieldOf?.(ref) || '').find(Boolean) || '';
+    const merchHay = value => merchField ? ' ' + window.BLMerchHierarchy.searchText(merchField, value) : '';
     const draw = () => {
       const top = list.scrollTop;
       const filter = clean(search.value).toLocaleLowerCase(isEnglish() ? 'en' : 'tr');
-      const visible = availableValues.filter(value => !filter || value.toLocaleLowerCase(isEnglish() ? 'en' : 'tr').includes(filter))
+      const visible = availableValues.filter(value => !filter || (value + merchHay(value)).toLocaleLowerCase(isEnglish() ? 'en' : 'tr').includes(filter))
         .sort((a,b)=>Number(selected.has(b))-Number(selected.has(a)));
       list.innerHTML = visible.length ? visible.map(value => `<label class="intakeFilterOption"><input type="checkbox" value="${esc(value)}"${selected.has(value) ? ' checked' : ''}><span>${esc(value)}</span></label>`).join('') : `<div class="intakeConfigEmpty">${esc(text('Eşleşen değer yok.', 'No matching value.'))}</div>`;
+      if (merchField) window.BLMerchHierarchy.decorate(list, merchField, { item: '.intakeFilterOption', text: 'span', searchAttr: 'blMerchSearch' });
       list.scrollTop = top;
     };
     draw();

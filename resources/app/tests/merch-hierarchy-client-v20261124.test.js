@@ -82,9 +82,16 @@ test('bütün filtre yüzeyleri aynı modülü kullanır', () => {
     'price-supplier-analysis.js': [/item:'\.psaMultiOption'/, /BLMerchHierarchy\.searchText/],
     'backlog-plan-actual.js': [/decorateSelect\(select,select\.dataset\.bpaFilter\)/],
     'overview-global-flow.js': [/\['mag','mmyg'\]\.forEach\(key=>window\.BLMerchHierarchy/],
-    'data-management-filter.js': [/BLMerchHierarchy\.optionText\(merchField, value\)/],
+    'data-management-filter.js': [/BLMerchHierarchy\.optionText\(merchField, value\)/, /data-merch-item="\.blvFilterValue"/, /BLMerchHierarchy\?\.decorateAll\?\.\(host\)/, /BLMerchHierarchy\.searchText\(merchField, value\)/],
     'user-management.js': [/function decorateMerch\(/, /decorateMerch\(main\)/],
     'quick-filter-groups.js': [/BLMerchHierarchy\.optionText\(merchField/],
+    // Widget filtreleri: liste bağlamı, ad/müdürlükle arama, seçili değer düğmesinde hover ipucu.
+    'tryd-advantage.js': [/merchHay\(value\)/, /item: '\.intakeFilterOption'/, /data-merch-field=/],
+    'postfob.js': [/merchHay\(value\)/, /item: '\.intakeFilterOption'/, /data-merch-field=/],
+    'oab-cube.js': [/merchHay\(value\)/, /item: '\.intakeFilterOption'/, /data-merch-field=/],
+    'intake.js': [/merchHay\(value\)/, /item: '\.intakeFilterOption'/, /data-merch-field=/],
+    // Ufuk (Veri Yönetimi) değer listesi ve Backlog genel bakış filtresi.
+    'backlog-overview.js': [/merchHay\(entry\)/, /BLMerchHierarchy\?\.decorateAll\?\.\(mount\)/],
   };
   for (const [file, patterns] of Object.entries(surfaces)) {
     const src = read(file);
@@ -92,4 +99,21 @@ test('bütün filtre yüzeyleri aynı modülü kullanır', () => {
   }
   assert.match(read('index.html'), /<script src="merch-hierarchy\.js\?v=__BL_ASSET_VERSION__/);
   assert.match(read('ui-components.css'), /\.blMerchCtx \{[^}]*var\(--ui-text-muted\)/, 'görünüm ortak bileşen dosyasında, renk token üzerinden');
+});
+
+test('hover ipucu: tam zincir, tablo çizimine dokunmaz, tek belge dinleyicisi', () => {
+  M.setData(DATA);
+  const mag = M.tipLines('mag', 'cu4e');
+  assert.equal(mag.head, 'CU4E · MAG');
+  assert.deepEqual(mag.lines, ['MMYG: CUW4 · ERKEK ÇOCUK', 'Marka Müdürlüğü: ERKEK ÇOCUK (8-14 YAŞ) MARKA DİREKTÖRLÜĞÜ'], 'müdürlük kısaltılmadan');
+  const mmyg = M.tipLines('mmyg', 'CUW4');
+  assert.equal(mmyg.head, 'CUW4 · ERKEK ÇOCUK');
+  assert.match(mmyg.lines.join('|'), /MAG: CU4C, CU4E/);
+  assert.deepEqual(M.tipLines('brandDirectorate', 'JOY MARKA DİREKTÖRLÜĞÜ').lines, ['ST9 · STANDART DIŞI AKSESUAR']);
+  assert.equal(M.tipLines('mag', 'NOPE'), null, 'eşlemesiz kodda ipucu yok, yerel title kalır');
+  assert.equal(M.tipLines('mag', 'OLD1').stale, true);
+  const src = read('merch-hierarchy.js'), app = read('app-main.js');
+  assert.match(src, /doc\.addEventListener\('pointerover',onOver,\{passive:true\}\)/);
+  assert.match(src, /headerCache/, 'başlık çözümü tablo başına önbellekli');
+  assert.doesNotMatch(app.slice(app.indexOf('function cellHtml('), app.indexOf('function cellPlainText(')), /BLMerchHierarchy/, 'hücre çizimi değişmedi');
 });

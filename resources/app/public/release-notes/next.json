@@ -97,6 +97,35 @@
           "en": "On a demo set model, separate saved fabric cards are picked for pieces A and B."
         }
       }
+    },
+    {
+      "id": "merch-hover-context",
+      "type": "feature",
+      "module": {
+        "tr": "Tablolar, widget'lar, Ufuk filtreleri",
+        "en": "Tables, widgets, Horizon filters"
+      },
+      "title": {
+        "tr": "MAG, MMYG ve Marka Müdürlüğü hücrelerinin üstüne gelince tam bağlam",
+        "en": "Full context when hovering MAG, MMYG and Brand Directorate cells"
+      },
+      "body": {
+        "tr": "Tablolarda bir MAG hücresinin üstüne gelince bağlı olduğu MMYG kodu ve adı ile Marka Müdürlüğü, MMYG hücresinde grubun adı, müdürlüğü ve altındaki MAG'ler görünür. Bu bilgi Genel Bakış widget'larının filtre listelerinde ve seçili değerlerinde, Veri Yönetimi Ufuk filtrelerinde ve Backlog genel bakış filtresinde de yer alır; arama ad ve müdürlükle de eşleşir. Tablo çizimine ek iş eklenmez.",
+        "en": "Hovering a MAG cell in a table shows its MMYG code, MMYG name and Brand Directorate; an MMYG cell shows the group name, directorate and its MAGs. The same context appears in Overview widget filter lists and selected values, Data Management Horizon filters and the Backlog overview filter, and search also matches names and directorates. Table rendering does no extra work."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "merch-hover-context.png",
+        "alt": {
+          "tr": "Demo CP tablosunda MAG hücresinin üstünde MMYG ve Marka Müdürlüğü ipucu",
+          "en": "MMYG and Brand Directorate tooltip over a MAG cell in the demo CP table"
+        },
+        "caption": {
+          "tr": "Demo veride D4 hücresinin üstüne gelince bağlı olduğu MMYG ve müdürlük görünüyor.",
+          "en": "On demo data, hovering D4 shows its MMYG and directorate."
+        }
+      }
     }
   ]
 }

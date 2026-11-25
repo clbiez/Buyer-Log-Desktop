@@ -125,6 +125,50 @@ async function refresh(){
     await page.screenshot({path:shotPath,clip:{x,y,width,height}});
     console.log('screenshot',shotPath,`${width*2}x${height*2}`,opened);
   }
+  // Tablo hover ipucu: MAG hücresine gelince tam zincir; yerel title ipucu süresince bastırılır.
+  await page.keyboard.press('Escape');await page.mouse.click(5,5);
+  await page.evaluate(()=>window.closeHeaderFilter?.());
+  const cellSel=`#view-cp td[data-key="Merch Alt Grup Kod"]`;
+  await page.waitForSelector(cellSel,{timeout:15000});
+  const cell=await page.$(cellSel),cellValue=(await cell.textContent()).trim();
+  await cell.scrollIntoViewIfNeeded();await cell.hover();
+  await page.waitForSelector('.blMerchTip.isVisible',{timeout:5000});
+  const tip=await page.$eval('.blMerchTip',el=>el.textContent);
+  const parent=h1.mag[cellValue];
+  assert.ok(tip.includes(cellValue)&&tip.includes(h1.mmyg[parent.mmyg].name)&&tip.includes(parent.directorate||h1.mmyg[parent.mmyg].directorate),`ipucu tam zinciri gösterir: ${tip}`);
+  assert.equal(await cell.getAttribute('title'),null,'yerel title ipucu süresince bastırılır');
+  if(shotPath){
+    const tipBox=await (await page.$('.blMerchTip')).boundingBox(),cb=await cell.boundingBox();
+    const width=1000,x=Math.max(0,Math.min(cb.x-420,1280-width)),y=Math.max(0,cb.y-160),height=Math.min(820-y,420);
+    const hoverShot=shotPath.replace(/\.png$/,'-hover.png');
+    await page.screenshot({path:hoverShot,clip:{x,y,width,height}});console.log('screenshot',hoverShot,tipBox.width,tipBox.height);
+  }
+  await page.mouse.move(5,5);
+  await page.waitForFunction(()=>!document.querySelector('.blMerchTip.isVisible'),null,{timeout:3000});
+  assert.equal(await cell.getAttribute('title'),cellValue,'ayrılınca yerel title geri yazılır');
+  // L1 ölçüm: hover maliyeti yalnız imlecin girdiği hücrede çalışan çözümleme işidir (render'a ek iş yok).
+  const hoverCost=await page.evaluate(()=>{
+    const H=window.BLMerchHierarchy,cells=[...document.querySelectorAll('#view-cp tbody td')];
+    const runs=[];for(let r=0;r<5;r++){const t=performance.now();for(const td of cells){const x=H.hoverTarget(td);if(x&&x.field)H.tipLines(x.field,x.value);}runs.push(+(((performance.now()-t)*1000)/cells.length).toFixed(2));}
+    return {cells:cells.length,microsPerCell:runs};
+  });
+  console.log('hover-resolve-us-per-cell',JSON.stringify(hoverCost));
+  // Widget/rapor tabloları sütun anahtarı taşımaz: alan başlık etiketinden (colspan dahil) çözülür.
+  const generic=await page.evaluate(([mag,mmyg])=>{
+    const t=document.createElement('table');
+    t.innerHTML=`<thead><tr><th colspan="2">Grup</th><th>Diğer</th></tr><tr><th>Buying Group</th><th>MAG ↑</th><th>MMYG</th></tr></thead><tbody><tr><td>X</td><td>${mag}</td><td>${mmyg}</td></tr></tbody>`;
+    document.body.appendChild(t);const H=window.BLMerchHierarchy,cells=t.tBodies[0].rows[0].cells;
+    const out=[...cells].map(td=>{const x=H.hoverTarget(td);return x?x.field+':'+x.value:'';});t.remove();return out;
+  },[firstMag,magEntry.mmyg]);
+  assert.deepEqual(generic,['',`mag:${firstMag}`,`mmyg:${magEntry.mmyg}`],'başlık etiketiyle sütun çözümü');
+  // Gruplu widget hücresi (TR/YD, Post-FOB, OAB Küp, INTAKE): aç/kapa oku + <strong> + model sayısı.
+  const grouped=await page.evaluate(mag=>{
+    const t=document.createElement('table');
+    t.innerHTML=`<thead><tr><th>MAG</th><th>Değer</th></tr></thead><tbody><tr><td class="oabPivotGroupCell" title="${mag}"><button type="button">▾</button><strong>${mag}</strong><span>3 model</span></td><td>1</td></tr></tbody>`;
+    document.body.appendChild(t);const H=window.BLMerchHierarchy,x=H.hoverTarget(t.querySelector('td'));
+    const hit=x&&x.candidates.map(v=>H.tipLines(x.field,v)).find(Boolean);t.remove();return hit?hit.head:null;
+  },firstMag);
+  assert.equal(grouped,`${firstMag} · MAG`,'gruplu widget hücresinde ham kod bulunur');
   // Kendiliğinden güncellenme: ASAS'ta ilk MAG başka bir MMYG'ye taşınır, yeniden yenilenir.
   writeAsas(true);await refresh();
   const h2=await (await api('/api/merch-hierarchy')).json();

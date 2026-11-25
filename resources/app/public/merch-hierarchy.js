@@ -131,7 +131,9 @@
   var DEFAULT_SHAPE={item:'.cfpItem',text:'',searchAttr:'txt'};
   function decorateItem(item,field,shape){
     var input=item.querySelector('input');if(!input)return;
-    var value=input.value;if(!/[0-9A-Za-zÇĞİÖŞÜçğıöşü]/.test(String(value)))return; // boş / '—' yer tutucu
+    // Değer: value niteliği; yoksa (data-* ile kodlanmış listeler) satır metni. İlk geçişte saklanır.
+    if(item.dataset.merchValue==null){var raw=input.getAttribute('value'),host0=shape.text?item.querySelector(shape.text):null;item.dataset.merchValue=raw!=null?raw:String((host0||item).textContent||'').replace(/\s+/g,' ').trim();}
+    var value=item.dataset.merchValue;if(!/[0-9A-Za-zÇĞİÖŞÜçğıöşü]/.test(String(value)))return; // boş / '—' yer tutucu
     var old=item.querySelector('.blMerchCtx');if(old)old.remove();
     var html=ctxHtml(field,value);if(!html)return;
     var wrap=item.querySelector('.blMerchOpt');
@@ -182,5 +184,133 @@
     return true;
   }
 
-  return Object.freeze({fieldOf:fieldOf,noteVersion:noteVersion,ensure:ensure,onChange:onChange,setData:setData,describe:describe,optionText:optionText,searchText:searchText,ctxHtml:ctxHtml,decorate:decorate,decorateSelect:decorateSelect,FIELDS:FIELDS.slice()});
+  /* Bildirimsel bağlantı: liste kapsayıcısı data-merch-field="MAG" (ve gerekirse
+     data-merch-item / data-merch-text) taşır; çizimden sonra decorateAll(root) yeter. */
+  function decorateAll(root){
+    if(!root||!root.querySelectorAll)return 0;
+    var hosts=[].slice.call(root.querySelectorAll('[data-merch-field]:not([data-merch-value])'));
+    if(root.matches&&root.matches('[data-merch-field]:not([data-merch-value])'))hosts.push(root);
+    hosts.forEach(function(host){
+      if(host.tagName==='SELECT')decorateSelect(host,host.dataset.merchField);
+      else decorate(host,host.dataset.merchField,{item:host.dataset.merchItem||DEFAULT_SHAPE.item,text:host.dataset.merchText||'',searchAttr:'blMerchSearch'});
+    });
+    return hosts.length;
+  }
+
+  /* ---------------------------------------------------------------------------
+     Hover ipucu: tablolarda (CP, Siparişler, Backlog, widget ve rapor tabloları) ve
+     data-merch-field + data-merch-value taşıyan her öğede imleç bir MAG / MMYG /
+     Marka Müdürlüğü değerine gelince tam zincir gösterilir.
+     Maliyet: tablo çizimine HİÇBİR şey eklenmez. Belge düzeyinde tek pointerover
+     dinleyicisi vardır; sütun alanı hücrenin data-key'inden ya da tablo başlık
+     satırından (tablo başına önbellekli) çözülür, değer O(1) haritadan okunur.
+     Veri yalnız ilk merch hücresine gelindiğinde istenir. */
+  var TIP_DELAY=320,tipEl=null,tipTarget=null,tipTimer=0,pendingEl=null,headerCache=typeof WeakMap==='function'?new WeakMap():null;
+  function headerLabel(th){
+    if(!th)return '';
+    var ds=th.dataset||{};
+    if(ds.merchField)return ds.merchField;
+    var key=ds.key||ds.fk||ds.kcol||ds.col||'';
+    if(key&&fieldOf(key))return key;
+    var label=th.querySelector&&th.querySelector('.thLabel');
+    return String((label||th).textContent||'').replace(/[▾▴▲▼↑↓⇅]/g,'').replace(/\s+/g,' ').trim(); // i18n-ignore — sıralama okları
+  }
+  function columnFields(table){
+    var head=table.tHead;if(!head||!head.rows.length)return null;
+    var row=head.rows[head.rows.length-1],cached=headerCache&&headerCache.get(table);
+    if(cached&&cached.row===row&&cached.count===row.cells.length)return cached.fields;
+    var fields=[],idx=0;
+    for(var i=0;i<row.cells.length;i++){var cell=row.cells[i],span=cell.colSpan||1,f=fieldOf(headerLabel(cell));for(var s=0;s<span;s++)fields[idx+s]=f;idx+=span;}
+    if(headerCache)headerCache.set(table,{row:row,count:row.cells.length,fields:fields});
+    return fields;
+  }
+  function cellColumnIndex(td){var idx=0,cells=td.parentElement?td.parentElement.cells:[];for(var i=0;i<cells.length&&cells[i]!==td;i++)idx+=cells[i].colSpan||1;return idx;}
+  function hoverTarget(el){
+    if(!el||!el.closest)return null;
+    var tagged=el.closest('[data-merch-field][data-merch-value]');
+    if(tagged)return {el:tagged,field:fieldOf(tagged.dataset.merchField),value:tagged.dataset.merchValue};
+    var td=el.closest('td');if(!td||td.closest('.colFilterPanel'))return null;
+    var field='';
+    if(td.dataset.merchField)field=fieldOf(td.dataset.merchField);
+    else if(td.dataset.key)field=fieldOf(td.dataset.key);
+    if(!field){var table=td.closest('table'),fields=table&&columnFields(table);field=fields?fields[cellColumnIndex(td)]||'':'';}
+    if(!field)return null;
+    // Değer adayları: gruplu widget hücreleri aç/kapa oku, <strong> etiket ve "3 model" sayısı
+    // taşır (tam metin "▾CU4E3 model" olur). Ham değer title / <strong> içindedir; eşlemede
+    // bulunan ilk aday kullanılır (showTip).
+    var clean=function(v){return String(v==null?'':v).replace(/\s+/g,' ').trim();};
+    var strong=td.querySelector&&td.querySelector('strong');
+    var candidates=[td.dataset.merchValue,td.getAttribute('title'),td.dataset.blMerchTitle,strong&&strong.textContent,td.textContent].map(clean).filter(function(v,i,a){return v&&a.indexOf(v)===i;});
+    return candidates.length?{el:td,field:field,value:candidates[0],candidates:candidates}:null;
+  }
+  function tipLines(field,value){
+    if(!data)return null;
+    var c=code(value);
+    if(field==='mag'){
+      var m=data.mag[c];if(!m)return null;var p=data.mmyg[m.mmyg]||{};
+      return {head:c+' · MAG',lines:[L('MMYG: ','MMYG: ')+[m.mmyg,p.name].filter(Boolean).join(' · '),L('Marka Müdürlüğü: ','Brand Directorate: ')+(m.directorate||p.directorate||'—')],stale:m.stale};
+    }
+    if(field==='mmyg'){
+      var g=data.mmyg[c];if(!g)return null;var mags=[];for(var k in data.mag)if(data.mag[k].mmyg===c)mags.push(k);mags.sort();
+      return {head:c+(g.name?' · '+g.name:''),lines:[L('Marka Müdürlüğü: ','Brand Directorate: ')+(g.directorate||'—'),'MAG: '+(mags.slice(0,10).join(', ')+(mags.length>10?' +'+(mags.length-10):'')||'—')],stale:g.stale};
+    }
+    if(field==='brandDirectorate'){
+      var want=lower(String(value).trim()),groups=[];
+      for(var mm in data.mmyg)if(lower(data.mmyg[mm].directorate)===want)groups.push(mm+(data.mmyg[mm].name?' · '+data.mmyg[mm].name:''));
+      if(!groups.length)return null;groups.sort();
+      return {head:String(value).trim(),lines:groups.slice(0,8).concat(groups.length>8?['+'+(groups.length-8)+' MMYG']:[])};
+    }
+    return null;
+  }
+  function hideTip(){
+    clearTimeout(tipTimer);tipTimer=0;pendingEl=null;
+    if(tipTarget&&tipTarget.dataset&&tipTarget.dataset.blMerchTitle!=null){if(!tipTarget.hasAttribute('title'))tipTarget.setAttribute('title',tipTarget.dataset.blMerchTitle);delete tipTarget.dataset.blMerchTitle;}
+    tipTarget=null;
+    if(tipEl){tipEl.classList.remove('isVisible');tipEl.hidden=true;}
+  }
+  function showTip(target){
+    var t=null,list=target.candidates||[target.value];
+    for(var i=0;i<list.length&&!t;i++)t=tipLines(target.field,list[i]);
+    if(!t)return;
+    var doc=root.document;
+    if(!tipEl){tipEl=doc.createElement('div');tipEl.className='blTip blMerchTip';tipEl.setAttribute('role','tooltip');tipEl.hidden=true;doc.body.appendChild(tipEl);}
+    var el=target.el;
+    // Yerel title ikinci (gecikmeli) ipucu açmasın: ayrılınca geri yazılır.
+    if(el.hasAttribute('title')){el.dataset.blMerchTitle=el.getAttribute('title');el.removeAttribute('title');}
+    tipEl.innerHTML='<b>'+esc(t.head)+'</b>'+t.lines.map(function(line){return '<span>'+esc(line)+'</span>';}).join('')+(t.stale?'<span class="blMerchCtxStale">'+esc(L('Son yenilemede görülmedi','Not seen in the latest refresh'))+'</span>':'');
+    tipEl.hidden=false;
+    var r=el.getBoundingClientRect(),w=tipEl.offsetWidth,h=tipEl.offsetHeight,vw=root.innerWidth,vh=root.innerHeight;
+    var left=Math.max(8,Math.min(Math.round(r.left),vw-w-8)),top=Math.round(r.bottom+6);
+    if(top+h>vh-8)top=Math.round(r.top-h-6);
+    tipEl.style.left=left+'px';tipEl.style.top=top+'px';
+    tipEl.classList.add('isVisible');
+    tipTarget=el;
+  }
+  function onOver(event){
+    var target=hoverTarget(event.target);
+    if(!target){if(tipTarget&&!tipTarget.contains(event.target))hideTip();return;}
+    if(target.el===tipTarget||target.el===pendingEl)return;
+    hideTip();
+    pendingEl=target.el;
+    tipTimer=setTimeout(function(){
+      tipTimer=0;pendingEl=null;
+      if(!target.el.isConnected)return;
+      if(data&&!data._stale){showTip(target);return;}
+      ensure().then(function(){if(target.el.isConnected&&target.el.matches(':hover'))showTip(target);});
+    },TIP_DELAY);
+  }
+  function installHoverTips(){
+    var doc=root.document;if(!doc||!doc.addEventListener||root.__blMerchTipsInstalled)return false;
+    root.__blMerchTipsInstalled=true;
+    doc.addEventListener('pointerover',onOver,{passive:true});
+    doc.addEventListener('pointerout',function(event){var owner=tipTarget||pendingEl;if(owner&&!owner.contains(event.relatedTarget))hideTip();},{passive:true});
+    doc.addEventListener('pointerdown',hideTip,true);
+    doc.addEventListener('keydown',function(event){if(event.key==='Escape')hideTip();});
+    root.addEventListener('scroll',hideTip,true);
+    root.addEventListener('blur',hideTip);
+    return true;
+  }
+  if(root&&root.document&&typeof module==='undefined')installHoverTips();
+
+  return Object.freeze({fieldOf:fieldOf,noteVersion:noteVersion,ensure:ensure,onChange:onChange,setData:setData,describe:describe,optionText:optionText,searchText:searchText,ctxHtml:ctxHtml,decorate:decorate,decorateSelect:decorateSelect,decorateAll:decorateAll,tipLines:tipLines,hoverTarget:hoverTarget,installHoverTips:installHoverTips,FIELDS:FIELDS.slice()});
 });
