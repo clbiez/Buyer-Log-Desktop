@@ -156,43 +156,9 @@
     if (ed.format === 'xlsx' && ed.selected !== 'summary') ed.selected = ed.data.sheets.length ? Math.max(0, Math.min(Number(ed.selected) || 0, ed.data.sheets.length - 1)) : 'summary';
   }
 
-  /* Smart Layout Studio is a view of the existing draft and layout, never a second document. */
-  async function openSelection(tab, scope) {
-    try {
-      let info = window.BLAIScreenData && window.BLAIScreenData.table(tab, { all: false });
-      if (!info) throw Error(L('Bu kaynakta kullanılabilir kayıt yok.', 'This source has no available records.'));
-      const selected = new Set(info.selectedIds || []);
-      const mode = scope || (selected.size ? 'selected' : 'filtered');
-      if (mode === 'selected') info = window.BLAIScreenData.table(tab, { all: true }) || info;
-      const rows = mode === 'selected' ? info.rows.filter(row => selected.has(info.rowId(row))) : info.rows;
-      if (rows.length > window.BLOutputSource.MAX_ROWS) throw Error(L('Bir sunumda en fazla 30.000 kayıt kullanılabilir. Filtreyi daraltın.', 'A presentation supports up to 30,000 records. Narrow the filter.'));
-      if (!rows.length) throw Error(L('Önce modelleri seçin veya filtreyi değiştirin.', 'Select models first or change the filter.'));
-      const built = window.BLOutputSource.build({ module: tab === 'koleksiyon' ? 'collection' : tab, rows, rowId: info.rowId,
-        readRow: info.canonicalRow || (row => row), columns: info.columns || [], scope: mode, lang: isEn() ? 'en' : 'tr' });
-      const records = Object.fromEntries(Object.entries(built.records).map(([token, record]) => [token, { id: record.id, module: record.module, values: record.values }]));
-      const draft = await AI().createStudio({ data: built.data, records, source: built.source, lang: isEn() ? 'en' : 'tr' });
-      await open({ draft, sourceTab: tab });
-      if (!ed || ed.draft.id !== draft.id) return;
-      const session = ed, images = {}, jobs = built.items.slice(0, 200);
-      let next = 0;
-      session.imageReady = Promise.all(Array.from({ length: 4 }, async () => {
-        while (next < jobs.length) {
-          const i = next++, item = jobs[i];
-          try {
-            const identity = window.BLAIScreenData.rowImage(tab, rows[i]);
-            if (!identity) continue;
-            const url = await window.BLAIScreenData.imageDataUrl(identity);
-            if (url) images[item.image] = url;
-          } catch (_) { /* missing images remain explicit placeholders */ }
-        }
-      })).then(async () => {
-        const saved = await AI().saveStudioImages(draft.id, images);
-        if (ed !== session) return;
-        session.draft.images = saved.images; updateLayoutPreview();
-      }).catch(error => { if (ed === session) { session.imageError = AI().errorText(error); renderFoot(); } });
-      AI().outputTemplates.list().then(list => { if (ed === session) { session.templates = [...list.personal, ...list.shared]; if (['content', 'layout'].includes(session.mode)) renderMain(); } }).catch(() => {});
-    } catch (error) { toast(error.message || AI().errorText(error), 'error'); }
-  }
+  /* Smart Layout Studio is a view of the existing draft and layout, never a second document.
+     Kayıtlardan yeni sunum Presentation Studio'dadır (presentation-studio.js); bu dal yalnız
+     stüdyo düzenli mevcut taslakları ve LCW AI çıktılarını düzenler. */
   const studioState = () => ed.data.layout.studio;
   const studioSelect = (key, label, choices, value) => `<label class="lcwaiEdField"><span>${esc(label)}</span><select data-studio-setting="${key}">${choices.map(([id, text]) => `<option value="${id}"${value === id ? ' selected' : ''}>${esc(text)}</option>`).join('')}</select></label>`;
   function studioSettings() {
@@ -318,7 +284,7 @@
     // Ayar paneli ve önizleme ayrı kayar; yeniden çizimde iki konum da korunur.
     const scroll = ['.lcwaiLayControls', '.lcwaiLay > .lcwaiLayStage'].map(sel => main.querySelector(sel)?.scrollTop || 0);
     main.innerHTML = `<div class="lcwaiLay"><aside class="lcwaiLayControls">
-      ${matrixPanel()}<details class="lcwaiLayMore"><summary>${esc(L('Kaynak ve şablonlar', 'Source and templates'))}</summary>${sourceSummary()}${ed.sourceTab ? `<div class="lcwaiStudioActions"><button class="lcwaiBtn" data-studio-scope="selected">${esc(L('Seçili kayıtlardan yeniden başlat', 'Restart from selected records'))}</button><button class="lcwaiBtn" data-studio-scope="filtered">${esc(L('Filtrelenmiş kayıtlardan yeniden başlat', 'Restart from filtered records'))}</button></div>` : ''}${(ed.templates || []).length ? studioSelect('template', L('Kayıtlı şablon', 'Saved template'), [['', L('Şablon seç', 'Choose a template')], ...ed.templates.map((t, i) => [String(i), t.name])], '') : ''}</details>${st.manualPages.length ? `<button class="lcwaiBtn" data-matrix-reset>${esc(L('Otomatik gruplamaya dön', 'Restore automatic grouping'))}</button><p class="lcwaiNote">${esc(L('Manuel yerleşim etkin. Grup ayarlarını uygulamak için otomatik gruplamaya dönün.', 'Manual placement is active. Restore automatic grouping to apply group rules.'))}</p>` : ''}<details class="lcwaiLayMore"><summary>${esc(L('Sayfa ve kart düzeni', 'Page and card layout'))}</summary><section class="lcwaiLayGroup">${studioSettings()}</section></details>
+      ${matrixPanel()}<details class="lcwaiLayMore"><summary>${esc(L('Kaynak ve şablonlar', 'Source and templates'))}</summary>${sourceSummary()}${(ed.templates || []).length ? studioSelect('template', L('Kayıtlı şablon', 'Saved template'), [['', L('Şablon seç', 'Choose a template')], ...ed.templates.map((t, i) => [String(i), t.name])], '') : ''}</details>${st.manualPages.length ? `<button class="lcwaiBtn" data-matrix-reset>${esc(L('Otomatik gruplamaya dön', 'Restore automatic grouping'))}</button><p class="lcwaiNote">${esc(L('Manuel yerleşim etkin. Grup ayarlarını uygulamak için otomatik gruplamaya dönün.', 'Manual placement is active. Restore automatic grouping to apply group rules.'))}</p>` : ''}<details class="lcwaiLayMore"><summary>${esc(L('Sayfa ve kart düzeni', 'Page and card layout'))}</summary><section class="lcwaiLayGroup">${studioSettings()}</section></details>
       ${chosen ? `<section class="lcwaiLayGroup"><h4>${esc(chosen)}</h4>${studioSelect('span', L('Bu kartın yüksekliği', 'This card height'), [['auto', L('Kaynağa göre', 'From source')], ['1', L('Tek satır', 'One row')], ['2', L('Çift satır', 'Two rows')]], String(st.spans[chosen] || 'auto'))}<div class="lcwaiStudioActions"><button class="lcwaiBtn" data-studio-card-move="-1">${esc(L('Öne taşı', 'Move earlier'))}</button><button class="lcwaiBtn" data-studio-card-move="1">${esc(L('Sona taşı', 'Move later'))}</button></div></section>` : ''}
       </aside><div class="lcwaiLaySplit" role="separator" tabindex="0" aria-orientation="vertical" aria-valuemin="${SPLIT_MIN}" aria-valuemax="${SPLIT_MAX}" aria-valuenow="${Math.round(studioSplit())}" data-lay-split title="${esc(L('Sürükleyerek panel genişliğini değiştirin · Çift tıklama: varsayılan', 'Drag to resize the panel · Double-click: default'))}" aria-label="${esc(L('Panel ile önizleme arasındaki sınır', 'Divider between panel and preview'))}"></div><div class="lcwaiLayStage" data-lay-stage></div></div>`;
     applyStudioSplit(main.querySelector('.lcwaiLay'), studioSplit());
@@ -390,7 +356,6 @@
       ed.aiProposal = null; markDirty(); renderRail(); renderMain(); return true;
     }
     if (target.matches('[data-studio-item-page]')) { ed.itemPage = Math.max(0, (ed.itemPage || 0) + Number(target.dataset.studioItemPage)); renderMain(); return true; }
-    if (target.matches('[data-studio-scope]')) { openSelection(ed.sourceTab, target.dataset.studioScope); return true; }
     if (target.matches('[data-studio-header]')) { studioCommit({ ...ed.data.layout, studio: { ...st, headerHidden: !st.headerHidden } }); return true; }
     if (target.matches('[data-studio-header-size]')) { studioCommit({ ...ed.data.layout, headerHeight: ed.data.layout.headerHeight + Number(target.dataset.studioHeaderSize) }); return true; }
     if (target.matches('[data-studio-card-move]')) {
@@ -522,7 +487,6 @@
     }
     if (isStudio()) { ed.data.layout.studio.matrix = true; ed.mode = 'layout'; }
     ed.exportFormat = draft.format;
-    ed.sourceTab = options.sourceTab || '';
     mount();
   }
 
@@ -1508,7 +1472,6 @@
     const api = AI();
     if (!ed || ed.busy || !api) return;
     const session = ed;
-    if (ed.imageReady) await ed.imageReady;
     if (ed !== session) return;
     const data = collectData();
     ed.busy = true; ed.error = ''; ed.issues = []; ed.warnings = []; ed.result = null;
@@ -2257,5 +2220,5 @@
     for (const record of Object.values(ed.draft.records || {})) if (!Array.isArray(record) && record.values) record.labels = Object.fromEntries(Object.keys(record.values).map(id => [id, fieldName(id)]));
     root().remove(); document.removeEventListener('keydown', onKeydown, true); mount();
   }
-  window.BLOutputEditor = { open, openSelection, close: () => close(false), openTemplates, refreshLanguage, _parseTsv: parseTsv, _state: () => ed };
+  window.BLOutputEditor = { open, close: () => close(false), openTemplates, refreshLanguage, _parseTsv: parseTsv, _state: () => ed };
 })();

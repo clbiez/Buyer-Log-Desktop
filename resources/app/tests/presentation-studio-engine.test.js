@@ -170,3 +170,10 @@ test('2.000 kartlık yerleşim makul sürede biter', () => {
   assert.equal(res.index.size, 2000);
   assert.ok(ms < 1500, `${ms} ms`);
 });
+
+test('belge kaynak tabloyu (Koleksiyon/CP/Siparişler) saklar; bilinmeyen kaynak Koleksiyon’a düşer', () => {
+  assert.equal(E.createDoc({ ids: ['a'], source: 'cp' }).source, 'cp');
+  assert.equal(E.normalizeDoc({ order: ['a'], source: 'orders' }, { ids: ['a'] }).source, 'orders');
+  assert.equal(E.normalizeDoc({ order: ['a'], source: 'evil' }, { ids: ['a'] }).source, 'koleksiyon');
+  assert.equal(E.normalizeDoc({ order: ['a'] }, { ids: ['a'] }).source, 'koleksiyon');
+});

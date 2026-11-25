@@ -41,8 +41,9 @@
   function defaultStyle(fields) {
     return { font: 'Arial', fs: 8, img: 1.05, cardW: 112, gap: 10, margin: 26, labels: false, card: 'frame', keepGroups: false, fields: (fields || []).slice(0, LIMITS.fields) };
   }
-  function createDoc({ ids = [], fields = [], levels = [], title = '' } = {}) {
-    return { v: 2, title: text(title, LIMITS.title), page: { preset: 'A4', orient: 'landscape', cw: 297, ch: 210 }, style: defaultStyle(fields),
+  const SOURCES = Object.freeze(['koleksiyon', 'cp', 'orders']);
+  function createDoc({ ids = [], fields = [], levels = [], title = '', source = 'koleksiyon' } = {}) {
+    return { v: 2, source: SOURCES.includes(source) ? source : 'koleksiyon', title: text(title, LIMITS.title), page: { preset: 'A4', orient: 'landscape', cw: 297, ch: 210 }, style: defaultStyle(fields),
       grouping: { levels: levels.slice(0, LIMITS.levels), breakTop: false }, pages: [{ id: 'p1', flow: true, auto: true }], cards: {}, order: ids.slice(0, LIMITS.cards), labels: {}, seq: 2 };
   }
   function normalizeStyle(raw, allowedFields) {
@@ -92,7 +93,7 @@
     const labels = {};
     for (const [k, v] of Object.entries(d.labels && typeof d.labels === 'object' ? d.labels : {}).slice(0, 2000)) if (typeof k === 'string' && k.length <= 2000) { const t = text(v, LIMITS.label); if (t) labels[k] = t; }
     const seq = Math.max(num(d.seq, 2), ...pages.map(p => Number(p.id.slice(1)) + 1));
-    return { v: 2, title: text(d.title, LIMITS.title), page: normalizePage(d.page), style: normalizeStyle(d.style, fields), grouping: normalizeGrouping(d.grouping, fields), pages, cards, order, labels, seq };
+    return { v: 2, source: SOURCES.includes(d.source) ? d.source : 'koleksiyon', title: text(d.title, LIMITS.title), page: normalizePage(d.page), style: normalizeStyle(d.style, fields), grouping: normalizeGrouping(d.grouping, fields), pages, cards, order, labels, seq };
   }
 
   function textHeight(s) { const n = s.fields.length; return n ? 8 + s.fs * 1.18 * 1.3 + (n - 1) * s.fs * 1.3 : 4; }

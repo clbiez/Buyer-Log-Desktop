@@ -9,6 +9,23 @@ const os = require('node:os');
 const path = require('node:path');
 const XLSX = require('xlsx');
 const templates = require('../server/lib/lcwai-output/output-user-templates');
+const { createDraftStore } = require('../server/lib/lcwai-output/output-drafts');
+const contracts = require('../server/lib/lcwai-output/output-contracts');
+/* Kayıtlardan yeni stüdyo taslağı oluşturma kaldırıldı (Presentation Studio'ya taşındı).
+   Önceden oluşturulmuş stüdyo düzenli taslaklar ve LCW AI çıktıları hâlâ aynı
+   çizim yolundan (renderStudio) geçer; bu yardımcı o taslakları aynı biçimde depoya yazar. */
+function seedStudioDraft(service, root, owner, input) {
+  const parsed = contracts.normalizePresentation(input.data, { lang: 'tr' });
+  assert.ok(parsed.ok);
+  const tokens = parsed.data.slides.flatMap(slide => slide.layout === 'gallery' ? slide.items : []).map(item => item.image);
+  const columns = S.normalizeColumns(input.source && input.source.columns);
+  const records = S.normalizeRecords(input.records, tokens, 'tr', columns);
+  const module = records[tokens[0]].module;
+  const id = createDraftStore({ root: `${root}-drafts` }).create(owner, { format: 'pptx', data: parsed.data, records, title: parsed.data.title, lang: 'tr',
+    source: { module, scope: 'selected', count: tokens.length, grain: module === 'collection' ? 'model-colour' : 'order-row', capturedAt: new Date().toISOString(), columns },
+    orientation: 'landscape', detail: 'standard', day: new Date().toISOString().slice(0, 10), template: 'catalog', templateLabel: 'Smart Layout Studio', images: input.images || {} });
+  return service.getDraft(owner, id);
+}
 
 test('studio: mixed spans preserve every record, never overlap and remain deterministic', () => {
   const groups = [{ title: 'A', items: Array.from({ length: 23 }, (_, i) => ({ title: `M${i}`, image: `KOL-${i + 1}` })) }];
@@ -77,7 +94,7 @@ test('studio: offline draft, owner isolation and real PDF/HTML/PPTX/XLSX paths p
   try {
     const service = createOutputService({ engine: { chat() { throw Error('AI must not be called'); } }, storeOptions: { root } });
     const source = S.build({ module: 'orders', rows: Array.from({ length: 123 }, (_, i) => ({ _id: `r${i}`, modelName: `Model ${i}`, quantity: i, setPieceCount: i % 4 ? 1 : 2 })) });
-    const draft = service.createStudio('u1', source);
+    const draft = seedStudioDraft(service, root, 'u1', source);
     assert.equal(draft.source.count, 123);
     assert.equal(draft.data.slides.flatMap(s => s.items || []).length, 123, 'no 60-card truncation');
     assert.throws(() => service.getDraft('u2', draft.id));
@@ -124,7 +141,7 @@ test('studio: reordering a scope larger than the image cap preserves the same re
     const service = createOutputService({ storeOptions: { root } });
     const source = S.build({ module: 'orders', rows: Array.from({ length: 205 }, (_, i) => ({ _id: `r${i}`, modelName: `M${i}` })) });
     source.images = { 'ORD-1': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==' };
-    const draft = service.createStudio('u1', source);
+    const draft = seedStudioDraft(service, root, 'u1', source);
     const items = draft.data.slides.find(slide => slide.items).items;
     items.push(items.shift());
     const output = (await service.renderDraft('u1', draft.id, { data: draft.data, format: 'html' })).output;
@@ -195,7 +212,7 @@ test('studio: table columns survive the server draft round-trip and reach Excel 
     const rows = [{ id: 1, plmId: 'P1', fabric: 'Pique' }, { id: 2, plmId: 'P2' }];
     const built = S.build({ module: 'collection', rows, columns: [{ key: 'fabric', label: 'Fabric', readValue: row => row.fabric }] });
     const records = Object.fromEntries(Object.entries(built.records).map(([token, r]) => [token, { id: r.id, module: r.module, values: r.values }]));
-    const draft = service.createStudio('u1', { data: built.data, records, source: { ...built.source, columns: [...built.source.columns, { id: 'bad id', label: 'x' }] } });
+    const draft = seedStudioDraft(service, root, 'u1', { data: built.data, records, source: { ...built.source, columns: [...built.source.columns, { id: 'bad id', label: 'x' }] } });
     assert.deepEqual(draft.source.columns, [{ id: 'col.fabric', label: 'Fabric' }]);
     assert.equal(draft.records['KOL-1'].values['col.fabric'], 'Pique');
     assert.equal(draft.records['KOL-2'].labels['col.fabric'], 'Fabric', 'labels exist even where the value is empty');
@@ -221,7 +238,7 @@ test('studio: PDF skips the shell footer (pages carry their own) and Buyer Log-o
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-studio-brand-'));
   try {
     const service = createOutputService({ engine: { chat() { throw Error('AI must not be called'); } }, storeOptions: { root } });
-    const draft = service.createStudio('u1', S.build({ module: 'orders', rows: [{ _id: 'a', modelName: 'A' }, { _id: 'b', modelName: 'B' }] }));
+    const draft = seedStudioDraft(service, root, 'u1', S.build({ module: 'orders', rows: [{ _id: 'a', modelName: 'A' }, { _id: 'b', modelName: 'B' }] }));
     const pdf = (await service.renderDraft('u1', draft.id, { data: draft.data, format: 'pdf' })).output;
     assert.equal(pdf.footer, false, 'Electron footerTemplate would overlap the slide footer');
     const pptx = (await service.renderDraft('u1', draft.id, { data: draft.data, format: 'pptx' })).output;

@@ -1,9 +1,9 @@
 /* ===================================================================
-   Presentation Studio — Koleksiyon modellerinden görsel sunum editörü.
+   Presentation Studio — Koleksiyon, CP ve Siparişler kayıtlarından görsel sunum editörü.
 
    Belge (BLPresentationEngine) tek doğruluk kaynağıdır; sayfa üzerinde
    sürükleme, boyutlandırma, sabitleme ve hizalama yalnız belgeyi değiştirir.
-   Koleksiyon verisi salt okunurdur: kart taşıma/grup değişimi kaynak
+   Kaynak tablo verisi salt okunurdur: kart taşıma/grup değişimi kaynak
    kayda yazılmaz. Önizleme, PDF ve PowerPoint aynı çizim listesinden
    (BLPresentationRender) üretilir.
 
@@ -43,7 +43,15 @@
   // Yalnız içerik değişince yazar: gereksiz DOM değişimi ve genel gözlemci işi oluşmaz.
   const setHtml = (el, html) => { if (el && el.__psHtml !== html) { el.innerHTML = html; el.__psHtml = html; } };
 
-  /* ---------------- Veri kaynağı (Koleksiyon, salt okunur) ---------------- */
+  /* ---------------- Veri kaynağı (Koleksiyon/CP/Siparişler, salt okunur) ---------------- */
+  // Kaynak tablo → canonical modül, görünen ad ve varsayılanlar. CP/Siparişler'de her kart bir sipariş satırıdır.
+  const SOURCES = Object.freeze({
+    koleksiyon: { module: 'collection', name: () => L('Koleksiyon', 'Collection'), title: () => L('Koleksiyon sunumu', 'Collection presentation'), fields: ['modelName', 'plmId', 'colour', 'colourCode', 'collectionQuantity', 'fob'] },
+    cp: { module: 'cp', name: () => 'CP', title: () => L('CP sunumu', 'CP presentation'), fields: ['modelName', 'plmId', 'orderCode', 'colour', 'orderQuantity', 'fob'] },
+    orders: { module: 'orders', name: () => L('Siparişler', 'Orders'), title: () => L('Sipariş sunumu', 'Orders presentation'), fields: ['modelName', 'plmId', 'orderCode', 'colour', 'orderQuantity', 'fob'] },
+  });
+  const sourceOf = tab => SOURCES[tab] || SOURCES.koleksiyon;
+  const sourceName = () => sourceOf(S && S.tab).name();
   function fieldMeta(built) {
     const C = root.BLCanonicalFields, labels = {};
     for (const col of built.source.columns || []) labels[col.id] = col.label;
@@ -57,17 +65,17 @@
     if (type === 'date' && /^\d{4}-\d{2}-\d{2}/.test(String(value))) { const d = new Date(String(value).slice(0, 10) + 'T00:00:00'); if (!Number.isNaN(d.getTime())) return d.toLocaleDateString(isEn() ? 'en-GB' : 'tr-TR'); }
     return String(value);
   }
-  function readSource(rows, info, scope) {
-    const built = root.BLOutputSource.build({ module: 'collection', rows, rowId: info.rowId, readRow: info.canonicalRow || (row => row), columns: info.columns || [], scope, lang: isEn() ? 'en' : 'tr' });
+  function readSource(rows, info, scope, tab) {
+    const built = root.BLOutputSource.build({ module: sourceOf(tab).module, rows, rowId: info.rowId, readRow: info.canonicalRow || (row => row), columns: info.columns || [], scope, lang: isEn() ? 'en' : 'tr' });
     const meta = fieldMeta(built), models = new Map();
     built.items.forEach((item, i) => {
       const rec = built.records[item.image];
-      let identity = null; try { identity = root.BLAIScreenData.rowImage('koleksiyon', rows[i]); } catch (_) { identity = null; }
+      let identity = null; try { identity = root.BLAIScreenData.rowImage(tab, rows[i]); } catch (_) { identity = null; }
       models.set(String(rec.id), Object.freeze({ id: String(rec.id), title: item.title, values: Object.freeze({ ...rec.values }), keys: Object.freeze({ ...rec.keys }), identity }));
     });
     return { models, meta, omitted: built.source.omittedColumns || [] };
   }
-  const defaultFields = ids => ['modelName', 'plmId', 'colour', 'colourCode', 'collectionQuantity', 'fob'].filter(id => ids.includes(id)).slice(0, 5);
+  const defaultFields = (ids, tab) => sourceOf(tab).fields.filter(id => ids.includes(id)).slice(0, 5);
   const defaultLevels = ids => ['productGroup'].filter(id => ids.includes(id));
 
   /* ---------------- Oturum ve belge ---------------- */
@@ -116,7 +124,7 @@
   function saveDeck() {
     if (!S) return;
     const index = readJson(KEY.decks, []).filter(d => d && d.id !== S.deckId);
-    const entry = { id: S.deckId, title: S.doc.title || L('Adsız sunum', 'Untitled presentation'), updatedAt: new Date().toISOString(), count: S.doc.order.length };
+    const entry = { id: S.deckId, title: S.doc.title || L('Adsız sunum', 'Untitled presentation'), updatedAt: new Date().toISOString(), count: S.doc.order.length, source: S.tab };
     index.unshift(entry);
     const removed = index.splice(MAX_DECKS);
     if (!writeJson(KEY.deck(S.deckId), S.doc)) { S.saveState = 'error'; renderStatus(); return; }
@@ -137,10 +145,11 @@
 
   /* ---------------- Açılış ---------------- */
   async function ensureScripts() {
-    if (!root.BLOutputSource && root.BLPerf) await root.BLPerf.ensureFeature('lcwaiOutputEditor');
+    if ((!root.BLOutputSource || !root.BLPresentationEngine) && root.BLPerf) await root.BLPerf.ensureFeature('presentationStudio');
   }
-  /* Koleksiyon tablosundaki seçili (yoksa filtrelenmiş) modellerle yeni sunum. */
+  /* Kaynak tablodaki (Koleksiyon/CP/Siparişler) seçili, yoksa filtrelenmiş kayıtlarla yeni sunum. */
   async function openSelection(tab = 'koleksiyon', scope) {
+    if (!SOURCES[tab]) throw Error(L('Bu sayfada sunum oluşturulamaz.', 'Presentations cannot be created on this page.'));
     await ensureScripts();
     let info = root.BLAIScreenData && root.BLAIScreenData.table(tab, { all: false });
     if (!info) throw Error(L('Bu kaynakta kullanılabilir kayıt yok.', 'This source has no available records.'));
@@ -150,25 +159,26 @@
     const rows = mode === 'selected' ? info.rows.filter(row => selected.has(String(info.rowId(row)))) : info.rows;
     if (!rows.length) { toast(L('Önce modelleri seçin veya filtreyi değiştirin.', 'Select models first or change the filter.'), 'warning'); return; }
     if (rows.length > E().LIMITS.cards) { toast(L(`Bir sunumda en fazla ${E().LIMITS.cards.toLocaleString('tr-TR')} model kullanılabilir. Seçimi veya filtreyi daraltın.`, `A presentation supports up to ${E().LIMITS.cards.toLocaleString('en-GB')} models. Narrow the selection or filter.`), 'warning'); return; }
-    const src = readSource(rows, info, mode), ids = [...src.models.keys()];
-    const fields = defaultFields(src.meta.ids), title = L('Koleksiyon sunumu', 'Collection presentation');
-    const docModel = E().createDoc({ ids, fields: fields.length ? fields : src.meta.ids.slice(0, 4), levels: defaultLevels(src.meta.ids), title });
+    const src = readSource(rows, info, mode, tab), ids = [...src.models.keys()];
+    const fields = defaultFields(src.meta.ids, tab), title = sourceOf(tab).title();
+    const docModel = E().createDoc({ ids, fields: fields.length ? fields : src.meta.ids.slice(0, 4), levels: defaultLevels(src.meta.ids), title, source: tab });
     start({ ...src, doc: docModel, deckId: 'd' + Date.now().toString(36), scope: mode, tab });
   }
   async function openDeck(deckId) {
     await ensureScripts();
     const raw = readJson(KEY.deck(deckId), null);
     if (!raw) { toast(L('Sunum bulunamadı.', 'Presentation not found.'), 'error'); return; }
-    const info = root.BLAIScreenData && root.BLAIScreenData.table('koleksiyon', { all: true });
-    if (!info) throw Error(L('Koleksiyon verisi okunamadı.', 'Collection data could not be read.'));
+    const tab = SOURCES[raw.source] ? raw.source : 'koleksiyon', name = sourceOf(tab).name();
+    const info = root.BLAIScreenData && root.BLAIScreenData.table(tab, { all: true });
+    if (!info) throw Error(L(`${name} verisi okunamadı.`, `${name} data could not be read.`));
     const wanted = new Set((raw.order || []).map(String));
     const rows = info.rows.filter(row => wanted.has(String(info.rowId(row))));
-    if (!rows.length) { toast(L('Bu sunumdaki modeller Koleksiyon’da artık yok.', 'The models in this presentation are no longer in the Collection.'), 'warning'); return; }
-    const src = readSource(rows, info, 'saved'), ids = [...src.models.keys()];
+    if (!rows.length) { toast(L(`Bu sunumdaki kayıtlar artık ${name} tablosunda yok.`, `The records in this presentation are no longer in ${name}.`), 'warning'); return; }
+    const src = readSource(rows, info, 'saved', tab), ids = [...src.models.keys()];
     const docModel = E().normalizeDoc(raw, { ids: (raw.order || []).map(String).filter(id => src.models.has(id)), fields: src.meta.ids });
     const missing = wanted.size - ids.length;
-    start({ ...src, doc: docModel, deckId, scope: 'saved', tab: 'koleksiyon' });
-    if (missing > 0) toast(L(`${missing} model Koleksiyon’da bulunamadı ve sunumdan çıkarıldı.`, `${missing} models were not found in the Collection and were removed from the presentation.`), 'warning');
+    start({ ...src, doc: docModel, deckId, scope: 'saved', tab });
+    if (missing > 0) toast(L(`${missing} kayıt ${name} tablosunda bulunamadı ve sunumdan çıkarıldı.`, `${missing} records were not found in ${name} and were removed from the presentation.`), 'warning');
   }
 
   function start(init) {
@@ -206,7 +216,7 @@
         <button type="button" class="tbtn psIcon" data-ps="undo">${sprite('arrow-back-up')}</button><button type="button" class="tbtn psIcon" data-ps="redo">${sprite('arrow-forward-up')}</button>
         <span class="psGrow"></span>
         <span class="psZoom"><button type="button" class="tbtn psIcon" data-ps="zoomOut">−</button><output class="psNum" data-ps="zoomVal"></output><button type="button" class="tbtn psIcon" data-ps="zoomIn">+</button><button type="button" class="tbtn" data-ps="zoomFit"></button></span>
-        <button type="button" class="tbtn" data-pop="decks"></button><button type="button" class="tbtn" data-pop="templates"></button><button type="button" class="tbtn" data-ps="classic"></button>
+        <button type="button" class="tbtn" data-pop="decks"></button><button type="button" class="tbtn" data-pop="templates"></button>
         <button type="button" class="tbtn primary" data-pop="export"></button><button type="button" class="tbtn psIcon" data-ps="close">${sprite('x')}</button></header>
       <div class="psBar" role="toolbar">
         <span class="psLbl" data-l="group"></span><span class="psChips" data-ps="chips"></span><label class="psToggle" data-ps="brkWrap"><input type="checkbox" data-ps="brk"><span data-l="brk"></span></label>
@@ -243,8 +253,6 @@
     t('[data-ps="zoomFit"]', L('Sığdır', 'Fit'));
     $('[data-pop="decks"]').innerHTML = `${sprite('folder')}<span>${esc(L('Sunumlarım', 'My presentations'))}</span>`;
     $('[data-pop="templates"]').innerHTML = `${sprite('layout-dashboard')}<span>${esc(L('Şablonlar', 'Templates'))}</span>`;
-    $('[data-ps="classic"]').innerHTML = `<span>${esc(L('Klasik düzenleyici', 'Classic editor'))}</span>`;
-    $('[data-ps="classic"]').title = L('Önceki sunum düzenleyicisini aynı seçimle açar', 'Opens the previous presentation editor with the same selection');
     $('[data-pop="export"]').innerHTML = `${sprite('file-export')}<span>${esc(L('Dışa aktar', 'Export'))}</span>`;
     $('[data-pop="fields"]').innerHTML = `${sprite('columns-3')}<span>${esc(L('Kart bilgileri', 'Card details'))}</span>`;
     $('[data-pop="design"]').innerHTML = `${sprite('palette')}<span>${esc(L('Tasarım', 'Design'))}</span>`;
@@ -265,7 +273,7 @@
     const cls = (sel ? ' isSel' : '') + (S.res.conflicts.has(el.id) ? ' isConflict' : '') + (el.pinned ? ' isPinned' : '');
     let inner = '';
     if (el.pinned) inner += `<span class="psBadge psPin" title="${esc(L('Sabit', 'Pinned'))}">${svg('pin')}</span>`;
-    if (c.vgroup != null) inner += `<span class="psBadge psMoved" title="${esc(L('Görsel olarak başka gruba taşındı · Koleksiyon verisi değişmedi', 'Moved to another group visually · Collection data unchanged'))}">${svg('move')}</span>`;
+    if (c.vgroup != null) inner += `<span class="psBadge psMoved" title="${esc(L(`Görsel olarak başka gruba taşındı · ${sourceName()} verisi değişmedi`, `Moved to another group visually · ${sourceName()} data unchanged`))}">${svg('move')}</span>`;
     if (primary && S.sel.size === 1) inner += ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].map(d => `<span class="psHandle" data-h="${d}"></span>`).join('');
     const m = S.models.get(el.id);
     return { attr: ` data-id="${esc(el.id)}" tabindex="-1" role="button" aria-label="${esc((m ? m.title : el.id) + (sel ? L(' · seçili', ' · selected') : ''))}"`, cls, inner };
@@ -303,6 +311,9 @@
     S.res.pages.forEach((rp, i) => {
       const page = built.get(rp.id) || { id: rp.id, elements: null };
       seen.add(page.id);
+      // Hızlı modda (slider sürüklenirken) görünmeyen mevcut sayfalara dokunulmaz; tampon geçişi tamamlar.
+      const existing = wrappers.get(page.id);
+      if (quick && !page.elements && existing && host.children[i] === existing) return;
       const pg = S.doc.pages.find(p => p.id === page.id);
       const tools = `<span class="psPageNo">${esc(L(`Sayfa ${i + 1}`, `Page ${i + 1}`))}</span><button type="button" class="tbtn psFlow" data-pa="flow" aria-pressed="${pg.flow}" title="${esc(pg.flow ? L('Otomatik akış açık: boş alanlar kartlarla dolar', 'Automatic flow on: free space fills with cards') : L('Serbest sayfa: yalnız sabit kartlar', 'Free page: pinned cards only'))}">${svg('flow')}<span>${esc(pg.flow ? L('Otomatik akış', 'Automatic flow') : L('Serbest sayfa', 'Free page'))}</span></button><span class="psGrow"></span>`
         + `<button type="button" class="tbtn psIcon" data-pa="up" aria-label="${esc(L('Yukarı taşı', 'Move up'))}" title="${esc(L('Yukarı taşı', 'Move up'))}"${i === 0 ? ' disabled' : ''}>${sprite('chevron-up')}</button><button type="button" class="tbtn psIcon" data-pa="down" aria-label="${esc(L('Aşağı taşı', 'Move down'))}" title="${esc(L('Aşağı taşı', 'Move down'))}"${i === total - 1 ? ' disabled' : ''}>${sprite('chevron-down')}</button>`
@@ -365,7 +376,7 @@
     if (S.res.overflow) parts.push(`<span class="psBad">${esc(L('Bazı kartlar sayfaya sığmadı; kart boyutunu küçültün.', 'Some cards did not fit the page; reduce the card size.'))}</span>`);
     if (S.omitted && S.omitted.length) parts.push(`<span class="psBad" title="${esc(S.omitted.join(', '))}">${esc(L('Çok sayıda kayıt nedeniyle bazı sütunlar alınmadı', 'Some columns were skipped because of the record count'))}</span>`);
     parts.push('<span class="psGrow"></span>');
-    parts.push(`<span title="${esc(L('Kart taşıma, gruplama ve sabitleme yalnız sunumu değiştirir', 'Moving, grouping and pinning cards only change the presentation'))}" class="${same ? 'psOk' : 'psBad'}">${esc(same ? L('Koleksiyon verisi değişmedi', 'Collection data unchanged') : L('Kaynak veri değişti', 'Source data changed'))}</span>`);
+    parts.push(`<span title="${esc(L('Kart taşıma, gruplama ve sabitleme yalnız sunumu değiştirir', 'Moving, grouping and pinning cards only change the presentation'))}" class="${same ? 'psOk' : 'psBad'}">${esc(same ? L(`${sourceName()} verisi değişmedi`, `${sourceName()} data unchanged`) : L('Kaynak veri değişti', 'Source data changed'))}</span>`);
     parts.push(`<span>${esc(S.saveState === 'error' ? L('Kaydedilemedi', 'Not saved') : S.saveState === 'saved' ? L('Hesabınıza kaydedildi', 'Saved to your account') : '')}</span>`);
     parts.push('<span class="psNum" data-ps="perf"></span>');
     const status = S.$('[data-ps="status"]');
@@ -421,7 +432,7 @@
     if (k === 'unpin') return commit(() => E().unpin(S.doc, ids, S.res, groupOf));
     if (k === 'exclude') {
       commit(() => { for (const id of ids) { const c = S.doc.cards[id] || (S.doc.cards[id] = {}); c.excluded = true; c.pinned = false; } S.sel.clear(); });
-      toast(L(`${ids.length} kart sunumdan çıkarıldı · Koleksiyon verisi değişmedi.`, `${ids.length} cards removed from the presentation · Collection data unchanged.`));
+      toast(L(`${ids.length} kart sunumdan çıkarıldı · ${sourceName()} verisi değişmedi.`, `${ids.length} cards removed from the presentation · ${sourceName()} data unchanged.`));
       return;
     }
     commit(() => { ids.forEach(id => { if (!S.res.index.get(id).pinned) E().pinAt(S.doc, id, S.res.index.get(id)); }); E().align(S.doc, ids, k); });
@@ -582,7 +593,7 @@
     if (a.mode === 'insert') {
       const ids = a.items.map(i => i.id);
       commit(() => E().insertAt(S.doc, ids, a.target.id, a.target.after, groupOf));
-      if (ids.some(id => S.doc.cards[id] && S.doc.cards[id].vgroup != null)) toast(L('Kart görsel olarak yeni gruba taşındı. Koleksiyon verisi değişmedi.', 'The card moved to a new group visually. Collection data is unchanged.'));
+      if (ids.some(id => S.doc.cards[id] && S.doc.cards[id].vgroup != null)) toast(L(`Kart görsel olarak yeni gruba taşındı. ${sourceName()} verisi değişmedi.`, `The card moved to a new group visually. ${sourceName()} data is unchanged.`));
       return;
     }
     let fail = 0;
@@ -719,8 +730,8 @@
         + `<div class="psTplSave"><input data-ps="tplName" maxlength="60" placeholder="${esc(L('Şablon adı', 'Template name'))}" aria-label="${esc(L('Şablon adı', 'Template name'))}"><button type="button" class="tbtn" data-ps="tplSave">${esc(L('Kaydet', 'Save'))}</button></div><p class="psHint">${esc(L('Şablon sayfa ölçüsünü, gruplamayı, kart bilgilerini ve tasarımı saklar; kart konumları sunuma özeldir.', 'A template stores the page size, grouping, card details and design; card positions belong to the presentation.'))}</p>`;
     } else if (kind === 'decks') {
       const decks = readJson(KEY.decks, []);
-      p.innerHTML = h(L('Sunumlarım', 'My presentations')) + (decks.length ? `<div class="psMenu psScroll">${decks.map(d => `<div class="psTpl"><span><b>${esc(d.title)}</b><small class="psSub">${esc(L(`${d.count} model · ${new Date(d.updatedAt).toLocaleString('tr-TR')}`, `${d.count} models · ${new Date(d.updatedAt).toLocaleString('en-GB')}`))}</small></span>${d.id === S.deckId ? `<small class="psSub">${esc(L('açık', 'open'))}</small>` : `<button type="button" class="tbtn" data-deck="${esc(d.id)}">${esc(L('Aç', 'Open'))}</button><button type="button" class="tbtn psIcon" data-ddel="${esc(d.id)}" aria-label="${esc(L('Sunumu sil', 'Delete presentation'))}">${sprite('trash')}</button>`}</div>`).join('')}</div>` : `<p class="psHint">${esc(L('Henüz kayıtlı sunum yok.', 'No saved presentations yet.'))}</p>`)
-        + `<p class="psHint">${esc(L(`Sunumlar hesabınıza otomatik kaydedilir (en fazla ${MAX_DECKS}). Model bilgileri her açılışta Koleksiyon’dan güncel okunur.`, `Presentations are saved to your account automatically (up to ${MAX_DECKS}). Model details are read fresh from the Collection each time.`))}</p>`;
+      p.innerHTML = h(L('Sunumlarım', 'My presentations')) + (decks.length ? `<div class="psMenu psScroll">${decks.map(d => `<div class="psTpl"><span><b>${esc(d.title)}</b><small class="psSub">${esc(L(`${sourceOf(d.source).name()} · ${d.count} kayıt · ${new Date(d.updatedAt).toLocaleString('tr-TR')}`, `${sourceOf(d.source).name()} · ${d.count} records · ${new Date(d.updatedAt).toLocaleString('en-GB')}`))}</small></span>${d.id === S.deckId ? `<small class="psSub">${esc(L('açık', 'open'))}</small>` : `<button type="button" class="tbtn" data-deck="${esc(d.id)}">${esc(L('Aç', 'Open'))}</button><button type="button" class="tbtn psIcon" data-ddel="${esc(d.id)}" aria-label="${esc(L('Sunumu sil', 'Delete presentation'))}">${sprite('trash')}</button>`}</div>`).join('')}</div>` : `<p class="psHint">${esc(L('Henüz kayıtlı sunum yok.', 'No saved presentations yet.'))}</p>`)
+        + `<p class="psHint">${esc(L(`Sunumlar hesabınıza otomatik kaydedilir (en fazla ${MAX_DECKS}). Kayıt bilgileri her açılışta kaynak tablodan güncel okunur.`, `Presentations are saved to your account automatically (up to ${MAX_DECKS}). Record details are read fresh from the source table each time.`))}</p>`;
     } else if (kind === 'export') {
       p.innerHTML = h(L('Dışa aktar', 'Export')) + `<div class="psMenu"><button type="button" class="tbtn" data-ex="pdf"><b class="psOptTitle">PDF</b><span class="psSub">${esc(L('Önizlemedeki sayfaların aynısı, seçili sayfa ölçüsünde.', 'Exactly the previewed pages, in the selected page size.'))}</span></button><button type="button" class="tbtn" data-ex="pptx"><b class="psOptTitle">PowerPoint</b><span class="psSub">${esc(L('Düzenlenebilir kartlar ve metinler; aynı konum ve ölçü.', 'Editable cards and text; same positions and size.'))}</span></button></div>`;
     }
@@ -848,7 +859,6 @@
       if (ps === 'close') return close();
       if (ps === 'addPage') return pageAction(S.doc.pages[S.doc.pages.length - 1].id, 'add');
       if (ps === 'fixConf') { let un = 0; commit(() => { un = E().resolvePinned(S.doc); }); toast(un ? L(`${un} kart akışa döndü.`, `${un} cards returned to flow.`) : L('Çakışmalar çözüldü.', 'Overlaps resolved.')); return; }
-      if (ps === 'classic') { const tab = S.tab, scope = S.scope === 'saved' ? 'selected' : S.scope; close(); root.BLPerf.ensureFeature('lcwaiOutputEditor').then(() => root.BLOutputEditor.openSelection(tab, scope)).catch(() => toast(L('Klasik düzenleyici açılamadı.', 'The classic editor could not be opened.'), 'error')); return; }
       if (ps === 'tplSave') {
         const name = $('[data-ps="tplName"]').value.trim();
         if (!name) { $('[data-ps="tplName"]').focus(); return; }
@@ -876,7 +886,7 @@
       const td = t.closest('[data-tdel]'); if (td) { const list = loadTemplates(); list.splice(Number(td.dataset.tdel) - 1, 1); writeJson(KEY.templates, list); fillPop('templates'); return; }
       const dk = t.closest('[data-deck]'); if (dk) { closePop(); openDeck(dk.dataset.deck).catch(err => toast(err.message, 'error')); return; }
       const dd = t.closest('[data-ddel]');
-      if (dd) { const id = dd.dataset.ddel, list = readJson(KEY.decks, []); const d = list.find(x => x.id === id); if (d && root.confirm(L(`“${d.title}” sunumu silinsin mi? Koleksiyon verisi etkilenmez.`, `Delete the “${d.title}” presentation? Collection data is not affected.`))) { writeJson(KEY.decks, list.filter(x => x.id !== id)); removeKey(KEY.deck(id)); fillPop('decks'); } return; }
+      if (dd) { const id = dd.dataset.ddel, list = readJson(KEY.decks, []); const d = list.find(x => x.id === id); if (d && root.confirm(L(`“${d.title}” sunumu silinsin mi? Kaynak veriler etkilenmez.`, `Delete the “${d.title}” presentation? Source data is not affected.`))) { writeJson(KEY.decks, list.filter(x => x.id !== id)); removeKey(KEY.deck(id)); fillPop('decks'); } return; }
       const ex = t.closest('[data-ex]'); if (ex) { closePop(); runExport(ex.dataset.ex); }
     });
     host.addEventListener('change', e => {

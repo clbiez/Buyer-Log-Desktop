@@ -282,30 +282,6 @@ function createOutputService(options = {}) {
     return render(ownerId, job, {},input.assertCurrent);
   }
 
-  function createStudio(ownerId, input = {}) {
-    const lang = input.lang === 'en' ? 'en' : 'tr';
-    if (!input.data || !input.data.layout || !input.data.layout.studio) throw lcwAiError('BAD_REQUEST');
-    const originalCount = (Array.isArray(input.data.slides) ? input.data.slides : []).reduce((n, slide) => n + (slide && Array.isArray(slide.items) ? slide.items.length : 0), 0);
-    if (originalCount > studioSource.MAX_ROWS) throw lcwAiError('BAD_REQUEST');
-    const parsed = contracts.normalizePresentation(input.data, { lang });
-    const items = parsed.data && parsed.data.slides.flatMap(s => s.layout === 'gallery' ? s.items : []);
-    if (!parsed.ok || parsed.warnings.length || !items.length || items.length > studioSource.MAX_ROWS) throw lcwAiError('OUTPUT_EDIT_INVALID', { issues: parsed.errors });
-    const tokens = items.map(item => item.image);
-    if (new Set(tokens).size !== tokens.length) throw lcwAiError('BAD_REQUEST');
-    const columns = studioSource.normalizeColumns(input.source && input.source.columns);
-    const records = studioSource.normalizeRecords(input.records, tokens, lang, columns);
-    if (tokens.some(token => !records[token])) throw lcwAiError('BAD_REQUEST');
-    const omitted = (input.source && Array.isArray(input.source.omittedColumns) ? input.source.omittedColumns : []).map(label => String(label == null ? '' : label).replace(/\s+/g, ' ').trim().slice(0, 80)).filter(Boolean).slice(0, 300);
-    const images = normalizeImages(input.images || {}, tokens);
-    const source = { module: records[tokens[0]].module, scope: input.source && input.source.scope === 'filtered' ? 'filtered' : 'selected',
-      count: items.length, grain: records[tokens[0]].module === 'collection' ? 'model-colour' : 'order-row', capturedAt: now().toISOString(),
-      columns, ...(omitted.length ? { omittedColumns: omitted } : {}) };
-    const id = drafts.create(ownerId, { format: 'pptx', data: parsed.data, records, source, title: parsed.data.title, lang,
-      orientation: 'landscape', detail: 'standard', day: now().toISOString().slice(0, 10), template: 'catalog', templateLabel: 'Smart Layout Studio',
-      images: Object.fromEntries(Object.entries(images).map(([token, image]) => [token, image.dataUrl])) });
-    return getDraft(ownerId, id);
-  }
-
   function renderStudio(ownerId, job, images, target,assertCurrent) {
     if (target === 'pptx') return render(ownerId, job, images,assertCurrent);
     if (target === 'xlsx') {
@@ -351,15 +327,7 @@ function createOutputService(options = {}) {
   }
 
   return {
-    create, createStudio, createTable, completeImages, completePdf, fallbackHtml, getDraft, renderDraft, skeleton,
-    saveStudioImages(ownerId, id, input) {
-      const draft = draftOf(ownerId, id);
-      if (!draft.source) throw lcwAiError('BAD_REQUEST');
-      const images = normalizeImages(input, collectTokens('pptx', draft.data));
-      const safe = Object.fromEntries(Object.entries(images).map(([token, image]) => [token, image.dataUrl]));
-      drafts.update(ownerId, id, { images: safe });
-      return safe;
-    },
+    create, createTable, completeImages, completePdf, fallbackHtml, getDraft, renderDraft, skeleton,
     renderStructured(ownerId,input){
       const format=contracts.normalizeFormat(input.format),lang=input.lang==='en'?'en':'tr',date=now();
       if(!['html','xlsx','pdf'].includes(format))throw lcwAiError('BAD_REQUEST');

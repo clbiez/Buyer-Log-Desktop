@@ -155,7 +155,26 @@ function demoImages() {
     const pageShot = await page.$('.psPageWrap .psPage');
     await pageShot.screenshot({ path: path.join(OUT, 'editor-page1.png') });
     fs.writeFileSync(path.join(OUT, 'geometry.json'), JSON.stringify(await page.evaluate(() => { const S = BLPresentationStudio._state(); return { w: S.res.g.w, h: S.res.g.h, page1: S.list.pages[0].elements.map(e => ({ type: e.type, id: e.id, x: e.x, y: e.y, w: e.w, h: e.h })) }; }), null, 1));
+    // CP ve Siparişler: aynı Presentation Studio (her kart bir sipariş satırı; filtrelenmiş kapsam).
+    await page.evaluate(() => BLPresentationStudio.close());
+    const sources = {};
+    for (const [tab, btn, menu, name] of [['cp', '#cpToolsBtn', '#cpToolsMenu', 'CP'], ['orders', '#ordersToolsBtn', '#ordersToolsMenu', 'Siparişler']]) {
+      await page.click(`button[data-tab="${tab}"]`);
+      await page.waitForFunction(t => document.querySelector(`#view-${t}`)?.offsetParent && document.querySelectorAll(`#view-${t} table tbody tr`).length > 0, tab, { timeout: 60000 });
+      await page.waitForTimeout(400);
+      const before = await page.evaluate(t => { const info = BLAIScreenData.table(t, { all: true }); return JSON.stringify(info.rows); }, tab);
+      await page.click(btn); await page.click(`${menu} [data-output-studio="${tab}"]`);
+      await page.waitForSelector('.psStudio .psDocCard', { timeout: 30000 }); await page.waitForTimeout(400);
+      const info = await page.evaluate(t => { const S = BLPresentationStudio._state(), rows = BLAIScreenData.table(t, { all: false }).rows.length; return { cards: S.res.index.size, rows, source: S.doc.source, status: document.querySelector('.psStatus').textContent }; }, tab);
+      assert.equal(info.source, tab); assert.ok(info.cards > 0 && info.cards === info.rows, JSON.stringify(info)); assert.equal(await clean(), 0);
+      assert.ok(info.status.includes(`${name} verisi değişmedi`), info.status);
+      assert.ok(await page.$eval('.psPageWrap .psPageTools', el => { const r = el.getBoundingClientRect(); return r.height > 0 && document.elementFromPoint(r.x + 30, r.y + r.height / 2)?.closest('.psPageTools') === el; }), 'sayfa araç çubuğu görünür ve tıklanabilir');
+      await page.screenshot({ path: path.join(OUT, `studio-${tab}-${THEME}.png`) });
+      await page.evaluate(() => BLPresentationStudio.close());
+      assert.equal(await page.evaluate(t => JSON.stringify(BLAIScreenData.table(t, { all: true }).rows), tab), before, `${tab} verisi değişmez`);
+      sources[tab] = info.cards;
+    }
     assert.deepEqual(errors, []);
-    console.log(JSON.stringify({ ok: true, theme: THEME, out: OUT, final: await state() }));
+    console.log(JSON.stringify({ ok: true, sources, theme: THEME, out: OUT }));
   } finally { await app.close(); }
 })().catch(error => { console.error(error); process.exit(1); });
