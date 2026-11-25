@@ -2240,10 +2240,19 @@
      çizilmez (sekmeye dönüşte mount zaten yeniden çizer). */
   let qOpenWorkspaceRefreshPending=false;
   const Q_DESK_PANELS='[data-pd-options-panel],[data-pd-columns-panel],[data-pd-bulk-panel],[data-pd-import-panel],[data-pd-mfr-panel],[data-pd-round-panel]';
-  function qRefreshOpenWorkspace(){
+  const Q_DESK_SCROLLERS=['#quotationNav','.pdMatrixScroll','.quotationTableWrap'];
+  // Masada görünen içeriğin imzası: liste + açık talebin satırları. Uzak yenileme
+  // görünen hiçbir şeyi değiştirmediyse masa yeniden çizilmez.
+  function qOpenWorkspaceSignature(){
+    if(!qWorkspaceMounted||qWorkspaceMode!=='quotations')return '';
+    const list=qVisibleRequests(qActiveSource,document.getElementById('quotationSearch')?.value||''),active=qLoad().requests.find(req=>req.id===qActiveId);
+    return JSON.stringify([list.map(req=>[req.id,req.updatedAt,req.status]),active?[active.id,active.updatedAt,(active.manufacturers||[]).length,(active.models||[]).length,(active.items||[]).map(item=>[item.id,item.rev,item.price,item.approved,item.dropped])]:null]);
+  }
+  function qRefreshOpenWorkspace(before=null){
     if(!qWorkspaceMounted||qWorkspaceMode!=='quotations')return;
     const host=document.getElementById('quotationWorkspacePage'),detail=document.getElementById('quotationDetail');
     if(!host||!detail||host.offsetParent===null)return;
+    if(before!=null&&before===qOpenWorkspaceSignature())return;
     const active=document.activeElement;
     const editing=Boolean(active&&host.contains(active)&&active.matches?.('input:not([type="search"]),textarea,select,[contenteditable="true"]'));
     const panelOpen=[...detail.querySelectorAll(Q_DESK_PANELS)].some(panel=>!panel.hidden);
@@ -2253,7 +2262,13 @@
       host.addEventListener('focusout',()=>setTimeout(()=>{qOpenWorkspaceRefreshPending=false;qRefreshOpenWorkspace();},0),{once:true});
       return;
     }
+    // Kaydırma (matris sanal penceresi dahil), seçili talep ve odak korunur.
+    const requestId=qActiveId,focusedId=active&&host.contains(active)?active.dataset?.quotationId||'':'';
+    const scrolls=Q_DESK_SCROLLERS.map(selector=>{const el=host.querySelector(selector);return el?{selector,top:el.scrollTop,left:el.scrollLeft}:null;}).filter(Boolean);
     qRenderWorkspaceAll(document.getElementById('quotationSearch')?.value||'');
+    if(qActiveId!==requestId)return;
+    scrolls.forEach(saved=>{const el=host.querySelector(saved.selector);if(!el)return;el.scrollTop=saved.top;el.scrollLeft=saved.left;el.dispatchEvent(new Event('scroll'));});
+    if(focusedId)[...host.querySelectorAll('[data-quotation-id]')].find(el=>el.dataset.quotationId===focusedId)?.focus?.({preventScroll:true});
   }
 
   async function mountWorkspace(host,{source='collection',preserveContext=true}={}){
@@ -3186,5 +3201,5 @@
     mountWorkspace:(host,options)=>mountWorkspace(host,options),mountHistoryTable:(host,options)=>mountPricingHistory(host,options),
     isWorkspaceMounted:()=>qWorkspaceMounted,
   };
-  window.BL_QUOTATIONS={collectionQuoteIndex,openPriceHistory,openPricingHistoryWorkspace,mountPricingHistory,mountWorkspace,openWorkspaceFromCollection,openSendToPricing,syncCollectionPricingUI,recordRequest,recordManualCollectionPrice,open:openModal,save:qSave,refresh:()=>qHydrateShared(true).then(result=>{qRefreshOpenWorkspace();return result;}),renameManufacturer,syncModelFields,setPrice,toggleApproval,findCollectionLine,updateCollectionLine,sendReminder(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qOpenReminder(req):false;},toggleDrop(requestId,lineId){const req=qLoad().requests.find(r=>r.id===requestId),line=req?.items.find(x=>x.id===lineId);return req&&line?qToggleDrop(req,line):false;},syncModelFieldsDurable,desk:qDeskApi,exportRequest(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qExportRequest(req):false;},moveRequest:qMoveRequest,deleteRequest:qDeleteRequest};
+  window.BL_QUOTATIONS={collectionQuoteIndex,openPriceHistory,openPricingHistoryWorkspace,mountPricingHistory,mountWorkspace,openWorkspaceFromCollection,openSendToPricing,syncCollectionPricingUI,recordRequest,recordManualCollectionPrice,open:openModal,save:qSave,refresh:()=>{const before=qOpenWorkspaceSignature();return qHydrateShared(true).then(result=>{qRefreshOpenWorkspace(before);return result;});},renameManufacturer,syncModelFields,setPrice,toggleApproval,findCollectionLine,updateCollectionLine,sendReminder(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qOpenReminder(req):false;},toggleDrop(requestId,lineId){const req=qLoad().requests.find(r=>r.id===requestId),line=req?.items.find(x=>x.id===lineId);return req&&line?qToggleDrop(req,line):false;},syncModelFieldsDurable,desk:qDeskApi,exportRequest(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qExportRequest(req):false;},moveRequest:qMoveRequest,deleteRequest:qDeleteRequest};
 })();

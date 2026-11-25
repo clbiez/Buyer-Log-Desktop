@@ -31,6 +31,8 @@ const PARALLEL = Math.max(1, Number(arg('--parallel', 4)) || 4), LIVE_LIMIT_MS =
 const MFRS = ['DEMO MFR A', 'DEMO MFR B', 'DEMO MFR C'];
 const PRICE_KEYS = ['targetPrice', '__priceStrip__', '__landedSummary__', '__bestPrice__', '__confirmedName__', '__confirmedPrice__', 'fob'];
 const ROWS_PER_OWNER = 4;
+// Görsel değiştirme senaryosunun yeni renkleri (paletteki 12 tonun dışında): indeks 12 ve 13.
+const EXTRA_COLOURS = [[20, 20, 20], [140, 140, 140]];
 
 // Hesap planı (20 kullanıcı = moderatör + 19 buyer).
 const PLAN = [
@@ -312,6 +314,79 @@ function check(name, ok, detail) { report.checks.push({ name, ok: Boolean(ok), d
         if (SCREENSHOTS) await releaseScreenshots({ viewer, observer, model });
       } finally { await Promise.all(Object.values(sessions).map(s => s.close())); }
     }
+    /* ---------- 4a. Görsel değiştirme (B hipotezi): sahip ve edit izinli kullanıcı ---------- */
+    {
+      const sessions = {};
+      const extra = OWNER_KEYS.length * ROWS_PER_OWNER;
+      const paint = (page, model, rgb) => page.evaluate(async ({ model, rgb }) => {
+        const c = document.createElement('canvas'); c.width = c.height = 96; const g = c.getContext('2d'); g.fillStyle = `rgb(${rgb.join(',')})`; g.fillRect(0, 0, 96, 96);
+        const row = kolRows.find(r => r.modelKod === model); await kolPersistImageData(row, c.toDataURL('image/png'), 'replace.png'); saveKolRows(); renderKol(); await kolSaveWorkspaceNow();
+      }, { model, rgb });
+      const waitColour = (page, model, index) => {
+        const t0 = Date.now();
+        return (async () => { while (Date.now() - t0 < LIVE_LIMIT_MS) { const rows = await readCollectionRows(page).catch(() => ({})); if (rows[model]?.image?.nearest === index) return Date.now() - t0; await page.waitForTimeout(700); } return null; })();
+      };
+      try {
+        for (const key of ['O2', 'E2a', 'V2a']) sessions[key] = await openUser(browser, server, accounts[key]);
+        await sessions.O2.page.evaluate(() => switchTab('koleksiyon'));
+        await sessions.O2.page.waitForFunction(() => kolWorkspaceCanEdit && kolRows.length > 0 && !kolWorkspaceSaving, null, { timeout: 90000 });
+        await sessions.V2a.page.evaluate(() => switchTab('koleksiyon'));
+        await sessions.V2a.page.waitForFunction(() => document.querySelector('#kolScopeFilters [data-owner-id]'), null, { timeout: 90000 });
+        await selectCollectionOwner(sessions.V2a.page, accounts.O2.id);
+        // Edit izinli kullanıcının tek-sahip düzenleme modu: UI'da yol yok (bulgu); kayıtlı kapsamla aynı çağrı kullanılır.
+        await sessions.E2a.page.evaluate(() => switchTab('koleksiyon'));
+        await sessions.E2a.page.waitForFunction(() => typeof kolWorkspaceList !== 'undefined' && kolWorkspaceList.length > 1, null, { timeout: 90000 });
+        await sessions.E2a.page.evaluate(async id => { await kolLoadWorkspaceBatch([id]); }, accounts.O2.id);
+        await sessions.E2a.page.waitForFunction(id => kolWorkspaceOwnerId === id && kolWorkspaceCanEdit, accounts.O2.id, { timeout: 60000 });
+        // (1) Sahip DM-O2-1 görselini değiştirir.
+        await paint(sessions.O2.page, 'DM-O2-1', EXTRA_COLOURS[0]);
+        const a = await Promise.all([waitColour(sessions.O2.page, 'DM-O2-1', extra), waitColour(sessions.V2a.page, 'DM-O2-1', extra), waitColour(sessions.E2a.page, 'DM-O2-1', extra)]);
+        // (2) Edit izinli kullanıcı DM-O2-2 görselini değiştirir.
+        await paint(sessions.E2a.page, 'DM-O2-2', EXTRA_COLOURS[1]);
+        const b = await Promise.all([waitColour(sessions.E2a.page, 'DM-O2-2', extra + 1), waitColour(sessions.V2a.page, 'DM-O2-2', extra + 1), waitColour(sessions.O2.page, 'DM-O2-2', extra + 1)]);
+        report.imageReplace = { ownerChange: { ownerMs: a[0], viewerMs: a[1], editorMs: a[2] }, editorChange: { editorMs: b[0], viewerMs: b[1], ownerMs: b[2] }, limitMs: LIVE_LIMIT_MS };
+        check('görsel: sahibin değiştirdiği görsel sahipte hemen görünür', a[0] != null, report.imageReplace);
+        check('görsel: sahibin değiştirdiği görsel view izinli kullanıcıda (çoklu görünüm) yenilemeden görünür', a[1] != null, report.imageReplace);
+        check('görsel: sahibin değiştirdiği görsel edit izinli kullanıcıda yenilemeden görünür', a[2] != null, report.imageReplace);
+        check('görsel: edit izinli kullanıcının değiştirdiği görsel kendisinde hemen görünür (_sharedCollectionImageUrl önceliği eskiyi göstermez)', b[0] != null, report.imageReplace);
+        check('görsel: edit izinli kullanıcının değiştirdiği görsel view izinli kullanıcıda yenilemeden görünür', b[1] != null, report.imageReplace);
+        if (b[2] == null) report.findings.push({ id: 'collection-image-replace-stale-canonical-registry', evidence: report.imageReplace,
+          note: 'Edit izinli kullanıcı görseli değiştirdiğinde sahip (görsel kanonik kaydı belleğinde yüklü kullanıcı) eski görseli sayfa yenilenene kadar görür: kolModelImageSources kanonik kaydı (overrides.imagemap) satır img alanından önce okur; /api/plm-image-links canlı olay yayımlamaz, diğer istemcilerin kaydı tazelenmez. Görüntüleyen (kaydı boş) sunucunun _serverPlmImageUrl değerini okuduğu için yeniyi görür. Tek sunucuda _sharedCollectionImageUrl boş; B hipotezindeki o alanın önceliği burada etkili değil.' });
+        for (const [key, sess] of Object.entries(sessions)) check(`görsel: ${key} pageerror yok`, sess.errors.length === 0, sess.errors);
+      } finally { await Promise.all(Object.values(sessions).map(sess => sess.close())); }
+    }
+
+    /* ---------- 4b. Büyük matris: uzak güncelleme kaydırmayı ve sanal pencereyi korur ---------- */
+    {
+      const sessions = {};
+      try {
+        for (const key of ['O3', 'V3a']) sessions[key] = await openUser(browser, server, accounts[key]);
+        const ownerPage = sessions.O3.page, viewerPage = sessions.V3a.page;
+        await ownerPage.evaluate(() => switchTab('koleksiyon'));
+        await ownerPage.waitForFunction(() => window.BL_QUOTATIONS && kolWorkspaceCanEdit, null, { timeout: 90000 }).catch(() => {});
+        const bigId = await ownerPage.evaluate(async () => {
+          const items = Array.from({ length: 150 }, (_, k) => ['DEMO MFR A', 'DEMO MFR B'].map((m, mi) => ({ id: `big-${k + 1}-${mi}`, modelKey: `kol:${1000 + k}`, rowId: 1000 + k, modelCode: `DM-BIG-${k + 1}`, targetPrice: '4,50', manufacturer: m, price: mi ? '' : '3,50' }))).flat();
+          const r = await fetch('/api/quotations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source: 'collection', manufacturers: [{ name: 'DEMO MFR A' }, { name: 'DEMO MFR B' }], items }) });
+          return (await r.json()).request.id;
+        });
+        for (const page of [ownerPage, viewerPage]) {
+          await openDesk(page); await page.evaluate(() => window.BLPricingDesk.setScope({ all: true })); await page.waitForTimeout(600);
+          await page.click(`#quotationNav [data-quotation-id="${bigId}"]`); await page.waitForSelector('.pdMatrix .pdCellInput', { timeout: 60000 });
+          await page.evaluate(() => { const sc = document.querySelector('.pdMatrixScroll'); sc.scrollTop = 4000; sc.dispatchEvent(new Event('scroll')); });
+          await page.waitForTimeout(600);
+        }
+        const snap = () => viewerPage.evaluate(() => { const sc = document.querySelector('.pdMatrixScroll'), r = sc.getBoundingClientRect(); const rows = [...document.querySelectorAll('.pdMatrix tbody tr[data-pd-model]')].filter(tr => { const b = tr.getBoundingClientRect(); return b.bottom > r.top + 60 && b.top < r.bottom; }); return { scrollTop: sc.scrollTop, first: rows[0]?.dataset.pdModel, rows: rows.length }; });
+        const before = await snap();
+        const model = before.first.split(':')[1] - 1000 + 2, line = `big-${model}-1`;
+        await ownerPage.locator(`.pdCellInput[data-pd-input="${line}"]`).fill('3,21'); await ownerPage.locator(`.pdCellInput[data-pd-input="${line}"]`).press('Enter');
+        const shown = await viewerPage.waitForFunction(l => document.querySelector(`.pdCellInput[data-pd-input="${l}"]`)?.value === '3,21', line, { timeout: LIVE_LIMIT_MS * 2 }).then(() => true).catch(() => false);
+        const after = await snap();
+        report.bigMatrix = { before, after, line, shown };
+        check('büyük matris: uzak fiyat görüntüleyende yenilemeden görünür', shown, report.bigMatrix);
+        check('büyük matris: uzak güncelleme kaydırmayı ve sanal pencereyi korur', after.scrollTop === before.scrollTop && after.first === before.first && after.rows > 0, report.bigMatrix);
+        for (const [key, sess] of Object.entries(sessions)) check(`büyük matris: ${key} pageerror yok`, sess.errors.length === 0, sess.errors);
+      } finally { await Promise.all(Object.values(sessions).map(sess => sess.close())); }
+    }
   } catch (error) {
     report.errors.push(String(error && error.stack || error));
   } finally {
@@ -372,7 +447,7 @@ async function openDesk(page) {
 /* ---------- DOM okuyucular (tarayıcı içinde) ---------- */
 async function readCollectionRows(page) {
   // Görseller tembel yüklenir: her satır görünür alana getirilir, görsel beklenir ve merkez pikseli okunur.
-  const palette = Array.from({ length: OWNER_KEYS.length * ROWS_PER_OWNER }, (_, i) => colourOf(Math.floor(i / ROWS_PER_OWNER), i % ROWS_PER_OWNER));
+  const palette = [...Array.from({ length: OWNER_KEYS.length * ROWS_PER_OWNER }, (_, i) => colourOf(Math.floor(i / ROWS_PER_OWNER), i % ROWS_PER_OWNER)), ...EXTRA_COLOURS];
   await page.evaluate(() => { window.norm = text => String(text || '').replace(/\s+/g, ' ').trim(); });
   const count = await page.locator('#kolTable tbody tr td[data-key="modelKod"]').count();
   for (let i = 0; i < count; i++) {
@@ -406,7 +481,7 @@ async function readCollectionRows(page) {
   }, { keys: PRICE_KEYS, palette });
 }
 async function readDesk(page) {
-  const palette = Array.from({ length: OWNER_KEYS.length * ROWS_PER_OWNER }, (_, i) => colourOf(Math.floor(i / ROWS_PER_OWNER), i % ROWS_PER_OWNER));
+  const palette = [...Array.from({ length: OWNER_KEYS.length * ROWS_PER_OWNER }, (_, i) => colourOf(Math.floor(i / ROWS_PER_OWNER), i % ROWS_PER_OWNER)), ...EXTRA_COLOURS];
   await page.mouse.move(2, 2);
   // Model görselleri tembel yüklenir: her satır görünür alana getirilip beklenir.
   const rowCount = await page.locator('.pdMatrix tbody tr[data-pd-model]').count();
