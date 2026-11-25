@@ -53,7 +53,7 @@ const masterReleases = require('./lib/master-releases');
 const { createYielder } = require('./lib/stable-digest');
 const { createRefreshPerformance } = require('./lib/refresh-performance');
 const sharedSyncPolicy = require('./lib/shared-sync-policy');
-const { filterCollectionWorkspaceDeltas, quarantineLegacyCollectionDeltas, createCollectionReplication } = require('./lib/collection-replication');
+const { filterCollectionWorkspaceDeltas, quarantineLegacyCollectionDeltas, createCollectionReplication, applyConflictIncoming: applyCollectionConflictIncoming } = require('./lib/collection-replication');
 const { createCollectionPermissionsStore } = require('./lib/collection-permissions-store');
 const { resolveBuyerLogDataRoots } = require('./lib/data-roots');
 const { createDataMaintenance } = require('./lib/data-maintenance');
@@ -3732,9 +3732,8 @@ async function applyCollectionConflictChoice(profile, conflict) {
   if (conflict.field === '_deleted') {
     if (current && conflict.incoming === 'yerelde silindi') change = { deletes:[{ id:current.id, _rev:current._rev }] };
   } else if (current) {
-    const row = { ...current };
-    if (conflict.incoming == null) delete row[conflict.field]; else row[conflict.field] = conflict.incoming;
-    change = { upserts:[row] };
+    // Fiyat haritası çakışması yalnız kaybeden üretici anahtarlarını güncel satıra uygular.
+    change = { upserts:[applyCollectionConflictIncoming(current, conflict)] };
   }
   if (!change) return;
   const result = await collectionWorkspaces.applyRowChangesAsync(ownerId, change);
@@ -10066,6 +10065,7 @@ app.post('/api/sync-conflicts/:id/resolve', userAccess.requireArea('source'), ex
     const choice = String(req.body && req.body.choice || 'current');
     let conflict;
     if (String(req.params.id).startsWith('collection:')) {
+      await refreshCollectionPermissionScope(); // çözüm yazar: izin önce tazelenir
       const visible = (await collectionMergeConflictsFor(req.currentUser)).some(item => item.conflictId === req.params.id);
       if (!visible) return res.status(404).json({ error:'Koleksiyon çakışması bulunamadı.', code:'COLLECTION_CONFLICT_NOT_FOUND' });
       conflict = await collectionReplication.resolveMergeConflict(req.params.id, choice, item => applyCollectionConflictChoice(req.currentUser, item));

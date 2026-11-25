@@ -50,6 +50,8 @@ test('yeniden temellendirme: yerel üretici değişikliği ve silme uygulanır, 
   // Değişmeyen harita uzak haritayı aynen alır; harita olmayan değer bütün alan kuralındadır.
   assert.deepEqual({ ...kolMergeLocalRowDelta(base, { ...base }, remote).pricing }, remote.pricing);
   assert.deepEqual(kolMergeLocalRowDelta({ id: 1, pricing: '' }, { id: 1, pricing: { A: '1' } }, { id: 1, pricing: '' }).pricing, { A: '1' });
+  // Tabansız çağrı (kimlik çakışması/yeni satır) eski bütün-değer kuralında kalır.
+  assert.deepEqual({ ...kolMergeLocalRowDelta({}, { id: 1, pricing: { A: '1' } }, { id: 1, pricing: { B: '2' } }).pricing }, { A: '1' });
   const removed = kolMergeLocalRowDelta({ id: 1, pricing: { A: '1' } }, { id: 1 }, { id: 1, pricing: { A: '1', B: '2' } });
   assert.equal(Object.prototype.hasOwnProperty.call(removed, 'pricing'), false, 'yerelde tamamen kaldırılan alan kaldırılır');
 });

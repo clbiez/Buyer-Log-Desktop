@@ -26948,12 +26948,12 @@ function kolMergeLocalRowDelta(base,local,remote){
     const hasLocal=Object.prototype.hasOwnProperty.call(local||{},key);
     if(hasBase===hasLocal&&kolValueEqual(base&&base[key],local&&local[key]))continue;
     if(!hasLocal){delete next[key];continue;}
-    if(key==='pricing'||key==='pricingSent'){
+    if((key==='pricing'||key==='pricingSent')&&hasBase){
       // Üretici başına fiyat haritaları tek değer değildir: başka cihazın başka
       // üreticiye girdiği fiyat, bu ekrandaki haritanın tamamı yazılınca
       // siliniyordu. Yalnız bu ekranda değişen üreticiler uzak haritaya taşınır.
       const isMap=value=>value!=null&&typeof value==='object'&&!Array.isArray(value);
-      const before=hasBase?base[key]:null,mine=local[key];
+      const before=base[key],mine=local[key];
       if(isMap(mine)&&(next[key]==null||isMap(next[key]))&&(before==null||isMap(before))){
         const from=isMap(before)?before:{},out={...(isMap(next[key])?next[key]:{})};
         for(const name of new Set([...Object.keys(from),...Object.keys(mine)])){

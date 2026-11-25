@@ -27,7 +27,7 @@ const fsp = require('node:fs/promises');
 const path = require('node:path');
 
 const { createCollectionSimulation, OWNER } = require('./helpers/collection-sync-sim');
-const { mergeCollectionWorkspaces, createCollectionReplication } = require('../server/lib/collection-replication');
+const { mergeCollectionWorkspaces, createCollectionReplication, applyConflictIncoming } = require('../server/lib/collection-replication');
 const { findConflictCopies } = require('../server/lib/onedrive-conflict-copies');
 
 const TIMEOUT_MS = process.platform === 'win32' ? 90000 : 20000;
@@ -64,6 +64,78 @@ test('12 eşzamanlı yazar: kayıt sahte çakışma döndürmez ve en fazla iki 
     for (const [index, device] of writers.entries()) assert.equal(hub.find(row => row.id === index + 1).not, `note-${device.index}`);
     for (const device of sim.devices) if (device.role !== 'none') assert.deepEqual(await sim.openConflicts(device), [], `false conflict on ${device.index}`);
     assert.deepEqual((await sim.quietRound()).work, [], 'settled installations do no extra read/publish work');
+  });
+});
+
+test('kira altı birleşimden sonra hub yazımı düşerse kaybeden yerel değer çakışma olarak kalır', { timeout: TIMEOUT_MS }, async t => {
+  const sim = await simulation(t, { seed: 25123, devices: 6 });
+  await guarded(sim, async () => {
+    const [, laptop, x, y] = sim.devices;
+    const target = sim.workspaceFile();
+    sim.setOnline(x, false);
+    assert.equal((await sim.edit(x, OWNER, 1, { not: 'x-not', fob: 'x-fob' })).status, 'applied');
+    assert.equal((await sim.edit(y, OWNER, 1, { not: 'y-not' })).status, 'applied');
+    await sim.poll(laptop);
+    sim.setOnline(x, true);
+    let calls = 0, saved = null;
+    const hooked = {
+      loadWorkspace: owner => x.modules.workspaces.loadWorkspace(owner),
+      replaceWorkspaceReplica: async (owner, raw, options) => {
+        const result = await x.modules.workspaces.replaceWorkspaceReplica(owner, raw, options);
+        calls += 1;
+        // 1) Birleşim yerelde yazıldı; başka kurulum araya girip yayımlar (CAS yarışı).
+        if (calls === 1) assert.equal((await sim.edit(laptop, OWNER, 1, { fob: 'laptop-fob' })).status, 'applied');
+        // 2) Kira altı birleşim yerelde yazıldı; hub yazımı kalıcı hatayla düşer.
+        if (calls === 2) { saved = await fsp.readFile(target); await fsp.rm(target); await fsp.mkdir(target); await fsp.writeFile(path.join(target, 'blocker'), 'x'); }
+        return result;
+      },
+    };
+    const replica = createCollectionReplication({ workspaces: hooked, permissions: x.permissions, getSharedSyncRoot: async () => sim.hub, stateFile: path.join(x.local, 'collection-replication-state.json') });
+    await replica.publishOwner(OWNER).catch(() => null);
+    assert.equal(calls, 2, 'merge-under-lease path was exercised');
+    await fsp.rm(target, { recursive: true, force: true });
+    await fsp.writeFile(target, saved);
+    await replica.syncOwner(x.userId, OWNER);
+    await sim.settle();
+    const row = (await sim.remoteEnvelope()).workspace.rows.find(item => item.id === 1);
+    assert.equal(row.not, 'y-not');
+    assert.equal(row.fob, 'laptop-fob', 'first published value wins');
+    const conflicts = await replica.listMergeConflicts([OWNER]);
+    assert.ok(conflicts.some(item => item.field === 'not' && item.incoming === 'x-not'));
+    assert.ok(conflicts.some(item => item.field === 'fob' && item.incoming === 'x-fob'), 'losing local value must not disappear when the hub write fails');
+  });
+});
+
+test('büyük zarfta kira altı birleşim yapılmaz: yayım beklemede kalır, sonraki senkron kayıpsız tamamlar', { timeout: TIMEOUT_MS }, async t => {
+  const sim = await simulation(t, { seed: 25124, devices: 6 });
+  await guarded(sim, async () => {
+    const [, laptop, x, y] = sim.devices;
+    sim.setOnline(x, false);
+    assert.equal((await sim.edit(x, OWNER, 2, { not: 'x-large' })).status, 'applied');
+    assert.equal((await sim.edit(y, OWNER, 3, { colour: 'Navy' })).status, 'applied');
+    await sim.poll(laptop);
+    sim.setOnline(x, true);
+    let calls = 0;
+    const hooked = {
+      loadWorkspace: owner => x.modules.workspaces.loadWorkspace(owner),
+      replaceWorkspaceReplica: async (owner, raw, options) => {
+        const result = await x.modules.workspaces.replaceWorkspaceReplica(owner, raw, options);
+        calls += 1;
+        if (calls === 1) assert.equal((await sim.edit(laptop, OWNER, 4, { fob: '7,00' })).status, 'applied');
+        return result;
+      },
+    };
+    // Eşik 1 bayt: her zarf "büyük" sayılır.
+    const replica = createCollectionReplication({ workspaces: hooked, permissions: x.permissions, getSharedSyncRoot: async () => sim.hub, stateFile: path.join(x.local, 'collection-replication-state.json'), mergeUnderLeaseMaxBytes: 1 });
+    const pending = await replica.publishOwner(OWNER);
+    assert.equal(calls, 1, 'no merge under the hub lease for a large envelope');
+    assert.equal(pending.publicationPending, true);
+    await replica.syncOwner(x.userId, OWNER);
+    await sim.settle();
+    const rows = (await sim.remoteEnvelope()).workspace.rows;
+    assert.equal(rows.find(row => row.id === 2).not, 'x-large');
+    assert.equal(rows.find(row => row.id === 3).colour, 'Navy');
+    assert.equal(rows.find(row => row.id === 4).fob, '7,00');
   });
 });
 
@@ -138,6 +210,15 @@ test('izleyiciye düşürülen düzenleyicinin çevrimdışı yazısı yayımlan
     assert.equal(sim.rowOf(editor, 8).targetPrice, '', 'viewer cache adopts the owner copy');
     assert.equal(sim.rowOf(editor, 7).targetPrice, '2,10');
     assert.ok(await sim.convergedNow());
+    // Yayımlanmayan yerel kopya sessizce yok edilmez: yerel kurtarma dosyasında kalır.
+    const preservedDir = path.join(editor.local, 'collection-replication-state.json.readonly-preserved');
+    const preserved = (await fsp.readdir(preservedDir)).filter(name => name.endsWith('.json'));
+    assert.equal(preserved.length, 1);
+    const copy = JSON.parse(await fsp.readFile(path.join(preservedDir, preserved[0]), 'utf8'));
+    assert.equal(copy.workspace.rows.find(row => row.id === 8).targetPrice, '9,99');
+    // Güncel izleyici önbelleği için ek kopya üretilmez.
+    await sim.settle();
+    assert.equal((await fsp.readdir(preservedDir)).filter(name => name.endsWith('.json')).length, 1);
   });
 });
 
@@ -178,10 +259,33 @@ test('fiyat haritası birleşimi: aynı üretici çakışması tanımlı kalır,
   const twoWay = mergeCollectionWorkspaces(null, local, remote);
   assert.deepEqual(twoWay.workspace.rows[0].pricing, { A: '1,70', B: '2,20', C: '3,00', D: '9,00' });
   assert.deepEqual(twoWay.conflicts.map(item => item.field), ['pricing']);
+  assert.deepEqual(conflicts[0].mapEntries, { A: '1,50' });
+  assert.deepEqual(conflicts[0].mapDeletes, []);
+  // "Benim değerim" çözümü yalnız kaybeden üreticiyi GÜNCEL satıra uygular:
+  // kayıttan sonra değişen/eklenen diğer üreticiler korunur.
+  const later = { id: 1, _rev: 9, pricing: { A: '1,70', B: '2,99', C: '3,00', E: '5,00' } };
+  assert.deepEqual(applyConflictIncoming(later, conflicts[0]).pricing, { A: '1,50', B: '2,99', C: '3,00', E: '5,00' });
+  const deletion = mergeCollectionWorkspaces(ws(5, [{ id: 1, _rev: 5, pricing: { A: '1', D: '9' } }]), ws(6, [{ id: 1, _rev: 6, pricing: { A: '1' } }]), ws(6, [{ id: 1, _rev: 6, pricing: { A: '1', D: '8' } }]));
+  assert.deepEqual(deletion.workspace.rows[0].pricing, { A: '1', D: '8' });
+  assert.deepEqual(deletion.conflicts[0].mapDeletes, ['D']);
+  assert.deepEqual(applyConflictIncoming({ id: 1, pricing: { A: '2', D: '8' } }, deletion.conflicts[0]).pricing, { A: '2' });
+  // Eski (harita anahtarı taşımayan) kayıt ve diğer alanlar bütün alan kuralında kalır.
+  assert.deepEqual(applyConflictIncoming({ id: 1, pricing: { A: '2' } }, { field: 'pricing', incoming: { Z: '1' } }).pricing, { Z: '1' });
+  assert.equal(applyConflictIncoming({ id: 1, fob: '1' }, { field: 'fob', incoming: '2' }).fob, '2');
+  assert.equal('fob' in applyConflictIncoming({ id: 1, fob: '1' }, { field: 'fob', incoming: null }), false);
   // Harita olmayan eski/bozuk değer bütün alan kuralına düşer.
   const legacy = mergeCollectionWorkspaces(ws(5, [{ id: 1, _rev: 5, pricing: '' }]), ws(6, [{ id: 1, _rev: 6, pricing: { A: '1' } }]), ws(6, [{ id: 1, _rev: 6, pricing: '' }]));
   assert.deepEqual(legacy.workspace.rows[0].pricing, { A: '1' });
   assert.deepEqual(legacy.conflicts, []);
+});
+
+test('sunucu çakışma çözümü harita anahtarlarını güncel satıra uygular ve önce izni tazeler', () => {
+  const source = require('node:fs').readFileSync(path.join(__dirname, '../server/server.js'), 'utf8');
+  const choice = source.slice(source.indexOf('async function applyCollectionConflictChoice('), source.indexOf('async function collectionReplicaStatus('));
+  assert.match(choice, /applyCollectionConflictIncoming\(current, conflict\)/);
+  assert.doesNotMatch(choice, /row\[conflict\.field\] = conflict\.incoming/);
+  const route = source.slice(source.indexOf("app.post('/api/sync-conflicts/:id/resolve'"), source.indexOf("app.post('/api/sync-conflicts/:id/resolve'") + 1200);
+  assert.ok(route.indexOf('refreshCollectionPermissionScope()') > 0 && route.indexOf('refreshCollectionPermissionScope()') < route.indexOf('resolveMergeConflict('), 'permission scope refreshed before applying a Collection conflict');
 });
 
 test('aynı alana eşzamanlı yazım: tek değere yakınsar, kaybeden değerler çakışma olarak kalır', { timeout: TIMEOUT_MS }, async t => {
