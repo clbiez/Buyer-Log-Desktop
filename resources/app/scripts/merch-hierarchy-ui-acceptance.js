@@ -161,6 +161,14 @@ async function refresh(){
     const out=[...cells].map(td=>{const x=H.hoverTarget(td);return x?x.field+':'+x.value:'';});t.remove();return out;
   },[firstMag,magEntry.mmyg]);
   assert.deepEqual(generic,['',`mag:${firstMag}`,`mmyg:${magEntry.mmyg}`],'başlık etiketiyle sütun çözümü');
+  // Gruplu widget hücresi (TR/YD, Post-FOB, OAB Küp, INTAKE): aç/kapa oku + <strong> + model sayısı.
+  const grouped=await page.evaluate(mag=>{
+    const t=document.createElement('table');
+    t.innerHTML=`<thead><tr><th>MAG</th><th>Değer</th></tr></thead><tbody><tr><td class="oabPivotGroupCell" title="${mag}"><button type="button">▾</button><strong>${mag}</strong><span>3 model</span></td><td>1</td></tr></tbody>`;
+    document.body.appendChild(t);const H=window.BLMerchHierarchy,x=H.hoverTarget(t.querySelector('td'));
+    const hit=x&&x.candidates.map(v=>H.tipLines(x.field,v)).find(Boolean);t.remove();return hit?hit.head:null;
+  },firstMag);
+  assert.equal(grouped,`${firstMag} · MAG`,'gruplu widget hücresinde ham kod bulunur');
   // Kendiliğinden güncellenme: ASAS'ta ilk MAG başka bir MMYG'ye taşınır, yeniden yenilenir.
   writeAsas(true);await refresh();
   const h2=await (await api('/api/merch-hierarchy')).json();

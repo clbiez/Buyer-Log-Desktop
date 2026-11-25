@@ -235,8 +235,13 @@
     else if(td.dataset.key)field=fieldOf(td.dataset.key);
     if(!field){var table=td.closest('table'),fields=table&&columnFields(table);field=fields?fields[cellColumnIndex(td)]||'':'';}
     if(!field)return null;
-    var value=td.dataset.merchValue||String(td.textContent||'').replace(/\s+/g,' ').trim();
-    return value?{el:td,field:field,value:value}:null;
+    // Değer adayları: gruplu widget hücreleri aç/kapa oku, <strong> etiket ve "3 model" sayısı
+    // taşır (tam metin "▾CU4E3 model" olur). Ham değer title / <strong> içindedir; eşlemede
+    // bulunan ilk aday kullanılır (showTip).
+    var clean=function(v){return String(v==null?'':v).replace(/\s+/g,' ').trim();};
+    var strong=td.querySelector&&td.querySelector('strong');
+    var candidates=[td.dataset.merchValue,td.getAttribute('title'),td.dataset.blMerchTitle,strong&&strong.textContent,td.textContent].map(clean).filter(function(v,i,a){return v&&a.indexOf(v)===i;});
+    return candidates.length?{el:td,field:field,value:candidates[0],candidates:candidates}:null;
   }
   function tipLines(field,value){
     if(!data)return null;
@@ -264,7 +269,9 @@
     if(tipEl){tipEl.classList.remove('isVisible');tipEl.hidden=true;}
   }
   function showTip(target){
-    var t=tipLines(target.field,target.value);if(!t)return;
+    var t=null,list=target.candidates||[target.value];
+    for(var i=0;i<list.length&&!t;i++)t=tipLines(target.field,list[i]);
+    if(!t)return;
     var doc=root.document;
     if(!tipEl){tipEl=doc.createElement('div');tipEl.className='blTip blMerchTip';tipEl.setAttribute('role','tooltip');tipEl.hidden=true;doc.body.appendChild(tipEl);}
     var el=target.el;
