@@ -31,7 +31,7 @@ test('CP and Orders expose Endeksmatik in Tools and read only their visible sele
  assert.match(HTML,/id="ordersToolsMenu"[\s\S]*?id="ordersEndeksmatikBtn"/);
  assert.match(APP,/function selectedEndeksmatikOrder\(mode\)/);
  const selection=APP.slice(APP.indexOf('function selectedEndeksmatikRows(mode)'),APP.indexOf('function endeksmatikModelContext'));
- assert.match(selection,/filteredOrders\(\)/);assert.match(selection,/filteredCP\(\)/);
+ assert.match(selection,/filteredOrders\(\{sort:false\}\)/);assert.match(selection,/filteredCP\(\{sort:false\}\)/);
  assert.doesNotMatch(selection,/selectedCpRowsForAction|_canEdit/);
  assert.match(APP,/data-em-order-direction/);
 });

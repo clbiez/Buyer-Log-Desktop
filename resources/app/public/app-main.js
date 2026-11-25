@@ -3331,19 +3331,24 @@ function managedGridHasRange(tab=document.body.dataset.activeTab){
 }
 // İşaretli satır varsa Copy, bayat hücre/aralık durumu render gecikmesiyle
 // hâlâ ayakta kalmış olsa bile satırları esas alır (bkz. registerManagedGridClipboard).
-function managedSelectionSourceRows(tableKey){
+function managedSelectionSourceRows(tableKey,include){
   const rows=partialViewRows(tableKey,state[tableKey]?.rows||[]);
   const sort=tableKey==='orders'?state.ordersSort:state.cpSort;
   // Seçim filtre dışında da korunur; çıktı her işlemde güncel tablo sırasını izler.
-  const ordered=sort?.key?sortRows(rows,sort.key,sort.dir):rows;
+  // include verilirse yalnız o satırlar sıralanır: sıralama ve arama sırası kararlı
+  // ve satır başına olduğu için sonuç "tümünü sırala, sonra süz" ile aynıdır; şema
+  // yine tüm kaynaktan çözülür.
+  const scoped=typeof include==='function'?rows.filter(include):rows;
+  const ordered=sort?.key?sortRows(scoped,sort.key,sort.dir,rows):scoped;
   const terms=parseTableSearchTerms(document.getElementById(tableKey==='orders'?'ordersSearch':'cpSearch')?.value);
   return window.BLTableSearch.orderRows(ordered,terms,cpSearchHaystack,{plainMode:'contains'});
 }
 function managedSelectionSnapshot(tableKey){
   const selected=tableKey==='orders'?state.ordersSelected:state.cpSelected;
-  const visible=tableKey==='orders'?filteredOrders():filteredCP();
+  // Görünürlük için sıra gerekmez: süzülmüş küme sıralanmadan alınır.
+  const visible=tableKey==='orders'?filteredOrders({sort:false}):filteredCP({sort:false});
   const ids=new Set(visible.map(row=>String(row._id)));
-  const rows=managedSelectionSourceRows(tableKey).filter(row=>selectionHasId(selected,row._id));
+  const rows=managedSelectionSourceRows(tableKey,row=>selectionHasId(selected,row._id));
   return {rows,hidden:rows.filter(row=>!ids.has(String(row._id))),selected};
 }
 function managedSelectionChange(tableKey,change){
@@ -3356,9 +3361,31 @@ function managedSelectionChange(tableKey,change){
     selected.clear();before.forEach(value=>{if(allowed.has(String(value)))selected.add(value);});render();window.BLSelectionBar?.refresh();
   }});
 }
+// Seçim çubuğu her tıklamada ve görünürken 700 ms'de bir yoklar. Snapshot tüm
+// kaynağı filtreleyip sıraladığı için yalnız girdileri değiştiğinde alınır:
+// kaynak/çizilen/akışla tamamlanmış satır dizisi, sıralama, arama ve seçim.
+// Filtre, veri yenileme veya kısmi görünüm değişince tablo yeniden çizilir ve
+// çizilen satır dizisi (tbody._chkMeta.rows) yeni bir kimlik alır.
+const _managedSelectionTokens=new WeakMap();let _managedSelectionTokenSeq=0;
+function managedSelectionToken(value){
+  if(!value||typeof value!=='object')return '-';
+  if(!_managedSelectionTokens.has(value))_managedSelectionTokens.set(value,++_managedSelectionTokenSeq);
+  return String(_managedSelectionTokens.get(value));
+}
+function managedSelectionSignature(tableKey){
+  const orders=tableKey==='orders';
+  const selected=orders?state.ordersSelected:state.cpSelected;
+  const sort=orders?state.ordersSort:state.cpSort;
+  const rendered=document.getElementById(orders?'ordersTable':'cpTable')?.tBodies?.[0]?._chkMeta?.rows;
+  const materialized=orders?ordersRMMaterializedRows():cpRMMaterializedRows();
+  const search=document.getElementById(orders?'ordersSearch':'cpSearch')?.value||'';
+  return [managedSelectionToken(state[tableKey]?.rows),managedSelectionToken(rendered),managedSelectionToken(materialized),
+    sort?.key||'',sort?.dir||'',search,[...(selected||[])].map(String).join('\u0001')].join('\u0002');
+}
 window.BLManagedSelection={
   clear(tableKey){managedSelectionChange(tableKey,selected=>selected.clear());},
   snapshot:managedSelectionSnapshot,
+  signature:managedSelectionSignature,
   remove(tableKey,id){
     managedSelectionChange(tableKey,selected=>{for(const value of selected)if(String(value)===String(id))selected.delete(value);});
   },
@@ -10574,7 +10601,7 @@ function cpRowPasses(r,ctx,ids){
   for(let i=0;i<ids.length;i++) if(!cpPassesGroup(r,ctx,ids[i])) return false;
   return true;
 }
-function filteredCP(){
+function filteredCP(options){
   // #1078: pencereli yolda eşleşen kümenin tamamı arka uçtan akışla alınmışsa o küme.
   const materialized=cpRMMaterializedRows();if(materialized)return materialized;
   if(!state.cp) return [];
@@ -10586,7 +10613,8 @@ function filteredCP(){
   ensurePlmSampleAccessors(state.cp.rows);
   const source=partialViewRows('cp',state.cp.rows);ensurePlmSampleAccessors(source);
   let rows=source.filter(r=>cpRowPasses(r,ctx,CP_MIRROR_IDS));
-  if(state.cpSort.key) rows = sortRows(rows, state.cpSort.key, state.cpSort.dir);
+  // {sort:false}: yalnız üyelik/sayı gereken yollar (seçim çubuğu, tek satır düğmeleri) sıralamaz.
+  if(state.cpSort.key&&options?.sort!==false) rows = sortRows(rows, state.cpSort.key, state.cpSort.dir);
   return window.BLTableSearch.orderRows(rows,ctx.q,cpSearchHaystack,{plainMode:'contains'});
 }
 // Tam tabloyu BIR kez gezip hem sonuc kumesini hem de bes capraz kapsami birden uretir.
@@ -10650,23 +10678,38 @@ function quickSeasonEntries(counts){
   return Object.entries(counts||{}).filter(([,n])=>Number(n)>0)
     .sort((a,b)=>compareSeasonValues(a[0],b[0]));
 }
-function sortRows(rows,key,dir){
+function sortRows(rows,key,dir,schemaRows){
   const privateKey=(COLS_BY_TABLE.cp||[]).some(col=>col.k===key&&col.personalNote)
     ||(COLS_BY_TABLE.orders||[]).some(col=>col.k===key&&col.personalNote);
-  return [...rows].sort((a,b)=>{
-    let x=privateKey?readPrivateOrderNote(a,key):a[key], y=privateKey?readPrivateOrderNote(b,key):b[key];
-    if(key==='Priority')return (priorityRank(x)-priorityRank(y))*dir;
-    if(String(key).toLocaleLowerCase('tr-TR')==='season') return BLBusinessRules.compareChronologicalValues(x,y,dir);
+  // Sütun, şema ve satır başına sıralama değeri karşılaştırıcıdan ÖNCE bir kez
+  // çözülür. Eskiden her karşılaştırmada (30k satırda ~450k kez) sütun aranıyor
+  // ve önbelleği olmayan şema tüm satırları tarayarak yeniden çıkarılıyordu;
+  // seçim çubuğu/araç düğmeleri her checkbox'ta sıraladığı için seçim donuyordu.
+  // Sonuç aynıdır: aynı değerler, aynı kural, kararlı (stable) sıralama.
+  const source=[...rows];
+  const raw=source.map(row=>privateKey?readPrivateOrderNote(row,key):row[key]);
+  let compare;
+  if(key==='Priority'){
+    const rank=raw.map(priorityRank);
+    compare=(i,j)=>(rank[i]-rank[j])*dir;
+  }else if(String(key).toLocaleLowerCase('tr-TR')==='season'){
+    compare=(i,j)=>BLBusinessRules.compareChronologicalValues(raw[i],raw[j],dir);
+  }else{
     const column=(COLS_BY_TABLE.cp||[]).find(item=>item.k===key)||(COLS_BY_TABLE.orders||[]).find(item=>item.k===key);
-    const schema=columnSchemaFor(column||{k:key},rows);
-    const sx=schema&&schema.sortValue(x), sy=schema&&schema.sortValue(y);
-    if(schema&&(schema.sortType==='number'||schema.sortType==='date')){
-      // Boş tarih/sayı her iki yönde de sona gider (Koleksiyon ile aynı kural).
-      if(sx!=null && sy!=null) return (sx-sy)*dir;
-      if((sx==null)!==(sy==null)) return sx==null?1:-1;
-    }
-    return BLBusinessRules.compareChronologicalValues(x,y,dir);
-  });
+    const schema=columnSchemaFor(column||{k:key},Array.isArray(schemaRows)?schemaRows:rows);
+    const typed=Boolean(schema&&(schema.sortType==='number'||schema.sortType==='date'));
+    const value=typed?raw.map(item=>schema.sortValue(item)):null;
+    compare=(i,j)=>{
+      if(typed){
+        const sx=value[i], sy=value[j];
+        // Boş tarih/sayı her iki yönde de sona gider (Koleksiyon ile aynı kural).
+        if(sx!=null && sy!=null) return (sx-sy)*dir;
+        if((sx==null)!==(sy==null)) return sx==null?1:-1;
+      }
+      return BLBusinessRules.compareChronologicalValues(raw[i],raw[j],dir);
+    };
+  }
+  return source.map((_,index)=>index).sort(compare).map(index=>source[index]);
 }
 /* Boş tablo yönlendirmesi: kaynakta hiç satır yoksa Veri Yönetimi'ne, filtreler
    her şeyi eliyorsa filtre temizlemeye yönlendirir. Tablo başlığı ve araç
@@ -11551,14 +11594,14 @@ function ordersEvaluateAll(){
   }
   return out;
 }
-function filteredOrders(){
+function filteredOrders(options){
   // #1076: pencereli yolda eşleşen kümenin tamamı arka uçtan akışla alınmışsa o küme.
   const materialized=ordersRMMaterializedRows();if(materialized)return materialized;
   if(!state.orders)return [];
   const ctx=ordersBuildFilterContext();
   const source=partialViewRows('orders',state.orders.rows);
   let rows=source.filter(row=>ordersRowPasses(row,ctx,ORDERS_MIRROR_IDS));
-  if(state.ordersSort.key)rows=sortRows(rows,state.ordersSort.key,state.ordersSort.dir);
+  if(state.ordersSort.key&&options?.sort!==false)rows=sortRows(rows,state.ordersSort.key,state.ordersSort.dir);
   return window.BLTableSearch.orderRows(rows,ctx.q,cpSearchHaystack,{plainMode:'contains'});
 }
 function ordersImageCellHtml(row){
@@ -28182,7 +28225,8 @@ function endeksmatikRoyaltyRule(mode,row){
 function selectedEndeksmatikRows(mode){
   const selected=mode==='orders'?state.ordersSelected:state.cpSelected;
   if(!selected?.size)return [];
-  return (mode==='orders'?filteredOrders():filteredCP()).filter(row=>selected?.has(row._id));
+  // Yalnız sayı (tam bir görünür satır) gerekir; her checkbox'ta 30k satır sıralanmaz.
+  return (mode==='orders'?filteredOrders({sort:false}):filteredCP({sort:false})).filter(row=>selected?.has(row._id));
 }
 function selectedEndeksmatikOrder(mode){
   const activeTab=document.body.dataset.activeTab||document.querySelector('nav.tabs button.active')?.dataset.tab||'';

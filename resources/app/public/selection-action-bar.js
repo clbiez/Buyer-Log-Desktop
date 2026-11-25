@@ -23,7 +23,7 @@
     excel:{icon:'#i-file-export',label:['Excel','Excel']},
     tools:{icon:'#i-bl-tools',label:['Araçlar','Tools']},
   });
-  let panel=null,lastSignature='',host=null,bar=null,lastKey='',lastCount=0,lastLang='',dismissedAt='',queued=false,poll=0;
+  let panel=null,lastSignature='',lastInput='',host=null,bar=null,lastKey='',lastCount=0,lastLang='',dismissedAt='',queued=false,poll=0;
 
   function mount(){
     host=doc.createElement('div');
@@ -65,6 +65,11 @@
   }
   const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function snapshot(){return (lastKey==='cp'||lastKey==='orders')?root.BLManagedSelection?.snapshot(lastKey):null;}
+  // Snapshot tüm kaynağı filtreleyip sıralar; girdiler aynıysa yoklama/tıklama onu yeniden almaz.
+  function inputSignature(key){
+    if(key!=='cp'&&key!=='orders')return '';
+    try{return String(root.BLManagedSelection?.signature?.(key)??'');}catch(_){return '';}
+  }
   function drawPanel(){
     const data=snapshot();if(!data)return;
     const hiddenIds=new Set(data.hidden.map(row=>String(row._id)));
@@ -77,7 +82,7 @@
     bar.hidden=true;
     if(poll){root.clearInterval(poll);poll=0;}
   }
-  function render(key,count){
+  function render(key,count,data){
     const page=PAGES[key];
     const items=page.actions.map(([action,id])=>{
       const target=doc.getElementById(id);
@@ -85,7 +90,7 @@
       const meta=ACTIONS[action],label=T(meta.label[0],meta.label[1]);
       return `<button type="button" class="tbtn blSelectionAction" data-selection-target="${id}"${target.disabled?' disabled':''}><svg class="ic" aria-hidden="true"><use href="${meta.icon}"/></svg><span>${label}</span></button>`;
     }).join('');
-    const data=snapshot(),hidden=data?.hidden.length||0;
+    const hidden=data?.hidden.length||0;
     const details=T('Seçili satırları göster','Show selected rows');
     const badge=hidden?`<button type="button" class="blSelectionHidden" data-selection-details title="${details}">${hidden} ${T('filtre dışında','outside filters')}</button>`:'';
     const dismiss=data?T('Tüm seçimleri temizle','Clear all selections'):T('Seçim çubuğunu gizle','Hide selection bar');
@@ -104,6 +109,9 @@
     if(dismissedAt&&dismissedAt!==signature)dismissedAt='';
     const lang=en()?'en':'tr';
     const oldKey=lastKey;lastKey=key;
+    const input=inputSignature(key);
+    if(input&&input===lastInput&&key===oldKey&&count===lastCount&&lang===lastLang&&!bar.hidden)return;
+    lastInput=input;
     const data=snapshot();
     const signatureRows=data?data.rows.map(row=>String(row._id)).join(',')+'|'+data.hidden.map(row=>String(row._id)).join(','):'';
     const changed=signatureRows!==lastSignature||key!==oldKey||count!==lastCount||lang!==lastLang||bar.hidden;
@@ -113,7 +121,7 @@
     lastSignature=signatureRows;
     const wasHidden=bar.hidden;
     const panelOpen=!panel.hidden;
-    render(key,count);
+    render(key,count,data);
     if(panelOpen){drawPanel();bar.querySelector('[data-selection-details]')?.setAttribute('aria-expanded','true');}
     bar.hidden=false;
     if(wasHidden)root.BLMotionPlus?.play?.('overlay',bar);
