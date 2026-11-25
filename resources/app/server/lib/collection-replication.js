@@ -28,6 +28,7 @@ const { withFileLeaseAsync, replaceFileWithRetry } = require('./shared-file-tran
 const REPLICATION_VERSION = 1;
 const REPLICATION_STATE_VERSION = 1;
 const LEGACY_DELTA_QUARANTINE_MARKER = 'collectionLegacyDeltaQuarantineV1';
+const CAS_RACE_CODES = new Set(['COLLECTION_REPLICA_CONFLICT', 'COLLECTION_REPLICA_STALE', 'COLLECTION_REPLICA_ANCESTRY_CONFLICT']);
 function clean(value) { return String(value == null ? '' : value).trim(); }
 function safeId(value) { return clean(value).replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 100); }
 function checksum(value) { return crypto.createHash('sha256').update(JSON.stringify(value), 'utf8').digest('hex'); }
@@ -187,6 +188,31 @@ function sameRowField(key, a, b) {
   if (emptyTextKeys.has(key) && (a == null || a === '') && (b == null || b === '')) return true;
   return sameValue(a, b);
 }
+/* Üretici başına fiyat haritaları (pricing: {üretici: fiyat}, pricingSent:
+   {üretici: true}) tek bir değer değildir. İki kullanıcı aynı modelde farklı
+   üreticilere fiyat girdiğinde haritayı bütün olarak karşılaştırmak birinin
+   fiyatını bütün cihazlarda düşürüyordu. Bu alanlar üretici anahtarı düzeyinde
+   aynı üç yönlü kuralla birleşir; aynı üretici iki tarafta farklı değiştiyse
+   önce yayımlanan (uzak) değer kalır, yerel değer çakışma olarak döner ve
+   çakışmanın "yerel" seçeneği diğer üreticileri korur. Harita olmayan
+   (eski/bozuk) değer bütün alan kuralına düşer. */
+const KEYED_ROW_MAPS = new Set(['pricing', 'pricingSent']);
+function plainMap(value) { return value != null && typeof value === 'object' && !Array.isArray(value); }
+function mapOrAbsent(value) { return value == null || plainMap(value); }
+function mergeKeyedRowMap(hasBase, base, local, remote) {
+  const b = plainMap(base) ? base : {}, l = plainMap(local) ? local : {}, r = plainMap(remote) ? remote : {};
+  const value = {}, losing = new Map();
+  for (const key of new Set([...Object.keys(r), ...Object.keys(l), ...Object.keys(b)])) {
+    const lv = l[key], rv = r[key], bv = b[key];
+    let next;
+    if (!hasBase && (lv === undefined || rv === undefined)) next = lv === undefined ? rv : lv;
+    else if (sameValue(lv, rv) || (hasBase && sameValue(lv, bv))) next = rv;
+    else if (hasBase && sameValue(rv, bv)) next = lv;
+    else { next = rv; losing.set(key, lv); }
+    if (next !== undefined) value[key] = next;
+  }
+  return { value, losing };
+}
 function mergeRowKey(row) { const id = row && row.id; return id == null || id === '' ? '' : String(id); }
 function mergeRowRevision(row) { return Math.max(0, Number(row && row._rev) || 0); }
 function rowContent(row) { const out = { ...(row || {}) }; delete out._rev; return out; }
@@ -200,6 +226,16 @@ function mergeRowFields(base, local, remote, rowId, conflicts) {
   const keys = new Set([...Object.keys(local), ...Object.keys(remote), ...Object.keys(base || {})]);
   for (const key of keys) {
     const l = local[key], r = remote[key], b = base ? base[key] : undefined;
+    if (KEYED_ROW_MAPS.has(key) && mapOrAbsent(l) && mapOrAbsent(r) && mapOrAbsent(b) && (plainMap(l) || plainMap(r))) {
+      const merged = mergeKeyedRowMap(Boolean(base), b, l, r);
+      if (merged.losing.size) {
+        const incoming = { ...merged.value };
+        for (const [mapKey, lost] of merged.losing) { if (lost === undefined) delete incoming[mapKey]; else incoming[mapKey] = lost; }
+        conflicts.push({ rowId, field: key, current: { ...merged.value }, incoming });
+      }
+      out[key] = merged.value;
+      continue;
+    }
     let value;
     if (!base && (l === undefined || r === undefined)) value = l === undefined ? r : l;
     else if (sameRowField(key, l, r) || (base && sameRowField(key, l, b))) value = r;
@@ -455,6 +491,44 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
       ...(publishError ? { ok:false, publicationPending:true, state:'error', code:publishError.code || 'PUBLISH_FAILED', message:publishError.message } : {}),
     };
   }
+  /* CAS YARIŞI. Birleşim uzak kopya kirası dışında hesaplanır; aynı anda
+     başka bir cihaz yayımlarsa birleşik kopyanın CAS denetimi düşer. Eskiden
+     bu kopya bir sonraki 5 sn'lik yoklamayı bekliyor, kaydeden kullanıcıya
+     sahte "aynı revizyonda farklı kopya" hatası dönüyor ve K eşzamanlı yazar
+     her turda yalnız bir kazananla K turda yakınsıyordu (ölçüm: 20 kurulum,
+     12 yazar → 10 tur). Yarışı kaybeden birleşim bir kez, güncel uzak kopyayla
+     kira ALTINDA yeniden yapılır: her kira sırası bir yayım üretir. Düşük
+     çekişmeli normal yol değişmez. Kilit zaman aşımı (SHARED_WRITE_BUSY),
+     bozuk uzak kopya ve bu arada değişen yerel kopya beklemede kalır. */
+  async function reconcileUntilPublished(owner, envelope, options = {}) {
+    const result = await reconcile(owner, envelope, options);
+    if (!(result && result.merged && result.publicationPending && CAS_RACE_CODES.has(result.code))) return result;
+    try {
+      const publication = await publishOwnerCas(owner, { mergeUnderLease: true });
+      return {
+        synced: true, merged: true, ownerId: owner, revision: Number(publication.revision) || result.revision,
+        conflicts: (Number(result.conflicts) || 0) + (Number(publication.conflicts) || 0),
+        published: Boolean(publication.published), reason: 'MERGED',
+      };
+    } catch (error) {
+      return { ...result, code: error.code || result.code, reason: error.code || result.reason, message: error.message || result.message };
+    }
+  }
+  /* YAYIM YETKİSİ. Canlı yoklama izin önbelleğini tazelemez. Sahibi olmadığı
+     bir Koleksiyonun yayımlanmamış yerel değişikliği yayımlanmadan (ya da
+     birleştirilip yayımlanmadan) önce erişim ortak izin belgesinden yeniden
+     doğrulanır: erişimi geri alınmış veya izleyiciye düşürülmüş bir
+     düzenleyicinin eski önbellek yetkisiyle çevrimdışı yaptığı yazım sahibin
+     kopyasına ulaşmaz. Yalnız yayım gerekirken çalışır; güncel kopyada ek
+     okuma yoktur. İzin belgesi okunamazsa yayım bekletilir (fail-closed). */
+  async function confirmPublishAccess(user, owner) {
+    if (user === owner || typeof permissions.sync !== 'function') return permissions.accessLevel(user, owner);
+    try { await permissions.sync(); }
+    catch (_) {
+      throw Object.assign(new Error('Koleksiyon yetkisi ortak klasörden doğrulanamadı; yerel değişiklik yayımlanmadı. / Collection access could not be verified from the shared folder; the local change was not published.'), { code: 'COLLECTION_ACCESS_UNVERIFIED', statusCode: 503 });
+    }
+    return permissions.accessLevel(user, owner);
+  }
   function publishOwner(ownerId) {
     return withOwnerOperation(ownerId, () => publishOwnerInternal(ownerId));
   }
@@ -468,47 +542,73 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
       if (Number(error && error.statusCode) !== 409) throw error;
       const owner = clean(ownerId), sharedRoot = await root();
       const envelope = sharedRoot ? await readEnvelope(remoteWorkspaceFile(sharedRoot, owner), owner) : null;
-      const merged = await reconcile(owner, envelope);
+      const merged = await reconcileUntilPublished(owner, envelope);
       if (!merged || !merged.merged) throw error;
       return merged;
     }
   }
-  async function publishOwnerCas(ownerId) {
+  /* Kira altında birleşim (yalnız CAS yarışını kaybeden birleşimin tek
+     yedek denemesi). Taban, bu cihazın son birleştirdiği uzak kopyadır; yerel
+     kopya bu arada değiştiyse yazılmaz ve yayım beklemede kalır. */
+  async function mergeWithinLease(owner, current) {
+    const state = await ownerState(owner);
+    const base = await readBaseSnapshot(owner, state && state.baseWorkspaceSha256);
+    const local = workspaces.loadWorkspace(owner);
+    const { workspace, conflicts } = mergeCollectionWorkspaces(base, local, current.workspace);
+    const write = await workspaces.replaceWorkspaceReplica(owner, workspace, { expectedSha256: checksum(local) });
+    const changed = () => conflictError('COLLECTION_REPLICA_CONCURRENT_CHANGE', 'Koleksiyon birleştirilirken yerel kopya değişti; bir sonraki senkronda yeniden denenecek.', { ownerId: owner });
+    if (!write || !write.applied) throw changed();
+    // Yayımlanan kopya yerel deponun gerçek içeriğidir. Birleşimin üzerine
+    // eklenmiş yerel kayıt (daha yüksek revizyon) onun soyundandır; daha düşük
+    // revizyon birleşimin yazılmadığını gösterir ve yayımlanmaz.
+    const reloaded = workspaces.loadWorkspace(owner);
+    if ((Number(reloaded && reloaded._revision) || 0) < (Number(workspace && workspace._revision) || 0)) throw changed();
+    return { workspace: reloaded, conflicts };
+  }
+  async function publishOwnerCas(ownerId, { mergeUnderLease = false } = {}) {
     const owner = clean(ownerId); if (!owner) throw Object.assign(new Error('Koleksiyon sahibi zorunludur.'), { code: 'COLLECTION_OWNER_REQUIRED' });
     const sharedRoot = await root();
     if (!sharedRoot) return { published: false, reason: 'not-configured' };
-    const workspace = workspaces.loadWorkspace(owner);
-    const localRevision = Number(workspace && workspace._revision) || 0;
+    let workspace = workspaces.loadWorkspace(owner);
+    let localRevision = Number(workspace && workspace._revision) || 0;
     const localWorkspaceSha256 = checksum(workspace);
     const target = remoteWorkspaceFile(sharedRoot, owner);
     let published = true;
     let reason = null;
     let publishedEnvelope = null;
+    let merge = null;
     try {
       await withFileLeaseAsync(target, async () => {
         const current = await readEnvelope(target, owner);
         if (current) {
           const remoteRevision = Number(current.workspace && current.workspace._revision) || 0;
+          let race = null;
           if (remoteRevision > localRevision) {
-            throw conflictError('COLLECTION_REPLICA_STALE', 'Uzak Koleksiyon kopyası yerel kopyadan daha yeni.', { ownerId: owner, localRevision, remoteRevision });
-          }
-          if (remoteRevision === localRevision) {
+            race = conflictError('COLLECTION_REPLICA_STALE', 'Uzak Koleksiyon kopyası yerel kopyadan daha yeni.', { ownerId: owner, localRevision, remoteRevision });
+          } else if (remoteRevision === localRevision) {
             if (checksum(current.workspace) === localWorkspaceSha256) {
               published = false;
               reason = 'UP_TO_DATE';
               publishedEnvelope = current;
               return;
             }
-            throw conflictError('COLLECTION_REPLICA_CONFLICT', 'Aynı revizyonda farklı Koleksiyon kopyaları bulundu.', { ownerId: owner, revision: localRevision });
+            race = conflictError('COLLECTION_REPLICA_CONFLICT', 'Aynı revizyonda farklı Koleksiyon kopyaları bulundu.', { ownerId: owner, revision: localRevision });
+          } else {
+            // A larger local revision is not proof of ancestry: another offline
+            // device may simply have produced more edits. The last envelope hash
+            // observed by THIS device must still be the remote head (CAS).
+            const base = await ownerState(owner);
+            if (!base || base.baseEnvelopeSha256 !== envelopeIdentity(current)) {
+              race = conflictError('COLLECTION_REPLICA_ANCESTRY_CONFLICT', 'Yerel Koleksiyon kopyasının uzak sürümden türediği doğrulanamadı.', {
+                ownerId: owner, localRevision, remoteRevision, remoteSha256: envelopeIdentity(current),
+              });
+            }
           }
-          // A larger local revision is not proof of ancestry: another offline
-          // device may simply have produced more edits. The last envelope hash
-          // observed by THIS device must still be the remote head (CAS).
-          const base = await ownerState(owner);
-          if (!base || base.baseEnvelopeSha256 !== envelopeIdentity(current)) {
-            throw conflictError('COLLECTION_REPLICA_ANCESTRY_CONFLICT', 'Yerel Koleksiyon kopyasının uzak sürümden türediği doğrulanamadı.', {
-              ownerId: owner, localRevision, remoteRevision, remoteSha256: envelopeIdentity(current),
-            });
+          if (race) {
+            if (!mergeUnderLease) throw race;
+            merge = await mergeWithinLease(owner, current);
+            workspace = merge.workspace;
+            localRevision = Number(workspace && workspace._revision) || 0;
           }
         }
         const envelope = { version: REPLICATION_VERSION, ownerId: owner, parentSha256: current ? envelopeIdentity(current) : null, workspace };
@@ -523,9 +623,13 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
       throw error;
     }
     await recordBase(owner, publishedEnvelope);
+    if (merge) {
+      await recordMergeConflicts(owner, merge.conflicts);
+      trace('COLLECTION_REPLICA_MERGED', { ownerId: owner, revision: localRevision, conflicts: merge.conflicts.length, underLease: true });
+    }
     if (!published) return { published: false, ownerId: owner, revision: localRevision, reason, state: 'up-to-date' };
     trace('COLLECTION_REPLICA_PUBLISHED', { ownerId: owner, revision: localRevision });
-    return { published: true, ownerId: owner, revision: localRevision, sha256: envelopeIdentity(publishedEnvelope), parentSha256: publishedEnvelope.parentSha256 };
+    return { published: true, ownerId: owner, revision: localRevision, sha256: envelopeIdentity(publishedEnvelope), parentSha256: publishedEnvelope.parentSha256, ...(merge ? { merged: true, conflicts: merge.conflicts.length } : {}) };
   }
   async function syncOwnerInternal(userId, ownerId) {
     const user = clean(userId), owner = clean(ownerId);
@@ -544,6 +648,18 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     const localWorkspaceSha256 = checksum(local);
     const remoteWorkspaceSha256 = checksum(envelope.workspace);
     const base = await ownerState(owner);
+    // Aşağıdaki üç dal yerel değişikliği yayımlayabilir: sahibi olmayan
+    // düzenleyicinin yetkisi önce ortak izin belgesinden doğrulanır.
+    let publishReadOnly = readOnly;
+    const authorizePublication = async () => {
+      if (publishReadOnly || user === owner) return;
+      const confirmed = await confirmPublishAccess(user, owner);
+      if (!confirmed) {
+        trace('COLLECTION_REPLICA_ACCESS_REVOKED', { ownerId: owner, userId: user });
+        throw Object.assign(new Error('Bu Koleksiyon sayfasına erişim yetkiniz bulunmuyor.'), { code: 'COLLECTION_ACCESS_DENIED', statusCode: 403 });
+      }
+      if (confirmed !== 'edit') publishReadOnly = true;
+    };
     if (localRevision === remoteRevision) {
       const sameContent = localWorkspaceSha256 === remoteWorkspaceSha256;
       if (sameContent) {
@@ -554,21 +670,23 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
       // produce revision N with different edits. Replacing either copy here
       // silently loses data, so keep the local copy and surface a deterministic
       // conflict for recovery/merge tooling.
-      const merged = await reconcile(owner, envelope, { readOnly });
+      await authorizePublication();
+      const merged = await reconcileUntilPublished(owner, envelope, { readOnly: publishReadOnly });
       if (merged) return merged;
       trace('COLLECTION_REPLICA_CONFLICT', { ownerId: owner, userId: user, reason: 'EQUAL_REVISION_DIVERGED', revision: localRevision });
       await recordConflict(owner, conflictError('COLLECTION_REPLICA_CONFLICT', 'Aynı revizyonda farklı Koleksiyon kopyaları bulundu.'), { localRevision, remoteRevision });
       return { synced: false, ownerId: owner, revision: localRevision, reason: 'EQUAL_REVISION_DIVERGED', conflict: true };
     }
     if (localRevision > remoteRevision) {
-      if (base && base.baseEnvelopeSha256 === envelopeIdentity(envelope)) {
+      await authorizePublication();
+      if (!publishReadOnly && base && base.baseEnvelopeSha256 === envelopeIdentity(envelope)) {
         // A previous process may have committed locally and crashed before the
         // remote publish. The CAS base proves this is a real descendant, so a
         // normal GET/sync can safely finish the interrupted publication.
         const publication = await publishOwnerInternal(owner);
         return { synced: Boolean(publication.merged), ...(publication.merged ? { merged:true } : {}), published: Boolean(publication.published), ownerId: owner, revision: Number(publication.revision) || localRevision, reason: publication.reason || 'LOCAL_NEWER_PUBLISHED' };
       }
-      const merged = await reconcile(owner, envelope, { readOnly });
+      const merged = await reconcileUntilPublished(owner, envelope, { readOnly: publishReadOnly });
       if (merged) return merged;
       const error = conflictError('COLLECTION_REPLICA_ANCESTRY_CONFLICT', 'Daha yeni yerel Koleksiyon kopyasının uzak sürümden türediği doğrulanamadı.');
       trace('COLLECTION_REPLICA_CONFLICT', { ownerId: owner, userId: user, reason:'LOCAL_NEWER_DIVERGED', localRevision, remoteRevision });
@@ -578,7 +696,8 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     const pristineLocal = localRevision === 0 && local && local.initialized === false;
     const localUnchangedSinceBase = Boolean(base && base.baseWorkspaceSha256 === localWorkspaceSha256);
     if (!pristineLocal && !localUnchangedSinceBase) {
-      const merged = await reconcile(owner, envelope, { readOnly });
+      await authorizePublication();
+      const merged = await reconcileUntilPublished(owner, envelope, { readOnly: publishReadOnly });
       if (merged) return merged;
       const error = conflictError('COLLECTION_REPLICA_ANCESTRY_CONFLICT', 'Uzak Koleksiyon daha yeni ancak yerel kopyada da yayımlanmamış değişiklikler var.');
       trace('COLLECTION_REPLICA_CONFLICT', { ownerId: owner, userId: user, reason:'REMOTE_NEWER_LOCAL_DIRTY', localRevision, remoteRevision });

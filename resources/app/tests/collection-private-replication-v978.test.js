@@ -143,12 +143,13 @@ test('aynı revizyondaki farklı Collection kopyası sessizce yerel verinin üst
   });
   await publisher.publishOwner('owner-a');
 
-  const local = { ...remote, rows: [{ id: 1, note: 'yerel değişiklik' }] };
+  // Yerel depo gerçek depo gibi yazılanı geri okur (birleşik kopya yayımlanır).
+  let local = { ...remote, rows: [{ id: 1, note: 'yerel değişiklik' }] };
   let replaced = 0;
   const receiver = createCollectionReplication({
     workspaces: {
       loadWorkspace: () => local,
-      replaceWorkspaceReplica: async (_ownerId, incoming) => { replaced += 1; return { applied: true, workspace: incoming }; },
+      replaceWorkspaceReplica: async (_ownerId, incoming) => { replaced += 1; local = incoming; return { applied: true, workspace: incoming }; },
     },
     permissions: store,
     getSharedSyncRoot: async () => sharedRoot,

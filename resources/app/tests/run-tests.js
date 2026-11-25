@@ -47,7 +47,7 @@ if (!tests.length) {
 // These tests enforce short wall-clock budgets. A measured
 // parallel run stretched a 23 ms PLM lookup to 650 ms and delayed worker startup
 // past 200 ms. Keep their data, assertions and deadlines; remove CPU contention.
-const isolatedNames = new Set(['sync-simulation-v20261009.test.js', 'oab-batch-integration-v720.test.js', 'refresh-pipeline-perf-v251.test.js', 'plm-technical-sheet-ownership-v1073.test.js', 'loading-recovery.test.js']);
+const isolatedNames = new Set(['sync-simulation-v20261009.test.js', 'collection-sync-simulation-v20261125.test.js', 'oab-batch-integration-v720.test.js', 'refresh-pipeline-perf-v251.test.js', 'plm-technical-sheet-ownership-v1073.test.js', 'loading-recovery.test.js']);
 // The projection regression also forks workers; isolate it after a measured
 // 8 GiB suite OOM. Its data, assertions and deadlines remain unchanged.
 // OAB runs a real HTTP server, cancellation and intentionally delayed mock PASS

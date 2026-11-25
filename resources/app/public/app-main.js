@@ -26941,6 +26941,20 @@ function kolCloneConflictValue(value){
 // alanlardaki güncellemesi ezilmez; kullanıcının kendi girişi de kaybolmaz.
 function kolMergeLocalRowDelta(base,local,remote){
   const next=migrateKolRow({...remote});
+  // Üretici başına fiyat haritaları (pricing/pricingSent) tek değer değildir:
+  // başka cihazın başka üreticiye girdiği fiyat, bu ekrandaki haritanın tamamı
+  // yazılınca siliniyordu. Yalnız bu ekranda değişen üreticiler taşınır.
+  const plainMap=value=>value!=null&&typeof value==='object'&&!Array.isArray(value);
+  const mergeMap=(before,mine,theirs)=>{
+    const from=plainMap(before)?before:{},out={...(plainMap(theirs)?theirs:{})};
+    for(const name of new Set([...Object.keys(from),...Object.keys(mine)])){
+      const hadBefore=Object.prototype.hasOwnProperty.call(from,name),hasMine=Object.prototype.hasOwnProperty.call(mine,name);
+      if(hadBefore===hasMine&&kolValueEqual(from[name],mine[name]))continue;
+      if(!hasMine){delete out[name];continue;}
+      out[name]=kolCloneConflictValue(mine[name]);
+    }
+    return out;
+  };
   const keys=new Set([...Object.keys(base||{}),...Object.keys(local||{})]);
   keys.delete('_rev');keys.delete('_sharedCollectionImageUrl');
   for(const key of keys){
@@ -26948,6 +26962,7 @@ function kolMergeLocalRowDelta(base,local,remote){
     const hasLocal=Object.prototype.hasOwnProperty.call(local||{},key);
     if(hasBase===hasLocal&&kolValueEqual(base&&base[key],local&&local[key]))continue;
     if(!hasLocal){delete next[key];continue;}
+    if((key==='pricing'||key==='pricingSent')&&plainMap(local[key])&&(next[key]==null||plainMap(next[key]))&&(!hasBase||base[key]==null||plainMap(base[key]))){next[key]=mergeMap(hasBase?base[key]:null,local[key],next[key]);continue;}
     next[key]=kolCloneConflictValue(local[key]);
   }
   if(remote&&Object.prototype.hasOwnProperty.call(remote,'_rev'))next._rev=remote._rev;

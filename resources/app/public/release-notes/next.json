@@ -369,6 +369,29 @@
           "en": "Server-side permission check only; the interface already offers no image deletion to view-only users, so nothing on screen changed."
         }
       }
+    },
+    {
+      "id": "collection-multi-device-sync-health",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Eşzamanlı Koleksiyon düzenlemesinde üretici fiyatları ve erişim kararı korunur",
+        "en": "Concurrent Collection editing keeps manufacturer prices and access decisions"
+      },
+      "body": {
+        "tr": "Aynı modelde farklı cihazlardan farklı üreticilere girilen fiyatlar ve fiyatlamaya gönderildi işaretleri artık birlikte korunur; önceden biri bütün cihazlarda düşüyordu. Birçok kullanıcı aynı Koleksiyonu aynı anda kaydettiğinde değişiklik hemen paylaşılır; yersiz “Aynı revizyonda farklı Koleksiyon kopyaları” uyarısı gösterilmez ve diğer cihazlara ulaşmak için yoklama turları beklenmez. Erişimi geri alınan ya da izleyiciye düşürülen kullanıcının çevrimdışıyken yaptığı değişiklik, bağlantı gelince sahibin Koleksiyonuna yayımlanmaz; daha önce kabul edilmiş değişiklikleri korunur.",
+        "en": "Prices and sent-for-pricing marks entered for different manufacturers on the same model from different devices are now kept together; previously one of them was dropped on every device. When many users save the same Collection at once, the change is shared immediately; the misleading “different Collection copies at the same revision” warning is no longer shown and other devices no longer wait several polling rounds. A change made offline by a user whose access was revoked or reduced to view is not published to the owner's Collection when the connection returns; their previously accepted changes are kept."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Arka plan senkron düzeltmesi; ekrandaki arayüz değişmedi.",
+          "en": "Background sync fix; the visible interface did not change."
+        }
+      }
     }
   ]
 }
