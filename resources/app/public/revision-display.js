@@ -60,9 +60,9 @@
   }
 
   /**
-   * Revizyon öncesi hâli temsil eden gölge satır. Yükleme onayında Ex-Factory
-   * karşılaştırması onaydan önceki planı kullanır. Diğer alanlar ASAS
-   * orijinallerine döner. Türevler (Priority, Ex→Retail, LT) bu tarihlerle
+   * Revizyon öncesi hâli temsil eden gölge satır. Tüm tarihler (yükleme onaylı
+   * Ex-Factory dahil) ASAS orijinallerine döner; böylece hücrede görünen
+   * "ASAS · onay" ile türev karşılaştırmaları aynı tabanı kullanır. Türevler (Priority, Ex→Retail, LT) bu tarihlerle
    * hesaplanır ve gölge satır önbelleklenir.
    */
   function baselineRow(row, applyDerived) {
@@ -70,9 +70,6 @@
     if (row._revBaseRow) return row._revBaseRow;
     const base = Object.assign({}, row);
     for (const key of DATE_KEYS) base[key] = baselineDate(row, key);
-    if (isAutomaticExFactory(row) && Object.hasOwn(row._exFactoryRevision, 'previousDate')) {
-      base['Ex-factory'] = row._exFactoryRevision.previousDate;
-    }
     if (typeof applyDerived === 'function') applyDerived(base);
     try {
       Object.defineProperty(row, '_revBaseRow', { value: base, enumerable: false, configurable: true });
