@@ -146,3 +146,20 @@ test('istemci sözleşmesi: üreticisiz talep, model sayısı ve matris varsayı
   assert.match(DESK, /listede olmayan yeni bir üretici adı yaz/);
   assert.match(DESK, /type a new manufacturer name that is not listed/);
 });
+
+test('senkron birleşimi: models alanını tanımayan eski sürüm kopyası bekleyen modelleri silmez', () => {
+  const ledger = require(path.join(ROOT, 'server', 'lib', 'quotation-ledger.js'));
+  const at = '2026-11-25T10:00:00.000Z';
+  const current = { id: 'q-mix', updatedAt: at, manufacturers: [], items: [], models: [seed(1), seed(2)] };
+  const legacy = { id: 'q-mix', updatedAt: at, manufacturers: [], items: [] };
+  for (const [a, b] of [[current, legacy], [legacy, current]]) {
+    const merged = ledger.mergeRequestCopies(a, b);
+    assert.deepEqual(merged.models.map(m => m.modelKey), ['kol:1', 'kol:2'], 'eşit zamanda eski kopya modelleri düşürmemeli');
+  }
+  // Eski sürüm sonra satır eklediyse satırı açılan model bekleyen listeye geri gelmez.
+  const legacyWithLine = { id: 'q-mix', updatedAt: '2026-11-25T11:00:00.000Z', manufacturers: [{ name: 'A' }], items: [{ id: 'x', modelKey: 'kol:1', manufacturer: 'A' }] };
+  assert.deepEqual(ledger.mergeRequestCopies(current, legacyWithLine).models.map(m => m.modelKey), ['kol:2']);
+  // Yeni sürüm kopyası açıkça boş liste taşıyorsa (modeller satıra dönüştü) eski liste geri gelmez.
+  const resolved = { ...current, updatedAt: '2026-11-25T12:00:00.000Z', items: [{ id: 'y', modelKey: 'kol:1', manufacturer: 'B' }, { id: 'z', modelKey: 'kol:2', manufacturer: 'B' }], models: [] };
+  assert.deepEqual(ledger.mergeRequestCopies(current, resolved).models, []);
+});
