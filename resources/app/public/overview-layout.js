@@ -31,7 +31,7 @@
     oab:{icon:'chart-histogram',group:'commercial',tr:'OAB',en:'OAB',descTr:'Order-Assortment-Budget pivotu.',descEn:'Order-Assortment-Budget pivot.',w:12,h:8,minW:6,minH:4,maxW:12,maxH:20},
     intake:{icon:'database-import',group:'commercial',tr:'INTAKE',en:'INTAKE',descTr:'INTAKE bütçe pivotu.',descEn:'INTAKE budget pivot.',w:12,h:8,minW:6,minH:4,maxW:12,maxH:20},
     postFob:{icon:'chart-bar',group:'commercial',tr:'FOB Sonrası Maliyet',en:'Post-FOB Cost',descTr:'FOB sonrası landed ve Integral maliyet analizi (FiyatMaliyetKontrolRapor).',descEn:'Post-FOB landed and Integral cost analysis (FiyatMaliyetKontrolRapor).',w:12,h:8,minW:6,minH:4,maxW:12,maxH:20},
-    trydAdvantage:{icon:'coins',group:'commercial',tr:'TR/YD Landed Avantaj',en:'TR/YD Landed Advantage',descTr:'Aynı modelin TR FOB’u ile yurtdışı gerçekleşen landed maliyetinin kıyası ve hedef farkı.',descEn:'Same-model TR FOB versus abroad realized landed cost, with the gap to target.',w:12,h:8,minW:6,minH:4,maxW:12,maxH:20},
+    trydAdvantage:{icon:'coins',group:'commercial',tr:'TR/YD Landed Avantaj',en:'TR/YD Landed Advantage',descTr:'Aynı modelin TR FOB’u ile yurtdışı gerçekleşen landed maliyetinin kıyası ve hedef farkı (FiyatMaliyetKontrolRapor).',descEn:'Same-model TR FOB versus abroad realized landed cost, with the gap to target (FiyatMaliyetKontrolRapor).',w:12,h:8,minW:6,minH:4,maxW:12,maxH:20},
     oabCube:{icon:'chart-histogram',group:'commercial',tr:'OAB (Küp)',en:'OAB (Cube)',descTr:'OAB verisi doğrudan OAB_Cube SSAS küpünden (PASS gerekmez).',descEn:'OAB data straight from the OAB_Cube SSAS cube (no PASS needed).',w:12,h:8,minW:6,minH:4,maxW:12,maxH:20},
   });
   const WIDGETS=Object.freeze(Object.keys(REGISTRY));

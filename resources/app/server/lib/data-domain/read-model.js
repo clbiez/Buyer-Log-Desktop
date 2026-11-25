@@ -24,7 +24,10 @@
 const horizon = require('../modelHorizon');
 // Genel Bakış widget'ı olan modüllerin module-registry kaydı yoktur; etiketleri burada.
 const UNREGISTERED_MODULE_LABELS = Object.freeze({
-  postfob: { tr: 'FOB Sonrası Maliyet', en: 'Post-FOB Cost' },
+  /* 'postfob' hedefi iki widget'ı besler: FOB Sonrası Maliyet ve TR/YD Landed
+     Avantaj aynı FiyatMaliyetKontrolRapor bağlantısını ve aynı ufku kullanır
+     (server/routes/postfob-routes.js). Etiket ikisini de adlandırır. */
+  postfob: { tr: 'FOB Sonrası Maliyet · TR/YD Landed Avantaj', en: 'Post-FOB Cost · TR/YD Landed Advantage' },
   oabcube: { tr: 'OAB (Küp)', en: 'OAB (Cube)' },
 });
 const modelFields = require('../model-fields');

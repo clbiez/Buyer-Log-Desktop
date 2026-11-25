@@ -126,6 +126,35 @@
           "en": "On demo data, hovering D4 shows its MMYG and directorate."
         }
       }
+    },
+    {
+      "id": "tryd-data-management-source",
+      "type": "fix",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "TR/YD Landed Avantaj veri kaynağında görünür",
+        "en": "TR/YD Landed Advantage is shown on its data source"
+      },
+      "body": {
+        "tr": "Veri Yönetimi’nde FiyatMaliyetKontrolRapor kaynağı artık yalnız FOB Sonrası Maliyet’i değil, aynı bağlantı ve ufuk filtresini kullanan TR/YD Landed Avantaj widget’ını da beslediği modül olarak gösterir. Widget kütüphanesindeki açıklama da kaynak veritabanını adlandırır.",
+        "en": "In Data Management, the FiyatMaliyetKontrolRapor source now lists not only Post-FOB Cost but also the TR/YD Landed Advantage widget, which uses the same connection and horizon filter, as a module it feeds. The widget library description also names the source database."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "tryd-data-management-source.png",
+        "alt": {
+          "tr": "Demo Veri Yönetimi ufuk paneli: FOB Sonrası Maliyet · TR/YD Landed Avantaj satırı",
+          "en": "Demo Data Management horizon panel: Post-FOB Cost · TR/YD Landed Advantage row"
+        },
+        "caption": {
+          "tr": "İki widget aynı kaynak ve filtreyi paylaşır.",
+          "en": "Both widgets share one source and filter."
+        }
+      }
     }
   ]
 }

@@ -110,8 +110,8 @@ const PROFILES = Object.freeze([
     legacyRole: 'postfob',
     label: { tr: 'Fiyat Maliyet Kontrol', en: 'Price Cost Control' },
     summary: {
-      tr: 'FiyatMaliyetKontrolRapor modeli: sipariş × renk düzeyinde FOB, landed, Integral maliyet ve FOB sonrası oranlar. Genel Bakış › FOB Sonrası Maliyet widget\'ını besler.',
-      en: 'FiyatMaliyetKontrolRapor model: FOB, landed, Integral cost and post-FOB rates at order × colour level. Feeds the Overview › Post-FOB Cost widget.',
+      tr: 'FiyatMaliyetKontrolRapor modeli: sipariş × renk düzeyinde FOB, landed, Integral maliyet ve FOB sonrası oranlar. Genel Bakış › FOB Sonrası Maliyet ve TR/YD Landed Avantaj widget\'larını besler.',
+      en: 'FiyatMaliyetKontrolRapor model: FOB, landed, Integral cost and post-FOB rates at order × colour level. Feeds the Overview › Post-FOB Cost and TR/YD Landed Advantage widgets.',
     },
     engine: 'tabular-dax',
     shape: 'rows',
