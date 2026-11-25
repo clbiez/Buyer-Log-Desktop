@@ -4383,6 +4383,24 @@ app.post('/api/plm-style-links/sync-links', userAccess.requireAnyArea('cp', 'ord
    kimlik parse.js anahtarları, depo saveCollectionImage, kayıt
    patchPlmImageLinks, sahiplik plm-image-ownership.
    =================================================================== */
+/* KANONİK GÖRSEL KAYDI DEĞİŞTİ (overrides.imagemap). Bu sunucuya bağlı açık
+   ekranlar kendi kayıt kopyasını yenilemeden tazelemelidir; aksi hâlde başka
+   bir kullanıcının değiştirdiği görsel, kanonik kaydı satır görselinden önce
+   okuyan CP/Siparişler/Koleksiyon hücrelerinde sayfa yenilenene kadar eski
+   kalıyordu. Olay DEĞER TAŞIMAZ (PLM kimliği/ref yok): her istemci kendi
+   yetkili kapsamını mevcut kapsamlı uçlardan okur. Canlı akış kopuksa
+   shared-revision yoklaması yedektir. Ateşle-unut; görsel yazmasını bozmaz. */
+function notifyModelImageRegistryChanged(originClientId = null, actorId = '') {
+  try { liveEvents.notifyChange('model-images', originClientId, null); }
+  catch (error) { logRuntimeFailure('modelImageRegistryLive', error); }
+  void sharedRevisionStore.update('modelImages', { actorId: String(actorId || '') }).catch(error => logRuntimeFailure('sharedRevision', error));
+}
+// Senkron/PLM içe aktarma ve paylaşılan dağıtım (cihazlar arası) yolu.
+function patchPlmImageLinksAndNotify(links) {
+  const saved = patchPlmImageLinks(links);
+  if (saved && Number(saved.updated) > 0) notifyModelImageRegistryChanged(null);
+  return saved;
+}
 function canonicalPlmImageIngest(owner) {
   return plmImageIngestLib.createPlmImageIngest({
     owner,
@@ -4393,7 +4411,7 @@ function canonicalPlmImageIngest(owner) {
     saveImage: payload => saveCollectionImageDeferred(payload),
     deleteImage: ref => deleteCollectionImageDeferred(ref),
     flushImages: () => flushCollectionImageIndex(),
-    patchLinks: links => patchPlmImageLinks(links),
+    patchLinks: links => patchPlmImageLinksAndNotify(links),
     readImageBytes: found => fs.readFileSync(found.full),
   });
 }
@@ -4423,7 +4441,7 @@ const modelImageDistribution = modelImageDistributionLib.createModelImageDistrib
   saveImage: payload => saveCollectionImageDeferred(payload),
   deleteImage: ref => deleteCollectionImageDeferred(ref),
   flushImages: () => flushCollectionImageIndex(),
-  patchLinks: links => patchPlmImageLinks(links),
+  patchLinks: links => patchPlmImageLinksAndNotify(links),
   onTrace: (event, detail) => plmImageRefreshLog(event, detail),
 });
 
@@ -9117,6 +9135,20 @@ app.get('/api/model-images/registry/cp', userAccess.requireArea('cp'), async (re
   finally{cp?.release();}
 });
 
+/* Koleksiyon karşılığı: CP kapsamlı kaydıyla aynı sözleşme ({imagemap, scopeKeys}).
+   Yalnız erişilebilen sahibin Koleksiyon satırlarındaki PLM+renk anahtarları
+   döner; tüm imagemap veya görsel baytı taşınmaz. Canlı `model-images`
+   sinyalinden sonra açık Koleksiyon görünümü kanonik kaydını buradan tazeler. */
+app.get('/api/model-images/registry/collection/:ownerId', userAccess.requireArea('koleksiyon'), async (req, res) => {
+  try {
+    await refreshCollectionPermissionScope();
+    const ownerId = canonicalCollectionOwner(String(req.params.ownerId || ''));
+    if (!userAccess.collectionAccessLevel(req.currentUser, ownerId)) return res.status(403).json({ error:'Bu Koleksiyon sayfasına erişim yetkiniz bulunmuyor.', code:'COLLECTION_ACCESS_DENIED' });
+    const rows = (loadWorkspace(ownerId).rows || []).map(row => ({ 'PLM ID': row && row.plmId, 'C.Code': row && row.colourCode }));
+    res.set('Cache-Control', 'no-store').json({ ok:true, ownerId, ...scopedCpImageRegistry(rows, loadOverrides().imagemap || {}) });
+  } catch (err) { apiError(res, err, 'Koleksiyon görsel kaydı okunamadı.'); }
+});
+
 app.get('/api/data/collection-catalog', userAccess.requireArea('koleksiyon'), async (req, res) => {
   try {
     const lease=await ensureComputedProjection(req,'collection-catalog',{legacy:true});
@@ -10333,6 +10365,8 @@ liveEvents.setReloadAuthorizer((entry, event, meta) => {
     if (event.area === 'collection-permissions' && String(profile.id) === String(meta && meta.granteeId || '')) return true;
     return Boolean(userAccess.collectionAccessLevel(profile, ownerId));
   }
+  // Değersiz görsel kaydı sinyali yalnız model görseli gösteren alanlara gider.
+  if (event.area === 'model-images') return ['koleksiyon', 'cp', 'orders'].some(area => userAccess.hasArea(profile, area));
   return true;
 });
 liveEvents.setPatchAuthorizer((entry, rowPatches, event) => {
@@ -10524,6 +10558,8 @@ app.patch('/api/overrides/:orderCode', async (req, res) => {
       fields: Object.keys(patchBody).filter(key => !/^expected/.test(key)),
     });
     liveEvents.notifyChange('orders', requestClientId(req), { rowPatches: liveRowPatchesFor([{ orderCode, patch: patchBody }]) });
+    // CP görsel bağlama/kaldırma kanonik kaydı da değiştirir (Koleksiyon hücreleri aynı kaydı okur).
+    if (Object.prototype.hasOwnProperty.call(patchBody, 'imageRef')) notifyModelImageRegistryChanged(requestClientId(req), req.currentUser.id);
     res.set('ETag', `"${saved.revision}"`);
     res.json({ ok: true, overrides: saved.overrides, revision: saved.revision, revisions: saved.revisions, pageCachePatchQueued });
   } catch (err) { apiError(res, err, 'Sipariş düzenlemesi kaydedilemedi.'); }
@@ -10590,6 +10626,7 @@ app.post('/api/plm-image-links', userAccess.requireArea('koleksiyon'), async (re
     try{pageCachePatched=await rewriteProjectionCacheForImageItems(req.currentUser,beforeContext,items);}
     catch(cacheError){logRuntimeFailure('imageProjectionCachePatch',cacheError);}
     userAccess.appendAudit(req.currentUser, 'PLM_IMAGE_LINKS', 'collection', { count: saved.updated });
+    if (saved.updated) notifyModelImageRegistryChanged(requestClientId(req), req.currentUser.id);
     res.json({ ok: true, updated: saved.updated, overrides: saved.overrides, revision: saved.revision, skipped: saved.skipped || [], pageCachePatched });
   } catch (err) { apiError(res, err, 'PLM görsel bağlantıları kaydedilemedi.'); }
 });
@@ -10723,6 +10760,7 @@ app.post('/api/model-images/delete-selected', userAccess.requireAnyArea('cp','or
       sharedQueued:!shared.available || Boolean(shared.error),
     };
     userAccess.appendAudit(req.currentUser, 'MODEL_IMAGES_DELETE_SELECTED', 'model-images', result);
+    if (saved.updated) notifyModelImageRegistryChanged(requestClientId(req), req.currentUser.id);
     res.json({ ok:true, ...result, deletedRefs:deletedLocal, overrides:saved.overrides, revision:saved.revision, pageCachePatched });
   } catch (err) { apiError(res, err, 'Seçili model görselleri silinemedi.'); }
 });

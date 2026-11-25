@@ -27,6 +27,8 @@ const { startServer, createBuyer, launchBrowser, openUser, delay } = require('./
 
 const args = process.argv.slice(2), arg = (name, fallback) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : fallback; };
 const SCREENSHOTS = args.includes('--screenshots');
+// Yalnız görsel değiştirme düzeltmesinin sürüm notu görüntüsü (diğer görüntüleri yeniden üretmez).
+const IMAGE_SCREENSHOT = args.includes('--image-screenshot');
 const PARALLEL = Math.max(1, Number(arg('--parallel', 4)) || 4), LIVE_LIMIT_MS = Number(arg('--live-limit-ms', 15000));
 const MFRS = ['DEMO MFR A', 'DEMO MFR B', 'DEMO MFR C'];
 const PRICE_KEYS = ['targetPrice', '__priceStrip__', '__landedSummary__', '__bestPrice__', '__confirmedName__', '__confirmedPrice__', 'fob'];
@@ -350,8 +352,10 @@ function check(name, ok, detail) { report.checks.push({ name, ok: Boolean(ok), d
         check('görsel: sahibin değiştirdiği görsel edit izinli kullanıcıda yenilemeden görünür', a[2] != null, report.imageReplace);
         check('görsel: edit izinli kullanıcının değiştirdiği görsel kendisinde hemen görünür (_sharedCollectionImageUrl önceliği eskiyi göstermez)', b[0] != null, report.imageReplace);
         check('görsel: edit izinli kullanıcının değiştirdiği görsel view izinli kullanıcıda yenilemeden görünür', b[1] != null, report.imageReplace);
-        if (b[2] == null) report.findings.push({ id: 'collection-image-replace-stale-canonical-registry', evidence: report.imageReplace,
-          note: 'Edit izinli kullanıcı görseli değiştirdiğinde sahip (görsel kanonik kaydı belleğinde yüklü kullanıcı) eski görseli sayfa yenilenene kadar görür: kolModelImageSources kanonik kaydı (overrides.imagemap) satır img alanından önce okur; /api/plm-image-links canlı olay yayımlamaz, diğer istemcilerin kaydı tazelenmez. Görüntüleyen (kaydı boş) sunucunun _serverPlmImageUrl değerini okuduğu için yeniyi görür. Tek sunucuda _sharedCollectionImageUrl boş; B hipotezindeki o alanın önceliği burada etkili değil.' });
+        // Eskiden bulgu (collection-image-replace-stale-canonical-registry): sahip kanonik kaydı yüklüyken eski
+        // görseli yenilemeye kadar görüyordu. Artık sert kontrol: model-images canlı sinyali kaydı tazeler.
+        check('görsel: edit izinli kullanıcının değiştirdiği görsel sahipte (kanonik kaydı yüklü) yenilemeden görünür', b[2] != null, report.imageReplace);
+        if (IMAGE_SCREENSHOT && b[2] != null) await releaseImageReplaceScreenshot(sessions.O2.page);
         for (const [key, sess] of Object.entries(sessions)) check(`görsel: ${key} pageerror yok`, sess.errors.length === 0, sess.errors);
       } finally { await Promise.all(Object.values(sessions).map(sess => sess.close())); }
     }
@@ -403,6 +407,23 @@ function check(name, ok, detail) { report.checks.push({ name, ok: Boolean(ok), d
 })().catch(error => { console.error(error); process.exitCode = 1; });
 
 /* ---------- Sürüm notu görselleri (--screenshots; demo veri, gerçek hesap adı yok) ---------- */
+/* Sahibin Koleksiyonu: düzenleyicinin değiştirdiği görsel (koyu gri) yenilemeden görünür.
+   Demo veri; gerçek kişi adı gösterilmez (yönetici adı varsa "Demo Buyer" olur). */
+async function releaseImageReplaceScreenshot(page) {
+  const dir = path.join(__dirname, '../public/release-notes/next-assets');
+  fs.mkdirSync(dir, { recursive: true });
+  await page.evaluate(() => {
+    document.activeElement?.blur?.(); document.querySelectorAll('[data-ui-feedback],.toast,.blToast').forEach(el => el.remove());
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT), names = new Set((window.kolWorkspaceList || []).map(w => w.supervisorName).filter(Boolean));
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) for (const name of names) if (!/^Demo /.test(name) && node.nodeValue.includes(name)) node.nodeValue = node.nodeValue.split(name).join('Demo Buyer');
+    const keep = new Set(['modelKod', 'colourCode', 'colour', 'quantity', 'targetPrice', 'durum']);
+    kolHiddenCols = new Set([...kolAllOrderedCols().map(c => c.k), ...KOL_SYNTHETIC_COL_KEYS].filter(k => !keep.has(k))); renderKol();
+  });
+  await page.waitForTimeout(1500); await page.mouse.move(5, 5); await page.waitForTimeout(300);
+  const kol = await page.locator('#view-koleksiyon').boundingBox(), table = await page.locator('#kolTable').boundingBox();
+  const width = Math.min(1600 - Math.round(kol.x), Math.round(kol.width)), height = Math.min(620, Math.max(Math.ceil(width / 3), Math.round(table.y + table.height + 14)));
+  await page.screenshot({ path: path.join(dir, 'collection-image-replace-live.png'), clip: { x: Math.round(kol.x), y: 0, width, height } });
+}
 async function releaseScreenshots({ viewer, observer, model }) {
   const dir = path.join(__dirname, '../public/release-notes/next-assets');
   fs.mkdirSync(dir, { recursive: true });
