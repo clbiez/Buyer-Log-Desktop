@@ -99,15 +99,24 @@ test('automatic revisions do not become manual date payloads and keep ASAS compa
  assert.equal(Revision.isAutomaticExFactory(row),true);assert.deepEqual(Revision.revisedDateKeys(row),[]);
  assert.equal(day(Revision.baselineDate(row,'Ex-factory')),'2026-10-30');
 });
-test('calculated comparisons start at the same prior date shown for automatic Ex-Factory',()=>{
+test('calculated comparisons start at the same ASAS date shown for automatic Ex-Factory',()=>{
  const overrides={datemap:{1001:{ex:'2026-12-12'}}};
  const [effective]=parse.applyDateOverrides([order({shipConf:'2026-11-12'})],overrides);
  const [row]=parse.buildCPRowsFromASAS([effective],{},overrides);
  const base=Revision.baselineRow(row,parse.applyFormulas);
- assert.equal(day(base['Ex-factory']),day(row._exFactoryRevision.previousDate));
+ assert.equal(day(base['Ex-factory']),'2026-10-30');
  assert.equal(day(Revision.baselineDate(row,'Ex-factory')),'2026-10-30');
- assert.deepEqual(Revision.info(row,'LT',base),{from:72,to:42});
- assert.deepEqual(Revision.info(row,'Ex→Retail',base),{from:2,to:32});
+ assert.deepEqual(Revision.info(row,'LT',base),{from:29,to:42});
+ assert.deepEqual(Revision.info(row,'Ex→Retail',base),{from:45,to:32});
+});
+test('manual plan equal to the approval still shows ASAS · approval',()=>{
+ const overrides={datemap:{1001:{ex:'2026-11-12'}}};
+ const [effective]=parse.applyDateOverrides([order({shipConf:'2026-11-12'})],overrides);
+ const [row]=parse.buildCPRowsFromASAS([effective],{},overrides);
+ const ctx=context(['revisionInfo'],{REVISION_KEYS:new Set(Revision.KEYS)});
+ const rev=ctx.revisionInfo(row,'Ex-factory');
+ assert.equal(rev.source,'loading-approval');
+ assert.equal(day(rev.from),'2026-10-30');assert.equal(day(rev.to),'2026-11-12');
 });
 test('client resolves the same date and renders a separate translated automatic marker',()=>{
  const ctx=context(['applyCpApprovalDate','revisionHtml'],{appLang:'tr',escapeHtml:String,revisionText:(key,value)=>String(value),L:String});
@@ -115,7 +124,7 @@ test('client resolves the same date and renders a separate translated automatic 
  ctx.applyCpApprovalDate(row);assert.equal(day(row['Ex-factory']),'2026-11-05');assert.equal(Revision.isAutomaticExFactory(row),true);
  const rev={from:'2026-10-30',to:'2026-11-05',source:'loading-approval'};
  const rendered=ctx.revisionHtml('Ex-factory',rev);
- assert.match(rendered,/Önceki tarih/);assert.match(rendered,/2026-10-30/);assert.match(rendered,/Yükleme onayı/);assert.match(rendered,/2026-11-05/);assert.doesNotMatch(rendered,/class="revPair"/);
+ assert.match(rendered,/ASAS Ex-Factory/);assert.match(rendered,/2026-10-30/);assert.match(rendered,/Yükleme onayı/);assert.match(rendered,/2026-11-05/);assert.doesNotMatch(rendered,/class="revPair"/);
  assert.doesNotMatch(rendered,/🔒|<small>/);
  assert.equal(rendered.replace(/<[^>]*>/g,''),'2026-10-30·2026-11-05','only the two dates and a dot are visible');
  for(const key of ['LT','Ex→Retail','Priority']){

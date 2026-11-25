@@ -6781,8 +6781,9 @@ function revisionBaseRow(row){ return BLRevision.baselineRow(row, base=>applyFor
 function revisionInfo(row,key,computed){
   if(!REVISION_KEYS.has(key)) return null;
   if(key==='Ex-factory'&&BLRevision.isAutomaticExFactory(row)){
-    const from=Object.hasOwn(row._exFactoryRevision,'previousDate')?row._exFactoryRevision.previousDate:BLRevision.baselineDate(row,key);
-    return {from,to:row[key],source:'loading-approval'};
+    // Karşılaştırma tabanı her zaman veritabanı (ASAS) tarihidir; elle revize
+    // edilen plan yükleme onayına eşitse bile "ASAS · onay" görünür.
+    return {from:BLRevision.baselineDate(row,key),to:row[key],source:'loading-approval'};
   }
   const base=revisionBaseRow(row);
   // Türev hücrelerde karşılaştırma ham row değerine değil, bu render için anlık
@@ -6810,7 +6811,7 @@ function revisionHtml(key,rev,renderValue){
   if(key==='Ex-factory'&&rev.source==='loading-approval'){
     const hint=escapeHtml(en?'Loading approval · Read-only':'Yükleme onayı · Salt okunur');
     const showPrevious=rev.from!=null&&from!==to;
-    const title=showPrevious?escapeHtml(en?`Previous date ${from} · Loading approval ${to} · Read-only`:`Önceki tarih ${from} · Yükleme onayı ${to} · Salt okunur`):hint;
+    const title=showPrevious?escapeHtml(en?`ASAS Ex-Factory ${from} · Loading approval ${to} · Read-only`:`ASAS Ex-Factory ${from} · Yükleme onayı ${to} · Salt okunur`):hint;
     const previous=showPrevious?`<span class="revAutoOriginal">${render(rev.from)}</span><span class="revAutoSeparator" aria-hidden="true">·</span>`:'';
     return `<span class="revAutomatic revAutomaticDates" role="group" aria-label="${hint}" title="${title}">${previous}<strong class="revAutoApproved">${render(rev.to)}</strong></span>`;
   }

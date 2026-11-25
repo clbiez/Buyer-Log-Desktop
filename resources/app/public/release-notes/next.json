@@ -126,6 +126,35 @@
           "en": "On demo data, hovering D4 shows its MMYG and directorate."
         }
       }
+    },
+    {
+      "id": "loading-approval-exfactory-asas-base",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Yükleme onaylı Ex-Factory her zaman ASAS tarihini gösterir",
+        "en": "Ex-Factory with loading approval always shows the ASAS date"
+      },
+      "body": {
+        "tr": "Ex-Factory tarihini elle revize ettiğiniz bir siparişe yükleme onayı geldiğinde hücre artık her zaman “ASAS Ex-Factory · yükleme onayı” biçiminde görünür. Elle girdiğiniz tarih onay tarihine eşit olsa bile veritabanı tarihi kaybolmaz; Ür. Sür. ve Yükleme Onay→Antrepo karşılaştırmaları da aynı ASAS tarihine göre yapılır.",
+        "en": "When a loading approval arrives for an order whose Ex-Factory you revised manually, the cell now always shows “ASAS Ex-Factory · loading approval”. The database date no longer disappears even if your manual date equals the approval date; lead time and approval→warehouse comparisons use the same ASAS date."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "loading-approval-exfactory-asas-base.png",
+        "alt": {
+          "tr": "Demo CP Tracker: elle revize tarihi onaya eşit olan satırda Ex-Factory 30.10.26 · 25.10.26 olarak görünüyor",
+          "en": "Demo CP Tracker: the row whose manual date equals the approval shows Ex-Factory as 30.10.26 · 25.10.26"
+        },
+        "caption": {
+          "tr": "DEMO MANUAL REVISION satırında ASAS tarihi ve yükleme onayı yan yana.",
+          "en": "On the DEMO MANUAL REVISION row, the ASAS date and loading approval appear side by side."
+        }
+      }
     }
   ]
 }
