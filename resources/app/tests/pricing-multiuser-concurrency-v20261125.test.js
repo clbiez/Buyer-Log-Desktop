@@ -284,6 +284,15 @@ test('yeniden deneme yalnız geçici çekişmeyi tekrarlar ve sınırlıdır', a
   calls = 0;
   await assert.rejects(() => withQuotationWriteRetry(() => { calls++; throw Object.assign(new Error('busy'), { code: 'REVISION_CONFLICT' }); }, { sleep: async () => {}, attempts: 4 }), error => error.code === 'REVISION_CONFLICT');
   assert.equal(calls, 4, 'deneme sayısı sınırlıdır; son hata aynen raporlanır');
+  // Bütçe süreye bağlıdır: yavaş makinede (her deneme uzun sürer) deneme sayısı
+  // dolmadan da sınırda durur; hızlı makinede aynı süre içinde daha çok dener.
+  let clock = 0; calls = 0;
+  await assert.rejects(() => withQuotationWriteRetry(() => { calls++; clock += 400; throw Object.assign(new Error('busy'), { code: 'SHARED_WRITE_BUSY' }); }, { sleep: async ms => { clock += ms; }, now: () => clock, deadlineMs: 2000, random: () => 0 }), error => error.code === 'SHARED_WRITE_BUSY');
+  assert.ok(calls >= 3 && calls <= 5, `süre sınırında durur (deneme: ${calls})`);
+  clock = 0; calls = 0;
+  const late = await withQuotationWriteRetry(() => { calls++; clock += 150; if (calls < 20) throw Object.assign(new Error('busy'), { code: 'SHARED_WRITE_BUSY' }); return 'ok'; }, { sleep: async ms => { clock += ms; }, now: () => clock, random: () => 0 });
+  assert.equal(late, 'ok', 'varsayılan süre bütçesi 12 denemeden uzun çekişmeyi karşılar');
+  assert.equal(calls, 20);
 });
 
 test('20 kurulum aynı ortak veri köküne eşzamanlı satır PATCH yazar: kayıp güncelleme ve sahte 409 yok', { timeout: process.platform === 'win32' ? 120000 : 60000 }, async () => {
