@@ -26,7 +26,8 @@ function createQuotationVisibility({ canEdit, collectionAccessLevel, hasPermissi
       return Boolean(request.ownerId && typeof collectionAccessLevel === 'function' && collectionAccessLevel(profile, request.ownerId));
     }
     if (typeof hasPermission === 'function' && hasPermission(profile, 'manageAllOrders')) return true;
-    return (Array.isArray(request.items) ? request.items : []).some(item => {
+    // Üreticisi henüz eklenmemiş modeller (request.models) de sipariş kapsamına girer.
+    return [...(Array.isArray(request.items) ? request.items : []), ...(Array.isArray(request.models) ? request.models : [])].some(item => {
       const code = orderCodeOf(item);
       if (code == null || typeof authoritativeOrderRows !== 'function') return false;
       const rows = authoritativeOrderRows(code) || [];

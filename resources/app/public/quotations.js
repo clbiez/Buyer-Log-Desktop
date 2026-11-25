@@ -46,6 +46,23 @@
   function qNormalizeOptions(list){
     return (Array.isArray(list)?list:[]).slice(0,10).map(option=>({id:qNorm(option?.id)||qId('opt'),label:qNorm(option?.label).slice(0,120),price:qNorm(option?.price).slice(0,120),note:qNorm(option?.note).slice(0,500)})).filter(option=>option.label||option.price||option.note);
   }
+  /* Üreticisi henüz seçilmemiş modeller (bkz. server/lib/quotations-store.js
+     normalizeModels). Send to Pricing üretici seçmeden talep açabilir; ilk
+     üretici satırı eklenince model bu listeden düşer. */
+  const Q_MODEL_FIELDS=['modelKey','rowId','orderCode','plmId','modelCode','license','category','colour','fabric','season','picture','inStoreMonth','quantity','targetPrice'];
+  function qModelSeed(item){
+    const seed={};Q_MODEL_FIELDS.forEach(key=>{seed[key]=key==='rowId'?((item?.rowId!==null&&item?.rowId!==''&&Number.isFinite(Number(item?.rowId)))?Number(item.rowId):null):key==='quantity'?qNumOrNull(item?.quantity):qNorm(item?.[key]);});
+    return seed;
+  }
+  function qNormalizeModels(list){
+    const seen=new Set();
+    return (Array.isArray(list)?list:[]).filter(Boolean).map(qModelSeed).filter(seed=>seed.modelKey&&!seen.has(seed.modelKey)&&seen.add(seed.modelKey));
+  }
+  function qPruneModels(req){
+    const lined=new Set((req?.items||[]).map(item=>item.modelKey));
+    if(req)req.models=(req.models||[]).filter(model=>!lined.has(model.modelKey));
+    return req;
+  }
   function qNormalizeRequest(req){
     const current=qCurrentUser();
     const created=req?.createdAt||qNow();
@@ -72,6 +89,7 @@
         rev:Number.isFinite(Number(item.rev))&&Number(item.rev)>0?Math.floor(Number(item.rev)):0,updatedAt:qNorm(item.updatedAt),updatedBy:qNorm(item.updatedBy),
         history:Array.isArray(item.history)?item.history.filter(event=>event&&typeof event==='object'&&event.type).slice(-200):[],
       })).filter(item=>item.modelKey&&item.manufacturer):[],
+      models:qNormalizeModels(req?.models),
       sortOrder:Number.isFinite(Number(req?.sortOrder))?Number(req.sortOrder):0,
       round:Number.isFinite(Number(req?.round))&&Number(req.round)>=1?Math.floor(Number(req.round)):1,
       rounds:Array.isArray(req?.rounds)?req.rounds.filter(round=>round&&typeof round==='object').slice(-50):[],
@@ -156,7 +174,7 @@
     return req;
   }
   const qSamePriceText=(a,b)=>{const x=qMoneyNumber(a),y=qMoneyNumber(b);if(Number.isFinite(x)||Number.isFinite(y))return Number.isFinite(x)&&Number.isFinite(y)&&Math.round(x*10000)===Math.round(y*10000);return qNorm(a)===qNorm(b);};
-  const qRequestShape=req=>JSON.stringify({note:req.note,capacityConfirmed:!!req.capacityConfirmed,manufacturers:req.manufacturers,sortOrder:req.sortOrder,items:(req.items||[]).map(item=>{const copy={...item};['price','approved','dropped','rev','updatedAt','updatedBy','history'].forEach(key=>delete copy[key]);return copy;})});
+  const qRequestShape=req=>JSON.stringify({note:req.note,capacityConfirmed:!!req.capacityConfirmed,manufacturers:req.manufacturers,models:req.models||[],sortOrder:req.sortOrder,items:(req.items||[]).map(item=>{const copy={...item};['price','approved','dropped','rev','updatedAt','updatedBy','history'].forEach(key=>delete copy[key]);return copy;})});
   function qPlanSave(req){
     const base=qExpectedState.get(req.id);
     if(!base)return {known:false,ops:[],structural:true};
@@ -311,7 +329,7 @@
     const first=names.slice(0,2).join(', '), more=names.length>2?` +${names.length-2}`:'';
     return `${qSourceLabel(req.source)} · ${first||qLang('Üretici yok','No manufacturer')}${more}`;
   }
-  function qModelCount(req){ return new Set(req.items.map(x=>x.modelKey)).size; }
+  function qModelCount(req){ return new Set([...req.items,...(req.models||[])].map(x=>x.modelKey)).size; }
   function qWorkspaceRequestTitle(req){
     if(req?.origin==='manual-collection')return qLang('Elle Girilen Fiyatlar','Manual Prices');
     const models=[...new Set((req?.items||[]).map(item=>qNorm(item.modelCode||item.plmId||item.orderCode)).filter(Boolean))];
@@ -985,19 +1003,25 @@
     const src=source==='cp'?'cp':'collection';
     const safeRows=Array.isArray(rows)?rows.filter(Boolean):[];
     const safeMfrs=(Array.isArray(manufacturers)?manufacturers:[]).map(m=>({name:qNorm(m?.name),email:qNorm(m?.email)})).filter(m=>m.name);
-    if(!safeRows.length||!safeMfrs.length)return null;
+    // Üretici seçimi isteğe bağlıdır: üreticisiz talep modelleri req.models ile taşır,
+    // üreticiler sonra Fiyat Masası'ndan elle eklenir.
+    if(!safeRows.length)return null;
     if(src==='cp'&&safeRows.some(row=>row._canEdit===false)){qViewOnlyNotice();return null;}
     const created=qNow(),user=qCurrentUser();
-    const req={id:qId('quotation'),source:src,createdAt:created,updatedAt:created,status:'active',closedAt:'',ownerId:qCurrentUserId(),ownerName:qNorm(user?.displayName||user?.username),editorIds:[],note:'',capacityConfirmed:false,manufacturers:safeMfrs,items:[],sortOrder:Date.now()};
+    const req={id:qId('quotation'),source:src,createdAt:created,updatedAt:created,status:'active',closedAt:'',ownerId:qCurrentUserId(),ownerName:qNorm(user?.displayName||user?.username),editorIds:[],note:'',capacityConfirmed:false,manufacturers:safeMfrs,items:[],models:[],sortOrder:Date.now()};
     safeRows.forEach((row,ri)=>{
       const modelSeed=src==='collection'?`kol:${row.id}`:`cp:${qNorm(row._sourceOrderCode)||qNorm(row.plmId)||qNorm(row.modelKod)||ri}`;
-      safeMfrs.forEach((m,mi)=>{
-        const oldPrice=row.pricing&&row.pricing[m.name];
-        req.items.push({
-          id:qId(`quote-${ri}-${mi}`),modelKey:modelSeed,rowId:src==='collection'?Number(row.id):null,
+      const base={
+          modelKey:modelSeed,rowId:src==='collection'?Number(row.id):null,
           orderCode:qNorm(row._sourceOrderCode||row['Order Code']),plmId:qNorm(row.plmId||row['PLM ID']),modelCode:qNorm(row.modelKod||row['Model Name']),license:qNorm(row.lisans||row['License']),
           category:qNorm(row.urunTipi||row['Category']),colour:qNorm(row.colour||row['Colour']),colourCode:qNorm(row.colourCode||row['C.Code']||row['Colour Code']),fabric:qFabricValue(row),season:qNorm(row.season||row['Season']),
           picture:qCollectionImageSrc(row),inStoreMonth:qNorm(row.inStoreMonth||row['In Store Month']||row['In-Store (Model Budget)']||row.inStore),quantity:Number.isFinite(qMoneyNumber(row.quantity!=null?row.quantity:row['Order Quantity']))?qMoneyNumber(row.quantity!=null?row.quantity:row['Order Quantity']):null,targetPrice:qNorm(row.targetPrice||row['Supp. FOB']),
+      };
+      if(!safeMfrs.length){req.models.push(qModelSeed(base));return;}
+      safeMfrs.forEach((m,mi)=>{
+        const oldPrice=row.pricing&&row.pricing[m.name];
+        req.items.push({
+          id:qId(`quote-${ri}-${mi}`),...base,
           manufacturer:m.name,manufacturerEmail:m.email,price:qValidPrice(oldPrice)?qMoneyDisplay(oldPrice):'',approved:src==='collection'&&qNorm(row.confirmedManufacturer)===m.name&&qValidPrice(oldPrice),dropped:false,
         });
       });
@@ -1711,7 +1735,7 @@
     const m={name:qNorm(known?.name)||typed,email:qNorm(raw?.email)||qNorm(known?.email)};
     const listed=(req.manufacturers||[]).find(item=>qMfrKey(item.name)===qMfrKey(m.name));
     if(!listed)req.manufacturers.push(m);else if(!qNorm(listed.email)&&m.email)listed.email=m.email;
-    const seeds=new Map();(req.items||[]).forEach(item=>{if(item.modelKey&&!seeds.has(item.modelKey))seeds.set(item.modelKey,item);});
+    const seeds=new Map();[...(req.items||[]),...(req.models||[])].forEach(item=>{if(item.modelKey&&!seeds.has(item.modelKey))seeds.set(item.modelKey,item);});
     const wanted=Array.isArray(modelKeys)?new Set(modelKeys):null,added=[];
     seeds.forEach((seed,modelKey)=>{
       if(wanted&&!wanted.has(modelKey))return;
@@ -1720,7 +1744,7 @@
       req.items.push(line);added.push(line);
     });
     if(!added.length&&listed)return {manufacturer:m,added};
-    qTrackOwners(req);req.updatedAt=qNow();qSave(req);
+    qPruneModels(req);qTrackOwners(req);req.updatedAt=qNow();qSave(req);
     return {manufacturer:m,added};
   }
   /* Alternatif fiyatların kaydı. Ana fiyat matristen girilir; burada ana
