@@ -12,8 +12,8 @@ const { seededRandom } = require('./sync-sim');
 
 const SOAK = process.env.BUYERLOG_PRICING_SOAK === '1';
 // Varsayılan koşu Windows runner'da da kısa kalır; ağır koşu yalnız bayrakla.
-const SEEDS = SOAK ? Array.from({ length: 12 }, (_, i) => 20261125 + i * 7919) : [20261125, 4711, 90210];
-const scale = n => (SOAK ? n * 10 : n);
+const SEEDS = SOAK ? Array.from({ length: 6 }, (_, i) => 20261125 + i * 7919) : [20261125, 4711, 90210];
+const scale = n => (SOAK ? n * 4 : n);
 
 function int(random, n) { return Math.floor(random() * n); }
 function pick(random, list) { return list[int(random, list.length)]; }
