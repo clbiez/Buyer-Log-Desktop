@@ -3845,7 +3845,13 @@ async function updateCollectionPermission(req, res, revoke = false) {
     const ownerId = String(body.ownerId || req.currentUser.id || '');
     const granteeId = String(req.params.granteeId || '');
     const ownsWorkspace = ownerId === String(req.currentUser.id || '');
-    if (!ownsWorkspace && !userAccess.hasCapability(req.currentUser, 'COLLECTIONS.MANAGE')) return res.status(403).json({ error: 'Başka bir kullanıcının Koleksiyon izinlerini değiştirme yetkiniz bulunmuyor.', code: 'COLLECTION_GRANT_DENIED' });
+    /* Başkası adına izin yönetimi yalnız Moderatördedir. Varsayılan Yönetici /
+       Kıdemli Yönetici rolleri de COLLECTIONS.MANAGE taşır; tek başına bu yetki
+       kişinin kendine veya ekibine herhangi bir buyer'ın Koleksiyonunu (satır,
+       fiyat, görsel ve bağlı fiyat talepleri) açmasına izin veriyordu. Rol ve
+       hiyerarşi Koleksiyon erişimini genişletmez; arayüz yalnız kendi izinlerini
+       yönetir (ownerId göndermez). */
+    if (!ownsWorkspace && !(isModeratorProfile(req.currentUser) && userAccess.hasCapability(req.currentUser, 'COLLECTIONS.MANAGE'))) return res.status(403).json({ error: 'Başka bir kullanıcının Koleksiyon izinlerini değiştirme yetkiniz bulunmuyor. / You do not have permission to change another user\'s Collection permissions.', code: 'COLLECTION_GRANT_DENIED' });
     const result = revoke
       ? await collectionPermissions.removeGrant({ ownerId, granteeId, actorId: req.currentUser.id })
       : await collectionPermissions.setGrant({ ownerId, granteeId, level: body.level, actorId: req.currentUser.id });
