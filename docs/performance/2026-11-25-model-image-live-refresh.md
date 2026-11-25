@@ -61,7 +61,8 @@ CP uygulaması atlanır; Koleksiyon ucu dolu kapsamı yinelemez (`emptyScopeKeys
 
 - Electron/Windows/SMB ve gerçek LAN çok kullanıcılı sunucu ölçülmedi.
 - Sinyal başına sunucu maliyeti açık ekran sayısıyla doğrusal artar (30k satırlık
-  sahipte istemci başına ~200 ms CPU). Değişikliği olmayan istemciler yine kaydı
+  sahipte istemci başına ~200 ms sunucu yanıt süresi; CPU ayrıca ölçülmedi).
+  Değişikliği olmayan istemciler yine kaydı
   indirir; koşullu (ETag/revizyon) yanıt protokol değişikliği olduğu için yapılmadı.
 - p95 iddiası yoktur (3 çift).
 
