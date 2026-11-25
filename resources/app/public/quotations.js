@@ -484,9 +484,17 @@
     // veriyordu; Pricing History vermediği için adlı kayıtlar ıskalanıp legacy
     // picture/img değerine düşülüyordu.
     const colourName=qNorm(row?.colour||row?.['Colour']||row?.['Renk']||item?.colour);
+    // Koleksiyon ile aynı sıra (kolModelImageSources): paylaşılan replika →
+    // kanonik kayıt → sunucunun çözdüğü PLM görseli → satır img/imgRef. İstemci
+    // kaydı CP yüklenene kadar boştur; sunucu alanları olmadan görüntüleme izinli
+    // kullanıcı (ve yeniden açılışta sahip) görseli göremiyordu.
+    const shared=qNorm(row?._sharedCollectionImageUrl);
+    if(shared)return shared;
     const canonicalKnown=window.BLModelImageCache?.hasRegistryKey?.(plmId,colourCode,colourName)||false;
     const canonical=window.BLModelImageCache?.resolveRegistrySource?.(plmId,colourCode,'/api/collection-images',colourName)||'';
     if(canonicalKnown)return canonical;
+    const serverPlm=qNorm(row?._serverPlmImageUrl);
+    if(serverPlm)return serverPlm;
     if(row){
       const direct=qNorm(row.img||row.Picture||row.picture);
       if(direct)return direct;
@@ -676,7 +684,11 @@
   }
 
   function qItemTargetPrice(req,item){
-    if(req?.ownerId&&req.ownerId!==qCurrentUserId())return qNorm(item?.targetPrice);
+    // Başka sahibin Koleksiyon talebinde de sahibin güncel satır hedefi okunur
+    // (qFindCollectionRow sahip kapsamlıdır); aksi hâlde sahip ile görüntüleyen
+    // aynı satırda farklı Hedef/Δ Hedef görüyordu. Koleksiyon bağlamı yoksa
+    // yabancı satır eşlenmez: talepteki hedef kullanılır.
+    if(req?.ownerId&&req.ownerId!==qCurrentUserId()&&!(req.source==='collection'&&qLoadedWorkspaceOwner()))return qNorm(item?.targetPrice);
     const row=req?.source==='collection'?qFindCollectionRow(item):qFindCpRow(item);
     if(row){
       if(req?.source==='collection' && Object.prototype.hasOwnProperty.call(row,'targetPrice')) return qNorm(qCollectionEffectiveValue(row,'targetPrice'));
@@ -1281,7 +1293,10 @@
 
   function qRenderStatusTabs(){
     const host=document.getElementById('quotationStatusTabs');if(!host)return;
-    const sourceRows=qLoad().requests.filter(req=>req.source===qActiveSource);
+    // Sayılar listeyle (qVisibleRequests) aynı Buyer kapsamını kullanır; aksi hâlde
+    // "Devam Eden 1" altında "0 kayıt" görünürdü.
+    const scope=window.BLPricingDesk?.scopeAllows;
+    const sourceRows=qLoad().requests.filter(req=>req.source===qActiveSource&&(typeof scope!=='function'||scope(req)));
     const keys=[...host.querySelectorAll('[data-quotation-status-filter]')].map(button=>button.dataset.quotationStatusFilter);
     const counts=Object.fromEntries(keys.map(key=>[key,sourceRows.filter(req=>qRequestMatchesStatus(req,key)).length]));
     host.querySelectorAll('[data-quotation-status-filter]').forEach(button=>{
@@ -2218,6 +2233,28 @@
 
     qRenderNav(query);qRenderDetail();
   }
+  /* Uzak değişiklik (başka kullanıcının fiyatı/onayı) açık Fiyat Masası'na
+     yansır: refresh yalnız qState'i tazeliyordu, açık matris eski değeri
+     gösteriyordu. Kullanıcı bir alanı düzenliyorsa veya bir panel açıksa çizim
+     yazdığını ezmez; odak masadan çıkınca bir kez uygulanır. Görünmeyen masa
+     çizilmez (sekmeye dönüşte mount zaten yeniden çizer). */
+  let qOpenWorkspaceRefreshPending=false;
+  const Q_DESK_PANELS='[data-pd-options-panel],[data-pd-columns-panel],[data-pd-bulk-panel],[data-pd-import-panel],[data-pd-mfr-panel],[data-pd-round-panel]';
+  function qRefreshOpenWorkspace(){
+    if(!qWorkspaceMounted||qWorkspaceMode!=='quotations')return;
+    const host=document.getElementById('quotationWorkspacePage'),detail=document.getElementById('quotationDetail');
+    if(!host||!detail||host.offsetParent===null)return;
+    const active=document.activeElement;
+    const editing=Boolean(active&&host.contains(active)&&active.matches?.('input:not([type="search"]),textarea,select,[contenteditable="true"]'));
+    const panelOpen=[...detail.querySelectorAll(Q_DESK_PANELS)].some(panel=>!panel.hidden);
+    if(editing||panelOpen){
+      if(qOpenWorkspaceRefreshPending)return;
+      qOpenWorkspaceRefreshPending=true;
+      host.addEventListener('focusout',()=>setTimeout(()=>{qOpenWorkspaceRefreshPending=false;qRefreshOpenWorkspace();},0),{once:true});
+      return;
+    }
+    qRenderWorkspaceAll(document.getElementById('quotationSearch')?.value||'');
+  }
 
   async function mountWorkspace(host,{source='collection',preserveContext=true}={}){
     if(!host)return false;
@@ -3149,5 +3186,5 @@
     mountWorkspace:(host,options)=>mountWorkspace(host,options),mountHistoryTable:(host,options)=>mountPricingHistory(host,options),
     isWorkspaceMounted:()=>qWorkspaceMounted,
   };
-  window.BL_QUOTATIONS={collectionQuoteIndex,openPriceHistory,openPricingHistoryWorkspace,mountPricingHistory,mountWorkspace,openWorkspaceFromCollection,openSendToPricing,syncCollectionPricingUI,recordRequest,recordManualCollectionPrice,open:openModal,save:qSave,refresh:()=>qHydrateShared(true),renameManufacturer,syncModelFields,setPrice,toggleApproval,findCollectionLine,updateCollectionLine,sendReminder(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qOpenReminder(req):false;},toggleDrop(requestId,lineId){const req=qLoad().requests.find(r=>r.id===requestId),line=req?.items.find(x=>x.id===lineId);return req&&line?qToggleDrop(req,line):false;},syncModelFieldsDurable,desk:qDeskApi,exportRequest(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qExportRequest(req):false;},moveRequest:qMoveRequest,deleteRequest:qDeleteRequest};
+  window.BL_QUOTATIONS={collectionQuoteIndex,openPriceHistory,openPricingHistoryWorkspace,mountPricingHistory,mountWorkspace,openWorkspaceFromCollection,openSendToPricing,syncCollectionPricingUI,recordRequest,recordManualCollectionPrice,open:openModal,save:qSave,refresh:()=>qHydrateShared(true).then(result=>{qRefreshOpenWorkspace();return result;}),renameManufacturer,syncModelFields,setPrice,toggleApproval,findCollectionLine,updateCollectionLine,sendReminder(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qOpenReminder(req):false;},toggleDrop(requestId,lineId){const req=qLoad().requests.find(r=>r.id===requestId),line=req?.items.find(x=>x.id===lineId);return req&&line?qToggleDrop(req,line):false;},syncModelFieldsDurable,desk:qDeskApi,exportRequest(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qExportRequest(req):false;},moveRequest:qMoveRequest,deleteRequest:qDeleteRequest};
 })();

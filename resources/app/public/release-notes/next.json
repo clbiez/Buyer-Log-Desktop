@@ -7,8 +7,8 @@
     "en": "Equal height for Collection status badges; PLM Sync asks about new options model by model"
   },
   "summary": {
-    "tr": "Koleksiyon tablosunda Durum etiketleri ana model ve renk satırlarında aynı yükseklikte görünür. Koleksiyon’daki mevcut modellere PLM Sync ile yeni opsiyon gelirken uyarı verilir ve renkler model model seçtirilir; bilerek silinen alt opsiyonlar onay olmadan geri gelmez. Koleksiyon, CP ve Siparişler’de yeni Sunum Stüdyosu ile seçili kayıtlardan sayfa üzerinde düzenlenen PDF ve PowerPoint sunumları hazırlanır. LCW AI dosya düzenleyicisi İçerik ve Önizle adımlarına sadeleşti. Send to Pricing artık üretici seçmeden Fiyat Masası talebi açabilir; üreticiler sonra, listede olmayan yeni bir ad dahil, masadan elle eklenir.",
-    "en": "In the Collection table, Status badges have the same height on main model and colour rows. When PLM Sync brings new options for existing Collection models, a warning is shown and colours are chosen model by model; deliberately deleted sub-options do not return without your approval. The new Presentation Studio in Collection, CP and Orders builds PDF and PowerPoint presentations from selected records, arranged directly on the page. The LCW AI file editor is simplified to Content and Preview steps. Send to Pricing can now open a Pricing Desk request without choosing manufacturers; manufacturers, including a new name that is not listed, are added later on the desk."
+    "tr": "Koleksiyon tablosunda Durum etiketleri ana model ve renk satırlarında aynı yükseklikte görünür. Koleksiyon’daki mevcut modellere PLM Sync ile yeni opsiyon gelirken uyarı verilir ve renkler model model seçtirilir; bilerek silinen alt opsiyonlar onay olmadan geri gelmez. Koleksiyon, CP ve Siparişler’de yeni Sunum Stüdyosu ile seçili kayıtlardan sayfa üzerinde düzenlenen PDF ve PowerPoint sunumları hazırlanır. LCW AI dosya düzenleyicisi İçerik ve Önizle adımlarına sadeleşti. Send to Pricing artık üretici seçmeden Fiyat Masası talebi açabilir; üreticiler sonra, listede olmayan yeni bir ad dahil, masadan elle eklenir. Başka bir sahibin Koleksiyonunu görüntüleyen kullanıcı, fiyat ve onay değişikliklerini sayfayı yenilemeden görür; açık Fiyat Masası da diğer kullanıcıların girdiği fiyatları anında gösterir.",
+    "en": "In the Collection table, Status badges have the same height on main model and colour rows. When PLM Sync brings new options for existing Collection models, a warning is shown and colours are chosen model by model; deliberately deleted sub-options do not return without your approval. The new Presentation Studio in Collection, CP and Orders builds PDF and PowerPoint presentations from selected records, arranged directly on the page. The LCW AI file editor is simplified to Content and Preview steps. Send to Pricing can now open a Pricing Desk request without choosing manufacturers; manufacturers, including a new name that is not listed, are added later on the desk. A user viewing another owner's Collection now sees price and approval changes without reloading; an open Pricing Desk also shows prices entered by other users right away."
   },
   "changes": [
     {
@@ -390,6 +390,64 @@
         "reason": {
           "tr": "Arka plan senkron düzeltmesi; ekrandaki arayüz değişmedi.",
           "en": "Background sync fix; the visible interface did not change."
+        }
+      }
+    },
+    {
+      "id": "collection-shared-view-live-update",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Paylaşılan Koleksiyon görünümü canlı ve doğru",
+        "en": "Shared Collection view is live and accurate"
+      },
+      "body": {
+        "tr": "“Görünüm ve Yetkiler”den başka bir buyer’ın Koleksiyonunu eklediğinde, o Koleksiyonda verilen fiyat ve üretici onayı artık sayfayı yenilemeden birkaç saniye içinde ekranına gelir; kaydırma konumun korunur. Birden çok buyer’ın Koleksiyonu birlikte açıkken bir buyer’ın modeli artık başka bir buyer’ın modelinin rengi gibi gruplanmaz; her satır kendi model adını, fiyatını ve görselini gösterir. Dili başka bir sayfadayken değiştirdiysen Koleksiyon başlıkları (Teklif & Onay, Fiyatlandırma, MB Tarihi…) sekmeye döndüğünde seçili dilde çizilir.",
+        "en": "When you add another buyer's Collection from “View & Permissions”, prices and manufacturer approvals given in that Collection now reach your screen within seconds without reloading; your scroll position is kept. With several buyers' Collections open together, one buyer's model is no longer grouped as a colour of another buyer's model; every row shows its own model name, price and image. If you change the language while on another page, Collection headers (Quotes & Approval, Pricing, MB Date…) are drawn in the selected language when you return."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-multi-view-live-update.png",
+        "alt": {
+          "tr": "Demo Koleksiyon çoklu görünümü: başka bir buyer'ın modelinde canlı gelen onaylı üretici ve fiyat",
+          "en": "Demo Collection multi view: approved manufacturer and price arriving live on another buyer's model"
+        },
+        "caption": {
+          "tr": "Demo veride görüntüleme izinli kullanıcı, düzenleyicinin Fiyat Masası’nda onayladığı fiyatı yenilemeden görüyor.",
+          "en": "On demo data, a view-only user sees the price an editor approved on the Pricing Desk without reloading."
+        }
+      }
+    },
+    {
+      "id": "pricing-desk-live-refresh",
+      "type": "fix",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Fiyat Masası her kullanıcıda aynı ve güncel",
+        "en": "Pricing Desk is the same and up to date for every user"
+      },
+      "body": {
+        "tr": "Fiyat Masası açıkken başka bir kullanıcının girdiği fiyat ve onay, sayfadan çıkıp girmeden matrise yansır; sen bir hücreye yazarken ekran yenilenmez, yazdığın değer korunur ve güncelleme hücreden çıkınca uygulanır. Başka bir buyer’ın talebinde model görselleri ve Hedef / Δ Hedef artık talep sahibinin Koleksiyonundaki güncel değerle, sahibin gördüğüyle aynı görünür. Yalnız görüntüleme yetkin olan hücrelerde onay/drop düğmeleri fiyatın üstüne binmez. Devam Eden / Onay Bekleyen / Tümü sayıları seçili Buyer kapsamıyla listede görünen kayıt sayısını gösterir.",
+        "en": "While the Pricing Desk is open, prices and approvals entered by another user appear in the matrix without leaving the page; the screen is not refreshed while you type in a cell, your value is kept and the update is applied when you leave the cell. On another buyer's request, model images and Target / Δ Target now show the current value from the request owner's Collection, the same as the owner sees. In cells you can only view, the approve/drop buttons no longer sit on top of the price. The In Progress / Waiting Approval / All counts match the records listed for the selected Buyer scope."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-desk-live-refresh.png",
+        "alt": {
+          "tr": "Demo Fiyat Masası: başka bir kullanıcının girip onayladığı fiyat yalnız görüntüleme matrisinde",
+          "en": "Demo Pricing Desk: a price entered and approved by another user in a view-only matrix"
+        },
+        "caption": {
+          "tr": "Demo veride düzenleyicinin girdiği fiyat ve onay, aynı talebi yalnız görüntüleyen kullanıcının açık masasına yenilemeden geldi.",
+          "en": "On demo data, the editor's price and approval reached the open desk of a user who only views the same request, without reloading."
         }
       }
     }

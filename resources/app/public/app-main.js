@@ -27297,12 +27297,19 @@ function kolApplyCombinedWorkspaces(items){
     (workspace.manufacturers||[]).forEach(name=>{if(norm(name))manufacturers.add(norm(name));});
     (workspace.customColumns||[]).forEach(col=>{if(col&&col.k&&!custom.has(col.k))custom.set(col.k,col);});
     (workspace.statusCatalog||[]).forEach(entry=>catalog.push(entry));
+    const ownerRows=[];
     (workspace.rows||[]).forEach(source=>{
       if(source&&source.durum)rowStatuses.push(source.durum);
       const row=migrateKolRow(JSON.parse(JSON.stringify(source||{})));
       row._collectionSourceId=row.id;row._collectionOwnerId=owner.id;row._collectionOwnerName=owner.displayName||owner.id;row.id=syntheticId--;
-      kolRows.push(row);
+      ownerRows.push(row);
     });
+    /* Model grupları sahip içinde kalır: modelGroupId satır kimliğinden türer ve
+       her buyer'ın kimlikleri 1'den başlar. Ön ek olmadan iki sahibin aynı
+       kimlikli satırları tek modelde birleşiyor, B'nin satırı A'nın model adını
+       ve fiyatını gösteriyordu. Grupsuz eski satırlar da önce kendi sahibi
+       içinde gruplanır. */
+    kolNormalizeModelGroups(ownerRows).forEach(row=>{row.modelGroupId=`${owner.id||''}:${row.modelGroupId}`;kolRows.push(row);});
   });
   kolStatusCatalog=KOL_STATUS_API.normalize(catalog.length?catalog:null,{rowStatuses});
   kolRows=kolNormalizeModelGroups(kolRows);
@@ -43506,7 +43513,28 @@ window.addEventListener('blur',kolReleasePointer);
    bayrak açık kalır; workspace temize döndüğünde sıfırlanır ve bir sonraki
    epizot yeniden uyarabilir. */
 let kolRemoteChangeNoticeShown=false;
+/* Çoklu (salt okunur) görünüm: başka bir sahibin Koleksiyonu yalnız bu yolla
+   görülür (kolWorkspaceOwnerId='__multi__'). Seçili sahiplerden birinin olayı
+   eskiden sahip kimliği eşleşmediği için atılıyordu; görüntüleyen kullanıcı
+   fiyat/onay değişikliğini sayfayı yenileyene kadar görmüyordu. Satırlar
+   sentetik kimlik taşıdığından yama uygulanamaz: birleşik görünüm tek, birleşik
+   bir batch okumasıyla yenilenir. Görünüm salt okunurdur; yerel taslak yoktur. */
+let kolMultiReloadTimer=0;
+function kolScheduleMultiViewReload(){
+  if(kolMultiReloadTimer)return;
+  kolMultiReloadTimer=setTimeout(async()=>{
+    kolMultiReloadTimer=0;
+    if(kolWorkspaceOwnerId!=='__multi__')return;
+    if(kolHasActiveWorkspaceEditor()){kolRemoteReloadPendingOwner='__multi__';return;}
+    const scrollHost=()=>document.getElementById('kolTable')?.closest('.tablewrap')||null;
+    const scroll=scrollHost(),top=scroll?scroll.scrollTop:0,left=scroll?scroll.scrollLeft:0;
+    try{await kolLoadWorkspaceBatch([...kolWorkspaceSelectedOwnerIds]);}
+    catch(err){console.warn('Uzaktan Koleksiyon güncellemesi uygulanamadı:',err&&err.message);return;}
+    const restored=scrollHost();if(restored){restored.scrollTop=top;restored.scrollLeft=left;}
+  },250);
+}
 async function kolHandleRemoteChange(ownerId,payload){
+  if(ownerId&&kolWorkspaceOwnerId==='__multi__'&&(ownerId==='__multi__'||kolWorkspaceSelectedOwnerIds.has(ownerId))){kolScheduleMultiViewReload();return;}
   // Şu an açık olmayan bir Koleksiyon workspace'i değiştiyse bu sekmeyi
   // ilgilendirmez; gereksiz iş yapılmaz.
   if(!ownerId||kolWorkspaceOwnerId!==ownerId)return;
@@ -45476,6 +45504,9 @@ function applyLanguage(lang){
     // Aktif olmayan CP/Overview sayfaları da işaretlenir; o sayfaya geçildiğinde
     // yeni dille yeniden çizilirler.
     ['cp','orders','overview'].forEach(t=>{ if(t!==tab) _deferredTabRenders.add(t); });
+    // Koleksiyon kendi ertelenmiş çizim bayrağını kullanır (switchTab → renderKol);
+    // aksi hâlde grup/sentetik sütun başlıkları eski dilde kalıyordu.
+    if(tab!=='koleksiyon'&&document.getElementById('kolTable'))kolRenderDeferred=true;
     if(tab==='cp' && typeof renderCP==='function') renderCP();
     else if(tab==='orders' && typeof renderOrders==='function') renderOrders();
     else if(tab==='koleksiyon' && typeof renderKol==='function') renderKol();
