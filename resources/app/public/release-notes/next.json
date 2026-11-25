@@ -346,6 +346,29 @@
           "en": "Server-side permission check only; the interface already manages only your own permissions, so nothing on screen changed."
         }
       }
+    },
+    {
+      "id": "collection-row-image-delete-edit-only",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Koleksiyon satır görselini yalnız sayfayı düzenleyebilen silebilir",
+        "en": "Only users who can edit the page can delete a Collection row image"
+      },
+      "body": {
+        "tr": "Bir Koleksiyon satırında kullanılan model görseli artık yalnız o sayfanın sahibi veya düzenleme izni olan kullanıcı tarafından silinebilir. Görüntüleme izni olan ya da hiç izni olmayan kullanıcılar, CP üzerinden dahil, başka bir buyer'ın satır görselini silemez. Görsellerin görünmesi ve sahibin görsel değiştirme/kaldırma akışı değişmedi.",
+        "en": "A model image used on a Collection row can now be deleted only by the page owner or a user with edit permission. Users with view-only or no permission, including through CP, cannot delete another buyer's row image. Image display and the owner's replace/remove flow are unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Yalnız sunucu yetki denetimi; arayüz zaten view-only kullanıcıya görsel silme sunmaz, ekranda değişen bir şey yok.",
+          "en": "Server-side permission check only; the interface already offers no image deletion to view-only users, so nothing on screen changed."
+        }
+      }
     }
   ]
 }
