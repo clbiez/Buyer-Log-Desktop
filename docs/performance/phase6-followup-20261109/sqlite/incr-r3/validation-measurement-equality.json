@@ -1,0 +1,32 @@
+{
+  "scripts/prototypes/sqlite-decision-20261109/sqlite-compat.cjs": {
+    "validation": "c9c33c573a519616539e9d2ef0d30be839d5e7dd5159cc93450c5046f29a820c",
+    "measurement": "c9c33c573a519616539e9d2ef0d30be839d5e7dd5159cc93450c5046f29a820c",
+    "working": "c9c33c573a519616539e9d2ef0d30be839d5e7dd5159cc93450c5046f29a820c"
+  },
+  "scripts/prototypes/sqlite-decision-20261109/compat-transitions.cjs": {
+    "validation": "6d926079b27e12c97228e51f72b0e19c238cbc1d5b03b80f4f8dd01767b36a4e",
+    "measurement": "6d926079b27e12c97228e51f72b0e19c238cbc1d5b03b80f4f8dd01767b36a4e",
+    "working": "6d926079b27e12c97228e51f72b0e19c238cbc1d5b03b80f4f8dd01767b36a4e"
+  },
+  "scripts/prototypes/sqlite-decision-20261109/compat-r2.test.cjs": {
+    "validation": "43fc236ddb025b01ebd871e4f5367b7867f7926fd0de39db7b53cecddafb9966",
+    "measurement": "43fc236ddb025b01ebd871e4f5367b7867f7926fd0de39db7b53cecddafb9966",
+    "working": "43fc236ddb025b01ebd871e4f5367b7867f7926fd0de39db7b53cecddafb9966"
+  },
+  "scripts/prototypes/sqlite-decision-20261109/contract-gates.test.cjs": {
+    "validation": "98840f11c065543cc7901b6b5f503a7e1da341474faabd8f0d202658c9b7bdb4",
+    "measurement": "98840f11c065543cc7901b6b5f503a7e1da341474faabd8f0d202658c9b7bdb4",
+    "working": "98840f11c065543cc7901b6b5f503a7e1da341474faabd8f0d202658c9b7bdb4"
+  },
+  "scripts/prototypes/sqlite-decision-20261109/prototype.test.cjs": {
+    "validation": "8279b3ebe41d8fb145607d145f385348a09a8009672f722f6e1983de64517994",
+    "measurement": "8279b3ebe41d8fb145607d145f385348a09a8009672f722f6e1983de64517994",
+    "working": "8279b3ebe41d8fb145607d145f385348a09a8009672f722f6e1983de64517994"
+  },
+  "scripts/prototypes/sqlite-decision-20261109/incremental-r3.test.cjs": {
+    "validation": "8cf577f9674f9d02d80bb43c75427a2cca7ecdff5a1be67f928bb72811639674",
+    "measurement": "8cf577f9674f9d02d80bb43c75427a2cca7ecdff5a1be67f928bb72811639674",
+    "working": "8cf577f9674f9d02d80bb43c75427a2cca7ecdff5a1be67f928bb72811639674"
+  }
+}

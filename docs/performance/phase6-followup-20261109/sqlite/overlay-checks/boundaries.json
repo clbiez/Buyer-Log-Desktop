@@ -1,0 +1,169 @@
+{
+  "versions": {
+    "node": "24.20.0",
+    "acorn": "8.18.0",
+    "ada": "4.0.0",
+    "amaro": "1.1.11",
+    "ares": "1.34.8",
+    "brotli": "1.2.0",
+    "cldr": "48.0",
+    "icu": "78.2",
+    "llhttp": "9.4.3",
+    "merve": "1.2.2",
+    "modules": "149",
+    "napi": "10",
+    "nbytes": "0.1.4",
+    "ncrypto": "0.0.1",
+    "nghttp2": "1.70.0",
+    "nghttp3": "",
+    "ngtcp2": "",
+    "openssl": "0.0.0",
+    "simdjson": "4.6.6",
+    "simdutf": "7.7.0",
+    "sqlite": "3.53.4",
+    "tz": "2025c",
+    "undici": "7.29.0",
+    "unicode": "17.0",
+    "uv": "1.52.1",
+    "uvwasi": "0.0.23",
+    "v8": "15.2.124.19-electron.0",
+    "zlib": "1.3.2.1-motley",
+    "zstd": "1.6.0",
+    "electron": "44.3.0",
+    "chrome": "152.0.7977.78"
+  },
+  "size": 10000,
+  "probes": [
+    {
+      "engine": "local",
+      "scenario": "checkpoint",
+      "boundary": "json-after-primary-rename",
+      "signal": "SIGKILL",
+      "stdout": "",
+      "stderr": "",
+      "recovered": {
+        "replayMs": 456.222631,
+        "digest": "11fe3827d7073e82c36be7285172ba54ac9f36e7b681f17a118cd870d0c3208b",
+        "counts": {
+          "records": 7008,
+          "events": 3005,
+          "journal": 3005,
+          "ledger": 7000,
+          "sequence": 10005
+        },
+        "ackRetained": [
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "inflightPresent": false,
+        "eventIds": "a595e9a83b3c8aa5df6803e727c6de41a5919c4ecb44213cbcb8d205258b4b84",
+        "pending": 2005,
+        "stdout": "",
+        "stderr": ""
+      },
+      "incompleteBackupRejected": null
+    },
+    {
+      "engine": "local",
+      "scenario": "backup",
+      "boundary": "backup-partial-before-manifest",
+      "signal": "SIGKILL",
+      "stdout": "",
+      "stderr": "",
+      "recovered": {
+        "replayMs": 657.665772,
+        "digest": "11fe3827d7073e82c36be7285172ba54ac9f36e7b681f17a118cd870d0c3208b",
+        "counts": {
+          "records": 7008,
+          "events": 10005,
+          "journal": 10005,
+          "ledger": 0,
+          "sequence": 10005
+        },
+        "ackRetained": [
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "inflightPresent": false,
+        "eventIds": "a595e9a83b3c8aa5df6803e727c6de41a5919c4ecb44213cbcb8d205258b4b84",
+        "pending": 2005,
+        "stdout": "",
+        "stderr": ""
+      },
+      "incompleteBackupRejected": true
+    },
+    {
+      "engine": "sqlite",
+      "scenario": "checkpoint",
+      "boundary": "sqlite-after-checkpoint",
+      "signal": "SIGKILL",
+      "stdout": "",
+      "stderr": "",
+      "recovered": {
+        "replayMs": 1.7722490000000022,
+        "digest": "11fe3827d7073e82c36be7285172ba54ac9f36e7b681f17a118cd870d0c3208b",
+        "counts": {
+          "records": 7008,
+          "events": 10005,
+          "journal": 10005,
+          "ledger": 0,
+          "sequence": 10005
+        },
+        "ackRetained": [
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "inflightPresent": false,
+        "eventIds": "a595e9a83b3c8aa5df6803e727c6de41a5919c4ecb44213cbcb8d205258b4b84",
+        "pending": 2005,
+        "integrity": "ok",
+        "stdout": "",
+        "stderr": ""
+      },
+      "incompleteBackupRejected": null
+    },
+    {
+      "engine": "sqlite",
+      "scenario": "backup",
+      "boundary": "backup-partial-before-manifest",
+      "signal": "SIGKILL",
+      "stdout": "",
+      "stderr": "",
+      "recovered": {
+        "replayMs": 3.9303960000000018,
+        "digest": "11fe3827d7073e82c36be7285172ba54ac9f36e7b681f17a118cd870d0c3208b",
+        "counts": {
+          "records": 7008,
+          "events": 10005,
+          "journal": 10005,
+          "ledger": 0,
+          "sequence": 10005
+        },
+        "ackRetained": [
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "inflightPresent": false,
+        "eventIds": "a595e9a83b3c8aa5df6803e727c6de41a5919c4ecb44213cbcb8d205258b4b84",
+        "pending": 2005,
+        "integrity": "ok",
+        "stdout": "",
+        "stderr": ""
+      },
+      "incompleteBackupRejected": true
+    }
+  ],
+  "validation": "subset-passed"
+}

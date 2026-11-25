@@ -1,0 +1,80 @@
+[
+  {
+    "size": 1000,
+    "seedEvents": 1000,
+    "seedBatch": 10000,
+    "seedUploadedFraction": 0.8,
+    "mixedOperations": 300,
+    "addedEvents": 630,
+    "mixedAndMutationTailSha256": "bce976c578426b83c8a5ea245470f4df1a187dd7c23be6900670e8bed1f86e2e",
+    "counts": {
+      "get": 150,
+      "filter": 60,
+      "pending": 30,
+      "singleWrite": 30,
+      "batch20": 30
+    },
+    "tail": [
+      "three repeated full reads",
+      "upload",
+      "single ACK",
+      "ACK-through",
+      "compaction",
+      "full oracle",
+      "close",
+      "fresh process reopen"
+    ]
+  },
+  {
+    "size": 10000,
+    "seedEvents": 10000,
+    "seedBatch": 10000,
+    "seedUploadedFraction": 0.8,
+    "mixedOperations": 300,
+    "addedEvents": 630,
+    "mixedAndMutationTailSha256": "144e1da70900111affda483e1df851a6fb9fc032f5f77ec986a6b70fd5a77e67",
+    "counts": {
+      "get": 150,
+      "filter": 60,
+      "pending": 30,
+      "singleWrite": 30,
+      "batch20": 30
+    },
+    "tail": [
+      "three repeated full reads",
+      "upload",
+      "single ACK",
+      "ACK-through",
+      "compaction",
+      "full oracle",
+      "close",
+      "fresh process reopen"
+    ]
+  },
+  {
+    "size": 200000,
+    "seedEvents": 200000,
+    "seedBatch": 10000,
+    "seedUploadedFraction": 0.8,
+    "mixedOperations": 300,
+    "addedEvents": 630,
+    "mixedAndMutationTailSha256": "ea5944bdaf3c7769cc6aee3f94518f86205d1adff220df840dc6d441870af1f8",
+    "counts": {
+      "get": 150,
+      "filter": 60,
+      "pending": 30,
+      "singleWrite": 30,
+      "batch20": 30
+    },
+    "tail": [
+      "three repeated full reads",
+      "upload",
+      "single ACK",
+      "ACK-through",
+      "compaction",
+      "full oracle",
+      "close",
+      "fresh process reopen"
+    ]
+  }
+]
