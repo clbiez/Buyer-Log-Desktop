@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "8.0.17",
+      "publishedAt": "2026-11-24",
+      "title": {
+        "tr": "Çok kullanıcılı Koleksiyon ve Fiyat Masası: kayıpsız senkron, sıkı yetki ve canlı güncelleme; Sunum Stüdyosu",
+        "en": "Multi-user Collection and Pricing Desk: lossless sync, stricter access and live updates; Presentation Studio"
+      },
+      "stats": {
+        "features": 4,
+        "improvements": 1,
+        "fixes": 13
+      },
+      "file": "release-notes/8.0.17/release.json"
+    },
+    {
       "version": "8.0.16",
       "publishedAt": "2026-11-24",
       "title": {
