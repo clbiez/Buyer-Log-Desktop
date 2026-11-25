@@ -267,7 +267,10 @@ async function createCollectionSimulation({ seed = 1, devices: count = 20, rows:
       const envelope = await remoteEnvelope(ownerId);
       if (!envelope) return false;
       const expected = checksum(envelope.workspace);
-      return devices.filter(item => item.online && item.role !== 'none').every(device => checksum(device.modules.workspaces.loadWorkspace(ownerId)) === expected);
+      // Yalnız hâlâ yetkili kurulumlar: erişimi geri alınan kurulumun eski
+      // önbelleği artık eşitlenmez (beklenen davranış).
+      return devices.filter(item => item.online && item.role !== 'none' && item.permissions.accessLevel(item.userId, ownerId))
+        .every(device => checksum(device.modules.workspaces.loadWorkspace(ownerId)) === expected);
     }
     async function quietRound() {
       const before = devices.map(device => ({ load: device.counters.loadWorkspace, replace: device.counters.replace, published: device.counters.published, merged: device.counters.merged }));
