@@ -385,7 +385,20 @@ function check(name, ok, detail) { report.checks.push({ name, ok: Boolean(ok), d
         await ownerPage.locator(`.pdCellInput[data-pd-input="${line}"]`).fill('3,21'); await ownerPage.locator(`.pdCellInput[data-pd-input="${line}"]`).press('Enter');
         const shown = await viewerPage.waitForFunction(l => document.querySelector(`.pdCellInput[data-pd-input="${l}"]`)?.value === '3,21', line, { timeout: LIVE_LIMIT_MS * 2 }).then(() => true).catch(() => false);
         const after = await snap();
-        report.bigMatrix = { before, after, line, shown };
+        // Kendi kaydı: sahip kendi masasında fiyat girer; ~7 sn'lik revizyon yoklaması gelince
+        // masa yeniden çizilmemeli (aynı DOM düğümü), kaydırma ve sanal pencere yerinde kalmalı.
+        const ownSnap = () => ownerPage.evaluate(() => { const sc = document.querySelector('.pdMatrixScroll'), r = sc.getBoundingClientRect(); const rows = [...document.querySelectorAll('.pdMatrix tbody tr[data-pd-model]')].filter(tr => { const b = tr.getBoundingClientRect(); return b.bottom > r.top + 60 && b.top < r.bottom; }); return { scrollTop: sc.scrollTop, first: rows[0]?.dataset.pdModel, marker: document.querySelector('.pdMatrix')?.dataset.e2eMarker || '' }; });
+        const ownLine = `big-${model + 1}-1`;
+        await ownerPage.locator(`.pdCellInput[data-pd-input="${ownLine}"]`).fill('3,22'); await ownerPage.locator(`.pdCellInput[data-pd-input="${ownLine}"]`).press('Enter');
+        await ownerPage.mouse.click(5, 5);
+        await ownerPage.waitForFunction(l => window.BL_QUOTATIONS.desk.requests().some(r => r.items.some(i => i.id === l && i.price === '3,22' && Number(i.rev) > 0)), ownLine, { timeout: 20000 }).catch(() => {});
+        await ownerPage.evaluate(() => { const m = document.querySelector('.pdMatrix'); if (m) m.dataset.e2eMarker = 'kept'; });
+        const ownBefore = await ownSnap();
+        const polls = []; const onReq = req => { if (/shared-revisions/.test(req.url())) polls.push(Date.now()); }; ownerPage.on('request', onReq);
+        await ownerPage.waitForTimeout(16000); ownerPage.off('request', onReq);
+        const ownAfter = await ownSnap();
+        report.bigMatrix = { before, after, line, shown, own: { before: ownBefore, after: ownAfter, revisionPolls: polls.length } };
+        check('büyük matris: kendi kaydından sonraki revizyon yoklaması masayı yeniden çizmez, kaydırma yerinde kalır', polls.length >= 1 && ownAfter.marker === 'kept' && ownAfter.scrollTop === ownBefore.scrollTop && ownAfter.first === ownBefore.first, report.bigMatrix.own);
         check('büyük matris: uzak fiyat görüntüleyende yenilemeden görünür', shown, report.bigMatrix);
         check('büyük matris: uzak güncelleme kaydırmayı ve sanal pencereyi korur', after.scrollTop === before.scrollTop && after.first === before.first && after.rows > 0, report.bigMatrix);
         for (const [key, sess] of Object.entries(sessions)) check(`büyük matris: ${key} pageerror yok`, sess.errors.length === 0, sess.errors);
