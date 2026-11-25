@@ -459,9 +459,11 @@
     if (approvalScopeOf(context, itemId) === 'option') {
       const reusableKey = optionAnswerKey(analysis, itemId);
       const reusable = reusableKey ? answers[reusableKey] : null;
-      // Sadece gerçek onay taşınır. Rejected / Not Required başka PO'lara
-      // yayılmaz; bunlar siparişe özel kararlardır.
-      if (reusable && normalizeStatus(reusable.state) === 'approved') return 'approved';
+      // Model/renk kapsamında seçilen her durum (Onaylandı, Reddedildi,
+      // Gerekmiyor, özel durumlar) aynı opsiyonun diğer PO'larına taşınır.
+      // 'open' sıfırlamadır: PLM kanıtı yeniden değerlendirilir.
+      const reusableState = reusable ? normalizeStatus(reusable.state) : '';
+      if (reusableState && reusableState !== 'open') return reusableState;
     }
     if (!Components.parseItem(itemId) && plmApproved(plmEvidenceOf(context, analysis, itemId))) return 'approved';
     return 'open';
@@ -592,8 +594,9 @@
           const direct = answer && normalizeStatus(answer.state);
           const reusableKey = approvalScopeOf(scopedContext, itemId) === 'option' ? optionAnswerKey(analysis, itemId) : '';
           const reusable = reusableKey ? answers[reusableKey] : null;
-          const reusableApproved = reusable && normalizeStatus(reusable.state) === 'approved';
-          if (!direct && !reusableApproved && !componentsFor(analysis, itemContext).length) plmAnswered += 1;
+          const reusableState = reusable ? normalizeStatus(reusable.state) : '';
+          const reusableResolved = Boolean(reusableState && reusableState !== 'open');
+          if (!direct && !reusableResolved && !componentsFor(analysis, itemContext).length) plmAnswered += 1;
         };
         for (const item of customItems) countResolved(item);
         for (const item of ITEMS) {

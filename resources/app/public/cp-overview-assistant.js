@@ -453,7 +453,8 @@
       if (optionKey && state.answers[optionKey]) {
         state.answers[optionKey] = Checklist.makeAnswer('open', analysis, { ...state.answers[optionKey], at: answerMeta.at, by, loadDate: null });
       }
-    } else if (next === 'approved' && optionKey) {
+    } else if (optionKey) {
+      // Model/renk kapsamı: seçilen durum aynı opsiyonun tüm PO'larına uygulanır.
       state.answers[key] = Checklist.makeAnswer(next, analysis, answerMeta);
       state.answers[optionKey] = Checklist.makeAnswer(next, analysis, { ...answerMeta, loadDate: null });
     } else {
@@ -2167,7 +2168,7 @@
             <option value="order"${rule.approvalScope !== 'option' ? ' selected' : ''}>${esc(L('Her PO’da tekrar kontrol et', 'Repeat for every PO'))}</option>
             <option value="option"${rule.approvalScope === 'option' ? ' selected' : ''}>${esc(L('Aynı model/renkte diğer PO’lara taşı', 'Carry to other POs of the same model/colour'))}</option>
           </select>
-          <small>${esc(L('Aynı PLM + Model + Renk için Onaylandı diğer PO’lara taşınır; Reddedildi PO’ya özel kalır.', 'Approved carries across POs of the same PLM + Model + Colour; Rejected stays PO-specific.'))}</small>
+          <small>${esc(L('Seçilen durum (Onaylandı, Reddedildi, Gerekmiyor…) aynı PLM + Model + Renkteki diğer PO’lara taşınır; PO’da ayrıca seçilen durum o PO için geçerli kalır.', 'The chosen status (Approved, Rejected, Not Required…) carries to other POs of the same PLM + Model + Colour; a status set separately on a PO stays in effect for that PO.'))}</small>
         </label>
         <label class="cpaRuleTarget"><span>${esc(L('Set modellerin her parçası için ayrı durum', 'Separate status for each set part'))}</span>
           <select data-cpa-rule-set-parts>
