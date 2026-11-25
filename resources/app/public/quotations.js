@@ -210,7 +210,8 @@
       }catch(err){
         qSaveFailureSerial++;qSaveFailureError=err;
         if(typeof showToast==='function')showToast(err?.message||qLang('Fiyat kaydedilemedi.','Price could not be saved.'));
-        if(err?.status===403||err?.status===404||err?.status===422)await qHydrateShared(true);
+        // 409: sunucu geçici çekişmeyi zaten yeniden denedi; ekran kaydedilmemiş fiyatı göstermeye devam etmez.
+        if(err?.status===403||err?.status===404||err?.status===409||err?.status===422)await qHydrateShared(true);
       }
     });
   }
@@ -967,24 +968,39 @@
        Koleksiyon'da elle yaptığı düzeltmeyi ezerdi. Bu cihazdaki ilk çalışmada
        mevcut kayıtlar yalnız işaretlenir (yeni cihaz eski değerleri geri yazmaz). */
     const me=qCurrentUserId(),firstRun=raw==null;let changed=0,dirty=false;
-    const pending=new Map();
-    qLoad().requests.forEach(req=>{
-      if(req.source!=='collection'||qNorm(req.ownerId)!==me||!qCanProjectToCollection(req))return;
+    // Yerel ayarlı küçük harf dönüşümü pahalıdır; çalışma içinde üretici adı başına bir kez yapılır.
+    const pending=new Map(),lowered=new Map(),cellKey=item=>{const name=qNorm(item.manufacturer);if(!lowered.has(name))lowered.set(name,name.toLocaleLowerCase('tr-TR'));return `${qNorm(item.rowId)}|${lowered.get(name)}`;};
+    const owned=qLoad().requests.filter(req=>!(req.source!=='collection'||qNorm(req.ownerId)!==me||!qCanProjectToCollection(req)));
+    /* Hücrenin en yeni satır değişikliği BÜTÜN satırlardan bulunur: sahibin
+       kendi (bu ya da diğer cihazındaki, Koleksiyon'dan elle düzeltme dahil)
+       daha yeni değişikliği ve daha önce yansıtılmış daha yeni bir editör
+       değişikliği, geç görünen eski bir editör değişikliğiyle geri alınmaz. */
+    const candidates=[];
+    owned.forEach(req=>{
       (req.items||[]).forEach(item=>{
         const at=qNorm(item.updatedAt),by=qNorm(item.updatedBy);
         if(!at||!by||by===me)return;
         if(String(stamps[item.id]||'')>=at)return;
         stamps[item.id]=at;dirty=true;
         if(firstRun)return;
+        candidates.push({req,item,at,key:cellKey(item)});
+      });
+    });
+    if(candidates.length){
+      // Yalnız yeni yabancı değişikliğin modelleri taranır (değişiklik yoksa ek maliyet yok).
+      // rowId normalize edilmiş (sayı/null) değerdir; üyelik ham değerle denetlenir.
+      const rows=new Set(candidates.map(entry=>entry.item.rowId)),keys=new Map(candidates.map(entry=>[entry.item,entry.key])),latestAt=new Map();
+      owned.forEach(req=>(req.items||[]).forEach(item=>{if(!rows.has(item.rowId))return;const at=qNorm(item.updatedAt);if(!at)return;const key=keys.get(item)||cellKey(item);if(at>(latestAt.get(key)||''))latestAt.set(key,at);}));
+      candidates.forEach(({req,item,at,key})=>{
         /* Aynı model × üretici için birden çok talep olabilir (yeniden teklif).
            Yalnız en yeni satır yansıtılır; eşit zamanda onaylı olan kazanır.
            Böylece eski talepteki satır yeni onayı ve fiyatı geri almaz. */
-        const key=`${qNorm(item.rowId)}|${qNorm(item.manufacturer).toLocaleLowerCase('tr-TR')}`;
+        if((latestAt.get(key)||'')>at)return;
         const prev=pending.get(key);
         const newer=!prev||at>prev.at||(at===prev.at&&item.approved===true&&prev.item.approved!==true);
         if(newer)pending.set(key,{req,item,at});
       });
-    });
+    }
     [...pending.values()].sort((a,b)=>a.at.localeCompare(b.at)).forEach(({req,item})=>{if(qWritePriceToCollection(req,item,{save:false}))changed++;});
     if(dirty){
       const entries=Object.entries(stamps).sort((a,b)=>String(b[1]).localeCompare(String(a[1]))).slice(0,5000);

@@ -154,15 +154,61 @@ function effectiveHistory(line, request) {
 }
 
 /* İKİ CİHAZDAN GELEN AYNI TALEBİN BİRLEŞİMİ.
-   Talep alanları (not, durum, üreticiler, satır kümesi) daha yeni updatedAt
-   taşıyan kopyadan gelir — eski davranış. Ortak satırlarda ise satırın kendi
-   updatedAt'i daha yeni olan kopyanın fiyat/onay/drop durumu kazanır ve iki
-   defter birleşir. Böylece A satır 1'i, B satır 2'yi düzenlediğinde ikisi de
-   korunur. Birleşim değişmeli ve tekrarlanabilirdir. */
+   Talep alanları (not, durum, kapasite, sıra) daha yeni updatedAt taşıyan
+   kopyadan gelir. Ortak satırlarda satırın kendi updatedAt'i daha yeni olan
+   kopyanın fiyat/onay/drop durumu kazanır ve iki defter birleşir.
+   Satır kümesi kimlikle BİRLEŞİR: istemcide satır silen akış yoktur (drop bir
+   işarettir), bu yüzden yalnız diğer kopyada olan satır başka cihazın eşzamanlı
+   eklemesidir ve korunur; üreticisi de listede kalır. Pazarlık turları her
+   zaman birleşir. Birleşim değişmeli, birleşmeli (satır/üretici görüntü sırası
+   hariç) ve tekrarlanabilirdir. */
 function newerRequest(a, b) {
   const at = String(a && a.updatedAt || ''), bt = String(b && b.updatedAt || '');
   if (at !== bt) return at > bt ? a : b;
   return JSON.stringify(a) >= JSON.stringify(b) ? a : b;
+}
+const manufacturerKey = value => clean(value, 240).toLocaleUpperCase('tr-TR').replace(/\s+/g, ' ');
+// Alternatif fiyat / etiket de durumdur (defterlenmez; düşerse kaybolur).
+function lineHasState(item) {
+  return Boolean(clean(item && item.price, 120) || (item && item.approved) || (item && item.dropped) || (Array.isArray(item && item.history) && item.history.length)
+    || (Array.isArray(item && item.options) && item.options.length) || clean(item && item.priceLabel, 120) || clean(item && item.priceNote, 500));
+}
+const sameLineState = (a, b) => a.updatedBy === b.updatedBy && a.price === b.price && Boolean(a.approved) === Boolean(b.approved) && Boolean(a.dropped) === Boolean(b.dropped) && a.priceLabel === b.priceLabel && a.priceNote === b.priceNote;
+// Aynı zaman damgalı iki satır kopyasında seçim içerikten yapılır; hangi talep kopyasının "yeni" sayıldığından bağımsızdır.
+function lineStateKey(item) {
+  return JSON.stringify([clean(item.updatedAt, 80), clean(item.updatedBy, 160), clean(item.price, 120), Boolean(item.approved), Boolean(item.dropped), clean(item.priceLabel, 120), clean(item.priceNote, 500)]);
+}
+/* Aynı model × üretici hücresinde birden çok satır yalnız iki cihazda aynı
+   üreticinin eşzamanlı eklenmesinden doğar. Durumu (fiyat/onay/drop/defter)
+   olmayan kopya fazlalıktır: hücrede durumlu satır varsa yalnız durumlular,
+   yoksa en küçük kimlikli satır kalır; durumlu satır hiçbir zaman düşmez.
+   Yalnız birleşimin yeni getirdiği satırların modelleri incelenir (sıcak yolda
+   ek maliyet yok); seçim birleşik kümenin fonksiyonudur, sıradan bağımsızdır. */
+function withoutRedundantLines(items, modelKeys) {
+  const keyOf = new Map(), cellOf = item => {
+    const name = item.manufacturer;
+    if (!keyOf.has(name)) keyOf.set(name, manufacturerKey(name));
+    return `${item.modelKey}\u0000${keyOf.get(name)}`;
+  };
+  const inScope = item => item && modelKeys.has(item.modelKey) && clean(item.modelKey, 300) && clean(item.manufacturer, 240);
+  const stateful = new Set(), keep = new Map();
+  for (const item of items) {
+    if (!inScope(item)) continue;
+    const cell = cellOf(item);
+    if (lineHasState(item)) stateful.add(cell);
+    else if (!keep.has(cell) || String(item.id) < keep.get(cell)) keep.set(cell, String(item.id));
+  }
+  const out = items.filter(item => {
+    if (!inScope(item) || lineHasState(item)) return true;
+    const cell = cellOf(item);
+    return !stateful.has(cell) && keep.get(cell) === String(item.id);
+  });
+  return out.length === items.length ? items : out;
+}
+// Aynı tur numarası iki cihazda eşzamanlı açıldıysa ilk açılış kalır (sıradan bağımsız seçim).
+const roundKey = round => JSON.stringify([clean(round && round.at, 80), clean(round && round.by, 160), clean(round && round.byName, 240), clean(round && round.note, 1000)]);
+function mergeRounds(a, b) {
+  return normalizeRounds([...(Array.isArray(a) ? a : []), ...(Array.isArray(b) ? b : [])].sort((x, y) => (Number(x && x.n) || 0) - (Number(y && y.n) || 0) || roundKey(x).localeCompare(roundKey(y))));
 }
 function mergeRequestCopies(a, b) {
   if (!a || typeof a !== 'object') return b;
@@ -177,13 +223,14 @@ function mergeRequestCopies(a, b) {
     newer = { ...newer, models: other.models.filter(model => model && !lined.has(model.modelKey)) };
   }
   const otherItems = new Map((Array.isArray(other.items) ? other.items : []).filter(item => item && item.id).map(item => [String(item.id), item]));
-  if (!otherItems.size || !Array.isArray(newer.items)) return newer;
-  let changed = false;
-  const items = newer.items.map(item => {
+  const newerItems = Array.isArray(newer.items) ? newer.items : [];
+  let changed = false, twins = 0;
+  let items = newerItems.map(item => {
     const twin = item && otherItems.get(String(item.id));
     if (!twin) return item;
+    twins++;
     const itemAt = String(item.updatedAt || ''), twinAt = String(twin.updatedAt || '');
-    const winner = twinAt > itemAt ? twin : item;
+    const winner = twinAt !== itemAt ? (twinAt > itemAt ? twin : item) : (sameLineState(item, twin) || lineStateKey(twin) <= lineStateKey(item) ? item : twin);
     const history = unionHistory(item.history, twin.history);
     const rev = Math.max(positiveInt(item.rev, 0), positiveInt(twin.rev, 0));
     const merged = { ...item, price: winner.price, approved: winner.approved, dropped: winner.dropped, updatedAt: winner.updatedAt, updatedBy: winner.updatedBy, history, rev };
@@ -192,9 +239,38 @@ function mergeRequestCopies(a, b) {
     if (winner !== item || history.length !== (Array.isArray(item.history) ? item.history.length : 0) || rev !== positiveInt(item.rev, 0)) changed = true;
     return merged;
   });
-  if (!changed) return newer;
+  // Yalnız diğer kopyada olan satır, başka cihazın eşzamanlı eklemesidir.
+  if (twins < otherItems.size) {
+    const known = new Set(newerItems.filter(item => item && item.id).map(item => String(item.id)));
+    const added = [];
+    for (const [id, item] of otherItems) if (!known.has(id)) added.push(item);
+    items = items.concat(added);
+    changed = true;
+    items = withoutRedundantLines(items, new Set(added.map(item => item.modelKey)));
+  }
+  // Diğer kopyadaki üretici yalnız bir satır onu hâlâ kullanıyorsa eklenir (yeniden adlandırılan eski ad geri gelmez).
+  const listed = new Set((Array.isArray(newer.manufacturers) ? newer.manufacturers : []).map(item => manufacturerKey(item && item.name)));
+  let extraManufacturers = (Array.isArray(other.manufacturers) ? other.manufacturers : []).filter(item => { const key = manufacturerKey(item && item.name); return key && !listed.has(key); });
+  if (extraManufacturers.length) {
+    const used = new Set([...new Set(items.map(item => item && item.manufacturer))].map(manufacturerKey));
+    extraManufacturers = extraManufacturers.filter(item => { const key = manufacturerKey(item.name); if (listed.has(key) || !used.has(key)) return false; listed.add(key); return true; });
+  }
   const round = Math.max(positiveInt(newer.round, 1), positiveInt(other.round, 1));
-  return { ...newer, items, round, rounds: normalizeRounds([...(newer.rounds || []), ...(other.rounds || [])]) };
+  const otherRounds = Array.isArray(other.rounds) ? other.rounds : [];
+  const rounds = otherRounds.length ? mergeRounds(newer.rounds, otherRounds) : normalizeRounds(newer.rounds);
+  const roundsChanged = round !== positiveInt(newer.round, 1) || (otherRounds.length > 0 && JSON.stringify(rounds) !== JSON.stringify(normalizeRounds(newer.rounds)));
+  // Bekleyen model yalnız azalır: birleşik kümede satırı açılan model listeden düşer.
+  let models = newer.models;
+  if (Array.isArray(newer.models) && newer.models.length) {
+    const lined = new Set(items.map(item => item && item.modelKey));
+    models = newer.models.filter(model => !(model && lined.has(model.modelKey)));
+  }
+  const modelsChanged = Array.isArray(newer.models) && models.length !== newer.models.length;
+  if (!changed && !extraManufacturers.length && !roundsChanged && !modelsChanged) return newer;
+  const out = { ...newer, items, round, rounds };
+  if (extraManufacturers.length) out.manufacturers = [...(Array.isArray(newer.manufacturers) ? newer.manufacturers : []), ...extraManufacturers];
+  if (Array.isArray(newer.models)) out.models = models;
+  return out;
 }
 
 module.exports = {

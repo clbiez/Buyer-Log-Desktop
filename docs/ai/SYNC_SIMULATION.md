@@ -24,3 +24,18 @@ The three counterexamples are now ordinary passing regressions. Foreign malforme
 The fix does not rewrite historically uploaded events automatically. Final validation: 6,278 passed / 66 skipped / zero failures or TODOs; targeted simulation 11 passed / 1 soak skip. Existing WAL, checkpoint and idempotency tests pass.
 
 A restored old pending retry cannot reduce the existing publication frontier; a delayed genuine published event still blocks the checkpoint until delivered (seed 4409).
+
+## Pricing Desk multi-user simulation (2026-11-25)
+
+Seeded tests for quotations with 20 users / installations; failures write the seed and synthetic operation log (`PRICING_SYNC_REPRO=...`, override the folder with `BUYERLOG_PRICING_SIM_FAILURE_ROOT`). Run from `resources/app`:
+
+```sh
+npm test -- pricing-multiuser-concurrency pricing-delta-merge-convergence pricing-collection-projection
+BUYERLOG_PRICING_SOAK=1 npm test -- pricing-multiuser-concurrency pricing-delta-merge-convergence pricing-collection-projection
+```
+
+- `pricing-multiuser-concurrency`: one server, 20 users with stale views (line PATCH / batch / approval exclusivity / structural PUT); 20 child-process installations sharing one data root under the non-blocking HTTP lease policy.
+- `pricing-delta-merge-convergence`: `mergeRequestCopies` commutativity, idempotency, absorption and (content) associativity across 20 gossiping replicas; 20 real local DBs with reordered, delayed and duplicated deltas plus a retention tombstone.
+- `pricing-collection-projection`: owner-side Collection projection with delayed visibility; a cell never moves back to an older value.
+
+The peer channel (`shared-sync-policy`) does not carry `store:quotations.json` in this version; the merge path is exercised through the local DB remote-delta engine. Line and manufacturer display order may differ between devices after three-way concurrent additions; content converges.

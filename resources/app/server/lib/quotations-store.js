@@ -318,7 +318,8 @@ function updateRequest(profile, id, payload,options={}) {
   incoming.sortOrder = Number.isFinite(Number(payload && payload.sortOrder)) ? Number(payload.sortOrder) : current.sortOrder;
   incoming.round = current.round || 1;
   incoming.rounds = current.rounds || [];
-  incoming.items = reconcileLines(current, incoming.items, rawItems(payload), profile);
+  incoming.items = keepConcurrentLines(current, reconcileLines(current, incoming.items, rawItems(payload), profile));
+  incoming.manufacturers = keepUsedManufacturers(current, incoming);
   // models alanını tanımayan eski istemcinin tam kaydı bekleyen modelleri silmez.
   if (!Array.isArray(payload && payload.models)) incoming.models = normalizeModels(current.models);
   pruneModels(incoming);
@@ -326,6 +327,31 @@ function updateRequest(profile, id, payload,options={}) {
   store.requests[index] = incoming;
   saveStore(store,options);
   return incoming;
+}
+/* ESKİ GÖRÜNÜMLÜ TAM KAYIT SATIR SİLMEZ. İstemcide satır silen akış yoktur
+   (drop bir işarettir; birleştirme kendi yolundan geçer). Kayıtta olmayan
+   mevcut satır, gönderenin henüz görmediği başka bir kullanıcının eşzamanlı
+   eklemesidir: fiyatı, onayı ve defteriyle korunur. Gönderenin aynı model ×
+   üretici hücresi için açtığı durumsuz yeni satır fazlalıktır ve atlanır. */
+const qCellKey = item => `${clean(item && item.modelKey, 300)}\u0000${clean(item && item.manufacturer, 240).toLocaleUpperCase('tr-TR').replace(/\s+/g, ' ')}`;
+function keepConcurrentLines(current, items) {
+  const sent = new Set(items.map(item => item.id));
+  const kept = (current.items || []).filter(item => !sent.has(item.id));
+  if (!kept.length) return items;
+  const before = new Set((current.items || []).map(item => item.id));
+  const occupied = new Set(kept.map(qCellKey));
+  const fresh = items.filter(item => before.has(item.id) || !occupied.has(qCellKey(item)) || item.price || item.approved || item.dropped || (item.history || []).length || (item.options || []).length || item.priceLabel || item.priceNote);
+  return [...fresh, ...kept];
+}
+// Kayıtta olmayan üretici, korunan bir satır onu hâlâ kullanıyorsa listede kalır (yeniden adlandırılan eski ad geri gelmez).
+function keepUsedManufacturers(current, incoming) {
+  const key = name => clean(name, 240).toLocaleUpperCase('tr-TR').replace(/\s+/g, ' ');
+  const listed = new Set(incoming.manufacturers.map(item => key(item.name)));
+  const missing = (current.manufacturers || []).filter(item => { const k = key(item.name); return k && !listed.has(k); });
+  if (!missing.length) return incoming.manufacturers;
+  const used = new Set([...new Set(incoming.items.map(item => item.manufacturer))].map(key));
+  const kept = missing.filter(item => { const k = key(item.name); if (listed.has(k) || !used.has(k)) return false; listed.add(k); return true; });
+  return kept.length ? [...incoming.manufacturers, ...kept] : incoming.manufacturers;
 }
 function rawItems(payload) {
   const map = new Map();
@@ -340,6 +366,11 @@ function seedLine(line, profile, request) {
   const empty = { price: '', approved: false, dropped: false, history: [], rev: 0 };
   const result = ledger.applyLineChange(empty, { price: line.price, dropped: line.dropped, approved: line.approved }, profile, { round: request.round || 1, source: 'manual' });
   return result.changed ? { ...line, price: result.line.price, approved: result.line.approved, dropped: result.line.dropped, history: result.line.history, rev: result.line.rev, updatedAt: result.line.updatedAt, updatedBy: result.line.updatedBy } : { ...line, history: [], rev: 0 };
+}
+function sameLineOptions(a, b) {
+  if ((a.priceLabel || '') !== (b.priceLabel || '') || (a.priceNote || '') !== (b.priceNote || '')) return false;
+  const x = a.options || [], y = b.options || [];
+  return x.length === y.length && (!x.length || JSON.stringify(x) === JSON.stringify(y));
 }
 // Alternatif fiyat alanlarını tanımayan eski bir istemcinin tam kaydı mevcut alternatifleri silmez.
 function keepLineOptions(item, prev, raw) {
@@ -366,6 +397,9 @@ function reconcileLines(current, items, raws, profile) {
     // Ana fiyat ile alternatifler yer değiştirebildiği için eski revizyon fiyatla birlikte bunları da ezemez.
     if (baseRev != null && baseRev < (prev.rev || 0)) return { ...item, price: prev.price, approved: prev.approved, dropped: prev.dropped, priceLabel: prev.priceLabel || '', priceNote: prev.priceNote || '', options: prev.options || [], ...keep };
     const result = ledger.applyLineChange(prev, { price: item.price, dropped: item.dropped, approved: item.approved }, profile, { round: current.round || 1, source: 'manual' });
+    // Alternatif fiyat / ana fiyat etiketi değişikliği de satır revizyonunu ilerletir (defter olayı yazmaz):
+    // bunları görmemiş eski revizyonlu bir tam kayıt yukarıdaki kuralla onları ezemez.
+    if (!result.changed && !sameLineOptions(item, prev)) return { ...item, price: prev.price, approved: prev.approved, dropped: prev.dropped, ...keep, rev: (prev.rev || 0) + 1 };
     if (!result.changed) return { ...item, price: prev.price, approved: prev.approved, dropped: prev.dropped, ...keep };
     return { ...item, price: result.line.price, approved: result.line.approved, dropped: result.line.dropped, history: result.line.history, rev: result.line.rev, updatedAt: result.line.updatedAt, updatedBy: result.line.updatedBy };
   });
