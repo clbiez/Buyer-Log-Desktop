@@ -323,6 +323,29 @@
           "en": "On demo data, “ANLIK ATÖLYE DEMO” was added by hand to a request opened without manufacturers and priced."
         }
       }
+    },
+    {
+      "id": "collection-permission-delegation-moderator-only",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Başkası adına Koleksiyon izni yalnız Moderatörde",
+        "en": "Only the Moderator manages Collection permissions on someone else's behalf"
+      },
+      "body": {
+        "tr": "Bir Koleksiyon sayfasına görüntüleme veya düzenleme izni yalnız sayfa sahibi tarafından verilir ya da geri alınır; sahip adına bunu yalnız Moderatör yapabilir. Yönetici ve Kıdemli Yönetici rolleri artık başka bir buyer'ın Koleksiyonunu kendilerine veya başkalarına açamaz. Kendi Koleksiyon izinlerini yöneten kullanıcılar için hiçbir şey değişmedi.",
+        "en": "View or edit access to a Collection page is granted or revoked only by the page owner; only the Moderator can do this on the owner's behalf. Manager and Senior Manager roles can no longer open another buyer's Collection to themselves or to others. Nothing changes for users managing their own Collection permissions."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Yalnız sunucu yetki denetimi; arayüz zaten yalnız kendi izinlerinizi yönetir, ekranda görünen bir şey değişmedi.",
+          "en": "Server-side permission check only; the interface already manages only your own permissions, so nothing on screen changed."
+        }
+      }
     }
   ]
 }
