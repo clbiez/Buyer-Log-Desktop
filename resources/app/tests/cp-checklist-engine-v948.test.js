@@ -135,6 +135,20 @@ test('aynı PLM ID + Model Adı + Colour Code için seçenek bazlı onay sonraki
   };
   assert.equal(Checklist.statusOf(later, item.id, { answers: rejected, item }), 'rejected',
     'PO’ya özel ret, paylaşılan onayın üzerinde istisna olmalı');
+
+  // Model/renk kapsamı yalnız Onaylandı değil, seçilen her durumu taşır.
+  for (const status of ['rejected', 'notRequired']) {
+    const shared = { [reusableKey]: Checklist.makeAnswer(status, first, { by: 'buyer', loadDate: null }) };
+    assert.equal(Checklist.statusOf(later, item.id, { answers: shared, item }), status,
+      `${status} aynı model/renkteki diğer PO’ya taşınmalı`);
+    assert.equal(Checklist.statusOf(otherColour, item.id, { answers: shared, item }), 'open',
+      `${status} başka renge taşınmamalı`);
+    assert.equal(Checklist.statusOf(later, item.id, { answers: shared, item: { ...item, approvalScope: 'order' } }), 'open',
+      `${status} PO bazlı checklistte taşınmamalı`);
+  }
+  const reset = { [reusableKey]: Checklist.makeAnswer('open', first, { by: 'buyer', loadDate: null }) };
+  assert.equal(Checklist.statusOf(later, item.id, { answers: reset, item }), 'open',
+    'paylaşılan Açık sıfırlaması durum taşımaz');
 });
 
 test('v9.48 "gerekmiyor" da soruyu susturur ama "tamamlandı"dan ayrı tutulur', () => {

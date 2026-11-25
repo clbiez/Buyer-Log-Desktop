@@ -637,7 +637,8 @@
     if (item.approvalScope === 'option' && typeof Checklist.optionAnswerKey === 'function') {
       const optionKey = Checklist.optionAnswerKey(analysis, item.id);
       const reusable = optionKey && s.answers && s.answers[optionKey];
-      if (reusable && Checklist.normalizeStatus(reusable.state) === 'approved') return reusable;
+      const reusableState = reusable ? Checklist.normalizeStatus(reusable.state) : '';
+      if (reusableState && reusableState !== 'open') return reusable;
     }
     if (!Components.parseItem(item.id) && item.builtIn && root.BLPlmSampleRequests && typeof root.BLPlmSampleRequests.evidenceForAnalysis === 'function') {
       try {

@@ -184,6 +184,35 @@
           "en": "Both widgets share one source and filter."
         }
       }
+    },
+    {
+      "id": "checklist-option-scope-all-statuses",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Model/renk kapsamlı checklistte tüm durumlar diğer PO’lara uygulanır",
+        "en": "Model/colour-scoped checklist applies every status to the other POs"
+      },
+      "body": {
+        "tr": "Onay geçerliliği “Aynı model/renkte diğer PO’lara taşı” olan checklist kalemlerinde yalnız Onaylandı değil; Reddedildi, Gerekmiyor ve özel durumlar da aynı PLM + Model + Renkteki diğer PO’lara uygulanır. Bir PO’da ayrıca seçilmiş durum o PO için geçerli kalır.",
+        "en": "For checklist items whose approval scope is “Carry to other POs of the same model/colour”, not only Approved but also Rejected, Not Required and custom statuses now apply to the other POs of the same PLM + Model + Colour. A status set separately on a PO stays in effect for that PO."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-option-scope-all-statuses.png",
+        "alt": {
+          "tr": "Demo CP Tracker: aynı model/renkteki iki PO’da Print Test Reddedildi, farklı renkteki PO Bekliyor",
+          "en": "Demo CP Tracker: Print Test is Rejected on two POs of the same model/colour, while the PO of another colour is Pending"
+        },
+        "caption": {
+          "tr": "Demo veride tek PO’da seçilen Reddedildi, aynı model/renkteki diğer PO’ya da uygulandı.",
+          "en": "On demo data, Rejected chosen on one PO is also applied to the other PO of the same model/colour."
+        }
+      }
     }
   ]
 }
