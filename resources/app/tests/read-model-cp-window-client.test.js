@@ -72,7 +72,7 @@ test('shared paths are wired: copy, export, grid clipboard, redraw, header filte
   assert.match(SOURCE,/\.\.\.\(tableKey==='cp'\?\{prepareRange:\(range,rows\)=>cpRMPrepareRange\(range,rows\)\}:\{\}\)/);
   assert.match(SOURCE,/else if\(tableKey==='cp'&&cpRMWindowedActive\(\)\)\{cpRMInvalidate\('redraw'\);renderCPNow\(\);\}/);
   assert.match(SOURCE,/if\(tableKey==='cp'&&cpRMOpenHeaderFilter\(key,anchorEl,rerenderOuter\)\)return;/);
-  assert.match(slice('function filteredCP(){','if(!state.cp) return [];'),/cpRMMaterializedRows\(\)/);
+  assert.match(slice('function filteredCP(options){','if(!state.cp) return [];'),/cpRMMaterializedRows\(\)/);
   const paint=slice('function cpRMPaintTable(){','function cpRMFooterSpec(){');
   assert.match(paint,/footerTotals:cpRMFooterTotals/);assert.match(paint,/loadAllRows:cpRMLoadAllIdRows/);assert.match(paint,/selectionRows:cpRMSelectionRows/);
   assert.match(paint,/cpRMNeedRow\(row\._rmIndex\)/,'pencere deponun indeksiyle istenir (sayfalı görünüm)');

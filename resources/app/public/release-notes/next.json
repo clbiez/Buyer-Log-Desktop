@@ -213,6 +213,29 @@
           "en": "On demo data, Rejected chosen on one PO is also applied to the other PO of the same model/colour."
         }
       }
+    },
+    {
+      "id": "orders-row-selection-freeze",
+      "type": "fix",
+      "module": {
+        "tr": "Siparişler",
+        "en": "Orders"
+      },
+      "title": {
+        "tr": "Satır işaretlemek Siparişler ve CP tablosunu artık yavaşlatmıyor",
+        "en": "Checking rows no longer slows down the Orders and CP tables"
+      },
+      "body": {
+        "tr": "Sıralanmış büyük tablolarda satır işaretlerken yaşanan donma giderildi. Sıralama, sütun türünü her karşılaştırmada yeniden çıkarmak yerine bir kez hesaplar; seçim çubuğu da seçim, filtre, sıralama veya arama değişmedikçe tüm tabloyu yeniden hesaplamaz. Sıralama sonucu ve seçim davranışı değişmedi.",
+        "en": "Fixed the freeze when checking rows in large sorted tables. Sorting now works out the column type once instead of on every comparison, and the selection bar no longer recalculates the whole table unless the selection, filters, sort or search change. Sort results and selection behaviour are unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Yalnız hız düzeltmesi; ekranda görünen arayüz değişmedi.",
+          "en": "Speed fix only; the visible interface did not change."
+        }
+      }
     }
   ]
 }
