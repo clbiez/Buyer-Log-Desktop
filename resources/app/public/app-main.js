@@ -45492,6 +45492,7 @@ function applyLanguage(lang){
   try{window.BLI18n?.absorbLegacy?.();window.BLI18n?.setLanguage?.(appLang);}catch(_){}
   window.BLCollectionPriceDrawer?.refresh?.({force:true});
   window.BLCpAssistant?.refreshLanguage?.();
+  window.BLPresentationStudio?.refreshLanguage?.();
   // TR/EN etiket genişlikleri farklı: duyarlı araç çubukları yeniden ölçülür.
   window.BLToolbarResponsive?.refresh?.(null,{remeasure:true});
 }
@@ -45509,8 +45510,14 @@ document.addEventListener('click', async event => {
   if (!button) return;
   button.disabled = true;
   try {
-    await window.BLPerf.ensureFeature('lcwaiOutputEditor');
-    await window.BLOutputEditor.openSelection(button.dataset.outputStudio);
+    // Koleksiyon: Presentation Studio (sayfa üzerinde serbest düzenleme). CP/Siparişler: mevcut düzenleyici.
+    if (button.dataset.outputStudio === 'koleksiyon') {
+      await window.BLPerf.ensureFeature('presentationStudio');
+      await window.BLPresentationStudio.openSelection('koleksiyon');
+    } else {
+      await window.BLPerf.ensureFeature('lcwaiOutputEditor');
+      await window.BLOutputEditor.openSelection(button.dataset.outputStudio);
+    }
   } catch (_) { showToast(appLang === 'en' ? 'The presentation editor could not be opened.' : 'Sunum düzenleyicisi açılamadı.', {kind:'error'}); }
   finally { button.disabled = false; }
 });

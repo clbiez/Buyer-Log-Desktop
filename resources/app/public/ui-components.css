@@ -15595,7 +15595,7 @@ html[data-ui-system="manifest"] .workspaceTableFooter{display:flex;align-items:c
 html[data-ui-system="manifest"] .workspaceTableFooter .uiPersistenceRegion{margin:0;padding:0;}
 /* Buyer Log 7.0.294 surface and spreadsheet restoration.
    Deliberately uses Manifest tokens; no separate theme or table logic. */
-html[data-ui-system="manifest"] :is(.panel,.cardBox,.modalCard,.mfrCard,.todoCard,.globalSearchCard,.nonDtrMfrCard,.modelFilesCard,.appBlockingCard,.sourcebar,.tablewrap,.cpaFrame,.cpaSeg,.lflCard,.lflScenarioCard,
+html[data-ui-system="manifest"] :is(.panel,.cardBox,.modalCard,.psHead,.psBar,.psRail,.psStatus,.psFloat,.psPop,.psThumbPage,.psSeg,.mfrCard,.todoCard,.globalSearchCard,.nonDtrMfrCard,.modelFilesCard,.appBlockingCard,.sourcebar,.tablewrap,.cpaFrame,.cpaSeg,.lflCard,.lflScenarioCard,
   /* Ürün sahibi kararı: modül kapsayıcıları, KPI kartları ve boş durumlar da çerçevelidir. */
   .mfpBar,.mfpList,.mfpCard,.mfpPanel,.mfpTile,.mfpStat,.psaBar,.psaPanel,.psaCard,.psaKpi,.pdTopBar,.pdSubBar,.pricingMetric,.pdHistoryDetail,.ocSidebar,.ocWorkspace,.dmPanel,.dmSummary,.autoSidebar,.autoWorkspace,.autoSection,.autoStatChip,.lcwaiChatSide,.lcwaiChatMain,.lcTable,.uiState,.lflInsight,.kpiGroup,.gfKpi),
 html[data-ui-system="manifest"] .ovHome > [data-overview-widget],
@@ -15727,9 +15727,9 @@ html[data-ui-system="manifest"] :is(.toolbarMoreMenu,.railAppearanceMenu,#corpor
 }
 html[data-ui-system="manifest"] :is(.toolbarMoreMenu,.railAppearanceMenu,#corporateConnections) :is(.navActionBtn,button.tbtn,label.tbtn,.vfMenuTrigger,.corporateConnection,button[id^="rail"]):hover:not(:disabled) {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
 }
-html:root[data-ui-system="manifest"] :is(.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips,.kolFabricPartSeg,.lflMethodSeg,.cpaSeg) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]) {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;font-weight:600 !important
+html:root[data-ui-system="manifest"] :is(.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips,.psSeg,.kolFabricPartSeg,.lflMethodSeg,.cpaSeg) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]) {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;font-weight:600 !important
 }
-html:root[data-ui-system="manifest"] :is(.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips,.kolFabricPartSeg,.lflMethodSeg,.cpaSeg) > button:not(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]):hover:not(:disabled) {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
+html:root[data-ui-system="manifest"] :is(.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips,.psSeg,.kolFabricPartSeg,.lflMethodSeg,.cpaSeg) > button:not(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]):hover:not(:disabled) {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
 }
 html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs,.cpaStudioTabs,.trFocusTabs) > button {position:relative;border:0 !important;box-shadow:none !important
 }
@@ -16261,4 +16261,98 @@ html[data-ui-system="manifest"] .blTriviaKickerCat:not(:empty)::before {color:va
 html[data-ui-system="manifest"] .blTriviaCard--compact .blTriviaCopy h2 {line-height:1.15
 }
 html[data-ui-system="manifest"] .blTriviaCard--compact .blTriviaCopy p {color:var(--ui-text-secondary) !important
+}
+/* ===== Presentation Studio (Koleksiyon sunum editörü) =====
+   Editör kabuğu ortak yüzey, çerçeve ve segment sözleşmesini kullanır. Sayfa
+   içeriği belge koordinatıdır (§8): belge renkleri JS'teki sabit paletten gelir.
+   Seçim çerçeve değil yüzey tonudur; odaklı kart klavye odağı çizgisini taşır. */
+html[data-ui-system="manifest"] .psStudio {background:var(--ui-canvas);color:var(--ui-text);z-index:var(--ui-z-modal);font-family:var(--ui-font-body);font-size:var(--ui-font-sm)
+}
+html[data-ui-system="manifest"] :is(.psHead,.psBar,.psRail,.psStatus) {background:var(--ui-surface)
+}
+html[data-ui-system="manifest"] .psBrand {font-family:var(--ui-font-heading);font-weight:600;font-size:var(--ui-font-lg);letter-spacing:.6px;text-transform:uppercase;color:var(--ui-text-secondary)
+}
+html[data-ui-system="manifest"] .psTitle {font-weight:600
+}
+html[data-ui-system="manifest"] :is(.psLbl,.psDim,.psStatus,.psThumbNo,.psHint,.psSub,.psRailHead,.psFloatInfo) {color:var(--ui-text-muted);font-size:var(--ui-font-xs)
+}
+html[data-ui-system="manifest"] :is(.psDim,.psNum,.psThumbNo) {font-variant-numeric:tabular-nums
+}
+html[data-ui-system="manifest"] .psRailHead {font-weight:600;text-transform:uppercase;letter-spacing:.6px
+}
+html[data-ui-system="manifest"] .psSep {background:var(--ui-group-divider)
+}
+html[data-ui-system="manifest"] .psChip {background:var(--ui-selected);color:var(--ui-selected-ink);font-weight:600
+}
+html[data-ui-system="manifest"] .psChipNo {color:var(--ui-text-muted);font-weight:500;font-size:var(--ui-font-2xs)
+}
+html[data-ui-system="manifest"] .psChipX {background:transparent;color:inherit
+}
+html[data-ui-system="manifest"] .psChipX:hover {background:var(--ui-surface-strong)
+}
+html[data-ui-system="manifest"] .psPageTools {color:var(--ui-text-muted);font-size:var(--ui-font-xs)
+}
+html[data-ui-system="manifest"] .psPageNo {color:var(--ui-text-secondary);font-weight:600
+}
+html[data-ui-system="manifest"] .psPageWrap[data-active] .psPageNo {color:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .psFlow[aria-pressed="true"] {background:var(--ui-success-bg) !important;color:var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .psFlow[aria-pressed="false"] {background:var(--ui-warning-bg) !important;color:var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .psPage {box-shadow:var(--ui-shadow-overlay)
+}
+html[data-ui-system="manifest"] .psDocCard:hover::after {content:"";position:absolute;inset:0;pointer-events:none;background:color-mix(in srgb,var(--ui-accent) 7%,transparent)
+}
+html[data-ui-system="manifest"] .psDocCard.isSel::after {content:"";position:absolute;inset:0;pointer-events:none;background:color-mix(in srgb,var(--ui-accent) 15%,transparent)
+}
+html[data-ui-system="manifest"] .psDocCard.isConflict::after {content:"";position:absolute;inset:0;pointer-events:none;background:color-mix(in srgb,var(--ui-danger) 24%,transparent)
+}
+html[data-ui-system="manifest"] .psDocCard:focus {outline:2px solid var(--ui-accent);outline-offset:0
+}
+html[data-ui-system="manifest"] .psBadge {background:var(--ui-surface);color:var(--ui-accent);z-index:var(--ui-z-raised)
+}
+html[data-ui-system="manifest"] .psMoved {color:var(--ui-warning)
+}
+html[data-ui-system="manifest"] .psHandle {background:var(--ui-accent);z-index:var(--ui-z-raised)
+}
+html[data-ui-system="manifest"] :is(.psGuide,.psInsert) {background:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .psMarquee {background:color-mix(in srgb,var(--ui-accent) 10%,transparent);z-index:var(--ui-z-raised)
+}
+html[data-ui-system="manifest"] .psDragLayer {z-index:var(--ui-z-tooltip)
+}
+html[data-ui-system="manifest"] .psDragClone {box-shadow:var(--ui-shadow-overlay);opacity:.94
+}
+html[data-ui-system="manifest"] .psDragClone.isBad::after {content:"";position:absolute;inset:0;background:color-mix(in srgb,var(--ui-danger) 24%,transparent)
+}
+html[data-ui-system="manifest"] .psTip {background:var(--ui-text);color:var(--ui-surface);font-size:var(--ui-font-xs);z-index:var(--ui-z-tooltip)
+}
+html[data-ui-system="manifest"] .psTip.isBad {background:var(--ui-danger);color:var(--ui-on-accent)
+}
+html[data-ui-system="manifest"] :is(.psFloat,.psPop) {background:var(--ui-surface);box-shadow:var(--ui-shadow-overlay);z-index:var(--ui-z-modal-menu)
+}
+html[data-ui-system="manifest"] .psPopTitle {margin:0;font-family:var(--ui-font-heading);font-weight:600;font-size:var(--ui-font-sm);letter-spacing:.6px;text-transform:uppercase;color:var(--ui-text-secondary)
+}
+html[data-ui-system="manifest"] :is(.psField,.psTpl):hover {background:var(--ui-surface-strong)
+}
+html[data-ui-system="manifest"] .psOptTitle {font-weight:600;color:var(--ui-text)
+}
+html[data-ui-system="manifest"] .psThumb {background:transparent;color:var(--ui-text)
+}
+html[data-ui-system="manifest"] .psThumb:hover {background:var(--ui-surface-strong)
+}
+html[data-ui-system="manifest"] :is(.psThumb[aria-current="true"],.psThumb[data-drop]) {background:var(--ui-selected)
+}
+html[data-ui-system="manifest"] .psThumbPage {background:var(--ui-surface)
+}
+html[data-ui-system="manifest"] .psThumbCard {background:var(--ui-group-divider)
+}
+html[data-ui-system="manifest"] .psThumbPin {background:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .psThumbHdr {background:var(--ui-text-muted)
+}
+html[data-ui-system="manifest"] .psOk {color:var(--ui-success)
+}
+html[data-ui-system="manifest"] .psBad {color:var(--ui-danger);font-weight:600
 }

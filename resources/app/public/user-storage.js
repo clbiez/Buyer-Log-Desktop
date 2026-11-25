@@ -30,7 +30,9 @@
     // v2026-11-20 — CP pencereli okuma modeli pilot anahtarı kullanıcı başınadır (#1078 alt PR 2).
     'bl.cpReadModel.',
     // v2026-11-20 — CP satır kaydı pilot anahtarı kullanıcı başınadır (#1078 alt PR 3).
-    'bl.cpRowSave.'
+    'bl.cpRowSave.',
+    // v2026-11-25 — Presentation Studio sunumları ve şablonları kişiseldir (hesapla eşitlenir).
+    'bl.presentationStudio.'
   ];
   /* AYNI BİLGİSAYARDA BİRDEN FAZLA KULLANICI.
      Aşağıdaki kişisel filtre/görünüm anahtarları eskiden kullanıcı önekine
@@ -135,7 +137,8 @@
     'bl.formulaColumns.', // v7.28 — hesaplanan sütun tanımları kullanıcıyla birlikte taşınır
     'bl.excelImport.profiles.', // Excel içe aktarma eşleme profilleri: kullanıcıya ve modüle ait YAPILANDIRMA (çalışma kitabı verisi değil)
     'lcw.cp.imageSize.','lcw_theme','lcw.themeTransition.','lcw_rail','lcw_sidebar_collapsed','lcw.lang.','lcw.font.','lcw_font_step','bl.refreshHistory.','bl.autoRefresh.','buyerlog.overview.notesReminderCollapsed','buyerlog.overview.collectionSummary.','buyerlog.overview.layout.','buyerlog.overview.breakdown.','buyerlog.overview.globalFlow.',
-    'buyerlog.horizonFieldPairs.' // v2026-10-30 — kişisel ASAS ⇄ IAS alan eşleme hafızası
+    'buyerlog.horizonFieldPairs.', // v2026-10-30 — kişisel ASAS ⇄ IAS alan eşleme hafızası
+    'bl.presentationStudio.' // v2026-11-25 — kişisel sunumlar (yalnız düzen; Koleksiyon verisi değil) ve şablonlar
   ];
   function synced(key){key=String(key);return SYNCED.some(function(p){return key.indexOf(p)===0})}
   var META_KEY='bl.user.'+uid+'.__syncMeta.v1';

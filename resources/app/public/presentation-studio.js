@@ -1,0 +1,957 @@
+/* ===================================================================
+   Presentation Studio — Koleksiyon modellerinden görsel sunum editörü.
+
+   Belge (BLPresentationEngine) tek doğruluk kaynağıdır; sayfa üzerinde
+   sürükleme, boyutlandırma, sabitleme ve hizalama yalnız belgeyi değiştirir.
+   Koleksiyon verisi salt okunurdur: kart taşıma/grup değişimi kaynak
+   kayda yazılmaz. Önizleme, PDF ve PowerPoint aynı çizim listesinden
+   (BLPresentationRender) üretilir.
+
+   Kalıcılık: kullanıcının sunumları ve şablonları hesabına bağlı
+   eşitlenen tercih deposundadır (BLStorage, "bl.presentationStudio.").
+   Görünüm Manifest token/bileşenlerinden gelir; modül CSS'i yalnız yerleşimdir.
+   =================================================================== */
+(function (root) {
+  'use strict';
+  const doc_ = root.document;
+  if (!doc_) return;
+  const E = () => root.BLPresentationEngine, R = () => root.BLPresentationRender;
+  const isEn = () => String(doc_.documentElement.lang || root.appLang || 'tr').toLowerCase().startsWith('en');
+  const L = (tr, en) => (isEn() ? en : tr);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const PT_PX = 4 / 3;
+  const KEY = { templates: 'bl.presentationStudio.templates.v1', decks: 'bl.presentationStudio.decks.v1', deck: id => `bl.presentationStudio.deck.${id}.v1` };
+  const MAX_DECKS = 20, IMAGE_MAX_PX = 1000;
+  const PAPER_LABEL = () => ({ A3: 'A3', A4: 'A4', A5: 'A5', '16:9': '16:9', '4:3': '4:3', square: L('Kare', 'Square'), custom: L('Özel ölçü', 'Custom size') });
+  const ICON = {
+    pin: '<path d="M12 17v5"/><path d="M8 3h8l-1 6 3 3v2H6v-2l3-3z"/>', unpin: '<path d="M12 17v5"/><path d="M8 3h8l-1 6 3 3v2H6v-2l3-3z"/><path d="M3 3l18 18"/>',
+    left: '<path d="M4 3v18"/><path d="M7 6h11v4H7zM7 14h6v4H7z"/>', hcenter: '<path d="M12 3v18"/><path d="M6 6h12v4H6zM8 14h8v4H8z"/>', right: '<path d="M20 3v18"/><path d="M6 6h11v4H6zM11 14h6v4h-6z"/>',
+    top: '<path d="M3 4h18"/><path d="M6 7h4v11H6zM14 7h4v6h-4z"/>', vcenter: '<path d="M3 12h18"/><path d="M6 6h4v12H6zM14 8h4v8h-4z"/>', bottom: '<path d="M3 20h18"/><path d="M6 6h4v11H6zM14 11h4v6h-4z"/>',
+    hdist: '<path d="M3 8h4v8H3zM10 8h4v8h-4zM17 8h4v8h-4z"/>', vdist: '<path d="M8 3h8v4H8zM8 10h8v4H8zM8 17h8v4H8z"/>', size: '<path d="M3 3h8v8H3zM13 13h8v8h-8z"/><path d="M11 7h4v4"/>',
+    flow: '<path d="M4 6h16M4 12h10M4 18h13"/>', landscape: '<path d="M3 7h18v10H3z"/>', portrait: '<path d="M7 3h10v18H7z"/>', move: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  };
+  const svg = name => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square" aria-hidden="true">${ICON[name]}</svg>`;
+  const sprite = name => `<svg class="ic" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+  const toast = (message, kind) => { if (typeof root.showToast === 'function') root.showToast(message, kind ? { kind } : undefined); };
+  const storage = () => { try { return root.BLStorage || root.localStorage; } catch (_) { return null; } };
+  const readJson = (key, fallback) => { try { const v = storage()?.getItem(key); return v ? JSON.parse(v) : fallback; } catch (_) { return fallback; } };
+  const writeJson = (key, value) => { try { storage()?.setItem(key, JSON.stringify(value)); return true; } catch (_) { return false; } };
+  const removeKey = key => { try { storage()?.removeItem(key); } catch (_) {} };
+
+  let S = null; // açık oturum
+  // Yalnız içerik değişince yazar: gereksiz DOM değişimi ve genel gözlemci işi oluşmaz.
+  const setHtml = (el, html) => { if (el && el.__psHtml !== html) { el.innerHTML = html; el.__psHtml = html; } };
+
+  /* ---------------- Veri kaynağı (Koleksiyon, salt okunur) ---------------- */
+  function fieldMeta(built) {
+    const C = root.BLCanonicalFields, labels = {};
+    for (const col of built.source.columns || []) labels[col.id] = col.label;
+    const label = id => (C && C.field && C.field(id) ? C.label(id, isEn() ? 'en' : 'tr') : labels[id] || id);
+    const type = id => (C && C.field && C.field(id) ? C.field(id).type : 'text');
+    return { ids: built.fields.slice(), label, type };
+  }
+  function formatValue(type, value) {
+    if (value == null || value === '') return '';
+    if (type === 'number' && Number.isFinite(Number(value))) return Number(value).toLocaleString(isEn() ? 'en-GB' : 'tr-TR', { maximumFractionDigits: 2 });
+    if (type === 'date' && /^\d{4}-\d{2}-\d{2}/.test(String(value))) { const d = new Date(String(value).slice(0, 10) + 'T00:00:00'); if (!Number.isNaN(d.getTime())) return d.toLocaleDateString(isEn() ? 'en-GB' : 'tr-TR'); }
+    return String(value);
+  }
+  function readSource(rows, info, scope) {
+    const built = root.BLOutputSource.build({ module: 'collection', rows, rowId: info.rowId, readRow: info.canonicalRow || (row => row), columns: info.columns || [], scope, lang: isEn() ? 'en' : 'tr' });
+    const meta = fieldMeta(built), models = new Map();
+    built.items.forEach((item, i) => {
+      const rec = built.records[item.image];
+      let identity = null; try { identity = root.BLAIScreenData.rowImage('koleksiyon', rows[i]); } catch (_) { identity = null; }
+      models.set(String(rec.id), Object.freeze({ id: String(rec.id), title: item.title, values: Object.freeze({ ...rec.values }), keys: Object.freeze({ ...rec.keys }), identity }));
+    });
+    return { models, meta, omitted: built.source.omittedColumns || [] };
+  }
+  const defaultFields = ids => ['modelName', 'plmId', 'colour', 'colourCode', 'collectionQuantity', 'fob'].filter(id => ids.includes(id)).slice(0, 5);
+  const defaultLevels = ids => ['productGroup'].filter(id => ids.includes(id));
+
+  /* ---------------- Oturum ve belge ---------------- */
+  function groupOf(id) {
+    const m = S.models.get(id), lv = S.doc.grouping.levels;
+    if (!m) return { key: '', vals: [] };
+    const keys = lv.map(f => String(m.keys[f] == null ? '' : m.keys[f]));
+    return { key: keys.join(E().SEP), vals: lv.map(f => formatValue(S.meta.type(f), m.values[f])) };
+  }
+  function relayout() {
+    const t = performance.now();
+    S.res = E().layout(S.doc, groupOf);
+    S.perf.layout = performance.now() - t;
+    for (const id of [...S.sel]) if (!S.res.index.has(id)) S.sel.delete(id);
+    if (!S.doc.pages.some(p => p.id === S.activePage)) S.activePage = S.doc.pages[0].id;
+  }
+  function renderSource(imageFor) {
+    return {
+      lines: id => { const m = S.models.get(id); return S.doc.style.fields.map(f => ({ label: S.meta.label(f), value: formatValue(S.meta.type(f), m && m.values[f]) })); },
+      image: imageFor,
+      header: it => {
+        const custom = S.doc.labels[it.key];
+        return { main: custom || it.vals[0] || '—', rest: custom ? '' : it.vals.slice(1).filter(Boolean).join(' · '), count: `${it.count} ${it.count === 1 ? L('model', 'model') : L('model', 'models')}${it.cont ? L(' · devam', ' · cont.') : ''}` };
+      },
+    };
+  }
+  function screenImage(id) {
+    const m = S.models.get(id);
+    if (!m || !m.identity || !m.identity.source) return null;
+    const dims = S.dims.get(m.identity.source);
+    return { src: m.identity.source, w: dims ? dims.w : 0, h: dims ? dims.h : 0 };
+  }
+  function commit(fn, { save = true } = {}) {
+    pushHistory();
+    fn();
+    relayout(); render();
+    if (save) scheduleSave();
+  }
+  function pushHistory() { S.hist.push(JSON.stringify(S.doc)); if (S.hist.length > 100) S.hist.shift(); S.fut = []; }
+  function undo() { if (!S.hist.length) return; S.fut.push(JSON.stringify(S.doc)); S.doc = JSON.parse(S.hist.pop()); relayout(); render(); scheduleSave(); }
+  function redo() { if (!S.fut.length) return; S.hist.push(JSON.stringify(S.doc)); S.doc = JSON.parse(S.fut.pop()); relayout(); render(); scheduleSave(); }
+
+  /* ---------------- Kalıcılık (sunumlar, şablonlar) ---------------- */
+  let saveTimer = 0;
+  function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(saveDeck, 900); }
+  function saveDeck() {
+    if (!S) return;
+    const index = readJson(KEY.decks, []).filter(d => d && d.id !== S.deckId);
+    const entry = { id: S.deckId, title: S.doc.title || L('Adsız sunum', 'Untitled presentation'), updatedAt: new Date().toISOString(), count: S.doc.order.length };
+    index.unshift(entry);
+    const removed = index.splice(MAX_DECKS);
+    if (!writeJson(KEY.deck(S.deckId), S.doc)) { S.saveState = 'error'; renderStatus(); return; }
+    writeJson(KEY.decks, index);
+    for (const d of removed) removeKey(KEY.deck(d.id));
+    if (removed.length) toast(L(`En fazla ${MAX_DECKS} sunum saklanır; en eski “${removed[0].title}” kaldırıldı.`, `Up to ${MAX_DECKS} presentations are kept; the oldest “${removed[0].title}” was removed.`));
+    S.saveState = 'saved'; renderStatus();
+  }
+  const loadTemplates = () => readJson(KEY.templates, []).map(t => E().normalizeTemplate(t)).filter(Boolean);
+  function builtinTemplates() {
+    const f = S.meta.ids, pick = list => list.filter(id => f.includes(id));
+    return [
+      { name: L('Katalog', 'Catalogue'), hint: L('A4 yatay · ürün grubu', 'A4 landscape · product group'), page: { preset: 'A4', orient: 'landscape' }, style: { font: 'Arial', fs: 8, img: 1.05, cardW: 112, gap: 10, margin: 26, card: 'frame', fields: pick(['modelName', 'plmId', 'colour', 'collectionQuantity', 'fob']) }, grouping: { levels: pick(['productGroup']) } },
+      { name: L('Vitrin', 'Showcase'), hint: L('16:9 · büyük görsel', '16:9 · large images'), page: { preset: '16:9', orient: 'landscape' }, style: { font: 'Georgia', fs: 10, img: 1.25, cardW: 190, gap: 18, margin: 36, card: 'plain', fields: pick(['modelName', 'colour']) }, grouping: { levels: pick(['productGroup']), breakTop: true } },
+      { name: L('Yoğun liste', 'Dense list'), hint: L('A4 dikey · küçük kart', 'A4 portrait · small cards'), page: { preset: 'A4', orient: 'portrait' }, style: { font: 'Verdana', fs: 6.5, img: 0.95, cardW: 76, gap: 6, margin: 18, labels: true, card: 'frame', fields: pick(['plmId', 'colour', 'collectionQuantity', 'fob']) }, grouping: { levels: pick(['productGroup', 'category']) } },
+    ];
+  }
+
+  /* ---------------- Açılış ---------------- */
+  async function ensureScripts() {
+    if (!root.BLOutputSource && root.BLPerf) await root.BLPerf.ensureFeature('lcwaiOutputEditor');
+  }
+  /* Koleksiyon tablosundaki seçili (yoksa filtrelenmiş) modellerle yeni sunum. */
+  async function openSelection(tab = 'koleksiyon', scope) {
+    await ensureScripts();
+    let info = root.BLAIScreenData && root.BLAIScreenData.table(tab, { all: false });
+    if (!info) throw Error(L('Bu kaynakta kullanılabilir kayıt yok.', 'This source has no available records.'));
+    const selected = new Set((info.selectedIds || []).map(String));
+    const mode = scope || (selected.size ? 'selected' : 'filtered');
+    if (mode === 'selected') info = root.BLAIScreenData.table(tab, { all: true }) || info;
+    const rows = mode === 'selected' ? info.rows.filter(row => selected.has(String(info.rowId(row)))) : info.rows;
+    if (!rows.length) { toast(L('Önce modelleri seçin veya filtreyi değiştirin.', 'Select models first or change the filter.'), 'warning'); return; }
+    if (rows.length > E().LIMITS.cards) { toast(L(`Bir sunumda en fazla ${E().LIMITS.cards.toLocaleString('tr-TR')} model kullanılabilir. Seçimi veya filtreyi daraltın.`, `A presentation supports up to ${E().LIMITS.cards.toLocaleString('en-GB')} models. Narrow the selection or filter.`), 'warning'); return; }
+    const src = readSource(rows, info, mode), ids = [...src.models.keys()];
+    const fields = defaultFields(src.meta.ids), title = L('Koleksiyon sunumu', 'Collection presentation');
+    const docModel = E().createDoc({ ids, fields: fields.length ? fields : src.meta.ids.slice(0, 4), levels: defaultLevels(src.meta.ids), title });
+    start({ ...src, doc: docModel, deckId: 'd' + Date.now().toString(36), scope: mode, tab });
+  }
+  async function openDeck(deckId) {
+    await ensureScripts();
+    const raw = readJson(KEY.deck(deckId), null);
+    if (!raw) { toast(L('Sunum bulunamadı.', 'Presentation not found.'), 'error'); return; }
+    const info = root.BLAIScreenData && root.BLAIScreenData.table('koleksiyon', { all: true });
+    if (!info) throw Error(L('Koleksiyon verisi okunamadı.', 'Collection data could not be read.'));
+    const wanted = new Set((raw.order || []).map(String));
+    const rows = info.rows.filter(row => wanted.has(String(info.rowId(row))));
+    if (!rows.length) { toast(L('Bu sunumdaki modeller Koleksiyon’da artık yok.', 'The models in this presentation are no longer in the Collection.'), 'warning'); return; }
+    const src = readSource(rows, info, 'saved'), ids = [...src.models.keys()];
+    const docModel = E().normalizeDoc(raw, { ids: (raw.order || []).map(String).filter(id => src.models.has(id)), fields: src.meta.ids });
+    const missing = wanted.size - ids.length;
+    start({ ...src, doc: docModel, deckId, scope: 'saved', tab: 'koleksiyon' });
+    if (missing > 0) toast(L(`${missing} model Koleksiyon’da bulunamadı ve sunumdan çıkarıldı.`, `${missing} models were not found in the Collection and were removed from the presentation.`), 'warning');
+  }
+
+  function start(init) {
+    close();
+    S = { ...init, sel: new Set(), hist: [], fut: [], zoom: 1, activePage: 'p1', dims: new Map(), perf: { layout: 0, render: 0 }, saveState: '', pageHtml: new Map(), act: null, measure: R().canvasMeasure(doc_) };
+    S.dataHash = hashModels();
+    buildShell();
+    relayout(); fitZoom(); render();
+    scheduleSave();
+    root.BLMotionPlus?.play?.('overlay', S.shell);
+  }
+  function hashModels() {
+    let h = 0x811c9dc5;
+    const str = JSON.stringify([...S.models.values()].map(m => [m.id, m.values]));
+    for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return (h >>> 0).toString(16).padStart(8, '0');
+  }
+  function close() {
+    if (!S) return;
+    clearTimeout(saveTimer); saveDeck();
+    closePop();
+    S.unbind?.();
+    const host = S.host;
+    root.BLLayerSystem?.closeDialog?.(host);
+    host.remove();
+    S = null;
+  }
+
+  /* ---------------- Kabuk ---------------- */
+  function buildShell() {
+    const host = doc_.createElement('div');
+    host.className = 'psStudio'; host.dataset.uiMigrated = 'presentation-studio';
+    host.innerHTML = `<div class="psShell" role="dialog" aria-modal="true" aria-labelledby="psTitleLabel">
+      <header class="psHead"><span class="psBrand" id="psTitleLabel"></span><input class="psTitle" data-ps="title" maxlength="120">
+        <button type="button" class="tbtn psIcon" data-ps="undo">${sprite('arrow-back-up')}</button><button type="button" class="tbtn psIcon" data-ps="redo">${sprite('arrow-forward-up')}</button>
+        <span class="psGrow"></span>
+        <span class="psZoom"><button type="button" class="tbtn psIcon" data-ps="zoomOut">−</button><output class="psNum" data-ps="zoomVal"></output><button type="button" class="tbtn psIcon" data-ps="zoomIn">+</button><button type="button" class="tbtn" data-ps="zoomFit"></button></span>
+        <button type="button" class="tbtn" data-pop="decks"></button><button type="button" class="tbtn" data-pop="templates"></button><button type="button" class="tbtn" data-ps="classic"></button>
+        <button type="button" class="tbtn primary" data-pop="export"></button><button type="button" class="tbtn psIcon" data-ps="close">${sprite('x')}</button></header>
+      <div class="psBar" role="toolbar">
+        <span class="psLbl" data-l="group"></span><span class="psChips" data-ps="chips"></span><label class="psToggle" data-ps="brkWrap"><input type="checkbox" data-ps="brk"><span data-l="brk"></span></label>
+        <span class="psSep"></span><span class="psLbl" data-l="page"></span><select data-ps="paper"></select>
+        <span class="psSeg" data-ps="orient"><button type="button" data-o="landscape">${svg('landscape')}</button><button type="button" data-o="portrait">${svg('portrait')}</button></span>
+        <span class="psCustom" data-ps="custom" hidden><input type="number" data-ps="cw" min="50" max="1200" step="1">×<input type="number" data-ps="ch" min="50" max="1200" step="1"><span>mm</span></span>
+        <span class="psDim" data-ps="dim"></span><span class="psSep"></span>
+        <button type="button" class="tbtn" data-pop="fields"></button><button type="button" class="tbtn" data-pop="design"></button><button type="button" class="tbtn" data-pop="arrange"></button>
+      </div>
+      <div class="psBody"><aside class="psRail"><div class="psRailHead"><span data-l="pages"></span><button type="button" class="tbtn psIcon" data-ps="addPage">${sprite('plus')}</button></div><div class="psThumbs" data-ps="thumbs" data-no-i18n></div><div class="psTray" data-ps="tray"></div></aside>
+        <div class="psCanvas" data-ps="canvas"><div class="psPages" data-ps="pages" data-no-i18n></div></div></div>
+      <footer class="psStatus" data-ps="status" role="status"></footer>
+      <div class="psFloat" data-ps="float" hidden></div><div class="psPop" data-ps="pop" hidden></div>
+      <div class="psDragLayer" data-ps="drag"></div><div class="psTip" data-ps="tip" hidden></div>
+    </div>`;
+    doc_.body.appendChild(host);
+    S.host = host; S.shell = host.firstElementChild;
+    const $ = sel => host.querySelector(sel);
+    S.$ = $;
+    root.BLLayerSystem?.openDialog?.(host, { onClose: close });
+    bindShell();
+    localize();
+  }
+  function localize() {
+    if (!S) return;
+    const $ = S.$, t = (sel, text, title) => { const el = $(sel); if (!el) return; el.textContent = text; if (title) el.title = title; };
+    S.shell.setAttribute('aria-label', L('Sunum stüdyosu', 'Presentation studio'));
+    t('#psTitleLabel', L('Sunum stüdyosu', 'Presentation studio'));
+    $('[data-ps="title"]').setAttribute('aria-label', L('Sunum başlığı', 'Presentation title'));
+    const label = (sel, text) => { const el = $(sel); el.title = text; el.setAttribute('aria-label', text); };
+    label('[data-ps="undo"]', L('Geri al (Ctrl+Z)', 'Undo (Ctrl+Z)')); label('[data-ps="redo"]', L('İleri al (Ctrl+Shift+Z)', 'Redo (Ctrl+Shift+Z)'));
+    label('[data-ps="zoomOut"]', L('Uzaklaştır', 'Zoom out')); label('[data-ps="zoomIn"]', L('Yakınlaştır', 'Zoom in')); label('[data-ps="close"]', L('Kapat', 'Close'));
+    label('[data-ps="addPage"]', L('Serbest sayfa ekle', 'Add free page'));
+    t('[data-ps="zoomFit"]', L('Sığdır', 'Fit'));
+    $('[data-pop="decks"]').innerHTML = `${sprite('folder')}<span>${esc(L('Sunumlarım', 'My presentations'))}</span>`;
+    $('[data-pop="templates"]').innerHTML = `${sprite('layout-dashboard')}<span>${esc(L('Şablonlar', 'Templates'))}</span>`;
+    $('[data-ps="classic"]').innerHTML = `<span>${esc(L('Klasik düzenleyici', 'Classic editor'))}</span>`;
+    $('[data-ps="classic"]').title = L('Önceki sunum düzenleyicisini aynı seçimle açar', 'Opens the previous presentation editor with the same selection');
+    $('[data-pop="export"]').innerHTML = `${sprite('file-export')}<span>${esc(L('Dışa aktar', 'Export'))}</span>`;
+    $('[data-pop="fields"]').innerHTML = `${sprite('columns-3')}<span>${esc(L('Kart bilgileri', 'Card details'))}</span>`;
+    $('[data-pop="design"]').innerHTML = `${sprite('palette')}<span>${esc(L('Tasarım', 'Design'))}</span>`;
+    $('[data-pop="arrange"]').innerHTML = `${sprite('layout-align-top')}<span>${esc(L('Yeniden düzenle', 'Rearrange'))}</span>`;
+    for (const [key, tr, en] of [['group', 'Grupla', 'Group by'], ['brk', 'Yeni sayfa', 'New page'], ['page', 'Sayfa', 'Page'], ['pages', 'Sayfalar', 'Pages']]) S.host.querySelectorAll(`[data-l="${key}"]`).forEach(el => { el.textContent = L(tr, en); });
+    $('[data-ps="brkWrap"]').title = L('Her ana grup yeni bir sayfadan başlar', 'Each top-level group starts on a new page');
+    $('[data-o="landscape"]').title = L('Yatay', 'Landscape'); $('[data-o="landscape"]').setAttribute('aria-label', L('Yatay', 'Landscape'));
+    $('[data-o="portrait"]').title = L('Dikey', 'Portrait'); $('[data-o="portrait"]').setAttribute('aria-label', L('Dikey', 'Portrait'));
+    $('[data-ps="cw"]').setAttribute('aria-label', L('Genişlik (mm)', 'Width (mm)')); $('[data-ps="ch"]').setAttribute('aria-label', L('Yükseklik (mm)', 'Height (mm)'));
+    $('[data-ps="paper"]').setAttribute('aria-label', L('Sayfa ölçüsü', 'Page size'));
+    $('[data-ps="paper"]').innerHTML = Object.entries(PAPER_LABEL()).map(([k, v]) => `<option value="${esc(k)}">${esc(v)}</option>`).join('');
+  }
+
+  /* ---------------- Çizim ---------------- */
+  function editorAttrs(el) {
+    if (el.type === 'hdr') return { attr: ` data-hdr="${esc(el.key)}" title="${esc(L('Çift tıklayarak yeniden adlandırın', 'Double-click to rename'))}"`, cls: '', inner: '' };
+    const c = S.doc.cards[el.id] || {}, sel = S.sel.has(el.id), primary = sel && S.primary === el.id;
+    const cls = (sel ? ' isSel' : '') + (S.res.conflicts.has(el.id) ? ' isConflict' : '') + (el.pinned ? ' isPinned' : '');
+    let inner = '';
+    if (el.pinned) inner += `<span class="psBadge psPin" title="${esc(L('Sabit', 'Pinned'))}">${svg('pin')}</span>`;
+    if (c.vgroup != null) inner += `<span class="psBadge psMoved" title="${esc(L('Görsel olarak başka gruba taşındı · Koleksiyon verisi değişmedi', 'Moved to another group visually · Collection data unchanged'))}">${svg('move')}</span>`;
+    if (primary && S.sel.size === 1) inner += ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].map(d => `<span class="psHandle" data-h="${d}"></span>`).join('');
+    const m = S.models.get(el.id);
+    return { attr: ` data-id="${esc(el.id)}" tabindex="-1" role="button" aria-label="${esc((m ? m.title : el.id) + (sel ? L(' · seçili', ' · selected') : ''))}"`, cls, inner };
+  }
+  function render() {
+    if (!S) return;
+    const t = performance.now();
+    renderPages();
+    S.perf.render = performance.now() - t;
+    // Küçük resimler her karede değil, değişiklik durduktan sonra güncellenir (slider sürüklemesi akıcı kalır).
+    clearTimeout(S.thumbTimer); S.thumbTimer = setTimeout(() => { if (S) renderThumbs(); }, S.thumbHtml ? 220 : 0);
+    renderTray(); renderBar(); renderStatus(); placeFloat();
+    S.$('[data-ps="undo"]').disabled = !S.hist.length; S.$('[data-ps="redo"]').disabled = !S.fut.length;
+    if (S.primary && S.sel.has(S.primary)) S.host.querySelector(`.psDocCard[data-id="${CSS.escape(S.primary)}"]`)?.focus({ preventScroll: true });
+  }
+  /* Sanallaştırma: yalnız görünür sayfalar (±1) çizilir; diğerleri doğru boyutta boş kâğıttır.
+     Kaydırınca yeni görünen sayfa çizilir; yerleşim ve dışa aktarma bütün sayfaları kullanır. */
+  function visibleRange(buffer = 1) {
+    const g = S.res.g, canvas = S.$('[data-ps="canvas"]'), stride = g.h * S.zoom * PT_PX + 46;
+    const first = Math.max(0, Math.floor((canvas.scrollTop - 8) / stride) - buffer), last = Math.ceil((canvas.scrollTop + canvas.clientHeight) / stride) - 1 + buffer;
+    return [first, last];
+  }
+  /* Sürekli girişte (slider) yalnız görünen sayfalar çizilir; komşu tampon sayfalar sonraki boş karede
+     tamamlanır. Böylece tek karedeki iş bölünür (DESIGN/PERFORMANCE: >50 ms bloklayan görev yok). */
+  function renderPages() {
+    const g = S.res.g, quick = Boolean(S.slider), [first, last] = visibleRange(quick ? 0 : 1), total = S.res.pages.length;
+    clearTimeout(S.fillTimer);
+    if (quick) S.fillTimer = setTimeout(() => { if (!S || S.act) return; const keep = S.slider; S.slider = false; renderPages(); S.slider = keep; }, 160);
+    const live = S.res.pages.filter((p, i) => i >= first && i <= last);
+    S.list = R().build(S.doc, { ...S.res, pages: live }, renderSource(screenImage), { measure: S.measure });
+    const built = new Map(S.list.pages.map(p => [p.id, p]));
+    S.range = `${first}:${last}`;
+    const host = S.$('[data-ps="pages"]'), seen = new Set();
+    const wrappers = new Map([...host.children].map(el => [el.dataset.psPage, el]));
+    S.res.pages.forEach((rp, i) => {
+      const page = built.get(rp.id) || { id: rp.id, elements: null };
+      seen.add(page.id);
+      const pg = S.doc.pages.find(p => p.id === page.id);
+      const tools = `<span class="psPageNo">${esc(L(`Sayfa ${i + 1}`, `Page ${i + 1}`))}</span><button type="button" class="tbtn psFlow" data-pa="flow" aria-pressed="${pg.flow}" title="${esc(pg.flow ? L('Otomatik akış açık: boş alanlar kartlarla dolar', 'Automatic flow on: free space fills with cards') : L('Serbest sayfa: yalnız sabit kartlar', 'Free page: pinned cards only'))}">${svg('flow')}<span>${esc(pg.flow ? L('Otomatik akış', 'Automatic flow') : L('Serbest sayfa', 'Free page'))}</span></button><span class="psGrow"></span>`
+        + `<button type="button" class="tbtn psIcon" data-pa="up" aria-label="${esc(L('Yukarı taşı', 'Move up'))}" title="${esc(L('Yukarı taşı', 'Move up'))}"${i === 0 ? ' disabled' : ''}>${sprite('chevron-up')}</button><button type="button" class="tbtn psIcon" data-pa="down" aria-label="${esc(L('Aşağı taşı', 'Move down'))}" title="${esc(L('Aşağı taşı', 'Move down'))}"${i === total - 1 ? ' disabled' : ''}>${sprite('chevron-down')}</button>`
+        + `<button type="button" class="tbtn psIcon" data-pa="add" aria-label="${esc(L('Sonrasına serbest sayfa ekle', 'Add a free page after'))}" title="${esc(L('Sonrasına serbest sayfa ekle', 'Add a free page after'))}">${sprite('plus')}</button><button type="button" class="tbtn psIcon" data-pa="del" aria-label="${esc(L('Sayfayı sil', 'Delete page'))}" title="${esc(L('Sayfayı sil', 'Delete page'))}"${total < 2 ? ' disabled' : ''}>${sprite('trash')}</button>`;
+      const html = `<div class="psPageTools">${tools}</div><div class="psPage" style="width:${g.w}pt;height:${g.h}pt;transform:scale(${S.zoom});background:${R().DOC.paper};font-family:${esc(R().fontStack(S.doc.style.font))}">${page.elements ? R().elementsHtml(page, { attrs: editorAttrs }) : ''}<div class="psGuides"></div></div>`;
+      let w = wrappers.get(page.id);
+      if (!w) { w = doc_.createElement('div'); w.className = 'psPageWrap'; w.dataset.psPage = page.id; }
+      w.style.width = `${g.w * S.zoom}pt`; w.style.height = `${g.h * S.zoom}pt`;
+      w.toggleAttribute('data-active', page.id === S.activePage);
+      if (S.pageHtml.get(page.id) !== html) { w.innerHTML = html; S.pageHtml.set(page.id, html); }
+      if (host.children[i] !== w) host.insertBefore(w, host.children[i] || null);
+    });
+    for (const [id, el] of wrappers) if (!seen.has(id)) { el.remove(); S.pageHtml.delete(id); }
+  }
+  /* Küçük resimler sayfa başına önbelleklidir; yalnız değişen sayfanın düğmesi yeniden yazılır. */
+  function renderThumbs() {
+    const g = S.res.g, W = 132, H = W * g.h / g.w, pct = (v, t) => `${(v / t * 100).toFixed(2)}%`;
+    const host = S.$('[data-ps="thumbs"]'), cache = S.thumbHtml || (S.thumbHtml = new Map()), seen = new Set();
+    const nodes = new Map([...host.children].map(el => [el.dataset.th, el]));
+    S.res.pages.forEach((p, i) => {
+      const pg = S.doc.pages.find(x => x.id === p.id);
+      const items = p.items.map(it => `<i class="${it.kind === 'hdr' ? 'psThumbHdr' : it.pinned ? 'psThumbPin' : 'psThumbCard'}" style="left:${pct(it.x, g.w)};top:${pct(it.kind === 'hdr' ? it.y + it.h - 1 : it.y, g.h)};width:${pct(it.w, g.w)};height:${it.kind === 'hdr' ? '1px' : pct(it.h, g.h)}"></i>`).join('');
+      const html = `<span class="psThumbPage" style="height:${H.toFixed(1)}px">${items}</span><span class="psThumbNo">${i + 1}${pg.flow ? '' : ` · ${esc(L('serbest', 'free'))}`}</span>`;
+      let el = nodes.get(p.id);
+      if (!el) { el = doc_.createElement('button'); el.type = 'button'; el.className = 'psThumb'; el.draggable = true; el.dataset.th = p.id; }
+      el.setAttribute('aria-current', String(p.id === S.activePage)); el.setAttribute('aria-label', L(`Sayfa ${i + 1}`, `Page ${i + 1}`));
+      if (cache.get(p.id) !== html) { el.innerHTML = html; cache.set(p.id, html); }
+      if (host.children[i] !== el) host.insertBefore(el, host.children[i] || null);
+      seen.add(p.id);
+    });
+    for (const [id, el] of nodes) if (!seen.has(id)) { el.remove(); cache.delete(id); }
+  }
+  function renderTray() {
+    const ex = S.doc.order.filter(id => S.doc.cards[id] && S.doc.cards[id].excluded);
+    setHtml(S.$('[data-ps="tray"]'), ex.length ? `<div class="psRailHead"><span>${esc(L('Sunum dışı', 'Not in presentation'))}</span></div>${ex.map(id => `<div class="psTrayItem"><span title="${esc(S.models.get(id)?.title || id)}">${esc(S.models.get(id)?.title || id)}</span><button type="button" class="tbtn" data-back="${esc(id)}">${esc(L('Geri ekle', 'Add back'))}</button></div>`).join('')}` : '');
+  }
+  function renderBar() {
+    const $ = S.$, d = S.doc, lv = d.grouping.levels, size = E().pageSize(d.page);
+    if (doc_.activeElement !== $('[data-ps="title"]')) $('[data-ps="title"]').value = d.title;
+    setHtml($('[data-ps="chips"]'), lv.map((f, i) => `<span class="psChip" draggable="true" data-lv="${i}" title="${esc(L('Sürükleyerek seviye sırasını değiştirin', 'Drag to reorder levels'))}"><b class="psChipNo">${i + 1}</b>${esc(S.meta.label(f))}<button type="button" class="psChipX" data-rmlv="${i}" aria-label="${esc(L(`${S.meta.label(f)} seviyesini kaldır`, `Remove ${S.meta.label(f)} level`))}">${sprite('x')}</button></span>`).join('')
+      + (lv.length < E().LIMITS.levels ? `<button type="button" class="tbtn" data-pop="level">${sprite('plus')}<span>${esc(lv.length ? L('Seviye', 'Level') : L('Grup ekle', 'Add group'))}</span></button>` : ''));
+    $('[data-ps="brk"]').checked = d.grouping.breakTop; $('[data-ps="brkWrap"]').hidden = !lv.length;
+    $('[data-ps="paper"]').value = d.page.preset;
+    $('[data-ps="custom"]').hidden = d.page.preset !== 'custom';
+    $('[data-ps="cw"]').value = Math.round(size.mmW); $('[data-ps="ch"]').value = Math.round(size.mmH);
+    const square = Math.abs(size.mmW - size.mmH) < 0.5;
+    $('[data-ps="orient"]').querySelectorAll('button').forEach(b => { b.setAttribute('aria-pressed', String(!square && b.dataset.o === (size.mmW >= size.mmH ? 'landscape' : 'portrait'))); b.disabled = square; });
+    $('[data-ps="dim"]').textContent = `${Math.round(size.mmW)} × ${Math.round(size.mmH)} mm`;
+    $('[data-ps="zoomVal"]').textContent = `${Math.round(S.zoom * 100)}%`;
+  }
+  function renderStatus() {
+    if (!S || !S.res) return;
+    const d = S.doc, cards = Object.values(d.cards), pinned = cards.filter(c => c.pinned && !c.excluded).length, moved = cards.filter(c => c.vgroup != null).length, ex = cards.filter(c => c.excluded).length;
+    // Model kopyaları dondurulmuştur; özet en çok 3 sn'de bir yeniden doğrulanır (büyük seçimlerde her çizimde değil).
+    if (!S.hashAt || performance.now() - S.hashAt > 3000) { S.hashSame = hashModels() === S.dataHash; S.hashAt = performance.now(); }
+    const same = S.hashSame, n = S.res.index.size;
+    const parts = [`<span>${esc(L(`${n} model · ${S.res.pages.length} sayfa · ${S.res.g.cols} sütun`, `${n} models · ${S.res.pages.length} pages · ${S.res.g.cols} columns`))}</span>`,
+      `<span>${esc(L(`${pinned} sabit · ${moved} grup taşıma · ${ex} sunum dışı`, `${pinned} pinned · ${moved} group moves · ${ex} not in presentation`))}</span>`];
+    if (S.res.conflicts.size) parts.push(`<span class="psBad">${esc(L(`${S.res.conflicts.size} kart çakışıyor`, `${S.res.conflicts.size} cards overlap`))} <button type="button" class="tbtn" data-ps="fixConf">${esc(L('Çöz', 'Resolve'))}</button></span>`);
+    if (S.res.overflow) parts.push(`<span class="psBad">${esc(L('Bazı kartlar sayfaya sığmadı; kart boyutunu küçültün.', 'Some cards did not fit the page; reduce the card size.'))}</span>`);
+    if (S.omitted && S.omitted.length) parts.push(`<span class="psBad" title="${esc(S.omitted.join(', '))}">${esc(L('Çok sayıda kayıt nedeniyle bazı sütunlar alınmadı', 'Some columns were skipped because of the record count'))}</span>`);
+    parts.push('<span class="psGrow"></span>');
+    parts.push(`<span title="${esc(L('Kart taşıma, gruplama ve sabitleme yalnız sunumu değiştirir', 'Moving, grouping and pinning cards only change the presentation'))}" class="${same ? 'psOk' : 'psBad'}">${esc(same ? L('Koleksiyon verisi değişmedi', 'Collection data unchanged') : L('Kaynak veri değişti', 'Source data changed'))}</span>`);
+    parts.push(`<span>${esc(S.saveState === 'error' ? L('Kaydedilemedi', 'Not saved') : S.saveState === 'saved' ? L('Hesabınıza kaydedildi', 'Saved to your account') : '')}</span>`);
+    parts.push('<span class="psNum" data-ps="perf"></span>');
+    const status = S.$('[data-ps="status"]');
+    setHtml(status, parts.join(''));
+    if (!S.exporting) status.querySelector('[data-ps="perf"]').textContent = L(`Yerleşim ${S.perf.layout.toFixed(0)} ms · çizim ${S.perf.render.toFixed(0)} ms`, `Layout ${S.perf.layout.toFixed(0)} ms · render ${S.perf.render.toFixed(0)} ms`);
+  }
+  function fitZoom() {
+    const g = S.res.g, canvas = S.$('[data-ps="canvas"]');
+    const w = Math.max(320, canvas.clientWidth - 64), h = Math.max(320, canvas.clientHeight - 72);
+    S.zoom = clamp(Math.min(w / (g.w * PT_PX), h / (g.h * PT_PX)), 0.2, 2);
+  }
+  function setZoom(z) { S.zoom = clamp(z, 0.2, 3); S.pageHtml.clear(); render(); }
+
+  /* ---------------- Seçim araç çubuğu ---------------- */
+  function hideFloat() { const f = S && S.$('[data-ps="float"]'); if (f) f.hidden = true; }
+  function placeFloat() {
+    const f = S.$('[data-ps="float"]');
+    if (!S.sel.size || S.act) { f.hidden = true; return; }
+    const els = [...S.sel].map(id => S.host.querySelector(`.psDocCard[data-id="${CSS.escape(id)}"]`)).filter(Boolean);
+    if (!els.length) { f.hidden = true; return; }
+    const ids = [...S.sel], n = ids.length, pinned = ids.map(id => S.res.index.get(id)?.pinned);
+    const all = pinned.every(Boolean), any = pinned.some(Boolean);
+    const btn = (k, icon, label, text) => `<button type="button" class="tbtn${text ? '' : ' psIcon'}" data-fa="${k}" title="${esc(label)}" aria-label="${esc(label)}">${icon}${text ? `<span>${esc(text)}</span>` : ''}</button>`;
+    let html = n > 1 ? `<span class="psFloatInfo">${esc(L(`${n} kart`, `${n} cards`))}</span>` : '';
+    html += all ? btn('unpin', svg('flow'), L('Sabitlemeyi kaldır: kart otomatik akışa döner (P)', 'Unpin: the card returns to automatic flow (P)'), L('Akışa döndür', 'Return to flow'))
+      : btn('pin', svg('pin'), L('Bulunduğu yerde sabitle (P)', 'Pin in place (P)'), L('Sabitle', 'Pin'));
+    if (any && !all) html += btn('unpin', svg('flow'), L('Sabitlemeyi kaldır', 'Unpin'), L('Akışa döndür', 'Return to flow'));
+    if (n > 1) {
+      html += '<span class="psSep"></span>' + [['left', L('Sola hizala', 'Align left')], ['hcenter', L('Yatay ortala', 'Center horizontally')], ['right', L('Sağa hizala', 'Align right')], ['top', L('Üste hizala', 'Align top')], ['vcenter', L('Dikey ortala', 'Center vertically')], ['bottom', L('Alta hizala', 'Align bottom')]].map(([k, l]) => btn(k, svg(k), l)).join('');
+      if (n > 2) html += btn('hdist', svg('hdist'), L('Yatay eşit dağıt', 'Distribute horizontally')) + btn('vdist', svg('vdist'), L('Dikey eşit dağıt', 'Distribute vertically'));
+      html += btn('size', svg('size'), L('İlk seçilen kartın boyutuna getir', 'Match the first selected card size'));
+    }
+    html += '<span class="psSep"></span>' + btn('exclude', sprite('trash'), L('Sunumdan çıkar (Delete) · veri silinmez', 'Remove from presentation (Delete) · data is not deleted'));
+    if (n === 1) {
+      const m = S.models.get(ids[0]), c = S.doc.cards[ids[0]] || {}, lv = S.doc.grouping.levels;
+      const info = [m && m.title, ...lv.map(f => `${S.meta.label(f)}: ${formatValue(S.meta.type(f), m && m.values[f]) || '—'}`)].filter(Boolean).join(' · ');
+      html += `<span class="psFloatInfo" title="${esc(info)}">${esc(info)}${c.vgroup != null ? esc(L(' · görsel grup değişti', ' · visual group changed')) : ''}</span>`;
+    }
+    f.innerHTML = html; f.hidden = false;
+    const rs = els.map(e => e.getBoundingClientRect()), cr = S.$('[data-ps="canvas"]').getBoundingClientRect();
+    const top = Math.min(...rs.map(r => r.top)), bottom = Math.max(...rs.map(r => r.bottom)), left = Math.min(...rs.map(r => r.left)), right = Math.max(...rs.map(r => r.right));
+    if (bottom < cr.top || top > cr.bottom) { f.hidden = true; return; }
+    const fr = f.getBoundingClientRect();
+    f.style.left = `${clamp((left + right) / 2 - fr.width / 2, cr.left + 8, root.innerWidth - fr.width - 8)}px`;
+    // Üstte yer yoksa seçimin altına iner; grup başlığını kapatmaz.
+    const above = top - fr.height - 10, y = above >= cr.top + 6 ? above : bottom + 10;
+    f.style.top = `${clamp(y, cr.top + 6, cr.bottom - fr.height - 6)}px`;
+  }
+  function selAction(k) {
+    const ids = [...S.sel].filter(id => S.res.index.has(id));
+    if (!ids.length) return;
+    if (k === 'pin') return commit(() => ids.forEach(id => E().pinAt(S.doc, id, S.res.index.get(id))));
+    if (k === 'unpin') return commit(() => E().unpin(S.doc, ids, S.res, groupOf));
+    if (k === 'exclude') {
+      commit(() => { for (const id of ids) { const c = S.doc.cards[id] || (S.doc.cards[id] = {}); c.excluded = true; c.pinned = false; } S.sel.clear(); });
+      toast(L(`${ids.length} kart sunumdan çıkarıldı · Koleksiyon verisi değişmedi.`, `${ids.length} cards removed from the presentation · Collection data unchanged.`));
+      return;
+    }
+    commit(() => { ids.forEach(id => { if (!S.res.index.get(id).pinned) E().pinAt(S.doc, id, S.res.index.get(id)); }); E().align(S.doc, ids, k); });
+    if (S.res.conflicts.size) toast(L('Hizalama sonrası üst üste binen kartlar işaretlendi; alttaki “Çöz” ile aralayabilirsiniz.', 'Overlapping cards after alignment are marked; use “Resolve” below to separate them.'), 'warning');
+  }
+
+  /* ---------------- Sürükleme, boyutlandırma, alan seçimi ---------------- */
+  const pageEl = id => S.host.querySelector(`.psPageWrap[data-ps-page="${CSS.escape(id)}"] .psPage`);
+  function toPage(id, x, y) { const r = pageEl(id).getBoundingClientRect(), g = S.res.g; return { x: (x - r.left) * g.w / r.width, y: (y - r.top) * g.h / r.height, k: r.width / g.w, r }; }
+  function pageAt(x, y) {
+    let best = null, bd = Infinity;
+    for (const w of S.host.querySelectorAll('.psPageWrap')) {
+      const r = w.getBoundingClientRect();
+      if (x < r.left - 60 || x > r.right + 60) continue;
+      const d = y < r.top ? r.top - y : y > r.bottom ? y - r.bottom : 0;
+      if (d < bd) { bd = d; best = w.dataset.psPage; }
+    }
+    return bd < 48 ? best : null;
+  }
+  const pageItems = id => (S.res.pages.find(p => p.id === id) || { items: [] }).items;
+  const pinnedRects = (id, except) => pageItems(id).filter(i => i.kind === 'card' && i.pinned && !except.has(i.id));
+  function snapTargets(id, except) {
+    const g = S.res.g, xs = [g.m, g.w / 2, g.w - g.m], ys = [g.m, g.h / 2, g.h - g.m];
+    for (const it of pageItems(id)) { if (it.kind === 'card' && except.has(it.id)) continue; xs.push(it.x, it.x + it.w / 2, it.x + it.w); ys.push(it.y, it.y + it.h / 2, it.y + it.h); }
+    return { xs, ys };
+  }
+  function snap(vals, targets, th) { let best = null; for (const v of vals) for (const t of targets) { const d = t - v; if (Math.abs(d) < th && (!best || Math.abs(d) < Math.abs(best.d))) best = { d, t }; } return best; }
+  function guides(id, gx, gy, ins) {
+    S.host.querySelectorAll('.psGuides').forEach(e => { e.innerHTML = ''; });
+    if (!id) return;
+    const g = S.res.g, host = pageEl(id).querySelector('.psGuides'); let h = '';
+    if (gx != null) h += `<i class="psGuide" style="left:${gx - 0.4}pt;top:0;width:0.8pt;height:${g.h}pt"></i>`;
+    if (gy != null) h += `<i class="psGuide" style="top:${gy - 0.4}pt;left:0;height:0.8pt;width:${g.w}pt"></i>`;
+    if (ins) h += `<i class="psInsert" style="left:${ins.x - 1.5}pt;top:${ins.y}pt;width:3pt;height:${ins.h}pt"></i>`;
+    host.innerHTML = h;
+  }
+  function tip(e, text, bad) { const t = S.$('[data-ps="tip"]'); t.hidden = false; t.textContent = text; t.classList.toggle('isBad', Boolean(bad)); t.style.left = `${e.clientX + 14}px`; t.style.top = `${e.clientY + 18}px`; }
+  const hideTip = () => { S.$('[data-ps="tip"]').hidden = true; };
+  const selectOnly = id => { S.sel = new Set([id]); S.primary = id; };
+
+  function onPointerDown(e) {
+    if (e.button !== 0) return;
+    const pa = e.target.closest('[data-pa]');
+    if (pa) return;
+    const wrap = e.target.closest('.psPageWrap');
+    if (wrap && wrap.dataset.psPage !== S.activePage) { S.activePage = wrap.dataset.psPage; S.host.querySelectorAll('.psPageWrap').forEach(w => w.toggleAttribute('data-active', w === wrap)); renderThumbs(); }
+    const h = e.target.closest('.psHandle');
+    if (h) {
+      const id = h.closest('.psDocCard').dataset.id, it = S.res.index.get(id);
+      S.act = { type: 'resize', id, dir: h.dataset.h, start: { ...it }, page: it.page, sx: e.clientX, sy: e.clientY, last: { x: it.x, y: it.y, w: it.w, h: it.h } };
+      e.preventDefault(); return;
+    }
+    const card = e.target.closest('.psDocCard');
+    if (card) {
+      const id = card.dataset.id;
+      if (e.shiftKey || e.metaKey || e.ctrlKey) { if (S.sel.has(id)) S.sel.delete(id); else { S.sel.add(id); S.primary = id; } }
+      else if (!S.sel.has(id)) selectOnly(id);
+      else S.primary = id;
+      render();
+      S.act = { type: 'press', id, sx: e.clientX, sy: e.clientY, mod: e.shiftKey || e.metaKey || e.ctrlKey };
+      e.preventDefault(); return;
+    }
+    if (e.target.closest('.psDocHdr')) return;
+    const page = e.target.closest('.psPage');
+    if (page) {
+      const pid = page.closest('.psPageWrap').dataset.psPage, p = toPage(pid, e.clientX, e.clientY);
+      if (!e.shiftKey) S.sel.clear();
+      S.act = { type: 'marquee', page: pid, x0: p.x, y0: p.y, base: new Set(S.sel) };
+      render(); e.preventDefault(); return;
+    }
+    if (S.sel.size && e.target.closest('.psCanvas')) { S.sel.clear(); render(); }
+  }
+  function onPointerMove(e) {
+    if (!S || !S.act) return;
+    const a = S.act;
+    if (a.type === 'press' && Math.hypot(e.clientX - a.sx, e.clientY - a.sy) > 4) startDrag();
+    if (S.act.type === 'drag') moveDrag(e);
+    else if (S.act.type === 'resize') moveResize(e);
+    else if (S.act.type === 'marquee') moveMarquee(e);
+  }
+  function onPointerUp(e) {
+    if (!S || !S.act) return;
+    const a = S.act; S.act = null;
+    if (a.type === 'drag') endDrag(a);
+    else if (a.type === 'resize') endResize(a);
+    else if (a.type === 'marquee') { S.host.querySelectorAll('.psMarquee').forEach(m => m.remove()); render(); }
+    else if (a.type === 'press' && !a.mod && S.sel.size > 1) { selectOnly(a.id); render(); }
+    else placeFloat();
+  }
+  function startDrag() {
+    const a = S.act, layer = S.$('[data-ps="drag"]'), ids = [...S.sel].filter(id => S.res.index.has(id));
+    layer.innerHTML = '';
+    const items = ids.map(id => {
+      const el = S.host.querySelector(`.psDocCard[data-id="${CSS.escape(id)}"]`), r = el.getBoundingClientRect(), cl = el.cloneNode(true);
+      cl.querySelectorAll('.psHandle').forEach(x => x.remove()); cl.classList.remove('isSel'); cl.classList.add('psDragClone');
+      cl.style.left = '0'; cl.style.top = '0'; cl.style.fontFamily = R().fontStack(S.doc.style.font);
+      cl.style.transform = `translate(${r.left}px,${r.top}px) scale(${S.zoom})`;
+      layer.appendChild(cl); el.classList.add('isGhost');
+      return { id, el, cl, r, it: S.res.index.get(id) };
+    });
+    S.act = { type: 'drag', items, lead: items.find(i => i.id === a.id) || items[0], sx: a.sx, sy: a.sy, ids: new Set(ids) };
+    hideFloat(); autoScroll();
+  }
+  function autoScroll() {
+    if (!S || !S.act || S.act.type !== 'drag') return;
+    const p = S.act.ptr, canvas = S.$('[data-ps="canvas"]');
+    if (p) { const r = canvas.getBoundingClientRect(); if (p.y < r.top + 48) canvas.scrollTop -= 14; else if (p.y > r.bottom - 48) canvas.scrollTop += 14; }
+    requestAnimationFrame(autoScroll);
+  }
+  function moveDrag(e) {
+    const a = S.act, g = S.res.g, dx = e.clientX - a.sx, dy = e.clientY - a.sy;
+    a.ptr = { x: e.clientX, y: e.clientY }; a.mode = null; a.target = null;
+    const move = (i, x, y, k) => { i.cl.style.transform = `translate(${x}px,${y}px) scale(${k})`; };
+    const thumb = doc_.elementFromPoint(e.clientX, e.clientY)?.closest?.('.psThumb');
+    S.host.querySelectorAll('.psThumb').forEach(t => t.toggleAttribute('data-drop', t === thumb));
+    if (thumb) {
+      a.mode = 'thumb'; a.page = thumb.dataset.th;
+      a.items.forEach(i => move(i, i.r.left + dx, i.r.top + dy, S.zoom * 0.6)); guides(null);
+      tip(e, L(`Sayfa ${S.doc.pages.findIndex(p => p.id === a.page) + 1}’e taşı · boş alana sabitlenir`, `Move to page ${S.doc.pages.findIndex(p => p.id === a.page) + 1} · pinned to free space`)); return;
+    }
+    const pid = pageAt(e.clientX, e.clientY); a.page = pid;
+    if (!pid) { a.items.forEach(i => move(i, i.r.left + dx, i.r.top + dy, S.zoom)); guides(null); tip(e, L('Bırakma alanı dışında · iptal', 'Outside the drop area · cancel')); return; }
+    const P = toPage(pid, e.clientX, e.clientY);
+    if (!e.altKey) {
+      const over = pageItems(pid).find(it => it.kind === 'card' && !it.pinned && !a.ids.has(it.id) && P.x >= it.x && P.x <= it.x + it.w && P.y >= it.y && P.y <= it.y + it.h);
+      if (over) {
+        const after = P.x > over.x + over.w / 2, key = E().effectiveKey(S.doc, over.id, groupOf);
+        a.mode = 'insert'; a.target = { id: over.id, after };
+        a.items.forEach(i => move(i, i.r.left + dx, i.r.top + dy, S.zoom * 0.85));
+        guides(pid, null, null, { x: after ? over.x + over.w + g.gap / 2 : over.x - g.gap / 2, y: over.y, h: over.h });
+        const vals = S.res.pages.flatMap(p => p.items).find(it => it.kind === 'hdr' && it.key === key);
+        const label = S.doc.labels[key] || (vals ? vals.vals.filter(Boolean).join(' · ') : '');
+        tip(e, (a.items.some(i => E().effectiveKey(S.doc, i.id, groupOf) !== key) ? L('Gruba taşı: ', 'Move to group: ') : L('Sıraya ekle: ', 'Insert in order: ')) + (label || L('akış', 'flow')));
+        return;
+      }
+    }
+    const L0 = a.lead.it;
+    let ox = (a.lead.r.left + dx - P.r.left) / P.k - L0.x, oy = (a.lead.r.top + dy - P.r.top) / P.k - L0.y;
+    const rects = a.items.map(i => ({ x: i.it.x + ox, y: i.it.y + oy, w: i.it.w, h: i.it.h }));
+    const bb = { x: Math.min(...rects.map(r => r.x)), y: Math.min(...rects.map(r => r.y)) };
+    bb.w = Math.max(...rects.map(r => r.x + r.w)) - bb.x; bb.h = Math.max(...rects.map(r => r.y + r.h)) - bb.y;
+    const T = snapTargets(pid, a.ids), th = 7 / P.k, sx = snap([bb.x, bb.x + bb.w / 2, bb.x + bb.w], T.xs, th), sy = snap([bb.y, bb.y + bb.h / 2, bb.y + bb.h], T.ys, th);
+    if (sx) ox += sx.d; if (sy) oy += sy.d;
+    const nx = bb.x + (sx ? sx.d : 0), ny = bb.y + (sy ? sy.d : 0);
+    ox += clamp(nx, 0, Math.max(0, g.w - bb.w)) - nx; oy += clamp(ny, 0, Math.max(0, g.h - bb.h)) - ny;
+    a.mode = 'free'; a.off = { x: ox, y: oy };
+    const obs = pinnedRects(pid, a.ids), final = a.items.map(i => ({ x: i.it.x + ox, y: i.it.y + oy, w: i.it.w, h: i.it.h }));
+    a.bad = final.some(r => obs.some(o => E().overlaps(r, o)));
+    a.items.forEach((i, n) => { move(i, P.r.left + final[n].x * P.k, P.r.top + final[n].y * P.k, S.zoom); i.cl.classList.toggle('isBad', a.bad); });
+    guides(pid, sx ? sx.t : null, sy ? sy.t : null);
+    tip(e, a.bad ? L('Çakışma · bırakınca en yakın boş alana yerleşir', 'Overlap · drops into the nearest free space') : (a.items.length > 1 ? L(`${a.items.length} kart · `, `${a.items.length} cards · `) : '') + L('Serbest yerleştir · sabitlenir', 'Place freely · pinned'), a.bad);
+  }
+  function endDrag(a) {
+    S.$('[data-ps="drag"]').innerHTML = ''; hideTip(); guides(null);
+    S.host.querySelectorAll('.psThumb[data-drop]').forEach(t => t.removeAttribute('data-drop'));
+    if (!a.mode || !a.page) { render(); return; }
+    const g = S.res.g;
+    if (a.mode === 'insert') {
+      const ids = a.items.map(i => i.id);
+      commit(() => E().insertAt(S.doc, ids, a.target.id, a.target.after, groupOf));
+      if (ids.some(id => S.doc.cards[id] && S.doc.cards[id].vgroup != null)) toast(L('Kart görsel olarak yeni gruba taşındı. Koleksiyon verisi değişmedi.', 'The card moved to a new group visually. Collection data is unchanged.'));
+      return;
+    }
+    let fail = 0;
+    commit(() => {
+      const placed = pinnedRects(a.page, a.ids).map(r => ({ ...r }));
+      for (const i of a.items) {
+        const r = a.mode === 'thumb' ? { x: g.m, y: g.m, w: i.it.w, h: i.it.h } : { x: i.it.x + a.off.x, y: i.it.y + a.off.y, w: i.it.w, h: i.it.h };
+        const fr = E().findFree(r, placed, g);
+        if (!fr) { fail++; continue; }
+        E().pinAt(S.doc, i.id, { ...fr, page: a.page }); placed.push(fr);
+      }
+    });
+    if (fail) toast(L(`${fail} kart için boş alan bulunamadı; eski yerinde bırakıldı.`, `No free space for ${fail} cards; left in place.`), 'warning');
+    else if (a.bad) toast(L('Çakışma önlendi: kart en yakın boş alana yerleşti.', 'Overlap prevented: the card was placed in the nearest free space.'));
+  }
+  function moveResize(e) {
+    const a = S.act, g = S.res.g, el = S.host.querySelector(`.psDocCard[data-id="${CSS.escape(a.id)}"]`);
+    if (!el) return;
+    const P = toPage(a.page, e.clientX, e.clientY), dx = (e.clientX - a.sx) / P.k, dy = (e.clientY - a.sy) / P.k, s = a.start, d = a.dir;
+    let x = s.x, y = s.y, w = s.w, h = s.h;
+    const minW = 50, minH = g.th + 24;
+    if (d.includes('e')) w = s.w + dx; if (d.includes('s')) h = s.h + dy;
+    if (d.includes('w')) { w = s.w - dx; x = s.x + dx; } if (d.includes('n')) { h = s.h - dy; y = s.y + dy; }
+    const T = snapTargets(a.page, new Set([a.id])), th = 7 / P.k; let gx = null, gy = null;
+    if (d.includes('e')) { const sn = snap([x + w], T.xs, th); if (sn) { w += sn.d; gx = sn.t; } }
+    if (d.includes('w')) { const sn = snap([x], T.xs, th); if (sn) { x += sn.d; w -= sn.d; gx = sn.t; } }
+    if (d.includes('s')) { const sn = snap([y + h], T.ys, th); if (sn) { h += sn.d; gy = sn.t; } }
+    if (d.includes('n')) { const sn = snap([y], T.ys, th); if (sn) { y += sn.d; h -= sn.d; gy = sn.t; } }
+    if (w < minW) { if (d.includes('w')) x -= minW - w; w = minW; }
+    if (h < minH) { if (d.includes('n')) y -= minH - h; h = minH; }
+    if (x < 0) { w += x; x = 0; } if (y < 0) { h += y; y = 0; }
+    w = Math.min(w, g.w - x); h = Math.min(h, g.h - y);
+    const r = { x, y, w, h };
+    if (pinnedRects(a.page, new Set([a.id])).some(o => E().overlaps(r, o))) { tip(e, L('Başka bir sabit kartla çakışıyor', 'Overlaps another pinned card'), true); return; }
+    a.last = r;
+    Object.assign(el.style, { left: `${x}pt`, top: `${y}pt`, width: `${w}pt`, height: `${h}pt` });
+    guides(a.page, gx, gy);
+    tip(e, `${Math.round(w / E().MM)} × ${Math.round(h / E().MM)} mm · ${L('sabitlenir', 'pinned')}`);
+  }
+  function endResize(a) {
+    hideTip(); guides(null);
+    const r = a.last, s = a.start;
+    if (Math.abs(r.w - s.w) < 0.5 && Math.abs(r.h - s.h) < 0.5 && Math.abs(r.x - s.x) < 0.5 && Math.abs(r.y - s.y) < 0.5) { render(); return; }
+    commit(() => E().pinAt(S.doc, a.id, { ...r, page: a.page }));
+  }
+  function moveMarquee(e) {
+    const a = S.act, P = toPage(a.page, e.clientX, e.clientY), r = { x: Math.min(a.x0, P.x), y: Math.min(a.y0, P.y), w: Math.abs(P.x - a.x0), h: Math.abs(P.y - a.y0) };
+    let m = pageEl(a.page).querySelector('.psMarquee');
+    if (!m) { m = doc_.createElement('div'); m.className = 'psMarquee'; pageEl(a.page).appendChild(m); }
+    Object.assign(m.style, { left: `${r.x}pt`, top: `${r.y}pt`, width: `${r.w}pt`, height: `${r.h}pt` });
+    S.sel = new Set(a.base);
+    for (const it of pageItems(a.page)) if (it.kind === 'card' && E().overlaps(r, it)) { S.sel.add(it.id); S.primary = it.id; }
+    pageEl(a.page).querySelectorAll('.psDocCard').forEach(c => c.classList.toggle('isSel', S.sel.has(c.dataset.id)));
+  }
+
+  /* ---------------- Sayfa işlemleri ---------------- */
+  function pageAction(id, k) {
+    const pages = S.doc.pages, i = pages.findIndex(p => p.id === id);
+    if (i < 0) return;
+    if (k === 'flow') return commit(() => { pages[i].flow = !pages[i].flow; pages[i].auto = false; });
+    if (k === 'up' && i > 0) return commit(() => { const [p] = pages.splice(i, 1); p.auto = false; pages.splice(i - 1, 0, p); });
+    if (k === 'down' && i < pages.length - 1) return commit(() => { const [p] = pages.splice(i, 1); p.auto = false; pages.splice(i + 1, 0, p); });
+    if (k === 'add') { commit(() => { const np = { id: 'p' + S.doc.seq++, flow: false, auto: false }; pages.splice(i + 1, 0, np); S.activePage = np.id; }); toast(L('Serbest sayfa eklendi: kartları buraya sürükleyin veya otomatik akışı açın.', 'Free page added: drag cards here or turn on automatic flow.')); return; }
+    if (k === 'del' && pages.length > 1) {
+      let n = 0;
+      commit(() => { for (const c of Object.values(S.doc.cards)) if (c.pinned && c.page === id) { c.pinned = false; n++; } pages.splice(i, 1); });
+      toast(n ? L(`Sayfa silindi; ${n} sabit kart otomatik akışa döndü.`, `Page deleted; ${n} pinned cards returned to automatic flow.`) : L('Sayfa silindi; kartlar otomatik akışa döndü.', 'Page deleted; cards returned to automatic flow.'));
+    }
+  }
+
+  /* ---------------- Sayfa ölçüsü ---------------- */
+  function changePage(next, extra) {
+    const bad = E().pageChangeConflicts(S.doc, next);
+    const apply = mode => { let un = 0; commit(() => { if (extra) extra(); un = E().applyPageChange(S.doc, next, mode); }); fitZoom(); S.pageHtml.clear(); render(); if (un) toast(L(`${un} kart için yer bulunamadı; otomatik akışa bırakıldı.`, `No space for ${un} cards; returned to automatic flow.`), 'warning'); };
+    if (!bad.length) { apply('keep'); return; }
+    const byPage = {};
+    for (const id of bad) { const n = S.doc.pages.findIndex(p => p.id === S.doc.cards[id].page) + 1; byPage[n] = (byPage[n] || 0) + 1; }
+    const pins = Object.values(S.doc.cards).filter(c => c.pinned && !c.excluded).length;
+    dialog(`<h3 id="psDlgTitle">${esc(L(`${bad.length} sabit kart yeni sayfaya sığmıyor`, `${bad.length} pinned cards do not fit the new page`))}</h3>
+      <p>${esc(Object.entries(byPage).map(([p, n]) => L(`Sayfa ${p}: ${n} kart`, `Page ${p}: ${n} cards`)).join(' · '))}. ${esc(L(`Diğer ${pins - bad.length} sabit kart konumunu ve boyutunu koruyor; akıştaki kartlar yeni ölçüye göre yeniden yerleşecek.`, `The other ${pins - bad.length} pinned cards keep their position and size; flowing cards will rearrange for the new size.`))}</p>
+      <div class="psOptions"><button type="button" class="tbtn" data-m="keep"><b class="psOptTitle">${esc(L('Koru, sayfa içine al', 'Keep, move inside the page'))}</b><span class="psSub">${esc(L('Taşan kartlar en yakın uygun konuma kayar; gerekirse orantılı küçülür.', 'Overflowing cards move to the nearest suitable position, shrinking proportionally if needed.'))}</span></button>
+      <button type="button" class="tbtn" data-m="scale"><b class="psOptTitle">${esc(L('Tüm sabitleri orantılı ölçekle', 'Scale all pinned cards proportionally'))}</b><span class="psSub">${esc(L('Bütün sabit kartlar yeni sayfa ölçüsüne birlikte uyarlanır.', 'All pinned cards are adapted together to the new page size.'))}</span></button>
+      <button type="button" class="tbtn" data-m="flow"><b class="psOptTitle">${esc(L('Taşanları otomatik akışa bırak', 'Return overflowing cards to automatic flow'))}</b><span class="psSub">${esc(L('Yalnız sığmayan kartların sabitlemesi kalkar.', 'Only cards that do not fit are unpinned.'))}</span></button></div>
+      <div class="modalFoot"><button type="button" class="tbtn" data-m="cancel">${esc(L('Vazgeç', 'Cancel'))}</button></div>`, choice => { if (choice && choice !== 'cancel') apply(choice); else renderBar(); });
+  }
+  function dialog(html, done) {
+    const overlay = doc_.createElement('div');
+    overlay.className = 'warnOverlay psDialog'; overlay.dataset.uiMigrated = 'presentation-studio';
+    overlay.innerHTML = `<div class="modalCard psDialogCard" role="dialog" aria-modal="true" aria-labelledby="psDlgTitle">${html}</div>`;
+    doc_.body.appendChild(overlay);
+    let finished = false;
+    const finish = choice => { if (finished) return; finished = true; root.BLLayerSystem?.closeDialog?.(overlay); overlay.remove(); done(choice); };
+    overlay.addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (b) finish(b.dataset.m); else if (e.target === overlay) finish('cancel'); });
+    root.BLLayerSystem?.openDialog?.(overlay, { onClose: () => finish('cancel') });
+    root.BLMotionPlus?.play?.('overlay', overlay.firstElementChild);
+    overlay.querySelector('[data-m]')?.focus();
+  }
+
+  /* ---------------- Açılır paneller ---------------- */
+  function closePop() { if (!S) return; const p = S.$('[data-ps="pop"]'); p.hidden = true; p.dataset.kind = ''; S.popAnchor = null; }
+  function openPop(kind, anchor) {
+    const p = S.$('[data-ps="pop"]');
+    if (!p.hidden && p.dataset.kind === kind) { closePop(); return; }
+    p.dataset.kind = kind; S.popAnchor = anchor; fillPop(kind); p.hidden = false;
+    const r = anchor.getBoundingClientRect();
+    p.style.left = `${clamp(r.left, 8, root.innerWidth - p.offsetWidth - 8)}px`; p.style.top = `${Math.min(r.bottom + 6, root.innerHeight - p.offsetHeight - 8)}px`;
+    root.BLMotionPlus?.play?.('overlay', p);
+    p.querySelector('input,select,button')?.focus({ preventScroll: true });
+  }
+  function fillPop(kind) {
+    const p = S.$('[data-ps="pop"]'), s = S.doc.style, h = t => `<h4 class="psPopTitle">${esc(t)}</h4>`;
+    if (kind === 'fields') {
+      const on = s.fields, off = S.meta.ids.filter(f => !on.includes(f));
+      p.innerHTML = h(L('Kartta gösterilecek bilgiler', 'Details shown on cards')) + `<div class="psFieldList" data-ps="fieldList">${[...on, ...off].map((f, i) => `<label class="psField" draggable="${on.includes(f)}" data-f="${esc(f)}"><span class="psGrip" aria-hidden="true">${on.includes(f) ? sprite('grip') : ''}</span><input type="checkbox" data-fc="${esc(f)}"${on.includes(f) ? ' checked' : ''}><span>${esc(S.meta.label(f))}</span>${i === 0 && on.length ? `<small class="psSub">${esc(L('başlık', 'title'))}</small>` : ''}</label>`).join('')}</div>`
+        + `<label class="psToggle"><input type="checkbox" data-ps="labels"${s.labels ? ' checked' : ''}><span>${esc(L('Alan adlarını göster', 'Show field names'))}</span></label><p class="psHint">${esc(L('Sürükleyerek sıralayın. İlk bilgi kart başlığı olur.', 'Drag to reorder. The first detail becomes the card title.'))}</p>`;
+    } else if (kind === 'design') {
+      const sl = (k, label, unit) => { const [min, max, , step] = E().STYLE_SPEC[k]; return `<label class="psSlider"><span>${esc(label)}</span><output class="psNum" data-out="${k}">${s[k]}${unit}</output><input type="range" data-s="${k}" data-u="${unit}" min="${min}" max="${max}" step="${step}" value="${s[k]}"></label>`; };
+      p.innerHTML = h(L('Tasarım', 'Design')) + `<label class="psSlider"><span>${esc(L('Yazı tipi', 'Font'))}</span><select data-ps="font">${E().FONTS.map(f => `<option${f === s.font ? ' selected' : ''}>${esc(f)}</option>`).join('')}</select></label>`
+        + sl('fs', L('Yazı boyutu', 'Text size'), ' pt') + sl('img', L('Görsel oranı', 'Image ratio'), '×') + sl('cardW', L('Kart boyutu', 'Card size'), ' pt') + sl('gap', L('Kart aralığı', 'Card spacing'), ' pt') + sl('margin', L('Sayfa kenarı', 'Page margin'), ' pt')
+        + `<div class="psSlider"><span>${esc(L('Kart stili', 'Card style'))}</span><span class="psSeg" data-ps="cardStyle">${[['frame', L('Çerçeve', 'Frame')], ['shadow', L('Gölge', 'Shadow')], ['plain', L('Sade', 'Plain')]].map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${s.card === v}">${esc(l)}</button>`).join('')}</span></div>`
+        + `<label class="psToggle"><input type="checkbox" data-ps="keepGroups"${s.keepGroups ? ' checked' : ''}><span>${esc(L('Grupları bütün tut (satırda bölme)', 'Keep groups together (no splitting across rows)'))}</span></label><p class="psHint">${esc(L('Değişiklikler anlık uygulanır; sabit kartların konumu ve boyutu korunur.', 'Changes apply instantly; pinned cards keep their position and size.'))}</p>`;
+    } else if (kind === 'arrange') {
+      p.innerHTML = h(L('Yeniden düzenle', 'Rearrange')) + `<div class="psMenu"><button type="button" class="tbtn" data-rf="keep"><b class="psOptTitle">${esc(L('Sabitleri koru, gerisini dengele', 'Keep pinned cards, rebalance the rest'))}</b><span class="psSub">${esc(L('Çakışmaları çözer, akıştaki kartları yeniden dağıtır.', 'Resolves overlaps and redistributes flowing cards.'))}</span></button>`
+        + `<button type="button" class="tbtn" data-rf="order"><b class="psOptTitle">${esc(L('Veri sırasına döndür', 'Return to data order'))}</b><span class="psSub">${esc(L('Elle verilen sıra ve grup taşımaları sıfırlanır; sabitler kalır.', 'Manual order and group moves are reset; pinned cards stay.'))}</span></button>`
+        + `<button type="button" class="tbtn" data-rf="all"><b class="psOptTitle">${esc(L('Tümünü sıfırla', 'Reset everything'))}</b><span class="psSub">${esc(L('Sabitleri kaldırır, sunumu baştan dizer.', 'Removes pins and lays the presentation out again.'))}</span></button></div>`;
+    } else if (kind === 'level') {
+      const rem = S.meta.ids.filter(f => !S.doc.grouping.levels.includes(f));
+      p.innerHTML = h(L('Gruplama seviyesi ekle', 'Add grouping level')) + `<div class="psMenu psScroll">${rem.map(f => `<button type="button" class="tbtn" data-addlv="${esc(f)}">${esc(S.meta.label(f))}</button>`).join('')}</div>`;
+    } else if (kind === 'templates') {
+      const saved = loadTemplates(), builtin = builtinTemplates();
+      const row = (t, key, del) => `<div class="psTpl"><span><b>${esc(t.name)}</b><small class="psSub">${esc(t.hint || `${PAPER_LABEL()[t.page.preset] || t.page.preset} · ${t.grouping.levels.map(f => S.meta.label(f)).join(' › ') || L('grupsuz', 'ungrouped')}`)}</small></span><button type="button" class="tbtn" data-tpl="${key}">${esc(L('Uygula', 'Apply'))}</button>${del ? `<button type="button" class="tbtn psIcon" data-tdel="${del}" aria-label="${esc(L('Şablonu sil', 'Delete template'))}">${sprite('trash')}</button>` : ''}</div>`;
+      p.innerHTML = h(L('Hazır şablonlar', 'Ready templates')) + builtin.map((t, i) => row(t, `b${i}`)).join('') + h(L('Şablonlarım', 'My templates'))
+        + (saved.length ? saved.map((t, i) => row(t, `s${i}`, String(i + 1))).join('') : `<p class="psHint">${esc(L('Henüz kayıtlı şablon yok.', 'No saved templates yet.'))}</p>`)
+        + `<div class="psTplSave"><input data-ps="tplName" maxlength="60" placeholder="${esc(L('Şablon adı', 'Template name'))}" aria-label="${esc(L('Şablon adı', 'Template name'))}"><button type="button" class="tbtn" data-ps="tplSave">${esc(L('Kaydet', 'Save'))}</button></div><p class="psHint">${esc(L('Şablon sayfa ölçüsünü, gruplamayı, kart bilgilerini ve tasarımı saklar; kart konumları sunuma özeldir.', 'A template stores the page size, grouping, card details and design; card positions belong to the presentation.'))}</p>`;
+    } else if (kind === 'decks') {
+      const decks = readJson(KEY.decks, []);
+      p.innerHTML = h(L('Sunumlarım', 'My presentations')) + (decks.length ? `<div class="psMenu psScroll">${decks.map(d => `<div class="psTpl"><span><b>${esc(d.title)}</b><small class="psSub">${esc(L(`${d.count} model · ${new Date(d.updatedAt).toLocaleString('tr-TR')}`, `${d.count} models · ${new Date(d.updatedAt).toLocaleString('en-GB')}`))}</small></span>${d.id === S.deckId ? `<small class="psSub">${esc(L('açık', 'open'))}</small>` : `<button type="button" class="tbtn" data-deck="${esc(d.id)}">${esc(L('Aç', 'Open'))}</button><button type="button" class="tbtn psIcon" data-ddel="${esc(d.id)}" aria-label="${esc(L('Sunumu sil', 'Delete presentation'))}">${sprite('trash')}</button>`}</div>`).join('')}</div>` : `<p class="psHint">${esc(L('Henüz kayıtlı sunum yok.', 'No saved presentations yet.'))}</p>`)
+        + `<p class="psHint">${esc(L(`Sunumlar hesabınıza otomatik kaydedilir (en fazla ${MAX_DECKS}). Model bilgileri her açılışta Koleksiyon’dan güncel okunur.`, `Presentations are saved to your account automatically (up to ${MAX_DECKS}). Model details are read fresh from the Collection each time.`))}</p>`;
+    } else if (kind === 'export') {
+      p.innerHTML = h(L('Dışa aktar', 'Export')) + `<div class="psMenu"><button type="button" class="tbtn" data-ex="pdf"><b class="psOptTitle">PDF</b><span class="psSub">${esc(L('Önizlemedeki sayfaların aynısı, seçili sayfa ölçüsünde.', 'Exactly the previewed pages, in the selected page size.'))}</span></button><button type="button" class="tbtn" data-ex="pptx"><b class="psOptTitle">PowerPoint</b><span class="psSub">${esc(L('Düzenlenebilir kartlar ve metinler; aynı konum ve ölçü.', 'Editable cards and text; same positions and size.'))}</span></button></div>`;
+    }
+  }
+
+  /* ---------------- Dışa aktarma ---------------- */
+  async function exportImage(id) {
+    const m = S.models.get(id);
+    if (!m || !m.identity) return null;
+    S.exportCache = S.exportCache || new Map();
+    if (S.exportCache.has(m.identity.source)) return S.exportCache.get(m.identity.source);
+    let out = null;
+    try {
+      const raw = await root.BLAIScreenData.imageDataUrl(m.identity);
+      if (raw) out = await downscale(raw);
+    } catch (_) { out = null; }
+    S.exportCache.set(m.identity.source, out);
+    return out;
+  }
+  function downscale(dataUrl) {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, IMAGE_MAX_PX / Math.max(img.naturalWidth, img.naturalHeight)), w = Math.max(1, Math.round(img.naturalWidth * k)), h = Math.max(1, Math.round(img.naturalHeight * k));
+        const c = doc_.createElement('canvas'); c.width = w; c.height = h;
+        const ctx = c.getContext('2d'); ctx.fillStyle = R().DOC.paper; ctx.fillRect(0, 0, w, h); ctx.drawImage(img, 0, 0, w, h);
+        resolve({ src: c.toDataURL('image/jpeg', 0.86), w, h });
+      };
+      img.onerror = () => resolve(null);
+      img.src = dataUrl;
+    });
+  }
+  async function exportList(onProgress) {
+    const ids = [...S.res.index.keys()]; let done = 0, next = 0;
+    const images = new Map();
+    await Promise.all(Array.from({ length: 4 }, async () => { while (next < ids.length) { const id = ids[next++]; images.set(id, await exportImage(id)); done++; onProgress(done, ids.length); } }));
+    return R().build(S.doc, S.res, renderSource(id => images.get(id) || null), { measure: S.measure });
+  }
+  function fileStem() { const d = new Date(), p = n => String(n).padStart(2, '0'); return `${(S.doc.title || L('Sunum', 'Presentation')).replace(/[\\/:*?"<>|]+/g, '').trim().slice(0, 80) || 'Buyer_Log'}_${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; }
+  function download(blob, name) { const url = URL.createObjectURL(blob), a = doc_.createElement('a'); a.href = url; a.download = name; doc_.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); }
+  async function runExport(kind) {
+    if (S.exporting) return;
+    S.exporting = true;
+    const btn = S.$('[data-pop="export"]'); btn.disabled = true;
+    const progress = (d, n) => { S.$('[data-ps="status"]').querySelector('.psNum').textContent = L(`Görseller hazırlanıyor ${d}/${n}`, `Preparing images ${d}/${n}`); };
+    try {
+      const list = await exportList(progress), titles = Object.fromEntries([...S.models.values()].map(m => [m.id, m.title]));
+      if (kind === 'pptx') {
+        const JSZip = root.JSZip || await root.BLPerf.ensureLibrary('jszip');
+        const zip = root.BLPresentationPptx.build(JSZip, list, { title: S.doc.title, lang: isEn() ? 'en' : 'tr', palette: R().DOC, titles });
+        download(await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', compression: 'DEFLATE' }), `${fileStem()}.pptx`);
+        toast(L('PowerPoint dosyası indirildi.', 'PowerPoint file downloaded.'));
+      } else {
+        const html = R().documentHtml(list, S.doc.title), desktop = root.buyerLogDesktop;
+        if (desktop && typeof desktop.renderPdf === 'function') {
+          const out = await desktop.renderPdf(html, { landscape: list.w >= list.h, footer: false });
+          if (!out || !out.ok || !out.data) throw Error(out && out.error === 'invalid' ? L('Sunum PDF için çok büyük; sayfa veya model sayısını azaltın.', 'The presentation is too large for PDF; reduce pages or models.') : L('PDF oluşturulamadı.', 'The PDF could not be created.'));
+          download(new Blob([out.data], { type: 'application/pdf' }), `${fileStem()}.pdf`);
+          toast(L('PDF indirildi.', 'PDF downloaded.'));
+        } else printInBrowser(html);
+      }
+    } catch (error) { toast(error && error.message ? error.message : L('Dışa aktarma başarısız oldu.', 'Export failed.'), 'error'); }
+    finally { if (S) { S.exporting = false; btn.disabled = false; renderStatus(); } }
+  }
+  /* Masaüstü kabuğu yoksa: aynı belge gizli çerçevede tarayıcı yazdırmasıyla (PDF olarak kaydet). */
+  function printInBrowser(html) {
+    const frame = doc_.createElement('iframe');
+    frame.className = 'psPrintFrame'; frame.setAttribute('aria-hidden', 'true'); frame.setAttribute('sandbox', 'allow-modals allow-same-origin');
+    frame.srcdoc = html;
+    frame.onload = () => { try { frame.contentWindow.focus(); frame.contentWindow.print(); } finally { setTimeout(() => frame.remove(), 60000); } };
+    doc_.body.appendChild(frame);
+    toast(L('Yazdırma penceresinde “PDF olarak kaydet”i seçin.', 'Choose “Save as PDF” in the print dialog.'));
+  }
+
+  /* ---------------- Olay bağlama ---------------- */
+  function setLevels(levels) {
+    const had = Object.values(S.doc.cards).some(c => c.vgroup != null);
+    commit(() => { S.doc.grouping.levels = levels; for (const c of Object.values(S.doc.cards)) delete c.vgroup; S.doc.labels = {}; });
+    if (had) toast(L('Gruplama değişti: görsel grup taşımaları sıfırlandı, sabit kartlar korundu.', 'Grouping changed: visual group moves were reset, pinned cards were kept.'));
+  }
+  function applyTemplate(t) {
+    const fields = S.meta.ids;
+    const run = mode => {
+      let result = null;
+      commit(() => { result = E().applyTemplate(S.doc, t, { fields, mode }); });
+      fitZoom(); S.pageHtml.clear(); render();
+      const extra = result && result.missing.length ? L(` · bu seçimde olmayan alanlar atlandı: ${result.missing.map(f => S.meta.label(f)).join(', ')}`, ` · fields missing in this selection were skipped: ${result.missing.map(f => S.meta.label(f)).join(', ')}`) : '';
+      toast(L(`“${t.name}” uygulandı; sabit kartlar korundu`, `“${t.name}” applied; pinned cards were kept`) + extra);
+    };
+    const bad = E().pageChangeConflicts(S.doc, E().normalizePage(t.page));
+    if (!bad.length) { run('keep'); return; }
+    dialog(`<h3 id="psDlgTitle">${esc(L(`${bad.length} sabit kart şablonun sayfasına sığmıyor`, `${bad.length} pinned cards do not fit the template page`))}</h3><div class="psOptions"><button type="button" class="tbtn" data-m="keep"><b class="psOptTitle">${esc(L('Koru, sayfa içine al', 'Keep, move inside the page'))}</b></button><button type="button" class="tbtn" data-m="scale"><b class="psOptTitle">${esc(L('Tüm sabitleri orantılı ölçekle', 'Scale all pinned cards proportionally'))}</b></button><button type="button" class="tbtn" data-m="flow"><b class="psOptTitle">${esc(L('Taşanları otomatik akışa bırak', 'Return overflowing cards to automatic flow'))}</b></button></div><div class="modalFoot"><button type="button" class="tbtn" data-m="cancel">${esc(L('Vazgeç', 'Cancel'))}</button></div>`, choice => { if (choice && choice !== 'cancel') run(choice); });
+  }
+  function bindShell() {
+    const host = S.host, $ = S.$, canvas = $('[data-ps="canvas"]');
+    canvas.addEventListener('pointerdown', onPointerDown);
+    S.onMove = e => onPointerMove(e); S.onUp = e => onPointerUp(e);
+    root.addEventListener('pointermove', S.onMove); root.addEventListener('pointerup', S.onUp);
+    S.onResize = () => placeFloat(); root.addEventListener('resize', S.onResize);
+    S.unbind = () => { root.removeEventListener('pointermove', S.onMove); root.removeEventListener('pointerup', S.onUp); root.removeEventListener('resize', S.onResize); };
+    canvas.addEventListener('scroll', () => {
+      if (!S) return;
+      if (S.sel.size) placeFloat();
+      cancelAnimationFrame(S.scrollRaf);
+      S.scrollRaf = requestAnimationFrame(() => { if (S && !S.act && visibleRange().join(':') !== S.range) renderPages(); });
+    }, { passive: true });
+    canvas.addEventListener('wheel', e => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); setZoom(S.zoom * (e.deltaY < 0 ? 1.08 : 1 / 1.08)); }, { passive: false });
+    canvas.addEventListener('load', e => {
+      const img = e.target;
+      if (!(img instanceof HTMLImageElement) || !img.naturalWidth || S.dims.has(img.getAttribute('src'))) return;
+      S.dims.set(img.getAttribute('src'), { w: img.naturalWidth, h: img.naturalHeight });
+      clearTimeout(S.dimTimer); S.dimTimer = setTimeout(() => { if (S && !S.act) render(); }, 160);
+    }, true);
+    host.addEventListener('click', e => {
+      const t = e.target;
+      const pop = t.closest('[data-pop]');
+      if (pop) { openPop(pop.dataset.pop, pop); return; }
+      if (!t.closest('[data-ps="pop"]') && !$('[data-ps="pop"]').hidden) closePop();
+      const ps = t.closest('[data-ps]')?.dataset.ps;
+      if (ps === 'undo') return undo();
+      if (ps === 'redo') return redo();
+      if (ps === 'zoomIn') return setZoom(S.zoom * 1.15);
+      if (ps === 'zoomOut') return setZoom(S.zoom / 1.15);
+      if (ps === 'zoomFit') { fitZoom(); S.pageHtml.clear(); return render(); }
+      if (ps === 'close') return close();
+      if (ps === 'addPage') return pageAction(S.doc.pages[S.doc.pages.length - 1].id, 'add');
+      if (ps === 'fixConf') { let un = 0; commit(() => { un = E().resolvePinned(S.doc); }); toast(un ? L(`${un} kart akışa döndü.`, `${un} cards returned to flow.`) : L('Çakışmalar çözüldü.', 'Overlaps resolved.')); return; }
+      if (ps === 'classic') { const tab = S.tab, scope = S.scope === 'saved' ? 'selected' : S.scope; close(); root.BLPerf.ensureFeature('lcwaiOutputEditor').then(() => root.BLOutputEditor.openSelection(tab, scope)).catch(() => toast(L('Klasik düzenleyici açılamadı.', 'The classic editor could not be opened.'), 'error')); return; }
+      if (ps === 'tplSave') {
+        const name = $('[data-ps="tplName"]').value.trim();
+        if (!name) { $('[data-ps="tplName"]').focus(); return; }
+        const list = loadTemplates().filter(t => t.name !== name); list.unshift(E().templateOf(S.doc, name));
+        writeJson(KEY.templates, list.slice(0, E().LIMITS.templates)); fillPop('templates'); toast(L(`“${name}” şablonu kaydedildi.`, `Template “${name}” saved.`)); return;
+      }
+      const o = t.closest('[data-ps="orient"] button'); if (o && !o.disabled) return changePage({ ...S.doc.page, orient: o.dataset.o });
+      const cs = t.closest('[data-ps="cardStyle"] button'); if (cs) { commit(() => { S.doc.style.card = cs.dataset.v; }); fillPop('design'); return; }
+      const pa = t.closest('[data-pa]'); if (pa) return pageAction(pa.closest('.psPageWrap').dataset.psPage, pa.dataset.pa);
+      const th = t.closest('[data-th]'); if (th) { S.activePage = th.dataset.th; host.querySelector(`.psPageWrap[data-ps-page="${CSS.escape(S.activePage)}"]`)?.scrollIntoView({ block: 'start' }); render(); return; }
+      const back = t.closest('[data-back]'); if (back) return commit(() => { delete S.doc.cards[back.dataset.back].excluded; });
+      const fa = t.closest('[data-fa]'); if (fa) return selAction(fa.dataset.fa);
+      const rm = t.closest('[data-rmlv]'); if (rm) { const lv = [...S.doc.grouping.levels]; lv.splice(Number(rm.dataset.rmlv), 1); return setLevels(lv); }
+      const add = t.closest('[data-addlv]'); if (add) { closePop(); return setLevels([...S.doc.grouping.levels, add.dataset.addlv]); }
+      const rf = t.closest('[data-rf]');
+      if (rf) {
+        closePop();
+        if (rf.dataset.rf === 'keep') { let un = 0; commit(() => { un = E().resolvePinned(S.doc); }); toast(un ? L(`${un} kart için yer bulunamadı; akışa döndü.`, `No space for ${un} cards; returned to flow.`) : L('Sabitler korundu, sayfalar yeniden dengelendi.', 'Pinned cards kept, pages rebalanced.')); }
+        if (rf.dataset.rf === 'order') commit(() => { S.doc.order = [...S.models.keys()].filter(id => S.doc.order.includes(id)); for (const c of Object.values(S.doc.cards)) delete c.vgroup; });
+        if (rf.dataset.rf === 'all') commit(() => { for (const c of Object.values(S.doc.cards)) { c.pinned = false; delete c.vgroup; } S.doc.order = [...S.models.keys()].filter(id => S.doc.order.includes(id)); S.doc.pages = S.doc.pages.filter(p => p.flow); if (!S.doc.pages.length) S.doc.pages = [{ id: 'p' + S.doc.seq++, flow: true, auto: true }]; });
+        return;
+      }
+      const tp = t.closest('[data-tpl]');
+      if (tp) { const k = tp.dataset.tpl, tpl = k[0] === 'b' ? builtinTemplates()[Number(k.slice(1))] : loadTemplates()[Number(k.slice(1))]; closePop(); if (tpl) applyTemplate(tpl); return; }
+      const td = t.closest('[data-tdel]'); if (td) { const list = loadTemplates(); list.splice(Number(td.dataset.tdel) - 1, 1); writeJson(KEY.templates, list); fillPop('templates'); return; }
+      const dk = t.closest('[data-deck]'); if (dk) { closePop(); openDeck(dk.dataset.deck).catch(err => toast(err.message, 'error')); return; }
+      const dd = t.closest('[data-ddel]');
+      if (dd) { const id = dd.dataset.ddel, list = readJson(KEY.decks, []); const d = list.find(x => x.id === id); if (d && root.confirm(L(`“${d.title}” sunumu silinsin mi? Koleksiyon verisi etkilenmez.`, `Delete the “${d.title}” presentation? Collection data is not affected.`))) { writeJson(KEY.decks, list.filter(x => x.id !== id)); removeKey(KEY.deck(id)); fillPop('decks'); } return; }
+      const ex = t.closest('[data-ex]'); if (ex) { closePop(); runExport(ex.dataset.ex); }
+    });
+    host.addEventListener('change', e => {
+      const t = e.target, ps = t.dataset.ps;
+      if (t.dataset.fc) { const f = t.dataset.fc; commit(() => { const on = S.doc.style.fields; S.doc.style.fields = t.checked ? [...on, f].slice(0, E().LIMITS.fields) : on.filter(x => x !== f); }); fillPop('fields'); return; }
+      if (ps === 'labels') return commit(() => { S.doc.style.labels = t.checked; });
+      if (ps === 'font') return commit(() => { S.doc.style.font = t.value; });
+      if (ps === 'keepGroups') return commit(() => { S.doc.style.keepGroups = t.checked; });
+      if (ps === 'brk') return commit(() => { S.doc.grouping.breakTop = t.checked; });
+      if (ps === 'title') return commit(() => { S.doc.title = t.value.trim().slice(0, 120); });
+      if (ps === 'paper') { const size = E().pageSize(S.doc.page); return changePage({ ...S.doc.page, preset: t.value, cw: Math.round(size.mmW), ch: Math.round(size.mmH) }); }
+      if (ps === 'cw' || ps === 'ch') { const w = clamp(Number($('[data-ps="cw"]').value) || 0, 50, 1200), h = clamp(Number($('[data-ps="ch"]').value) || 0, 50, 1200); return changePage({ preset: 'custom', cw: w, ch: h, orient: w >= h ? 'landscape' : 'portrait' }); }
+      if (t.dataset.s) S.slider = false;
+    });
+    host.addEventListener('input', e => {
+      const t = e.target; if (!t.dataset.s) return;
+      if (!S.slider) { pushHistory(); S.slider = true; }
+      S.doc.style[t.dataset.s] = Number(t.value);
+      host.querySelector(`[data-out="${t.dataset.s}"]`).textContent = t.value + t.dataset.u;
+      cancelAnimationFrame(S.raf); S.raf = requestAnimationFrame(() => { relayout(); render(); scheduleSave(); });
+    });
+    host.addEventListener('dblclick', e => {
+      const h = e.target.closest('.psDocHdr'); if (!h) return;
+      const key = h.dataset.hdr, current = S.doc.labels[key] || '';
+      const vals = (S.res.pages.flatMap(p => p.items).find(it => it.kind === 'hdr' && it.key === key) || { vals: [] }).vals.filter(Boolean).join(' · ');
+      const next = root.prompt(L('Grup başlığı (boş bırakılırsa veri değeri kullanılır)', 'Group title (leave empty to use the data value)'), current || vals);
+      if (next == null) return;
+      commit(() => { const v = next.trim().slice(0, E().LIMITS.label); if (v && v !== vals) S.doc.labels[key] = v; else delete S.doc.labels[key]; });
+    });
+    // Sürükle-bırak listeleri (gruplama seviyeleri, kart alanları, sayfa sırası)
+    let dragList = null;
+    host.addEventListener('dragstart', e => {
+      const chip = e.target.closest?.('[data-lv]'), field = e.target.closest?.('.psField[draggable="true"]'), thumb = e.target.closest?.('[data-th]');
+      dragList = chip ? { kind: 'lv', from: Number(chip.dataset.lv) } : field ? { kind: 'f', from: field.dataset.f } : thumb ? { kind: 'th', from: thumb.dataset.th } : null;
+      if (dragList && e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+    });
+    host.addEventListener('dragover', e => { if (dragList) e.preventDefault(); });
+    host.addEventListener('drop', e => {
+      if (!dragList) return; e.preventDefault();
+      const d = dragList; dragList = null;
+      if (d.kind === 'lv') { const to = e.target.closest('[data-lv]'); if (!to) return; const lv = [...S.doc.grouping.levels], [x] = lv.splice(d.from, 1); lv.splice(Number(to.dataset.lv), 0, x); setLevels(lv); }
+      if (d.kind === 'f') { const to = e.target.closest('.psField'); if (!to || !S.doc.style.fields.includes(to.dataset.f) || to.dataset.f === d.from) return; commit(() => { const on = S.doc.style.fields.filter(x => x !== d.from); on.splice(on.indexOf(to.dataset.f), 0, d.from); S.doc.style.fields = on; }); fillPop('fields'); }
+      if (d.kind === 'th') { const to = e.target.closest('[data-th]'); if (!to || to.dataset.th === d.from) return; commit(() => { const pages = S.doc.pages, i = pages.findIndex(p => p.id === d.from), [p] = pages.splice(i, 1); p.auto = false; const j = pages.findIndex(x => x.id === to.dataset.th); pages.splice(i <= j ? j + 1 : j, 0, p); }); }
+    });
+    host.addEventListener('dragend', () => { dragList = null; });
+    S.shell.addEventListener('keydown', onKey);
+  }
+  function onKey(e) {
+    if (e.target.matches('input,select,textarea')) { if (e.key === 'Escape' && !S.$('[data-ps="pop"]').hidden) { e.stopPropagation(); closePop(); } return; }
+    const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
+    if (e.key === 'Escape') {
+      if (!S.$('[data-ps="pop"]').hidden) { e.stopPropagation(); closePop(); return; }
+      if (S.sel.size) { e.stopPropagation(); S.sel.clear(); render(); return; }
+      return; // katman sistemi editörü kapatır
+    }
+    if (mod && k === 'z') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; }
+    if (mod && k === 'y') { e.preventDefault(); redo(); return; }
+    if (mod && k === 'a') { e.preventDefault(); S.sel = new Set(pageItems(S.activePage).filter(i => i.kind === 'card').map(i => i.id)); S.primary = [...S.sel][0]; render(); return; }
+    if (!S.sel.size) return;
+    if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); selAction('exclude'); return; }
+    if (k === 'p' && !mod) { selAction([...S.sel].every(id => S.res.index.get(id)?.pinned) ? 'unpin' : 'pin'); return; }
+    const dir = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+    if (dir) {
+      e.preventDefault();
+      const step = e.shiftKey ? 10 : 1, g = S.res.g, ids = [...S.sel];
+      commit(() => {
+        ids.forEach(id => { if (!S.res.index.get(id)?.pinned) E().pinAt(S.doc, id, S.res.index.get(id)); });
+        for (const id of ids) {
+          const c = S.doc.cards[id], r = { ...c, x: clamp(c.x + dir[0] * step, 0, g.w - c.w), y: clamp(c.y + dir[1] * step, 0, g.h - c.h) };
+          const obs = Object.entries(S.doc.cards).filter(([k2, o]) => k2 !== id && o.pinned && !o.excluded && o.page === c.page && !S.sel.has(k2)).map(([, o]) => o);
+          if (!obs.some(o => E().overlaps(r, o))) { c.x = r.x; c.y = r.y; }
+        }
+      });
+    }
+  }
+  function refreshLanguage() { if (!S) return; localize(); S.pageHtml.clear(); render(); const p = S.$('[data-ps="pop"]'); if (!p.hidden) fillPop(p.dataset.kind); }
+  root.BLPresentationStudio = Object.freeze({ openSelection, openDeck, refreshLanguage, close, _state: () => S });
+})(window);

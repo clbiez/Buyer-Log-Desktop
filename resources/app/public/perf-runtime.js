@@ -142,6 +142,8 @@
     layoutControl:['lcwai-assistant.js?rev=1','layout-control-template.js?rev=3','layout-control-engine.js?rev=4','layout-document-reader.js?rev=2','layout-ai-review.js?rev=1','layout-control.js?rev=6'],
     // LCW AI Çıktı Düzenleyici + çıktı şablonları: yalnız "Düzenle"/"Şablonlar" ile yüklenir.
     lcwaiOutputEditor:['lcwai-output-layout.js?rev=6','lcwai-output-source.js?rev=1','lcwai-output-editor.js?rev=8'],
+    // Presentation Studio (Koleksiyon › Sunum Oluştur): saf motor/çizim/PPTX yazıcısı editörden ÖNCE.
+    presentationStudio:['lcwai-output-source.js?rev=1','presentation-studio-engine.js?rev=1','presentation-studio-render.js?rev=1','presentation-studio-pptx.js?rev=1','presentation-studio.js?rev=1'],
     lfl:['lfl-calculation-engine.js','lfl.js?rev=20261117-strict-detail-images'],
     // v7.0.229 — Üreticiler sayfası: saf motor ve ortak rehber görünümden ÖNCE.
     // email-groups.js deferredUi ile AYNI adla listelenir; loadScript tek kez yükler.
@@ -213,7 +215,7 @@
     manufacturers:['manufacturers.css','backlog-plan-actual.css'],licensecards:['license-cards.css'],orderLicenseAtlas:['license-cards.css'],
     collectionTools:['collection-analytics.css','price-supplier-analysis.css','pricing-workspace.css','pricing-desk.css','collection-spreadsheet.css'],
     backlogAnalysis:['backlog-delivery-analysis.css','backlog-plan-actual.css','backlog-presentation.css'],
-    excelImport:['excel-import.css'],dataManagement:['data-maintenance.css','data-management.css'],
+    excelImport:['excel-import.css'],presentationStudio:['presentation-studio.css'],dataManagement:['data-maintenance.css','data-management.css'],
     userManagement:['user-management.css'],exceptionInbox:['exception-inbox.css'],bomControl:['bom-control.css'],
   };
   const featureViews={
@@ -247,6 +249,7 @@
     if(name==='lcwaiChat'&&typeof global.initLcwAiChat==='function'&&global.BLMarkdown)return true;
     if(name==='layoutControl'&&global.BLLayoutControl&&global.BLLayoutControlEngine)return true;
     if(name==='lcwaiOutputEditor'&&global.BLOutputEditor&&global.BLOutputLayout)return true;
+    if(name==='presentationStudio'&&global.BLPresentationStudio&&global.BLPresentationEngine&&global.BLPresentationRender&&global.BLPresentationPptx&&global.BLOutputSource)return true;
     if(name==='manufacturers'&&typeof global.initManufacturersPage==='function'&&global.BLEmailGroups)return true;
     if(name==='collectionTools'&&typeof global.initPriceSupplierAnalysis==='function'&&global.BLCollectionSpreadsheet)return true;
     if(name==='backlogAnalysis'&&global.BLBacklogAnalysis&&global.BLBacklogPlanActual&&global.BLBacklogPresentation)return true;
