@@ -2246,7 +2246,7 @@
   function qOpenWorkspaceSignature(){
     if(!qWorkspaceMounted||qWorkspaceMode!=='quotations')return '';
     const list=qVisibleRequests(qActiveSource,document.getElementById('quotationSearch')?.value||''),active=qLoad().requests.find(req=>req.id===qActiveId);
-    return JSON.stringify([list.map(req=>[req.id,req.updatedAt,req.status]),active?[active.id,active.updatedAt,(active.manufacturers||[]).length,(active.models||[]).length,(active.items||[]).map(item=>[item.id,item.rev,item.price,item.approved,item.dropped])]:null]);
+    return JSON.stringify([list.map(req=>[req.id,req.updatedAt,req.status,req.round]),active?[active.id,active.updatedAt,active.round,(active.manufacturers||[]).length,(active.models||[]).length,(active.items||[]).map(item=>[item.id,item.rev,item.price,item.approved,item.dropped])]:null]);
   }
   function qRefreshOpenWorkspace(before=null){
     if(!qWorkspaceMounted||qWorkspaceMode!=='quotations')return;
