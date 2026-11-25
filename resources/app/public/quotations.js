@@ -210,8 +210,8 @@
       }catch(err){
         qSaveFailureSerial++;qSaveFailureError=err;
         if(typeof showToast==='function')showToast(err?.message||qLang('Fiyat kaydedilemedi.','Price could not be saved.'));
-        // 409: sunucu geçici çekişmeyi zaten yeniden denedi; ekran kaydedilmemiş fiyatı göstermeye devam etmez.
-        if(err?.status===403||err?.status===404||err?.status===409||err?.status===422)await qHydrateShared(true);
+        // 409: sunucu geçici çekişmeyi zaten yeniden denedi; ekran (açık masa dahil) kaydedilmemiş fiyatı göstermeye devam etmez.
+        if(err?.status===403||err?.status===404||err?.status===409||err?.status===422){const before=qOpenWorkspaceSignature();await qHydrateShared(true);qRefreshOpenWorkspace(before);}
       }
     });
   }

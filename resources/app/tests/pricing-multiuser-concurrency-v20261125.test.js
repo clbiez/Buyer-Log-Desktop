@@ -341,4 +341,5 @@ test('rota ve istemci sözleşmesi: yazım rotaları geçici çekişmeyi yeniden
   const quotes = fs.readFileSync(path.join(ROOT, 'public', 'quotations.js'), 'utf8');
   const lineOp = quotes.slice(quotes.indexOf('function qQueueLineOp('), quotes.indexOf('// Kaynak etiketi'));
   assert.match(lineOp, /err\?\.status===409/, 'tükenen çekişmede ekran kaydedilmemiş fiyatı göstermeye devam etmez');
+  assert.match(lineOp, /const before=qOpenWorkspaceSignature\(\);await qHydrateShared\(true\);qRefreshOpenWorkspace\(before\);/, 'açık Fiyat Masası da sunucu hâliyle yeniden çizilir');
 });
