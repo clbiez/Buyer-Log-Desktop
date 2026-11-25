@@ -158,31 +158,22 @@ test('şablon: yerleşim kaydedilir ve uygulanır; LCW AI’ın yazdığı yerle
   assert.equal(skeleton.layout.rows, 3, 'şablon olarak kaydederken yerleşim gelir');
 });
 
-test('arayüz: İçerik/Yerleşim geçişi, kaydırıcılar, ızgara seçici, hazır yerleşimler, ortak hesap; TR/EN', () => {
-  const editor = fs.readFileSync(path.join(ROOT, 'public', 'lcwai-output-editor.js'), 'utf8');
-  assert.match(editor, /data-ed-mode="layout"/);
-  assert.match(editor, /data-lay="\$\{key\}"/);
-  assert.match(editor, /data-gp="\$\{c\},\$\{r\}"/);
-  assert.match(editor, /data-lay-preset="\$\{key\}"/);
-  assert.match(editor, /LAY\(\)\.expandGalleries\(slides, l,/, 'önizleme sunucuyla aynı hücre/paketleme hesabı');
-  assert.match(editor, /LAY\(\)\.prepareReport\(ed\.data\.body/, 'rapor önizlemesi sunucuyla aynı hazırlık (kart bilgisi, grup, sayfa)');
-  assert.match(editor, /layout: ed\.data\.layout \|\| null/, 'rapor yerleşimi oluşturmaya gider');
-  for (const text of ["L('Yerleşim', 'Layout')", "L('Başlık bandı yüksekliği', 'Title band height')", "L('Model ızgarası', 'Model grid')", "L('Yerleşimi de kaydet', 'Save the layout too')"]) assert.ok(editor.includes(text), text);
-  const shared = fs.readFileSync(path.join(ROOT, 'public', 'lcwai-output-layout.js'), 'utf8');
-  assert.doesNotMatch(shared, /require\(|document\.|window\.[a-z]/, 'saf modül (sunucu + tarayıcı)');
-});
-
-test('sadelik: 3 adımlı üst çubuk, temel ayarlar önde / ince ayar katlı, galeri yoksa ızgara gizli, sohbette şablon seçici yalnız dosya kipinde', () => {
+test('arayüz: İçerik → Önizle ve oluştur; önizleme ve rapor sunucuyla aynı hesap; görsel yerleşim düzenlemesi yok', () => {
   const editor = fs.readFileSync(path.join(ROOT, 'public', 'lcwai-output-editor.js'), 'utf8');
   assert.match(editor, /class="lcwaiEdSteps"/);
-  assert.match(editor, /data-ed-mode="content"[\s\S]*data-ed-mode="layout"[\s\S]*data-ed-render/, 'İçerik → Yerleşim → Dosyayı Oluştur sırası');
-  assert.doesNotMatch(editor, /<select data-ed-orientation/, 'sayfa yönü üst çubukta değil, Yerleşim adımında');
-  assert.match(editor, /data-ed-orient="\$\{key\}"/);
-  assert.match(editor, /<details class="lcwaiLayMore"/, 'ince ayar varsayılan kapalı');
-  assert.match(editor, /const grid = isSheet \? '' : gallery/, 'galeri yoksa ızgara yerine yönlendirme');
+  assert.match(editor, /data-ed-mode="content"[\s\S]*data-ed-mode="review"/, 'İçerik → Önizle ve oluştur sırası');
+  assert.doesNotMatch(editor, /data-ed-mode="layout"|data-lay="|data-gp=|data-lay-preset|isStudio|studio/i, 'Yerleşim/stüdyo kaldırıldı');
+  assert.match(editor, /LAY\(\)\.expandGalleries\(slides, l,/, 'önizleme sunucuyla aynı hücre/paketleme hesabı');
+  assert.match(editor, /LAY\(\)\.prepareReport\(ed\.data\.body/, 'rapor önizlemesi sunucuyla aynı hazırlık (kart bilgisi, grup, sayfa)');
+  assert.match(editor, /layout: ed\.data\.layout \|\| null/, 'rapor yerleşimi (şablon/varsayılan) oluşturmaya gider');
+  for (const text of ["L('Önizle ve oluştur', 'Preview and create')", "L('Yerleşimi de kaydet', 'Save the layout too')"]) assert.ok(editor.includes(text), text);
   assert.match(editor, /<details class="lcwaiEdAdvanced"/, 'şablon penceresinde yapı/ayrıntılar katlı');
   assert.match(editor, /Bu düzeni yine kullanacak mısınız\?/, 'oluşturma sonrası şablon önerisi');
+  const shared = fs.readFileSync(path.join(ROOT, 'public', 'lcwai-output-layout.js'), 'utf8');
+  assert.doesNotMatch(shared, /require\(|document\.|window\.[a-z]/, 'saf modül (sunucu + tarayıcı)');
+  assert.doesNotMatch(shared, /studio|normalizeStudio|applyOperations|presentationReport/i, 'eski stüdyo yerleşimi kaldırıldı');
   const chat = fs.readFileSync(path.join(ROOT, 'public', 'lcwai-chat.js'), 'utf8');
   const options = chat.slice(chat.indexOf('data-output-options hidden'), chat.indexOf('</span>', chat.indexOf('data-output-options hidden')));
   assert.match(options, /data-output-template/, 'şablon seçici dosya seçenekleri içinde (sohbet kipinde gizli)');
 });
+

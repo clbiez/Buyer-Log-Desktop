@@ -252,14 +252,11 @@ test('HTML gösterisi: betiksiz CSS animasyonları (kaydırmayla beliren kartlar
   assert.doesNotMatch(screen.replace(/url\(data:font\/woff2;base64,[^)]*\)/g, ''), /url\(|<script|javascript:/i);
 });
 
-test('arayüz: kart bilgisi seçici, grup bayrakları, 60 kartlık galeri, kaynak satırları LCW AI bağlamına girmez; TR/EN', () => {
+test('arayüz: 60 kartlık galeri, önizleme kartı dosyayla aynı hesap, kaynak satırları LCW AI bağlamına girmez', () => {
   const editor = fs.readFileSync(path.join(ROOT, 'public', 'lcwai-output-editor.js'), 'utf8');
   assert.match(editor, /gallery: 60/, 'düzenleyici sunucu sınırıyla aynı (eskiden 6)');
-  assert.match(editor, /data-lay-field="\$\{esc\(label\)\}"/);
-  assert.match(editor, /data-lay-field-move=/);
-  assert.match(editor, /flag\('packGroups'/);
-  assert.match(editor, /flag\('autoFit'/);
-  for (const text of ["L('Kart bilgileri', 'Card details')", "L('Az model varsa kartları büyüt', 'Enlarge cards when there are few models')", "L('Kaynak', 'Source')", "L('Alan adları', 'Field names')", "L('Varsayılan bilgilere dön', 'Back to the default details')"]) assert.ok(editor.includes(text), text);
+  // Görsel yerleşim düzenlemesi (kart bilgisi seçici, grup bayrakları) kaldırıldı; kart bilgisi şablon/varsayılandan gelir.
+  assert.doesNotMatch(editor, /data-lay-field|flag\('packGroups'|data-ed-mode="layout"/);
   assert.doesNotMatch(editor, /\.badge`|flag\('showBadge'/, 'A3 etiketi düzenleyicide sunulmaz');
   assert.match(editor, /LAY\(\)\.cardContent\(cell, l,/, 'önizleme kartı dosyayla aynı hesap');
   const chat = fs.readFileSync(path.join(ROOT, 'public', 'lcwai-chat.js'), 'utf8');

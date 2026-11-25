@@ -22,13 +22,11 @@ const { lcwAiError, isLcwAiError } = require('../lcwai/lcwai-errors');
 const contracts = require('./output-contracts');
 const { chooseTemplate, templateLabel } = require('./output-templates');
 const { buildDocument } = require('./output-html');
-const { buildDeck } = require('./output-deck');
 const { reportCss } = require('./output-theme');
 const { createOutputStore } = require('./output-store');
 const { collectTokens, normalizeImages, normalizeRecords, fillHtmlImages } = require('./output-images');
 const { createDraftStore } = require('./output-drafts');
 const userTemplates = require('./output-user-templates');
-const studioSource = require('../../../public/lcwai-output-source');
 const BLOutputLayout = require('../../../public/lcwai-output-layout');
 
 const MAX_REPAIRS = 2;
@@ -205,6 +203,8 @@ function createOutputService(options = {}) {
   function draftOf(ownerId, draftId) {
     const draft = drafts.get(ownerId, draftId);
     if (!draft) throw lcwAiError('OUTPUT_NOT_FOUND');
+    // Kayıtlardan oluşturulmuş eski stüdyo taslağı: yeniden çizilirse kartlar LCW AI sınırına kırpılırdı.
+    if (draft.source) throw lcwAiError('OUTPUT_LEGACY_STUDIO');
     return draft;
   }
 
@@ -217,8 +217,7 @@ function createOutputService(options = {}) {
       template: draft.template, templateLabel: draft.templateLabel, revision: draft.revision, updatedAt: draft.updatedAt,
       // Görseller önizlemede (rapor, Yerleşim aracındaki model kartları) kullanılır.
       data: draft.data, imageKeys: Object.keys(draft.images || {}), images: draft.images || {},
-      // Kart bilgisi seçicisi kaynak satırlardaki sütunları da sunar.
-      records: draft.records || {}, source: draft.source || null,
+      records: draft.records || {},
     };
     if (draft.format === 'pdf' || draft.format === 'html') out.previewCss = reportCss({ orientation: draft.orientation, print: false });
     return out;
@@ -233,12 +232,10 @@ function createOutputService(options = {}) {
     const raw = input.data && typeof input.data === 'object' ? input.data : null;
     if (!raw) throw lcwAiError('OUTPUT_EDIT_INVALID', { issues: [lang === 'en' ? 'Content is missing.' : 'İçerik eksik.'] });
     if (input.format && !['pptx', 'pdf', 'html', 'xlsx'].includes(input.format)) throw lcwAiError('BAD_REQUEST');
-    if (raw.layout && raw.layout.studio && (Array.isArray(raw.slides) ? raw.slides : []).reduce((n, slide) => n + (slide && Array.isArray(slide.items) ? slide.items.length : 0), 0) > studioSource.MAX_ROWS) throw lcwAiError('OUTPUT_EDIT_INVALID', { issues: [lang === 'en' ? 'Use up to 30,000 records per presentation.' : 'Sunum başına en fazla 30.000 kayıt kullanın.'] });
     const parsed = draft.format === 'xlsx' ? contracts.normalizeWorkbook(raw, options)
       : draft.format === 'pptx' ? contracts.normalizePresentation(raw, options)
         : contracts.normalizeHtmlDraft(raw, options);
     if (!parsed.ok) throw lcwAiError('OUTPUT_EDIT_INVALID', { issues: parsed.errors });
-    if (draft.source && parsed.warnings.length) throw lcwAiError('OUTPUT_EDIT_INVALID', { issues: parsed.warnings });
     const title = String(input.title == null ? '' : input.title).replace(/\s+/g, ' ').trim().slice(0, contracts.LIMITS.titleChars) || (parsed.data && parsed.data.title) || draft.title;
     if (draft.format !== 'pdf' && draft.format !== 'html') parsed.data.title = title;
     const orientation = input.orientation === 'landscape' || input.orientation === 'portrait' ? input.orientation : draft.orientation;
@@ -247,18 +244,11 @@ function createOutputService(options = {}) {
     const job = {
       format: draft.format, data: parsed.data, title, template: draft.template, templateLabel: draft.templateLabel,
       attempts: 1, lang, orientation, day: draft.day, date: date.toISOString(), requestId: '', draftId: draft.id, edited: true,
-      records: draft.source ? studioSource.normalizeRecords(draft.records, Object.keys(draft.records), lang, draft.source.columns) : raw.layout && raw.layout.studio ? studioSource.bindLegacyRecords(draft.records, lang) : draft.records || {},
+      records: draft.records || {},
     };
-    const imageTokens = parsed.data.layout && parsed.data.layout.studio && draft.format === 'pptx'
-      ? parsed.data.slides.flatMap(slide => [slide.image, ...(slide.items || []).map(item => item.image)]).filter(Boolean)
-      : collectTokens(draft.format, parsed.data);
+    const imageTokens = collectTokens(draft.format, parsed.data);
     const images = normalizeImages(draft.images || {}, imageTokens);
-    let output;
-    if (parsed.data.layout && parsed.data.layout.studio && draft.format === 'pptx') {
-      const target = input.format || 'pptx';
-      if (!['pptx', 'pdf', 'html', 'xlsx'].includes(target)) throw lcwAiError('BAD_REQUEST');
-      output = renderStudio(ownerId, job, images, target,input.assertCurrent);
-    } else output = render(ownerId, job, images,input.assertCurrent);
+    const output = render(ownerId, job, images,input.assertCurrent);
     const finish=value=>({output:value,warnings:parsed.warnings||[],revision:updated?updated.revision:draft.revision});
     return output?.then?output.then(finish):finish(output);
   }
@@ -280,42 +270,6 @@ function createOutputService(options = {}) {
       job.draftId = drafts.create(ownerId, { format: 'xlsx', data: job.data, title: job.title, template: job.template, templateLabel: label, lang, orientation: 'portrait', detail: 'standard', day, images: {} });
     } catch (_) { job.draftId = null; }
     return render(ownerId, job, {},input.assertCurrent);
-  }
-
-  function renderStudio(ownerId, job, images, target,assertCurrent) {
-    if (target === 'pptx') return render(ownerId, job, images,assertCurrent);
-    if (target === 'xlsx') {
-      const items = job.data.slides.flatMap(s => s.layout === 'gallery' ? s.items : []);
-      const fields = job.data.layout.cardFields || [];
-      // Excel retains typed bound values and every record; long lists are split into sheets.
-      const sheets = [];
-      for (let start = 0; start < items.length; start += 5000) {
-        sheets.push({ name: `${job.lang === 'en' ? 'Models' : 'Modeller'} ${sheets.length + 1}`, columns: [{ header: 'Model', type: 'text' }, ...fields.map(id => {
-          const record = job.records[items[0].image];
-          return { header: record && record.labels && record.labels[id] || id, type: studioSource.columnType(id) };
-        })], rows: items.slice(start, start + 5000).map(item => [item.title, ...fields.map(id => {
-          const record = job.records[item.image];
-          return record && !Array.isArray(record) && record.values ? record.values[id] ?? null : BLOutputLayout.fieldValue(item, id, job.records);
-        })]) });
-      }
-      const parsed = contracts.normalizeWorkbook({ title: job.title, sheets }, { lang: job.lang });
-      if (!parsed.ok || parsed.warnings.length) throw lcwAiError('OUTPUT_EDIT_INVALID', { issues: [...parsed.errors, ...parsed.warnings] });
-      return render(ownerId, { ...job, format: target, data: parsed.data }, {},assertCurrent);
-    }
-    if (target === 'html') {
-      // HTML: etkileşimli, animasyonlu sunum (yalnız CSS; katı CSP korunur). PDF aşağıdaki baskı yolunda kalır.
-      try {
-        const buffer = Buffer.from(buildDeck({ data: job.data, records: job.records, images, title: job.title, lang: job.lang, date: job.day }), 'utf8');
-        return store.save(ownerId, { buffer, title: job.title, format: 'html', template: job.template, templateLabel: job.templateLabel, attempts: job.attempts, requestId: job.requestId, draftId: job.draftId, edited: Boolean(job.edited) });
-      } catch (error) {
-        if (isLcwAiError(error)) throw error;
-        throw lcwAiError('OUTPUT_RENDER_FAILED', { detail: String(error && error.code || 'deck').slice(0, 60) });
-      }
-    }
-    const report = BLOutputLayout.presentationReport(job.data, job.records, job.lang === 'en');
-    const c = require('./output-theme').theme().colors;
-    const css = `@page{size:${report.width}pt ${report.height}pt;margin:0}html,body,.bl-page,.bl-report{margin:0!important;padding:0!important;max-width:none!important;width:auto!important}.bl-header,.bl-footer{display:none!important}.bl-studio-page{background:${c.paper};margin:0!important;overflow:hidden}.bl-studio-page:last-child{break-after:auto}.bl-studio-title{color:${c.ink}}.bl-studio-title small{display:block;font-size:12pt}.bl-studio-card{background:${c.paper};border:0.5pt solid ${c.line}}.bl-studio-card img{max-width:none!important;margin:0!important}.bl-studio-content table{width:100%}`;
-    return render(ownerId, { ...job, format: target, pageFooter: false, orientation: job.data.layout.studio.orientation, data: { body: report.body, styles: [css], title: job.title, layout: null } }, images,assertCurrent);
   }
 
   /* Şablon olarak kaydetme: taslaktaki (ya da düzenleyicideki) yapının

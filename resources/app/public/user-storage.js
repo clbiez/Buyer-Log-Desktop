@@ -19,8 +19,6 @@
     'bl.backlog.excelColumns.','bl.detailTables.showImages.','bl.modelImages.','bl.tableRange.','bl.refreshHistory.','bl.autoRefresh.','bl.lcwai.history.','buyerlog.overview.notesReminderCollapsed','buyerlog.overview.collectionSummary.','buyerlog.overview.layout.','buyerlog.overview.breakdown.','buyerlog.overview.globalFlow.',
     // v2026-10-30 — kişisel ASAS ⇄ IAS alan eşleme hafızası (yalnız sunucu yazar).
     'buyerlog.horizonFieldPairs.',
-    // v2026-11-14 — PowerPoint düzenleyici panel/önizleme genişliği kişiseldir (cihazda kalır, eşitlenmez).
-    'bl.lcwai.studioSplit',
     // v2026-11-15 — tablo içi Rapor görünümü tercihi tablo ve kullanıcı başınadır.
     'buyerlog.tableReportMode.',
     // v2026-11-19 — Siparişler okuma modeli pilot anahtarı kullanıcı başınadır (#1076).

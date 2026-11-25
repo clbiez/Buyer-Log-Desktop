@@ -37,7 +37,7 @@ thead th:hover {color:var(--ui-text)
 }
 tbody tr:hover {background:var(--ui-row-hover)
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 *,*::before,*::after {animation:none;transition:none
 }
 }
@@ -121,7 +121,7 @@ button:hover {
   background:color-mix(in srgb,var(--ui-text) 5%,transparent);
   color:var(--ui-text)
 }
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce){
 *,*::before,*::after {
     transition:none!important;
     animation:none!important
@@ -166,7 +166,7 @@ html[data-ui-system="manifest"] .blCmdEmpty {color:var(--ui-text-muted) !importa
 }
 html[data-ui-system="manifest"] .blCmdFoot {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important;background:var(--ui-surface-soft) !important
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .blCmdCard {animation:none !important
 }
 }
@@ -283,7 +283,7 @@ html[data-ui-system="manifest"] .ximProgress li { color:var(--ui-text-muted) !im
 }
 html[data-ui-system="manifest"] .ximProgress li.isActive { background:var(--ui-selected) !important; color:var(--ui-text) !important
 }
-@media (max-width:820px) {
+@media (max-width:820px){
 html[data-ui-system="manifest"] .ximTable { font-size:var(--ui-font-xs) !important
 }
 }
@@ -484,7 +484,7 @@ html[data-ui-system="manifest"] .layoutRowIdentity>.layoutBuyerDecision {color:v
 }
 html[data-ui-system="manifest"] .layoutRowExpand {font-size:var(--ui-font-2xs) !important;color:var(--ui-accent) !important
 }
-@media (max-width:1200px) {
+@media (max-width:1200px){
 html[data-ui-system="manifest"] .layoutRowCell::before {color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important
 }
 }
@@ -723,7 +723,7 @@ html[data-ui-system="manifest"] .gfEarthProgress {z-index:var(--ui-z-data)
 }
 html[data-ui-system="manifest"] .gfEarthProgress i {background:var(--ui-accent) !important;animation:none !important
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .gfEarthProgress i {animation:none !important
 }
 }
@@ -964,11 +964,11 @@ html[data-ui-system="manifest"] .ovClockRemove:hover {background:var(--ui-surfac
 }
 html[data-ui-system="manifest"] .ovClockEmpty {color:var(--ui-text-muted) !important;font-size:var(--ui-font-sm) !important
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .ovHome.ovHomeSlideNext>[data-overview-widget],html[data-ui-system="manifest"] .ovHome.ovHomeSlidePrev>[data-overview-widget],html[data-ui-system="manifest"] .ovHome>[data-overview-widget].ovHomePulse {animation:none !important
 }
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .ovHomeDrawer,html[data-ui-system="manifest"] .ovHomeDrawerOverlay,html[data-ui-system="manifest"] .ovHomeDot {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 }
@@ -1142,15 +1142,15 @@ html[data-ui-system="manifest"] .ovClockClose {background:transparent !important
 }
 html[data-ui-system="manifest"] .ovBdFill,html[data-ui-system="manifest"] .ovBdStack {animation:none !important
 }
-@container ovw (max-width:400px) {
+@container ovw (max-width:400px){
 html[data-ui-system="manifest"] .ovPulseKpi>strong {font-size:var(--ui-font-xl) !important
 }
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .ovHorizonTrack>i,html[data-ui-system="manifest"] .ovMetricRow em,html[data-ui-system="manifest"] .ovBdFill,html[data-ui-system="manifest"] .ovBdStack {animation:none !important
 }
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .ovShowcaseProducts img,html[data-ui-system="manifest"] .ovCollectionMonthThumb {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 }
@@ -1298,7 +1298,7 @@ html[data-ui-system="manifest"] .railFoot button {background:none !important;fon
 }
 html[data-ui-system="manifest"][data-rail="min"] .rail:hover,html[data-ui-system="manifest"][data-rail="min"] .rail:focus-within {z-index:var(--ui-z-popover)
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"][data-rail="min"] .rail {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 }
@@ -1926,7 +1926,7 @@ html[data-ui-system="manifest"] #_toast {color:var(--ui-canvas) !important;font-
 }
 html[data-ui-system="manifest"] .dropzone {color:var(--ui-on-accent) !important;font-size:var(--ui-font-xl) !important;font-weight:650 !important;z-index:var(--ui-z-popover)
 }
-@media (max-width:1100px) {
+@media (max-width:1100px){
 html[data-ui-system="manifest"] .vfBar .navColsRight {background:var(--ui-surface) !important;z-index:var(--ui-z-data)
 }
 }
@@ -2305,15 +2305,15 @@ html[data-ui-system="manifest"] .navSortableItem.dropBefore::before,html[data-ui
 html[data-ui-system="manifest"] .tableToolbarActions>.navActionBtn,html[data-ui-system="manifest"] .tableToolbarActions>button.tbtn,html[data-ui-system="manifest"] .tableToolbarActions>label.tbtn {
   font-size:var(--ui-font-xs) !important
 }
-@media (max-width:1150px) {
+@media (max-width:1150px){
 html[data-ui-system="manifest"] .tableToolbarActions>.navActionBtn,html[data-ui-system="manifest"] .tableToolbarActions>button.tbtn,html[data-ui-system="manifest"] .tableToolbarActions>label.tbtn {font-size:var(--ui-font-2xs) !important
 }
 }
-@media (max-width:900px) {
+@media (max-width:900px){
 html[data-ui-system="manifest"] .tableActionToolbar>input[type=search] {background:var(--ui-surface-strong) !important
 }
 }
-@media (max-width:1000px) {
+@media (max-width:1000px){
 html[data-ui-system="manifest"] #ordersTableToolbar>input[type=search] {z-index:var(--ui-z-base);background:var(--ui-surface-strong) !important
 }
 }
@@ -2594,7 +2594,7 @@ html[data-ui-system="manifest"] .mailTopicPricingHint {background:color-mix(in s
 }
 html[data-ui-system="manifest"] .mailTopicColumnsFoot #mailTopicEditorSave {background:var(--ui-accent) !important;color:var(--ui-on-accent,var(--ui-surface)) !important
 }
-@media (max-width:620px) {
+@media (max-width:620px){
 html[data-ui-system="manifest"] .mailTopicSubjectToggle {font-size:var(--ui-font-2xs) !important
 }
 }
@@ -2980,7 +2980,7 @@ html[data-ui-system="manifest"] .centerNotice .centerNoticeCard {
 }
 html[data-ui-system="manifest"] .centerNotice .centerNoticeIcon {color:var(--ui-success,var(--ui-accent)) !important
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .centerNotice .centerNoticeCard {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 }
@@ -3987,7 +3987,7 @@ html[data-ui-system="manifest"] .oabDrillImageEmpty {color:var(--ui-text-muted) 
 }
 html[data-ui-system="manifest"] tr.blRemoteChanged>td {animation:none !important
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] tr.blRemoteChanged>td {animation:none !important;background-color:color-mix(in srgb,var(--ui-accent) 14%,transparent) !important
 }
 }
@@ -4183,7 +4183,7 @@ html[data-ui-system="manifest"] .oabActivitySteps>span.isDone b {background:colo
 }
 html[data-ui-system="manifest"] .oabActivityWarning {background:color-mix(in srgb,var(--ui-warning) 9%,var(--ui-surface)) !important;color:var(--ui-text) !important;font-size:var(--ui-font-2xs) !important;font-weight:650 !important;line-height:1.35
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .oabMiniBrowserPulse,html[data-ui-system="manifest"] .oabActivityFlow span {animation:none!important
 }
 }
@@ -4712,23 +4712,23 @@ html[data-ui-system="manifest"] .blColResizeBadge {z-index:var(--ui-z-tooltip);
 }
 html[data-ui-system="manifest"] .toolbarMoreMenu .toolbarOverflowItem {font-size:var(--ui-font-xs) !important
 }
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce){
 html[data-ui-system="manifest"] #topRefreshBtn.spinning .ic {animation:none!important
 }
 }
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce){
 html[data-ui-system="manifest"] #serverRefreshBtn.spinning .ic,html[data-ui-system="manifest"] .overviewDataNoticeSpinner {animation:none!important
 }
 }
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce){
 html[data-ui-system="manifest"] .appBlockingSpinner {animation:none!important
 }
 }
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce){
 html[data-ui-system="manifest"] .prepareEmailProgressSpinner {animation:none!important
 }
 }
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce){
 html[data-ui-system="manifest"] .outlookLoading>span {animation:none!important
 }
 }
@@ -5070,7 +5070,7 @@ html[data-ui-system="manifest"] .ovCollectionMonthTip>span:not(.ovCollectionTipS
 }
 html[data-ui-system="manifest"] .ovCollectionMonthTip small {font-size:var(--ui-font-2xs) !important;font-weight:600 !important;color:var(--ui-text-muted) !important
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .ovCollectionMonthRow {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 }
@@ -5144,11 +5144,11 @@ html[data-ui-system="manifest"] .mailTopicTablePreview small,html[data-ui-system
 }
 html[data-ui-system="manifest"] .mailTopicEditorCard .mailTopicFieldGroupToggle:focus-visible,html[data-ui-system="manifest"] .mailTopicEditorCard .mailTopicGroupCheck input:focus-visible {outline:2px solid var(--ui-accent);outline-offset:2px
 }
-@media (max-width:650px) {
+@media (max-width:650px){
 html[data-ui-system="manifest"] .mailTopicEditorCard .mailTopicSubjectToggle {font-size:var(--ui-font-2xs) !important
 }
 }
-@media (max-width:650px) {
+@media (max-width:650px){
 html[data-ui-system="manifest"] .mailTopicEditorCard .mailTopicSubjectLegend {font-size:var(--ui-font-2xs) !important
 }
 }
@@ -5428,7 +5428,7 @@ html[data-ui-system="manifest"] .endeksmatikImportSteps li[data-state="done"]>sp
 }
 html[data-ui-system="manifest"] .endeksmatikImportFootnote {font-size:var(--ui-font-sm) !important;color:var(--ui-text-muted) !important
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .endeksmatikImportSpinner {animation:none !important
 }
 }
@@ -5546,7 +5546,7 @@ html[data-ui-system="manifest"] .dateCalendarDay {font-size:var(--ui-font-xs) !i
 }
 html[data-ui-system="manifest"] .dateCalendarDay.selected {background:var(--ui-accent) !important;color:var(--ui-on-accent) !important
 }
-@media (max-width:760px) {
+@media (max-width:760px){
 html[data-ui-system="manifest"] .appTop h1 {font-size:var(--ui-font-md) !important
 }
 }
@@ -5629,7 +5629,7 @@ html[data-ui-system="manifest"] .tbtn.isActionWorking::after,html[data-ui-system
 }
 html[data-ui-system="manifest"] .tbtn.isActionDone,html[data-ui-system="manifest"] .navActionBtn.isActionDone {animation:none !important
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .tbtn.isActionWorking::after,html[data-ui-system="manifest"] .navActionBtn.isActionWorking::after,html[data-ui-system="manifest"] .tbtn.isActionDone,html[data-ui-system="manifest"] .navActionBtn.isActionDone {animation:none!important
 }
 }
@@ -5660,7 +5660,7 @@ html[data-ui-system="manifest"] .appTop .corporateConnection[data-state="connect
 }
 html[data-ui-system="manifest"] .appTop .corporateConnection[data-state="connecting"] {color:var(--ui-text-muted) !important
 }
-@media (max-width:850px) {
+@media (max-width:850px){
 html[data-ui-system="manifest"] .appTop .corporateConnection {font-size:var(--ui-font-2xs) !important
 }
 }
@@ -5735,7 +5735,7 @@ html[data-ui-system="manifest"] .imageDeleteConfirmPopover .imageSetMainColour {
 html[data-ui-system="manifest"] .imageDeleteConfirmPopover .imageSetMainColour:hover:not(:disabled) {
   background:var(--ui-selected) !important
 }
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce){
 html[data-ui-system="manifest"] .spinner,html[data-ui-system="manifest"] [data-loading] .ic {
     animation:none!important
 }
@@ -6211,7 +6211,7 @@ html[data-ui-system="manifest"] .umDialogBody input,html[data-ui-system="manifes
 }
 html[data-ui-system="manifest"] .umConfirmText { font-size:var(--ui-font-base) !important; line-height:1.5
 }
-@media (max-width:900px) {
+@media (max-width:900px){
 html[data-ui-system="manifest"] .umDrawer { z-index:var(--ui-z-data); box-shadow:var(--ui-shadow-overlay) !important
 }
 }
@@ -6627,42 +6627,6 @@ html[data-ui-system="manifest"] .lcwaiTplRow {background:var(--ui-surface) !impo
 }
 html[data-ui-system="manifest"] .lcwaiTplRow .lcwaiFileInfo small.lcwaiTplPreview {color:var(--ui-text-secondary) !important
 }
-html[data-ui-system="manifest"] .lcwaiLayControls {background:var(--ui-surface) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayGroup h4 {font-size:var(--ui-font-xs) !important;font-weight:700 !important;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-text-muted) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayCtl {font-size:var(--ui-font-xs) !important;color:var(--ui-text-secondary) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayCtl b {color:var(--ui-selected-ink) !important;font-variant-numeric:tabular-nums !important
-}
-html[data-ui-system="manifest"] .lcwaiLayCtl small {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayCtl input[type="range"] {accent-color:var(--ui-accent)
-}
-html[data-ui-system="manifest"] .lcwaiLayGridPick button {background:var(--ui-surface-soft) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayGridPick button.is-on {background:var(--ui-accent) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayGridText {font-size:var(--ui-font-sm) !important;color:var(--ui-text-secondary) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayGridText b {color:var(--ui-selected-ink) !important;font-size:var(--ui-font-md) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayFlag {font-size:var(--ui-font-xs) !important;color:var(--ui-text-secondary) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayFields {background:var(--ui-surface) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayField {font-size:var(--ui-font-xs) !important;color:var(--ui-text-secondary) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayField.is-on {color:var(--ui-text) !important;background:var(--ui-selected) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayFieldSrc {font-size:var(--ui-font-2xs) !important;color:var(--ui-selected-ink) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayPick {font-size:var(--ui-font-xs) !important;color:var(--ui-text-secondary) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayChip {font-size:var(--ui-font-2xs) !important;color:var(--ui-selected-ink) !important;background:var(--ui-selected) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayChip:hover {background:var(--ui-surface) !important
-}
 html[data-ui-system="manifest"] .lcwaiLayStageHead {font-size:var(--ui-font-sm) !important;color:var(--ui-text-secondary) !important
 }
 html[data-ui-system="manifest"] .lcwaiLayStageHead small {color:var(--ui-text-muted) !important
@@ -6765,31 +6729,7 @@ html[data-ui-system="manifest"] .lcwaiEdIconBtn.is-tool {font-size:var(--ui-font
 }
 html[data-ui-system="manifest"] .lcwaiEdIconBtn.is-tool:hover {color:var(--ui-text) !important
 }
-html[data-ui-system="manifest"] .lcwaiLayPreset {background:var(--ui-surface) !important;color:var(--ui-text) !important;font:inherit !important
-}
-html[data-ui-system="manifest"] .lcwaiLayPreset.is-active {background:var(--ui-selected) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayPreset b {font-size:var(--ui-font-sm) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayPreset small {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important;line-height:1.3
-}
-html[data-ui-system="manifest"] .lcwaiLayThumb {background:var(--ui-surface-soft) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayThumb i {background:var(--ui-group-divider) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayPreset.is-active .lcwaiLayThumb i {background:var(--ui-accent) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayThumb.is-text b,html[data-ui-system="manifest"] .lcwaiLayThumb.is-text i {background:none !important;font-style:normal !important;color:var(--ui-text-secondary) !important;line-height:1
-}
-html[data-ui-system="manifest"] .lcwaiLayGridPick button.is-hover {background:var(--ui-selected) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayGridPick button.is-on.is-hover {background:var(--ui-accent) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayGridText.is-hover span {color:var(--ui-text-muted) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayMore>summary,html[data-ui-system="manifest"] .lcwaiEdAdvanced>summary {font-size:var(--ui-font-xs) !important;font-weight:600 !important;color:var(--ui-text-secondary) !important
-}
-html[data-ui-system="manifest"] .lcwaiLayFlags>span {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+html[data-ui-system="manifest"] .lcwaiEdAdvanced>summary {font-size:var(--ui-font-xs) !important;font-weight:600 !important;color:var(--ui-text-secondary) !important
 }
 html[data-ui-system="manifest"] .lcwaiEdAdvanced {background:var(--ui-surface-soft) !important
 }
@@ -6969,11 +6909,11 @@ html[data-ui-system="manifest"] .blGuideTarget {outline:0;outline-offset:5px;bac
 }
 html[data-ui-system="manifest"] .blGuideEmpty {color:var(--ui-text-secondary) !important
 }
-@media (max-width:1000px) {
+@media (max-width:1000px){
 html[data-ui-system="manifest"] .blGuideCopy h2 {font-size:var(--ui-font-2xl) !important
 }
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .blGuideVisual svg .blGuideRoute {animation:none !important
 }
 }
@@ -7089,27 +7029,27 @@ html[data-ui-system="manifest"] #blBootGuard.blBootWithGuide .blBootContinue:hov
 }
 html[data-ui-system="manifest"] #blBootGuard[data-ready="1"] [data-boot-message]::before {color:var(--ui-success,var(--ui-accent)) !important
 }
-@media (max-width:760px) {
+@media (max-width:760px){
 html[data-ui-system="manifest"] .blTriviaIcon {font-size:var(--ui-font-2xl) !important
 }
 }
-@media (max-width:760px) {
+@media (max-width:760px){
 html[data-ui-system="manifest"] .blTriviaCopy h2 {font-size:var(--ui-font-2xl) !important
 }
 }
-@media (max-width:760px) {
+@media (max-width:760px){
 html[data-ui-system="manifest"] .blTriviaCopy p {font-size:var(--ui-font-md) !important
 }
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .blTriviaVisual,html[data-ui-system="manifest"] .blTriviaVisual *,html[data-ui-system="manifest"] .blTriviaIcon,html[data-ui-system="manifest"] .blTriviaCopy,html[data-ui-system="manifest"] .blBootContinue {animation:none!important
 }
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .blTriviaProgress i {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .blTriviaVisual .draw {stroke-dashoffset:0
 }
 }
@@ -7131,11 +7071,11 @@ html[data-ui-system="manifest"] .blTriviaHoldContinue:hover {background:var(--ui
 }
 html[data-ui-system="manifest"] .blTriviaHoldContinue:focus-visible {outline:2px solid var(--ui-accent,var(--ui-accent));outline-offset:3px
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .blTriviaHold,html[data-ui-system="manifest"] .blTriviaHoldContinue {animation:none !important
 }
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .blTriviaHold[data-leaving="1"] {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 }
@@ -7881,15 +7821,15 @@ html[data-ui-system="manifest"] .blRnLightboxClose:hover {color:var(--ui-accent)
 }
 html[data-ui-system="manifest"] .blRnLightboxClose:focus-visible {outline:2px solid var(--ui-accent);outline-offset:2px
 }
-@media (max-width:680px) {
+@media (max-width:680px){
 html[data-ui-system="manifest"] .blRnHeader h1 {font-size:var(--ui-font-2xl) !important
 }
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .blRnVisual,html[data-ui-system="manifest"] .blRnFocus {animation:none !important
 }
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .blRnShot img,html[data-ui-system="manifest"] .blRnNavBtn {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 }
@@ -8377,15 +8317,15 @@ html[data-ui-system="manifest"] .syncStatusActions>[data-refresh] {color:var(--u
 }
 html[data-ui-system="manifest"] .syncStatusActions>[data-refresh]:hover {background:var(--ui-surface) !important;color:var(--ui-text-secondary) !important
 }
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce){
 html[data-ui-system="manifest"] .syncStatusBadge.is-syncing .ic {animation:none!important
 }
 }
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce){
 html[data-ui-system="manifest"] .uiStateSpinner,html[data-ui-system="manifest"] .uiFeedbackSpinner {animation:none!important
 }
 }
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce){
 html[data-ui-system="manifest"] .umSpinner {animation:none!important
 }
 }
@@ -8495,7 +8435,7 @@ html[data-ui-system="manifest"] .uiFeedbackClose:focus-visible {color:var(--ui-t
 }
 html[data-ui-system="manifest"] .uiFeedbackDetail {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .uiFeedback {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 }
@@ -8887,11 +8827,11 @@ html[data-ui-system="manifest"] .kolScopePanel .kolScopeOptions .tbtn,html[data-
 }
 html[data-ui-system="manifest"] .kolScopePanel [data-grant-picker] input[type="search"] {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font-size:var(--ui-font-2xs) !important
 }
-@media (max-width:650px) {
+@media (max-width:650px){
 html[data-ui-system="manifest"] .kolScopeSectionLabel {font-size:var(--ui-font-2xs) !important
 }
 }
-@media (max-width:650px) {
+@media (max-width:650px){
 html[data-ui-system="manifest"] .kolScopePresets .tbtn,html[data-ui-system="manifest"] .kolScopeDim>summary {font-size:var(--ui-font-2xs) !important
 }
 }
@@ -9351,11 +9291,11 @@ html[data-ui-system="manifest"] .pdHighlight {font-size:var(--ui-font-sm) !impor
 }
 html[data-ui-system="manifest"] .pdHighlight small {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-secondary) !important
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .pdShell *,html[data-ui-system="manifest"] .pdToast,html[data-ui-system="manifest"] .pdScopePanel {animation:none!important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .pdSeries {stroke-dashoffset:0
 }
 }
@@ -9477,11 +9417,11 @@ html[data-ui-system="manifest"] .cpdCountryList {background:var(--ui-surface) !i
 }
 html[data-ui-system="manifest"] .cpdCountryList label:hover {background:var(--ui-surface-soft) !important
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .kolHealthChip,html[data-ui-system="manifest"] .cpdOffer {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .kolHealthBar,html[data-ui-system="manifest"] .cpdSection {animation:none !important
 }
 }
@@ -10457,11 +10397,11 @@ html[data-ui-system="manifest"] .lmUsage {font-size:var(--ui-font-xs) !important
 }
 html[data-ui-system="manifest"] .lmScrim.isError .lmStatus {color:var(--ui-danger) !important
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .lcTable.isEntering .lcRow,html[data-ui-system="manifest"] .lcRow.isSaved,html[data-ui-system="manifest"] .lcDetail,html[data-ui-system="manifest"] .lmScrim,html[data-ui-system="manifest"] .lmDrawer,html[data-ui-system="manifest"] .lmStage,html[data-ui-system="manifest"] .lmRoute,html[data-ui-system="manifest"] .lmFlowStep,html[data-ui-system="manifest"] .lcNote,html[data-ui-system="manifest"] .lcNotice,html[data-ui-system="manifest"] .lcRowSave,html[data-ui-system="manifest"] .lcDetailFoot,html[data-ui-system="manifest"] .lcRowMsg,html[data-ui-system="manifest"] .lcCover img,html[data-ui-system="manifest"] .lmGuide,html[data-ui-system="manifest"] .lcSkeleton i,html[data-ui-system="manifest"] .lmTpl,html[data-ui-system="manifest"] .lmNaming,html[data-ui-system="manifest"] .lmNotice,html[data-ui-system="manifest"] .lmTemplate {animation:none !important
 }
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .lcSelectionBar,html[data-ui-system="manifest"] .lmMore,html[data-ui-system="manifest"] .lcRow,html[data-ui-system="manifest"] .lcThumb img,html[data-ui-system="manifest"] .lcExpand .ic,html[data-ui-system="manifest"] .lmExpand .ic {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 }
@@ -10471,7 +10411,7 @@ html[data-ui-system="manifest"] .lmDrawer .lmNewTag input {background:var(--ui-s
 }
 html[data-ui-system="manifest"] .lmDrawer .lmNewTag input:focus {outline:0
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .lmNewTagRow {animation:none !important
 }
 }
@@ -10519,11 +10459,11 @@ html[data-ui-system="manifest"] .lcClipPaste {color:var(--ui-accent) !important;
 }
 html[data-ui-system="manifest"] .lcClipBar {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;font-size:var(--ui-font-xs) !important;animation:none !important
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .lcMergePanel,html[data-ui-system="manifest"] .lcClipPaste,html[data-ui-system="manifest"] .lcClipBar {animation:none !important
 }
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .lcClipCopy {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 }
@@ -12118,7 +12058,7 @@ html[data-ui-system="manifest"] #kolTableActions>.kolSelectedGroupLabel {font-si
 }
 html[data-ui-system="manifest"] #kolTableActions>.kolSelectedGroupLabel::before {background:var(--ui-group-divider) !important
 }
-@media (max-width:1350px) {
+@media (max-width:1350px){
 html[data-ui-system="manifest"] #kolTableActions>.kolSelectedGroupLabel {font-size:0 !important
 }
 }
@@ -12609,7 +12549,7 @@ html[data-ui-system="manifest"] .blvTipBox.is-chart-style .blvTimelineTooltipOve
 }
 html[data-ui-system="manifest"] .blvGroupBar {background:var(--ui-series-color) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .blvGroupBar,html[data-ui-system="manifest"] .blvBuyerBar,html[data-ui-system="manifest"] .blvBuyerStack,html[data-ui-system="manifest"] .blvBuyerStackSeg {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 }
@@ -13039,11 +12979,11 @@ html[data-ui-system="manifest"] .bpaDrawerStats span {font-size:var(--ui-font-xs
 }
 html[data-ui-system="manifest"] .bpaDrawerTable {border-top:0 !important
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .bpaBar,html[data-ui-system="manifest"] .bpaColBar,html[data-ui-system="manifest"] .bpaRevBar,html[data-ui-system="manifest"] .bpaRingValue,html[data-ui-system="manifest"] .bpaDrawer,html[data-ui-system="manifest"] .bpaDrawerScrim,html[data-ui-system="manifest"] .bpaSeg,html[data-ui-system="manifest"] .bpaTile {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .bpaSpinner {animation:none !important
 }
 }
@@ -13213,7 +13153,7 @@ html[data-ui-system="manifest"] .blChartLine {fill:none;stroke:var(--ui-accent);
 }
 html[data-ui-system="manifest"] .blChartPoint {fill:var(--ui-accent);stroke:var(--ui-surface);stroke-width:1.4
 }
-@media (max-width:680px) {
+@media (max-width:680px){
 html[data-ui-system="manifest"] .backlogChartTypeSwitch button {font-size:var(--ui-font-2xs) !important
 }
 }
@@ -13251,7 +13191,7 @@ html[data-ui-system="manifest"] .blpFrame {background:var(--ui-canvas) !importan
 }
 html[data-ui-system="manifest"] .blpState {color:var(--ui-text-secondary) !important;font-size:var(--ui-font-sm) !important
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .blpDialog {animation:none !important
 }
 }
@@ -13332,7 +13272,7 @@ html[data-ui-system="manifest"] .blDetailViewPreset[aria-pressed="true"] {backgr
 }
 html[data-ui-system="manifest"] .blDetailTable .blDetailGroupRow th {z-index:var(--ui-z-data);background:var(--ui-surface-strong) !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-2xs) !important;font-weight:650 !important;letter-spacing:.4px;border-bottom:0 !important
 }
-@media (max-width:760px) {
+@media (max-width:760px){
 html[data-ui-system="manifest"] .blDetailViewLabel {background:var(--ui-surface) !important;z-index:var(--ui-z-data)
 }
 }
@@ -13390,7 +13330,7 @@ html[data-ui-system="manifest"] .blDetailReportFilter button {background:transpa
 }
 html[data-ui-system="manifest"] .blDetailReportFilter button:hover,html[data-ui-system="manifest"] .blDetailReportFilter button.filterActive {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
 }
-@media (max-width:760px) {
+@media (max-width:760px){
 html[data-ui-system="manifest"] .blDetailDrawerTitle b {font-size:var(--ui-font-xl) !important
 }
 }
@@ -13934,7 +13874,7 @@ html[data-ui-system="manifest"] .cpaCheckTileCounts>span {background:var(--ui-su
 }
 html[data-ui-system="manifest"] .cpaCheckTileCounts .cpaCheckRejected {color:var(--ui-danger) !important;background:var(--ui-danger-bg) !important
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .cpaCheckTile {animation:none !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 }
@@ -14235,7 +14175,7 @@ html[data-ui-system="manifest"] .cpDimPanel.viewportFloating {z-index:var(--ui-z
 html[data-ui-system="manifest"] .tableToolbarActions>.colPanelWrap>.navActionBtn {
   font-size:var(--ui-font-xs) !important
 }
-@media (max-width:1150px) {
+@media (max-width:1150px){
 html[data-ui-system="manifest"] .tableToolbarActions>.colPanelWrap>.navActionBtn {font-size:var(--ui-font-2xs) !important
 }
 }
@@ -14851,7 +14791,7 @@ html[data-ui-system="manifest"] .colPanel.show {animation:none !important
 }
 html[data-ui-system="manifest"] #view-shipping #shipEmpty {background:transparent !important
 }
-@media (min-width:1180px) {
+@media (min-width:1180px){
 html[data-ui-system="manifest"] #view-cp>#cpHorizonBadge,html[data-ui-system="manifest"] #view-orders>#ordersHorizonBadge {z-index:var(--ui-z-data)
 }
 }
@@ -15275,7 +15215,6 @@ html[data-ui-system="manifest"] [data-ui-migrated] input[type="range"]::-webkit-
 html[data-ui-system="manifest"] [data-ui-migrated] input[type="range"]::-webkit-slider-thumb{appearance:none;width:14px;height:14px;margin-top:-5px;background:var(--ui-accent);}
 html[data-ui-system="manifest"] [data-ui-migrated] input[type="range"]::-moz-range-track{height:4px;background:var(--ui-surface-strong);}
 html[data-ui-system="manifest"] [data-ui-migrated] input[type="range"]::-moz-range-thumb{width:14px;height:14px;background:var(--ui-accent);}
-html[data-ui-system="manifest"] .lcwaiLayPreset.is-active .lcwaiLayThumb.is-text i{background:none!important;color:var(--ui-text-secondary)!important;}
 
 /* PLM drag status: same surface and TR/EN lifecycle as the Collection. */
 html[data-ui-system="manifest"] #view-koleksiyon.blPlmDragOver::after,html[data-ui-system="manifest"] #view-koleksiyon.blPlmDragBusy::after{content:"PLM modelini bırak → Koleksiyona ekle";background:var(--ui-surface);color:var(--ui-text);font:600 var(--ui-font-base)/1.4 var(--ui-font-body);box-shadow:var(--ui-shadow-overlay);z-index:var(--ui-z-modal-menu);}
@@ -15360,7 +15299,7 @@ html[data-ui-system="manifest"] .blBulkBody section {border-bottom:0
 }
 html[data-ui-system="manifest"] .blBulkCard button:focus-visible {outline:2px solid var(--ui-accent);box-shadow:none
 }
-@media (prefers-reduced-motion:reduce) {
+@media (prefers-reduced-motion:reduce){
 html[data-ui-system="manifest"] .blBulkOverlay,html[data-ui-system="manifest"] .blBulkCard {transition:none!important;animation:none!important
 }
 }
@@ -15444,13 +15383,8 @@ html[data-ui-system="manifest"] #ordersTable tbody td.blGridRangeCell {
 html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.kolSpreadsheetRangeCell:not(.kolSpreadsheetActiveCell):not(.kolSpreadsheetEditing) {
   background-color:var(--ui-grid-range-bg) !important;
 }
-/* Smart Layout Studio shares Manifest surfaces, type and focus. */
-html[data-ui-system="manifest"] .lcwaiStudioSource h2{font:600 var(--ui-font-xl)/1.2 var(--ui-font-heading);color:var(--ui-text)}
-html[data-ui-system="manifest"] .lcwaiStudioThumb{background:var(--ui-surface-soft)}
-html[data-ui-system="manifest"] .lcwaiStudioThumb i{background:var(--ui-selected)}
-html[data-ui-system="manifest"] .lcwaiStudioThumb i::before{background:var(--ui-accent)}
-html[data-ui-system="manifest"] .lcwaiStudioHandle,html[data-ui-system="manifest"] .lcwaiStudioCardGrip{background:var(--ui-selected);color:var(--ui-accent);font:600 var(--ui-font-xs)/1 var(--ui-font-body);z-index:var(--ui-z-raised)}
-html[data-ui-system="manifest"] .lcwaiStudioHandle:focus-visible,html[data-ui-system="manifest"] .lcwaiStudioCardGrip:focus-visible,html[data-ui-system="manifest"] [data-studio-card]:focus-visible{outline:2px solid var(--ui-accent);outline-offset:2px}
+/* LCW AI çıktı düzenleyicisi · Önizle ve oluştur başlığı (Manifest yüzey/tipografi). */
+html[data-ui-system="manifest"] .lcwaiReview h2{font:600 var(--ui-font-xl)/1.2 var(--ui-font-heading);color:var(--ui-text)}
 
 /* Theme-aware selection controls for the leading column of tables. */
 html[data-ui-system="manifest"] [data-ui-migrated] table :is(th:first-child,td:first-child) input[type="checkbox"],
@@ -15772,7 +15706,7 @@ html[data-ui-system="manifest"] .appTop #corporateConnections .corporateConnecti
 }
 html[data-ui-system="manifest"] .appTop #corporateConnections .corporateConnection[data-state="connecting"]::before {background:var(--ui-warning)
 }
-@media (max-width:850px) {
+@media (max-width:850px){
 html[data-ui-system="manifest"] .corporateConnectionsLabel {display:none
 }
 }
@@ -16097,20 +16031,6 @@ html[data-ui-system="manifest"] .backlogColFx.is-empty {color:var(--ui-text-mute
 html[data-ui-system="manifest"] .backlogColSource {font-size:var(--ui-font-xs);color:var(--ui-text-muted);}
 
 /* Matrix previews use the print palette independently of the editor theme. */
-html[data-ui-system="manifest"] .lcwaiMatrixPage [data-matrix-output="true"]{background:var(--ui-print-paper)!important;color:var(--ui-print-ink)!important}
-html[data-ui-system="manifest"] .lcwaiMatrixPage [data-matrix-output="true"] .lcwaiLayBox.is-band,
-html[data-ui-system="manifest"] .lcwaiMatrixPage [data-matrix-output="true"] .lcwaiLayBox.is-card,
-html[data-ui-system="manifest"] .lcwaiMatrixPage [data-matrix-output="true"] .lcwaiLayBox.is-frame{background:var(--ui-print-paper)!important}
-html[data-ui-system="manifest"] .lcwaiMatrixPage [data-matrix-output="true"] .lcwaiLayText,
-html[data-ui-system="manifest"] .lcwaiMatrixPage [data-matrix-output="true"] .lcwaiLayBox.is-title{color:var(--ui-print-ink)!important}
-html[data-ui-system="manifest"] .lcwaiMatrixOptions .lcwaiEdField{align-items:stretch;text-align:start}
-html[data-ui-system="manifest"] .lcwaiMatrixOptions input[type="range"]{width:100%}
-
-html[data-ui-system="manifest"] .lcwaiMatrixHead{background:var(--ui-surface-soft);font-size:var(--ui-font-2xs);z-index:var(--ui-z-raised)}
-html[data-ui-system="manifest"] .lcwaiMatrixField[open]{background:var(--ui-selected)}
-html[data-ui-system="manifest"] .lcwaiLaySplit::after{background:var(--ui-row-divider)}
-html[data-ui-system="manifest"] .lcwaiLaySplit:is(:hover,:focus-visible)::after,html[data-ui-system="manifest"] .lcwaiLay.is-resizing .lcwaiLaySplit::after{background:var(--ui-accent)}
-html[data-ui-system="manifest"] .lcwaiLaySplit:focus-visible{outline:none}
 html[data-ui-system="manifest"] .lcwaiEdFoot.has-result{background:var(--ui-success-bg)!important;padding-block:10px}
 html[data-ui-system="manifest"] .lcwaiEdResultIcon{background:var(--ui-success);color:var(--ui-surface);font-weight:700}
 html[data-ui-system="manifest"] .lcwaiEdResultText b{font:600 var(--ui-font-md)/1.2 var(--ui-font-heading);color:var(--ui-success)}

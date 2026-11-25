@@ -141,9 +141,9 @@
     layoutDocument:['lcwai-assistant.js?rev=1','layout-control-template.js?rev=3','layout-control-engine.js?rev=4','layout-document-reader.js?rev=2'],
     layoutControl:['lcwai-assistant.js?rev=1','layout-control-template.js?rev=3','layout-control-engine.js?rev=4','layout-document-reader.js?rev=2','layout-ai-review.js?rev=1','layout-control.js?rev=6'],
     // LCW AI Çıktı Düzenleyici + çıktı şablonları: yalnız "Düzenle"/"Şablonlar" ile yüklenir.
-    lcwaiOutputEditor:['lcwai-output-layout.js?rev=6','lcwai-output-source.js?rev=1','lcwai-output-editor.js?rev=8'],
+    lcwaiOutputEditor:['lcwai-output-layout.js?rev=7','lcwai-output-editor.js?rev=9'],
     // Presentation Studio (Koleksiyon › Sunum Oluştur): saf motor/çizim/PPTX yazıcısı editörden ÖNCE.
-    presentationStudio:['lcwai-output-source.js?rev=1','presentation-studio-engine.js?rev=1','presentation-studio-render.js?rev=1','presentation-studio-pptx.js?rev=1','presentation-studio.js?rev=1'],
+    presentationStudio:['lcwai-output-source.js?rev=2','presentation-studio-engine.js?rev=1','presentation-studio-render.js?rev=1','presentation-studio-pptx.js?rev=1','presentation-studio.js?rev=1'],
     lfl:['lfl-calculation-engine.js','lfl.js?rev=20261117-strict-detail-images'],
     // v7.0.229 — Üreticiler sayfası: saf motor ve ortak rehber görünümden ÖNCE.
     // email-groups.js deferredUi ile AYNI adla listelenir; loadScript tek kez yükler.

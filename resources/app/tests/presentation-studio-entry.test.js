@@ -16,13 +16,20 @@ test('üç Sunum Oluştur düğmesi Presentation Studio’yu tembel yükleyip a�
   assert.doesNotMatch(studio, /data-ps="classic"|Klasik düzenleyici/);
 });
 
-test('eski kayıtlardan stüdyo oluşturma yolu geri gelmez; LCW AI çıktı düzenleyicisi korunur', () => {
+test('eski sunum stüdyosu tamamen kaldırıldı; LCW AI çıktı düzenleyicisi yalnız içerik ve önizleme sunar', () => {
   const editor = read('public/lcwai-output-editor.js'), assistant = read('public/lcwai-assistant.js'), routes = read('server/routes/lcwai-routes.js'), service = read('server/lib/lcwai-output/output-service.js');
-  assert.doesNotMatch(editor, /function openSelection|data-studio-scope|sourceTab/);
+  const layout = read('public/lcwai-output-layout.js'), pptx = read('server/lib/lcwai-output/output-pptx.js'), prompt = read('server/lib/lcwai/lcwai-prompt.js');
+  assert.doesNotMatch(editor, /function openSelection|data-studio|sourceTab|isStudio|data-ed-mode="layout"|studio/i);
   assert.match(editor, /window\.BLOutputEditor = \{ open, close:/);
   assert.doesNotMatch(assistant, /createStudio|saveStudioImages|\/api\/lcwai\/output-studio/);
   assert.doesNotMatch(routes, /\/api\/lcwai\/output-studio/);
-  assert.doesNotMatch(service, /function createStudio|saveStudioImages/);
-  assert.match(service, /function renderStudio\(/, 'mevcut stüdyo düzenli taslaklar ve LCW AI çıktıları için çizim yolu kalır');
+  assert.doesNotMatch(service, /createStudio|saveStudioImages|renderStudio|buildDeck|studioSource/);
+  assert.doesNotMatch(layout + pptx, /studio/i);
+  assert.doesNotMatch(prompt, /'output-studio'/);
+  for (const gone of ['server/lib/lcwai-output/output-deck.js', 'public/lcwai-output-layout-worker.js']) assert.equal(fs.existsSync(path.join(__dirname, '..', gone)), false, gone);
+  // Kayıtlardan oluşturulmuş eski taslak yeniden çizilmez (kartlar sessizce kırpılırdı); açık bir hata döner.
+  assert.match(service, /if \(draft\.source\) throw lcwAiError\('OUTPUT_LEGACY_STUDIO'\)/);
+  assert.match(read('public/lcwai-assistant.js'), /LCWAI_OUTPUT_LEGACY_STUDIO: \{ tr: 'Bu sunum taslağı kaldırılan eski/);
+  assert.match(read('server/lib/lcwai/lcwai-errors.js'), /OUTPUT_LEGACY_STUDIO: \{ status: 410, tr: '[^']+', en: '[^']+' \}/);
   assert.match(read('public/lcwai-chat.js'), /ensureFeature\('lcwaiOutputEditor'\)/);
 });

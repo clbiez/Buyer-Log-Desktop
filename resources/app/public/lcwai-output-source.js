@@ -1,4 +1,4 @@
-/* Canonical source adapter. Geometry belongs exclusively to BLOutputLayout. */
+/* Canonical source adapter: tablo satırları → canonical kayıtlar (Presentation Studio kaynağı). */
 (function (root, factory) {
   const api = factory(typeof module === 'object' && module.exports ? require('./canonical-fields') : root.BLCanonicalFields);
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -17,16 +17,6 @@
   const labelKey = value => text(value, COLUMN_LABEL).toLocaleLowerCase('tr-TR');
   const columnKey = value => text(value, COLUMN_VALUE).toLocaleLowerCase('tr-TR');
   const isColumnId = id => typeof id === 'string' && /^col\.[\w.%-]{1,56}$/.test(id);
-  function normalizeColumns(list) {
-    const out = [], seen = new Set();
-    for (const col of Array.isArray(list) ? list : []) {
-      const id = col && col.id, label = text(col && col.label, COLUMN_LABEL);
-      if (!isColumnId(id) || !label || seen.has(id)) continue;
-      seen.add(id); out.push({ id, label });
-      if (out.length >= MAX_COLUMNS) break;
-    }
-    return out;
-  }
   function tableColumns(moduleId, columns) {
     const fields = C.moduleFields(moduleId);
     const keys = new Set(fields.map(id => C.bindingFor(moduleId, id).keys[0]));
@@ -85,49 +75,5 @@
       columns: table.list.map(({ id, label }) => ({ id, label })), ...(table.omitted.length ? { omittedColumns: table.omitted } : {}) },
       data: { title: lang === 'en' ? 'Model catalogue' : 'Model kataloğu', slides: [{ layout: 'gallery', title: lang === 'en' ? 'Models' : 'Modeller', items }], layout: { cardFields, columns: 3, rows: 3, studio: { version: 1, sizing: 'sets', reflow: 'balanced', preset: 'catalog' } } } };
   }
-  function normalizeRecords(raw, tokens, lang = 'tr', columns = []) {
-    const out = {}, table = normalizeColumns(columns);
-    for (const token of tokens) {
-      const entry = raw && raw[token];
-      if (!entry || !['collection', 'cp', 'orders'].includes(entry.module)) continue;
-      const values = {}, keys = {}, labels = {};
-      for (const id of C.moduleFields(entry.module)) if (entry.values && Object.prototype.hasOwnProperty.call(entry.values, id)) {
-        values[id] = scalar(entry.values[id]); labels[id] = C.label(id, lang);
-        // Group identity is independent of the active UI language.
-        const binding = C.bindingFor(entry.module, id);
-        keys[id] = C.normalizedValue({ [binding.keys[0]]: values[id] }, entry.module, id);
-      }
-      // Column labels are on every record (Excel headers read the first card); values stay sparse.
-      for (const col of table) {
-        labels[col.id] = col.label;
-        const value = entry.values && Object.prototype.hasOwnProperty.call(entry.values, col.id) ? text(entry.values[col.id], COLUMN_VALUE) : '';
-        if (value) { values[col.id] = value; keys[col.id] = columnKey(value); }
-      }
-      out[token] = { id: String(entry.id || token).slice(0, 160), module: entry.module, values, keys, labels };
-    }
-    return out;
-  }
-  function bindLegacyRecords(raw, lang = 'tr') {
-    return Object.fromEntries(Object.entries(raw || {}).map(([token, pairs]) => {
-      if (!Array.isArray(pairs)) return [token, pairs];
-      const moduleId = token.startsWith('KOL-') ? 'collection' : token.startsWith('ORD-') ? 'orders' : token.startsWith('CP-') ? 'cp' : null;
-      if (!moduleId) return [token, pairs];
-      const values = {}, labels = {}, keys = {}, aliases = {};
-      for (const [label, value] of pairs) {
-        const id = C.canonicalId(moduleId, label) || label;
-        // Retain unregistered fields from old templates without guessing a new binding.
-        if (!(id in values)) values[id] = value;
-        labels[id] = C.field(id) ? C.label(id, lang) : label;
-        aliases[label] = id;
-        if (C.field(id)) {
-          const def = C.field(id), binding = C.bindingFor(moduleId, id);
-          for (const name of [id, def.label.tr, def.label.en, ...(def.aliases || [])]) aliases[name] = id;
-          keys[id] = C.normalizedValue({ [binding.keys[0]]: value }, moduleId, id);
-        }
-      }
-      return [token, { values, labels, keys, aliases, module: moduleId }];
-    }));
-  }
-  const columnType = id => { const def = Object.prototype.hasOwnProperty.call(C.fields, id) && C.field(id); return def && ['number', 'date'].includes(def.type) ? def.type : 'text'; };
-  return { build, normalizeRecords, normalizeColumns, bindLegacyRecords, columnType, MAX_ROWS };
+  return { build, MAX_ROWS };
 });

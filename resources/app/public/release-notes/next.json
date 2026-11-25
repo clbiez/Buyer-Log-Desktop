@@ -7,8 +7,8 @@
     "en": "Equal height for Collection status badges; PLM Sync asks about new options model by model"
   },
   "summary": {
-    "tr": "Koleksiyon tablosunda Durum etiketleri ana model ve renk satırlarında aynı yükseklikte görünür. Koleksiyon’daki mevcut modellere PLM Sync ile yeni opsiyon gelirken uyarı verilir ve renkler model model seçtirilir; bilerek silinen alt opsiyonlar onay olmadan geri gelmez. Koleksiyon, CP ve Siparişler’de yeni Sunum Stüdyosu ile seçili kayıtlardan sayfa üzerinde düzenlenen PDF ve PowerPoint sunumları hazırlanır.",
-    "en": "In the Collection table, Status badges have the same height on main model and colour rows. When PLM Sync brings new options for existing Collection models, a warning is shown and colours are chosen model by model; deliberately deleted sub-options do not return without your approval. The new Presentation Studio in Collection, CP and Orders builds PDF and PowerPoint presentations from selected records, arranged directly on the page."
+    "tr": "Koleksiyon tablosunda Durum etiketleri ana model ve renk satırlarında aynı yükseklikte görünür. Koleksiyon’daki mevcut modellere PLM Sync ile yeni opsiyon gelirken uyarı verilir ve renkler model model seçtirilir; bilerek silinen alt opsiyonlar onay olmadan geri gelmez. Koleksiyon, CP ve Siparişler’de yeni Sunum Stüdyosu ile seçili kayıtlardan sayfa üzerinde düzenlenen PDF ve PowerPoint sunumları hazırlanır. LCW AI dosya düzenleyicisi İçerik ve Önizle adımlarına sadeleşti.",
+    "en": "In the Collection table, Status badges have the same height on main model and colour rows. When PLM Sync brings new options for existing Collection models, a warning is shown and colours are chosen model by model; deliberately deleted sub-options do not return without your approval. The new Presentation Studio in Collection, CP and Orders builds PDF and PowerPoint presentations from selected records, arranged directly on the page. The LCW AI file editor is simplified to Content and Preview steps."
   },
   "changes": [
     {
@@ -249,8 +249,8 @@
         "en": "Presentation Studio: presentations from selected records, arranged freely on the page"
       },
       "body": {
-        "tr": "Koleksiyon, CP ve Siparişler’deki Araçlar › Sunum Oluştur artık Sunum Stüdyosu’nu açar ve önceki sunum düzenleyicisinin yerini alır. Seçili kayıtlar çok seviyeli gruplamayla (ör. Ürün Grubu › Kumaş) sayfalara dengeli yerleşir; kartları sayfada sürükleyip kenarlarından boyutlandırabilir, başka gruba veya sayfaya taşıyabilirsiniz. Elle düzenlenen kart sabitlenir, diğerleri çevresine akmaya devam eder. Sayfa ölçüsü (A3, A4, A5, 16:9, 4:3, kare, özel) ve yön değiştirilebilir; kart bilgileri, yazı tipi ve ölçüler ayarlanır, şablon olarak kaydedilir. PDF ve düzenlenebilir PowerPoint, önizlemedeki konum ve ölçüyle aynı çıkar. Sunumlar hesabınıza kaydedilir; kaynak tablo verisi değişmez. LCW AI ile üretilen dosyaların düzenlenmesi değişmedi.",
-        "en": "Tools › Create Presentation in Collection, CP and Orders now opens Presentation Studio, replacing the previous presentation editor. Selected records are laid out evenly with multi-level grouping (e.g. Product Group › Fabric); drag cards on the page, resize them from their edges and move them to another group or page. A card you arrange is pinned while the others keep flowing around it. Page size (A3, A4, A5, 16:9, 4:3, square, custom) and orientation can be changed; card details, font and sizes are adjustable and can be saved as a template. PDF and editable PowerPoint match the preview’s positions and size. Presentations are saved to your account; source table data is not changed. Editing files produced by LCW AI is unchanged."
+        "tr": "Koleksiyon, CP ve Siparişler’deki Araçlar › Sunum Oluştur artık Sunum Stüdyosu’nu açar ve önceki sunum düzenleyicisinin yerini alır. Seçili kayıtlar çok seviyeli gruplamayla (ör. Ürün Grubu › Kumaş) sayfalara dengeli yerleşir; kartları sayfada sürükleyip kenarlarından boyutlandırabilir, başka gruba veya sayfaya taşıyabilirsiniz. Elle düzenlenen kart sabitlenir, diğerleri çevresine akmaya devam eder. Sayfa ölçüsü (A3, A4, A5, 16:9, 4:3, kare, özel) ve yön değiştirilebilir; kart bilgileri, yazı tipi ve ölçüler ayarlanır, şablon olarak kaydedilir. PDF ve düzenlenebilir PowerPoint, önizlemedeki konum ve ölçüyle aynı çıkar. Sunumlar hesabınıza kaydedilir; kaynak tablo verisi değişmez.",
+        "en": "Tools › Create Presentation in Collection, CP and Orders now opens Presentation Studio, replacing the previous presentation editor. Selected records are laid out evenly with multi-level grouping (e.g. Product Group › Fabric); drag cards on the page, resize them from their edges and move them to another group or page. A card you arrange is pinned while the others keep flowing around it. Page size (A3, A4, A5, 16:9, 4:3, square, custom) and orientation can be changed; card details, font and sizes are adjustable and can be saved as a template. PDF and editable PowerPoint match the preview’s positions and size. Presentations are saved to your account; source table data is not changed."
       },
       "visual": {
         "kind": "screenshot",
@@ -263,6 +263,35 @@
         "caption": {
           "tr": "Demo veride seçili kart, tutamaçlar ve bağlamsal araç çubuğu; sağda serbest yerleştirilmiş sabit kart.",
           "en": "On demo data: the selected card with handles and a contextual toolbar; a freely placed pinned card on the right."
+        }
+      }
+    },
+    {
+      "id": "lcwai-output-editor-simplified",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI dosya düzenleyicisi sadeleşti: İçerik ve Önizle",
+        "en": "LCW AI file editor simplified: Content and Preview"
+      },
+      "body": {
+        "tr": "LCW AI ile üretilen PowerPoint, Excel ve PDF dosyalarının düzenleyicisi artık iki adımdan oluşur: İçerik ve Önizle ve oluştur. Ayrı yerleşim düzenleme adımı ve gelişmiş yerleşim stüdyosu kaldırıldı; slaytlar seçili şablonun sabit yerleşimiyle oluşturulur. Serbest yerleşimli sunumlar için Araçlar › Sunum Oluştur’daki Sunum Stüdyosu’nu kullanın. Kaldırılan stüdyoyla hazırlanmış eski taslaklar artık açılmaz ve bunu açıklayan bir mesaj gösterilir; daha önce oluşturulan dosyalar indirilebilir.",
+        "en": "The editor for PowerPoint, Excel and PDF files produced by LCW AI now has two steps: Content and Preview and create. The separate layout step and the advanced layout studio were removed; slides are created with the selected template’s fixed layout. For freely arranged presentations use Presentation Studio under Tools › Create Presentation. Old drafts made with the removed studio no longer open and a message explains why; files created earlier can still be downloaded."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-output-review.png",
+        "alt": {
+          "tr": "Demo sunum taslağıyla LCW AI PowerPoint düzenleyicisi: İçerik ve Önizle ve oluştur adımları, solda slayt listesi, sağda seçili slaydın önizlemesi",
+          "en": "LCW AI PowerPoint editor with a demo draft: Content and Preview and create steps, the slide list on the left and a preview of the selected slide on the right"
+        },
+        "caption": {
+          "tr": "Demo taslakta iki adımlı düzenleyici: yerleşim adımı yok, önizleme şablonun sabit yerleşimini gösterir.",
+          "en": "The two-step editor on a demo draft: no layout step; the preview shows the template’s fixed layout."
         }
       }
     }
