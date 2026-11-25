@@ -4048,6 +4048,80 @@ function mergeImageOverridePayload(current,incoming){
 function syncModelImageRegistry(){
   window.BLModelImageCache?.setRegistryMap?.(state?.overrides?.imagemap||{});
 }
+/* KANONİK GÖRSEL KAYDI CANLI TAZELEME. Başka bir kullanıcı/sekme bir model
+   görselini değiştirdiğinde sunucu değer taşımayan `model-images` sinyali
+   yayımlar. CP/Siparişler/Koleksiyon hücreleri kanonik kaydı satır görselinden
+   önce okuduğu için bellekteki kayıt tazelenmezse eski görsel sayfa yenilenene
+   kadar kalıyordu. Bu ekran yalnız kendi yetkili kapsamını okur: açık
+   Koleksiyon sahipleri ve CP. Yalnız değişen anahtarların eski görselleri
+   geçersiz kılınır; bir şey değiştiyse yalnız aktif tablo yeniden çizilir.
+   Eşzamanlı sinyaller tek tazelemede birleşir (en fazla bir tekrar). */
+let modelImageRegistryRefreshRun=null,modelImageRegistryRefreshAgain=false;
+/* Kapsamlı kayıt yanıtı → artımlı yama ({anahtar: ref | null=kaldırıldı}). Saf
+   fark: durum değişmez. Kapsam = scopeKeys (CP sözleşmesi) ya da emptyScopeKeys +
+   yanıttaki anahtarların tabanları (Koleksiyon uç noktası dolu kapsamı
+   yinelemez; yanıt yarıya iner, anlam aynıdır). */
+function scopedModelImageRegistryPatch(payload){
+  const patch={};
+  const scopeList=payload&&(Array.isArray(payload.emptyScopeKeys)?payload.emptyScopeKeys:payload.scopeKeys);
+  if(!payload||payload.ok!==true||!payload.imagemap||typeof payload.imagemap!=='object'||!Array.isArray(scopeList))return patch;
+  const before=state.overrides?.imagemap||{},incoming=payload.imagemap,scope=new Set(scopeList);
+  for(const key of Object.keys(incoming)){
+    const at=key.indexOf('|name:');scope.add(at>=0?key.slice(0,at):key);
+    if(before[key]!==incoming[key])patch[key]=incoming[key];
+  }
+  for(const key of Object.keys(before)){
+    if(Object.prototype.hasOwnProperty.call(incoming,key))continue;
+    const at=key.indexOf('|name:');
+    if(scope.has(at>=0?key.slice(0,at):key))patch[key]=null;
+  }
+  return patch;
+}
+/* Değişiklik yoksa (sinyallerin çoğu) hiçbir şey yazılmaz; varsa mevcut sessiz
+   görsel tamamlama yolu kullanılır: kayıt yerinde yamanır, adlı indeks
+   artımlı güncellenir (tam kopya/yeniden indeks yok), eski URL'ler düşer. */
+function applyScopedModelImageRegistry(payload){
+  const patch=scopedModelImageRegistryPatch(payload);
+  return Object.keys(patch).length?silentImageApplyPatch({imagemapPatch:patch}):0;
+}
+function refreshModelImageRegistryFromServer(){
+  if(modelImageRegistryRefreshRun){modelImageRegistryRefreshAgain=true;return modelImageRegistryRefreshRun;}
+  modelImageRegistryRefreshRun=(async()=>{
+    let changed=0,cpChanged=0;
+    do{
+      modelImageRegistryRefreshAgain=false;
+      // Koleksiyon erişimi yoksa varsayılan sahip kimliği için boşuna (403) istek atılmaz.
+      const kolAllowed=typeof window.BLCanAccessArea!=='function'||window.BLCanAccessArea('koleksiyon');
+      const owners=!kolAllowed?[]:kolWorkspaceOwnerId==='__multi__'?[...(kolWorkspaceSelectedOwnerIds||[])]:(kolWorkspaceOwnerId?[kolWorkspaceOwnerId]:[]);
+      for(const ownerId of owners.slice(0,50)){
+        try{
+          const response=await fetch(`/api/model-images/registry/collection/${encodeURIComponent(ownerId)}`,{cache:'no-store'});
+          if(response.ok)changed+=applyScopedModelImageRegistry(await response.json());
+        }catch(_){/* çevrimdışı: bir sonraki sinyal/yoklama yeniden dener */}
+      }
+      const cpRows=[...(state.cp?.rows||[]),...(state.orders?.rows||[])];
+      if(cpRows.length&&(typeof window.BLCanAccessArea!=='function'||window.BLCanAccessArea('cp'))){
+        try{
+          const response=await fetch('/api/model-images/registry/cp',{cache:'no-store'});
+          if(response.ok){
+            // CP satır görsel alanları da güncellenmeli: fark varsa mevcut CP uygulaması
+            // (applyCpStartupImageRegistry) çalışır; yoksa tam kopya + satır turu atlanır.
+            const payload=await response.json(),count=Object.keys(scopedModelImageRegistryPatch(payload)).length;
+            if(count&&applyCpStartupImageRegistry(payload,cpRows))cpChanged+=count;
+          }
+        }catch(_){/* CP kaydı alınamadı: mevcut görsel kalır */}
+      }
+    }while(modelImageRegistryRefreshAgain);
+    const tab=currentActiveTab();
+    if(changed&&tab==='koleksiyon')renderKol();
+    if((changed||cpChanged)&&tab==='cp')renderCP();
+    if((changed||cpChanged)&&tab==='orders')renderOrders();
+    return {changed,cpChanged};
+  })();
+  const run=modelImageRegistryRefreshRun;
+  run.finally(()=>{if(modelImageRegistryRefreshRun===run)modelImageRegistryRefreshRun=null;});
+  return run;
+}
 // Tek görsel = tek URL: CP, Orders, Koleksiyon ve Quotations aynı ref için
 // aynı adresi üretir (bkz. BLModelImageCache.imageUrl).
 function modelImageUrl(value){
@@ -43832,6 +43906,9 @@ function initLiveSync(){
       // kapsamı önce yeniden hesaplar; istemci sadece izinli listeyi yeniden
       // yükler ve hiçbir eski veriyi tekrar göndermeye çalışmaz.
       void initKolWorkspaces({permissionChanged:true}).catch(()=>{});
+    }else if(payload.area==='model-images'){
+      // Başka kullanıcının görsel değişikliği: kanonik kayıt yetkili kapsamdan tazelenir.
+      void refreshModelImageRegistryFromServer().catch(()=>{});
     }
   };
   let channel=null;
@@ -43959,6 +44036,7 @@ window.addEventListener('bl-shared-revision',event=>{
   if(changed.has('tableReportLayouts')&&!liveSyncConnected)void window.BLTableReportInline?.refreshShared(true);
   if(changed.has('cpManagedRules')&&!liveSyncConnected)window.dispatchEvent(new CustomEvent('bl:cp-managed-rules-changed'));
   if(changed.has('quotation'))void window.BL_QUOTATIONS?.refresh?.();
+  if(changed.has('modelImages')&&!liveSyncConnected)void refreshModelImageRegistryFromServer().catch(()=>{});
   if(changed.has('licenseCards')&&!liveSyncConnected)window.BLLicenseCardsPage?.invalidate?.();
   if(changed.has('pricingRules'))window.BLLicenseCardsPage?.invalidate?.();
   if(changed.has('pricingRules')&&!liveSyncConnected)void refreshPricingRulesFromServer().catch(()=>{});

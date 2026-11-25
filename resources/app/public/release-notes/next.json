@@ -452,6 +452,35 @@
       }
     },
     {
+      "id": "collection-image-replace-live",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Başka kullanıcının değiştirdiği model görseli yenilemeden görünür",
+        "en": "A model image changed by another user appears without a refresh"
+      },
+      "body": {
+        "tr": "Koleksiyon, CP veya Siparişler'de bir model görseli başka bir kullanıcı tarafından (ör. Koleksiyon'da düzenleme izni olan kişi) değiştirildiğinde açık ekranlar artık sayfa yenilenmeden yeni görseli gösterir. Önceden görsel kaydını bellekte tutan kullanıcı, eski görseli sayfayı yenileyene kadar görüyordu. Her ekran yalnız erişebildiği modellerin görsel kaydını tazeler.",
+        "en": "When another user changes a model image in Collection, CP or Orders (for example someone with edit access to the Collection), open screens now show the new image without a page refresh. Previously a user who kept the image registry in memory saw the old image until reloading the page. Each screen refreshes the image registry only for the models it can access."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-image-replace-live.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: sahibin ekranında düzenleyicinin değiştirdiği gri model görseli yenilemeden görünüyor",
+          "en": "Demo Collection table: on the owner's screen the grey model image changed by an editor appears without a refresh"
+        },
+        "caption": {
+          "tr": "Demo veride DM-O2-2 görselini düzenleme izinli kullanıcı değiştirdi; sahibin açık ekranı yenilemeden güncellendi.",
+          "en": "On demo data an editor changed the DM-O2-2 image; the owner's open screen updated without a refresh."
+        }
+      }
+    },
+    {
       "id": "pricing-multiuser-save-integrity",
       "type": "fix",
       "module": {
