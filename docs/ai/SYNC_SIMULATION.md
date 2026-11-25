@@ -43,3 +43,18 @@ A failing seed writes its synthetic operation log and prints `COLLECTION_SYNC_SI
 Findings fixed in the same change (RED first, then one independent review round whose findings were also fixed RED→GREEN: base/conflicts are recorded right after the under-lease local write; price-map conflict resolution applies only the losing manufacturer keys to the current row; a view-downgraded installation keeps its unpublished local copy in `collection-replication-state.json.readonly-preserved/` before adopting; the merge-under-lease fallback is limited to envelopes ≤ 2 MB because at 30k rows / 6.7 MB it extends the hub lease by ~1.08 s against the 3 s cross-machine lease wait): concurrent publishers lost the CAS race outside the lease and waited for later polls (12 writers → 10 rounds, false "same revision, different copies" toast for 9 of 12 users); a revoked or view-downgraded editor's offline write was published by the live poll from the stale permission cache; `pricing`/`pricingSent` maps were merged as one value, dropping another manufacturer's price on every installation (server merge and client rebase).
 
 Executed RED/TODO, not a convergence proof: with separate OneDrive mirrors a concurrently displaced publication is lost without a merge conflict (the loser's merge base is its own displaced envelope). Fixing it needs envelope ancestry (protocol work). Limits: cross-machine lock contention timing (`SHARED_WRITE_BUSY` after 3 s) is not modelled because one process serialises leases in memory; the recycle bin is per installation and is not replicated.
+
+## Pricing Desk multi-user simulation (2026-11-25)
+
+Seeded tests for quotations with 20 users / installations; failures write the seed and synthetic operation log (`PRICING_SYNC_REPRO=...`, override the folder with `BUYERLOG_PRICING_SIM_FAILURE_ROOT`). Run from `resources/app`:
+
+```sh
+npm test -- pricing-multiuser-concurrency pricing-delta-merge-convergence pricing-collection-projection
+BUYERLOG_PRICING_SOAK=1 npm test -- pricing-multiuser-concurrency pricing-delta-merge-convergence pricing-collection-projection
+```
+
+- `pricing-multiuser-concurrency`: one server, 20 users with stale views (line PATCH / batch / approval exclusivity / structural PUT); 20 child-process installations sharing one data root under the non-blocking HTTP lease policy.
+- `pricing-delta-merge-convergence`: `mergeRequestCopies` commutativity, idempotency, absorption and (content) associativity across 20 gossiping replicas; 20 real local DBs with reordered, delayed and duplicated deltas plus a retention tombstone.
+- `pricing-collection-projection`: owner-side Collection projection with delayed visibility; a cell never moves back to an older value.
+
+The peer channel (`shared-sync-policy`) does not carry `store:quotations.json` in this version; the merge path is exercised through the local DB remote-delta engine. Line and manufacturer display order may differ between devices after three-way concurrent additions; content converges.
