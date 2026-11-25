@@ -24,7 +24,7 @@ function stableScopeId(seed) {
  *   asas    → cp, orders, backlog, lfl, priceanalysis
  *   antrepo → cp, orders, backlog          (IAS yalnız bu üç sayfa için çalışır)
  *   intake  → intake                      (INTAKE kendi veritabanı bağlantısından gelir)
- *   postfob → postfob                     (FOB Sonrası Maliyet, FiyatMaliyetKontrolRapor modeli)
+ *   postfob → postfob                     (FOB Sonrası Maliyet + TR/YD Landed Avantaj, FiyatMaliyetKontrolRapor modeli)
  *   oabcube → oabcube                     (OAB (Küp), OAB_Cube modeli)
  *
  * Kumaş bilgileri ayrı bir rol/hedef değildir; ana ASAS sorgusunun alanlarıdır.
@@ -48,7 +48,7 @@ const TARGET_LABELS = {
   lfl: 'LFL',
   priceanalysis: 'Price & Supplier Analysis',
   intake: 'INTAKE',
-  postfob: 'FOB Sonrası Maliyet',
+  postfob: 'FOB Sonrası Maliyet · TR/YD Landed Avantaj',
   oabcube: 'OAB (Küp)',
 };
 

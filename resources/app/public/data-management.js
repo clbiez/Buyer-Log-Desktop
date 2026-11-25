@@ -429,8 +429,8 @@
       hint: { tr: 'Bağımsız kaynak ve filtre; kendi ekranından yenilenir.', en: 'Independent source and filter; refreshes from its own screen.' },
     },
     postfob: {
-      title: { tr: 'FOB Sonrası Maliyet', en: 'Post-FOB Cost' },
-      hint: { tr: 'Bağımsız kaynak ve filtre; Genel Bakış widget’ından yenilenir.', en: 'Independent source and filter; refreshes from its Overview widget.' },
+      title: { tr: 'FOB Sonrası Maliyet · TR/YD Landed Avantaj', en: 'Post-FOB Cost · TR/YD Landed Advantage' },
+      hint: { tr: 'İki widget aynı kaynak ve filtreyi paylaşır; her biri kendi Genel Bakış widget’ından yenilenir.', en: 'Both widgets share one source and filter; each refreshes from its own Overview widget.' },
     },
     oabcube: {
       title: { tr: 'OAB (Küp)', en: 'OAB (Cube)' },

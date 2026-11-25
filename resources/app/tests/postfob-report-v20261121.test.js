@@ -223,8 +223,12 @@ test('Veri Yönetimi okuma modeli postfob kaynağını ve modülünü iki dilde 
   const en = readModel.build(items, { language: 'en' });
   const source = tr.sources.find(entry => entry.profileId === 'postfob-cost');
   assert.ok(source, 'kaynak listede');
-  assert.equal(tr.modules.find(entry => entry.id === 'postfob').label, 'FOB Sonrası Maliyet');
-  assert.equal(en.modules.find(entry => entry.id === 'postfob').label, 'Post-FOB Cost');
+  // Aynı bağlantı ve ufuk TR/YD Landed Avantaj widget'ını da besler; etiket ikisini de adlandırır.
+  assert.equal(tr.modules.find(entry => entry.id === 'postfob').label, 'FOB Sonrası Maliyet · TR/YD Landed Avantaj');
+  assert.equal(en.modules.find(entry => entry.id === 'postfob').label, 'Post-FOB Cost · TR/YD Landed Advantage');
+  const profile = require('../server/lib/data-domain/source-profiles').get('postfob-cost');
+  assert.match(profile.summary.tr, /TR\/YD Landed Avantaj/);
+  assert.match(profile.summary.en, /TR\/YD Landed Advantage/);
 });
 
 test('Veri Yönetimi ufku sorguya SUMMARIZECOLUMNS argümanı olarak girer ve sezon zorunluluğunu karşılar', () => {
@@ -250,7 +254,7 @@ test('Veri Yönetimi ekranı postfob ufkunu ayrı satır ve çekmece grubu olara
   const dm = fs.readFileSync(path.join(__dirname, '../public/data-management.js'), 'utf8');
   assert.match(dm, /horizonRow\(\{ id: 'postfob', targets: \['postfob'\] \}\)/);
   assert.match(dm, /\{ id: 'postfob', targets: \['postfob'\] \}(?:, \{ id: '[a-z]+', targets: \['[a-z]+'\] \})*\];/);
-  assert.match(dm, /postfob: \{\s*title: \{ tr: 'FOB Sonrası Maliyet', en: 'Post-FOB Cost' \}/);
+  assert.match(dm, /postfob: \{\s*title: \{ tr: 'FOB Sonrası Maliyet · TR\/YD Landed Avantaj', en: 'Post-FOB Cost · TR\/YD Landed Advantage' \}/);
   const ui = fs.readFileSync(path.join(__dirname, '../public/postfob.js'), 'utf8');
   assert.match(ui, /if \(!state\.horizon && !\(view\(\)\.filterValues\.season \|\| \[\]\)\.length\)/);
   const routes = fs.readFileSync(path.join(__dirname, '../server/routes/horizon-routes.js'), 'utf8');
