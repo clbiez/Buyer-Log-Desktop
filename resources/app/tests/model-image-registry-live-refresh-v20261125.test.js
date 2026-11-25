@@ -124,13 +124,13 @@ test('sunucu sözleşmesi: imagemap değiştiren yollar sinyali yayımlar, canl�
   assert.match(reload, /event\.area === 'model-images'[\s\S]{0,200}hasArea\(profile, area\)/);
 });
 
-function clientContext({ cpRows = null, owner = 'own', multi = null, activeTab = 'koleksiyon', registry = {}, cpRegistry = null } = {}) {
+function clientContext({ cpRows = null, owner = 'own', multi = null, activeTab = 'koleksiyon', registry = {}, cpRegistry = null, areas = null } = {}) {
   const calls = { fetch: [], render: [], invalidated: [], synced: 0, cpApplied: 0 };
   const ctx = {
     state: { overrides: { imagemap: { 'plm:PLM-LIVE-1|colour:BLK': 'ci_old_demo', 'plm:PLM-OTHER|colour:RED': 'ci_keep' } }, cp: cpRows ? { rows: cpRows } : null, orders: null },
     kolWorkspaceOwnerId: multi ? '__multi__' : owner,
     kolWorkspaceSelectedOwnerIds: new Set(multi || [owner]),
-    window: { BLCanAccessArea: () => true },
+    window: { BLCanAccessArea: area => !areas || areas.includes(area) },
     currentActiveTab: () => activeTab,
     syncModelImageRegistry: () => { calls.synced++; },
     modelImageRefUrl: ref => `/api/collection-images/${ref}`,
@@ -183,6 +183,14 @@ test('istemci: kapsamdaki silinen görsel (ad varyantı dahil) kayıttan düşer
   assert.deepEqual(Object.keys(ctx.state.overrides.imagemap), ['plm:PLM-OTHER|colour:RED']);
   assert.deepEqual(calls.invalidated.sort(), ['/api/collection-images/ci_named_demo', '/api/collection-images/ci_old_demo']);
   assert.deepEqual(calls.render, ['kol']);
+});
+
+test('istemci: Koleksiyon erişimi olmayan kullanıcı sinyalde Koleksiyon kaydı istemez (gizli modül trafiği yok), CP kapsamı yine tazelenir', async () => {
+  const { ctx, calls } = clientContext({ areas: ['cp'], cpRows: [{ 'PLM ID': 'PLM-LIVE-1' }], activeTab: 'cp', cpRegistry: { 'plm:PLM-CP|colour:NAV': 'ci_cp_new' } });
+  await ctx.refreshModelImageRegistryFromServer();
+  assert.deepEqual(calls.fetch, []);
+  assert.equal(calls.cpApplied, 1);
+  assert.deepEqual(calls.render, ['cp']);
 });
 
 test('istemci: çoklu görünüm her seçili sahibi, CP açık kullanıcı CP kapsamını tazeler; eşzamanlı sinyaller birleşir', async () => {

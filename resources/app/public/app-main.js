@@ -4083,7 +4083,9 @@ function refreshModelImageRegistryFromServer(){
     let changed=0,cpChanged=0;
     do{
       modelImageRegistryRefreshAgain=false;
-      const owners=kolWorkspaceOwnerId==='__multi__'?[...(kolWorkspaceSelectedOwnerIds||[])]:(kolWorkspaceOwnerId?[kolWorkspaceOwnerId]:[]);
+      // Koleksiyon erişimi yoksa varsayılan sahip kimliği için boşuna (403) istek atılmaz.
+      const kolAllowed=typeof window.BLCanAccessArea!=='function'||window.BLCanAccessArea('koleksiyon');
+      const owners=!kolAllowed?[]:kolWorkspaceOwnerId==='__multi__'?[...(kolWorkspaceSelectedOwnerIds||[])]:(kolWorkspaceOwnerId?[kolWorkspaceOwnerId]:[]);
       for(const ownerId of owners.slice(0,50)){
         try{
           const response=await fetch(`/api/model-images/registry/collection/${encodeURIComponent(ownerId)}`,{cache:'no-store'});
