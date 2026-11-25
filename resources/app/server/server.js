@@ -4390,10 +4390,18 @@ app.post('/api/plm-style-links/sync-links', userAccess.requireAnyArea('cp', 'ord
    kalıyordu. Olay DEĞER TAŞIMAZ (PLM kimliği/ref yok): her istemci kendi
    yetkili kapsamını mevcut kapsamlı uçlardan okur. Canlı akış kopuksa
    shared-revision yoklaması yedektir. Ateşle-unut; görsel yazmasını bozmaz. */
+let modelImageRevisionTimer = null, modelImageRevisionActor = '';
 function notifyModelImageRegistryChanged(originClientId = null, actorId = '') {
   try { liveEvents.notifyChange('model-images', originClientId, null); }
   catch (error) { logRuntimeFailure('modelImageRegistryLive', error); }
-  void sharedRevisionStore.update('modelImages', { actorId: String(actorId || '') }).catch(error => logRuntimeFailure('sharedRevision', error));
+  // Toplu PLM/dağıtım partileri tek shared-revision yazımında birleşir (kira + dosya yazımı).
+  modelImageRevisionActor = String(actorId || modelImageRevisionActor || '');
+  if (modelImageRevisionTimer) return;
+  modelImageRevisionTimer = setTimeout(() => {
+    const actor = modelImageRevisionActor; modelImageRevisionTimer = null; modelImageRevisionActor = '';
+    void sharedRevisionStore.update('modelImages', { actorId: actor }).catch(error => logRuntimeFailure('sharedRevision', error));
+  }, 1000);
+  if (typeof modelImageRevisionTimer.unref === 'function') modelImageRevisionTimer.unref();
 }
 // Senkron/PLM içe aktarma ve paylaşılan dağıtım (cihazlar arası) yolu.
 function patchPlmImageLinksAndNotify(links) {
