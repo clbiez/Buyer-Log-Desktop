@@ -703,6 +703,8 @@ for (const store of [plmStyleLinks, fabricCards, require('./db'), require('./lib
 collectionWorkspaces.attachDeltaStore(deltaStore);
 markStartup('DELTA_STORE_MODE', { mode: deltaStore.mode });
 const quotationStore = require('./lib/quotations-store');
+// Fiyat talebi yazımlarında geçici dosya kirası çekişmesi (beklemesiz HTTP kirası) taze durumla yeniden denenir.
+const { withQuotationWriteRetry } = require('./lib/quotation-write-retry');
 const overrideScope = require('./lib/override-scope');
 const quotationVisibility = require('./lib/quotation-visibility').createQuotationVisibility({
   canEdit: quotationStore.canEdit,
@@ -3508,11 +3510,11 @@ app.post('/api/quotations/import', userAccess.requireCapability('QUOTATIONS.CREA
     res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'QUOTATION_IMPORT_FAILED' });
   }
 });
-app.post('/api/quotations', userAccess.requireCapability('QUOTATIONS.CREATE'), express.json({ limit: '100mb' }), (req, res) => {
+app.post('/api/quotations', userAccess.requireCapability('QUOTATIONS.CREATE'), express.json({ limit: '100mb' }), async (req, res) => {
   try {
     const source = req.body && req.body.source === 'cp' ? 'cp' : 'collection';
     if (!userAccess.hasArea(req.currentUser, source === 'cp' ? 'cp' : 'koleksiyon')) return res.status(403).json({ error: 'Bu quotation kaynağına erişim yetkiniz bulunmuyor.', code: 'ACCESS_AREA_REQUIRED' });
-    const request = quotationStore.createRequest(req.currentUser, req.body || {});
+    const request = await withQuotationWriteRetry(() => quotationStore.createRequest(req.currentUser, req.body || {}), { attempts: 6 });
     void sharedRevisionStore.update('quotation',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
     userAccess.appendAudit(req.currentUser, 'QUOTATION_CREATE', request.id, { source: request.source, items: request.items.length });
     res.status(201).json({ ok: true, request });
@@ -3520,9 +3522,9 @@ app.post('/api/quotations', userAccess.requireCapability('QUOTATIONS.CREATE'), e
     res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'QUOTATION_CREATE_FAILED' });
   }
 });
-app.put('/api/quotations/:id', userAccess.requireCapability('QUOTATIONS.EDIT'), express.json({ limit: '100mb' }), (req, res) => {
+app.put('/api/quotations/:id', userAccess.requireCapability('QUOTATIONS.EDIT'), express.json({ limit: '100mb' }), async (req, res) => {
   try {
-    const request = quotationStore.updateRequest(req.currentUser, req.params.id, req.body || {});
+    const request = await withQuotationWriteRetry(() => quotationStore.updateRequest(req.currentUser, req.params.id, req.body || {}), { attempts: 6 });
     if (!request) return res.status(404).json({ error: 'Quotation kaydı bulunamadı.', code: 'QUOTATION_NOT_FOUND' });
     void sharedRevisionStore.update('quotation',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
     userAccess.appendAudit(req.currentUser, 'QUOTATION_UPDATE', request.id, { items: request.items.length });
@@ -3531,9 +3533,9 @@ app.put('/api/quotations/:id', userAccess.requireCapability('QUOTATIONS.EDIT'), 
     res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'QUOTATION_UPDATE_FAILED' });
   }
 });
-app.patch('/api/quotations/:id/status', userAccess.requireCapability('QUOTATIONS.EDIT'), express.json({ limit: '64kb' }), (req, res) => {
+app.patch('/api/quotations/:id/status', userAccess.requireCapability('QUOTATIONS.EDIT'), express.json({ limit: '64kb' }), async (req, res) => {
   try {
-    const request = quotationStore.setStatus(req.currentUser, req.params.id, req.body && req.body.status);
+    const request = await withQuotationWriteRetry(() => quotationStore.setStatus(req.currentUser, req.params.id, req.body && req.body.status));
     if (!request) return res.status(404).json({ error: 'Quotation kaydı bulunamadı.', code: 'QUOTATION_NOT_FOUND' });
     void sharedRevisionStore.update('quotation',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
     userAccess.appendAudit(req.currentUser, 'QUOTATION_STATUS', request.id, { status: request.status });
@@ -3562,10 +3564,10 @@ app.post('/api/quotations/:id/lines/batch',userAccess.requireCapability('QUOTATI
     res.json(result);
   }catch(error){res.status(error.statusCode||500).json({error:error.message,code:error.code||'QUOTATION_BATCH_FAILED'});}
 });
-app.patch('/api/quotations/:id/lines/:lineId', userAccess.requireCapability('QUOTATIONS.EDIT'), express.json({ limit: '64kb' }), (req, res) => {
+app.patch('/api/quotations/:id/lines/:lineId', userAccess.requireCapability('QUOTATIONS.EDIT'), express.json({ limit: '64kb' }), async (req, res) => {
   try {
     const body = req.body && typeof req.body === 'object' ? req.body : {};
-    const result = quotationStore.patchLine(req.currentUser, req.params.id, req.params.lineId, body);
+    const result = await withQuotationWriteRetry(() => quotationStore.patchLine(req.currentUser, req.params.id, req.params.lineId, body));
     if (!result) return res.status(404).json({ error: 'Quotation satırı bulunamadı.', code: 'QUOTATION_LINE_NOT_FOUND' });
     if (result.changed) {
       void sharedRevisionStore.update('quotation',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
@@ -3576,9 +3578,9 @@ app.patch('/api/quotations/:id/lines/:lineId', userAccess.requireCapability('QUO
     res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'QUOTATION_LINE_FAILED' });
   }
 });
-app.post('/api/quotations/:id/rounds', userAccess.requireCapability('QUOTATIONS.EDIT'), express.json({ limit: '16kb' }), (req, res) => {
+app.post('/api/quotations/:id/rounds', userAccess.requireCapability('QUOTATIONS.EDIT'), express.json({ limit: '16kb' }), async (req, res) => {
   try {
-    const request = quotationStore.startRound(req.currentUser, req.params.id, req.body && req.body.note);
+    const request = await withQuotationWriteRetry(() => quotationStore.startRound(req.currentUser, req.params.id, req.body && req.body.note));
     if (!request) return res.status(404).json({ error: 'Quotation kaydı bulunamadı.', code: 'QUOTATION_NOT_FOUND' });
     void sharedRevisionStore.update('quotation',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
     userAccess.appendAudit(req.currentUser, 'QUOTATION_ROUND', request.id, { round: request.round });
