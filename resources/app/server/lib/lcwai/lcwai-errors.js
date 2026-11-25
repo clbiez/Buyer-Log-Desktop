@@ -28,6 +28,8 @@ const CODES = Object.freeze({
   OUTPUT_INVALID: { status: 422, tr: 'LCW AI istenen dosya için geçerli bir içerik üretmedi (düzeltme denemeleri de sonuç vermedi). İsteği sadeleştirip tekrar deneyin.', en: 'LCW AI did not produce valid content for the requested file (repair attempts failed too). Simplify the request and try again.', retryable: true },
   OUTPUT_RENDER_FAILED: { status: 500, tr: 'Dosya oluşturulamadı.', en: 'The file could not be created.', retryable: true },
   OUTPUT_NOT_FOUND: { status: 404, tr: 'Dosya bulunamadı; silinmiş ya da taşınmış olabilir.', en: 'The file was not found; it may have been deleted or moved.' },
+  // Kaldırılan eski sunum düzenleyicisinin (kayıtlardan stüdyo) taslakları: dosyalar indirilebilir, taslak düzenlenmez.
+  OUTPUT_LEGACY_STUDIO: { status: 410, tr: 'Bu sunum taslağı kaldırılan eski sunum düzenleyicisiyle oluşturuldu ve artık düzenlenemez. Oluşturulan dosyalar indirilebilir; yeni sunum için Araçlar › Sunum Oluştur’u kullanın.', en: 'This presentation draft was made with the removed presentation editor and can no longer be edited. Files already created can still be downloaded; use Tools › Create Presentation for a new presentation.' },
   OUTPUT_EDIT_INVALID: { status: 422, tr: 'Düzenlenen içerik dosyaya çevrilemedi. İşaretli sorunları düzeltip tekrar deneyin.', en: 'The edited content could not be turned into a file. Fix the listed issues and try again.' },
   OUTPUT_TEMPLATE_NOT_FOUND: { status: 404, tr: 'Çıktı şablonu bulunamadı; silinmiş olabilir.', en: 'The output template was not found; it may have been deleted.' },
   OUTPUT_TEMPLATE_INVALID: { status: 400, tr: 'Şablon adı ve dosya biçimi zorunludur.', en: 'A template name and file format are required.' },

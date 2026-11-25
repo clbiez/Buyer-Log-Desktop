@@ -99,6 +99,8 @@ const SYNCED_PREFIXES = Object.freeze([
   'lcw_filter_favorite_', // kayıtlı filtreler
   // v2026-10-30: kişisel ASAS ⇄ IAS alan eşleme hafızası (horizon-field-pairs).
   'buyerlog.horizonFieldPairs.',
+  // v2026-11-25: Presentation Studio — kişisel sunum düzenleri ve şablonları (kayıt kimlikleri + konumlar; iş verisi değil).
+  'bl.presentationStudio.',
   ...Object.values(WORKSPACE_CATEGORY_PREFIXES).flat(),
   APPLIED_HORIZON_PREFIX,
 ]);

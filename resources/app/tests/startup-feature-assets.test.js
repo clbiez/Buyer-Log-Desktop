@@ -85,12 +85,12 @@ test('first Manufacturers activation waits for order drill-down CSS; Backlog reu
 });
 
 test('startup omits optional scripts and blocking module styles while preserving shared dependencies',()=>{
-  for(const file of ['buyerlog-guide-data','buyerlog-trivia-data','buyerlog-trivia','buyerlog-guide','backlog-plan-actual-report','backlog-plan-actual','backlog-presentation-report','backlog-presentation','collection-spreadsheet-engine','collection-spreadsheet','excel-import-workbook','excel-import-match','excel-import-plan','excel-import-profiles','excel-import-ai','excel-import-wizard']){
+  for(const file of ['presentation-studio-engine','presentation-studio-render','presentation-studio-pptx','presentation-studio','buyerlog-guide-data','buyerlog-trivia-data','buyerlog-trivia','buyerlog-guide','backlog-plan-actual-report','backlog-plan-actual','backlog-presentation-report','backlog-presentation','collection-spreadsheet-engine','collection-spreadsheet','excel-import-workbook','excel-import-match','excel-import-plan','excel-import-profiles','excel-import-ai','excel-import-wizard']){
     assert.doesNotMatch(html,new RegExp('<script[^>]+src="'+file+'\\.js[?]'));
     assert.ok(source.includes("'"+file+'.js'),file+' missing from feature manifest');
   }
   const anchors=[...html.matchAll(/<template data-bl-style="([^"]+)"/g)].map(m=>m[1]);
-  assert.equal(anchors.length,19); // +bom-control.css (CP BOM Kontrol, tembel)
+  assert.equal(anchors.length,20); // +bom-control.css (CP BOM Kontrol), +presentation-studio.css (Koleksiyon Sunum Stüdyosu) — ikisi de tembel
   for(const file of anchors){assert.doesNotMatch(html,new RegExp('<link[^>]+href="'+file.replaceAll('.','\\.')+'[?]'));assert.ok(source.includes("'"+file+"'"));}
   for(const file of ['excel-import-mapping','backlog-chart','backlog-v3-report','backlog-overview'])assert.ok(html.includes('<script src="'+file+'.js?'));
 });

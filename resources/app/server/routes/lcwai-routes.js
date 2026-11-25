@@ -248,14 +248,6 @@ app.patch('/api/lcwai/layout-control/history/:id', express.json({ limit: '16kb' 
   /* ---------------- AI Çıktı Düzenleyici (taslaklar) ----------------
      Taslak yalnız sahibine açılır; düzenleme yeniden doğrulanır ve yeni bir
      dosya olarak kaydedilir (eski dosya silinmez). */
-app.post('/api/lcwai/output-studio', express.json({ limit: '48mb' }), (req, res) => {
-    try {
-      const draft = outputsOf().createStudio(ownerOf(req), req.body || {});
-      audit(req, 'OUTPUT_STUDIO_CREATE', { count: draft.source.count });
-      res.set('Cache-Control', 'no-store').json({ ok: true, draft });
-    } catch (error) { fail(res, error); }
-  });
-
   /* Doğal dil veri sorgusunun Buyer Log tarafından hesaplanan sonucu → Excel. */
 app.post('/api/lcwai/outputs/table', express.json({ limit: '24mb' }), async (req, res) => {
     try {
@@ -273,12 +265,6 @@ app.post('/api/lcwai/outputs/table', express.json({ limit: '24mb' }), async (req
 app.get('/api/lcwai/output-drafts/:id', (req, res) => {
     try {
       res.set('Cache-Control', 'no-store').json({ ok: true, draft: outputsOf().getDraft(ownerOf(req), req.params.id) });
-    } catch (error) { fail(res, error); }
-  });
-
-app.post('/api/lcwai/output-studio/:id/images', express.json({ limit: '48mb' }), (req, res) => {
-    try {
-      res.set('Cache-Control', 'no-store').json({ ok: true, images: outputsOf().saveStudioImages(ownerOf(req), req.params.id, req.body) });
     } catch (error) { fail(res, error); }
   });
 

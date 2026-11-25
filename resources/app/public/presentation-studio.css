@@ -1,0 +1,75 @@
+/* Presentation Studio — yalnız yerleşim ve belge geometrisi.
+   Görünüm (renk, çerçeve, yazı, gölge, katman) ui-components.css'tedir (DESIGN_SYSTEM.md §1, §9). */
+.psStudio{position:fixed;inset:0;display:flex}
+.psShell{display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;width:100%;height:100%;min-width:0;min-height:0}
+.psHead,.psBar{display:flex;align-items:center;gap:8px;padding:8px 14px;flex-wrap:wrap;min-width:0}
+.psBrand{white-space:nowrap}
+.psTitle{flex:1 1 220px;min-width:140px;max-width:420px}
+.psGrow{flex:1 1 auto}
+.psZoom{display:inline-flex;align-items:center;gap:2px}
+.psZoom output{min-width:48px;text-align:center}
+.psIcon{min-width:32px;padding-inline:6px;justify-content:center}
+.psChips{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.psChip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 2px 0 8px;cursor:grab;user-select:none}
+.psChip button{display:grid;place-items:center;width:22px;height:22px;padding:0;cursor:pointer}
+.psChip button .ic{width:12px;height:12px}
+.psToggle{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.psSep{display:inline-block;width:1px;height:22px;flex:none}
+.psSeg{display:inline-flex}
+.psSeg>button{display:grid;place-items:center;min-width:32px;height:30px;padding:0 8px;cursor:pointer}
+.psCustom{display:inline-flex;align-items:center;gap:4px}
+.psCustom input{width:72px}
+.psBody{display:grid;grid-template-columns:172px minmax(0,1fr);min-height:0}
+.psRail{display:flex;flex-direction:column;gap:10px;padding:10px;overflow:auto;min-height:0}
+.psRailHead{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.psThumbs,.psTray{display:flex;flex-direction:column;gap:6px}
+.psThumb{display:flex;flex-direction:column;gap:4px;width:100%;padding:4px;cursor:pointer;text-align:left}
+.psThumbPage{position:relative;display:block;width:100%;overflow:hidden}
+.psThumbPage i{position:absolute}
+.psTrayItem{display:flex;align-items:center;gap:6px}
+.psTrayItem span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.psCanvas{position:relative;overflow:auto;padding:8px 32px 64px;min-height:0}
+.psPages{display:flex;flex-direction:column;align-items:center}
+.psPageWrap{position:relative;flex:none;box-sizing:content-box;margin-top:6px;padding-top:40px;content-visibility:auto}
+.psPageTools{position:absolute;left:0;right:0;top:2px;height:34px;display:flex;align-items:center;gap:4px}
+.psPage{position:absolute;left:0;top:40px;transform-origin:0 0;overflow:hidden}
+.psDocCard{cursor:grab;user-select:none}
+.psDocCard img{pointer-events:none;object-fit:contain}
+.psDocCard.isGhost{opacity:.28}
+.psBadge{position:absolute;top:3pt;width:13pt;height:13pt;display:grid;place-items:center;pointer-events:none}
+.psBadge .ic{width:8pt;height:8pt}
+.psPin{right:3pt}
+.psMoved{left:3pt}
+.psHandle{position:absolute;width:9px;height:9px}
+.psHandle[data-h="nw"]{left:-5px;top:-5px;cursor:nwse-resize}.psHandle[data-h="ne"]{right:-5px;top:-5px;cursor:nesw-resize}
+.psHandle[data-h="sw"]{left:-5px;bottom:-5px;cursor:nesw-resize}.psHandle[data-h="se"]{right:-5px;bottom:-5px;cursor:nwse-resize}
+.psHandle[data-h="n"]{left:calc(50% - 5px);top:-5px;cursor:ns-resize}.psHandle[data-h="s"]{left:calc(50% - 5px);bottom:-5px;cursor:ns-resize}
+.psHandle[data-h="w"]{top:calc(50% - 5px);left:-5px;cursor:ew-resize}.psHandle[data-h="e"]{top:calc(50% - 5px);right:-5px;cursor:ew-resize}
+.psDocHdr{cursor:text}
+.psGuides{position:absolute;inset:0;pointer-events:none}
+.psGuide,.psInsert,.psMarquee{position:absolute;pointer-events:none}
+.psDragLayer{position:fixed;inset:0;pointer-events:none}
+.psDragClone{position:absolute;transform-origin:0 0;cursor:grabbing}
+.psTip{position:fixed;padding:4px 9px;white-space:nowrap;pointer-events:none}
+.psFloat{position:fixed;display:flex;align-items:center;gap:2px;padding:4px;max-width:calc(100vw - 16px);flex-wrap:wrap}
+.psFloatInfo{padding:0 8px;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.psPop{position:fixed;display:flex;flex-direction:column;gap:8px;width:320px;max-height:min(70vh,560px);padding:12px;overflow:auto}
+.psFieldList,.psScroll{max-height:320px;overflow:auto}
+.psFieldList{display:flex;flex-direction:column;gap:2px}
+.psField{display:flex;align-items:center;gap:8px;padding:4px 6px;cursor:pointer}
+.psField small{margin-left:auto}
+.psGrip{display:grid;place-items:center;width:14px;cursor:grab}
+.psSlider{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 10px}
+.psSlider>input,.psSlider>select,.psSlider>.psSeg{grid-column:1/-1;width:100%}
+.psSlider>.psSeg>button{flex:1}
+.psMenu{display:flex;flex-direction:column;gap:4px}
+.psMenu>.tbtn,.psOptions>.tbtn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;height:auto;min-height:0;padding:8px 10px;text-align:left;white-space:normal}
+.psTpl{display:flex;align-items:center;gap:6px;padding:4px}
+.psTpl>span{display:flex;flex-direction:column;flex:1;min-width:0}
+.psTplSave{display:flex;gap:6px}
+.psTplSave input{flex:1;min-width:0}
+.psStatus{display:flex;align-items:center;gap:14px;padding:5px 14px;flex-wrap:wrap}
+.psOptions{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.psDialogCard{width:min(540px,calc(100vw - 32px))}
+.psPrintFrame{position:fixed;left:-10000px;top:0;width:1px;height:1px;visibility:hidden}
+@media (max-width:900px){.psBody{grid-template-columns:minmax(0,1fr)}.psRail{display:none}.psCanvas{padding:8px 12px 64px}}

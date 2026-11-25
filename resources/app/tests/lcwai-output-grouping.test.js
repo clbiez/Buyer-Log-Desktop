@@ -145,17 +145,11 @@ test('PDF/HTML: aynı gruplama bölüm + yan yana gruplar; başlık+galeri böl�
   assert.match(titled, /<h2>Tişört \/ Şort<\/h2>[\s\S]*<h2>Tişört<\/h2>/, 'gruplama yokken başlık yeniden yazılır');
 });
 
-test('şablon ve arayüz: gruplama/başlık alanları LCW AI talimatına girer; Yerleşim kontrolleri TR/EN', () => {
+test('şablon: gruplama/başlık alanları LCW AI talimatına girer; önizleme gruplamada kaynak satırları kullanır', () => {
   const def = userTemplates.normalizeDefinition({ format: 'pptx', layout: { groupBy: ['Kategori', 'Kumaş'], pageTitle: { mode: 'manual', text: '{Sezon} · {Kategori}' }, cardFields: ['Fit'] } });
   assert.deepEqual(def.layout.groupBy, ['Kategori', 'Kumaş']);
   assert.match(userTemplates.templateInstruction(def, { name: 'X', lang: 'tr' }), /Model kartı bilgileri: .*Fit, Kategori, Kumaş, Sezon/);
   const editor = fs.readFileSync(path.join(ROOT, 'public', 'lcwai-output-editor.js'), 'utf8');
-  assert.match(editor, /data-lay-group="\$\{i\}"/);
-  assert.match(editor, /data-lay-group-break/);
-  assert.match(editor, /groupBreak: Number\(el\.value\)/);
-  assert.match(editor, /data-lay-title-mode="\$\{value\}"/);
-  assert.match(editor, /data-lay-title-text/);
-  assert.match(editor, /data-lay-title-insert=/);
   assert.match(editor, /LAY\(\)\.expandGalleries\(slides, l, \{ english: isEn\(\), records:/, 'önizleme gruplamada kaynak satırları kullanır');
-  for (const text of ["L('Gruplama', 'Grouping')", "L('1. grup', '1st group')", "L('3. grup', '3rd group')", "L('Elle yaz', 'Type it')", "L('Alanlardan', 'From fields')", "L('Slayt başlığı', 'Slide title')", "L('Bölüm başlığı', 'Section title')", "L('Yeni slayt', 'New slide')", "L('Yok — tüm gruplar yan yana', 'None — all groups side by side')"]) assert.ok(editor.includes(text), text);
+  assert.doesNotMatch(editor, /data-lay-group|data-lay-title-mode/, 'görsel yerleşim düzenlemesi kaldırıldı');
 });

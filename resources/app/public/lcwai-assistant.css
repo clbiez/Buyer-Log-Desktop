@@ -201,33 +201,7 @@
 .lcwaiTplRow .lcwaiFileInfo small.lcwaiTplPreview{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 @media (max-width:900px){.lcwaiEdBody{grid-template-columns:1fr;}.lcwaiEdRail{max-height:180px;}.lcwaiEdKpi,.lcwaiEdKpi.is-gallery,.lcwaiTplItem,.lcwaiEdCols,.lcwaiEdSlideBand .lcwaiEdRow{grid-template-columns:1fr;}.lcwaiTplRow{flex-wrap:wrap;}}
 /* ---------------- Yerleşim aracı (Çıktı Düzenleyici › Yerleşim) ---------------- */
-.lcwaiLay{display:grid;grid-template-columns:310px minmax(0,1fr);gap:18px;align-items:start;min-height:100%;}
-.lcwaiLayControls{position:sticky;top:0;display:flex;flex-direction:column;gap:12px;padding:12px;max-height:calc(100% - 4px);overflow:auto;}
-.lcwaiLayGroup{display:grid;gap:8px;padding-top:10px;}
-.lcwaiLayGroup h4{margin:0;}
-.lcwaiLayCtl{display:grid;gap:3px;}
-.lcwaiLayCtl>span{display:flex;justify-content:space-between;gap:8px;}
-.lcwaiLayCtl input[type="range"]{width:100%;padding:0!important;}
-.lcwaiLayGridPick{display:grid;gap:3px;width:100%;max-width:240px;}
-.lcwaiLayGridPick button{aspect-ratio:1/1;padding:0;cursor:pointer;}
-.lcwaiLayGridPick:hover button.is-on{opacity:.75;}
-.lcwaiLayGridText{margin:0;}
-.lcwaiLayFlags{display:flex;flex-wrap:wrap;gap:4px 12px;}
-.lcwaiLayFlag{display:inline-flex;align-items:center;gap:4px;cursor:pointer;}
-.lcwaiLayFlags.is-stack{flex-direction:column;gap:4px;}
 /* Kart bilgileri seçicisi: işaretli alanlar üstte (sıralı), diğerleri altta. */
-.lcwaiLayFields{list-style:none;margin:0;padding:0;display:grid;gap:2px;max-height:240px;overflow:auto;}
-.lcwaiLayField{display:flex;align-items:center;gap:4px;padding:3px 6px;}
-.lcwaiLayField label{flex:1;min-width:0;display:flex;align-items:center;gap:6px;cursor:pointer;}
-.lcwaiLayField label span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.lcwaiLayField .lcwaiEdIconBtn{width:22px;height:22px;}
-.lcwaiLayFieldSrc{flex:none;margin-left:auto;padding:0 5px;}
-.lcwaiLayPicks{display:grid;gap:6px;}
-.lcwaiLayPick{display:grid;grid-template-columns:70px minmax(0,1fr);align-items:center;gap:8px;}
-.lcwaiLayPick select{height:28px;min-width:0;}
-.lcwaiLayTitleInput{width:100%;height:30px;}
-.lcwaiLayChips{display:flex;flex-wrap:wrap;gap:4px;}
-.lcwaiLayChip{padding:1px 6px;cursor:pointer;}
 .lcwaiLayStage{min-width:0;display:flex;flex-direction:column;gap:10px;}
 .lcwaiLayStageHead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
 .lcwaiLayStageHead select{height:28px;margin-left:6px;}
@@ -265,7 +239,6 @@
 .lcwaiEdXRules{display:flex;flex-direction:column;gap:4px;align-items:flex-start;}
 .lcwaiEdXRule{display:flex;gap:4px;align-items:center;}
 .lcwaiEdXRule input{width:92px;}
-@media (max-width:1100px){.lcwaiLay{grid-template-columns:1fr;}.lcwaiLayControls{position:static;}}
 .lcwaiLayStage .lcwaiEdFrame{flex:none;height:calc(94vh - 190px);min-height:420px;max-width:none;}
 /* Sadeleştirme: 3 adımlı üst çubuk, hazır yerleşim kartları, katlanır ince ayar */
 .lcwaiEdSteps{display:inline-flex;align-items:stretch;}
@@ -274,16 +247,7 @@
 .lcwaiEdSteps button:disabled{opacity:.6;cursor:progress;}
 .lcwaiEdHeadTools{display:inline-flex;align-items:center;gap:6px;margin-left:4px;}
 .lcwaiEdIconBtn.is-tool{width:var(--ui-control-height);height:var(--ui-control-height);}
-.lcwaiLayGroup.is-first{padding-top:0;}
-.lcwaiLayPresets{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
-.lcwaiLayPreset{display:grid;justify-items:start;gap:2px;padding:8px;text-align:left;cursor:pointer;}
-.lcwaiLayThumb{display:grid;gap:2px;width:100%;height:34px;margin-bottom:4px;padding:3px;}
-.lcwaiLayThumb i{display:block;min-height:0;}
-.lcwaiLayThumb.is-text{display:flex;align-items:flex-end;gap:6px;}
-.lcwaiLayGridPick{max-width:200px;}
-.lcwaiLayMore{padding-top:8px;}
-.lcwaiLayMore>summary,.lcwaiEdAdvanced>summary{cursor:pointer;}
-.lcwaiLayMore>.lcwaiLayGroup{margin-top:8px;}
+.lcwaiEdAdvanced>summary{cursor:pointer;}
 .lcwaiEdAdvanced{padding:8px 10px;}
 .lcwaiEdDialogBody.is-nested{padding:10px 0 2px;overflow:visible;}
 
@@ -296,23 +260,12 @@
 @media(max-width:700px){.lcwaiMsg,.lcwaiMsg.is-user,.lcwaiMsg.is-ai{grid-template-columns:1fr;}.lcwaiMsgWho,.lcwaiMsgBody,.lcwaiMsgMeta,.lcwaiMsgActions{grid-column:1;grid-row:auto;}}
 
 
-/* Studio owns geometry; Manifest component ownership stays in ui-components.css. */
-.lcwaiEdOverlay.is-studio:not(.is-advanced) .lcwaiEdBody{grid-template-columns:minmax(0,1fr)}
-.lcwaiEdOverlay.is-studio:not(.is-advanced) .lcwaiEdRail{display:none}
-.lcwaiStudioSource{max-width:1100px;margin:auto;display:flex;flex-direction:column;gap:var(--ui-space-3)}
-.lcwaiStudioActions{display:flex;flex-wrap:wrap;gap:var(--ui-space-2);align-items:center}
-.lcwaiStudioThumb{position:relative;display:block;width:100%;aspect-ratio:16/9;box-sizing:border-box}
-.lcwaiStudioThumb i{position:absolute;display:block;box-sizing:border-box;min-height:0}
-.lcwaiStudioThumb i::before{content:"";display:block;width:100%;height:var(--studio-image)}
-.lcwaiStudioHandle{position:absolute;left:35%;width:30%;height:16px;transform:translateY(-50%);padding:0;cursor:ns-resize;touch-action:none}
-.lcwaiStudioCardGrip{position:absolute;right:0;bottom:0;width:24px;height:24px;cursor:ns-resize;touch-action:none}
-.lcwaiLayField[hidden]{display:none}
-[data-studio-card]{cursor:pointer}
+/* Önizle ve oluştur adımı: yerleşim burada, görünüm ui-components.css (Manifest). */
+.lcwaiReview{max-width:1100px;margin:auto;display:flex;flex-direction:column;gap:var(--ui-space-3)}
+.lcwaiEdActions{display:flex;flex-wrap:wrap;gap:var(--ui-space-2);align-items:center}
 .lcwaiLayImg{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
 .lcwaiLayImg img{min-width:0;min-height:0}
 /* Sunumu şekillendir: ayar paneli ve önizleme bağımsız kayar; tekerlek bir sütunda diğerini taşımaz. */
-@media(min-width:1101px){.lcwaiEdOverlay.is-studio .lcwaiLay{height:100%;min-height:0;grid-template-rows:minmax(0,1fr);align-items:stretch}.lcwaiEdOverlay.is-studio .lcwaiLayControls{position:static;max-height:none;min-height:0;overflow:auto;overscroll-behavior:contain}.lcwaiEdOverlay.is-studio .lcwaiLay > .lcwaiLayStage{min-height:0;overflow:auto;overscroll-behavior:contain}}
-@media(max-width:950px){.lcwaiEdOverlay.is-studio .lcwaiLay{grid-template-columns:minmax(0,1fr)}.lcwaiEdOverlay.is-studio .lcwaiLayControls{position:static;max-height:none}}
 /* Doğal dil veri sorgusu: "Buyer Log hesapladı" yorumu, seçenekler, uyarı. */
 .lcwaiQuery{display:flex;flex-direction:column;gap:6px;margin:0 0 10px;padding:9px 11px;}
 .lcwaiQueryHead{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;}
@@ -330,31 +283,10 @@
 .lcwaiProgressDetail{flex-basis:100%;padding-left:calc(1.1em + 8px);}
 
 /* Column matrix: shared tokens and independent scroll surfaces. */
-.lcwaiEdOverlay.is-studio:not(.is-advanced) .lcwaiLay{grid-template-columns:minmax(450px,44%) minmax(0,1fr)}
-.lcwaiMatrixHead,.lcwaiMatrixField>summary{display:grid;grid-template-columns:minmax(100px,1fr) repeat(4,64px);align-items:center;gap:6px;padding:10px 6px}
-.lcwaiMatrixHead{position:sticky;top:0;text-align:center}
-.lcwaiMatrixField{display:block}.lcwaiMatrixField>summary{cursor:pointer;list-style:none}.lcwaiMatrixField>summary label{text-align:center}
-.lcwaiMatrixOptions{padding:12px;display:grid;gap:12px}
-.lcwaiMatrixPage{margin-bottom:24px;content-visibility:auto;contain-intrinsic-size:auto 600px}
-.lcwaiMatrixPage .lcwaiLaySlide{margin:0 auto}
-@media(max-width:1100px){.lcwaiEdOverlay.is-studio:not(.is-advanced) .lcwaiLay{grid-template-columns:minmax(0,1fr)}}
-.lcwaiMatrixPage .lcwaiLayText.is-detail{white-space:normal;text-overflow:clip;overflow-wrap:anywhere}
-.lcwaiMatrixPage>.lcwaiStudioActions{max-height:48px;overflow:auto;flex-wrap:nowrap}
-.lcwaiMatrixPage>.lcwaiStudioActions button{max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
 /* design.css .cardBox{position:relative} slayt kutularını akışa düşürmesin; kartlar mutlak konumlu kalır. */
 .lcwaiLayBox.cardBox{position:absolute}
 /* Sıkı sütun matrisi: satırlar arası grup boşluğu sıfırlanır. */
-.lcwaiMatrixHead{padding-block:8px}
-.lcwaiMatrixField>summary{padding-block:5px}
-.lcwaiMatrixHead+.lcwaiMatrixField,.lcwaiMatrixField+.lcwaiMatrixField{margin-top:-8px}
 /* Panel ↔ önizleme sınırı sürüklenerek genişletilir; dar ekranda tek sütun kalır. */
-.lcwaiLaySplit{display:none}
-@media(min-width:1101px){
-.lcwaiEdOverlay.is-studio:not(.is-advanced) .lcwaiLay:has(>.lcwaiLaySplit){grid-template-columns:minmax(320px,var(--lcwai-lay-split,44%)) 14px minmax(320px,1fr);column-gap:4px}
-.lcwaiEdOverlay.is-studio:not(.is-advanced) .lcwaiLaySplit{display:block;position:relative;cursor:col-resize;touch-action:none;align-self:stretch}
-.lcwaiLaySplit::after{content:"";position:absolute;inset:0 6px}
-.lcwaiLay.is-resizing{cursor:col-resize;user-select:none}
-}
 /* Alt bar: kalıcı birincil eylem sağda, oluşturulan dosya belirgin bir bantta. */
 .lcwaiEdFootActions{display:flex;align-items:center;gap:var(--ui-space-3);flex:none}
 .lcwaiEdResult{display:flex;align-items:center;flex-wrap:wrap;gap:var(--ui-space-2) var(--ui-space-3);min-width:0}

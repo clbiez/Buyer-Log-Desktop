@@ -195,7 +195,7 @@ test('düzenleyici: Excel biçimi bölümü ve önizleme ortak doğrulayıcıyı
   assert.match(editor, /data-ed-xrule-add/);
   assert.match(editor, /LAY\(\)\.XLSX_FORMAT\.limits\.bars/, 'çubuk sınırı arayüzde de korunur');
   const perf = fs.readFileSync(path.join(ROOT, 'public', 'perf-runtime.js'), 'utf8');
-  assert.match(perf, /lcwai-output-layout\.js\?rev=6[^]*lcwai-output-editor\.js\?rev=8/);
+  assert.match(perf, /lcwai-output-layout\.js\?rev=7[^]*lcwai-output-editor\.js\?rev=9/);
 });
 
 test('servis: düzenleyiciden gelen metin değerli biçim doğrulanır, taslakta saklanır ve dosyaya yazılır', async () => {

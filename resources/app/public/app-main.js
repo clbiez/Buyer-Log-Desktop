@@ -45492,6 +45492,7 @@ function applyLanguage(lang){
   try{window.BLI18n?.absorbLegacy?.();window.BLI18n?.setLanguage?.(appLang);}catch(_){}
   window.BLCollectionPriceDrawer?.refresh?.({force:true});
   window.BLCpAssistant?.refreshLanguage?.();
+  window.BLPresentationStudio?.refreshLanguage?.();
   // TR/EN etiket genişlikleri farklı: duyarlı araç çubukları yeniden ölçülür.
   window.BLToolbarResponsive?.refresh?.(null,{remeasure:true});
 }
@@ -45503,14 +45504,14 @@ applyLanguage(appLang);
 syncTableToolbarActions(document.body.dataset.activeTab||'overview');
 setTimeout(()=>void loadModelImageSettings(),1200);
 
-// Presentation tools use the existing lazy output editor and canonical source scope.
+// Sunum Oluştur (Koleksiyon, CP, Siparişler): Presentation Studio; tembel yüklenir, kaynak tablo salt okunur.
 document.addEventListener('click', async event => {
   const button = event.target.closest('[data-output-studio]');
   if (!button) return;
   button.disabled = true;
   try {
-    await window.BLPerf.ensureFeature('lcwaiOutputEditor');
-    await window.BLOutputEditor.openSelection(button.dataset.outputStudio);
+    await window.BLPerf.ensureFeature('presentationStudio');
+    await window.BLPresentationStudio.openSelection(button.dataset.outputStudio);
   } catch (_) { showToast(appLang === 'en' ? 'The presentation editor could not be opened.' : 'Sunum düzenleyicisi açılamadı.', {kind:'error'}); }
   finally { button.disabled = false; }
 });
