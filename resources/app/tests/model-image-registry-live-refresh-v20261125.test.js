@@ -93,8 +93,10 @@ test('görsel bağlantısı değişince yetkili aboneler değersiz model-images 
     assert.equal(registry.body.ok, true);
     const entries = Object.entries(registry.body.imagemap).filter(([key]) => key.startsWith('plm:PLM-LIVE-1|colour:BLK'));
     assert.ok(entries.length && entries.every(([, ref]) => ref === 'ci_new_demo'), `${who}: ${JSON.stringify(registry.body)}`);
-    assert.ok(registry.body.scopeKeys.includes('plm:PLM-LIVE-1|colour:BLK'));
-    assert.ok(registry.body.scopeKeys.includes('plm:PLM-LIVE-2|colour:WHT'));
+    // Dolu kapsam yinelenmez (yanıt yarıya iner): kaydı olmayan kapsam ayrı listelenir.
+    assert.equal(registry.body.scopeKeys, undefined);
+    assert.ok(!registry.body.emptyScopeKeys.includes('plm:PLM-LIVE-1|colour:BLK'), 'filled key is derived from imagemap');
+    assert.ok(registry.body.emptyScopeKeys.includes('plm:PLM-LIVE-2|colour:WHT'));
   }
   // Erişimi olmayan kullanıcı başkasının Koleksiyon görsel kaydını alamaz.
   const denied = await s.out.get('/api/model-images/registry/collection/own');
@@ -136,16 +138,19 @@ function clientContext({ cpRows = null, owner = 'own', multi = null, activeTab =
     modelImageRefUrl: ref => `/api/collection-images/${ref}`,
     BLImageRuntime: { invalidate: urls => calls.invalidated.push(...urls) },
     renderKol: () => calls.render.push('kol'), renderCP: () => calls.render.push('cp'), renderOrders: () => calls.render.push('orders'),
-    refreshCpStartupImageRegistry: async rows => {
+    // Mevcut CP uygulaması (tam kopya + CP satır alanları) yalnız fark varsa çağrılmalı.
+    applyCpStartupImageRegistry: (payload, rows) => {
       calls.cpApplied++; calls.cpRows = rows.length;
-      if (cpRegistry) ctx.state.overrides.imagemap = { ...ctx.state.overrides.imagemap, ...cpRegistry };
+      ctx.state.overrides.imagemap = { ...ctx.state.overrides.imagemap, ...payload.imagemap };
       return true;
     },
     encodeURIComponent,
     fetch: async url => {
       calls.fetch.push(url);
       const owner = decodeURIComponent(String(url).split('/').pop());
-      const body = registry[owner] || { ok: true, imagemap: {}, scopeKeys: [] };
+      const body = owner === 'cp'
+        ? { ok: true, imagemap: cpRegistry || {}, scopeKeys: Object.keys(cpRegistry || {}) }
+        : registry[owner] || { ok: true, imagemap: {}, emptyScopeKeys: [] };
       return { ok: true, status: 200, json: async () => body };
     },
     console, Promise, Set, Map, Object, Array, String, Number, JSON,
@@ -153,13 +158,17 @@ function clientContext({ cpRows = null, owner = 'own', multi = null, activeTab =
   const start = SOURCE.indexOf('/* KANONİK GÖRSEL KAYDI CANLI TAZELEME');
   const end = SOURCE.indexOf('// Tek görsel = tek URL', start);
   assert.ok(start > 0 && end > start, 'client refresh block exists in the shared image pipeline');
+  // Değişiklik mevcut sessiz görsel tamamlama yamasıyla (gerçek kaynak) uygulanır.
+  const patchStart = SOURCE.indexOf('function silentImageApplyPatch(');
+  const patchEnd = SOURCE.indexOf('\n/* ', patchStart);
+  assert.ok(patchStart > 0 && patchEnd > patchStart);
   vm.createContext(ctx);
-  vm.runInContext(SOURCE.slice(start, end), ctx);
+  vm.runInContext(SOURCE.slice(start, end) + '\n' + SOURCE.slice(patchStart, patchEnd), ctx);
   return { ctx, calls };
 }
 
 test('istemci: sinyalde açık Koleksiyon sahiplerinin kapsamı tazelenir, yalnız değişen görsel geçersiz kılınır ve aktif tablo yeniden çizilir', async () => {
-  const { ctx, calls } = clientContext({ registry: { own: { ok: true, imagemap: { 'plm:PLM-LIVE-1|colour:BLK': 'ci_new_demo' }, scopeKeys: ['plm:PLM-LIVE-1|colour:BLK', 'plm:PLM-LIVE-2|colour:WHT'] } } });
+  const { ctx, calls } = clientContext({ registry: { own: { ok: true, imagemap: { 'plm:PLM-LIVE-1|colour:BLK': 'ci_new_demo' }, emptyScopeKeys: ['plm:PLM-LIVE-2|colour:WHT'] } } });
   const result = await ctx.refreshModelImageRegistryFromServer();
   assert.deepEqual(calls.fetch, ['/api/model-images/registry/collection/own']);
   assert.equal(ctx.state.overrides.imagemap['plm:PLM-LIVE-1|colour:BLK'], 'ci_new_demo');
@@ -176,7 +185,7 @@ test('istemci: sinyalde açık Koleksiyon sahiplerinin kapsamı tazelenir, yaln�
 });
 
 test('istemci: kapsamdaki silinen görsel (ad varyantı dahil) kayıttan düşer ve eski URL geçersiz kılınır; kapsam dışı anahtar kalır', async () => {
-  const { ctx, calls } = clientContext({ registry: { own: { ok: true, imagemap: {}, scopeKeys: ['plm:PLM-LIVE-1|colour:BLK'] } } });
+  const { ctx, calls } = clientContext({ registry: { own: { ok: true, imagemap: {}, emptyScopeKeys: ['plm:PLM-LIVE-1|colour:BLK'] } } });
   ctx.state.overrides.imagemap['plm:PLM-LIVE-1|colour:BLK|name:Demo Navy'] = 'ci_named_demo';
   const result = await ctx.refreshModelImageRegistryFromServer();
   assert.equal(result.changed, 2);
@@ -185,10 +194,21 @@ test('istemci: kapsamdaki silinen görsel (ad varyantı dahil) kayıttan düşer
   assert.deepEqual(calls.render, ['kol']);
 });
 
+test('istemci: tabanı yanıtta olan ad varyantı düşer (kapsam yanıt anahtarlarından türetilir); kayıt yerinde yamanır', async () => {
+  const { ctx, calls } = clientContext({ registry: { own: { ok: true, imagemap: { 'plm:PLM-LIVE-1|colour:BLK': 'ci_old_demo' }, emptyScopeKeys: [] } } });
+  const map = ctx.state.overrides.imagemap;
+  map['plm:PLM-LIVE-1|colour:BLK|name:Demo Navy'] = 'ci_named_demo';
+  const result = await ctx.refreshModelImageRegistryFromServer();
+  assert.equal(result.changed, 1);
+  assert.equal(ctx.state.overrides.imagemap, map, 'patched in place, no full copy');
+  assert.deepEqual(Object.keys(map).sort(), ['plm:PLM-LIVE-1|colour:BLK', 'plm:PLM-OTHER|colour:RED']);
+  assert.deepEqual(calls.invalidated, ['/api/collection-images/ci_named_demo']);
+});
+
 test('istemci: Koleksiyon erişimi olmayan kullanıcı sinyalde Koleksiyon kaydı istemez (gizli modül trafiği yok), CP kapsamı yine tazelenir', async () => {
   const { ctx, calls } = clientContext({ areas: ['cp'], cpRows: [{ 'PLM ID': 'PLM-LIVE-1' }], activeTab: 'cp', cpRegistry: { 'plm:PLM-CP|colour:NAV': 'ci_cp_new' } });
   await ctx.refreshModelImageRegistryFromServer();
-  assert.deepEqual(calls.fetch, []);
+  assert.deepEqual(calls.fetch, ['/api/model-images/registry/cp'], 'no Collection registry request');
   assert.equal(calls.cpApplied, 1);
   assert.deepEqual(calls.render, ['cp']);
 });
@@ -196,14 +216,15 @@ test('istemci: Koleksiyon erişimi olmayan kullanıcı sinyalde Koleksiyon kayd�
 test('istemci: çoklu görünüm her seçili sahibi, CP açık kullanıcı CP kapsamını tazeler; eşzamanlı sinyaller birleşir', async () => {
   const { ctx, calls } = clientContext({ multi: ['own', 'oth'], cpRows: [{ 'PLM ID': 'PLM-LIVE-1' }], activeTab: 'cp', cpRegistry: { 'plm:PLM-CP|colour:NAV': 'ci_cp_new' } });
   await Promise.all([ctx.refreshModelImageRegistryFromServer(), ctx.refreshModelImageRegistryFromServer(), ctx.refreshModelImageRegistryFromServer()]);
-  assert.deepEqual(calls.fetch.slice(0, 2).sort(), ['/api/model-images/registry/collection/oth', '/api/model-images/registry/collection/own']);
-  assert.ok(calls.fetch.length <= 4, `coalesced: ${calls.fetch.length} requests`);
-  assert.ok(calls.cpApplied >= 1 && calls.cpApplied <= 2);
+  assert.deepEqual(calls.fetch.slice(0, 3).sort(), ['/api/model-images/registry/collection/oth', '/api/model-images/registry/collection/own', '/api/model-images/registry/cp']);
+  assert.ok(calls.fetch.length <= 6, `coalesced: ${calls.fetch.length} requests`);
+  assert.equal(calls.cpApplied, 1, 'the repeat pass finds no CP difference and skips the full CP apply');
   assert.ok(calls.render.includes('cp'));
   assert.equal(calls.render.filter(item => item === 'cp').length, 1, 'one redraw for the coalesced burst');
-  // CP kaydında değişiklik yoksa CP yeniden çizilmez.
+  // CP kaydında değişiklik yoksa tam CP uygulaması çalışmaz ve CP yeniden çizilmez.
   const quiet = clientContext({ cpRows: [{ 'PLM ID': 'PLM-LIVE-1' }], activeTab: 'cp' });
   await quiet.ctx.refreshModelImageRegistryFromServer();
+  assert.equal(quiet.calls.cpApplied, 0);
   assert.deepEqual(quiet.calls.render, []);
 });
 

@@ -9153,7 +9153,11 @@ app.get('/api/model-images/registry/collection/:ownerId', userAccess.requireArea
     const ownerId = canonicalCollectionOwner(String(req.params.ownerId || ''));
     if (!userAccess.collectionAccessLevel(req.currentUser, ownerId)) return res.status(403).json({ error:'Bu Koleksiyon sayfasına erişim yetkiniz bulunmuyor.', code:'COLLECTION_ACCESS_DENIED' });
     const rows = (loadWorkspace(ownerId).rows || []).map(row => ({ 'PLM ID': row && row.plmId, 'C.Code': row && row.colourCode }));
-    res.set('Cache-Control', 'no-store').json({ ok:true, ownerId, ...scopedCpImageRegistry(rows, loadOverrides().imagemap || {}) });
+    const scoped = scopedCpImageRegistry(rows, loadOverrides().imagemap || {});
+    // Kaydı olan kapsam anahtarları yanıttaki anahtarların tabanından türetilir;
+    // yalnız kaydı olmayanlar gönderilir (30k satırda yanıt yarıya iner, anlam aynı).
+    const filled = new Set(Object.keys(scoped.imagemap).map(key => { const at = key.indexOf('|name:'); return at >= 0 ? key.slice(0, at) : key; }));
+    res.set('Cache-Control', 'no-store').json({ ok:true, ownerId, imagemap: scoped.imagemap, emptyScopeKeys: scoped.scopeKeys.filter(key => !filled.has(key)) });
   } catch (err) { apiError(res, err, 'Koleksiyon görsel kaydı okunamadı.'); }
 });
 

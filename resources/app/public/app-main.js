@@ -4057,25 +4057,32 @@ function syncModelImageRegistry(){
    geçersiz kılınır; bir şey değiştiyse yalnız aktif tablo yeniden çizilir.
    Eşzamanlı sinyaller tek tazelemede birleşir (en fazla bir tekrar). */
 let modelImageRegistryRefreshRun=null,modelImageRegistryRefreshAgain=false;
-function applyScopedModelImageRegistry(payload){
-  if(!payload||payload.ok!==true||!payload.imagemap||typeof payload.imagemap!=='object'||!Array.isArray(payload.scopeKeys))return 0;
-  state.overrides=state.overrides||{};
-  // Önce yalnız farkı bul; değişiklik yoksa (sinyallerin çoğu) büyük kaydı kopyalama.
-  const before=state.overrides.imagemap||{},incoming=payload.imagemap,scope=new Set(payload.scopeKeys),removed=[],staleUrls=[];let changed=0;
+/* Kapsamlı kayıt yanıtı → artımlı yama ({anahtar: ref | null=kaldırıldı}). Saf
+   fark: durum değişmez. Kapsam = scopeKeys (CP sözleşmesi) ya da emptyScopeKeys +
+   yanıttaki anahtarların tabanları (Koleksiyon uç noktası dolu kapsamı
+   yinelemez; yanıt yarıya iner, anlam aynıdır). */
+function scopedModelImageRegistryPatch(payload){
+  const patch={};
+  const scopeList=payload&&(Array.isArray(payload.emptyScopeKeys)?payload.emptyScopeKeys:payload.scopeKeys);
+  if(!payload||payload.ok!==true||!payload.imagemap||typeof payload.imagemap!=='object'||!Array.isArray(scopeList))return patch;
+  const before=state.overrides?.imagemap||{},incoming=payload.imagemap,scope=new Set(scopeList);
+  for(const key of Object.keys(incoming)){
+    const at=key.indexOf('|name:');scope.add(at>=0?key.slice(0,at):key);
+    if(before[key]!==incoming[key])patch[key]=incoming[key];
+  }
   for(const key of Object.keys(before)){
     if(Object.prototype.hasOwnProperty.call(incoming,key))continue;
-    const at=key.indexOf('|name:'),base=at>=0?key.slice(0,at):key;
-    if(scope.has(base)){removed.push(key);changed++;if(before[key])staleUrls.push(modelImageRefUrl(before[key]));}
+    const at=key.indexOf('|name:');
+    if(scope.has(at>=0?key.slice(0,at):key))patch[key]=null;
   }
-  for(const key of Object.keys(incoming)){
-    if(before[key]===incoming[key])continue;
-    changed++;if(before[key])staleUrls.push(modelImageRefUrl(before[key]));
-  }
-  if(!changed)return 0;
-  const next={...before};for(const key of removed)delete next[key];Object.assign(next,incoming);
-  state.overrides.imagemap=next;syncModelImageRegistry();
-  if(staleUrls.length)BLImageRuntime.invalidate(staleUrls);
-  return changed;
+  return patch;
+}
+/* Değişiklik yoksa (sinyallerin çoğu) hiçbir şey yazılmaz; varsa mevcut sessiz
+   görsel tamamlama yolu kullanılır: kayıt yerinde yamanır, adlı indeks
+   artımlı güncellenir (tam kopya/yeniden indeks yok), eski URL'ler düşer. */
+function applyScopedModelImageRegistry(payload){
+  const patch=scopedModelImageRegistryPatch(payload);
+  return Object.keys(patch).length?silentImageApplyPatch({imagemapPatch:patch}):0;
 }
 function refreshModelImageRegistryFromServer(){
   if(modelImageRegistryRefreshRun){modelImageRegistryRefreshAgain=true;return modelImageRegistryRefreshRun;}
@@ -4094,11 +4101,13 @@ function refreshModelImageRegistryFromServer(){
       }
       const cpRows=[...(state.cp?.rows||[]),...(state.orders?.rows||[])];
       if(cpRows.length&&(typeof window.BLCanAccessArea!=='function'||window.BLCanAccessArea('cp'))){
-        const beforeMap=state.overrides?.imagemap||{};
         try{
-          if(await refreshCpStartupImageRegistry(cpRows)){
-            const afterMap=state.overrides?.imagemap||{};
-            for(const key of new Set([...Object.keys(beforeMap),...Object.keys(afterMap)]))if(beforeMap[key]!==afterMap[key])cpChanged++;
+          const response=await fetch('/api/model-images/registry/cp',{cache:'no-store'});
+          if(response.ok){
+            // CP satır görsel alanları da güncellenmeli: fark varsa mevcut CP uygulaması
+            // (applyCpStartupImageRegistry) çalışır; yoksa tam kopya + satır turu atlanır.
+            const payload=await response.json(),count=Object.keys(scopedModelImageRegistryPatch(payload)).length;
+            if(count&&applyCpStartupImageRegistry(payload,cpRows))cpChanged+=count;
           }
         }catch(_){/* CP kaydı alınamadı: mevcut görsel kalır */}
       }
