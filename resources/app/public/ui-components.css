@@ -8684,61 +8684,61 @@ html[data-ui-system="manifest"] #kolTable tbody td.kolFabricTd:hover .kolFabricC
 }
 /* Ortak hücre kartları: Artwork, Kumaş (yerleşim: app.css). Bölge/parça kartı
    nötr çerçeveli; teknik/etiket kendi tonunda çerçeveli. */
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellPart {font:600 var(--ui-font-2xs)/1 var(--ui-font-mono);background:var(--ui-text-secondary);color:var(--ui-surface)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellPart {font:600 var(--ui-font-2xs)/1 var(--ui-font-mono);background:var(--ui-text-secondary);color:var(--ui-surface)
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellChip {font-size:var(--ui-font-2xs);line-height:14px;background:var(--ui-surface);border:1px solid var(--ui-group-divider)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellChip {font-size:var(--ui-font-2xs);line-height:14px;background:var(--ui-surface);border:1px solid var(--ui-group-divider)
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellChip b {font-weight:500;color:var(--ui-text)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellChip b {font-weight:500;color:var(--ui-text)
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellChip i {font-style:normal;font-family:var(--ui-font-mono);color:var(--ui-selected-ink);background:var(--ui-selected);border-inline-start:1px solid var(--ui-group-divider)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellChip i {font-style:normal;font-family:var(--ui-font-mono);color:var(--ui-selected-ink);background:var(--ui-selected);border-inline-start:1px solid var(--ui-group-divider)
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellChip.isCode b {font-family:var(--ui-font-mono);font-weight:600;color:var(--ui-selected-ink);background:var(--ui-selected)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellChip.isCode b {font-family:var(--ui-font-mono);font-weight:600;color:var(--ui-selected-ink);background:var(--ui-selected)
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag {font-size:var(--ui-font-2xs);line-height:14px
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellTag {font-size:var(--ui-font-2xs);line-height:14px
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag[data-tone="1"] {color:var(--ui-chart-3);background:color-mix(in srgb,var(--ui-chart-3) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-3) 45%,var(--ui-surface))
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellTag[data-tone="1"] {color:var(--ui-chart-3);background:color-mix(in srgb,var(--ui-chart-3) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-3) 45%,var(--ui-surface))
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag[data-tone="2"] {color:var(--ui-chart-4);background:color-mix(in srgb,var(--ui-chart-4) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-4) 45%,var(--ui-surface))
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellTag[data-tone="2"] {color:var(--ui-chart-4);background:color-mix(in srgb,var(--ui-chart-4) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-4) 45%,var(--ui-surface))
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag[data-tone="3"] {color:var(--ui-chart-5);background:color-mix(in srgb,var(--ui-chart-5) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-5) 45%,var(--ui-surface))
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellTag[data-tone="3"] {color:var(--ui-chart-5);background:color-mix(in srgb,var(--ui-chart-5) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-5) 45%,var(--ui-surface))
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag[data-tone="4"] {color:var(--ui-chart-8);background:color-mix(in srgb,var(--ui-chart-8) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-8) 45%,var(--ui-surface))
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellTag[data-tone="4"] {color:var(--ui-chart-8);background:color-mix(in srgb,var(--ui-chart-8) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-chart-8) 45%,var(--ui-surface))
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag[data-tone="5"] {color:var(--ui-accent);background:color-mix(in srgb,var(--ui-accent) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-accent) 45%,var(--ui-surface))
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellTag[data-tone="5"] {color:var(--ui-accent);background:color-mix(in srgb,var(--ui-accent) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-accent) 45%,var(--ui-surface))
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag[data-tone="eco"] {color:var(--ui-success);background:color-mix(in srgb,var(--ui-success) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-success) 45%,var(--ui-surface))
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellTag[data-tone="eco"] {color:var(--ui-success);background:color-mix(in srgb,var(--ui-success) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-success) 45%,var(--ui-surface))
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTotal {font:600 var(--ui-font-xs) var(--ui-font-mono);font-variant-numeric:tabular-nums;color:var(--ui-text)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellTotal {font:600 var(--ui-font-xs) var(--ui-font-mono);font-variant-numeric:tabular-nums;color:var(--ui-text)
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellNone {font-size:var(--ui-font-2xs);color:var(--ui-text-muted)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellNone {font-size:var(--ui-font-2xs);color:var(--ui-text-muted)
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag[data-tone="good"] {color:var(--ui-success);background:color-mix(in srgb,var(--ui-success) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-success) 45%,var(--ui-surface))
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellTag[data-tone="good"] {color:var(--ui-success);background:color-mix(in srgb,var(--ui-success) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-success) 45%,var(--ui-surface))
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag[data-tone="bad"] {color:var(--ui-danger);background:color-mix(in srgb,var(--ui-danger) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-danger) 45%,var(--ui-surface))
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellTag[data-tone="bad"] {color:var(--ui-danger);background:color-mix(in srgb,var(--ui-danger) 10%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-danger) 45%,var(--ui-surface))
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellTag {font-family:var(--ui-font-mono);font-variant-numeric:tabular-nums
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellTag {font-family:var(--ui-font-mono);font-variant-numeric:tabular-nums
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellStackLabel {font-size:var(--ui-font-2xs);color:var(--ui-text-muted)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellStackLabel {font-size:var(--ui-font-2xs);color:var(--ui-text-muted)
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellValue {font:500 var(--ui-font-xs) var(--ui-font-mono);font-variant-numeric:tabular-nums;color:var(--ui-text)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellValue {font:500 var(--ui-font-xs) var(--ui-font-mono);font-variant-numeric:tabular-nums;color:var(--ui-text)
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellValue.isStrong {font-weight:700;color:var(--ui-text)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellValue.isStrong {font-weight:700;color:var(--ui-text)
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellValue.isSoft {font-weight:400;color:var(--ui-text-secondary)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellValue.isSoft {font-weight:400;color:var(--ui-text-secondary)
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellValue.isEmpty {font-family:var(--ui-font-body);color:var(--ui-text-muted)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellValue.isEmpty {font-family:var(--ui-font-body);color:var(--ui-text-muted)
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellMfr {font-size:var(--ui-font-2xs);line-height:14px;background:var(--ui-surface);border:1px solid var(--ui-group-divider)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellMfr {font-size:var(--ui-font-2xs);line-height:14px;background:var(--ui-surface);border:1px solid var(--ui-group-divider)
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellMfr em {font-style:normal;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-text-muted);border-inline-end:1px solid var(--ui-group-divider)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellMfr em {font-style:normal;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-text-muted);border-inline-end:1px solid var(--ui-group-divider)
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellMfr b {font-weight:500;color:var(--ui-text-secondary)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellMfr b {font-weight:500;color:var(--ui-text-secondary)
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellMfr.isConfirmed {background:color-mix(in srgb,var(--ui-success) 12%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-success) 55%,var(--ui-surface))
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellMfr.isConfirmed {background:color-mix(in srgb,var(--ui-success) 12%,var(--ui-surface));border:1px solid color-mix(in srgb,var(--ui-success) 55%,var(--ui-surface))
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellMfr.isConfirmed em {color:var(--ui-surface);background:var(--ui-success);border-inline-end:0
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellMfr.isConfirmed em {color:var(--ui-surface);background:var(--ui-success);border-inline-end:0
 }
-html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable) tbody .blCellMfr.isConfirmed b {font-weight:600;color:var(--ui-success)
+html[data-ui-system="manifest"] :is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody .blCellMfr.isConfirmed b {font-weight:600;color:var(--ui-success)
 }
 html[data-ui-system="manifest"] #kolTable tbody td.kolArtworkManual::after {font-size:var(--ui-font-2xs);line-height:14px;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-warning);background:var(--ui-warning-bg)
 }
@@ -8991,7 +8991,7 @@ html[data-ui-system="manifest"] .pdLegend {font-size:var(--ui-font-2xs) !importa
 }
 html[data-ui-system="manifest"] .pdLegendBest {background:var(--ui-success-bg) !important
 }
-html[data-ui-system="manifest"] .pdLegendAppr {background:var(--ui-surface) !important
+html[data-ui-system="manifest"] .pdLegendAppr {background:var(--ui-success) !important
 }
 html[data-ui-system="manifest"] .pdLegendOut {background:var(--ui-warning-bg) !important
 }
@@ -9043,9 +9043,9 @@ html[data-ui-system="manifest"] .pdMatrix tbody td,html[data-ui-system="manifest
 }
 html[data-ui-system="manifest"] .pdMatrix tbody tr:hover>td,html[data-ui-system="manifest"] .pdMatrix tbody tr:hover>th {background:var(--ui-row-hover) !important
 }
-html[data-ui-system="manifest"] .pdMatrix .pdTarget,html[data-ui-system="manifest"] .pdMatrix .pdStickyBest,html[data-ui-system="manifest"] .pdMatrix .pdStickyDelta,html[data-ui-system="manifest"] .pdMatrix .pdSummary {z-index:var(--ui-z-data);background:var(--ui-surface) !important
+html[data-ui-system="manifest"] .pdMatrix .pdTarget,html[data-ui-system="manifest"] .pdMatrix .pdQuotesCol,html[data-ui-system="manifest"] .pdMatrix .pdRefsCol,html[data-ui-system="manifest"] .pdMatrix .pdSummary {z-index:var(--ui-z-data);background:var(--ui-surface) !important
 }
-html[data-ui-system="manifest"] .pdMatrix thead .pdTarget,html[data-ui-system="manifest"] .pdMatrix thead .pdStickyBest,html[data-ui-system="manifest"] .pdMatrix thead .pdStickyDelta,html[data-ui-system="manifest"] .pdMatrix thead .pdSummary {z-index:var(--ui-z-data);background:var(--ui-header-bg) !important
+html[data-ui-system="manifest"] .pdMatrix thead .pdTarget,html[data-ui-system="manifest"] .pdMatrix thead .pdQuotesCol,html[data-ui-system="manifest"] .pdMatrix thead .pdRefsCol,html[data-ui-system="manifest"] .pdMatrix thead .pdSummary {z-index:var(--ui-z-data);background:var(--ui-header-bg) !important
 }
 html[data-ui-system="manifest"] .pdMfrHead b {color:var(--ui-header-ink) !important
 }
@@ -16283,4 +16283,44 @@ html[data-ui-system="manifest"] .psAreaGhost {background:color-mix(in srgb,var(-
 html[data-ui-system="manifest"] .psOk {color:var(--ui-success)
 }
 html[data-ui-system="manifest"] .psBad {color:var(--ui-danger);font-weight:600
+}
+/* Fiyat Masası (v2026-11-26) — onaylı fiyat her zaman okunur; Koleksiyon fiyat sütunları,
+   sıralama ve sütun genişliği. Yalnız tasarım tokenları. */
+html[data-ui-system="manifest"] .pdMatrix tbody td.pdCell.isApproved {background:color-mix(in srgb,var(--ui-success) 18%,var(--ui-surface)) !important
+}
+html[data-ui-system="manifest"] .pdMatrix tbody td.pdCell.isApproved .pdCellInput {background:transparent !important;color:var(--ui-success) !important;font-weight:800 !important
+}
+html[data-ui-system="manifest"] .pdMatrix tbody td.pdCell.isNotChosen .pdCellInput {color:var(--ui-text-muted) !important;font-weight:500 !important
+}
+html[data-ui-system="manifest"] .pdMatrix tbody td.pdCell.isBest.isNotChosen {background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .pdApprovedMark {color:var(--ui-success);font:800 var(--ui-font-2xs)/1 var(--ui-font-body);letter-spacing:.04em
+}
+html[data-ui-system="manifest"] .pdApprovalProgress {background:var(--ui-surface-soft);color:var(--ui-text-secondary);font:600 var(--ui-font-2xs)/1 var(--ui-font-body);font-variant-numeric:tabular-nums
+}
+html[data-ui-system="manifest"] .pdApprovalProgress.isComplete {background:color-mix(in srgb,var(--ui-success) 14%,var(--ui-surface));color:var(--ui-success)
+}
+html[data-ui-system="manifest"] .pdHintsBtn {background:var(--ui-surface-soft);color:var(--ui-text-muted);font-size:var(--ui-font-2xs)
+}
+html[data-ui-system="manifest"] .pdSortBtn:hover,html[data-ui-system="manifest"] .pdSortBtn:focus-visible,html[data-ui-system="manifest"] .pdSortBtn:not([data-dir=""]) {color:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .pdColResize {z-index:var(--ui-z-data)
+}
+html[data-ui-system="manifest"] .pdColResize::after {background:color-mix(in srgb,var(--ui-header-ink) 28%,transparent)
+}
+html[data-ui-system="manifest"] .pdColResize:hover::after,html[data-ui-system="manifest"] .pdMatrix.isResizing .pdColResize::after {background:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .pdTargetInput {background:var(--ui-surface) !important;color:var(--ui-text) !important;font:600 var(--ui-font-sm) var(--ui-font-mono) !important;font-variant-numeric:tabular-nums !important
+}
+html[data-ui-system="manifest"] .pdTargetBox {color:var(--ui-text-muted);font-family:var(--ui-font-mono);font-variant-numeric:tabular-nums
+}
+html[data-ui-system="manifest"] .pdTargetBox>b {color:var(--ui-text);font-weight:600
+}
+html[data-ui-system="manifest"] .pdMatrix tbody td.pdQuotesCol.isConfirmed {background:color-mix(in srgb,var(--ui-success) 5%,var(--ui-surface)) !important
+}
+html[data-ui-system="manifest"] .quotationSubLine .quotationMetaStrip {background:transparent !important
+}
+html[data-ui-system="manifest"] .pdColHide {z-index:var(--ui-z-data);background:var(--ui-surface) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .pdColHide:hover,html[data-ui-system="manifest"] .pdColHide:focus-visible {color:var(--ui-accent) !important
 }

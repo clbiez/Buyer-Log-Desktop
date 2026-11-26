@@ -17,7 +17,15 @@
   'use strict';
 
   const clean=value=>String(value==null?'':value).trim();
-  const keyOf=value=>clean(value).toLocaleUpperCase('tr-TR').replace(/\s+/g,' ');
+  /* Anahtar normalleştirme saf bir fonksiyondur; toLocaleUpperCase('tr-TR') ICU yolu
+     pahalıdır ve masa her çizimde aynı birkaç üretici/model adını binlerce kez
+     anahtarlar. Sınırlı önbellek aynı sonucu döndürür (sınırda tamamen temizlenir). */
+  const keyCache=new Map(),KEY_CACHE_LIMIT=5000;
+  const keyOf=value=>{
+    const text=clean(value);let key=keyCache.get(text);
+    if(key===undefined){key=text.toLocaleUpperCase('tr-TR').replace(/\s+/g,' ');if(keyCache.size>=KEY_CACHE_LIMIT)keyCache.clear();keyCache.set(text,key);}
+    return key;
+  };
   const OUTLIER_RATIO=3;
   const GROUP_DIMENSIONS=['classification','mag','mmyg','buyingGroup','buyer','productMainDefinition','season','license'];
 

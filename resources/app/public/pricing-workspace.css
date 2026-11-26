@@ -83,3 +83,16 @@
 .quotationDetailIdentity{min-width:0}
 .quotationHeadActions{flex-wrap:nowrap}
 @media(max-width:1150px){.quotationHeadActions{flex-wrap:wrap}}
+/* Kompakt detay başlığı (Fiyat Masası, v2026-11-26): başlık + durum tek satır;
+   özet, sahip, not ve kapasite ikinci satırda. Tabloya dikey alan kalır. */
+.quotationWorkspaceShell .quotationDetailHead{align-items:center;gap:10px;margin-bottom:0;padding:5px 10px}
+.quotationWorkspaceShell .quotationDetailIdentity{flex:1 1 auto}
+.quotationWorkspaceShell .quotationTitleLine{flex-wrap:nowrap;min-width:0;gap:8px}
+.quotationWorkspaceShell .quotationTitleLine h3{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.quotationSubLine{display:flex;align-items:center;gap:10px;min-width:0;margin-top:2px}
+.quotationSubLine .quotationSummaryLine{flex:1 1 auto;min-width:0;margin:0}
+.quotationSubLine .quotationOwnership{margin:0!important}
+.quotationSubLine .quotationMetaStrip{flex:0 0 auto;min-width:0;min-height:0;margin:0;padding:0;gap:6px}
+.quotationSubLine .quotationNoteTrigger{flex:0 1 auto;min-width:96px;max-width:260px;height:22px}
+.quotationSubLine .quotationCapacityToggle{flex:none;height:22px}
+@media(max-width:1150px){.quotationSubLine{flex-wrap:wrap;gap:4px 10px}}

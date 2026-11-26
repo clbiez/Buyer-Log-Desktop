@@ -638,18 +638,60 @@
     // Collection catalog keys are module bindings; effective values preserve model/colour inheritance.
     const value=qDeskFieldRaw(req,item,key);
     if(key==='fabric')return qItemFabricSummary(req,item);
-    if(key==='quantity'&&typeof value==='number')return value.toLocaleString(typeof appLang!=='undefined'&&appLang==='en'?'en-GB':'tr-TR');
+    // Adet Koleksiyon ile aynı yazılır (1.000 nokta ayracı, dilden bağımsız).
+    if(key==='quantity'){
+      const raw=qNorm(value),n=typeof value==='number'?value:(!raw?NaN:typeof kolParseQuantityNum==='function'?kolParseQuantityNum(raw):(/^\d+$/.test(raw)?Number(raw):NaN));
+      return Number.isFinite(n)?Math.trunc(n).toLocaleString('tr-TR'):qNorm(value);
+    }
+    if(key==='inStoreMonth')return qDeskMonthText(value);
     return qNorm(value);
+  }
+  /* MB Ay kısa yazımı: 202707 / "JULY 2027" → JULY 27 (TR: TEMMUZ 27). Ay kodu
+     Koleksiyon'un kendi ayrıştırıcısından (kolMonthCode) okunur; tanınmayan
+     değer olduğu gibi gösterilir. */
+  const Q_MONTHS={tr:['OCAK','ŞUBAT','MART','NİSAN','MAYIS','HAZİRAN','TEMMUZ','AĞUSTOS','EYLÜL','EKİM','KASIM','ARALIK'],en:['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER']}; // i18n-ignore — ay adları iki dilde birlikte tanımlı
+  function qDeskMonthCode(value){
+    const raw=qNorm(value);if(!raw)return '';
+    if(typeof kolMonthCode==='function'){try{return String(kolMonthCode(raw)||'');}catch(_){return '';}}
+    const m=/^(\d{4})[-/. ]?(\d{1,2})$/.exec(raw);
+    if(m)return Number(m[2])>=1&&Number(m[2])<=12?m[1]+String(m[2]).padStart(2,'0'):'';
+    const named=/^(\S+)\s+(\d{4})$/.exec(raw.toLocaleUpperCase('tr-TR'));
+    const index=named?Math.max(Q_MONTHS.tr.indexOf(named[1]),Q_MONTHS.en.indexOf(named[1].replace(/İ/g,'I'))):-1;
+    return index>=0?named[2]+String(index+1).padStart(2,'0'):'';
+  }
+  function qDeskMonthText(value){
+    const code=qDeskMonthCode(value);if(!code)return qNorm(value);
+    return `${Q_MONTHS[typeof appLang!=='undefined'&&appLang==='en'?'en':'tr'][Number(code.slice(4))-1]} ${code.slice(2,4)}`;
+  }
+  /* Fiyat Masası "Hedef Fiyat" hücresi Koleksiyon'un Target Price hücresidir.
+     Yalnız fiyatın Koleksiyon'a yansıtılabildiği talepte (yüklü çalışma alanının
+     sahibi, düzenleme yetkisi) yazılır; yazım Koleksiyon'un kanonik hücre yolundan
+     (commitKolEditor: geri al, modele bağlı alan koruması, FOB yeniden hesabı,
+     kayıt) geçer. Başka buyer'ın talebinde hedef salt okunurdur. */
+  function qCanEditDeskTarget(req,item){
+    if(!req||req.source!=='collection'||!qCanEditRequest(req)||!qCanProjectToCollection(req))return false;
+    if(typeof commitKolEditor!=='function'||typeof kolWorkspaceCanEdit==='undefined'||!kolWorkspaceCanEdit)return false;
+    const row=qFindCollectionRow(item);
+    return Boolean(row&&typeof kolRows!=='undefined'&&Array.isArray(kolRows)&&kolRows.includes(row));
+  }
+  function qSetDeskTarget(req,item,value){
+    if(!qCanEditDeskTarget(req,item))return false;
+    const row=qFindCollectionRow(item),input=document.createElement('input');
+    input.className='kolMoneyCell';input.dataset.id=String(row.id);input.dataset.k='targetPrice';input.value=qNorm(value);
+    let ok=false;try{ok=commitKolEditor(input,{rerender:false})!==false;}catch(_){ok=false;}
+    if(ok)qRefreshCollection();
+    return ok;
   }
   function qItemFabricSummary(req,item){
     const row=req.source==='collection'?qFindCollectionRow(item):qFindCpRow(item);
     const raw=qNorm(row?qCollectionEffectiveValue(row,'fabric'):null)||qItemFabric(req,item);
     return typeof kolFabricDisplay==='function'?kolFabricDisplay(raw):raw;
   }
-  function qDeskColumnsPanelHtml(){
+  function qDeskColumnsPanelHtml(req){
     const selected=new Set(qDeskSelectedColumns());
     return `<div class="pdPanelHead"><b>${qEsc(qLang('Koleksiyon sütunları','Collection columns'))}</b><span>${qEsc(qLang('Seçim her iki görünümde kullanılır ve sizin için kaydedilir. Kumaş kartı özeti modelin altında görünür.','Your selection is saved for both views. The Fabric Card summary appears below the model.'))}</span></div>
       <div class="pdColumnsList">${qDeskColumnCatalog().map(column=>`<label class="pdCheck"><input type="checkbox" data-pd-column="${qEsc(column.key)}" ${selected.has(column.key)?'checked':''}><span>${qEsc(qDeskColumnLabel(column.key))}</span></label>`).join('')}</div>
+      ${window.BLPricingDesk?.matrixColumnsPanelHtml?.(req)||''}
       <div class="pdPanelActions"><button type="button" class="tbtn" data-pd-columns-reset>${qEsc(qLang('Varsayılanlar','Defaults'))}</button><button type="button" class="tbtn" data-pd-columns-cancel>${qEsc(qLang('Vazgeç','Cancel'))}</button><button type="button" class="tbtn" data-pd-columns-apply>${qEsc(qLang('Uygula','Apply'))}</button></div>`;
   }
   function qBindDeskColumns(host,req){
@@ -659,13 +701,14 @@
     trigger.addEventListener('click',()=>{
       if(!panel.hidden){close();return;}
       qCommitActivePriceInput(req,host);
-      panel.innerHTML=qDeskColumnsPanelHtml();panel.hidden=false;trigger.setAttribute('aria-expanded','true');
+      panel.innerHTML=qDeskColumnsPanelHtml(req);panel.hidden=false;trigger.setAttribute('aria-expanded','true');
       window.BLMotionPlus?.play?.('overlay',panel);
       panel.querySelector('input')?.focus({preventScroll:true});
       panel.querySelector('[data-pd-columns-cancel]').onclick=close;
-      panel.querySelector('[data-pd-columns-reset]').onclick=()=>panel.querySelectorAll('[data-pd-column]').forEach(box=>box.checked=DESK_DEFAULT_COLUMNS.includes(box.dataset.pdColumn));
+      panel.querySelector('[data-pd-columns-reset]').onclick=()=>{panel.querySelectorAll('[data-pd-column]').forEach(box=>box.checked=DESK_DEFAULT_COLUMNS.includes(box.dataset.pdColumn));panel.querySelectorAll('[data-pd-matrix-col]').forEach(box=>box.checked=true);};
       panel.querySelector('[data-pd-columns-apply]').onclick=()=>{
         qDeskSaveColumns([...panel.querySelectorAll('[data-pd-column]:checked')].map(box=>box.dataset.pdColumn));
+        window.BLPricingDesk?.applyMatrixColumnsPanel?.(req,panel);
         // A removed column must not leave an invisible filter or sort behind.
         const keys=new Set(qListColumns().map(column=>column.key));
         qTableStates.forEach(table=>{
@@ -1406,7 +1449,7 @@
   ];
   function qListColumns(){
     if(qCollectionRead?.deskListColumns)return qCollectionRead.deskListColumns;
-    const fields=qDeskSelectedColumns().filter(key=>key!=='fabric').map(key=>({key:'collection:'+key,field:key,tr:qDeskColumnLabel(key),en:qDeskColumnLabel(key),value:(req,item)=>qDeskFieldValue(req,item,key),sort:key==='quantity'?'number':'text',number:(item,req)=>{const raw=qDeskFieldRaw(req,item,key);if(raw==null||raw==='')return NaN;return typeof kolParseQuantityNum==='function'?kolParseQuantityNum(raw):Number(raw);}}));
+    const fields=qDeskSelectedColumns().filter(key=>key!=='fabric').map(key=>({key:'collection:'+key,field:key,tr:qDeskColumnLabel(key),en:qDeskColumnLabel(key),value:(req,item)=>qDeskFieldValue(req,item,key),sort:key==='quantity'||key==='inStoreMonth'?'number':'text',number:(item,req)=>{const raw=qDeskFieldRaw(req,item,key);if(raw==null||raw==='')return NaN;if(key==='inStoreMonth'){const code=qDeskMonthCode(raw);return code?Number(code):NaN;}return typeof kolParseQuantityNum==='function'?kolParseQuantityNum(raw):Number(raw);}}));
     const columns=[qTableCols[0],...fields,...qTableCols.slice(1)];
     if(qCollectionRead)qCollectionRead.deskListColumns=columns;
     return columns;
@@ -1703,20 +1746,22 @@
        toolbarMoreMenu çekmecesinde toplanır (DESIGN_SYSTEM: aynı işi yapan
        eylemler tek çekmecede). Düğme data-* kimlikleri ve işleyicileri aynıdır. */
     const moreItems=`${reopenDraftAction}${qWorkspaceMounted&&req.source==='collection'?`<button type="button" class="tbtn" data-q-open-collection><svg class="ic"><use href="#i-hanger"/></svg>${qEsc(qLang('Koleksiyonda Aç','Open in Collection'))}</button><button type="button" class="tbtn" data-q-open-history><svg class="ic"><use href="#i-chart-histogram"/></svg>${qEsc(qLang('Fiyat Geçmişi','Pricing History'))}</button>`:''}${canManageAccess?`<button type="button" class="tbtn quotationAccessBtn" data-manage-quotation-access title="${qEsc(qLang('Bu quotation için düzenleme yetkisi ver','Grant editing permission for this quotation'))}"><svg class="ic"><use href="#i-users-group"/></svg>${qEsc(qLang('Düzenleme Yetkisi','Editing Permission'))}</button>`:''}<button type="button" class="tbtn quotationExportBtn" data-export-quotation="${qEsc(req.id)}" title="${qEsc(qLang('Bu fiyat çalışmasını Excel’e aktar','Export this quotation request to Excel'))}"><svg class="ic"><use href="#i-file-export"/></svg>${qEsc(qLang('Excel’e Aktar','Export to Excel'))}</button><hr class="toolbarMoreDivider" role="separator"><button type="button" class="tbtn quotationDeleteMenuItem" data-delete-quotation="${qEsc(req.id)}" ${canDelete?'':'disabled'} title="${qEsc(canDelete?qLang('Fiyat çalışmasını sil','Delete quotation request'):qLang('Yalnız kayıt sahibi silebilir','Only the owner can delete'))}"><svg class="ic"><use href="#i-trash"/></svg>${qEsc(qLang('Sil','Delete'))}</button>`;
+    /* Kompakt başlık (tabloya alan): başlık + durum bir satır; özet, sahip/yetki,
+       not ve kapasite ikinci satırda. Tam metinler araç ipucunda kalır. */
+    const titleText=qRequestTitle(req),ownerText=`${qLang('Kayıt sahibi','Owner')}: ${qOwnerLabel(req)}`;
     host.innerHTML=`<div class="quotationDetailHead">
-        <div class="quotationDetailIdentity"><div class="quotationTitleLine"><h3>${qEsc(qRequestTitle(req))}</h3>${statusControl}</div><p class="quotationSummaryLine" title="${qEsc(manufacturerNames)}">${qEsc(summaryText)}</p><p class="quotationOwnership"><strong>${qEsc(qLang('Kayıt sahibi','Owner'))}:</strong> ${qEsc(qOwnerLabel(req))} · ${qEsc(permissionText)}</p></div>
-        <div class="quotationHeadActions">${viewToggle}<button type="button" class="tbtn" data-pd-columns aria-expanded="false">${qEsc(qLang('Sütunlar','Columns'))}</button>${plmSyncAction}${workspaceReminder}${activeFilterCount?`<button type="button" class="tbtn quotationClearFilters" title="${qEsc(qLang('Tüm tablo filtrelerini kaldır','Remove all table filters'))}">${qEsc(qLang('Filtreleri Temizle','Clear Filters'))}</button>`:''}<div class="toolbarMoreWrap quotationMoreWrap"><button type="button" class="tbtn quotationMoreBtn" data-q-more aria-haspopup="true" aria-expanded="false" title="${qEsc(qLang('Diğer işlemler','More actions'))}"><svg class="ic"><use href="#i-dots"/></svg><span>${qEsc(qLang('Diğer','More'))}</span></button><div class="toolbarMoreMenu quotationMoreMenu" data-q-more-menu hidden>${moreItems}</div></div></div>
-      </div>
-      <div class="pdColumnsPanel" data-pd-columns-panel hidden></div>
-      <div class="quotationMetaStrip">
-        <button type="button" class="quotationNoteTrigger${noteValue?' hasValue':''}" data-quotation-note title="${qEsc(qLang('Quotation notunu aç','Open quotation note'))}">
+        <div class="quotationDetailIdentity"><div class="quotationTitleLine"><h3 title="${qEsc(titleText)}">${qEsc(titleText)}</h3>${statusControl}</div><div class="quotationSubLine"><p class="quotationSummaryLine" title="${qEsc([summaryText,manufacturerNames,ownerText,permissionText].filter(Boolean).join('\n'))}">${qEsc(summaryText)}<span class="quotationOwnership"> · <strong>${qEsc(qLang('Kayıt sahibi','Owner'))}:</strong> ${qEsc(qOwnerLabel(req))}${editorNames.length?` · ${qEsc(permissionText)}`:''}</span></p><div class="quotationMetaStrip">
+        <button type="button" class="quotationNoteTrigger${noteValue?' hasValue':''}" data-quotation-note title="${qEsc(noteValue||qLang('Quotation notunu aç','Open quotation note'))}">
           <svg class="ic"><use href="#i-notebook"/></svg><span>${qEsc(qLang('Not','Note'))}</span><em>${qEsc(noteLabel)}</em>
         </button>
         <label class="quotationCapacityToggle${req.capacityConfirmed?' isConfirmed':''}" title="${qEsc(qLang('Bu quotation için üretim kapasitesi teyit edildi','Production capacity is confirmed for this quotation'))}">
           <input type="checkbox" data-quotation-capacity ${req.capacityConfirmed?'checked':''} ${contentCanEdit?'':'disabled'}>
           <span aria-hidden="true">✓</span><b>Capacity Confirmed</b>
         </label>
+      </div></div></div>
+        <div class="quotationHeadActions">${viewToggle}<button type="button" class="tbtn" data-pd-columns aria-expanded="false">${qEsc(qLang('Sütunlar','Columns'))}</button>${plmSyncAction}${workspaceReminder}${activeFilterCount?`<button type="button" class="tbtn quotationClearFilters" title="${qEsc(qLang('Tüm tablo filtrelerini kaldır','Remove all table filters'))}">${qEsc(qLang('Filtreleri Temizle','Clear Filters'))}</button>`:''}<div class="toolbarMoreWrap quotationMoreWrap"><button type="button" class="tbtn quotationMoreBtn" data-q-more aria-haspopup="true" aria-expanded="false" title="${qEsc(qLang('Diğer işlemler','More actions'))}"><svg class="ic"><use href="#i-dots"/></svg><span>${qEsc(qLang('Diğer','More'))}</span></button><div class="toolbarMoreMenu quotationMoreMenu" data-q-more-menu hidden>${moreItems}</div></div></div>
       </div>
+      <div class="pdColumnsPanel" data-pd-columns-panel hidden></div>
       ${matrixMode?`<div class="quotationTableWrap pdMatrixWrap" data-pd-matrix></div>`:`<div class="pdOptionsPanel" data-pd-options-panel hidden></div><div class="quotationTableWrap"><table class="quotationTable" style="width:${tableWidth}px;min-width:${tableWidth}px"><colgroup>${columnGroup}</colgroup><thead><tr>${headers}</tr></thead><tbody>${rows||`<tr><td colspan="${qListColumns().length}"><div class="quotationFilteredEmpty">${qEsc(qLang('Seçili filtrelere uyan satır yok.','No rows match the selected filters.'))}</div></td></tr>`}</tbody></table></div>`}
       ${(!requestCanEdit?`<div class="quotationCpNotice">${qEsc(qLang(`Bu kayıt ${qOwnerLabel(req)} tarafından oluşturuldu. Görüntüleyebilirsiniz; düzenleme için kayıt sahibinin yetki vermesi gerekir.`,`This record was created by ${qOwnerLabel(req)}. You can view it; the owner must grant editing permission.`))}</div>`:(req.source==='cp'?`<div class="quotationCpNotice">${qEsc(qLang('CP quotation kayıtları takip amaçlıdır. Buradaki fiyat ve onay değişiklikleri CP tablosuna geri aktarılmaz.','CP quotations are for tracking. Price and approval changes here are not written back to the CP table.'))}</div>`:''))}`;
     qBindDetail(req);
@@ -3191,7 +3236,7 @@
     requests:()=>qLoad().requests,profiles:()=>qProfiles,currentUserId:qCurrentUserId,isModerator:qIsModerator,
     canEdit:qCanEditRequest,canManage:qCanManageAccess,findRow:qFindCollectionRow,rowValue:qCollectionEffectiveValue,withCollectionRead:qWithCollectionRead,
     identityMatchesRow:qLineMatchesCollectionIdentity,
-    imageSrc:qCollectionImageSrc,thumb:qCachedModelThumb,selectedColumns:qDeskSelectedColumns,columnLabel:qDeskColumnLabel,fieldValue:qDeskFieldValue,itemFabricSummary:qItemFabricSummary,itemCategory:qItemCategory,itemTarget:qItemTargetPrice,itemFabric:qItemFabric,
+    imageSrc:qCollectionImageSrc,thumb:qCachedModelThumb,selectedColumns:qDeskSelectedColumns,columnLabel:qDeskColumnLabel,fieldValue:qDeskFieldValue,fieldRaw:qDeskFieldRaw,monthCode:qDeskMonthCode,canEditTarget:qCanEditDeskTarget,setTarget:qSetDeskTarget,itemFabricSummary:qItemFabricSummary,itemCategory:qItemCategory,itemTarget:qItemTargetPrice,itemFabric:qItemFabric,
     targetDelta:qTargetDelta,ownerLabel:qOwnerLabel,profileName:qProfileName,requestTitle:qRequestTitle,workspaceTitle:qWorkspaceRequestTitle,
     moneyDisplay:qMoneyDisplay,moneyNumber:qMoneyNumber,validPrice:qValidPrice,date:qDate,lineOwnerId:qLineOwnerId,
     applyPrice(req,line,value,source='matrix'){if(!req||!line||!qCanEditLine(req,line)){qViewOnlyNotice(req);return null;}return qWithLineSource(source,()=>qApplyPrice(req,line,value));},

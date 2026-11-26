@@ -111,7 +111,9 @@ const sharedNotificationBorder = d => d.file==='ui-components.css' && classicSel
 // Ürün sahibi kararı (ortak hücre kartları: Artwork, Kumaş; Koleksiyon Durum rozeti):
 // kart/etiket/rozet kenarlığı yalnız bu tam selector'larda ve tasarım tokenlarıyla.
 // Genel bir modül istisnası değildir.
-const CELL_CARD_SCOPE=':is(#kolTable,#cpTable,#ordersTable) tbody ';
+// Fiyat Masası matrisi (.pdMatrix) Koleksiyon'un Teklif & Onay / referans kartlarını
+// aynı değerlerle kullanır; kapsam genişler, izinli değerler değişmez.
+const CELL_CARD_SCOPE=':is(#kolTable,#cpTable,#ordersTable,.pdMatrix) tbody ';
 const CELL_TAG_TONES={'1':'--ui-chart-3','2':'--ui-chart-4','3':'--ui-chart-5','4':'--ui-chart-8','5':'--ui-accent','eco':'--ui-success','good':'--ui-success','bad':'--ui-danger'};
 const tonedBorder=token=>`1px solid color-mix(in srgb,var(${token}) 45%,var(--ui-surface))`;
 const cellCardBorder = d => {

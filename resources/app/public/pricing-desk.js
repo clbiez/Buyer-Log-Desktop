@@ -24,6 +24,13 @@
   const locale=()=>isEn()?'en-GB':'tr-TR';
   const money=value=>Number.isFinite(value)?'$'+value.toLocaleString(locale(),{minimumFractionDigits:2,maximumFractionDigits:2}):'—';
   const moneyPlain=value=>Number.isFinite(value)?value.toLocaleString(locale(),{minimumFractionDigits:2,maximumFractionDigits:2}):'';
+  /* Matris para biçimi Koleksiyon tablosuyla aynıdır (dil ne olursa olsun
+     ondalık virgül, binlik nokta: $1,62). Böylece aynı satırdaki Teklif & Onay
+     kartı ile üretici fiyat hücreleri aynı rakamı aynı yazımla gösterir. */
+  // Biçimleyici bir kez kurulur: toLocaleString(seçenekli) her çağrıda yeni Intl nesnesi üretir.
+  const kformat=new Intl.NumberFormat('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const kplain=value=>Number.isFinite(value)?kformat.format(value):'';
+  const kmoney=value=>Number.isFinite(value)?'$'+kplain(value):'—';
   const pctText=value=>{if(!Number.isFinite(value))return '—';const r=Math.round(value*10)/10;return `${r>0?'+':r<0?'−':''}${Math.abs(r).toLocaleString(locale(),{maximumFractionDigits:1})}%`;};
   const dateText=iso=>{const d=new Date(iso);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString(locale());};
   const toneOf=value=>!Number.isFinite(value)?'isNeutral':value<=0?'isGood':'isBad';
@@ -216,22 +223,22 @@
     const info=lineInfo(req,model.first),value=E.price(line.price),dropped=!!line.dropped;
     const isBest=!dropped&&stats.best&&stats.best.lineId===line.id&&stats.priced>1,isAppr=!!line.approved&&!dropped,outlier=stats.outliers.has(line.id);
     const neg=E.negotiation(line,req),prev=neg&&neg.previous!=null&&Math.abs(neg.previous-(value||0))>0.0001?neg.previous:null;
-    const classes=['pdCell',isBest?'isBest':'',isAppr?'isApproved':'',dropped?'isDropped':'',outlier?'isOutlier':'',state.flash.has(line.id)?'pdFlash':''].filter(Boolean).join(' ');
+    const classes=['pdCell',isBest?'isBest':'',isAppr?'isApproved':'',!isAppr&&stats.approved?'isNotChosen':'',dropped?'isDropped':'',outlier?'isOutlier':'',state.flash.has(line.id)?'pdFlash':''].filter(Boolean).join(' ');
     const label=`${info.model} · ${name}`;
     return `<td class="${classes}" data-pd-line="${esc(line.id)}">
-      <div class="pdCellTop">${prev!=null?`<s class="pdPrev" title="${esc(L('Önceki teklif','Previous offer'))}">${esc(moneyPlain(prev))}</s>`:''}${isBest?`<span class="pdBestTag${ctx.moved?' isMoved':''}">${esc(L('EN İYİ','BEST'))}</span>`:''}${isAppr?`<span class="pdApprovedTag">${esc(L('ONAYLI','APPROVED'))}</span>`:''}</div>
+      <div class="pdCellTop">${prev!=null?`<s class="pdPrev" title="${esc(L('Önceki teklif','Previous offer'))}">${esc(kplain(prev))}</s>`:''}${isBest?`<span class="pdBestTag${ctx.moved?' isMoved':''}">${esc(L('EN İYİ','BEST'))}</span>`:''}${isAppr?`<span class="pdApprovedTag">${esc(L('ONAYLI','APPROVED'))}</span>`:''}</div>
       <div class="pdCellMain">
-        <input type="text" inputmode="decimal" class="pdCellInput" data-pd-input="${esc(line.id)}" data-r="${ctx.mi}" data-c="${ctx.ci}" value="${esc(value!=null?moneyPlain(value):clean(line.price))}" placeholder="—" aria-label="${esc(L(`${label} teklif fiyatı`,`${label} quotation price`)+(E.lineOptions(line).length?L(` · ${E.lineOptions(line).length} alternatif fiyat`,` · ${E.lineOptions(line).length} alternative prices`):''))}" ${ctx.canEdit&&!dropped?'':'disabled'}>
+        <input type="text" inputmode="decimal" class="pdCellInput" data-pd-input="${esc(line.id)}" data-r="${ctx.mi}" data-c="${ctx.ci}" value="${esc(value!=null?kplain(value):clean(line.price))}" placeholder="—" aria-label="${esc((isAppr?L('Onaylı · ','Approved · '):'')+L(`${label} teklif fiyatı`,`${label} quotation price`)+(E.lineOptions(line).length?L(` · ${E.lineOptions(line).length} alternatif fiyat`,` · ${E.lineOptions(line).length} alternative prices`):''))}" ${ctx.canEdit&&!dropped?'':'disabled'}>
         <button type="button" class="pdApprove${isAppr?' isOn':''}" data-pd-approve="${esc(line.id)}" tabindex="-1" aria-pressed="${isAppr?'true':'false'}" ${ctx.canEdit&&!dropped&&value!=null?'':'disabled'} title="${esc(isAppr?L('Onayı kaldır (A)','Remove approval (A)'):L('Onayla (A)','Approve (A)'))}" aria-label="${esc((isAppr?L('Onayı kaldır: ','Remove approval: '):L('Onayla: ','Approve: '))+label)}"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></button>
         <button type="button" class="pdDrop${dropped?' isOn':''}" data-pd-drop="${esc(line.id)}" tabindex="-1" aria-pressed="${dropped?'true':'false'}" ${ctx.canEdit?'':'disabled'} title="${esc(dropped?L('Drop işaretini kaldır (D)','Remove Drop (D)'):L('Drop (D)','Drop (D)'))}" aria-label="${esc('Drop: '+label)}"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
       </div>
-      <div class="pdCellOpt">${optionBadgeHtml(line,label,ctx.canEdit)}</div>
+      <div class="pdCellOpt">${optionBadgeHtml(line,label,ctx.canEdit)}</div>${isAppr?`<span class="pdApprovedMark" aria-hidden="true">${esc(L('ONAYLI','APPROVED'))}</span>`:''}
       <div class="pdCellNote">${outlier?esc(L('Olağan dışı · emin misin?','Unusual · are you sure?')):(dropped?esc(L('Drop','Dropped')):(neg&&neg.rounds>1?esc(L(`${neg.rounds} tur · ${pctText(neg.gainPct)}`,`${neg.rounds} rounds · ${pctText(neg.gainPct)}`)):''))}</div>
     </td>`;
   }
   function matrixContext(){
     const api=Q(),selected=api.selectedColumns?.()||[];
-    const summary=selected.filter(key=>key==='quantity'||key==='inStoreMonth');
+    const summary=matrixLayout.hidden.includes('summary')?[]:selected.filter(key=>key==='quantity'||key==='inStoreMonth');
     const extra=selected.filter(key=>!['quantity','inStoreMonth','productMainDefinition','fabric'].includes(key));
     return {selected,summary,extra,count:(summary.length?1:0)+extra.length};
   }
@@ -245,6 +252,208 @@
     const selected=matrixContext().selected;
     return [selected.includes('productMainDefinition')?info.productMainDefinition:'',info.colour].filter(Boolean).join(' · ');
   }
+  /* ---------------- Koleksiyon fiyat sütunları ----------------
+     Hedef · Teklif & Onay · Previous Season / LFL / Sezon Etkisi, Koleksiyon
+     tablosunun Kompakt fiyat görünümüyle aynı kart dili (blCell*) ve işlevle
+     çizilir. Teklif & Onay değerleri talebin canlı satırlarından gelir: matriste
+     yazılan fiyat/onay aynı satırı anında yeniler ve başka buyer'ın talebinde de
+     doğru kalır. Referans hücresi Koleksiyon'un kendi BLCollectionLfl
+     çizicisidir; çift tık / ⤢ yalnız yüklü Koleksiyon satırında Fiyat
+     Çekmecesini açar (Koleksiyon'daki ile aynı). */
+  const REF_KEYS=['__previousSeason__','__lfl__','__seasonImpact__'];
+  const refLabel=key=>key==='__seasonImpact__'?L('Sezon Etkisi','Season Impact'):key==='__previousSeason__'?'Previous Season':'LFL';
+  function drawerRow(info){
+    const row=info&&info.row;
+    return row&&window.BLCollectionPriceDrawer?.open&&typeof kolRows!=='undefined'&&Array.isArray(kolRows)&&kolRows.includes(row)?row:null;
+  }
+  function quotesModel(model,info,stats){
+    const live=model.lines.filter(line=>line&&!line.dropped);
+    const offers=live.map(line=>({name:clean(line.manufacturer),price:E.price(line.price)})).filter(offer=>offer.price!=null).sort((a,b)=>a.price-b.price);
+    const approved=stats.approved&&stats.approved.price!=null?stats.approved:null,main=approved||stats.best||null;
+    const fobRaw=info.row?E.price(info.row.fob):null;
+    return {offers,approved,main,delta:main&&info.target?E.pct(main.price,info.target):null,waiting:live.filter(line=>E.price(line.price)==null).length,fob:fobRaw};
+  }
+  function targetCellHtml(req,model,info,canEdit){
+    const text=info.target!=null?kplain(info.target):'';
+    if(canEdit&&Q()?.canEditTarget?.(req,model.first))return `<td class="pdNum pdTarget isEditable"><label class="pdTargetBox"><span aria-hidden="true">$</span><input type="text" inputmode="decimal" class="pdTargetInput" data-pd-target="${esc(model.modelKey)}" value="${esc(text)}" placeholder="—" aria-label="${esc(L(`${info.model} hedef fiyatı`,`${info.model} target price`))}"></label></td>`;
+    return `<td class="pdNum pdTarget"><span class="pdTargetBox">${text?`<span aria-hidden="true">$</span><b>${esc(text)}</b>`:'<b>—</b>'}</span></td>`;
+  }
+  function quotesCellHtml(model,info,stats){
+    const q=quotesModel(model,info,stats),label=text=>`<span class="blCellStackLabel">${esc(text)}</span>`,drawer=drawerRow(info);
+    const tip=q.offers.map(offer=>`${offer.name}: ${kmoney(offer.price)}${q.approved&&E.keyOf(q.approved.manufacturer)===E.keyOf(offer.name)?L(' · onaylı',' · approved'):''}`);
+    if(info.target!=null)tip.push(`Target Price: ${kmoney(info.target)}`);
+    if(q.delta!=null)tip.push(`${L('Fark','Difference')}: ${pctText(q.delta)}`);
+    if(q.fob!=null)tip.push(`FOB: ${kmoney(q.fob)}`);
+    if(q.waiting)tip.push(L(`${q.waiting} teklif cevap bekliyor`,`${q.waiting} quotation(s) awaiting a reply`));
+    if(drawer)tip.push(L('Çift tık: fiyat çekmecesini aç','Double-click: open the price drawer'));
+    const deltaHtml=q.delta!=null?`<span class="blCellTag" data-tone="${q.delta<=0?'good':'bad'}">${esc(pctText(q.delta))}</span>`:'<span></span>';
+    const supp=q.main?`${label('Supp. FOB')}<b class="blCellValue${q.approved?' isStrong':' isSoft'}">${esc(kmoney(q.main.price))}</b>${deltaHtml}`:`${label('Supp. FOB')}<span class="blCellNone">${esc(L('Teklif yok','No quotation'))}</span><span></span>`;
+    const fob=q.fob!=null&&(!q.main||Math.abs(q.fob-q.main.price)>0.004)?`${label('FOB')}<b class="blCellValue">${esc(kmoney(q.fob))}</b><span class="blCellNone">${esc(q.main?L('+ masraf','+ costs'):L('hedef','target'))}</span>`:'';
+    const waiting=q.waiting?`<span class="blCellTag" data-tone="4">${esc(L(`${q.waiting} bekliyor`,`${q.waiting} waiting`))}</span>`:'';
+    const mfr=q.main?`<span class="blCellMfr${q.approved?' isConfirmed':''}"><em>${esc(q.approved?L('✓ Onaylı','✓ Approved'):L('Öneri','Best'))}</em><b>${esc(q.main.manufacturer)}</b></span>`:'';
+    const count=q.offers.length?`<span class="blCellTotal" title="${esc(L('Teklif sayısı','Quotations'))}">${q.offers.length}</span>`:'';
+    const who=mfr||waiting||count?`<div class="blCellLine">${mfr}${waiting}${count}</div>`:'';
+    const open=drawer?`<button type="button" class="kolManualBtn kolPsOpenBtn" data-pd-drawer-open="${esc(model.modelKey)}" tabindex="-1" title="${esc(L('Fiyat çekmecesini aç','Open price drawer'))}" aria-label="${esc(L('Fiyat çekmecesini aç','Open price drawer'))}">⤢</button>`:'';
+    return `<td class="pdQuotesCol kolPriceStripTd${q.approved?' isConfirmed':''}" data-pd-quotes${drawer?` data-pd-drawer="${esc(model.modelKey)}"`:''} title="${esc(tip.join('\n'))}"><div class="kolPs blCellCol"><div class="blCellStack">${supp}${fob}</div>${who}</div>${open}</td>`;
+  }
+  function quotesText(model,info,stats){
+    const q=quotesModel(model,info,stats);
+    return q.main?[kmoney(q.main.price),q.delta!=null?pctText(q.delta):'',`${q.approved?L('✓ Onaylı','✓ Approved'):L('Öneri','Best')} ${clipboardLabel(q.main.manufacturer)}`,q.waiting?L(`${q.waiting} bekliyor`,`${q.waiting} waiting`):''].filter(Boolean).join(' · '):L('Teklif yok','No quotation');
+  }
+  function refsCellHtml(model,info){
+    const lfl=window.BLCollectionLfl,drawer=drawerRow(info),attrs=` data-pd-refs${drawer?` data-pd-drawer="${esc(model.modelKey)}"`:''}`;
+    let html='';
+    if(info.row&&lfl?.combinedCell){try{html=lfl.combinedCell(info.row,attrs,REF_KEYS);}catch(_){html='';}}
+    // Koleksiyon tablosunun kendi çift tık dinleyicisi bu hücreyi görmez; kimlik masada modelKey'dir.
+    return html?html.replace(/ data-kol-drawer="[^"]*"/,'').replace('<td class="','<td class="pdRefsCol '):`<td class="pdRefsCol"${attrs}><span class="blCellNone">—</span></td>`;
+  }
+  function refsText(info){
+    const lfl=window.BLCollectionLfl;
+    if(!info.row||!lfl?.combinedText)return '—';
+    try{return clipboardLabel(lfl.combinedText(info.row,REF_KEYS))||'—';}catch(_){return '—';}
+  }
+  /* Previous Season / LFL referansı Koleksiyon ile aynı oturum önbelleğinden
+     okunur. Masa görünürken ve referans henüz yüklenmemişse tek istek atılır;
+     yanıt gelince açık matrisler bir kez yeniden çizilir. */
+  let referenceWait=null;
+  function ensureReferences(){
+    const lfl=window.BLCollectionLfl;if(!lfl?.ensure||referenceWait)return;
+    let pending;try{pending=lfl.ensure();}catch(_){return;}
+    if(!lfl.isPending?.()||!pending?.then)return;
+    referenceWait=pending.catch(()=>{}).then(()=>{referenceWait=null;Q()?.withCollectionRead?Q().withCollectionRead(()=>rerenderMatrices()):rerenderMatrices();});
+  }
+  function rerenderMatrices(){
+    document.querySelectorAll('[data-pd-matrix]').forEach(host=>{
+      const view=matrixViews.get(host);if(!view||!host.isConnected||host.contains(document.activeElement))return;
+      const left=view.scroll?.scrollLeft||0,top=view.scroll?.scrollTop||0;
+      renderMatrixContent(host,view.req);
+      const scroll=host.querySelector('.pdMatrixScroll');if(scroll){scroll.scrollLeft=left;scroll.scrollTop=top;}
+    });
+  }
+
+  /* Sütun sıralama ve genişlikleri kullanıcı başına (BLStorage) saklanır. Sıralama
+     modelleri yeniden dizer; sanal pencere, yapıştırma ve klavye gezinmesi aynı
+     mantıksal sırayı (view.matrix.models) kullanır. Yazarken satırlar yerinden
+     oynamaz: yeni sıra odak tablodan çıkınca uygulanır. */
+  const MATRIX_LAYOUT_KEY='lcw.pricingDesk.matrixLayout.v1';
+  /* Sütun gizleme: sabit fiyat sütunları (Adet/MB Ay · Hedef · Teklif & Onay ·
+     referanslar) kullanıcı başına, üretici sütunları talep başına gizlenir (her
+     talebin üretici kümesi farklıdır). Gizli üretici teklif hesabından çıkmaz;
+     yalnız matriste görünmez. Model sütunu gizlenemez. */
+  const HIDEABLE_FIXED=['summary','target','quotes','refs'];
+  const matrixLayout=(()=>{
+    const raw=store.get(MATRIX_LAYOUT_KEY,{})||{},sort=raw.sort,suppliers=raw.hiddenSuppliers&&typeof raw.hiddenSuppliers==='object'&&!Array.isArray(raw.hiddenSuppliers)?raw.hiddenSuppliers:{};
+    return {widths:raw.widths&&typeof raw.widths==='object'&&!Array.isArray(raw.widths)?raw.widths:{},sort:sort&&typeof sort.key==='string'&&(sort.dir===1||sort.dir===-1)?{key:sort.key,dir:sort.dir}:null,
+      hidden:Array.isArray(raw.hidden)?raw.hidden.filter(key=>HIDEABLE_FIXED.includes(key)):[],
+      hiddenSuppliers:Object.fromEntries(Object.entries(suppliers).filter(([id,list])=>id&&Array.isArray(list)).slice(-200).map(([id,list])=>[id,[...new Set(list.map(clean).filter(Boolean))].slice(0,100)]).filter(([,list])=>list.length))};
+  })();
+  function saveMatrixLayout(){store.set(MATRIX_LAYOUT_KEY,{widths:matrixLayout.widths,sort:matrixLayout.sort,hidden:matrixLayout.hidden,hiddenSuppliers:matrixLayout.hiddenSuppliers});}
+  const fixedShown=key=>!matrixLayout.hidden.includes(key);
+  const supplierHidden=(req,name)=>Boolean(req&&(matrixLayout.hiddenSuppliers[req.id]||[]).some(item=>E.keyOf(item)===E.keyOf(name)));
+  function setColumnHidden(req,key,hidden){
+    if(key.startsWith('mfr:')){
+      if(!req)return;const name=key.slice(4),list=(matrixLayout.hiddenSuppliers[req.id]||[]).filter(item=>E.keyOf(item)!==E.keyOf(name));
+      if(hidden)list.push(name);
+      if(list.length)matrixLayout.hiddenSuppliers[req.id]=list;else delete matrixLayout.hiddenSuppliers[req.id];
+    }else if(HIDEABLE_FIXED.includes(key)){
+      matrixLayout.hidden=matrixLayout.hidden.filter(item=>item!==key);if(hidden)matrixLayout.hidden.push(key);
+    }else return;
+    if(hidden&&matrixLayout.sort&&(matrixLayout.sort.key===key||(key==='summary'&&matrixLayout.sort.key.startsWith('field:'))||(key==='refs'&&matrixLayout.sort.key.startsWith('ref:'))))matrixLayout.sort=null;
+    saveMatrixLayout();
+  }
+  function hiddenColumnCount(req){return matrixLayout.hidden.length+(req?(matrixLayout.hiddenSuppliers[req.id]||[]).length:0);}
+  function showAllColumns(req){matrixLayout.hidden=[];if(req)delete matrixLayout.hiddenSuppliers[req.id];saveMatrixLayout();}
+  function visibleSupplierCards(req){return E.supplierScorecards(req).filter(card=>!supplierHidden(req,card.name));}
+  const hideButton=(key,label)=>`<button type="button" class="pdColHide" data-pd-hide="${esc(key)}" tabindex="-1" title="${esc(L('Sütunu gizle','Hide column'))}" aria-label="${esc(L(`${label} sütununu gizle`,`Hide ${label} column`))}"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>`;
+  /* Sütunlar panelindeki "Matris sütunları" bölümü (quotations.js çağırır). */
+  function matrixColumnsPanelHtml(req){
+    if(!req||detailView(req)!=='matrix')return '';
+    const api=Q(),summaryLabel=(api?.selectedColumns?.()||[]).filter(key=>key==='quantity'||key==='inStoreMonth').map(key=>api.columnLabel(key)).join(' / ');
+    const fixed=[...(summaryLabel?[['summary',summaryLabel]]:[]),['target',L('Hedef Fiyat','Target Price')],['quotes',L('Teklif & Onay','Quotes & Approval')],['refs',REF_KEYS.map(refLabel).join(' / ')]];
+    const suppliers=E.supplierScorecards(req).map(card=>['mfr:'+card.name,card.name]);
+    const box=([key,label])=>`<label class="pdCheck"><input type="checkbox" data-pd-matrix-col="${esc(key)}" ${(key.startsWith('mfr:')?supplierHidden(req,key.slice(4)):!fixedShown(key))?'':'checked'}><span>${esc(label)}</span></label>`;
+    return `<div class="pdPanelHead"><b>${esc(L('Matris sütunları','Matrix columns'))}</b><span>${esc(L('İşareti kaldırılan sütun gizlenir; teklif ve onay hesapları değişmez. Üretici seçimi bu talep için saklanır.','Unchecked columns are hidden; quotation and approval calculations do not change. Manufacturer choices are saved for this request.'))}</span></div>
+      <div class="pdColumnsList" data-pd-matrix-columns>${[...fixed,...suppliers].map(box).join('')}</div>`;
+  }
+  function applyMatrixColumnsPanel(req,panel){
+    if(!req||!panel)return;
+    panel.querySelectorAll('[data-pd-matrix-col]').forEach(box=>setColumnHidden(req,box.dataset.pdMatrixCol,!box.checked));
+  }
+  const COL_DEFAULT={model:190,summary:160,target:88,quotes:268,refs:290,ctx:150,mfr:104,other:104,add:124};
+  const COL_MIN={model:120,summary:90,target:72,quotes:150,refs:180,ctx:64,mfr:72,other:72,add:96};
+  const STICKY_COLS=['model','summary','target','quotes'];
+  const colKind=key=>key.startsWith('ctx:')?'ctx':key.startsWith('mfr:')?'mfr':key;
+  function colWidth(key){const kind=colKind(key),min=COL_MIN[kind]||64,saved=Number(matrixLayout.widths[key]);return Number.isFinite(saved)&&saved>0?Math.max(min,Math.min(900,Math.round(saved))):(COL_DEFAULT[kind]||120);}
+  function matrixColumnKeys(context,layout,canEdit){
+    return ['model',...(context.summary.length?['summary']:[]),...['target','quotes','refs'].filter(fixedShown),...context.extra.map(key=>'ctx:'+key),...layout.visible.map(card=>'mfr:'+card.name),...(layout.other.length?['other']:[]),...(canEdit?['add']:[])];
+  }
+  function matrixGeometry(keys){
+    let total=0,left=0;const lefts={};
+    keys.forEach(key=>{const width=colWidth(key);if(STICKY_COLS.includes(key)){lefts[key]=left;left+=width;}total+=width;});
+    return {total,lefts};
+  }
+  function matrixTableStyle(keys){const g=matrixGeometry(keys);return `width:${g.total}px;--pd-l-summary:${g.lefts.summary||0}px;--pd-l-target:${g.lefts.target||0}px;--pd-l-quotes:${g.lefts.quotes||0}px`;}
+  /* Teklif & Onay yalnız kaydırılabilir alanda en az ~4 üretici sütunu kalıyorsa
+     sabitlenir; dar ekranda tabloyla kayar (Model · Adet/MB Ay · Hedef sabit kalır,
+     onay üretici hücresinde yeşil olarak görünmeye devam eder). */
+  const PIN_QUOTES_MIN_SCROLL=420;
+  // Son ölçülen tablo kabı genişliği (ResizeObserver'dan; çizimde eşzamanlı yerleşim okuması yapılmaz).
+  let lastMatrixWidth=0;
+  function updateQuotesPin(view){
+    const table=view?.scroll?.querySelector('table'),width=view?.scroll?.clientWidth||0;if(!table||!width)return;
+    lastMatrixWidth=width;const g=matrixGeometry(view.columnKeys);
+    table.classList.toggle('pdQuotesScroll',width-(g.lefts.quotes+colWidth('quotes'))<PIN_QUOTES_MIN_SCROLL);
+  }
+  function applyMatrixWidths(table,keys){
+    const g=matrixGeometry(keys);
+    table.querySelectorAll('col[data-pd-col]').forEach(col=>{col.style.width=colWidth(col.dataset.pdCol)+'px';});
+    table.style.width=g.total+'px';
+    ['summary','target','quotes'].forEach(key=>table.style.setProperty('--pd-l-'+key,(g.lefts[key]||0)+'px'));
+  }
+  function sortAttrs(key){
+    const sort=matrixLayout.sort,dir=sort&&sort.key===key?(sort.dir===1?'asc':'desc'):'';
+    return `data-pd-sort="${esc(key)}" data-dir="${dir}" role="button" tabindex="0" title="${esc(dir==='asc'?L('Artan sıralı · tıkla: azalan','Sorted ascending · click: descending'):dir==='desc'?L('Azalan sıralı · tıkla: sıralamayı kaldır','Sorted descending · click: clear sorting'):L('Sırala','Sort'))}"`;
+  }
+  const sortLabel=(key,label)=>`<span class="pdSortBtn" ${sortAttrs(key)}>${esc(label)}</span>`;
+  const resizeHandle=key=>`<span class="pdColResize" data-pd-resize="${esc(key)}" role="separator" aria-orientation="vertical" title="${esc(L('Sütun genişliğini ayarla; çift tıklayarak sıfırla','Resize column; double-click to reset'))}"></span>`;
+  function ariaSort(keys){const sort=matrixLayout.sort;return sort&&keys.includes(sort.key)?` aria-sort="${sort.dir===1?'ascending':'descending'}"`:'';}
+  function sortValue(req,model,key){
+    const api=Q(),info=lineInfo(req,model.first);
+    if(key==='model')return info.model;
+    if(key==='target')return info.target;
+    if(key==='quotes'){const stats=E.rowStats(model.lines),main=stats.approved&&stats.approved.price!=null?stats.approved:stats.best;return main?main.price:null;}
+    if(key.startsWith('ref:')){
+      const lfl=window.BLCollectionLfl;if(!info.row||!lfl?.model)return null;
+      try{const m=lfl.model(info.row,lfl.modeForKey(key.slice(4)));return m.reference&&Number.isFinite(m.percent)?m.percent:null;}catch(_){return null;}
+    }
+    if(key.startsWith('mfr:')){const line=model.cell(key.slice(4));return line&&!line.dropped?E.price(line.price):null;}
+    if(key.startsWith('field:')){
+      const field=key.slice(6),raw=api.fieldRaw?api.fieldRaw(req,model.first,field):api.fieldValue(req,model.first,field);
+      if(field==='inStoreMonth'){const code=api.monthCode?api.monthCode(raw):'';return code?Number(code):null;}
+      if(field==='quantity'){if(raw==null||raw==='')return null;const n=typeof raw==='number'?raw:(typeof kolParseQuantityNum==='function'?kolParseQuantityNum(raw):Number(String(raw).replace(/\./g,'').replace(',','.')));return Number.isFinite(n)?n:null;}
+      return clean(api.fieldValue(req,model.first,field));
+    }
+    return null;
+  }
+  function sortModels(req,models,validKeys){
+    const sort=matrixLayout.sort;if(!sort||!validKeys.has(sort.key))return models;
+    const empty=value=>value==null||value===''||(typeof value==='number'&&!Number.isFinite(value));
+    const items=models.map((model,index)=>({model,index,value:sortValue(req,model,sort.key)}));
+    items.sort((a,b)=>{
+      if(empty(a.value)||empty(b.value))return empty(a.value)===empty(b.value)?a.index-b.index:(empty(a.value)?1:-1);
+      const diff=typeof a.value==='number'&&typeof b.value==='number'?a.value-b.value:String(a.value).localeCompare(String(b.value),'tr',{numeric:true,sensitivity:'base'});
+      return diff*sort.dir||a.index-b.index;
+    });
+    return items.map(item=>item.model);
+  }
+  function sortKeysFor(context,layout){
+    return new Set(['model',...['target','quotes'].filter(fixedShown),...(fixedShown('refs')?REF_KEYS.map(key=>'ref:'+key):[]),...context.summary.map(key=>'field:'+key),...context.extra.map(key=>'field:'+key),...layout.visible.map(card=>'mfr:'+card.name)]);
+  }
+  function cycleSort(key){
+    const sort=matrixLayout.sort;
+    matrixLayout.sort=!sort||sort.key!==key?{key,dir:1}:sort.dir===1?{key,dir:-1}:null;
+    saveMatrixLayout();
+  }
   const matrixViews=new WeakMap(),matrixScrollViews=new WeakMap();
   function matrixRowsHtml(req,matrix,ctx){
     const api=Q(),prevBest=state.lastBest.get(req.id)||new Map(),nextBest=new Map(prevBest),start=ctx.start||0;
@@ -253,17 +462,13 @@
       const info=lineInfo(req,model.first),stats=E.rowStats(model.lines);
       const bestId=stats.best?stats.best.lineId:'';nextBest.set(model.modelKey,bestId);
       const moved=Boolean(bestId&&prevBest.has(model.modelKey)&&prevBest.get(model.modelKey)!==bestId);
-      const shown=stats.approved&&stats.approved.price!=null?stats.approved:stats.best;
-      const delta=shown&&info.target?E.pct(shown.price,info.target):null;
       const cells=matrix.manufacturers.map((name,ci)=>cellHtml(req,model,name,stats,{mi,ci,canEdit:ctx.canEdit,moved:moved&&bestId===model.cell(name)?.id}));
-      if(ctx.other.length){const offers=ctx.other.map(s=>model.cell(s.name)).filter(line=>line&&!line.dropped&&E.price(line.price)!=null).sort((a,b)=>E.price(a.price)-E.price(b.price));const best=offers[0];cells.push(`<td class="pdCell pdOther"><button type="button" data-pd-expand aria-label="${esc(L('Diğer üreticileri aç','Expand other manufacturers'))}">${best?`<b>${esc(money(E.price(best.price)))}</b><small>${esc(best.manufacturer)}</small>`:'—'}</button></td>`);}
+      if(ctx.other.length){const offers=ctx.other.map(s=>model.cell(s.name)).filter(line=>line&&!line.dropped&&E.price(line.price)!=null).sort((a,b)=>E.price(a.price)-E.price(b.price));const best=offers[0];cells.push(`<td class="pdCell pdOther"><button type="button" data-pd-expand aria-label="${esc(L('Diğer üreticileri aç','Expand other manufacturers'))}">${best?`<b>${esc(kmoney(E.price(best.price)))}</b><small>${esc(best.manufacturer)}</small>`:'—'}</button></td>`);}
       const meta=modelMeta(info),context=matrixContext();
-      return `<tr data-pd-model="${esc(model.modelKey)}" data-pd-row="${mi}" aria-rowindex="${mi+2}">
+      return `<tr data-pd-model="${esc(model.modelKey)}" data-pd-row="${mi}" aria-rowindex="${mi+2}"${stats.approved?' class="pdRowApproved"':''}>
         <th scope="row" class="pdModelCell"><div class="pdModel">${thumbHtml(req,model.first)}<div class="pdModelText"><b title="${esc(info.model)}">${esc(info.model)}</b><span title="${esc(meta)}">${esc(meta||'—')}</span>${context.selected.includes('fabric')?`<small title="${esc(info.fabric)}">${esc(info.fabric||'—')}</small>`:''}</div></div></th>
         ${context.summary.length?`<td class="pdSummary"><span title="${esc(matrixSummaryText(req,model.first,context))}">${context.summary.map(key=>`<span><small>${esc(api.columnLabel(key))}</small><b>${esc(api.fieldValue(req,model.first,key)||'—')}</b></span>`).join('')}</span></td>`:''}
-        <td class="pdNum pdTarget">${info.target!=null?esc(money(info.target)):'—'}</td>
-        <td class="pdNum pdBestCol pdStickyBest" data-pd-best>${shown?`<b>${esc(money(shown.price))}</b><span>${esc(shown.manufacturer)}${stats.approved?` · ${esc(L('onaylı','approved'))}`:''}</span>`:'<span>—</span>'}</td>
-        <td class="pdNum pdStickyDelta" data-pd-delta><span class="pdChip ${toneOf(delta)}">${esc(pctText(delta))}</span></td>
+        ${fixedShown('target')?targetCellHtml(req,model,info,ctx.canEdit):''}${fixedShown('quotes')?quotesCellHtml(model,info,stats):''}${fixedShown('refs')?refsCellHtml(model,info):''}
         ${matrixExtraCells(req,model.first,context)}${cells.join('')}${ctx.canEdit?'<td class="pdAddMfrCell" aria-hidden="true"></td>':''}
       </tr>`;
     }).join('');
@@ -272,7 +477,7 @@
   }
   function supplierHeadHtml(card){
     const coverage=L(`${card.models}/${card.total} model, ${card.wins} kazanma`,`${card.models}/${card.total} models, ${card.wins} wins`);
-    return `<b title="${esc(card.name)}">${esc(card.name)}</b><small title="${esc(coverage)}" aria-label="${esc(coverage)}">${card.models}/${card.total} · ${card.wins} ${esc(L('en iyi','best'))}</small><small class="${toneOf(card.modelIndex)}" title="${esc(L('Aynı modelin teklif ortalamasına göre fark','Difference to the same model’s average offer'))}">${esc(pctText(card.modelIndex))}</small>`;
+    return `<b class="pdSortBtn" ${sortAttrs('mfr:'+card.name)}>${esc(card.name)}</b><small title="${esc(coverage)}" aria-label="${esc(coverage)}">${card.models}/${card.total} · ${card.wins} ${esc(L('en iyi','best'))}</small><small class="${toneOf(card.modelIndex)}" title="${esc(L('Aynı modelin teklif ortalamasına göre fark','Difference to the same model’s average offer'))}">${esc(pctText(card.modelIndex))}</small>`;
   }
   // Clipboard values come from the complete request, including unmounted rows.
   // Keep the native matrix's plain-text layout for existing Excel workflows.
@@ -284,25 +489,26 @@
     }
     return text;
   }
+  // Kopyalanan sabit sütunlar görünen sütunlarla birebir hizalıdır.
+  function fixedClip(target,quotes,refs){return [['target',target],['quotes',quotes],['refs',refs]].filter(([key])=>fixedShown(key)).map(([,text])=>text);}
   function matrixClipboardHeaderParts(req,ctx){
-    const cards=E.supplierScorecards(req),other=ctx.other||ctx.layout?.other||[],parts=[L('Model','Model')+'\t',...(matrixContext().summary.length?[matrixContext().summary.map(key=>Q().columnLabel(key)).join(' / ')+'\t']:[]),L('Hedef','Target')+'\t',L('En iyi / Onaylı','Best / Approved')+'\t','Δ '+L('Hedef','Target')+'\t\n'];
+    const cards=E.supplierScorecards(req),other=ctx.other||ctx.layout?.other||[],parts=[L('Model','Model')+'\t',...(matrixContext().summary.length?[matrixContext().summary.map(key=>Q().columnLabel(key)).join(' / ')+'\t']:[]),...fixedClip(L('Hedef Fiyat','Target Price'),L('Teklif & Onay','Quotes & Approval'),REF_KEYS.map(refLabel).join(' / ')).map(text=>text+'\t')];
     parts.push(...matrixContext().extra.map(key=>Q().columnLabel(key)+'\t'));
     for(const name of ctx.matrix.manufacturers){const card=cards.find(card=>card.name===name);parts.push(`${clipboardLabel(name)}\n${card.models}/${card.total} · ${card.wins} ${L('en iyi','best')}\n${pctText(card.modelIndex)}\n`);}
     if(other.length)parts.push(L(`Diğer (${other.length})`,`Other (${other.length})`)+(ctx.canEdit?'\t':'\n'));if(ctx.canEdit)parts.push(L('Üretici','Manufacturer')+'\n');return parts;
   }
   function matrixClipboardRowParts(req,model,ctx){
-    const {matrix,canEdit}=ctx,other=ctx.other||ctx.layout?.other||[],info=lineInfo(req,model.first),stats=E.rowStats(model.lines),shown=stats.approved&&stats.approved.price!=null?stats.approved:stats.best;
+    const {matrix,canEdit}=ctx,other=ctx.other||ctx.layout?.other||[],info=lineInfo(req,model.first),stats=E.rowStats(model.lines);
     const context=matrixContext(),meta=clipboardLabel(modelMeta(info)||'—');
     const imagePrefix=/<img\b/i.test(thumbHtml(req,model.first))?'\n':'';
-    const parts=[`${imagePrefix}${clipboardLabel(info.model)}\n${meta}\n${context.selected.includes('fabric')?clipboardLabel(info.fabric||'—')+'\n':''}`, ...(context.summary.length?[clipboardLabel(matrixSummaryText(req,model.first,context))+'\t']:[]),(info.target!=null?money(info.target):'—')+'\t\n',
-      (shown?`${money(shown.price)}\n${clipboardLabel(shown.manufacturer)}${stats.approved?' · '+L('onaylı','approved'):''}`:'—')+'\n',pctText(shown&&info.target?E.pct(shown.price,info.target):null)+'\t\n'];
+    const parts=[`${imagePrefix}${clipboardLabel(info.model)}\n${meta}\n${context.selected.includes('fabric')?clipboardLabel(info.fabric||'—')+'\n':''}`, ...(context.summary.length?[clipboardLabel(matrixSummaryText(req,model.first,context))+'\t']:[]),...fixedClip(info.target!=null?kmoney(info.target):'—',fixedShown('quotes')?quotesText(model,info,stats):'',fixedShown('refs')?refsText(info):'').map(text=>text+'\t')];
     parts.push(...context.extra.map(key=>clipboardLabel(Q().fieldValue(req,model.first,key)||'—')+'\t'));
     for(const name of matrix.manufacturers){
       const line=model.cell(name);if(!line){parts.push(canEdit?'\n—\n':'—\n');continue;}
       const value=E.price(line.price),options=E.lineOptions(line),badge=options.length?L(`OPS ${options.length}`,`OPT ${options.length}`):(canEdit?L('+ OPS','+ OPT'):'');
-      parts.push((value!=null?moneyPlain(value):(clean(line.price).replace(/[\r\n]/g,'')||'—'))+'\n\n'+(badge?badge+'\n':''));
+      parts.push((value!=null?kplain(value):(clean(line.price).replace(/[\r\n]/g,'')||'—'))+'\n\n'+(badge?badge+'\n':''));
     }
-    if(other.length){const offers=other.map(card=>model.cell(card.name)).filter(line=>line&&!line.dropped&&E.price(line.price)!=null).sort((a,b)=>E.price(a.price)-E.price(b.price));parts.push((offers[0]?money(E.price(offers[0].price))+'\n'+clipboardLabel(offers[0].manufacturer):'—')+'\n');}
+    if(other.length){const offers=other.map(card=>model.cell(card.name)).filter(line=>line&&!line.dropped&&E.price(line.price)!=null).sort((a,b)=>E.price(a.price)-E.price(b.price));parts.push((offers[0]?kmoney(E.price(offers[0].price))+'\n'+clipboardLabel(offers[0].manufacturer):'—')+'\n');}
     if(canEdit)parts.push('');return parts;
   }
   function matrixPasteTargets(req,matrix,r0,c0,text){
@@ -370,7 +576,7 @@
     return true;
   }
   function matrixClipboardHtml(view,start=0,end=view.matrix.models.length,includeHeaders=true){
-    const cards=E.supplierScorecards(view.req),headers=[L('Model','Model'),...(matrixContext().summary.length?[matrixContext().summary.map(key=>Q().columnLabel(key)).join(' / ')]:[]),L('Hedef','Target'),L('En iyi / Onaylı','Best / Approved'),'Δ '+L('Hedef','Target'),...matrixContext().extra.map(key=>Q().columnLabel(key)),...view.matrix.manufacturers.map(name=>{const card=cards.find(card=>card.name===name);return `${clipboardLabel(name)}\n${card.models}/${card.total} · ${card.wins} ${L('en iyi','best')}\n${pctText(card.modelIndex)}`;})];
+    const cards=E.supplierScorecards(view.req),headers=[L('Model','Model'),...(matrixContext().summary.length?[matrixContext().summary.map(key=>Q().columnLabel(key)).join(' / ')]:[]),...fixedClip(L('Hedef Fiyat','Target Price'),L('Teklif & Onay','Quotes & Approval'),REF_KEYS.map(refLabel).join(' / ')),...matrixContext().extra.map(key=>Q().columnLabel(key)),...view.matrix.manufacturers.map(name=>{const card=cards.find(card=>card.name===name);return `${clipboardLabel(name)}\n${card.models}/${card.total} · ${card.wins} ${L('en iyi','best')}\n${pctText(card.modelIndex)}`;})];
     if(view.other.length)headers.push(L(`Diğer (${view.other.length})`,`Other (${view.other.length})`));if(view.canEdit)headers.push(L('Üretici','Manufacturer'));
     const cell=value=>esc(value.trim()).replace(/\n/g,'<br>');
     const image=model=>{const html=thumbHtml(view.req,model.first),src=html.match(/\sdata-src="([^"]*)"/)?.[1];return src?html.replace(/\ssrc="[^"]*"/,' src="'+src+'"'):html;};
@@ -412,7 +618,7 @@
       const start=Number(first.closest('tr').dataset.pdRow||0),end=Number(last.closest('tr').dataset.pdRow??matrix.models.length-1)+1,inHead=Boolean(first.closest('thead')),headers=inHead&&getComputedStyle(first).userSelect!=='none';
       const offset=(cell,node,position,part)=>{
         const element=node.nodeType===1?node:node.parentElement,opt=element.closest('.pdCellOpt'),prefix=document.createRange();
-        const blocks=cell.querySelector('.pdModelText')||(cell.matches('.pdBestCol,.pdMfrHead')?cell:null);
+        const blocks=cell.querySelector('.pdModelText')||cell.querySelector('.pdMfrHeadBody');
         if(blocks){
           const fields=[...blocks.children].filter(field=>field.matches('b,span,small')&&getComputedStyle(field).display!=='none'),field=fields.find(field=>field===element||field.contains(element));
           const index=node===blocks?fields.filter(field=>[...blocks.childNodes].indexOf(field)<position).length:fields.indexOf(field);
@@ -443,40 +649,47 @@
   function renderMatrixContent(host,req){
     const api=Q();if(!host||!req||!api)return;
     infoCache=new WeakMap();
-    const canEdit=api.canEdit(req),layout=E.supplierLayout(E.supplierScorecards(req),Boolean(state.expandedSuppliers[req.id])),matrix={...E.requestMatrix(req),manufacturers:layout.visible.map(s=>s.name)};
+    const canEdit=api.canEdit(req),layout=E.supplierLayout(visibleSupplierCards(req),Boolean(state.expandedSuppliers[req.id])),matrix={...E.requestMatrix(req),manufacturers:layout.visible.map(s=>s.name)};
     const candidates=canEdit?E.bulkApproveCandidates(req,item=>api.itemTarget(req,item)):[];
     const gain=E.requestGain(req),round=Math.max(1,Number(req.round)||1);
-    const heads=layout.visible.map(card=>`<th scope="col" class="pdMfrHead" data-pd-supplier="${esc(card.key)}">${supplierHeadHtml(card)}</th>`).join('');
-    const otherHead=layout.other.length?`<th scope="col" class="pdMfrHead"><button type="button" class="linkBtn" data-pd-expand aria-expanded="false">${esc(L(`Diğer (${layout.other.length})`,`Other (${layout.other.length})`))}</button></th>`:'';
+    const heads=layout.visible.map(card=>`<th scope="col" class="pdMfrHead" data-pd-supplier="${esc(card.key)}"${ariaSort(['mfr:'+card.name])}><div class="pdMfrHeadBody">${supplierHeadHtml(card)}</div>${hideButton('mfr:'+card.name,card.name)}${resizeHandle('mfr:'+card.name)}</th>`).join('');
+    const otherHead=layout.other.length?`<th scope="col" class="pdMfrHead"><button type="button" class="linkBtn" data-pd-expand aria-expanded="false">${esc(L(`Diğer (${layout.other.length})`,`Other (${layout.other.length})`))}</button>${resizeHandle('other')}</th>`:'';
     // Tablodan üretici ekleme sütunu (Send to Pricing kullanmadan fiyat veren üretici için).
     const addHead=canEdit?`<th scope="col" class="pdMfrHead pdAddMfrHead"><button type="button" class="pdAddMfr" data-pd-add-mfr title="${esc(L('Tabloya üretici ekle','Add a manufacturer to the table'))}"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>${esc(L('Üretici','Manufacturer'))}</button></th>`:'';
     const columnCount=matrix.manufacturers.length+(layout.other.length?1:0)+(canEdit?1:0);
-    const virtual=matrix.models.length>100,initialEnd=virtual?40:matrix.models.length,context=matrixContext();
-    const summaryWidth=context.summary.length?144:0,contextWidth=summaryWidth+context.extra.length*150;
-    const contextHeads=context.extra.map(key=>`<th scope="col">${esc(api.columnLabel(key))}</th>`).join('');
+    const virtual=matrix.models.length>100,initialEnd=virtual?40:matrix.models.length,context=matrixContext(),columnKeys=matrixColumnKeys(context,layout,canEdit);
+    matrix.models=sortModels(req,matrix.models,sortKeysFor(context,layout));
+    if(req.source==='collection'&&matrix.models.length)ensureReferences();
+    const approvedModels=matrix.models.filter(model=>E.rowStats(model.lines).approved).length;
+    // Sabitleme kararı tablo eklenmeden önce kabın genişliğinden verilir (tablo sonrası okuma tam tablo yerleşimi zorlardı).
+    const pinGeometry=matrixGeometry(columnKeys),pinSpace=lastMatrixWidth,quotesScroll=Boolean(pinSpace)&&pinSpace-(pinGeometry.lefts.quotes+colWidth('quotes'))<PIN_QUOTES_MIN_SCROLL;
+    const hintsText=[['Enter',L('alt satır','next row')],['Tab',L('sonraki üretici','next manufacturer')],['A',L('onayla','approve')],['D','Drop'],['O',L('alternatif fiyat','alternative price')],['Ctrl+V',L('Excel’den blok yapıştır','paste a block from Excel')],['Ctrl+Z',L('geri al','undo')],['Esc',L('vazgeç','cancel')]].map(([key,text])=>`${key}: ${text}`).join('\n');
+    const contextHeads=context.extra.map(key=>`<th scope="col"${ariaSort(['field:'+key])}>${sortLabel('field:'+key,api.columnLabel(key))}${resizeHandle('ctx:'+key)}</th>`).join('');
     host.innerHTML=`<div class="pdMatrixBar">
-        <span class="pdLegend"><i class="pdLegendBest"></i>${esc(L('En iyi','Best'))}<i class="pdLegendAppr"></i>${esc(L('Onaylı','Approved'))}<i class="pdLegendOut"></i>${esc(L('Olağan dışı','Unusual'))}</span>
+        <span class="pdLegend"><i class="pdLegendAppr"></i>${esc(L('Onaylı','Approved'))}<i class="pdLegendBest"></i>${esc(L('En iyi (onaysız)','Best (not approved)'))}<i class="pdLegendOut"></i>${esc(L('Olağan dışı','Unusual'))}</span>
+        <span class="pdApprovalProgress${matrix.models.length&&approvedModels===matrix.models.length?' isComplete':''}" data-pd-approval-progress title="${esc(L('Onaylı fiyatı olan model sayısı','Models with an approved price'))}">${esc(L(`${approvedModels}/${matrix.models.length} model onaylı`,`${approvedModels}/${matrix.models.length} models approved`))}</span>
         <span class="pdRoundBadge" title="${esc(L('Bu talepteki pazarlık turu','Negotiation round of this request'))}">${esc(L(`Tur ${round}`,`Round ${round}`))}</span>
         ${gain&&Number.isFinite(gain.gainPct)&&Math.abs(gain.gainPct)>=0.05?`<span class="pdChip ${toneOf(gain.gainPct)}" title="${esc(L('İlk tur en iyi tekliflerine göre güncel fiyat','Current price versus first-round best offers'))}">${esc(L('Pazarlık','Negotiation'))} ${esc(pctText(gain.gainPct))}</span>`:''}
+        ${hiddenColumnCount(req)?`<button type="button" class="tbtn" data-pd-show-hidden title="${esc(L('Gizlenen sütunları yeniden göster','Show the hidden columns again'))}">${esc(L(`${hiddenColumnCount(req)} gizli sütun · göster`,`${hiddenColumnCount(req)} hidden column(s) · show`))}</button>`:''}
         <span class="pdBarSpacer"></span>
+        <span class="pdHintsBtn" tabindex="0" role="note" title="${esc(hintsText)}" aria-label="${esc(L('Klavye kısayolları','Keyboard shortcuts')+': '+hintsText.replace(/\n/g,' · '))}">${esc(L('Kısayollar','Shortcuts'))}</span>
         <button type="button" class="tbtn" data-pd-copy>${esc(L('Matrisi kopyala','Copy matrix'))}</button>
         ${state.expandedSuppliers[req.id]&&matrix.manufacturers.length>8?`<button type="button" class="tbtn" data-pd-collapse aria-expanded="true">${esc(L('Üreticileri katla','Collapse manufacturers'))}</button>`:''}
         ${canEdit&&candidates.length?`<button type="button" class="tbtn" data-pd-bulk><svg class="ic"><use href="#i-check"/></svg>${esc(L(`Hedefin altındakileri onayla (${candidates.length})`,`Approve below target (${candidates.length})`))}</button>`:''}
         ${canEdit?`<button type="button" class="tbtn" data-pd-import title="${esc(L('Üreticinin doldurduğu fiyat talep Excel’ini seç ya da tabloya sürükle','Choose the pricing request Excel returned by the manufacturer, or drag it onto the table'))}"><svg class="ic"><use href="#i-file-import"/></svg>${esc(L('Dönüş Excel’i','Supplier Excel'))}</button><input type="file" accept=".xlsx,.xls" data-pd-import-file hidden>`:''}
         ${canEdit?`<button type="button" class="tbtn" data-pd-round><svg class="ic"><use href="#i-refresh"/></svg>${esc(L('Yeni tur','New round'))}</button>`:''}
-        <button type="button" class="tbtn" data-pd-undo ${state.undo.some(group=>group.requestId===req.id)?'':'disabled'} title="Ctrl+Z"><svg class="ic"><use href="#i-arrow-back-up"/></svg>${esc(L('Geri al','Undo'))}</button>
+        <button type="button" class="tbtn pdIconBtn" data-pd-undo ${state.undo.some(group=>group.requestId===req.id)?'':'disabled'} title="${esc(L('Geri al (Ctrl+Z)','Undo (Ctrl+Z)'))}" aria-label="${esc(L('Geri al','Undo'))}"><svg class="ic" aria-hidden="true"><use href="#i-arrow-back-up"/></svg></button>
       </div>
       <div class="pdBulkPanel" data-pd-bulk-panel hidden></div>
       <div class="pdRoundPanel" data-pd-round-panel hidden></div>
       <div class="pdImportPanel" data-pd-import-panel hidden></div>
       <div class="pdMfrPanel" data-pd-mfr-panel hidden></div>
       <div class="pdOptionsPanel" data-pd-options-panel hidden></div>
-      <div class="pdMatrixScroll" tabindex="0"><table class="pdMatrix" style="--pd-columns:${columnCount};--pd-summary-width:${summaryWidth}px;--pd-context-width:${contextWidth}px" aria-rowcount="${matrix.models.length+1}" aria-colcount="${columnCount+4+context.count}" aria-label="${esc(L('Model × üretici teklif matrisi','Model × manufacturer quotation matrix'))}">
-        <colgroup><col class="pdModelWidth">${context.summary.length?'<col class="pdSummaryWidth">':''}<col class="pdTargetWidth"><col class="pdBestWidth"><col class="pdDeltaWidth">${context.extra.map(()=>'<col class="pdContextWidth">').join('')}${Array.from({length:columnCount},()=>'<col class="pdSupplierWidth">').join('')}</colgroup>
-        <thead><tr><th scope="col" class="pdModelHead">${esc(L('Model','Model'))}</th>${context.summary.length?`<th scope="col" class="pdSummary">${esc(context.summary.map(key=>api.columnLabel(key)).join(' / '))}</th>`:''}<th scope="col" class="pdNum pdTarget">${esc(L('Hedef','Target'))}</th><th scope="col" class="pdNum pdStickyBest">${esc(L('En iyi / Onaylı','Best / Approved'))}</th><th scope="col" class="pdNum pdStickyDelta">Δ ${esc(L('Hedef','Target'))}</th>${contextHeads}${heads}${otherHead}${addHead}</tr></thead>
-        <tbody>${matrix.models.length?matrixRowsHtml(req,matrix,{canEdit,other:layout.other,end:initialEnd}):`<tr><td colspan="${columnCount+4+context.count}"><div class="pricingEmptyState">${esc(L('Bu talepte model yok.','There are no models in this request.'))}</div></td></tr>`}</tbody>
-      </table></div>
-      <div class="pdHints" aria-hidden="true"><span><kbd>Enter</kbd> ${esc(L('alt satır','next row'))}</span><span><kbd>Tab</kbd> ${esc(L('sonraki üretici','next manufacturer'))}</span><span><kbd>A</kbd> ${esc(L('onayla','approve'))}</span><span><kbd>D</kbd> Drop</span><span><kbd>O</kbd> ${esc(L('alternatif fiyat','alternative price'))}</span><span><kbd>Ctrl+V</kbd> ${esc(L('Excel’den blok yapıştır','paste a block from Excel'))}</span><span><kbd>Ctrl+Z</kbd> ${esc(L('geri al','undo'))}</span><span><kbd>Esc</kbd> ${esc(L('vazgeç','cancel'))}</span></div>`;
+      <div class="pdMatrixScroll" tabindex="0"><table class="pdMatrix${quotesScroll?' pdQuotesScroll':''}" style="${matrixTableStyle(columnKeys)}" aria-rowcount="${matrix.models.length+1}" aria-colcount="${columnKeys.length}" aria-label="${esc(L('Model × üretici teklif matrisi','Model × manufacturer quotation matrix'))}">
+        <colgroup>${columnKeys.map(key=>`<col data-pd-col="${esc(key)}" style="width:${colWidth(key)}px">`).join('')}</colgroup>
+        <thead><tr><th scope="col" class="pdModelHead"${ariaSort(['model'])}>${sortLabel('model',L('Model','Model'))}${resizeHandle('model')}</th>${context.summary.length?`<th scope="col" class="pdSummary"${ariaSort(context.summary.map(key=>'field:'+key))}><span class="pdHeadSorts">${context.summary.map(key=>sortLabel('field:'+key,api.columnLabel(key))).join('<span class="pdHeadSep" aria-hidden="true"> / </span>')}</span>${hideButton('summary',context.summary.map(key=>api.columnLabel(key)).join(' / '))}${resizeHandle('summary')}</th>`:''}${fixedShown('target')?`<th scope="col" class="pdNum pdTarget"${ariaSort(['target'])}>${sortLabel('target',L('Hedef Fiyat','Target Price'))}${hideButton('target',L('Hedef Fiyat','Target Price'))}${resizeHandle('target')}</th>`:''}${fixedShown('quotes')?`<th scope="col" class="pdQuotesCol"${ariaSort(['quotes'])}>${sortLabel('quotes',L('Teklif & Onay','Quotes & Approval'))}${hideButton('quotes',L('Teklif & Onay','Quotes & Approval'))}${resizeHandle('quotes')}</th>`:''}${fixedShown('refs')?`<th scope="col" class="pdRefsCol"${ariaSort(REF_KEYS.map(key=>'ref:'+key))}><span class="pdHeadSorts">${REF_KEYS.map(key=>sortLabel('ref:'+key,refLabel(key))).join('<span class="pdHeadSep" aria-hidden="true"> / </span>')}</span>${hideButton('refs',REF_KEYS.map(refLabel).join(' / '))}${resizeHandle('refs')}</th>`:''}${contextHeads}${heads}${otherHead}${addHead}</tr></thead>
+        <tbody>${matrix.models.length?matrixRowsHtml(req,matrix,{canEdit,other:layout.other,end:initialEnd}):`<tr><td colspan="${columnKeys.length}"><div class="pricingEmptyState">${esc(L('Bu talepte model yok.','There are no models in this request.'))}</div></td></tr>`}</tbody>
+      </table></div>`;
     host.querySelectorAll('thead [data-pd-expand],[data-pd-collapse]').forEach(button=>button.addEventListener('click',()=>{
       const scroll=host.querySelector('.pdMatrixScroll'),left=scroll?.scrollLeft||0;
       if(button.hasAttribute('data-pd-expand'))state.expandedSuppliers[req.id]=true;else delete state.expandedSuppliers[req.id];
@@ -491,14 +704,15 @@
       const left=host.querySelector('.pdMatrixScroll')?.scrollLeft||0;
       renderMatrix(host,req);const scroll=host.querySelector('.pdMatrixScroll');if(scroll)scroll.scrollLeft=left;
     },0);
-    const scroll=host.querySelector('.pdMatrixScroll'),view={host,scroll,req,matrix,items:req.items,layout,canEdit,other:layout.other,virtual,columns:columnCount+4+context.count,rowHeight:scroll.querySelector('tr[data-pd-row]')?.getBoundingClientRect().height||42};
+    const scroll=host.querySelector('.pdMatrixScroll'),view={host,scroll,req,matrix,items:req.items,layout,canEdit,other:layout.other,virtual,columnKeys,columns:columnKeys.length,rowHeight:scroll.querySelector('tr[data-pd-row]')?.getBoundingClientRect().height||42};
     matrixViews.set(host,view);matrixScrollViews.set(scroll,view);matrixRenderWindow(view);
+    if(!virtual&&typeof ResizeObserver!=='undefined'){const pinObserver=new ResizeObserver(()=>{if(!host.isConnected||matrixViews.get(host)!==view){pinObserver.disconnect();return;}updateQuotesPin(view);});pinObserver.observe(scroll);}
     if(virtual){
       let frame=0;scroll.addEventListener('scroll',()=>{if(!frame)frame=requestAnimationFrame(()=>{frame=0;matrixRenderWindow(view);});},{passive:true});
-      if(typeof ResizeObserver!=='undefined'){const observer=new ResizeObserver(()=>{if(!host.isConnected||matrixViews.get(host)!==view){observer.disconnect();return;}view.rowHeight=scroll.querySelector('tr[data-pd-row]')?.getBoundingClientRect().height||view.rowHeight;matrixRenderWindow(view);});observer.observe(scroll);}
+      if(typeof ResizeObserver!=='undefined'){const observer=new ResizeObserver(()=>{if(!host.isConnected||matrixViews.get(host)!==view){observer.disconnect();return;}view.rowHeight=scroll.querySelector('tr[data-pd-row]')?.getBoundingClientRect().height||view.rowHeight;matrixRenderWindow(view);updateQuotesPin(view);});observer.observe(scroll);}
     }
     state.flash.clear();
-    bindMatrix(host,req,matrix,candidates);view.ready=true;bindMatrixClipboard(view);
+    bindMatrix(host,req,matrix,candidates);view.ready=true;bindMatrixClipboard(view);bindMatrixHead(view);
     bindThumbs(host);
     restoreFocus(host,req);
   }
@@ -543,15 +757,86 @@
       td.querySelector('.pdCellTop').innerHTML=next.querySelector('.pdCellTop').innerHTML;
       td.querySelector('.pdCellNote').innerHTML=next.querySelector('.pdCellNote').innerHTML;
       const opt=td.querySelector('.pdCellOpt');if(opt)opt.innerHTML=next.querySelector('.pdCellOpt').innerHTML;
+      td.querySelector('.pdApprovedMark')?.remove();const mark=next.querySelector('.pdApprovedMark');if(mark)td.appendChild(mark);
+      const input=td.querySelector('.pdCellInput'),freshInput=next.querySelector('.pdCellInput');if(input&&freshInput)input.setAttribute('aria-label',freshInput.getAttribute('aria-label'));
       ['.pdApprove','.pdDrop'].forEach(selector=>{const a=td.querySelector(selector),b=next.querySelector(selector);if(a&&b){a.className=b.className;a.disabled=b.disabled;a.setAttribute('aria-pressed',b.getAttribute('aria-pressed'));a.title=b.title;}});
     });
-    const shown=stats.approved&&stats.approved.price!=null?stats.approved:stats.best;
-    const delta=shown&&info.target?E.pct(shown.price,info.target):null;
-    const best=tr.querySelector('[data-pd-best]');if(best)best.innerHTML=shown?`<b>${esc(money(shown.price))}</b><span>${esc(shown.manufacturer)}${stats.approved?` · ${esc(L('onaylı','approved'))}`:''}</span>`:'<span>—</span>';
-    const deltaCell=tr.querySelector('[data-pd-delta]');if(deltaCell)deltaCell.innerHTML=`<span class="pdChip ${toneOf(delta)}">${esc(pctText(delta))}</span>`;
-    E.supplierScorecards(req).forEach(card=>{const head=host.querySelector(`[data-pd-supplier="${CSS.escape(card.key)}"]`);if(head)head.innerHTML=supplierHeadHtml(card);});
+    const swap=(selector,html)=>{const td=tr.querySelector(selector);if(!td)return;const tmp=document.createElement('tbody');tmp.innerHTML=`<tr>${html}</tr>`;const next=tmp.querySelector('td');if(next)td.replaceWith(next);};
+    swap('td[data-pd-quotes]',quotesCellHtml(model,info,stats));
+    swap('td[data-pd-refs]',refsCellHtml(model,info));
+    tr.classList.toggle('pdRowApproved',Boolean(stats.approved));
+    updateApprovalProgress(host,req);
+    E.supplierScorecards(req).forEach(card=>{const head=host.querySelector(`[data-pd-supplier="${CSS.escape(card.key)}"] .pdMfrHeadBody`);if(head)head.innerHTML=supplierHeadHtml(card);});
     host.dataset.pdOrderDirty='1';
     const undo=host.querySelector('[data-pd-undo]');if(undo)undo.disabled=!state.undo.some(group=>group.requestId===req.id);
+  }
+  function updateApprovalProgress(host,req){
+    const chip=host.querySelector('[data-pd-approval-progress]'),view=matrixViews.get(host);if(!chip||!view)return;
+    const models=matrixCurrent(view).models,approved=models.filter(model=>E.rowStats(model.lines).approved).length;
+    chip.textContent=L(`${approved}/${models.length} model onaylı`,`${approved}/${models.length} models approved`);
+    chip.classList.toggle('isComplete',Boolean(models.length)&&approved===models.length);
+  }
+  /* Hedef fiyat Koleksiyon'daki Target Price hücresidir; yalnız Koleksiyon'un
+     kendisinin yazmaya izin verdiği satırda (yüklü çalışma alanının sahibi,
+     düzenleme yetkisi, modele bağlı olmayan alan) düzenlenir ve Koleksiyon'un
+     kanonik hücre yazım yolundan (geri al, FOB yeniden hesabı, kayıt) geçer. */
+  function commitTarget(host,req,input){
+    const api=Q(),modelKey=input.dataset.pdTarget,item=[...(req.items||[]),...(req.models||[])].find(entry=>entry&&entry.modelKey===modelKey);
+    const reset=()=>{input.value=input.defaultValue;};
+    const raw=clean(input.value);
+    if(raw===clean(input.defaultValue))return;
+    if(!api?.setTarget||!item){reset();return;}
+    if(raw&&E.price(raw)==null){toast(L('Geçerli bir hedef fiyat girin.','Enter a valid target price.'));reset();return;}
+    if(!api.setTarget(req,item,raw)){reset();return;}
+    infoCache=new WeakMap();
+    const target=E.price(api.itemTarget(req,item));
+    input.value=target!=null?kplain(target):'';input.defaultValue=input.value;
+    refreshModelRow(host,req,modelKey);
+  }
+  function openPriceDrawer(host,req,modelKey){
+    const view=matrixViews.get(host),model=view&&matrixCurrent(view).models.find(entry=>entry.modelKey===modelKey);if(!model)return false;
+    const row=drawerRow(lineInfo(req,model.first)),drawer=window.BLCollectionPriceDrawer;
+    if(!row||!drawer.open(row))return false;
+    // Çekmecede yapılan onay/fiyat değişikliği kapanınca masaya yansır.
+    if(typeof MutationObserver!=='undefined'&&drawer.isOpen){
+      const watch=new MutationObserver(()=>{if(drawer.isOpen())return;watch.disconnect();if(host.isConnected)Q()?.renderDetail?.();});
+      watch.observe(document.body,{childList:true});
+    }
+    return true;
+  }
+  /* Başlık: sıralama etiketi (tık / Enter / Boşluk) ve sürükleyerek genişlik. */
+  function bindMatrixHead(view){
+    const {host,scroll,req}=view,table=scroll.querySelector('table'),head=table?.tHead;if(!head)return;
+    const sortBy=key=>{
+      const active=document.activeElement;if(active?.classList?.contains('pdCellInput'))commitInput(host,req,active);
+      cycleSort(key);const left=scroll.scrollLeft;renderMatrix(host,req);
+      const next=host.querySelector('.pdMatrixScroll');if(next)next.scrollLeft=left;
+      host.querySelector(`thead [data-pd-sort="${CSS.escape(key)}"]`)?.focus({preventScroll:true});
+    };
+    const rerender=focusSelector=>{const left=scroll.scrollLeft;renderMatrix(host,req);const next=host.querySelector('.pdMatrixScroll');if(next)next.scrollLeft=left;if(focusSelector)host.querySelector(focusSelector)?.focus({preventScroll:true});};
+    head.addEventListener('click',event=>{
+      const hide=event.target.closest('[data-pd-hide]');if(!hide||!head.contains(hide))return;
+      event.preventDefault();event.stopPropagation();
+      const active=document.activeElement;if(active?.classList?.contains('pdCellInput'))commitInput(host,req,active);
+      setColumnHidden(req,hide.dataset.pdHide,true);rerender('[data-pd-show-hidden]');
+    });
+    host.querySelector('[data-pd-show-hidden]')?.addEventListener('click',()=>{showAllColumns(req);rerender();});
+    head.addEventListener('click',event=>{const label=event.target.closest('[data-pd-sort]');if(label&&head.contains(label)){event.preventDefault();sortBy(label.dataset.pdSort);}});
+    head.addEventListener('keydown',event=>{const label=event.target.closest('[data-pd-sort]');if(label&&(event.key==='Enter'||event.key===' ')){event.preventDefault();sortBy(label.dataset.pdSort);}});
+    head.querySelectorAll('[data-pd-resize]').forEach(handle=>{
+      const key=handle.dataset.pdResize;
+      handle.addEventListener('pointerdown',event=>{
+        if(event.button!==0)return;event.preventDefault();event.stopPropagation();
+        const startX=event.clientX,start=colWidth(key);
+        try{handle.setPointerCapture(event.pointerId);}catch(_){}
+        table.classList.add('isResizing');
+        const move=e=>{matrixLayout.widths[key]=start+e.clientX-startX;matrixLayout.widths[key]=colWidth(key);applyMatrixWidths(table,view.columnKeys);};
+        const up=()=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',up);handle.removeEventListener('pointercancel',up);table.classList.remove('isResizing');saveMatrixLayout();updateQuotesPin(view);view.rowHeight=scroll.querySelector('tr[data-pd-row]')?.getBoundingClientRect().height||view.rowHeight;matrixRenderWindow(view);};
+        handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',up);handle.addEventListener('pointercancel',up);
+      });
+      handle.addEventListener('click',event=>event.stopPropagation());
+      handle.addEventListener('dblclick',event=>{event.preventDefault();event.stopPropagation();delete matrixLayout.widths[key];applyMatrixWidths(table,view.columnKeys);saveMatrixLayout();updateQuotesPin(view);});
+    });
   }
   function flashCell(host,lineId){
     const td=host.querySelector(`td[data-pd-line="${CSS.escape(lineId)}"]`);if(!td||reducedMotion())return;
@@ -561,10 +846,10 @@
     const api=Q(),line=lineOf(req,input.dataset.pdInput);if(!api||!line)return false;
     const raw=clean(input.value),current=clean(line.price);
     const same=(E.price(raw)!=null||E.price(current)!=null)?Math.abs((E.price(raw)||0)-(E.price(current)||0))<0.00005&&(E.price(raw)!=null)===(E.price(current)!=null):raw===current;
-    if(same){const v=E.price(current);input.value=v!=null?moneyPlain(v):current;return false;}
+    if(same){const v=E.price(current);input.value=v!=null?kplain(v):current;return false;}
     pushUndo(req,[line],'price');
     api.applyPrice(req,line,raw,source);
-    const v=E.price(line.price);input.value=v!=null?moneyPlain(v):clean(line.price);
+    const v=E.price(line.price);input.value=v!=null?kplain(v):clean(line.price);
     refreshModelRow(host,req,line.modelKey);flashCell(host,line.id);
     return true;
   }
@@ -753,9 +1038,9 @@
           event.preventDefault();commitInput(host,req,input);
           moveFocus(host,input,(event.key==='ArrowUp'||(event.key==='Enter'&&event.shiftKey))?-1:1,0);return;
         }
-        if(event.key==='Escape'){const v=E.price(line?.price);input.value=v!=null?moneyPlain(v):clean(line?.price);input.blur();return;}
+        if(event.key==='Escape'){const v=E.price(line?.price);input.value=v!=null?kplain(v):clean(line?.price);input.blur();return;}
         if((event.ctrlKey||event.metaKey)&&!event.shiftKey&&event.key.toLowerCase()==='z'){
-          const v=E.price(line?.price);if(clean(input.value)===(v!=null?moneyPlain(v):clean(line?.price))){event.preventDefault();undoLast();}
+          const v=E.price(line?.price);if(clean(input.value)===(v!=null?kplain(v):clean(line?.price))){event.preventDefault();undoLast();}
           return;
         }
         if(event.ctrlKey||event.metaKey||event.altKey)return;
@@ -766,6 +1051,15 @@
         if(key==='h'){event.preventDefault();openTab('history',{query:lineInfo(req,line).model});}
       });
       input.addEventListener('paste',event=>{const text=event.clipboardData?.getData('text/plain')||'';if(/[\t\n]/.test(text.replace(/\r?\n$/,''))){event.preventDefault();pasteBlock(host,req,input,text);}});
+    });
+    root.querySelectorAll('[data-pd-target]').forEach(input=>{
+      input.addEventListener('focus',()=>input.select());
+      input.addEventListener('change',()=>commitTarget(host,req,input));
+      input.addEventListener('keydown',event=>{
+        if(event.isComposing)return;
+        if(event.key==='Enter'){event.preventDefault();commitTarget(host,req,input);}
+        else if(event.key==='Escape'){event.preventDefault();input.value=input.defaultValue;input.blur();}
+      });
     });
     root.querySelectorAll('[data-pd-approve]').forEach(button=>button.addEventListener('click',()=>{const active=document.activeElement;if(active?.classList?.contains('pdCellInput'))commitInput(host,req,active);toggleApprove(host,req,lineOf(req,button.dataset.pdApprove));}));
     root.querySelectorAll('[data-pd-drop]').forEach(button=>button.addEventListener('click',()=>toggleDrop(host,req,lineOf(req,button.dataset.pdDrop))));
@@ -780,8 +1074,14 @@
     host.querySelector('.pdMatrixScroll')?.addEventListener('click',event=>{
       const optionButton=event.target.closest('[data-pd-options]');
       if(optionButton){event.preventDefault();const active=document.activeElement;if(active?.classList?.contains('pdCellInput'))commitInput(host,req,active);openOptionsPanel(host,req,lineOf(req,optionButton.dataset.pdOptions));return;}
+      const drawerButton=event.target.closest('[data-pd-drawer-open]');
+      if(drawerButton){event.preventDefault();event.stopPropagation();openPriceDrawer(host,req,drawerButton.dataset.pdDrawerOpen);return;}
       const addButton=event.target.closest('[data-pd-add-line]');
       if(addButton){event.preventDefault();addLineFor(host,req,addButton.dataset.pdAddLine,addButton.dataset.pdAddModel);}
+    });
+    host.querySelector('.pdMatrixScroll')?.addEventListener('dblclick',event=>{
+      const cell=event.target.closest('td[data-pd-drawer]');if(!cell||event.target.closest('button,input,select'))return;
+      event.preventDefault();openPriceDrawer(host,req,cell.dataset.pdDrawer);
     });
     host.querySelector('[data-pd-undo]')?.addEventListener('click',()=>undoLast());
     const fileInput=host.querySelector('[data-pd-import-file]');
@@ -1224,5 +1524,5 @@
     bindThumbs(host);
   }
 
-  window.BLPricingDesk={openOptions:openOptionsPanel,renderLanguage(){state.hosts.forEach(host=>{if(host.isConnected&&host.getClientRects().length)renderHost(host);});},mount,openTab,setHistoryContext,renderMatrix,detailView,setDetailView,scopeAllows,ownerRows,setScope,undo:undoLast,_test:{supplierWorkbookPlan,state,matrixClipboardText,matrixPasteTargets,matrixWindow,matrixNextFocusRow,matrixCurrent}};
+  window.BLPricingDesk={openOptions:openOptionsPanel,matrixColumnsPanelHtml,applyMatrixColumnsPanel,renderLanguage(){state.hosts.forEach(host=>{if(host.isConnected&&host.getClientRects().length)renderHost(host);});},mount,openTab,setHistoryContext,renderMatrix,detailView,setDetailView,scopeAllows,ownerRows,setScope,undo:undoLast,_test:{supplierWorkbookPlan,state,matrixClipboardText,matrixPasteTargets,matrixWindow,matrixNextFocusRow,matrixCurrent,quotesModel,quotesCellHtml,sortModels,sortKeysFor,matrixColumnKeys,matrixGeometry,colWidth,matrixLayout,cycleSort,setColumnHidden,showAllColumns,hiddenColumnCount,matrixClipboardHeaderParts}};
 })();
