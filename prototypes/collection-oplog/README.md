@@ -71,3 +71,49 @@ Testlerin bulup düzelttiği tasarım açıkları:
 2. **Yetki geri alma sonrası kuyruğa düşen kayıtların gösterimi ve çözümü (UI).**
 3. **Silme işareti ve dosya budama ufku:** 30 günlük paket saklamasıyla ilişkisi.
 4. **Geçiş:** Mevcut zarfla gölge mod, sonra okuma kaynağının değişmesi (ADR-0001 Aşama 1–2).
+
+## İterasyon 2 — artımlı ve saatsiz (`oplog-incremental.js`)
+
+Ürün sahibi kararı: saat bazlı çakışma çözümü kabul edilmedi. İterasyon 1'deki `earliest-wins` bir parametreydi ve sahte kesinlik üretiyordu; iterasyon 2'de hiçbir karar duvar saatine ya da HLC'ye bakmaz.
+
+| Özellik | Davranış |
+| --- | --- |
+| Nedensel tamponlama | Bir kayıt, dayandığı tüm sürümler uygulanmadan uygulanmaz; geç gelen öncül tamponu çözer. "Sürüm biliniyor mu" sorusu "kaydı uygulandı mı" sorusuna indirgenir; sürüm başına küme tutulmaz. |
+| Kompakt durum | Hücre başına yalnız baş sürümler. Ezilen geçmiş tutulmaz. |
+| Eşzamanlı aynı alan | Başların hepsi korunur, hücre `unresolved` çakışma olur. Görüntülenecek değer yalnız yakınsama için sürüm kimliği özetiyle seçilir; bu bir "kazanan" iddiası değildir. |
+| Yetki | Varış sırasından bağımsız. İzin sonradan gelirse geçici karantina yeniden denenir. Geri alma sonradan gelirse ve kesimin ötesinde uygulanmış kayıt varsa durum, yetki kayıtları önce olmak üzere yeniden kurulur. İzinsiz kayda dayananlar bekler; kesin reddedilene dayananlar onu yok sayar. |
+
+**Doğrulama** (20 seed, karşılaştırma senaryolarının kayıt kümeleri):
+- Tam katlamayla 384 hücrede baş-değer kümesi 0 fark.
+- Rastgele sıra + tekrarlı teslimle 100 karıştırmada 0 fark.
+- İlk sürüm 100'de 93 farklı sonuç verdi. Kök neden ölçümle ayrıldı: varış sırasına bağlı yetki kararı ve geçici karantinanın "uygulanmış" sayılması. İkisi düzeltildi.
+
+**Ölçek** (30k satır × 18 alan, Linux container):
+
+| Düzenleme geçmişi | 1.000 | 10.000 | 50.000 |
+| --- | --- | --- | --- |
+| Checkpoint | 24,4 MB | 24,4 MB | 24,7 MB |
+| Checkpoint'ten açılış | 297 ms | 266 ms | 318 ms |
+| Açılış sonrası 100 yeni kayıt | 0,5 ms | 0,3 ms | 0,2 ms |
+| Tam görünüm üretimi | 87 ms | 122 ms | 146 ms |
+
+İterasyon 1'de tam katlama 1.436 ms ve checkpoint 58,5 MB idi. Maliyet artık geçmiş uzunluğuyla büyümüyor; yerel DB'deki journal büyümesi sorunu yeniden üretilmedi.
+
+**Kalan ölçek açıkları:**
+- Checkpoint, mevcut zarfın (9,2 MB) ~2,7 katı. Nedeni, sürüm kimliklerinin hücre başına metin olarak tutulması; satır başına yaratma kimliği + alan indeksiyle kodlanabilir (ölçülmedi).
+- Uygulanmış kayıt kümesi çok yavaş büyüyor (49 bin düzenlemede ~0,3 MB); cihaz başına sınır değeri (watermark) gerekir.
+- Görünüm her seferinde tam üretiliyor; artımlı görünüm (yalnız değişen hücre) ölçülmedi.
+
+## Mevcut çakışma politikası bu modelde hangi koşulda korunur?
+
+Mevcut kural: eşzamanlı aynı alanda önce yayımlanan kalır, diğeri çakışma kaydına düşer.
+
+| Durum | Korunabilir mi? |
+| --- | --- |
+| İkinci yazar, birinci yayımı **görerek** yazdı (nedensel sıra var) | **Evet ve kesin.** Bu eşzamanlılık değildir; sonraki yazım öncekini ezer, çakışma yoktur. |
+| İki yazar birbirini görmeden yazdı (gerçek eşzamanlılık) | **Hayır, merkezi koordinasyon olmadan.** "Önce yayımlanan" bilgisi ortak dosyanın sırasından gelir. Cihaz başına değişmez günlükte ortak sıra yoktur ve OneDrive teslim sırası cihazdan cihaza değişir. Saat güvenilmez (ürün sahibi kararı). |
+
+Gerçek eşzamanlılık için **ürün sahibi seçenekleri:**
+- **A · Çözülmemiş çakışma (iterasyon 2'nin varsayılanı):** İki değer de korunur, hücre çakışmalı görünür, kullanıcı seçer. Sahte kesinlik yok; kullanıcıya iş yükü getirir.
+- **B · İş kuralıyla öncelik:** Örneğin Koleksiyon sahibinin değeri kalır, diğeri kayda düşer. Deterministik ve saatsiz. Hangi alanda kimin öncelikli olduğu iş kararıdır.
+- **C · Çevrimiçi koordinatör:** Sahip ya da moderatör cihazı çevrimiçiyken sırayı belirler; çevrimdışıyken A'ya düşülür. "Önce yayımlanan" anlamına en yakın seçenek, ama tek cihaza bağımlılık getirir.
