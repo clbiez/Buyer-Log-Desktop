@@ -184,6 +184,29 @@
           "en": "Approved prices and Collection price columns on demo data."
         }
       }
+    },
+    {
+      "id": "orders-startup-no-false-wait",
+      "type": "improvement",
+      "module": {
+        "tr": "Siparişler",
+        "en": "Orders"
+      },
+      "title": {
+        "tr": "Siparişler: açılışta gereksiz 15 saniyelik bekleme kaldırıldı",
+        "en": "Orders: unnecessary 15-second wait at startup removed"
+      },
+      "body": {
+        "tr": "Buyer Log Siparişler ekranıyla açıldığında satırlar yaklaşık bir saniyede görünse bile, bazı durumlarda açılışın tamamlanması 15 saniye bekleniyordu. Satırların ekranda olduğu artık her çizim yolunda doğrudan bildiriliyor; açılış satırlar görünür olur olmaz tamamlanıyor. Veri ve hesaplamalar değişmedi.",
+        "en": "When Buyer Log opened on the Orders screen, startup could wait 15 seconds even though the rows appeared in about a second. Every drawing path now reports directly that the rows are on screen, so startup finishes as soon as they are visible. Data and calculations are unchanged."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekrandaki içerik aynı; yalnız açılışın bitmesi beklenmiyor.",
+          "en": "Screen content is the same; only the startup wait is gone."
+        }
+      }
     }
   ]
 }
