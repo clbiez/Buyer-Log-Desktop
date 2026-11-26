@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "8.0.18",
+      "publishedAt": "2026-11-26",
+      "title": {
+        "tr": "Sunum Stüdyosu: grup alanları, çip görünümü, tam metin, sabit kart başlıkları, birlikte boyutlandırma, taslaklar; seçili satırları görsel olarak kopyala; Artwork kart editörü ve korunan manuel alanlar; Ufuk filtrelerinde MAG/MMYG bağlamı",
+        "en": "Presentation Studio: group areas, chip view, full text, pinned card titles, resizing together, drafts; copy selected rows as an image; Artwork card editor and protected manual fields; MAG/MMYG context in Horizon filters"
+      },
+      "stats": {
+        "features": 7,
+        "improvements": 1,
+        "fixes": 4
+      },
+      "file": "release-notes/8.0.18/release.json"
+    },
+    {
       "version": "8.0.17",
       "publishedAt": "2026-11-24",
       "title": {
