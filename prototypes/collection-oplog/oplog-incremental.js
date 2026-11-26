@@ -106,7 +106,10 @@ function depsOfOp(op) {
    motor geçmişi bellekte tutmaz. */
 function rebuild(state, { owner, allBatches }) {
   const batches = [...allBatches()];
-  const fresh = createState();
+  // Yeniden kurulum en son checkpoint'ten başlar: budanmış geçmişe ihtiyaç yoktur.
+  // Checkpoint, sahibin o ana kadarki kaydı kabulüdür; geç gelen geri alma onun
+  // içine giremez, yalnız checkpoint sonrası kayıtları etkiler.
+  const fresh = state.baseCheckpoint ? restore(state.baseCheckpoint) : createState();
   const isPermission = b => b.user === owner && b.ops.some(op => op.t === 'grant' || op.t === 'revoke');
   for (const b of batches.filter(isPermission)) ingest(fresh, b, { owner, allBatches });
   for (const b of batches.filter(b => !isPermission(b))) ingest(fresh, b, { owner, allBatches });
@@ -188,7 +191,9 @@ function view(state) {
       const ordered = [...heads].sort((a, b) => (displayKey(a.id) < displayKey(b.id) ? -1 : 1));
       fields[field] = ordered[0].value;
       versions[field] = heads.map(h => h.id);
-      if (heads.length > 1) conflicts.push({ row, field, values: ordered.map(h => h.value), unresolved: true });
+      // Aynı değere ulaşan eşzamanlı yazımlar kullanıcıya çakışma olarak sunulmaz.
+      const distinct = [...new Set(ordered.map(h => JSON.stringify(h.value)))];
+      if (distinct.length > 1) conflicts.push({ row, field, values: ordered.map(h => h.value), unresolved: true });
     }
     if (r.deleteConflict || r.resurrected) conflicts.push({ row, field: '_deleted', unresolved: true });
     rows.set(row, { id: row, fields, versions });
@@ -200,16 +205,24 @@ function view(state) {
 function snapshot(state) {
   const rows = [];
   for (const [row, r] of state.rows) rows.push([row, r.deleted ? [...r.deleted.observed] : null, [...r.cells].map(([field, heads]) => [field, heads.map(h => [h.id, h.value])])]);
-  return { v: 2, rows, applied: [...state.applied], grants: [...state.grants], revokes: [...state.revokes] };
+  const body = { v: 2, rows, applied: [...state.applied], rejected: [...state.rejected], grants: [...state.grants], revokes: [...state.revokes] };
+  // Bozuk/yarım aktarılmış checkpoint açılışta tespit edilir (özet tutmazsa reddedilir).
+  return { ...body, sha256: crypto.createHash('sha256').update(JSON.stringify(body)).digest('hex') };
 }
 function restore(cp) {
+  const { sha256, ...body } = cp || {};
+  if (!cp || body.v !== 2 || crypto.createHash('sha256').update(JSON.stringify(body)).digest('hex') !== sha256) {
+    throw Object.assign(new Error('checkpoint corrupt or incomplete'), { code: 'CHECKPOINT_CORRUPT' });
+  }
   const state = createState();
+  state.baseCheckpoint = cp;
   for (const [row, deleted, cells] of cp.rows) {
     const r = { deleted: deleted ? { observed: new Set(deleted) } : null, cells: new Map() };
     for (const [field, heads] of cells) r.cells.set(field, heads.map(([id, value]) => ({ id, value })));
     state.rows.set(row, r);
   }
   for (const id of cp.applied) state.applied.add(id);
+  for (const id of cp.rejected || []) state.rejected.add(id);
   for (const u of cp.grants) state.grants.add(u);
   for (const [u, cuts] of cp.revokes) state.revokes.set(u, cuts);
   return state;
