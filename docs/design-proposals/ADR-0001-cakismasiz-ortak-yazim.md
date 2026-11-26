@@ -157,3 +157,58 @@ Testin geliştirilmesi sırasında bulunup düzeltilen hatalar:
 - İlk ölçüm turunda (optimizasyon öncesi) S1/S3 **FAIL** idi: +88 ve +116 ms, 5/5 çift A/A üstündeydi. Neden: fark hesabında satır başına `JSON.stringify`. Bunun yerine string üretmeyen tam eşitlik kullanıldı; `_rev`'e güvenilerek içerik karşılaştırması atlanmadı, çünkü atlamak bütünlüğü zayıflatırdı.
 - **Dürüst değerlendirme:** Önceden yazılan kural ("medyan A/A [min, max] içinde") tek bir A/A aykırı değeriyle (+98) genişleyen aralık yüzünden gevşek kaldı. Çift farklarının işareti 6/6 pozitif. Bu yüzden S1/S3 sonucu "gerileme yok" diye sunulmaz: yayım başına yaklaşık +25–40 ms'lik (%6–9) muhtemel gerçek maliyet **BLOCKED / ürün kararı** olarak kayda geçer. Seçenekler: (a) bütünlüğün bedeli olarak kabul; (b) fark hesabını kira dışına veya worker'a taşımak (yeni kesinti testleriyle).
 - **Bayt:** 2 kurulumlu zarfta +197 bayt (kriter: kurulum başına ≤ ~200).
+
+## 8 · Kapsama haritasının garantileri ve sınırları
+
+### Klasik version vector'den farkı
+
+| | Klasik version vector | Buyer Log `heads` (Aşama 0) |
+| --- | --- | --- |
+| Değer | Kurulum başına monoton sayaç | Kurulumun bu kopyaya dahil son yayımının **içerik adresli kimliği** (`chainSha256`) |
+| Sıralama | `VV1 ≤ VV2` karşılaştırması kısmi sırayı (ata/eşzamanlı) doğrudan verir | **Vermez.** İki farklı kimlik, hangisinin diğerini kapsadığını tek başına kanıtlamaz. |
+| Sorduğu soru | "A, B'nin ardılı mı?" | Yalnız: "Bu kopya **benim son bekleyen yayımımı** kapsıyor mu?" (eşitlik testi) |
+| Geri sarılma riski | Yedekten dönen veya yeniden kurulan kurulum sayacı tekrar kullanabilir; sahte "kapsandı" mümkün | Kimlik içerikten türer; aynı değer ancak aynı içerik ve ebeveynle oluşur |
+| Nedenselliğin kaynağı | Veri yapısının kendisi | **Protokol değişmezi** (aşağıda); veri yapısı tek başına kanıt değildir |
+
+### Protokol değişmezi (garantinin dayanağı)
+
+- **D1.** `heads[k] = X` girdisi bir zarfa yalnız iki yolla girer: (a) k kurulumunun X yayımının kendisi; (b) `nextHeads(current)`, yani girdiyi taşıyan `current` zarfının üstüne CAS ile ya da üç yönlü birleşimle kurulan yeni zarf.
+- **D2.** (b)'deki birleşim `current`'ın değişikliklerini ya korur ya da çakışma kaydına alır. Silme + eşzamanlı düzenlemede satır korunur ve bildirilir.
+- **Sonuç:** `heads[k] = X` taşıyan her zarfın verisi X'in değişikliklerini içerir; ya da bunlar bilinçli bir çakışma çözümüyle, nedensel olarak sonraki bir yazımla veya bilinçli bir silmeyle geçersiz kılınmıştır. Bu garanti tümevarımsaldır ve D1–D2'ye uyan istemcilere bağlıdır.
+
+### Garantinin geçerli olmadığı durumlar
+
+- **Eski istemci:** Haritayı düşürür. Yerine geçen `parentSha256` yalnız bir adım geriyi gösterir; harita yeniden kurulana kadar bekleyen yayım temkinli tabana düşer. Kayıp oluşmaz, fazladan çakışma kaydı olabilir.
+- **Kötü niyetli veya elle düzenlenmiş dosya:** `headsSha256` bir **imza değildir**, yalnız bozulmaya karşı özet denetimidir. Dosyayı yazabilen biri tutarlı sahte bir harita üretebilir. Bu tehdit modeli ortak klasöre yazma yetkisi olanları zaten güvenilir sayar; erişim güvenliği klasör izniyle sağlanır.
+- **Sırasız teslim (daha yeni taban üzerine eski sürüm) ve düşmanca bulut (eski tabanlı yükleme kazanır):** İçerik kimliği sıralamaz ve tüm-belge birleşimi ortak atayı bilmez. Bu iki açık kapanmaz (`todo` testleri).
+- **Geri gelen satır:** Silinip eşzamanlı düzenlenen ve geri gelen satırın silinme öncesi hâli taban olarak bilinmez, bu yüzden iki yönlü birleşir. Sonuç sessiz kayıp değil, çakışma kaydıdır (`todo`).
+
+### Test kapsamı ≠ garanti kapsamı
+
+| Test (2026-11-26) | Model | Sonuç |
+| --- | --- | --- |
+| Tek sahipli rastgele bulut | Gerçekçi, 252 seed | 0 ihlal |
+| Nedensellik oracle'lı (aynı satır/alan, silme-düzenleme, kesinti, yeniden başlatma) | Gerçekçi, 120 seed | Kesin ihlal 0. Bilinen sınır: 120 seed'in 10'unda bildirilmiş (çakışma kaydında) durum. |
+| Aynı | Düşmanca, 40 seed | 4 seed kesin ihlalli: 2 sessiz kayıp, 11 sessizce düşen yeni değer. Kardeş dal sınırı. |
+| Düzeltme öncesi (`df778c0`), aynı oracle | Gerçekçi, 40 seed | 40/40 ihlalli: 111 sessiz kayıp, 376 sessizce düşen yeni değer, 32 silmenin yuttuğu düzenleme, 16 gereksiz geri gelme |
+
+**Oracle değişiklikleri.** Oracle üç kez düzeltildi; üçü de izle gösterilmiş yanlış alarmlardı:
+1. Silen cihazın gördüğü değer artık kayıp sayılmıyor.
+2. Kaybeden ama bildirilmiş düzenleme, silmenin "yuttuğu" düzenleme sayılmıyor.
+3. Üzerine yazılmış değerin düşmesi artık kayıp sayılmıyor; zincirin ucu ayrıca denetleniyor.
+
+Her düzeltmeden sonra yeni seed kümesi koşuldu. Bağımsız incelemede oracle da denetlenir.
+
+**Kapsanmayanlar:** Gerçek OneDrive istemci davranışı, Windows dosya kilitleri, saat kayması, yetki geri alma ile eşzamanlı birleşim, 3'ten fazla yazar cihaz, 30k satırlık rastgele senaryo.
+
+## 9 · Aşama 0'ın bağımsız yayımlanabilirliği (değerlendirme; karar ürün sahibinde)
+
+| Soru | Bulgu |
+| --- | --- |
+| Mevcut sürüme göre güvenli bir iyileştirme mi? | Ölçülen her bütünlük kategorisinde aday, düzeltme öncesinden iyi ya da eşit; gerileme görülen kategori yok. Bunun tek istisnası "çakışmaya düşen kayıp": sessiz kaybın yerini aldığı için sayısı artıyor; bu bilinçli bir takas. |
+| Karma sürüm filosu (eski + yeni istemci) | Eski istemci yeni zarfı doğrular (sha/chain değişmedi; test). Yeni alanları düşürür, yeni istemci temkinli tabana düşer. Mevcut davranıştan kötü değil. |
+| Geri dönüş (yeni sürümden eskiye) | Eski sürüm bekleyen-taban dosyalarını (`*.pending-first.json`, `*.pending-log.jsonl`) ve `heads`'i yok sayar. Dosyalar zararsız kalır. |
+| Disk etkisi | İlk bekleyen yayımda taban dosyası yeniden adlandırılır (ek kopya yok). Yayım başına küçük bir JSONL satırı eklenir; onayla silinir. Onaysız tek kullanıcı senaryosunda günlük büyür (yayım başına ~satır boyu) [Muhtemel]; sınırı ölçülmedi. |
+| Performans | Yayım +25–40 ms (%6–9). Ürün sahibi bütünlük bedeli olarak kabul etti. |
+| Açık riskler | Sırasız teslim ve düşmanca bulut açıkları sürüyor ve düzeltme öncesinde de vardı. Gerçek OneDrive davranışı doğrulanmadı. Bağımsız ikinci model incelemesi ve tam `npm test` sonuçları ayrıca raporlanır. |
+| Öneri | Yayımlanırsa "bilinen açıkları kapatan tam çözüm" değil, "ölçülmüş risk azaltma" olarak yayımlanmalı. Önce TEST kanalında iki gerçek Windows + OneDrive makinesiyle kısa bir ıslatma (soak) testi yapılmalı. |
