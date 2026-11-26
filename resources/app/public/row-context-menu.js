@@ -145,6 +145,12 @@
     if (checked && checked.size > 0 && navCopy && !navCopy.disabled) {
       items.push({ label: T(`İşaretli ${checked.size} satırı kopyala`, `Copy ${checked.size} checked row(s)`), run: () => navCopy.click() });
     }
+    // Görsel kopya (CP/Orders): hücre aralığı ve işaretli satırlar ayrı hedeflerdir.
+    const imageCopy = window.BLTableImageCopyAction;
+    if ((config.module === 'cp' || config.module === 'orders') && imageCopy?.supported?.()) {
+      items.push({ label: T('Seçili hücreleri görsel olarak kopyala', 'Copy selected cells as image'), run: () => void imageCopy.copy({ source: 'range' }) });
+      if (checked && checked.size > 0) items.push({ label: T(`İşaretli ${checked.size} satırı görsel olarak kopyala`, `Copy ${checked.size} checked row(s) as image`), run: () => void imageCopy.copy({ source: 'checked' }) });
+    }
     return items;
   }
 
