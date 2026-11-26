@@ -77,6 +77,6 @@
 .psOptions{display:flex;flex-direction:column;gap:8px;margin:12px 0}
 .psDialogCard{width:min(540px,calc(100vw - 32px))}
 /* Belge çip öğeleri (yalnız yerleşim): presentation-studio-render.js DOC_CSS ile aynı metin. */
-.psC{position:absolute;white-space:pre;outline-offset:-0.6pt}.psS{position:absolute;top:0;height:100%;text-align:center}.psP{position:absolute;text-align:center;font-weight:700}.psT{position:absolute;top:0;white-space:pre}
+.psC{position:absolute;white-space:pre}.psS{position:absolute;top:0;height:100%;text-align:center}.psP{position:absolute;text-align:center}.psT{position:absolute;top:0;white-space:pre}
 .psPrintFrame{position:fixed;left:-10000px;top:0;width:1px;height:1px;visibility:hidden}
 @media (max-width:900px){.psBody{grid-template-columns:minmax(0,1fr)}.psRail{display:none}.psCanvas{padding:8px 12px 64px}}

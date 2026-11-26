@@ -262,19 +262,19 @@
   /* Çip öğelerinin sabit yerleşim kuralları sınıflarda (öğe başına satır içi stil ayrıştırması büyük
      sunumda kare başına onlarca ms tutuyordu); veri renkleri ve konumlar satır içi kalır. Aynı metin
      editörde presentation-studio.css'te, PDF belgesinde <style> içinde (test eşitliği denetler). */
-  const DOC_CSS = '.psC{position:absolute;white-space:pre;outline-offset:-0.6pt}.psS{position:absolute;top:0;height:100%;text-align:center}.psP{position:absolute;text-align:center;font-weight:700}.psT{position:absolute;top:0;white-space:pre}';
+  const DOC_CSS = '.psC{position:absolute;white-space:pre}.psS{position:absolute;top:0;height:100%;text-align:center}.psP{position:absolute;text-align:center}.psT{position:absolute;top:0;white-space:pre}';
   function atomsHtml(atoms, lh, lite = false) {
     const b = chipBox(lh), bh = r2(b.h), bt = r2(b.top), lhp = r2(lh);
     return atoms.map(a => {
       // Kaydırıcı sürüklenirken (lite) çip tek öğe: parça metinleri yan yana, ilk parçanın dolgusu; bırakınca tam çizim.
-      if (a.type === 'chip' && lite) return `<span class="psC" style="left:${r2(a.x)}pt;top:${bt}pt;width:${r2(a.w)}pt;height:${bh}pt;font-size:${r2(a.size)}pt;outline:0.6pt solid ${a.line};background:${a.segs[0].fill};color:${a.segs[0].ink};line-height:${bh}pt;text-align:center">${esc(a.segs.map(sg => sg.t).join('  '))}</span>`;
+      if (a.type === 'chip' && lite) return `<span class="psC" style="left:${r2(a.x)}pt;top:${bt}pt;width:${r2(a.w)}pt;height:${bh}pt;font-size:${r2(a.size)}pt;outline:0.6pt solid ${a.line};outline-offset:-0.6pt;background:${a.segs[0].fill};color:${a.segs[0].ink};line-height:${bh}pt;text-align:center">${esc(a.segs.map(sg => sg.t).join('  '))}</span>`;
       if (a.type === 'chip') {
         let off = 0;
         const segs = a.segs.map(sg => { const html = `<span class="psS" style="left:${r2(off)}pt;width:${r2(sg.w)}pt;background:${sg.fill};color:${sg.ink};line-height:${bh}pt${sg.bold ? ';font-weight:700' : ''}">${esc(sg.t)}</span>`; off += sg.w; return html; }).join('');
         // Çerçeve: outline alt öğelerin (parça dolguları) üstünde çizilir; ayrı katman öğesine gerek yok.
-        return `<span class="psC" style="left:${r2(a.x)}pt;top:${bt}pt;width:${r2(a.w)}pt;height:${bh}pt;font-size:${r2(a.size)}pt;outline:0.6pt solid ${a.line}">${segs}</span>`;
+        return `<span class="psC" style="left:${r2(a.x)}pt;top:${bt}pt;width:${r2(a.w)}pt;height:${bh}pt;font-size:${r2(a.size)}pt;outline:0.6pt solid ${a.line};outline-offset:-0.6pt">${segs}</span>`;
       }
-      if (a.type === 'part') return `<span class="psP" style="left:${r2(a.x)}pt;top:${bt}pt;width:${r2(a.w)}pt;height:${bh}pt;background:${CHIP.part};color:${CHIP.partInk};font-size:${r2(a.size)}pt;line-height:${bh}pt">${esc(a.t)}</span>`;
+      if (a.type === 'part') return `<span class="psP" style="left:${r2(a.x)}pt;top:${bt}pt;width:${r2(a.w)}pt;height:${bh}pt;background:${CHIP.part};color:${CHIP.partInk};font-size:${r2(a.size)}pt;font-weight:700;line-height:${bh}pt">${esc(a.t)}</span>`;
       return `<span class="psT" style="left:${r2(a.x)}pt;font-size:${r2(a.size)}pt;color:${a.color};line-height:${lhp}pt${a.bold ? ';font-weight:700' : ''}">${esc(a.t)}</span>`;
     }).join('');
   }
