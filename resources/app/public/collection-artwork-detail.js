@@ -20,9 +20,13 @@
 
   const ART_KEY = 'artworkDetail';
   const PLM_KEY = 'artworkDetailPlm';
+  // Hücre bazında paylaşılan görünüm bayrağı: 'text' ise kart çizilmez (app-main KOL_CELL_VIEW_KEYS).
+  const VIEW_KEY = 'artworkDetailView';
   const FRESH_MS = 20000;
   const BATCH = 500;
-  const state = { cache: new Map(), meta: new Map(), fetchedAt: 0, revision: 0, inflight: null, timer: 0, patchedRender: false, bound: false, rendering: false };
+  const state = { cache: new Map(), meta: new Map(), fetchedAt: 0, revision: 0, inflight: null, timer: 0, patchedRender: false, bound: false, rendering: false,
+    // Manuel değer + değişen PLM özeti: kullanıcı onayı bekler (rowId → {row, summary}).
+    conflicts: new Map(), deferred: new Set(), prompting: false, promptTimer: 0 };
 
   const isEn = () => String(document.documentElement.lang || '').toLowerCase().startsWith('en')
     || (typeof global.appLang !== 'undefined' && global.appLang === 'en');
@@ -110,18 +114,23 @@
       placements: (Array.isArray(part.placements) ? part.placements : []).filter(Boolean).map(slimPlacement),
     }));
   }
-  function partText(part, en) {
+  /* Karışık teknikte tekniksiz bölge açık "—" ile yazılır; aksi hâlde
+     "Ön: 1 • Arka: 1 | Pigment" tekniği iki bölgeye de ait okunurdu.
+     legacy=true eski (belirsiz) metni üretir: yalnız PLM sahipliği tanımak için. */
+  const NO_TECH = '—';
+  function partText(part, en, legacy = false) {
     const T = (tr, enText) => (en ? enText : tr);
     if (!part.total) return T('Baskı yok', 'No print');
     const label = group => (en ? group.en : group.tr);
     const techOf = group => [...group.techniques].join(' + ');
     const uniform = new Set(part.groups.map(techOf)).size <= 1;
     const totalText = `${T('Toplam', 'Total')}: ${part.total}`;
-    if (!uniform) return `${part.groups.map(group => `${label(group)}: ${group.count}${techOf(group) ? ` | ${techOf(group)}` : ''}`).join(' • ')} | ${totalText}`;
+    const blank = legacy ? '' : ` | ${NO_TECH}`;
+    if (!uniform) return `${part.groups.map(group => `${label(group)}: ${group.count}${techOf(group) ? ` | ${techOf(group)}` : blank}`).join(' • ')} | ${totalText}`;
     const tech = part.techniques.join(' + ');
     return `${part.groups.map(group => `${label(group)}: ${group.count}`).join(' • ')}${tech ? ` | ${tech}` : ''} | ${totalText}`;
   }
-  function summaryFor(entry, lang) {
+  function summaryFor(entry, lang, legacy = false) {
     if (!entry) return '';
     const en = lang ? lang === 'en' : isEn();
     const model = modelFor(entry);
@@ -130,8 +139,8 @@
       if (entry.isSetStyle && String(entry.artworkSummary || '').trim()) return String(entry.artworkSummary).trim();
       return entry.hasPrint ? '' : (en ? 'No print' : 'Baskı yok');
     }
-    if (model.set) return model.parts.map(part => `${part.label} - ${partText(part, en)}`).join('\n');
-    return partText(model.parts[0], en);
+    if (model.set) return model.parts.map(part => `${part.label} - ${partText(part, en, legacy)}`).join('\n');
+    return partText(model.parts[0], en, legacy);
   }
   /* Aynı BOM'un başka dilde ya da eski (sırasız) biçimde yazılmış metni de
      PLM'e aittir; dil değişimi veya sürüm geçişi hücreyi manuele çevirmez. */
@@ -167,6 +176,7 @@
     variantCache.set(entry, out);
     for (const lang of ['tr', 'en']) {
       out.add(summaryFor(entry, lang));
+      out.add(summaryFor(entry, lang, true));
       if (!entry.isSetStyle) out.add(legacyUnsorted(entry, lang === 'en'));
     }
     if (entry.isSetStyle && entry.artworkSummary) out.add(String(entry.artworkSummary).trim());
@@ -231,6 +241,7 @@
   const TOTAL_RE = /\s*\|\s*(?:toplam|total)\s*:\s*(\d+)\s*$/i; // i18n-ignore — özet biçimi anahtar kelimesi
   const NO_PRINT_RE = /^(?:baskı yok|no print)$/i; // i18n-ignore — özet biçimi anahtar kelimesi
   const SEGMENT_RE = /^([^:|•]+?)\s*:\s*(\d+)\s*(?:\|\s*([^:|•]+?)\s*)?$/;
+  const NO_TECH_RE = /^[—-]$/;
   function parsePart(text) {
     let body = String(text || '').trim();
     if (NO_PRINT_RE.test(body)) return { groups: [], techniques: [], total: 0 };
@@ -244,14 +255,16 @@
       const seg = segment.match(SEGMENT_RE);
       const count = seg ? Number(seg[2]) : 0;
       if (!seg || !count) return null;
-      const techniques = new Set(seg[3] ? seg[3].split(/\s*\+\s*/).filter(Boolean) : []);
-      groups.push({ key: '', tr: seg[1], en: seg[1], count, techniques });
+      const explicitNone = Boolean(seg[3]) && NO_TECH_RE.test(seg[3]);
+      const techniques = new Set(seg[3] && !explicitNone ? seg[3].split(/\s*\+\s*/).filter(Boolean) : []);
+      groups.push({ key: '', tr: seg[1], en: seg[1], count, techniques, explicit: Boolean(seg[3]) });
       total += count;
     }
     if (!groups.length || total !== declared) return null;
     // Tekdüze biçimde teknik yalnız son bölgeden sonra yazılır ama tüm bölgelere aittir.
-    const tagged = groups.filter(group => group.techniques.size);
-    if (groups.length > 1 && tagged.length === 1 && tagged[0] === groups[groups.length - 1]) {
+    // Başka bölgede açık teknik (veya "—") yazılmışsa yayılım yapılmaz.
+    const tagged = groups.filter(group => group.explicit);
+    if (groups.length > 1 && tagged.length === 1 && tagged[0] === groups[groups.length - 1] && tagged[0].techniques.size) {
       for (const group of groups) group.techniques = new Set(tagged[0].techniques);
     }
     const techniques = new Set();
@@ -291,7 +304,7 @@
      yazılmış özet biçimli değerde metinden kurulur; serbest metinde null. */
   function cellCards(row, value) {
     const text = String(value == null ? '' : value);
-    if (!text.trim()) return null;
+    if (!text.trim() || (row && row[VIEW_KEY] === 'text')) return null;
     const plmId = plmIdOfRow(row);
     const entry = plmId ? state.cache.get(plmId) : null;
     if (!entry || text !== cachedSummary(entry)) return manualCards(text);
@@ -353,7 +366,8 @@
       const rows = Array.isArray(list[p] && list[p].rows) ? list[p].rows : [];
       for (let r = 0; r < rows.length; r++) {
         const region = String(rows[r].region || '').trim();
-        const technique = String(rows[r].technique || '').trim().split(/\s*\+\s*/).filter(Boolean).join(' + ');
+        const typed = String(rows[r].technique || '').trim();
+        const technique = NO_TECH_RE.test(typed) ? '' : typed.split(/\s*\+\s*/).filter(Boolean).join(' + ');
         const count = Number(rows[r].count);
         if (!region) return fail('region', p, r);
         if (BAD_REGION.test(region) || BAD_TECHNIQUE.test(technique)) return fail('chars', p, r);
@@ -364,9 +378,6 @@
         else merged.set(id, { region: regionLabel(region), technique, count, row: r });
       }
       const groups = [...merged.values()];
-      // Bölgelerin bir kısmında teknik yoksa metin belirsizleşir (teknik son bölgeye ait okunur).
-      const firstBlank = groups.find(group => !group.technique);
-      if (firstBlank && groups.some(group => group.technique)) return fail('technique', p, firstBlank.row);
       const techniques = [];
       for (const group of groups) for (const tech of group.technique ? group.technique.split(' + ') : []) if (!techniques.includes(tech)) techniques.push(tech);
       const text = partText({
@@ -396,21 +407,71 @@
     return L('Kural ile net', 'Resolved by rule');
   }
 
-  /* PLM özetini satıra yazar. Manuel değer (son PLM özetinden farklı ve dolu)
-     korunur. Henüz izlenmeyen eski satırlar (PLM_KEY yok) önceki sürümün
-     salt-okunur projeksiyonundan geldiği için PLM'e ait sayılır; ancak yalnız
-     yerine yazılacak bir PLM özeti varsa. PLM ID'si/BOM'u olmayan satırdaki
-     izsiz değer (Excel/kopya ile gelen) elle yazılmıştır ve silinmez. */
+  /* PLM özetini satıra yazar. PLM'e ait değer (boş, son PLM özetine eşit ya
+     da aynı BOM'un başka dil/eski biçim metni) güncellenir. Manuel değer HİÇBİR
+     zaman onaysız ezilmez: PLM özeti son görülenden anlamca farklıysa (ya da
+     satır izsizse ve değer farklıysa) çakışma kaydedilir, son PLM değeri onaya
+     kadar güncellenmez ve kullanıcıya sorulur (promptConflicts). */
   function applyToRow(row, summary, entry) {
     if (!row) return false;
     const current = row[ART_KEY] == null ? '' : String(row[ART_KEY]);
     const tracked = Object.prototype.hasOwnProperty.call(row, PLM_KEY);
-    const plmOwned = !current.trim() || (!tracked && Boolean(summary)) || current === String(row[PLM_KEY] == null ? '' : row[PLM_KEY])
-      || Boolean(entry && plmVariants(entry).has(current));
+    const lastPlm = String(row[PLM_KEY] == null ? '' : row[PLM_KEY]);
+    const variants = entry ? plmVariants(entry) : null;
+    const plmOwned = !current.trim() || (tracked && current === lastPlm) || Boolean(variants && variants.has(current));
+    const id = String(row.id);
     let changed = false;
     if (plmOwned && current !== summary) { row[ART_KEY] = summary; changed = true; }
+    const plmChanged = !tracked || (lastPlm !== summary && !(variants && variants.has(lastPlm)));
+    if (!plmOwned && summary && plmChanged) {
+      state.conflicts.set(id, { row, summary });
+      return changed;
+    }
+    state.conflicts.delete(id);
     if (!tracked || row[PLM_KEY] !== summary) row[PLM_KEY] = summary;
     return changed;
+  }
+  /* Bekleyen çakışmaları app-main'in ortak onay penceresiyle tek tek sorar.
+     Manueli koru: son PLM değeri kaydedilir (PLM tekrar değişene kadar sorulmaz).
+     PLM değerini al: ortak batchEdit (geri alma/kayıt). İptal: bu oturumda bir
+     sonraki PLM işlemine kadar tekrar sorulmaz; değer yine korunur. */
+  async function promptConflicts() {
+    const b = bridge();
+    if (state.prompting || !b || !b.canEdit?.() || !b.askManualConflicts) return false;
+    const list = [...state.conflicts.values()].filter(item => allRows().includes(item.row) && !state.deferred.has(`${item.row.id}\u0001${item.summary}`));
+    if (!list.length) return false;
+    state.prompting = true;
+    try {
+      const label = L('Artwork Detayı', 'Artwork Detail');
+      const answer = await b.askManualConflicts(list.map(({ row, summary }) => ({
+        model: [row.plmId, row.modelKod, row.colourCode || row.colour].map(value => String(value == null ? '' : value).trim()).filter(Boolean).join(' · '),
+        label, current: String(row[ART_KEY] == null ? '' : row[ART_KEY]), incoming: summary,
+      })));
+      if (!answer || answer.cancelled) {
+        for (const item of list) state.deferred.add(`${item.row.id}\u0001${item.summary}`);
+        return false;
+      }
+      const ops = [];
+      list.forEach((item, index) => {
+        state.conflicts.delete(String(item.row.id));
+        if (answer.choices[index] === 'plm') ops.push({ rowId: item.row.id, key: ART_KEY, value: item.summary });
+        else item.row[PLM_KEY] = item.summary;
+      });
+      // batchEdit kaydı korunan satırların yeni son-PLM değerini de yazar.
+      if (ops.length) b.batchEdit(ops, { source: 'artwork-plm-conflict' });
+      else b.saveRows?.();
+      return true;
+    } finally { state.prompting = false; }
+  }
+  function schedulePrompt() {
+    clearTimeout(state.promptTimer);
+    if (!state.conflicts.size) return;
+    state.promptTimer = setTimeout(() => {
+      // Başka bir pencere açıkken (ör. PLM SYNC önizlemesi) araya girilmez; sonraki çizimde denenir.
+      if (document.querySelector?.('.warnOverlay')) return;
+      if (document.body?.dataset?.activeTab && document.body.dataset.activeTab !== 'koleksiyon') return;
+      void promptConflicts();
+    }, 400);
   }
   /* Önbellekteki BOM özetlerini TÜM Koleksiyon satırlarına uygular (yalnız
      görünenlere değil): filtre, sıralama ve LCW AI tüm veriyi görür. Henüz
@@ -570,7 +631,9 @@
     } else {
       lines.push(L('Bu model için BOM kaydı yok. PLM SYNC çalıştırıldığında otomatik oluşur.', 'No BOM record exists for this style. It is created automatically by PLM SYNC.'));
     }
-    if (current.trim() && current !== plmValue && !td.querySelector('.kolArtworkCards')) {
+    if (row[VIEW_KEY] === 'text') {
+      lines.push(L('Düz metin görünümü · Sağ tık › Karta çevir', 'Plain text view · Right-click › Convert to cards'));
+    } else if (current.trim() && current !== plmValue && !td.querySelector('.kolArtworkCards')) {
       lines.push(L('Kart için biçim: Ön: 1 • Arka: 1 | Pigment | Toplam: 2', 'Card format: Front: 1 • Back: 1 | Pigment | Total: 2'));
     }
     lines.push(L('Sağ tık › BOM Detayını Aç', 'Right-click › Open BOM Detail'));
@@ -668,7 +731,7 @@
     const preview = modal.querySelector('[data-art-preview]');
     const rowHtml = (row, p, r) => `<div class="kolArtworkEdRow" data-art-row="${p}:${r}">
         <input type="text" list="_kolArtworkRegions" autocomplete="off" data-art-field="region" data-p="${p}" data-r="${r}" value="${esc(row.region)}" placeholder="${esc(L('Bölge', 'Region'))}" aria-label="${esc(L(`Bölge ${r + 1}`, `Region ${r + 1}`))}">
-        <input type="text" list="_kolArtworkTechniques" autocomplete="off" data-art-field="technique" data-p="${p}" data-r="${r}" value="${esc(row.technique)}" placeholder="${esc(L('Teknik', 'Technique'))}" aria-label="${esc(L(`Teknik ${r + 1}`, `Technique ${r + 1}`))}">
+        <input type="text" list="_kolArtworkTechniques" autocomplete="off" data-art-field="technique" data-p="${p}" data-r="${r}" value="${esc(row.technique)}" placeholder="${esc(L('Teknik (bilinmiyorsa boş)', 'Technique (blank if unknown)'))}" aria-label="${esc(L(`Teknik ${r + 1}`, `Technique ${r + 1}`))}">
         <input type="number" min="1" max="999" step="1" inputmode="numeric" data-art-field="count" data-p="${p}" data-r="${r}" value="${esc(row.count)}" aria-label="${esc(L(`Adet ${r + 1}`, `Count ${r + 1}`))}">
         <button type="button" class="tbtn" data-art-remove-row="${p}:${r}" aria-label="${esc(L(`Kartı kaldır ${r + 1}`, `Remove card ${r + 1}`))}" title="${esc(L('Kaldır', 'Remove'))}">×</button>
       </div>`;
@@ -692,8 +755,7 @@
       if (result.error === 'label') return L(`${result.part + 1}. set parçası: benzersiz bir harf girin (A, B…).`, `Set piece ${result.part + 1}: enter a unique letter (A, B…).`);
       if (result.error === 'region') return L(`${where}${n}. kart: bölge seçin.`, `${where}Card ${n}: choose a region.`);
       if (result.error === 'chars') return L(`${where}${n}. kart: bölge ve teknikte : | • kullanılamaz (bölgede + de).`, `${where}Card ${n}: region and technique cannot contain : | • (region also not +).`);
-      if (result.error === 'count') return L(`${where}${n}. kart: adet 1–999 arası tam sayı olmalı.`, `${where}Card ${n}: count must be a whole number from 1 to 999.`);
-      return L(`${where}${n}. kart: teknik girin (diğer kartlarda teknik var).`, `${where}Card ${n}: enter a technique (other cards have one).`);
+      return L(`${where}${n}. kart: adet 1–999 arası tam sayı olmalı.`, `${where}Card ${n}: count must be a whole number from 1 to 999.`);
     };
     const close = () => { global.BLLayerSystem?.closeDialog?.(modal, { trigger }); modal.remove(); };
     const write = value => {
@@ -744,7 +806,7 @@
         const result = editorCompose(parts);
         if (!result.ok) {
           status.textContent = errorText(result);
-          const selector = result.row >= 0 ? `[data-art-row="${result.part}:${result.row}"] [data-art-field="${result.error === 'technique' ? 'technique' : result.error === 'count' ? 'count' : 'region'}"]` : `[data-art-part="${result.part}"] [data-art-field="label"]`;
+          const selector = result.row >= 0 ? `[data-art-row="${result.part}:${result.row}"] [data-art-field="${result.error === 'count' ? 'count' : 'region'}"]` : `[data-art-part="${result.part}"] [data-art-field="label"]`;
           host.querySelector(selector)?.focus();
           return;
         }
@@ -783,6 +845,7 @@
       const result = base.apply(this, args);
       extendBridge();
       decorate();
+      schedulePrompt();
       clearTimeout(state.timer);
       state.timer = setTimeout(() => { void ensureFresh(); }, 40);
       return result;
@@ -798,7 +861,8 @@
     extendBridge();
     // PLM işlemi başlarken önbellek bayatlatılır; sonraki render'lar (ve
     // FRESH_MS süresi) PLM SYNC'in yazdığı yeni BOM özetlerini okur.
-    global.addEventListener('bl:plm-operation-started', () => { state.fetchedAt = 0; });
+    // Yeni PLM işlemi: ertelenen (iptal edilen) Artwork onayları tekrar sorulabilir.
+    global.addEventListener('bl:plm-operation-started', () => { state.fetchedAt = 0; state.deferred.clear(); });
     // Özet metni dile bağlıdır (Toplam/Total); dil değişince önbellekten yeniden yazılır.
     // Özet metni dile bağlıdır (Toplam/Total). applyLanguage aktif Koleksiyon'u
     // renderKol ile yeniden çizer; sarmalanmış render önce project() çalıştırır.
@@ -808,6 +872,7 @@
   global.BLCollectionArtworkDetail = {
     key: ART_KEY,
     plmKey: PLM_KEY,
+    viewKey: VIEW_KEY,
     ensureFresh,
     project,
     applyToRow,
@@ -819,6 +884,8 @@
     cellCards,
     refreshCell,
     openEditor,
+    conflicts: () => [...state.conflicts.values()],
+    promptConflicts,
     editor: { fromText: editorFromText, compose: editorCompose, regions: REGIONS },
   };
 

@@ -252,6 +252,10 @@ function handleCopyShortcut(event,options={}){if(!isCollectionActive()||modalOpe
     const groupActions=bridge()?.modelGroupActions?.(row,state.active.key,selectedWholeRowIds())||[];
     const checkedModels=bridge()?.selectedCount?.()||0,editableSelection=selectionHasEditable(),selectionSize=selectionCellCount();
     const bounds=Engine.rangeBounds(state.anchor||state.active,state.focus||state.active),multiRowRange=!state.multiCells.size&&Boolean(bounds&&bounds.r2>bounds.r1);
+    const viewRowIds=(()=>{const ids=new Set(),key=contextCoord.key;
+      if(state.multiCells.size)selectedCoordinates().forEach(c=>{if(c.key===key)ids.add(String(c.rowId));});
+      else if(bounds)for(let r=bounds.r1;r<=bounds.r2;r++)for(const cell of state.cellRows[r]||[]){const c=coordForCell(cell);if(c&&c.key===key)ids.add(String(c.rowId));}
+      return [...ids];})();
     openMenu(event.clientX,event.clientY,[
       // Ctrl+C = Kopyala (başlıksız). Başlıklı kopya yalnız buradan bilerek seçilir.
       {label:lang()==='en'?'Copy':'Kopyala',key:'Ctrl+C',run:()=>handleCopyShortcut({preventDefault(){},stopImmediatePropagation(){}},{includeHeaders:false,forceCellCopy:true})},
@@ -264,6 +268,8 @@ function handleCopyShortcut(event,options={}){if(!isCollectionActive()||modalOpe
       ...(groupActions.length?['sep',...groupActions]:[]),
       ...(modelNameContext?['sep',{label:lang()==='en'?'Go to PLM Page':'PLM Sayfasına Git',run:()=>bridge()?.openPlm?.(contextRow),disabled:!canOpenContextPlm}]:[]),
       ...(contextCoord.key==='artworkDetail'&&bridge()?.openArtworkBom?['sep',{label:lang()==='en'?'Open BOM Detail':'BOM Detayını Aç',run:()=>bridge().openArtworkBom(contextRow)}]:[]),
+      // Artwork / Kumaş: kart ↔ düz metin görünümü; aynı sütundaki seçili hücrelere uygulanır.
+      ...(()=>{const items=bridge()?.cellViewActions?.(contextRow,contextCoord.key,viewRowIds)||[];return items.length?['sep',...items]:[];})(),
       'sep',{label:'Open Quotations',run:()=>bridge()?.openQuotations?.(row)},{label:'Pricing History',run:()=>bridge()?.openPricingHistory?.(row)},
       'sep',{label:lang()==='en'?'Freeze Up To This Column':'Bu Sütuna Kadar Dondur',run:()=>bridge()?.freezeToKey?.(state.active.key)},{label:lang()==='en'?'Hide Column':'Sütunu Gizle',run:()=>bridge()?.hideColumn?.(state.active.key)}
     ]);

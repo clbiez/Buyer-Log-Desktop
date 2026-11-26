@@ -594,15 +594,16 @@ function kolBuildPlmImportPlan(kolRows,parsedRows,helpers){
       }
     }else target=key?byKey.get(key):null;
     if(!target){creates.push(parsed);return;}
-    const changes=[];
+    const changes=[],plmValues={};
     touched.forEach(fieldKey=>{
       const to=kolImportReadField(parsed,fieldKey);if(!to)return; // PLM'de olmayan/çevirisi onaylanmamış alan mevcut değeri silmez.
+      plmValues[fieldKey]=to;
       const from=kolImportReadTargetField(target,fieldKey,targetReader,{norm,turknorm});if(from!==to)changes.push({key:fieldKey,label:kolImportFieldLabel(fieldKey,knownByKey),from,to});
     });
     // PLM ID Koleksiyon'da mevcutsa değişiklik olmasa bile kullanıcıya model model sorulur.
     // Güncelleme yalnız changes içindeki PLM-kaynaklı alanları yazar; pricing/notlar ve
     // diğer Buyer Log kullanıcı alanları hedef satırda aynen kalır.
-    existing.push({target,parsed,changes,hasImage:Boolean(parsed._plmImage),matchedByPlm:Boolean(plm&&plmTargets.length)});
+    existing.push({target,parsed,changes,plmValues,hasImage:Boolean(parsed._plmImage),matchedByPlm:Boolean(plm&&plmTargets.length)});
   });
   return {existing,creates,ambiguous,inputDuplicates,knownByKey};
 }
@@ -613,6 +614,27 @@ function kolApplyApprovedPlmUpdate(item,kolImportWriteField){
   // hiçbir assignment yapılmaz; bu nedenle mevcut kullanıcı verisi kaybolmaz.
   item.changes.forEach(change=>kolImportWriteField(item.target,change.key,change.to));
   item.target._plmSource={...(item.target._plmSource||{}),...(item.parsed._plmSource||{})};
+  // Son görülen PLM değeri: yazılan ve kullanıcının koruduğu alanlar dahil.
+  // Sonraki sync manuel değeri bununla ayırt eder (kolPlmClassifyChanges).
+  if(item.plmValues&&Object.keys(item.plmValues).length)item.target._plmValues={...(item.target._plmValues||{}),...item.plmValues};
+}
+
+/* PLM alanı değişikliklerini sahipliğe göre ayırır. _plmValues satırın SON
+   GÖRÜLEN PLM değeridir:
+   - mevcut boş ya da son PLM değerine eşit (PLM'e ait) → apply (sessiz)
+   - manuel ve PLM değeri değişmemiş                      → keep (sessiz, tekrar sorulmaz)
+   - manuel ve PLM değişmiş ya da iz yok (eski satır)     → conflicts (kullanıcıya sorulur) */
+function kolPlmClassifyChanges(item){
+  const snapshot=item&&item.target&&item.target._plmValues&&typeof item.target._plmValues==='object'?item.target._plmValues:{};
+  const out={apply:[],keep:[],conflicts:[]};
+  for(const change of (item&&item.changes)||[]){
+    const from=text(change.from);
+    const tracked=Object.prototype.hasOwnProperty.call(snapshot,change.key),last=text(snapshot[change.key]);
+    if(!from||(tracked&&from===last))out.apply.push(change);
+    else if(tracked&&text(change.to)===last)out.keep.push(change);
+    else out.conflicts.push(change);
+  }
+  return out;
 }
 
 function kolParseQuantityNum(v){
@@ -692,5 +714,5 @@ function colourSwatch(row){
   return best.hex;
 }
 
-  return { approvedManufacturer,writeOwnValue,writeGroupedValue,adoptImportedValue,kolImportReadTargetField,kolParseQuantityNum,kolParseMoneyNum,kolApplyApprovedPlmUpdate,kolImportMatchKey,kolImportReadField,kolPlmCodePrefix,kolPlmSeason,kolPlmBrandToken,kolPlmImportTouchedKeys,kolPlmImportColourKey,kolPlmNormalizeDirectRecord,kolBuildPlmImportPlan,bestPricing,confirmedPricing,colourSwatch,identityOf, colourIdentity, fieldMetadata, normalizeRows, linkImportedColourVariants, inheritModelValues, groupFor, hasVariantOverride, effectiveValue, createValueReader, valueReaderForRevision, invalidateValueReader, setSharedValue, setVariantOverride, clearVariantOverride, clearAllVariantOverrides, setPricingOverrides, visibleRows, mergeGroups, detachVariant, relinkVariant, summary };
+  return { approvedManufacturer,writeOwnValue,writeGroupedValue,adoptImportedValue,kolImportReadTargetField,kolParseQuantityNum,kolParseMoneyNum,kolApplyApprovedPlmUpdate,kolPlmClassifyChanges,kolImportMatchKey,kolImportReadField,kolPlmCodePrefix,kolPlmSeason,kolPlmBrandToken,kolPlmImportTouchedKeys,kolPlmImportColourKey,kolPlmNormalizeDirectRecord,kolBuildPlmImportPlan,bestPricing,confirmedPricing,colourSwatch,identityOf, colourIdentity, fieldMetadata, normalizeRows, linkImportedColourVariants, inheritModelValues, groupFor, hasVariantOverride, effectiveValue, createValueReader, valueReaderForRevision, invalidateValueReader, setSharedValue, setVariantOverride, clearVariantOverride, clearAllVariantOverrides, setPricingOverrides, visibleRows, mergeGroups, detachVariant, relinkVariant, summary };
 });

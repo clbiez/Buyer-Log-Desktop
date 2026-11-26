@@ -202,7 +202,8 @@ function sameRowField(key, a, b) {
    önce yayımlanan (uzak) değer kalır, yerel değer çakışma olarak döner ve
    çakışmanın "yerel" seçeneği diğer üreticileri korur. Harita olmayan
    (eski/bozuk) değer bütün alan kuralına düşer. */
-const KEYED_ROW_MAPS = new Set(['pricing', 'pricingSent']);
+// _plmValues: PLM alanı başına son görülen PLM değeri; alan bazında birleşir.
+const KEYED_ROW_MAPS = new Set(['pricing', 'pricingSent', '_plmValues']);
 function plainMap(value) { return value != null && typeof value === 'object' && !Array.isArray(value); }
 function mapOrAbsent(value) { return value == null || plainMap(value); }
 function mergeKeyedRowMap(hasBase, base, local, remote) {

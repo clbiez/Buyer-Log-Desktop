@@ -292,3 +292,10 @@
 .kolArtworkEdPreview{overflow-wrap:anywhere;margin-top:var(--ui-space-2,8px)}
 .kolArtworkEdNote{margin:0 0 var(--ui-space-3,12px);overflow-wrap:anywhere}
 @media (max-width:520px){.kolArtworkEdRow{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 4rem auto}}
+/* PLM SYNC manuel alan onayı (tek tek); yalnız yerleşim. */
+.kolManualConflictCard{width:min(620px,calc(100vw - 32px))}
+.kolManualConflictModel{margin:0 0 var(--ui-space-3,12px);overflow-wrap:anywhere}
+.kolManualConflictGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--ui-space-3,12px);margin:0 0 var(--ui-space-3,12px)}
+.kolManualConflictValue{white-space:pre-line;overflow-wrap:anywhere;margin-top:4px}
+.kolManualConflictAll{display:flex;align-items:center;gap:8px}
+@media (max-width:520px){.kolManualConflictGrid{grid-template-columns:minmax(0,1fr)}}
