@@ -80,7 +80,10 @@
 .psTplSave input{flex:1;min-width:0}
 .psStatus{display:flex;align-items:center;gap:14px;padding:5px 14px;flex-wrap:wrap}
 .psOptions{display:flex;flex-direction:column;gap:8px;margin:12px 0}
-.psDialogCard{width:min(540px,calc(100vw - 32px))}
+.psDialogCard{width:min(540px,calc(100vw - 32px));max-height:calc(100vh - 48px);overflow:auto;box-sizing:border-box;padding:18px 20px 16px;display:flex;flex-direction:column;gap:10px}
+.psDialogCard>h3,.psDialogCard>p{margin:0}
+.psDialogCard .psOptions{margin:4px 0}
+.psDialogCard .modalFoot{display:flex;justify-content:flex-end;gap:8px;padding:0}
 /* Belge çip öğeleri (yalnız yerleşim): presentation-studio-render.js DOC_CSS ile aynı metin. */
 .psC{position:absolute;white-space:pre}.psS{position:absolute;top:0;height:100%;text-align:center}.psP{position:absolute;text-align:center}.psT{position:absolute;top:0;white-space:pre}
 .psPrintFrame{position:fixed;left:-10000px;top:0;width:1px;height:1px;visibility:hidden}

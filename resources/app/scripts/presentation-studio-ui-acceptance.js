@@ -384,6 +384,55 @@ function demoImages() {
     const out = await page.evaluate(async () => { const S = BLPresentationStudio._state(), list = S.list; const html = BLPresentationRender.documentHtml(list, 't'); const zip = BLPresentationPptx.build(JSZip, list, { title: 't', palette: BLPresentationRender.DOC, chip: BLPresentationRender.CHIP }); const x = await zip.file('ppt/slides/slide1.xml').async('string'); return { html: html.includes('214233') && html.includes('Pigment'), pptx: x.includes('<a:t>214233</a:t>') && x.includes('Chip frame') }; });
     assert.deepEqual(out, { html: true, pptx: true });
     await page.evaluate(() => { BLCollectionArtworkDetail.cellModel = window.__artModel; });
+
+    // Taslak: kaydet → kapat → tabloda model düzelt → Sunum Oluştur'dan taslağa devam: güncel bilgi, aynı düzen, aynı sayfa.
+    await page.fill('.psStudio [data-ps="title"]', 'Demo taslak'); await page.keyboard.press('Tab'); await page.waitForTimeout(200);
+    assert.match(await page.$eval('.psStatus', el => el.textContent), /kaydedilmedi|not saved/i, 'yeni sunum kaydedilmemiş görünür');
+    await page.click('.psStudio [data-ps="saveDraft"]'); await page.waitForTimeout(300);
+    assert.match(await page.$eval('.psStatus', el => el.textContent), /Taslak hesabınıza kaydedildi|Draft saved/);
+    const pagesBefore = await page.evaluate(() => BLPresentationStudio._state().doc.pages.map(p => p.id));
+    if (pagesBefore.length > 1) { await page.click(`.psStudio .psThumb[data-th="${pagesBefore[1]}"]`); await page.waitForTimeout(200); }
+    await page.click('.psStudio [data-ps="zoomIn"]'); await page.waitForTimeout(1200);
+    const saved = await page.evaluate(() => { const S = BLPresentationStudio._state(); return { id: S.deckId, page: S.activePage, zoom: S.zoom, levels: S.doc.grouping.levels, fields: S.doc.style.fields, chips: S.doc.style.chips, cardW: S.doc.style.cardW, order: S.doc.order.slice(0, 2) }; });
+    await page.click('.psStudio [data-ps="close"]'); await page.waitForTimeout(300);
+    assert.equal(await page.$('.psStudio'), null, 'kaydedilmiş taslak sorusuz kapanır');
+    const edited = await page.evaluate(ids => { const out = []; for (const r of kolRows) if (ids.includes(String(r.id))) { r.colour = 'TASLAK GÜNCEL ' + r.id; out.push(r.colour); } renderKol(); return out; }, saved.order);
+    assert.equal(edited.length, 2);
+    await page.click('#kolToolsBtn'); await page.click('#kolToolsMenu [data-output-studio="koleksiyon"]');
+    await page.waitForSelector('.psDialog [data-m^="d:"]', { timeout: 10000 });
+    assert.ok(await page.$('.psDialog [data-m="new"]'), 'yeni sunum seçeneği');
+    await page.click(`.psDialog [data-m="d:${saved.id}"]`);
+    await page.waitForSelector('.psStudio .psDocCard', { timeout: 30000 }); await page.waitForTimeout(600);
+    const back = await page.evaluate(() => { const S = BLPresentationStudio._state(); return { id: S.deckId, title: S.doc.title, page: S.activePage, zoom: S.zoom, levels: S.doc.grouping.levels, fields: S.doc.style.fields, chips: S.doc.style.chips, cardW: S.doc.style.cardW, colours: S.doc.order.slice(0, 2).map(id => S.models.get(id).values.colour), saved: S.saved, toast: [...document.querySelectorAll('[data-ui-feedback-region]')].map(e => e.textContent).join(' ') }; });
+    assert.equal(back.id, saved.id); assert.equal(back.title, 'Demo taslak'); assert.equal(back.saved, true);
+    assert.deepEqual([back.levels, back.fields, back.chips, back.cardW], [saved.levels, saved.fields, saved.chips, saved.cardW], 'düzen korunur');
+    assert.equal(back.page, saved.page, 'kaldığı sayfa'); assert.ok(Math.abs(back.zoom - saved.zoom) < 0.001, 'kaldığı yakınlık');
+    assert.deepEqual(back.colours, edited, 'tablodaki düzeltme taslağa yansır');
+    assert.match(back.toast, /2 modelin bilgisi Koleksiyon tablosunda güncellenmiş|2 models were updated in Collection/, back.toast);
+    await page.click('.psStudio [data-ps="close"]'); await page.waitForTimeout(300);
+    // Kaydedilmemiş yeni sunumda değişiklik → kapatırken sorulur; "Kaydetmeden çık" taslak eklemez.
+    const draftsBefore = await page.evaluate(() => JSON.parse(BLStorage.getItem('bl.presentationStudio.decks.v1') || '[]').length);
+    await page.click('#kolToolsBtn'); await page.click('#kolToolsMenu [data-output-studio="koleksiyon"]');
+    await page.waitForSelector('.psDialog [data-m="new"]', { timeout: 10000 }); await page.click('.psDialog [data-m="new"]');
+    await page.waitForSelector('.psStudio .psDocCard', { timeout: 30000 }); await page.waitForTimeout(400);
+    await page.click('.psStudio [data-ps="chipMode"] [data-v="text"]').catch(() => page.click('.psStudio [data-ps="zoomIn"]'));
+    await page.fill('.psStudio [data-ps="title"]', 'Geçici'); await page.keyboard.press('Tab'); await page.waitForTimeout(200);
+    await page.click('.psStudio [data-ps="close"]');
+    await page.waitForSelector('.psDialog [data-m="discard"]', { timeout: 5000 });
+    await page.screenshot({ path: path.join(OUT, `draft-confirm-${THEME}.png`) });
+    await page.click('.psDialog [data-m="discard"]'); await page.waitForTimeout(300);
+    assert.equal(await page.$('.psStudio'), null);
+    assert.equal(await page.evaluate(() => JSON.parse(BLStorage.getItem('bl.presentationStudio.decks.v1') || '[]').length), draftsBefore, 'kaydedilmeyen sunum taslaklara eklenmez');
+    // Taslak seçimi ekranı (sürüm notu görseli).
+    await page.click('#kolToolsBtn'); await page.click('#kolToolsMenu [data-output-studio="koleksiyon"]');
+    await page.waitForSelector('.psDialog [data-m^="d:"]', { timeout: 10000 }); await page.waitForTimeout(300);
+    await page.evaluate(() => document.querySelectorAll('[data-ui-feedback-region]').forEach(el => { el.style.visibility = 'hidden'; }));
+    await page.screenshot({ path: path.join(OUT, `draft-choose-${THEME}.png`) });
+    await page.evaluate(() => document.querySelectorAll('[data-ui-feedback-region]').forEach(el => { el.style.visibility = ''; }));
+    await page.click('.psDialog [data-m="cancel"]'); await page.waitForTimeout(200);
+    await page.click('#kolToolsBtn'); await page.click('#kolToolsMenu [data-output-studio="koleksiyon"]');
+    await page.waitForSelector('.psDialog [data-m="new"]', { timeout: 10000 }); await page.click('.psDialog [data-m="new"]');
+    await page.waitForSelector('.psStudio .psDocCard', { timeout: 30000 });
     await page.evaluate(() => document.querySelectorAll('[data-ui-feedback-region]').forEach(el => { el.style.visibility = ''; }));
 
     // CP ve Siparişler: aynı Presentation Studio (her kart bir sipariş satırı; filtrelenmiş kapsam).
