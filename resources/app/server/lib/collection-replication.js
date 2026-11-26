@@ -636,10 +636,18 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     if (reset) { await writeTextAtomic(file, line); return; }
     // Yarım kalmış son satır (ekleme sırasında kesinti) yayımı hiç inmemiş bir
     // kayda aittir: yeni satır ona yapışıp sonraki kayıtları erişilmez kılmasın.
-    let existing = '';
-    try { existing = await fsp.readFile(file, 'utf8'); } catch (_) {}
-    if (existing && !existing.endsWith('\n')) await writeTextAtomic(file, existing.slice(0, existing.lastIndexOf('\n') + 1) + line);
-    else await fsp.appendFile(file, line, 'utf8');
+    // Yalnız son bayt okunur (günlük büyüse de ekleme maliyeti sabit kalır).
+    let tailIsNewline = true;
+    let handle = null;
+    try {
+      handle = await fsp.open(file, 'r');
+      const { size } = await handle.stat();
+      if (size > 0) { const byte = Buffer.alloc(1); await handle.read(byte, 0, 1, size - 1); tailIsNewline = byte[0] === 0x0a; }
+    } catch (_) { tailIsNewline = true; }
+    finally { if (handle) await handle.close().catch(() => {}); }
+    if (tailIsNewline) { await fsp.appendFile(file, line, 'utf8'); return; }
+    const existing = await fsp.readFile(file, 'utf8');
+    await writeTextAtomic(file, existing.slice(0, existing.lastIndexOf('\n') + 1) + line);
   }
   async function rewritePendingLog(ownerId, entries) {
     const text = entries.map(entry => `${JSON.stringify(entry)}\n`).join('');
