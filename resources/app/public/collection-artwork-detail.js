@@ -10,8 +10,9 @@
  * Sahiplik kuralı: satırdaki değer son PLM özetine eşitse (veya boşsa) PLM'e
  * aittir ve PLM SYNC güncellediğinde yenilenir. Kullanıcı hücreyi farklı bir
  * değerle düzenlerse değer manueldir ve korunur; hücreyi temizlemek PLM
- * değerine geri döndürür. Projeksiyon saveKolRows çağırmaz; ikinci bir kalıcı
- * kaynak oluşturmaz.
+ * değerine geri döndürür. Özet biçiminde elle yazılan değer de karta
+ * dönüşür. Projeksiyon saveKolRows çağırmaz; ikinci bir kalıcı kaynak
+ * oluşturmaz.
  */
 (function (global) {
   'use strict';
@@ -214,24 +215,91 @@
       + (tech ? `<span class="blCellTag" data-tone="${toneOf([...groups[0].techniques][0])}">${esc(tech)}</span>` : '')).join('');
     return `<div class="blCellLine">${tag}<span class="blCellBody">${body}</span><span class="blCellTotal">${part.total}</span></div>`;
   }
+  function cardsOf(model, en) {
+    return model ? {
+      cls: `kolArtworkTd${model.parts.length > 1 ? ' isMulti' : ''}`,
+      inner: `<div class="kolArtworkCards" aria-hidden="true">${model.parts.map(part => partHtml(part, en)).join('')}</div>`,
+    } : null;
+  }
+  /* ---- Elle yazılmış özet ----
+     Kullanıcının hücreye PLM özetiyle aynı biçimde yazdığı metin de karta
+     dönüşür (PLM ID'siz model, BOM'u henüz olmayan model veya PLM değerinin
+     bilinçli olarak değiştirildiği manuel değer). Biçim: bölgeler " • " ile,
+     teknik " | " ile ayrılır ve "Toplam/Total: N" ile biter; Set Style'da her
+     satır "A - …" parçasıdır. Toplam zorunludur ve bölge adetleriyle tutmalıdır;
+     tutmayan veya serbest metin (ör. "Termin: 12") düz metin kalır. */
+  const TOTAL_RE = /\s*\|\s*(?:toplam|total)\s*:\s*(\d+)\s*$/i; // i18n-ignore — özet biçimi anahtar kelimesi
+  const NO_PRINT_RE = /^(?:baskı yok|no print)$/i; // i18n-ignore — özet biçimi anahtar kelimesi
+  const SEGMENT_RE = /^([^:|•]+?)\s*:\s*(\d+)\s*(?:\|\s*([^:|•]+?)\s*)?$/;
+  function parsePart(text) {
+    let body = String(text || '').trim();
+    if (NO_PRINT_RE.test(body)) return { groups: [], techniques: [], total: 0 };
+    const match = body.match(TOTAL_RE);
+    if (!match) return null;
+    const declared = Number(match[1]);
+    body = body.slice(0, match.index).trim();
+    const groups = [];
+    let total = 0;
+    for (const segment of body.split(/\s*•\s*/)) {
+      const seg = segment.match(SEGMENT_RE);
+      const count = seg ? Number(seg[2]) : 0;
+      if (!seg || !count) return null;
+      const techniques = new Set(seg[3] ? seg[3].split(/\s*\+\s*/).filter(Boolean) : []);
+      groups.push({ key: '', tr: seg[1], en: seg[1], count, techniques });
+      total += count;
+    }
+    if (!groups.length || total !== declared) return null;
+    // Tekdüze biçimde teknik yalnız son bölgeden sonra yazılır ama tüm bölgelere aittir.
+    const tagged = groups.filter(group => group.techniques.size);
+    if (groups.length > 1 && tagged.length === 1 && tagged[0] === groups[groups.length - 1]) {
+      for (const group of groups) group.techniques = new Set(tagged[0].techniques);
+    }
+    const techniques = new Set();
+    for (const group of groups) for (const tech of group.techniques) techniques.add(tech);
+    return { groups, techniques: [...techniques], total };
+  }
+  function parseSummary(text) {
+    const lines = String(text || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+    if (!lines.length) return null;
+    const setLines = lines.map(line => line.match(/^([A-Za-z0-9]{1,3})\s+-\s+(.+)$/));
+    if (setLines.every(Boolean)) {
+      const parts = setLines.map(([, label, body]) => { const part = parsePart(body); return part && { label, ...part }; });
+      return parts.every(Boolean) ? { set: true, parts } : null;
+    }
+    if (lines.length > 1) return null;
+    const part = parsePart(lines[0]);
+    return part ? { set: false, parts: [{ label: '', ...part }] } : null;
+  }
   const cardCache = new WeakMap();
-  /* app-main renderKol çağırır. PLM'e ait ve önbellekte modeli olan değer için
-     kart katmanı döner; manuel/eski/bilinmeyen değerde null (düz metin kalır). */
+  /* Aynı özet metni çok satırda tekrarlar; kart HTML'i metin + dil başına bir
+     kez kurulur. Serbest metin ucuz ön kontrolle (Toplam/Total ya da Baskı yok
+     ile bitmeyen) önbelleğe girmeden elenir. */
+  const manualCardCache = new Map();
+  const MANUAL_CACHE_MAX = 5000;
+  const MAYBE_SUMMARY_RE = /(?:toplam|total)\s*:\s*\d+\s*$|(?:baskı yok|no print)\s*$/im; // i18n-ignore — özet biçimi anahtar kelimesi
+  function manualCards(text) {
+    if (!MAYBE_SUMMARY_RE.test(text)) return null;
+    const key = `${isEn() ? 'en' : 'tr'}\u0001${text}`;
+    const hit = manualCardCache.get(key);
+    if (hit !== undefined) return hit;
+    if (manualCardCache.size >= MANUAL_CACHE_MAX) manualCardCache.clear();
+    const out = cardsOf(parseSummary(text), isEn());
+    manualCardCache.set(key, out);
+    return out;
+  }
+  /* app-main renderKol çağırır. PLM'e ait değerde kart BOM modelinden, elle
+     yazılmış özet biçimli değerde metinden kurulur; serbest metinde null. */
   function cellCards(row, value) {
+    const text = String(value == null ? '' : value);
+    if (!text.trim()) return null;
     const plmId = plmIdOfRow(row);
     const entry = plmId ? state.cache.get(plmId) : null;
-    if (!entry) return null;
-    const text = String(value == null ? '' : value);
-    if (!text || text !== cachedSummary(entry)) return null;
+    if (!entry || text !== cachedSummary(entry)) return manualCards(text);
     const lang = isEn() ? 'en' : 'tr';
     let byLang = cardCache.get(entry);
     if (!byLang) { byLang = {}; cardCache.set(entry, byLang); }
     if (lang in byLang) return byLang[lang];
-    const model = modelFor(entry);
-    const out = model ? {
-      cls: `kolArtworkTd${model.parts.length > 1 ? ' isMulti' : ''}`,
-      inner: `<div class="kolArtworkCards" aria-hidden="true">${model.parts.map(part => partHtml(part, lang === 'en')).join('')}</div>`,
-    } : null;
+    const out = cardsOf(modelFor(entry), lang === 'en') || manualCards(text);
     byLang[lang] = out;
     return out;
   }
@@ -246,12 +314,14 @@
 
   /* PLM özetini satıra yazar. Manuel değer (son PLM özetinden farklı ve dolu)
      korunur. Henüz izlenmeyen eski satırlar (PLM_KEY yok) önceki sürümün
-     salt-okunur projeksiyonundan geldiği için PLM'e ait sayılır. */
+     salt-okunur projeksiyonundan geldiği için PLM'e ait sayılır; ancak yalnız
+     yerine yazılacak bir PLM özeti varsa. PLM ID'si/BOM'u olmayan satırdaki
+     izsiz değer (Excel/kopya ile gelen) elle yazılmıştır ve silinmez. */
   function applyToRow(row, summary, entry) {
     if (!row) return false;
     const current = row[ART_KEY] == null ? '' : String(row[ART_KEY]);
     const tracked = Object.prototype.hasOwnProperty.call(row, PLM_KEY);
-    const plmOwned = !current.trim() || !tracked || current === String(row[PLM_KEY] == null ? '' : row[PLM_KEY])
+    const plmOwned = !current.trim() || (!tracked && Boolean(summary)) || current === String(row[PLM_KEY] == null ? '' : row[PLM_KEY])
       || Boolean(entry && plmVariants(entry).has(current));
     let changed = false;
     if (plmOwned && current !== summary) { row[ART_KEY] = summary; changed = true; }
@@ -393,39 +463,82 @@
   }
   /* Hücreye yalnız bilgi (ipucu + kontrol gerekli vurgusu) ekler; değer ve
      düzenleyici app-main'in ortak metin hücresinden gelir. */
+  function decorateCell(td, row) {
+    const entry = state.meta.get(plmIdOfRow(row)) || null;
+    const plmValue = String(row[PLM_KEY] == null ? '' : row[PLM_KEY]);
+    const current = String(row[ART_KEY] == null ? '' : row[ART_KEY]);
+    const manual = Boolean(current.trim()) && current !== plmValue;
+    td.classList.toggle('kolArtworkNeedsReview', Boolean(entry && entry.needsAi && !manual));
+    // PLM kaydı olan modelde elle yazılmış değer "Manuel" rozeti alır.
+    td.classList.toggle('kolArtworkManual', Boolean(entry && manual));
+    if (entry && manual) td.dataset.manualLabel = L('Manuel', 'Manual');
+    else delete td.dataset.manualLabel;
+    const lines = [];
+    if (manual && entry) {
+      lines.push(L('Manuel değer · temizlerseniz PLM değeri geri gelir', 'Manual value · clear it to restore the PLM value'));
+      if (plmValue) lines.push(`PLM: ${plmValue}`);
+    } else if (manual) {
+      lines.push(L('Manuel değer · bu model için PLM BOM kaydı yok', 'Manual value · no PLM BOM record for this style'));
+    } else if (entry) {
+      if (entry.needsAi) lines.push(L('⚠ Kontrol gerekli', '⚠ Review required'));
+      lines.push(`CoreNectum BOM · ${aiStatus(entry)}`);
+      if (entry.fetchedAt) lines.push(new Date(entry.fetchedAt).toLocaleString(isEn() ? 'en-GB' : 'tr-TR'));
+    } else {
+      lines.push(L('Bu model için BOM kaydı yok. PLM SYNC çalıştırıldığında otomatik oluşur.', 'No BOM record exists for this style. It is created automatically by PLM SYNC.'));
+    }
+    if (current.trim() && current !== plmValue && !td.querySelector('.kolArtworkCards')) {
+      lines.push(L('Kart için biçim: Ön: 1 • Arka: 1 | Pigment | Toplam: 2', 'Card format: Front: 1 • Back: 1 | Pigment | Total: 2'));
+    }
+    lines.push(L('Sağ tık › BOM Detayını Aç', 'Right-click › Open BOM Detail'));
+    td.title = [current, ...lines].filter(Boolean).join('\n');
+  }
+  function rowOfCell(td, byId) {
+    const tr = td.closest('tr');
+    return byId.get(String(tr && (tr.dataset.id || tr.dataset.kolid || tr.getAttribute('data-kolid')) || ''))
+      || byId.get(String(td.querySelector('[data-id]') && td.querySelector('[data-id]').dataset.id || ''));
+  }
   function decorate() {
     injectStyle();
     const table = document.getElementById('kolTable');
     if (!table || !table.tBodies[0]) return;
     const byId = new Map(allRows().map(row => [String(row && row.id), row]));
     for (const td of table.tBodies[0].querySelectorAll(`td[data-key="${ART_KEY}"]`)) {
-      const tr = td.closest('tr');
-      const row = byId.get(String(tr && (tr.dataset.id || tr.dataset.kolid || tr.getAttribute('data-kolid')) || ''))
-        || byId.get(String(td.querySelector('[data-id]') && td.querySelector('[data-id]').dataset.id || ''));
-      if (!row) continue;
-      const entry = state.meta.get(plmIdOfRow(row)) || null;
-      const plmValue = String(row[PLM_KEY] == null ? '' : row[PLM_KEY]);
-      const current = String(row[ART_KEY] == null ? '' : row[ART_KEY]);
-      const manual = Boolean(current.trim()) && current !== plmValue;
-      td.classList.toggle('kolArtworkNeedsReview', Boolean(entry && entry.needsAi && !manual));
-      // PLM kaydı olan modelde elle yazılmış değer kart yerine düz metin + "Manuel" rozeti.
-      td.classList.toggle('kolArtworkManual', Boolean(entry && manual));
-      if (entry && manual) td.dataset.manualLabel = L('Manuel', 'Manual');
-      else delete td.dataset.manualLabel;
-      const lines = [];
-      if (manual) {
-        lines.push(L('Manuel değer · temizlerseniz PLM değeri geri gelir', 'Manual value · clear it to restore the PLM value'));
-        if (plmValue) lines.push(`PLM: ${plmValue}`);
-      } else if (entry) {
-        if (entry.needsAi) lines.push(L('⚠ Kontrol gerekli', '⚠ Review required'));
-        lines.push(`CoreNectum BOM · ${aiStatus(entry)}`);
-        if (entry.fetchedAt) lines.push(new Date(entry.fetchedAt).toLocaleString(isEn() ? 'en-GB' : 'tr-TR'));
-      } else {
-        lines.push(L('Bu model için BOM kaydı yok. PLM SYNC çalıştırıldığında otomatik oluşur.', 'No BOM record exists for this style. It is created automatically by PLM SYNC.'));
-      }
-      lines.push(L('Sağ tık › BOM Detayını Aç', 'Right-click › Open BOM Detail'));
-      td.title = [current, ...lines].filter(Boolean).join('\n');
+      const row = rowOfCell(td, byId);
+      if (row) decorateCell(td, row);
     }
+  }
+  /* Tek hücre düzenlemesi tabloyu yeniden çizmez (commitKolEditor). Kart
+     katmanı, sınıfları ve ipucu yalnız o satırın hücresinde yenilenir; aksi
+     hâlde elle yazılan özet kart almaz, eski kartlar yeni metnin üstünde kalırdı. */
+  function refreshCell(row) {
+    const table = document.getElementById('kolTable');
+    if (!row || !table || !table.tBodies[0]) return false;
+    // Temizlenen PLM hücresi render'daki project() ile aynı kuralla PLM değerine döner.
+    const id = plmIdOfRow(row);
+    let restored = false;
+    if (!id || state.cache.has(id)) {
+      const entry = id ? state.cache.get(id) : null;
+      restored = applyToRow(row, cachedSummary(entry), entry);
+    }
+    let found = false;
+    for (const editor of table.tBodies[0].querySelectorAll(`.editCell[data-k="${ART_KEY}"]`)) {
+      if (String(editor.dataset.id) !== String(row.id)) continue;
+      const td = editor.closest('td');
+      if (!td) continue;
+      found = true;
+      // Hücrenin gösterdiği değer esas alınır; yalnız PLM geri yüklemesi metni değiştirir.
+      if (restored) editor.value = String(row[ART_KEY] == null ? '' : row[ART_KEY]);
+      const art = cellCards(row, editor.value);
+      const old = td.querySelector('.kolArtworkCards');
+      if (old) old.remove();
+      td.classList.remove('kolArtworkTd', 'isMulti');
+      if (art) {
+        td.classList.add(...art.cls.split(/\s+/).filter(Boolean));
+        td.insertAdjacentHTML('afterbegin', art.inner);
+      }
+      decorateCell(td, row);
+    }
+    return found;
   }
 
   async function openBom(row) {
@@ -487,6 +600,7 @@
     openBom,
     summaryFor,
     cellCards,
+    refreshCell,
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true });

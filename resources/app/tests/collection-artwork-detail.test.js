@@ -179,6 +179,23 @@ test('PLM value fills empty/PLM-owned cells, keeps manual edits and returns to P
   assert.equal(legacy.artworkDetail, 'Front: 1 | Toplam: 1');
 });
 
+test('untracked manual value is never wiped when there is no PLM summary to replace it', async () => {
+  // Excel/kopya ile gelen ve artworkDetailPlm izi olmayan satırlar: PLM ID yok
+  // veya BOM kaydı yok. Boş PLM özeti elle yazılmış değeri silmemeli.
+  const rows = [
+    { id: 1, artworkDetail: 'Front: 1 | Pigment | Total: 1' },
+    { id: 2, plmId: '777', artworkDetail: 'Manual note' },
+  ];
+  const { api } = loadModule({ rows });
+  await api.ensureFresh({ force: true, silent: true });
+  api.project();
+  assert.equal(rows[0].artworkDetail, 'Front: 1 | Pigment | Total: 1');
+  assert.equal(rows[1].artworkDetail, 'Manual note');
+  assert.equal(rows[0].artworkDetailPlm, '', 'row becomes tracked; value is now recognised as manual');
+  api.project();
+  assert.equal(rows[0].artworkDetail, 'Front: 1 | Pigment | Total: 1');
+});
+
 test('ensureFresh projects BOM summaries into ALL Collection rows (not only visible ones) for filter and LCW AI', async () => {
   const rows = [
     { id: 1, plmId: '2112292' },
@@ -313,7 +330,7 @@ test('PLM text in the other language or legacy order stays PLM-owned; real manua
   assert.equal(rows[2].artworkDetail, 'Pigment Print', 'manual value must survive');
 });
 
-test('cellCards renders region chips, technique tag and total only for PLM-owned values', async () => {
+test('cellCards renders region chips, technique tag and total for PLM-owned values', async () => {
   const entry = { plmId: '7', hasPrint: true, placements: [placeOf('front_body', 'Ön', 'Front', 'Pigment'), placeOf('both_sleeves', 'Kollar', 'Sleeves', 'Transfer', 2)] };
   const setEntry = { plmId: '8', isSetStyle: true, hasPrint: true, setParts: [
     { label: 'A', placements: [placeOf('front_body', 'Ön', 'Front', '<b>Pigment</b>')] }, { label: 'B', placements: [] },
@@ -332,11 +349,42 @@ test('cellCards renders region chips, technique tag and total only for PLM-owned
   assert.match(set.cls, /isMulti/);
   assert.match(set.inner, /blCellPart">A[\s\S]*blCellPart">B[\s\S]*Baskı yok/);
   assert.match(set.inner, /&lt;b&gt;Pigment&lt;\/b&gt;/, 'PLM text is escaped');
-  assert.equal(api.cellCards(rows[2], rows[2].artworkDetail), null, 'manual value stays plain text');
+  assert.equal(api.cellCards(rows[2], rows[2].artworkDetail), null, 'free-text manual value stays plain text');
   assert.equal(api.cellCards({ id: 9, plmId: '99' }, 'x'), null, 'no BOM record → plain text');
 });
 
+test('manually written summary text renders cards too; free text and inconsistent totals stay plain', () => {
+  const rows = [{ id: 1, artworkDetail: '' }, { id: 2, plmId: '7', artworkDetail: '', artworkDetailPlm: 'x' }];
+  const { api } = loadModule({ rows, lang: 'en' });
+  // PLM ID'siz satır: kullanıcı özet biçimini elle yazar.
+  const single = api.cellCards(rows[0], 'Front: 1 | Pigment | Total: 1');
+  assert.ok(single, 'manual summary must render cards');
+  assert.match(single.cls, /kolArtworkTd/);
+  assert.match(single.inner, /<b>Front<\/b><i>1<\/i><\/span><span class="blCellTag" data-tone="1">Pigment<\/span>/);
+  assert.match(single.inner, /blCellTotal">1</);
+  // Tek teknik son bölgede yazılır ama tüm bölgelere aittir (tekdüze biçim).
+  const uniform = api.cellCards(rows[0], 'Front: 1 • Back: 2 | Pigment | Total: 3');
+  assert.match(uniform.inner, /<b>Front<\/b><i>1<\/i><\/span><span class="blCellChip"><b>Back<\/b><i>2<\/i><\/span><span class="blCellTag" data-tone="1">Pigment</);
+  // Karışık teknik + TR anahtar kelimesi.
+  const mixed = api.cellCards(rows[0], 'Ön: 1 | Pigment • Kollar: 2 | Transfer | Toplam: 3');
+  assert.match(mixed.inner, /<b>Ön<\/b><i>1<\/i><\/span><span class="blCellTag" data-tone="1">Pigment<\/span><span class="blCellChip"><b>Kollar<\/b><i>2<\/i><\/span><span class="blCellTag" data-tone="2">Transfer/);
+  // Set Style biçimi: her satır bir parça.
+  const set = api.cellCards(rows[0], 'A - Front: 1 • Back: 1 | Pigment | Total: 2\nB - No print');
+  assert.match(set.cls, /isMulti/);
+  assert.match(set.inner, /blCellPart">A[\s\S]*blCellTotal">2<[\s\S]*blCellPart">B[\s\S]*No print/);
+  // Kayıtlı BOM'u olan satırda farklı ama biçimli manuel değer de kartlanır.
+  assert.ok(api.cellCards(rows[1], 'Back: 1 | Foil Print | Total: 1'));
+  // Elle yazılan etiket kaçışlanır.
+  assert.match(api.cellCards(rows[0], '<b>X</b>: 1 | Pigment | Total: 1').inner, /&lt;b&gt;X&lt;\/b&gt;/);
+  for (const text of ['Pigment Print', 'Termin: 12', 'Front: 1 | Pigment', 'Front: 1 | Pigment | Total: 5', 'Front: 0 | Pigment | Total: 0', 'Front: 1 | Total: 1\nnot a part', '']) {
+    assert.equal(api.cellCards(rows[0], text), null, `plain text expected for ${JSON.stringify(text)}`);
+  }
+});
+
 test('Collection cell keeps the textarea editor under the card layer (edit/copy path unchanged)', () => {
+  // Tek hücre düzenlemesi tam çizim yapmaz; kart katmanı o hücrede yenilenir.
+  assert.match(APP, /if\(k==='artworkDetail'\)window\.BLCollectionArtworkDetail\?\.refreshCell\?\.\(row\);/);
+  assert.match(COLUMN, /function refreshCell\(row\)/);
   assert.match(APP, /c\.k==='artworkDetail'\?window\.BLCollectionArtworkDetail\?\.cellCards\?\.\(r,val\):null/);
   assert.match(APP, /\$\{art\?art\.inner:''\}<textarea class="editCell kolTextCell"/);
   const css = read('public/collection-spreadsheet.css');

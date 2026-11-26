@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-26",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Elle yazılan Artwork Detayı kart olarak görünür",
+    "en": "Manually typed Artwork Detail shows as cards"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon'da Artwork Detayı özet biçiminde elle yazıldığında da bölge kartlarıyla gösterilir.",
+    "en": "In Collection, Artwork Detail typed manually in the summary format is also shown with region chips."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "collection-artwork-manual-cards",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Elle yazılan Artwork Detayı da karta dönüşür",
+        "en": "Manually typed Artwork Detail also becomes cards"
+      },
+      "body": {
+        "tr": "Artwork Detayı hücresine PLM özetiyle aynı biçimde yazılan değer (ör. Ön: 1 • Arka: 1 | Pigment | Toplam: 2; Set Style için her satır A - …) artık bölge kartları, teknik etiketi ve toplamla gösterilir; PLM ID'si veya BOM kaydı olmayan modeller de dahil. Kart, Enter ile kaydedildiği anda çizilir. Toplam bölge adetleriyle tutmazsa veya değer serbest metinse düz metin kalır ve ipucu doğru biçimi gösterir. Ayrıca PLM ID'si olmayan satırlarda içe aktarılmış Artwork değerinin ilk açılışta silinmesi engellendi.",
+        "en": "A value typed into the Artwork Detail cell in the same format as the PLM summary (e.g. Front: 1 • Back: 1 | Pigment | Total: 2; for Set Style one A - … line per part) is now shown with region chips, a technique tag and the total, including styles without a PLM ID or BOM record. The cards appear as soon as the value is saved with Enter. If the total does not match the region counts or the value is free text, it stays plain text and the tooltip shows the expected format. Imported Artwork values on rows without a PLM ID are also no longer cleared on first load."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-artwork-manual-cards.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: elle yazılmış Artwork Detayı değerleri bölge kartları, teknik etiketleri, Set Style A/B satırları ve toplamlarla; serbest metin notu düz metin olarak",
+          "en": "Demo Collection table: manually typed Artwork Detail values shown as region chips, technique tags, Set Style A/B lines and totals; a free-text note stays plain text"
+        },
+        "caption": {
+          "tr": "Demo veride elle yazılan Artwork Detayı değerleri kart olarak görünür; serbest metin düz kalır.",
+          "en": "On demo data, manually typed Artwork Detail values appear as cards; free text stays plain."
+        }
+      }
+    }
+  ]
 }

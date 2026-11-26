@@ -33219,7 +33219,11 @@ function commitKolEditor(el, options={}){
   if(persist)saveKolRows();
   if(!kolBulkPreparing&&(k==='plmId'||k==='colourCode')&&row.imgRef)void kolPlmLinkImageEverywhere(row,row.imgRef);
   if(rerender && needsRerender) renderKol();
-  else if(rerender) refreshKolSummaryFooter();
+  else if(rerender){
+    // Artwork Detayı kart katmanı tam çizim olmadan yalnız bu hücrede yenilenir.
+    if(k==='artworkDetail')window.BLCollectionArtworkDetail?.refreshCell?.(row);
+    refreshKolSummaryFooter();
+  }
   return true;
 }
 function commitKolPriceEditor(el, options={}){
@@ -33698,7 +33702,7 @@ function renderKol(){
         html+=`<td class="editTd"${rc} data-copy-text="${escapeHtml(display)}"><textarea class="editCell kolTextCell kolCustomSchemaCell" data-id="${r.id}" data-k="${c.k}" data-raw-value="${escapeHtml(String(val))}" data-display-value="${escapeHtml(display)}">${escapeHtml(display)}</textarea></td>`;
       }else{
         // Artwork Detayı: PLM'e ait değer bölge kartlarıyla gösterilir; aynı
-        // textarea düzenleme/kopyalama için hücrede kalır (manuel değer düz metin).
+        // textarea düzenleme/kopyalama için hücrede kalır (özet biçimli manuel değer de kartlanır; serbest metin düz kalır).
         const art=c.k==='artworkDetail'?window.BLCollectionArtworkDetail?.cellCards?.(r,val):null;
         html+=`<td class="editTd${art?' '+art.cls:''}"${rc}>${art?art.inner:''}<textarea class="editCell kolTextCell" data-id="${r.id}" data-k="${c.k}">${escapeHtml(String(val))}</textarea></td>`;}
     });
