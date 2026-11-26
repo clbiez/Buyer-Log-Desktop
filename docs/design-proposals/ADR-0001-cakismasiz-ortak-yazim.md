@@ -239,3 +239,17 @@ Her düzeltmeden sonra yeni seed kümesi koşuldu. Bağımsız incelemede oracle
 - Tek kurulumlu kullanıcıda bekleyen kayıt hiç onaylanmıyor; günlük ve ilk taban dosyası birikir. Bir saklama politikası gerekir; şimdilik ölçülmedi.
 - Bozuk (ortası yarım) günlükte ilk tabana düşülür ve bu kayıp üretebilir. Bu durum yalnız disk bozulmasında beklenir.
 - Gerçek OneDrive davranışı doğrulanmadı.
+
+### Son kod üzerinde L2 (aday `8b48377`, kaynak sha `2a8c2603a413`; 6 sıra-dönüşümlü çift + 6 A/A; sakin makine)
+
+| Senaryo | Ana dal | Aday | Çift farkları (ms) | Medyan | A/A aralığı | Karar |
+| --- | --- | --- | --- | --- | --- | --- |
+| S1 yayım | 335,3 | 375,4 | +28, +32, +47, +52, +73, +40 | **+43,6 (+%13,0)** | [−18, +18] | **FAIL**: 6/6 çift A/A üstünde |
+| S2 benimseme | 330,2 | 329,2 | +5, −29, −24, +8, +7, +3 | +4,2 | [−14, +13] | PASS |
+| S3 20 ardışık yayım sonrası | 324,6 | 356,0 | +20, +30, +25, +32, +66, +52 | **+31,0 (+%9,6)** | [−24, +19] | **FAIL**: 6/6 |
+| S4 yerinden edilmiş birleşim (yeni yol) | 1314,2 | 1408,6 | +113, +59, +78, +162, +186, +98 | **+105,5 (+%8,0)** | [−69, +53] | Bütçe aşıldı: 6/6 |
+
+**Yorum:**
+- Ürün sahibinin bütünlük bedeli olarak kabul ettiği aralık yayım başına 25–40 ms idi. Son ölçüm +44 ms ile bu aralığın biraz üstünde; karar ürün sahibinde.
+- S4 ana dalda veri kaybettiren yol. İnceleme düzeltmelerinden sonra (taban günlükten kurulur, ek dosya okuma ve fark uygulama) +106 ms.
+- Ürün sahibinin talimatı gereği bu maliyeti düşürmek için mekanizmaya yeni karmaşıklık eklenmedi.
