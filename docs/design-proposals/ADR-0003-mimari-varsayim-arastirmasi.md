@@ -475,6 +475,43 @@ Peşinen seçilmedi: ölçüm iki ayrı, birbirinden bağımsız pilot gösteriy
   - **Ödünleşim:** Okumalı akışta Siparişler okuma beklemesi **ayrıca** raporlanır. Bu benchmark her 2,5 sn'de bir bütün dosya okuyor; bu, M1 için en kötü desen, çünkü her okuma sıkıştırma tetikler. Gerileme varsa pilot BLOCKED olur ve tarayıcıya "taban + günlük kuyruğu" sunma seçeneği (istemci yamaları zaten uyguluyor) ayrı karar olarak getirilir.
 - Geri dönüş: bayrak kapalıyken bugünkü yol. Günlük silinebilir.
 
+## 6B · Pilot B uygulaması: kabul ölçütleri (ölçümden ÖNCE yazıldı, 2026-11-26)
+
+**Kapsam:** Ürün sahibi onayıyla pilot kodu kendi dalında yazılır. Bayrak `BL_PROJECTION_PATCH_LOG=1`, **varsayılan kapalı**. PR, merge ve TEST yok. Dokunulmayanlar: `public/app-main.js` (Siparişler açılış düzeltmesi başka oturumda), `collection-replication.js` ve sync dosyaları. Projeksiyon türetilmiş veridir: kalıcılık, senkron ve yedek yükü verilmez; bozulursa silinip yeniden üretilir.
+
+**Mekanizma:**
+- Bayrak açıkken CP satır kaydı yalnız aktif neslin `patches.log` dosyasına adımları ekler ve manifesti günceller (bağlam, sıra numarası, günlük baytı).
+- Bütün dosyayı okuyan ya da başka bir nesil üreten her yol, önce günlüğü **sıkıştırır**. Sıkıştırma, mevcut ve parite testli toplu yeniden yazımdır (`runRowRewriteSteps`, çok adım).
+- Sıkıştırma ayrıca boşta (son eklemeden belirli süre sonra) ve eşikte (giriş sayısı ya da bayt üst sınırı) tetiklenir. Böylece günlük sınırsız büyüyemez.
+
+**Hedef:** Toplam işlemci maliyetinde, sıkıştırma dahil, ≥ %80 düşüş. Maliyeti sonraya ötelemek kazanç sayılmaz; bu yüzden pencere sıkıştırmanın bitişini içerir.
+
+**Ölçüm kuralı:**
+- PERFORMANCE_ACCEPTANCE §3: ≥ 3 dönüşümlü (ABBA) kapalı/açık çift, aynı makine, aynı 30k fixture (seed 7), seri koşu.
+- **A/A gürültü sınırı:** Aynı serideki bayrak kapalı koşuların ikili farklarının mutlak maksimumu.
+- **Karar kuralı:** "Medyan A/A aralığında" kullanılmaz. Bir metrikte gerileme ancak şu durumda sayılır: **çift farklarının (açık − kapalı) üçü de aynı işarette pozitif** ve **her biri A/A maksimumundan büyük**. Kazanç da aynı kuralın tersiyle (üç fark da negatif ve A/A maksimumundan büyük) kanıtlanır. Tek aykırı A/A değeri aralığı genişletse bile, işaret kuralı bunu yakalar.
+
+**Senaryolar:**
+- **S1 · Uzun oturum:** 200 ardışık CP satır düzenlemesi (not / Del. Type / Retail Date karışık, 200 farklı sipariş), 1.000 ms aralık, akış sırasında bütün dosya okuması yok. Son düzenlemeden sonra boşta bekleme; bayrak açıkken boşta sıkıştırma, kapalıyken bekleyen yeniden yazımlar bitene kadar. Ardından bir `/api/page-projection/cp` okuması. **Pencere:** ilk kayıttan bu okumanın bitişine kadar.
+- **S2 · Okumalı kayıt akışı:** Mevcut `benchmark-cp-save-flow.js` senaryosu (16 kayıt, 2,5 sn, her aralıkta Siparişler bütün dosya okuması). Bu, bayrak açık yol için en kötü desendir.
+- **S3 · Beklenmedik kapanma:** Bayrak açık, günlük doluyken kayıttan hemen sonra `SIGKILL`. Ardından yeniden başlatma, soğuk ilk okuma ve sıcak ikinci okuma süresi, düzenlenen satırlarda son değerlerin varlığı.
+
+**Kapılar:**
+
+| # | Kapı | Ölçüt |
+| --- | --- | --- |
+| G1 | **S1 toplam süreç CPU'su** | Açık medyanı ≤ 0,20 × kapalı medyanı **ve** üç çift farkı da negatif ve her biri A/A maksimumundan büyük |
+| G2 | S1/S2 ana iş parçacığı CPU'su ve kayıt onayı p50 | Gerileme kuralına takılmaz |
+| G3 | **S2 toplam süreç CPU'su ve Siparişler okuma bekleme p50** | Gerileme kuralına takılmaz (en kötü desen; takılırsa pilot BLOCKED) |
+| G4 | Tepe RSS (S1, S2) | Gerileme kuralına takılmaz |
+| G5 | Disk yazımı (S1, `/proc/<pid>/io` `wchar` + `write_bytes`) | Raporlanır; gerileme kuralına takılmaz |
+| G6 | Günlük sınırı | Her an giriş ≤ 64 ve bayt ≤ 8 MiB (sunucu izinden). Sıkıştırma sayısı, nedeni (okuma / boşta / eşik / mutasyon) ve süresi raporlanır |
+| G7 | **Eşitlik (her düzenlemeden sonra)** | Birim: sentetik fixture'da 200 düzenleme, işçi ve ana iş parçacığı yolları; her düzenlemeden sonra okunan projeksiyon, eski yolla bayt düzeyinde aynı. 30k: in-process, ilk 10 düzenlemenin her birinden sonra ve 200'de kanonik eşitlik. Hepsinde %100 |
+| G8 | **Dayanıklılık** | S3'te yeniden başlatma sonrası okuma 200 döner ve son değerler mevcut. Birim: yırtık günlük ya da manifest/günlük uyuşmazlığı → önbellek atılır ve yeniden üretilir; `.bak` manifest bekleyen günlükle asla güncel veri olarak sunulmaz; araya giren mutasyon önce sıkıştırır; Backlog varyantları eski yoldaki gibi düşer |
+| G9 | Mevcut testler | `npm test -- projection-rewrite page-cache page-projection cp-shared-edit` geçer |
+
+**Karar:** Yalnız G1–G9'un tümü geçerse PASS. Ölçümden sonra hiçbir eşik gevşetilmez; ölçülemeyen kapı BLOCKED sayılır.
+
 ---
 
 ## 7 · Ürün sahibinin vermesi gereken kararlar
