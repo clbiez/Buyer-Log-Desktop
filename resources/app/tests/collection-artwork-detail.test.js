@@ -452,7 +452,7 @@ test('Artwork cell double-click opens the card editor (Fabric pattern); typing s
 
 test('Collection cell keeps the textarea editor under the card layer (edit/copy path unchanged)', () => {
   // Tek hücre düzenlemesi tam çizim yapmaz; kart katmanı o hücrede yenilenir.
-  assert.match(APP, /if\(k==='artworkDetail'\)window\.BLCollectionArtworkDetail\?\.refreshCell\?\.\(row\);/);
+  assert.match(APP, /if\(rerender && !needsRerender && k==='artworkDetail'\)window\.BLCollectionArtworkDetail\?\.refreshCell\?\.\(row\);/);
   assert.match(COLUMN, /function refreshCell\(row\)/);
   assert.match(APP, /c\.k==='artworkDetail'\?window\.BLCollectionArtworkDetail\?\.cellCards\?\.\(r,val\):null/);
   assert.match(APP, /\$\{art\?art\.inner:''\}<textarea class="editCell kolTextCell"/);

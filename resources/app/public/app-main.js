@@ -33218,12 +33218,10 @@ function commitKolEditor(el, options={}){
   else if(k==='trPrice'||k==='trLandedMult'||k==='trFx'||k==='ydLandedMult'){ needsRerender=true; }
   if(persist)saveKolRows();
   if(!kolBulkPreparing&&(k==='plmId'||k==='colourCode')&&row.imgRef)void kolPlmLinkImageEverywhere(row,row.imgRef);
+  // Artwork Detayı kart katmanı tam çizim olmadan yalnız bu hücrede yenilenir.
+  if(rerender && !needsRerender && k==='artworkDetail')window.BLCollectionArtworkDetail?.refreshCell?.(row);
   if(rerender && needsRerender) renderKol();
-  else if(rerender){
-    // Artwork Detayı kart katmanı tam çizim olmadan yalnız bu hücrede yenilenir.
-    if(k==='artworkDetail')window.BLCollectionArtworkDetail?.refreshCell?.(row);
-    refreshKolSummaryFooter();
-  }
+  else if(rerender) refreshKolSummaryFooter();
   return true;
 }
 function commitKolPriceEditor(el, options={}){
