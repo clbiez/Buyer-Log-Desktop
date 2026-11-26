@@ -12269,6 +12269,7 @@ const ordersRM={
   columnFacets:new Map(),materialized:null,legacyReason:'',firstStarted:0,
   // Açılış bekleyicisi: her çizim bildirir (bkz. ordersNotifyPainted).
   paintWaiters:new Set(),paintCount:0,
+  sourceRenderTimer:null, // CP yazımı / uzak yama sonrası birleştirilmiş yeniden çizim (bkz. ordersRMSourceChanged)
 };
 // Depolama bir kez okunur: filteredOrders / sütun paneli gibi sık yollar her çağrıda okumaz.
 let ordersRMEnabledCache=null;
@@ -12772,6 +12773,17 @@ window.addEventListener('bl:global-flow-data-changed',event=>{
   if(reason!=='server-orders-deferred'){ordersRMAdoptFullRows();ordersRMWarmDataset();}
   if(ordersReadModelEnabled()&&ordersRM.rows)queueMicrotask(()=>{if(currentActiveTab()==='orders')renderOrders();});
 });
+/* CP yazımından ya da uzak satır yamasından sonra pencereli Siparişler sonucu bayattır: okuma modeli açıkken
+   satırlar sunucu sorgusundan gelir, state.orders eşleri (orderLinePeerRows / remoteRowLists) yoktur. Yalnız
+   sunucu onayından SONRA çağrılır (onaydan önce sorgu eski değeri döndürür ve o sonuç yeni sanılır). Siparişler
+   görünmüyorsa yalnız geçersizleşir; sonraki açılış yeniden sorgular. Görünürse art arda gelenler tek çizimde birleşir. */
+function ordersRMSourceChanged(reason){
+  if(!ordersReadModelEnabled()||!ordersRM.rows)return;
+  ordersRMInvalidate(reason);
+  if(currentActiveTab()!=='orders'||ordersRM.sourceRenderTimer)return;
+  ordersRM.sourceRenderTimer=setTimeout(()=>{ordersRM.sourceRenderTimer=null;if(currentActiveTab()==='orders')renderOrders();},250);
+}
+window.addEventListener('buyerlog:cp-write-ack',()=>ordersRMSourceChanged('cp-write-ack'));
 function ordersRMInvalidate(reason){
   ordersRM.epoch++;ordersRM.seq++;ordersRM.facetsSeq++;ordersRM.signature='';ordersRM.facets=null;ordersRM.facetsKey='';ordersRM.columnFacets.clear();ordersRM.materialized=null;
   window.BLPerf?.mark?.('ORDERS_READ_MODEL_INVALIDATED',{reason:reason||'data'});
@@ -44503,7 +44515,7 @@ function initLiveSync(){
       window.BLLicenseCardsPage?.invalidate?.();
       void refreshPricingRulesFromServer().catch(()=>{});
     }else if(payload.area==='orders'){
-      if(payload.mode==='patch'&&Array.isArray(payload.rowPatches)){applyRemoteRowPatches(payload.rowPatches);return;}
+      if(payload.mode==='patch'&&Array.isArray(payload.rowPatches)){applyRemoteRowPatches(payload.rowPatches);ordersRMSourceChanged('remote-row-patch');return;}
       // Yapısal değişiklik: HAFİF yeniden yükleme. Tam kaynak yenilemesi değil —
       // ekip arkadaşının düzenlemesi ASAS/Antrepo verisini değiştirmez.
       if(typeof loadFromServer==='function')loadFromServer(false).catch(()=>{});
