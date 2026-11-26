@@ -75,15 +75,39 @@ test('complete supplier, prices, dates and historic LCW MB week/month mapping',(
   assert.equal(source['In-Store (Model Budget)'],'2027-07-08'); // source remains untouched
   assert.equal(scope.sourceIdentity(source,true),scope.sourceIdentity(row));
 });
-test('without Sub MFR the Manufacturer is used, and a missing Supp. FOB never falls back to the final FOB',()=>{
+test('without Sub MFR the Manufacturer is used, and a blank Supp. FOB falls back to Manufacturer + FOB as a pair',()=>{
   const scope=transferMapper();
   const main=scope.mapOrder({'Order Code':'M1','PLM ID':'1','Model Name':'M','Manufacturer':'MAIN FACTORY','FOB ($)':'5.00','Supp. FOB':'4.20'});
   assert.equal(main.confirmedManufacturer,'MAIN FACTORY');
   assert.equal(JSON.stringify(main.pricing),JSON.stringify({'MAIN FACTORY':'4.20'}));
+  assert.equal(main._sourceOrderDetails.priceBasis,'supplierFob');
+  // Çoğu kullanıcı Supp. FOB / Sub-MFR kullanmaz: doğrudan FOB + Manufacturer.
+  const plain=scope.mapOrder({'Order Code':'M3','PLM ID':'1','Model Name':'M','Manufacturer':'MAIN FACTORY','Sub-Manufacturer':'  ','FOB ($)':'5.00','Supp. FOB':''});
+  assert.equal(plain.confirmedManufacturer,'MAIN FACTORY');
+  assert.equal(plain.buyingSampleManufacturer,'MAIN FACTORY');
+  assert.equal(JSON.stringify(plain.pricing),JSON.stringify({'MAIN FACTORY':'5.00'}));
+  assert.equal(plain.targetPrice,'5.00');
+  assert.equal(plain.fob,'5.00');
+  assert.equal(plain._sourceOrderDetails.priceBasis,'fob');
+  assert.equal(plain._sourceOrderDetails.supplierFob,'');
+  // Fiyat/üretici çifti: Sub-MFR dolu ama Supp. FOB boş → FOB ana üreticinin
+  // fiyatıdır; Sub-MFR adına yazılmaz, Manufacturer + FOB alınır.
   const noSupp=scope.mapOrder({'Order Code':'M2','PLM ID':'1','Model Name':'M','Manufacturer':'MAIN FACTORY','Sub-Manufacturer':'SUB','FOB ($)':'5.00'});
-  assert.equal(JSON.stringify(noSupp.pricing),'{}');
-  assert.equal(noSupp.confirmedManufacturer,'SUB');
+  assert.equal(JSON.stringify(noSupp.pricing),JSON.stringify({'MAIN FACTORY':'5.00'}));
+  assert.equal(noSupp.confirmedManufacturer,'MAIN FACTORY');
+  assert.equal(noSupp.buyingSampleManufacturer,'MAIN FACTORY');
+  assert.equal(noSupp._sourceOrderDetails.subManufacturer,'SUB');
   assert.equal(noSupp._sourceOrderDetails.deliveryType,'');
+  // Geçersiz/sıfır Supp. FOB dolu sayılmaz; ikisi de yoksa fiyat uydurulmaz.
+  const zeroSupp=scope.mapOrder({'Order Code':'M4','PLM ID':'1','Model Name':'M','Manufacturer':'MAIN FACTORY','FOB ($)':'5.00','Supp. FOB':'0'});
+  assert.equal(JSON.stringify(zeroSupp.pricing),JSON.stringify({'MAIN FACTORY':'5.00'}));
+  const none=scope.mapOrder({'Order Code':'M5','PLM ID':'1','Model Name':'M','Manufacturer':'MAIN FACTORY'});
+  assert.equal(JSON.stringify(none.pricing),'{}');
+  assert.equal(none.targetPrice,'');
+  assert.equal(none._sourceOrderDetails.priceBasis,'');
+  // Kaynak kimliği FOB geri dönüşünden etkilenmez: aynı sipariş tekrar aktarılmaz.
+  const src={'Order Code':'M3','PLM ID':'1','Model Name':'M','Manufacturer':'MAIN FACTORY','FOB ($)':'5.00'};
+  assert.equal(scope.sourceIdentity(src,true),scope.sourceIdentity(scope.mapOrder(src)));
 });
 test('historical entries with unknown LCW calendar do not invent MB period',()=>{
   const scope=transferMapper();

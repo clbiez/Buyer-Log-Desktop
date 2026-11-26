@@ -1775,12 +1775,12 @@
         "tr": [
           "Soldaki listeden fiyat talebini seçin.",
           "Matris hücresine fiyatı yazın veya Excel’den yapıştırın, Ctrl+Z son girişi geri alır.",
-          "Doğru teklifi ✓ ile onaylayın ya da hedefin altındaki teklifleri toplu onaylayın."
+          "Doğru teklifi ✓ ile onaylayın; onay bekleyenleri Yalnız onaysız filtresiyle izleyin."
         ],
         "en": [
           "Select the pricing request on the left.",
           "Type a price in the matrix cell or paste from Excel, Ctrl+Z undoes the last entry.",
-          "Approve the right offer with ✓ or bulk-approve offers below target."
+          "Approve the right offer with ✓ and track what is still open with the Unapproved only filter."
         ]
       },
       "note": {

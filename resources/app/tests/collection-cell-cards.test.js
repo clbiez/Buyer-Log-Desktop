@@ -45,7 +45,7 @@ test('fabric cell: single fabric → code + type|weight, composition below; A/B 
   assert.match(block, /:`<div class="kolFabricLine hasCard blCellLine">\$\{label\}<span class="blCellBody">\$\{code\}\$\{chips\.head\}\$\{chips\.mix\}<\/span><\/div>`\)/);
   assert.match(block, /<span class="blCellChip isCode"><b>\$\{escapeHtml\(part\.code\)\}<\/b><\/span>/);
   assert.match(block, /:`<div class="kolFabricLine\$\{card\?' hasCard':''\}">/, 'cards without segments keep the plain summary line');
-  assert.match(LAYOUT, /:is\(#kolTable,#cpTable,#ordersTable\) tbody \.blCellChip\.isShrink b\{overflow:hidden;text-overflow:ellipsis\}/);
+  assert.match(LAYOUT, /:is\(#kolTable,#cpTable,#ordersTable,\.pdMatrix\) tbody \.blCellChip\.isShrink b\{overflow:hidden;text-overflow:ellipsis\}/);
 });
 
 test('status badge keeps the full label in its tooltip, also after a live change', () => {
@@ -96,5 +96,5 @@ test('Landed summary and Endeksmatik stack OS/TR lines; references carry their o
   const lfl = fs.readFileSync(path.join(PUBLIC, 'collection-lfl.js'), 'utf8');
   assert.match(lfl, /<span class="blCellStackRow" title="\$\{esc\(m\.detail\)\}"><span class="blCellStackLabel">\$\{esc\(labelFor\(key\)\)\}<\/span><b class="blCellValue/);
   assert.match(lfl, /data-tone="\$\{m\.percent<=0\?'good':'bad'\}">\$\{esc\(m\.percentText\)\}/);
-  assert.match(LAYOUT, /:is\(#kolTable,#cpTable,#ordersTable\) tbody \.blCellStack\{display:grid;grid-template-columns:auto auto auto/);
+  assert.match(LAYOUT, /:is\(#kolTable,#cpTable,#ordersTable,\.pdMatrix\) tbody \.blCellStack\{display:grid;grid-template-columns:auto auto auto/);
 });

@@ -31,7 +31,7 @@ test('quantity sort reads the numeric source rather than localized thousands sep
  vm.runInContext(source.slice(start,end),ctx);
  const req={source:'collection'},item={id:'quantity'};rows.set(item.id,{quantity:1200});
  const column=ctx.qListColumns().find(column=>column.field==='quantity');
- assert.equal(column.value(req,item),'1,200');assert.equal(column.number(item,req),1200);
+ assert.equal(column.value(req,item),'1.200','quantity uses the Collection dot thousands separator in every language');assert.equal(column.number(item,req),1200);
  rows.set(item.id,{quantity:0});assert.equal(column.number(item,req),0);
  rows.set(item.id,{quantity:''});assert.ok(Number.isNaN(column.number(item,req)));
 });

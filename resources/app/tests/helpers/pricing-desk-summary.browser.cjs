@@ -28,14 +28,14 @@ try{
  assert.match(await page.locator('.pdModelText').first().innerText(),/Printed cotton tee 1/);
  assert.doesNotMatch(await page.locator('.pdModelText').first().innerText(),/CATEGORY/);
  assert.match(await page.locator('.pdSummary').nth(1).innerText(),/0/);
- assert.deepEqual(await page.locator('.pdMatrix thead th').allTextContents(),['Model','Adet / MB Ay','Hedef','En iyi / Onaylı','Δ Hedef','Demo Textile A130/130 · 130 en iyi−2,6%','Demo Textile B130/130 · 0 en iyi+2,6%','Üretici']);
+ assert.deepEqual(await page.locator('.pdMatrix thead th').allTextContents(),['Model','Adet / MB Ay','Hedef Fiyat','Teklif & Onay','Previous Season / LFL / Sezon Etkisi','Demo Textile A130/130 · 130 en iyi−2,6%','Demo Textile B130/130 · 0 en iyi+2,6%','Üretici']);
  assert.ok(await page.locator('tr[data-pd-row]').count()<60);
  if(process.env.PRICING_DESK_CAPTURE_DIR)await page.screenshot({animations:'disabled',path:path.join(process.env.PRICING_DESK_CAPTURE_DIR,'pricing-desk-summary-matrix.png')});
  await page.locator('[data-pd-columns]').click();await page.locator('[data-pd-column="season"]').check();await page.locator('[data-pd-columns-apply]').click();
  assert.equal(await page.locator('.pdMatrix thead th').nth(5).innerText(),'SEZON');
  // Copies include logical rows outside the DOM window and the selected Collection context.
  const copied=await page.evaluate(()=>{const req=window.BL_QUOTATIONS.desk.activeRequest(),E=window.BLPricingDeskEngine,layout=E.supplierLayout(E.supplierScorecards(req),true),matrix={...E.requestMatrix(req),manufacturers:layout.visible.map(s=>s.name)};return window.BLPricingDesk._test.matrixClipboardText(req,{matrix,layout,canEdit:true});});
- assert.match(copied,/DEMO-MODEL-130/);assert.match(copied,/Adet: 0/);assert.match(copied,/JUNE 2027/);assert.match(copied,/S7/);assert.doesNotMatch(copied,/CATEGORY-MUST-NOT-APPEAR/);
+ assert.match(copied,/DEMO-MODEL-130/);assert.match(copied,/Adet: 0/);assert.match(copied,/HAZİRAN 27/);assert.match(copied,/S7/);assert.doesNotMatch(copied,/CATEGORY-MUST-NOT-APPEAR/);
  await page.evaluate(()=>{kolRows[1].fabric='';window.BL_QUOTATIONS.desk.activeRequest().items.filter(item=>item.rowId===2).forEach(item=>item.fabric='');window.BL_QUOTATIONS.desk.renderDetail();});
  const rowHeights=await page.locator('tr[data-pd-row]').evaluateAll(rows=>rows.map(row=>row.getBoundingClientRect().height));
  assert.ok(rowHeights.length>0);assert.ok(rowHeights.every(height=>height===rowHeights[0]),'missing Fabric Cards preserve uniform virtual row heights');

@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-26",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Sunum Stüdyosu: grupları birleştirme, ayrılan kart için grup alanı, satır satır başlıklar; Alanlar: sütunu sürükleyerek başka ana başlığa taşı; özel sütunlarla kopyala ve hassas sütunlar",
-    "en": "Presentation Studio: merge groups, group areas for separated cards, line-by-line titles; Fields: drag a column under another heading; copy custom columns and sensitive columns"
+    "tr": "Sunum Stüdyosu: grupları birleştirme, ayrılan kart için grup alanı, satır satır başlıklar; Alanlar: sütunu sürükleyerek başka ana başlığa taşı; özel sütunlarla kopyala ve hassas sütunlar; Fiyat Masası: net onay görünümü ve Koleksiyon fiyat sütunları",
+    "en": "Presentation Studio: merge groups, group areas for separated cards, line-by-line titles; Fields: drag a column under another heading; copy custom columns and sensitive columns; Pricing Desk: clear approval state and Collection price columns"
   },
   "summary": {
-    "tr": "Sunum Stüdyosu’nda bir kartı başka bir kartın ya da grubun üzerine bırakmak iki grubu birleştirir; grubundan ayrılan kartlar kendi grup alanına alınıp boyutlandırılabilir. Grup başlığında her gruplama seviyesi ve takım parçası ayrı satırda; başlık yazı boyutu kart yazısından ayrı ayarlanır. Grup alanı boyutlandırılınca kartlar alanı orantılı doldurur; görsellerin arkasındaki gri zemin kaldırıldı. Alanları düzenle ekranında CP, Siparişler ve Koleksiyon sütunları sürükle-bırakla başka bir ana başlığa taşınır; tablodaki başlık bandı da hemen değişir. Seçim kişiseldir ve Alanları sıfırla ile geri alınır. CP, Siparişler ve Koleksiyon'da satırlar seçtiğiniz sütunlarla ve sırayla kopyalanır; hassas işaretli sütunlar (varsayılan: Retail tarihi, Ex→Retail, MB tarihi/hafta/ay; Koleksiyon'da fiyat analizi, Endeksmatik, avantaj, onaylı fiyat ve üretici) seçim çubuğundaki “Hassaslar gizli” ile kopyadan çıkarılır. Ctrl+C ve normal Kopyala değişmez.",
-    "en": "In Presentation Studio, dropping a card onto another card or group merges the two groups; cards separated from their group can get their own resizable group area. Group titles show each grouping level and set part on its own line, and the title text size is set separately from the card text. Resizing a group area scales its cards to fill it, and the grey background behind images was removed. In Edit fields, CP, Orders and Collection columns can be dragged under another heading; the heading band in the table updates right away. The choice is personal and Reset fields undoes it. In CP, Orders and Collection, rows can be copied with the columns you choose, in your order; columns marked sensitive (by default Retail date, Ex→Retail, MB date/week/month; in Collection also price analysis, Endeksmatik, advantage, approved price and manufacturer) are left out with “Hide sensitive” in the selection bar. Ctrl+C and normal Copy are unchanged."
+    "tr": "Sunum Stüdyosu’nda bir kartı başka bir kartın ya da grubun üzerine bırakmak iki grubu birleştirir; grubundan ayrılan kartlar kendi grup alanına alınıp boyutlandırılabilir. Grup başlığında her gruplama seviyesi ve takım parçası ayrı satırda; başlık yazı boyutu kart yazısından ayrı ayarlanır. Grup alanı boyutlandırılınca kartlar alanı orantılı doldurur; görsellerin arkasındaki gri zemin kaldırıldı. Alanları düzenle ekranında CP, Siparişler ve Koleksiyon sütunları sürükle-bırakla başka bir ana başlığa taşınır; tablodaki başlık bandı da hemen değişir. Seçim kişiseldir ve Alanları sıfırla ile geri alınır. CP, Siparişler ve Koleksiyon'da satırlar seçtiğiniz sütunlarla ve sırayla kopyalanır; hassas işaretli sütunlar (varsayılan: Retail tarihi, Ex→Retail, MB tarihi/hafta/ay; Koleksiyon'da fiyat analizi, Endeksmatik, avantaj, onaylı fiyat ve üretici) seçim çubuğundaki “Hassaslar gizli” ile kopyadan çıkarılır. Ctrl+C ve normal Kopyala değişmez. Fiyat Masası’nda onaylı fiyat hücresi her zaman yeşil ve ONAYLI etiketiyle görünür; Hedef, Teklif & Onay ve kompakt PS / LFL / SE sütunları Koleksiyon verisiyle gelir, sütunlar sıralanır, genişletilir ve gizlenir, Yalnız onaysız filtresi eklendi, toplu onay kaldırıldı ve tablo üstündeki alan küçüldü.",
+    "en": "In Presentation Studio, dropping a card onto another card or group merges the two groups; cards separated from their group can get their own resizable group area. Group titles show each grouping level and set part on its own line, and the title text size is set separately from the card text. Resizing a group area scales its cards to fill it, and the grey background behind images was removed. In Edit fields, CP, Orders and Collection columns can be dragged under another heading; the heading band in the table updates right away. The choice is personal and Reset fields undoes it. In CP, Orders and Collection, rows can be copied with the columns you choose, in your order; columns marked sensitive (by default Retail date, Ex→Retail, MB date/week/month; in Collection also price analysis, Endeksmatik, advantage, approved price and manufacturer) are left out with “Hide sensitive” in the selection bar. Ctrl+C and normal Copy are unchanged. In Pricing Desk an approved price cell is always green with an APPROVED label; Target, Quotes & Approval and compact PS / LFL / SI columns come from Collection data, columns can be sorted, resized and hidden, an Unapproved only filter was added, bulk approval was removed and the area above the table is smaller."
   },
   "changes": [
     {
@@ -147,6 +147,64 @@
         "reason": {
           "tr": "Arka plandaki senkron birleşimi düzeltildi; ekranda değişen bir öğe yok.",
           "en": "The background sync merge was fixed; nothing on screen changes."
+        }
+      }
+    },
+    {
+      "id": "collection-order-fob-manufacturer-fallback",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon · CP · Siparişler",
+        "en": "Collection · CP · Orders"
+      },
+      "title": {
+        "tr": "Koleksiyona aktarımda Supp. FOB boşsa FOB ve Manufacturer alınır",
+        "en": "Import to Collection uses FOB and Manufacturer when Supp. FOB is blank"
+      },
+      "body": {
+        "tr": "CP veya Siparişler’den seçili modelleri Koleksiyon’a aktarırken onaylı fiyat ve üretici birlikte seçilir: Supp. FOB doluysa Supp. FOB ve Sub-Manufacturer (boşsa Manufacturer), Supp. FOB boşsa FOB ve Manufacturer alınır. Böylece Supp. FOB ve Sub-MFR kullanmayan kullanıcılarda modeller artık fiyatsız açılmaz ve FOB başka bir üreticinin adına yazılmaz. Önizleme sütunları ‘Üretici · fiyat’ olarak adlandırıldı.",
+        "en": "When selected models are imported from CP or Orders into Collection, the confirmed price and manufacturer are chosen as a pair: with a Supp. FOB, Supp. FOB and Sub-Manufacturer (or Manufacturer if blank); without one, FOB and Manufacturer. Users who do not use Supp. FOB and Sub-MFR no longer get models without a price, and FOB is never recorded under another manufacturer’s name. The preview columns are now labelled ‘Manufacturer · price’."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-order-fob-fallback.png",
+        "alt": {
+          "tr": "Demo verili Siparişlerden Koleksiyon Oluştur önizlemesi: Supp. FOB boş satır Manufacturer ve FOB ile, Supp. FOB dolu satır Sub-Manufacturer ve Supp. FOB ile geliyor",
+          "en": "Build Collection from Orders preview with demo data: the row without Supp. FOB uses Manufacturer and FOB, the row with Supp. FOB uses Sub-Manufacturer and Supp. FOB"
+        },
+        "caption": {
+          "tr": "Supp. FOB boş siparişte FOB ve Manufacturer, dolu siparişte Supp. FOB ve Sub-Manufacturer onaylı fiyat/üretici olur.",
+          "en": "An order without Supp. FOB takes FOB and Manufacturer; one with Supp. FOB takes Supp. FOB and Sub-Manufacturer."
+        }
+      }
+    },
+    {
+      "id": "pricing-desk-approval-collection-columns",
+      "type": "feature",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Fiyat Masası: onaylı fiyat belirgin, Koleksiyon fiyat sütunları, sıralanabilir, genişletilebilir ve gizlenebilir sütunlar",
+        "en": "Pricing Desk: clear approved price, Collection price columns, sortable, resizable and hideable columns"
+      },
+      "body": {
+        "tr": "Onaylanan fiyat hücresi artık fareyle üzerine gelmeden de yeşil zemin, dolu onay işareti ve ONAYLI etiketiyle görünür; aynı modelin onaysız teklifleri soluk yazılır araç çubuğunda kaç modelin onaylı olduğu yazar. Yalnız onaysız düğmesi onay bekleyen modelleri iş listesi gibi gösterir: onaylanan model listeden çıkar, imleç sıradaki modele geçer. Hedefin altındakileri toplu onaylama kaldırıldı; her onay tek tek verilir. Hedef / En iyi-Onaylı / Δ Hedef sütunlarının yerine Koleksiyon tablosundaki Target Price, Teklif & Onay ve Previous Season / LFL / Sezon Etkisi sütunları aynı biçimle gelir: Supp. FOB, hedefe fark, onaylı ya da önerilen üretici, bekleyen teklif sayısı ve önceki sezon referansları. Referans sütunu masada kompakttır: PS / LFL / SE kısaltması ve % etkisi tek satırda, ortalama fiyat ve dönem ipucunda. Adet / MB Ay hücresinde yalnız değerler yazar; etiketler sütun başlığındadır. Yalnız Model sütunu sabittir, diğer sütunlar yatayda kayar. Çift tık veya ⤢ fiyat çekmecesini açar; hedef fiyat Koleksiyon’daki gibi düzenlenir (yalnız kendi Koleksiyon satırlarınızda). Sütun başlığına tıklayarak artan/azalan sıralar, başlık kenarından sürükleyerek genişlik ayarlarsınız; başlıktaki × ya da Sütunlar panelindeki Matris sütunları ile sütun gizlersiniz (üretici gizleme o talebe özeldir, teklif ve onay hesapları değişmez); ayarlar sizin için saklanır, başlıklar sığmayınca alt satıra geçer. MB Ay JULY 27 biçiminde, adet 15.165 biçiminde yazılır. Başlık, özet, not ve kapasite iki satırda toplandı, klavye kısayolları tek düğmeye alındı; tabloya daha çok alan kalır.",
+        "en": "An approved price cell is now green with a filled check mark and an APPROVED label without hovering; the other offers for the same model are dimmed and the toolbar shows how many models are approved. Unapproved only lists the models still waiting like a work queue: an approved model leaves the list and the cursor moves to the next model. Bulk approval of offers below target was removed; every approval is given one by one. The Target / Best-Approved / Δ Target columns are replaced by the Collection table’s Target Price, Quotes & Approval and Previous Season / LFL / Season Impact columns in the same format: Supp. FOB, difference to target, approved or suggested manufacturer, waiting quotations and previous-season references. The reference column is compact in the desk: PS / LFL / SI with the % impact on one line, with the average price and period in the tooltip. Quantity / MB Month cells show only the values; the labels are in the column header. Only the Model column is frozen; the other columns scroll horizontally. Double-click or ⤢ opens the price drawer, and the target price can be edited as in Collection (only on your own Collection rows). Click a column header to sort ascending/descending and drag its edge to resize; hide a column with the × in its header or under Matrix columns in the Columns panel (manufacturer hiding applies to that request only and does not change quotation or approval calculations); settings are saved for you and long headers wrap. MB Month reads JULY 27 and quantities read 15.165. Title, summary, note and capacity now fit on two lines and keyboard shortcuts moved into one button, leaving more room for the table."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-desk-approval-collection-columns.png",
+        "alt": {
+          "tr": "Demo verili Fiyat Masası matrisi: onaylı fiyat hücreleri yeşil ve ONAYLI etiketli; Quantity / MB Month sütununda 15.165 ve JULY 27; Target Price, Quotes & Approval ve PS / LFL / SI referans sütunu; araç çubuğunda 7/8 models approved sayacı ve Unapproved only (1) düğmesi",
+          "en": "Pricing Desk matrix with demo data: approved price cells are green with an APPROVED label; the Quantity / MB Month column shows 15.165 and JULY 27; Target Price, Quotes & Approval and PS / LFL / SI reference column; the toolbar shows 7/8 models approved and the Unapproved only (1) button"
+        },
+        "caption": {
+          "tr": "Demo veride onaylı fiyatlar ve Koleksiyon fiyat sütunları.",
+          "en": "Approved prices and Collection price columns on demo data."
         }
       }
     },
