@@ -58,4 +58,8 @@ set ELECTRON_RUN_AS_NODE=1
 
 - Arayüz tarayıcıda açılır; masaüstü penceresi ve Excel/PowerShell bağımlı özellikler bu testin kapsamı dışındadır. Senkron ve Koleksiyon yolu aynı sunucu kodudur.
 - İki makine aynı `moderator` kullanıcısını kullanır. Farklı kullanıcılar arası yetki senaryosu bu kurulumda yoktur.
-- **Henüz uçtan uca doğrulanmadı.** Windows ve gerçek OneDrive üzerinde denenmedi; komut ya da yol hatası görürseniz ekran çıktısını iletin.
+- **Linux'ta doğrulandı (2026-11-26):**
+  - 4 güvenlik kontrolü (gerçek Hub benzeri klasör, işaretsiz dolu kök, 6194 portu, sonradan değiştirilen sync klasörü) çıkış kodu 2 ile reddetti.
+  - İki sunucu (A: 6294, B: 6295) ve ortak bir test klasörüyle: A'nın 10 test satırı B'ye ulaştı; A → B ve B → A düzenlemeleri karşı tarafa yayıldı; denetim `converged: true` verdi.
+  - Gerçek ev dizini klasörlerine (`~/.buyer-log`) hiçbir dosya yazılmadı.
+- **Doğrulanmadı:** Windows, `soak-start.cmd`, `BuyerLog.exe`'nin Node modu ve gerçek OneDrive eşitlemesi. Komut ya da yol hatası görürseniz ekran çıktısını iletin.

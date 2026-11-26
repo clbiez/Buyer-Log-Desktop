@@ -14,7 +14,7 @@ if (!fs.existsSync(path.join(hub, 'BUYERLOG-SOAK-HUB.txt'))) { console.error(`Te
 const readJson = file => { try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch (_) { return null; } };
 const workspaces = root => {
   const dir = path.join(root, 'data', 'server', 'collection-workspaces'), out = {};
-  for (const name of fs.existsSync(dir) ? fs.readdirSync(dir).filter(n => n.endsWith('.json')) : []) out[name] = readJson(path.join(dir, name));
+  for (const name of fs.existsSync(dir) ? fs.readdirSync(dir).filter(n => n.endsWith('.json') && !n.includes('.write-fence') && !n.includes('.write-lock')) : []) out[name] = readJson(path.join(dir, name));
   return out;
 };
 const canonicalRows = ws => JSON.stringify(((ws && ws.rows) || []).map(row => { const { _rev, updatedAt, updatedBy, ...rest } = row; return [row.id, rest]; }).sort((x, y) => String(x[0]).localeCompare(String(y[0]), undefined, { numeric: true })));

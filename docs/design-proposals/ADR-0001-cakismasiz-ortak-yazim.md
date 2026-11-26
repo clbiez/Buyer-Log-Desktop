@@ -266,7 +266,8 @@ Her düzeltmeden sonra yeni seed kümesi koşuldu. Bağımsız incelemede oracle
 ### TEST kanalı mevcut kullanıcı verisinden yalıtılmış mı?
 
 **Hayır.**
-- **[Doğrulandı: source]** Veri kökleri kanala bağlı değil: `server/lib/data-roots.js` her zaman `%APPDATA%\Buyer Log` ve `%LOCALAPPDATA%\BuyerLog` kullanır; ortak klasör yapılandırılmış Shared Hub'dır.
+- **[Doğrulandı: source] (2026-11-26 düzeltmesi):** Veri kökleri kanala bağlı değildir. Masaüstü başlatıcısı (`electron/portable-paths.js`) arka uca veri köklerini **koşulsuz** olarak `<BuyerLog.exe klasörü>\data\…` biçiminde verir; dışarıdan verilen değişkenleri ezer. `server/lib/data-roots.js`'teki `%APPDATA%`/`%LOCALAPPDATA%` varsayılanı yalnız başlatıcısız çalıştırmada geçerlidir. Bu bölümün ilk sürümü bunu yanlış yazmıştı. Ortak klasör yapılandırılmış Shared Hub'dır.
+- Bu nedenle yalıtım ortam değişkeniyle **masaüstü uygulamasında yapılamaz**. `tools/soak/` sunucuyu doğrudan, yalıtılmış köklerle çalıştırır. Paketlenmiş sürüm ayrıca çalıştırdığı kodun bütünlük denetimini yapar; kurulum kopyasına dal kodu koymak bu yüzden çalışmaz [Muhtemel; Windows'ta denenmedi].
 - **[Muhtemel: dağıtım belgesi]** TEST sürümü aynı kurulumu yerinde günceller.
 - Güncelleme deneme politikası (`electron/update/trial-backend.js`) yalnız güncellemenin hemen ardından, sürüm onaylanana kadar yazmaları durdurur; bu bir yalıtım değildir.
 
