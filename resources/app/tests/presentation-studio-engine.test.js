@@ -364,3 +364,59 @@ test('grup alanı: boş sayfada bile sığmayan alan sonsuz sayfa üretmez', () 
   assert.equal(res.index.size, 12);
   assert.ok(res.pages.length < 20, 'sayfa sayısı sınırlı: ' + res.pages.length);
 });
+
+test('başlık yazı boyutu kart yazısından ayrı: başlık bandı hfs ile, kart metni fs ile ölçeklenir', () => {
+  const { doc, groupOf } = setup(24, ['fabric']);
+  assert.equal(doc.style.hfs, 10, 'varsayılan başlık 10 pt (önceki fs×1,25 ile aynı görünüm)');
+  const g0 = E.layout(doc, groupOf).g;
+  doc.style.hfs = 16;
+  const g1 = E.layout(doc, groupOf).g;
+  assert.ok(g1.hH > g0.hH && Math.abs(g1.hLine - 16 * 1.3) < 0.01);
+  assert.equal(g1.th, g0.th, 'kart metni yüksekliği değişmez');
+  assert.equal(E.normalizeStyle({ hfs: 99 }).hfs, 24); assert.equal(E.normalizeStyle({}).hfs, 10);
+});
+
+test('grubundan ayrılmış kart kendi grup alanına alınır; gruplar kartı bırakınca birleşir', () => {
+  const { data, doc, groupOf } = setup(24, ['fabric']);
+  const snapshot = JSON.stringify(data);
+  let res = E.layout(doc, groupOf);
+  const g = res.g, merinos = doc.order.filter(id => groupOf(id).vals[0] === 'Merinos');
+  // Ayrılmış (sabit) kart → kendi elle grubu + alan; özgün başlık metni korunur, özgün grup akışta kalır.
+  E.pinAt(doc, merinos[0], { page: 'p1', x: g.w - g.m - g.cellW, y: g.h - g.m - g.cellH, w: g.cellW, h: g.cellH });
+  const key = E.splitGroup(doc, [merinos[0]], groupOf);
+  assert.notEqual(key, groupOf(merinos[0]).key);
+  E.setArea(doc, key, { page: 'p1', x: g.w - g.m - g.cellW, y: g.m, w: g.cellW, h: 0 });
+  res = E.layout(doc, groupOf);
+  const items = res.pages.flatMap(p => p.items);
+  const hdr = items.find(i => i.kind === 'hdr' && i.area === key);
+  assert.ok(hdr && hdr.vals[0] === 'Merinos', 'başlık metni özgün grubunki');
+  assert.equal(items.filter(i => i.kind === 'card' && i.area === key).length, 1);
+  assert.ok(items.some(i => i.kind === 'hdr' && i.key === groupOf(merinos[1]).key && !i.area), 'özgün grup akışta ayrı');
+  assert.equal(res.index.get(merinos[0]).pinned, undefined, 'sabitleme kalktı, alanda akıyor');
+  // Kalıcılık
+  const round = E.normalizeDoc(JSON.parse(JSON.stringify(doc)), { ids: doc.order });
+  assert.deepEqual(round.splits[key], { vals: ['Merinos'] });
+  // Birleştirme: Pamuk grubunun tüm kartları Kaşmir grubuna katılır.
+  const pamuk = groupOf(doc.order.find(id => groupOf(id).vals[0] === 'Pamuk')).key, kasmir = groupOf(doc.order.find(id => groupOf(id).vals[0] === 'Kaşmir')).key;
+  const n = E.mergeGroups(doc, pamuk, kasmir, groupOf);
+  assert.equal(n, 6);
+  res = E.layout(doc, groupOf);
+  assert.equal(res.pages.flatMap(p => p.items).filter(i => i.kind === 'hdr' && i.key === pamuk).length, 0);
+  assert.equal(res.pages.flatMap(p => p.items).filter(i => i.kind === 'hdr' && i.key === kasmir).reduce((m, h) => Math.max(m, h.count), 0), 12);
+  assert.equal(JSON.stringify(data), snapshot, 'kaynak veri değişmez');
+  assertClean(res);
+});
+
+test('grup alanları ve sabit kartlar üst üste binmez: alan engelin altına kayar, aşağıdaki engele kadar büyür', () => {
+  const { doc, groupOf } = setup(40, ['fabric']);
+  let res = E.layout(doc, groupOf);
+  const g = res.g, keys = [...new Set(doc.order.map(id => groupOf(id).key))];
+  // İkinci alan birincinin ortasına bırakılır; sabit kart da birinci alanın altına konur.
+  E.setArea(doc, keys[0], { page: 'p1', x: g.m, y: g.h * 0.4, w: 2 * g.cellW + g.gap, h: 0 });
+  E.setArea(doc, keys[1], { page: 'p1', x: g.m, y: g.m, w: 2 * g.cellW + g.gap, h: 0 });
+  res = E.layout(doc, groupOf);
+  assertClean(res);
+  const items = res.pages.flatMap(p => p.items);
+  for (const k of keys.slice(0, 2)) assert.equal(items.filter(i => i.kind === 'card' && i.area === k).length, doc.order.filter(id => groupOf(id).key === k).length, 'kart kaybı yok');
+  assert.ok(res.pages.length >= 2);
+});

@@ -151,7 +151,7 @@
   function textPlan() {
     const st = S.doc.style, cellW = E().geometry(S.doc, null).cellW;
     const vkey = [st.fields.join(','), st.labels, st.chips, st.fabricCode, S.doc.grouping.levels.join(','), S.doc.order.length, isEn()].join('|');
-    const key = [vkey, st.fs, st.font, cellW.toFixed(2), JSON.stringify(S.doc.labels)].join('|');
+    const key = [vkey, st.fs, st.hfs, st.font, cellW.toFixed(2), JSON.stringify(S.doc.labels)].join('|');
     if (S.plan) S.plan.approx = Boolean(S.slider);
     if (S.plan && S.planKey === key) return S.plan;
     // Kaydırıcı sürüklenirken önceki plan kullanılır (satır sayısı anlık olarak bir satır geride kalabilir); bırakınca kesin plan hesaplanır.
@@ -177,12 +177,10 @@
       header: it => {
         const custom = S.doc.labels[it.key];
         const out = { main: custom || it.vals[0] || '—', rest: custom ? '' : it.vals.slice(1).filter(Boolean).join(' · '), count: `${it.count} ${it.count === 1 ? L('model', 'model') : L('model', 'models')}${it.cont ? L(' · devam', ' · cont.') : ''}` };
-        // Grup başlığında Kumaş/Artwork seviyesi çip olarak; diğer seviyeler metin.
+        // Başlıkta her gruplama seviyesi ayrı satırda; Kumaş/Artwork seviyesi çip (takım parçaları A/B/C ayrı satır).
         const lv = S.doc.grouping.levels, rep = !custom && S.doc.style.chips && lv.some(chipField) ? groupRow(it.key) : null;
-        if (rep) {
-          const parts = lv.map((f, j) => { const chips = chipField(f) ? chipModel(rep, f) : null; return chips ? { chips } : { text: it.vals[j] || '' }; }).filter(p => p.chips || p.text);
-          if (parts.some(p => p.chips)) out.parts = parts;
-        }
+        out.parts = custom ? [{ text: custom }] : lv.map((f, j) => { const chips = rep && chipField(f) ? chipModel(rep, f) : null; return chips ? { chips } : { text: it.vals[j] || '' }; }).filter(p => p.chips || p.text);
+        if (!out.parts.length) out.parts = [{ text: out.main }];
         return out;
       },
     };
@@ -422,7 +420,7 @@
       const on = S.areaSel === el.key;
       return { attr: ` data-area="${esc(el.key)}"`, cls: (on ? ' isSel' : '') + (el.cont ? ' isCont' : ''), inner: on && !el.cont ? ['e', 's', 'se', 'w'].map(d => `<span class="psHandle" data-h="${d}" data-ah="${d}"></span>`).join('') : '' };
     }
-    if (el.type === 'hdr') return { attr: ` data-hdr="${esc(el.key)}"${el.area ? ` data-area-hdr="${esc(el.key)}"` : ''} title="${esc(el.area ? L('Sürükleyerek grup alanını taşıyın · çift tıklayarak yeniden adlandırın', 'Drag to move the group area · double-click to rename') : L('Sürükleyerek grubu kendi alanına alın · çift tıklayarak yeniden adlandırın', 'Drag to give the group its own area · double-click to rename'))}"`, cls: '', inner: '' };
+    if (el.type === 'hdr') return { attr: ` data-hdr="${esc(el.key)}"${el.area ? ` data-area-hdr="${esc(el.key)}"` : ''}${!el.area && el.pins ? ` data-pins="${esc(el.pins.join('\u001f'))}"` : ''} title="${esc(el.area ? L('Sürükleyerek grup alanını taşıyın · çift tıklayarak yeniden adlandırın', 'Drag to move the group area · double-click to rename') : L('Sürükleyerek grubu kendi alanına alın · çift tıklayarak yeniden adlandırın', 'Drag to give the group its own area · double-click to rename'))}"`, cls: '', inner: '' };
     const c = S.doc.cards[el.id] || {}, sel = S.sel.has(el.id), primary = sel && S.primary === el.id;
     const cls = (sel ? ' isSel' : '') + (S.res.conflicts.has(el.id) ? ' isConflict' : '') + (el.pinned ? ' isPinned' : '');
     let inner = '';
@@ -668,7 +666,7 @@
     const hdr = e.target.closest('.psDocHdr');
     if (hdr) {
       // Başlığa basılı tutup sürükle: grup kendi alanına alınır / alan taşınır. Tıklama: alan seçilir.
-      S.act = { type: 'hdrPress', key: hdr.dataset.hdr, area: hdr.dataset.areaHdr != null, page: hdr.closest('.psPageWrap')?.dataset.psPage, sx: e.clientX, sy: e.clientY };
+      S.act = { type: 'hdrPress', key: hdr.dataset.hdr, area: hdr.dataset.areaHdr != null, pins: hdr.dataset.pins ? hdr.dataset.pins.split('\u001f') : null, page: hdr.closest('.psPageWrap')?.dataset.psPage, sx: e.clientX, sy: e.clientY };
       return;
     }
     const page = e.target.closest('.psPage');
@@ -738,7 +736,16 @@
     const pid = pageAt(e.clientX, e.clientY); a.page = pid;
     if (!pid) { a.items.forEach(i => move(i, i.r.left + dx, i.r.top + dy, S.zoom)); guides(null); tip(e, L('Bırakma alanı dışında · iptal', 'Outside the drop area · cancel')); return; }
     const P = toPage(pid, e.clientX, e.clientY);
+    a.single = e.shiftKey; // Shift: yalnız bu kart (grup birleştirilmez)
     if (!e.altKey) {
+      const pinnedOver = pageItems(pid).find(it => it.kind === 'card' && it.pinned && !a.ids.has(it.id) && P.x >= it.x && P.x <= it.x + it.w && P.y >= it.y && P.y <= it.y + it.h);
+      if (pinnedOver) {
+        a.mode = 'pinNext'; a.target = { id: pinnedOver.id, page: pid };
+        a.items.forEach(i => move(i, i.r.left + dx, i.r.top + dy, S.zoom * 0.85));
+        guides(pid, null, null, { x: pinnedOver.x + pinnedOver.w + g.gap / 2, y: pinnedOver.y, h: pinnedOver.h });
+        tip(e, a.single ? L('Yanına koy, bu kart o gruba katılır', 'Place alongside; this card joins that group') : L('Yanına koy, gruplar birleşir (Shift: yalnız bu kart)', 'Place alongside; groups merge (Shift: this card only)'));
+        return;
+      }
       const over = pageItems(pid).find(it => it.kind === 'card' && !it.pinned && !a.ids.has(it.id) && P.x >= it.x && P.x <= it.x + it.w && P.y >= it.y && P.y <= it.y + it.h);
       if (over) {
         const after = P.x > over.x + over.w / 2, key = E().effectiveKey(S.doc, over.id, groupOf);
@@ -747,7 +754,8 @@
         guides(pid, null, null, { x: after ? over.x + over.w + g.gap / 2 : over.x - g.gap / 2, y: over.y, h: over.h });
         const vals = S.res.pages.flatMap(p => p.items).find(it => it.kind === 'hdr' && it.key === key);
         const label = S.doc.labels[key] || (vals ? vals.vals.filter(Boolean).join(' · ') : '');
-        tip(e, (a.items.some(i => E().effectiveKey(S.doc, i.id, groupOf) !== key) ? L('Gruba taşı: ', 'Move to group: ') : L('Sıraya ekle: ', 'Insert in order: ')) + (label || L('akış', 'flow')));
+        const other = a.items.some(i => E().effectiveKey(S.doc, i.id, groupOf) !== key);
+        tip(e, (other ? (a.single ? L('Yalnız bu kartı gruba taşı: ', 'Move only this card to group: ') : L('Grupları birleştir: ', 'Merge groups: ')) : L('Sıraya ekle: ', 'Insert in order: ')) + (label || L('akış', 'flow')) + (other && !a.single ? L(' (Shift: yalnız bu kart)', ' (Shift: this card only)') : ''));
         return;
       }
     }
@@ -773,9 +781,30 @@
     if (!a.mode || !a.page) { render(); return; }
     const g = S.res.g;
     if (a.mode === 'insert') {
-      const ids = a.items.map(i => i.id);
-      commit(() => E().insertAt(S.doc, ids, a.target.id, a.target.after, groupOf));
-      if (ids.some(id => S.doc.cards[id] && S.doc.cards[id].vgroup != null)) toast(L(`Kart görsel olarak yeni gruba taşındı. ${sourceName()} verisi değişmedi.`, `The card moved to a new group visually. ${sourceName()} data is unchanged.`));
+      const ids = a.items.map(i => i.id), to = E().effectiveKey(S.doc, a.target.id, groupOf);
+      let merged = 0;
+      commit(() => { if (!a.single) merged = mergeInto(ids, to); E().insertAt(S.doc, ids, a.target.id, a.target.after, groupOf); });
+      if (merged) toast(L(`Gruplar birleştirildi: ${merged} model aynı başlık altında. ${sourceName()} verisi değişmedi (Ctrl+Z ile geri alınır).`, `Groups merged: ${merged} models under one title. ${sourceName()} data is unchanged (undo with Ctrl+Z).`));
+      else if (ids.some(id => S.doc.cards[id] && S.doc.cards[id].vgroup != null)) toast(L(`Kart görsel olarak yeni gruba taşındı. ${sourceName()} verisi değişmedi.`, `The card moved to a new group visually. ${sourceName()} data is unchanged.`));
+      return;
+    }
+    if (a.mode === 'pinNext') {
+      // Ayrılmış (sabit) kartın üstüne bırakılan kart yanına sabitlenir ve aynı gruba girer: ortak başlık.
+      const t = S.res.index.get(a.target.id), to = E().effectiveKey(S.doc, a.target.id, groupOf), ids = a.items.map(i => i.id);
+      let merged = 0, fail = 0;
+      commit(() => {
+        if (!a.single) merged = mergeInto(ids, to);
+        const placed = pinnedRects(t.page, new Set(ids)).map(r => ({ ...r }));
+        let x = t.x + t.w + g.gap;
+        for (const id of ids) {
+          E().setGroup(S.doc, id, to, groupOf);
+          const fr = E().findFree({ x, y: t.y, w: t.w, h: t.h }, placed.map(r => ({ x: r.x - g.gap / 2, y: r.y - g.gap / 2, w: r.w + g.gap, h: r.h + g.gap })), g);
+          if (!fr) { fail++; continue; }
+          E().pinAt(S.doc, id, { ...fr, page: t.page }); placed.push(fr); x = fr.x + fr.w + g.gap;
+        }
+      });
+      if (fail) toast(L(`${fail} kart için boş alan bulunamadı.`, `No free space for ${fail} cards.`), 'warning');
+      else toast(merged ? L(`Gruplar birleştirildi: ${merged} model aynı başlık altında.`, `Groups merged: ${merged} models under one title.`) : L('Kart aynı gruba alındı ve yanına yerleşti.', 'The card joined the group and was placed alongside.'));
       return;
     }
     let fail = 0, joined = 0;
@@ -788,15 +817,21 @@
         E().pinAt(S.doc, i.id, { ...fr, page: a.page }); placed.push(fr);
         // Grup alanının içine bırakılan kart o grubun alanında akar (sabitlenmez).
         const center = { x: fr.x + fr.w / 2, y: fr.y + fr.h / 2 }, inArea = a.mode === 'thumb' ? null : pageItems(a.page).find(it => it.kind === 'area' && center.x >= it.x && center.x <= it.x + it.w && center.y >= it.y && center.y <= it.y + it.h);
-        if (inArea) { const last = [...S.doc.order].reverse().find(x => x !== i.id && E().effectiveKey(S.doc, x, groupOf) === inArea.key); placed.pop(); if (last) E().insertAt(S.doc, [i.id], last, true, groupOf); else { S.doc.cards[i.id].pinned = false; E().setGroup(S.doc, i.id, inArea.key, groupOf); } joined++; continue; }
+        if (inArea) { if (!a.single) mergeInto([i.id], inArea.key); const last = [...S.doc.order].reverse().find(x => x !== i.id && E().effectiveKey(S.doc, x, groupOf) === inArea.key); placed.pop(); if (last) E().insertAt(S.doc, [i.id], last, true, groupOf); else { S.doc.cards[i.id].pinned = false; E().setGroup(S.doc, i.id, inArea.key, groupOf); } joined++; continue; }
         // Başka grubun alanına bırakılan kart o gruba elle katılır (kaynak veri değişmez, yeni başlık yazılmaz).
         const into = a.mode === 'thumb' ? null : E().groupAt(S.res, a.page, center);
-        if (into != null && into !== E().effectiveKey(S.doc, i.id, groupOf)) { E().setGroup(S.doc, i.id, into, groupOf); joined++; }
+        if (into != null && into !== E().effectiveKey(S.doc, i.id, groupOf)) { if (!a.single) mergeInto([i.id], into); E().setGroup(S.doc, i.id, into, groupOf); joined++; }
       }
     });
     if (fail) toast(L(`${fail} kart için boş alan bulunamadı; eski yerinde bırakıldı.`, `No free space for ${fail} cards; left in place.`), 'warning');
     else if (a.bad) toast(L('Çakışma önlendi: kart en yakın boş alana yerleşti.', 'Overlap prevented: the card was placed in the nearest free space.'));
     else if (joined) toast(L(`Kart bırakıldığı gruba elle katıldı. ${sourceName()} verisi değişmedi.`, `The card joined the group it was dropped into. ${sourceName()} data is unchanged.`));
+  }
+  /* Bırakılan kartların gruplarını hedef grupla birleştirir (Shift ile bırakılırsa çağrılmaz). Döner: taşınan model sayısı. */
+  function mergeInto(ids, to) {
+    let n = 0;
+    for (const from of new Set(ids.map(id => E().effectiveKey(S.doc, id, groupOf)))) if (from !== to) n += E().mergeGroups(S.doc, from, to, groupOf);
+    return n;
   }
   function moveResize(e) {
     const a = S.act, g = S.res.g, el = S.host.querySelector(`.psDocCard[data-id="${CSS.escape(a.id)}"]`);
@@ -846,11 +881,11 @@
   }
   function startAreaDrag(a) {
     const g = S.res.g, area = areaItem(a.key);
-    const hdr = area ? null : S.res.pages.flatMap(p => p.items).find(i => i.kind === 'hdr' && i.key === a.key && !i.pinOf);
+    const hdr = area ? null : S.res.pages.flatMap(p => p.items).find(i => i.kind === 'hdr' && i.key === a.key && (a.pins ? i.pinOf && a.pins.includes(i.pinOf) : !i.pinOf));
     const w = area ? area.w : Math.max(g.cellW, hdr ? hdr.w : g.cellW), h = area ? area.h : (hdr ? hdr.h : g.hH) + g.hGap + g.cellH;
     const ghost = doc_.createElement('div'); ghost.className = 'psAreaGhost';
     S.$('[data-ps="drag"]').appendChild(ghost);
-    S.act = { type: 'areaDrag', key: a.key, w, h, minH: area ? area.h : 0, ghost, sx: a.sx, sy: a.sy, page: null, x: 0, y: 0 };
+    S.act = { type: 'areaDrag', key: a.key, pins: area ? null : a.pins, w, h, minH: area ? area.h : 0, ghost, sx: a.sx, sy: a.sy, page: null, x: 0, y: 0 };
     S.areaSel = a.key; S.sel.clear(); placeFloat();
   }
   function moveAreaDrag(e) {
@@ -877,8 +912,10 @@
     a.ghost.remove(); hideTip(); guides(null);
     S.host.querySelectorAll('.psThumb[data-drop]').forEach(t => t.removeAttribute('data-drop'));
     if (!a.page) { render(); return; }
-    commit(() => E().setArea(S.doc, a.key, { page: a.page, x: a.x, y: a.y, w: a.w, h: a.minH }));
-    S.areaSel = a.key; render();
+    // Grubundan ayrılmış kartın başlığı: kartlar kendi elle grubuna (özgün başlık metniyle) ve alanına alınır.
+    let key = a.key;
+    commit(() => { if (a.pins) key = E().splitGroup(S.doc, a.pins, groupOf); E().setArea(S.doc, key, { page: a.page, x: a.x, y: a.y, w: a.w, h: a.minH }); });
+    S.areaSel = key; render();
   }
   function moveAreaResize(e) {
     const a = S.act, g = S.res.g, el = S.host.querySelector(`.psArea[data-area="${CSS.escape(a.key)}"]`);
@@ -999,7 +1036,7 @@
     } else if (kind === 'design') {
       const sl = (k, label, unit) => { const [min, max, , step] = E().STYLE_SPEC[k]; return `<label class="psSlider"><span>${esc(label)}</span><output class="psNum" data-out="${k}">${s[k]}${unit}</output><input type="range" data-s="${k}" data-u="${unit}" min="${min}" max="${max}" step="${step}" value="${s[k]}"></label>`; };
       p.innerHTML = h(L('Tasarım', 'Design')) + `<label class="psSlider"><span>${esc(L('Yazı tipi', 'Font'))}</span><select data-ps="font">${E().FONTS.map(f => `<option${f === s.font ? ' selected' : ''}>${esc(f)}</option>`).join('')}</select></label>`
-        + sl('fs', L('Yazı boyutu', 'Text size'), ' pt') + sl('img', L('Görsel oranı', 'Image ratio'), '×') + sl('cardW', L('Kart boyutu', 'Card size'), ' pt') + sl('gap', L('Kart aralığı', 'Card spacing'), ' pt') + sl('margin', L('Sayfa kenarı', 'Page margin'), ' pt')
+        + sl('hfs', L('Başlık yazı boyutu', 'Title text size'), ' pt') + sl('fs', L('Kart yazı boyutu', 'Card text size'), ' pt') + sl('img', L('Görsel oranı', 'Image ratio'), '×') + sl('cardW', L('Kart boyutu', 'Card size'), ' pt') + sl('gap', L('Kart aralığı', 'Card spacing'), ' pt') + sl('margin', L('Sayfa kenarı', 'Page margin'), ' pt')
         + `<div class="psSlider"><span>${esc(L('Kart stili', 'Card style'))}</span><span class="psSeg" data-ps="cardStyle">${[['frame', L('Çerçeve', 'Frame')], ['shadow', L('Gölge', 'Shadow')], ['plain', L('Sade', 'Plain')]].map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${s.card === v}">${esc(l)}</button>`).join('')}</span></div>`
         + `<label class="psToggle"><input type="checkbox" data-ps="keepGroups"${s.keepGroups ? ' checked' : ''}><span>${esc(L('Grupları bütün tut (satırda bölme)', 'Keep groups together (no splitting across rows)'))}</span></label><p class="psHint">${esc(L('Değişiklikler anlık uygulanır; sabit kartların konumu ve boyutu korunur.', 'Changes apply instantly; pinned cards keep their position and size.'))}</p>`;
     } else if (kind === 'arrange') {

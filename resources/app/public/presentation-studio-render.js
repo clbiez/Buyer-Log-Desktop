@@ -54,7 +54,7 @@
   }
   /* Satır kırma: kelime sınırından böler (boşluksuz uzun parça karakterden),
      biçimi (kalın/renk) korur. maxLines aşılırsa yalnız son satır "…" ile biter. */
-  const MAX_LINES = Object.freeze({ title: 2, field: 3, header: 6, chips: 6 });
+  const MAX_LINES = Object.freeze({ title: 2, field: 3, header: 10, chips: 6 });
   function wrapRuns(runs, maxW, measure, font, maxLines = 1) {
     const w = r => measure(r.t, r.size, r.bold, font), total = list => list.reduce((s, r) => s + w(r), 0);
     if (total(runs) <= maxW) return [runs];
@@ -154,6 +154,11 @@
       if (a.segs) a.segs.forEach(sg => { sg.w = segW(sg, a); });
       cur.push(a); x = a.x + w;
     }
+    // Aynı biçimli komşu kelimeler tek atom (daha az öğe; PowerPoint'te tek metin kutusu).
+    for (const r of rows) for (let i = r.length - 1; i > 0; i--) {
+      const a = r[i - 1], b = r[i];
+      if (a.type === 'text' && b.type === 'text' && a.size === b.size && a.bold === b.bold && a.color === b.color) { a.t += ' ' + b.t; a.w = b.x + b.w - a.x; r.splice(i, 1); }
+    }
     const out = rows.filter((r, i) => r.length || i === 0);
     if (out.length > maxRows) {
       const keep = out.slice(0, maxRows), last = keep[maxRows - 1], size = (last[0] && last[0].size) || 7;
@@ -165,7 +170,9 @@
     return out;
   }
   const cardAtoms = (s, f, i) => [...(s.labels && f.label && i ? words(f.label, s.fs, false, DOC.muted) : []), ...chipAtoms(f.chips, i ? s.fs : s.fs * 1.18)];
-  const headerAtoms = (hd, size) => hd.parts.flatMap((p, j) => [...(j ? [{ type: 'text', t: '·', size, bold: false, color: DOC.ink2 }] : []), ...(p.chips ? chipAtoms(p.chips, size).filter(a => a.type !== 'br') : words(p.text, size, j === 0, j === 0 ? DOC.ink : DOC.ink2))]);
+  /* Başlık: her gruplama seviyesi ayrı satırda; takım parçaları (A/B/C) kendi satırlarında. */
+  const headerParts = hd => hd.parts || [{ text: hd.main }, ...(hd.rest ? String(hd.rest).split(' · ').map(t => ({ text: t })) : [])];
+  const headerAtoms = (hd, size) => headerParts(hd).flatMap((p, j) => [...(j ? [{ type: 'br' }] : []), ...(p.chips ? chipAtoms(p.chips, size) : words(p.text, size, j === 0, j === 0 ? DOC.ink : DOC.ink2))]);
   const cardRuns = (s, f, i) => i === 0 ? [{ t: f.value || '—', size: s.fs * 1.18, bold: true, color: DOC.ink }]
     : [...(s.labels && f.label ? [{ t: f.label + ' ', size: s.fs, bold: false, color: DOC.muted }] : []), { t: f.value || '—', size: s.fs, bold: false, color: DOC.ink2 }];
   /* Dar başlıkta model sayısı metne yer bırakmıyorsa gösterilmez; başlık tam genişliği kullanır. */
@@ -201,18 +208,19 @@
         if (fieldLines[i] >= cap) break;
       }
     }
-    const size = s.fs * 1.25, cache = new Map(), natural = new Map();
+    const size = s.hfs || s.fs * 1.25, cache = new Map(), natural = new Map();
     const plan = { fieldLines, approx: false };
     plan.hdrLines = (h, w) => {
-      const hd = src.header(h), base = `${hd.main}\u0001${hd.rest}\u0001${hd.count}\u0001${hd.parts ? 'c' : ''}`;
+      const hd = src.header(h), base = `${hd.main}\u0001${hd.rest}\u0001${hd.count}\u0001${hd.parts ? JSON.stringify(hd.parts).length + ':' + (hd.parts.map(p => (p.chips ? 'c' : p.text)).join('\u0003')) : ''}`;
       if (plan.approx) {
         // Kaydırıcı sürüklenirken: tek satırlık doğal genişlikten tahmin (genişlikten bağımsız önbellek); bırakınca kesin hesap.
-        if (!natural.has(base)) natural.set(base, hd.parts ? layoutAtoms(headerAtoms(hd, size), 1e9, measure, font).reduce((m, r) => Math.max(m, r.reduce((x, a) => Math.max(x, a.x + a.w), 0)), 0) : headerRuns(hd, size).reduce((x, r) => x + measure(r.t, r.size, r.bold, font), 0));
-        const tw = headerBox(hd, w, size, measure, font).textW;
-        return Math.max(1, Math.min(MAX_LINES.header, Math.ceil(natural.get(base) / Math.max(10, tw))));
+        // Satır (seviye) başına doğal genişlik; tahmin = satırların kırılma sayıları toplamı.
+        if (!natural.has(base)) natural.set(base, layoutAtoms(headerAtoms(hd, size), 1e9, measure, font).map(r => r.reduce((x, a) => Math.max(x, a.x + a.w), 0)));
+        const tw = Math.max(10, headerBox(hd, w, size, measure, font).textW);
+        return Math.max(1, Math.min(MAX_LINES.header, natural.get(base).reduce((n, rw) => n + Math.max(1, Math.ceil(rw / tw)), 0)));
       }
       const key = `${base}\u0001${Math.round(w * 10)}`;
-      if (!cache.has(key)) { const tw = headerBox(hd, w, size, measure, font).textW; cache.set(key, hd.parts ? layoutAtoms(headerAtoms(hd, size), tw, measure, font, MAX_LINES.header).length : wrapRuns(headerRuns(hd, size), tw, measure, font, MAX_LINES.header).length); }
+      if (!cache.has(key)) { const tw = headerBox(hd, w, size, measure, font).textW; cache.set(key, layoutAtoms(headerAtoms(hd, size), tw, measure, font, MAX_LINES.header).length); }
       return cache.get(key);
     };
     return plan;
@@ -232,14 +240,14 @@
         // Grup alanı çerçevesi yalnız editörde görünür (belge çıktısında başlık ve kartlar kalır).
         if (it.kind === 'area') { els.push({ type: 'area', key: it.key, x: it.x, y: it.y, w: it.w, h: it.h, cont: Boolean(it.cont) }); continue; }
         if (it.kind === 'hdr') {
-          const h = src.header(it), size = s.fs * 1.25, countSize = size * 0.82;
+          const h = src.header(it), size = s.hfs || s.fs * 1.25, countSize = size * 0.82;
           const box = headerBox(h, it.w, size, measure, font), countW = box.countW;
           // Bandın aldığı satır sayısı kadar kırılır; metin alta (çizgiye) yaslanır.
           const lh = size * 1.3, room = Math.max(1, Math.round((it.h - g.hH) / (g.hLine || lh)) + 1);
-          const wrapped = h.parts ? layoutAtoms(headerAtoms(h, size), box.textW, measure, font, room) : wrapRuns(headerRuns(h, size), box.textW, measure, font, room);
-          const top = it.y + it.h - 2 - wrapped.length * lh, lines = wrapped.map((r, i) => (h.parts ? { y: top + i * lh, atoms: r, box: chipBox(lh) } : { y: top + i * lh, runs: r }));
+          const wrapped = layoutAtoms(headerAtoms(h, size), box.textW, measure, font, room);
+          const top = it.y + it.h - 2 - wrapped.length * lh, lines = wrapped.map((r, i) => ({ y: top + i * lh, atoms: r, box: chipBox(lh) }));
           const lastY = lines.length ? lines[lines.length - 1].y : it.y + it.h - 2 - lh;
-          els.push({ type: 'hdr', key: it.key, area: it.area || null, x: it.x, y: it.y, w: it.w, h: it.h, lines, lh, size, count: box.showCount ? { t: h.count, size: countSize, color: DOC.muted, w: countW, y: lastY + (size - countSize) } : null, rule: { x: it.x, y: it.y + it.h - 0.8, w: it.w, h: 0.8 } });
+          els.push({ type: 'hdr', key: it.key, area: it.area || null, pins: it.pins || (it.pinOf ? [it.pinOf] : null), x: it.x, y: it.y, w: it.w, h: it.h, lines, lh, size, count: box.showCount ? { t: h.count, size: countSize, color: DOC.muted, w: countW, y: lastY + (size - countSize) } : null, rule: { x: it.x, y: it.y + it.h - 0.8, w: it.w, h: 0.8 } });
           continue;
         }
         const img = src.image(it.id), imgH = Math.max(16, it.h - g.th), box = { x: it.x, y: it.y, w: it.w, h: imgH };
