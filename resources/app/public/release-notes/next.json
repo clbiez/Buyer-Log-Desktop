@@ -128,6 +128,35 @@
       }
     },
     {
+      "id": "collection-order-fob-manufacturer-fallback",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon · CP · Siparişler",
+        "en": "Collection · CP · Orders"
+      },
+      "title": {
+        "tr": "Koleksiyona aktarımda Supp. FOB boşsa FOB ve Manufacturer alınır",
+        "en": "Import to Collection uses FOB and Manufacturer when Supp. FOB is blank"
+      },
+      "body": {
+        "tr": "CP veya Siparişler’den seçili modelleri Koleksiyon’a aktarırken onaylı fiyat ve üretici birlikte seçilir: Supp. FOB doluysa Supp. FOB ve Sub-Manufacturer (boşsa Manufacturer), Supp. FOB boşsa FOB ve Manufacturer alınır. Böylece Supp. FOB ve Sub-MFR kullanmayan kullanıcılarda modeller artık fiyatsız açılmaz ve FOB başka bir üreticinin adına yazılmaz. Önizleme sütunları ‘Üretici · fiyat’ olarak adlandırıldı.",
+        "en": "When selected models are imported from CP or Orders into Collection, the confirmed price and manufacturer are chosen as a pair: with a Supp. FOB, Supp. FOB and Sub-Manufacturer (or Manufacturer if blank); without one, FOB and Manufacturer. Users who do not use Supp. FOB and Sub-MFR no longer get models without a price, and FOB is never recorded under another manufacturer’s name. The preview columns are now labelled ‘Manufacturer · price’."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-order-fob-fallback.png",
+        "alt": {
+          "tr": "Demo verili Siparişlerden Koleksiyon Oluştur önizlemesi: Supp. FOB boş satır Manufacturer ve FOB ile, Supp. FOB dolu satır Sub-Manufacturer ve Supp. FOB ile geliyor",
+          "en": "Build Collection from Orders preview with demo data: the row without Supp. FOB uses Manufacturer and FOB, the row with Supp. FOB uses Sub-Manufacturer and Supp. FOB"
+        },
+        "caption": {
+          "tr": "Supp. FOB boş siparişte FOB ve Manufacturer, dolu siparişte Supp. FOB ve Sub-Manufacturer onaylı fiyat/üretici olur.",
+          "en": "An order without Supp. FOB takes FOB and Manufacturer; one with Supp. FOB takes Supp. FOB and Sub-Manufacturer."
+        }
+      }
+    },
+    {
       "id": "pricing-desk-approval-collection-columns",
       "type": "feature",
       "module": {
