@@ -45200,17 +45200,20 @@ function cpRowToKolRow(r,allocateId=true){
   const date=(key)=>toISODate(r[key])||'';
   const manufacturer=canonicalText('manufacturer')||canonicalText('subManufacturer');
   const subManufacturer=canonicalText('subManufacturer');
-  /* Koleksiyonda onaylı üretici, siparişi fiilen üreten Sub-Manufacturer'dır
-     (yoksa Manufacturer). Onaylı fiyat nihai FOB değil Supp. FOB'dur: Koleksiyon
-     FOB'u bu fiyata royalty + hologram'ı kendisi ekler. Nihai FOB'u fiyat
-     olarak yazmak bu masrafları iki kez eklerdi. Supp. FOB yoksa fiyat
-     uydurulmaz; satır onaylı fiyatsız açılır. */
+  /* Koleksiyonda onaylı üretici Sub-Manufacturer doluysa odur, boşsa
+     Manufacturer. Onaylı fiyat Supp. FOB geçerliyse odur, boşsa FOB: çoğu
+     kullanıcı Supp. FOB / Sub-MFR kullanmaz. Supp. FOB yalnız eşleşen License
+     Royalty kuralıyla oluştuğundan boş Supp. FOB'lu satırda Koleksiyon da
+     genellikle royalty eklemez (Non-DTR + kural yok → FOB hesabı durur). İkisi
+     de yoksa fiyat uydurulmaz; satır onaylı fiyatsız açılır. */
   const producer=subManufacturer||manufacturer;
   const sourceFob=value('fob');
   const quotedFob=(sourceFob!==null&&sourceFob!==undefined&&String(sourceFob).trim()!=='')
     ?String(sourceFob).trim():'';
   const supplierFob=norm(value('supplierFob'))||'';
-  const validQuote=Number.isFinite(kolParseMoneyNum(supplierFob))&&kolParseMoneyNum(supplierFob)>0;
+  const positive=raw=>Number.isFinite(kolParseMoneyNum(raw))&&kolParseMoneyNum(raw)>0;
+  const priceBasis=positive(supplierFob)?'supplierFob':(positive(quotedFob)?'fob':'');
+  const confirmedPrice=priceBasis==='supplierFob'?supplierFob:(priceBasis==='fob'?quotedFob:'');
   const deliveryType=normalizeTransitDelType(value('deliveryType'))||'';
   const inStoreDate=canonicalDate('inStore');
   // LCW Merch Calendar, never the browser locale/ISO week, determines MB periods.
@@ -45244,11 +45247,11 @@ function cpRowToKolRow(r,allocateId=true){
     delType:deliveryType||'Gemi',
     buyingSampleManufacturer:producer,
     confirmedManufacturer:producer,
-    pricing:producer&&validQuote?{[producer]:supplierFob}:{},
+    pricing:producer&&confirmedPrice?{[producer]:confirmedPrice}:{},
     pricingSent:{},
     // Kaynak nihai FOB; Koleksiyon FOB'u kaydetmeden önce kuraldan yeniden hesaplanır.
     fob:quotedFob,
-    targetPrice:supplierFob,
+    targetPrice:confirmedPrice,
     exFactory:canonicalDate('exFactory')||date('Original Ex-factory'),
     retail:canonicalDate('retailDate'),
     inStore:inStoreDate,
@@ -45271,7 +45274,7 @@ function cpRowToKolRow(r,allocateId=true){
       remainingUnits:r['Remaining Units']??'',
       fabricCategory:text('Kumaş Kategorisi'),fabricComposition:text('Karışım'),
       yarn:text('İplik No'),weight:text('Gramaj'),fabricCountry:text('Kumaşçı Ülkesi'),
-      sourceFob:quotedFob,supplierFob,deliveryType,
+      sourceFob:quotedFob,supplierFob,priceBasis,deliveryType,
     }
   });
 }
@@ -45351,7 +45354,7 @@ document.getElementById('kolCreateOcBtn')?.addEventListener('click', ()=>{
 // CP "Fiyatlamaya Gönder": Koleksiyon'daki akışın AYNISI (üretici seç → taslak e-posta
 // + Excel eki). Fark: seçili satırlar Koleksiyon'a KOPYALANMAZ. CP satırları yalnızca
 // e-posta/Excel üretimi için bellekte kol-biçimine dönüştürülür; kolRows'a yazılmaz.
-// Hedef fiyat alanına CP'deki Supp. FOB değeri gelir (cpRowToKolRow içinde).
+// Hedef fiyat alanına CP'deki Supp. FOB, boşsa FOB değeri gelir (cpRowToKolRow içinde).
 // Fiyat Geçmişi: seçili modellerin bugüne kadar aldığı GEÇERLİ fiyatları tek tabloda
 // gösterir. Salt okunurdur; hiçbir kaydı değiştirmez. Satır kaynağı v3.79'daki
 // "önce filtre, sonra seçim" kuralını kullanır.
@@ -45529,10 +45532,10 @@ function cpKolBackfillPreview(plan,trigger){
         row.country,row.quantity,row.opd||'—',row.exFactory||'—',orders.map(order=>order.orderCode).filter(Boolean).join(', ')].map(cell).join('')}</tr>`;
     }).join('');
     const missingPeriod=plan.changes.filter(({row})=>!row.inStoreMonth).length;
-    const headers=[T('İşlem','Action'),T('Model','Model'),T('Renk Kodu','Colour Code'),T('MB ayı','MB month'),T('Mevcut onaylı üretici · Supp. FOB','Current confirmed manufacturer · Supp. FOB'),
-      T('Siparişteki Sub MFR · Supp. FOB','Order Sub MFR · Supp. FOB'),T('Fiyat onayı','Price approval'),T('Ülke','Country'),T('Adet','Quantity'),'OPD','Ex-Factory',T('Kaynak siparişler','Source orders')];
+    const headers=[T('İşlem','Action'),T('Model','Model'),T('Renk Kodu','Colour Code'),T('MB ayı','MB month'),T('Mevcut onaylı üretici · fiyat','Current confirmed manufacturer · price'),
+      T('Siparişten üretici · fiyat','Order manufacturer · price'),T('Fiyat onayı','Price approval'),T('Ülke','Country'),T('Adet','Quantity'),'OPD','Ex-Factory',T('Kaynak siparişler','Source orders')];
     const approveAll=pending?`<p><label class="cpKolBackfillApprove"><input type="checkbox" data-price-approve-all> ${escapeHtml(T(`Fiyatı/üreticisi farklı ${pending} kaydın tamamını güncelle`,`Update all ${pending} records with a different price/manufacturer`))}</label></p>`:'';
-    overlay.innerHTML=`<div class="modalCard blBulkCard cpKolBackfillCard" role="dialog" aria-modal="true" aria-labelledby="cpKolBackfillTitle"><div class="modalTitle" id="cpKolBackfillTitle">${T('Siparişlerden Koleksiyon Oluştur','Build Collection from Orders')}</div><div class="blBulkBody"><p>${escapeHtml(T(`${created} yeni satır · ${updated} mevcut kayıt güncellenecek · ${plan.unchanged||0} kayıt zaten güncel · ${plan.duplicates} tekrar atlandı`,`${created} new rows · ${updated} existing records to update · ${plan.unchanged||0} records already up to date · ${plan.duplicates} duplicates skipped`))}</p><p>${escapeHtml(T('Eşleşme MB ayı + PLM ID + Renk Kodu ile yapılır. Koleksiyonda olan kayıt çoğaltılmaz, yerinde güncellenir; fiyatlama geçmişi, teklifler, fiyat avantajları, landed kıyasları ve Endeksmatik korunur. MAG, buyer, ülke, tarihler, adet, kumaş ve diğer sipariş alanları siparişten taşınır; siparişte boş olan alan mevcut değeri silmez.','Records are matched by MB month + PLM ID + Colour Code. A record already in Collection is not duplicated but updated in place; pricing history, quotes, price advantages, landed comparisons and Endeksmatik are kept. MAG, buyer, country, dates, quantity, fabric and other order fields are copied from the order; a field that is blank in the order does not clear the existing value.'))}</p><p>${escapeHtml(T('Onaylı üretici Sub-Manufacturer, onaylı fiyat Supp. FOB olarak alınır; FOB, royalty ve hologram ile Koleksiyonda hesaplanır. Mevcut kaydın onaylı üreticisi veya fiyatı farklıysa yalnız işaretlediğiniz kayıtlarda değişir.','The confirmed manufacturer is taken from Sub-Manufacturer and the confirmed price from Supp. FOB; Collection calculates FOB with royalty and hologram. When an existing record has a different confirmed manufacturer or price, it changes only for the records you tick.'))}</p>${pending?`<p role="status">${escapeHtml(T(`${pending} kayıtta fiyat/üretici farkı onayınızı bekliyor.`,`${pending} records have a price/manufacturer difference awaiting your approval.`))}</p>`:''}${conflicts?`<p role="status">${escapeHtml(T(`${conflicts} kayıtta siparişler farklı fiyat/üretici taşıyor; fiyat otomatik değişmez.`,`${conflicts} records have orders with different prices/manufacturers; the price is not changed automatically.`))}</p>`:''}${missing?`<p role="status">${escapeHtml(T(`${missing} kayıtta Supp. FOB yok; nihai FOB fiyat olarak taşınmaz.`,`${missing} records have no Supp. FOB; the final FOB is not copied as the price.`))}</p>`:''}${missingPeriod?`<p role="status">${escapeHtml(T(`${missingPeriod} satırın MB ayı Merch Calendar ile çözülemedi; bu siparişler eşleştirilmeden ayrı tutulur.`,`${missingPeriod} rows have no MB month resolved by Merch Calendar; these orders are kept separate without matching.`))}</p>`:''}${approveAll}<div class="blBulkTableWrap"><table><thead><tr>${headers.map(label=>`<th>${escapeHtml(label)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>${plan.changes.length>100?`<p>${T('İlk 100 satır gösteriliyor; aktarım tüm satırları kapsar. Gösterilmeyen satırlarda fiyat farkı yalnız "tamamını güncelle" ile onaylanır.','Showing the first 100 rows; all rows will be imported. Price differences in hidden rows are approved only with "update all".')}</p>`:''}<p>${T('Kaynak siparişler korunur. İşlem Koleksiyonda tek adımda geri alınabilir.','Source orders are preserved. You can undo this operation in one step in Collection.')}</p></div><div class="modalFoot"><button type="button" class="tbtn" data-backfill-cancel>${T('Vazgeç','Cancel')}</button><button type="button" class="tbtn primary" data-backfill-apply>${T('Koleksiyona Aktar','Import into Collection')}</button></div></div>`;
+    overlay.innerHTML=`<div class="modalCard blBulkCard cpKolBackfillCard" role="dialog" aria-modal="true" aria-labelledby="cpKolBackfillTitle"><div class="modalTitle" id="cpKolBackfillTitle">${T('Siparişlerden Koleksiyon Oluştur','Build Collection from Orders')}</div><div class="blBulkBody"><p>${escapeHtml(T(`${created} yeni satır · ${updated} mevcut kayıt güncellenecek · ${plan.unchanged||0} kayıt zaten güncel · ${plan.duplicates} tekrar atlandı`,`${created} new rows · ${updated} existing records to update · ${plan.unchanged||0} records already up to date · ${plan.duplicates} duplicates skipped`))}</p><p>${escapeHtml(T('Eşleşme MB ayı + PLM ID + Renk Kodu ile yapılır. Koleksiyonda olan kayıt çoğaltılmaz, yerinde güncellenir; fiyatlama geçmişi, teklifler, fiyat avantajları, landed kıyasları ve Endeksmatik korunur. MAG, buyer, ülke, tarihler, adet, kumaş ve diğer sipariş alanları siparişten taşınır; siparişte boş olan alan mevcut değeri silmez.','Records are matched by MB month + PLM ID + Colour Code. A record already in Collection is not duplicated but updated in place; pricing history, quotes, price advantages, landed comparisons and Endeksmatik are kept. MAG, buyer, country, dates, quantity, fabric and other order fields are copied from the order; a field that is blank in the order does not clear the existing value.'))}</p><p>${escapeHtml(T('Onaylı üretici Sub-Manufacturer doluysa ondan, boşsa Manufacturer’dan; onaylı fiyat Supp. FOB doluysa ondan, boşsa FOB’dan alınır. Koleksiyon FOB’u royalty ve hologram kuralıyla hesaplanır. Mevcut kaydın onaylı üreticisi veya fiyatı farklıysa yalnız işaretlediğiniz kayıtlarda değişir.','The confirmed manufacturer is taken from Sub-Manufacturer when filled, otherwise from Manufacturer; the confirmed price is taken from Supp. FOB when filled, otherwise from FOB. Collection calculates FOB with the royalty and hologram rule. When an existing record has a different confirmed manufacturer or price, it changes only for the records you tick.'))}</p>${pending?`<p role="status">${escapeHtml(T(`${pending} kayıtta fiyat/üretici farkı onayınızı bekliyor.`,`${pending} records have a price/manufacturer difference awaiting your approval.`))}</p>`:''}${conflicts?`<p role="status">${escapeHtml(T(`${conflicts} kayıtta siparişler farklı fiyat/üretici taşıyor; fiyat otomatik değişmez.`,`${conflicts} records have orders with different prices/manufacturers; the price is not changed automatically.`))}</p>`:''}${missing?`<p role="status">${escapeHtml(T(`${missing} kayıtta Supp. FOB ve FOB yok; onaylı fiyat boş kalır.`,`${missing} records have neither Supp. FOB nor FOB; the confirmed price stays blank.`))}</p>`:''}${missingPeriod?`<p role="status">${escapeHtml(T(`${missingPeriod} satırın MB ayı Merch Calendar ile çözülemedi; bu siparişler eşleştirilmeden ayrı tutulur.`,`${missingPeriod} rows have no MB month resolved by Merch Calendar; these orders are kept separate without matching.`))}</p>`:''}${approveAll}<div class="blBulkTableWrap"><table><thead><tr>${headers.map(label=>`<th>${escapeHtml(label)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>${plan.changes.length>100?`<p>${T('İlk 100 satır gösteriliyor; aktarım tüm satırları kapsar. Gösterilmeyen satırlarda fiyat farkı yalnız "tamamını güncelle" ile onaylanır.','Showing the first 100 rows; all rows will be imported. Price differences in hidden rows are approved only with "update all".')}</p>`:''}<p>${T('Kaynak siparişler korunur. İşlem Koleksiyonda tek adımda geri alınabilir.','Source orders are preserved. You can undo this operation in one step in Collection.')}</p></div><div class="modalFoot"><button type="button" class="tbtn" data-backfill-cancel>${T('Vazgeç','Cancel')}</button><button type="button" class="tbtn primary" data-backfill-apply>${T('Koleksiyona Aktar','Import into Collection')}</button></div></div>`;
     const all=overlay.querySelector('[data-price-approve-all]');
     const boxes=[...overlay.querySelectorAll('[data-price-approve]')];
     all?.addEventListener('change',()=>boxes.forEach(box=>{box.checked=all.checked;}));
