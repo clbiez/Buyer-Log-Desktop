@@ -59,10 +59,13 @@
     const type = id => (C && C.field && C.field(id) ? C.field(id).type : 'text');
     return { ids: built.fields.slice(), label, type };
   }
+  // Biçimlendiriciler dil başına bir kez kurulur (toLocaleString her çağrıda yenisini kurar; 2000 kartta pahalı).
+  const formatters = {};
+  const fmt = () => { const loc = isEn() ? 'en-GB' : 'tr-TR'; return formatters[loc] || (formatters[loc] = { num: new Intl.NumberFormat(loc, { maximumFractionDigits: 2 }), date: new Intl.DateTimeFormat(loc) }); };
   function formatValue(type, value) {
     if (value == null || value === '') return '';
-    if (type === 'number' && Number.isFinite(Number(value))) return Number(value).toLocaleString(isEn() ? 'en-GB' : 'tr-TR', { maximumFractionDigits: 2 });
-    if (type === 'date' && /^\d{4}-\d{2}-\d{2}/.test(String(value))) { const d = new Date(String(value).slice(0, 10) + 'T00:00:00'); if (!Number.isNaN(d.getTime())) return d.toLocaleDateString(isEn() ? 'en-GB' : 'tr-TR'); }
+    if (type === 'number' && Number.isFinite(Number(value))) return fmt().num.format(Number(value));
+    if (type === 'date' && /^\d{4}-\d{2}-\d{2}/.test(String(value))) { const d = new Date(String(value).slice(0, 10) + 'T00:00:00'); if (!Number.isNaN(d.getTime())) return fmt().date.format(d); }
     return String(value);
   }
   function readSource(rows, info, scope, tab) {
@@ -85,9 +88,23 @@
     const keys = lv.map(f => String(m.keys[f] == null ? '' : m.keys[f]));
     return { key: keys.join(E().SEP), vals: lv.map(f => formatValue(S.meta.type(f), m.values[f])) };
   }
+  /* Metin planı yalnız alanlar, yazı, kart genişliği veya başlık adları değişince yeniden ölçülür. */
+  function textPlan() {
+    const st = S.doc.style, cellW = E().geometry(S.doc, null).cellW;
+    const vkey = [st.fields.join(','), st.labels, S.doc.order.length, isEn()].join('|');
+    const key = [vkey, st.fs, st.font, cellW.toFixed(2), JSON.stringify(S.doc.labels)].join('|');
+    if (S.plan && S.planKey === key) return S.plan;
+    // Kaydırıcı sürüklenirken önceki plan kullanılır (satır sayısı anlık olarak bir satır geride kalabilir); bırakınca kesin plan hesaplanır.
+    if (S.plan && S.slider && S.planValuesKey === vkey) return S.plan;
+    if (S.planValuesKey !== vkey) { const t0 = performance.now(); S.planValuesKey = vkey; S.planValues = R().distinctValues(S.doc, S.doc.order, renderSource(() => null)); S.perf.values = performance.now() - t0; }
+    S.planKey = key;
+    S.plan = R().textPlan(S.doc, cellW, S.doc.order, renderSource(() => null), { measure: S.measure, values: S.planValues });
+    return S.plan;
+  }
   function relayout() {
     const t = performance.now();
-    S.res = E().layout(S.doc, groupOf);
+    const plan = textPlan(); S.perf.plan = performance.now() - t;
+    S.res = E().layout(S.doc, groupOf, plan);
     S.perf.layout = performance.now() - t;
     for (const id of [...S.sel]) if (!S.res.index.has(id)) S.sel.delete(id);
     if (!S.doc.pages.some(p => p.id === S.activePage)) S.activePage = S.doc.pages[0].id;
@@ -274,7 +291,7 @@
     let inner = '';
     if (el.pinned) inner += `<span class="psBadge psPin" title="${esc(L('Sabit', 'Pinned'))}">${svg('pin')}</span>`;
     if (c.vgroup != null) inner += `<span class="psBadge psMoved" title="${esc(L(`Görsel olarak başka gruba taşındı · ${sourceName()} verisi değişmedi`, `Moved to another group visually · ${sourceName()} data unchanged`))}">${svg('move')}</span>`;
-    if (primary && S.sel.size === 1) inner += ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].map(d => `<span class="psHandle" data-h="${d}"></span>`).join('');
+    if (primary) inner += ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].map(d => `<span class="psHandle" data-h="${d}"></span>`).join('');
     const m = S.models.get(el.id);
     return { attr: ` data-id="${esc(el.id)}" tabindex="-1" role="button" aria-label="${esc((m ? m.title : el.id) + (sel ? L(' · seçili', ' · selected') : ''))}"`, cls, inner };
   }
@@ -488,7 +505,7 @@
     const card = e.target.closest('.psDocCard');
     if (card) {
       const id = card.dataset.id;
-      if (e.shiftKey || e.metaKey || e.ctrlKey) { if (S.sel.has(id)) S.sel.delete(id); else { S.sel.add(id); S.primary = id; } }
+      if (e.shiftKey || e.metaKey || e.ctrlKey) { if (S.sel.has(id)) { S.sel.delete(id); if (S.primary === id) S.primary = [...S.sel].pop(); } else { S.sel.add(id); S.primary = id; } }
       else if (!S.sel.has(id)) selectOnly(id);
       else S.primary = id;
       render();
@@ -596,7 +613,7 @@
       if (ids.some(id => S.doc.cards[id] && S.doc.cards[id].vgroup != null)) toast(L(`Kart görsel olarak yeni gruba taşındı. ${sourceName()} verisi değişmedi.`, `The card moved to a new group visually. ${sourceName()} data is unchanged.`));
       return;
     }
-    let fail = 0;
+    let fail = 0, joined = 0;
     commit(() => {
       const placed = pinnedRects(a.page, a.ids).map(r => ({ ...r }));
       for (const i of a.items) {
@@ -604,10 +621,14 @@
         const fr = E().findFree(r, placed, g);
         if (!fr) { fail++; continue; }
         E().pinAt(S.doc, i.id, { ...fr, page: a.page }); placed.push(fr);
+        // Başka grubun alanına bırakılan kart o gruba elle katılır (kaynak veri değişmez, yeni başlık yazılmaz).
+        const into = a.mode === 'thumb' ? null : E().groupAt(S.res, a.page, { x: fr.x + fr.w / 2, y: fr.y + fr.h / 2 });
+        if (into != null && into !== E().effectiveKey(S.doc, i.id, groupOf)) { E().setGroup(S.doc, i.id, into, groupOf); joined++; }
       }
     });
     if (fail) toast(L(`${fail} kart için boş alan bulunamadı; eski yerinde bırakıldı.`, `No free space for ${fail} cards; left in place.`), 'warning');
     else if (a.bad) toast(L('Çakışma önlendi: kart en yakın boş alana yerleşti.', 'Overlap prevented: the card was placed in the nearest free space.'));
+    else if (joined) toast(L(`Kart bırakıldığı gruba elle katıldı. ${sourceName()} verisi değişmedi.`, `The card joined the group it was dropped into. ${sourceName()} data is unchanged.`));
   }
   function moveResize(e) {
     const a = S.act, g = S.res.g, el = S.host.querySelector(`.psDocCard[data-id="${CSS.escape(a.id)}"]`);
@@ -617,7 +638,8 @@
     const minW = 50, minH = g.th + 24;
     if (d.includes('e')) w = s.w + dx; if (d.includes('s')) h = s.h + dy;
     if (d.includes('w')) { w = s.w - dx; x = s.x + dx; } if (d.includes('n')) { h = s.h - dy; y = s.y + dy; }
-    const T = snapTargets(a.page, new Set([a.id])), th = 7 / P.k; let gx = null, gy = null;
+    const multi = S.sel.size > 1 && S.sel.has(a.id), skip = multi ? new Set(S.sel) : new Set([a.id]);
+    const T = snapTargets(a.page, skip), th = 7 / P.k; let gx = null, gy = null;
     if (d.includes('e')) { const sn = snap([x + w], T.xs, th); if (sn) { w += sn.d; gx = sn.t; } }
     if (d.includes('w')) { const sn = snap([x], T.xs, th); if (sn) { x += sn.d; w -= sn.d; gx = sn.t; } }
     if (d.includes('s')) { const sn = snap([y + h], T.ys, th); if (sn) { h += sn.d; gy = sn.t; } }
@@ -627,16 +649,23 @@
     if (x < 0) { w += x; x = 0; } if (y < 0) { h += y; y = 0; }
     w = Math.min(w, g.w - x); h = Math.min(h, g.h - y);
     const r = { x, y, w, h };
-    if (pinnedRects(a.page, new Set([a.id])).some(o => E().overlaps(r, o))) { tip(e, L('Başka bir sabit kartla çakışıyor', 'Overlaps another pinned card'), true); return; }
+    if (pinnedRects(a.page, skip).some(o => E().overlaps(r, o))) { tip(e, L('Başka bir sabit kartla çakışıyor', 'Overlaps another pinned card'), true); return; }
     a.last = r;
     Object.assign(el.style, { left: `${x}pt`, top: `${y}pt`, width: `${w}pt`, height: `${h}pt` });
     guides(a.page, gx, gy);
-    tip(e, `${Math.round(w / E().MM)} × ${Math.round(h / E().MM)} mm · ${L('sabitlenir', 'pinned')}`);
+    tip(e, `${Math.round(w / E().MM)} × ${Math.round(h / E().MM)} mm · ${multi ? L(`${S.sel.size} kart bu ölçüye gelir`, `${S.sel.size} cards get this size`) : L('sabitlenir', 'pinned')}`);
   }
   function endResize(a) {
     hideTip(); guides(null);
     const r = a.last, s = a.start;
     if (Math.abs(r.w - s.w) < 0.5 && Math.abs(r.h - s.h) < 0.5 && Math.abs(r.x - s.x) < 0.5 && Math.abs(r.y - s.y) < 0.5) { render(); return; }
+    if (S.sel.size > 1 && S.sel.has(a.id)) {
+      // Çoklu seçim: hepsi aynı ölçüye gelir, seçimin sol üstünden okuma sırasıyla dizilir.
+      let failed = 0;
+      commit(() => { failed = E().resizeAll(S.doc, S.res, [...S.sel], r.w, r.h); });
+      if (failed) toast(L(`${failed} kart sayfaya sığmadı; akışta kaldı.`, `${failed} cards did not fit on the page; they stay in the flow.`), 'warning');
+      return;
+    }
     commit(() => E().pinAt(S.doc, a.id, { ...r, page: a.page }));
   }
   function moveMarquee(e) {
@@ -912,7 +941,7 @@
       if (ps === 'title') return commit(() => { S.doc.title = t.value.trim().slice(0, 120); });
       if (ps === 'paper') { const size = E().pageSize(S.doc.page); return changePage({ ...S.doc.page, preset: t.value, cw: Math.round(size.mmW), ch: Math.round(size.mmH) }); }
       if (ps === 'cw' || ps === 'ch') { const w = clamp(Number($('[data-ps="cw"]').value) || 0, 50, 1200), h = clamp(Number($('[data-ps="ch"]').value) || 0, 50, 1200); return changePage({ preset: 'custom', cw: w, ch: h, orient: w >= h ? 'landscape' : 'portrait' }); }
-      if (t.dataset.s) S.slider = false;
+      if (t.dataset.s) { S.slider = false; cancelAnimationFrame(S.raf); relayout(); render(); scheduleSave(); }
     });
     host.addEventListener('input', e => {
       const t = e.target;

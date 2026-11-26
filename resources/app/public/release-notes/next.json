@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-26",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Sunum Stüdyosu: okunur ve aranabilir alan listeleri",
-    "en": "Presentation Studio: readable, searchable field lists"
+    "tr": "Sunum Stüdyosu: tam metin, sabit kart başlıkları, birlikte boyutlandırma ve aranabilir alan listeleri",
+    "en": "Presentation Studio: full text, pinned card titles, resizing together and searchable field lists"
   },
   "summary": {
-    "tr": "Sunum Stüdyosu’nda gruplama ve kart bilgisi listeleri çok sütunlu tablolarda okunur ve arama kutusuyla filtrelenir.",
-    "en": "In Presentation Studio, grouping and card detail lists stay readable in tables with many columns and can be filtered with a search box."
+    "tr": "Sunum Stüdyosu’nda kart bilgileri ve grup başlıkları tam metinle görünür; serbest yerleştirilen kartlar grup başlığını korur, başka gruba bırakılan kart o gruba elle katılır. Birden çok kart birlikte boyutlandırılır; gruplama ve kart bilgisi listeleri okunur ve aranabilir.",
+    "en": "In Presentation Studio, card details and group titles show in full; freely placed cards keep their group title and a card dropped into another group joins it manually. Several cards can be resized together; grouping and card detail lists are readable and searchable."
   },
   "changes": [
     {
@@ -37,6 +37,35 @@
         "caption": {
           "tr": "Demo veride Gruplama seviyesi ekle paneli: arama kutusu ve okunur alan satırları.",
           "en": "The Add grouping level panel on demo data: search box and readable field rows."
+        }
+      }
+    },
+    {
+      "id": "presentation-studio-full-text-groups",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · CP · Siparişler",
+        "en": "Collection · CP · Orders"
+      },
+      "title": {
+        "tr": "Sunum Stüdyosu: kart ve grup başlıklarında tam metin, sabit kartlarda grup başlığı, birlikte boyutlandırma",
+        "en": "Presentation Studio: full text on cards and group titles, group titles on pinned cards, resizing together"
+      },
+      "body": {
+        "tr": "Uzun kart bilgileri (ör. kumaş açıklaması) artık “…” ile kesilmez, kartta en fazla üç satıra kırılır; alanlar tüm kartlarda aynı hizada kalır. Dar gruplarda grup başlığı tam metinle birden çok satıra kırılır, gerekirse model sayısı gizlenir. Grubundan çıkarılıp serbest yerleştirilen kart kendi grup başlığıyla görünür; yan yana duran aynı gruptan kartlar tek başlığı paylaşır. Başka bir grubun alanına bırakılan kart, Koleksiyon bilgisinden bağımsız olarak o gruba elle katılır ve yeni başlık açılmaz; kaynak veri değişmez. Birden çok kart seçiliyken kenar tutamacıyla yapılan boyutlandırma seçili tüm kartlara uygulanır. Boyut tutamaçları artık kartın içinde, tamamen görünür ve tutulabilir. PDF ve PowerPoint aynı satırları kullanır.",
+        "en": "Long card details (e.g. a fabric description) are no longer cut with “…”; they wrap to up to three lines and fields stay aligned across all cards. In narrow groups the group title wraps to several lines in full, hiding the model count if needed. A card taken out of its group and placed freely shows its own group title; neighbouring cards of the same group share one title. A card dropped into another group’s area joins that group manually, regardless of its Collection details, and no new title is added; source data does not change. With several cards selected, resizing from an edge handle applies to all selected cards. Resize handles now sit inside the card and are fully visible and easy to grab. PDF and PowerPoint use the same lines."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "presentation-studio-full-text.png",
+        "alt": {
+          "tr": "Demo modellerle Sunum Stüdyosu: birlikte boyutlandırılmış üç sabit kart, ortak grup başlığı ve sağda birden çok satıra kırılmış tam uzun grup başlığı",
+          "en": "Presentation Studio with demo models: three pinned cards resized together, a shared group title and, on the right, a long group title wrapped in full over several lines"
+        },
+        "caption": {
+          "tr": "Demo veride tam metinli grup başlıkları ve birlikte boyutlandırılmış sabit kartlar.",
+          "en": "Full-text group titles and pinned cards resized together on demo data."
         }
       }
     }

@@ -58,8 +58,9 @@
     const b = slideBuilder(page.font, lang), shapes = [];
     for (const el of page.elements) {
       if (el.type === 'hdr') {
-        const inner = b.textBox('Group title', el.x, el.textY, Math.max(1, el.w - el.count.w - 4), [{ lh: el.size * 1.3, runs: el.runs }])
-          + b.textBox('Group count', el.x + el.w - el.count.w - 4, el.textY + (el.size - el.count.size), el.count.w + 4, [{ lh: el.count.size * 1.3, runs: [el.count] }], 'r')
+        const cw = el.count ? el.count.w + 4 : 0;
+        const inner = (el.lines.length ? b.textBox('Group title', el.x, el.lines[0].y, Math.max(1, el.w - cw), el.lines.map(l => ({ lh: el.lh, runs: l.runs }))) : '')
+          + (el.count ? b.textBox('Group count', el.x + el.w - cw, el.count.y, cw, [{ lh: el.count.size * 1.3, runs: [el.count] }], 'r') : '')
           + b.rect('Group rule', el.rule.x, el.rule.y, el.rule.w, el.rule.h, { fill: palette.rule });
         shapes.push(b.group('Group', { x: el.x, y: el.y, w: el.w, h: el.h }, inner));
         continue;

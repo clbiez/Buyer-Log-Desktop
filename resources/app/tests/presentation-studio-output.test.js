@@ -89,3 +89,79 @@ test('belge HTML\'inde yazı tipi style özniteliğini bozmaz (PDF serif düşme
     assert.ok(style.endsWith('page-break-after:always'), 'öznitelik tırnakla erken kapanmaz');
   }
 });
+
+test('uzun metin satırlara kırılır; yalnız üst sınır aşılırsa "…" eklenir', () => {
+  const m = R.approxMeasure, runs = [{ t: 'Three Thread Brushed · 30/70/14 · 260 gsm · 65% Cotton 35% Poliester', size: 7, bold: false }];
+  const one = R.wrapRuns(runs, 1000, m, 'Arial', 3); assert.equal(one.length, 1); assert.equal(one[0][0].t, runs[0].t);
+  const three = R.wrapRuns(runs, 60, m, 'Arial', 3);
+  assert.equal(three.length, 3);
+  const joined = three.map(l => l.map(r => r.t).join('')).join(' ').replace(/\s+/g, ' ');
+  for (const l of three) assert.ok(l.reduce((s, r) => s + m(r.t, r.size, r.bold), 0) <= 60 + 0.01);
+  const all = R.wrapRuns(runs, 60, m, 'Arial', 10);
+  assert.ok(all.length > 3 && !all.flat().some(r => r.t.includes('…')), 'sınır yoksa metin tam');
+  assert.equal(all.map(l => l.map(r => r.t).join('')).join(' ').replace(/\s+/g, ' ').trim(), runs[0].t.replace(/\s+/g, ' '));
+  assert.ok(three.at(-1).at(-1).t.endsWith('…') && joined.startsWith('Three Thread Brushed'));
+  // Biçim (kalın başlık + normal devam) satırlar boyunca korunur.
+  const mixed = R.wrapRuns([{ t: 'Uzun Kumaş Adı', size: 9, bold: true }, { t: ' · Örme · Pamuk', size: 9, bold: false }], 60, m, 'Arial', 5);
+  assert.ok(mixed.flat().some(r => r.bold) && mixed.flat().some(r => !r.bold));
+  // Boşluksuz uzun parça karakter düzeyinde bölünür.
+  assert.ok(R.wrapRuns([{ t: 'X'.repeat(80), size: 7 }], 60, m, 'Arial', 6).every(l => l.reduce((s, r) => s + m(r.t, r.size, r.bold), 0) <= 60.01));
+});
+
+test('metin planı: kartta tam metin, alanlar kartlar arasında hizalı; başlık tam görünür; PDF ve PPTX aynı satırlar', async () => {
+  const ids = Array.from({ length: 8 }, (_, i) => 'K' + i);
+  const doc = E.createDoc({ ids, fields: ['modelName', 'fabric', 'price'], levels: ['fabric'] });
+  doc.style.cardW = 160;
+  const longFabric = 'Three Thread Brushed · 30/70/14 · 260 gsm · 65% Cotton 35% Poliester';
+  const fab = id => (Number(id.slice(1)) < 2 ? longFabric : 'Pamuk');
+  const groupOf = id => ({ key: fab(id), vals: [fab(id)] });
+  const src = {
+    lines: id => [{ label: 'Model', value: 'Model ' + id }, { label: 'Kumaş', value: fab(id) }, { label: 'Fiyat', value: '' }],
+    image: () => ({ src: PNG, w: 600, h: 800 }),
+    header: it => ({ main: it.vals[0], rest: '', count: `${it.count} model` }),
+  };
+  const cellW = E.geometry(doc, null).cellW, plan = R.textPlan(doc, cellW, ids, src);
+  // Dar kartta üst sınır korunur.
+  const narrow = JSON.parse(JSON.stringify(doc)); narrow.style.cardW = 60;
+  assert.equal(R.textPlan(narrow, E.geometry(narrow, null).cellW, ids, src).fieldLines[1], R.MAX_LINES.field);
+  assert.equal(plan.fieldLines[0], 1); assert.ok(plan.fieldLines[1] >= 2 && plan.fieldLines[1] <= R.MAX_LINES.field); assert.equal(plan.fieldLines[2], 1);
+  const res = E.layout(doc, groupOf, plan), list = R.build(doc, res, src);
+  const cards = list.pages.flatMap(p => p.elements).filter(e => e.type === 'card');
+  const longCard = cards.find(c => c.id === 'K0'), shortCard = cards.find(c => c.id === 'K5');
+  const text = c => c.lines.map(l => l.runs.map(r => r.t).join('')).join(' ');
+  assert.ok(!text(longCard).includes('…'), 'uzun kumaş adı kırpılmaz: ' + text(longCard));
+  assert.ok(text(longCard).replace(/\s+/g, ' ').includes(longFabric.replace(/\s+/g, ' ')));
+  // Fiyat satırı her kartta aynı yükseklikte (alan hizası).
+  const priceY = c => c.lines.find(l => l.runs.at(-1).t === '—').y - c.y;
+  assert.ok(Math.abs(priceY(longCard) - priceY(shortCard)) < 0.01);
+  for (const c of cards) for (const l of c.lines) assert.ok(l.y + l.lh <= c.y + c.h + 0.5);
+  // Dar (1-2 kartlık) grup başlığı tam metinle çok satıra kırılır.
+  const hdr = list.pages.flatMap(p => p.elements).find(e => e.type === 'hdr' && e.key === longFabric);
+  assert.ok(hdr.lines.length >= 2);
+  assert.equal(hdr.lines.map(l => l.runs.map(r => r.t).join('')).join(' ').replace(/\s+/g, ' ').trim(), longFabric.replace(/\s+/g, ' '));
+  for (const l of hdr.lines) assert.ok(l.y >= hdr.y - 0.01 && l.y + hdr.lh <= hdr.rule.y + 0.01);
+  // PDF HTML ve PPTX aynı başlık satırlarını taşır.
+  const html = R.documentHtml(list, 'Test');
+  for (const l of hdr.lines) for (const r of l.runs) assert.ok(html.includes(`>${r.t.replace(/&/g, '&amp;')}</span>`), r.t);
+  const zip = await JSZip.loadAsync(await P.build(JSZip, list, { title: 'Test', palette: R.DOC }).generateAsync({ type: 'nodebuffer' }));
+  const slides = (await Promise.all(Object.keys(zip.files).filter(f => /^ppt\/slides\/slide\d+\.xml$/.test(f)).map(f => zip.file(f).async('string')))).join('');
+  for (const l of hdr.lines) for (const r of l.runs) assert.ok(slides.includes(`<a:t>${r.t.replace(/&/g, '&amp;')}</a:t>`), 'pptx ' + r.t);
+});
+
+test('dar başlıkta model sayısı gizlenir, metin tam genişlikte kırılır (kelime ortasından bölünmez)', async () => {
+  const ids = ['K0', 'K1'];
+  const doc = E.createDoc({ ids, fields: ['modelName'], levels: ['fabric'] });
+  doc.cards.K0 = { pinned: true, page: 'p1', x: 300, y: 300, w: 80, h: 150 };
+  const label = 'Three Thread Brushed Cotton';
+  const groupOf = id => ({ key: id, vals: [id === 'K0' ? label : 'Pamuk'] });
+  const src = { lines: id => [{ label: 'Model', value: id }], image: () => null, header: it => ({ main: it.vals[0], rest: '', count: `${it.count} model` }) };
+  const plan = R.textPlan(doc, E.geometry(doc, null).cellW, ids, src);
+  const res = E.layout(doc, groupOf, plan), list = R.build(doc, res, src);
+  const hdr = list.pages[0].elements.find(e => e.type === 'hdr' && e.key === 'K0');
+  assert.equal(hdr.count, null, 'sayı gizli');
+  const words = hdr.lines.map(l => l.runs.map(r => r.t).join('').trim());
+  for (const w of words) for (const part of w.split(/\s+/)) assert.ok(label.split(' ').includes(part), 'kelime bölünmedi: ' + words);
+  assert.ok(!R.documentHtml(list, 't').includes('undefined'));
+  const zip = P.build(JSZip, list, { title: 't', palette: R.DOC });
+  assert.ok((await zip.generateAsync({ type: 'nodebuffer' })).length > 0);
+});

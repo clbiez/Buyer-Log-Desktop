@@ -40,11 +40,12 @@
 .psBadge .ic{width:8pt;height:8pt}
 .psPin{right:3pt}
 .psMoved{left:3pt}
-.psHandle{position:absolute;width:9px;height:9px}
-.psHandle[data-h="nw"]{left:-5px;top:-5px;cursor:nwse-resize}.psHandle[data-h="ne"]{right:-5px;top:-5px;cursor:nesw-resize}
-.psHandle[data-h="sw"]{left:-5px;bottom:-5px;cursor:nesw-resize}.psHandle[data-h="se"]{right:-5px;bottom:-5px;cursor:nwse-resize}
-.psHandle[data-h="n"]{left:calc(50% - 5px);top:-5px;cursor:ns-resize}.psHandle[data-h="s"]{left:calc(50% - 5px);bottom:-5px;cursor:ns-resize}
-.psHandle[data-h="w"]{top:calc(50% - 5px);left:-5px;cursor:ew-resize}.psHandle[data-h="e"]{top:calc(50% - 5px);right:-5px;cursor:ew-resize}
+.psHandle{position:absolute;width:10px;height:10px}
+/* Tutamaçlar kartın içinde: kart overflow:hidden olduğundan dışarı taşan kısım tıklanamaz. */
+.psHandle[data-h="nw"]{left:0;top:0;cursor:nwse-resize}.psHandle[data-h="ne"]{right:0;top:0;cursor:nesw-resize}
+.psHandle[data-h="sw"]{left:0;bottom:0;cursor:nesw-resize}.psHandle[data-h="se"]{right:0;bottom:0;cursor:nwse-resize}
+.psHandle[data-h="n"]{left:calc(50% - 5px);top:0;cursor:ns-resize}.psHandle[data-h="s"]{left:calc(50% - 5px);bottom:0;cursor:ns-resize}
+.psHandle[data-h="w"]{top:calc(50% - 5px);left:0;cursor:ew-resize}.psHandle[data-h="e"]{top:calc(50% - 5px);right:0;cursor:ew-resize}
 .psDocHdr{cursor:text}
 .psGuides{position:absolute;inset:0;pointer-events:none}
 .psGuide,.psInsert,.psMarquee{position:absolute;pointer-events:none}

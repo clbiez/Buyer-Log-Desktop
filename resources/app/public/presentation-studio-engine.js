@@ -96,12 +96,24 @@
     return { v: 2, source: SOURCES.includes(d.source) ? d.source : 'koleksiyon', title: text(d.title, LIMITS.title), page: normalizePage(d.page), style: normalizeStyle(d.style, fields), grouping: normalizeGrouping(d.grouping, fields), pages, cards, order, labels, seq };
   }
 
-  function textHeight(s) { const n = s.fields.length; return n ? 8 + s.fs * 1.18 * 1.3 + (n - 1) * s.fs * 1.3 : 4; }
-  function geometry(doc) {
+  /* Metin planı (ölçüm çizim modülünde yapılır): fieldLines[i] alanın kartta
+     kaç satır alacağı, hdrLines(h, w) grup başlığının w genişliğinde kaç satır
+     gerektirdiği. Son yerleşimin planı belgeye bağlanır; resolvePinned/findFree
+     aynı hücre ölçüsünü kullanır. Plan yoksa her alan ve başlık tek satırdır. */
+  const TEXT = new WeakMap(), lineCount = v => Math.max(1, Math.min(6, Math.round(Number(v) || 1)));
+  function textHeight(s, lines) {
+    const n = s.fields.length;
+    if (!n) return 4;
+    let h = 8;
+    for (let i = 0; i < n; i++) h += lineCount(lines && lines[i]) * s.fs * (i ? 1 : 1.18) * 1.3;
+    return h;
+  }
+  function geometry(doc, text) {
+    if (text === undefined) text = TEXT.get(doc) || null;
     const { w, h } = pageSize(doc.page), s = doc.style, m = Math.min(s.margin, w / 5, h / 5), gap = s.gap;
     const cx = m, cy = m, cw = w - 2 * m, ch = h - 2 * m;
     const cols = Math.max(1, Math.round((cw + gap) / (s.cardW + gap))), cellW = (cw - gap * (cols - 1)) / cols;
-    const hH = doc.grouping.levels.length ? s.fs * 1.25 * 1.55 + 5 : 0, hGap = hH ? 5 : 0, th = textHeight(s), groupGap = Math.max(gap * 1.6, 8);
+    const hH = doc.grouping.levels.length ? s.fs * 1.25 * 1.55 + 5 : 0, hGap = hH ? 5 : 0, th = textHeight(s, text && text.fieldLines), groupGap = Math.max(gap * 1.6, 8);
     let cellH = cellW * s.img + th;
     if (cellH > ch - hH - hGap) cellH = ch - hH - hGap;
     /* Dengeli doldurma: satır yüksekliği hedefin ±%20'si içinde ayarlanır;
@@ -110,7 +122,10 @@
     const n0 = Math.max(1, Math.floor((ch + step) / (cellH + lead + step))), up = fit(n0 + 1), down = fit(n0);
     if (up >= cellH * 0.8 && up - th > 20) cellH = up; else if (down <= cellH * 1.2) cellH = down;
     const rows = Math.max(1, Math.floor((ch - hH - hGap + gap) / (cellH + gap)));
-    return { w, h, m, cx, cy, cw, ch, bottom: cy + ch, gap, cols, cellW, cellH, th, hH, hGap, cap: cols * rows, groupGap };
+    const fieldLines = s.fields.map((_, i) => lineCount(text && text.fieldLines && text.fieldLines[i])), hLine = s.fs * 1.25 * 1.3;
+    // Başlık bandı: grup adının w genişliğinde gerektirdiği satır kadar uzar.
+    const hdrH = hd => (!hH ? 0 : hH + (text && typeof text.hdrLines === 'function' ? lineCount(text.hdrLines(hd, hd.w)) - 1 : 0) * hLine);
+    return { w, h, m, cx, cy, cw, ch, bottom: cy + ch, gap, cols, cellW, cellH, th, hH, hGap, cap: cols * rows, groupGap, fieldLines, hLine, hdrH };
   }
 
   function compareVals(a, b, n) {
@@ -153,24 +168,44 @@
   function layoutPageFlow(queue, obs, g) {
     const items = [], hit = r => obs.some(o => overlaps(r, o));
     let y = g.cy, placed = 0;
-    while (queue.length) {
-      const cardY = y + g.hH + g.hGap;
-      if (cardY + g.cellH > g.bottom + 0.01) break;
-      let seg = null, any = false, stop = false;
-      const close = () => { if (seg && g.hH) items.push({ kind: 'hdr', key: seg.ch.key, vals: seg.ch.vals, cont: seg.cont, count: seg.ch.total, x: seg.x, y, w: seg.x2 - seg.x, h: g.hH }); seg = null; };
+    /* Tek satırı hH başlık bandıyla dener; kuyruğu ilerletir. */
+    const row = hH => {
+      const cardY = y + hH + g.hGap, out = [], hdrs = [];
+      if (cardY + g.cellH > g.bottom + 0.01) return null;
+      let seg = null, any = false, stop = false, n = 0;
+      const close = () => { if (seg && g.hH) { const hd = { kind: 'hdr', key: seg.ch.key, vals: seg.ch.vals, cont: seg.cont, count: seg.ch.total, x: seg.x, y, w: seg.x2 - seg.x, h: hH }; out.push(hd); hdrs.push(hd); } seg = null; };
       for (let c = 0; c < g.cols && queue.length; c++) {
         const ch = queue[0];
-        if (ch.brk && placed > 0 && ch.items.length === ch.total) { stop = true; break; }
+        if (ch.brk && placed + n > 0 && ch.items.length === ch.total) { stop = true; break; }
         const x = colX(g, c);
-        if (hit({ x, y, w: g.cellW, h: g.hH + g.hGap + g.cellH })) { close(); continue; }
+        if (hit({ x, y, w: g.cellW, h: hH + g.hGap + g.cellH })) { close(); continue; }
         if (!seg || seg.ch !== ch) { close(); seg = { ch, x, cont: ch.cont || ch.items.length < ch.total }; }
-        items.push({ kind: 'card', id: ch.items.shift(), x, y: cardY, w: g.cellW, h: g.cellH });
-        seg.x2 = x + g.cellW; placed++; any = true;
+        out.push({ kind: 'card', id: ch.items.shift(), x, y: cardY, w: g.cellW, h: g.cellH });
+        seg.x2 = x + g.cellW; n++; any = true;
         if (!ch.items.length) queue.shift();
       }
       close();
-      if (stop) break;
-      y = cardY + g.cellH + (any ? g.groupGap : g.gap);
+      return { out, hdrs, any, stop, n, cardY, need: hdrs.reduce((m, hd) => Math.max(m, g.hdrH(hd)), g.hH) };
+    };
+    while (queue.length) {
+      const q0 = queue.slice(), s0 = q0.map(ch => ch.items.slice());
+      const restore = () => { queue.length = 0; queue.push(...q0); q0.forEach((ch, i) => { ch.items = s0[i].slice(); }); };
+      let hH = g.hH, r = row(hH);
+      if (!r) break;
+      // Uzun başlık: satırı daha yüksek bantla yeniden kur (segment genişliği değişebilir).
+      for (let k = 0; k < 3 && r.need > hH + 0.01; k++) {
+        hH = r.need; restore();
+        const next = row(hH);
+        if (!next) {
+          restore();
+          if (placed > 0) return items; // satır bir sonraki sayfaya geçer
+          hH = g.hH; r = row(hH); break; // boş sayfaya da sığmıyorsa başlık kısaltılır
+        }
+        r = next;
+      }
+      items.push(...r.out); placed += r.n;
+      if (r.stop) break;
+      y = r.cardY + g.cellH + (r.any ? g.groupGap : g.gap);
     }
     return items;
   }
@@ -179,32 +214,34 @@
   function layoutPageBlocks(queue, obs, g) {
     const items = [], hit = r => obs.some(o => overlaps(r, o)), tops = Array(g.cols).fill(g.cy);
     let placed = 0, lastY = g.cy;
-    const sim = (ids, c, w, y0) => {
+    const sim = (ch, c, w, y0, base) => {
+      const ids = ch.items;
       let y = y0; const bw = w * g.cellW + (w - 1) * g.gap;
-      if (g.hH) for (let k = 0; k < 30; k++) { const bl = obs.filter(o => overlaps({ x: colX(g, c), y, w: bw, h: g.hH }, o)); if (!bl.length) break; y = Math.max(...bl.map(o => o.y + o.h)) + 2; }
-      if (y + g.hH + g.hGap + g.cellH > g.bottom + 0.01) return null;
-      const top = y + g.hH + g.hGap, pl = []; let idx = 0, r = 0, bottom = y + g.hH;
+      const hh = !g.hH || base ? g.hH : g.hdrH({ key: ch.key, vals: ch.vals, cont: ch.cont || ids.length < ch.total, count: ch.total, w: bw });
+      if (hh) for (let k = 0; k < 30; k++) { const bl = obs.filter(o => overlaps({ x: colX(g, c), y, w: bw, h: hh }, o)); if (!bl.length) break; y = Math.max(...bl.map(o => o.y + o.h)) + 2; }
+      if (y + hh + g.hGap + g.cellH > g.bottom + 0.01) return null;
+      const top = y + hh + g.hGap, pl = []; let idx = 0, r = 0, bottom = y + hh;
       while (idx < ids.length && r < 500) {
         const ry = top + r * (g.cellH + g.gap);
         if (ry + g.cellH > g.bottom + 0.01) break;
         for (let j = 0; j < w && idx < ids.length; j++) { const rc = { x: colX(g, c + j), y: ry, w: g.cellW, h: g.cellH }; if (!hit(rc)) { pl.push({ ...rc, id: ids[idx++] }); bottom = Math.max(bottom, ry + g.cellH); } }
         r++;
       }
-      return { y, w, c, bw, pl, bottom, complete: idx >= ids.length, empty: w * Math.ceil(ids.length / w) - ids.length };
+      return { y, w, c, bw, hh, pl, bottom, complete: idx >= ids.length, empty: w * Math.ceil(ids.length / w) - ids.length };
     };
     while (queue.length) {
       const ch = queue[0];
       if (ch.brk && placed > 0) break;
       const n = ch.items.length; let best = null, part = null;
-      for (let w = Math.min(n, g.cols); w >= 1; w--) for (let c = 0; c + w <= g.cols; c++) {
-        const s = sim(ch.items, c, w, Math.max(lastY, ...tops.slice(c, c + w)));
+      for (let pass = 0; pass < 2 && !best && !(pass && (placed > 0 || part)); pass++) for (let w = Math.min(n, g.cols); w >= 1; w--) for (let c = 0; c + w <= g.cols; c++) {
+        const s = sim(ch, c, w, Math.max(lastY, ...tops.slice(c, c + w)), pass === 1);
         if (!s || !s.pl.length) continue;
         if (!s.complete) { if (!part || s.pl.length > part.pl.length) part = s; continue; }
         if (!best || s.bottom < best.bottom - 0.5 || (Math.abs(s.bottom - best.bottom) <= 0.5 && (s.y < best.y - 0.5 || (Math.abs(s.y - best.y) <= 0.5 && (s.empty < best.empty || (s.empty === best.empty && s.c < best.c)))))) best = s;
       }
       let s = best;
       if (!s) { if (placed === 0 && part) s = part; else break; }
-      if (g.hH) items.push({ kind: 'hdr', key: ch.key, vals: ch.vals, cont: ch.cont, count: ch.total, x: colX(g, s.c), y: s.y, w: s.bw, h: g.hH });
+      if (g.hH) items.push({ kind: 'hdr', key: ch.key, vals: ch.vals, cont: ch.cont, count: ch.total, x: colX(g, s.c), y: s.y, w: s.bw, h: s.hh });
       for (const p of s.pl) items.push({ kind: 'card', id: p.id, x: p.x, y: p.y, w: p.w, h: p.h });
       for (let j = s.c; j < s.c + s.w; j++) tops[j] = s.bottom + g.groupGap;
       lastY = s.y; placed += s.pl.length;
@@ -216,7 +253,8 @@
 
   /* Yerleşim: belgeyi okur, otomatik sayfaları ekler/budar (doc.pages
      güncellenir), sayfa başına öğe listesi döndürür. */
-  function layout(doc, groupOf) {
+  function layout(doc, groupOf, text = null) {
+    if (text) TEXT.set(doc, text); else TEXT.delete(doc);
     const g = geometry(doc), pageIds = new Set(doc.pages.map(p => p.id)), pinned = {};
     for (const id of doc.order) {
       const c = doc.cards[id];
@@ -224,21 +262,66 @@
       if (!pageIds.has(c.page)) { c.pinned = false; continue; }
       (pinned[c.page] || (pinned[c.page] = [])).push({ kind: 'card', id, pinned: true, x: c.x, y: c.y, w: c.w, h: c.h });
     }
-    const queue = buildChunks(doc, g, groupOf), place = doc.style.keepGroups ? layoutPageBlocks : layoutPageFlow, out = [];
+    const place = doc.style.keepGroups ? layoutPageBlocks : layoutPageFlow;
+    const valsOf = new Map();
+    if (g.hH) for (const id of doc.order) { const gi = groupOf(id); if (!valsOf.has(gi.key)) valsOf.set(gi.key, gi.vals); }
+    /* Grubundan ayrı sabitlenen kart: aynı sayfada grubun akan başlığı yoksa
+       kartın hemen üstüne kendi başlığı konur (akış o bandı boş bırakır). */
+    const pinHdr = (it, count) => {
+      const key = effectiveKey(doc, it.id, groupOf), hd = { kind: 'hdr', key, vals: valsOf.get(key) || key.split(SEP), cont: false, count, x: it.x, w: it.w, pinOf: it.id };
+      hd.h = g.hdrH(hd); hd.y = it.y - g.hGap - hd.h; return hd;
+    };
+    const pad = (it, need) => {
+      const top = need && need.has(it.id) ? pinHdr(it, 1).y : it.y;
+      return { x: it.x - g.gap / 2, y: top - g.gap / 2, w: it.w + g.gap, h: it.y + it.h - top + g.gap };
+    };
     let overflow = false;
-    const pad = it => ({ x: it.x - g.gap / 2, y: it.y - g.gap / 2, w: it.w + g.gap, h: it.h + g.gap });
-    for (const p of doc.pages) {
-      const items = [...(pinned[p.id] || [])];
-      if (p.flow && queue.length) items.push(...place(queue, items.map(pad), g));
-      out.push({ id: p.id, items });
+    const run = need => {
+      const queue = buildChunks(doc, g, groupOf), out = [];
+      for (const p of doc.pages) {
+        const items = [...(pinned[p.id] || [])];
+        if (p.flow && queue.length) items.push(...place(queue, items.map(it => pad(it, need)), g));
+        out.push({ id: p.id, items });
+      }
+      while (queue.length && doc.pages.length < LIMITS.pages) {
+        const items = place(queue, [], g);
+        if (!items.length) break;
+        const np = { id: 'p' + doc.seq++, flow: true, auto: true };
+        doc.pages.push(np); out.push({ id: np.id, items });
+      }
+      overflow = queue.length > 0;
+      return out;
+    };
+    const lonely = out => {
+      const set = new Set();
+      for (const p of out) {
+        const keys = new Set(p.items.filter(i => i.kind === 'hdr').map(i => i.key));
+        for (const it of p.items) if (it.pinned && !keys.has(effectiveKey(doc, it.id, groupOf))) set.add(it.id);
+      }
+      return set;
+    };
+    let out = run(null);
+    if (g.hH) {
+      // Başlık bandı gereken sabitler: ikinci geçişte yeni yalnız kalan olursa kümeye eklenip yeniden yerleşir.
+      let need = lonely(out), still = need;
+      for (let k = 0; k < 3 && need.size; k++) {
+        out = run(need); still = lonely(out);
+        if ([...still].every(id => need.has(id))) break;
+        need = new Set([...need, ...still]);
+      }
+      for (const p of out) {
+        // Aynı gruptan, aynı hizada yan yana duran sabit kartlar tek başlığı paylaşır.
+        const pins = p.items.filter(i => i.pinned && still.has(i.id)).sort((a, b) => a.y - b.y || a.x - b.x), runs = [];
+        for (const it of pins) {
+          const key = effectiveKey(doc, it.id, groupOf), run = runs.find(r => r.key === key && Math.abs(r.y - it.y) < 1 && it.x - r.x2 >= -0.5 && it.x - r.x2 <= g.gap * 1.6 + 0.5);
+          if (run) { run.x2 = it.x + it.w; run.ids.push(it.id); } else runs.push({ key, id: it.id, ids: [it.id], x: it.x, y: it.y, x2: it.x + it.w });
+        }
+        for (const r of runs) {
+          const hd = pinHdr({ id: r.id, x: r.x, y: r.y, w: r.x2 - r.x }, r.ids.length); hd.pins = r.ids;
+          if (hd.y >= -0.01 && !p.items.some(o => !r.ids.includes(o.id) && overlaps(hd, o))) p.items.push(hd);
+        }
+      }
     }
-    while (queue.length && doc.pages.length < LIMITS.pages) {
-      const items = place(queue, [], g);
-      if (!items.length) { overflow = true; break; }
-      const np = { id: 'p' + doc.seq++, flow: true, auto: true };
-      doc.pages.push(np); out.push({ id: np.id, items });
-    }
-    if (queue.length) overflow = true;
     for (let i = out.length - 1; i >= 0 && out.length > 1; i--) {
       const p = doc.pages[i];
       if (p.auto && p.flow && !out[i].items.length) { out.splice(i, 1); doc.pages.splice(i, 1); }
@@ -316,6 +399,19 @@
       setGroup(doc, id, effectiveKey(doc, before.id, groupOf), groupOf);
     }
   }
+  /* Sayfadaki bir noktanın düştüğü akış grubu: başlık bandı ve altındaki akan
+     kartlarının kapladığı alan. Boş alan veya sabit kart üstü → null. */
+  function groupAt(res, pageId, pt) {
+    const p = res.pages.find(pg => pg.id === pageId); if (!p) return null;
+    const g = res.g, inside = (r, q) => q.x >= r.x && q.x <= r.x + r.w && q.y >= r.y && q.y <= r.y + r.h;
+    for (const h of p.items) {
+      if (h.kind !== 'hdr' || h.pinOf) continue;
+      const cards = p.items.filter(c => c.kind === 'card' && !c.pinned && c.x >= h.x - 0.1 && c.x < h.x + h.w - 0.1 && c.y > h.y && c.y - h.y <= h.h + g.hGap + 0.1);
+      const bottom = cards.reduce((m, c) => Math.max(m, c.y + c.h), h.y + h.h);
+      if (inside({ x: h.x, y: h.y, w: h.w, h: bottom - h.y }, pt)) return h.key;
+    }
+    return null;
+  }
   function setGroup(doc, id, key, groupOf) { const c = doc.cards[id] || (doc.cards[id] = {}); if (key === groupOf(id).key) delete c.vgroup; else c.vgroup = key; }
   /* Sıraya ekleme: kartlar hedef kartın önüne/arkasına ve hedefin görsel grubuna taşınır. */
   function insertAt(doc, ids, targetId, after, groupOf) {
@@ -324,6 +420,32 @@
     const at = doc.order.indexOf(targetId) + (after ? 1 : 0);
     doc.order.splice(at < 0 ? doc.order.length : at, 0, ...ids);
     for (const id of ids) { const c = doc.cards[id] || (doc.cards[id] = {}); c.pinned = false; setGroup(doc, id, key, groupOf); }
+  }
+  /* Çoklu seçimde boyut: seçili kartlar aynı ölçüye gelir ve sayfa başına
+     okuma sırasıyla seçimin sol üstünden dizilir; diğer sabitlerin etrafından
+     dolaşır. Yer bulunamayan kart akışta kalır. Dönüş: yerleşemeyen kart sayısı. */
+  function resizeAll(doc, res, ids, w, h) {
+    const g = res.g, byPage = new Map();
+    for (const id of ids) { const it = res.index.get(id); if (it) (byPage.get(it.page) || byPage.set(it.page, []).get(it.page)).push(it); }
+    w = Math.min(Math.max(1, w), g.w - 2 * g.m); h = Math.min(Math.max(1, h), g.h - 2 * g.m);
+    let failed = 0;
+    const sel = new Set(ids);
+    for (const [page, list] of byPage) {
+      list.sort((a, b) => (Math.abs(a.y - b.y) > 1 ? a.y - b.y : a.x - b.x));
+      const x0 = Math.min(...list.map(i => i.x)), y0 = Math.min(...list.map(i => i.y));
+      const p = res.pages.find(pg => pg.id === page);
+      const obs = (p ? p.items : []).filter(i => i.kind === 'card' && i.pinned && !sel.has(i.id)).map(i => ({ x: i.x - g.gap / 2, y: i.y - g.gap / 2, w: i.w + g.gap, h: i.h + g.gap }));
+      let x = x0, y = y0;
+      for (const it of list) {
+        if (x > x0 && x + w > g.w - g.m + 0.01) { x = x0; y += h + g.gap; }
+        const spot = findFree({ x, y, w, h }, obs, g);
+        if (!spot) { const c = doc.cards[it.id]; if (c) c.pinned = false; failed++; continue; }
+        pinAt(doc, it.id, { ...spot, page });
+        obs.push({ x: spot.x - g.gap / 2, y: spot.y - g.gap / 2, w: w + g.gap, h: h + g.gap });
+        x = spot.x + w + g.gap; y = spot.y;
+      }
+    }
+    return failed;
   }
   function align(doc, ids, kind) {
     const byPage = {};
@@ -369,7 +491,7 @@
     return { ok: true, missing: [...new Set(missing)], unpinned, levelsChanged };
   }
 
-  return { MM, SEP, PAPERS, FONTS, CARD_STYLES, STYLE_SPEC, LIMITS, overlaps, pageSize, createDoc, normalizeDoc, normalizeStyle, normalizePage, geometry, textHeight,
+  return { MM, SEP, PAPERS, FONTS, CARD_STYLES, STYLE_SPEC, LIMITS, overlaps, pageSize, createDoc, resizeAll, groupAt, normalizeDoc, normalizeStyle, normalizePage, geometry, textHeight,
     buildChunks, layoutPageFlow, layoutPageBlocks, layout, conflicts, findFree, resolvePinned, pageChangeConflicts, applyPageChange,
     effectiveKey, pinAt, unpin, insertAt, setGroup, align, templateOf, normalizeTemplate, applyTemplate };
 });
