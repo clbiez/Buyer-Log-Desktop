@@ -396,15 +396,13 @@ test('20 cihazdan eşzamanlı izin değişikliği kayıpsız birleşir; bozuk iz
   });
 });
 
-/* Bilinen tasarım sınırı (docs/ai/SHARED_FOLDER_WRITERS.md, "Çok yazarlı"):
-   ayrı OneDrive aynalarında iki cihaz aynı tabandan aynı anda yayımlarsa
-   sağlayıcı birini `<sahip>-<PC>.json` kopyasına ayırır. Kaybeden cihazın
-   birleşim tabanı kendi (yerinden edilmiş) yayımıdır; bu nedenle kendi
-   düzenlemesini "zaten tabanda" sayar ve uzak kopyayı benimser — düzenleme
-   çakışma kaydı bile olmadan düşer. Düzeltme zarf soy zinciri (ör. son N
-   kimlik) gerektirir: protokol işi. Bu test hedef davranışı yürütülmüş
-   RED/TODO olarak tutar; geçmesi yakınsama kanıtı değildir. */
-test('ayrı OneDrive aynaları: yerinden edilen eşzamanlı yayım sessizce kaybolmamalı', { todo: 'zarf soy zinciri gerektirir (protokol işi)', timeout: TIMEOUT_MS }, async t => {
+/* Ayrı OneDrive aynalarında iki cihaz aynı tabandan aynı anda yayımlarsa
+   sağlayıcı birini `<sahip>-<PC>.json` kopyasına ayırır. Eskiden kaybeden
+   cihaz kendi (yerinden edilmiş) yayımını birleşim tabanı sayıyor ve
+   düzenleme çakışma kaydı bile olmadan düşüyordu. ADR-0001 Aşama 0: zarf soy
+   listesi + bekleyen yayım kaydı; ayrıntılı senaryolar
+   tests/collection-sync-displaced-publication-v20261126.test.js. */
+test('ayrı OneDrive aynaları: yerinden edilen eşzamanlı yayım sessizce kaybolmamalı', { timeout: TIMEOUT_MS }, async t => {
   const sim = await simulation(t, { seed: 25119, devices: 4 });
   const [a, , b] = sim.devices;
   const relative = path.relative(sim.hub, sim.workspaceFile());

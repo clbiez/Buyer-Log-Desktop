@@ -128,6 +128,29 @@
       }
     },
     {
+      "id": "collection-sync-displaced-publication",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · Senkron",
+        "en": "Collection · Sync"
+      },
+      "title": {
+        "tr": "Koleksiyon: OneDrive'da aynı anda kaydedilen düzenleme artık kaybolmuyor",
+        "en": "Collection: edits saved at the same time over OneDrive are no longer lost"
+      },
+      "body": {
+        "tr": "Aynı Koleksiyon sayfası iki bilgisayarda aynı anda kaydedildiğinde OneDrive bir kopyayı ayrı bir çakışma dosyasına ayırabiliyordu; o bilgisayardaki düzenleme çakışma kaydı bile bırakmadan düşüyordu. Buyer Log artık kendi kaydının bulutta ezildiğini fark ediyor ve düzenlemeyi diğer bilgisayarın değişiklikleriyle birleştiriyor. Aynı alan iki tarafta farklı değiştirildiyse önce kaydedilen değer kalır, sizin değeriniz Senkron çakışmalarında bekler.",
+        "en": "When the same Collection page was saved on two computers at the same time, OneDrive could move one copy to a separate conflict file, and that computer's edit was dropped without even a conflict record. Buyer Log now detects that its save was overwritten in the cloud and merges the edit with the other computer's changes. If the same field was changed differently on both sides, the value saved first stays and yours waits in Sync conflicts."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Arka plandaki senkron birleşimi düzeltildi; ekranda değişen bir öğe yok.",
+          "en": "The background sync merge was fixed; nothing on screen changes."
+        }
+      }
+    },
+    {
       "id": "collection-order-fob-manufacturer-fallback",
       "type": "improvement",
       "module": {
