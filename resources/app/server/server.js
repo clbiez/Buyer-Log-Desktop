@@ -4133,8 +4133,8 @@ const merchMasterRefresher = merchMaster.createMasterRefresher({
   },
   writeFile: value => { atomicWriteJson(MERCH_MASTER_FILE, value); merchMasterCache = value; },
 });
-function kickMerchMasterRefresh() {
-  merchMasterRefresher.ensure().catch(err => logRuntimeFailure('merchMasterRefresh', err));
+function kickMerchMasterRefresh(reason) {
+  merchMasterRefresher.ensure({ reason }).catch(err => logRuntimeFailure('merchMasterRefresh', err));
 }
 // Merch hiyerarşisi (Marka Müdürlüğü › MMYG › MAG). Filtre listeleri kodun yanında ad ve
 // müdürlüğü göstermek için ister; veri kullanıcının kendi ASAS yenilemesinden gelir,
@@ -4149,7 +4149,7 @@ app.get('/api/merch-hierarchy', async (req, res) => {
     }
     const master = merchMasterRefresher.read();
     const status = merchMasterRefresher.status();
-    if (!status.fresh) kickMerchMasterRefresh(); // arka planda; yanıt beklemez
+    if (!status.builtAt) kickMerchMasterRefresh('missing'); // yalnız ilk kez; arka planda, yanıt beklemez
     const view = merchHierarchy.publicView(merchMaster.overlay(runtime.merchHierarchy, master && master.hierarchy));
     view.master = { builtAt: status.builtAt, pending: merchMasterRefresher.status().pending, error: status.error };
     res.set('Cache-Control', 'no-store').json(view);
@@ -8307,8 +8307,9 @@ async function loadFromModels(value, targets = null, options = {}) {
     },
   };
   throwIfRefreshSignalAborted(options.signal);
-  // Model geneli merch eşlemesi ASAS model yenilemesinden sonra arka planda tazelenir (12 saat kısıtlı).
-  if (asasMode === 'database') setImmediate(kickMerchMasterRefresh);
+  // Model geneli merch eşlemesi her yenilemede OKUNMAZ: yalnız kayıt yoksa, 7 günden eskiyse ya da bu
+  // yenilemede kayıtlı eşlemede olmayan yeni kod göründüyse (en sık 6 saatte bir) arka planda okunur.
+  if (asasMode === 'database') setImmediate(() => { const reason = merchMasterRefresher.needsRefresh(next.merchHierarchy); if (reason) kickMerchMasterRefresh(reason); });
   if (options.deferPublish) return next;
   return publishRefreshedRuntime(id, next);
 }
@@ -12746,6 +12747,7 @@ require('./routes/horizon-template-routes')(app, {
 // ---- Veri modeli bağlantıları route'ları (şema, sorgu, çalıştırma) → server/routes/model-connection-routes.js ----
 require('./routes/model-connection-routes')(app, {
   MODEL_EXPORT_ROOT,
+  refreshMerchMaster: () => kickMerchMasterRefresh('manual'),
   alignHorizonWithMapping,
   apiError,
   ensureConnectionMapping,

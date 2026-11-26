@@ -58,36 +58,49 @@ test('birleştirme: kullanıcının taze gözlemi kazanır, model eksik kodları
   assert.equal(M.overlay(null, master).mag.BGA.mmyg, 'BGA8');
 });
 
-test('yenileyici: 12 saat taze kalır, hata sonrası 30 dk denemez, aynı anda tek iş, kaynak kuramazsa nedenini söyler', async () => {
-  let clock = Date.parse('2026-11-26T08:00:00Z'), queries = 0, stored = null, fail = false, release;
+test('yenileyici her yenilemede okumaz: kayıt yoksa, 7 günden eskiyse ya da yeni kod göründüyse (en sık 6 saatte bir); elle tetikleme beklemez', async () => {
+  let clock = Date.parse('2026-11-26T08:00:00Z'), queries = 0, stored = null, fail = false, release = null;
   const item = asas({ 'Merch Alt Grup Kod': col('Urun', 'MAG'), 'Merch Marka Yaş Grup Kod': col('Urun', 'MMYG') });
   const r = M.createMasterRefresher({
     loadConnections: () => [item], now: () => clock,
-    runModelRows: async () => { queries += 1; if (fail) throw new Error('SSAS kapalı'); await new Promise(res => { release = res; }); return { rows: [['CU4E', 'CUW4']] }; },
+    runModelRows: async () => { queries += 1; if (fail) throw new Error('SSAS kapalı'); if (release === null) await new Promise(res => { release = res; }); return { rows: [['CU4E', 'CUW4']] }; },
     readFile: () => stored, writeFile: value => { stored = value; },
   });
-  const a = r.ensure(), b = r.ensure();
+  const runtime = codes => ({ version: 1, builtAt: 'x', columns: {}, conflicts: [], mag: Object.fromEntries(codes.map(c => [c, { mmyg: 'CUW4', rows: 1 }])), mmyg: { CUW4: { name: '', rows: 1 } } });
+  assert.equal(r.needsRefresh(runtime(['CU4E'])), 'missing');
+  const a = r.ensure({ reason: 'missing' }), b = r.ensure({ reason: 'missing' });
   assert.equal(a, b, 'aynı anda tek iş');
   assert.equal(r.status().pending, true);
   release(); await a;
   assert.equal(queries, 1);
-  assert.equal(stored.hierarchy.mag.CU4E.mmyg, 'CUW4');
-  assert.equal(r.status().fresh, true);
-  await r.ensure(); assert.equal(queries, 1, '12 saat içinde tekrar sorgu yok');
-  clock += M.MAX_AGE_MS + 1; fail = true;
-  await r.ensure(); assert.equal(queries, 2);
+  assert.equal(stored.hierarchy.mag.CU4E.mmyg, 'CUW4', 'programa kalıcı yazıldı');
+  assert.equal(r.needsRefresh(runtime(['CU4E'])), '', 'bilinen kodlarla yenileme sorgu tetiklemez');
+  assert.equal(r.needsRefresh(runtime(['CU4E', 'NEW1'])), '', 'yeni kod: son okumadan 6 saat geçmeden tetiklemez');
+  clock += M.NEW_CODE_MIN_INTERVAL_MS + 1;
+  assert.equal(r.needsRefresh(runtime(['CU4E'])), '');
+  assert.equal(r.needsRefresh(runtime(['CU4E', 'NEW1'])), 'new-codes');
+  assert.equal(r.needsRefresh({ ...runtime(['CU4E']), mag: { OLD: { mmyg: 'X', stale: true } } }), '', 'eski (görülmeyen) kod tetiklemez');
+  await r.ensure(); assert.equal(queries, 1, 'nedensiz çağrı taze kayıtta sorgu atmaz');
+  clock += M.MAX_AGE_MS;
+  assert.equal(r.needsRefresh(runtime(['CU4E'])), 'aged');
+  fail = true;
+  await r.ensure({ reason: 'aged' }); assert.equal(queries, 2);
   assert.match(r.status().error, /SSAS kapalı/);
   assert.equal(stored.hierarchy.mag.CU4E.mmyg, 'CUW4', 'hata son başarılı eşlemeyi silmez');
-  clock += 60 * 1000; await r.ensure(); assert.equal(queries, 2, 'hata sonrası 30 dk beklenir');
+  clock += 60 * 1000; await r.ensure({ reason: 'aged' }); assert.equal(queries, 2, 'hata sonrası 30 dk beklenir');
+  fail = false; await r.ensure({ reason: 'manual' }); assert.equal(queries, 3, 'elle tazeleme beklemeyi atlar');
   const none = M.createMasterRefresher({ loadConnections: () => [], runModelRows: async () => ({ rows: [] }), readFile: () => null, writeFile: () => {} });
-  await none.ensure(); assert.match(none.status().error, /bağlantısı yok/);
+  await none.ensure({ reason: 'missing' }); assert.match(none.status().error, /bağlantısı yok/);
 });
 
-test('sunucu: uç model katmanını birleştirir, bayatsa arka planda tazeler; model yenilemesi sonrası tetiklenir; sürüm iki katmanı izler', () => {
+test('sunucu: uç model katmanını birleştirir; okuma ilk kez, gerektiğinde ya da elle; sürüm iki katmanı izler', () => {
   const server = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
   assert.match(server, /merchMaster\.overlay\(runtime\.merchHierarchy, master && master\.hierarchy\)/);
-  assert.match(server, /if \(!status\.fresh\) kickMerchMasterRefresh\(\)/);
-  assert.match(server, /if \(asasMode === 'database'\) setImmediate\(kickMerchMasterRefresh\)/);
+  assert.match(server, /if \(!status\.builtAt\) kickMerchMasterRefresh\('missing'\)/, 'uç yalnız ilk kez tetikler');
+  assert.match(server, /const reason = merchMasterRefresher\.needsRefresh\(next\.merchHierarchy\); if \(reason\) kickMerchMasterRefresh\(reason\)/, 'yenileme sonrası yalnız gerekirse');
+  assert.match(server, /refreshMerchMaster: \(\) => kickMerchMasterRefresh\('manual'\)/);
+  const routes = fs.readFileSync(path.join(__dirname, '..', 'server', 'routes', 'model-connection-routes.js'), 'utf8');
+  assert.match(routes, /if \(typeof refreshMerchMaster === 'function'\) refreshMerchMaster\(\);/, '"ASAS\'tan Tazele" eşlemeyi de yeniler');
   assert.match(server, /merchHierarchyVersion: \[active\.merchHierarchy && active\.merchHierarchy\.builtAt \|\| '', merchMasterRefresher\.status\(\)\.builtAt \|\| ''\]\.join\('\|'\)/);
   assert.match(server, /path\.join\(SERVER_DATA_ROOT, 'merch-master\.json'\)/);
 });

@@ -9,9 +9,12 @@
  * ASAS model bağlantısının MEVCUT alan eşlemesiyle küçük bir SUMMARIZE sorgusu atılır:
  * yalnız var olan MAG/MMYG/ad/müdürlük kombinasyonları döner (yüzlerce satır).
  *
- * Kurallar:
- *  - Sorgu kullanıcı yenilemesini beklemez; arka planda, en sık 12 saatte bir çalışır.
- *    Hata olursa 30 dakika tekrar denenmez. Aynı anda tek iş yürür.
+ * Kurallar (her yenilemede ÇALIŞMAZ; sonuç programın veri klasörüne kalıcı yazılır):
+ *  - İlk kez (kayıt yoksa) bir kez okunur.
+ *  - ASAS yenilemesinde kayıtlı eşlemede olmayan YENİ bir MAG/MMYG kodu görülürse
+ *    yeniden okunur (son okumadan en az 6 saat sonra), kayıt 7 günden eskiyse de.
+ *  - Elle: Kullanıcı yönetimi › "ASAS'tan Tazele" (MAG/MMYG listesi) aynı anda yeniler.
+ *  - Sorgu kullanıcıyı beklemez (arka plan). Hata olursa 30 dk denenmez; tek iş yürür.
  *  - Birleştirmede kullanıcının kendi (taze) gözlemi kazanır; model katmanı eksik
  *    kodları ve boş ad/müdürlük alanlarını tamamlar.
  */
@@ -19,7 +22,8 @@
 const merchHierarchy = require('./merch-hierarchy');
 const modelFields = require('./model-fields');
 
-const MAX_AGE_MS = 12 * 3600 * 1000;
+const MAX_AGE_MS = 7 * 24 * 3600 * 1000;
+const NEW_CODE_MIN_INTERVAL_MS = 6 * 3600 * 1000;
 const RETRY_AFTER_FAILURE_MS = 30 * 60 * 1000;
 const MAX_ROWS = 50000;
 const HEADERS = Object.freeze({
@@ -139,17 +143,29 @@ function createMasterRefresher(deps) {
     }
     throw new Error(reason);
   }
+  /* Yeniden okuma gerekiyor mu? '' = hayır. runtime: kullanıcının yayınlanan hiyerarşisi. */
+  function needsRefresh(runtime) {
+    const v = read();
+    if (!v) return 'missing';
+    const age = now() - (Date.parse(v.builtAt) || 0);
+    if (age >= MAX_AGE_MS) return 'aged';
+    if (age < NEW_CODE_MIN_INTERVAL_MS || !merchHierarchy.isHierarchy(runtime)) return '';
+    const known = v.hierarchy;
+    for (const kind of ['mag', 'mmyg']) for (const [code, e] of Object.entries(runtime[kind])) if (!e.stale && !known[kind][code]) return 'new-codes';
+    return '';
+  }
+  /* options.reason: 'manual' yalnız eşzamanlı işi bekler; diğerleri hata sonrası 30 dk bekler. */
   function ensure(options = {}) {
     if (inflight) return inflight;
-    const s = status();
-    if (!options.force && s.fresh) return Promise.resolve(read());
-    if (!options.force && lastFailureAt && now() - lastFailureAt < RETRY_AFTER_FAILURE_MS) return Promise.resolve(read());
+    const manual = options.reason === 'manual';
+    if (!manual && !options.reason && status().fresh) return Promise.resolve(read());
+    if (!manual && lastFailureAt && now() - lastFailureAt < RETRY_AFTER_FAILURE_MS) return Promise.resolve(read());
     inflight = run()
       .catch(err => { lastFailureAt = now(); lastError = String(err && err.message || err); return read(); })
       .finally(() => { inflight = null; });
     return inflight;
   }
-  return { ensure, status, read };
+  return { ensure, status, read, needsRefresh };
 }
 
-module.exports = { MAX_AGE_MS, RETRY_AFTER_FAILURE_MS, HEADERS, buildMasterQuery, hierarchyFromRows, overlay, createMasterRefresher };
+module.exports = { MAX_AGE_MS, NEW_CODE_MIN_INTERVAL_MS, RETRY_AFTER_FAILURE_MS, HEADERS, buildMasterQuery, hierarchyFromRows, overlay, createMasterRefresher };
