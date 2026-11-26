@@ -127,3 +127,33 @@ Doğruluk aşamaları bitmeden ve ölçüm yapılmadan hız işi yapılmaz.
 - **Karar (S4):** Yeni yetenek. Bütçe, aynı veride normal üç yönlü birleşimin (S2'nin birleşimli varyantı) medyanı + fark uygulama süresi; ham değer raporlanır. 2 MiB üstü zarfta kira altı birleşim yapılmaması kuralı değişmez.
 - **Bayt:** Zarf artışı yayım yapan kurulum başına ≤ ~200 bayt. Yayım başına ek yerel yazım: durum dosyası + tek fark satırı. İlk bekleyen yayımda yeniden adlandırma dışında tam kopya yazımı yoktur.
 - **Öncelik:** Veri bütünlüğü kriterini geçmeyen aday, performans sonucundan bağımsız olarak elenir. Performans için bütünlük mekanizması zayıflatılmaz; ek state yazımı kira dışına ancak aynı kesinti testleri geçerse taşınır.
+
+### Sonuçlar (2026-11-26, Linux container, Node 22; Windows/OneDrive gerçek ortamı ölçülmedi)
+
+**Veri bütünlüğü.** Rastgele bulut modelinde, düzeltme öncesi (`df778c0`) ile aday karşılaştırıldı:
+
+| Model | Sürüm | Seed | Düşen senaryo | Sessiz kayıp | Çakışmaya düşen kayıp | Geri gelen silme | Yanlış çakışma |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Gerçekçi | Düzeltme öncesi | 40 | 40 | 257 | 9 | 153 | 12 |
+| Gerçekçi | Aday | 212 | 0 | 0 | 0 | 0 | 0 |
+| Düşmanca | Düzeltme öncesi | 40 | 40 | 258 | 5 | 147 | 10 |
+| Düşmanca | Aday | 40 | 4 | 2 | 3 | 3 | 4 |
+
+Testin geliştirilmesi sırasında bulunup düzeltilen hatalar:
+- 32'lik soy listesi, 40 yayım sonrası silinen satırı geri getiriyordu.
+- İlk yayımda taban boş kaldığı için iki yönlü birleşime düşülüyordu.
+- `_rev` eşit ama içeriği farklı satır farka girmiyordu.
+- Yeniden yazım sırasında bir yardımcı fonksiyon yanlışlıkla silinmişti; mevcut izleyici testi yakaladı.
+
+**Performans (L2).** 30k satır, 6 sıra-dönüşümlü çift + 6 A/A çifti, aday `0b37faceb85b`:
+
+| Senaryo | Ana dal medyanı | Aday medyanı | Çift farkları (ms) | A/A aralığı | Kriter metnine göre | Yorum |
+| --- | --- | --- | --- | --- | --- | --- |
+| S1 yayım | 420,2 | 448,5 | +35, +114, +42, +63, +26, +14 (medyan +38) | [−38, +98] | PASS | **6/6 pozitif:** muhtemelen gerçek ~25–40 ms maliyet (fark hesabı) |
+| S2 benimseme | 406,2 | 401,2 | medyan −10 | [−38, +51] | PASS | Gerileme yok |
+| S3 20 yayım sonrası | 413,1 | 458,8 | +21, +46, +122, +24, +25, +10 (medyan +25) | [−52, +31] | PASS | **6/6 pozitif:** aynı maliyet |
+| S4 yerinden edilmiş birleşim | 1668,8 | 1614,7 | medyan −54 | [−83, +81] | PASS | Ana dal bu yolda veri kaybediyor |
+
+- İlk ölçüm turunda (optimizasyon öncesi) S1/S3 **FAIL** idi: +88 ve +116 ms, 5/5 çift A/A üstündeydi. Neden: fark hesabında satır başına `JSON.stringify`. Bunun yerine string üretmeyen tam eşitlik kullanıldı; `_rev`'e güvenilerek içerik karşılaştırması atlanmadı, çünkü atlamak bütünlüğü zayıflatırdı.
+- **Dürüst değerlendirme:** Önceden yazılan kural ("medyan A/A [min, max] içinde") tek bir A/A aykırı değeriyle (+98) genişleyen aralık yüzünden gevşek kaldı. Çift farklarının işareti 6/6 pozitif. Bu yüzden S1/S3 sonucu "gerileme yok" diye sunulmaz: yayım başına yaklaşık +25–40 ms'lik (%6–9) muhtemel gerçek maliyet **BLOCKED / ürün kararı** olarak kayda geçer. Seçenekler: (a) bütünlüğün bedeli olarak kabul; (b) fark hesabını kira dışına veya worker'a taşımak (yeni kesinti testleriyle).
+- **Bayt:** 2 kurulumlu zarfta +197 bayt (kriter: kurulum başına ≤ ~200).
