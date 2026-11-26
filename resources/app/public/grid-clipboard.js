@@ -666,6 +666,19 @@
   }
 
   function copyActive(event,options){const entry=activeEntry();return entry?copyEntry(entry,event,options):false;}
+  /* "Görsel olarak kopyala": seçili aralığın kayıtları (pencereli sağlayıcıda önce
+     yüklenir) ve aralık. Kopyalamayla aynı satır/sütun çözümlemesi kullanılır. */
+  async function selectionSnapshot(tableId){
+    const entry=tables.get(tableId);if(!entry)return null;
+    if(typeof entry.config.prepareRange==='function'){
+      const pending=currentRange(entry);
+      if(!pending.range)return null;
+      if(await entry.config.prepareRange(pending.range,pending.rows)===false)return null;
+    }
+    const data=currentRange(entry);
+    if(!data.range)return null;
+    return {range:data.range,rows:data.rows.slice(data.range.startRow,data.range.endRow+1),columns:data.columns.slice(data.range.startColumn,data.range.endColumn+1)};
+  }
   function state(tableId){return tables.get(tableId)?.state||null;}
   function restoreActive(tableId,cell){
     const entry=tables.get(tableId);if(!entry||!cell)return false;
@@ -674,5 +687,5 @@
     return setFocus(entry,cell,{focus:false});
   }
 
-  return {editActiveCell:tableId=>editActiveCell(tables.get(tableId)),resolveRange,buildMatrix,selectionSize,edgeClassesForCell,serialize,createDiagnostics,diagnostics,nativeEditingTarget,withNativeSelection,parseClipboardText,isMultiCellText,planPaste,register,afterRender,clear,copyActive,selectAll,state,restoreActive,prepareContextMenu};
+  return {editActiveCell:tableId=>editActiveCell(tables.get(tableId)),resolveRange,buildMatrix,selectionSize,edgeClassesForCell,serialize,createDiagnostics,diagnostics,nativeEditingTarget,withNativeSelection,parseClipboardText,isMultiCellText,planPaste,register,afterRender,clear,copyActive,selectionSnapshot,selectAll,state,restoreActive,prepareContextMenu};
 });
