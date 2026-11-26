@@ -253,3 +253,51 @@ Her düzeltmeden sonra yeni seed kümesi koşuldu. Bağımsız incelemede oracle
 - Ürün sahibinin bütünlük bedeli olarak kabul ettiği aralık yayım başına 25–40 ms idi. Son ölçüm +44 ms ile bu aralığın biraz üstünde; karar ürün sahibinde.
 - S4 ana dalda veri kaybettiren yol. İnceleme düzeltmelerinden sonra (taban günlükten kurulur, ek dosya okuma ve fark uygulama) +106 ms.
 - Ürün sahibinin talimatı gereği bu maliyeti düşürmek için mekanizmaya yeni karmaşıklık eklenmedi.
+
+## 11 · Performans istisnası (ürün sahibi kararı, 2026-11-26)
+
+- **Karar kaydı:** S1 yayım **FAIL** (+43,6 ms, +%13,0) ve S3 **FAIL** (+31,0 ms, +%9,6) olarak kalır; önceden yazılmış kriter geriye dönük değiştirilmez.
+- **İstisna:** Veri bütünlüğü kazanımı nedeniyle (gerçekçi modelde sessiz kayıp 111 → 0) gerekçeli ve **geçici** bir performans istisnası tanımlandı. Bu istisna merge, TEST veya STABLE onayı değildir.
+- **Ayrı kayıt:** S4 yerinden edilmiş birleşim +105,5 ms (+%8,0). Ana dal bu yolda veri kaybediyordu.
+- **İstisnanın bitişi:** Aşama 1 (değişmez olay günlüğü) tüm-belge yayımını kaldırdığında bu maliyetin kaynağı da kalkar; istisna o zaman kapanır. Bu süre içinde maliyeti düşürmek için mevcut mekanizmaya karmaşıklık eklenmez.
+
+## 12 · TEST kanalı ve dayanıklılık (soak) testi kapsamı
+
+### TEST kanalı mevcut kullanıcı verisinden yalıtılmış mı?
+
+**Hayır.**
+- **[Doğrulandı: source]** Veri kökleri kanala bağlı değil: `server/lib/data-roots.js` her zaman `%APPDATA%\Buyer Log` ve `%LOCALAPPDATA%\BuyerLog` kullanır; ortak klasör yapılandırılmış Shared Hub'dır.
+- **[Muhtemel: dağıtım belgesi]** TEST sürümü aynı kurulumu yerinde günceller.
+- Güncelleme deneme politikası (`electron/update/trial-backend.js`) yalnız güncellemenin hemen ardından, sürüm onaylanana kadar yazmaları durdurur; bu bir yalıtım değildir.
+
+**Sonuç:** Aşama 0'ı TEST kanalına çıkarmak, gerçek Koleksiyon zarflarına `heads`/`headsSha256` alanlarını ve gerçek yerel veriye bekleyen-kayıt dosyalarını yazar. Eski istemci uyumu testle doğrulandı, ama karışık filoda temkinli tabana düşme olur. **Aşama 0 için ilk adım TEST kanalı değil, aşağıdaki yalıtılmış ortamdır.**
+
+### Yalıtılmış dayanıklılık ortamı (öneri)
+
+| Bileşen | Kurulum |
+| --- | --- |
+| Cihazlar | 2 gerçek Windows makinesi (tercihen farklı kullanıcı hesapları), her birinde OneDrive istemcisi |
+| Uygulama | Dalın taşınabilir (portable) kopyası. Kurulu Buyer Log'a dokunulmaz, güncelleme kanalı kullanılmaz. |
+| Veri kökleri | Her makinede ortam değişkenleriyle ayrı klasör: `BUYER_LOG_DATA_ROOT`, `BUYER_LOG_LOCAL_DATA_ROOT`, `BUYER_LOG_SERVER_DATA_ROOT`, `BUYER_LOG_CONFIG_PATH`, `BUYER_LOG_TEMP_ROOT` → `C:\BuyerLogSoak\<makine>\…` |
+| Ortak klasör | Yalnız bu test için açılmış ayrı bir OneDrive klasörü (gerçek Shared Hub değil) |
+| Veri | `scripts/generate-demo-data.js` ile sentetik/anonim veri. Gerçek iş verisi ve gerçek kullanıcı çalışma alanı yok. |
+| Kimlik | Test kullanıcıları; gerçek hesap ya da credential yok |
+
+### Senaryolar (her biri en az 3 kez)
+
+1. Aynı Koleksiyonun farklı satırlarında ve aynı satırın farklı alanlarında eşzamanlı düzenleme.
+2. Aynı alanda eşzamanlı düzenleme. Beklenen: önce yayımlanan kalır, diğeri çakışma kaydına düşer.
+3. Bir cihazda OneDrive "duraklat" → iki tarafta düzenleme → "devam". Bu, gerçek `-PC` çakışma kopyası üretir; beklenen: kayıp yok, kopya sayısı ve çözüm kaydedilir.
+4. Ağ kesintisi / uyku modu ve yeniden bağlanma; uzun çevrimdışı (≥40 yayım).
+5. Yayım sırasında süreci sonlandırma (Görev Yöneticisi) → yeniden başlatma.
+6. Hedef dosyayı başka bir uygulamayla kısa süre kilitleme (antivirüs/indeksleme benzeri) → yazım hatası yolu (F1/F4).
+7. Silme + eşzamanlı düzenleme; silinip geri gelen satır.
+8. Bir cihaz düzeltme öncesi sürümle, diğeri Aşama 0 ile (karışık filo).
+
+### Ölçülecekler ve kabul
+
+- Her cihaz düzenlemelerini benzersiz değerlerle yerel bir denetim günlüğüne yazar. Test sonunda nedensellik oracle'ı (`tests/collection-sync-causal-cloud-*` kuralları) bu günlüklere karşı çalıştırılır. **Kabul: 0 sessiz kayıp, 0 yanlış silme, 0 gereksiz geri gelme, tam yakınsama.**
+- Toplanacak veriler: `-PC` kopya sayısı, çakışma kayıtları, bekleyen günlük boyutu, yayım süreleri, replikasyon izleri.
+- **Durdurma ölçütü:** Tek bir sessiz kayıp ya da yakınsamama. Bu durumda test durur ve kök neden incelenir; Aşama 0 TEST kanalına çıkmaz.
+- Süre önerisi: 2 iş günü etkin kullanım + 1 gece boşta.
+- Bu test bu container'da çalıştırılamaz; kurulum ürün sahibinin onayı ve iki gerçek makine gerektirir.
