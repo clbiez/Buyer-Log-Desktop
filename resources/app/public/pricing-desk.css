@@ -42,13 +42,16 @@
 
 /* MATRİS */
 .pdMatrixWrap{display:flex;flex-direction:column;min-height:0;position:relative}
-.pdMatrixBar{position:sticky;top:0;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:6px 10px}
+.pdMatrixBar{position:sticky;top:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:3px 10px}
+.pdMatrixBar .tbtn{height:var(--ui-control-height-small);padding-top:0;padding-bottom:0}
+.pdApprovalProgress{display:inline-flex;align-items:center;height:22px;padding:0 8px;white-space:nowrap}
+.pdHintsBtn{display:inline-flex;align-items:center;height:var(--ui-control-height-small);padding:0 7px;cursor:help;white-space:nowrap}
 .pdLegend{display:inline-flex;align-items:center;gap:6px}
 .pdLegend i{display:inline-block;width:12px;height:12px;margin-left:6px}
 .pdLegend i:first-child{margin-left:0}
 .pdRoundBadge{display:inline-flex;align-items:center;height:22px;padding:0 8px}
-.pdBulkPanel,.pdRoundPanel,.pdImportPanel,.pdMfrPanel,.pdOptionsPanel{display:flex;flex-direction:column;gap:8px;margin:8px 10px 0;padding:10px 12px}
-.pdBulkPanel[hidden],.pdRoundPanel[hidden],.pdImportPanel[hidden],.pdMfrPanel[hidden],.pdOptionsPanel[hidden]{display:none}
+.pdRoundPanel,.pdImportPanel,.pdMfrPanel,.pdOptionsPanel{display:flex;flex-direction:column;gap:8px;margin:8px 10px 0;padding:10px 12px}
+.pdRoundPanel[hidden],.pdImportPanel[hidden],.pdMfrPanel[hidden],.pdOptionsPanel[hidden]{display:none}
 /* Tablodan üretici ekleme + alternatif fiyatlar */
 .pdMfrFields{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:8px;max-width:640px}
 .pdOptGrid{display:flex;flex-direction:column;gap:4px;max-height:320px;overflow:auto}
@@ -72,31 +75,42 @@
 .pdAddMfr .ic{width:14px;height:14px}
 @media (max-width:720px){.pdMfrFields{grid-template-columns:1fr}.pdOptRow{grid-template-columns:minmax(0,1fr) 88px}.pdOptRow>:nth-child(3),.pdOptRow>:nth-child(4){grid-column:1 / -1}}
 .pdMatrixScroll{flex:1 1 auto;min-height:0;overflow:auto}
-.pdMatrix{border-collapse:separate;border-spacing:0;table-layout:fixed;width:calc(504px + var(--pd-context-width,0px) + var(--pd-columns)*96px)}
-.pdMatrix thead th{position:sticky;top:0;padding:6px 8px;text-align:left;white-space:nowrap}
+.pdMatrix{border-collapse:separate;border-spacing:0;table-layout:fixed}
+/* Başlık metni ezilmez: dar sütunda kendi içinde alt satıra geçer. */
+.pdMatrix thead th{position:sticky;top:0;padding:6px 10px 6px 8px;text-align:left;vertical-align:bottom;white-space:normal;overflow-wrap:anywhere;word-break:normal}
+.pdSortBtn{cursor:pointer}
+.pdSortBtn[data-dir="asc"]::after{content:" ▲"}
+.pdSortBtn[data-dir="desc"]::after{content:" ▼"}
+.pdHeadSorts{display:inline}
+.pdColResize{position:absolute;top:0;right:-3px;bottom:0;width:8px;cursor:col-resize;touch-action:none}
+/* Sütun gizleme: başlıkta yalnız üzerine gelince / odakta görünür. */
+.pdColHide{position:absolute;top:2px;right:6px;display:inline-grid;place-items:center;width:18px;height:18px;padding:0;cursor:pointer;opacity:0;pointer-events:none}
+.pdColHide .ic{width:12px;height:12px}
+.pdMatrix thead th:hover .pdColHide,.pdMatrix thead th:focus-within .pdColHide,.pdColHide:focus-visible{opacity:1;pointer-events:auto}
+.pdPanelHead+.pdColumnsList+.pdPanelHead{margin-top:6px}
+.pdColResize::after{content:"";position:absolute;top:24%;bottom:24%;left:3px;width:1px}
+.pdMatrix.isResizing{cursor:col-resize;user-select:none}
 .pdMatrix thead th.pdNum{text-align:right}
 .pdMatrix .pdModelHead,.pdMatrix .pdModelCell{position:sticky;left:0}
 .pdMatrix tbody td,.pdMatrix tbody th{padding:4px 8px;vertical-align:middle}
-.pdModelWidth{width:200px}
-.pdSummaryWidth{width:144px}
-.pdContextWidth{width:150px}
-.pdTargetWidth{width:80px}
-.pdBestWidth{width:144px}
-.pdDeltaWidth{width:80px}
-.pdSupplierWidth{width:96px}
-.pdMatrix .pdTarget,.pdMatrix .pdStickyBest,.pdMatrix .pdStickyDelta{position:sticky}
-.pdMatrix .pdTarget{left:calc(200px + var(--pd-summary-width,0px))}
-.pdMatrix .pdStickyBest{left:calc(280px + var(--pd-summary-width,0px))}
-.pdMatrix .pdStickyDelta{left:calc(424px + var(--pd-summary-width,0px))}
-.pdMatrix tbody tr{height:36px}
+/* Yalnız Model sütunu donar; diğer sütunlar tabloyla birlikte yatayda kayar. */
+.pdMatrix tbody tr{height:44px}
+.pdMatrix tbody td.pdQuotesCol,.pdMatrix tbody td.pdRefsCol{padding:3px 8px;vertical-align:middle;overflow:hidden}
+.pdMatrix tbody td.pdRefsCol,.pdMatrix tbody td.pdQuotesCol{position:relative}
+.pdRefsCompact{display:grid;grid-template-columns:auto auto;align-items:center;justify-content:start;gap:2px 8px}
+.pdRefRow{display:contents}
+.pdRefTail{display:inline-flex;align-items:center;gap:4px;min-width:0;white-space:nowrap}
+.pdIconBtn{display:inline-grid;place-items:center;width:var(--ui-control-height-small);padding:0}
+.pdMatrix td.pdQuotesCol:hover .kolManualBtn,.pdMatrix td.pdQuotesCol:focus-within .kolManualBtn{opacity:1}
+.pdTargetBox{display:flex;align-items:center;justify-content:space-between;gap:4px;min-width:0}
+.pdTargetBox>b{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.pdTargetInput{flex:1 1 auto;width:100%;min-width:0;height:var(--ui-control-height);padding:0 4px;text-align:right}
 .pdMatrix tbody tr.pdVirtualSpacer{height:0}
 .pdMatrix tbody tr.pdVirtualSpacer>td{padding:0}
-.pdMfrHead{overflow:hidden}
 .pdMfrHead .linkBtn{white-space:normal;text-align:left}
-.pdMfrHead small{overflow:hidden;text-overflow:ellipsis}
-.pdMfrHead b{display:block;max-width:80px;overflow:hidden;text-overflow:ellipsis}
-.pdMfrHead small{display:block}
-.pdModel{display:flex;align-items:center;gap:6px;min-width:0;max-width:184px}
+.pdMfrHeadBody{display:flex;flex-direction:column;gap:1px;min-width:0}
+.pdMfrHead b,.pdMfrHead small{display:block;white-space:normal;overflow-wrap:anywhere}
+.pdModel{display:flex;align-items:center;gap:6px;min-width:0;max-width:100%}
 .pdModel .pdThumb{width:24px;height:28px;flex:0 0 24px}
 .pdModelText small{display:block}
 .pdModelText{display:flex;flex-direction:column;gap:1px;min-width:0}
@@ -117,6 +131,12 @@
 .pdCell.isOutlier:hover .pdCellNote,.pdCell.isOutlier:focus-within .pdCellNote{display:block}
 .pdCell .pdApprove,.pdCell .pdDrop{position:absolute;right:20px;width:20px;height:24px;opacity:0;pointer-events:none}
 .pdCell .pdDrop{right:0}
+/* Onaylı hücre her zaman okunur: dolu onay düğmesi ve ONAYLI etiketi
+   üzerine gelmeden de görünür (eskiden yalnız fareyle görünüyordu). */
+.pdCell .pdApprove.isOn,.pdCell .pdApprove.isOn:disabled{opacity:1;pointer-events:auto}
+.pdCell.isApproved .pdCellInput{padding-right:24px}
+.pdCell.isApproved:not(:hover):not(:focus-within) .pdApprove{right:0}
+.pdApprovedMark{position:absolute;left:4px;bottom:1px;pointer-events:none;white-space:nowrap}
 .pdCell:hover .pdApprove,.pdCell:hover .pdDrop,.pdCell:focus-within .pdApprove,.pdCell:focus-within .pdDrop{opacity:1;pointer-events:auto}
 /* Genel `button:disabled{opacity:.5}` (0,2,1) gizli durumu ezmesin: devre dışı eylem yalnız hücre üzerindeyken soluk görünür. */
 .pdCell .pdApprove:disabled,.pdCell .pdDrop:disabled{opacity:0}
@@ -125,10 +145,6 @@
 @media (hover:none){.pdCell:focus-within .pdCellTop{display:flex}}
 .pdOther button{display:block;width:100%;cursor:pointer;text-align:right}
 .pdOther small{display:block;max-width:80px;overflow:hidden;text-overflow:ellipsis}
-.pdBestCol b{display:block}
-.pdBestCol span{display:block;max-width:128px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:auto}
-.pdHints{display:flex;flex-wrap:wrap;gap:4px 14px;padding:6px 10px}
-.pdHints kbd{display:inline-block;padding:0 4px}
 
 /* Bildirim */
 .pdToast{position:fixed;right:20px;bottom:20px;display:flex;align-items:center;gap:12px;max-width:min(520px,92vw);padding:10px 12px 10px 14px}
@@ -316,9 +332,7 @@ td.kolPriceStripTd:hover .kolManualBtn,td.kolPriceStripTd:focus-within .kolManua
 .pdRoundQuote{display:inline-flex;align-items:center;gap:5px;padding:3px 5px}
 
 /* Collection context and per-user column selection. */
-.pdMatrix .pdSummary{position:sticky;left:200px}
-.pdSummary>span{display:flex;flex-direction:column;gap:2px}
-.pdSummary>span>span{display:flex;align-items:center;justify-content:space-between;gap:6px}
+td.pdSummary>span{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .pdSummary b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pdCollectionValue{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pdColumnsPanel{display:flex;flex-direction:column;gap:8px;margin:8px 10px;padding:12px}

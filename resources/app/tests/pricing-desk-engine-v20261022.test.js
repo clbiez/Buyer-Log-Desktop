@@ -60,12 +60,8 @@ test('drop edilen satır en iyi teklif hesabına girmez', () => {
   assert.equal(E.rowStats(lines).best.lineId, 'y');
 });
 
-test('toplu onay yalnız onaysız ve hedefin altındaki en iyi teklifi önerir', () => {
-  const req = request();
-  const targets = { 'kol:1': 9.2, 'kol:2': 9.5, 'kol:3': 7 };
-  const candidates = E.bulkApproveCandidates(req, item => targets[item.modelKey]);
-  assert.deepEqual(candidates.map(item => [item.modelKey, item.manufacturer, item.price]), [['kol:2', 'Üretici C', 9.4]]);
-  assert.ok(candidates[0].deltaPct < 0);
+test('toplu onay kaldırıldı: motor aday üretmez', () => {
+  assert.equal(typeof E.bulkApproveCandidates, 'undefined');
 });
 
 test('turlar defter olaylarından kurulur; eski satır legacy teklif olarak 1. tura düşer', () => {

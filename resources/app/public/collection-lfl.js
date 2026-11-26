@@ -321,5 +321,5 @@
       :T('Referanslar kalıcı saklanır. Güncellemek için Referansları yenile düğmesini kullanın.','References are saved permanently. Use Refresh references to update them.');
     return sections+countryRuleHtml(row)+`<p class="cpdNote" role="status">${esc(note)}</p><div class="cpdActions"><button type="button" class="tbtn" data-cpd-lfl-refresh${active.pending||active.status==='loading'?' disabled':''}>${esc(T('Referansları yenile','Refresh references'))}</button></div>`;
   }
-  global.BLCollectionLfl={ensure,invalidate,model,cell,combinedCell,combinedText,modeForKey,drawer,onDrawerChange,detailReport,footerSummaries,footerCells,text:(row,mode='month')=>model(row,mode).text};
+  global.BLCollectionLfl={ensure,isPending:()=>Boolean(current&&current.pending),invalidate,model,cell,combinedCell,combinedText,modeForKey,drawer,onDrawerChange,detailReport,footerSummaries,footerCells,text:(row,mode='month')=>model(row,mode).text};
 })(window);

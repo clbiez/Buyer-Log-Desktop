@@ -3,7 +3,6 @@
    Görünümden bağımsızdır; quotation kayıtlarını ve (varsa) Koleksiyon satır
    bilgisini alıp Fiyat Masası ekranlarının sorduğu sorulara cevap üretir:
      · Matris: talep içinde model × üretici, en iyi teklif, olağan dışı fiyat,
-     · Toplu onay adayları (hedefin altındaki en iyi teklif),
      · Pazarlık turları ve tur kazancı (Fiyat Defteri olaylarından),
      · Geçmiş serileri (model başına, üretici başına),
      · Klasman / kategori / MAG… × üretici analizi ve üretici karnesi.
@@ -17,7 +16,15 @@
   'use strict';
 
   const clean=value=>String(value==null?'':value).trim();
-  const keyOf=value=>clean(value).toLocaleUpperCase('tr-TR').replace(/\s+/g,' ');
+  /* Anahtar normalleştirme saf bir fonksiyondur; toLocaleUpperCase('tr-TR') ICU yolu
+     pahalıdır ve masa her çizimde aynı birkaç üretici/model adını binlerce kez
+     anahtarlar. Sınırlı önbellek aynı sonucu döndürür (sınırda tamamen temizlenir). */
+  const keyCache=new Map(),KEY_CACHE_LIMIT=5000;
+  const keyOf=value=>{
+    const text=clean(value);let key=keyCache.get(text);
+    if(key===undefined){key=text.toLocaleUpperCase('tr-TR').replace(/\s+/g,' ');if(keyCache.size>=KEY_CACHE_LIMIT)keyCache.clear();keyCache.set(text,key);}
+    return key;
+  };
   const OUTLIER_RATIO=3;
   const GROUP_DIMENSIONS=['classification','mag','mmyg','buyingGroup','buyer','productMainDefinition','season','license'];
 
@@ -167,19 +174,6 @@
     if(n==null||!stats.median||stats.priced<2)return null;
     const ratio=n/stats.median;
     return ratio>=OUTLIER_RATIO||ratio<=1/OUTLIER_RATIO?ratio:null;
-  }
-  /* Toplu onay: onayı olmayan ve en iyi teklifi hedefin altında/eşit olan
-     modeller. Hedefi bilinmeyen model aday olmaz (karar kullanıcıda kalır). */
-  function bulkApproveCandidates(request,targetOf){
-    const matrix=requestMatrix(request),out=[];
-    matrix.models.forEach(model=>{
-      const stats=rowStats(model.lines);
-      if(!stats.best||stats.approved)return;
-      const target=price(typeof targetOf==='function'?targetOf(model.first):null);
-      if(target==null||stats.best.price>target)return;
-      out.push({modelKey:model.modelKey,lineId:stats.best.lineId,manufacturer:stats.best.manufacturer,price:stats.best.price,target,deltaPct:pct(stats.best.price,target),line:model.lines.find(line=>line.id===stats.best.lineId)});
-    });
-    return out;
   }
 
   /* PAZARLIK TURLARI: Fiyat Defteri teklif olayları tur numarasına göre
@@ -363,5 +357,5 @@
       .sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'tr'));
   }
 
-  return {lineOptions,compareSuppliers,supplierScorecards,supplierLayout,OUTLIER_RATIO,GROUP_DIMENSIONS,price,mean,median,pct,keyOf,effectiveHistory,offers,negotiation,requestMatrix,rowStats,outlierRatio,bulkApproveCandidates,rounds,requestGain,lane,responseRates,historySeries,filterObservations,dimensionValues,analyze,buyerComparison};
+  return {lineOptions,compareSuppliers,supplierScorecards,supplierLayout,OUTLIER_RATIO,GROUP_DIMENSIONS,price,mean,median,pct,keyOf,effectiveHistory,offers,negotiation,requestMatrix,rowStats,outlierRatio,rounds,requestGain,lane,responseRates,historySeries,filterObservations,dimensionValues,analyze,buyerComparison};
 });

@@ -532,8 +532,8 @@ test('Collection cell keeps the textarea editor under the card layer (edit/copy 
   const css = read('public/collection-spreadsheet.css');
   assert.match(css, /td\.kolArtworkTd:not\(\.kolSpreadsheetEditing\):not\(:focus-within\) \.editCell\{opacity:0\}/);
   assert.match(css, /\.kolArtworkCards\{[^}]*pointer-events:none/);
-  assert.match(read('public/ui-components.css'), /:is\(#kolTable,#cpTable,#ordersTable\) tbody \.blCellTag\[data-tone="1"\] \{color:var\(--ui-chart-3\)/, 'appearance lives in the Manifest layer');
-  assert.match(read('public/app.css'), /:is\(#kolTable,#cpTable,#ordersTable\) tbody \.blCellChip\{flex:none;display:inline-flex/, 'shared card layout is global (CP/Orders reuse it)');
+  assert.match(read('public/ui-components.css'), /:is\(#kolTable,#cpTable,#ordersTable,\.pdMatrix\) tbody \.blCellTag\[data-tone="1"\] \{color:var\(--ui-chart-3\)/, 'appearance lives in the Manifest layer');
+  assert.match(read('public/app.css'), /:is\(#kolTable,#cpTable,#ordersTable,\.pdMatrix\) tbody \.blCellChip\{flex:none;display:inline-flex/, 'shared card layout is global (CP/Orders reuse it)');
 });
 
 test('BOM batch summary carries slim Set Style parts for the card view', () => {
