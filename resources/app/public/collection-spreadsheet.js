@@ -262,6 +262,11 @@ function handleCopyShortcut(event,options={}){if(!isCollectionActive()||modalOpe
       {label:lang()==='en'?'Copy with headers':'Başlıklarla kopyala',run:()=>handleCopyShortcut({preventDefault(){},stopImmediatePropagation(){}},{includeHeaders:true,forceCellCopy:true})},
       // İşaretli model varken iki hedef de açıkça sunulur: hücreler mi, modeller mi.
       ...(checkedModels>0&&q('kolCopySelectedBtn')?[{label:lang()==='en'?`Copy ${checkedModels} checked model(s)`:`İşaretli ${checkedModels} modeli kopyala`,run:()=>q('kolCopySelectedBtn')?.click()}]:[]),
+      // Özel sütun profili / hassaslar gizli kopya işaretli modellere uygulanır.
+      ...(checkedModels>0&&global.BLCopyColumnsAction?.supported?.('koleksiyon')?[
+        {label:lang()==='en'?'Copy custom columns':'Özel sütunlarla kopyala',run:()=>void global.BLCopyColumnsAction.copy('koleksiyon','profile')},
+        {label:lang()==='en'?'Copy without sensitive columns':'Hassaslar gizli kopyala',run:()=>void global.BLCopyColumnsAction.copy('koleksiyon','safe')},
+      ]:[]),
       // Görsel kopya: seçili hücreler ve işaretli modeller ayrı hedeflerdir.
       ...(global.BLTableImageCopyAction?.supported?.('koleksiyon')?[{label:lang()==='en'?'Copy selected cells as image':'Seçili hücreleri görsel olarak kopyala',run:()=>void global.BLTableImageCopyAction.copy({source:'range'})}]:[]),
       ...(checkedModels>0&&global.BLTableImageCopyAction?.supported?.('koleksiyon')?[{label:lang()==='en'?`Copy ${checkedModels} checked model(s) as image`:`İşaretli ${checkedModels} modeli görsel olarak kopyala`,run:()=>void global.BLTableImageCopyAction.copy({source:'checked'})}]:[]),

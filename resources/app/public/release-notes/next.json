@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-26",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Özel sütunlarla kopyala ve hassas sütunlar",
+    "en": "Copy custom columns and sensitive columns"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "CP, Siparişler ve Koleksiyon'da satırlar seçtiğiniz sütunlarla ve sırayla kopyalanır; hassas işaretli sütunlar (varsayılan: Retail tarihi, Ex→Retail, MB tarihi/hafta/ay; Koleksiyon'da fiyat analizi, Endeksmatik, avantaj, onaylı fiyat ve üretici) seçim çubuğundaki “Hassaslar gizli” ile kopyadan çıkarılır. Ctrl+C ve normal Kopyala değişmez.",
+    "en": "In CP, Orders and Collection, rows can be copied with the columns you choose, in your order; columns marked sensitive (by default Retail date, Ex→Retail, MB date/week/month; in Collection also price analysis, Endeksmatik, advantage, approved price and manufacturer) are left out with “Hide sensitive” in the selection bar. Ctrl+C and normal Copy are unchanged."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "copy-column-profiles",
+      "type": "feature",
+      "module": {
+        "tr": "CP · Siparişler · Koleksiyon",
+        "en": "CP · Orders · Collection"
+      },
+      "title": {
+        "tr": "Özel sütunlarla kopyala ve hassas sütunlar",
+        "en": "Copy custom columns and sensitive columns"
+      },
+      "body": {
+        "tr": "Satır işaretlenince açılan seçim çubuğunda “Hassaslar gizli” düğmesi, işaretli satırları görünür sütunlarla ama hassas sütunlar çıkarılmış olarak kopyalar; hemen sağındaki kalem hassas sütun listesini açar. Varsayılan hassaslar: Retail tarihi, Ex→Retail ve MB tarihi/hafta/ay; Koleksiyon'da ayrıca Previous Season, LFL, Sezon Etkisi, Hedefe Fark, onaylı üretici ve fiyat ile Endeksmatik & Avantaj sütunları. Liste kişiseldir ve istediğiniz zaman değiştirilebilir. Kopyala ▾ ve sağ tık menüsündeki “Özel sütunlarla kopyala” yalnız seçtiğiniz sütunları, belirlediğiniz sırayla kopyalar; işaretli satır yoksa CP/Siparişler'de seçili hücre aralığının satırları kullanılır. Ctrl+C ve normal Kopyala eskisi gibi tüm görünür sütunları kopyalar.",
+        "en": "When rows are checked, the “Hide sensitive” button in the selection bar copies them with the visible columns but without the sensitive ones; the pencil right next to it opens the sensitive column list. Default sensitive columns: Retail date, Ex→Retail and MB date/week/month; in Collection also Previous Season, LFL, Season Impact, Diff. to Target, approved manufacturer and price, and the Endeksmatik & Advantage columns. The list is personal and can be changed at any time. “Copy custom columns” in Copy ▾ and the right-click menu copies only the columns you chose, in your order; with no checked rows, CP/Orders use the rows of the selected cell range. Ctrl+C and normal Copy still copy all visible columns."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "copy-column-profiles.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: Hassas sütunlar penceresinde özel kopya sütunları ve hassas işaretli MB hafta/ay ile onaylı üretici fiyatı",
+          "en": "Demo Collection table: Sensitive columns window with custom copy columns and MB week/month and approved manufacturer price marked sensitive"
+        },
+        "caption": {
+          "tr": "Seçim çubuğundaki kalemle açılan Hassas sütunlar penceresi (demo veri).",
+          "en": "The Sensitive columns window opened with the pencil in the selection bar (demo data)."
+        }
+      }
+    }
+  ]
 }
