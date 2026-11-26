@@ -138,14 +138,15 @@ test('metin planı: kartta tam metin, alanlar kartlar arasında hizalı; başlı
   // Dar (1-2 kartlık) grup başlığı tam metinle çok satıra kırılır.
   const hdr = list.pages.flatMap(p => p.elements).find(e => e.type === 'hdr' && e.key === longFabric);
   assert.ok(hdr.lines.length >= 2);
-  assert.equal(hdr.lines.map(l => l.runs.map(r => r.t).join('')).join(' ').replace(/\s+/g, ' ').trim(), longFabric.replace(/\s+/g, ' '));
+  const textOf = l => l.atoms.filter(a => a.type === 'text').map(a => a.t).join(' ');
+  assert.equal(hdr.lines.map(textOf).join(' ').replace(/\s+/g, ' ').trim(), longFabric.replace(/\s+/g, ' '));
   for (const l of hdr.lines) assert.ok(l.y >= hdr.y - 0.01 && l.y + hdr.lh <= hdr.rule.y + 0.01);
   // PDF HTML ve PPTX aynı başlık satırlarını taşır.
   const html = R.documentHtml(list, 'Test');
-  for (const l of hdr.lines) for (const r of l.runs) assert.ok(html.includes(`>${r.t.replace(/&/g, '&amp;')}</span>`), r.t);
+  for (const l of hdr.lines) for (const r of l.atoms) assert.ok(html.includes(`>${r.t.replace(/&/g, '&amp;')}</span>`), r.t);
   const zip = await JSZip.loadAsync(await P.build(JSZip, list, { title: 'Test', palette: R.DOC }).generateAsync({ type: 'nodebuffer' }));
   const slides = (await Promise.all(Object.keys(zip.files).filter(f => /^ppt\/slides\/slide\d+\.xml$/.test(f)).map(f => zip.file(f).async('string')))).join('');
-  for (const l of hdr.lines) for (const r of l.runs) assert.ok(slides.includes(`<a:t>${r.t.replace(/&/g, '&amp;')}</a:t>`), 'pptx ' + r.t);
+  for (const l of hdr.lines) for (const r of l.atoms) assert.ok(slides.includes(`<a:t>${r.t.replace(/&/g, '&amp;')}</a:t>`), 'pptx ' + r.t);
 });
 
 test('dar başlıkta model sayısı gizlenir, metin tam genişlikte kırılır (kelime ortasından bölünmez)', async () => {
@@ -159,7 +160,7 @@ test('dar başlıkta model sayısı gizlenir, metin tam genişlikte kırılır (
   const res = E.layout(doc, groupOf, plan), list = R.build(doc, res, src);
   const hdr = list.pages[0].elements.find(e => e.type === 'hdr' && e.key === 'K0');
   assert.equal(hdr.count, null, 'sayı gizli');
-  const words = hdr.lines.map(l => l.runs.map(r => r.t).join('').trim());
+  const words = hdr.lines.map(l => l.atoms.map(a => a.t).join(' ').trim());
   for (const w of words) for (const part of w.split(/\s+/)) assert.ok(label.split(' ').includes(part), 'kelime bölünmedi: ' + words);
   assert.ok(!R.documentHtml(list, 't').includes('undefined'));
   const zip = P.build(JSZip, list, { title: 't', palette: R.DOC });
@@ -227,7 +228,7 @@ test('çip görünümü kartta ve grup başlığında; plan satır sayar; PDF HT
   // Metin seçeneği: aynı belge çipsiz.
   const textSrc = { ...src, lines: id => src.lines(id).map(({ chips, ...f }) => f), header: it => ({ ...src.header(it), parts: undefined }) };
   const plain = R.build(doc, E.layout(doc, groupOf, R.textPlan(doc, E.geometry(doc, null).cellW, ids, textSrc)), textSrc);
-  assert.ok(plain.pages[0].elements.every(e => e.lines.every(l => !l.atoms)));
+  assert.ok(plain.pages[0].elements.every(e => e.lines.every(l => !l.atoms || l.atoms.every(x => x.type === 'text'))), 'metin modunda çip yok');
 });
 
 test('grup alanı çerçevesi yalnız editörde; PDF HTML ve PPTX başlık ve kartları taşır, çerçeveyi taşımaz', async () => {
@@ -249,4 +250,32 @@ test('grup alanı çerçevesi yalnız editörde; PDF HTML ve PPTX başlık ve ka
   const slide = await zip.file('ppt/slides/slide1.xml').async('string');
   assert.ok(slide.includes('<a:t>Kazak</a:t>'));
   assert.equal((slide.match(/name="Card K/g) || []).length, list.pages[0].elements.filter(e => e.type === 'card').length, 'alan kartı yok, yalnız gerçek kartlar');
+});
+
+test('başlıkta her gruplama seviyesi ayrı satırda; takım parçaları (A/B) kendi satırlarında; başlık boyutu hfs', () => {
+  const ids = ['K0', 'K1'];
+  const doc = E.createDoc({ ids, fields: ['modelName'], levels: ['col.fabric', 'productGroup', 'col.artworkDetail'] });
+  doc.style.cardW = 300; doc.style.hfs = 12;
+  const groupOf = () => ({ key: 'g', vals: ['Süprem', 'T-Shirt', 'Ön 1'] });
+  const SET = [{ label: 'A', items: [{ kind: 'chip', t: 'Ön', sub: '1' }] }, { label: 'B', items: [{ kind: 'chip', t: 'Kol', sub: '2' }] }];
+  const src = { lines: id => [{ label: 'Model', value: id }], image: () => null, header: it => ({ main: 'Süprem', rest: 'T-Shirt · Ön 1', count: `${it.count} model`, parts: [{ text: 'Süprem 100% Pamuk' }, { text: 'T-Shirt' }, { chips: SET }] }) };
+  const plan = R.textPlan(doc, E.geometry(doc, null).cellW, ids, src);
+  const res = E.layout(doc, groupOf, plan), list = R.build(doc, res, src);
+  const hdr = list.pages[0].elements.find(e => e.type === 'hdr');
+  const rows = hdr.lines.map(l => l.atoms.map(a => (a.type === 'chip' ? a.segs.map(s => s.t).join('|') : a.t)).join(' '));
+  assert.deepEqual(rows, ['Süprem 100% Pamuk', 'T-Shirt', 'A Ön|1', 'B Kol|2'], JSON.stringify(rows));
+  assert.ok(Math.abs(hdr.size - 12) < 0.01 && Math.abs(hdr.lh - 12 * 1.3) < 0.01, 'başlık boyutu hfs');
+  assert.equal(hdr.lines[0].atoms[0].bold, true, 'ilk seviye kalın');
+  assert.equal(hdr.lines[0].atoms.length, 1, 'aynı biçimli kelimeler tek atom');
+  assert.ok(Math.abs(hdr.count.y - hdr.lines[3].y - (hdr.size - hdr.count.size)) < 0.01, 'model sayısı son satırda');
+});
+
+test('görsel arkasında ayrı gri zemin yok: kart zemini görünür (önizleme/PDF ve PPTX)', async () => {
+  const { list } = fixture();
+  const html = R.documentHtml(list, 't');
+  assert.ok(!html.includes(`background:${R.DOC.image}`), 'PDF/önizleme');
+  const zip = await JSZip.loadAsync(await P.build(JSZip, list, { title: 't', palette: R.DOC }).generateAsync({ type: 'nodebuffer' }));
+  const slide = await zip.file('ppt/slides/slide1.xml').async('string');
+  assert.ok(!slide.includes('name="Image area'), 'PPTX');
+  assert.ok(slide.includes('<p:pic>'), 'görsel yine var');
 });

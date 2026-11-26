@@ -203,10 +203,13 @@
          tanımlarda _placedGroup hiç yoktu; boş metadata yüzünden kullanıcının
          elle verdiği sıra yeniden grup sonuna taşınmamalı. */
       const placed = col.formulaDef && col.formulaDef._placedGroup;
-      const groupChanged = Boolean(placed) && nameKey(placed) !== nameKey(col.group);
+      // Kullanıcının Alanlar çekmecesinde verdiği kişisel başlık col.group'a yazılır;
+      // yerleşim kararı tanımdaki başlığa (baseGroup) göre verilir.
+      const definitionGroup = Object.prototype.hasOwnProperty.call(col, 'baseGroup') ? col.baseGroup : col.group;
+      const groupChanged = Boolean(placed) && nameKey(placed) !== nameKey(definitionGroup);
       if (isNew || groupChanged) {
-        placeInGroup(tableKey, col.k, col.group);
-        rememberPlacedGroup(tableKey, col.formulaId, col.group);
+        placeInGroup(tableKey, col.k, definitionGroup);
+        rememberPlacedGroup(tableKey, col.formulaId, definitionGroup);
       }
     });
     return dynamic;
