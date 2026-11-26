@@ -10479,7 +10479,12 @@ async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, i
       fromContextHash:beforeContext.contextHash,toContextHash:afterContext.contextHash,
       items:clean,context:require('./lib/projection-rewrite').rowPatchContext(overrides,clean,shared),collectCpRows:Boolean(cpRows),
     });
-    if (result && cpRows) { cpRows.push(...(result.cpRows||[])); cpRows.json=require('./lib/compute-tasks').serialize(cpRows,'projection'); }
+    if (result && cpRows) {
+      // Yama günlüğü pilotu (BL_PROJECTION_PATCH_LOG=1, ADR-0003 §6B): CP satırları sıkıştırmada üretilir; doğrulama o zaman yapılır.
+      const rows=result.deferredCpRows?await result.deferredCpRows:result.cpRows;
+      if (result.deferredCpRows&&!rows) return false;
+      cpRows.push(...(rows||[])); cpRows.json=require('./lib/compute-tasks').serialize(cpRows,'projection');
+    }
     return Boolean(result && result.manifest);
   }
   const legacyContext={...overrides,cpRowStored:shared};

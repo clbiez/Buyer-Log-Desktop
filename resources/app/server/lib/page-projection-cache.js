@@ -112,7 +112,7 @@ function loadManifestCandidates(userId) {
   const backup = loadManifestFile(manifestPath(userId) + '.bak');
   const out = [];
   if (primary) out.push(primary);
-  if (backup && (!primary || backup.activeGeneration !== primary.activeGeneration)) out.push(backup);
+  if (backup && !pendingPatchLog(backup) && (!primary || backup.activeGeneration !== primary.activeGeneration)) out.push(backup);
   return out;
 }
 function loadManifest(userId) { return loadManifestCandidates(userId)[0] || null; }
@@ -167,10 +167,12 @@ async function readCompressed(file, expectedChecksum = '') {
 async function readProjectionCompressed(userId, module, contextHash) {
   if (!MODULES.has(module)) return null;
   await pendingRewritesSettled(userId);
+  await settlePatchLog(userId, contextHash);
   const started = Date.now(), candidates = loadManifestCandidates(userId);
   for (let index = 0; index < candidates.length; index += 1) {
     const manifest = candidates[index];
     if (String(manifest.contextHash || '') !== String(contextHash || '')) continue;
+    if (pendingPatchLog(manifest)) continue; // taban baytları bu bağlamın verisi değildir
     const meta = manifest.modules && manifest.modules[module];
     if (!meta) continue;
     const file = modulePath(userId, manifest.activeGeneration, module);
@@ -192,9 +194,10 @@ async function readProjection(userId, module, contextHash) {
   };
 }
 async function decodeProjection(buffer){return JSON.parse((await gunzip(buffer)).toString('utf8'));}
-async function readReusableProjections(userId,contextHash,moduleInputKeys={}) {
+async function readReusableProjections(userId,contextHash,moduleInputKeys={},{locked=false}={}) {
+  if(!locked)await settlePatchLog(userId,contextHash);
   const manifest=loadManifest(userId),projections={};
-  if(!manifest||String(manifest.contextHash)!==String(contextHash))return {manifest,projections};
+  if(!manifest||String(manifest.contextHash)!==String(contextHash)||pendingPatchLog(manifest))return {manifest,projections};
   for(const [module,key] of Object.entries(moduleInputKeys)){
     const meta=manifest.modules?.[module];
     if(!MODULES.has(module)||!key||manifest.moduleInputKeys?.[module]!==key||!meta?.checksum)continue;
@@ -208,7 +211,8 @@ async function readReusableProjections(userId,contextHash,moduleInputKeys={}) {
 async function reuseGeneration(userId,{contextHash,generation,moduleInputKeys={},sourceLoadedAt=null,extra={},assertCurrent}={}){
   return enqueueUserMutation(userId,async()=>{
     assertCurrent?.();
-    const checked=await readReusableProjections(userId,contextHash,moduleInputKeys),manifest=checked.manifest;
+    await materializePatchLogUnlocked(userId,'mutation');
+    const checked=await readReusableProjections(userId,contextHash,moduleInputKeys,{locked:true}),manifest=checked.manifest;
     assertCurrent?.();
     if(!manifest||manifest.activeGeneration!==generation||Object.keys(checked.projections).length!==Object.keys(moduleInputKeys).length)return null;
     const next={...manifest,...extra,sourceLoadedAt,moduleInputKeys};
@@ -253,6 +257,7 @@ async function writeGeneration(userId, { contextHash, sourceLoadedAt = null, pro
   const moduleKey = Object.keys({...reused,...projections}).sort().join(',');
   const inputKey=checksum(Buffer.from(JSON.stringify([sourceLoadedAt,extra.moduleInputKeys||null])));
   return singleFlight(`generation:${safeUserId(userId)}:${contextHash}:${moduleKey}:${inputKey}`, () => enqueueUserMutation(userId, async () => {
+    await materializePatchLogUnlocked(userId, 'mutation');
     return writeGenerationUnlocked(userId, { contextHash, sourceLoadedAt, projections, reused, extra, previous:loadManifest(userId) });
   }));
 }
@@ -261,6 +266,7 @@ async function writeCompressedGeneration(userId,{contextHash,sourceLoadedAt=null
   const inputKey=checksum(Buffer.from(JSON.stringify([sourceLoadedAt,extra.moduleInputKeys||null,extra.sourceProjectionKeys||null])));
   return singleFlight(`compressed-generation:${safeUserId(userId)}:${contextHash}:${moduleKey}:${inputKey}`,()=>enqueueUserMutation(userId,async()=>{
     assertCurrent?.();
+    await materializePatchLogUnlocked(userId,'mutation');
     const previous=loadManifest(userId),id=generationId(),root=generationRoot(userId,id),modules={};let committed=false;
     await fs.promises.mkdir(root,{recursive:true});
     try{
@@ -294,6 +300,7 @@ async function rewriteGeneration(userId, { fromContextHash, toContextHash, trans
   const key = safeUserId(userId), pending = pendingRewrites.get(key) || new Set();
   pendingRewrites.set(key, pending);
   const promise = singleFlight(`rewrite:${safeUserId(userId)}:${fromContextHash}:${toContextHash}`, () => enqueueUserMutation(userId, async () => {
+    await materializePatchLogUnlocked(userId, 'mutation');
     const previous = loadManifest(userId);
     if (!previous || String(previous.contextHash || '') !== String(fromContextHash || '')) return null;
     const projections = {};
@@ -387,13 +394,20 @@ async function runRowRewriteBatch(userId, request) {
   };
   const batch = [request];
   try {
-    const previous = loadManifest(userId);
+    // Bekleyen günlük (bayrak sonradan kapatılmış olsa bile) önce sıkıştırılır: taban baytları tek başına güncel değildir.
+    const previous = pendingPatchLog(loadManifest(userId)) && !patchLogEnabled() ? await materializePatchLogUnlocked(userId, 'mutation') : loadManifest(userId);
     if (!previous || String(previous.contextHash || '') !== String(request.fromContextHash || '')) return finish(batch, null);
     for (const next of queue) {
       if (next === request || next.done || !(next.seq > request.seq)) continue;
       const last = batch[batch.length - 1];
       if (batch.length >= ROW_REWRITE_MAX_BATCH || next.seq !== last.seq + 1 || String(next.fromContextHash || '') !== String(last.toContextHash || '')) break;
       batch.push(next);
+    }
+    if (patchLogEnabled()) {
+      const appended = await appendPatchLogUnlocked(userId, previous, batch);
+      if (!appended) return finish(batch, null);
+      const info = { batchSize: batch.length, via: 'patch-log', changedModules: [], timings: null };
+      return finish(batch, batch.map((_, index) => ({ manifest: appended.manifest, cpRows: null, deferredCpRows: appended.promises[index], info })));
     }
     const modules = [], metas = {};
     for (const module of MODULES) {
@@ -422,6 +436,142 @@ async function runRowRewriteBatch(userId, request) {
     const info = { batchSize: batch.length, via: rewritten.via, changedModules: rewritten.modules.filter(item => item.changed).map(item => item.module), timings: rewritten.timings || null };
     finish(batch, batch.map((_, index) => ({ manifest, cpRows: rewritten.cpRowsBySteps[index] || null, info })));
   } catch (error) { finish(batch, null, error); }
+}
+/* ===================================================================
+   PROJEKSİYON YAMA GÜNLÜĞÜ — PİLOT (ADR-0003 §6B). Bayrak: BL_PROJECTION_PATCH_LOG=1 (varsayılan KAPALI).
+
+   Ölçüm (ADR-0003 §6A): satır kaydı başına ~6,5 CPU-sn'nin %99,4'ü bütün modül dosyalarının
+   çöz/ayrıştır/serileştir/sıkıştır döngüsü; yama hesabı %0,6. Projeksiyon türetilmiş veridir.
+   Bayrak açıkken kayıt yalnız aktif neslin `patches.log` dosyasına adımları ekler ve manifesti
+   (bağlam, giriş/bayt sayısı) günceller. Bütün dosya ancak gerektiğinde, birikmiş adımlarla TEK
+   kez yeniden yazılır (sıkıştırma). Sıkıştırma, eski yolun parite testli toplu yeniden yazımının
+   aynısıdır (runRowRewriteSteps + writeGenerationUnlocked): sonuç nesli eski yolla aynıdır.
+
+   Sıkıştırma tetikleri: (1) eşleşen bağlamla okuma, (2) araya giren her mutasyon (önce sıkıştırır,
+   eski kuyruk sırasının aynısı), (3) boşta (son eklemeden BL_PROJECTION_PATCH_LOG_IDLE_MS sonra),
+   (4) eşik (giriş ≥ MAX_ENTRIES ya da bayt ≥ MAX_BYTES) — günlük sınırsız büyüyemez.
+   Dayanıklılık: günlük kaynak değildir. Manifest yalnız günlüğe eklendikten sonra yazılır; fazladan
+   (çökme) bayt bir sonraki eklemede kesilir. Yırtık/uyuşmayan günlük → kullanıcının önbelleği atılır
+   ve kaynaktan yeniden üretilir. Bekleyen günlüklü yedek (.bak) manifest okuyuculara sunulmaz. */
+const PATCH_LOG_FILE = 'patches.log';
+function patchLogEnabled() { return String(process.env.BL_PROJECTION_PATCH_LOG || '') === '1'; }
+function patchLogLimits() {
+  const num = (name, fallback, min) => { const n = Number(process.env[name]); return Number.isFinite(n) && n >= min ? n : fallback; };
+  return { maxEntries: num('BL_PROJECTION_PATCH_LOG_MAX_ENTRIES', 64, 1), maxBytes: num('BL_PROJECTION_PATCH_LOG_MAX_BYTES', 8 * 1024 * 1024, 1024), idleMs: num('BL_PROJECTION_PATCH_LOG_IDLE_MS', 30000, 0) };
+}
+const patchLogCounters = { appends: 0, steps: 0, compactions: 0, compactMs: 0, byReason: {}, discarded: 0, maxEntries: 0, maxBytes: 0 };
+const patchLogDeferred = new Map();   // kullanıcı → [{resolve, index}] (collectCpRows adımları; index = günlükteki küresel adım sırası)
+const patchLogIdleTimers = new Map();
+function patchLogTrace(message) { if (process.env.BL_PROJECTION_PATCH_LOG_TRACE === '1') console.log('[page-cache] patch-log ' + message); }
+function patchLogPath(userId, generation) { return path.join(generationRoot(userId, generation), PATCH_LOG_FILE); }
+function pendingPatchLog(manifest) { const log = manifest && manifest.patchLog; return log && Number(log.entries) > 0 ? log : null; }
+function patchLogStats() { return { ...patchLogCounters, byReason: { ...patchLogCounters.byReason }, enabled: patchLogEnabled(), limits: patchLogLimits() }; }
+function resolvePatchLogDeferred(userId, values) {
+  const key = safeUserId(userId), list = patchLogDeferred.get(key) || [];
+  patchLogDeferred.delete(key);
+  list.forEach(entry => entry.resolve(values ? (values[entry.index] || []) : null));
+}
+function discardPatchLogCacheUnlocked(userId, reason) {
+  patchLogCounters.discarded++;
+  console.warn('[page-cache] patch-log discarded; cache will be rebuilt from source:', reason);
+  resolvePatchLogDeferred(userId, null);
+  invalidate(userId);
+}
+async function readPatchLogEntries(userId, manifest, log) {
+  if (log.generation !== manifest.activeGeneration) throw new Error('generation mismatch');
+  const buffer = (await fs.promises.readFile(patchLogPath(userId, log.generation))).subarray(0, Number(log.bytes) || 0);
+  if (buffer.length !== Number(log.bytes)) throw new Error('torn log');
+  const entries = buffer.toString('utf8').split('\n').filter(Boolean).map(line => JSON.parse(line));
+  if (entries.length !== Number(log.entries)) throw new Error('entry count mismatch');
+  let context = String(log.baseContextHash || '');
+  for (const entry of entries) {
+    if (String(entry.from) !== context || !Array.isArray(entry.steps)) throw new Error('context chain broken');
+    context = String(entry.to);
+  }
+  if (context !== String(manifest.contextHash || '')) throw new Error('context chain does not reach manifest');
+  return entries;
+}
+/* Kuyruk içinde çağrılır. Bekleyen günlük yoksa no-op. Dönen: güncel manifest | null (atıldı). */
+async function materializePatchLogUnlocked(userId, reason) {
+  const manifest = loadManifest(userId), log = pendingPatchLog(manifest);
+  if (!log) return manifest;
+  const started = Date.now();
+  const timer = patchLogIdleTimers.get(safeUserId(userId)); if (timer) { clearTimeout(timer); patchLogIdleTimers.delete(safeUserId(userId)); }
+  let entries, modules = [], metas = {};
+  try {
+    entries = await readPatchLogEntries(userId, manifest, log);
+    for (const module of MODULES) {
+      const meta = manifest.modules && manifest.modules[module];
+      if (!meta) continue;
+      const { buffer } = await readCompressed(modulePath(userId, manifest.activeGeneration, module), meta.checksum || '');
+      modules.push({ module, buffer }); metas[module] = meta;
+    }
+  } catch (error) { discardPatchLogCacheUnlocked(userId, `${reason}: ${error && error.message}`); return null; }
+  const steps = entries.flatMap(entry => entry.steps);
+  const rewritten = await runRowRewriteSteps(modules, steps, entry => Number(metas[entry.module].uncompressedBytes) || entry.buffer.length);
+  const reused = {};
+  for (const entry of rewritten.modules) {
+    const original = modules.find(item => item.module === entry.module);
+    reused[entry.module] = entry.changed ? { buffer: entry.buffer, uncompressedBytes: entry.uncompressedBytes } : { buffer: original.buffer, uncompressedBytes: metas[entry.module].uncompressedBytes };
+  }
+  const next = await writeGenerationUnlocked(userId, {
+    contextHash: manifest.contextHash, sourceLoadedAt: manifest.sourceLoadedAt || null, reused,
+    extra: { runtimeMeta: manifest.runtimeMeta || {}, sourceRevisionKey: manifest.sourceRevisionKey || null },
+    previous: manifest,
+  });
+  resolvePatchLogDeferred(userId, rewritten.cpRowsBySteps);
+  const ms = Date.now() - started;
+  patchLogCounters.compactions++; patchLogCounters.compactMs += ms; patchLogCounters.byReason[reason] = (patchLogCounters.byReason[reason] || 0) + 1;
+  patchLogTrace(`compact reason=${reason} entries=${log.entries} steps=${steps.length} bytes=${log.bytes} ms=${ms} via=${rewritten.via}`);
+  return next;
+}
+function schedulePatchLogCompaction(userId, reason) {
+  return enqueueUserMutation(userId, () => materializePatchLogUnlocked(userId, reason)).catch(error => console.warn('[page-cache] patch-log compaction failed:', error && (error.code || error.message)));
+}
+/* Okuyucular: bekleyen günlük okunan bağlamdaysa önce sıkıştırılır (eski yoldaki "okuma yeniden yazımı bekler"). */
+async function settlePatchLog(userId, contextHash = null) {
+  const manifest = loadManifest(userId);
+  if (pendingPatchLog(manifest) && (contextHash == null || String(manifest.contextHash || '') === String(contextHash || ''))) {
+    await enqueueUserMutation(userId, () => materializePatchLogUnlocked(userId, 'read'));
+  }
+}
+async function appendPatchLogUnlocked(userId, previous, batch) {
+  let existing = pendingPatchLog(previous);
+  if (existing && existing.generation !== previous.activeGeneration) { discardPatchLogCacheUnlocked(userId, 'append: generation mismatch'); return null; }
+  const line = JSON.stringify({ v: 1, from: String(batch[0].fromContextHash || ''), to: String(batch[batch.length - 1].toContextHash || ''),
+    steps: batch.map(item => ({ items: item.items, context: item.context, collectCpRows: item.collectCpRows })) }) + '\n';
+  const limits = patchLogLimits(), lineBytes = Buffer.byteLength(line);
+  // Kesin üst sınır: ekleme sınırı aşacaksa önce sıkıştırılır (ani kayıt dizisinde de giriş ≤ maxEntries).
+  if (existing && (Number(existing.entries) + 1 > limits.maxEntries || Number(existing.bytes) + lineBytes > limits.maxBytes)) {
+    previous = await materializePatchLogUnlocked(userId, 'threshold');
+    if (!previous || String(previous.contextHash || '') !== String(batch[0].fromContextHash || '')) return null;
+    existing = null;
+  }
+  const file = patchLogPath(userId, previous.activeGeneration), keepBytes = existing ? Number(existing.bytes) || 0 : 0;
+  // Çökmeden kalan, manifestin bilmediği bayt kesilir; manifest yalnız eklemeden sonra yazılır.
+  try { await fs.promises.truncate(file, keepBytes); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  await fs.promises.appendFile(file, line);
+  const log = { generation: previous.activeGeneration, baseContextHash: existing ? existing.baseContextHash : String(previous.contextHash || ''),
+    entries: (existing ? Number(existing.entries) : 0) + 1, steps: (existing ? Number(existing.steps) || 0 : 0) + batch.length, bytes: keepBytes + lineBytes };
+  // Eski yolun yeni manifestiyle aynı alanlar (backlogVariants boşalır, yalnız runtimeMeta/sourceRevisionKey taşınır).
+  const next = { schemaVersion: CACHE_SCHEMA_VERSION, activeGeneration: previous.activeGeneration, previousGeneration: previous.previousGeneration || null,
+    contextHash: String(batch[batch.length - 1].toContextHash || ''), sourceLoadedAt: previous.sourceLoadedAt || null, createdAt: new Date().toISOString(),
+    modules: previous.modules, backlogVariants: {}, runtimeMeta: previous.runtimeMeta || {}, sourceRevisionKey: previous.sourceRevisionKey || null, patchLog: log };
+  await saveManifest(userId, next);
+  patchLogCounters.appends++; patchLogCounters.steps += batch.length;
+  patchLogCounters.maxEntries = Math.max(patchLogCounters.maxEntries, log.entries); patchLogCounters.maxBytes = Math.max(patchLogCounters.maxBytes, log.bytes);
+  patchLogTrace(`append entries=${log.entries} steps=${log.steps} bytes=${log.bytes}`);
+  const key = safeUserId(userId), deferred = patchLogDeferred.get(key) || [];
+  const stepBase = existing ? Number(existing.steps) || 0 : 0;
+  const promises = batch.map((item, i) => (item.collectCpRows ? new Promise(resolve => deferred.push({ resolve, index: stepBase + i })) : null));
+  patchLogDeferred.set(key, deferred);
+  if (log.bytes > limits.maxBytes) schedulePatchLogCompaction(userId, 'threshold'); // tek giriş sınırdan büyükse
+  else {
+    const old = patchLogIdleTimers.get(key); if (old) clearTimeout(old);
+    const timer = setTimeout(() => { patchLogIdleTimers.delete(key); schedulePatchLogCompaction(userId, 'idle'); }, limits.idleMs);
+    timer.unref?.(); patchLogIdleTimers.set(key, timer);
+  }
+  return { manifest: next, promises };
 }
 function rewriteRowPatches(userId, { fromContextHash, toContextHash, items, context = {}, collectCpRows = false } = {}) {
   const key = safeUserId(userId), flightKey = `rewrite:${key}:${fromContextHash}:${toContextHash}`;
@@ -465,6 +615,7 @@ async function cleanupGenerations(userId, keep) {
 async function writeProjection(userId, module, contextHash, value) {
   if (!MODULES.has(module)) return null;
   return singleFlight(`projection:${safeUserId(userId)}:${contextHash}:${module}`, () => enqueueUserMutation(userId, async () => {
+    await materializePatchLogUnlocked(userId, 'mutation');
     const manifest = loadManifest(userId);
     if (!manifest || String(manifest.contextHash || '') !== String(contextHash || '')) return null;
     const meta = await writeJsonGzip(modulePath(userId, manifest.activeGeneration, module), value);
@@ -483,6 +634,7 @@ async function readBacklog(userId, contextHash, key) {
     if (String(manifest.contextHash || '') !== String(contextHash || '')) continue;
     // A previous manifest may only supply variants for the current Backlog input.
     if(manifest.backlogInputKey!==candidates[0].backlogInputKey)continue;
+    if(pendingPatchLog(manifest))continue;
     const meta = manifest.backlogVariants && manifest.backlogVariants[key];
     if (!meta) continue;
     try {
@@ -504,6 +656,7 @@ async function readBacklog(userId, contextHash, key) {
 }
 async function writeBacklog(userId, contextHash, key, value) {
   return singleFlight(`backlog:${safeUserId(userId)}:${contextHash}:${key}`, () => enqueueUserMutation(userId, async () => {
+    await materializePatchLogUnlocked(userId, 'mutation');
     const manifest = loadManifest(userId);
     if (!manifest || String(manifest.contextHash || '') !== String(contextHash || '')) return null;
     const meta = await writeJsonGzip(backlogPath(userId, manifest.activeGeneration, key), value);
@@ -519,6 +672,9 @@ async function writeBacklog(userId, contextHash, key, value) {
   }));
 }
 function invalidate(userId) {
+  const key = safeUserId(userId), timer = patchLogIdleTimers.get(key);
+  if (timer) { clearTimeout(timer); patchLogIdleTimers.delete(key); }
+  if (patchLogDeferred.has(key)) resolvePatchLogDeferred(userId, null);
   const prefix = userRoot(userId) + path.sep;
   for (const [key, entry] of compressedLru) {
     if (entry.file.startsWith(prefix)) { compressedLru.delete(key); compressedLruBytes -= entry.buffer.length; }
@@ -545,5 +701,5 @@ function listSnapshotUserIds(snapshotRoot) {
 module.exports = {
   ROOT, CACHE_SCHEMA_VERSION, BACKLOG_MAX_VARIANTS, safeUserId, manifestPath, loadManifest,
   MEMORY_MAX_ENTRIES, MEMORY_MAX_BYTES,
-  readProjection, readProjectionCompressed, decodeProjection, readReusableProjections, reuseGeneration, writeProjection, writeGeneration, writeCompressedGeneration, rewriteGeneration, rewriteRowPatches, setRowRewriteRunnerForTests, splitRewriteModules, readBacklog, writeBacklog, invalidate, invalidateAll, listCachedUserIds, listSnapshotUserIds,
+  readProjection, readProjectionCompressed, decodeProjection, patchLogStats, settlePatchLog, readReusableProjections, reuseGeneration, writeProjection, writeGeneration, writeCompressedGeneration, rewriteGeneration, rewriteRowPatches, setRowRewriteRunnerForTests, splitRewriteModules, readBacklog, writeBacklog, invalidate, invalidateAll, listCachedUserIds, listSnapshotUserIds,
 };
