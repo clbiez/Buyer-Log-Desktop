@@ -650,7 +650,7 @@
       <div class="plmImportBody">
         <datalist id="_kolArtworkRegions">${regionOptions}</datalist>
         <datalist id="_kolArtworkTechniques">${techOptions}</datalist>
-        ${initial.parseable ? '' : `<div class="kolArtworkEdNote" role="note">${esc(L('Hücredeki metin kart biçiminde değil; kaydederseniz kartlarla değiştirilir:', 'The cell text is not in card format; saving replaces it with cards:'))} <q>${esc(current)}</q></div>`}
+        ${initial.parseable ? '' : `<div class="kolArtworkEdNote plmExistingWarning" role="note">${esc(L('Hücredeki metin kart biçiminde değil; kaydederseniz kartlarla değiştirilir:', 'The cell text is not in card format; saving replaces it with cards:'))} <q>${esc(current)}</q></div>`}
         <div class="kolArtworkEdParts" data-art-parts></div>
         <div><button type="button" class="tbtn" data-art="add-part"><span>${esc(L('+ Set parçası ekle', '+ Add set piece'))}</span></button></div>
         <div class="kolArtworkEdPreview muted" data-art-preview aria-live="polite"></div>

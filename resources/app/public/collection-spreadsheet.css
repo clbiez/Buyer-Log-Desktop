@@ -285,11 +285,10 @@
 .kolArtworkEditor{width:min(640px,calc(100vw - 32px))}
 .kolArtworkEdParts{display:grid;gap:var(--ui-space-3,12px);margin:0 0 var(--ui-space-3,12px)}
 .kolArtworkEdPart{display:grid;gap:var(--ui-space-2,8px)}
-.kolArtworkEdPart.isMulti{padding:var(--ui-space-2,8px);border:1px solid var(--ui-group-divider)}
 .kolArtworkEdPartHead{display:flex;align-items:center;gap:8px}
 .kolArtworkEdRow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1.3fr) 4.5rem auto;align-items:center;gap:4px 8px}
 .kolArtworkEdRow input,.kolArtworkEdLabel{min-width:0;width:100%;box-sizing:border-box;min-height:var(--ui-control-height,32px);padding:4px 8px}
 .kolArtworkEdLabel{width:3.5rem;text-align:center}
 .kolArtworkEdPreview{overflow-wrap:anywhere;margin-top:var(--ui-space-2,8px)}
-.kolArtworkEdNote{margin:0 0 var(--ui-space-3,12px);color:var(--ui-warning);overflow-wrap:anywhere}
+.kolArtworkEdNote{margin:0 0 var(--ui-space-3,12px);overflow-wrap:anywhere}
 @media (max-width:520px){.kolArtworkEdRow{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 4rem auto}}
