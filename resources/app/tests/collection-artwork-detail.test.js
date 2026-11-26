@@ -381,6 +381,75 @@ test('manually written summary text renders cards too; free text and inconsisten
   }
 });
 
+// vm bağlamındaki nesneler başka realm'dedir; yapısal karşılaştırma düz JSON üzerinden.
+const same = (actual, expected, message) => assert.deepEqual(JSON.parse(JSON.stringify(actual)), expected, message);
+
+test('card editor: text → editable rows with region labels in the UI language', () => {
+  const { api } = loadModule({ lang: 'tr' });
+  const single = api.editor.fromText('Front: 1 | Pigment • Back: 2 | Transfer | Total: 3');
+  assert.equal(single.parseable, true);
+  same(single.parts, [{ label: '', rows: [
+    { region: 'Ön', technique: 'Pigment', count: 1 }, { region: 'Arka', technique: 'Transfer', count: 2 },
+  ] }]);
+  const set = api.editor.fromText('A - Ön: 1 • Arka: 1 | Pigment | Toplam: 2\nB - Baskı yok');
+  same(set.parts.map(part => [part.label, part.rows.length]), [['A', 2], ['B', 0]]);
+  assert.equal(set.parts[0].rows[1].technique, 'Pigment', 'uniform technique belongs to every region');
+  const custom = api.editor.fromText('Yaka: 1 | Nakış | Toplam: 1');
+  assert.equal(custom.parts[0].rows[0].region, 'Yaka', 'unknown region text is kept as typed');
+  const free = api.editor.fromText('Demo not');
+  assert.equal(free.parseable, false);
+  same(free.parts, [{ label: '', rows: [] }]);
+  assert.equal(api.editor.fromText('').parseable, true);
+});
+
+test('card editor: rows → canonical summary text that renders cards again', () => {
+  const tr = loadModule({ lang: 'tr' }).api;
+  const mixed = tr.editor.compose([{ label: '', rows: [
+    { region: 'Ön', technique: 'Pigment', count: 1 }, { region: 'Arka', technique: 'Transfer', count: 2 },
+  ] }]);
+  same(mixed, { ok: true, value: 'Ön: 1 | Pigment • Arka: 2 | Transfer | Toplam: 3' });
+  // Aynı bölge + teknik birleşir; tek teknik sona yazılır.
+  assert.equal(tr.editor.compose([{ label: '', rows: [
+    { region: 'Ön', technique: 'Pigment', count: 1 }, { region: 'Arka', technique: 'Pigment', count: 1 }, { region: 'Ön', technique: 'Pigment', count: 2 },
+  ] }]).value, 'Ön: 3 • Arka: 1 | Pigment | Toplam: 4');
+  assert.equal(tr.editor.compose([{ label: '', rows: [] }]).value, 'Baskı yok');
+  const set = tr.editor.compose([
+    { label: 'a', rows: [{ region: 'Ön', technique: 'Pigment', count: 1 }] }, { label: 'B', rows: [] },
+  ]);
+  assert.equal(set.value, 'A - Ön: 1 | Pigment | Toplam: 1\nB - Baskı yok');
+  assert.ok(tr.cellCards({ id: 1 }, set.value), 'composed text renders as cards');
+  assert.ok(tr.cellCards({ id: 1 }, mixed.value));
+  const en = loadModule({ lang: 'en' }).api;
+  assert.equal(en.editor.compose([{ label: '', rows: [{ region: 'Front', technique: 'Foil Print', count: 1 }] }]).value, 'Front: 1 | Foil Print | Total: 1');
+  // Round-trip: aynı metin geri okunur.
+  same(tr.editor.compose(tr.editor.fromText(mixed.value).parts), JSON.parse(JSON.stringify(mixed)));
+});
+
+test('card editor: invalid rows are rejected with the offending part/row', () => {
+  const { api } = loadModule({ lang: 'tr' });
+  const one = rows => api.editor.compose([{ label: '', rows }]);
+  same(one([{ region: '', technique: 'Pigment', count: 1 }]), { ok: false, error: 'region', part: 0, row: 0 });
+  assert.equal(one([{ region: 'Ön: Sol', technique: 'Pigment', count: 1 }]).error, 'chars');
+  assert.equal(one([{ region: 'Ön', technique: 'Pig|ment', count: 1 }]).error, 'chars');
+  assert.equal(one([{ region: 'Ön', technique: 'Pigment', count: 0 }]).error, 'count');
+  assert.equal(one([{ region: 'Ön', technique: 'Pigment', count: 1.5 }]).error, 'count');
+  // Bir bölgede teknik var, diğerinde yoksa metin belirsizleşir.
+  same(one([{ region: 'Ön', technique: '', count: 1 }, { region: 'Arka', technique: 'Pigment', count: 1 }]), { ok: false, error: 'technique', part: 0, row: 0 });
+  assert.equal(one([{ region: 'Ön', technique: '', count: 1 }]).value, 'Ön: 1 | Toplam: 1', 'no technique anywhere is allowed');
+  const dup = api.editor.compose([{ label: 'A', rows: [] }, { label: 'A', rows: [] }]);
+  same(dup, { ok: false, error: 'label', part: 1, row: -1 });
+  assert.equal(api.editor.compose([{ label: 'A-1', rows: [] }, { label: 'B', rows: [] }]).error, 'label');
+});
+
+test('Artwork cell double-click opens the card editor (Fabric pattern); typing still edits text', () => {
+  assert.match(APP, /textarea\.editCell\[data-k="artworkDetail"\]'\)\.forEach\(el=>el\.addEventListener\('dblclick'/);
+  assert.match(APP, /window\.BLCollectionArtworkDetail\?\.openEditor\?\.\(/);
+  assert.match(COLUMN, /function openEditor\(row, \{ trigger = null \} = \{\}\)/);
+  assert.match(COLUMN, /b\.batchEdit\(\[\{ rowId: row\.id, key: ART_KEY, value \}\], \{ source: 'artwork-cards' \}\)/, 'writes through the shared undo/save path');
+  assert.match(COLUMN, /BLLayerSystem\?\.openDialog/);
+  assert.match(COLUMN, /BLMotionPlus\?\.play\?\.\('overlay'/);
+});
+
 test('Collection cell keeps the textarea editor under the card layer (edit/copy path unchanged)', () => {
   // Tek hücre düzenlemesi tam çizim yapmaz; kart katmanı o hücrede yenilenir.
   assert.match(APP, /if\(k==='artworkDetail'\)window\.BLCollectionArtworkDetail\?\.refreshCell\?\.\(row\);/);

@@ -303,6 +303,90 @@
     byLang[lang] = out;
     return out;
   }
+  /* ---- Kart editörü: metin ↔ düzenlenebilir satırlar ----
+     Editör ikinci bir veri kaynağı tutmaz: hücre metnini satırlara açar,
+     kaydette aynı kanonik özet metnini (partText) üretir. Bölge listesi
+     server/lib/corenectum-bom-api.js PLACEMENTS ile aynıdır (All Over
+     kumaşta yazıldığı için listede yok); etiket arayüz dilinde yazılır. */
+  const REGIONS = [
+    { key: 'front_body', tr: 'Ön', en: 'Front' }, { key: 'back_body', tr: 'Arka', en: 'Back' },
+    { key: 'left_sleeve', tr: 'Sol Kol', en: 'Left Sleeve' }, { key: 'right_sleeve', tr: 'Sağ Kol', en: 'Right Sleeve' },
+    { key: 'both_sleeves', tr: 'Kollar', en: 'Sleeves' }, { key: 'sleeve', tr: 'Kol', en: 'Sleeve' },
+    { key: 'chest', tr: 'Göğüs', en: 'Chest' }, { key: 'pocket', tr: 'Cep', en: 'Pocket' },
+    { key: 'hood', tr: 'Kapüşon', en: 'Hood' }, { key: 'left_leg', tr: 'Sol Bacak', en: 'Left Leg' },
+    { key: 'right_leg', tr: 'Sağ Bacak', en: 'Right Leg' }, { key: 'both_legs', tr: 'Bacaklar', en: 'Legs' },
+    { key: 'leg', tr: 'Bacak/Paça', en: 'Leg' }, { key: 'other', tr: 'Diğer', en: 'Other' },
+  ];
+  const BASE_TECHNIQUES = ['Pigment', 'Transfer', 'Plastisol', 'Foil Print'];
+  const foldKey = text => String(text || '').trim().toLocaleLowerCase('tr');
+  function regionLabel(text) {
+    const key = foldKey(text);
+    const hit = REGIONS.find(region => foldKey(region.tr) === key || foldKey(region.en) === key);
+    return hit ? (isEn() ? hit.en : hit.tr) : String(text || '').trim();
+  }
+  function editorFromText(text) {
+    const value = String(text == null ? '' : text);
+    if (!value.trim()) return { parseable: true, parts: [{ label: '', rows: [] }] };
+    const model = parseSummary(value);
+    if (!model) return { parseable: false, parts: [{ label: '', rows: [] }] };
+    return {
+      parseable: true,
+      parts: model.parts.map(part => ({
+        label: part.label || '',
+        rows: part.groups.map(group => ({ region: regionLabel(group.tr), technique: [...group.techniques].join(' + '), count: group.count })),
+      })),
+    };
+  }
+  const BAD_REGION = /[:|•+\n\r]/;
+  const BAD_TECHNIQUE = /[:|•\n\r]/;
+  function editorCompose(parts) {
+    const list = Array.isArray(parts) && parts.length ? parts : [{ label: '', rows: [] }];
+    const set = list.length > 1;
+    const fail = (error, part, row) => ({ ok: false, error, part, row });
+    const labels = new Set();
+    const lines = [];
+    for (let p = 0; p < list.length; p++) {
+      const label = String(list[p] && list[p].label || '').trim().toLocaleUpperCase('en-US');
+      if (set && (!/^[A-Z0-9]{1,3}$/.test(label) || labels.has(label))) return fail('label', p, -1);
+      labels.add(label);
+      const merged = new Map();
+      const rows = Array.isArray(list[p] && list[p].rows) ? list[p].rows : [];
+      for (let r = 0; r < rows.length; r++) {
+        const region = String(rows[r].region || '').trim();
+        const technique = String(rows[r].technique || '').trim().split(/\s*\+\s*/).filter(Boolean).join(' + ');
+        const count = Number(rows[r].count);
+        if (!region) return fail('region', p, r);
+        if (BAD_REGION.test(region) || BAD_TECHNIQUE.test(technique)) return fail('chars', p, r);
+        if (!Number.isInteger(count) || count < 1 || count > 999) return fail('count', p, r);
+        const id = `${foldKey(region)}\u0001${foldKey(technique)}`;
+        const hit = merged.get(id);
+        if (hit) hit.count += count;
+        else merged.set(id, { region: regionLabel(region), technique, count, row: r });
+      }
+      const groups = [...merged.values()];
+      // Bölgelerin bir kısmında teknik yoksa metin belirsizleşir (teknik son bölgeye ait okunur).
+      const firstBlank = groups.find(group => !group.technique);
+      if (firstBlank && groups.some(group => group.technique)) return fail('technique', p, firstBlank.row);
+      const techniques = [];
+      for (const group of groups) for (const tech of group.technique ? group.technique.split(' + ') : []) if (!techniques.includes(tech)) techniques.push(tech);
+      const text = partText({
+        groups: groups.map(group => ({ key: '', tr: group.region, en: group.region, count: group.count, techniques: new Set(group.technique ? group.technique.split(' + ') : []) })),
+        techniques,
+        total: groups.reduce((sum, group) => sum + group.count, 0),
+      }, isEn());
+      lines.push(set ? `${label} - ${text}` : text);
+    }
+    return { ok: true, value: lines.join('\n') };
+  }
+  function techniqueSuggestions() {
+    const out = new Set(BASE_TECHNIQUES);
+    for (const entry of state.cache.values()) {
+      const placements = entry && entry.isSetStyle ? setPartsOf(entry).flatMap(part => part.placements) : (entry && entry.placements) || [];
+      for (const item of placements) if (item && String(item.printType || '').trim()) out.add(String(item.printType).trim());
+    }
+    return [...out].sort((a, b) => a.localeCompare(b, 'tr'));
+  }
+
   function aiStatus(entry) {
     const status = entry && entry.ai && entry.ai.status || 'not-needed';
     if (status === 'resolved') return L('LCW AI doğruladı', 'LCW AI verified');
@@ -541,6 +625,139 @@
     return found;
   }
 
+  /* Çift tık kart editörü (Kumaş seçicisiyle aynı pencere deseni). Kayıt
+     ortak batchEdit yolundan gider: geri alma, kayıt, model bağı denetimi ve
+     render aynı kalır. Boş kayıt hücreyi temizler (PLM değeri varsa geri gelir). */
+  function openEditor(row, { trigger = null } = {}) {
+    const b = bridge();
+    if (!row || !b || !b.canEdit?.() || !b.batchEdit) return false;
+    const current = String((b.rawValue ? b.rawValue(row, ART_KEY) : row[ART_KEY]) ?? '');
+    const initial = editorFromText(current);
+    let parts = initial.parts.map(part => ({ label: part.label, rows: part.rows.map(item => ({ ...item })) }));
+    if (parts.length === 1 && !parts[0].rows.length && initial.parseable) parts[0].rows.push({ region: '', technique: '', count: 1 });
+    document.getElementById('_kolArtworkEditor')?.remove();
+    const modal = document.createElement('div');
+    modal.id = '_kolArtworkEditor';
+    modal.className = 'warnOverlay';
+    modal.dataset.uiMigrated = 'dialog';
+    const model = [row.plmId, row.modelKod].map(value => String(value == null ? '' : value).trim()).filter(Boolean).join(' · ');
+    const title = L('Artwork kartları', 'Artwork cards') + (model ? ` · ${model}` : '');
+    const regionOptions = REGIONS.map(region => `<option value="${esc(isEn() ? region.en : region.tr)}"></option>`).join('');
+    const techOptions = techniqueSuggestions().map(tech => `<option value="${esc(tech)}"></option>`).join('');
+    modal.innerHTML = `<div class="modalCard verHistCard plmImportCard kolArtworkEditor" role="dialog" aria-modal="true" aria-labelledby="_kolArtworkEditorTitle">
+      <div class="verHistHead"><div><strong id="_kolArtworkEditorTitle">${esc(title)}</strong>
+        <div class="muted">${esc(L('Her baskıyı bölge, teknik ve adetle bir kart olarak ekleyin. Takım modelde her parçayı (A, B…) ayrı ekleyin.', 'Add each print as a card with region, technique and count. For set styles add every piece (A, B…) separately.'))}</div></div></div>
+      <div class="plmImportBody">
+        <datalist id="_kolArtworkRegions">${regionOptions}</datalist>
+        <datalist id="_kolArtworkTechniques">${techOptions}</datalist>
+        ${initial.parseable ? '' : `<div class="kolArtworkEdNote" role="note">${esc(L('Hücredeki metin kart biçiminde değil; kaydederseniz kartlarla değiştirilir:', 'The cell text is not in card format; saving replaces it with cards:'))} <q>${esc(current)}</q></div>`}
+        <div class="kolArtworkEdParts" data-art-parts></div>
+        <div><button type="button" class="tbtn" data-art="add-part"><span>${esc(L('+ Set parçası ekle', '+ Add set piece'))}</span></button></div>
+        <div class="kolArtworkEdPreview muted" data-art-preview aria-live="polite"></div>
+        <div class="muted" data-art-status role="status"></div>
+      </div>
+      <div class="verHistFoot kolFabricFoot">
+        <button type="button" class="tbtn" data-art="clear">${esc(L('Hücreyi temizle', 'Clear cell'))}</button>
+        <span class="kolFabricFootSpacer"></span>
+        <button type="button" class="tbtn" data-art="cancel">${esc(L('Vazgeç', 'Cancel'))}</button>
+        <button type="button" class="tbtn primary" data-art="apply">${esc(L('Hücreye uygula', 'Apply to cell'))}</button>
+      </div>
+    </div>`;
+    const host = modal.querySelector('[data-art-parts]');
+    const status = modal.querySelector('[data-art-status]');
+    const preview = modal.querySelector('[data-art-preview]');
+    const rowHtml = (row, p, r) => `<div class="kolArtworkEdRow" data-art-row="${p}:${r}">
+        <input type="text" list="_kolArtworkRegions" autocomplete="off" data-art-field="region" data-p="${p}" data-r="${r}" value="${esc(row.region)}" placeholder="${esc(L('Bölge', 'Region'))}" aria-label="${esc(L(`Bölge ${r + 1}`, `Region ${r + 1}`))}">
+        <input type="text" list="_kolArtworkTechniques" autocomplete="off" data-art-field="technique" data-p="${p}" data-r="${r}" value="${esc(row.technique)}" placeholder="${esc(L('Teknik', 'Technique'))}" aria-label="${esc(L(`Teknik ${r + 1}`, `Technique ${r + 1}`))}">
+        <input type="number" min="1" max="999" step="1" inputmode="numeric" data-art-field="count" data-p="${p}" data-r="${r}" value="${esc(row.count)}" aria-label="${esc(L(`Adet ${r + 1}`, `Count ${r + 1}`))}">
+        <button type="button" class="tbtn" data-art-remove-row="${p}:${r}" aria-label="${esc(L(`Kartı kaldır ${r + 1}`, `Remove card ${r + 1}`))}" title="${esc(L('Kaldır', 'Remove'))}">×</button>
+      </div>`;
+    const render = () => {
+      const multi = parts.length > 1;
+      host.innerHTML = parts.map((part, p) => `<section class="kolArtworkEdPart${multi ? ' isMulti' : ''}" data-art-part="${p}">
+          ${multi ? `<div class="kolArtworkEdPartHead"><input type="text" class="kolArtworkEdLabel" maxlength="3" autocomplete="off" data-art-field="label" data-p="${p}" value="${esc(part.label)}" placeholder="${esc(String.fromCharCode(65 + p))}" aria-label="${esc(L(`Set parçası harfi ${p + 1}`, `Set piece letter ${p + 1}`))}">
+            <button type="button" class="tbtn" data-art-remove-part="${p}">${esc(L('Parçayı kaldır', 'Remove piece'))}</button></div>` : ''}
+          ${part.rows.map((row, r) => rowHtml(row, p, r)).join('') || `<div class="muted">${esc(L('Baskı yok', 'No print'))}</div>`}
+          <div><button type="button" class="tbtn" data-art-add-row="${p}"><span>${esc(L('+ Kart ekle', '+ Add card'))}</span></button></div>
+        </section>`).join('');
+      updatePreview();
+    };
+    const updatePreview = () => {
+      const result = editorCompose(parts);
+      preview.textContent = result.ok ? `${L('Hücreye yazılacak', 'Will be written')}: ${result.value.replace(/\n/g, ' / ')}` : '';
+    };
+    const errorText = result => {
+      const where = parts.length > 1 ? `${parts[result.part].label || String.fromCharCode(65 + result.part)} · ` : '';
+      const n = result.row + 1;
+      if (result.error === 'label') return L(`${result.part + 1}. set parçası: benzersiz bir harf girin (A, B…).`, `Set piece ${result.part + 1}: enter a unique letter (A, B…).`);
+      if (result.error === 'region') return L(`${where}${n}. kart: bölge seçin.`, `${where}Card ${n}: choose a region.`);
+      if (result.error === 'chars') return L(`${where}${n}. kart: bölge ve teknikte : | • kullanılamaz (bölgede + de).`, `${where}Card ${n}: region and technique cannot contain : | • (region also not +).`);
+      if (result.error === 'count') return L(`${where}${n}. kart: adet 1–999 arası tam sayı olmalı.`, `${where}Card ${n}: count must be a whole number from 1 to 999.`);
+      return L(`${where}${n}. kart: teknik girin (diğer kartlarda teknik var).`, `${where}Card ${n}: enter a technique (other cards have one).`);
+    };
+    const close = () => { global.BLLayerSystem?.closeDialog?.(modal, { trigger }); modal.remove(); };
+    const write = value => {
+      if (value === current) { close(); return; }
+      const result = b.batchEdit([{ rowId: row.id, key: ART_KEY, value }], { source: 'artwork-cards' });
+      if (!result || !result.ok) { status.textContent = L('Artwork bu hücreye yazılamadı (model grubuna bağlı alan olabilir).', 'Artwork could not be written to this cell (the field may be linked to the model group).'); return; }
+      close();
+      global.showToast?.(L('Artwork kartları güncellendi. Geri alınabilir.', 'Artwork cards updated. Undo is available.'));
+    };
+    modal.addEventListener('input', event => {
+      const field = event.target.dataset.artField;
+      if (!field) return;
+      const p = Number(event.target.dataset.p), r = Number(event.target.dataset.r);
+      if (field === 'label') { event.target.value = event.target.value.toLocaleUpperCase('en-US').replace(/[^A-Z0-9]/g, ''); parts[p].label = event.target.value; }
+      else if (field === 'count') parts[p].rows[r].count = event.target.value === '' ? NaN : Number(event.target.value);
+      else parts[p].rows[r][field] = event.target.value;
+      status.textContent = '';
+      updatePreview();
+    });
+    modal.addEventListener('click', event => {
+      if (event.target === modal) { close(); return; }
+      const addRow = event.target.closest('[data-art-add-row]');
+      if (addRow) {
+        const p = Number(addRow.dataset.artAddRow);
+        parts[p].rows.push({ region: '', technique: parts[p].rows.length ? parts[p].rows[parts[p].rows.length - 1].technique : '', count: 1 });
+        render();
+        host.querySelector(`[data-art-row="${p}:${parts[p].rows.length - 1}"] input`)?.focus();
+        return;
+      }
+      const removeRow = event.target.closest('[data-art-remove-row]');
+      if (removeRow) { const [p, r] = removeRow.dataset.artRemoveRow.split(':').map(Number); parts[p].rows.splice(r, 1); render(); status.textContent = ''; return; }
+      const removePart = event.target.closest('[data-art-remove-part]');
+      if (removePart) { parts.splice(Number(removePart.dataset.artRemovePart), 1); if (parts.length === 1) parts[0].label = ''; render(); status.textContent = ''; return; }
+      const action = event.target.closest('[data-art]')?.dataset.art;
+      if (action === 'cancel') { close(); return; }
+      if (action === 'add-part') {
+        if (parts.length === 1 && !parts[0].label) parts[0].label = 'A';
+        const used = new Set(parts.map(part => part.label));
+        let next = 0;
+        while (used.has(String.fromCharCode(65 + next)) && next < 25) next++;
+        parts.push({ label: String.fromCharCode(65 + next), rows: [{ region: '', technique: '', count: 1 }] });
+        render();
+        host.querySelector(`[data-art-part="${parts.length - 1}"] [data-art-field="region"]`)?.focus();
+        return;
+      }
+      if (action === 'clear') { write(''); return; }
+      if (action === 'apply') {
+        const result = editorCompose(parts);
+        if (!result.ok) {
+          status.textContent = errorText(result);
+          const selector = result.row >= 0 ? `[data-art-row="${result.part}:${result.row}"] [data-art-field="${result.error === 'technique' ? 'technique' : result.error === 'count' ? 'count' : 'region'}"]` : `[data-art-part="${result.part}"] [data-art-field="label"]`;
+          host.querySelector(selector)?.focus();
+          return;
+        }
+        write(result.value);
+      }
+    });
+    render();
+    document.body.appendChild(modal);
+    global.BLLayerSystem?.openDialog?.(modal, { trigger, onClose: close, initialFocus: '[data-art-field="region"]' });
+    global.BLMotionPlus?.play?.('overlay', modal.querySelector('.modalCard'));
+    return true;
+  }
+
   async function openBom(row) {
     if (!row) return false;
     try {
@@ -601,6 +818,8 @@
     summaryFor,
     cellCards,
     refreshCell,
+    openEditor,
+    editor: { fromText: editorFromText, compose: editorCompose, regions: REGIONS },
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true });

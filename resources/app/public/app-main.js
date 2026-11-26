@@ -33765,6 +33765,15 @@ function renderKol(){
     commitKolEditor(el);
     openKolFabricTextDialog(el.dataset.id,{trigger:el.closest('td')});
   }));
+  // Artwork Detayı: çift tık kart editörünü açar (bölge/teknik/adet); seçili hücrede
+  // doğrudan yazmak, yapıştırma ve temizleme düz metin yolunda kalır.
+  tbody.querySelectorAll('textarea.editCell[data-k="artworkDetail"]').forEach(el=>el.addEventListener('dblclick',event=>{
+    if(!kolWorkspaceCanEdit||el.readOnly||el.disabled||!window.BLCollectionArtworkDetail?.openEditor)return;
+    const row=kolRows.find(item=>String(item.id)===String(el.dataset.id));if(!row)return;
+    event.preventDefault();event.stopPropagation();
+    commitKolEditor(el);
+    window.BLCollectionArtworkDetail?.openEditor?.(row,{trigger:el.closest('td')});
+  }));
   tbody.querySelectorAll('.kolPeriodTd[data-period-id][data-period-mode]').forEach(cell=>cell.addEventListener('dblclick',event=>{
     event.preventDefault();event.stopPropagation();
     if(!kolWorkspaceCanEdit)return;

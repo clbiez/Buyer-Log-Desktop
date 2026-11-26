@@ -3,14 +3,43 @@
   "publishedAt": "2026-11-26",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Elle yazılan Artwork Detayı kart olarak görünür",
-    "en": "Manually typed Artwork Detail shows as cards"
+    "tr": "Artwork Detayı kartlarla düzenlenir",
+    "en": "Artwork Detail is edited with cards"
   },
   "summary": {
-    "tr": "Koleksiyon'da Artwork Detayı özet biçiminde elle yazıldığında da bölge kartlarıyla gösterilir.",
-    "en": "In Collection, Artwork Detail typed manually in the summary format is also shown with region chips."
+    "tr": "Koleksiyon'da Artwork Detayı çift tıkla açılan kart editöründe bölge, teknik ve adetle düzenlenir; elle yazılan özet de kart olarak görünür.",
+    "en": "In Collection, Artwork Detail is edited in a double-click card editor by region, technique and count; manually typed summaries also show as cards."
   },
   "changes": [
+    {
+      "id": "collection-artwork-card-editor",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Artwork Detayı kart editörüyle düzenlenir",
+        "en": "Edit Artwork Detail with a card editor"
+      },
+      "body": {
+        "tr": "Artwork Detayı hücresine çift tıklayınca kart editörü açılır: her baskı bölge (Ön, Arka, Kollar…), teknik (Pigment, Transfer…) ve adetle ayrı bir kart olarak eklenir, kaldırılır veya değiştirilir; toplam otomatik hesaplanır. Takım modellerde A, B… parçaları ayrı eklenir. Dolu hücre mevcut kartlarla açılır ve hücreye yazılacak metin önizlenir. Kayıt normal hücre düzenlemesi gibi geri alınabilir; seçili hücrede doğrudan yazmak, yapıştırma ve temizleme eskisi gibi düz metinle çalışır.",
+        "en": "Double-clicking an Artwork Detail cell opens a card editor: each print is added, removed or changed as its own card with a region (Front, Back, Sleeves…), technique (Pigment, Transfer…) and count, and the total is calculated automatically. Set styles get separate A, B… pieces. A filled cell opens with its current cards and the text to be written is previewed. Saving can be undone like any cell edit; typing directly into a selected cell, paste and clear still work with plain text."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-artwork-card-editor.png",
+        "alt": {
+          "tr": "Demo Koleksiyon'da Artwork kartları penceresi: Ön · Pigment · 1 ve Arka · Transfer · 2 kartları, Kart ekle ve Set parçası ekle düğmeleri, hücreye yazılacak metin önizlemesi",
+          "en": "Artwork cards dialog on demo Collection data: Front · Pigment · 1 and Back · Transfer · 2 cards, Add card and Add set piece buttons, and a preview of the cell text"
+        },
+        "caption": {
+          "tr": "Demo veride çift tıkla açılan Artwork kart editörü.",
+          "en": "The Artwork card editor opened by double-click on demo data."
+        }
+      }
+    },
     {
       "id": "collection-artwork-manual-cards",
       "type": "fix",
