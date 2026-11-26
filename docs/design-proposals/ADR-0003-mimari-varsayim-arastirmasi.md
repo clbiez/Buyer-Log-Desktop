@@ -652,6 +652,70 @@ Sınırlar: okuyucu ya da modül başına ayrı günlük uygulama mekanizması y
 
 B1 kodu (`c800f90b`) bayrak kapalı haliyle dalda kalır. Davranışı değiştirmez. Karar O3'e kadar ertelenir.
 
+## 6D · O3: gerçek arayüz okuma deseni ve veri güncelliği (ölçüm, 2026-11-26)
+
+**Ölçülen kod:** Mevcut sistem = `main` `b6ee28b`. B1 = `41393eff`, yerel cherry-pick (`c800f90b` → `b6ee28b`, push edilmedi; `git cherry-pick c800f90b` ile yeniden üretilir), bayrak açık. B1'in `b6ee28b`'ye taşınmasının nedeni: `c800f90b` Siparişler açılış düzeltmesini (#1228) içermiyor; doğrudan karşılaştırma bayrak etkisini bu düzeltmeyle karıştırırdı. Repo kodu değişmedi; araçlar scratchpad'de (`o3/lib.js`, `journey.js`).
+
+**Ortam ve yöntem:** Linux container, Playwright Chromium (Electron değil), sentetik 30k (seed 7). Her kol 3 tekrar, sıra dönüşümlü (off, on, on, off, off, on); tek tarayıcı bağlamında art arda senaryolar. Düzenleme gerçek DOM olayıyla yapıldı: CP tablosunda `input.editCell[data-kind=suppfob]` üzerinde `change`, yani `commitCpEditor`. Ortak alan: **Supp. FOB** (CP ve Siparişler tablosunda görünür). Bekleme = eylemden görünür satıra (ya da kayıt onayına) kadar. Bayt = CDP `encodedDataLength`.
+
+### 6D.1 · Okuma sıklığı (deterministik; 3 tekrarda aynı) ve bekleme (medyan [ham], ms)
+
+| Senaryo | Tam projeksiyon okuma | Okuma modeli istekleri (aktarılan) | Mevcut bekleme | B1 bekleme | B1 sıkıştırma |
+| --- | --- | --- | --- | --- | --- |
+| S5 Siparişler ilk açılış | **0** | 3× `orders/query` (1,58 MB) | 2.893 [2.739 / 3.049 / 2.893] | 2.824 [2.811 / 3.107 / 2.824] | — |
+| S3a Siparişler → CP (ilk) | **1× `page-projection:cp`** (4,87 MB) | 1× `orders/facets` | 7.353 [7.353 / 7.401 / 6.739] | 7.051 [7.051 / 7.123 / 6.932] | — |
+| S3b CP → Siparişler / S3c → CP (sıcak) | 0 | 0 | 548 / 884 | 532 / 996 | — |
+| S1 CP tek düzenleme (kayıt onayı) | 0 | 1× `cp/computed` (**4,94 MB**) | 651 [709 / 651 / 596] | 687 [693 / 658 / 687] | — |
+| S4 Siparişler'e dönüş | 0 | arama sonrası 2× `orders/query` (0,53 MB) | 461 [457 / 461 / 600] | 474 [474 / 501 / 436] | okumada 2,3–2,6 sn |
+| S2 CP 20 ardışık düzenleme | 0 | 3× `cp/query` (1,24 MB) | 5.608 (sunucu CPU 33,0 sn) | 5.422 (sunucu CPU 21,4 sn) | — |
+| S6a Yeni sekme, Siparişler | 0 | 3× `orders/query` (1,58 MB) | 8.832 [8.832 / 7.978 / 10.239] | 8.930 [8.930 / 11.950 / 8.347] | okumada ~2,4 sn |
+| S6b Zorla yenileme | 0 | 1× `orders/query` (0,53 MB) | 1.190 [1.190 / 1.183 / 2.898] | 1.471 [1.471 / 2.154 / 1.216] | — |
+| S7a Uzun CP oturumu (200 düzenleme) | 0 | çoğu koşuda 0; bir B1 koşusunda 2× `cp/query` + 6× `cp/facets` | 33.842 (CPU 46,7 sn) | 33.736 (CPU 14,0 sn; aykırı koşu: 334 sn, CPU 80,1 sn) | 2 eşik; aykırı koşuda 12 okuma |
+| S7b Uzun oturum sonrası yeni sekmede Siparişler | 0 | 5× `orders/query` (2,11 MB) | 9.599 [9.599 / 7.840 / 9.759] | 9.558 [10.602 / 7.157 / 9.558] | okumada 0–2,2 sn |
+| S8a Sunucu yeniden başlatma + Siparişler | 0 | 5× `orders/query` (2,12 MB) | 2.978 | 2.888 | — |
+| S8b Yeniden başlatma sonrası CP açılışı | **1× `page-projection:cp`** (4,87 MB) | — | 8.500 [8.500 / 8.365 / 9.574] | 8.768 [9.489 / 5.920 / 8.768] | — |
+
+**Okuma sıklığı sonucu [Doğrulandı: ölçüm]:**
+- **Siparişler hiçbir senaryoda tam projeksiyon okumadı.** İlk açılış, yeni sekme, yenileme ve yeniden başlatmada okuma modeli sorgusu kullandı.
+- Tam okuma yalnız **CP'nin açılışında** var (aynı sekmede ilk geçiş ve yeniden başlatma sonrası): 4,87 MB.
+- Her CP düzenlemesinden sonra **4,94 MB'lık `read-model/cp/computed`** isteği oluşuyor (S1). Bu, kayıt başına en büyük okuma trafiği.
+- B1'in S2'de (B1 değerlendirmesindeki) cezalandırdığı desen, yani kayıttan sonra bütün dosya okuması, gerçek arayüzde Siparişler için **oluşmadı**.
+
+**Kullanıcı bekleme (mevcut vs B1):**
+- Açılış, geçiş ve kayıt onayında fark gürültü düzeyinde. Üç ham örnek de iç içe; L2 işaret kuralıyla değerlendirilmedi, yalnız gösterge.
+- B1 sıkıştırmayı okuma yoluna taşıdığı yerlerde (S4 arama, S6a yeni sekme) 2,1–2,6 sn sıkıştırma süresi okumanın içinde. Toplam bekleme yine örtüşüyor, çünkü mevcut sistemde de aynı okuma yeniden yazımı bekliyor.
+- **Risk [Doğrulandı: 1/3 B1 koşusu + düzeltme koşusu]:** CP okuma modeli isteklerinin (`cp/query`, `cp/facets`) düzenlemelerle iç içe geçtiği durumda B1 her okumada sıkıştırma yaptı.
+  - Aykırı koşu: 12 sıkıştırma; 200 düzenleme 334 sn sürdü; 25 kayıt onayı 300 sn içinde gelmedi.
+  - Düzeltme koşusu (CP doğrudan açıldı): 15 sıkıştırma; toplam CPU mevcut sistemle neredeyse aynı (99,1 vs 91,5 sn).
+  - Kök neden **[Bilinmiyor]**. B1'in toplam CPU kazancı yalnız düzenlemeler arasında okuma olmadığında geçerli.
+
+### 6D.2 · Veri güncelliği bulgusu (doğruluk, B1'den bağımsız)
+
+**Bulgu [Doğrulandı: 6/6 koşu, iki kolda da].** CP'de Supp. FOB değiştirildikten sonra **aynı sekmede** Siparişler'e dönülünce tablo **eski değeri** gösteriyor (8,97, beklenen 777,77) ve **en az 20 sn** (ölçüm penceresi) öyle kalıyor. Kendiliğinden düzelme gözlenmedi. Siparişler aramasıyla sunucuya yeni sorgu gidince güncel değer geliyor (sorgu süresi 5,3–8,7 sn). Yeni sekme ve zorla yenileme de güncel gösteriyor.
+
+**Mekanizma [Doğrulandı: source]:**
+1. CP düzenlemesi yerel eşleri yalnız `state.orders` üzerinden günceller: `syncOrderLinePeersFromCpRow` → `orderLinePeerRows` (`public/app-main.js:12943-12957` ve `orderLinePeerRows` tanımı). Okuma modeli açıkken `state.orders` yüklü değil (S5'te `stateOrders:false`), yani güncellenecek eş satır yok.
+2. Siparişler okuma modeli penceresi yalnız `orders-projection-loaded`, `server-orders-hydrated`, `server-orders-deferred` nedenleriyle geçersizleşir (`public/app-main.js:12754-12761`). CP düzenlemesi bunlardan biri değil.
+3. Sunucu canlı satır yamasını yayar ama olay yazan istemcinin kimliğini taşır (`server/lib/live-events.js:26,146-176`). Yazan sekme kendi olayını yok sayar (`public/app-main.js:44466`).
+
+Sonuç: Düzenlemeyi yapan sekmedeki Siparişler penceresi, kullanıcı filtre, arama ya da sıralama değiştirene veya sekmeyi yenileyene kadar eski değeri gösterir. Başka sekmeler ve cihazlar canlı yamayla güncellenir (S6a/S6b güncel).
+
+**Ölçüm sınırları:**
+- Uzun oturum ve yeniden başlatma sonrası güncellik kontrolünde (S7b, S8a) hedef satır sonraki düzenlemelerle üzerine yazıldı. S8a'da görülen 350,50, S7a'nın o satıra son yazdığı değerle aritmetik olarak tutarlı (ilk görünür satır: 200 + 150 + 0,5), yani güncel **[Muhtemel]**.
+- S7b'de son düzenlenen siparişin aramada bulunamaması ve düzeltme koşusunda CP doğrudan açıldığında `Order Code` hücresinin okunamaması nedeniyle bu iki kontrol **[Bilinmiyor]** kaldı.
+
+### 6D.3 · Karar
+
+- **B1 ve B2 BLOCKED kalır.** Kabul ölçütleri değiştirilmedi.
+- **B1'in uygulanabilirliği:**
+  - B1'in FAIL olduğu "kayıttan sonra bütün dosya okuması" deseni gerçek arayüzde Siparişler için oluşmuyor.
+  - Ama CP'nin kendi okuma modeli istekleri (`cp/query`, `cp/facets`, `cp/computed`) düzenlemelerle iç içe geçebiliyor. O durumda B1 her okumada sıkıştırıyor ve hem toplam CPU kazancı kayboluyor hem de bir koşuda kayıt onayları gecikti.
+  - Bu yüzden B1, okuma modeli yolu günlüğü sıkıştırmadan okuyabilene kadar (B2 §6C'de yapı gereği BLOCKED) **uygulanabilir değil**.
+- **Yeni ürün kararları gerekiyor:**
+  1. **Güncellik hatası (öncelikli, doğruluk):** Düzenlemeyi yapan sekmede Siparişler penceresi eski veri gösteriyor. Düzeltme yönü ürün kararı: pencerenin yerel düzenlemede geçersizleşmesi mi, yoksa okuma modeli satırlarına yerel eş güncellemesi mi? İkincisi yeni bir uygulama döngüsü olmamalı (ilke 06).
+  2. Her CP düzenlemesinden sonraki 4,94 MB `cp/computed` okuması, kayıt başına en büyük trafik. Gerekliliği ayrıca incelenmeli.
+  3. B1 kodunun (`c800f90b`, bayrak kapalı) dalda tutulması ya da geri alınması.
+
 ---
 
 ## 7 · Ürün sahibinin vermesi gereken kararlar
