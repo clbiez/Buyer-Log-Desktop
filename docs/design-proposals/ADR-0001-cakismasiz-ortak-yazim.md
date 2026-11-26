@@ -302,3 +302,10 @@ Her düzeltmeden sonra yeni seed kümesi koşuldu. Bağımsız incelemede oracle
 - **Durdurma ölçütü:** Tek bir sessiz kayıp ya da yakınsamama. Bu durumda test durur ve kök neden incelenir; Aşama 0 TEST kanalına çıkmaz.
 - Süre önerisi: 2 iş günü etkin kullanım + 1 gece boşta.
 - Bu test bu container'da çalıştırılamaz; kurulum ürün sahibinin onayı ve iki gerçek makine gerektirir.
+
+## 13 · TEST kararı (ürün sahibi, 2026-11-26 gece)
+
+- Ürün sahibi, gerçek Windows/OneDrive dayanıklılık testinin TEST'ten **önce** yapılması kuralını kaldırdı. Aşama 0, TEST 8.0.19 ile yayımlanır; gerçek ortam doğrulaması TEST kanalında yapılır.
+- §11 performans istisnası aynen geçerlidir: S1/S3 **FAIL** kaydı korunur. TEST'e alınması ölçütün PASS sayıldığı anlamına gelmez.
+- **STABLE ön koşulu:** TEST kullanıcılarında Koleksiyon senkronu gözlemlenir. Bakılacaklar: OneDrive `-PC` çakışma kopyası sonrası kayıp, Senkron çakışmaları listesi, bekleyen yayım günlükleri (`*.pending-log.jsonl`), açılış ve yayım süresi. Açıklanamayan tek bir kayıp STABLE'ı durdurur.
+- `tools/soak/` (geliştirme dalında) isteğe bağlı olarak kullanılmaya devam eder; artık TEST için ön koşul değildir.
