@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-26",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Seçili satırları görsel olarak kopyala",
+    "en": "Copy selected rows as an image"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "CP, Siparişler ve Koleksiyon'da seçili satırlar Buyer Log'da göründüğü gibi (durum etiketleri, renkler, model görselleri, grup başlıkları) PNG görsel olarak panoya kopyalanır; Excel, Outlook veya Teams'e Ctrl+V ile yapıştırılır. 50 satırdan büyük seçimler PNG dosyası olarak kaydedilir.",
+    "en": "In CP, Orders and Collection, selected rows are copied to the clipboard as a PNG image exactly as they look in Buyer Log (status badges, colours, model images, group headers) and can be pasted into Excel, Outlook or Teams with Ctrl+V. Selections over 50 rows are saved as a PNG file."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "table-image-copy",
+      "type": "feature",
+      "module": {
+        "tr": "CP · Siparişler · Koleksiyon",
+        "en": "CP · Orders · Collection"
+      },
+      "title": {
+        "tr": "Görsel olarak kopyala",
+        "en": "Copy as image"
+      },
+      "body": {
+        "tr": "Kopyala menüsündeki “Görsel olarak kopyala”, işaretli satırları tüm görünür sütunlarıyla, işaretli satır yoksa seçili hücre aralığını yalnız o sütunlarla tek bir PNG görsele çevirir. Görsel her zaman aydınlık temada çizilir; uygulamanın teması ve tablo görünümü değişmez. Ekranda olmayan (başka sayfadaki) seçili satırlar da görsele girer. Sağ tık menüsü seçili hücreleri ve işaretli satırları ayrı ayrı sunar. Pano en fazla 50 satır taşır; daha büyük seçimler için “PNG olarak kaydet” önerilir (en fazla 300 satır).",
+        "en": "“Copy as image” in the Copy menu turns the checked rows with all visible columns, or, if no rows are checked, the selected cell range with only those columns, into a single PNG image. The image is always drawn in the light theme; the app theme and table view do not change. Selected rows that are not on screen (on another page) are included too. The right-click menu offers selected cells and checked rows separately. The clipboard holds up to 50 rows; for larger selections “Save as PNG” is offered (up to 300 rows)."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-image-copy.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: Kopyala menüsünde Görsel olarak kopyala seçeneği ve 2 satırın görsel olarak kopyalandığı bildirimi",
+          "en": "Demo Collection table: Copy as image option in the Copy menu and a notification that 2 rows were copied as an image"
+        },
+        "caption": {
+          "tr": "Demo veride iki işaretli model görsel olarak panoya kopyalandı.",
+          "en": "On demo data, two checked models were copied to the clipboard as an image."
+        }
+      }
+    }
+  ]
 }

@@ -2191,6 +2191,10 @@ function syncTableToolbarActions(tab=document.body.dataset.activeTab){
     removeColumnActions('ordersMoreMenu');
     appendVfProfiles('ordersMoreMenu');
   }else if(tab==='koleksiyon'){
+    // Kopyalama seçenekleri (başlıklı/başlıksız, görsel olarak) CP/Orders'taki
+    // gibi Kopyala düğmesinin hemen yanında açılır.
+    const kolCopy=document.getElementById('kolCopySelectedBtn'),copyMenu=sharedTableActionNode('navCopyMenuBtn')||document.getElementById('navCopyMenuBtn');
+    if(kolCopy&&copyMenu)kolCopy.after(copyMenu);
     appendSharedTableActions('kolMoreMenu',['navFitColumnsBtn','navFreezeBtn']);
     placeSharedActionsBefore('kolMoreWrap',['navClearFilters']);
     removeColumnActions('kolMoreMenu');
@@ -3409,6 +3413,130 @@ function copyGridSelection(includeHeaders=true,event=null){
   if(includeHeaders){blActiveCopyButton()?.click();return true;}
   showToast(appLang==='en'?'Select a rectangular cell range first.':'Önce dikdörtgen bir hücre aralığı seçin.');return false;
 }
+/* ---------- Görsel olarak kopyala (CP / Orders / Koleksiyon) ----------
+   Seçili satırlar Buyer Log'da göründüğü gibi PNG olarak panoya (çok satırda
+   dosyaya) gider; çizim ve sınırlar public/table-image-copy.js'tedir.
+   Kaynak önceliği normal Kopyala ile aynıdır: source 'auto' iken işaretli
+   satırlar (tüm görünür sütunlar), yoksa seçili hücre aralığı (yalnız o
+   sütunlar). Sağ tık menüsü iki hedefi ayrı ayrı sunabilir. */
+const TABLE_IMAGE_COPY_TABS=new Set(['cp','orders','koleksiyon']);
+let _tableImageCopyBusy=false,_tableImageCopyLastSource='auto';
+function tableImageCopySupported(tab=currentActiveTab()){return TABLE_IMAGE_COPY_TABS.has(tab)&&Boolean(window.BLTableImageCopy);}
+function tableImageCopyManagedPending(tab,source){
+  const tableId=tab==='orders'?'ordersTable':'cpTable',table=document.getElementById(tableId);
+  if(!table||typeof table._blBuildRow!=='function')return null;
+  const selected=tab==='orders'?state.ordersSelected:state.cpSelected;
+  if(source!=='range'&&selected&&selected.size){
+    return {count:selected.size,resolve:async()=>{
+      if(!(tab==='orders'?await ordersPrepareAllRows():await cpPrepareAllRows()))return null;
+      // Pencereli CP'de tam satırlar yüklenince öncelik/checklist kısa süre yeniden
+      // hesaplanır ve hücreler "Hesaplanıyor…" çizilir; görsel o geçici anı taşımasın.
+      if(tab==='cp')for(let i=0;i<200&&cpComputed.pendingView;i++)await new Promise(resolve=>setTimeout(resolve,100));
+      const rows=managedSelectionSourceRows(tab,row=>selectionHasId(selected,row._id));
+      const live=document.getElementById(tableId);
+      return live&&typeof live._blBuildRow==='function'?{table:live,rows:rows.map((row,index)=>live._blBuildRow(row,index)),keepLeaf:null}:null;
+    }};
+  }
+  if(source==='checked'||window.BLTableReportInline?.isActive?.(tab))return null;
+  const range=window.BLGridClipboard?.state?.(tableId)?.selectionRange;
+  if(!range)return null;
+  return {count:range.endRow-range.startRow+1,resolve:async()=>{
+    const snapshot=await window.BLGridClipboard.selectionSnapshot(tableId);
+    const live=document.getElementById(tableId);
+    if(!snapshot||!live||typeof live._blBuildRow!=='function')return null;
+    const keepLeaf=new Set();for(let c=snapshot.range.startColumn;c<=snapshot.range.endColumn;c++)keepLeaf.add(c);
+    return {table:live,rows:snapshot.rows.map((row,index)=>live._blBuildRow(row,snapshot.range.startRow+index)),keepLeaf};
+  }};
+}
+function tableImageCopyKolPending(source){
+  const table=document.getElementById('kolTable');
+  if(!table||typeof table._blBuildRow!=='function')return null;
+  if(source!=='range'&&kolSelected&&kolSelected.size){
+    // Ekrandaki sıra ve görünüm: kapalı grubun gizli renkleri değil, model özeti.
+    const rows=kolPresentationRows(filteredKol()).filter(row=>selectionHasId(kolSelected,row.id));
+    if(rows.length)return {count:rows.length,resolve:async()=>({table,rows:rows.map((row,index)=>table._blBuildRow(row,index)),keepLeaf:null})};
+  }
+  if(source==='checked')return null;
+  const sheet=window.BLCollectionSpreadsheet?.state,Engine=window.BLCollectionSpreadsheetEngine;
+  if(!sheet||!sheet.active||!Engine)return null;
+  const bounds=Engine.rangeBounds(sheet.anchor||sheet.active,sheet.focus||sheet.active),multi=sheet.multiCells&&sheet.multiCells.size>0;
+  const rowIds=[],seen=new Set(),keepLeaf=new Set();
+  (sheet.cellRows||[]).forEach(line=>(line||[]).forEach(td=>{
+    if(!td||!td.isConnected)return;
+    const coord=sheet.coordByCell?.get?.(td)||{r:Number(td.dataset.sheetR),c:Number(td.dataset.sheetC)};
+    const tr=td.closest('tr'),rowId=String(tr?.dataset.id||''),key=String(td.dataset.key||'');
+    const inside=multi?sheet.multiCells.has(`${rowId}\u0000${key}`):Boolean(bounds&&coord.r>=bounds.r1&&coord.r<=bounds.r2&&coord.c>=bounds.c1&&coord.c<=bounds.c2);
+    if(!inside||!rowId)return;
+    if(!seen.has(rowId)){seen.add(rowId);rowIds.push(rowId);}
+    const leaf=Array.prototype.indexOf.call(tr.children,td)-1;if(leaf>=0)keepLeaf.add(leaf);
+  }));
+  if(!rowIds.length||!keepLeaf.size)return null;
+  const byId=new Map((Array.isArray(table._blKolVisibleRows)?table._blKolVisibleRows:[]).map(row=>[String(row.id),row]));
+  const rows=rowIds.map(id=>byId.get(id)).filter(Boolean);
+  return rows.length?{count:rows.length,resolve:async()=>({table,rows:rows.map((row,index)=>table._blBuildRow(row,index)),keepLeaf})}:null;
+}
+function tableImageCopyErrorText(code){
+  const en=appLang==='en',Copy=window.BLTableImageCopy;
+  if(code==='empty')return en?'No rows to copy were found.':'Kopyalanacak satır bulunamadı.';
+  if(code==='tooManyRows')return en?`A PNG can hold at most ${Copy.FILE_MAX_ROWS} rows; select fewer rows.`:`PNG en fazla ${Copy.FILE_MAX_ROWS} satır taşır; daha az satır seçin.`;
+  if(code==='tooLarge')return en?'The selection is too large for a single image; select fewer rows or columns.':'Seçim tek görsele sığmayacak kadar büyük; daha az satır veya sütun seçin.';
+  return en?'The image could not be created.':'Görsel oluşturulamadı.';
+}
+function offerTableImageFile(count){
+  const en=appLang==='en',max=window.BLTableImageCopy.CLIPBOARD_MAX_ROWS;
+  const message=count>max
+    ?(en?`${count} rows are too many for the clipboard (max ${max}). Save the image as a PNG file instead.`:`${count} satır panoya fazla (en fazla ${max}). Görseli PNG dosyası olarak kaydedin.`)
+    :(en?'The image is too large for the clipboard. Save it as a PNG file instead.':'Görsel panoya sığmayacak kadar büyük. PNG dosyası olarak kaydedin.');
+  showToast(message,{kind:'warning',duration:0,actions:[{id:'png',label:en?'Save as PNG':'PNG olarak kaydet',primary:true}],onAction:(id,context)=>{
+    if(id!=='png')return;context?.close?.();void copyActiveTableAsImage({mode:'file',source:_tableImageCopyLastSource});
+  }});
+}
+async function copyActiveTableAsImage({mode='clipboard',source='auto'}={}){
+  const tab=currentActiveTab(),en=appLang==='en',Copy=window.BLTableImageCopy;
+  if(!tableImageCopySupported(tab)){showToast(en?'Copy as image is available in CP, Orders and Collection.':'Görsel olarak kopyalama CP, Orders ve Koleksiyon\'da kullanılabilir.');return false;}
+  if(_tableImageCopyBusy){showToast(en?'An image is already being prepared.':'Bir görsel zaten hazırlanıyor.');return false;}
+  const pending=tab==='koleksiyon'?tableImageCopyKolPending(source):tableImageCopyManagedPending(tab,source);
+  if(!pending){showToast(en?'Select rows (checkbox) or a cell range first.':'Önce satır (onay kutusu) veya hücre aralığı seçin.');return false;}
+  _tableImageCopyLastSource=source;
+  const plan=Copy.rowPlan(pending.count,mode);
+  if(!plan.ok){if(plan.reason==='needsFile')offerTableImageFile(pending.count);else showToast(tableImageCopyErrorText(plan.reason),{kind:'error'});return false;}
+  _tableImageCopyBusy=true;
+  const closeProgress=showToast(en?`Preparing image (${pending.count} rows)…`:`Görsel hazırlanıyor (${pending.count} satır)…`,{duration:0});
+  const job=(async()=>{
+    const selection=await pending.resolve();
+    if(!selection||!selection.rows||!selection.rows.length)throw Object.assign(new Error('empty'),{code:'empty'});
+    const result=await Copy.render({...selection,mode});
+    if(result.error)throw Object.assign(new Error(result.error),{code:result.error,detail:result.detail});
+    return result;
+  })();
+  try{
+    if(mode==='file'){
+      const result=await job,name=Copy.saveFile(result.blob,Copy.fileName(tab));
+      showToast(en?`${result.rowCount} rows saved as PNG: ${name}`:`${result.rowCount} satır PNG olarak kaydedildi: ${name}`,{kind:'success'});
+      return true;
+    }
+    // Pano yazımı hemen (blob sözüyle) başlar: çizim sürerken kullanıcı etkileşimi düşmez.
+    const blobPromise=job.then(result=>result.blob);blobPromise.catch(()=>{});
+    const [write,render]=await Promise.allSettled([Copy.writeClipboard(blobPromise),job]);
+    if(render.status==='rejected')throw render.reason;
+    if(write.status==='rejected'){
+      const blob=render.value.blob;
+      showToast(en?'The image could not be written to the clipboard.':'Görsel panoya yazılamadı.',{kind:'error',duration:0,actions:[{id:'png',label:en?'Save as PNG':'PNG olarak kaydet',primary:true}],onAction:(id,context)=>{
+        if(id!=='png')return;Copy.saveFile(blob,Copy.fileName(tab));context?.close?.();
+      }});
+      return false;
+    }
+    showToast(en?`${render.value.rowCount} rows copied as image. Paste with Ctrl+V into Excel, Outlook or Teams.`:`${render.value.rowCount} satır görsel olarak kopyalandı. Excel, Outlook veya Teams'e Ctrl+V ile yapıştırın.`,{kind:'success'});
+    return true;
+  }catch(error){
+    const code=error&&error.code||'failed';
+    if(code==='needsFile'){offerTableImageFile(pending.count);return false;}
+    if(code==='failed')console.warn('[table-image-copy]',error&&error.detail||error);
+    showToast(tableImageCopyErrorText(code),{kind:'error'});
+    return false;
+  }finally{_tableImageCopyBusy=false;closeProgress?.();}
+}
+window.BLTableImageCopyAction={copy:copyActiveTableAsImage,supported:tableImageCopySupported};
 let _gridClipboardOutsideHandler=null;
 function closeGridClipboardMenu(){
   if(_gridClipboardOutsideHandler){document.removeEventListener('pointerdown',_gridClipboardOutsideHandler,true);_gridClipboardOutsideHandler=null;}
@@ -3431,6 +3559,7 @@ document.getElementById('navCopyMenuBtn')?.addEventListener('click',event=>{
     {label:appLang==='en'?'Copy with headers':'Başlıklarla kopyala',run:()=>copyGridSelection(true)},
     {label:appLang==='en'?'Copy without headers':'Başlıksız kopyala',run:()=>copyGridSelection(false)},
   ];
+  if(tableImageCopySupported())items.push({label:appLang==='en'?'Copy as image':'Görsel olarak kopyala',run:()=>void copyActiveTableAsImage()});
   items.push({label:appLang==='en'?'Clipboard diagnostics':'Pano hata teşhisi',run:openClipboardDiagnostics});
   items.forEach(item=>{
     const node=document.createElement('button');node.type='button';node.setAttribute('role','menuitem');
@@ -9216,6 +9345,8 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
     }
     return tr;
   };
+  // "Görsel olarak kopyala" ekranda olmayan seçili satırları da aynı çizimle üretir.
+  table._blBuildRow=buildRow;
   const canVirtualize = opts.virtualize===true && !opts.hasExpandedRows && rows.length>VIRTUALIZE_ROW_THRESHOLD;
   if(canVirtualize){
     setupVirtualizedBody(tbody, table, rows, buildRow, cols.length+(withChk?1:0));
@@ -33486,7 +33617,9 @@ function renderKol(){
   const collapsedSummaryCache=new Map();
   const logicalIds=new Set(logicalRows.map(row=>String(row.id)));
   const statusRender=kolStatusRenderSnapshot();
-  visibleRows.forEach((r,ri)=>{
+  // Satır üreticisi tabloya bağlanır: "Görsel olarak kopyala" başka sayfadaki
+  // seçili modelleri de aynı sütun/görünüm durumuyla üretir.
+  const buildKolRow=(r,ri)=>{
     const tr=document.createElement('tr'),groupMembers=groupMembersById.get(String(r.modelGroupId||''))||[],isGrouped=groupMembers.length>1,isParent=isGrouped&&(r.modelGroupRole==='parent'||groupMembers[0]===r);
     const groupParent=isGrouped?(groupMembers.find(item=>item.modelGroupRole==='parent')||groupMembers[0]):null;
     const parentInLogical=Boolean(groupParent&&logicalIds.has(String(groupParent.id)));
@@ -33707,8 +33840,10 @@ function renderKol(){
       const title=td.dataset.kolSummaryTitle||'';
       if(title){td.title=title;td.querySelectorAll('[title]').forEach(el=>{el.title=title;});}
     });
-    frag.appendChild(tr);
-  });
+    return tr;
+  };
+  visibleRows.forEach((r,ri)=>frag.appendChild(buildKolRow(r,ri)));
+  table._blBuildRow=buildKolRow;table._blKolVisibleRows=visibleRows;
   tbody.innerHTML='';tbody.appendChild(frag);
   tbody.querySelectorAll('[data-kol-group-toggle]').forEach(btn=>btn.addEventListener('click',event=>{
     event.preventDefault();event.stopPropagation();kolToggleModelGroup(btn.dataset.kolGroupToggle);
