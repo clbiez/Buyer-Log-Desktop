@@ -1,4 +1,4 @@
-# BL-014 · FX kur değerlerinin API'de doğrulanmaması (düşük öncelik)
+# BL-020 · FX kur değerlerinin API'de doğrulanmaması (düşük öncelik)
 
 - **Durum:** Açık bulgu, düzeltilmedi (ürün sahibi kararı: kapsamlı FX değişikliği yok).
 - **Risk:** P3–P2 sınırı. Üretimde tetiklendiği bir yol bulunamadı.
