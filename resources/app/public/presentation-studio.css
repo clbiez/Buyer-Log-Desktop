@@ -18,6 +18,8 @@
 .psSeg{display:inline-flex}
 .psSeg>button{display:grid;place-items:center;min-width:32px;height:30px;padding:0 8px;cursor:pointer}
 .psCustom{display:inline-flex;align-items:center;gap:4px}
+.psChipMode{display:inline-flex;align-items:center;gap:8px}
+.psChipMode[hidden]{display:none}
 .psCustom input{width:72px}
 .psBody{display:grid;grid-template-columns:172px minmax(0,1fr);min-height:0}
 .psRail{display:flex;flex-direction:column;gap:10px;padding:10px;overflow:auto;min-height:0}
@@ -74,5 +76,7 @@
 .psStatus{display:flex;align-items:center;gap:14px;padding:5px 14px;flex-wrap:wrap}
 .psOptions{display:flex;flex-direction:column;gap:8px;margin:12px 0}
 .psDialogCard{width:min(540px,calc(100vw - 32px))}
+/* Belge çip öğeleri (yalnız yerleşim): presentation-studio-render.js DOC_CSS ile aynı metin. */
+.psC{position:absolute;white-space:pre;outline-offset:-0.6pt}.psS{position:absolute;top:0;height:100%;text-align:center}.psP{position:absolute;text-align:center;font-weight:700}.psT{position:absolute;top:0;white-space:pre}
 .psPrintFrame{position:fixed;left:-10000px;top:0;width:1px;height:1px;visibility:hidden}
 @media (max-width:900px){.psBody{grid-template-columns:minmax(0,1fr)}.psRail{display:none}.psCanvas{padding:8px 12px 64px}}

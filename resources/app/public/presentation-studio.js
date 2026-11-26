@@ -74,25 +74,67 @@
     built.items.forEach((item, i) => {
       const rec = built.records[item.image];
       let identity = null; try { identity = root.BLAIScreenData.rowImage(tab, rows[i]); } catch (_) { identity = null; }
-      models.set(String(rec.id), Object.freeze({ id: String(rec.id), title: item.title, values: Object.freeze({ ...rec.values }), keys: Object.freeze({ ...rec.keys }), identity }));
+      models.set(String(rec.id), Object.freeze({ id: String(rec.id), title: item.title, values: Object.freeze({ ...rec.values }), keys: Object.freeze({ ...rec.keys }), identity, row: rows[i] }));
     });
     return { models, meta, omitted: built.source.omittedColumns || [] };
   }
   const defaultFields = (ids, tab) => sourceOf(tab).fields.filter(id => ids.includes(id)).slice(0, 5);
   const defaultLevels = ids => ['productGroup'].filter(id => ids.includes(id));
 
+  /* ---------------- Çip görünümü (Kumaş, Artwork Detail) ----------------
+     Tablodaki kart hücresinin yapısal modeli BLCellChips'ten okunur; yalnız okuma,
+     kaynak satır değişmez. Değeri kartı/önbelleği olmayan hücre metin kalır. */
+  const columnId = key => 'col.' + String(key).replace(/[^\w.%-]/g, '_').slice(0, 56);
+  function chipKinds(tab) {
+    const cols = root.BLCellChips && root.BLCellChips.columns && root.BLCellChips.columns[tab], out = new Map();
+    for (const [key, kind] of Object.entries(cols || {})) out.set(columnId(key), { kind, key });
+    return out;
+  }
+  const chipField = f => Boolean(S && S.chipKinds && S.chipKinds.has(f));
+  function chipModel(id, f) {
+    if (!S.doc.style.chips || !chipField(f)) return null;
+    const m = S.models.get(id), spec = S.chipKinds.get(f);
+    if (!m || !m.row) return null;
+    const lang = isEn() ? 'en' : 'tr', raw = String(m.row[spec.key] == null ? '' : m.row[spec.key]);
+    if (!raw.trim()) return null;
+    // Kumaş modeli yalnız değere, artwork modeli PLM kaydına bağlıdır.
+    const key = `${spec.kind}${lang}${raw}${spec.kind === 'artwork' ? id : ''}`;
+    if (S.chipCache.has(key)) return S.chipCache.get(key);
+    let model = null;
+    try { model = root.BLCellChips.model(spec.kind, m.row, spec.key); } catch (_) { model = null; }
+    model = Array.isArray(model) && model.length ? model : null;
+    S.chipCache.set(key, model);
+    return model;
+  }
+  const chipsInUse = () => Boolean(S && S.chipKinds && S.chipKinds.size && [...S.doc.style.fields, ...S.doc.grouping.levels].some(chipField));
+
   /* ---------------- Oturum ve belge ---------------- */
   function groupOf(id) {
     const m = S.models.get(id), lv = S.doc.grouping.levels;
     if (!m) return { key: '', vals: [] };
+    // Grup anahtarı yalnız seviyelere ve dile bağlı: önbellek relayout başında doğrulanır (groupCacheCheck).
+    if (!S.groupCache || S.groupCacheLevels !== lv) groupCacheCheck();
+    const hit = S.groupCache.get(id);
+    if (hit) return hit;
+    const g = groupOfRaw(m, lv);
+    S.groupCache.set(id, g);
+    return g;
+  }
+  function groupCacheCheck() {
+    const ck = S.doc.grouping.levels.join('\u0001') + (isEn() ? 'e' : 't');
+    if (S.groupCacheKey !== ck || !S.groupCache) { S.groupCacheKey = ck; S.groupCache = new Map(); }
+    S.groupCacheLevels = S.doc.grouping.levels;
+  }
+  function groupOfRaw(m, lv) {
     const keys = lv.map(f => String(m.keys[f] == null ? '' : m.keys[f]));
     return { key: keys.join(E().SEP), vals: lv.map(f => formatValue(S.meta.type(f), m.values[f])) };
   }
   /* Metin planı yalnız alanlar, yazı, kart genişliği veya başlık adları değişince yeniden ölçülür. */
   function textPlan() {
     const st = S.doc.style, cellW = E().geometry(S.doc, null).cellW;
-    const vkey = [st.fields.join(','), st.labels, S.doc.order.length, isEn()].join('|');
+    const vkey = [st.fields.join(','), st.labels, st.chips, S.doc.grouping.levels.join(','), S.doc.order.length, isEn()].join('|');
     const key = [vkey, st.fs, st.font, cellW.toFixed(2), JSON.stringify(S.doc.labels)].join('|');
+    if (S.plan) S.plan.approx = Boolean(S.slider);
     if (S.plan && S.planKey === key) return S.plan;
     // Kaydırıcı sürüklenirken önceki plan kullanılır (satır sayısı anlık olarak bir satır geride kalabilir); bırakınca kesin plan hesaplanır.
     if (S.plan && S.slider && S.planValuesKey === vkey) return S.plan;
@@ -103,6 +145,7 @@
   }
   function relayout() {
     const t = performance.now();
+    groupCacheCheck();
     const plan = textPlan(); S.perf.plan = performance.now() - t;
     S.res = E().layout(S.doc, groupOf, plan);
     S.perf.layout = performance.now() - t;
@@ -111,13 +154,28 @@
   }
   function renderSource(imageFor) {
     return {
-      lines: id => { const m = S.models.get(id); return S.doc.style.fields.map(f => ({ label: S.meta.label(f), value: formatValue(S.meta.type(f), m && m.values[f]) })); },
+      lines: id => { const m = S.models.get(id); return S.doc.style.fields.map(f => { const chips = chipModel(id, f); return chips ? { label: S.meta.label(f), value: formatValue(S.meta.type(f), m && m.values[f]), chips } : { label: S.meta.label(f), value: formatValue(S.meta.type(f), m && m.values[f]) }; }); },
       image: imageFor,
       header: it => {
         const custom = S.doc.labels[it.key];
-        return { main: custom || it.vals[0] || '—', rest: custom ? '' : it.vals.slice(1).filter(Boolean).join(' · '), count: `${it.count} ${it.count === 1 ? L('model', 'model') : L('model', 'models')}${it.cont ? L(' · devam', ' · cont.') : ''}` };
+        const out = { main: custom || it.vals[0] || '—', rest: custom ? '' : it.vals.slice(1).filter(Boolean).join(' · '), count: `${it.count} ${it.count === 1 ? L('model', 'model') : L('model', 'models')}${it.cont ? L(' · devam', ' · cont.') : ''}` };
+        // Grup başlığında Kumaş/Artwork seviyesi çip olarak; diğer seviyeler metin.
+        const lv = S.doc.grouping.levels, rep = !custom && S.doc.style.chips && lv.some(chipField) ? groupRow(it.key) : null;
+        if (rep) {
+          const parts = lv.map((f, j) => { const chips = chipField(f) ? chipModel(rep, f) : null; return chips ? { chips } : { text: it.vals[j] || '' }; }).filter(p => p.chips || p.text);
+          if (parts.some(p => p.chips)) out.parts = parts;
+        }
+        return out;
       },
     };
+  }
+  /* Grubun temsilci kartı (başlık çipleri için): anahtar başına ilk kart, yerleşim başına bir kez. */
+  function groupRow(key) {
+    if (!S.groupRows || S.groupRowsFor !== S.res) {
+      S.groupRows = new Map(); S.groupRowsFor = S.res;
+      for (const id of S.doc.order) { const k = E().effectiveKey(S.doc, id, groupOf); if (!S.groupRows.has(k)) S.groupRows.set(k, id); }
+    }
+    return S.groupRows.get(key) || null;
   }
   function screenImage(id) {
     const m = S.models.get(id);
@@ -200,8 +258,8 @@
 
   function start(init) {
     close();
-    S = { ...init, sel: new Set(), hist: [], fut: [], zoom: 1, activePage: 'p1', dims: new Map(), perf: { layout: 0, render: 0 }, saveState: '', pageHtml: new Map(), act: null, measure: R().canvasMeasure(doc_) };
-    S.dataHash = hashModels();
+    S = { ...init, sel: new Set(), hist: [], fut: [], zoom: 1, activePage: 'p1', dims: new Map(), chipCache: new Map(), perf: { layout: 0, render: 0 }, saveState: '', pageHtml: new Map(), act: null, measure: R().canvasMeasure(doc_) };
+    S.dataHash = hashModels(); S.chipKinds = chipKinds(S.tab);
     buildShell();
     relayout(); fitZoom(); render();
     scheduleSave();
@@ -228,6 +286,8 @@
   function buildShell() {
     const host = doc_.createElement('div');
     host.className = 'psStudio'; host.dataset.uiMigrated = 'presentation-studio';
+    // Stüdyo kendisi diyalogdur: içindeki her çizim, tüm belgeyi tarayan bulanıklık eşitlemesini tetiklemesin.
+    host.setAttribute('data-blur-skip', '');
     host.innerHTML = `<div class="psShell" role="dialog" aria-modal="true" aria-labelledby="psTitleLabel">
       <header class="psHead"><span class="psBrand" id="psTitleLabel"></span><input class="psTitle" data-ps="title" maxlength="120">
         <button type="button" class="tbtn psIcon" data-ps="undo">${sprite('arrow-back-up')}</button><button type="button" class="tbtn psIcon" data-ps="redo">${sprite('arrow-forward-up')}</button>
@@ -242,6 +302,7 @@
         <span class="psCustom" data-ps="custom" hidden><input type="number" data-ps="cw" min="50" max="1200" step="1">×<input type="number" data-ps="ch" min="50" max="1200" step="1"><span>mm</span></span>
         <span class="psDim" data-ps="dim"></span><span class="psSep"></span>
         <button type="button" class="tbtn" data-pop="fields"></button><button type="button" class="tbtn" data-pop="design"></button><button type="button" class="tbtn" data-pop="arrange"></button>
+        <span class="psChipMode" data-ps="chipModeWrap" hidden><span class="psSep"></span><span class="psLbl" data-l="chipMode"></span><span class="psSeg" data-ps="chipMode"><button type="button" data-v="chips"></button><button type="button" data-v="text"></button></span></span>
       </div>
       <div class="psBody"><aside class="psRail"><div class="psRailHead"><span data-l="pages"></span><button type="button" class="tbtn psIcon" data-ps="addPage">${sprite('plus')}</button></div><div class="psThumbs" data-ps="thumbs" data-no-i18n></div><div class="psTray" data-ps="tray"></div></aside>
         <div class="psCanvas" data-ps="canvas"><div class="psPages" data-ps="pages" data-no-i18n></div></div></div>
@@ -274,7 +335,9 @@
     $('[data-pop="fields"]').innerHTML = `${sprite('columns-3')}<span>${esc(L('Kart bilgileri', 'Card details'))}</span>`;
     $('[data-pop="design"]').innerHTML = `${sprite('palette')}<span>${esc(L('Tasarım', 'Design'))}</span>`;
     $('[data-pop="arrange"]').innerHTML = `${sprite('layout-align-top')}<span>${esc(L('Yeniden düzenle', 'Rearrange'))}</span>`;
-    for (const [key, tr, en] of [['group', 'Grupla', 'Group by'], ['brk', 'Yeni sayfa', 'New page'], ['page', 'Sayfa', 'Page'], ['pages', 'Sayfalar', 'Pages']]) S.host.querySelectorAll(`[data-l="${key}"]`).forEach(el => { el.textContent = L(tr, en); });
+    $('[data-ps="chipMode"] [data-v="chips"]').textContent = L('Çip', 'Chips'); $('[data-ps="chipMode"] [data-v="text"]').textContent = L('Metin', 'Text');
+    $('[data-ps="chipModeWrap"]').title = L('Kumaş ve Artwork Detail kartlarda ve grup başlıklarında tablodaki gibi çip ya da düz metin olarak gösterilir', 'Fabric and Artwork Detail appear on cards and group titles as chips, like in the table, or as plain text');
+    for (const [key, tr, en] of [['group', 'Grupla', 'Group by'], ['brk', 'Yeni sayfa', 'New page'], ['page', 'Sayfa', 'Page'], ['pages', 'Sayfalar', 'Pages'], ['chipMode', 'Kumaş/Artwork', 'Fabric/Artwork']]) S.host.querySelectorAll(`[data-l="${key}"]`).forEach(el => { el.textContent = L(tr, en); });
     $('[data-ps="brkWrap"]').title = L('Her ana grup yeni bir sayfadan başlar', 'Each top-level group starts on a new page');
     $('[data-o="landscape"]').title = L('Yatay', 'Landscape'); $('[data-o="landscape"]').setAttribute('aria-label', L('Yatay', 'Landscape'));
     $('[data-o="portrait"]').title = L('Dikey', 'Portrait'); $('[data-o="portrait"]').setAttribute('aria-label', L('Dikey', 'Portrait'));
@@ -324,22 +387,27 @@
     const built = new Map(S.list.pages.map(p => [p.id, p]));
     S.range = `${first}:${last}`;
     const host = S.$('[data-ps="pages"]'), seen = new Set();
-    const wrappers = new Map([...host.children].map(el => [el.dataset.psPage, el]));
+    const wrappers = new Map([...host.children].map(el => [el.dataset.psPage, el])), docPages = new Map(S.doc.pages.map(p => [p.id, p]));
     S.res.pages.forEach((rp, i) => {
       const page = built.get(rp.id) || { id: rp.id, elements: null };
       seen.add(page.id);
       // Hızlı modda (slider sürüklenirken) görünmeyen mevcut sayfalara dokunulmaz; tampon geçişi tamamlar.
       const existing = wrappers.get(page.id);
       if (quick && !page.elements && existing && host.children[i] === existing) return;
-      const pg = S.doc.pages.find(p => p.id === page.id);
-      const tools = `<span class="psPageNo">${esc(L(`Sayfa ${i + 1}`, `Page ${i + 1}`))}</span><button type="button" class="tbtn psFlow" data-pa="flow" aria-pressed="${pg.flow}" title="${esc(pg.flow ? L('Otomatik akış açık: boş alanlar kartlarla dolar', 'Automatic flow on: free space fills with cards') : L('Serbest sayfa: yalnız sabit kartlar', 'Free page: pinned cards only'))}">${svg('flow')}<span>${esc(pg.flow ? L('Otomatik akış', 'Automatic flow') : L('Serbest sayfa', 'Free page'))}</span></button><span class="psGrow"></span>`
+      const pg = docPages.get(page.id), toolKey = `${i}|${total}|${pg.flow}|${isEn()}`;
+      const tools = S.toolsHtml && S.toolsHtml.get(page.id + '|' + toolKey) ||  `<span class="psPageNo">${esc(L(`Sayfa ${i + 1}`, `Page ${i + 1}`))}</span><button type="button" class="tbtn psFlow" data-pa="flow" aria-pressed="${pg.flow}" title="${esc(pg.flow ? L('Otomatik akış açık: boş alanlar kartlarla dolar', 'Automatic flow on: free space fills with cards') : L('Serbest sayfa: yalnız sabit kartlar', 'Free page: pinned cards only'))}">${svg('flow')}<span>${esc(pg.flow ? L('Otomatik akış', 'Automatic flow') : L('Serbest sayfa', 'Free page'))}</span></button><span class="psGrow"></span>`
         + `<button type="button" class="tbtn psIcon" data-pa="up" aria-label="${esc(L('Yukarı taşı', 'Move up'))}" title="${esc(L('Yukarı taşı', 'Move up'))}"${i === 0 ? ' disabled' : ''}>${sprite('chevron-up')}</button><button type="button" class="tbtn psIcon" data-pa="down" aria-label="${esc(L('Aşağı taşı', 'Move down'))}" title="${esc(L('Aşağı taşı', 'Move down'))}"${i === total - 1 ? ' disabled' : ''}>${sprite('chevron-down')}</button>`
         + `<button type="button" class="tbtn psIcon" data-pa="add" aria-label="${esc(L('Sonrasına serbest sayfa ekle', 'Add a free page after'))}" title="${esc(L('Sonrasına serbest sayfa ekle', 'Add a free page after'))}">${sprite('plus')}</button><button type="button" class="tbtn psIcon" data-pa="del" aria-label="${esc(L('Sayfayı sil', 'Delete page'))}" title="${esc(L('Sayfayı sil', 'Delete page'))}"${total < 2 ? ' disabled' : ''}>${sprite('trash')}</button>`;
-      const html = `<div class="psPageTools">${tools}</div><div class="psPage" style="width:${g.w}pt;height:${g.h}pt;transform:scale(${S.zoom});background:${R().DOC.paper};font-family:${esc(R().fontStack(S.doc.style.font))}">${page.elements ? R().elementsHtml(page, { attrs: editorAttrs }) : ''}<div class="psGuides"></div></div>`;
+      if (S.toolsHtml && S.toolsHtml.size > 2000) S.toolsHtml.clear();
+      (S.toolsHtml || (S.toolsHtml = new Map())).set(page.id + '|' + toolKey, tools);
+      const html = `<div class="psPageTools">${tools}</div><div class="psPage" style="width:${g.w}pt;height:${g.h}pt;transform:scale(${S.zoom});background:${R().DOC.paper};font-family:${esc(R().fontStack(S.doc.style.font))}">${page.elements ? R().elementsHtml(page, { attrs: editorAttrs, lite: quick }) : ''}<div class="psGuides"></div></div>`;
       let w = wrappers.get(page.id);
       if (!w) { w = doc_.createElement('div'); w.className = 'psPageWrap'; w.dataset.psPage = page.id; }
-      w.style.width = `${g.w * S.zoom}pt`; w.style.height = `${g.h * S.zoom}pt`;
-      w.toggleAttribute('data-active', page.id === S.activePage);
+      // Değişmeyen boyut/durum yeniden yazılmaz (her karede yüzlerce sayfada stil yeniden hesabını önler).
+      const size = `${g.w * S.zoom}pt|${g.h * S.zoom}pt`;
+      if (w.dataset.psSize !== size) { w.dataset.psSize = size; w.style.width = `${g.w * S.zoom}pt`; w.style.height = `${g.h * S.zoom}pt`; }
+      const active = page.id === S.activePage;
+      if (w.hasAttribute('data-active') !== active) w.toggleAttribute('data-active', active);
       if (S.pageHtml.get(page.id) !== html) { w.innerHTML = html; S.pageHtml.set(page.id, html); }
       if (host.children[i] !== w) host.insertBefore(w, host.children[i] || null);
     });
@@ -380,6 +448,8 @@
     $('[data-ps="orient"]').querySelectorAll('button').forEach(b => { b.setAttribute('aria-pressed', String(!square && b.dataset.o === (size.mmW >= size.mmH ? 'landscape' : 'portrait'))); b.disabled = square; });
     $('[data-ps="dim"]').textContent = `${Math.round(size.mmW)} × ${Math.round(size.mmH)} mm`;
     $('[data-ps="zoomVal"]').textContent = `${Math.round(S.zoom * 100)}%`;
+    $('[data-ps="chipModeWrap"]').hidden = !chipsInUse();
+    $('[data-ps="chipMode"]').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.v === 'chips') === d.style.chips)));
   }
   function renderStatus() {
     if (!S || !S.res) return;
@@ -823,7 +893,7 @@
       const list = await exportList(progress), titles = Object.fromEntries([...S.models.values()].map(m => [m.id, m.title]));
       if (kind === 'pptx') {
         const JSZip = root.JSZip || await root.BLPerf.ensureLibrary('jszip');
-        const zip = root.BLPresentationPptx.build(JSZip, list, { title: S.doc.title, lang: isEn() ? 'en' : 'tr', palette: R().DOC, titles });
+        const zip = root.BLPresentationPptx.build(JSZip, list, { title: S.doc.title, lang: isEn() ? 'en' : 'tr', palette: R().DOC, titles, chip: R().CHIP });
         download(await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', compression: 'DEFLATE' }), `${fileStem()}.pptx`);
         toast(L('PowerPoint dosyası indirildi.', 'PowerPoint file downloaded.'));
       } else {
@@ -908,6 +978,7 @@
         writeJson(KEY.templates, list.slice(0, E().LIMITS.templates)); fillPop('templates'); toast(L(`“${name}” şablonu kaydedildi.`, `Template “${name}” saved.`)); return;
       }
       const o = t.closest('[data-ps="orient"] button'); if (o && !o.disabled) return changePage({ ...S.doc.page, orient: o.dataset.o });
+      const cm = t.closest('[data-ps="chipMode"] button'); if (cm) { const on = cm.dataset.v === 'chips'; if (on !== S.doc.style.chips) commit(() => { S.doc.style.chips = on; }); return; }
       const cs = t.closest('[data-ps="cardStyle"] button'); if (cs) { commit(() => { S.doc.style.card = cs.dataset.v; }); fillPop('design'); return; }
       const pa = t.closest('[data-pa]'); if (pa) return pageAction(pa.closest('.psPageWrap').dataset.psPage, pa.dataset.pa);
       const th = t.closest('[data-th]'); if (th) { S.activePage = th.dataset.th; host.querySelector(`.psPageWrap[data-ps-page="${CSS.escape(S.activePage)}"]`)?.scrollIntoView({ block: 'start' }); render(); return; }
@@ -933,7 +1004,7 @@
     });
     host.addEventListener('change', e => {
       const t = e.target, ps = t.dataset.ps;
-      if (t.dataset.fc) { const f = t.dataset.fc; commit(() => { const on = S.doc.style.fields; S.doc.style.fields = t.checked ? [...on, f].slice(0, E().LIMITS.fields) : on.filter(x => x !== f); }); fillPop('fields'); return; }
+      if (t.dataset.fc) { const f = t.dataset.fc, fromSearch = doc_.activeElement?.dataset?.ps === 'search'; commit(() => { const on = S.doc.style.fields; S.doc.style.fields = t.checked ? [...on, f].slice(0, E().LIMITS.fields) : on.filter(x => x !== f); }); fillPop('fields'); if (!fromSearch) S.$(`[data-fc="${CSS.escape(f)}"]`)?.focus({ preventScroll: true }); return; }
       if (ps === 'labels') return commit(() => { S.doc.style.labels = t.checked; });
       if (ps === 'font') return commit(() => { S.doc.style.font = t.value; });
       if (ps === 'keepGroups') return commit(() => { S.doc.style.keepGroups = t.checked; });

@@ -39,7 +39,7 @@
   }
 
   function defaultStyle(fields) {
-    return { font: 'Arial', fs: 8, img: 1.05, cardW: 112, gap: 10, margin: 26, labels: false, card: 'frame', keepGroups: false, fields: (fields || []).slice(0, LIMITS.fields) };
+    return { font: 'Arial', fs: 8, img: 1.05, cardW: 112, gap: 10, margin: 26, labels: false, card: 'frame', keepGroups: false, chips: true, fields: (fields || []).slice(0, LIMITS.fields) };
   }
   const SOURCES = Object.freeze(['koleksiyon', 'cp', 'orders']);
   function createDoc({ ids = [], fields = [], levels = [], title = '', source = 'koleksiyon' } = {}) {
@@ -52,6 +52,7 @@
     out.font = FONTS.includes(s.font) ? s.font : 'Arial';
     out.card = CARD_STYLES.includes(s.card) ? s.card : 'frame';
     out.labels = s.labels === true; out.keepGroups = s.keepGroups === true;
+    out.chips = s.chips !== false; // Kumaş/Artwork çip görünümü (varsayılan açık; kullanıcı metne çevirebilir)
     const allowed = allowedFields ? new Set(allowedFields) : null;
     out.fields = [...new Set(Array.isArray(s.fields) ? s.fields.map(String) : [])].filter(f => !allowed || allowed.has(f)).slice(0, LIMITS.fields);
     return out;
@@ -128,11 +129,14 @@
     return { w, h, m, cx, cy, cw, ch, bottom: cy + ch, gap, cols, cellW, cellH, th, hH, hGap, cap: cols * rows, groupGap, fieldLines, hLine, hdrH };
   }
 
+  // localeCompare her çağrıda karşılaştırıcı kurar; aynı seçeneklerle tek Collator (aynı sıralama).
+  let collator = null;
+  const cmp = (x, y) => (collator || (collator = typeof Intl !== 'undefined' && Intl.Collator ? new Intl.Collator('tr', { numeric: true, sensitivity: 'base' }) : { compare: (p, q) => p.localeCompare(q, 'tr', { numeric: true, sensitivity: 'base' }) })).compare(x, y);
   function compareVals(a, b, n) {
     for (let i = 0; i < n; i++) {
       const x = String(a[i] == null ? '' : a[i]), y = String(b[i] == null ? '' : b[i]);
       if (!x !== !y) return x ? -1 : 1; // boş değerli gruplar sona
-      const d = x.localeCompare(y, 'tr', { numeric: true, sensitivity: 'base' });
+      const d = cmp(x, y);
       if (d) return d;
     }
     return 0;

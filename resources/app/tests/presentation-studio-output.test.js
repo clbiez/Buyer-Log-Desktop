@@ -165,3 +165,67 @@ test('dar başlıkta model sayısı gizlenir, metin tam genişlikte kırılır (
   const zip = P.build(JSZip, list, { title: 't', palette: R.DOC });
   assert.ok((await zip.generateAsync({ type: 'nodebuffer' })).length > 0);
 });
+
+const FABRIC = [{ label: '', items: [{ kind: 'code', t: '214233' }, { kind: 'chip', t: 'Three Thread Brushed', sub: '260 gsm' }] }, { label: '', items: [{ kind: 'chip', t: '65% Cotton 35% Poliester' }] }];
+const ART = [{ label: 'A', items: [{ kind: 'chip', t: 'Front', sub: '1' }, { kind: 'chip', t: 'Back', sub: '1' }, { kind: 'tag', t: 'Pigment', tone: '1' }], total: '2' }, { label: 'B', items: [{ kind: 'chip', t: 'Front', sub: '1' }, { kind: 'tag', t: 'Pigment', tone: '1' }], total: '1' }];
+
+test('çip yerleşimi: tablodaki gibi kod/çip/etiket/parça harfi; satır kırılması, sağda toplam, sığmayanda "…"', () => {
+  const m = R.approxMeasure;
+  const rows = R.layoutAtoms(R.chipAtoms(ART, 8), 200, m, 'Arial');
+  assert.equal(rows.length, 2, 'A ve B ayrı satır');
+  assert.equal(rows[0][0].type, 'part'); assert.equal(rows[0][0].t, 'A');
+  const tot = rows[0].find(a => a.type === 'total');
+  assert.ok(tot && Math.abs(tot.x + tot.w - 200) < 0.01, 'toplam sağa yaslı');
+  const tag = rows[0].find(a => a.type === 'chip' && a.segs[0].t === 'Pigment');
+  assert.equal(tag.segs[0].ink, R.CHIP.tone[1].ink); assert.notEqual(tag.segs[0].fill, '#FFFFFF');
+  const chip = rows[0].find(a => a.type === 'chip' && a.segs.length === 2);
+  assert.equal(chip.segs[1].fill, R.CHIP.sub, 'adet bölümü seçili ton');
+  for (const r of rows) for (const a of r) assert.ok(a.x >= -0.01 && a.x + a.w <= 200 + 0.01);
+  const fab = R.layoutAtoms(R.chipAtoms(FABRIC, 8), 120, m, 'Arial');
+  assert.ok(fab.length >= 2);
+  assert.equal(fab[0][0].segs[0].t, '214233'); assert.equal(fab[0][0].segs[0].fill, R.CHIP.sub);
+  const narrow = R.layoutAtoms(R.chipAtoms(FABRIC, 8), 50, m, 'Arial', 2);
+  assert.equal(narrow.length, 2);
+  for (const r of narrow) for (const a of r) assert.ok(a.x + a.w <= 50 + 0.01);
+  assert.ok(narrow.flat().some(a => (a.segs ? a.segs.some(s => s.t.endsWith('…')) : a.t === '…')), 'sığmayan kısaltılır');
+});
+
+test('çip görünümü kartta ve grup başlığında; plan satır sayar; PDF HTML ve PPTX aynı çipleri taşır', async () => {
+  const ids = ['K0', 'K1', 'K2'];
+  const doc = E.createDoc({ ids, fields: ['modelName', 'col.fabric', 'col.artworkDetail'], levels: ['col.fabric'] });
+  assert.equal(doc.style.chips, true, 'varsayılan çip');
+  assert.equal(E.normalizeStyle({ ...doc.style, chips: false }).chips, false);
+  const groupOf = id => ({ key: 'F', vals: ['Three Thread Brushed · 260 gsm'] });
+  const src = {
+    lines: id => [{ label: 'Model', value: 'Model ' + id }, { label: 'Kumaş', value: 'Three Thread Brushed · 260 gsm', chips: FABRIC }, { label: 'Artwork', value: 'Front: 1', chips: ART }],
+    image: () => null,
+    header: it => ({ main: it.vals[0], rest: '', count: `${it.count} model`, parts: [{ chips: FABRIC }] }),
+  };
+  const plan = R.textPlan(doc, E.geometry(doc, null).cellW, ids, src);
+  assert.ok(plan.fieldLines[1] >= 2 && plan.fieldLines[2] >= 2, JSON.stringify(plan.fieldLines));
+  const res = E.layout(doc, groupOf, plan), list = R.build(doc, res, src);
+  const card = list.pages[0].elements.find(e => e.type === 'card');
+  const chipLines = card.lines.filter(l => l.atoms);
+  assert.ok(chipLines.length >= 4, 'kumaş + artwork çip satırları');
+  for (const l of chipLines) assert.ok(l.box && l.box.h > 0 && l.box.h < l.lh);
+  const hdr = list.pages[0].elements.find(e => e.type === 'hdr');
+  assert.ok(hdr.lines[0].atoms && hdr.lines.flatMap(l => l.atoms).some(a => a.type === 'chip' && a.segs[0].t === '214233'), 'başlıkta kumaş çipi');
+  const html = R.documentHtml(list, 't');
+  for (const t of ['214233', 'Three Thread Brushed', '260 gsm', 'Pigment', '>A<']) assert.ok(html.includes(t), t);
+  assert.ok(html.includes(`outline:0.6pt solid ${R.CHIP.line}`) && html.includes(R.DOC_CSS), 'çip çerçevesi ve sınıf kuralları belgede');
+  // Editör aynı sınıf kurallarını modül CSS'inden alır; metin birebir aynı olmalı.
+  assert.ok(require('node:fs').readFileSync(require('node:path').join(__dirname, '../public/presentation-studio.css'), 'utf8').includes(R.DOC_CSS), 'editör CSS = belge CSS');
+  const zip = await JSZip.loadAsync(await P.build(JSZip, list, { title: 't', palette: R.DOC, chip: R.CHIP }).generateAsync({ type: 'nodebuffer' }));
+  const slide = await zip.file('ppt/slides/slide1.xml').async('string');
+  for (const t of ['214233', 'Three Thread Brushed', '260 gsm', 'Pigment']) assert.ok(slide.includes(`<a:t>${t}</a:t>`), 'pptx ' + t);
+  assert.ok(slide.includes('name="Chip frame'), 'pptx çip çerçevesi');
+  assert.ok(slide.includes(R.CHIP.sub.slice(1)), 'pptx çip dolgusu');
+  // Kaydırıcı sürüklenirken (lite) çip tek öğe; bırakınca tam çizim (parça dolguları ayrı).
+  const full = R.elementsHtml(list.pages[0]), lite = R.elementsHtml(list.pages[0], { lite: true });
+  assert.ok((lite.match(/class="psS"/g) || []).length === 0 && (full.match(/class="psS"/g) || []).length > 0);
+  assert.equal((lite.match(/class="psC"/g) || []).length, (full.match(/class="psC"/g) || []).length, 'aynı sayıda çip');
+  // Metin seçeneği: aynı belge çipsiz.
+  const textSrc = { ...src, lines: id => src.lines(id).map(({ chips, ...f }) => f), header: it => ({ ...src.header(it), parts: undefined }) };
+  const plain = R.build(doc, E.layout(doc, groupOf, R.textPlan(doc, E.geometry(doc, null).cellW, ids, textSrc)), textSrc);
+  assert.ok(plain.pages[0].elements.every(e => e.lines.every(l => !l.atoms)));
+});

@@ -279,6 +279,57 @@ function demoImages() {
     const pageShot = await page.$('.psPageWrap .psPage');
     await pageShot.screenshot({ path: path.join(OUT, 'editor-page1.png') });
     fs.writeFileSync(path.join(OUT, 'geometry.json'), JSON.stringify(await page.evaluate(() => { const S = BLPresentationStudio._state(); return { w: S.res.g.w, h: S.res.g.h, page1: S.list.pages[0].elements.map(e => ({ type: e.type, id: e.id, x: e.x, y: e.y, w: e.w, h: e.h })) }; }), null, 1));
+    // Çip görünümü: Kumaş ve Artwork Detail kartta ve grup başlığında tablodaki gibi; üst çubukta Çip/Metin.
+    await page.evaluate(() => BLPresentationStudio.close());
+    await page.evaluate(() => {
+      // Bellekte (kaydedilmez): PLM biçimli kumaş değerleri + kumaş kartları. Artwork BOM önbelleği modülün içinde
+      // olduğundan yapısal model burada taklit edilir (gerçek model birim testte modülle sınanır).
+      const cards = { 214233: 'Three Thread Brushed · 30/70/14 · 260 gsm · 65% Cotton 35% Poliester', 300100: 'Single Jersey · 30/1 · 150 gsm · 100% Cotton' };
+      for (const [code, summary] of Object.entries(cards)) kolFabricCards.set(code, { code, summary, summaryEn: summary });
+      kolFabricCardsState = 'ready'; // sunucudan eşzamansız yükleme test kartlarını sonradan değiştirmesin (CP/Orders karşılaştırması)
+      // Artwork: elle girilmiş değer (PLM değerinden farklı) korunur; PLM'e ait boş değeri modül temizler.
+      kolRows.forEach((r, i) => { r.fabric = i % 3 === 0 ? 'A - 214233-THREE THREAD / B - 300100-SINGLE JERSEY' : i % 3 === 1 ? '214233-THREE THREAD BRUSHED' : '300100-SINGLE JERSEY'; r.artworkDetail = 'Front: 1 | Pigment'; r.artworkDetailPlm = 'plm'; });
+      window.__artModel = BLCollectionArtworkDetail.cellModel;
+      BLCollectionArtworkDetail.cellModel = row => [{ label: '', items: [{ kind: 'chip', t: 'Front', sub: '1' }, { kind: 'tag', t: 'Pigment', tone: '1' }], total: '1' }];
+      kolHiddenCols.delete('artworkDetail'); // Stüdyo görünür sütunları okur; demo görünümünde Artwork Detail gizli
+      renderKol();
+    });
+    await page.click('#kolToolsBtn'); await page.click('#kolToolsMenu [data-output-studio="koleksiyon"]');
+    await page.waitForSelector('.psStudio .psDocCard', { timeout: 30000 });
+    await page.click('.psStudio [data-pop="level"]'); await page.fill('.psPop [data-ps="search"]', 'fabric'); await page.keyboard.press('Enter'); await page.waitForTimeout(200);
+    await page.click('.psStudio [data-rmlv="0"]'); await page.waitForTimeout(200);
+    await page.click('.psStudio [data-pop="fields"]');
+    const ids = await page.evaluate(() => BLPresentationStudio._state().meta.ids);
+    assert.ok(ids.includes('col.artworkDetail'), 'Artwork Detail alanı: ' + ids.join(','));
+    for (const f of ['col.fabric', 'col.artworkDetail']) if (!(await page.$eval(`.psPop [data-fc="${f}"]`, el => el.checked))) { await page.click(`.psPop [data-fc="${f}"]`); await page.waitForTimeout(150); }
+    await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+    assert.equal(await page.$('.psPop:not([hidden])'), null, 'kart bilgisi işaretlendikten sonra Escape paneli kapatır');
+    assert.deepEqual(await page.evaluate(() => BLPresentationStudio._state().doc.grouping.levels), ['col.fabric']);
+    assert.equal(await page.$eval('.psStudio [data-ps="chipModeWrap"]', el => el.hidden), false, 'Çip/Metin seçeneği görünür');
+    const chipState = () => page.evaluate(() => { const S = BLPresentationStudio._state(), els = S.list.pages.flatMap(p => p.elements); const atoms = els.flatMap(e => e.lines.filter(l => l.atoms).flatMap(l => l.atoms)); return { cardChips: els.filter(e => e.type === 'card').some(e => e.lines.some(l => l.atoms && l.atoms.some(a => a.type === 'chip' && a.segs[0].t === '214233'))), hdrChips: els.filter(e => e.type === 'hdr').some(e => e.lines.some(l => l.atoms && l.atoms.some(a => a.type === 'chip'))), art: atoms.some(a => a.type === 'chip' && a.segs.some(s => s.t === 'Pigment')), parts: atoms.filter(a => a.type === 'part').map(a => a.t), dom: document.querySelector('.psPageWrap .psPage').innerHTML.includes('214233') }; });
+    let cs = await chipState();
+    assert.ok(cs.cardChips && cs.hdrChips && cs.art && cs.dom, 'kartta, başlıkta ve artwork alanında çip: ' + JSON.stringify(cs));
+    assert.ok(cs.parts.includes('A') && cs.parts.includes('B'), 'takım kumaşında A/B parça harfi');
+    assert.equal(await clean(), 0);
+    // Sürüm notu görseli: kartlar biraz genişletilir (Tasarım › Kart boyutu) ki çipler okunsun.
+    await page.click('.psStudio [data-pop="design"]');
+    await page.$eval('.psPop [data-s="cardW"]', el => { el.value = 150; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); });
+    await page.keyboard.press('Escape'); await page.click('.psStudio .psCanvas', { position: { x: 10, y: 10 } }); await page.waitForTimeout(400);
+    assert.equal(await clean(), 0);
+    await page.evaluate(() => document.querySelectorAll('[data-ui-feedback-region]').forEach(el => { el.style.visibility = 'hidden'; }));
+    await page.screenshot({ path: path.join(OUT, `chips-${THEME}.png`) });
+    await page.click('.psStudio [data-ps="chipMode"] [data-v="text"]'); await page.waitForTimeout(300);
+    cs = await chipState();
+    assert.ok(!cs.cardChips && !cs.hdrChips && !cs.art, 'Metin seçeneğinde çip yok');
+    assert.equal(await page.evaluate(() => BLPresentationStudio._state().doc.style.chips), false);
+    await page.click('.psStudio [data-ps="chipMode"] [data-v="chips"]'); await page.waitForTimeout(300);
+    assert.ok((await chipState()).cardChips);
+    // PPTX ve PDF belgesi aynı çipleri taşır.
+    const out = await page.evaluate(async () => { const S = BLPresentationStudio._state(), list = S.list; const html = BLPresentationRender.documentHtml(list, 't'); const zip = BLPresentationPptx.build(JSZip, list, { title: 't', palette: BLPresentationRender.DOC, chip: BLPresentationRender.CHIP }); const x = await zip.file('ppt/slides/slide1.xml').async('string'); return { html: html.includes('214233') && html.includes('Pigment'), pptx: x.includes('<a:t>214233</a:t>') && x.includes('Chip frame') }; });
+    assert.deepEqual(out, { html: true, pptx: true });
+    await page.evaluate(() => { BLCollectionArtworkDetail.cellModel = window.__artModel; });
+    await page.evaluate(() => document.querySelectorAll('[data-ui-feedback-region]').forEach(el => { el.style.visibility = ''; }));
+
     // CP ve Siparişler: aynı Presentation Studio (her kart bir sipariş satırı; filtrelenmiş kapsam).
     await page.evaluate(() => BLPresentationStudio.close());
     const sources = {};
@@ -295,7 +346,12 @@ function demoImages() {
       assert.ok(await page.$eval('.psPageWrap .psPageTools', el => { const r = el.getBoundingClientRect(); return r.height > 0 && document.elementFromPoint(r.x + 30, r.y + r.height / 2)?.closest('.psPageTools') === el; }), 'sayfa araç çubuğu görünür ve tıklanabilir');
       await page.screenshot({ path: path.join(OUT, `studio-${tab}-${THEME}.png`) });
       await page.evaluate(() => BLPresentationStudio.close());
-      assert.equal(await page.evaluate(t => JSON.stringify(BLAIScreenData.table(t, { all: true }).rows), tab), before, `${tab} verisi değişmez`);
+      const afterRows = await page.evaluate(t => JSON.stringify(BLAIScreenData.table(t, { all: true }).rows), tab);
+      if (afterRows !== before) {
+        const A = JSON.parse(before), B = JSON.parse(afterRows), diff = [];
+        B.forEach((r, i) => { const a0 = A[i] || {}; for (const k of new Set([...Object.keys(r), ...Object.keys(a0)])) if (JSON.stringify(r[k]) !== JSON.stringify(a0[k])) diff.push(`${i}.${k}: ${String(JSON.stringify(a0[k])).slice(0, 60)} → ${String(JSON.stringify(r[k])).slice(0, 60)}`); });
+        assert.fail(`${tab} verisi değişmez: ${A.length}→${B.length} satır; ${diff.slice(0, 8).join(' | ')}`);
+      }
       sources[tab] = info.cards;
     }
     assert.deepEqual(errors, []);

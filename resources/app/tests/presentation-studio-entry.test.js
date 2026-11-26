@@ -48,3 +48,16 @@ test('uzun alan listeleri (gruplama seviyesi, kart bilgileri) okunur ve aranabil
   assert.match(studio, /const fold = s => String\(s \|\| ''\)\.toLocaleLowerCase\('tr'\)\.normalize\('NFD'\)/);
   assert.match(studio, /if \(t\.dataset\.ps === 'search'\) \{ S\.popQuery = t\.value; filterPop\(\); return; \}/);
 });
+
+test('çip görünümü: Kumaş/Artwork yapısal modeli tablodaki kartlarla aynı kaynaktan; üst çubukta Çip/Metin seçeneği', () => {
+  const app = read('public/app-main.js'), art = read('public/collection-artwork-detail.js'), studio = read('public/presentation-studio.js');
+  assert.match(app, /function fabricCardCellModel\(val\)\{/);
+  assert.match(app, /window\.BLCellChips=Object\.freeze\(\{\n  columns:Object\.freeze\(\{koleksiyon:Object\.freeze\(\{fabric:'fabric',artworkDetail:'artwork'\}\),cp:Object\.freeze\(\{\[CP_FABRIC_PLM_KEY\]:'fabric'\}\),orders:/);
+  assert.match(art, /function cellModel\(row, value\) \{/);
+  assert.match(art, /    cellCards,\n    cellModel,\n/);
+  assert.match(studio, /<span class="psSeg" data-ps="chipMode"><button type="button" data-v="chips"><\/button><button type="button" data-v="text"><\/button><\/span>/);
+  assert.match(studio, /L\('Çip', 'Chips'\)/); assert.match(studio, /L\('Metin', 'Text'\)/);
+  assert.match(studio, /\$\('\[data-ps="chipModeWrap"\]'\)\.hidden = !chipsInUse\(\);/);
+  // Kaynak satır yalnız okunur.
+  assert.doesNotMatch(studio.slice(studio.indexOf('function chipModel'), studio.indexOf('const chipsInUse')), /m\.row\[[^\]]+\]\s*=[^=]/);
+});
