@@ -19,7 +19,10 @@
     if(layer.dataset.blur!==state)layer.dataset.blur=state;
   }
   const schedule=()=>{if(!queued){queued=true;requestAnimationFrame(sync);}};
-  new MutationObserver(schedule).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','hidden','open','aria-hidden','style']});
+  // Overlay içermeyen yoğun belge alanları (ör. Sunum Stüdyosu sayfaları) [data-blur-skip] ile işaretlenir:
+  // oradaki her çizim tüm belgeyi tarayan sync'i tetiklemez (kaydırıcı sürüklemesinde kare başına ~10 ms).
+  const relevant=records=>!Array.isArray(records)||records.some(r=>{const el=r.target&&r.target.nodeType===1?r.target:r.target&&r.target.parentElement;return !(el&&el.closest('[data-blur-skip]'));});
+  new MutationObserver(records=>{if(relevant(records))schedule();}).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','hidden','open','aria-hidden','style']});
   document.querySelector('.rail')?.addEventListener('pointerenter',schedule);
   document.querySelector('.rail')?.addEventListener('pointerleave',schedule);
   document.addEventListener('focusin',schedule);document.addEventListener('focusout',schedule);

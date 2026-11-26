@@ -16272,6 +16272,14 @@ html[data-ui-system="manifest"] .psThumbPin {background:var(--ui-accent)
 }
 html[data-ui-system="manifest"] .psThumbHdr {background:var(--ui-text-muted)
 }
+html[data-ui-system="manifest"] .psThumbArea {background:color-mix(in srgb,var(--ui-accent) 18%,transparent)
+}
+html[data-ui-system="manifest"] .psArea {background:color-mix(in srgb,var(--ui-accent) 5%,transparent)
+}
+html[data-ui-system="manifest"] .psArea.isSel {background:color-mix(in srgb,var(--ui-accent) 12%,transparent)
+}
+html[data-ui-system="manifest"] .psAreaGhost {background:color-mix(in srgb,var(--ui-accent) 14%,transparent);z-index:var(--ui-z-tooltip)
+}
 html[data-ui-system="manifest"] .psOk {color:var(--ui-success)
 }
 html[data-ui-system="manifest"] .psBad {color:var(--ui-danger);font-weight:600

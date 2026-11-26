@@ -89,3 +89,164 @@ test('belge HTML\'inde yazı tipi style özniteliğini bozmaz (PDF serif düşme
     assert.ok(style.endsWith('page-break-after:always'), 'öznitelik tırnakla erken kapanmaz');
   }
 });
+
+test('uzun metin satırlara kırılır; yalnız üst sınır aşılırsa "…" eklenir', () => {
+  const m = R.approxMeasure, runs = [{ t: 'Three Thread Brushed · 30/70/14 · 260 gsm · 65% Cotton 35% Poliester', size: 7, bold: false }];
+  const one = R.wrapRuns(runs, 1000, m, 'Arial', 3); assert.equal(one.length, 1); assert.equal(one[0][0].t, runs[0].t);
+  const three = R.wrapRuns(runs, 60, m, 'Arial', 3);
+  assert.equal(three.length, 3);
+  const joined = three.map(l => l.map(r => r.t).join('')).join(' ').replace(/\s+/g, ' ');
+  for (const l of three) assert.ok(l.reduce((s, r) => s + m(r.t, r.size, r.bold), 0) <= 60 + 0.01);
+  const all = R.wrapRuns(runs, 60, m, 'Arial', 10);
+  assert.ok(all.length > 3 && !all.flat().some(r => r.t.includes('…')), 'sınır yoksa metin tam');
+  assert.equal(all.map(l => l.map(r => r.t).join('')).join(' ').replace(/\s+/g, ' ').trim(), runs[0].t.replace(/\s+/g, ' '));
+  assert.ok(three.at(-1).at(-1).t.endsWith('…') && joined.startsWith('Three Thread Brushed'));
+  // Biçim (kalın başlık + normal devam) satırlar boyunca korunur.
+  const mixed = R.wrapRuns([{ t: 'Uzun Kumaş Adı', size: 9, bold: true }, { t: ' · Örme · Pamuk', size: 9, bold: false }], 60, m, 'Arial', 5);
+  assert.ok(mixed.flat().some(r => r.bold) && mixed.flat().some(r => !r.bold));
+  // Boşluksuz uzun parça karakter düzeyinde bölünür.
+  assert.ok(R.wrapRuns([{ t: 'X'.repeat(80), size: 7 }], 60, m, 'Arial', 6).every(l => l.reduce((s, r) => s + m(r.t, r.size, r.bold), 0) <= 60.01));
+});
+
+test('metin planı: kartta tam metin, alanlar kartlar arasında hizalı; başlık tam görünür; PDF ve PPTX aynı satırlar', async () => {
+  const ids = Array.from({ length: 8 }, (_, i) => 'K' + i);
+  const doc = E.createDoc({ ids, fields: ['modelName', 'fabric', 'price'], levels: ['fabric'] });
+  doc.style.cardW = 160;
+  const longFabric = 'Three Thread Brushed · 30/70/14 · 260 gsm · 65% Cotton 35% Poliester';
+  const fab = id => (Number(id.slice(1)) < 2 ? longFabric : 'Pamuk');
+  const groupOf = id => ({ key: fab(id), vals: [fab(id)] });
+  const src = {
+    lines: id => [{ label: 'Model', value: 'Model ' + id }, { label: 'Kumaş', value: fab(id) }, { label: 'Fiyat', value: '' }],
+    image: () => ({ src: PNG, w: 600, h: 800 }),
+    header: it => ({ main: it.vals[0], rest: '', count: `${it.count} model` }),
+  };
+  const cellW = E.geometry(doc, null).cellW, plan = R.textPlan(doc, cellW, ids, src);
+  // Dar kartta üst sınır korunur.
+  const narrow = JSON.parse(JSON.stringify(doc)); narrow.style.cardW = 60;
+  assert.equal(R.textPlan(narrow, E.geometry(narrow, null).cellW, ids, src).fieldLines[1], R.MAX_LINES.field);
+  assert.equal(plan.fieldLines[0], 1); assert.ok(plan.fieldLines[1] >= 2 && plan.fieldLines[1] <= R.MAX_LINES.field); assert.equal(plan.fieldLines[2], 1);
+  const res = E.layout(doc, groupOf, plan), list = R.build(doc, res, src);
+  const cards = list.pages.flatMap(p => p.elements).filter(e => e.type === 'card');
+  const longCard = cards.find(c => c.id === 'K0'), shortCard = cards.find(c => c.id === 'K5');
+  const text = c => c.lines.map(l => l.runs.map(r => r.t).join('')).join(' ');
+  assert.ok(!text(longCard).includes('…'), 'uzun kumaş adı kırpılmaz: ' + text(longCard));
+  assert.ok(text(longCard).replace(/\s+/g, ' ').includes(longFabric.replace(/\s+/g, ' ')));
+  // Fiyat satırı her kartta aynı yükseklikte (alan hizası).
+  const priceY = c => c.lines.find(l => l.runs.at(-1).t === '—').y - c.y;
+  assert.ok(Math.abs(priceY(longCard) - priceY(shortCard)) < 0.01);
+  for (const c of cards) for (const l of c.lines) assert.ok(l.y + l.lh <= c.y + c.h + 0.5);
+  // Dar (1-2 kartlık) grup başlığı tam metinle çok satıra kırılır.
+  const hdr = list.pages.flatMap(p => p.elements).find(e => e.type === 'hdr' && e.key === longFabric);
+  assert.ok(hdr.lines.length >= 2);
+  assert.equal(hdr.lines.map(l => l.runs.map(r => r.t).join('')).join(' ').replace(/\s+/g, ' ').trim(), longFabric.replace(/\s+/g, ' '));
+  for (const l of hdr.lines) assert.ok(l.y >= hdr.y - 0.01 && l.y + hdr.lh <= hdr.rule.y + 0.01);
+  // PDF HTML ve PPTX aynı başlık satırlarını taşır.
+  const html = R.documentHtml(list, 'Test');
+  for (const l of hdr.lines) for (const r of l.runs) assert.ok(html.includes(`>${r.t.replace(/&/g, '&amp;')}</span>`), r.t);
+  const zip = await JSZip.loadAsync(await P.build(JSZip, list, { title: 'Test', palette: R.DOC }).generateAsync({ type: 'nodebuffer' }));
+  const slides = (await Promise.all(Object.keys(zip.files).filter(f => /^ppt\/slides\/slide\d+\.xml$/.test(f)).map(f => zip.file(f).async('string')))).join('');
+  for (const l of hdr.lines) for (const r of l.runs) assert.ok(slides.includes(`<a:t>${r.t.replace(/&/g, '&amp;')}</a:t>`), 'pptx ' + r.t);
+});
+
+test('dar başlıkta model sayısı gizlenir, metin tam genişlikte kırılır (kelime ortasından bölünmez)', async () => {
+  const ids = ['K0', 'K1'];
+  const doc = E.createDoc({ ids, fields: ['modelName'], levels: ['fabric'] });
+  doc.cards.K0 = { pinned: true, page: 'p1', x: 300, y: 300, w: 80, h: 150 };
+  const label = 'Three Thread Brushed Cotton';
+  const groupOf = id => ({ key: id, vals: [id === 'K0' ? label : 'Pamuk'] });
+  const src = { lines: id => [{ label: 'Model', value: id }], image: () => null, header: it => ({ main: it.vals[0], rest: '', count: `${it.count} model` }) };
+  const plan = R.textPlan(doc, E.geometry(doc, null).cellW, ids, src);
+  const res = E.layout(doc, groupOf, plan), list = R.build(doc, res, src);
+  const hdr = list.pages[0].elements.find(e => e.type === 'hdr' && e.key === 'K0');
+  assert.equal(hdr.count, null, 'sayı gizli');
+  const words = hdr.lines.map(l => l.runs.map(r => r.t).join('').trim());
+  for (const w of words) for (const part of w.split(/\s+/)) assert.ok(label.split(' ').includes(part), 'kelime bölünmedi: ' + words);
+  assert.ok(!R.documentHtml(list, 't').includes('undefined'));
+  const zip = P.build(JSZip, list, { title: 't', palette: R.DOC });
+  assert.ok((await zip.generateAsync({ type: 'nodebuffer' })).length > 0);
+});
+
+const FABRIC = [{ label: '', items: [{ kind: 'code', t: '214233' }, { kind: 'chip', t: 'Three Thread Brushed', sub: '260 gsm' }] }, { label: '', items: [{ kind: 'chip', t: '65% Cotton 35% Poliester' }] }];
+const ART = [{ label: 'A', items: [{ kind: 'chip', t: 'Front', sub: '1' }, { kind: 'chip', t: 'Back', sub: '1' }, { kind: 'tag', t: 'Pigment', tone: '1' }], total: '2' }, { label: 'B', items: [{ kind: 'chip', t: 'Front', sub: '1' }, { kind: 'tag', t: 'Pigment', tone: '1' }], total: '1' }];
+
+test('çip yerleşimi: tablodaki gibi kod/çip/etiket/parça harfi; satır kırılması, sağda toplam, sığmayanda "…"', () => {
+  const m = R.approxMeasure;
+  const rows = R.layoutAtoms(R.chipAtoms(ART, 8), 200, m, 'Arial');
+  assert.equal(rows.length, 2, 'A ve B ayrı satır');
+  assert.equal(rows[0][0].type, 'part'); assert.equal(rows[0][0].t, 'A');
+  const tot = rows[0].find(a => a.type === 'total');
+  assert.ok(tot && Math.abs(tot.x + tot.w - 200) < 0.01, 'toplam sağa yaslı');
+  const tag = rows[0].find(a => a.type === 'chip' && a.segs[0].t === 'Pigment');
+  assert.equal(tag.segs[0].ink, R.CHIP.tone[1].ink); assert.notEqual(tag.segs[0].fill, '#FFFFFF');
+  const chip = rows[0].find(a => a.type === 'chip' && a.segs.length === 2);
+  assert.equal(chip.segs[1].fill, R.CHIP.sub, 'adet bölümü seçili ton');
+  for (const r of rows) for (const a of r) assert.ok(a.x >= -0.01 && a.x + a.w <= 200 + 0.01);
+  const fab = R.layoutAtoms(R.chipAtoms(FABRIC, 8), 120, m, 'Arial');
+  assert.ok(fab.length >= 2);
+  assert.equal(fab[0][0].segs[0].t, '214233'); assert.equal(fab[0][0].segs[0].fill, R.CHIP.sub);
+  const narrow = R.layoutAtoms(R.chipAtoms(FABRIC, 8), 50, m, 'Arial', 2);
+  assert.equal(narrow.length, 2);
+  for (const r of narrow) for (const a of r) assert.ok(a.x + a.w <= 50 + 0.01);
+  assert.ok(narrow.flat().some(a => (a.segs ? a.segs.some(s => s.t.endsWith('…')) : a.t === '…')), 'sığmayan kısaltılır');
+});
+
+test('çip görünümü kartta ve grup başlığında; plan satır sayar; PDF HTML ve PPTX aynı çipleri taşır', async () => {
+  const ids = ['K0', 'K1', 'K2'];
+  const doc = E.createDoc({ ids, fields: ['modelName', 'col.fabric', 'col.artworkDetail'], levels: ['col.fabric'] });
+  assert.equal(doc.style.chips, true, 'varsayılan çip');
+  assert.equal(E.normalizeStyle({ ...doc.style, chips: false }).chips, false);
+  const groupOf = id => ({ key: 'F', vals: ['Three Thread Brushed · 260 gsm'] });
+  const src = {
+    lines: id => [{ label: 'Model', value: 'Model ' + id }, { label: 'Kumaş', value: 'Three Thread Brushed · 260 gsm', chips: FABRIC }, { label: 'Artwork', value: 'Front: 1', chips: ART }],
+    image: () => null,
+    header: it => ({ main: it.vals[0], rest: '', count: `${it.count} model`, parts: [{ chips: FABRIC }] }),
+  };
+  const plan = R.textPlan(doc, E.geometry(doc, null).cellW, ids, src);
+  assert.ok(plan.fieldLines[1] >= 2 && plan.fieldLines[2] >= 2, JSON.stringify(plan.fieldLines));
+  const res = E.layout(doc, groupOf, plan), list = R.build(doc, res, src);
+  const card = list.pages[0].elements.find(e => e.type === 'card');
+  const chipLines = card.lines.filter(l => l.atoms);
+  assert.ok(chipLines.length >= 4, 'kumaş + artwork çip satırları');
+  for (const l of chipLines) assert.ok(l.box && l.box.h > 0 && l.box.h < l.lh);
+  const hdr = list.pages[0].elements.find(e => e.type === 'hdr');
+  assert.ok(hdr.lines[0].atoms && hdr.lines.flatMap(l => l.atoms).some(a => a.type === 'chip' && a.segs[0].t === '214233'), 'başlıkta kumaş çipi');
+  const html = R.documentHtml(list, 't');
+  for (const t of ['214233', 'Three Thread Brushed', '260 gsm', 'Pigment', '>A<']) assert.ok(html.includes(t), t);
+  assert.ok(html.includes(`outline:0.6pt solid ${R.CHIP.line}`) && html.includes(R.DOC_CSS), 'çip çerçevesi ve sınıf kuralları belgede');
+  // Editör aynı sınıf kurallarını modül CSS'inden alır; metin birebir aynı olmalı.
+  assert.ok(require('node:fs').readFileSync(require('node:path').join(__dirname, '../public/presentation-studio.css'), 'utf8').includes(R.DOC_CSS), 'editör CSS = belge CSS');
+  const zip = await JSZip.loadAsync(await P.build(JSZip, list, { title: 't', palette: R.DOC, chip: R.CHIP }).generateAsync({ type: 'nodebuffer' }));
+  const slide = await zip.file('ppt/slides/slide1.xml').async('string');
+  for (const t of ['214233', 'Three Thread Brushed', '260 gsm', 'Pigment']) assert.ok(slide.includes(`<a:t>${t}</a:t>`), 'pptx ' + t);
+  assert.ok(slide.includes('name="Chip frame'), 'pptx çip çerçevesi');
+  assert.ok(slide.includes(R.CHIP.sub.slice(1)), 'pptx çip dolgusu');
+  // Kaydırıcı sürüklenirken (lite) çip tek öğe; bırakınca tam çizim (parça dolguları ayrı).
+  const full = R.elementsHtml(list.pages[0]), lite = R.elementsHtml(list.pages[0], { lite: true });
+  assert.ok((lite.match(/class="psS"/g) || []).length === 0 && (full.match(/class="psS"/g) || []).length > 0);
+  assert.equal((lite.match(/class="psC"/g) || []).length, (full.match(/class="psC"/g) || []).length, 'aynı sayıda çip');
+  // Metin seçeneği: aynı belge çipsiz.
+  const textSrc = { ...src, lines: id => src.lines(id).map(({ chips, ...f }) => f), header: it => ({ ...src.header(it), parts: undefined }) };
+  const plain = R.build(doc, E.layout(doc, groupOf, R.textPlan(doc, E.geometry(doc, null).cellW, ids, textSrc)), textSrc);
+  assert.ok(plain.pages[0].elements.every(e => e.lines.every(l => !l.atoms)));
+});
+
+test('grup alanı çerçevesi yalnız editörde; PDF HTML ve PPTX başlık ve kartları taşır, çerçeveyi taşımaz', async () => {
+  const ids = Array.from({ length: 10 }, (_, i) => 'K' + i);
+  const doc = E.createDoc({ ids, fields: ['modelName'], levels: ['g'] });
+  const groupOf = id => { const v = Number(id.slice(1)) % 2 ? 'Hırka' : 'Kazak'; return { key: v, vals: [v] }; };
+  const g0 = E.geometry(doc, null);
+  E.setArea(doc, 'Kazak', { page: 'p1', x: g0.w - g0.m - g0.cellW, y: g0.m, w: g0.cellW, h: 0 });
+  const src = { lines: id => [{ label: 'Model', value: id }], image: () => null, header: it => ({ main: it.vals[0], rest: '', count: `${it.count} model` }) };
+  const res = E.layout(doc, groupOf), list = R.build(doc, res, src);
+  const area = list.pages[0].elements.find(e => e.type === 'area');
+  assert.ok(area && area.key === 'Kazak');
+  assert.ok(list.pages[0].elements.some(e => e.type === 'hdr' && e.area === 'Kazak'));
+  const editor = R.elementsHtml(list.pages[0], { attrs: el => ({ attr: el.type === 'area' ? ` data-area="${el.key}"` : '', cls: '', inner: '' }) });
+  assert.ok(editor.includes('class="psArea"') && editor.includes('data-area="Kazak"'));
+  const html = R.documentHtml(list, 't');
+  assert.ok(!html.includes('psArea') && html.includes('>Kazak</span>'), 'PDF: başlık var, çerçeve yok');
+  const zip = await JSZip.loadAsync(await P.build(JSZip, list, { title: 't', palette: R.DOC }).generateAsync({ type: 'nodebuffer' }));
+  const slide = await zip.file('ppt/slides/slide1.xml').async('string');
+  assert.ok(slide.includes('<a:t>Kazak</a:t>'));
+  assert.equal((slide.match(/name="Card K/g) || []).length, list.pages[0].elements.filter(e => e.type === 'card').length, 'alan kartı yok, yalnız gerçek kartlar');
+});
