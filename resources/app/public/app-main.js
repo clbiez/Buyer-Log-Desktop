@@ -12258,6 +12258,8 @@ const ordersRM={
   windows:new Set(),pending:new Map(),wanted:new Set(),flushQueued:false,repaintFrame:0,
   facets:null,facetsKey:'',facetsSeq:0,optionsGeneration:'',
   columnFacets:new Map(),materialized:null,legacyReason:'',firstStarted:0,
+  // Son çizilen sorgu geçişinin seq'i: seq ile eşitse güncel sorgunun satırları tabloda.
+  paintedSeq:0,
 };
 // Depolama bir kez okunur: filteredOrders / sütun paneli gibi sık yollar her çağrıda okumaz.
 let ordersRMEnabledCache=null;
@@ -12549,6 +12551,7 @@ function renderOrdersFromReadModel(){
   if(signature===ordersRM.signature&&ordersRM.rows){
     supersede();
     ordersRMPaintTable();
+    ordersRM.paintedSeq=ordersRM.seq;
     ordersRMRequestFacets(spec,signature);
     return true;
   }
@@ -12564,6 +12567,7 @@ function renderOrdersFromReadModel(){
     ordersRM.windows.add(0);
     if(currentActiveTab()!=='orders'){_deferredTabRenders.add('orders');return;}
     ordersRMPaintTable();
+    ordersRM.paintedSeq=seq;
     ordersRecordRowsVisible('readModel',started,{rows:ordersRM.total,queryMs:payload.timing&&payload.timing.queryMs,cached:payload.cached===true});
     ordersRMRequestFacets(spec,signature);
   }).catch(error=>{
@@ -20971,12 +20975,20 @@ async function waitForStartupPrimaryScreen(){
   return true;
 }
 // Açılış ekranı Siparişler ise ilk pencere görünene (ya da eski yol çizilene) kadar bekler.
+// İlk pencere bu dinleyiciden önce çizilmiş olabilir: renderOrders() aynı imzada önbellekten
+// yeniden çizer ve bl:orders-rows-visible yaymaz. Güncel sorgunun satırları tablodaysa hemen hazırdır.
 function waitForOrdersReadModelRows(){
   return new Promise(resolve=>{
-    const done=()=>{window.removeEventListener('bl:orders-rows-visible',done);resolve(true);};
+    let settled=false,timer=0;
+    const finish=value=>{
+      if(settled)return;
+      settled=true;clearTimeout(timer);window.removeEventListener('bl:orders-rows-visible',done);resolve(value);
+    };
+    const done=()=>finish(true);
     window.addEventListener('bl:orders-rows-visible',done);
     renderOrders();
-    setTimeout(()=>{window.removeEventListener('bl:orders-rows-visible',done);resolve(Boolean(ordersRM.rows||state.orders));},15000);
+    if(ordersRM.rows&&ordersRM.paintedSeq===ordersRM.seq&&document.getElementById('ordersTable')?._blRenderedRowsSource===ordersRM.rows)finish(true);
+    if(!settled)timer=setTimeout(()=>finish(Boolean(ordersRM.rows||state.orders)),15000);
   });
 }
 function scheduleStartupScreenReady(callback){
