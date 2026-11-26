@@ -58,7 +58,11 @@ güncelleme ver. `devam` mesajını otomatik yeni görev sayma.
 1. Hedef davranış, mevcut davranış ve source of truth'u ayır; gerekirse
    çoğaltılabilir hata senaryosu çıkar.
 2. Risk sınıfını (§3.1) ve etki alanını belirle; en küçük güvenli değişikliği yap.
-   Görev dışı refactor/rename/cleanup ekleme.
+   Görev dışı refactor/rename/cleanup ekleme. Yeni kod yazmadan önce sırayla
+   değerlendir (§4.0): mevcut mekanizma daha verimli olabilir mi → aynı iş başka
+   bir mekanizmayla daha iyi yapılır mı → problemi doğuran mekanizma (veri
+   temsili, işlem sırası, çalışma prensibi değiştirilerek) tamamen kaldırılabilir
+   mi; ihtiyaç eski kodun bir kısmı kaldırılarak karşılanabilir mi?
 3. Test altyapısı varsa yeni davranışı önce başarısız testle (RED) sabitle, sonra
    geçir (GREEN). Altyapı yoksa belirt ve uygulanabilir doğrulamayı seç.
 4. **Geliştirme sırasında yalnız filtrelenmiş testler:** `npm test -- <modül>`
@@ -143,6 +147,25 @@ kademesine göre değerlendirilir; ayrıntıyı yalnız L1/L2 gerekiyorsa aç.
   gerekli kapı BLOCKED'dır; FAIL/BLOCKED merge veya yayın için PASS sayılamaz.
 
 ## 4 · Değişmez mimari kurallar
+
+### 4.0 · Kalıcı mimari ilkeler
+
+Teknik ödünleşimde sıra (sözlük sırası, puanlama yok): **veri bütünlüğü >
+iş kuralı doğruluğu > kararlılık > performans > mimari sadelik > UX**. Alttaki
+kazanç üsttekindeki kaybı telafi etmez; sıra ürün sahibinin UX/iş kuralı
+kararını geçersiz kılmaz.
+
+01 Sessiz veri kaybı hiçbir kazançla meşrulaşmaz · 02 Geçersiz durum mümkünse
+temsil edilemez olmalı (boş/sıfır/bilinmiyor/kaynakta yok ayrı) · 03 Aynı girdi →
+aynı sonuç; saat/yerel gün/dil/config açık girdidir · 04 Temel çalışma ortak
+klasöre/ağa/dış servise bağlı değildir · 05 Gereksiz işlemi kaldırmak
+hızlandırmaktan önce gelir: yalnız gerekeni oku, etkileneni hesapla, değişeni
+kaydet/aktar/çiz · 06 Bir iş kuralı ve girdi eşlemesi tek yerde · 07 Değişikliğin
+etki alanı yapıyla sınırlı · 08 Ölçülmeden üstünlük yok (§3.2) · 09 Dönüşümde
+bayrak/gölge mod/geri dönüş yolu · 10 Yeni mekanizma gelince eskisi kalkar;
+paralel kalıcı yol bırakılmaz (yalnız görevin etki alanında, eşdeğer testle —
+§3 adım 2). Asıl iş verisi ile silinip yeniden üretilebilen türetilmiş
+önbellek ayrı tutulur; önbelleğe asıl verinin kalıcılık/senkron yükü verilmez.
 
 - Ortak veri alanları canonical ID + module binding üzerinden okunur:
   `public/canonical-fields.js` ve `server/lib/canonical-fields.js`. Ham başlık
