@@ -24,7 +24,7 @@
          38 MB SVG üretiyordu); pseudo-element'ler de yerel olarak çizilir.
          Yalnız aynı kökenden stil, font ve model görseli okunur; hiçbir şey
          dışarı gönderilmez.
-       · PNG en fazla MAX_PNG_BYTES (8 MiB) olur: e-postaya yapıştırma sınırı.
+       · PNG en fazla MAX_PNG_BYTES (6 MiB) olur: 10 MB'lık posta sunucusu mesaj sınırı.
        · Pano en fazla CLIPBOARD_MAX_ROWS satır taşır (Windows panosuna dev
          bitmap yazmak Excel/Outlook'u kilitler). Fazlası PNG dosyası olarak
          kaydedilir (FILE_MAX_ROWS'a kadar).
@@ -39,10 +39,12 @@
     file:{maxRows:FILE_MAX_ROWS,maxArea:64e6,preferredRatio:2,minRatio:0.75},
   };
   const IMAGE_LOAD_TIMEOUT_MS=8000;
-  // E-postaya yapıştırılan/eklenen PNG en fazla 8 MiB (≈8,4 MB). Aşılırsa çözünürlük
+  // Posta sunucusu mesaj sınırı 10 MB. E-postada görsel base64 ile kodlanır (MIME satır
+  // sonlarıyla ~×1,37): 6 MiB (≈6,3 MB) PNG mesajda ~8,6 MB eder; imza, logo ve gövde
+  // için ~1,4 MB pay kalır. 8 MiB mesajda ~11,5 MB olur ve sınırı aşar. Aşılırsa çözünürlük
   // kademeli düşürülür (SVG vektördür; yalnız tuval yeniden çizilir), modun
   // okunabilirlik tabanının (minRatio) altına inilmez.
-  const MAX_PNG_BYTES=8*1024*1024;
+  const MAX_PNG_BYTES=6*1024*1024;
   const MAX_SHRINK_STEPS=4;
   const TRANSPARENT_PIXEL='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
   const CHROME_SELECTOR='.thFilterBtn,.colResizer,input[type="checkbox"],.kolSyntheticFilterBtn';

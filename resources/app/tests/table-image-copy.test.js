@@ -140,32 +140,34 @@ test('giriş noktaları: araç çubuğu menüsü ve iki sağ tık menüsü TR/EN
   assert.match(app, /const kolCopy=document\.getElementById\('kolCopySelectedBtn'\),copyMenu=sharedTableActionNode\('navCopyMenuBtn'\)\|\|document\.getElementById\('navCopyMenuBtn'\);\n    if\(kolCopy&&copyMenu\)kolCopy\.after\(copyMenu\);/);
 });
 
-test('PNG en fazla 8 MiB: aşılırsa çözünürlük karekök oranında düşer, okunabilirlik tabanının altına inmez', () => {
+test('PNG en fazla 6 MiB (10 MB posta mesajı, base64 ~×1,37): aşılırsa çözünürlük karekök oranında düşer, okunabilirlik tabanının altına inmez', () => {
   const MAX = ImageCopy.MAX_PNG_BYTES;
-  assert.equal(MAX, 8 * 1024 * 1024);
+  assert.equal(MAX, 6 * 1024 * 1024);
+  // Base64 + MIME satır sonları (76 karakter + CRLF) ile mesajdaki boyut 10 MB'ın ~1 MB altında kalır.
+  assert.ok(Math.ceil(MAX / 3) * 4 * (78 / 76) < 9e6);
   // Sığıyorsa oran aynı kalır.
   assert.equal(ImageCopy.nextPixelRatio(2, MAX, 1), 2);
   assert.equal(ImageCopy.nextPixelRatio(2, 1000, 1), 2);
-  // 2x'te 12 MiB → alan ≈ (8/12) × 0.9 hedeflenir; yeni oran < 2 ve ≥ taban.
+  // 2x'te 12 MiB (sınırın 2 katı) → alan ≈ (8/12) × 0.9 hedeflenir; yeni oran < 2 ve ≥ taban.
   const next = ImageCopy.nextPixelRatio(2, 12 * 1024 * 1024, 1);
   assert.ok(next < 2 && next >= 1, String(next));
-  assert.ok((next / 2) ** 2 * 12 < 8, 'tahmini boyut 8 MiB altında olmalı: ' + next);
+  assert.ok((next / 2) ** 2 * 12 < 6, 'tahmini boyut 6 MiB altında olmalı: ' + next);
   // Pano tabanı 1x: 1x'te bile 9 MiB ise pano olmaz (null → dosya önerisi).
   assert.equal(ImageCopy.nextPixelRatio(1, 9 * 1024 * 1024, 1), null);
-  // Dosya tabanı 0.75x: 1x'te 9 MiB → ~0.85x denenir.
-  const fileNext = ImageCopy.nextPixelRatio(1, 9 * 1024 * 1024, 0.75);
+  // Dosya tabanı 0.75x: 1x'te 7 MiB → ~0.88x denenir.
+  const fileNext = ImageCopy.nextPixelRatio(1, 7 * 1024 * 1024, 0.75);
   assert.ok(fileNext >= 0.75 && fileNext < 1, String(fileNext));
   // Özel sınır (test/ileride ayar) desteklenir.
   assert.equal(ImageCopy.nextPixelRatio(2, 300, 1, 1000), 2);
 });
 
-test('8 MiB sınırı render döngüsünde uygulanır; aşan görsel panoya yazılmaz, boyut kullanıcıya gösterilir', () => {
+test('PNG bayt sınırı render döngüsünde uygulanır; aşan görsel panoya yazılmaz, boyut kullanıcıya gösterilir', () => {
   const source = read('table-image-copy.js');
   assert.match(source, /if\(blob\.size<=maxBytes\)break;/);
   assert.match(source, /return \{error:mode==='file'\?'tooHeavy':'needsFile',reason:'bytes',bytes:blob\.size\};/);
   assert.match(source, /async function render\(\{table,rows,keepLeaf=null,mode='clipboard',maxBytes=MAX_PNG_BYTES\}\)/);
   const app = read('app-main.js');
   assert.match(app, /if\(code==='needsFile'\)\{offerTableImageFile\(pending\.count,error\.reason\);return false;\}/);
-  assert.match(app, /if\(code==='tooHeavy'\)return en\?'The image cannot be reduced below the 8 MB e-mail limit; select fewer rows or columns\.':'Görsel 8 MB e-posta sınırının altına indirilemiyor; daha az satır veya sütun seçin\.';/);
+  assert.match(app, /if\(code==='tooHeavy'\)\{const limit=tableImageCopySizeText\(Copy\.MAX_PNG_BYTES,0\);/);
   assert.match(app, /satır görsel olarak kopyalandı \(\$\{tableImageCopySizeText\(render\.value\.bytes\)\}\)/);
 });
