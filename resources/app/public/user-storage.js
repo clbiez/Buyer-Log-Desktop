@@ -30,7 +30,9 @@
     // v2026-11-20 — CP satır kaydı pilot anahtarı kullanıcı başınadır (#1078 alt PR 3).
     'bl.cpRowSave.',
     // v2026-11-25 — Presentation Studio sunumları ve şablonları kişiseldir (hesapla eşitlenir).
-    'bl.presentationStudio.'
+    'bl.presentationStudio.',
+    // v2026-11-26 — kopyalama sütun profili ve hassas sütunlar kişiseldir (hesapla eşitlenir).
+    'lcw.copyColumns.'
   ];
   /* AYNI BİLGİSAYARDA BİRDEN FAZLA KULLANICI.
      Aşağıdaki kişisel filtre/görünüm anahtarları eskiden kullanıcı önekine
@@ -136,7 +138,8 @@
     'bl.excelImport.profiles.', // Excel içe aktarma eşleme profilleri: kullanıcıya ve modüle ait YAPILANDIRMA (çalışma kitabı verisi değil)
     'lcw.cp.imageSize.','lcw_theme','lcw.themeTransition.','lcw_rail','lcw_sidebar_collapsed','lcw.lang.','lcw.font.','lcw_font_step','bl.refreshHistory.','bl.autoRefresh.','buyerlog.overview.notesReminderCollapsed','buyerlog.overview.collectionSummary.','buyerlog.overview.layout.','buyerlog.overview.breakdown.','buyerlog.overview.globalFlow.',
     'buyerlog.horizonFieldPairs.', // v2026-10-30 — kişisel ASAS ⇄ IAS alan eşleme hafızası
-    'bl.presentationStudio.' // v2026-11-25 — kişisel sunumlar (yalnız düzen; Koleksiyon verisi değil) ve şablonlar
+    'bl.presentationStudio.', // v2026-11-25 — kişisel sunumlar (yalnız düzen; Koleksiyon verisi değil) ve şablonlar
+    'lcw.copyColumns.' // v2026-11-26 — kopyalama sütun profili ve hassas sütun tercihi (yalnız sütun anahtarları)
   ];
   function synced(key){key=String(key);return SYNCED.some(function(p){return key.indexOf(p)===0})}
   var META_KEY='bl.user.'+uid+'.__syncMeta.v1';

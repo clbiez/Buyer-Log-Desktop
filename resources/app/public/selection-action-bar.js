@@ -14,12 +14,14 @@
     return 0;
   };
   const PAGES=Object.freeze({
-    cp:{unit:['satır seçili','rows selected'],actions:[['copy','navCopy'],['excel','cpExcelBtn'],['tools','cpToolsBtn']]},
-    orders:{unit:['satır seçili','rows selected'],actions:[['copy','navCopy'],['excel','navExcelBtn'],['tools','ordersToolsBtn']]},
-    koleksiyon:{unit:['model seçili','models selected'],actions:[['copy','kolCopySelectedBtn'],['excel','kolExcelBtn'],['tools','kolToolsBtn']]},
+    cp:{unit:['satır seçili','rows selected'],actions:[['copy','navCopy'],['copySafe',''],['excel','cpExcelBtn'],['tools','cpToolsBtn']]},
+    orders:{unit:['satır seçili','rows selected'],actions:[['copy','navCopy'],['copySafe',''],['excel','navExcelBtn'],['tools','ordersToolsBtn']]},
+    koleksiyon:{unit:['model seçili','models selected'],actions:[['copy','kolCopySelectedBtn'],['copySafe',''],['excel','kolExcelBtn'],['tools','kolToolsBtn']]},
   });
   const ACTIONS=Object.freeze({
     copy:{icon:'#i-copy',label:['Kopyala','Copy']},
+    // Hassas işaretli sütunlar çıkarılarak kopya; hemen sağındaki kalem hassas sütun ayarını açar.
+    copySafe:{icon:'#i-eye-off',label:['Hassaslar gizli','Hide sensitive'],title:['Hassas sütunları gizleyerek kopyala','Copy without sensitive columns']},
     excel:{icon:'#i-file-export',label:['Excel','Excel']},
     tools:{icon:'#i-bl-tools',label:['Araçlar','Tools']},
   });
@@ -51,6 +53,14 @@
       if(button.dataset.selectionDetails!==undefined){
         if(panel.hidden){drawPanel();panel.hidden=false;bar.querySelector('[data-selection-details]')?.setAttribute('aria-expanded','true');root.BLMotionPlus?.play?.('overlay',panel);panel.querySelector('button')?.focus();}else closePanel(true);
         return;
+      }
+      if(button.dataset.selectionRun){
+        const action=root.BLCopyColumnsAction;
+        if(action?.supported?.(lastKey)){
+          if(button.dataset.selectionRun==='copySafe')void action.copy(lastKey,'safe');
+          else if(button.dataset.selectionRun==='editSensitive')action.edit(lastKey,{focus:'sensitive'});
+        }
+        schedule();return;
       }
       if(button.dataset.selectionDismiss!==undefined){if(lastKey==='cp'||lastKey==='orders'){root.BLManagedSelection?.clear(lastKey);schedule();return;}dismissedAt=lastKey+':'+lastCount;hide();return;}
       const target=doc.getElementById(button.dataset.selectionTarget||'');
@@ -85,6 +95,11 @@
   function render(key,count,data){
     const page=PAGES[key];
     const items=page.actions.map(([action,id])=>{
+      if(action==='copySafe'){
+        if(!root.BLCopyColumnsAction?.supported?.(key))return '';
+        const meta=ACTIONS.copySafe,label=T(meta.label[0],meta.label[1]),title=T(meta.title[0],meta.title[1]),edit=T('Hassas sütunları düzenle','Edit sensitive columns');
+        return `<button type="button" class="tbtn blSelectionAction" data-selection-run="copySafe" title="${escape(title)}"><svg class="ic" aria-hidden="true"><use href="${meta.icon}"/></svg><span>${escape(label)}</span></button><button type="button" class="iconbtn blSelectionEdit" data-selection-run="editSensitive" title="${escape(edit)}" aria-label="${escape(edit)}"><svg class="ic" aria-hidden="true"><use href="#i-pencil"/></svg></button>`;
+      }
       const target=doc.getElementById(id);
       if(!target)return '';
       const meta=ACTIONS[action],label=T(meta.label[0],meta.label[1]);

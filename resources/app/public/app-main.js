@@ -3567,6 +3567,14 @@ document.getElementById('navCopyMenuBtn')?.addEventListener('click',event=>{
     {label:appLang==='en'?'Copy without headers':'Başlıksız kopyala',run:()=>copyGridSelection(false)},
   ];
   if(tableImageCopySupported())items.push({label:appLang==='en'?'Copy as image':'Görsel olarak kopyala',run:()=>void copyActiveTableAsImage()});
+  const copyColumnsTab=document.body.dataset.activeTab||'';
+  if(window.BLCopyColumnsAction?.supported(copyColumnsTab)){
+    items.push(
+      {label:appLang==='en'?'Copy custom columns':'Özel sütunlarla kopyala',run:()=>void copyRowsWithCopyColumns(copyColumnsTab,'profile')},
+      {label:appLang==='en'?'Copy without sensitive columns':'Hassaslar gizli kopyala',run:()=>void copyRowsWithCopyColumns(copyColumnsTab,'safe')},
+      {label:appLang==='en'?'Copy columns & sensitive fields…':'Kopyalama sütunları ve hassas alanlar…',run:()=>openCopyColumnsEditor(copyColumnsTab)},
+    );
+  }
   items.push({label:appLang==='en'?'Clipboard diagnostics':'Pano hata teşhisi',run:openClipboardDiagnostics});
   items.forEach(item=>{
     const node=document.createElement('button');node.type='button';node.setAttribute('role','menuitem');
@@ -4988,6 +4996,9 @@ function existingColumnGroups(tableKey){
 function placeColumnInGroup(tableKey,key,group){
   const cols=COLS_BY_TABLE[tableKey]||[], cs=colmgr[tableKey];
   if(!cs||!Array.isArray(cs.order))return;
+  // Tanımın başlığına açıkça yerleştirilen sütunun (yeni sütun ya da tanımda başlığı
+  // değişen sütun) kişisel başlık eşlemesi artık geçersizdir.
+  if(cs.groups&&Object.prototype.hasOwnProperty.call(cs.groups,key)){const groups={...cs.groups};delete groups[key];cs.groups=groups;applyColumnGroupOverrides(tableKey);}
   const byKey=new Map(cols.map(c=>[c.k,c]));
   const target=groupKey(group);
   let lastIndex=-1;
@@ -4996,6 +5007,39 @@ function placeColumnInGroup(tableKey,key,group){
   if(current>=0)cs.order.splice(current,1);
   if(lastIndex<0){ cs.order.push(key); return; }
   cs.order.splice(lastIndex+(current>=0&&current<=lastIndex?0:1),0,key);
+}
+/* Alanlar çekmecesinde sütunun ana başlığı sürükle-bırakla değiştirilebilir. Bu,
+   sütun sırası gibi KİŞİSEL yerleşim tercihidir (lcw.table.columnState.v1 → groups);
+   paylaşılan sütun tanımı (veritabanı / not / hesaplanan sütun) değişmez. Etkin
+   başlık sütun nesnesinin group alanına yazılır, tanımdaki başlık baseGroup'ta
+   kalır; tablo bantları, Sunum Stüdyosu ve dışa aktarım aynı başlığı okur. Sütun
+   listesi her yeniden kurulduğunda invalidateColumnIndex eşlemeyi yeniden uygular. */
+function tableColumnBaseGroup(column){
+  if(!column)return '';
+  return Object.prototype.hasOwnProperty.call(column,'baseGroup')?column.baseGroup:column.group;
+}
+function applyColumnGroupOverrides(tableKey){
+  const cols=COLS_BY_TABLE[tableKey];if(!Array.isArray(cols))return;
+  const groups=(colmgr[tableKey]&&colmgr[tableKey].groups)||{};
+  cols.forEach(column=>{
+    if(!column||typeof column!=='object')return;
+    if(!Object.prototype.hasOwnProperty.call(column,'baseGroup'))column.baseGroup=column.group;
+    const override=Object.prototype.hasOwnProperty.call(groups,column.k)?groups[column.k]:'';
+    column.group=override&&groupKey(override)!==groupKey(canonicalColumnGroup(column.baseGroup))?override:column.baseGroup;
+  });
+}
+function normalizeColumnGroupOverrides(value){
+  const out={};
+  if(value&&typeof value==='object'&&!Array.isArray(value))Object.entries(value).forEach(([key,group])=>{const name=canonicalColumnGroup(group);if(key&&typeof group==='string'&&name)out[key]=name;});
+  return out;
+}
+function setColumnGroupOverride(tableKey,key,group){
+  const cs=colmgr[tableKey],column=(COLS_BY_TABLE[tableKey]||[]).find(c=>c.k===key);
+  if(!cs||!column)return false;
+  const groups={...(cs.groups||{})},next=canonicalColumnGroup(group);
+  if(!next||groupKey(next)===groupKey(canonicalColumnGroup(tableColumnBaseGroup(column))))delete groups[key];else groups[key]=next;
+  cs.groups=groups;applyColumnGroupOverrides(tableKey);
+  return true;
 }
 window.BLColumnGroups={ list:existingColumnGroups, placeInGroup:placeColumnInGroup, key:groupKey, canonical:canonicalColumnGroup, label:tableColumnGroupLabel };
 
@@ -5015,8 +5059,9 @@ function syncCpModelColumns(defs){
   restoreLateManagedColumnState('cp');
   dynamic.forEach(c=>{
     const isNew=!knownBefore.has(c.k)&&!persistedBefore.has(c.k);
-    const groupChanged=previousGroup.has(c.k)&&groupKey(previousGroup.get(c.k)||'')!==groupKey(c.group);
-    if(isNew||groupChanged)placeColumnInGroup('cp',c.k,c.group);
+    const definitionGroup=tableColumnBaseGroup(c);
+    const groupChanged=previousGroup.has(c.k)&&groupKey(previousGroup.get(c.k)||'')!==groupKey(definitionGroup);
+    if(isNew||groupChanged)placeColumnInGroup('cp',c.k,definitionGroup);
   });
   regroupDynamicColumnsAfterLayoutReset('cp');
   Object.keys(state.colFilters.cp||{}).forEach(k=>{if(!valid.includes(k))delete state.colFilters.cp[k];});
@@ -5295,6 +5340,10 @@ function restoreLateManagedColumnState(tableKey){
   const widthPx=Object.fromEntries(Object.entries(cs.widthPx||{}).filter(([k,v])=>validSet.has(k)&&Number.isFinite(Number(v))));
   if(entry)Object.entries(entry.widthPx||{}).forEach(([k,v])=>{if(validSet.has(k)&&Number.isFinite(Number(v)))widthPx[k]=Number(v);});
   cs.widthPx=widthPx;
+  // Başlık eşlemesi geç yüklenen sütunlar için de korunur: anahtar şu an tabloda
+  // olmasa bile saklanır (sütun yüklendiğinde başlığı yeniden uygulanır).
+  if(entry&&entry.groups)cs.groups=normalizeColumnGroupOverrides(entry.groups);
+  applyColumnGroupOverrides(tableKey);
   return savedColumnOrderKeys(tableKey);
 }
 function writeAutoTableColumnStateSnapshot(){
@@ -5332,6 +5381,8 @@ function saveAutoTableColumnState(){
       Object.entries(prior.widthPx||{}).forEach(([k,v])=>{if(!validSet.has(k)&&Number.isFinite(Number(v)))widthPx[k]=Number(v);});
       Object.entries(cs.widthPx||{}).forEach(([k,v])=>{if(validSet.has(k)&&Number.isFinite(Number(v)))widthPx[k]=Number(v);});
       payload[t]={order,hidden,widthPx};
+      const groups=normalizeColumnGroupOverrides(cs.groups);
+      if(Object.keys(groups).length)payload[t].groups=groups;
       cs.order=currentOrder;
     });
     autoTableColumnStateSnapshot=payload;
@@ -5354,8 +5405,8 @@ function migrateCpOrdersColumnLayout(saved){
 function regroupDynamicColumnsAfterLayoutReset(tableKey){
   if(!COLUMN_LAYOUT_REGROUP.has(tableKey))return;
   const cols=COLS_BY_TABLE[tableKey]||[];
-  const baseGroups=new Set(cols.filter(c=>!c.modelCustom&&!c.noteCustom&&!c.personalNote&&!c.formulaCustom&&!c.checklistSupplierColumn).map(c=>groupKey(c.group)));
-  cols.filter(c=>(c.modelCustom||c.noteCustom||c.personalNote)&&baseGroups.has(groupKey(c.group))).forEach(c=>placeColumnInGroup(tableKey,c.k,c.group));
+  const baseGroups=new Set(cols.filter(c=>!c.modelCustom&&!c.noteCustom&&!c.personalNote&&!c.formulaCustom&&!c.checklistSupplierColumn).map(c=>groupKey(tableColumnBaseGroup(c))));
+  cols.filter(c=>(c.modelCustom||c.noteCustom||c.personalNote)&&baseGroups.has(groupKey(tableColumnBaseGroup(c)))).forEach(c=>placeColumnInGroup(tableKey,c.k,tableColumnBaseGroup(c)));
 }
 function loadAutoTableColumnState(){
   try{
@@ -5368,8 +5419,10 @@ function loadAutoTableColumnState(){
       colmgr[t].hidden=new Set((saved[t].hidden||[]).filter(k=>valid.includes(k)));
       hideUnseenDefaultHiddenColumns(t,saved[t].order);
       colmgr[t].widthPx=Object.fromEntries(Object.entries(saved[t].widthPx||{}).filter(([k,v])=>valid.includes(k)&&Number.isFinite(Number(v))));
+      colmgr[t].groups=normalizeColumnGroupOverrides(saved[t].groups);
     });
   }catch(e){}
+  Object.keys(COLS_BY_TABLE).forEach(t=>{try{applyColumnGroupOverrides(t);}catch(_){}});
 }
 function reloadPersistedTableColumnStateAfterHydration(){
   // user-storage hydrate() uygulama çekirdeği çalıştıktan SONRA daha yeni bir
@@ -5698,11 +5751,43 @@ function cycleTableGroupMode(tableKey,group){
   if(base!=='custom')tableViewLastAppliedPreset[tableKey]=base;
   return tableViewApplyVisibility(tableKey,visible);
 }
+// Alanlar çekmecesinde başka başlığa taşınmış sütunlar.
+function tableColumnGroupOverrideKeys(tableKey){
+  if(tableKey==='koleksiyon')return Object.keys(kolColGroupOverrides||{});
+  const known=new Set((COLS_BY_TABLE[tableKey]||[]).map(c=>c.k));
+  return Object.keys(colmgr[tableKey]?.groups||{}).filter(key=>known.has(key));
+}
+// Taşınan sütunlar tanımdaki başlıklarına, o başlığın son sütununun ardına döner.
+function resetTableColumnGroupOverrides(tableKey){
+  const keys=tableColumnGroupOverrideKeys(tableKey);
+  if(tableKey==='koleksiyon'){
+    if(!Object.keys(kolColGroupOverrides||{}).length)return false;
+    kolColGroupOverrides={};
+    let order=kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder());
+    keys.forEach(key=>{
+      if(!order.includes(key))return;
+      const home=kolColumnGroupFor(key,order),rest=order.filter(item=>item!==key);
+      let at=-1;rest.forEach((item,index)=>{if(kolColumnGroupFor(item,rest)===home)at=index;});
+      if(at<0)return;
+      rest.splice(at+1,0,key);order=kolNormalizeDisplayOrder(rest);
+    });
+    kolColOrder=order;saveKolColState();
+    return true;
+  }
+  const cs=colmgr[tableKey];if(!cs||!cs.groups||!Object.keys(cs.groups).length)return false;
+  const cols=COLS_BY_TABLE[tableKey]||[];
+  cs.groups={};applyColumnGroupOverrides(tableKey);
+  keys.forEach(key=>{const column=cols.find(c=>c.k===key);if(column)placeColumnInGroup(tableKey,key,tableColumnBaseGroup(column));});
+  saveAutoTableColumnState();
+  return true;
+}
 function resetTableGroupOverrides(tableKey){
+  const movedBack=resetTableColumnGroupOverrides(tableKey);
   // Aktif görünüm katman temizlenmeden önce okunur; sonra yalnız preset uygulanır.
   const base=tableViewBasePreset(tableKey);
   Object.keys(tableGroupOverrides(tableKey)).forEach(group=>saveTableGroupOverride(tableKey,group,''));
   if(base!=='custom')return applyTableViewPreset(tableKey,base);
+  if(movedBack){const info=activeTableInfo();if(info?.tableKey===tableKey&&typeof info.rerender==='function')info.rerender();}
   renderTableViewContext(tableKey);return true;
 }
 /* v7.0.229 — ALANLAR ÇEKMECESİ. Eski "Sütunlar" paneli ve ayrı Odak/Genişletilmiş
@@ -5759,12 +5844,29 @@ function tableFieldsDeleteColumn(tableKey,key){
   else if(meta.kind==='note')void removeCpNoteColumn(meta.col.noteColumnId,done);
   else if(meta.kind==='personalNote')removePersonalOrderNoteColumn(meta.col.k,done);
 }
-// Koleksiyon'da kullanıcının eklediği serbest sütun (checklist hariç) ana başlığını
-// soldaki komşusundan alır; bu yüzden başka bir başlığın içine sürüklenebilir ve
-// başlığı yerleştiği yere göre kendiliğinden değişir. Sistem sütunlarının ve
-// CP/Orders'ın ortak (sunucu) sütun tanımlarının başlığı sabittir.
+// Sütun başka bir ana başlığa sürüklenebilir; başlık KİŞİSEL yerleşim tercihidir
+// (paylaşılan sütun tanımı değişmez). Koleksiyon serbest sütunu başlığını soldaki
+// komşusundan alır; sistem sütunu kolColGroupOverrides ile taşınır. Fiyat ve
+// Endeksmatik sütunlarının yerleşimi fiyat görünümüne bağlı, checklist maddeleri
+// ise kendi başlığına aittir: bunlar ve sabit görsel sütunu başlık değiştirmez.
+const TABLE_FIELDS_LOCKED_GROUPS=Object.freeze(['Checklist','Endeksmatik & Avantaj']); // i18n-ignore — başlık kimlikleri
+const KOL_FIELDS_LOCKED_SOURCE_GROUPS=Object.freeze(['Checklist','Endeksmatik & Avantaj','Fiyatlandırma']); // i18n-ignore — başlık kimlikleri
+function tableFieldsKolSystemMovable(key){
+  if(!key||key==='__picture__'||tableFieldsColumn('koleksiyon',key).kind!=='system')return false;
+  return !KOL_FIELDS_LOCKED_SOURCE_GROUPS.includes(kolColumnGroupFor(key,null,{base:true}));
+}
 function tableFieldsCanChangeGroup(tableKey,key){
-  return tableKey==='koleksiyon'&&tableFieldsColumn(tableKey,key).kind==='custom';
+  if(tableKey==='koleksiyon'){
+    const kind=tableFieldsColumn(tableKey,key).kind;
+    return kind==='custom'||tableFieldsKolSystemMovable(key);
+  }
+  const meta=tableFieldsColumn(tableKey,key);
+  return !!meta.col&&!meta.fixed&&meta.kind!=='cpChecklist'&&!TABLE_FIELDS_LOCKED_GROUPS.includes(canonicalColumnGroup(tableColumnBaseGroup(meta.col)));
+}
+// Hedef başlık sütunu kabul eder mi? Checklist ve sona sabitlenen Endeksmatik
+// başlığına başka sütun taşınmaz.
+function tableFieldsGroupAccepts(group){
+  return !!group&&!TABLE_FIELDS_LOCKED_GROUPS.includes(canonicalColumnGroup(group));
 }
 // Sütun kendi başlığı içinde taşınır; yalnız tableFieldsCanChangeGroup sütunları
 // başka başlığa geçebilir. targetGroup verilirse sütun o başlıkta kalmalıdır.
@@ -5777,8 +5879,16 @@ function tableFieldsKolPlan(key,targetKey,after,targetGroup){
   const base=kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder()).filter(item=>item!==key);
   if(base.indexOf(targetKey)<0)return null;
   const place=side=>{const order=base.slice();order.splice(order.indexOf(targetKey)+(side?1:0),0,key);return kolNormalizeDisplayOrder(order);};
+  // Sistem sütununun başlığı konumdan değil kişisel eşlemeden gelir; hedef sütunun
+  // yanına bırakılması bandı bitişik tutar.
+  if(targetGroup&&tableFieldsKolSystemMovable(key))return tableFieldsGroupAccepts(targetGroup)?place(!!after):null;
   const fits=order=>!targetGroup||kolColumnGroupFor(key,order)===targetGroup;
   return [place(!!after),place(!after)].find(fits)||null;
+}
+function kolSetColumnGroupOverride(key,group){
+  const next={...(kolColGroupOverrides||{})},name=canonicalColumnGroup(group);
+  if(!name||groupKey(name)===groupKey(canonicalColumnGroup(kolColumnGroupFor(key,null,{base:true}))))delete next[key];else next[key]=name;
+  kolColGroupOverrides=next;
 }
 function tableFieldsMoveColumn(tableKey,key,targetKey,after,targetGroup){
   if(!key||!targetKey||key===targetKey)return false;
@@ -5786,12 +5896,16 @@ function tableFieldsMoveColumn(tableKey,key,targetKey,after,targetGroup){
     if(key==='__picture__'||targetKey==='__picture__')return false;
     const next=tableFieldsKolPlan(key,targetKey,after,targetGroup);
     if(!next){showToast(appLang==='en'?'This column cannot be moved under that heading.':'Bu sütun o başlığın altına taşınamaz.');return false;}
+    if(targetGroup&&tableFieldsKolSystemMovable(key))kolSetColumnGroupOverride(key,targetGroup);
     kolColOrder=next;saveKolColState();
   }else{
     const cs=colmgr[tableKey];if(!cs)return false;
+    const crossGroup=!!targetGroup&&groupKey(tableViewColumnGroup(tableKey,key))!==groupKey(targetGroup);
+    if(crossGroup&&!(tableFieldsCanChangeGroup(tableKey,key)&&tableFieldsGroupAccepts(targetGroup))){showToast(appLang==='en'?'This column cannot be moved under that heading.':'Bu sütun o başlığın altına taşınamaz.');return false;}
     const order=normalizedColumnOrder(tableKey,cs.order).filter(item=>item!==key);
     const at=order.indexOf(targetKey);if(at<0)return false;
     order.splice(after?at+1:at,0,key);
+    if(crossGroup)setColumnGroupOverride(tableKey,key,targetGroup);
     cs.order=order;saveAutoTableColumnState();
   }
   tableFieldsRerender(tableKey);
@@ -5854,7 +5968,7 @@ function renderTableFieldsMenu(menu,tableKey){
     addButtons.push(`<button type="button" class="tbtn" data-table-fields-add="column">+ ${escapeHtml(en?'Add Column':'Sütun Ekle')}</button>`);
     addButtons.push(`<button type="button" class="tbtn" data-table-fields-checklist>+ ${escapeHtml(en?'Add checklist item':'Checklist maddesi ekle')}</button>`);
   }
-  menu.innerHTML=`<div class="tableFieldsHead"><div><b>${escapeHtml(en?'Fields':'Alanlar')}</b><span>${escapeHtml(en?'Open a heading to see its columns. Ticks choose the views a column appears in; drag to reorder. Drag your own columns onto another heading to move them there.':'Başlığı açıp sütunları görün. Tikler sütunun hangi görünümde yer alacağını belirler; sürükleyerek sıralayın. Eklediğiniz sütunları başka bir başlığa sürükleyerek o başlığa taşıyın.')}</span></div><button type="button" class="tableFieldsClose" data-table-fields-close aria-label="${escapeHtml(en?'Close':'Kapat')}">×</button></div><div class="tableFieldsGridHead"><span>${escapeHtml(en?'Heading / column':'Başlık / sütun')}</span><span class="tableFieldsChecks">${presetHead}</span></div><div class="tableFieldsList" role="group">${groupsHtml}</div><div class="tableFieldsFoot"><div class="tableFieldsAdd">${addButtons.join('')}</div><button type="button" class="tbtn" data-table-fields-reset ${Object.keys(overrides).length?'':'disabled'}>${escapeHtml(en?'Reset fields':'Alanları sıfırla')}</button></div>`;
+  menu.innerHTML=`<div class="tableFieldsHead"><div><b>${escapeHtml(en?'Fields':'Alanlar')}</b><span>${escapeHtml(en?'Open a heading to see its columns. Ticks choose the views a column appears in; drag to reorder. Drag a column onto another heading to move it there.':'Başlığı açıp sütunları görün. Tikler sütunun hangi görünümde yer alacağını belirler; sürükleyerek sıralayın. Bir sütunu başka bir başlığa sürükleyerek o başlığa taşıyın.')}</span></div><button type="button" class="tableFieldsClose" data-table-fields-close aria-label="${escapeHtml(en?'Close':'Kapat')}">×</button></div><div class="tableFieldsGridHead"><span>${escapeHtml(en?'Heading / column':'Başlık / sütun')}</span><span class="tableFieldsChecks">${presetHead}</span></div><div class="tableFieldsList" role="group">${groupsHtml}</div><div class="tableFieldsFoot"><div class="tableFieldsAdd">${addButtons.join('')}</div><button type="button" class="tbtn" data-table-fields-reset ${Object.keys(overrides).length||tableColumnGroupOverrideKeys(tableKey).length?'':'disabled'}>${escapeHtml(en?'Reset fields':'Alanları sıfırla')}</button></div>`;
   menu.querySelectorAll('input[data-indeterminate]').forEach(input=>{input.indeterminate=true;});
   const list=menu.querySelector('.tableFieldsList');if(list)list.scrollTop=listScroll;
   menu.querySelector('[data-table-fields-close]')?.addEventListener('click',()=>closeTableFieldsMenu());
@@ -5887,7 +6001,7 @@ function renderTableFieldsMenu(menu,tableKey){
   const crossPlans=new Map();
   const crossFits=(targetKey,group)=>{
     const id=`${tableFieldsDragKey}\u0000${targetKey}\u0000${group}`;
-    if(!crossPlans.has(id))crossPlans.set(id,tableKey==='koleksiyon'&&!!tableFieldsKolPlan(tableFieldsDragKey,targetKey,true,group));
+    if(!crossPlans.has(id))crossPlans.set(id,tableKey==='koleksiyon'?!!tableFieldsKolPlan(tableFieldsDragKey,targetKey,true,group):tableFieldsGroupAccepts(group));
     return crossPlans.get(id);
   };
   menu.querySelectorAll('.tableFieldsColumn[draggable="true"]').forEach(row=>{
@@ -8053,6 +8167,8 @@ function quickFilterColumnActive(tableKey, key){
 const _colIndexCache=new Map();
 function invalidateColumnIndex(tableKey){
   if(tableKey==null)_colIndexCache.clear();else _colIndexCache.delete(tableKey);
+  // Sütun listesi yeniden kuruldu: kişisel başlık eşlemesi yeni nesnelere uygulanır.
+  try{(tableKey==null?Object.keys(COLS_BY_TABLE):[tableKey]).forEach(applyColumnGroupOverrides);}catch(_){}
 }
 function columnByKey(tableKey,key){
   const cols=COLS_BY_TABLE[tableKey]||[];
@@ -9982,7 +10098,8 @@ async function kolRecordImageCopyCell(record){
     style:`border:1px solid #B4B8BD;padding:2px;vertical-align:middle;text-align:center;width:${dims.w+8}px;height:${dims.h+8}px;`,
   };
 }
-async function buildCollectionStyledCopy(selSet){
+async function buildCollectionStyledCopy(selSet,options){
+  options=options||{};
   const meta=TABLE_META.kolTable;
   const all=meta.rowsFn();
   const records=selSet&&selSet.size
@@ -9990,8 +10107,10 @@ async function buildCollectionStyledCopy(selSet){
     : all;
   if(!records.length) return null;
 
-  const descriptors=kolExportDescriptors();
-  const pictureVisible=!kolPictureHidden;
+  // options.descriptors / options.picture: Özel veya hassas-gizli kopya sütunları.
+  const descriptors=Array.isArray(options.descriptors)?options.descriptors:kolExportDescriptors();
+  const pictureVisible=typeof options.picture==='boolean'?options.picture:!kolPictureHidden;
+  if(!descriptors.length&&!pictureVisible) return null;
   const matrix=BLTableExport.buildMatrix({
     records, columns:descriptors,
     columnLabel:col=>col.label||col.k,
@@ -10178,13 +10297,17 @@ async function cpOrdersRecordImageCopyCells(records,dims){
   });
 }
 function cpOrdersImageDims(tableKey){return tableKey==='orders'?ordersImageDims():cpImageDims();}
-async function buildManagedTableStyledCopy(tableKey, rows, selSet){
+async function buildManagedTableStyledCopy(tableKey, rows, selSet, options){
+  options=options||{};
+  // options.columns: Özel/hassas-gizli kopya sütun listesi; yoksa görünür sütunlar.
+  // options.records: hücre aralığından gelen, zaten hazırlanmış kayıtlar (sırası korunur).
   const all=selSet?.size?managedSelectionSourceRows(tableKey):(Array.isArray(rows)?rows:[]);
-  const records=selSet&&selSet.size
+  const records=Array.isArray(options.records)?options.records:selSet&&selSet.size
     ? all.filter(row=>selSet.has(row._id)||selSet.has(Number(row._id))||selSet.has(String(row._id)))
     : all;
   if(!records.length) return null;
-  const cols=visibleCols(tableKey);
+  const cols=Array.isArray(options.columns)?options.columns:visibleCols(tableKey);
+  if(!cols.length) return null;
   /* computeFlags SATIR BAŞINA bir kez. Önce hem hücre metninde hem hücre
      stilinde ayrı ayrı çağrılıyordu; 60 sütunluk bir tabloda bu, satır başına
      120 kez iş kuralı + tarih hesabı demekti ve çok satırlı kopyalama
@@ -10303,6 +10426,111 @@ async function copyManagedTableLikeExcel(tableKey, rows, selSet, btnId){
   const ok = await copyRichToClipboard(built.html, built.plain);
   flashCopyBtn(btnId, ok, built.count);
 }
+
+/* ---------- Özel sütunlarla / hassaslar gizli kopyalama (CP · Siparişler · Koleksiyon) ----------
+   Ctrl+C ve normal Kopyala değişmez. Bu iki yol aynı kayıt kaynaklı kopya
+   üreticisini (buildManagedTableStyledCopy / buildCollectionStyledCopy) yalnız
+   farklı bir sütun listesiyle çağırır; hücre metni, biçim ve görsel aynıdır.
+   Sütun profili ve hassas işaretleri public/copy-column-profiles.js'tedir. */
+const KOL_COPY_PICTURE_KEY='__kolPicture__';
+function copyColumnsCatalog(tableKey){
+  if(tableKey==='cp'||tableKey==='orders'){
+    const cols=COLS_BY_TABLE[tableKey]||[],byKey=new Map(cols.map(c=>[c.k,c]));
+    const order=[...new Set([...(colmgr[tableKey]?.order||[]).filter(k=>byKey.has(k)),...cols.map(c=>c.k)])];
+    const items=order.map(k=>{const c=byKey.get(k);return {key:k,label:tableColumnLabel(tableKey,c),group:c.group||'',groupLabel:c.group?tableColumnGroupLabel(c.group):''};});
+    return {items,visibleKeys:visibleCols(tableKey).map(c=>c.k),columns:cols};
+  }
+  if(tableKey==='koleksiyon'){
+    kolPriceDetailCache=new WeakMap();
+    const descriptors=kolExpandPriceDetails(kolDisplayDescriptors({all:true}));
+    const groupOf=d=>d.col?.group||KOL_SYNTHETIC_COL_META[d.k]?.group||d.field?.group||KOL_PRICE_VIEW_COLS[d.k]?.group||'';
+    const item=(key,label,group)=>({key,label,group,groupLabel:group?tableColumnGroupLabel(group):''});
+    const items=[item(KOL_COPY_PICTURE_KEY,L('Picture'),'Model Detayları'),...descriptors.map(d=>item(d.k,d.label||d.k,groupOf(d)))];
+    const visibleKeys=[...(kolPictureHidden?[]:[KOL_COPY_PICTURE_KEY]),...kolExportDescriptors().map(d=>d.k)];
+    return {items,visibleKeys,descriptors};
+  }
+  return null;
+}
+// Modül ilk kullanımda yüklenir; açılışta indirilmez/çalıştırılmaz.
+async function loadCopyColumnProfiles(){
+  if(window.BLCopyColumnProfiles)return window.BLCopyColumnProfiles;
+  try{await window.BLPerf?._loadScript?.('copy-column-profiles.js?rev=1');}
+  catch(error){showToast((appLang==='en'?'Copy column settings could not be loaded: ':'Kopyalama sütun ayarı yüklenemedi: ')+(error&&error.message||error),{kind:'error'});}
+  return window.BLCopyColumnProfiles||null;
+}
+async function openCopyColumnsEditor(tableKey,options){
+  options=options||{};
+  const P=await loadCopyColumnProfiles(),catalog=P&&copyColumnsCatalog(tableKey);
+  if(!P||!catalog)return false;
+  return P.openEditor({module:tableKey,catalog:catalog.items,visibleKeys:catalog.visibleKeys,focus:options.focus||'profile',onSave:(entry,ok)=>{
+    if(!ok){showToast(appLang==='en'?'Copy column settings could not be saved.':'Kopyalama sütun ayarı kaydedilemedi.',{kind:'error'});return;}
+    window.BLSelectionBar?.refresh?.();
+    if(typeof options.then==='function'){void options.then();return;}
+    showToast(appLang==='en'?'Copy column settings saved.':'Kopyalama sütun ayarı kaydedildi.',{kind:'success'});
+  }});
+}
+async function copyRowsWithCopyColumns(tableKey,mode){
+  const P=await loadCopyColumnProfiles(),en=appLang==='en';
+  const catalog=P&&copyColumnsCatalog(tableKey);if(!catalog)return false;
+  const entry=P.getEntry(tableKey),sensitive=P.sensitiveSet(tableKey,catalog.items,entry);
+  let keys=null;
+  if(mode==='profile'){
+    keys=P.profileKeys(catalog.items,entry);
+    if(!keys){
+      showToast(en?'Choose the custom copy columns first.':'Önce özel kopya sütunlarını seçin.');
+      openCopyColumnsEditor(tableKey,{focus:'profile',then:()=>copyRowsWithCopyColumns(tableKey,'profile')});
+      return false;
+    }
+  }
+  const noRows=()=>{showToast(en?'Check rows or select a cell range first.':'Önce satır işaretleyin veya hücre aralığı seçin.');return false;};
+  let built=null,hidden=0,columnCount=0;
+  if(tableKey==='koleksiyon'){
+    if(!kolSelected||!kolSelected.size){showToast(L('Kopyalamak için önce satır seç.'));return false;}
+    commitActiveTableEditor({refresh:false});
+    let descriptors,picture;
+    if(mode==='profile'){
+      descriptors=P.orderedByKeys(catalog.descriptors,d=>d.k,keys);
+      picture=keys.includes(KOL_COPY_PICTURE_KEY);
+    }else{
+      const visible=kolExportDescriptors(),kept=P.withoutSensitive(visible,d=>d.k,sensitive);
+      descriptors=kept.columns;
+      picture=!kolPictureHidden&&!sensitive.has(KOL_COPY_PICTURE_KEY);
+      hidden=kept.hidden+(!kolPictureHidden&&sensitive.has(KOL_COPY_PICTURE_KEY)?1:0);
+    }
+    columnCount=descriptors.length+(picture?1:0);
+    if(!columnCount){showToast(en?'No columns left to copy.':'Kopyalanacak sütun kalmadı.');return false;}
+    built=await buildCollectionStyledCopy(kolSelected,{descriptors,picture});
+  }else if(tableKey==='cp'||tableKey==='orders'){
+    const checked=tableKey==='cp'?state.cpSelected:state.ordersSelected;
+    let selSet=null,records=null;
+    if(checked&&checked.size){
+      if(!await (tableKey==='cp'?cpPrepareAllRows():ordersPrepareAllRows()))return false;
+      selSet=checked;
+    }else{
+      const snapshot=await window.BLGridClipboard?.selectionSnapshot?.(tableKey==='orders'?'ordersTable':'cpTable');
+      if(!snapshot||!snapshot.rows.length)return noRows();
+      records=snapshot.rows;
+    }
+    let cols;
+    if(mode==='profile')cols=P.orderedByKeys(catalog.columns,c=>c.k,keys);
+    else{const kept=P.withoutSensitive(visibleCols(tableKey),c=>c.k,sensitive);cols=kept.columns;hidden=kept.hidden;}
+    columnCount=cols.length;
+    if(!columnCount){showToast(en?'No columns left to copy.':'Kopyalanacak sütun kalmadı.');return false;}
+    built=await buildManagedTableStyledCopy(tableKey,null,selSet,{columns:cols,records});
+  }else return false;
+  if(!built)return noRows();
+  const ok=await copyRichToClipboard(built.html,built.plain);
+  if(!ok){showToast(en?'Copy failed':'Kopyalama başarısız',{kind:'error'});return false;}
+  showToast(mode==='profile'
+    ?(en?`${built.count} row(s) copied with ${columnCount} custom column(s).`:`${built.count} satır, ${columnCount} özel sütunla kopyalandı.`)
+    :(en?`${built.count} row(s) copied · ${hidden} sensitive column(s) hidden.`:`${built.count} satır kopyalandı · ${hidden} hassas sütun gizlendi.`),{kind:'success'});
+  return true;
+}
+window.BLCopyColumnsAction={
+  supported:tableKey=>['cp','orders','koleksiyon'].includes(tableKey),
+  copy:copyRowsWithCopyColumns,
+  edit:openCopyColumnsEditor,
+};
 
 async function copyRows(tableKey, rows, selectedSet, btnId, computeFn){
   const chosen = rows.filter(r=>selectedSet.has(r._id));
@@ -21297,12 +21525,13 @@ function resetViewToSystemDefault(){
   if(!state.freeze)state.freeze={};
   delete state.freeze[page];
   if(page==='koleksiyon'){
-    kolColOrder=null;kolColWidths={};kolHiddenCols=new Set();kolPictureHidden=false;
+    kolColOrder=null;kolColWidths={};kolHiddenCols=new Set();kolPictureHidden=false;kolColGroupOverrides={};
     kolSort={key:null,dir:1};
     saveKolColState();
   }else if(colmgr[page]){
     forgetPersistedTableColumnState(page);
     colmgr[page]=initColState(COLS_BY_TABLE[page]||[]);
+    applyColumnGroupOverrides(page);
     if(page==='cp'||page==='orders')colmgr[page].widthPx.__picture=tableImageSizeDimensions(page,tableImageSizeCurrentValue(page)).col;
     saveAutoTableColumnState();
   }
@@ -29633,6 +29862,10 @@ let kolManufacturers = []; // [{name, email}]
    gösterirdi. İşlev her çağrıda güncel diziyi döndürür. */
 window.BLPrepareEmailManufacturers = () => (Array.isArray(kolManufacturers) ? kolManufacturers : []);
 let kolColOrder = null; // KOL_COLS.k sırası (null = varsayılan tanım sırası)
+// {sistemSütunu: başlık} — Alanlar çekmecesinde başka başlığa sürüklenen sistem
+// sütununun KİŞİSEL başlığı. Tanımdaki başlık değişmez; serbest sütunlar başlığı
+// yine soldaki komşusundan alır.
+let kolColGroupOverrides = {};
 let kolColWidths = {}; // {k: px} — kullanıcı sürükleyerek ayarladıysa
 let kolHiddenCols = new Set(); // Sütun seç panelinde gizlenen sabit Koleksiyon sütunları
 let kolPictureHidden = false; // Görsel/Picture sütunu da görünümden gizlenebilir
@@ -29940,8 +30173,15 @@ function kolDefaultDisplayOrder(){
 }
 /* Koleksiyon ana başlığı (group). Sistem sütunları sabit başlık taşır; kullanıcının
    eklediği serbest sütun, tablodaki solundaki sütunun başlığına katılır. */
-function kolColumnGroupFor(key,orderKeys){
+function kolColumnGroupOverride(key){
+  const group=kolColGroupOverrides&&Object.prototype.hasOwnProperty.call(kolColGroupOverrides,key)?kolColGroupOverrides[key]:'';
+  return typeof group==='string'?group:'';
+}
+function kolColumnGroupFor(key,orderKeys,options){
   if(key==='__picture__')return 'Model Detayları';
+  const useOverrides=!(options&&options.base);
+  const own=useOverrides?kolColumnGroupOverride(key):'';
+  if(own)return own;
   if(KOL_SYNTHETIC_COL_META[key])return KOL_SYNTHETIC_COL_META[key].group;
   if(KOL_PRICE_VIEW_COLS[key])return KOL_PRICE_VIEW_COLS[key].group;
   if(KOL_PRICE_DETAIL_BY_KEY[key])return KOL_PRICE_DETAIL_BY_KEY[key].group;
@@ -29951,6 +30191,8 @@ function kolColumnGroupFor(key,orderKeys){
   const order=Array.isArray(orderKeys)?orderKeys:kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder());
   for(let i=order.indexOf(key)-1;i>=0;i--){
     const left=order[i];
+    const leftOwn=useOverrides?kolColumnGroupOverride(left):'';
+    if(leftOwn)return leftOwn;
     if(KOL_SYNTHETIC_COL_META[left])return KOL_SYNTHETIC_COL_META[left].group;
     const leftDef=kolColDefs().find(c=>c.k===left);
     if(leftDef&&leftDef.checklist)return 'Checklist';
@@ -29978,7 +30220,7 @@ function saveKolColState(){
   try{
     if(Array.isArray(kolColOrder))kolColOrder=kolNormalizeDisplayOrder(kolColOrder);
     const filters = {}; Object.entries(kolColFilters).forEach(([k,s])=>{ if(s&&s.size) filters[k]=[...s]; });
-    BLStorage.setItem(KOL_COL_STATE_KEY, JSON.stringify({layoutVersion:KOL_COL_LAYOUT_VERSION, order:kolColOrder, hidden:[...kolHiddenCols], custom:kolCustomCols, pictureHidden:kolPictureHidden, imgSize:kolImgSize, widths:kolColWidths, filters, fabricDetails:Object.fromEntries(Object.entries(kolFabricDetailFilters).filter(([key,set])=>fabricFacetKeyInfo(key)&&set?.size).map(([key,set])=>[key,[...set]]))}));
+    BLStorage.setItem(KOL_COL_STATE_KEY, JSON.stringify({layoutVersion:KOL_COL_LAYOUT_VERSION, order:kolColOrder, groups:kolColGroupOverrides, hidden:[...kolHiddenCols], custom:kolCustomCols, pictureHidden:kolPictureHidden, imgSize:kolImgSize, widths:kolColWidths, filters, fabricDetails:Object.fromEntries(Object.entries(kolFabricDetailFilters).filter(([key,set])=>fabricFacetKeyInfo(key)&&set?.size).map(([key,set])=>[key,[...set]]))}));
   }catch(e){}
 }
 function loadKolColState(options={}){
@@ -29986,6 +30228,7 @@ function loadKolColState(options={}){
     const raw = BLStorage.getItem(KOL_COL_STATE_KEY); if(!raw) return;
     const obj = JSON.parse(raw);
     if(!options.preserveCustom) kolCustomCols = kolNormalizeCustomCols(obj.custom);
+    kolColGroupOverrides = normalizeColumnGroupOverrides(obj.groups);
     if(Array.isArray(obj.order)){
       kolColOrder = kolNormalizeDisplayOrder(obj.order);
     }

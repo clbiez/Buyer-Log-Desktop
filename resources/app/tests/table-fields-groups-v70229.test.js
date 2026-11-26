@@ -192,6 +192,8 @@ function fieldsHarness(options = {}) {
     ${extractFunction(APP, 'tableGroupNextMode')}
     ${extractFunction(APP, 'cycleTableGroupMode')}
     function applyTableViewPreset(tableKey,preset){tableViewLastAppliedPreset[tableKey]=preset;return tableViewApplyVisibility(tableKey,new Set(tableViewEffectiveKeys(tableKey,preset)));}
+    function resetTableColumnGroupOverrides(){return false;}
+    function activeTableInfo(){return null;}
     ${extractFunction(APP, 'resetTableGroupOverrides')}
     this.api={applyTableViewPreset,cycleTableGroupMode,tableGroupModeLabel,tableViewPresetState,tableViewEffectiveKeys,resetTableGroupOverrides,visible:()=>tableViewAllKeys().filter(key=>!hidden.has(key))};
   `, context);
@@ -345,11 +347,13 @@ test('Alanlar çekmecesi: Koleksiyon serbest sütunu başka başlığa sürükle
     showToast: message => context.toasts.push(message),
     tableFieldsRerender: () => {},
     tableFieldsColumn: (_table, key) => ({ kind: fixed[key] ? 'system' : 'custom' }),
+    // Bu test serbest sütun davranışını sınar; sistem sütunu kişisel başlık
+    // eşlemesi table-fields-cross-group-heading testindedir.
+    tableFieldsKolSystemMovable: () => false,
   };
   vm.runInNewContext(`${extractFunction(APP, 'tableFieldsCanChangeGroup')}${extractFunction(APP, 'tableFieldsKolPlan')}${extractFunction(APP, 'tableFieldsMoveColumn')};this.move=tableFieldsMoveColumn;this.can=tableFieldsCanChangeGroup;this.plan=tableFieldsKolPlan;`, context);
   assert.equal(context.can('koleksiyon', 'x'), true);
   assert.equal(context.can('koleksiyon', 'b1'), false);
-  assert.equal(context.can('cp', 'x'), false, 'CP/Orders ortak sütun başlığı sürüklemeyle değişmez');
   // B başlığındaki x, A'nın son sütununun ardına bırakılır → A başlığına geçer.
   assert.equal(context.move('koleksiyon', 'x', 'a2', true, 'A'), true);
   assert.deepEqual(plain(context.kolColOrder), ['a1', 'a2', 'x', 'b1', 'b2', 'z']);
@@ -369,8 +373,8 @@ test('Alanlar çekmecesi: Koleksiyon serbest sütunu başka başlığa sürükle
   assert.match(fn, /dragged\.dataset\.crossGroup==='1'/);
   assert.match(fn, /crossFits\(row\.dataset\.tableFieldsCol,row\.dataset\.group\)/);
   assert.match(fn, /dragged\.dataset\.group!==group&&crossFits\(target,group\)/);
-  assert.match(fn, /Drag your own columns onto another heading/);
-  assert.match(fn, /Eklediğiniz sütunları başka bir başlığa sürükleyerek/);
+  assert.match(fn, /Drag a column onto another heading to move it there/);
+  assert.match(fn, /Bir sütunu başka bir başlığa sürükleyerek o başlığa taşıyın/);
   // Tutamaç yazı tipine bağlı '⋮⋮' karakterleri yerine 2×3 noktalı SVG ikondur.
   assert.match(fn, /class="tableFieldsDrag[^"]*" aria-hidden="true"><svg class="ic"><use href="#i-grip"\/><\/svg><\/span>/);
   assert.doesNotMatch(fn, /⋮⋮/);

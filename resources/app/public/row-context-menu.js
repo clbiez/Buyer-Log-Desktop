@@ -145,6 +145,14 @@
     if (checked && checked.size > 0 && navCopy && !navCopy.disabled) {
       items.push({ label: T(`İşaretli ${checked.size} satırı kopyala`, `Copy ${checked.size} checked row(s)`), run: () => navCopy.click() });
     }
+    // Özel sütun profili / hassaslar gizli kopya: işaretli satırlar, yoksa seçili aralığın satırları.
+    const copyColumns = window.BLCopyColumnsAction;
+    if ((config.module === 'cp' || config.module === 'orders') && copyColumns?.supported?.(config.module)) {
+      items.push(
+        { label: T('Özel sütunlarla kopyala', 'Copy custom columns'), run: () => void copyColumns.copy(config.module, 'profile') },
+        { label: T('Hassaslar gizli kopyala', 'Copy without sensitive columns'), run: () => void copyColumns.copy(config.module, 'safe') },
+      );
+    }
     // Görsel kopya (CP/Orders): hücre aralığı ve işaretli satırlar ayrı hedeflerdir.
     const imageCopy = window.BLTableImageCopyAction;
     if ((config.module === 'cp' || config.module === 'orders') && imageCopy?.supported?.()) {
