@@ -13,8 +13,9 @@
  *    sayılır; kendi dosyasını görmek onay değildir (geç yerinden edilme).
  *  · Bekleyen yayım varken onu soyunda taşımayan uzak kopya, yayımdan önceki
  *    tabanla birleştirilir; düzenleme korunur ya da çakışma olarak raporlanır.
- *  · Zarf soy listesi (ancestry) eski istemcilerin sha256/chainSha256
- *    doğrulamasını değiştirmez; doğrulanamayan soy listesi yok sayılır.
+ *  · Yayım kapsama haritası (heads, version vector) eski istemcilerin
+ *    sha256/chainSha256 doğrulamasını değiştirmez; doğrulanamayan harita yok
+ *    sayılır.
  */
 
 const test = require('node:test');
@@ -108,23 +109,25 @@ test('uzak kopya daha yüksek revizyonda ezerse değişmemiş görünen yerel ko
   assert.ok(await keptOrReported(ctx, b, replica.b, 4, 'mirror-b'), 'displaced edit must survive a higher remote revision');
 });
 
-test('doğrulanamayan soy listesi yayımı onaylamış sayılmaz', { timeout: TIMEOUT_MS }, async t => {
+test('doğrulanamayan kapsama haritası yayımı onaylamış sayılmaz', { timeout: TIMEOUT_MS }, async t => {
   const ctx = await mirrored(t, 26114);
   const { b, replica, write, file } = ctx;
   assert.equal((await write(ctx.a, replica.a, 3, { not: 'mirror-a' })).published, true);
   assert.equal((await write(b, replica.b, 4, { not: 'mirror-b' })).published, true);
   const displacedId = (await ctx.readEnvelope('b')).chainSha256;
   await ctx.displaceBWithA();
-  // Bozuk/sahte soy: B'nin yayımını içerdiğini iddia eder ama özeti tutmaz.
+  // Bozuk/sahte harita: B'nin yayımını kapsadığını iddia eder ama özeti tutmaz.
+  const { installationId } = JSON.parse(await fsp.readFile(path.join(b.local, 'collection-replication-state.json'), 'utf8'));
+  assert.ok(installationId);
   const forged = await ctx.readEnvelope('b');
-  forged.ancestry = [displacedId, ...(Array.isArray(forged.ancestry) ? forged.ancestry : [])];
-  forged.ancestrySha256 = '0'.repeat(64);
+  forged.heads = { ...(forged.heads || {}), [installationId]: displacedId };
+  forged.headsSha256 = '0'.repeat(64);
   await fsp.writeFile(file.b, JSON.stringify(forged));
   await replica.b.syncOwner(b.userId, OWNER);
   assert.ok(await keptOrReported(ctx, b, replica.b, 4, 'mirror-b'), 'forged ancestry must not confirm a displaced publication');
 });
 
-test('soy listeli zarf eski istemci doğrulamasını değiştirmez ve halef yayımı onaylar', { timeout: TIMEOUT_MS }, async t => {
+test('kapsama haritalı zarf eski istemci doğrulamasını değiştirmez ve halef yayımı kapsar', { timeout: TIMEOUT_MS }, async t => {
   const sim = await createCollectionSimulation({ seed: 26115, devices: 4 });
   t.after(() => sim.close());
   await sim.bootstrap();
@@ -139,9 +142,11 @@ test('soy listeli zarf eski istemci doğrulamasını değiştirmez ve halef yay�
     assert.equal(envelope.sha256, sha({ version: envelope.version, ownerId: envelope.ownerId, workspace: envelope.workspace }));
     assert.equal(envelope.chainSha256, sha({ sha256: envelope.sha256, parentSha256: envelope.parentSha256 || null }));
   }
-  assert.ok(Array.isArray(second.ancestry) && second.ancestry.length <= 32, 'bounded ancestry list');
-  assert.equal(second.ancestry[0], second.parentSha256);
-  assert.ok(second.ancestry.includes(first.chainSha256));
+  assert.equal(second.headsSha256, sha({ chainSha256: second.chainSha256, heads: second.heads }));
+  const heads = Object.values(second.heads);
+  assert.ok(heads.includes(first.chainSha256), 'successor covers the editor publication');
+  assert.ok(heads.includes(second.chainSha256), 'publisher covers itself');
+  assert.equal(heads.length, 2, 'one entry per publishing installation, not per publication');
   await sim.settle();
   assert.ok(await sim.convergedNow());
   for (const device of sim.devices) if (device.role !== 'none') assert.deepEqual(await sim.openConflicts(device), [], `false conflict on ${device.index}`);

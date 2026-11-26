@@ -94,3 +94,36 @@ Doğruluk aşamaları bitmeden ve ölçüm yapılmadan hız işi yapılmaz.
 - Mevcut senkron, yetki geri alma ve bozuk dosya senaryoları geçmeye devam eder.
 - L2 performans: senkron turu, Koleksiyon açılışı ve büyük zarf yayımında gerileme yok.
 - `tests/fixtures/i18n-coverage-baseline.json` boş kalır. Kullanıcıya görünen çakışma metinleri TR/EN birlikte eklenir.
+
+## 7 · Aşama 0 uygulaması ve kabul kriterleri (performans ölçümünden ÖNCE yazıldı, 2026-11-26)
+
+### Mekanizma
+
+- **Yayım kapsama haritası (version vector, `heads`):** zarf, kurulum kimliği → o kurulumun bu kopyaya dahil son yayımının **içerik adresli** kimliği haritasını taşır. Sayaç yoktur: yedekten dönme veya yeniden kurulum bir sayacı geri sarıp yayımı sahte biçimde "kapsanmış" gösteremez. Girdi yalnız o yayımın üstüne (CAS veya üç yönlü birleşimle) kurulan zarfa aktarılır; birleşim uzak tarafın değişikliğini korur ya da çakışmaya alır. Harita kendi özetiyle doğrulanır; tutmazsa yok sayılır. Eski istemcilerin doğruladığı `sha256`/`chainSha256` değişmez; eski istemci haritayı düşürürse `parentSha256` zinciri kullanılır. Budama yoktur (boyut kurulum sayısıyla büyür, kurulum başına ~110 bayt).
+- **İlk sürümdeki 32'lik soy listesi kaldırıldı:** 40 yayım sonrası, silinen satırı geri getiren bir gerileme ürettiği testle gösterildi.
+- **Bekleyen yayım:** Yayım, onu kapsayan bir halef görülene kadar beklemede kalır; kendi dosyasını görmek onay değildir. Saklanan: ilk taban (tam kopya, yeniden adlandırma ile) ve yayım başına küçük değişiklik farkı (JSONL). Kapsanan yayımın tam tabanı ilk taban + farklarla kesin kurulur. Bekleyen zincirde yabancı birleşim olmaz, çünkü her yabancı birleşim kaydı temizler.
+- **Kurulum kimliği:** Durum dosyasında kalıcıdır ve bilgisayar + kullanıcı parmak izine bağlıdır (`installation-fingerprint.js`). Kopyalanan veri klasörü yeni kimlik alır.
+
+### Doğruluk kanıtı (veri bütünlüğü: eleme kriteri)
+
+| Kriter | Sonuç |
+| --- | --- |
+| Mevcut Koleksiyon testleri | Ayrıca raporlanır |
+| Sınır senaryoları: uzun çevrimdışı (40+ yayım), yarıda kalan yayım + yeniden başlatma, 3 cihaz + çakışan birleşimler, eski istemci, kimlik kalıcılığı, kopyalanan klasör, yeniden kurulum, yedekten eski durum, taban yazım hatası | Hepsi geçmeli |
+| Rastgele bulut modeli, gerçekçi (eski tabanlı yükleme yerinden edilir), ≥100 seed | 0 sessiz kayıp, 0 çakışmaya düşen kayıp, 0 geri gelen silme, 0 yanlış silme, 0 yanlış çakışma, tam yakınsama |
+| Rastgele bulut modeli, düşmanca (eski tabanlı yükleme %50 kazanır) | Düzeltme öncesine göre gerileme yok; kalan durumlar `todo` olarak belgelenir |
+
+**Bilinen sınırlar:** (a) Sırasız teslim: daha yeni taban üzerine eski sürüm gelmesi. Bu sorun Aşama 0'dan önce de vardı. (b) Düşmanca bulutta oluşan kardeş dal. İkisi de tüm-belge + tek taban modelinde ortak ata bilinmediği için kapatılamaz. ADR-0003 kapsamında alan düzeyi nedensellik veya olay günlüğü araştırılır.
+
+### Performans kabul kriterleri (L2)
+
+- **Senaryolar:** 30.000 satır (~9,2 MB) zarf.
+  - S1: tek satır düzenleme → yayım (uçtan uca).
+  - S2: karşı cihazın benimsemesi (uçtan uca).
+  - S3: 20 ardışık onaylanmamış yayımdan sonraki yayım (fark günlüğünün büyümesi).
+  - S4: yerinden edilmiş birleşim (yeni yol; ana dalda karşılığı yok, çünkü ana dal bu durumda veri kaybediyordu).
+- **Yöntem:** Aynı makine, Node ve veri. Ana dal (`df778c0`) ile aday dönüşümlü ≥5 çift; her koşuda 8 ölçüm, koşu medyanı alınır. Gürültü aralığı için aynı yöntemle ≥5 A/A çifti (ana dal ↔ ana dal). Ham örnekler kaydedilir.
+- **Karar (S1–S3):** Aday−ana çift farklarının medyanı A/A çift farklarının [min, max] aralığındaysa **PASS**. Medyan A/A üst sınırını aşıyorsa ve çiftlerin çoğunluğunda tekrarlanıyorsa **FAIL**. Aksi durumda **BLOCKED**. Genel bir "izinli yavaşlama yüzdesi" yoktur.
+- **Karar (S4):** Yeni yetenek. Bütçe, aynı veride normal üç yönlü birleşimin (S2'nin birleşimli varyantı) medyanı + fark uygulama süresi; ham değer raporlanır. 2 MiB üstü zarfta kira altı birleşim yapılmaması kuralı değişmez.
+- **Bayt:** Zarf artışı yayım yapan kurulum başına ≤ ~200 bayt. Yayım başına ek yerel yazım: durum dosyası + tek fark satırı. İlk bekleyen yayımda yeniden adlandırma dışında tam kopya yazımı yoktur.
+- **Öncelik:** Veri bütünlüğü kriterini geçmeyen aday, performans sonucundan bağımsız olarak elenir. Performans için bütünlük mekanizması zayıflatılmaz; ek state yazımı kira dışına ancak aynı kesinti testleri geçerse taşınır.
