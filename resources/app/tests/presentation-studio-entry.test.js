@@ -61,3 +61,16 @@ test('çip görünümü: Kumaş/Artwork yapısal modeli tablodaki kartlarla ayn�
   // Kaynak satır yalnız okunur.
   assert.doesNotMatch(studio.slice(studio.indexOf('function chipModel'), studio.indexOf('const chipsInUse')), /m\.row\[[^\]]+\]\s*=[^=]/);
 });
+
+test('kumaş kodu gizlenebilir: üstte ad, altta karışım ve gramaj; seçenek üst çubukta TR/EN', () => {
+  const app = read('public/app-main.js'), studio = read('public/presentation-studio.js'), engine = require('../public/presentation-studio-engine.js');
+  assert.match(app, /fabric:\{code:part\.code,type,weight,mix,eco\}/, 'uygulama modeli ham parçaları taşır');
+  assert.match(studio, /if \(model && spec\.kind === 'fabric' && !S\.doc\.style\.fabricCode\) model = withoutFabricCode\(model\);/);
+  assert.match(studio, /\['fabricCode', 'Kumaş kodu', 'Fabric code'\]/);
+  assert.equal(engine.createDoc({}).style.fabricCode, true);
+  assert.equal(engine.normalizeStyle({ fabricCode: false }).fabricCode, false);
+  // Dönüşüm: kodsuz iki satır.
+  const fn = new Function(`${studio.slice(studio.indexOf('function withoutFabricCode'), studio.indexOf('const fabricInUse'))}; return withoutFabricCode;`)();
+  const out = fn([{ label: '', items: [{ kind: 'code', t: '214233' }, { kind: 'chip', t: 'Three Thread', sub: '260 gsm' }], fabric: { code: '214233', type: 'Three Thread', weight: '260 gsm', mix: '65% Cotton', eco: '' } }, { label: '', items: [{ kind: 'chip', t: '65% Cotton' }] }]);
+  assert.deepEqual(out, [{ label: '', items: [{ kind: 'chip', t: 'Three Thread' }] }, { label: '', items: [{ kind: 'chip', t: '65% Cotton' }, { kind: 'meta', t: '260 gsm' }] }]);
+});

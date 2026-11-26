@@ -39,12 +39,12 @@
   }
 
   function defaultStyle(fields) {
-    return { font: 'Arial', fs: 8, img: 1.05, cardW: 112, gap: 10, margin: 26, labels: false, card: 'frame', keepGroups: false, chips: true, fields: (fields || []).slice(0, LIMITS.fields) };
+    return { font: 'Arial', fs: 8, img: 1.05, cardW: 112, gap: 10, margin: 26, labels: false, card: 'frame', keepGroups: false, chips: true, fabricCode: true, fields: (fields || []).slice(0, LIMITS.fields) };
   }
   const SOURCES = Object.freeze(['koleksiyon', 'cp', 'orders']);
   function createDoc({ ids = [], fields = [], levels = [], title = '', source = 'koleksiyon' } = {}) {
     return { v: 2, source: SOURCES.includes(source) ? source : 'koleksiyon', title: text(title, LIMITS.title), page: { preset: 'A4', orient: 'landscape', cw: 297, ch: 210 }, style: defaultStyle(fields),
-      grouping: { levels: levels.slice(0, LIMITS.levels), breakTop: false }, pages: [{ id: 'p1', flow: true, auto: true }], cards: {}, order: ids.slice(0, LIMITS.cards), labels: {}, seq: 2 };
+      grouping: { levels: levels.slice(0, LIMITS.levels), breakTop: false }, pages: [{ id: 'p1', flow: true, auto: true }], cards: {}, order: ids.slice(0, LIMITS.cards), areas: {}, labels: {}, seq: 2 };
   }
   function normalizeStyle(raw, allowedFields) {
     const s = raw && typeof raw === 'object' ? raw : {}, out = defaultStyle([]);
@@ -53,8 +53,20 @@
     out.card = CARD_STYLES.includes(s.card) ? s.card : 'frame';
     out.labels = s.labels === true; out.keepGroups = s.keepGroups === true;
     out.chips = s.chips !== false; // Kumaş/Artwork çip görünümü (varsayılan açık; kullanıcı metne çevirebilir)
+    out.fabricCode = s.fabricCode !== false; // kumaş çipinde kod (gizlenince: üstte ad, altta karışım | gramaj)
     const allowed = allowedFields ? new Set(allowedFields) : null;
     out.fields = [...new Set(Array.isArray(s.fields) ? s.fields.map(String) : [])].filter(f => !allowed || allowed.has(f)).slice(0, LIMITS.fields);
+    return out;
+  }
+  /* Grup alanları: grup anahtarı → { page, x, y, w, h } (h en az yükseklik; alan kartlara göre büyür). */
+  function normalizeAreas(raw, pageIds) {
+    const out = {};
+    for (const [k, a] of Object.entries(raw && typeof raw === 'object' ? raw : {}).slice(0, 400)) {
+      if (typeof k !== 'string' || k.length > 2000 || !a || typeof a !== 'object' || !pageIds.has(a.page)) continue;
+      const [x, y, w, h] = [a.x, a.y, a.w, a.h].map(Number);
+      if (![x, y, w].every(Number.isFinite)) continue;
+      out[k] = { page: a.page, x: Math.max(0, x), y: Math.max(0, y), w: Math.max(20, w), h: Number.isFinite(h) ? Math.max(0, h) : 0 };
+    }
     return out;
   }
   function normalizePage(raw) {
@@ -93,8 +105,9 @@
     }
     const labels = {};
     for (const [k, v] of Object.entries(d.labels && typeof d.labels === 'object' ? d.labels : {}).slice(0, 2000)) if (typeof k === 'string' && k.length <= 2000) { const t = text(v, LIMITS.label); if (t) labels[k] = t; }
+    const areas = normalizeAreas(d.areas, pageIds);
     const seq = Math.max(num(d.seq, 2), ...pages.map(p => Number(p.id.slice(1)) + 1));
-    return { v: 2, source: SOURCES.includes(d.source) ? d.source : 'koleksiyon', title: text(d.title, LIMITS.title), page: normalizePage(d.page), style: normalizeStyle(d.style, fields), grouping: normalizeGrouping(d.grouping, fields), pages, cards, order, labels, seq };
+    return { v: 2, source: SOURCES.includes(d.source) ? d.source : 'koleksiyon', title: text(d.title, LIMITS.title), page: normalizePage(d.page), style: normalizeStyle(d.style, fields), grouping: normalizeGrouping(d.grouping, fields), pages, cards, order, areas, labels, seq };
   }
 
   /* Metin planı (ölçüm çizim modülünde yapılır): fieldLines[i] alanın kartta
@@ -143,13 +156,14 @@
   }
   /* groupOf(id) → { key, vals } — anahtar normalize kimlik, vals görünen değerler. */
   function effectiveKey(doc, id, groupOf) { const c = doc.cards[id]; return c && c.vgroup != null ? c.vgroup : groupOf(id).key; }
-  function buildChunks(doc, g, groupOf) {
+  function buildChunks(doc, g, groupOf, skip = null) {
     const n = doc.grouping.levels.length, map = new Map(), valsOf = new Map();
     for (const id of doc.order) { const gi = groupOf(id); if (!valsOf.has(gi.key)) valsOf.set(gi.key, gi.vals); }
     for (const id of doc.order) {
       const c = doc.cards[id];
       if (c && (c.excluded || c.pinned)) continue;
       const key = effectiveKey(doc, id, groupOf);
+      if (skip && skip.has(key)) continue; // grup alanındaki kartlar akışa girmez
       if (!map.has(key)) map.set(key, { key, vals: valsOf.get(key) || key.split(SEP), items: [] });
       map.get(key).items.push(id);
     }
@@ -280,20 +294,65 @@
       return { x: it.x - g.gap / 2, y: top - g.gap / 2, w: it.w + g.gap, h: it.y + it.h - top + g.gap };
     };
     let overflow = false;
+    /* Grup alanları (seçenek d): alan kartlara yetmezse aşağı büyür; sayfa bitince kalan
+       kartlar sonraki sayfada aynı yatay konumda, aynı başlıkla ("devam") sürer. */
+    const areaSpecs = new Map(), areaKeys = new Set();
+    if (g.hH && doc.areas && Object.keys(doc.areas).length) {
+      const byKey = new Map();
+      for (const id of doc.order) {
+        const c = doc.cards[id];
+        if (c && (c.excluded || c.pinned)) continue;
+        const k = effectiveKey(doc, id, groupOf);
+        if (doc.areas[k] && pageIds.has(doc.areas[k].page)) (byKey.get(k) || byKey.set(k, []).get(k)).push(id);
+      }
+      for (const [k, ids] of byKey) {
+        const a = doc.areas[k], w = clamp(a.w, g.cellW, g.w - 2 * g.m), spec = { key: k, page: a.page, x: clamp(a.x, 0, g.w - w), y: clamp(a.y, 0, g.h - g.hH), w, h: a.h, ids, total: ids.length, vals: valsOf.get(k) || k.split(SEP), cont: false };
+        (areaSpecs.get(a.page) || areaSpecs.set(a.page, []).get(a.page)).push(spec);
+        areaKeys.add(k);
+      }
+      for (const list of areaSpecs.values()) list.sort((p, q) => p.y - q.y || p.x - q.x);
+    }
+    const placeArea = (sp, force) => {
+      const hd = { kind: 'hdr', key: sp.key, vals: sp.vals, cont: sp.cont, count: sp.total, x: sp.x, y: sp.y, w: sp.w, area: sp.key };
+      hd.h = g.hdrH(hd);
+      const cols = Math.max(1, Math.floor((sp.w + g.gap + 0.01) / (g.cellW + g.gap))), top = sp.y + hd.h + g.hGap;
+      let rows = Math.min(Math.ceil(sp.ids.length / cols), Math.max(0, Math.floor((g.bottom - top + g.gap + 0.01) / (g.cellH + g.gap))));
+      if (!rows && force) rows = 1; // boş sayfada bile sığmıyorsa bir satır zorla (sonsuz sayfa üretme)
+      const n = Math.min(sp.ids.length, rows * cols);
+      if (!n) return { items: [], rest: sp.ids };
+      const bodyH = rows * (g.cellH + g.gap) - g.gap, h = Math.max(sp.h || 0, Math.min(hd.h + g.hGap + bodyH, g.h - sp.y));
+      const items = [{ kind: 'area', key: sp.key, x: sp.x, y: sp.y, w: sp.w, h: Math.min(h, g.h - sp.y), cont: sp.cont }, hd];
+      for (let i = 0; i < n; i++) items.push({ kind: 'card', id: sp.ids[i], x: sp.x + (i % cols) * (g.cellW + g.gap), y: top + Math.floor(i / cols) * (g.cellH + g.gap), w: g.cellW, h: g.cellH, area: sp.key });
+      return { items, rest: sp.ids.slice(n) };
+    };
+    const areaPad = it => ({ x: it.x - g.gap / 2, y: it.y - g.gap / 2, w: it.w + g.gap, h: it.h + g.gap });
     const run = need => {
-      const queue = buildChunks(doc, g, groupOf), out = [];
+      const queue = buildChunks(doc, g, groupOf, areaKeys), out = [];
+      let carry = [];
+      const fill = (pid, items) => {
+        const specs = [...carry, ...(areaSpecs.get(pid) || [])]; carry = [];
+        for (const sp of specs) {
+          const r = placeArea(sp, sp.cont && Math.abs(sp.y - g.cy) < 0.01);
+          items.push(...r.items);
+          if (r.rest.length) carry.push({ ...sp, y: g.cy, h: 0, cont: true, ids: r.rest });
+        }
+      };
+      const obstacles = items => items.filter(it => it.kind === 'area' || it.pinned).map(it => (it.kind === 'area' ? areaPad(it) : pad(it, need)));
       for (const p of doc.pages) {
         const items = [...(pinned[p.id] || [])];
-        if (p.flow && queue.length) items.push(...place(queue, items.map(it => pad(it, need)), g));
+        fill(p.id, items);
+        if (p.flow && queue.length) items.push(...place(queue, obstacles(items), g));
         out.push({ id: p.id, items });
       }
-      while (queue.length && doc.pages.length < LIMITS.pages) {
-        const items = place(queue, [], g);
+      while ((queue.length || carry.length) && doc.pages.length < LIMITS.pages) {
+        const items = [];
+        fill(null, items);
+        if (queue.length) items.push(...place(queue, obstacles(items), g));
         if (!items.length) break;
         const np = { id: 'p' + doc.seq++, flow: true, auto: true };
         doc.pages.push(np); out.push({ id: np.id, items });
       }
-      overflow = queue.length > 0;
+      overflow = queue.length > 0 || carry.length > 0;
       return out;
     };
     const lonely = out => {
@@ -339,6 +398,8 @@
     for (const p of pages) {
       const pc = p.items.filter(i => i.pinned);
       for (let i = 0; i < pc.length; i++) for (let j = i + 1; j < pc.length; j++) if (overlaps(pc[i], pc[j])) { set.add(pc[i].id); set.add(pc[j].id); }
+      // Grup alanının üstüne düşen sabit kart da çakışmadır.
+      for (const ar of p.items.filter(i => i.kind === 'area')) for (const c of pc) if (overlaps(ar, c)) set.add(c.id);
     }
     return set;
   }
@@ -408,6 +469,7 @@
   function groupAt(res, pageId, pt) {
     const p = res.pages.find(pg => pg.id === pageId); if (!p) return null;
     const g = res.g, inside = (r, q) => q.x >= r.x && q.x <= r.x + r.w && q.y >= r.y && q.y <= r.y + r.h;
+    for (const ar of p.items) if (ar.kind === 'area' && inside(ar, pt)) return ar.key;
     for (const h of p.items) {
       if (h.kind !== 'hdr' || h.pinOf) continue;
       const cards = p.items.filter(c => c.kind === 'card' && !c.pinned && c.x >= h.x - 0.1 && c.x < h.x + h.w - 0.1 && c.y > h.y && c.y - h.y <= h.h + g.hGap + 0.1);
@@ -416,6 +478,12 @@
     }
     return null;
   }
+  /* Grubu kendi alanına alır / alanı taşır-boyutlar (sayfa, konum, genişlik, en az yükseklik). */
+  function setArea(doc, key, rect) {
+    if (!doc.areas) doc.areas = {};
+    doc.areas[key] = { page: rect.page, x: Math.max(0, Number(rect.x) || 0), y: Math.max(0, Number(rect.y) || 0), w: Math.max(20, Number(rect.w) || 20), h: Math.max(0, Number(rect.h) || 0) };
+  }
+  function clearArea(doc, key) { if (doc.areas) delete doc.areas[key]; }
   function setGroup(doc, id, key, groupOf) { const c = doc.cards[id] || (doc.cards[id] = {}); if (key === groupOf(id).key) delete c.vgroup; else c.vgroup = key; }
   /* Sıraya ekleme: kartlar hedef kartın önüne/arkasına ve hedefin görsel grubuna taşınır. */
   function insertAt(doc, ids, targetId, after, groupOf) {
@@ -495,7 +563,7 @@
     return { ok: true, missing: [...new Set(missing)], unpinned, levelsChanged };
   }
 
-  return { MM, SEP, PAPERS, FONTS, CARD_STYLES, STYLE_SPEC, LIMITS, overlaps, pageSize, createDoc, resizeAll, groupAt, normalizeDoc, normalizeStyle, normalizePage, geometry, textHeight,
+  return { MM, SEP, PAPERS, FONTS, CARD_STYLES, STYLE_SPEC, LIMITS, overlaps, pageSize, createDoc, resizeAll, groupAt, setArea, clearArea, normalizeDoc, normalizeStyle, normalizePage, geometry, textHeight,
     buildChunks, layoutPageFlow, layoutPageBlocks, layout, conflicts, findFree, resolvePinned, pageChangeConflicts, applyPageChange,
     effectiveKey, pinAt, unpin, insertAt, setGroup, align, templateOf, normalizeTemplate, applyTemplate };
 });

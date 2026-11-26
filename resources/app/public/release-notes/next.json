@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-26",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Sunum Stüdyosu: çip görünümü, tam metin, sabit kart başlıkları, birlikte boyutlandırma ve aranabilir alan listeleri",
-    "en": "Presentation Studio: chip view, full text, pinned card titles, resizing together and searchable field lists"
+    "tr": "Sunum Stüdyosu: grup alanları, çip görünümü, tam metin, sabit kart başlıkları, birlikte boyutlandırma",
+    "en": "Presentation Studio: group areas, chip view, full text, pinned card titles, resizing together"
   },
   "summary": {
-    "tr": "Sunum Stüdyosu’nda Kumaş ve Artwork Detail tablodaki gibi çip olarak görünür (üst çubuktan metne çevrilebilir); kart bilgileri ve grup başlıkları tam metinle görünür; serbest yerleştirilen kartlar grup başlığını korur, başka gruba bırakılan kart o gruba elle katılır. Birden çok kart birlikte boyutlandırılır; gruplama ve kart bilgisi listeleri okunur ve aranabilir.",
-    "en": "In Presentation Studio, Fabric and Artwork Detail appear as chips like in the table (switchable to text in the top bar); card details and group titles show in full; freely placed cards keep their group title and a card dropped into another group joins it manually. Several cards can be resized together; grouping and card detail lists are readable and searchable."
+    "tr": "Sunum Stüdyosu’nda grup başlığı sürüklenerek grup kendi alanına alınır, kartlarıyla birlikte taşınır ve boyutlandırılır; alan yetmezse büyür, sayfa bitince sonraki sayfada devam eder. Kumaş ve Artwork Detail tablodaki gibi çip olarak görünür (kumaş kodu gizlenebilir, metne çevrilebilir); kart bilgileri ve grup başlıkları tam metinle görünür; serbest yerleştirilen kartlar grup başlığını korur, başka gruba bırakılan kart o gruba elle katılır. Birden çok kart birlikte boyutlandırılır; gruplama ve kart bilgisi listeleri okunur ve aranabilir.",
+    "en": "In Presentation Studio, dragging a group title gives the group its own area that moves and resizes together with its cards; the area grows when needed and continues on the next page. Fabric and Artwork Detail appear as chips like in the table (fabric code can be hidden, or switched to text); card details and group titles show in full; freely placed cards keep their group title and a card dropped into another group joins it manually. Several cards can be resized together; grouping and card detail lists are readable and searchable."
   },
   "changes": [
     {
@@ -81,8 +81,8 @@
         "en": "Presentation Studio: Fabric and Artwork Detail as chips, like in the table"
       },
       "body": {
-        "tr": "Kumaş ve Artwork Detail bilgileri kartlarda ve grup başlıklarında Buyer Log tablosundaki mini kartlarla aynı görünür: kumaş kodu, tip ve gramaj, karışım, takım parçaları (A/B), baskı bölgeleri, teknik etiketi ve toplam. Üst çubuktaki Kumaş/Artwork: Çip | Metin seçeneğiyle düz metne dönülebilir; seçim sunumla ve şablonla kaydedilir. PDF ve PowerPoint aynı çipleri taşır; PowerPoint’te çipler düzenlenebilir şekillerdir. Kumaş kartı veya PLM baskı bilgisi olmayan değerler metin olarak kalır.",
-        "en": "Fabric and Artwork Detail appear on cards and group titles exactly like the mini cards in the Buyer Log table: fabric code, type and weight, composition, set parts (A/B), print areas, technique tag and total. The Fabric/Artwork: Chips | Text option in the top bar switches back to plain text; the choice is saved with the presentation and the template. PDF and PowerPoint carry the same chips; in PowerPoint they are editable shapes. Values without a fabric card or PLM print information stay as text."
+        "tr": "Kumaş ve Artwork Detail bilgileri kartlarda ve grup başlıklarında Buyer Log tablosundaki mini kartlarla aynı görünür: kumaş kodu, tip ve gramaj, karışım, takım parçaları (A/B), baskı bölgeleri, teknik etiketi ve toplam. Üst çubuktaki Kumaş/Artwork: Çip | Metin seçeneğiyle düz metne dönülebilir; seçim sunumla ve şablonla kaydedilir. PDF ve PowerPoint aynı çipleri taşır; PowerPoint’te çipler düzenlenebilir şekillerdir. Kumaş kodu seçeneği kapatılınca kod gösterilmez: üstte kumaş adı, altta karışım ve gramaj yer alır; kart yatayda daha az yer kaplar. Kumaş kartı veya PLM baskı bilgisi olmayan değerler metin olarak kalır.",
+        "en": "Fabric and Artwork Detail appear on cards and group titles exactly like the mini cards in the Buyer Log table: fabric code, type and weight, composition, set parts (A/B), print areas, technique tag and total. The Fabric/Artwork: Chips | Text option in the top bar switches back to plain text; the choice is saved with the presentation and the template. PDF and PowerPoint carry the same chips; in PowerPoint they are editable shapes. With the Fabric code option off the code is hidden: the fabric name sits on top with composition and weight below, so cards take less horizontal space. Values without a fabric card or PLM print information stay as text."
       },
       "visual": {
         "kind": "screenshot",
@@ -95,6 +95,35 @@
         "caption": {
           "tr": "Demo veride Kumaş ve Artwork Detail çipleri; üst çubukta Çip | Metin seçeneği.",
           "en": "Fabric and Artwork Detail chips on demo data; the Chips | Text option in the top bar."
+        }
+      }
+    },
+    {
+      "id": "presentation-studio-group-areas",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · CP · Siparişler",
+        "en": "Collection · CP · Orders"
+      },
+      "title": {
+        "tr": "Sunum Stüdyosu: grup alanları — grubu kartlarıyla birlikte taşıyın ve boyutlandırın",
+        "en": "Presentation Studio: group areas — move and resize a group together with its cards"
+      },
+      "body": {
+        "tr": "Bir grup başlığını sürükleyip sayfada istediğiniz yere bırakınca grup kendi alanına alınır; kartları alanın içinde akar. Alanı kenarlarından genişletip daraltabilir (kart sütununa oturur), başlığından sürükleyerek sağa sola veya küçük resimlere bırakarak başka sayfaya taşıyabilirsiniz. Alan kartlara yetmezse aşağı doğru büyür; sayfa bitince kalan kartlar sonraki sayfada aynı başlıkla devam eder. Alanın içine bırakılan kart o gruba katılır. Akışa döndür ile grup otomatik yerleşime geri döner. Alan çerçevesi yalnız düzenleyicide görünür; PDF ve PowerPoint’te başlık ve kartlar yer alır. Kaynak veri değişmez.",
+        "en": "Drag a group title and drop it anywhere on the page to give the group its own area; its cards flow inside the area. Resize the area from its edges (it snaps to card columns), move it sideways by dragging its title, or drop it on a thumbnail to move it to another page. If the area is too small it grows downward; when the page ends, the remaining cards continue on the next page under the same title. A card dropped inside the area joins that group. Return to flow puts the group back into the automatic layout. The area frame is visible only in the editor; PDF and PowerPoint contain the title and cards. Source data does not change."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "presentation-studio-group-area.png",
+        "alt": {
+          "tr": "Demo modellerle Sunum Stüdyosu: tek sütuna daraltılmış seçili grup alanı, kenar tutamaçları ve Grup alanı · 3 model · Akışa döndür araç çubuğu; diğer gruplar alanın etrafında akıyor",
+          "en": "Presentation Studio with demo models: a selected group area narrowed to one column, edge handles and the Group area · 3 models · Return to flow toolbar; other groups flow around the area"
+        },
+        "caption": {
+          "tr": "Demo veride kendi alanına alınmış ve tek sütuna daraltılmış grup.",
+          "en": "A group given its own area and narrowed to one column on demo data."
         }
       }
     }

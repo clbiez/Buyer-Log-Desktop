@@ -57,7 +57,7 @@ function demoImages() {
     await page.waitForSelector('.psStudio .psDocCard', { timeout: 30000 });
     await page.waitForTimeout(600);
     const state = () => page.evaluate(() => { const S = BLPresentationStudio._state(); return { cards: S.res.index.size, pages: S.res.pages.length, conflicts: S.res.conflicts.size, pinned: Object.values(S.doc.cards).filter(c => c.pinned).length, moved: Object.values(S.doc.cards).filter(c => c.vgroup != null).length, page: S.doc.page, cols: S.res.g.cols }; });
-    const clean = () => page.evaluate(() => { const S = BLPresentationStudio._state(), E = BLPresentationEngine, g = S.res.g; let bad = 0; for (const p of S.res.pages) { for (const it of p.items) if (it.x < -0.01 || it.y < -0.01 || it.x + it.w > g.w + 0.01 || it.y + it.h > g.h + 0.01) bad++; for (let i = 0; i < p.items.length; i++) for (let j = i + 1; j < p.items.length; j++) if (E.overlaps(p.items[i], p.items[j])) bad++; } return bad; });
+    const clean = () => page.evaluate(() => { const S = BLPresentationStudio._state(), E = BLPresentationEngine, g = S.res.g; let bad = 0; for (const p of S.res.pages) { for (const it of p.items) if (it.x < -0.01 || it.y < -0.01 || it.x + it.w > g.w + 0.01 || it.y + it.h > g.h + 0.01) bad++; const own = (a, b) => a.kind === 'area' && b.area === a.key; for (let i = 0; i < p.items.length; i++) for (let j = i + 1; j < p.items.length; j++) { const a = p.items[i], b = p.items[j]; if (!own(a, b) && !own(b, a) && E.overlaps(a, b)) bad++; } } return bad; });
     let s = await state();
     assert.equal(s.cards, 24, 'seçili 24 model sunumda'); assert.equal(await clean(), 0);
     assert.equal(s.page.preset, 'A4'); assert.equal(s.page.orient, 'landscape');
@@ -221,6 +221,51 @@ function demoImages() {
     await page.screenshot({ path: path.join(OUT, `multi-resize-${THEME}.png`) });
     await page.evaluate(() => document.querySelectorAll('[data-ui-feedback-region]').forEach(el => { el.style.visibility = ''; }));
 
+    // Grup alanı (seçenek d): başlığı sürükle → grup kendi alanında akar; kenarından boyutla; akışa döndür.
+    const areaKey = await page.evaluate(() => { const S = BLPresentationStudio._state(); const h = S.res.pages[0].items.filter(i => i.kind === 'hdr' && !i.pinOf && !i.area).sort((a, b) => b.count - a.count)[0]; return h.key; });
+    const groupTotal = await page.evaluate(k => { const S = BLPresentationStudio._state(), E = BLPresentationEngine; return S.doc.order.filter(id => !S.doc.cards[id]?.pinned && !S.doc.cards[id]?.excluded && E.effectiveKey(S.doc, id, x => { const m = S.models.get(x); return { key: S.doc.grouping.levels.map(f => String(m.keys[f] == null ? '' : m.keys[f])).join(E.SEP) }; }) === k).length; }, areaKey);
+    const hb0 = await page.$eval(`.psPageWrap .psDocHdr[data-hdr="${areaKey.replace(/"/g, '\\"')}"]`, el => { const r = el.getBoundingClientRect(); return { x: r.x + 10, y: r.y + r.height / 2 }; });
+    const pb0 = await page.$eval('.psPageWrap .psPage', el => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });
+    await page.mouse.move(hb0.x, hb0.y); await page.mouse.down(); await page.mouse.move(hb0.x + 20, hb0.y + 20, { steps: 4 });
+    assert.ok(await page.$('.psDragLayer .psAreaGhost:not([hidden])'), 'sürüklerken alan önizlemesi');
+    await page.mouse.move(pb0.x + pb0.w * 0.72, pb0.y + pb0.h * 0.08, { steps: 10 }); await page.mouse.up(); await page.waitForTimeout(400);
+    let ar = await page.evaluate(k => { const S = BLPresentationStudio._state(); const items = S.res.pages.flatMap((p, i) => p.items.map(it => ({ ...it, pi: i }))); return { spec: S.doc.areas && S.doc.areas[k], areas: items.filter(i => i.kind === 'area' && i.key === k).map(i => ({ pi: i.pi, cont: i.cont, x: i.x, y: i.y, w: i.w, h: i.h })), cards: items.filter(i => i.kind === 'card' && i.area === k).length, flowHdr: items.filter(i => i.kind === 'hdr' && i.key === k && !i.area && !i.pinOf).length, dom: Boolean(document.querySelector(`.psArea[data-area="${CSS.escape(k)}"]`)), sel: S.areaSel }; }, areaKey);
+    assert.ok(ar.spec && ar.areas.length >= 1 && ar.dom, 'grup alanı oluştu: ' + JSON.stringify(ar));
+    assert.equal(ar.cards, groupTotal, 'grubun tüm kartları alanda');
+    assert.equal(ar.flowHdr, 0, 'akışta ikinci başlık yok');
+    assert.equal(ar.sel, areaKey, 'alan seçili');
+    assert.equal(await clean(), 0);
+    assert.ok(await page.$eval('.psFloat', el => !el.hidden && Boolean(el.querySelector('[data-fa-area="out"]'))), 'alan araç çubuğu: Akışa döndür');
+    // Kenardan daralt: 1 sütun → kartlar sığmaz, sonraki sayfada aynı başlıkla devam eder.
+    const handleE = await page.$(`.psArea[data-area="${areaKey.replace(/"/g, '\\"')}"] .psHandle[data-ah="e"]`);
+    assert.ok(handleE, 'alan kenar tutamağı');
+    const hbE = await handleE.boundingBox();
+    const areaBox = await page.$eval(`.psArea[data-area="${areaKey.replace(/"/g, '\\"')}"]`, el => { const r = el.getBoundingClientRect(); return { r: r.right, cy: r.top + r.height / 2 }; });
+    assert.ok(Math.abs(hbE.x + hbE.width - areaBox.r) < 2 && Math.abs(hbE.y + hbE.height / 2 - areaBox.cy) < 3, 'doğu tutamağı sağ kenarın ortasında');
+    const oneCol = await page.evaluate(() => { const S = BLPresentationStudio._state(); return S.res.g.cellW * S.zoom * 96 / 72; });
+    const atHandle = await page.evaluate(({ x, y }) => { const el = document.elementFromPoint(x, y); return el ? el.className + '|' + (el.closest('.psArea') ? 'inArea' : '') : 'none'; }, { x: hbE.x + hbE.width / 2, y: hbE.y + hbE.height / 2 });
+    await page.mouse.move(hbE.x + hbE.width / 2, hbE.y + hbE.height / 2); await page.mouse.down();
+    const actType = await page.evaluate(() => BLPresentationStudio._state().act?.type || 'none');
+    await page.mouse.move(hbE.x - (ar.areas[0].w * 96 / 72 * await page.evaluate(() => BLPresentationStudio._state().zoom)) + oneCol, hbE.y + hbE.height / 2, { steps: 8 });
+    const mid = await page.evaluate(k => { const S = BLPresentationStudio._state(); return { act: S.act && S.act.type, last: S.act && S.act.last, start: S.act && S.act.start && { x: S.act.start.x, w: S.act.start.w }, el: Boolean(S.host.querySelector(`.psArea[data-area="${CSS.escape(k)}"]`)) }; }, areaKey);
+    await page.mouse.up(); await page.waitForTimeout(400);
+    ar = await page.evaluate(k => { const S = BLPresentationStudio._state(); const items = S.res.pages.flatMap((p, i) => p.items.map(it => ({ ...it, pi: i }))); return { w: S.doc.areas[k].w, cellW: S.res.g.cellW, areas: items.filter(i => i.kind === 'area' && i.key === k).map(i => ({ pi: i.pi, cont: i.cont })), cards: items.filter(i => i.kind === 'card' && i.area === k).length, conts: items.filter(i => i.kind === 'hdr' && i.area === k && i.cont).length }; }, areaKey);
+    assert.ok(Math.abs(ar.w - ar.cellW) < 0.5, 'tek sütuna oturdu: ' + JSON.stringify({ ...ar, atHandle, actType, mid, oneCol }));
+    assert.equal(ar.cards, groupTotal);
+    if (ar.areas.length > 1) assert.ok(ar.areas[1].cont && ar.conts >= 1, 'devam alanı aynı başlıkla');
+    assert.equal(await clean(), 0);
+    await page.evaluate(() => document.querySelectorAll('[data-ui-feedback-region]').forEach(el => { el.style.visibility = 'hidden'; }));
+    await page.screenshot({ path: path.join(OUT, `group-area-${THEME}.png`) });
+    await page.evaluate(() => document.querySelectorAll('[data-ui-feedback-region]').forEach(el => { el.style.visibility = ''; }));
+    // PDF/PPTX çerçevesiz; Koleksiyon verisi değişmez.
+    assert.equal(await page.evaluate(() => { const S = BLPresentationStudio._state(); return BLPresentationRender.documentHtml(S.list, 't').includes('psArea'); }), false);
+    assert.equal(await page.evaluate(() => { const before = JSON.parse(window.__psBefore); return kolRows.filter((r, i) => JSON.stringify(r) !== JSON.stringify(before[i])).length; }), 0, 'Koleksiyon verisi değişmez');
+    // Akışa döndür.
+    await page.click('.psFloat [data-fa-area="out"]'); await page.waitForTimeout(300);
+    assert.equal(await page.evaluate(k => Boolean(BLPresentationStudio._state().doc.areas[k]), areaKey), false);
+    assert.equal(await page.evaluate(k => BLPresentationStudio._state().res.pages.flatMap(p => p.items).filter(i => i.kind === 'area').length, areaKey), 0);
+    assert.equal(await clean(), 0);
+
     // Sayfa ölçüsü ve yön: tüm hazır ölçüler + özel ölçü.
     for (const preset of ['A3', '16:9', '4:3', 'square', 'A5', 'A4']) {
       await page.selectOption('.psStudio [data-ps="paper"]', preset); await page.waitForTimeout(150);
@@ -311,6 +356,17 @@ function demoImages() {
     assert.ok(cs.cardChips && cs.hdrChips && cs.art && cs.dom, 'kartta, başlıkta ve artwork alanında çip: ' + JSON.stringify(cs));
     assert.ok(cs.parts.includes('A') && cs.parts.includes('B'), 'takım kumaşında A/B parça harfi');
     assert.equal(await clean(), 0);
+    // Kumaş kodu gizli: üstte kumaş adı, altta karışım | gramaj (yatayda daha az yer).
+    assert.equal(await page.$eval('.psStudio [data-ps="fabricCodeWrap"]', el => el.hidden), false, 'Kumaş kodu seçeneği görünür');
+    await page.click('.psStudio [data-ps="fabricCode"]'); await page.waitForTimeout(300);
+    const noCode = await page.evaluate(() => { const S = BLPresentationStudio._state(); const card = S.list.pages[0].elements.find(e => e.type === 'card' && e.lines.some(l => l.atoms)); const rows = card.lines.filter(l => l.atoms).map(l => l.atoms.filter(a => a.type === 'chip').map(a => a.segs.map(s => s.t).join('|'))); return { off: S.doc.style.fabricCode === false, code: S.list.pages[0].elements.some(e => e.lines.some(l => l.atoms && l.atoms.some(a => a.type === 'chip' && /^(214233|300100)$/.test(a.segs[0].t)))), rows }; });
+    assert.ok(noCode.off && !noCode.code, 'kumaş kodu gizli: ' + JSON.stringify(noCode));
+    const rowOf = re => noCode.rows.findIndex(r => r.some(c => re.test(c)));
+    assert.ok(rowOf(/^Three Thread Brushed$/) >= 0 && rowOf(/^65% /) > rowOf(/^Three Thread Brushed$/) && rowOf(/^260 gsm$/) >= rowOf(/^65% /), 'üstte ad, altta karışım ve gramaj (tam metin): ' + JSON.stringify(noCode.rows));
+    await page.evaluate(() => document.querySelectorAll('[data-ui-feedback-region]').forEach(el => { el.style.visibility = 'hidden'; }));
+    await page.screenshot({ path: path.join(OUT, `chips-nocode-${THEME}.png`) });
+    await page.click('.psStudio [data-ps="fabricCode"]'); await page.waitForTimeout(300);
+    assert.equal(await page.evaluate(() => BLPresentationStudio._state().doc.style.fabricCode), true);
     // Sürüm notu görseli: kartlar biraz genişletilir (Tasarım › Kart boyutu) ki çipler okunsun.
     await page.click('.psStudio [data-pop="design"]');
     await page.$eval('.psPop [data-s="cardW"]', el => { el.value = 150; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); });

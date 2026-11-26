@@ -85,6 +85,7 @@
   function slideXml(page, images, palette, lang, titles, chip) {
     const b = slideBuilder(page.font, lang), shapes = [];
     for (const el of page.elements) {
+      if (el.type === 'area') continue; // grup alanı çerçevesi yalnız editörde
       if (el.type === 'hdr') {
         const cw = el.count ? el.count.w + 4 : 0;
         const inner = (el.lines.length ? (el.lines[0].atoms ? el.lines.map(l => atomShapes(b, l, el.x, el.lh, chip)).join('') : b.textBox('Group title', el.x, el.lines[0].y, Math.max(1, el.w - cw), el.lines.map(l => ({ lh: el.lh, runs: l.runs })))) : '')

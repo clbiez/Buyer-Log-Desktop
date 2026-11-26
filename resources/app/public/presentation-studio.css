@@ -20,6 +20,7 @@
 .psCustom{display:inline-flex;align-items:center;gap:4px}
 .psChipMode{display:inline-flex;align-items:center;gap:8px}
 .psChipMode[hidden]{display:none}
+.psChipMode .psToggle[hidden]{display:none}
 .psCustom input{width:72px}
 .psBody{display:grid;grid-template-columns:172px minmax(0,1fr);min-height:0}
 .psRail{display:flex;flex-direction:column;gap:10px;padding:10px;overflow:auto;min-height:0}
@@ -48,7 +49,11 @@
 .psHandle[data-h="sw"]{left:0;bottom:0;cursor:nesw-resize}.psHandle[data-h="se"]{right:0;bottom:0;cursor:nwse-resize}
 .psHandle[data-h="n"]{left:calc(50% - 5px);top:0;cursor:ns-resize}.psHandle[data-h="s"]{left:calc(50% - 5px);bottom:0;cursor:ns-resize}
 .psHandle[data-h="w"]{top:calc(50% - 5px);left:0;cursor:ew-resize}.psHandle[data-h="e"]{top:calc(50% - 5px);right:0;cursor:ew-resize}
-.psDocHdr{cursor:text}
+.psDocHdr{cursor:grab}
+.psArea{pointer-events:none}
+.psArea .psHandle{pointer-events:auto}
+.psAreaGhost{position:absolute;pointer-events:none}
+.psAreaGhost[hidden]{display:none}
 .psGuides{position:absolute;inset:0;pointer-events:none}
 .psGuide,.psInsert,.psMarquee{position:absolute;pointer-events:none}
 .psDragLayer{position:fixed;inset:0;pointer-events:none}

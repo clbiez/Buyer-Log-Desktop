@@ -229,3 +229,24 @@ test('çip görünümü kartta ve grup başlığında; plan satır sayar; PDF HT
   const plain = R.build(doc, E.layout(doc, groupOf, R.textPlan(doc, E.geometry(doc, null).cellW, ids, textSrc)), textSrc);
   assert.ok(plain.pages[0].elements.every(e => e.lines.every(l => !l.atoms)));
 });
+
+test('grup alanı çerçevesi yalnız editörde; PDF HTML ve PPTX başlık ve kartları taşır, çerçeveyi taşımaz', async () => {
+  const ids = Array.from({ length: 10 }, (_, i) => 'K' + i);
+  const doc = E.createDoc({ ids, fields: ['modelName'], levels: ['g'] });
+  const groupOf = id => { const v = Number(id.slice(1)) % 2 ? 'Hırka' : 'Kazak'; return { key: v, vals: [v] }; };
+  const g0 = E.geometry(doc, null);
+  E.setArea(doc, 'Kazak', { page: 'p1', x: g0.w - g0.m - g0.cellW, y: g0.m, w: g0.cellW, h: 0 });
+  const src = { lines: id => [{ label: 'Model', value: id }], image: () => null, header: it => ({ main: it.vals[0], rest: '', count: `${it.count} model` }) };
+  const res = E.layout(doc, groupOf), list = R.build(doc, res, src);
+  const area = list.pages[0].elements.find(e => e.type === 'area');
+  assert.ok(area && area.key === 'Kazak');
+  assert.ok(list.pages[0].elements.some(e => e.type === 'hdr' && e.area === 'Kazak'));
+  const editor = R.elementsHtml(list.pages[0], { attrs: el => ({ attr: el.type === 'area' ? ` data-area="${el.key}"` : '', cls: '', inner: '' }) });
+  assert.ok(editor.includes('class="psArea"') && editor.includes('data-area="Kazak"'));
+  const html = R.documentHtml(list, 't');
+  assert.ok(!html.includes('psArea') && html.includes('>Kazak</span>'), 'PDF: başlık var, çerçeve yok');
+  const zip = await JSZip.loadAsync(await P.build(JSZip, list, { title: 't', palette: R.DOC }).generateAsync({ type: 'nodebuffer' }));
+  const slide = await zip.file('ppt/slides/slide1.xml').async('string');
+  assert.ok(slide.includes('<a:t>Kazak</a:t>'));
+  assert.equal((slide.match(/name="Card K/g) || []).length, list.pages[0].elements.filter(e => e.type === 'card').length, 'alan kartı yok, yalnız gerçek kartlar');
+});

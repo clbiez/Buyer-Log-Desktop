@@ -54,7 +54,7 @@
   }
   /* Satır kırma: kelime sınırından böler (boşluksuz uzun parça karakterden),
      biçimi (kalın/renk) korur. maxLines aşılırsa yalnız son satır "…" ile biter. */
-  const MAX_LINES = Object.freeze({ title: 2, field: 3, header: 6, chips: 4 });
+  const MAX_LINES = Object.freeze({ title: 2, field: 3, header: 6, chips: 6 });
   function wrapRuns(runs, maxW, measure, font, maxLines = 1) {
     const w = r => measure(r.t, r.size, r.bold, font), total = list => list.reduce((s, r) => s + w(r), 0);
     if (total(runs) <= maxW) return [runs];
@@ -111,6 +111,7 @@
         if (it.kind === 'none') { out.push(...words(it.t, cs, false, CHIP.muted)); continue; }
         const tone = it.kind === 'tag' ? CHIP.tone[it.tone] || CHIP.tone[5] : null;
         const segs = it.kind === 'code' ? [{ t: it.t, fill: CHIP.sub, ink: CHIP.subInk, bold: true }]
+          : it.kind === 'meta' ? [{ t: it.t, fill: CHIP.sub, ink: CHIP.subInk, bold: false }]
           : tone ? [{ t: it.t, fill: tone.fill, ink: tone.ink, bold: false }]
           : [{ t: it.t, fill: CHIP.fill, ink: CHIP.ink, bold: false }, ...(it.sub ? [{ t: it.sub, fill: CHIP.sub, ink: CHIP.subInk, bold: false }] : [])];
         out.push({ type: 'chip', segs, line: tone ? tone.line : CHIP.line, size: cs });
@@ -228,6 +229,8 @@
     const pages = res.pages.map(p => {
       const els = [];
       for (const it of p.items) {
+        // Grup alanı çerçevesi yalnız editörde görünür (belge çıktısında başlık ve kartlar kalır).
+        if (it.kind === 'area') { els.push({ type: 'area', key: it.key, x: it.x, y: it.y, w: it.w, h: it.h, cont: Boolean(it.cont) }); continue; }
         if (it.kind === 'hdr') {
           const h = src.header(it), size = s.fs * 1.25, countSize = size * 0.82;
           const box = headerBox(h, it.w, size, measure, font), countW = box.countW;
@@ -236,7 +239,7 @@
           const wrapped = h.parts ? layoutAtoms(headerAtoms(h, size), box.textW, measure, font, room) : wrapRuns(headerRuns(h, size), box.textW, measure, font, room);
           const top = it.y + it.h - 2 - wrapped.length * lh, lines = wrapped.map((r, i) => (h.parts ? { y: top + i * lh, atoms: r, box: chipBox(lh) } : { y: top + i * lh, runs: r }));
           const lastY = lines.length ? lines[lines.length - 1].y : it.y + it.h - 2 - lh;
-          els.push({ type: 'hdr', key: it.key, x: it.x, y: it.y, w: it.w, h: it.h, lines, lh, size, count: box.showCount ? { t: h.count, size: countSize, color: DOC.muted, w: countW, y: lastY + (size - countSize) } : null, rule: { x: it.x, y: it.y + it.h - 0.8, w: it.w, h: 0.8 } });
+          els.push({ type: 'hdr', key: it.key, area: it.area || null, x: it.x, y: it.y, w: it.w, h: it.h, lines, lh, size, count: box.showCount ? { t: h.count, size: countSize, color: DOC.muted, w: countW, y: lastY + (size - countSize) } : null, rule: { x: it.x, y: it.y + it.h - 0.8, w: it.w, h: 0.8 } });
           continue;
         }
         const img = src.image(it.id), imgH = Math.max(16, it.h - g.th), box = { x: it.x, y: it.y, w: it.w, h: imgH };
@@ -283,6 +286,7 @@
   function elementsHtml(page, { attrs = null, lite = false } = {}) {
     return page.elements.map(el => {
       const extra = attrs ? attrs(el) : { attr: '', cls: '', inner: '' };
+      if (el.type === 'area') return attrs ? `<div class="psArea${extra.cls}"${extra.attr} style="position:absolute;left:${r2(el.x)}pt;top:${r2(el.y)}pt;width:${r2(el.w)}pt;height:${r2(el.h)}pt">${extra.inner}</div>` : '';
       if (el.type === 'hdr') {
         return `<div class="psDocHdr${extra.cls}"${extra.attr} style="position:absolute;left:${r2(el.x)}pt;top:${r2(el.y)}pt;width:${r2(el.w)}pt;height:${r2(el.h)}pt">`
           + el.lines.map(l => (l.atoms

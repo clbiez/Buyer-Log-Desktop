@@ -98,14 +98,32 @@
     const lang = isEn() ? 'en' : 'tr', raw = String(m.row[spec.key] == null ? '' : m.row[spec.key]);
     if (!raw.trim()) return null;
     // Kumaş modeli yalnız değere, artwork modeli PLM kaydına bağlıdır.
-    const key = `${spec.kind}${lang}${raw}${spec.kind === 'artwork' ? id : ''}`;
+    const key = `${spec.kind}\u0001${lang}\u0001${raw}\u0001${spec.kind === 'artwork' ? id : ''}\u0001${S.doc.style.fabricCode ? 1 : 0}`;
     if (S.chipCache.has(key)) return S.chipCache.get(key);
     let model = null;
     try { model = root.BLCellChips.model(spec.kind, m.row, spec.key); } catch (_) { model = null; }
     model = Array.isArray(model) && model.length ? model : null;
+    if (model && spec.kind === 'fabric' && !S.doc.style.fabricCode) model = withoutFabricCode(model);
     S.chipCache.set(key, model);
     return model;
   }
+  /* Kumaş kodu gizli: her parça iki satır — üstte kumaş adı (ve sürdürülebilirlik etiketi), altta
+     karışım | gramaj. Yatayda daha az yer kaplar. Ham parçalar uygulama modelinden (fabric) gelir. */
+  function withoutFabricCode(model) {
+    if (!model.some(l => l.fabric)) return model;
+    const out = [];
+    for (const line of model) {
+      const f = line.fabric;
+      if (!f) continue;
+      const top = [...(f.type ? [{ kind: 'chip', t: f.type }] : []), ...(f.eco ? [{ kind: 'tag', t: f.eco, tone: 'eco' }] : [])];
+      // Gramaj ayrı küçük çip: dar kartta kısalmak yerine alt satıra geçer.
+      const bottom = [...(f.mix ? [{ kind: 'chip', t: f.mix }] : []), ...(f.weight ? [{ kind: 'meta', t: f.weight }] : [])];
+      if (top.length) out.push({ label: line.label, items: top });
+      if (bottom.length) out.push({ label: top.length ? '' : line.label, items: bottom });
+    }
+    return out.length ? out : model;
+  }
+  const fabricInUse = () => Boolean(S && S.chipKinds && [...S.doc.style.fields, ...S.doc.grouping.levels].some(f => S.chipKinds.get(f)?.kind === 'fabric'));
   const chipsInUse = () => Boolean(S && S.chipKinds && S.chipKinds.size && [...S.doc.style.fields, ...S.doc.grouping.levels].some(chipField));
 
   /* ---------------- Oturum ve belge ---------------- */
@@ -132,7 +150,7 @@
   /* Metin planı yalnız alanlar, yazı, kart genişliği veya başlık adları değişince yeniden ölçülür. */
   function textPlan() {
     const st = S.doc.style, cellW = E().geometry(S.doc, null).cellW;
-    const vkey = [st.fields.join(','), st.labels, st.chips, S.doc.grouping.levels.join(','), S.doc.order.length, isEn()].join('|');
+    const vkey = [st.fields.join(','), st.labels, st.chips, st.fabricCode, S.doc.grouping.levels.join(','), S.doc.order.length, isEn()].join('|');
     const key = [vkey, st.fs, st.font, cellW.toFixed(2), JSON.stringify(S.doc.labels)].join('|');
     if (S.plan) S.plan.approx = Boolean(S.slider);
     if (S.plan && S.planKey === key) return S.plan;
@@ -302,7 +320,7 @@
         <span class="psCustom" data-ps="custom" hidden><input type="number" data-ps="cw" min="50" max="1200" step="1">×<input type="number" data-ps="ch" min="50" max="1200" step="1"><span>mm</span></span>
         <span class="psDim" data-ps="dim"></span><span class="psSep"></span>
         <button type="button" class="tbtn" data-pop="fields"></button><button type="button" class="tbtn" data-pop="design"></button><button type="button" class="tbtn" data-pop="arrange"></button>
-        <span class="psChipMode" data-ps="chipModeWrap" hidden><span class="psSep"></span><span class="psLbl" data-l="chipMode"></span><span class="psSeg" data-ps="chipMode"><button type="button" data-v="chips"></button><button type="button" data-v="text"></button></span></span>
+        <span class="psChipMode" data-ps="chipModeWrap" hidden><span class="psSep"></span><span class="psLbl" data-l="chipMode"></span><span class="psSeg" data-ps="chipMode"><button type="button" data-v="chips"></button><button type="button" data-v="text"></button></span><label class="psToggle" data-ps="fabricCodeWrap"><input type="checkbox" data-ps="fabricCode"><span data-l="fabricCode"></span></label></span>
       </div>
       <div class="psBody"><aside class="psRail"><div class="psRailHead"><span data-l="pages"></span><button type="button" class="tbtn psIcon" data-ps="addPage">${sprite('plus')}</button></div><div class="psThumbs" data-ps="thumbs" data-no-i18n></div><div class="psTray" data-ps="tray"></div></aside>
         <div class="psCanvas" data-ps="canvas"><div class="psPages" data-ps="pages" data-no-i18n></div></div></div>
@@ -336,8 +354,9 @@
     $('[data-pop="design"]').innerHTML = `${sprite('palette')}<span>${esc(L('Tasarım', 'Design'))}</span>`;
     $('[data-pop="arrange"]').innerHTML = `${sprite('layout-align-top')}<span>${esc(L('Yeniden düzenle', 'Rearrange'))}</span>`;
     $('[data-ps="chipMode"] [data-v="chips"]').textContent = L('Çip', 'Chips'); $('[data-ps="chipMode"] [data-v="text"]').textContent = L('Metin', 'Text');
+    $('[data-ps="fabricCodeWrap"]').title = L('Kapalıyken kumaş çipinde kod gösterilmez: üstte kumaş adı, altta karışım ve gramaj', 'When off, fabric chips hide the code: fabric name on top, composition and weight below');
     $('[data-ps="chipModeWrap"]').title = L('Kumaş ve Artwork Detail kartlarda ve grup başlıklarında tablodaki gibi çip ya da düz metin olarak gösterilir', 'Fabric and Artwork Detail appear on cards and group titles as chips, like in the table, or as plain text');
-    for (const [key, tr, en] of [['group', 'Grupla', 'Group by'], ['brk', 'Yeni sayfa', 'New page'], ['page', 'Sayfa', 'Page'], ['pages', 'Sayfalar', 'Pages'], ['chipMode', 'Kumaş/Artwork', 'Fabric/Artwork']]) S.host.querySelectorAll(`[data-l="${key}"]`).forEach(el => { el.textContent = L(tr, en); });
+    for (const [key, tr, en] of [['group', 'Grupla', 'Group by'], ['brk', 'Yeni sayfa', 'New page'], ['page', 'Sayfa', 'Page'], ['pages', 'Sayfalar', 'Pages'], ['chipMode', 'Kumaş/Artwork', 'Fabric/Artwork'], ['fabricCode', 'Kumaş kodu', 'Fabric code']]) S.host.querySelectorAll(`[data-l="${key}"]`).forEach(el => { el.textContent = L(tr, en); });
     $('[data-ps="brkWrap"]').title = L('Her ana grup yeni bir sayfadan başlar', 'Each top-level group starts on a new page');
     $('[data-o="landscape"]').title = L('Yatay', 'Landscape'); $('[data-o="landscape"]').setAttribute('aria-label', L('Yatay', 'Landscape'));
     $('[data-o="portrait"]').title = L('Dikey', 'Portrait'); $('[data-o="portrait"]').setAttribute('aria-label', L('Dikey', 'Portrait'));
@@ -348,7 +367,11 @@
 
   /* ---------------- Çizim ---------------- */
   function editorAttrs(el) {
-    if (el.type === 'hdr') return { attr: ` data-hdr="${esc(el.key)}" title="${esc(L('Çift tıklayarak yeniden adlandırın', 'Double-click to rename'))}"`, cls: '', inner: '' };
+    if (el.type === 'area') {
+      const on = S.areaSel === el.key;
+      return { attr: ` data-area="${esc(el.key)}"`, cls: (on ? ' isSel' : '') + (el.cont ? ' isCont' : ''), inner: on && !el.cont ? ['e', 's', 'se', 'w'].map(d => `<span class="psHandle" data-h="${d}" data-ah="${d}"></span>`).join('') : '' };
+    }
+    if (el.type === 'hdr') return { attr: ` data-hdr="${esc(el.key)}"${el.area ? ` data-area-hdr="${esc(el.key)}"` : ''} title="${esc(el.area ? L('Sürükleyerek grup alanını taşıyın · çift tıklayarak yeniden adlandırın', 'Drag to move the group area · double-click to rename') : L('Sürükleyerek grubu kendi alanına alın · çift tıklayarak yeniden adlandırın', 'Drag to give the group its own area · double-click to rename'))}"`, cls: '', inner: '' };
     const c = S.doc.cards[el.id] || {}, sel = S.sel.has(el.id), primary = sel && S.primary === el.id;
     const cls = (sel ? ' isSel' : '') + (S.res.conflicts.has(el.id) ? ' isConflict' : '') + (el.pinned ? ' isPinned' : '');
     let inner = '';
@@ -420,7 +443,7 @@
     const nodes = new Map([...host.children].map(el => [el.dataset.th, el]));
     S.res.pages.forEach((p, i) => {
       const pg = S.doc.pages.find(x => x.id === p.id);
-      const items = p.items.map(it => `<i class="${it.kind === 'hdr' ? 'psThumbHdr' : it.pinned ? 'psThumbPin' : 'psThumbCard'}" style="left:${pct(it.x, g.w)};top:${pct(it.kind === 'hdr' ? it.y + it.h - 1 : it.y, g.h)};width:${pct(it.w, g.w)};height:${it.kind === 'hdr' ? '1px' : pct(it.h, g.h)}"></i>`).join('');
+      const items = p.items.map(it => `<i class="${it.kind === 'area' ? 'psThumbArea' : it.kind === 'hdr' ? 'psThumbHdr' : it.pinned ? 'psThumbPin' : 'psThumbCard'}" style="left:${pct(it.x, g.w)};top:${pct(it.kind === 'hdr' ? it.y + it.h - 1 : it.y, g.h)};width:${pct(it.w, g.w)};height:${it.kind === 'hdr' ? '1px' : pct(it.h, g.h)}"></i>`).join('');
       const html = `<span class="psThumbPage" style="height:${H.toFixed(1)}px">${items}</span><span class="psThumbNo">${i + 1}${pg.flow ? '' : ` · ${esc(L('serbest', 'free'))}`}</span>`;
       let el = nodes.get(p.id);
       if (!el) { el = doc_.createElement('button'); el.type = 'button'; el.className = 'psThumb'; el.draggable = true; el.dataset.th = p.id; }
@@ -449,6 +472,8 @@
     $('[data-ps="dim"]').textContent = `${Math.round(size.mmW)} × ${Math.round(size.mmH)} mm`;
     $('[data-ps="zoomVal"]').textContent = `${Math.round(S.zoom * 100)}%`;
     $('[data-ps="chipModeWrap"]').hidden = !chipsInUse();
+    $('[data-ps="fabricCodeWrap"]').hidden = !d.style.chips || !fabricInUse();
+    $('[data-ps="fabricCode"]').checked = d.style.fabricCode;
     $('[data-ps="chipMode"]').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.v === 'chips') === d.style.chips)));
   }
   function renderStatus() {
@@ -481,6 +506,7 @@
   function hideFloat() { const f = S && S.$('[data-ps="float"]'); if (f) f.hidden = true; }
   function placeFloat() {
     const f = S.$('[data-ps="float"]');
+    if (!S.sel.size && S.areaSel && !S.act && placeAreaFloat(f)) return;
     if (!S.sel.size || S.act) { f.hidden = true; return; }
     const els = [...S.sel].map(id => S.host.querySelector(`.psDocCard[data-id="${CSS.escape(id)}"]`)).filter(Boolean);
     if (!els.length) { f.hidden = true; return; }
@@ -558,7 +584,7 @@
   }
   function tip(e, text, bad) { const t = S.$('[data-ps="tip"]'); t.hidden = false; t.textContent = text; t.classList.toggle('isBad', Boolean(bad)); t.style.left = `${e.clientX + 14}px`; t.style.top = `${e.clientY + 18}px`; }
   const hideTip = () => { S.$('[data-ps="tip"]').hidden = true; };
-  const selectOnly = id => { S.sel = new Set([id]); S.primary = id; };
+  const selectOnly = id => { S.sel = new Set([id]); S.primary = id; S.areaSel = null; };
 
   function onPointerDown(e) {
     if (e.button !== 0) return;
@@ -566,6 +592,11 @@
     if (pa) return;
     const wrap = e.target.closest('.psPageWrap');
     if (wrap && wrap.dataset.psPage !== S.activePage) { S.activePage = wrap.dataset.psPage; S.host.querySelectorAll('.psPageWrap').forEach(w => w.toggleAttribute('data-active', w === wrap)); renderThumbs(); }
+    const ah = e.target.closest('.psArea .psHandle[data-ah]');
+    if (ah) {
+      const key = ah.closest('.psArea').dataset.area, it = areaItem(key);
+      if (it) { S.act = { type: 'areaResize', key, dir: ah.dataset.ah, start: { ...it }, page: it.page, sx: e.clientX, sy: e.clientY, last: { x: it.x, y: it.y, w: it.w, h: it.h } }; e.preventDefault(); return; }
+    }
     const h = e.target.closest('.psHandle');
     if (h) {
       const id = h.closest('.psDocCard').dataset.id, it = S.res.index.get(id);
@@ -582,11 +613,17 @@
       S.act = { type: 'press', id, sx: e.clientX, sy: e.clientY, mod: e.shiftKey || e.metaKey || e.ctrlKey };
       e.preventDefault(); return;
     }
-    if (e.target.closest('.psDocHdr')) return;
+    const hdr = e.target.closest('.psDocHdr');
+    if (hdr) {
+      // Başlığa basılı tutup sürükle: grup kendi alanına alınır / alan taşınır. Tıklama: alan seçilir.
+      S.act = { type: 'hdrPress', key: hdr.dataset.hdr, area: hdr.dataset.areaHdr != null, page: hdr.closest('.psPageWrap')?.dataset.psPage, sx: e.clientX, sy: e.clientY };
+      return;
+    }
     const page = e.target.closest('.psPage');
     if (page) {
       const pid = page.closest('.psPageWrap').dataset.psPage, p = toPage(pid, e.clientX, e.clientY);
       if (!e.shiftKey) S.sel.clear();
+      S.areaSel = null;
       S.act = { type: 'marquee', page: pid, x0: p.x, y0: p.y, base: new Set(S.sel) };
       render(); e.preventDefault(); return;
     }
@@ -596,6 +633,9 @@
     if (!S || !S.act) return;
     const a = S.act;
     if (a.type === 'press' && Math.hypot(e.clientX - a.sx, e.clientY - a.sy) > 4) startDrag();
+    if (a.type === 'hdrPress' && Math.hypot(e.clientX - a.sx, e.clientY - a.sy) > 4) startAreaDrag(a);
+    if (S.act.type === 'areaDrag') return moveAreaDrag(e);
+    if (S.act.type === 'areaResize') return moveAreaResize(e);
     if (S.act.type === 'drag') moveDrag(e);
     else if (S.act.type === 'resize') moveResize(e);
     else if (S.act.type === 'marquee') moveMarquee(e);
@@ -603,6 +643,9 @@
   function onPointerUp(e) {
     if (!S || !S.act) return;
     const a = S.act; S.act = null;
+    if (a.type === 'areaDrag') return endAreaDrag(a);
+    if (a.type === 'areaResize') return endAreaResize(a);
+    if (a.type === 'hdrPress') { if (a.area) { S.areaSel = a.key; S.sel.clear(); } else S.areaSel = null; render(); return; }
     if (a.type === 'drag') endDrag(a);
     else if (a.type === 'resize') endResize(a);
     else if (a.type === 'marquee') { S.host.querySelectorAll('.psMarquee').forEach(m => m.remove()); render(); }
@@ -691,8 +734,11 @@
         const fr = E().findFree(r, placed, g);
         if (!fr) { fail++; continue; }
         E().pinAt(S.doc, i.id, { ...fr, page: a.page }); placed.push(fr);
+        // Grup alanının içine bırakılan kart o grubun alanında akar (sabitlenmez).
+        const center = { x: fr.x + fr.w / 2, y: fr.y + fr.h / 2 }, inArea = a.mode === 'thumb' ? null : pageItems(a.page).find(it => it.kind === 'area' && center.x >= it.x && center.x <= it.x + it.w && center.y >= it.y && center.y <= it.y + it.h);
+        if (inArea) { const last = [...S.doc.order].reverse().find(x => x !== i.id && E().effectiveKey(S.doc, x, groupOf) === inArea.key); placed.pop(); if (last) E().insertAt(S.doc, [i.id], last, true, groupOf); else { S.doc.cards[i.id].pinned = false; E().setGroup(S.doc, i.id, inArea.key, groupOf); } joined++; continue; }
         // Başka grubun alanına bırakılan kart o gruba elle katılır (kaynak veri değişmez, yeni başlık yazılmaz).
-        const into = a.mode === 'thumb' ? null : E().groupAt(S.res, a.page, { x: fr.x + fr.w / 2, y: fr.y + fr.h / 2 });
+        const into = a.mode === 'thumb' ? null : E().groupAt(S.res, a.page, center);
         if (into != null && into !== E().effectiveKey(S.doc, i.id, groupOf)) { E().setGroup(S.doc, i.id, into, groupOf); joined++; }
       }
     });
@@ -737,6 +783,84 @@
       return;
     }
     commit(() => E().pinAt(S.doc, a.id, { ...r, page: a.page }));
+  }
+  /* ---------------- Grup alanları ----------------
+     Başlık sürüklenince grup kendi alanına alınır (veya alan taşınır); alanın kenarından
+     genişlik/en az yükseklik ayarlanır. Alan kartlara yetmezse aşağı büyür, sayfa bitince
+     kalan kartlar sonraki sayfada aynı başlıkla sürer (motor: layout). Kaynak veri değişmez. */
+  function areaItem(key, cont = false) {
+    for (const p of S.res.pages) { const it = p.items.find(i => i.kind === 'area' && i.key === key && Boolean(i.cont) === cont); if (it) return { ...it, page: p.id }; }
+    return null;
+  }
+  function startAreaDrag(a) {
+    const g = S.res.g, area = areaItem(a.key);
+    const hdr = area ? null : S.res.pages.flatMap(p => p.items).find(i => i.kind === 'hdr' && i.key === a.key && !i.pinOf);
+    const w = area ? area.w : Math.max(g.cellW, hdr ? hdr.w : g.cellW), h = area ? area.h : (hdr ? hdr.h : g.hH) + g.hGap + g.cellH;
+    const ghost = doc_.createElement('div'); ghost.className = 'psAreaGhost';
+    S.$('[data-ps="drag"]').appendChild(ghost);
+    S.act = { type: 'areaDrag', key: a.key, w, h, minH: area ? area.h : 0, ghost, sx: a.sx, sy: a.sy, page: null, x: 0, y: 0 };
+    S.areaSel = a.key; S.sel.clear(); placeFloat();
+  }
+  function moveAreaDrag(e) {
+    const a = S.act, g = S.res.g;
+    const thumb = doc_.elementFromPoint(e.clientX, e.clientY)?.closest?.('.psThumb');
+    S.host.querySelectorAll('.psThumb').forEach(t => t.toggleAttribute('data-drop', t === thumb));
+    if (thumb) {
+      a.page = thumb.dataset.th; a.x = g.m; a.y = g.m; a.ghost.hidden = true;
+      tip(e, L(`Grubu Sayfa ${S.doc.pages.findIndex(p => p.id === a.page) + 1}’e taşı`, `Move the group to page ${S.doc.pages.findIndex(p => p.id === a.page) + 1}`)); return;
+    }
+    const pid = pageAt(e.clientX, e.clientY); a.page = pid;
+    if (!pid) { a.ghost.hidden = true; tip(e, L('Bırakma alanı dışında · iptal', 'Outside the drop area · cancel')); return; }
+    const P = toPage(pid, e.clientX, e.clientY);
+    let x = clamp(P.x - Math.min(40, a.w / 2), 0, g.w - a.w), y = clamp(P.y - 8, 0, g.h - g.hH);
+    const T = snapTargets(pid, new Set()), th = 7 / P.k, sx = snap([x, x + a.w], T.xs, th), sy = snap([y], T.ys, th);
+    if (sx) x += sx.d; if (sy) y += sy.d;
+    a.x = clamp(x, 0, g.w - a.w); a.y = clamp(y, 0, g.h - g.hH);
+    Object.assign(a.ghost.style, { left: `${P.r.left + a.x * P.k}px`, top: `${P.r.top + a.y * P.k}px`, width: `${a.w * P.k}px`, height: `${Math.min(a.h, g.h - a.y) * P.k}px` });
+    a.ghost.hidden = false;
+    guides(pid, sx ? sx.t : null, sy ? sy.t : null);
+    tip(e, L('Grup alanı · kartlar alanın içinde akar', 'Group area · cards flow inside the area'));
+  }
+  function endAreaDrag(a) {
+    a.ghost.remove(); hideTip(); guides(null);
+    S.host.querySelectorAll('.psThumb[data-drop]').forEach(t => t.removeAttribute('data-drop'));
+    if (!a.page) { render(); return; }
+    commit(() => E().setArea(S.doc, a.key, { page: a.page, x: a.x, y: a.y, w: a.w, h: a.minH }));
+    S.areaSel = a.key; render();
+  }
+  function moveAreaResize(e) {
+    const a = S.act, g = S.res.g, el = S.host.querySelector(`.psArea[data-area="${CSS.escape(a.key)}"]`);
+    if (!el) return;
+    const P = toPage(a.page, e.clientX, e.clientY), dx = (e.clientX - a.sx) / P.k, dy = (e.clientY - a.sy) / P.k, s = a.start, d = a.dir;
+    let x = s.x, w = s.w, h = s.h;
+    if (d.includes('e')) w = s.w + dx;
+    if (d.includes('w')) { w = s.w - dx; x = s.x + dx; }
+    if (d.includes('s')) h = s.h + dy;
+    // Genişlik kart sütununa oturur; yükseklik "en az" ölçüdür (kartlar sığmazsa alan büyür).
+    const cols = Math.max(1, Math.round((w + g.gap) / (g.cellW + g.gap)));
+    const snapW = Math.min(cols * g.cellW + (cols - 1) * g.gap, g.w - 2 * g.m);
+    if (d.includes('w')) x = s.x + s.w - snapW;
+    x = clamp(x, 0, g.w - snapW); h = clamp(h, 0, g.h - s.y);
+    a.last = { x, y: s.y, w: snapW, h };
+    Object.assign(el.style, { left: `${x}pt`, width: `${snapW}pt`, height: `${Math.max(h, 12)}pt` });
+    tip(e, L(`${cols} sütun · en az ${Math.round(h / E().MM)} mm`, `${cols} columns · at least ${Math.round(h / E().MM)} mm`));
+  }
+  function endAreaResize(a) {
+    hideTip();
+    const r = a.last, s = a.start;
+    if (Math.abs(r.w - s.w) < 0.5 && Math.abs(r.h - s.h) < 0.5 && Math.abs(r.x - s.x) < 0.5) { render(); return; }
+    commit(() => E().setArea(S.doc, a.key, { page: a.page, x: r.x, y: r.y, w: r.w, h: r.h }));
+  }
+  function placeAreaFloat(f) {
+    const it = areaItem(S.areaSel), el = it && S.host.querySelector(`.psArea[data-area="${CSS.escape(S.areaSel)}"]`);
+    if (!it || !el) { S.areaSel = null; return false; }
+    const n = S.res.pages.flatMap(p => p.items).filter(i => i.kind === 'card' && i.area === S.areaSel).length;
+    const label = L('Grup alanını kaldır: kartlar otomatik akışa döner', 'Remove the group area: cards return to automatic flow');
+    f.innerHTML = `<span class="psFloatInfo">${esc(L(`Grup alanı · ${n} model`, `Group area · ${n} models`))}</span><button type="button" class="tbtn" data-fa-area="out" title="${esc(label)}" aria-label="${esc(label)}">${svg('flow')}<span>${esc(L('Akışa döndür', 'Return to flow'))}</span></button>`;
+    f.hidden = false;
+    const r = el.getBoundingClientRect(), fw = f.offsetWidth;
+    f.style.left = `${clamp(r.left, 8, root.innerWidth - fw - 8)}px`; f.style.top = `${Math.max(8, r.top - f.offsetHeight - 8)}px`;
+    return true;
   }
   function moveMarquee(e) {
     const a = S.act, P = toPage(a.page, e.clientX, e.clientY), r = { x: Math.min(a.x0, P.x), y: Math.min(a.y0, P.y), w: Math.abs(P.x - a.x0), h: Math.abs(P.y - a.y0) };
@@ -984,6 +1108,7 @@
       const th = t.closest('[data-th]'); if (th) { S.activePage = th.dataset.th; host.querySelector(`.psPageWrap[data-ps-page="${CSS.escape(S.activePage)}"]`)?.scrollIntoView({ block: 'start' }); render(); return; }
       const back = t.closest('[data-back]'); if (back) return commit(() => { delete S.doc.cards[back.dataset.back].excluded; });
       const fa = t.closest('[data-fa]'); if (fa) return selAction(fa.dataset.fa);
+      const fo = t.closest('[data-fa-area]'); if (fo && S.areaSel) { const key = S.areaSel; S.areaSel = null; commit(() => E().clearArea(S.doc, key)); toast(L('Grup alanı kaldırıldı; kartlar otomatik akışa döndü.', 'Group area removed; cards returned to automatic flow.')); return; }
       const rm = t.closest('[data-rmlv]'); if (rm) { const lv = [...S.doc.grouping.levels]; lv.splice(Number(rm.dataset.rmlv), 1); return setLevels(lv); }
       const add = t.closest('[data-addlv]'); if (add) { closePop(); return setLevels([...S.doc.grouping.levels, add.dataset.addlv]); }
       const rf = t.closest('[data-rf]');
@@ -1008,6 +1133,7 @@
       if (ps === 'labels') return commit(() => { S.doc.style.labels = t.checked; });
       if (ps === 'font') return commit(() => { S.doc.style.font = t.value; });
       if (ps === 'keepGroups') return commit(() => { S.doc.style.keepGroups = t.checked; });
+      if (ps === 'fabricCode') return commit(() => { S.doc.style.fabricCode = t.checked; });
       if (ps === 'brk') return commit(() => { S.doc.grouping.breakTop = t.checked; });
       if (ps === 'title') return commit(() => { S.doc.title = t.value.trim().slice(0, 120); });
       if (ps === 'paper') { const size = E().pageSize(S.doc.page); return changePage({ ...S.doc.page, preset: t.value, cw: Math.round(size.mmW), ch: Math.round(size.mmH) }); }

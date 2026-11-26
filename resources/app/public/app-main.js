@@ -36450,12 +36450,13 @@ function fabricCardCellModel(val){
     const head=[{kind:'code',t:part.code}];
     if(type||weight)head.push({kind:'chip',t:type||weight,sub:type&&weight?weight:''});
     if(eco)head.push({kind:'tag',t:eco,tone:'eco'});
-    parts.push({label:part.label||'',head,mix:mix?[{kind:'chip',t:mix}]:[]});
+    parts.push({label:part.label||'',head,mix:mix?[{kind:'chip',t:mix}]:[],fabric:{code:part.code,type,weight,mix,eco}});
   }
   // Tek kumaş: üstte kod + tip|gramaj, altta karışım. A/B: parça başına tek satır (hücreyle aynı).
+  // Her parçanın ilk satırı ham parçaları (fabric) taşır: Sunum Stüdyosu kod gizlenince satırları yeniden kurar.
   return parts.length===1
-    ?[{label:parts[0].label,items:parts[0].head},...(parts[0].mix.length?[{label:'',items:parts[0].mix}]:[])]
-    :parts.map(p=>({label:p.label,items:[...p.head,...p.mix]}));
+    ?[{label:parts[0].label,items:parts[0].head,fabric:parts[0].fabric},...(parts[0].mix.length?[{label:'',items:parts[0].mix}]:[])]
+    :parts.map(p=>({label:p.label,items:[...p.head,...p.mix],fabric:p.fabric}));
 }
 /* Kumaş hücresinin içi: Koleksiyon, CP ve Orders aynı görünümü kullanır. */
 function fabricCardCellParts(val){

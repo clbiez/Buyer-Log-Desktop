@@ -20,7 +20,13 @@ function assertClean(res) {
   const g = res.g;
   for (const p of res.pages) {
     for (const it of p.items) assert.ok(it.x >= -0.01 && it.y >= -0.01 && it.x + it.w <= g.w + 0.01 && it.y + it.h <= g.h + 0.01, `${p.id} ${it.kind} sayfa dışında`);
-    for (let i = 0; i < p.items.length; i++) for (let j = i + 1; j < p.items.length; j++) assert.equal(E.overlaps(p.items[i], p.items[j]), false, `${p.id}: ${p.items[i].id || 'hdr'} ↔ ${p.items[j].id || 'hdr'}`);
+    // Grup alanı çerçevesi kendi başlığını ve kartlarını içerir; başka öğeyle örtüşmesi hatadır.
+    const own = (a, b) => a.kind === 'area' && b.area === a.key;
+    for (let i = 0; i < p.items.length; i++) for (let j = i + 1; j < p.items.length; j++) {
+      const a = p.items[i], b = p.items[j];
+      if (own(a, b) || own(b, a)) continue;
+      assert.equal(E.overlaps(a, b), false, `${p.id}: ${a.id || a.kind} ↔ ${b.id || b.kind}`);
+    }
   }
 }
 
@@ -306,4 +312,55 @@ test('yan yana duran aynı gruptan sabit kartlar tek grup başlığını paylaş
   assert.ok(Math.abs(hdrs[0].w - (2 * g.cellW + g.gap)) < 0.01);
   assert.deepEqual(hdrs[0].pins, [visk[0], visk[1]]);
   assertClean(res);
+});
+
+test('grup alanı (d): grup kendi alanında akar; alan büyür, sayfa bitince sonraki sayfada aynı başlıkla sürer', () => {
+  const { data, doc, groupOf } = setup(60, ['fabric']);
+  const snapshot = JSON.stringify(data);
+  let res = E.layout(doc, groupOf);
+  const g = res.g, key = groupOf(doc.order.find(id => groupOf(id).vals[0] === 'Merinos')).key;
+  const total = doc.order.filter(id => groupOf(id).key === key).length; // 15
+  // 2 sütunluk alan, sayfanın sağ yarısında; 15 kart tek sayfaya sığmaz → devam sayfası.
+  E.setArea(doc, key, { page: 'p1', x: g.w - g.m - (2 * g.cellW + g.gap), y: g.m, w: 2 * g.cellW + g.gap, h: 0 });
+  res = E.layout(doc, groupOf);
+  assertClean(res);
+  const all = res.pages.flatMap((p, i) => p.items.map(it => ({ ...it, pi: i })));
+  const areas = all.filter(i => i.kind === 'area' && i.key === key);
+  assert.ok(areas.length >= 2, 'alan sonraki sayfada devam eder');
+  assert.equal(areas[0].pi, 0); assert.equal(areas[0].cont, false); assert.equal(areas[1].cont, true);
+  assert.ok(Math.abs(areas[1].y - g.cy) < 0.01 && Math.abs(areas[1].x - areas[0].x) < 0.01, 'devam alanı aynı yatay konumda, üstte');
+  assert.ok(areas[0].y + areas[0].h <= g.h + 0.01, 'alan sayfa dışına taşmaz');
+  const inArea = all.filter(i => i.kind === 'card' && i.area === key);
+  assert.equal(inArea.length, total, 'grubun tüm kartları alanda');
+  for (const c of inArea) { const ar = areas.find(a => a.pi === c.pi); assert.ok(c.x >= ar.x - 0.01 && c.x + c.w <= ar.x + ar.w + 0.01 && c.y >= ar.y && c.y + c.h <= ar.y + ar.h + 0.01); }
+  assert.equal(all.filter(i => i.kind === 'hdr' && i.key === key && !i.area).length, 0, 'akışta ikinci başlık yok');
+  assert.ok(all.filter(i => i.kind === 'hdr' && i.area === key).every(h => h.count === total));
+  // Akış alanın etrafından geçer; tüm kartlar yerleşir, kaynak değişmez.
+  assert.equal(res.index.size, 60);
+  for (const p of res.pages) for (const ar of p.items.filter(i => i.kind === 'area')) for (const c of p.items.filter(i => i.kind === 'card' && !i.area)) assert.equal(E.overlaps(ar, c), false);
+  assert.equal(JSON.stringify(data), snapshot);
+  // Alan içine düşen nokta o grubu verir (karta bırakma = gruba katılma).
+  assert.equal(E.groupAt(res, 'p1', { x: areas[0].x + areas[0].w - 2, y: areas[0].y + areas[0].h - 2 }), key);
+  // En az yükseklik korunur: kartlar az olsa da alan kullanıcı ölçüsünde kalır.
+  E.setArea(doc, key, { page: 'p1', x: g.m, y: g.m, w: 6 * g.cellW + 5 * g.gap, h: g.h - 2 * g.m });
+  res = E.layout(doc, groupOf);
+  const big = res.pages[0].items.find(i => i.kind === 'area');
+  assert.ok(Math.abs(big.h - (g.h - 2 * g.m)) < 0.01);
+  // Kalıcılık: normalizeDoc alanı korur, sayfası olmayan alanı atar.
+  const round = E.normalizeDoc(JSON.parse(JSON.stringify(doc)), { ids: doc.order, fields: doc.style.fields });
+  assert.deepEqual(round.areas[key], doc.areas[key]);
+  assert.deepEqual(E.normalizeDoc({ ...JSON.parse(JSON.stringify(doc)), areas: { x: { page: 'p99', x: 1, y: 1, w: 100, h: 0 } } }, { ids: doc.order }).areas, {});
+  // Akışa döndür.
+  E.clearArea(doc, key); res = E.layout(doc, groupOf);
+  assert.equal(res.pages.flatMap(p => p.items).filter(i => i.kind === 'area').length, 0);
+});
+
+test('grup alanı: boş sayfada bile sığmayan alan sonsuz sayfa üretmez', () => {
+  const { doc, groupOf } = setup(12, ['fabric']);
+  let res = E.layout(doc, groupOf);
+  const g = res.g, key = groupOf(doc.order[0]).key;
+  E.setArea(doc, key, { page: 'p1', x: g.m, y: g.h - g.hH - 2, w: g.cellW, h: 0 });
+  res = E.layout(doc, groupOf, { fieldLines: [1, 1, 1], hdrLines: () => 6 });
+  assert.equal(res.index.size, 12);
+  assert.ok(res.pages.length < 20, 'sayfa sayısı sınırlı: ' + res.pages.length);
 });
