@@ -2784,6 +2784,18 @@ function syntheticSegmentKind(segment) {
   return kind === 'production' || kind === 'shortage' || kind === 'warehouse' ? kind : '';
 }
 
+// ADR-0002 · Değer–kanıt sözleşmesi. IAS parsiyeli olan siparişte ASAS yükleme
+// onayı önceki sevkiyata aittir; IAS kaydı olmayan kalan bakiye için onay "yok"tur
+// (absent) ve ondan türeyen otomatik Ex-Factory revizyonu da bakiyeye taşınmaz.
+// Bakiye, onaydan önceki planlanan tarihi (ASAS veya kullanıcı revizyonu) kullanır.
+// Hiç IAS kaydı olmayan siparişte onay siparişin tamamına aittir ve geçerli kalır
+// (tests/loading-approval-exfactory.test.js). Kaynak siparişin revizyonu değişmez.
+function plannedExFactoryWithoutApproval(order) {
+  const revision = order && order._exFactoryRevision;
+  if (revision && revision.source === 'loading-approval') return revision.previousDate || null;
+  return order ? order.ex : null;
+}
+
 function backlogSegment(order, values) {
   const quantity = Math.max(0, Number(values && values.quantity) || 0);
   const requestedKind = values && values.kind;
@@ -2801,6 +2813,8 @@ function backlogSegment(order, values) {
     ...order,
     // IAS kaydı olmayan bakiye, siparişin önceki yükleme onayını devralmaz.
     shipConf: kind === 'ias' ? (order.shipConf || null) : null,
+    ...(kind === 'ias' || !(values && values.approvalConsumed) || order._exFactoryRevision?.source !== 'loading-approval' ? null
+      : { ex: plannedExFactoryWithoutApproval(order), _exFactoryRevision: null }),
     qty: quantity,
     kalan: kind === 'production' ? quantity : 0,
     antrepo: (antrepoStatusKey(status) === 'DEPODA' || antrepoStatusKey(status) === 'RETAILE AKTARIM BEKLENIYOR') ? quantity : 0,
@@ -3022,7 +3036,7 @@ function buildBacklogOperationalRows(asasOrders, antrepoMap, overrides) {
         const segmentKind = isShortageStatus(remainderStatus) ? 'shortage'
           : (isProductionStatus(remainderStatus) ? 'production' : 'warehouse');
         const delType = backlogProductionDelType(order, overrides);
-        const arrival = estimateAntrepoDate(order.ex, delType, null, {
+        const arrival = estimateAntrepoDate(hits.length ? plannedExFactoryWithoutApproval(order) : order.ex, delType, null, {
           season: order.season,
           country: order.countryRaw,
           // Eksik Yükleme üretim statüsü değildir. Tahmini antrepo, siparişin
@@ -3041,6 +3055,7 @@ function buildBacklogOperationalRows(asasOrders, antrepoMap, overrides) {
           delType,
           orderQty,
           userShortage,
+          approvalConsumed: hits.length > 0,
         }));
       }
     }
@@ -3250,8 +3265,9 @@ function filterBacklogOrders(asasOrders, antrepoMap, overrides, opts, dimensions
     if(!retail || retailFrom && retail<retailFrom || retailTo && retail>retailTo)return false;
     for(const [field,start,end] of orderDateWindows){
       if(!start&&!end)continue;
-      const date=toDateOnly(order[field]);
-      if(!date || start&&date<start || end&&date>end)return false;
+      const inWindow=value=>{const date=toDateOnly(value);return !!date&&!(start&&date<start)&&!(end&&date>end);};
+      // Sipariş ön-filtresi üst kümedir: onaysız bakiye planlanan Ex-Factory'yi taşır (ADR-0002); kesin süzme segmentte.
+      if(!inWindow(order[field]) && !(field==='ex' && order._exFactoryRevision && inWindow(plannedExFactoryWithoutApproval(order))))return false;
     }
     if(!includeWindowed && buyerGrupFilterSet && !buyerGrupFilterSet.has(turknorm(order.buyerGrup)))return false;
     return early.every(f=>matchesBacklogAnalysisValue(f.orderValue(order),f)) && earlyDimensions.every(([getter,values])=>values.has(getter(order)));
@@ -3863,6 +3879,8 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
     // sourceOrderRef asıl siparişi korur; onayı oradan tekrar sentetik
     // bakiyeye taşımamak gerekir. Risk ve Excel aynı satır değerini kullanır.
     const shipConfirmationDate = syntheticSegmentKind(segment) ? null : (order.shipConf || null);
+    // Sentetik bakiyenin Ex-Factory'si segmentte çözülmüştür (backlogSegment, ADR-0002).
+    const exFactory = syntheticSegmentKind(segment) ? segment.ex : order.ex;
     const segmentQty = Math.max(0, Number(segment.qty) || 0);
     const isProduction = segment._segmentKind === 'production';
     const isShortage = segment._segmentKind === 'shortage' || isShortageStatus(segment._status);
@@ -3895,7 +3913,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
     const asasExDate = asasBaseline(order, 'ex', '_asasEx');
     const isPartial = !isProduction && !isShortage;
     const partialLoadDate = isPartial && ias ? toDateOnly(ias.handover) : null;
-    const revisedExFactoryDate = toDateOnly(order.ex) || asasExDate || null;
+    const revisedExFactoryDate = toDateOnly(exFactory) || asasExDate || null;
     const actualLoadDate = isPartial ? (partialLoadDate || revisedExFactoryDate) : revisedExFactoryDate;
 
     // Üretim sonrası parsiyellerde de ülke/sezon/yükleme tipine göre tanımlanmış
@@ -3904,7 +3922,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
     // kuralı transit gecikmesi hesabında görünmez kılıyordu.
     const transitInfo = resolveTransitDays({
       delType: effectiveDelType,
-      exFactory: actualLoadDate || revisedExFactoryDate || order.ex,
+      exFactory: actualLoadDate || revisedExFactoryDate || exFactory,
       season: order.season,
       country: order.countryRaw,
       status: segment._status,
@@ -3928,7 +3946,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
     });
 
     const priorityInput = {
-      'Ex-factory': order.ex,
+      'Ex-factory': exFactory,
       'Retail Date': order.retail,
       'In-Store (Model Budget)': order.mb,
       'Ant. Arrival': backlogAntrepoDate,

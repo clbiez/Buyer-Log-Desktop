@@ -7,8 +7,8 @@
     "en": "Presentation Studio: merge groups, group areas for separated cards, line-by-line titles; Fields: drag a column under another heading; copy custom columns and sensitive columns; Pricing Desk: clear approval state and Collection price columns"
   },
   "summary": {
-    "tr": "Sunum Stüdyosu’nda bir kartı başka bir kartın ya da grubun üzerine bırakmak iki grubu birleştirir; grubundan ayrılan kartlar kendi grup alanına alınıp boyutlandırılabilir. Grup başlığında her gruplama seviyesi ve takım parçası ayrı satırda; başlık yazı boyutu kart yazısından ayrı ayarlanır. Grup alanı boyutlandırılınca kartlar alanı orantılı doldurur; görsellerin arkasındaki gri zemin kaldırıldı. Alanları düzenle ekranında CP, Siparişler ve Koleksiyon sütunları sürükle-bırakla başka bir ana başlığa taşınır; tablodaki başlık bandı da hemen değişir. Seçim kişiseldir ve Alanları sıfırla ile geri alınır. CP, Siparişler ve Koleksiyon'da satırlar seçtiğiniz sütunlarla ve sırayla kopyalanır; hassas işaretli sütunlar (varsayılan: Retail tarihi, Ex→Retail, MB tarihi/hafta/ay; Koleksiyon'da fiyat analizi, Endeksmatik, avantaj, onaylı fiyat ve üretici) seçim çubuğundaki “Hassaslar gizli” ile kopyadan çıkarılır. Ctrl+C ve normal Kopyala değişmez. Fiyat Masası’nda onaylı fiyat hücresi her zaman yeşil ve ONAYLI etiketiyle görünür; Hedef, Teklif & Onay ve kompakt PS / LFL / SE sütunları Koleksiyon verisiyle gelir, sütunlar sıralanır, genişletilir ve gizlenir, Yalnız onaysız filtresi eklendi, toplu onay kaldırıldı ve tablo üstündeki alan küçüldü.",
-    "en": "In Presentation Studio, dropping a card onto another card or group merges the two groups; cards separated from their group can get their own resizable group area. Group titles show each grouping level and set part on its own line, and the title text size is set separately from the card text. Resizing a group area scales its cards to fill it, and the grey background behind images was removed. In Edit fields, CP, Orders and Collection columns can be dragged under another heading; the heading band in the table updates right away. The choice is personal and Reset fields undoes it. In CP, Orders and Collection, rows can be copied with the columns you choose, in your order; columns marked sensitive (by default Retail date, Ex→Retail, MB date/week/month; in Collection also price analysis, Endeksmatik, advantage, approved price and manufacturer) are left out with “Hide sensitive” in the selection bar. Ctrl+C and normal Copy are unchanged. In Pricing Desk an approved price cell is always green with an APPROVED label; Target, Quotes & Approval and compact PS / LFL / SI columns come from Collection data, columns can be sorted, resized and hidden, an Unapproved only filter was added, bulk approval was removed and the area above the table is smaller."
+    "tr": "Sunum Stüdyosu’nda bir kartı başka bir kartın ya da grubun üzerine bırakmak iki grubu birleştirir; grubundan ayrılan kartlar kendi grup alanına alınıp boyutlandırılabilir. Grup başlığında her gruplama seviyesi ve takım parçası ayrı satırda; başlık yazı boyutu kart yazısından ayrı ayarlanır. Grup alanı boyutlandırılınca kartlar alanı orantılı doldurur; görsellerin arkasındaki gri zemin kaldırıldı. Alanları düzenle ekranında CP, Siparişler ve Koleksiyon sütunları sürükle-bırakla başka bir ana başlığa taşınır; tablodaki başlık bandı da hemen değişir. Seçim kişiseldir ve Alanları sıfırla ile geri alınır. CP, Siparişler ve Koleksiyon'da satırlar seçtiğiniz sütunlarla ve sırayla kopyalanır; hassas işaretli sütunlar (varsayılan: Retail tarihi, Ex→Retail, MB tarihi/hafta/ay; Koleksiyon'da fiyat analizi, Endeksmatik, avantaj, onaylı fiyat ve üretici) seçim çubuğundaki “Hassaslar gizli” ile kopyadan çıkarılır. Ctrl+C ve normal Kopyala değişmez. Fiyat Masası’nda onaylı fiyat hücresi her zaman yeşil ve ONAYLI etiketiyle görünür; Hedef, Teklif & Onay ve kompakt PS / LFL / SE sütunları Koleksiyon verisiyle gelir, sütunlar sıralanır, genişletilir ve gizlenir, Yalnız onaysız filtresi eklendi, toplu onay kaldırıldı ve tablo üstündeki alan küçüldü. Backlog’da kısmi yüklenmiş siparişin yüklenmemiş bakiyesi, önceki sevkiyatın yükleme onayı tarihini değil planlanan Ex-Factory’yi gösterir.",
+    "en": "In Presentation Studio, dropping a card onto another card or group merges the two groups; cards separated from their group can get their own resizable group area. Group titles show each grouping level and set part on its own line, and the title text size is set separately from the card text. Resizing a group area scales its cards to fill it, and the grey background behind images was removed. In Edit fields, CP, Orders and Collection columns can be dragged under another heading; the heading band in the table updates right away. The choice is personal and Reset fields undoes it. In CP, Orders and Collection, rows can be copied with the columns you choose, in your order; columns marked sensitive (by default Retail date, Ex→Retail, MB date/week/month; in Collection also price analysis, Endeksmatik, advantage, approved price and manufacturer) are left out with “Hide sensitive” in the selection bar. Ctrl+C and normal Copy are unchanged. In Pricing Desk an approved price cell is always green with an APPROVED label; Target, Quotes & Approval and compact PS / LFL / SI columns come from Collection data, columns can be sorted, resized and hidden, an Unapproved only filter was added, bulk approval was removed and the area above the table is smaller. In Backlog, the unloaded balance of a partly loaded order keeps its planned Ex-Factory instead of the earlier shipment's loading approval date."
   },
   "changes": [
     {
@@ -182,6 +182,35 @@
         "caption": {
           "tr": "Demo veride onaylı fiyatlar ve Koleksiyon fiyat sütunları.",
           "en": "Approved prices and Collection price columns on demo data."
+        }
+      }
+    },
+    {
+      "id": "backlog-balance-planned-exfactory",
+      "type": "fix",
+      "module": {
+        "tr": "Backlog · CP",
+        "en": "Backlog · CP"
+      },
+      "title": {
+        "tr": "Backlog: yüklenmemiş bakiye önceki sevkiyatın yükleme onayı tarihini almaz",
+        "en": "Backlog: the unloaded balance no longer takes the loading approval date of an earlier shipment"
+      },
+      "body": {
+        "tr": "Bir kısmı IAS ile yüklenmiş siparişte, IAS kaydı olmayan kalan bakiye (Üretimde / Eksik Yükleme / Depoda) artık siparişin önceki sevkiyata ait yükleme onayı tarihini Revize Ex-Factory olarak göstermez. Bakiye, onaydan önceki planlanan tarihi (ASAS ya da sizin girdiğiniz revizyon) kullanır; tahmini antrepo tarihi (CP lojistik detayındaki bakiye tahmini dahil), Ex-Factory filtresi ve Retail gecikmesi riski de bu tarihten hesaplanır. Böylece geçmişte kalan onay tarihi bakiyenin gerçek Retail gecikmesini gizlemez. Yüklenmiş parsiyeller, CP ve Siparişler'deki sipariş tarihi ile hiç IAS kaydı olmayan siparişler değişmez.",
+        "en": "In an order partly loaded through IAS, the remaining balance without an IAS record (In Production / Short Shipment / In Warehouse) no longer shows the order's loading approval date, which belongs to an earlier shipment, as its Revised Ex-Factory. The balance uses the planned date before the approval (ASAS or your own revision); the estimated warehouse date (including the balance estimate in CP logistics details), the Ex-Factory filter and the Retail delay risk are calculated from that date too. A past approval date therefore no longer hides a real Retail delay of the balance. Loaded partials, the order date in CP and Orders, and orders with no IAS record at all are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-balance-planned-exfactory.png",
+        "alt": {
+          "tr": "Demo verili Seçili Siparişler Backlog Raporu: kısmi yüklenmiş siparişin Üretimde bakiyesi planlanan 2026-12-20 Revize Ex-Factory ve VAR riskiyle, Depoda parsiyelleri onay tarihi 2026-11-02 ile; IAS kaydı olmayan sipariş onay tarihi 2026-12-01 ile",
+          "en": "Selected Orders Backlog Report with demo data: the In Production balance of a partly loaded order with planned Revised Ex-Factory 2026-12-20 and risk VAR, its In Warehouse partials with approval date 2026-11-02; an order with no IAS record with approval date 2026-12-01"
+        },
+        "caption": {
+          "tr": "Bakiye satırı planlanan Ex-Factory'yi, yüklenmiş parsiyeller onay tarihini gösterir.",
+          "en": "The balance row shows the planned Ex-Factory; loaded partials show the approval date."
         }
       }
     }
