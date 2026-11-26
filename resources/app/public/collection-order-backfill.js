@@ -11,8 +11,8 @@
    * satır kimliği (id) korunur ve ona bağlı fiyatlama geçmişi, teklifler, fiyat
    * avantajları, landed kıyasları, Endeksmatik ve görsel kaybolmaz.
    *
-   * Fiyat kaynağı Supp. FOB doluysa Supp. FOB, boşsa FOB'dur; üretici
-   * Sub-Manufacturer doluysa odur, boşsa Manufacturer (seçim cpRowToKolRow'da).
+   * Fiyat ve üretici çift seçilir (cpRowToKolRow): Supp. FOB doluysa Supp. FOB +
+   * Sub-Manufacturer (boşsa Manufacturer), değilse FOB + Manufacturer.
    * Koleksiyon FOB'u bu fiyattan royalty + hologram kuralıyla kendisi hesaplar.
    * Mevcut satırın onaylı üretici/fiyatı farklıysa değişiklik yalnız kullanıcı
    * onayıyla uygulanır (priceChange.requiresApproval). Diğer kaynak alanları

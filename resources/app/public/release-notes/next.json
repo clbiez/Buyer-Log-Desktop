@@ -135,24 +135,24 @@
         "en": "Collection · CP · Orders"
       },
       "title": {
-        "tr": "Koleksiyona aktarımda Supp. FOB / Sub-MFR boşsa FOB ve Manufacturer alınır",
-        "en": "Import to Collection uses FOB and Manufacturer when Supp. FOB / Sub-MFR are blank"
+        "tr": "Koleksiyona aktarımda Supp. FOB boşsa FOB ve Manufacturer alınır",
+        "en": "Import to Collection uses FOB and Manufacturer when Supp. FOB is blank"
       },
       "body": {
-        "tr": "CP veya Siparişler’den seçili modelleri Koleksiyon’a aktarırken onaylı üretici Sub-Manufacturer doluysa ondan, boşsa Manufacturer’dan; onaylı fiyat Supp. FOB doluysa ondan, boşsa FOB’dan alınır. Böylece Supp. FOB ve Sub-MFR kullanmayan kullanıcılarda modeller artık fiyatsız açılmaz. Önizleme sütunları ‘Üretici · fiyat’ olarak adlandırıldı. Supp. FOB dolu satırlarda davranış değişmez.",
-        "en": "When selected models are imported from CP or Orders into Collection, the confirmed manufacturer is taken from Sub-Manufacturer when filled, otherwise from Manufacturer, and the confirmed price from Supp. FOB when filled, otherwise from FOB. Users who do not use Supp. FOB and Sub-MFR no longer get models without a price. The preview columns are now labelled ‘Manufacturer · price’. Rows with a Supp. FOB behave as before."
+        "tr": "CP veya Siparişler’den seçili modelleri Koleksiyon’a aktarırken onaylı fiyat ve üretici birlikte seçilir: Supp. FOB doluysa Supp. FOB ve Sub-Manufacturer (boşsa Manufacturer), Supp. FOB boşsa FOB ve Manufacturer alınır. Böylece Supp. FOB ve Sub-MFR kullanmayan kullanıcılarda modeller artık fiyatsız açılmaz ve FOB başka bir üreticinin adına yazılmaz. Önizleme sütunları ‘Üretici · fiyat’ olarak adlandırıldı.",
+        "en": "When selected models are imported from CP or Orders into Collection, the confirmed price and manufacturer are chosen as a pair: with a Supp. FOB, Supp. FOB and Sub-Manufacturer (or Manufacturer if blank); without one, FOB and Manufacturer. Users who do not use Supp. FOB and Sub-MFR no longer get models without a price, and FOB is never recorded under another manufacturer’s name. The preview columns are now labelled ‘Manufacturer · price’."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
         "src": "collection-order-fob-fallback.png",
         "alt": {
-          "tr": "Demo verili Siparişlerden Koleksiyon Oluştur önizlemesi: Supp. FOB boş satır Manufacturer ve FOB ile, dolu satır Supp. FOB ile geliyor",
-          "en": "Build Collection from Orders preview with demo data: the row without Supp. FOB uses Manufacturer and FOB, the row with Supp. FOB keeps it"
+          "tr": "Demo verili Siparişlerden Koleksiyon Oluştur önizlemesi: Supp. FOB boş satır Manufacturer ve FOB ile, Supp. FOB dolu satır Sub-Manufacturer ve Supp. FOB ile geliyor",
+          "en": "Build Collection from Orders preview with demo data: the row without Supp. FOB uses Manufacturer and FOB, the row with Supp. FOB uses Sub-Manufacturer and Supp. FOB"
         },
         "caption": {
-          "tr": "Supp. FOB / Sub-MFR boş siparişlerde FOB ve Manufacturer onaylı fiyat/üretici olur.",
-          "en": "Orders without Supp. FOB / Sub-MFR take FOB and Manufacturer as the confirmed price and manufacturer."
+          "tr": "Supp. FOB boş siparişte FOB ve Manufacturer, dolu siparişte Supp. FOB ve Sub-Manufacturer onaylı fiyat/üretici olur.",
+          "en": "An order without Supp. FOB takes FOB and Manufacturer; one with Supp. FOB takes Supp. FOB and Sub-Manufacturer."
         }
       }
     }

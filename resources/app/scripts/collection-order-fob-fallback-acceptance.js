@@ -1,6 +1,6 @@
 'use strict';
 // Real HTTP + Buyer Log UI with synthetic ASAS data and isolated persistence.
-// CP → Collection when Supp. FOB / Sub-MFR are blank: FOB + Manufacturer become the confirmed price/manufacturer.
+// CP → Collection price/manufacturer pairing: Supp. FOB → Sub-MFR + Supp. FOB, else Manufacturer + FOB.
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),{spawn}=require('node:child_process');
 const {chromium}=require('playwright'),XLSX=require('xlsx');
 const app=path.resolve(__dirname,'..'),work=path.resolve(app,'../../work');fs.mkdirSync(work,{recursive:true});
@@ -42,11 +42,11 @@ async function refresh(){await api('/api/refresh',{},'POST',202);for(let i=0;i<1
   await page.locator('nav.tabs button[data-tab="koleksiyon"]').click();
   await page.waitForFunction(()=>typeof kolWorkspaceCanEdit!=='undefined'&&kolWorkspaceCanEdit&&kolIsOwnWorkspace(),null,{timeout:60000});
   await page.locator('nav.tabs button[data-tab="cp"]').click();await page.waitForFunction(()=>document.querySelectorAll('#cpTable tbody tr').length>=3);
-  // Çoğu kullanıcı Supp. FOB / Sub-MFR kullanmaz: iki sütun boş, yalnız FOB + Manufacturer dolu.
-  // Bir satırda Supp. FOB dolu kalır: o satır Supp. FOB'u almaya devam etmeli.
+  // Sub-MFR tüm satırlarda dolu; Supp. FOB yalnız hırkada dolu. Polo (Supp. FOB boş)
+  // Manufacturer + FOB çiftini, hırka Sub-MFR + Supp. FOB çiftini almalı.
   await page.evaluate(()=>{
     applyLanguage('tr');
-    state.cp.rows.forEach(row=>{row['Sub-Manufacturer']='';row['Supp. FOB']=Number(row['FOB ($)'])===7.4?6.3:'';row._suppFobManual=true;});
+    state.cp.rows.forEach(row=>{row['Sub-Manufacturer']='DEMO SUB ÖRME';row['Supp. FOB']=Number(row['FOB ($)'])===7.4?6.3:'';row._suppFobManual=true;});
     state.cpSelected=new Set(state.cp.rows.map(row=>row._id));renderCP();updateShippingBtnVisibility();
   });
   await page.waitForFunction(()=>{const key=JSON.stringify([kolWorkspaceRevision,kolRows]);const same=window.__kolSettle===key;window.__kolSettle=key;return same;},null,{polling:1000,timeout:30000});
@@ -56,8 +56,9 @@ async function refresh(){await api('/api/refresh',{},'POST',202);for(let i=0;i<1
   if(process.env.DEBUG_SYNC)console.log(text);
   assert.match(text,/2 yeni satır/);
   assert.match(text,/DEMO MAIN FACTORY · 5,20/);
-  assert.match(text,/DEMO MAIN FACTORY · 6,30/);
-  assert.match(text,/Supp\. FOB doluysa ondan, boşsa FOB’dan/);
+  assert.doesNotMatch(text,/DEMO SUB ÖRME · 5,20/);
+  assert.match(text,/DEMO SUB ÖRME · 6,30/);
+  assert.match(text,/Supp\. FOB boşsa onaylı fiyat FOB, onaylı üretici Manufacturer/);
   assert.doesNotMatch(text,/Supp\. FOB yok/);
   const assets=path.join(app,'public/release-notes/next-assets');fs.mkdirSync(assets,{recursive:true});
   await page.screenshot({path:path.join(assets,'collection-order-fob-fallback.png')});
@@ -69,10 +70,10 @@ async function refresh(){await api('/api/refresh',{},'POST',202);for(let i=0;i<1
   assert.equal(polo.confirmed,'DEMO MAIN FACTORY');
   assert.deepEqual(Object.keys(polo.pricing),['DEMO MAIN FACTORY']);
   assert.match(String(polo.pricing['DEMO MAIN FACTORY']),/^5[.,]2/);
-  assert.equal(cardigan.confirmed,'DEMO MAIN FACTORY');
-  assert.match(String(cardigan.pricing['DEMO MAIN FACTORY']),/^6[.,]3/);
+  assert.equal(cardigan.confirmed,'DEMO SUB ÖRME');
+  assert.match(String(cardigan.pricing['DEMO SUB ÖRME']),/^6[.,]3/);
   assert.deepEqual(errors,[]);
-  console.log('PASS real UI: blank Supp. FOB/Sub-MFR → FOB + Manufacturer; filled Supp. FOB still wins; screenshot captured. Collection FOB: '+JSON.stringify(rows.map(r=>[r.plmId,r.fob])));
+  console.log('PASS real UI: blank Supp. FOB → Manufacturer + FOB pair even with Sub-MFR; filled Supp. FOB → Sub-MFR + Supp. FOB; screenshot captured. Collection FOB: '+JSON.stringify(rows.map(r=>[r.plmId,r.fob])));
   console.log('Evidence: '+root);
 })().catch(async error=>{console.error(error);if(page)await page.screenshot({path:path.join(root,'failure.png')}).catch(()=>{});console.error('Evidence: '+root);process.exitCode=1;}).finally(async()=>{
   if(browser)await browser.close();

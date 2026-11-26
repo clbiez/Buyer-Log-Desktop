@@ -75,7 +75,7 @@ test('complete supplier, prices, dates and historic LCW MB week/month mapping',(
   assert.equal(source['In-Store (Model Budget)'],'2027-07-08'); // source remains untouched
   assert.equal(scope.sourceIdentity(source,true),scope.sourceIdentity(row));
 });
-test('without Sub MFR the Manufacturer is used, and a blank Supp. FOB falls back to FOB',()=>{
+test('without Sub MFR the Manufacturer is used, and a blank Supp. FOB falls back to Manufacturer + FOB as a pair',()=>{
   const scope=transferMapper();
   const main=scope.mapOrder({'Order Code':'M1','PLM ID':'1','Model Name':'M','Manufacturer':'MAIN FACTORY','FOB ($)':'5.00','Supp. FOB':'4.20'});
   assert.equal(main.confirmedManufacturer,'MAIN FACTORY');
@@ -90,10 +90,13 @@ test('without Sub MFR the Manufacturer is used, and a blank Supp. FOB falls back
   assert.equal(plain.fob,'5.00');
   assert.equal(plain._sourceOrderDetails.priceBasis,'fob');
   assert.equal(plain._sourceOrderDetails.supplierFob,'');
-  // Her sütun bağımsız: Sub-MFR dolu, Supp. FOB boş → Sub-MFR + FOB.
+  // Fiyat/üretici çifti: Sub-MFR dolu ama Supp. FOB boş → FOB ana üreticinin
+  // fiyatıdır; Sub-MFR adına yazılmaz, Manufacturer + FOB alınır.
   const noSupp=scope.mapOrder({'Order Code':'M2','PLM ID':'1','Model Name':'M','Manufacturer':'MAIN FACTORY','Sub-Manufacturer':'SUB','FOB ($)':'5.00'});
-  assert.equal(JSON.stringify(noSupp.pricing),JSON.stringify({'SUB':'5.00'}));
-  assert.equal(noSupp.confirmedManufacturer,'SUB');
+  assert.equal(JSON.stringify(noSupp.pricing),JSON.stringify({'MAIN FACTORY':'5.00'}));
+  assert.equal(noSupp.confirmedManufacturer,'MAIN FACTORY');
+  assert.equal(noSupp.buyingSampleManufacturer,'MAIN FACTORY');
+  assert.equal(noSupp._sourceOrderDetails.subManufacturer,'SUB');
   assert.equal(noSupp._sourceOrderDetails.deliveryType,'');
   // Geçersiz/sıfır Supp. FOB dolu sayılmaz; ikisi de yoksa fiyat uydurulmaz.
   const zeroSupp=scope.mapOrder({'Order Code':'M4','PLM ID':'1','Model Name':'M','Manufacturer':'MAIN FACTORY','FOB ($)':'5.00','Supp. FOB':'0'});
