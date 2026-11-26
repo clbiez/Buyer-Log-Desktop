@@ -130,23 +130,28 @@ function workspaceDelta(before, after) {
   const beforeRows = new Map();
   for (const row of beforeList) beforeRows.set(mergeRowKey(row), row);
   const upserts = [], seen = new Set();
-  let orderChanged = beforeList.length !== afterList.length;
   for (let index = 0; index < afterList.length; index++) {
     const row = afterList[index], key = mergeRowKey(row);
     seen.add(key);
-    if (!orderChanged && mergeRowKey(beforeList[index]) !== key) orderChanged = true;
     const previous = beforeRows.get(key);
     if (!previous || mergeRowRevision(previous) !== mergeRowRevision(row) || !sameRowShallow(previous, row)) upserts.push(row);
   }
   const deletes = [];
   for (const key of beforeRows.keys()) if (!seen.has(key)) deletes.push(key);
+  // Sıra yalnız gerçekten değiştiyse saklanır: silme ve sona ekleme göreli sırayı bozmaz.
+  // Uygulama: önceki sıra korunur, silinenler çıkar, yeni satırlar geliş sırasıyla sona eklenir.
+  const deleted = new Set(deletes);
+  const expected = [];
+  for (const row of beforeList) { const key = mergeRowKey(row); if (!deleted.has(key)) expected.push(key); }
+  for (const row of afterList) { const key = mergeRowKey(row); if (!beforeRows.has(key)) expected.push(key); }
+  let orderChanged = expected.length !== afterList.length;
+  for (let index = 0; !orderChanged && index < afterList.length; index++) if (mergeRowKey(afterList[index]) !== expected[index]) orderChanged = true;
   const meta = {}, metaDeletes = [];
   for (const key of new Set([...Object.keys(before || {}), ...Object.keys(after || {})])) {
     if (key === 'rows') continue;
     if (!Object.prototype.hasOwnProperty.call(after || {}, key)) metaDeletes.push(key);
     else if (!sameValue((before || {})[key], after[key])) meta[key] = after[key];
   }
-  // Sıra yalnız değiştiyse saklanır; değişmediyse önceki sıra korunur, yeni satırlar sona eklenir.
   return { order: orderChanged ? afterList.map(mergeRowKey) : null, upserts, deletes, meta, metaDeletes };
 }
 function applyWorkspaceDelta(before, delta) {
@@ -565,7 +570,10 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     const file = baseFile(ownerId);
     if (!file) value = volatileBases.has(safeId(ownerId)) ? JSON.parse(volatileBases.get(safeId(ownerId))) : null;
     else { try { value = JSON.parse(await fsp.readFile(file, 'utf8')); } catch (_) { value = null; } }
-    return value && checksum(value) === expectedSha256 ? value : null;
+    if (value && checksum(value) === expectedSha256) return value;
+    // Taban, bekleyen ilk tabana taşınmış ama durum güncellenmeden süreç kesilmiş olabilir.
+    if (file) { try { const moved = JSON.parse(await fsp.readFile(pendingFirstFile(ownerId), 'utf8')); if (checksum(moved) === expectedSha256) return moved; } catch (_) {} }
+    return null;
   }
   async function writeBaseSnapshot(ownerId, workspace) {
     const file = baseFile(ownerId);
@@ -622,22 +630,36 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     }
     const file = pendingLogFile(ownerId);
     await fsp.mkdir(path.dirname(file), { recursive: true });
-    if (reset) await writeTextAtomic(file, line);
+    if (reset) { await writeTextAtomic(file, line); return; }
+    // Yarım kalmış son satır (ekleme sırasında kesinti) yayımı hiç inmemiş bir
+    // kayda aittir: yeni satır ona yapışıp sonraki kayıtları erişilmez kılmasın.
+    let existing = '';
+    try { existing = await fsp.readFile(file, 'utf8'); } catch (_) {}
+    if (existing && !existing.endsWith('\n')) await writeTextAtomic(file, existing.slice(0, existing.lastIndexOf('\n') + 1) + line);
     else await fsp.appendFile(file, line, 'utf8');
+  }
+  async function rewritePendingLog(ownerId, entries) {
+    const text = entries.map(entry => `${JSON.stringify(entry)}\n`).join('');
+    if (!statePath) { volatileBases.set(`${safeId(ownerId)}.pending-log`, text); return; }
+    await writeTextAtomic(pendingLogFile(ownerId), text);
   }
   async function writeTextAtomic(file, text) {
     const temporary = `${file}.${process.pid}.${crypto.randomUUID()}.tmp`;
     try { await fsp.writeFile(temporary, text, 'utf8'); await replaceFileWithRetry(temporary, file, { attempts: 8, baseDelayMs: 20 }); }
     finally { await fsp.unlink(temporary).catch(() => {}); }
   }
-  async function moveBaseToPendingFirst(ownerId) {
-    if (!statePath) {
-      const raw = volatileBases.get(safeId(ownerId));
-      if (raw) volatileBases.set(`${safeId(ownerId)}.pending-first`, raw);
-      return;
+  /* Bekleyen ilk taban kalıcı olmadan hub yazımına geçilmez: taşıma düşerse
+     kopya yazılır; o da düşerse yayım iptal edilir (yerel kayıt durur, sonraki
+     senkron yeniden dener). Sessiz devam, yerinden edilmede bekleyen silmeyi
+     geri getiriyordu (bağımsız inceleme F4). */
+  async function moveBaseToPendingFirst(ownerId, workspace) {
+    if (!statePath) { volatileBases.set(`${safeId(ownerId)}.pending-first`, JSON.stringify(workspace)); return; }
+    try { await replaceFileWithRetry(baseFile(ownerId), pendingFirstFile(ownerId), { attempts: 4, baseDelayMs: 20 }); return; }
+    catch (error) { trace('COLLECTION_REPLICA_PENDING_BASE_FAILED', { ownerId: clean(ownerId), error: error && (error.code || error.message), fallback: 'copy' }); }
+    try { await writeJson(pendingFirstFile(ownerId), workspace); }
+    catch (error) {
+      throw Object.assign(new Error('Koleksiyon bekleyen yayım tabanı kaydedilemedi; yayım ertelendi. / Collection pending publication base could not be saved; publish deferred.'), { code: 'COLLECTION_PENDING_BASE_UNSAVED', cause: error });
     }
-    try { await replaceFileWithRetry(baseFile(ownerId), pendingFirstFile(ownerId), { attempts: 4, baseDelayMs: 20 }); }
-    catch (error) { trace('COLLECTION_REPLICA_PENDING_BASE_FAILED', { ownerId: clean(ownerId), error: error && (error.code || error.message) }); }
   }
   async function dropPendingBases(ownerId) {
     if (!statePath) { volatileBases.delete(`${safeId(ownerId)}.pending-first`); volatileBases.delete(`${safeId(ownerId)}.pending-log`); return; }
@@ -900,25 +922,40 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
      yok); sonraki her yayım yalnız küçük farkını günlüğe ekler. */
   async function markPendingPublication(owner, current, identity, workspace) {
     const prior = await ownerState(owner) || {};
-    const fresh = !hasPendingPublication(prior);
-    if (fresh) {
+    const startChain = async () => {
+      // İlk taban önce kalıcı olur (taşıma ya da kopya); olmazsa yayım iptal.
       const baseMatchesCurrent = Boolean(current && prior.baseEnvelopeSha256 === envelopeIdentity(current) && clean(prior.baseWorkspaceSha256));
       let firstSha = null;
-      if (current && !baseMatchesCurrent) {
+      if (current && baseMatchesCurrent) { await moveBaseToPendingFirst(owner, current.workspace); firstSha = clean(prior.baseWorkspaceSha256); }
+      else if (current) {
         if (statePath) await writeJson(pendingFirstFile(owner), current.workspace);
         else volatileBases.set(`${safeId(owner)}.pending-first`, JSON.stringify(current.workspace));
         firstSha = checksum(current.workspace);
-      } else if (current) firstSha = clean(prior.baseWorkspaceSha256);
+      }
       await appendPendingLog(owner, { id: identity, delta: workspaceDelta(current ? current.workspace : null, workspace) }, { reset: true });
       await updateOwnerState(owner, { pendingLatest: identity, pendingFirstBaseSha256: firstSha, pendingFromEmpty: current ? null : true, pendingChainBroken: null });
-      if (baseMatchesCurrent) await moveBaseToPendingFirst(owner);
+    };
+    if (!hasPendingPublication(prior)) return startChain();
+    if (current && envelopeIdentity(current) === clean(prior.pendingLatest)) {
+      await appendPendingLog(owner, { id: identity, delta: workspaceDelta(current.workspace, workspace) });
+      await updateOwnerState(owner, { pendingLatest: identity });
       return;
     }
-    // Zincir yalnız kendi son yayımımızın üstüne uzar. Aksi (beklenmeyen) durumda
-    // farklar artık o zinciri temsil etmez: ilk tabana düşülür (temkinli).
-    const chained = Boolean(current) && envelopeIdentity(current) === clean(prior.pendingLatest);
-    if (chained) await appendPendingLog(owner, { id: identity, delta: workspaceDelta(current.workspace, workspace) });
-    await updateOwnerState(owner, { pendingLatest: identity, ...(chained ? {} : { pendingChainBroken: true }) });
+    /* Zincir son kaydımızın üstüne uzamıyor: son kayıt(lar)ın hub yazımı inmedi.
+       Uzak kopya (CAS ile tabanımız) zincirde inmiş bir kayıtsa günlük oradan
+       kesilip zincir sürdürülür; değilse inen bekleyen kayıt kalmamıştır ve zincir
+       uzak kopyadan yeniden başlar. İkisi de kesindir; eski ilk tabana düşmek
+       bilinçli geri almaları kaybettiriyordu (bağımsız inceleme F1). */
+    const entries = current ? await readPendingLog(owner) : [];
+    const index = current ? entries.findIndex(entry => clean(entry.id) === envelopeIdentity(current)) : -1;
+    if (index >= 0) {
+      await rewritePendingLog(owner, [...entries.slice(0, index + 1), { id: identity, delta: workspaceDelta(current.workspace, workspace) }]);
+      await updateOwnerState(owner, { pendingLatest: identity, pendingChainBroken: null });
+      trace('COLLECTION_REPLICA_PENDING_CHAIN_RESUMED', { ownerId: owner, dropped: entries.length - index - 1 });
+      return;
+    }
+    trace('COLLECTION_REPLICA_PENDING_CHAIN_RESTARTED', { ownerId: owner });
+    return startChain();
   }
   async function publishOwnerCas(ownerId, { mergeUnderLease = false } = {}) {
     const owner = clean(ownerId); if (!owner) throw Object.assign(new Error('Koleksiyon sahibi zorunludur.'), { code: 'COLLECTION_OWNER_REQUIRED' });

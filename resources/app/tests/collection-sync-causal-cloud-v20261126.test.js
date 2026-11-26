@@ -30,7 +30,7 @@ const { createCollectionSimulation, OWNER } = require('./helpers/collection-sync
 const { createCollectionReplication } = require('../server/lib/collection-replication');
 
 const TIMEOUT_MS = process.platform === 'win32' ? 240000 : 90000;
-const SEEDS = Array.from({ length: 10 }, (_, index) => 26401 + index);
+const SEEDS = Array.from({ length: Number(process.env.BUYERLOG_CAUSAL_SEEDS || 10) }, (_, index) => 26401 + index);
 const FIELDS = ['not', 'buyer'];
 
 function seeded(seed) {
@@ -79,11 +79,12 @@ async function runCausalScenario(seed, { staleUploadWins = 0, steps = 70, rows: 
       writes.push({ rowId: Number(row.id), field, value, prev: String(row[field] ?? ''), device: name });
       await devices[name].modules.workspaces.applyRowChangesAsync(OWNER, { upserts: [{ ...row, [field]: value }] });
       if (interrupted) {
-        // Yayım hub yazımında düşer (kilitli/erişilemeyen hedef); dosya sonra geri gelir.
-        const saved = await fsp.readFile(file[name]);
-        await fsp.rm(file[name]); await fsp.mkdir(file[name]); await fsp.writeFile(path.join(file[name], 'blocker'), 'x');
-        await replica[name].publishOwner(OWNER).catch(() => null);
-        await fsp.rm(file[name], { recursive: true, force: true }); await fsp.writeFile(file[name], saved);
+        // Yayım tam hub yazımında (atomik yeniden adlandırma) düşer: zarf okunmuş,
+        // bekleyen kayıt işaretlenmiş, ama yeni zarf inmemiştir. (Hedefi dizine
+        // çevirmek okumada düşer ve bu yolu hiç çalıştırmazdı — bağımsız inceleme F2.)
+        const original = fsp.rename, target = path.resolve(file[name]);
+        fsp.rename = async (from, to) => { if (path.resolve(to) === target) throw Object.assign(new Error('simulated hub write failure'), { code: 'EIO' }); return original(from, to); };
+        try { await replica[name].publishOwner(OWNER).catch(() => null); } finally { fsp.rename = original; }
       } else await replica[name].publishOwner(OWNER).catch(() => null);
       return `${interrupted ? 'edit!' : 'edit'} ${name} ${row.id}.${field}=${value}`;
     }
@@ -158,7 +159,9 @@ async function runCausalScenario(seed, { staleUploadWins = 0, steps = 70, rows: 
         else {
           // Silenin görmediği ama eşzamanlı alan çakışmasını kaybedip çakışma kaydına
           // düşmüş (bildirilmiş) düzenleme yutulmuş sayılmaz: silen, kazanan durumu gördü.
-          const swallowed = unseenByDeleter.filter(w => !reported(`${rowId}|${w.field}`, w.value));
+          // Üzerine yazılmış değer (zincirin ucu ayrıca denetlenir) yutulmuş sayılmaz (bağımsız inceleme F3).
+          const supersededByOther = w => rowWrites.some(other => other !== w && other.field === w.field && ancestors(`${rowId}|${w.field}`, other.value).has(w.value));
+          const swallowed = unseenByDeleter.filter(w => !reported(`${rowId}|${w.field}`, w.value) && !supersededByOther(w));
           if (swallowed.length) failures.push(`delete swallowed concurrent edit(s) on row ${rowId}: ${swallowed.map(w => w.value).join(',')}`);
         }
         continue;
