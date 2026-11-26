@@ -544,3 +544,33 @@ test('BOM batch summary carries slim Set Style parts for the card view', () => {
   assert.deepEqual(summary.setParts, [{ label: 'A', placements: [{ placement: 'front_body', placementTr: 'Ön', placementEn: 'Front', count: 1, printType: 'Pigment' }] }]);
   assert.deepEqual(summaryEntry({ plmId: '2', placements: [] }).setParts, []);
 });
+
+test('cellModel: Sunum Stüdyosu için hücre kartlarıyla aynı yapısal çip modeli', async () => {
+  const entry = { plmId: '7', hasPrint: true, placements: [placeOf('front_body', 'Ön', 'Front', 'Pigment'), placeOf('both_sleeves', 'Kollar', 'Sleeves', 'Transfer', 2)] };
+  const setEntry = { plmId: '8', isSetStyle: true, hasPrint: true, setParts: [
+    { label: 'A', placements: [placeOf('front_body', 'Ön', 'Front', 'Pigment')] }, { label: 'B', placements: [] },
+  ] };
+  const rows = [{ id: 1, plmId: '7', artworkDetail: '' }, { id: 2, plmId: '8', artworkDetail: '' }, { id: 3, plmId: '7', artworkDetail: 'Pigment Print', artworkDetailPlm: 'x' }];
+  const { api } = loadModule({ rows, entries: { 7: entry, 8: setEntry } });
+  await api.ensureFresh({ force: true, silent: true });
+  const plain = v => JSON.parse(JSON.stringify(v)); // vm bağlamındaki diziler farklı realm'den
+  const single = plain(api.cellModel(rows[0], rows[0].artworkDetail));
+  assert.equal(single.length, 1);
+  assert.deepEqual(single[0].items.map(i => [i.kind, i.t, i.sub || '']), [['chip', 'Ön', '1'], ['tag', 'Pigment', ''], ['chip', 'Kollar', '2'], ['tag', 'Transfer', '']]);
+  assert.equal(single[0].total, '3');
+  const set = plain(api.cellModel(rows[1], rows[1].artworkDetail));
+  assert.deepEqual(set.map(p => p.label), ['A', 'B']);
+  assert.deepEqual(set[1].items, [{ kind: 'none', t: '— Baskı yok' }]);
+  assert.equal(api.cellModel(rows[2], rows[2].artworkDetail), null, 'manuel değer metin kalır');
+  assert.equal(api.cellModel({ id: 9, plmId: '99' }, 'x'), null);
+});
+
+test('cellModel follows the table cards: manual summary chips, text view stays text, unknown technique keeps a neutral tag', () => {
+  const { api } = loadModule({ lang: 'tr' });
+  const plain = v => JSON.parse(JSON.stringify(v));
+  const manual = plain(api.cellModel({ id: 1 }, 'Ön: 1 | — • Arka: 1 | Pigment | Toplam: 2'));
+  assert.deepEqual(manual[0].items.map(i => [i.kind, i.t]), [['chip', 'Ön'], ['tag', '—'], ['chip', 'Arka'], ['tag', 'Pigment']]);
+  assert.equal(manual[0].total, '2');
+  assert.equal(api.cellModel({ id: 1, artworkDetailView: 'text' }, 'Ön: 1 | Pigment | Toplam: 1'), null, 'plain-text view stays text in the studio too');
+  assert.equal(api.cellModel({ id: 1 }, 'Pigment Print'), null);
+});

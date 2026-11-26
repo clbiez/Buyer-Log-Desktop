@@ -59,10 +59,13 @@
     const type = id => (C && C.field && C.field(id) ? C.field(id).type : 'text');
     return { ids: built.fields.slice(), label, type };
   }
+  // Biçimlendiriciler dil başına bir kez kurulur (toLocaleString her çağrıda yenisini kurar; 2000 kartta pahalı).
+  const formatters = {};
+  const fmt = () => { const loc = isEn() ? 'en-GB' : 'tr-TR'; return formatters[loc] || (formatters[loc] = { num: new Intl.NumberFormat(loc, { maximumFractionDigits: 2 }), date: new Intl.DateTimeFormat(loc) }); };
   function formatValue(type, value) {
     if (value == null || value === '') return '';
-    if (type === 'number' && Number.isFinite(Number(value))) return Number(value).toLocaleString(isEn() ? 'en-GB' : 'tr-TR', { maximumFractionDigits: 2 });
-    if (type === 'date' && /^\d{4}-\d{2}-\d{2}/.test(String(value))) { const d = new Date(String(value).slice(0, 10) + 'T00:00:00'); if (!Number.isNaN(d.getTime())) return d.toLocaleDateString(isEn() ? 'en-GB' : 'tr-TR'); }
+    if (type === 'number' && Number.isFinite(Number(value))) return fmt().num.format(Number(value));
+    if (type === 'date' && /^\d{4}-\d{2}-\d{2}/.test(String(value))) { const d = new Date(String(value).slice(0, 10) + 'T00:00:00'); if (!Number.isNaN(d.getTime())) return fmt().date.format(d); }
     return String(value);
   }
   function readSource(rows, info, scope, tab) {
@@ -71,36 +74,126 @@
     built.items.forEach((item, i) => {
       const rec = built.records[item.image];
       let identity = null; try { identity = root.BLAIScreenData.rowImage(tab, rows[i]); } catch (_) { identity = null; }
-      models.set(String(rec.id), Object.freeze({ id: String(rec.id), title: item.title, values: Object.freeze({ ...rec.values }), keys: Object.freeze({ ...rec.keys }), identity }));
+      models.set(String(rec.id), Object.freeze({ id: String(rec.id), title: item.title, values: Object.freeze({ ...rec.values }), keys: Object.freeze({ ...rec.keys }), identity, row: rows[i] }));
     });
     return { models, meta, omitted: built.source.omittedColumns || [] };
   }
   const defaultFields = (ids, tab) => sourceOf(tab).fields.filter(id => ids.includes(id)).slice(0, 5);
   const defaultLevels = ids => ['productGroup'].filter(id => ids.includes(id));
 
+  /* ---------------- Çip görünümü (Kumaş, Artwork Detail) ----------------
+     Tablodaki kart hücresinin yapısal modeli BLCellChips'ten okunur; yalnız okuma,
+     kaynak satır değişmez. Değeri kartı/önbelleği olmayan hücre metin kalır. */
+  const columnId = key => 'col.' + String(key).replace(/[^\w.%-]/g, '_').slice(0, 56);
+  function chipKinds(tab) {
+    const cols = root.BLCellChips && root.BLCellChips.columns && root.BLCellChips.columns[tab], out = new Map();
+    for (const [key, kind] of Object.entries(cols || {})) out.set(columnId(key), { kind, key });
+    return out;
+  }
+  const chipField = f => Boolean(S && S.chipKinds && S.chipKinds.has(f));
+  function chipModel(id, f) {
+    if (!S.doc.style.chips || !chipField(f)) return null;
+    const m = S.models.get(id), spec = S.chipKinds.get(f);
+    if (!m || !m.row) return null;
+    const lang = isEn() ? 'en' : 'tr', raw = String(m.row[spec.key] == null ? '' : m.row[spec.key]);
+    if (!raw.trim()) return null;
+    // Kumaş modeli yalnız değere, artwork modeli PLM kaydına bağlıdır.
+    const key = `${spec.kind}\u0001${lang}\u0001${raw}\u0001${spec.kind === 'artwork' ? id : ''}\u0001${S.doc.style.fabricCode ? 1 : 0}`;
+    if (S.chipCache.has(key)) return S.chipCache.get(key);
+    let model = null;
+    try { model = root.BLCellChips.model(spec.kind, m.row, spec.key); } catch (_) { model = null; }
+    model = Array.isArray(model) && model.length ? model : null;
+    if (model && spec.kind === 'fabric' && !S.doc.style.fabricCode) model = withoutFabricCode(model);
+    S.chipCache.set(key, model);
+    return model;
+  }
+  /* Kumaş kodu gizli: her parça iki satır — üstte kumaş adı (ve sürdürülebilirlik etiketi), altta
+     karışım | gramaj. Yatayda daha az yer kaplar. Ham parçalar uygulama modelinden (fabric) gelir. */
+  function withoutFabricCode(model) {
+    if (!model.some(l => l.fabric)) return model;
+    const out = [];
+    for (const line of model) {
+      const f = line.fabric;
+      if (!f) continue;
+      const top = [...(f.type ? [{ kind: 'chip', t: f.type }] : []), ...(f.eco ? [{ kind: 'tag', t: f.eco, tone: 'eco' }] : [])];
+      // Gramaj ayrı küçük çip: dar kartta kısalmak yerine alt satıra geçer.
+      const bottom = [...(f.mix ? [{ kind: 'chip', t: f.mix }] : []), ...(f.weight ? [{ kind: 'meta', t: f.weight }] : [])];
+      if (top.length) out.push({ label: line.label, items: top });
+      if (bottom.length) out.push({ label: top.length ? '' : line.label, items: bottom });
+    }
+    return out.length ? out : model;
+  }
+  const fabricInUse = () => Boolean(S && S.chipKinds && [...S.doc.style.fields, ...S.doc.grouping.levels].some(f => S.chipKinds.get(f)?.kind === 'fabric'));
+  const chipsInUse = () => Boolean(S && S.chipKinds && S.chipKinds.size && [...S.doc.style.fields, ...S.doc.grouping.levels].some(chipField));
+
   /* ---------------- Oturum ve belge ---------------- */
   function groupOf(id) {
     const m = S.models.get(id), lv = S.doc.grouping.levels;
     if (!m) return { key: '', vals: [] };
+    // Grup anahtarı yalnız seviyelere ve dile bağlı: önbellek relayout başında doğrulanır (groupCacheCheck).
+    if (!S.groupCache || S.groupCacheLevels !== lv) groupCacheCheck();
+    const hit = S.groupCache.get(id);
+    if (hit) return hit;
+    const g = groupOfRaw(m, lv);
+    S.groupCache.set(id, g);
+    return g;
+  }
+  function groupCacheCheck() {
+    const ck = S.doc.grouping.levels.join('\u0001') + (isEn() ? 'e' : 't');
+    if (S.groupCacheKey !== ck || !S.groupCache) { S.groupCacheKey = ck; S.groupCache = new Map(); }
+    S.groupCacheLevels = S.doc.grouping.levels;
+  }
+  function groupOfRaw(m, lv) {
     const keys = lv.map(f => String(m.keys[f] == null ? '' : m.keys[f]));
     return { key: keys.join(E().SEP), vals: lv.map(f => formatValue(S.meta.type(f), m.values[f])) };
   }
+  /* Metin planı yalnız alanlar, yazı, kart genişliği veya başlık adları değişince yeniden ölçülür. */
+  function textPlan() {
+    const st = S.doc.style, cellW = E().geometry(S.doc, null).cellW;
+    const vkey = [st.fields.join(','), st.labels, st.chips, st.fabricCode, S.doc.grouping.levels.join(','), S.doc.order.length, isEn()].join('|');
+    const key = [vkey, st.fs, st.font, cellW.toFixed(2), JSON.stringify(S.doc.labels)].join('|');
+    if (S.plan) S.plan.approx = Boolean(S.slider);
+    if (S.plan && S.planKey === key) return S.plan;
+    // Kaydırıcı sürüklenirken önceki plan kullanılır (satır sayısı anlık olarak bir satır geride kalabilir); bırakınca kesin plan hesaplanır.
+    if (S.plan && S.slider && S.planValuesKey === vkey) return S.plan;
+    if (S.planValuesKey !== vkey) { const t0 = performance.now(); S.planValuesKey = vkey; S.planValues = R().distinctValues(S.doc, S.doc.order, renderSource(() => null)); S.perf.values = performance.now() - t0; }
+    S.planKey = key;
+    S.plan = R().textPlan(S.doc, cellW, S.doc.order, renderSource(() => null), { measure: S.measure, values: S.planValues });
+    return S.plan;
+  }
   function relayout() {
     const t = performance.now();
-    S.res = E().layout(S.doc, groupOf);
+    groupCacheCheck();
+    const plan = textPlan(); S.perf.plan = performance.now() - t;
+    S.res = E().layout(S.doc, groupOf, plan);
     S.perf.layout = performance.now() - t;
     for (const id of [...S.sel]) if (!S.res.index.has(id)) S.sel.delete(id);
     if (!S.doc.pages.some(p => p.id === S.activePage)) S.activePage = S.doc.pages[0].id;
   }
   function renderSource(imageFor) {
     return {
-      lines: id => { const m = S.models.get(id); return S.doc.style.fields.map(f => ({ label: S.meta.label(f), value: formatValue(S.meta.type(f), m && m.values[f]) })); },
+      lines: id => { const m = S.models.get(id); return S.doc.style.fields.map(f => { const chips = chipModel(id, f); return chips ? { label: S.meta.label(f), value: formatValue(S.meta.type(f), m && m.values[f]), chips } : { label: S.meta.label(f), value: formatValue(S.meta.type(f), m && m.values[f]) }; }); },
       image: imageFor,
       header: it => {
         const custom = S.doc.labels[it.key];
-        return { main: custom || it.vals[0] || '—', rest: custom ? '' : it.vals.slice(1).filter(Boolean).join(' · '), count: `${it.count} ${it.count === 1 ? L('model', 'model') : L('model', 'models')}${it.cont ? L(' · devam', ' · cont.') : ''}` };
+        const out = { main: custom || it.vals[0] || '—', rest: custom ? '' : it.vals.slice(1).filter(Boolean).join(' · '), count: `${it.count} ${it.count === 1 ? L('model', 'model') : L('model', 'models')}${it.cont ? L(' · devam', ' · cont.') : ''}` };
+        // Grup başlığında Kumaş/Artwork seviyesi çip olarak; diğer seviyeler metin.
+        const lv = S.doc.grouping.levels, rep = !custom && S.doc.style.chips && lv.some(chipField) ? groupRow(it.key) : null;
+        if (rep) {
+          const parts = lv.map((f, j) => { const chips = chipField(f) ? chipModel(rep, f) : null; return chips ? { chips } : { text: it.vals[j] || '' }; }).filter(p => p.chips || p.text);
+          if (parts.some(p => p.chips)) out.parts = parts;
+        }
+        return out;
       },
     };
+  }
+  /* Grubun temsilci kartı (başlık çipleri için): anahtar başına ilk kart, yerleşim başına bir kez. */
+  function groupRow(key) {
+    if (!S.groupRows || S.groupRowsFor !== S.res) {
+      S.groupRows = new Map(); S.groupRowsFor = S.res;
+      for (const id of S.doc.order) { const k = E().effectiveKey(S.doc, id, groupOf); if (!S.groupRows.has(k)) S.groupRows.set(k, id); }
+    }
+    return S.groupRows.get(key) || null;
   }
   function screenImage(id) {
     const m = S.models.get(id);
@@ -120,14 +213,30 @@
 
   /* ---------------- Kalıcılık (sunumlar, şablonlar) ---------------- */
   let saveTimer = 0;
-  function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(saveDeck, 900); }
-  function saveDeck() {
+  /* Taslaklar: yeni sunum yalnız "Taslağı kaydet" ile saklanır (açıp kapatmak listeyi doldurmaz);
+     kaydedilmiş taslak her değişiklikte otomatik güncellenir. Taslak, kart başına kısa bir parmak izi
+     (snap) ve son görünüm (sayfa, yakınlık) taşır: yeniden açılınca tablodaki güncel bilgiler okunur,
+     değişen modeller bildirilir, kullanıcı kaldığı sayfadan devam eder. */
+  function scheduleSave() { if (S && !S.saved) { S.dirty = true; renderStatus(); return; } clearTimeout(saveTimer); saveTimer = setTimeout(saveDeck, 900); }
+  const fingerprint = m => { let h = 0x811c9dc5; const str = JSON.stringify(m.values); for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
+  function saveDraft() {
     if (!S) return;
+    const first = !S.saved;
+    S.saved = true; S.dirty = false;
+    clearTimeout(saveTimer); saveDeck();
+    if (S.saveState === 'saved') toast(first ? L(`“${S.doc.title || L('Adsız sunum', 'Untitled presentation')}” taslak olarak kaydedildi. Taslaklar’dan kaldığınız yerden devam edebilirsiniz.`, `“${S.doc.title || 'Untitled presentation'}” was saved as a draft. Continue where you left off from Drafts.`) : L('Taslak kaydedildi.', 'Draft saved.'));
+  }
+  function saveDeck() {
+    if (!S || !S.saved) return;
     const index = readJson(KEY.decks, []).filter(d => d && d.id !== S.deckId);
-    const entry = { id: S.deckId, title: S.doc.title || L('Adsız sunum', 'Untitled presentation'), updatedAt: new Date().toISOString(), count: S.doc.order.length, source: S.tab };
+    const entry = { id: S.deckId, title: S.doc.title || L('Adsız sunum', 'Untitled presentation'), updatedAt: new Date().toISOString(), count: S.doc.order.length, source: S.tab, draft: true };
     index.unshift(entry);
     const removed = index.splice(MAX_DECKS);
-    if (!writeJson(KEY.deck(S.deckId), S.doc)) { S.saveState = 'error'; renderStatus(); return; }
+    const snap = {};
+    // Modeller oturum boyunca değişmez: parmak izi bir kez hesaplanır, otomatik kayıtta yeniden kullanılır.
+    if (!S.fp) S.fp = new Map();
+    for (const id of S.doc.order) { const m = S.models.get(id); if (!m) continue; if (!S.fp.has(id)) S.fp.set(id, fingerprint(m)); snap[id] = S.fp.get(id); }
+    if (!writeJson(KEY.deck(S.deckId), { ...S.doc, snap, view: { page: S.activePage, zoom: S.zoom } })) { S.saveState = 'error'; renderStatus(); return; }
     writeJson(KEY.decks, index);
     for (const d of removed) removeKey(KEY.deck(d.id));
     if (removed.length) toast(L(`En fazla ${MAX_DECKS} sunum saklanır; en eski “${removed[0].title}” kaldırıldı.`, `Up to ${MAX_DECKS} presentations are kept; the oldest “${removed[0].title}” was removed.`));
@@ -159,10 +268,24 @@
     const rows = mode === 'selected' ? info.rows.filter(row => selected.has(String(info.rowId(row)))) : info.rows;
     if (!rows.length) { toast(L('Önce modelleri seçin veya filtreyi değiştirin.', 'Select models first or change the filter.'), 'warning'); return; }
     if (rows.length > E().LIMITS.cards) { toast(L(`Bir sunumda en fazla ${E().LIMITS.cards.toLocaleString('tr-TR')} model kullanılabilir. Seçimi veya filtreyi daraltın.`, `A presentation supports up to ${E().LIMITS.cards.toLocaleString('en-GB')} models. Narrow the selection or filter.`), 'warning'); return; }
+    const drafts = readJson(KEY.decks, []).filter(d => d && (d.source || 'koleksiyon') === tab).slice(0, 5);
+    if (drafts.length && !scope) { chooseDraft(tab, drafts, rows.length, mode); return; }
     const src = readSource(rows, info, mode, tab), ids = [...src.models.keys()];
     const fields = defaultFields(src.meta.ids, tab), title = sourceOf(tab).title();
     const docModel = E().createDoc({ ids, fields: fields.length ? fields : src.meta.ids.slice(0, 4), levels: defaultLevels(src.meta.ids), title, source: tab });
-    start({ ...src, doc: docModel, deckId: 'd' + Date.now().toString(36), scope: mode, tab });
+    start({ ...src, doc: docModel, deckId: 'd' + Date.now().toString(36), scope: mode, tab, saved: false });
+  }
+  /* Aynı kaynağın taslağı varsa: yeni sunum ya da taslağa devam. */
+  function chooseDraft(tab, drafts, n, mode) {
+    const when = d => new Date(d.updatedAt).toLocaleString(isEn() ? 'en-GB' : 'tr-TR', { dateStyle: 'medium', timeStyle: 'short' });
+    const newLabel = mode === 'selected' ? L(`Seçili ${n} modelle yeni sunum`, `New presentation with ${n} selected models`) : L(`Filtrelenmiş ${n} kayıtla yeni sunum`, `New presentation with ${n} filtered records`);
+    dialog(`<h3 id="psDlgTitle">${esc(L('Sunum oluştur', 'Create presentation'))}</h3><p>${esc(L('Yeni bir sunum başlatın ya da kayıtlı bir taslaktan kaldığınız yerden devam edin. Taslaklar açılırken model bilgileri tablodan güncel okunur.', 'Start a new presentation or continue a saved draft where you left off. Model details are read fresh from the table when a draft opens.'))}</p>
+      <div class="psOptions"><button type="button" class="tbtn" data-m="new"><b class="psOptTitle">${esc(newLabel)}</b><span class="psSub">${esc(L('Boş bir düzenle başlar; kaydetmek için Taslağı kaydet.', 'Starts with a fresh layout; use Save draft to keep it.'))}</span></button>
+      ${drafts.map(d => `<button type="button" class="tbtn" data-m="d:${esc(d.id)}"><b class="psOptTitle">${esc(L('Taslağa devam et: ', 'Continue draft: '))}${esc(d.title)}</b><span class="psSub">${esc(L(`${d.count} kayıt · ${when(d)}`, `${d.count} records · ${when(d)}`))}</span></button>`).join('')}</div>
+      <div class="modalFoot"><button type="button" class="tbtn" data-m="cancel">${esc(L('Vazgeç', 'Cancel'))}</button></div>`, choice => {
+      if (choice === 'new') openSelection(tab, mode).catch(err => toast(err.message, 'error'));
+      else if (choice && choice.startsWith('d:')) openDeck(choice.slice(2)).catch(err => toast(err.message, 'error'));
+    });
   }
   async function openDeck(deckId) {
     await ensureScripts();
@@ -177,17 +300,27 @@
     const src = readSource(rows, info, 'saved', tab), ids = [...src.models.keys()];
     const docModel = E().normalizeDoc(raw, { ids: (raw.order || []).map(String).filter(id => src.models.has(id)), fields: src.meta.ids });
     const missing = wanted.size - ids.length;
-    start({ ...src, doc: docModel, deckId, scope: 'saved', tab });
+    // Taslak kaydedildiğinden beri tabloda bilgisi değişen modeller (parmak izi karşılaştırması).
+    const snap = raw.snap && typeof raw.snap === 'object' ? raw.snap : null;
+    const changed = snap ? ids.filter(id => snap[id] && snap[id] !== fingerprint(src.models.get(id))).length : 0;
+    start({ ...src, doc: docModel, deckId, scope: 'saved', tab, saved: true, view: raw.view });
+    if (changed > 0) toast(L(`${changed} modelin bilgisi ${name} tablosunda güncellenmiş; taslak güncel bilgilerle açıldı.`, `${changed} models were updated in ${name}; the draft opened with the current details.`));
     if (missing > 0) toast(L(`${missing} kayıt ${name} tablosunda bulunamadı ve sunumdan çıkarıldı.`, `${missing} records were not found in ${name} and were removed from the presentation.`), 'warning');
   }
 
   function start(init) {
     close();
-    S = { ...init, sel: new Set(), hist: [], fut: [], zoom: 1, activePage: 'p1', dims: new Map(), perf: { layout: 0, render: 0 }, saveState: '', pageHtml: new Map(), act: null, measure: R().canvasMeasure(doc_) };
-    S.dataHash = hashModels();
+    S = { ...init, sel: new Set(), hist: [], fut: [], zoom: 1, activePage: 'p1', dims: new Map(), chipCache: new Map(), perf: { layout: 0, render: 0 }, saveState: '', pageHtml: new Map(), act: null, measure: R().canvasMeasure(doc_) };
+    S.dataHash = hashModels(); S.chipKinds = chipKinds(S.tab);
     buildShell();
-    relayout(); fitZoom(); render();
-    scheduleSave();
+    relayout(); fitZoom();
+    // Kaldığı yerden: son sayfa ve yakınlık.
+    const view = init.view && typeof init.view === 'object' ? init.view : null;
+    if (view && S.doc.pages.some(p => p.id === view.page)) S.activePage = view.page;
+    if (view && Number.isFinite(Number(view.zoom))) S.zoom = clamp(Number(view.zoom), 0.25, 3);
+    render();
+    if (view && S.activePage !== S.doc.pages[0].id) S.host.querySelector(`.psPageWrap[data-ps-page="${CSS.escape(S.activePage)}"]`)?.scrollIntoView({ block: 'start' });
+    if (S.saved) scheduleSave();
     root.BLMotionPlus?.play?.('overlay', S.shell);
   }
   function hashModels() {
@@ -196,6 +329,15 @@
     for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
     return (h >>> 0).toString(16).padStart(8, '0');
   }
+  /* Kaydedilmemiş yeni sunumda değişiklik varsa çıkmadan önce sorar. */
+  function confirmLeave(next) {
+    if (!S || S.saved || !S.dirty) { next(); return; }
+    dialog(`<h3 id="psDlgTitle">${esc(L('Sunum taslak olarak kaydedilsin mi?', 'Save the presentation as a draft?'))}</h3><p>${esc(L('Kaydederseniz Sunum Oluştur’dan kaldığınız yerden devam edebilirsiniz; model bilgileri açılışta tablodan güncel okunur.', 'If you save it, you can continue where you left off from Create Presentation; model details are read fresh from the table when it opens.'))}</p>
+      <div class="modalFoot"><button type="button" class="tbtn" data-m="cancel">${esc(L('Vazgeç', 'Cancel'))}</button><button type="button" class="tbtn" data-m="discard">${esc(L('Kaydetmeden çık', 'Leave without saving'))}</button><button type="button" class="tbtn primary" data-m="save">${esc(L('Taslağı kaydet', 'Save draft'))}</button></div>`, choice => {
+      if (choice === 'save') { saveDraft(); next(); } else if (choice === 'discard') next();
+    });
+  }
+  function requestClose() { confirmLeave(close); }
   function close() {
     if (!S) return;
     clearTimeout(saveTimer); saveDeck();
@@ -211,12 +353,14 @@
   function buildShell() {
     const host = doc_.createElement('div');
     host.className = 'psStudio'; host.dataset.uiMigrated = 'presentation-studio';
+    // Stüdyo kendisi diyalogdur: içindeki her çizim, tüm belgeyi tarayan bulanıklık eşitlemesini tetiklemesin.
+    host.setAttribute('data-blur-skip', '');
     host.innerHTML = `<div class="psShell" role="dialog" aria-modal="true" aria-labelledby="psTitleLabel">
       <header class="psHead"><span class="psBrand" id="psTitleLabel"></span><input class="psTitle" data-ps="title" maxlength="120">
         <button type="button" class="tbtn psIcon" data-ps="undo">${sprite('arrow-back-up')}</button><button type="button" class="tbtn psIcon" data-ps="redo">${sprite('arrow-forward-up')}</button>
         <span class="psGrow"></span>
         <span class="psZoom"><button type="button" class="tbtn psIcon" data-ps="zoomOut">−</button><output class="psNum" data-ps="zoomVal"></output><button type="button" class="tbtn psIcon" data-ps="zoomIn">+</button><button type="button" class="tbtn" data-ps="zoomFit"></button></span>
-        <button type="button" class="tbtn" data-pop="decks"></button><button type="button" class="tbtn" data-pop="templates"></button>
+        <button type="button" class="tbtn" data-ps="saveDraft"></button><button type="button" class="tbtn" data-pop="decks"></button><button type="button" class="tbtn" data-pop="templates"></button>
         <button type="button" class="tbtn primary" data-pop="export"></button><button type="button" class="tbtn psIcon" data-ps="close">${sprite('x')}</button></header>
       <div class="psBar" role="toolbar">
         <span class="psLbl" data-l="group"></span><span class="psChips" data-ps="chips"></span><label class="psToggle" data-ps="brkWrap"><input type="checkbox" data-ps="brk"><span data-l="brk"></span></label>
@@ -225,6 +369,7 @@
         <span class="psCustom" data-ps="custom" hidden><input type="number" data-ps="cw" min="50" max="1200" step="1">×<input type="number" data-ps="ch" min="50" max="1200" step="1"><span>mm</span></span>
         <span class="psDim" data-ps="dim"></span><span class="psSep"></span>
         <button type="button" class="tbtn" data-pop="fields"></button><button type="button" class="tbtn" data-pop="design"></button><button type="button" class="tbtn" data-pop="arrange"></button>
+        <span class="psChipMode" data-ps="chipModeWrap" hidden><span class="psSep"></span><span class="psLbl" data-l="chipMode"></span><span class="psSeg" data-ps="chipMode"><button type="button" data-v="chips"></button><button type="button" data-v="text"></button></span><label class="psToggle" data-ps="fabricCodeWrap"><input type="checkbox" data-ps="fabricCode"><span data-l="fabricCode"></span></label></span>
       </div>
       <div class="psBody"><aside class="psRail"><div class="psRailHead"><span data-l="pages"></span><button type="button" class="tbtn psIcon" data-ps="addPage">${sprite('plus')}</button></div><div class="psThumbs" data-ps="thumbs" data-no-i18n></div><div class="psTray" data-ps="tray"></div></aside>
         <div class="psCanvas" data-ps="canvas"><div class="psPages" data-ps="pages" data-no-i18n></div></div></div>
@@ -236,7 +381,7 @@
     S.host = host; S.shell = host.firstElementChild;
     const $ = sel => host.querySelector(sel);
     S.$ = $;
-    root.BLLayerSystem?.openDialog?.(host, { onClose: close });
+    root.BLLayerSystem?.openDialog?.(host, { onClose: requestClose });
     bindShell();
     localize();
   }
@@ -251,13 +396,18 @@
     label('[data-ps="zoomOut"]', L('Uzaklaştır', 'Zoom out')); label('[data-ps="zoomIn"]', L('Yakınlaştır', 'Zoom in')); label('[data-ps="close"]', L('Kapat', 'Close'));
     label('[data-ps="addPage"]', L('Serbest sayfa ekle', 'Add free page'));
     t('[data-ps="zoomFit"]', L('Sığdır', 'Fit'));
-    $('[data-pop="decks"]').innerHTML = `${sprite('folder')}<span>${esc(L('Sunumlarım', 'My presentations'))}</span>`;
+    $('[data-pop="decks"]').innerHTML = `${sprite('folder')}<span>${esc(L('Taslaklar', 'Drafts'))}</span>`;
+    $('[data-ps="saveDraft"]').innerHTML = `${sprite('device-floppy')}<span>${esc(L('Taslağı kaydet', 'Save draft'))}</span>`;
+    $('[data-ps="saveDraft"]').title = L('Sunumu taslak olarak kaydeder; sonra Sunum Oluştur’dan kaldığınız yerden devam edersiniz', 'Saves the presentation as a draft; later continue where you left off from Create Presentation');
     $('[data-pop="templates"]').innerHTML = `${sprite('layout-dashboard')}<span>${esc(L('Şablonlar', 'Templates'))}</span>`;
     $('[data-pop="export"]').innerHTML = `${sprite('file-export')}<span>${esc(L('Dışa aktar', 'Export'))}</span>`;
     $('[data-pop="fields"]').innerHTML = `${sprite('columns-3')}<span>${esc(L('Kart bilgileri', 'Card details'))}</span>`;
     $('[data-pop="design"]').innerHTML = `${sprite('palette')}<span>${esc(L('Tasarım', 'Design'))}</span>`;
     $('[data-pop="arrange"]').innerHTML = `${sprite('layout-align-top')}<span>${esc(L('Yeniden düzenle', 'Rearrange'))}</span>`;
-    for (const [key, tr, en] of [['group', 'Grupla', 'Group by'], ['brk', 'Yeni sayfa', 'New page'], ['page', 'Sayfa', 'Page'], ['pages', 'Sayfalar', 'Pages']]) S.host.querySelectorAll(`[data-l="${key}"]`).forEach(el => { el.textContent = L(tr, en); });
+    $('[data-ps="chipMode"] [data-v="chips"]').textContent = L('Çip', 'Chips'); $('[data-ps="chipMode"] [data-v="text"]').textContent = L('Metin', 'Text');
+    $('[data-ps="fabricCodeWrap"]').title = L('Kapalıyken kumaş çipinde kod gösterilmez: üstte kumaş adı, altta karışım ve gramaj', 'When off, fabric chips hide the code: fabric name on top, composition and weight below');
+    $('[data-ps="chipModeWrap"]').title = L('Kumaş ve Artwork Detail kartlarda ve grup başlıklarında tablodaki gibi çip ya da düz metin olarak gösterilir', 'Fabric and Artwork Detail appear on cards and group titles as chips, like in the table, or as plain text');
+    for (const [key, tr, en] of [['group', 'Grupla', 'Group by'], ['brk', 'Yeni sayfa', 'New page'], ['page', 'Sayfa', 'Page'], ['pages', 'Sayfalar', 'Pages'], ['chipMode', 'Kumaş/Artwork', 'Fabric/Artwork'], ['fabricCode', 'Kumaş kodu', 'Fabric code']]) S.host.querySelectorAll(`[data-l="${key}"]`).forEach(el => { el.textContent = L(tr, en); });
     $('[data-ps="brkWrap"]').title = L('Her ana grup yeni bir sayfadan başlar', 'Each top-level group starts on a new page');
     $('[data-o="landscape"]').title = L('Yatay', 'Landscape'); $('[data-o="landscape"]').setAttribute('aria-label', L('Yatay', 'Landscape'));
     $('[data-o="portrait"]').title = L('Dikey', 'Portrait'); $('[data-o="portrait"]').setAttribute('aria-label', L('Dikey', 'Portrait'));
@@ -268,13 +418,17 @@
 
   /* ---------------- Çizim ---------------- */
   function editorAttrs(el) {
-    if (el.type === 'hdr') return { attr: ` data-hdr="${esc(el.key)}" title="${esc(L('Çift tıklayarak yeniden adlandırın', 'Double-click to rename'))}"`, cls: '', inner: '' };
+    if (el.type === 'area') {
+      const on = S.areaSel === el.key;
+      return { attr: ` data-area="${esc(el.key)}"`, cls: (on ? ' isSel' : '') + (el.cont ? ' isCont' : ''), inner: on && !el.cont ? ['e', 's', 'se', 'w'].map(d => `<span class="psHandle" data-h="${d}" data-ah="${d}"></span>`).join('') : '' };
+    }
+    if (el.type === 'hdr') return { attr: ` data-hdr="${esc(el.key)}"${el.area ? ` data-area-hdr="${esc(el.key)}"` : ''} title="${esc(el.area ? L('Sürükleyerek grup alanını taşıyın · çift tıklayarak yeniden adlandırın', 'Drag to move the group area · double-click to rename') : L('Sürükleyerek grubu kendi alanına alın · çift tıklayarak yeniden adlandırın', 'Drag to give the group its own area · double-click to rename'))}"`, cls: '', inner: '' };
     const c = S.doc.cards[el.id] || {}, sel = S.sel.has(el.id), primary = sel && S.primary === el.id;
     const cls = (sel ? ' isSel' : '') + (S.res.conflicts.has(el.id) ? ' isConflict' : '') + (el.pinned ? ' isPinned' : '');
     let inner = '';
     if (el.pinned) inner += `<span class="psBadge psPin" title="${esc(L('Sabit', 'Pinned'))}">${svg('pin')}</span>`;
     if (c.vgroup != null) inner += `<span class="psBadge psMoved" title="${esc(L(`Görsel olarak başka gruba taşındı · ${sourceName()} verisi değişmedi`, `Moved to another group visually · ${sourceName()} data unchanged`))}">${svg('move')}</span>`;
-    if (primary && S.sel.size === 1) inner += ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].map(d => `<span class="psHandle" data-h="${d}"></span>`).join('');
+    if (primary) inner += ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].map(d => `<span class="psHandle" data-h="${d}"></span>`).join('');
     const m = S.models.get(el.id);
     return { attr: ` data-id="${esc(el.id)}" tabindex="-1" role="button" aria-label="${esc((m ? m.title : el.id) + (sel ? L(' · seçili', ' · selected') : ''))}"`, cls, inner };
   }
@@ -307,22 +461,27 @@
     const built = new Map(S.list.pages.map(p => [p.id, p]));
     S.range = `${first}:${last}`;
     const host = S.$('[data-ps="pages"]'), seen = new Set();
-    const wrappers = new Map([...host.children].map(el => [el.dataset.psPage, el]));
+    const wrappers = new Map([...host.children].map(el => [el.dataset.psPage, el])), docPages = new Map(S.doc.pages.map(p => [p.id, p]));
     S.res.pages.forEach((rp, i) => {
       const page = built.get(rp.id) || { id: rp.id, elements: null };
       seen.add(page.id);
       // Hızlı modda (slider sürüklenirken) görünmeyen mevcut sayfalara dokunulmaz; tampon geçişi tamamlar.
       const existing = wrappers.get(page.id);
       if (quick && !page.elements && existing && host.children[i] === existing) return;
-      const pg = S.doc.pages.find(p => p.id === page.id);
-      const tools = `<span class="psPageNo">${esc(L(`Sayfa ${i + 1}`, `Page ${i + 1}`))}</span><button type="button" class="tbtn psFlow" data-pa="flow" aria-pressed="${pg.flow}" title="${esc(pg.flow ? L('Otomatik akış açık: boş alanlar kartlarla dolar', 'Automatic flow on: free space fills with cards') : L('Serbest sayfa: yalnız sabit kartlar', 'Free page: pinned cards only'))}">${svg('flow')}<span>${esc(pg.flow ? L('Otomatik akış', 'Automatic flow') : L('Serbest sayfa', 'Free page'))}</span></button><span class="psGrow"></span>`
+      const pg = docPages.get(page.id), toolKey = `${i}|${total}|${pg.flow}|${isEn()}`;
+      const tools = S.toolsHtml && S.toolsHtml.get(page.id + '|' + toolKey) ||  `<span class="psPageNo">${esc(L(`Sayfa ${i + 1}`, `Page ${i + 1}`))}</span><button type="button" class="tbtn psFlow" data-pa="flow" aria-pressed="${pg.flow}" title="${esc(pg.flow ? L('Otomatik akış açık: boş alanlar kartlarla dolar', 'Automatic flow on: free space fills with cards') : L('Serbest sayfa: yalnız sabit kartlar', 'Free page: pinned cards only'))}">${svg('flow')}<span>${esc(pg.flow ? L('Otomatik akış', 'Automatic flow') : L('Serbest sayfa', 'Free page'))}</span></button><span class="psGrow"></span>`
         + `<button type="button" class="tbtn psIcon" data-pa="up" aria-label="${esc(L('Yukarı taşı', 'Move up'))}" title="${esc(L('Yukarı taşı', 'Move up'))}"${i === 0 ? ' disabled' : ''}>${sprite('chevron-up')}</button><button type="button" class="tbtn psIcon" data-pa="down" aria-label="${esc(L('Aşağı taşı', 'Move down'))}" title="${esc(L('Aşağı taşı', 'Move down'))}"${i === total - 1 ? ' disabled' : ''}>${sprite('chevron-down')}</button>`
         + `<button type="button" class="tbtn psIcon" data-pa="add" aria-label="${esc(L('Sonrasına serbest sayfa ekle', 'Add a free page after'))}" title="${esc(L('Sonrasına serbest sayfa ekle', 'Add a free page after'))}">${sprite('plus')}</button><button type="button" class="tbtn psIcon" data-pa="del" aria-label="${esc(L('Sayfayı sil', 'Delete page'))}" title="${esc(L('Sayfayı sil', 'Delete page'))}"${total < 2 ? ' disabled' : ''}>${sprite('trash')}</button>`;
-      const html = `<div class="psPageTools">${tools}</div><div class="psPage" style="width:${g.w}pt;height:${g.h}pt;transform:scale(${S.zoom});background:${R().DOC.paper};font-family:${esc(R().fontStack(S.doc.style.font))}">${page.elements ? R().elementsHtml(page, { attrs: editorAttrs }) : ''}<div class="psGuides"></div></div>`;
+      if (S.toolsHtml && S.toolsHtml.size > 2000) S.toolsHtml.clear();
+      (S.toolsHtml || (S.toolsHtml = new Map())).set(page.id + '|' + toolKey, tools);
+      const html = `<div class="psPageTools">${tools}</div><div class="psPage" style="width:${g.w}pt;height:${g.h}pt;transform:scale(${S.zoom});background:${R().DOC.paper};font-family:${esc(R().fontStack(S.doc.style.font))}">${page.elements ? R().elementsHtml(page, { attrs: editorAttrs, lite: quick }) : ''}<div class="psGuides"></div></div>`;
       let w = wrappers.get(page.id);
       if (!w) { w = doc_.createElement('div'); w.className = 'psPageWrap'; w.dataset.psPage = page.id; }
-      w.style.width = `${g.w * S.zoom}pt`; w.style.height = `${g.h * S.zoom}pt`;
-      w.toggleAttribute('data-active', page.id === S.activePage);
+      // Değişmeyen boyut/durum yeniden yazılmaz (her karede yüzlerce sayfada stil yeniden hesabını önler).
+      const size = `${g.w * S.zoom}pt|${g.h * S.zoom}pt`;
+      if (w.dataset.psSize !== size) { w.dataset.psSize = size; w.style.width = `${g.w * S.zoom}pt`; w.style.height = `${g.h * S.zoom}pt`; }
+      const active = page.id === S.activePage;
+      if (w.hasAttribute('data-active') !== active) w.toggleAttribute('data-active', active);
       if (S.pageHtml.get(page.id) !== html) { w.innerHTML = html; S.pageHtml.set(page.id, html); }
       if (host.children[i] !== w) host.insertBefore(w, host.children[i] || null);
     });
@@ -335,7 +494,7 @@
     const nodes = new Map([...host.children].map(el => [el.dataset.th, el]));
     S.res.pages.forEach((p, i) => {
       const pg = S.doc.pages.find(x => x.id === p.id);
-      const items = p.items.map(it => `<i class="${it.kind === 'hdr' ? 'psThumbHdr' : it.pinned ? 'psThumbPin' : 'psThumbCard'}" style="left:${pct(it.x, g.w)};top:${pct(it.kind === 'hdr' ? it.y + it.h - 1 : it.y, g.h)};width:${pct(it.w, g.w)};height:${it.kind === 'hdr' ? '1px' : pct(it.h, g.h)}"></i>`).join('');
+      const items = p.items.map(it => `<i class="${it.kind === 'area' ? 'psThumbArea' : it.kind === 'hdr' ? 'psThumbHdr' : it.pinned ? 'psThumbPin' : 'psThumbCard'}" style="left:${pct(it.x, g.w)};top:${pct(it.kind === 'hdr' ? it.y + it.h - 1 : it.y, g.h)};width:${pct(it.w, g.w)};height:${it.kind === 'hdr' ? '1px' : pct(it.h, g.h)}"></i>`).join('');
       const html = `<span class="psThumbPage" style="height:${H.toFixed(1)}px">${items}</span><span class="psThumbNo">${i + 1}${pg.flow ? '' : ` · ${esc(L('serbest', 'free'))}`}</span>`;
       let el = nodes.get(p.id);
       if (!el) { el = doc_.createElement('button'); el.type = 'button'; el.className = 'psThumb'; el.draggable = true; el.dataset.th = p.id; }
@@ -363,6 +522,10 @@
     $('[data-ps="orient"]').querySelectorAll('button').forEach(b => { b.setAttribute('aria-pressed', String(!square && b.dataset.o === (size.mmW >= size.mmH ? 'landscape' : 'portrait'))); b.disabled = square; });
     $('[data-ps="dim"]').textContent = `${Math.round(size.mmW)} × ${Math.round(size.mmH)} mm`;
     $('[data-ps="zoomVal"]').textContent = `${Math.round(S.zoom * 100)}%`;
+    $('[data-ps="chipModeWrap"]').hidden = !chipsInUse();
+    $('[data-ps="fabricCodeWrap"]').hidden = !d.style.chips || !fabricInUse();
+    $('[data-ps="fabricCode"]').checked = d.style.fabricCode;
+    $('[data-ps="chipMode"]').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.v === 'chips') === d.style.chips)));
   }
   function renderStatus() {
     if (!S || !S.res) return;
@@ -377,7 +540,8 @@
     if (S.omitted && S.omitted.length) parts.push(`<span class="psBad" title="${esc(S.omitted.join(', '))}">${esc(L('Çok sayıda kayıt nedeniyle bazı sütunlar alınmadı', 'Some columns were skipped because of the record count'))}</span>`);
     parts.push('<span class="psGrow"></span>');
     parts.push(`<span title="${esc(L('Kart taşıma, gruplama ve sabitleme yalnız sunumu değiştirir', 'Moving, grouping and pinning cards only change the presentation'))}" class="${same ? 'psOk' : 'psBad'}">${esc(same ? L(`${sourceName()} verisi değişmedi`, `${sourceName()} data unchanged`) : L('Kaynak veri değişti', 'Source data changed'))}</span>`);
-    parts.push(`<span>${esc(S.saveState === 'error' ? L('Kaydedilemedi', 'Not saved') : S.saveState === 'saved' ? L('Hesabınıza kaydedildi', 'Saved to your account') : '')}</span>`);
+    parts.push(!S.saved ? `<span class="${S.dirty ? 'psBad' : ''}">${esc(S.dirty ? L('Taslak kaydedilmedi', 'Draft not saved') : L('Yeni sunum · kaydedilmedi', 'New presentation · not saved'))}</span>`
+      : `<span>${esc(S.saveState === 'error' ? L('Kaydedilemedi', 'Not saved') : S.saveState === 'saved' ? L('Taslak hesabınıza kaydedildi', 'Draft saved to your account') : '')}</span>`);
     parts.push('<span class="psNum" data-ps="perf"></span>');
     const status = S.$('[data-ps="status"]');
     setHtml(status, parts.join(''));
@@ -394,6 +558,7 @@
   function hideFloat() { const f = S && S.$('[data-ps="float"]'); if (f) f.hidden = true; }
   function placeFloat() {
     const f = S.$('[data-ps="float"]');
+    if (!S.sel.size && S.areaSel && !S.act && placeAreaFloat(f)) return;
     if (!S.sel.size || S.act) { f.hidden = true; return; }
     const els = [...S.sel].map(id => S.host.querySelector(`.psDocCard[data-id="${CSS.escape(id)}"]`)).filter(Boolean);
     if (!els.length) { f.hidden = true; return; }
@@ -471,7 +636,7 @@
   }
   function tip(e, text, bad) { const t = S.$('[data-ps="tip"]'); t.hidden = false; t.textContent = text; t.classList.toggle('isBad', Boolean(bad)); t.style.left = `${e.clientX + 14}px`; t.style.top = `${e.clientY + 18}px`; }
   const hideTip = () => { S.$('[data-ps="tip"]').hidden = true; };
-  const selectOnly = id => { S.sel = new Set([id]); S.primary = id; };
+  const selectOnly = id => { S.sel = new Set([id]); S.primary = id; S.areaSel = null; };
 
   function onPointerDown(e) {
     if (e.button !== 0) return;
@@ -479,6 +644,11 @@
     if (pa) return;
     const wrap = e.target.closest('.psPageWrap');
     if (wrap && wrap.dataset.psPage !== S.activePage) { S.activePage = wrap.dataset.psPage; S.host.querySelectorAll('.psPageWrap').forEach(w => w.toggleAttribute('data-active', w === wrap)); renderThumbs(); }
+    const ah = e.target.closest('.psArea .psHandle[data-ah]');
+    if (ah) {
+      const key = ah.closest('.psArea').dataset.area, it = areaItem(key);
+      if (it) { S.act = { type: 'areaResize', key, dir: ah.dataset.ah, start: { ...it }, page: it.page, sx: e.clientX, sy: e.clientY, last: { x: it.x, y: it.y, w: it.w, h: it.h } }; e.preventDefault(); return; }
+    }
     const h = e.target.closest('.psHandle');
     if (h) {
       const id = h.closest('.psDocCard').dataset.id, it = S.res.index.get(id);
@@ -488,18 +658,24 @@
     const card = e.target.closest('.psDocCard');
     if (card) {
       const id = card.dataset.id;
-      if (e.shiftKey || e.metaKey || e.ctrlKey) { if (S.sel.has(id)) S.sel.delete(id); else { S.sel.add(id); S.primary = id; } }
+      if (e.shiftKey || e.metaKey || e.ctrlKey) { if (S.sel.has(id)) { S.sel.delete(id); if (S.primary === id) S.primary = [...S.sel].pop(); } else { S.sel.add(id); S.primary = id; } }
       else if (!S.sel.has(id)) selectOnly(id);
       else S.primary = id;
       render();
       S.act = { type: 'press', id, sx: e.clientX, sy: e.clientY, mod: e.shiftKey || e.metaKey || e.ctrlKey };
       e.preventDefault(); return;
     }
-    if (e.target.closest('.psDocHdr')) return;
+    const hdr = e.target.closest('.psDocHdr');
+    if (hdr) {
+      // Başlığa basılı tutup sürükle: grup kendi alanına alınır / alan taşınır. Tıklama: alan seçilir.
+      S.act = { type: 'hdrPress', key: hdr.dataset.hdr, area: hdr.dataset.areaHdr != null, page: hdr.closest('.psPageWrap')?.dataset.psPage, sx: e.clientX, sy: e.clientY };
+      return;
+    }
     const page = e.target.closest('.psPage');
     if (page) {
       const pid = page.closest('.psPageWrap').dataset.psPage, p = toPage(pid, e.clientX, e.clientY);
       if (!e.shiftKey) S.sel.clear();
+      S.areaSel = null;
       S.act = { type: 'marquee', page: pid, x0: p.x, y0: p.y, base: new Set(S.sel) };
       render(); e.preventDefault(); return;
     }
@@ -509,6 +685,9 @@
     if (!S || !S.act) return;
     const a = S.act;
     if (a.type === 'press' && Math.hypot(e.clientX - a.sx, e.clientY - a.sy) > 4) startDrag();
+    if (a.type === 'hdrPress' && Math.hypot(e.clientX - a.sx, e.clientY - a.sy) > 4) startAreaDrag(a);
+    if (S.act.type === 'areaDrag') return moveAreaDrag(e);
+    if (S.act.type === 'areaResize') return moveAreaResize(e);
     if (S.act.type === 'drag') moveDrag(e);
     else if (S.act.type === 'resize') moveResize(e);
     else if (S.act.type === 'marquee') moveMarquee(e);
@@ -516,6 +695,9 @@
   function onPointerUp(e) {
     if (!S || !S.act) return;
     const a = S.act; S.act = null;
+    if (a.type === 'areaDrag') return endAreaDrag(a);
+    if (a.type === 'areaResize') return endAreaResize(a);
+    if (a.type === 'hdrPress') { if (a.area) { S.areaSel = a.key; S.sel.clear(); } else S.areaSel = null; render(); return; }
     if (a.type === 'drag') endDrag(a);
     else if (a.type === 'resize') endResize(a);
     else if (a.type === 'marquee') { S.host.querySelectorAll('.psMarquee').forEach(m => m.remove()); render(); }
@@ -596,7 +778,7 @@
       if (ids.some(id => S.doc.cards[id] && S.doc.cards[id].vgroup != null)) toast(L(`Kart görsel olarak yeni gruba taşındı. ${sourceName()} verisi değişmedi.`, `The card moved to a new group visually. ${sourceName()} data is unchanged.`));
       return;
     }
-    let fail = 0;
+    let fail = 0, joined = 0;
     commit(() => {
       const placed = pinnedRects(a.page, a.ids).map(r => ({ ...r }));
       for (const i of a.items) {
@@ -604,10 +786,17 @@
         const fr = E().findFree(r, placed, g);
         if (!fr) { fail++; continue; }
         E().pinAt(S.doc, i.id, { ...fr, page: a.page }); placed.push(fr);
+        // Grup alanının içine bırakılan kart o grubun alanında akar (sabitlenmez).
+        const center = { x: fr.x + fr.w / 2, y: fr.y + fr.h / 2 }, inArea = a.mode === 'thumb' ? null : pageItems(a.page).find(it => it.kind === 'area' && center.x >= it.x && center.x <= it.x + it.w && center.y >= it.y && center.y <= it.y + it.h);
+        if (inArea) { const last = [...S.doc.order].reverse().find(x => x !== i.id && E().effectiveKey(S.doc, x, groupOf) === inArea.key); placed.pop(); if (last) E().insertAt(S.doc, [i.id], last, true, groupOf); else { S.doc.cards[i.id].pinned = false; E().setGroup(S.doc, i.id, inArea.key, groupOf); } joined++; continue; }
+        // Başka grubun alanına bırakılan kart o gruba elle katılır (kaynak veri değişmez, yeni başlık yazılmaz).
+        const into = a.mode === 'thumb' ? null : E().groupAt(S.res, a.page, center);
+        if (into != null && into !== E().effectiveKey(S.doc, i.id, groupOf)) { E().setGroup(S.doc, i.id, into, groupOf); joined++; }
       }
     });
     if (fail) toast(L(`${fail} kart için boş alan bulunamadı; eski yerinde bırakıldı.`, `No free space for ${fail} cards; left in place.`), 'warning');
     else if (a.bad) toast(L('Çakışma önlendi: kart en yakın boş alana yerleşti.', 'Overlap prevented: the card was placed in the nearest free space.'));
+    else if (joined) toast(L(`Kart bırakıldığı gruba elle katıldı. ${sourceName()} verisi değişmedi.`, `The card joined the group it was dropped into. ${sourceName()} data is unchanged.`));
   }
   function moveResize(e) {
     const a = S.act, g = S.res.g, el = S.host.querySelector(`.psDocCard[data-id="${CSS.escape(a.id)}"]`);
@@ -617,7 +806,8 @@
     const minW = 50, minH = g.th + 24;
     if (d.includes('e')) w = s.w + dx; if (d.includes('s')) h = s.h + dy;
     if (d.includes('w')) { w = s.w - dx; x = s.x + dx; } if (d.includes('n')) { h = s.h - dy; y = s.y + dy; }
-    const T = snapTargets(a.page, new Set([a.id])), th = 7 / P.k; let gx = null, gy = null;
+    const multi = S.sel.size > 1 && S.sel.has(a.id), skip = multi ? new Set(S.sel) : new Set([a.id]);
+    const T = snapTargets(a.page, skip), th = 7 / P.k; let gx = null, gy = null;
     if (d.includes('e')) { const sn = snap([x + w], T.xs, th); if (sn) { w += sn.d; gx = sn.t; } }
     if (d.includes('w')) { const sn = snap([x], T.xs, th); if (sn) { x += sn.d; w -= sn.d; gx = sn.t; } }
     if (d.includes('s')) { const sn = snap([y + h], T.ys, th); if (sn) { h += sn.d; gy = sn.t; } }
@@ -627,17 +817,102 @@
     if (x < 0) { w += x; x = 0; } if (y < 0) { h += y; y = 0; }
     w = Math.min(w, g.w - x); h = Math.min(h, g.h - y);
     const r = { x, y, w, h };
-    if (pinnedRects(a.page, new Set([a.id])).some(o => E().overlaps(r, o))) { tip(e, L('Başka bir sabit kartla çakışıyor', 'Overlaps another pinned card'), true); return; }
+    if (pinnedRects(a.page, skip).some(o => E().overlaps(r, o))) { tip(e, L('Başka bir sabit kartla çakışıyor', 'Overlaps another pinned card'), true); return; }
     a.last = r;
     Object.assign(el.style, { left: `${x}pt`, top: `${y}pt`, width: `${w}pt`, height: `${h}pt` });
     guides(a.page, gx, gy);
-    tip(e, `${Math.round(w / E().MM)} × ${Math.round(h / E().MM)} mm · ${L('sabitlenir', 'pinned')}`);
+    tip(e, `${Math.round(w / E().MM)} × ${Math.round(h / E().MM)} mm · ${multi ? L(`${S.sel.size} kart bu ölçüye gelir`, `${S.sel.size} cards get this size`) : L('sabitlenir', 'pinned')}`);
   }
   function endResize(a) {
     hideTip(); guides(null);
     const r = a.last, s = a.start;
     if (Math.abs(r.w - s.w) < 0.5 && Math.abs(r.h - s.h) < 0.5 && Math.abs(r.x - s.x) < 0.5 && Math.abs(r.y - s.y) < 0.5) { render(); return; }
+    if (S.sel.size > 1 && S.sel.has(a.id)) {
+      // Çoklu seçim: hepsi aynı ölçüye gelir, seçimin sol üstünden okuma sırasıyla dizilir.
+      let failed = 0;
+      commit(() => { failed = E().resizeAll(S.doc, S.res, [...S.sel], r.w, r.h); });
+      if (failed) toast(L(`${failed} kart sayfaya sığmadı; akışta kaldı.`, `${failed} cards did not fit on the page; they stay in the flow.`), 'warning');
+      return;
+    }
     commit(() => E().pinAt(S.doc, a.id, { ...r, page: a.page }));
+  }
+  /* ---------------- Grup alanları ----------------
+     Başlık sürüklenince grup kendi alanına alınır (veya alan taşınır); alanın kenarından
+     genişlik/en az yükseklik ayarlanır. Alan kartlara yetmezse aşağı büyür, sayfa bitince
+     kalan kartlar sonraki sayfada aynı başlıkla sürer (motor: layout). Kaynak veri değişmez. */
+  function areaItem(key, cont = false) {
+    for (const p of S.res.pages) { const it = p.items.find(i => i.kind === 'area' && i.key === key && Boolean(i.cont) === cont); if (it) return { ...it, page: p.id }; }
+    return null;
+  }
+  function startAreaDrag(a) {
+    const g = S.res.g, area = areaItem(a.key);
+    const hdr = area ? null : S.res.pages.flatMap(p => p.items).find(i => i.kind === 'hdr' && i.key === a.key && !i.pinOf);
+    const w = area ? area.w : Math.max(g.cellW, hdr ? hdr.w : g.cellW), h = area ? area.h : (hdr ? hdr.h : g.hH) + g.hGap + g.cellH;
+    const ghost = doc_.createElement('div'); ghost.className = 'psAreaGhost';
+    S.$('[data-ps="drag"]').appendChild(ghost);
+    S.act = { type: 'areaDrag', key: a.key, w, h, minH: area ? area.h : 0, ghost, sx: a.sx, sy: a.sy, page: null, x: 0, y: 0 };
+    S.areaSel = a.key; S.sel.clear(); placeFloat();
+  }
+  function moveAreaDrag(e) {
+    const a = S.act, g = S.res.g;
+    const thumb = doc_.elementFromPoint(e.clientX, e.clientY)?.closest?.('.psThumb');
+    S.host.querySelectorAll('.psThumb').forEach(t => t.toggleAttribute('data-drop', t === thumb));
+    if (thumb) {
+      a.page = thumb.dataset.th; a.x = g.m; a.y = g.m; a.ghost.hidden = true;
+      tip(e, L(`Grubu Sayfa ${S.doc.pages.findIndex(p => p.id === a.page) + 1}’e taşı`, `Move the group to page ${S.doc.pages.findIndex(p => p.id === a.page) + 1}`)); return;
+    }
+    const pid = pageAt(e.clientX, e.clientY); a.page = pid;
+    if (!pid) { a.ghost.hidden = true; tip(e, L('Bırakma alanı dışında · iptal', 'Outside the drop area · cancel')); return; }
+    const P = toPage(pid, e.clientX, e.clientY);
+    let x = clamp(P.x - Math.min(40, a.w / 2), 0, g.w - a.w), y = clamp(P.y - 8, 0, g.h - g.hH);
+    const T = snapTargets(pid, new Set()), th = 7 / P.k, sx = snap([x, x + a.w], T.xs, th), sy = snap([y], T.ys, th);
+    if (sx) x += sx.d; if (sy) y += sy.d;
+    a.x = clamp(x, 0, g.w - a.w); a.y = clamp(y, 0, g.h - g.hH);
+    Object.assign(a.ghost.style, { left: `${P.r.left + a.x * P.k}px`, top: `${P.r.top + a.y * P.k}px`, width: `${a.w * P.k}px`, height: `${Math.min(a.h, g.h - a.y) * P.k}px` });
+    a.ghost.hidden = false;
+    guides(pid, sx ? sx.t : null, sy ? sy.t : null);
+    tip(e, L('Grup alanı · kartlar alanın içinde akar', 'Group area · cards flow inside the area'));
+  }
+  function endAreaDrag(a) {
+    a.ghost.remove(); hideTip(); guides(null);
+    S.host.querySelectorAll('.psThumb[data-drop]').forEach(t => t.removeAttribute('data-drop'));
+    if (!a.page) { render(); return; }
+    commit(() => E().setArea(S.doc, a.key, { page: a.page, x: a.x, y: a.y, w: a.w, h: a.minH }));
+    S.areaSel = a.key; render();
+  }
+  function moveAreaResize(e) {
+    const a = S.act, g = S.res.g, el = S.host.querySelector(`.psArea[data-area="${CSS.escape(a.key)}"]`);
+    if (!el) return;
+    const P = toPage(a.page, e.clientX, e.clientY), dx = (e.clientX - a.sx) / P.k, dy = (e.clientY - a.sy) / P.k, s = a.start, d = a.dir;
+    let x = s.x, w = s.w, h = s.h;
+    if (d.includes('e')) w = s.w + dx;
+    if (d.includes('w')) { w = s.w - dx; x = s.x + dx; }
+    if (d.includes('s')) h = s.h + dy;
+    // Genişlik kart sütununa oturur; yükseklik "en az" ölçüdür (kartlar sığmazsa alan büyür).
+    const cols = Math.max(1, Math.round((w + g.gap) / (g.cellW + g.gap)));
+    const snapW = Math.min(cols * g.cellW + (cols - 1) * g.gap, g.w - 2 * g.m);
+    if (d.includes('w')) x = s.x + s.w - snapW;
+    x = clamp(x, 0, g.w - snapW); h = clamp(h, 0, g.h - s.y);
+    a.last = { x, y: s.y, w: snapW, h };
+    Object.assign(el.style, { left: `${x}pt`, width: `${snapW}pt`, height: `${Math.max(h, 12)}pt` });
+    tip(e, L(`${cols} sütun · en az ${Math.round(h / E().MM)} mm`, `${cols} columns · at least ${Math.round(h / E().MM)} mm`));
+  }
+  function endAreaResize(a) {
+    hideTip();
+    const r = a.last, s = a.start;
+    if (Math.abs(r.w - s.w) < 0.5 && Math.abs(r.h - s.h) < 0.5 && Math.abs(r.x - s.x) < 0.5) { render(); return; }
+    commit(() => E().setArea(S.doc, a.key, { page: a.page, x: r.x, y: r.y, w: r.w, h: r.h }));
+  }
+  function placeAreaFloat(f) {
+    const it = areaItem(S.areaSel), el = it && S.host.querySelector(`.psArea[data-area="${CSS.escape(S.areaSel)}"]`);
+    if (!it || !el) { S.areaSel = null; return false; }
+    const n = S.res.pages.flatMap(p => p.items).filter(i => i.kind === 'card' && i.area === S.areaSel).length;
+    const label = L('Grup alanını kaldır: kartlar otomatik akışa döner', 'Remove the group area: cards return to automatic flow');
+    f.innerHTML = `<span class="psFloatInfo">${esc(L(`Grup alanı · ${n} model`, `Group area · ${n} models`))}</span><button type="button" class="tbtn" data-fa-area="out" title="${esc(label)}" aria-label="${esc(label)}">${svg('flow')}<span>${esc(L('Akışa döndür', 'Return to flow'))}</span></button>`;
+    f.hidden = false;
+    const r = el.getBoundingClientRect(), fw = f.offsetWidth;
+    f.style.left = `${clamp(r.left, 8, root.innerWidth - fw - 8)}px`; f.style.top = `${Math.max(8, r.top - f.offsetHeight - 8)}px`;
+    return true;
   }
   function moveMarquee(e) {
     const a = S.act, P = toPage(a.page, e.clientX, e.clientY), r = { x: Math.min(a.x0, P.x), y: Math.min(a.y0, P.y), w: Math.abs(P.x - a.x0), h: Math.abs(P.y - a.y0) };
@@ -693,11 +968,22 @@
   }
 
   /* ---------------- Açılır paneller ---------------- */
+  const fold = s => String(s || '').toLocaleLowerCase('tr').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ı/g, 'i');
+  const searchKey = f => esc(fold(`${S.meta.label(f)} ${f}`));
+  const searchBox = label => `<input type="search" class="psSearch" data-ps="search" value="${esc(S.popQuery || '')}" placeholder="${esc(L('Ara…', 'Search…'))}" aria-label="${esc(label)}" autocomplete="off" spellcheck="false">`;
+  const noMatch = () => `<p class="psHint" data-ps="noMatch" hidden>${esc(L('Eşleşen alan yok.', 'No matching field.'))}</p>`;
+  // Arama, panel yeniden çizildiğinde (ör. kart bilgisi işaretlenince) korunur.
+  function filterPop() {
+    const p = S.$('[data-ps="pop"]'), q = fold(S.popQuery).trim();
+    let shown = 0;
+    for (const el of p.querySelectorAll('[data-q]')) { const hit = !q || el.dataset.q.includes(q); el.hidden = !hit; if (hit) shown += 1; }
+    const empty = p.querySelector('[data-ps="noMatch"]'); if (empty) empty.hidden = shown > 0;
+  }
   function closePop() { if (!S) return; const p = S.$('[data-ps="pop"]'); p.hidden = true; p.dataset.kind = ''; S.popAnchor = null; }
   function openPop(kind, anchor) {
     const p = S.$('[data-ps="pop"]');
     if (!p.hidden && p.dataset.kind === kind) { closePop(); return; }
-    p.dataset.kind = kind; S.popAnchor = anchor; fillPop(kind); p.hidden = false;
+    p.dataset.kind = kind; S.popAnchor = anchor; S.popQuery = ''; fillPop(kind); p.hidden = false;
     const r = anchor.getBoundingClientRect();
     p.style.left = `${clamp(r.left, 8, root.innerWidth - p.offsetWidth - 8)}px`; p.style.top = `${Math.min(r.bottom + 6, root.innerHeight - p.offsetHeight - 8)}px`;
     root.BLMotionPlus?.play?.('overlay', p);
@@ -705,9 +991,10 @@
   }
   function fillPop(kind) {
     const p = S.$('[data-ps="pop"]'), s = S.doc.style, h = t => `<h4 class="psPopTitle">${esc(t)}</h4>`;
+    const searching = doc_.activeElement?.dataset?.ps === 'search' && p.contains(doc_.activeElement);
     if (kind === 'fields') {
       const on = s.fields, off = S.meta.ids.filter(f => !on.includes(f));
-      p.innerHTML = h(L('Kartta gösterilecek bilgiler', 'Details shown on cards')) + `<div class="psFieldList" data-ps="fieldList">${[...on, ...off].map((f, i) => `<label class="psField" draggable="${on.includes(f)}" data-f="${esc(f)}"><span class="psGrip" aria-hidden="true">${on.includes(f) ? sprite('grip') : ''}</span><input type="checkbox" data-fc="${esc(f)}"${on.includes(f) ? ' checked' : ''}><span>${esc(S.meta.label(f))}</span>${i === 0 && on.length ? `<small class="psSub">${esc(L('başlık', 'title'))}</small>` : ''}</label>`).join('')}</div>`
+      p.innerHTML = h(L('Kartta gösterilecek bilgiler', 'Details shown on cards')) + searchBox(L('Kart bilgisi ara', 'Search card details')) + `<div class="psFieldList" data-ps="fieldList">${[...on, ...off].map((f, i) => `<label class="psField" draggable="${on.includes(f)}" data-f="${esc(f)}" data-q="${searchKey(f)}"><span class="psGrip" aria-hidden="true">${on.includes(f) ? sprite('grip') : ''}</span><input type="checkbox" data-fc="${esc(f)}"${on.includes(f) ? ' checked' : ''}><span>${esc(S.meta.label(f))}</span>${i === 0 && on.length ? `<small class="psSub">${esc(L('başlık', 'title'))}</small>` : ''}</label>`).join('')}</div>` + noMatch()
         + `<label class="psToggle"><input type="checkbox" data-ps="labels"${s.labels ? ' checked' : ''}><span>${esc(L('Alan adlarını göster', 'Show field names'))}</span></label><p class="psHint">${esc(L('Sürükleyerek sıralayın. İlk bilgi kart başlığı olur.', 'Drag to reorder. The first detail becomes the card title.'))}</p>`;
     } else if (kind === 'design') {
       const sl = (k, label, unit) => { const [min, max, , step] = E().STYLE_SPEC[k]; return `<label class="psSlider"><span>${esc(label)}</span><output class="psNum" data-out="${k}">${s[k]}${unit}</output><input type="range" data-s="${k}" data-u="${unit}" min="${min}" max="${max}" step="${step}" value="${s[k]}"></label>`; };
@@ -721,7 +1008,7 @@
         + `<button type="button" class="tbtn" data-rf="all"><b class="psOptTitle">${esc(L('Tümünü sıfırla', 'Reset everything'))}</b><span class="psSub">${esc(L('Sabitleri kaldırır, sunumu baştan dizer.', 'Removes pins and lays the presentation out again.'))}</span></button></div>`;
     } else if (kind === 'level') {
       const rem = S.meta.ids.filter(f => !S.doc.grouping.levels.includes(f));
-      p.innerHTML = h(L('Gruplama seviyesi ekle', 'Add grouping level')) + `<div class="psMenu psScroll">${rem.map(f => `<button type="button" class="tbtn" data-addlv="${esc(f)}">${esc(S.meta.label(f))}</button>`).join('')}</div>`;
+      p.innerHTML = h(L('Gruplama seviyesi ekle', 'Add grouping level')) + searchBox(L('Gruplama alanı ara', 'Search grouping fields')) + `<div class="psMenu psScroll">${rem.map(f => `<button type="button" class="tbtn" data-addlv="${esc(f)}" data-q="${searchKey(f)}">${esc(S.meta.label(f))}</button>`).join('')}</div>` + noMatch();
     } else if (kind === 'templates') {
       const saved = loadTemplates(), builtin = builtinTemplates();
       const row = (t, key, del) => `<div class="psTpl"><span><b>${esc(t.name)}</b><small class="psSub">${esc(t.hint || `${PAPER_LABEL()[t.page.preset] || t.page.preset} · ${t.grouping.levels.map(f => S.meta.label(f)).join(' › ') || L('grupsuz', 'ungrouped')}`)}</small></span><button type="button" class="tbtn" data-tpl="${key}">${esc(L('Uygula', 'Apply'))}</button>${del ? `<button type="button" class="tbtn psIcon" data-tdel="${del}" aria-label="${esc(L('Şablonu sil', 'Delete template'))}">${sprite('trash')}</button>` : ''}</div>`;
@@ -730,11 +1017,12 @@
         + `<div class="psTplSave"><input data-ps="tplName" maxlength="60" placeholder="${esc(L('Şablon adı', 'Template name'))}" aria-label="${esc(L('Şablon adı', 'Template name'))}"><button type="button" class="tbtn" data-ps="tplSave">${esc(L('Kaydet', 'Save'))}</button></div><p class="psHint">${esc(L('Şablon sayfa ölçüsünü, gruplamayı, kart bilgilerini ve tasarımı saklar; kart konumları sunuma özeldir.', 'A template stores the page size, grouping, card details and design; card positions belong to the presentation.'))}</p>`;
     } else if (kind === 'decks') {
       const decks = readJson(KEY.decks, []);
-      p.innerHTML = h(L('Sunumlarım', 'My presentations')) + (decks.length ? `<div class="psMenu psScroll">${decks.map(d => `<div class="psTpl"><span><b>${esc(d.title)}</b><small class="psSub">${esc(L(`${sourceOf(d.source).name()} · ${d.count} kayıt · ${new Date(d.updatedAt).toLocaleString('tr-TR')}`, `${sourceOf(d.source).name()} · ${d.count} records · ${new Date(d.updatedAt).toLocaleString('en-GB')}`))}</small></span>${d.id === S.deckId ? `<small class="psSub">${esc(L('açık', 'open'))}</small>` : `<button type="button" class="tbtn" data-deck="${esc(d.id)}">${esc(L('Aç', 'Open'))}</button><button type="button" class="tbtn psIcon" data-ddel="${esc(d.id)}" aria-label="${esc(L('Sunumu sil', 'Delete presentation'))}">${sprite('trash')}</button>`}</div>`).join('')}</div>` : `<p class="psHint">${esc(L('Henüz kayıtlı sunum yok.', 'No saved presentations yet.'))}</p>`)
-        + `<p class="psHint">${esc(L(`Sunumlar hesabınıza otomatik kaydedilir (en fazla ${MAX_DECKS}). Kayıt bilgileri her açılışta kaynak tablodan güncel okunur.`, `Presentations are saved to your account automatically (up to ${MAX_DECKS}). Record details are read fresh from the source table each time.`))}</p>`;
+      p.innerHTML = h(L('Taslaklar', 'Drafts')) + (decks.length ? `<div class="psMenu psScroll">${decks.map(d => `<div class="psTpl"><span><b>${esc(d.title)}</b><small class="psSub">${esc(L(`${sourceOf(d.source).name()} · ${d.count} kayıt · ${new Date(d.updatedAt).toLocaleString('tr-TR')}`, `${sourceOf(d.source).name()} · ${d.count} records · ${new Date(d.updatedAt).toLocaleString('en-GB')}`))}</small></span>${d.id === S.deckId ? `<small class="psSub">${esc(L('açık', 'open'))}</small>` : `<button type="button" class="tbtn" data-deck="${esc(d.id)}">${esc(L('Aç', 'Open'))}</button><button type="button" class="tbtn psIcon" data-ddel="${esc(d.id)}" aria-label="${esc(L('Sunumu sil', 'Delete presentation'))}">${sprite('trash')}</button>`}</div>`).join('')}</div>` : `<p class="psHint">${esc(L('Henüz kayıtlı taslak yok. Taslağı kaydet ile bu sunumu saklayın.', 'No saved drafts yet. Use Save draft to keep this presentation.'))}</p>`)
+        + `<p class="psHint">${esc(L(`Kaydedilen taslaklar her değişiklikte hesabınıza otomatik güncellenir (en fazla ${MAX_DECKS}). Taslak açılırken model bilgileri tablodan güncel okunur; tabloda yaptığınız düzeltmeler sunuma yansır.`, `Saved drafts update in your account with every change (up to ${MAX_DECKS}). Model details are read fresh from the table when a draft opens, so corrections you make in the table appear in the presentation.`))}</p>`;
     } else if (kind === 'export') {
       p.innerHTML = h(L('Dışa aktar', 'Export')) + `<div class="psMenu"><button type="button" class="tbtn" data-ex="pdf"><b class="psOptTitle">PDF</b><span class="psSub">${esc(L('Önizlemedeki sayfaların aynısı, seçili sayfa ölçüsünde.', 'Exactly the previewed pages, in the selected page size.'))}</span></button><button type="button" class="tbtn" data-ex="pptx"><b class="psOptTitle">PowerPoint</b><span class="psSub">${esc(L('Düzenlenebilir kartlar ve metinler; aynı konum ve ölçü.', 'Editable cards and text; same positions and size.'))}</span></button></div>`;
-    }
+    }    const search = p.querySelector('[data-ps="search"]');
+    if (search) { filterPop(); if (searching) { search.focus({ preventScroll: true }); search.setSelectionRange(search.value.length, search.value.length); } }
   }
 
   /* ---------------- Dışa aktarma ---------------- */
@@ -781,7 +1069,7 @@
       const list = await exportList(progress), titles = Object.fromEntries([...S.models.values()].map(m => [m.id, m.title]));
       if (kind === 'pptx') {
         const JSZip = root.JSZip || await root.BLPerf.ensureLibrary('jszip');
-        const zip = root.BLPresentationPptx.build(JSZip, list, { title: S.doc.title, lang: isEn() ? 'en' : 'tr', palette: R().DOC, titles });
+        const zip = root.BLPresentationPptx.build(JSZip, list, { title: S.doc.title, lang: isEn() ? 'en' : 'tr', palette: R().DOC, titles, chip: R().CHIP });
         download(await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', compression: 'DEFLATE' }), `${fileStem()}.pptx`);
         toast(L('PowerPoint dosyası indirildi.', 'PowerPoint file downloaded.'));
       } else {
@@ -856,7 +1144,8 @@
       if (ps === 'zoomIn') return setZoom(S.zoom * 1.15);
       if (ps === 'zoomOut') return setZoom(S.zoom / 1.15);
       if (ps === 'zoomFit') { fitZoom(); S.pageHtml.clear(); return render(); }
-      if (ps === 'close') return close();
+      if (ps === 'close') return requestClose();
+      if (ps === 'saveDraft') return saveDraft();
       if (ps === 'addPage') return pageAction(S.doc.pages[S.doc.pages.length - 1].id, 'add');
       if (ps === 'fixConf') { let un = 0; commit(() => { un = E().resolvePinned(S.doc); }); toast(un ? L(`${un} kart akışa döndü.`, `${un} cards returned to flow.`) : L('Çakışmalar çözüldü.', 'Overlaps resolved.')); return; }
       if (ps === 'tplSave') {
@@ -866,11 +1155,13 @@
         writeJson(KEY.templates, list.slice(0, E().LIMITS.templates)); fillPop('templates'); toast(L(`“${name}” şablonu kaydedildi.`, `Template “${name}” saved.`)); return;
       }
       const o = t.closest('[data-ps="orient"] button'); if (o && !o.disabled) return changePage({ ...S.doc.page, orient: o.dataset.o });
+      const cm = t.closest('[data-ps="chipMode"] button'); if (cm) { const on = cm.dataset.v === 'chips'; if (on !== S.doc.style.chips) commit(() => { S.doc.style.chips = on; }); return; }
       const cs = t.closest('[data-ps="cardStyle"] button'); if (cs) { commit(() => { S.doc.style.card = cs.dataset.v; }); fillPop('design'); return; }
       const pa = t.closest('[data-pa]'); if (pa) return pageAction(pa.closest('.psPageWrap').dataset.psPage, pa.dataset.pa);
       const th = t.closest('[data-th]'); if (th) { S.activePage = th.dataset.th; host.querySelector(`.psPageWrap[data-ps-page="${CSS.escape(S.activePage)}"]`)?.scrollIntoView({ block: 'start' }); render(); return; }
       const back = t.closest('[data-back]'); if (back) return commit(() => { delete S.doc.cards[back.dataset.back].excluded; });
       const fa = t.closest('[data-fa]'); if (fa) return selAction(fa.dataset.fa);
+      const fo = t.closest('[data-fa-area]'); if (fo && S.areaSel) { const key = S.areaSel; S.areaSel = null; commit(() => E().clearArea(S.doc, key)); toast(L('Grup alanı kaldırıldı; kartlar otomatik akışa döndü.', 'Group area removed; cards returned to automatic flow.')); return; }
       const rm = t.closest('[data-rmlv]'); if (rm) { const lv = [...S.doc.grouping.levels]; lv.splice(Number(rm.dataset.rmlv), 1); return setLevels(lv); }
       const add = t.closest('[data-addlv]'); if (add) { closePop(); return setLevels([...S.doc.grouping.levels, add.dataset.addlv]); }
       const rf = t.closest('[data-rf]');
@@ -884,25 +1175,28 @@
       const tp = t.closest('[data-tpl]');
       if (tp) { const k = tp.dataset.tpl, tpl = k[0] === 'b' ? builtinTemplates()[Number(k.slice(1))] : loadTemplates()[Number(k.slice(1))]; closePop(); if (tpl) applyTemplate(tpl); return; }
       const td = t.closest('[data-tdel]'); if (td) { const list = loadTemplates(); list.splice(Number(td.dataset.tdel) - 1, 1); writeJson(KEY.templates, list); fillPop('templates'); return; }
-      const dk = t.closest('[data-deck]'); if (dk) { closePop(); openDeck(dk.dataset.deck).catch(err => toast(err.message, 'error')); return; }
+      const dk = t.closest('[data-deck]'); if (dk) { closePop(); const id = dk.dataset.deck; confirmLeave(() => openDeck(id).catch(err => toast(err.message, 'error'))); return; }
       const dd = t.closest('[data-ddel]');
       if (dd) { const id = dd.dataset.ddel, list = readJson(KEY.decks, []); const d = list.find(x => x.id === id); if (d && root.confirm(L(`“${d.title}” sunumu silinsin mi? Kaynak veriler etkilenmez.`, `Delete the “${d.title}” presentation? Source data is not affected.`))) { writeJson(KEY.decks, list.filter(x => x.id !== id)); removeKey(KEY.deck(id)); fillPop('decks'); } return; }
       const ex = t.closest('[data-ex]'); if (ex) { closePop(); runExport(ex.dataset.ex); }
     });
     host.addEventListener('change', e => {
       const t = e.target, ps = t.dataset.ps;
-      if (t.dataset.fc) { const f = t.dataset.fc; commit(() => { const on = S.doc.style.fields; S.doc.style.fields = t.checked ? [...on, f].slice(0, E().LIMITS.fields) : on.filter(x => x !== f); }); fillPop('fields'); return; }
+      if (t.dataset.fc) { const f = t.dataset.fc, fromSearch = doc_.activeElement?.dataset?.ps === 'search'; commit(() => { const on = S.doc.style.fields; S.doc.style.fields = t.checked ? [...on, f].slice(0, E().LIMITS.fields) : on.filter(x => x !== f); }); fillPop('fields'); if (!fromSearch) S.$(`[data-fc="${CSS.escape(f)}"]`)?.focus({ preventScroll: true }); return; }
       if (ps === 'labels') return commit(() => { S.doc.style.labels = t.checked; });
       if (ps === 'font') return commit(() => { S.doc.style.font = t.value; });
       if (ps === 'keepGroups') return commit(() => { S.doc.style.keepGroups = t.checked; });
+      if (ps === 'fabricCode') return commit(() => { S.doc.style.fabricCode = t.checked; });
       if (ps === 'brk') return commit(() => { S.doc.grouping.breakTop = t.checked; });
       if (ps === 'title') return commit(() => { S.doc.title = t.value.trim().slice(0, 120); });
       if (ps === 'paper') { const size = E().pageSize(S.doc.page); return changePage({ ...S.doc.page, preset: t.value, cw: Math.round(size.mmW), ch: Math.round(size.mmH) }); }
       if (ps === 'cw' || ps === 'ch') { const w = clamp(Number($('[data-ps="cw"]').value) || 0, 50, 1200), h = clamp(Number($('[data-ps="ch"]').value) || 0, 50, 1200); return changePage({ preset: 'custom', cw: w, ch: h, orient: w >= h ? 'landscape' : 'portrait' }); }
-      if (t.dataset.s) S.slider = false;
+      if (t.dataset.s) { S.slider = false; cancelAnimationFrame(S.raf); relayout(); render(); scheduleSave(); }
     });
     host.addEventListener('input', e => {
-      const t = e.target; if (!t.dataset.s) return;
+      const t = e.target;
+      if (t.dataset.ps === 'search') { S.popQuery = t.value; filterPop(); return; }
+      if (!t.dataset.s) return;
       if (!S.slider) { pushHistory(); S.slider = true; }
       S.doc.style[t.dataset.s] = Number(t.value);
       host.querySelector(`[data-out="${t.dataset.s}"]`).textContent = t.value + t.dataset.u;
@@ -935,6 +1229,13 @@
     S.shell.addEventListener('keydown', onKey);
   }
   function onKey(e) {
+    if (e.key === 'Enter' && e.target.dataset.ps === 'search') {
+      // Enter ilk eşleşmeyi seçer: gruplama seviyesi eklenir ya da kart bilgisi açılıp kapanır.
+      e.preventDefault();
+      const first = S.$('[data-ps="pop"]').querySelector('[data-q]:not([hidden])');
+      if (first) (first.matches('[data-addlv]') ? first : first.querySelector('input[data-fc]'))?.click();
+      return;
+    }
     if (e.target.matches('input,select,textarea')) { if (e.key === 'Escape' && !S.$('[data-ps="pop"]').hidden) { e.stopPropagation(); closePop(); } return; }
     const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
     if (e.key === 'Escape') {

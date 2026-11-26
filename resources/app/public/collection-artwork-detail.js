@@ -400,6 +400,31 @@
     return [...out].sort((a, b) => a.localeCompare(b, 'tr'));
   }
 
+  /* Sunum Stüdyosu: hücre kartlarının yapısal modeli (HTML değil). Bölgeler
+     tekniğe göre gruplanır, her grubu teknik etiketi izler; hücreyle aynı kaynak
+     (cellCards): PLM özeti, özet biçiminde elle yazılmış değer; düz metin
+     görünümündeki hücre ve serbest metin null (metin kalır). */
+  function cellModel(row, value) {
+    const text = String(value == null ? '' : value);
+    if (!text.trim() || (row && row[VIEW_KEY] === 'text')) return null;
+    const plmId = plmIdOfRow(row);
+    const entry = plmId ? state.cache.get(plmId) : null;
+    const model = entry && text === cachedSummary(entry) ? modelFor(entry) : parseSummary(text);
+    if (!model) return null;
+    const en = isEn();
+    return model.parts.map(part => {
+      if (!part.total) return { label: part.label, items: [{ kind: 'none', t: `— ${en ? 'No print' : 'Baskı yok'}` }], total: '' };
+      const byTech = new Map();
+      for (const group of part.groups) { const tech = [...group.techniques].join(' + '); if (!byTech.has(tech)) byTech.set(tech, []); byTech.get(tech).push(group); }
+      const items = [];
+      for (const [tech, groups] of byTech) {
+        for (const group of groups) items.push({ kind: 'chip', t: en ? group.en : group.tr, sub: String(group.count) });
+        if (tech) items.push({ kind: 'tag', t: tech, tone: String(toneOf([...groups[0].techniques][0])) });
+        else if (byTech.size > 1) items.push({ kind: 'tag', t: NO_TECH, tone: '' }); // tekniksiz bölge (hücredeki nötr "—")
+      }
+      return { label: part.label, items, total: String(part.total) };
+    });
+  }
   function aiStatus(entry) {
     const status = entry && entry.ai && entry.ai.status || 'not-needed';
     if (status === 'resolved') return L('LCW AI doğruladı', 'LCW AI verified');
@@ -883,6 +908,7 @@
     openBom,
     summaryFor,
     cellCards,
+    cellModel,
     refreshCell,
     openEditor,
     conflicts: () => [...state.conflicts.values()],
