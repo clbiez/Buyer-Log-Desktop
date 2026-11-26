@@ -303,15 +303,15 @@
           + (el.count ? `<div style="position:absolute;right:0;top:${r2(el.count.y - el.y)}pt;white-space:pre;line-height:${r2(el.count.size * 1.3)}pt">${runHtml(el.count)}</div>` : '')
           + `<div style="position:absolute;left:0;top:${r2(el.rule.y - el.y)}pt;width:100%;height:${el.rule.h}pt;background:${DOC.rule}"></div>${extra.inner}</div>`;
       }
-      // Çerçeve, görsel zemininin üstünde kalması için ayrı katmandır (aşağıda).
+      // Çerçeve, görselin üstünde kalması için ayrı katmandır (aşağıda).
       const frame = el.style === 'shadow' ? 'box-shadow:0 1pt 4pt rgba(16,24,40,.18);' : '';
-      const b = el.imageBox;
       const image = el.image ? `<img src="${esc(el.image.src)}" alt="" draggable="false" style="position:absolute;left:${r2(el.image.x - el.x)}pt;top:${r2(el.image.y - el.y)}pt;width:${r2(el.image.w)}pt;height:${r2(el.image.h)}pt">` : '';
       const lines = el.lines.map(l => (l.atoms
         ? `<div style="position:absolute;left:${r2(l.x - el.x)}pt;top:${r2(l.y - el.y)}pt;width:${r2(l.w)}pt;height:${r2(l.lh)}pt">${atomsHtml(l.atoms, l.lh, lite)}</div>`
         : `<div style="position:absolute;left:${r2(l.x - el.x)}pt;top:${r2(l.y - el.y)}pt;width:${r2(l.w)}pt;white-space:pre;overflow:hidden;line-height:${r2(l.lh)}pt">${l.runs.map(runHtml).join('')}</div>`)).join('');
       return `<div class="psDocCard${extra.cls}"${extra.attr} style="position:absolute;left:${r2(el.x)}pt;top:${r2(el.y)}pt;width:${r2(el.w)}pt;height:${r2(el.h)}pt;background:${DOC.card};overflow:hidden;${frame}">`
-        + `<div style="position:absolute;left:0;top:0;width:${r2(b.w)}pt;height:${r2(b.h)}pt;background:${DOC.image}"></div>${image}${lines}`
+        // Görsel alanı ayrı gri zemin taşımaz: kartın zemin rengi görünür (kullanıcı isteği).
+        + `${image}${lines}`
         + (el.style === 'frame' ? `<div style="position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 ${FRAME}pt ${DOC.line}"></div>` : '') + `${extra.inner}</div>`;
     }).join('');
   }

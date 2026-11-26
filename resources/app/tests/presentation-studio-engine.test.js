@@ -420,3 +420,50 @@ test('grup alanları ve sabit kartlar üst üste binmez: alan engelin altına ka
   for (const k of keys.slice(0, 2)) assert.equal(items.filter(i => i.kind === 'card' && i.area === k).length, doc.order.filter(id => groupOf(id).key === k).length, 'kart kaybı yok');
   assert.ok(res.pages.length >= 2);
 });
+
+test('grup bazlı kart boyutu: boyutlanmış alanda kartlar alanı orantılı doldurur; kart eklenince küçülür', () => {
+  const { doc, groupOf } = setup(40, ['fabric']);
+  let res = E.layout(doc, groupOf);
+  const g = res.g, key = groupOf(doc.order[0]).key;
+  const fill = () => {
+    res = E.layout(doc, groupOf);
+    const items = res.pages.flatMap(p => p.items), ar = items.find(i => i.kind === 'area' && i.key === key && !i.cont);
+    const cards = items.filter(i => i.kind === 'card' && i.area === key);
+    return { ar, cards, right: Math.max(...cards.map(c => c.x + c.w)), bottom: Math.max(...cards.map(c => c.y + c.h)) };
+  };
+  // Alan elle boyutlandı (h > 0): kartlar genişliği ve yüksekliği doldurur, boş alan kalmaz.
+  E.setArea(doc, key, { page: 'p1', x: g.m, y: g.m, w: 420, h: 360 });
+  let f = fill();
+  assert.equal(f.cards.length, 10, 'grubun tüm kartları tek alanda');
+  assert.ok(Math.abs(f.right - (f.ar.x + f.ar.w)) < 0.5, 'sağ kenar dolu');
+  assert.ok(Math.abs(f.bottom - (f.ar.y + f.ar.h)) < 0.5, 'alt kenar dolu');
+  assert.ok(Math.abs(f.ar.h - 360) < 0.5);
+  assertClean(res);
+  const w10 = f.cards[0].w;
+  // Gruba kart eklenince (birleşme) aynı alanda kartlar küçülür.
+  const other = groupOf(doc.order.find(id => groupOf(id).key !== key)).key;
+  E.mergeGroups(doc, other, key, groupOf);
+  f = fill();
+  assert.equal(f.cards.length, 20);
+  assert.ok(f.cards[0].w * f.cards[0].h < w10 * f.cards[0].h * 1.0001 || f.cards[0].w < w10, 'kartlar küçüldü');
+  assert.ok(Math.abs(f.bottom - (f.ar.y + f.ar.h)) < 0.5 && Math.abs(f.right - (f.ar.x + f.ar.w)) < 0.5);
+  // Otomatik boyut (h = 0): genel kart ölçüsü.
+  E.setArea(doc, key, { page: 'p1', x: g.m, y: g.m, w: 420, h: 0 });
+  f = fill();
+  assert.ok(Math.abs(f.cards[0].w - g.cellW) < 0.01 && Math.abs(f.cards[0].h - g.cellH) < 0.01);
+  assertClean(res);
+});
+
+test('grup bazlı kart boyutu: yalnız genişlik daralırsa alan aşağı büyür, kartlar genişliği doldurur', () => {
+  const { doc, groupOf } = setup(24, ['fabric']);
+  let res = E.layout(doc, groupOf);
+  const g = res.g, key = groupOf(doc.order[0]).key;
+  E.setArea(doc, key, { page: 'p1', x: g.m, y: g.m, w: 100, h: g.hH + g.cellH + 10 });
+  res = E.layout(doc, groupOf);
+  const items = res.pages.flatMap(p => p.items), ar = items.find(i => i.kind === 'area' && i.key === key), cards = items.filter(i => i.kind === 'card' && i.area === key);
+  assert.ok(ar.fit && cards.length === 6);
+  assert.ok(Math.abs(Math.max(...cards.map(c => c.x + c.w)) - (ar.x + ar.w)) < 0.5);
+  assert.ok(Math.abs(Math.max(...cards.map(c => c.y + c.h)) - (ar.y + ar.h)) < 0.5);
+  assert.ok(ar.h > g.hH + g.cellH + 10, 'alan büyüdü');
+  assertClean(res);
+});

@@ -7,8 +7,8 @@
     "en": "Presentation Studio: merge groups, group areas for separated cards, line-by-line titles"
   },
   "summary": {
-    "tr": "Sunum Stüdyosu’nda bir kartı başka bir kartın ya da grubun üzerine bırakmak iki grubu birleştirir; grubundan ayrılan kartlar kendi grup alanına alınıp boyutlandırılabilir. Grup başlığında her gruplama seviyesi ve takım parçası ayrı satırda; başlık yazı boyutu kart yazısından ayrı ayarlanır.",
-    "en": "In Presentation Studio, dropping a card onto another card or group merges the two groups; cards separated from their group can get their own resizable group area. Group titles show each grouping level and set part on its own line, and the title text size is set separately from the card text."
+    "tr": "Sunum Stüdyosu’nda bir kartı başka bir kartın ya da grubun üzerine bırakmak iki grubu birleştirir; grubundan ayrılan kartlar kendi grup alanına alınıp boyutlandırılabilir. Grup başlığında her gruplama seviyesi ve takım parçası ayrı satırda; başlık yazı boyutu kart yazısından ayrı ayarlanır. Grup alanı boyutlandırılınca kartlar alanı orantılı doldurur; görsellerin arkasındaki gri zemin kaldırıldı.",
+    "en": "In Presentation Studio, dropping a card onto another card or group merges the two groups; cards separated from their group can get their own resizable group area. Group titles show each grouping level and set part on its own line, and the title text size is set separately from the card text. Resizing a group area scales its cards to fill it, and the grey background behind images was removed."
   },
   "changes": [
     {
@@ -37,6 +37,35 @@
         "caption": {
           "tr": "Demo veride satır satır grup başlıkları; başlık yazısı kart yazısından ayrı boyutta.",
           "en": "Line-by-line group titles on demo data; title text sized separately from card text."
+        }
+      }
+    },
+    {
+      "id": "presentation-studio-group-card-size",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · CP · Siparişler",
+        "en": "Collection · CP · Orders"
+      },
+      "title": {
+        "tr": "Sunum Stüdyosu: grup bazlı kart boyutu, görsellerde gri zemin yok",
+        "en": "Presentation Studio: card size per group, no grey behind images"
+      },
+      "body": {
+        "tr": "Grup alanını kenarından büyütüp küçülttüğünüzde içindeki model kartları alanı orantılı olarak doldurur; boş alan kalmaz. Gruba yeni kart eklendiğinde kartlar aynı alana sığacak şekilde küçülür; alan yetmezse aşağı doğru büyür. Böylece kart ölçüsü Tasarım’daki genel ayarın yanında grup bazında da belirlenebilir; alan araç çubuğundaki Otomatik kart boyutu genel ölçüye döndürür. Kart görsellerinin arkasındaki gri zemin kaldırıldı; görsel kartın zemin rengi üzerinde görünür (PDF ve PowerPoint dahil).",
+        "en": "When you resize a group area from its edges, the model cards inside fill the area proportionally, leaving no empty space. When a card is added to the group, the cards shrink to fit the same area; if the area is too small it grows downward. Card size can now be set per group alongside the general Design setting; Automatic card size in the area toolbar returns to the general size. The grey background behind card images was removed; images sit on the card background (PDF and PowerPoint included)."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "presentation-studio-group-card-size.png",
+        "alt": {
+          "tr": "Demo modellerle Sunum Stüdyosu: daraltılmış bir grup alanında kartlar alanı dolduracak şekilde küçülmüş; alan araç çubuğunda Otomatik kart boyutu ve Akışa döndür; görsellerin arkası beyaz",
+          "en": "Presentation Studio with demo models: cards in a narrowed group area shrink to fill it; the area toolbar shows Automatic card size and Return to flow; images on a white background"
+        },
+        "caption": {
+          "tr": "Demo veride grup alanına göre ölçeklenen kartlar.",
+          "en": "Cards scaled to the group area on demo data."
         }
       }
     }

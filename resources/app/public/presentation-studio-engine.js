@@ -337,6 +337,29 @@
       const below = obs.filter(o => o.x < sp.x + sp.w && o.x + o.w > sp.x && o.y >= y).map(o => o.y - g.gap);
       const limit = Math.min(g.bottom, ...below);
       hd.y = y;
+      /* Grup bazlı kart boyutu: alan elle boyutlandıysa (h > 0) kartlar alanı orantılı doldurur. Sütun sayısı,
+         görsel oranı genel karta en yakın ve boş hücresi en az olan seçenektir; kart eklenince kartlar küçülür.
+         Kartlar çok küçülürse (genişlik < 40 pt) genel ölçüyle akıp sayfa sonunda devam eder. */
+      if (sp.h > 0 && !sp.cont) {
+        const H = Math.min(sp.h, limit - y), bodyH = H - hd.h - g.hGap, n = sp.ids.length, ratio = (g.cellH - g.th) / g.cellW;
+        let best = null, grow = null;
+        for (let c = 1; c <= Math.min(n, 24); c++) {
+          const rws = Math.ceil(n / c), cwW = (sp.w - (c - 1) * g.gap) / c;
+          if (cwW < 40) break;
+          const chMax = (bodyH - (rws - 1) * g.gap) / rws, cwH = (chMax - g.th) / ratio, size = Math.min(cwW, cwH);
+          // Alan yüksekliğine sığan en büyük kart (eşitlikte daha az boş hücre).
+          if (chMax - g.th >= 16 && size >= 40 && (!best || size > best.size + 0.01 || (Math.abs(size - best.size) <= 0.01 && c * rws - n < best.empty))) best = { c, cw: cwW, ch: chMax, size, empty: c * rws - n, h: H };
+          // Hiçbiri sığmazsa: genişliği dolduran doğal oranlı kartlarla alan aşağı büyür (sayfa sınırına kadar).
+          const chN = cwW * ratio + g.th, total = hd.h + g.hGap + rws * chN + (rws - 1) * g.gap;
+          if (y + total <= limit + 0.01 && (!grow || cwW > grow.cw)) grow = { c, cw: cwW, ch: chN, h: Math.max(H, total) };
+        }
+        const pick = best || grow;
+        if (pick) {
+          const top2 = y + hd.h + g.hGap, items = [{ kind: 'area', key: sp.key, x: sp.x, y, w: sp.w, h: pick.h, cont: sp.cont, fit: true }, hd];
+          sp.ids.forEach((id, i) => items.push({ kind: 'card', id, x: sp.x + (i % pick.c) * (pick.cw + g.gap), y: top2 + Math.floor(i / pick.c) * (pick.ch + g.gap), w: pick.cw, h: pick.ch, area: sp.key }));
+          return { items, rest: [] };
+        }
+      }
       const cols = Math.max(1, Math.floor((sp.w + g.gap + 0.01) / (g.cellW + g.gap))), top = y + hd.h + g.hGap;
       let rows = Math.min(Math.ceil(sp.ids.length / cols), Math.max(0, Math.floor((limit - top + g.gap + 0.01) / (g.cellH + g.gap))));
       if (!rows && force && !obs.length) rows = 1; // boş sayfada bile sığmıyorsa bir satır zorla (sonsuz sayfa üretme)

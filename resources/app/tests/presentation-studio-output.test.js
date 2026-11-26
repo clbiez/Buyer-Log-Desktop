@@ -269,3 +269,13 @@ test('başlıkta her gruplama seviyesi ayrı satırda; takım parçaları (A/B) 
   assert.equal(hdr.lines[0].atoms.length, 1, 'aynı biçimli kelimeler tek atom');
   assert.ok(Math.abs(hdr.count.y - hdr.lines[3].y - (hdr.size - hdr.count.size)) < 0.01, 'model sayısı son satırda');
 });
+
+test('görsel arkasında ayrı gri zemin yok: kart zemini görünür (önizleme/PDF ve PPTX)', async () => {
+  const { list } = fixture();
+  const html = R.documentHtml(list, 't');
+  assert.ok(!html.includes(`background:${R.DOC.image}`), 'PDF/önizleme');
+  const zip = await JSZip.loadAsync(await P.build(JSZip, list, { title: 't', palette: R.DOC }).generateAsync({ type: 'nodebuffer' }));
+  const slide = await zip.file('ppt/slides/slide1.xml').async('string');
+  assert.ok(!slide.includes('name="Image area'), 'PPTX');
+  assert.ok(slide.includes('<p:pic>'), 'görsel yine var');
+});
