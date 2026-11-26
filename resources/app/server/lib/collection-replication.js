@@ -405,6 +405,27 @@ function mergeCollectionWorkspaces(base, local, remote) {
   // aynı kimlik aynı model kabul edilir; farklı alanlar çakışma olarak döner.
   const hasBase = Boolean(base);
   const baseRows = rowsByKey(base && base.rows), localRows = rowsByKey(local && local.rows), remoteRows = rowsByKey(remote && remote.rows);
+  /* Tabanda olmayan aynı kimlik iki tarafta farklıysa iki durum vardır:
+     (a) iki cihaz aynı YENİ kimliği farklı modellere verdi: ikisi de korunur;
+     (b) silinip başka cihazlarda eşzamanlı düzenlenerek geri gelen AYNI satır:
+         çoğaltılmaz, alan alan birleşir (farklı alanda uzak değer kalır, yerel
+         değer çakışma). Ayrım: iki tarafta kalıcı recordId varsa o belirler;
+     yoksa kimlik tabandan sonra ayrıldıysa (id >= base.nextId; yeni kimlik
+     istemcide max(nextId, en büyük id + 1)'den ayrılır) ya da satır kimlik
+     alanları (plmId, modelKod) iki tarafta farklıysa (a), aksi halde (b). */
+  const baseNextId = Number(base && base.nextId);
+  const newSinceBase = key => !Number.isFinite(baseNextId) || !Number.isFinite(Number(key)) || Number(key) >= baseNextId;
+  const identityDiffers = (l, r) => ['plmId', 'modelKod'].some(field => clean(l && l[field]) && clean(r && r[field]) && clean(l[field]) !== clean(r[field]));
+  const sameRecord = (l, r) => {
+    const a = clean(l && (l.recordId || l._sharedRecordId)), b = clean(r && (r.recordId || r._sharedRecordId));
+    return a && b ? a === b : null;
+  };
+  const idCollision = (key, b, l, r) => {
+    if (!hasBase || b || sameValue(rowContent(l), rowContent(r))) return false;
+    const record = sameRecord(l, r);
+    if (record !== null) return !record;
+    return newSinceBase(key) || identityDiffers(l, r);
+  };
   const numericIds = [...baseRows.keys(), ...localRows.keys(), ...remoteRows.keys()].map(Number).filter(Number.isFinite);
   let nextId = Math.max(Number(local && local.nextId) || 1, Number(remote && remote.nextId) || 1, (numericIds.length ? Math.max(...numericIds) : 0) + 1);
   const rows = [];
@@ -418,7 +439,7 @@ function mergeCollectionWorkspaces(base, local, remote) {
       } else if (!(l == null && b)) rows.push(r);
       continue;
     }
-    if (hasBase && !b && !sameValue(rowContent(l), rowContent(r))) { rows.push(r); continue; } // kimlik çakışması: yerel satır aşağıda yeni kimlik alır
+    if (idCollision(key, b, l, r)) { rows.push(r); continue; } // kimlik çakışması: yerel satır aşağıda yeni kimlik alır
     const merged = mergeRowFields(b ? rowContent(b) : null, rowContent(l), rowContent(r), key, conflicts);
     merged._rev = sameValue(merged, rowContent(l)) ? mergeRowRevision(l) : Math.max(mergeRowRevision(l), mergeRowRevision(r)) + 1;
     rows.push(merged);
@@ -428,7 +449,7 @@ function mergeCollectionWorkspaces(base, local, remote) {
     if (!key) continue;
     const r = remoteRows.get(key), b = baseRows.get(key);
     if (r) {
-      if (hasBase && !b && !sameValue(rowContent(l), rowContent(r))) rows.push({ ...l, id: nextId++, _rev: mergeRowRevision(l) + 1 });
+      if (idCollision(key, b, l, r)) rows.push({ ...l, id: nextId++, _rev: mergeRowRevision(l) + 1 });
       continue;
     }
     if (b) {

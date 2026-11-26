@@ -282,3 +282,29 @@ test('yayımdan sonra taban yazımı düşerse bekleyen zincir yine kesin tabanl
   assert.equal(sim.rowOf(b, 5).not, 'b-3');
   assert.deepEqual(await m.conflicts('b'), [], 'no false conflict when the base snapshot write failed');
 });
+
+test('silinip eşzamanlı düzenlenen ve geri gelen satır çoğaltılmaz', { timeout: TIMEOUT_MS }, async t => {
+  const sim = await simulation(t, { seed: 26130, devices: 6 });
+  const a = sim.devices[0], b = sim.devices[2], c = sim.devices[3];
+  const m = await mirrors(sim, { a, b, c });
+  const row = sim.rowOf(b, 5);
+  await b.modules.workspaces.applyRowChangesAsync(OWNER, { deletes: [{ id: row.id, _rev: row._rev }] });
+  assert.equal((await m.replica.b.publishOwner(OWNER)).published, true);
+  assert.equal((await m.write('a', 5, { not: 'a' })).published, true);
+  await m.deliver('b', 'a');
+  // A silmeyi görür, düzenlemesini korur ama birleşimin yayımı düşer: A'nın tabanında satır yok, yerelde var.
+  const target = path.resolve(m.file.a);
+  const originalRename = fsp.rename;
+  fsp.rename = async (from, to) => { if (path.resolve(to) === target) throw Object.assign(new Error('simulated hub write failure'), { code: 'EIO' }); return originalRename(from, to); };
+  try { await m.sync('a'); } finally { fsp.rename = originalRename; }
+  assert.ok(sim.rowOf(a, 5), 'concurrent edit keeps the row');
+  assert.equal((await m.write('c', 5, { buyer: 'c' })).published, true);
+  await m.deliver('c', 'a');
+  await m.sync('a');
+  const copies = sim.workspaceOf(a).rows.filter(item => item.buyer === 'c' || item.not === 'a');
+  assert.equal(copies.length, 1, `the resurrected row must not be duplicated: ${JSON.stringify(copies.map(item => item.id))}`);
+  assert.equal(sim.workspaceOf(a).rows.length, 24);
+  assert.equal(sim.rowOf(a, 5).buyer, 'c');
+  const keptA = sim.rowOf(a, 5).not === 'a' || (await m.conflicts('a')).some(item => item.incoming === 'a');
+  assert.ok(keptA, 'the other concurrent edit is kept or reported');
+});
