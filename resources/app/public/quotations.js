@@ -2300,7 +2300,7 @@
      yazdığını ezmez; odak masadan çıkınca bir kez uygulanır. Görünmeyen masa
      çizilmez (sekmeye dönüşte mount zaten yeniden çizer). */
   let qOpenWorkspaceRefreshPending=false;
-  const Q_DESK_PANELS='[data-pd-options-panel],[data-pd-columns-panel],[data-pd-bulk-panel],[data-pd-import-panel],[data-pd-mfr-panel],[data-pd-round-panel]';
+  const Q_DESK_PANELS='[data-pd-options-panel],[data-pd-columns-panel],[data-pd-import-panel],[data-pd-mfr-panel],[data-pd-round-panel]';
   const Q_DESK_SCROLLERS=['#quotationNav','.pdMatrixScroll','.quotationTableWrap'];
   // Masada görünen içeriğin imzası: liste + açık talebin satırları. Uzak yenileme
   // görünen hiçbir şeyi değiştirmediyse masa yeniden çizilmez.

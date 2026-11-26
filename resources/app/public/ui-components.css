@@ -8997,7 +8997,7 @@ html[data-ui-system="manifest"] .pdLegendOut {background:var(--ui-warning-bg) !i
 }
 html[data-ui-system="manifest"] .pdRoundBadge {color:var(--ui-selected-ink) !important;background:var(--ui-selected) !important;font:700 var(--ui-font-2xs) var(--ui-font-body) !important
 }
-html[data-ui-system="manifest"] .pdBulkPanel,html[data-ui-system="manifest"] .pdRoundPanel,html[data-ui-system="manifest"] .pdImportPanel,html[data-ui-system="manifest"] .pdMfrPanel,html[data-ui-system="manifest"] .pdOptionsPanel,html[data-ui-system="manifest"] .pdColumnsPanel {background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important;animation:none !important
+html[data-ui-system="manifest"] .pdRoundPanel,html[data-ui-system="manifest"] .pdImportPanel,html[data-ui-system="manifest"] .pdMfrPanel,html[data-ui-system="manifest"] .pdOptionsPanel,html[data-ui-system="manifest"] .pdColumnsPanel {background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important;animation:none !important
 }
 html[data-ui-system="manifest"] .pdOptHeadRow {font:600 var(--ui-font-2xs)/1.2 var(--ui-font-body) !important;color:var(--ui-text-muted) !important;text-transform:uppercase;letter-spacing:.04em;min-height:20px !important
 }

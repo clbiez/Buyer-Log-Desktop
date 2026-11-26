@@ -50,8 +50,8 @@
 .pdLegend i{display:inline-block;width:12px;height:12px;margin-left:6px}
 .pdLegend i:first-child{margin-left:0}
 .pdRoundBadge{display:inline-flex;align-items:center;height:22px;padding:0 8px}
-.pdBulkPanel,.pdRoundPanel,.pdImportPanel,.pdMfrPanel,.pdOptionsPanel{display:flex;flex-direction:column;gap:8px;margin:8px 10px 0;padding:10px 12px}
-.pdBulkPanel[hidden],.pdRoundPanel[hidden],.pdImportPanel[hidden],.pdMfrPanel[hidden],.pdOptionsPanel[hidden]{display:none}
+.pdRoundPanel,.pdImportPanel,.pdMfrPanel,.pdOptionsPanel{display:flex;flex-direction:column;gap:8px;margin:8px 10px 0;padding:10px 12px}
+.pdRoundPanel[hidden],.pdImportPanel[hidden],.pdMfrPanel[hidden],.pdOptionsPanel[hidden]{display:none}
 /* Tablodan üretici ekleme + alternatif fiyatlar */
 .pdMfrFields{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:8px;max-width:640px}
 .pdOptGrid{display:flex;flex-direction:column;gap:4px;max-height:320px;overflow:auto}

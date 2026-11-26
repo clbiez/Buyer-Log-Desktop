@@ -104,6 +104,19 @@ test('hidden columns leave the matrix, clipboard and sort keys aligned; manufact
   api.showAllColumns(req);assert.equal(api.hiddenColumnCount(req),0);
 });
 
+test('Unapproved only keeps open models, survives a server acknowledgement and is saved for the user',()=>{
+  const {api,store}=desk(),req=request(),models=E.requestMatrix(req).models;
+  assert.equal(api.filterUnapproved(models).length,3,'off by default');
+  api.matrixLayout.unapprovedOnly=true;
+  const open=api.filterUnapproved(models);assert.deepEqual(Array.from(open,m=>m.modelKey),['m2','m3']);
+  const view={req,items:req.items,matrix:{...E.requestMatrix(req),models:open,manufacturers:['Demo Mill A','Demo Mill B']}};
+  req.items=req.items.map(line=>({...line}));
+  assert.deepEqual(Array.from(api.matrixCurrent(view).models,m=>m.modelKey),['m2','m3'],'acknowledged items do not bring the approved model back');
+  api.setColumnHidden(req,'refs',false);assert.match(String(store.get('lcw.pricingDesk.matrixLayout.v1')),/"unapprovedOnly":true/);
+  assert.doesNotMatch(deskSource,/bulkApproveCandidates|data-pd-bulk/,'bulk approval is removed from the desk');
+  assert.equal(E.bulkApproveCandidates,undefined);
+});
+
 function quotes(lang){
   const ctx={window:{BLCollectionColumns:{catalog:()=>[],label:key=>key}},BLStorage:{getItem:()=>null,setItem(){}},qCurrentUserId:()=>'demo',qNorm:v=>String(v??'').trim(),qLang:(tr,en)=>lang==='en'?en:tr,qCollectionRead:null,appLang:lang,qFindCollectionRow:item=>item.row,qFindCpRow:()=>null,qCollectionEffectiveValue:(row,key)=>row?.[key],qItemFabric:()=>'',kolFabricDisplay:raw=>raw};
   vm.createContext(ctx);
