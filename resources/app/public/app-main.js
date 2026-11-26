@@ -33356,6 +33356,8 @@ function commitKolEditor(el, options={}){
   else if(k==='trPrice'||k==='trLandedMult'||k==='trFx'||k==='ydLandedMult'){ needsRerender=true; }
   if(persist)saveKolRows();
   if(!kolBulkPreparing&&(k==='plmId'||k==='colourCode')&&row.imgRef)void kolPlmLinkImageEverywhere(row,row.imgRef);
+  // Artwork Detayı kart katmanı tam çizim olmadan yalnız bu hücrede yenilenir.
+  if(rerender && !needsRerender && k==='artworkDetail')window.BLCollectionArtworkDetail?.refreshCell?.(row);
   if(rerender && needsRerender) renderKol();
   else if(rerender) refreshKolSummaryFooter();
   return true;
@@ -33803,7 +33805,7 @@ function renderKol(){
         // hücresindeki sağ tık menüsü aynı kanonik PLM resolver'ını kullanır;
         // böylece spreadsheet left-click/edit/range davranışı sade kalır.
         html+=`<td class="editTd plmEditTd plmModelLinkCell"${rc} data-copy-text="${escapeHtml(cur)}"><div class="plmEditCell"><textarea class="editCell kolTextCell" data-id="${r.id}" data-k="${c.k}">${escapeHtml(cur)}</textarea></div></td>`;
-      }else if(c.k==='fabric'&&kolFabricParts(val).length){
+      }else if(c.k==='fabric'&&!kolCellViewIsText(r,'fabric')&&kolFabricParts(val).length){
         kolFabricCardsEnsureLoaded();
         html+=kolFabricCellHtml(r,val,rc);
       }else if(c.inStorePeriod){
@@ -33838,7 +33840,7 @@ function renderKol(){
         html+=`<td class="editTd"${rc} data-copy-text="${escapeHtml(display)}"><textarea class="editCell kolTextCell kolCustomSchemaCell" data-id="${r.id}" data-k="${c.k}" data-raw-value="${escapeHtml(String(val))}" data-display-value="${escapeHtml(display)}">${escapeHtml(display)}</textarea></td>`;
       }else{
         // Artwork Detayı: PLM'e ait değer bölge kartlarıyla gösterilir; aynı
-        // textarea düzenleme/kopyalama için hücrede kalır (manuel değer düz metin).
+        // textarea düzenleme/kopyalama için hücrede kalır (özet biçimli manuel değer de kartlanır; serbest metin düz kalır).
         const art=c.k==='artworkDetail'?window.BLCollectionArtworkDetail?.cellCards?.(r,val):null;
         html+=`<td class="editTd${art?' '+art.cls:''}"${rc}>${art?art.inner:''}<textarea class="editCell kolTextCell" data-id="${r.id}" data-k="${c.k}">${escapeHtml(String(val))}</textarea></td>`;}
     });
@@ -33898,10 +33900,22 @@ function renderKol(){
   // Boş kumaş hücresi: çift tık kayıtlı kartlardan seçiciyi açar (takımda A/B parçaları).
   tbody.querySelectorAll('textarea.editCell[data-k="fabric"]').forEach(el=>el.addEventListener('dblclick',event=>{
     if(!kolWorkspaceCanEdit||!kolFabricApi()||el.readOnly||el.disabled)return;
+    // Düz metin görünümüne çevrilmiş hücre: çift tık normal metin düzenlemesidir.
+    if(kolCellViewIsText(kolRows.find(item=>String(item.id)===String(el.dataset.id)),'fabric'))return;
     if(!norm(el.value)){event.preventDefault();event.stopPropagation();openKolFabricPicker(el.dataset.id,{trigger:el.closest('td')});return;}
     event.preventDefault();event.stopPropagation();
     commitKolEditor(el);
     openKolFabricTextDialog(el.dataset.id,{trigger:el.closest('td')});
+  }));
+  // Artwork Detayı: çift tık kart editörünü açar (bölge/teknik/adet); seçili hücrede
+  // doğrudan yazmak, yapıştırma ve temizleme düz metin yolunda kalır.
+  tbody.querySelectorAll('textarea.editCell[data-k="artworkDetail"]').forEach(el=>el.addEventListener('dblclick',event=>{
+    if(!kolWorkspaceCanEdit||el.readOnly||el.disabled||!window.BLCollectionArtworkDetail?.openEditor)return;
+    const row=kolRows.find(item=>String(item.id)===String(el.dataset.id));if(!row)return;
+    if(kolCellViewIsText(row,'artworkDetail'))return;
+    event.preventDefault();event.stopPropagation();
+    commitKolEditor(el);
+    window.BLCollectionArtworkDetail?.openEditor?.(row,{trigger:el.closest('td')});
   }));
   tbody.querySelectorAll('.kolPeriodTd[data-period-id][data-period-mode]').forEach(cell=>cell.addEventListener('dblclick',event=>{
     event.preventDefault();event.stopPropagation();
@@ -34226,6 +34240,49 @@ function kolToggleConfirmedManufacturer(row,m,rawPrice){
   saveKolRows();renderKol();showToast(nextConfirmed?(appLang==='en'?`${m} confirmed as the final manufacturer.`:`${m} nihai üretici olarak onaylandı.`):(appLang==='en'?'Manufacturer confirmation removed.':'Üretici onayı kaldırıldı.'));
   return Boolean(nextConfirmed);
 }
+/* Artwork / Kumaş hücre görünümü: kart ya da düz metin. Hücre bazında,
+   satırda paylaşılan düz alan (artworkDetailView / fabricView = 'text');
+   hücre metni değişmez. Alan bazında 3 yönlü senkron birleştirmeyle uyumludur. */
+const KOL_CELL_VIEW_KEYS={artworkDetail:'artworkDetailView',fabric:'fabricView'};
+function kolCellViewIsText(row,key){const flag=KOL_CELL_VIEW_KEYS[key];return Boolean(flag&&row&&row[flag]==='text');}
+function kolCellShowsCards(row,key){
+  if(!row||kolCellViewIsText(row,key))return false;
+  const val=kolEffectiveValue(row,key)??'';
+  if(key==='fabric')return kolFabricParts(String(val)).length>0;
+  if(key==='artworkDetail')return Boolean(window.BLCollectionArtworkDetail?.cellCards?.(row,val));
+  return false;
+}
+function kolSetCellView(rows,key,mode){
+  const flag=KOL_CELL_VIEW_KEYS[key];if(!flag||!kolWorkspaceCanEdit)return false;
+  const targets=(rows||[]).filter(row=>row&&(mode==='text')!==kolCellViewIsText(row,key));
+  if(!targets.length)return false;
+  kolPushUndo();
+  targets.forEach(row=>{if(mode==='text')row[flag]='text';else delete row[flag];});
+  saveKolRows();renderKol();
+  return true;
+}
+function kolCellViewActions(row,key,rowIds){
+  if(!KOL_CELL_VIEW_KEYS[key]||!row)return [];
+  const en=appLang==='en',ids=new Set((rowIds||[]).map(String));ids.add(String(row.id));
+  const rows=[...ids].map(id=>kolRows.find(item=>String(item.id)===id)).filter(Boolean);
+  const suffix=rows.length>1?` (${rows.length})`:'';
+  const toText=rows.filter(item=>kolCellShowsCards(item,key));
+  const items=[];
+  if(toText.length)items.push({label:(en?'Convert to plain text':'Düz metne çevir')+suffix,run:()=>kolSetCellView(toText,key,'text'),disabled:!kolWorkspaceCanEdit});
+  if(rows.some(item=>!kolCellShowsCards(item,key)))items.push({label:(en?'Convert to cards':'Karta çevir')+suffix,run:()=>kolConvertCellsToCards(rows,key,row),disabled:!kolWorkspaceCanEdit});
+  return items;
+}
+/* Karta çevir: bayrak kalkar. Metin kart biçiminde değilse bağlam hücresi için
+   ilgili kart penceresi açılır (Artwork editörü / Kumaş kartı). */
+function kolConvertCellsToCards(rows,key,row){
+  kolSetCellView(rows,key,'card');
+  const live=kolRows.find(item=>String(item.id)===String(row?.id));
+  if(!live||kolCellShowsCards(live,key)||!kolWorkspaceCanEdit)return;
+  const trigger=document.querySelector(`#kolTable tbody .editCell[data-id="${live.id}"][data-k="${key}"]`)?.closest('td')||null;
+  if(key==='artworkDetail'){window.BLCollectionArtworkDetail?.openEditor?.(live,{trigger});return;}
+  if(!norm(kolEffectiveValue(live,'fabric')??''))openKolFabricPicker(live.id,{trigger});
+  else openKolFabricTextDialog(live.id,{trigger});
+}
 function kolApplyCollectionCellChange(change,options={}){
   const editor=change?.editor||null;
   const rowId=Number(change?.rowId??editor?.dataset?.id);
@@ -34502,7 +34559,7 @@ function kolCollectionPlmUrl(row){
   return window.BLPlmModelLinks?.url?.(row?.modelKod,row?.plmId,{allowNameMatch:Boolean(norm(row?.specialCode))})||'';
 }
 window.BLCollectionSpreadsheetBridge={
-  canEdit:()=>Boolean(kolWorkspaceCanEdit),rows:()=>kolRows,filteredRows:()=>kolPresentationRows(filteredKol()),descriptors:()=>kolDisplayDescriptors(),descriptorByKey:kolDescriptorByKey,
+  canEdit:()=>Boolean(kolWorkspaceCanEdit),rows:()=>kolRows,cellViewActions:kolCellViewActions,askManualConflicts:kolAskManualConflicts,saveRows:()=>saveKolRows(),filteredRows:()=>kolPresentationRows(filteredKol()),descriptors:()=>kolDisplayDescriptors(),descriptorByKey:kolDescriptorByKey,
   selectedCount:()=>kolValidSelectedRows().length,columnMeta:kolSpreadsheetColumnMeta,rawValue:kolSpreadsheetRawValue,landedCopyToken:rowId=>`${KOL_TR_LANDED_COPY_PREFIX}${rowId}`,validateValue:kolSpreadsheetValidateValue,batchEdit:kolSpreadsheetBatchEdit,previewBatch:kolSpreadsheetPreviewBatch,
   parseNumber:kolParseMoneyNum,enterDateEdit:enterKolDateEdit,render:renderKol,saveColumnState:saveKolColState,setColumnWidth:kolSpreadsheetSetColumnWidth,autoFitColumn:kolSpreadsheetAutoFitColumn,modelGroupActions:kolModelGroupActions,
   autoFitAll:()=>{kolDisplayDescriptors().forEach(d=>kolSpreadsheetAutoFitColumn(d.k));renderKol();},resetWidths:()=>{kolColWidths={};saveKolColState();renderKol();},
@@ -36121,6 +36178,102 @@ async function kolResolvePlmExistingDecisions(existing){
   }
   return {cancelled:false,approved,skipped,added};
 }
+/* PLM SYNC — elle değiştirilmiş alan onaysız ezilmez (kolPlmClassifyChanges).
+   _plmValues satırın son görülen PLM değeridir; PLM'den oluşturulan satır izli başlar. */
+function kolPlmValuesOf(row){
+  const out={};
+  kolPlmImportTouchedKeys().forEach(key=>{const value=kolImportReadField(row,key);if(value)out[key]=value;});
+  return out;
+}
+function kolPlmDropSilentKeeps(plan){
+  const api=window.BLCollectionModelGroups;
+  (plan?.existing||[]).forEach(item=>{const result=api.kolPlmClassifyChanges(item);item.changes=[...result.apply,...result.conflicts];});
+  return plan;
+}
+function kolPlmSyncDropSilentKeeps(summary){
+  const api=window.BLCollectionModelGroups,changed=[],unchanged=[...(summary.unchanged||[])];
+  (summary.changed||[]).forEach(item=>{
+    const result=api.kolPlmClassifyChanges(item),changes=[...result.apply,...result.conflicts];
+    if(changes.length)changed.push({...item,changes});else unchanged.push(item);
+  });
+  return {...summary,changed,unchanged};
+}
+function kolPlmConflictModelLabel(row){
+  return [row?.plmId,row?.modelKod,row?.colourCode||row?.colour].map(norm).filter(Boolean).join(' · ');
+}
+/* Çakışmaları TEK TEK sorar: Manueli koru / PLM değerini al; "kalanlara uygula"
+   aynı kararı kalan çakışmalara verir. İptal hiçbir şey yazmaz. Sonuç:
+   {cancelled, choices:['manual'|'plm',…]} (giriş sırasıyla). Artwork da kullanır. */
+function kolAskManualConflicts(conflicts){
+  const list=Array.isArray(conflicts)?conflicts:[];
+  if(!list.length)return Promise.resolve({cancelled:false,choices:[]});
+  const en=appLang==='en';
+  return new Promise(resolve=>{
+    document.getElementById('_kolManualConflict')?.remove();
+    const modal=document.createElement('div');modal.id='_kolManualConflict';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
+    modal.innerHTML=`<div class="modalCard verHistCard plmImportCard kolManualConflictCard" role="dialog" aria-modal="true" aria-labelledby="_kolManualConflictTitle">
+      <div class="verHistHead"><div><strong id="_kolManualConflictTitle" data-conflict-title></strong>
+        <div class="muted">${escapeHtml(en?'You changed this field manually and PLM now brings a different value. Nothing is overwritten without your approval.':'Bu alanı elle değiştirmiştiniz ve PLM farklı bir değer getiriyor. Onayınız olmadan hiçbir şey değiştirilmez.')}</div></div></div>
+      <div class="plmImportBody">
+        <div class="kolManualConflictModel" data-conflict-model></div>
+        <div class="kolManualConflictGrid">
+          <div class="kolManualConflictCol"><div class="muted">${escapeHtml(en?'Current (manual)':'Mevcut (manuel)')}</div><div class="kolManualConflictValue" data-conflict-current></div></div>
+          <div class="kolManualConflictCol"><div class="muted">${escapeHtml(en?'From PLM':'PLM’den gelen')}</div><div class="kolManualConflictValue" data-conflict-incoming></div></div>
+        </div>
+        <label class="kolManualConflictAll"><input type="checkbox" data-conflict-all> <span data-conflict-all-label></span></label>
+      </div>
+      <div class="verHistFoot kolFabricFoot">
+        <button type="button" class="tbtn" data-conflict="cancel">${escapeHtml(en?'Cancel sync':'Senkronu iptal et')}</button>
+        <span class="kolFabricFootSpacer"></span>
+        <button type="button" class="tbtn" data-conflict="plm">${escapeHtml(en?'Use PLM value':'PLM değerini al')}</button>
+        <button type="button" class="tbtn primary" data-conflict="manual">${escapeHtml(en?'Keep manual':'Manueli koru')}</button>
+      </div>
+    </div>`;
+    const choices=[];let index=0,settled=false;
+    const field=name=>modal.querySelector(`[data-conflict-${name}]`);
+    const show=()=>{
+      const item=list[index]||{},left=list.length-index-1;
+      field('title').textContent=`${item.label||''} · ${index+1} / ${list.length}`;
+      field('model').textContent=item.model||'';
+      field('current').textContent=String(item.current??'')||'—';
+      field('incoming').textContent=String(item.incoming??'')||'—';
+      const all=field('all');all.checked=false;all.closest('label').hidden=left<1;
+      field('all-label').textContent=en?`Apply the same decision to the remaining ${left} conflict(s)`:`Aynı kararı kalan ${left} çakışmaya da uygula`;
+    };
+    const close=result=>{if(settled)return;settled=true;window.BLLayerSystem?.closeDialog?.(modal);modal.remove();resolve(result);};
+    const decide=choice=>{
+      const all=field('all').checked;
+      choices.push(choice);index++;
+      if(all)while(index<list.length){choices.push(choice);index++;}
+      if(index>=list.length){close({cancelled:false,choices});return;}
+      show();modal.querySelector('[data-conflict="manual"]')?.focus();
+    };
+    modal.addEventListener('click',event=>{
+      const action=event.target.closest('[data-conflict]')?.dataset.conflict;
+      if(action==='cancel')close({cancelled:true,choices:[]});
+      else if(action==='manual'||action==='plm')decide(action);
+    });
+    show();
+    document.body.appendChild(modal);
+    window.BLLayerSystem?.openDialog?.(modal,{onClose:()=>close({cancelled:true,choices:[]}),initialFocus:'[data-conflict="manual"]'});
+    window.BLMotionPlus?.play?.('overlay',modal.querySelector('.modalCard'));
+  });
+}
+async function kolResolvePlmManualConflicts(items){
+  const api=window.BLCollectionModelGroups,pending=[];
+  for(const item of items||[]){
+    const result=api.kolPlmClassifyChanges(item);
+    // Sessiz koru (manuel, PLM değişmedi) yazılmaz; çakışmalar kullanıcı kararına kalır.
+    item.changes=result.apply.slice();
+    result.conflicts.forEach(change=>pending.push({item,change}));
+  }
+  if(!pending.length)return {cancelled:false,kept:0,taken:0};
+  const answer=await kolAskManualConflicts(pending.map(({item,change})=>({model:kolPlmConflictModelLabel(item.target),label:change.label,current:change.from,incoming:change.to})));
+  if(answer.cancelled)return {cancelled:true,kept:0,taken:0};
+  let kept=0,taken=0;
+  pending.forEach(({item,change},index)=>{if(answer.choices[index]==='plm'){item.changes.push(change);taken++;}else kept++;});
+  return {cancelled:false,kept,taken};
+}
 function kolApplyApprovedPlmUpdate(item){return window.BLCollectionModelGroups.kolApplyApprovedPlmUpdate(item,kolImportWriteField);}
 
 /* ===================================================================
@@ -36283,14 +36436,16 @@ async function importSelectedKolPlmModels(button,{downloadFile=false,language=''
     const translated=await kolPlmNormalizeAndTranslate(records);
     if(translated.cancelled)return {ok:true,applied:0,cancelled:true};
     const parsed={rows:translated.rows,mapped:KOL_PLM_DIRECT_MAPPED_FIELDS};
-    const plan=kolBuildPlmImportPlan(translated.rows);
+    const plan=kolPlmDropSilentKeeps(kolBuildPlmImportPlan(translated.rows));
     const approved=await showKolPlmImportPreview(plan,parsed,translated.translationInfo||{matchedPlm:0},0,appLang==='en'?'Import PLM-selected models':'PLM’de Seçili Modelleri Buyer Log’a Aktar');
     if(!approved)return {ok:true,applied:0,cancelled:true};
     const decisions=await kolResolvePlmExistingDecisions(plan.existing);if(decisions.cancelled)return {ok:true,applied:0,cancelled:true};
+    const manual=await kolResolvePlmManualConflicts(decisions.approved);
+    if(manual.cancelled)return {ok:true,applied:0,cancelled:true};
     kolPushUndo();
     decisions.approved.forEach(kolApplyApprovedPlmUpdate);
     const createInputs=[...plan.creates,...decisions.added.map(item=>item.parsed)];
-    let created=createInputs.map(row=>{row.id=kolNextId++;row.img='';row.imgRef='';delete row._plmImportRow;return kolApplyNewModelDefaults(migrateKolRow(row));});
+    let created=createInputs.map(row=>{row.id=kolNextId++;row.img='';row.imgRef='';delete row._plmImportRow;row._plmValues=kolPlmValuesOf(row);return kolApplyNewModelDefaults(migrateKolRow(row));});
     created=kolLinkImportedColourVariants(created);
     if(created.length)kolRows=[...created,...kolRows];
     kolSelected=new Set([...created.map(row=>row.id),...decisions.approved.map(item=>item.target.id)]);
@@ -37400,7 +37555,7 @@ async function kolPlmListImportRun(button,config,{quietWhenEmpty=false}={}){
   const translated=await kolPlmNormalizeAndTranslate(api.applyColourMode(records,config.colourMode));
   if(translated.cancelled)return {ok:true,applied:0,cancelled:true};
   const parsed={rows:translated.rows,mapped:KOL_PLM_DIRECT_MAPPED_FIELDS};
-  const plan=kolBuildPlmImportPlan(translated.rows);
+  const plan=kolPlmDropSilentKeeps(kolBuildPlmImportPlan(translated.rows));
   const approved=await showKolPlmImportPreview(plan,parsed,translated.translationInfo||{matchedPlm:0},0,en?'Add from PLM ID List':'PLM ID Listesinden Ekle',{existingMode:config.existingMode});
   if(!approved)return {ok:true,applied:0,cancelled:true};
   let decisions;
@@ -37408,11 +37563,13 @@ async function kolPlmListImportRun(button,config,{quietWhenEmpty=false}={}){
   else if(config.existingMode==='skip')decisions={cancelled:false,approved:[],skipped:plan.existing.slice(),added:[]};
   else decisions=await kolResolvePlmExistingDecisions(plan.existing);
   if(decisions.cancelled)return {ok:true,applied:0,cancelled:true};
+  const manual=await kolResolvePlmManualConflicts(decisions.approved);
+  if(manual.cancelled)return {ok:true,applied:0,cancelled:true};
   kolPushUndo();
   decisions.approved.forEach(kolApplyApprovedPlmUpdate);
   const createInputs=[...plan.creates,...decisions.added.map(item=>item.parsed)];
   let created=createInputs.map(row=>{
-    row.id=kolNextId++;row.img='';row.imgRef='';delete row._plmImportRow;
+    row.id=kolNextId++;row.img='';row.imgRef='';delete row._plmImportRow;row._plmValues=kolPlmValuesOf(row);
     return kolPlmListApplyNewRowValues(kolApplyNewModelDefaults(migrateKolRow(row)),config.defaults,config.valuesById);
   });
   created=kolLinkImportedColourVariants(created);
@@ -37474,13 +37631,14 @@ window.BLPlmListImportFlow={open:openKolPlmListImport,run:kolPlmListImportRun,pe
      MODEL (yeni PLM ID) oluşturmaz ve satır silmez. */
 const KOL_PLM_COLOUR_FIELDS=new Set(['colourCode','colour']);
 function kolPlmSyncModelLevelItem(row,parsed,knownByKey){
-  const changes=[];
+  const changes=[],plmValues={};
   PLM_MANAGED_FIELDS().forEach(fieldKey=>{
     if(KOL_PLM_COLOUR_FIELDS.has(fieldKey))return;
     const to=kolImportReadField(parsed,fieldKey);if(!to)return;
+    plmValues[fieldKey]=to;
     const from=kolImportReadTargetField(row,fieldKey);if(from!==to)changes.push({key:fieldKey,label:kolImportFieldLabel(fieldKey,knownByKey||{}),from,to});
   });
-  return {target:row,parsed,changes,hasImage:false,matchedByPlm:true,colourMissing:true};
+  return {target:row,parsed,changes,plmValues,hasImage:false,matchedByPlm:true,colourMissing:true};
 }
 function kolPlmSyncBuildSummary(targetRows,parsedRows,fetchResult){
   const plan=kolBuildPlmImportPlan(parsedRows);
@@ -37512,7 +37670,7 @@ function kolPlmSyncBuildSummary(targetRows,parsedRows,fetchResult){
    işleminin kullandığı aynı mergeGroups yoluyla bağlanır. */
 function kolPlmSyncAddNewColours(newColours){
   if(!Array.isArray(newColours)||!newColours.length)return [];
-  let created=newColours.map(parsed=>{const row={...parsed};delete row._plmNewColour;row.id=kolNextId++;row.img='';row.imgRef='';delete row._plmImportRow;return kolApplyNewModelDefaults(migrateKolRow(row));});
+  let created=newColours.map(parsed=>{const row={...parsed};delete row._plmNewColour;row.id=kolNextId++;row.img='';row.imgRef='';delete row._plmImportRow;row._plmValues=kolPlmValuesOf(row);return kolApplyNewModelDefaults(migrateKolRow(row));});
   kolRows=[...kolRows,...created];
   kolPlmJoinColourRowsToModels(created.map(row=>row.id));
   const ids=new Set(created.map(row=>row.id));
@@ -37717,7 +37875,10 @@ function kolPlmSyncFilterSummaryByColumns(summary,keys){
   const changed=[],unchanged=[...summary.unchanged];
   (summary.changed||[]).forEach(item=>{
     const kept=item.changes.filter(change=>keys.has(change.key));
-    if(kept.length)changed.push({...item,changes:kept});
+    // Dışarıda bırakılan sütunun PLM değeri "görüldü" sayılmaz (manuel takibi bozulmasın).
+    const dropped=new Set(item.changes.filter(change=>!keys.has(change.key)).map(change=>change.key));
+    const plmValues=Object.fromEntries(Object.entries(item.plmValues||{}).filter(([key])=>!dropped.has(key)));
+    if(kept.length)changed.push({...item,changes:kept,plmValues});
     else unchanged.push(item);
   });
   return {...summary,changed,unchanged};
@@ -37820,6 +37981,8 @@ async function kolPlmSyncRun(mode,button,options={}){
   // gerekmez; istemcinin link haritası burada tazelenir.
   if(fetchResult.styleLinks)applyPlmStyleLinksPayload(fetchResult.styleLinks);
   let summary=kolPlmSyncBuildSummary(targetRows,translated.rows,fetchResult);
+  // Manuel ve PLM'i değişmemiş alan sessizce korunur; önizlemede değişiklik gibi görünmez.
+  summary=kolPlmSyncDropSilentKeeps(summary);
   // Sütun seçimi — ön izlemeden ÖNCE (kullanıcı kararı).
   if(summary.changed.length){
     if(options.skipColumnChooser!==true){
@@ -37845,6 +38008,8 @@ async function kolPlmSyncRun(mode,button,options={}){
   }
   const approved=await showPlmSyncPreview(mode,summary);
   if(!approved){kolPlmSyncStampStatus(targetRows,summary,{applied:false});return {ok:true,applied:0,summary,cancelled:true};}
+  const manual=await kolResolvePlmManualConflicts(summary.changed);
+  if(manual.cancelled){kolPlmSyncStampStatus(targetRows,summary,{applied:false});return {ok:true,applied:0,summary,cancelled:true};}
   kolPushUndo();
   summary.changed.forEach(kolApplyApprovedPlmUpdate);
   kolPlmSyncStampStatus(targetRows,summary,{applied:true});
@@ -37947,16 +38112,18 @@ async function importKolPlmExcelFile(file){
     const translationReview=await showKolPlmTranslationReview(translationQuestions);if(translationReview.cancelled)return;
     if(translationReview.skippedFields?.length)kolPlmSkipTranslationFields(parsed.rows,translationReview.skippedFields,translationInfo);
     else kolPlmApplyReviewedMappings(parsed.rows,translationReview.mappings,translationInfo);
-    const plan=kolBuildPlmImportPlan(parsed.rows);
+    const plan=kolPlmDropSilentKeeps(kolBuildPlmImportPlan(parsed.rows));
     const approved=await showKolPlmImportPreview(plan,parsed,translationInfo,images.size);if(!approved)return;
     // Mevcut PLM ID'ler için hiçbir veri yazmadan önce kararları tek tek topla.
     // Kullanıcı aktarımı iptal ederse kısmi güncelleme oluşmaz.
     const decisions=await kolResolvePlmExistingDecisions(plan.existing);if(decisions.cancelled)return;
+    const manual=await kolResolvePlmManualConflicts(decisions.approved);
+    if(manual.cancelled)return;
     kolPushUndo();
     decisions.approved.forEach(kolApplyApprovedPlmUpdate);
     const createInputs=[...plan.creates,...decisions.added.map(item=>item.parsed)];
     let created=createInputs.map(row=>{
-      row.id=kolNextId++;row.img='';row.imgRef='';delete row._plmImportRow;
+      row.id=kolNextId++;row.img='';row.imgRef='';delete row._plmImportRow;row._plmValues=kolPlmValuesOf(row);
       return kolApplyNewModelDefaults(migrateKolRow(row));
     });
     created=kolLinkImportedColourVariants(created);

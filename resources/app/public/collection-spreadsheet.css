@@ -281,3 +281,21 @@
 #kolTable tbody .kolArtworkCards{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:2px 8px;pointer-events:none;user-select:none;overflow:hidden}
 #kolTable tbody td.kolArtworkManual::after{content:attr(data-manual-label);position:absolute;top:3px;right:4px;padding:0 4px;pointer-events:none}
 #kolTable tbody td.kolArtworkManual.kolSpreadsheetEditing::after,#kolTable tbody td.kolArtworkManual:focus-within::after{display:none}
+/* Artwork kart editörü (çift tık): Kumaş seçicisiyle aynı pencere; yalnız yerleşim. */
+.kolArtworkEditor{width:min(640px,calc(100vw - 32px))}
+.kolArtworkEdParts{display:grid;gap:var(--ui-space-3,12px);margin:0 0 var(--ui-space-3,12px)}
+.kolArtworkEdPart{display:grid;gap:var(--ui-space-2,8px)}
+.kolArtworkEdPartHead{display:flex;align-items:center;gap:8px}
+.kolArtworkEdRow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1.3fr) 4.5rem auto;align-items:center;gap:4px 8px}
+.kolArtworkEdRow input,.kolArtworkEdLabel{min-width:0;width:100%;box-sizing:border-box;min-height:var(--ui-control-height,32px);padding:4px 8px}
+.kolArtworkEdLabel{width:3.5rem;text-align:center}
+.kolArtworkEdPreview{overflow-wrap:anywhere;margin-top:var(--ui-space-2,8px)}
+.kolArtworkEdNote{margin:0 0 var(--ui-space-3,12px);overflow-wrap:anywhere}
+@media (max-width:520px){.kolArtworkEdRow{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 4rem auto}}
+/* PLM SYNC manuel alan onayı (tek tek); yalnız yerleşim. */
+.kolManualConflictCard{width:min(620px,calc(100vw - 32px))}
+.kolManualConflictModel{margin:0 0 var(--ui-space-3,12px);overflow-wrap:anywhere}
+.kolManualConflictGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--ui-space-3,12px);margin:0 0 var(--ui-space-3,12px)}
+.kolManualConflictValue{white-space:pre-line;overflow-wrap:anywhere;margin-top:4px}
+.kolManualConflictAll{display:flex;align-items:center;gap:8px}
+@media (max-width:520px){.kolManualConflictGrid{grid-template-columns:minmax(0,1fr)}}

@@ -132,7 +132,8 @@ test('LCW AI sözleşmesi tek kayıtta tanımlı ve cevap biçimi şekil olarak 
 
 test('Koleksiyon tablosu PLM metnini korur, kart özetini gösterir ve içe aktarımda eksik kartları önerir', () => {
   assert.ok(HTML.indexOf('fabric-cards-engine.js') > 0 && HTML.indexOf('fabric-cards-engine.js') < HTML.indexOf('app-main.js'), 'motor app-main.js öncesinde yüklenir');
-  assert.match(APP, /\}else if\(c\.k==='fabric'&&kolFabricParts\(val\)\.length\)\{\n\s*kolFabricCardsEnsureLoaded\(\);\n\s*html\+=kolFabricCellHtml\(r,val,rc\);/);
+  // Kart dalı; hücre "düz metin" görünümüne çevrilmişse (fabricView) metin hücresi kalır.
+  assert.match(APP, /\}else if\(c\.k==='fabric'&&!kolCellViewIsText\(r,'fabric'\)&&kolFabricParts\(val\)\.length\)\{\n\s*kolFabricCardsEnsureLoaded\(\);\n\s*html\+=kolFabricCellHtml\(r,val,rc\);/);
   assert.match(APP, /\.kolFabricTd\[data-fabric-id\]'\)\.forEach\(cell=>cell\.addEventListener\('dblclick'/);
   assert.match(APP, /if\(key==='fabric'\)return kolFabricDisplay\(effective\);/);
   assert.equal((APP.match(/kolFabricCardsAfterImport\(/g) || []).length, 7, 'tanım + dört PLM içe aktarma akışı + PLM Sync "güncel" yolu + kuyruk devamı');

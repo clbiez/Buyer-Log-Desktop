@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-26",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Sunum Stüdyosu: grup alanları, çip görünümü, tam metin, sabit kart başlıkları, birlikte boyutlandırma, taslaklar; seçili satırları görsel olarak kopyala",
-    "en": "Presentation Studio: group areas, chip view, full text, pinned card titles, resizing together, drafts; copy selected rows as an image"
+    "tr": "Sunum Stüdyosu: grup alanları, çip görünümü, tam metin, sabit kart başlıkları, birlikte boyutlandırma, taslaklar; seçili satırları görsel olarak kopyala; Artwork kart editörü ve korunan manuel alanlar",
+    "en": "Presentation Studio: group areas, chip view, full text, pinned card titles, resizing together, drafts; copy selected rows as an image; Artwork card editor and protected manual fields"
   },
   "summary": {
-    "tr": "Sunum Stüdyosu’nda grup başlığı sürüklenerek grup kendi alanına alınır, kartlarıyla birlikte taşınır ve boyutlandırılır; alan yetmezse büyür, sayfa bitince sonraki sayfada devam eder. Kumaş ve Artwork Detail tablodaki gibi çip olarak görünür (kumaş kodu gizlenebilir, metne çevrilebilir); kart bilgileri ve grup başlıkları tam metinle görünür; serbest yerleştirilen kartlar grup başlığını korur, başka gruba bırakılan kart o gruba elle katılır. Birden çok kart birlikte boyutlandırılır; gruplama ve kart bilgisi listeleri okunur ve aranabilir. CP, Siparişler ve Koleksiyon'da seçili satırlar Buyer Log'da göründüğü gibi (durum etiketleri, renkler, model görselleri, grup başlıkları) en fazla 6 MB PNG görsel olarak panoya kopyalanır; Excel, Outlook veya Teams'e Ctrl+V ile yapıştırılır. 50 satırdan büyük seçimler PNG dosyası olarak kaydedilir. Sunumlar taslak olarak kaydedilir; taslağa dönüldüğünde Koleksiyon’daki düzeltmeler sunuma yansır.",
-    "en": "In Presentation Studio, dragging a group title gives the group its own area that moves and resizes together with its cards; the area grows when needed and continues on the next page. Fabric and Artwork Detail appear as chips like in the table (fabric code can be hidden, or switched to text); card details and group titles show in full; freely placed cards keep their group title and a card dropped into another group joins it manually. Several cards can be resized together; grouping and card detail lists are readable and searchable. In CP, Orders and Collection, selected rows are copied to the clipboard as a PNG image of at most 6 MB exactly as they look in Buyer Log (status badges, colours, model images, group headers) and can be pasted into Excel, Outlook or Teams with Ctrl+V. Selections over 50 rows are saved as a PNG file. Presentations can be saved as drafts; corrections made in Collection appear when you return to a draft."
+    "tr": "Sunum Stüdyosu’nda grup başlığı sürüklenerek grup kendi alanına alınır, kartlarıyla birlikte taşınır ve boyutlandırılır; alan yetmezse büyür, sayfa bitince sonraki sayfada devam eder. Kumaş ve Artwork Detail tablodaki gibi çip olarak görünür (kumaş kodu gizlenebilir, metne çevrilebilir); kart bilgileri ve grup başlıkları tam metinle görünür; serbest yerleştirilen kartlar grup başlığını korur, başka gruba bırakılan kart o gruba elle katılır. Birden çok kart birlikte boyutlandırılır; gruplama ve kart bilgisi listeleri okunur ve aranabilir. CP, Siparişler ve Koleksiyon'da seçili satırlar Buyer Log'da göründüğü gibi (durum etiketleri, renkler, model görselleri, grup başlıkları) en fazla 6 MB PNG görsel olarak panoya kopyalanır; Excel, Outlook veya Teams'e Ctrl+V ile yapıştırılır. 50 satırdan büyük seçimler PNG dosyası olarak kaydedilir. Sunumlar taslak olarak kaydedilir; taslağa dönüldüğünde Koleksiyon’daki düzeltmeler sunuma yansır. Artwork Detayı kart editörüyle düzenlenir, Artwork/Kumaş hücreleri kart ya da metin gösterilebilir ve PLM SYNC elle değiştirilmiş alanları onaysız ezmez.",
+    "en": "In Presentation Studio, dragging a group title gives the group its own area that moves and resizes together with its cards; the area grows when needed and continues on the next page. Fabric and Artwork Detail appear as chips like in the table (fabric code can be hidden, or switched to text); card details and group titles show in full; freely placed cards keep their group title and a card dropped into another group joins it manually. Several cards can be resized together; grouping and card detail lists are readable and searchable. In CP, Orders and Collection, selected rows are copied to the clipboard as a PNG image of at most 6 MB exactly as they look in Buyer Log (status badges, colours, model images, group headers) and can be pasted into Excel, Outlook or Teams with Ctrl+V. Selections over 50 rows are saved as a PNG file. Presentations can be saved as drafts; corrections made in Collection appear when you return to a draft. Artwork Detail is edited with a card editor, Artwork/Fabric cells can show cards or text, and PLM SYNC no longer overwrites manual edits without approval."
   },
   "changes": [
     {
@@ -182,6 +182,151 @@
         "caption": {
           "tr": "Sunum Oluştur’da yeni sunum ya da kayıtlı taslağa devam (demo veri).",
           "en": "Create Presentation offers a new presentation or continuing a saved draft (demo data)."
+        }
+      }
+    },
+    {
+      "id": "collection-plm-manual-conflict",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "PLM SYNC elle değiştirdiğiniz alanı onaysız ezmez",
+        "en": "PLM SYNC no longer overwrites your manual edits without approval"
+      },
+      "body": {
+        "tr": "PLM SYNC veya PLM aktarımı, elle değiştirdiğiniz bir alana (Kumaş, Renk, Sezon, Fit, Line, Lisans… ve Artwork Detayı) farklı bir değer getirecekse önce sorar: her çakışma için model, mevcut (manuel) değer ve PLM'den gelen değer gösterilir; Manueli koru veya PLM değerini al seçilir, istenirse aynı karar kalan çakışmalara uygulanır. İptal hiçbir şeyi değiştirmez. Korunan manuel değer, PLM aynı kaldıkça sonraki senkronlarda tekrar sorulmaz; PLM yeniden değişirse sorulur. Boş ya da PLM'den gelmiş değerler eskisi gibi sessizce güncellenir.",
+        "en": "When PLM SYNC or a PLM import would put a different value into a field you edited manually (Fabric, Colour, Season, Fit, Line, License… and Artwork Detail), it asks first: each conflict shows the model, the current (manual) value and the value from PLM; choose Keep manual or Use PLM value, optionally for all remaining conflicts. Cancel changes nothing. A kept manual value is not asked again while PLM stays the same; it is asked again if PLM changes. Empty or PLM-sourced values are still updated silently."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-plm-manual-conflict.png",
+        "alt": {
+          "tr": "Demo veride manuel alan onay penceresi: Kumaş · 1 / 3, mevcut manuel değer ve PLM'den gelen değer, kalanlara uygula seçeneği, Manueli koru ve PLM değerini al düğmeleri",
+          "en": "Manual field approval dialog on demo data: Fabric · 1 / 3, current manual value and value from PLM, apply-to-remaining option, Keep manual and Use PLM value buttons"
+        },
+        "caption": {
+          "tr": "Demo veride PLM'in elle değiştirilmiş kumaşa farklı değer getirdiği çakışma.",
+          "en": "On demo data, PLM brings a different value for a manually edited fabric."
+        }
+      }
+    },
+    {
+      "id": "collection-cell-view-toggle",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Artwork ve Kumaş hücreleri kart ya da düz metin olarak gösterilebilir",
+        "en": "Artwork and Fabric cells can be shown as cards or plain text"
+      },
+      "body": {
+        "tr": "Artwork Detayı ve Kumaş hücresinde sağ tık › Düz metne çevir / Karta çevir seçilen hücrelerin görünümünü değiştirir; seçili aralıktaki aynı sütun hücrelerine birlikte uygulanır ve geri alınabilir. Tercih hücreye kaydedilir, çalışma alanını açan herkes aynı görünümü görür; hücre metni değişmez. Düz metin görünümünde çift tık metni düzenler. Kart biçiminde olmayan değerde Karta çevir ilgili kart penceresini açar.",
+        "en": "In Artwork Detail and Fabric cells, right-click › Convert to plain text / Convert to cards changes how the selected cells are shown; it applies to the same column across the selected range and can be undone. The choice is saved on the cell, so everyone opening the workspace sees the same view; the cell text does not change. In plain text view double-click edits the text. For a value not in card format, Convert to cards opens the matching card dialog."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-cell-view-menu.png",
+        "alt": {
+          "tr": "Demo Koleksiyon'da Artwork Detayı hücresinin sağ tık menüsünde Düz metne çevir seçeneği",
+          "en": "Convert to plain text option in the right-click menu of an Artwork Detail cell on demo Collection data"
+        },
+        "caption": {
+          "tr": "Demo veride Artwork hücresinin sağ tık menüsü.",
+          "en": "Right-click menu of an Artwork cell on demo data."
+        }
+      }
+    },
+    {
+      "id": "collection-artwork-no-technique",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Tekniği bilinmeyen Artwork bölgesi kaydedilebilir",
+        "en": "Artwork regions with an unknown technique can be saved"
+      },
+      "body": {
+        "tr": "Bir bölgede teknik varken diğerinde yoksa (PLM'den eksik gelmiş ya da bilinmiyor) kart editörü artık kaydı reddetmez. Tekniksiz bölge metinde açık “—” işaretiyle (Ön: 1 | — • Arka: 1 | Pigment) ve kartta nötr “—” etiketiyle gösterilir; teknik yanlışlıkla diğer bölgeye ait görünmez. PLM'den gelen aynı durumdaki özet de bu açık biçimde yazılır.",
+        "en": "When one region has a technique and another does not (missing from PLM or unknown), the card editor no longer rejects the save. The region without a technique is written with an explicit “—” marker (Front: 1 | — • Back: 1 | Pigment) and shown with a neutral “—” tag on the card, so the technique no longer appears to belong to the other region. PLM summaries in the same situation use this explicit format too."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-artwork-no-technique.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: DEMO-006 satırında Front 1, nötr — etiketi, Back 1 ve Pigment kartları",
+          "en": "Demo Collection table: DEMO-006 row shows Front 1, a neutral — tag, Back 1 and Pigment chips"
+        },
+        "caption": {
+          "tr": "Demo veride tekniği bilinmeyen Ön bölgesi nötr “—” etiketiyle.",
+          "en": "On demo data, the Front region without a technique has a neutral “—” tag."
+        }
+      }
+    },
+    {
+      "id": "collection-artwork-card-editor",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Artwork Detayı kart editörüyle düzenlenir",
+        "en": "Edit Artwork Detail with a card editor"
+      },
+      "body": {
+        "tr": "Artwork Detayı hücresine çift tıklayınca kart editörü açılır: her baskı bölge (Ön, Arka, Kollar…), teknik (Pigment, Transfer…) ve adetle ayrı bir kart olarak eklenir, kaldırılır veya değiştirilir; toplam otomatik hesaplanır. Takım modellerde A, B… parçaları ayrı eklenir. Dolu hücre mevcut kartlarla açılır ve hücreye yazılacak metin önizlenir. Kayıt normal hücre düzenlemesi gibi geri alınabilir; seçili hücrede doğrudan yazmak, yapıştırma ve temizleme eskisi gibi düz metinle çalışır.",
+        "en": "Double-clicking an Artwork Detail cell opens a card editor: each print is added, removed or changed as its own card with a region (Front, Back, Sleeves…), technique (Pigment, Transfer…) and count, and the total is calculated automatically. Set styles get separate A, B… pieces. A filled cell opens with its current cards and the text to be written is previewed. Saving can be undone like any cell edit; typing directly into a selected cell, paste and clear still work with plain text."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-artwork-card-editor.png",
+        "alt": {
+          "tr": "Demo Koleksiyon'da Artwork kartları penceresi: Ön · Pigment · 1 ve Arka · Transfer · 2 kartları, Kart ekle ve Set parçası ekle düğmeleri, hücreye yazılacak metin önizlemesi",
+          "en": "Artwork cards dialog on demo Collection data: Front · Pigment · 1 and Back · Transfer · 2 cards, Add card and Add set piece buttons, and a preview of the cell text"
+        },
+        "caption": {
+          "tr": "Demo veride çift tıkla açılan Artwork kart editörü.",
+          "en": "The Artwork card editor opened by double-click on demo data."
+        }
+      }
+    },
+    {
+      "id": "collection-artwork-manual-cards",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Elle yazılan Artwork Detayı da karta dönüşür",
+        "en": "Manually typed Artwork Detail also becomes cards"
+      },
+      "body": {
+        "tr": "Artwork Detayı hücresine PLM özetiyle aynı biçimde yazılan değer (ör. Ön: 1 • Arka: 1 | Pigment | Toplam: 2; Set Style için her satır A - …) artık bölge kartları, teknik etiketi ve toplamla gösterilir; PLM ID'si veya BOM kaydı olmayan modeller de dahil. Kart, Enter ile kaydedildiği anda çizilir. Toplam bölge adetleriyle tutmazsa veya değer serbest metinse düz metin kalır ve ipucu doğru biçimi gösterir. Ayrıca PLM ID'si olmayan satırlarda içe aktarılmış Artwork değerinin ilk açılışta silinmesi engellendi.",
+        "en": "A value typed into the Artwork Detail cell in the same format as the PLM summary (e.g. Front: 1 • Back: 1 | Pigment | Total: 2; for Set Style one A - … line per part) is now shown with region chips, a technique tag and the total, including styles without a PLM ID or BOM record. The cards appear as soon as the value is saved with Enter. If the total does not match the region counts or the value is free text, it stays plain text and the tooltip shows the expected format. Imported Artwork values on rows without a PLM ID are also no longer cleared on first load."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-artwork-manual-cards.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: elle yazılmış Artwork Detayı değerleri bölge kartları, teknik etiketleri, Set Style A/B satırları ve toplamlarla; serbest metin notu düz metin olarak",
+          "en": "Demo Collection table: manually typed Artwork Detail values shown as region chips, technique tags, Set Style A/B lines and totals; a free-text note stays plain text"
+        },
+        "caption": {
+          "tr": "Demo veride elle yazılan Artwork Detayı değerleri kart olarak görünür; serbest metin düz kalır.",
+          "en": "On demo data, manually typed Artwork Detail values appear as cards; free text stays plain."
         }
       }
     }
