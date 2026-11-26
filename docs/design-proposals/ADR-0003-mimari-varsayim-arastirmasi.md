@@ -14,7 +14,8 @@
 1. Buyer Log'un yavaşlığının ve tekrarının büyük kısmı tek bir kökten geliyor: **türetilmiş veri, tek bir yerde ve bir kez üretilmiyor.** Aynı türetme istemcide yapılıyor, sunucuda aynası tutuluyor (17 parite testi var), her satır kaydında tüm modül projeksiyonu yeniden yazılıyor ve aynı "satır değişti" bilgisi üç ayrı mekanizmayla taşınıyor.
 2. İş kuralı çekirdeği (fiyat, transit, öncelik, lisansör) **zaten tek kaynakta** (`public/business-rules.js`, 67 dışa aktarım, 57 tüketici dosyası; `app-main.js`, `parse.js` ve `server.js` yalnız delege ediyor) **[Doğrulandı]**. Tekrar çekirdekte değil; **ilkellerde** (sayı zorlama, kaçış, normalize) ve **mekanizmalarda** (filtre, sorgu yolu, türetme zinciri, projeksiyon güncelleme).
 3. Ölçülen davranış farkı var: 40 sayı zorlama tanımı en az 6 farklı anlam taşıyor (`null`→0 ya da `null`; `"1,5"`→`null` ya da 1,5; `"1.234,56"`→1,234) **[Doğrulandı: deney]**. Sütun filtresinin anlamı da modüle göre değişiyor **[Doğrulandı: source]**.
-4. **Önerilen ilk pilot:** CP satır kaydında **projeksiyon yeniden yazımına duyulan ihtiyacı kaldırmak**. Projeksiyon "değişmez taban + kalıcı satır yama günlüğü" olarak temsil edilir; tam yeniden yazım yalnız boşta sıkıştırma (compaction) olur. Bu, uygulamanın `local-db.js` WAL'ında zaten kanıtlanmış desenin aynısı. Faz 0 davranışı değiştirmez, yalnız gölge eşitliği ölçer (§6).
+4. **Öncelikte birinci varsayım (V10, kapsam eki):** birden fazla cihazın aynı yayım dosyasına yazması gerekli değil. Tek yazarlı değişmez kayıtlar kira, `-PC` kopyası, CAS ve tüm-belge yayım maliyetini ihtiyaç olarak kaldırır. Karşılığında yetki/saat sınırı, tombstone ufku ve geçiş köprüsü getirir; yolu ADR-0001'dir.
+5. **Önerilen ilk pilot:** CP satır kaydında **projeksiyon yeniden yazımına duyulan ihtiyacı kaldırmak**. Projeksiyon "değişmez taban + kalıcı satır yama günlüğü" olarak temsil edilir; tam yeniden yazım yalnız boşta sıkıştırma (compaction) olur. Bu, uygulamanın `local-db.js` WAL'ında zaten kanıtlanmış desenin aynısı. Faz 0 davranışı değiştirmez, yalnız gölge eşitliği ölçer (§6).
 
 ---
 
@@ -29,7 +30,7 @@
 | CP/Siparişler satırı, kaynak (Excel/ASAS) başlığı anahtarlı serbest nesne (`row['Order Code']`); Koleksiyon satırı camelCase (`plmId`, `modelKod`) | Excel'den büyüme; kanonik katman sonradan eklendi (`canonical-fields.js`) | **Tarihsel.** |
 | Türetilmiş alanlar istemcide açılışta yeniden üretilir; sunucu aynası tutulur | `server/lib/read-model/overview-row-prep.js:2-11`: "Projeksiyon bu alanları ham taşır; istemci açılışta yeniden türetir. Karar katmanı türetilmiş değerleri okuduğu için sunucu da aynısını yapmalıdır" **[Doğrulandı]** | **Tarihsel.** JSON `Date` taşıyamadığı için tarih zorlaması istemcide kalmış **[Muhtemel]**; gün ordinal'i (tamsayı) bu kısıtı kaldırır. |
 | Satır kaydı sonrası modül projeksiyonları yeniden yazılır | `server/lib/page-projection-cache.js:377` `runRowRewriteBatch`; `cp-row-patch-log.js:6`: "sayfa önbelleği yeniden yazımı, 30k'da 6–10 sn" **[Doğrulandı: source yorumu]** | **Tarihsel.** Projeksiyon türetilmiş, yeniden üretilebilir bir önbellektir; tam dosya olarak tutulması zorunlu değil. |
-| Ortak klasörde çok yazarlı değiştirilebilir dosyalar + kira | ADR-0001 §1 | **Kaldırılabilir**, ADR-0001'in konusu. |
+| Ortak klasörde aynı yayım dosyasına birden fazla cihaz yazar (kira + CAS) | ADR-0001 §1; `collection-replication.js:24-36` | **Kaldırılabilir** (V10). Koleksiyonun genel delta yolundan çıkarılması o günkü genel yol için zorunlu, mimari olarak tarihsel. |
 
 ---
 
@@ -207,10 +208,77 @@ Sıralama §0'daki öncelik sırasına göre etkiyi izler. Her varsayımda **S1*
 - **Doğrulama:** Mutasyon denemesi. Hedef fonksiyonda küçük bir davranış değişikliği yapılır ve kaç testin yakaladığına bakılır. Davranışı koruyan bir yeniden adlandırma yapılır ve kaç testin yanlışlıkla kırıldığına bakılır. **[Bilinmiyor]**, koşulmadı.
 - **Risk:** Koruduğu regresyon bilinmeden test silinmez (CLAUDE.md §3 adım 7). Dönüşüm yalnız, eşdeğer davranış testi eklendikten sonra eski sözleşmenin yerine geçer. **Geri alınabilirlik:** Yüksek.
 
-### V10 · "Ortak klasörde çok yazarlı değiştirilebilir dosyalar kira ile korunabilir"
+### V10 · "Birden fazla cihazın aynı yayım dosyasına yazması gerekir"
 
-- **Kapsam dışı; yalnız referans.** ADR-0001 bu varsayımı **kaldırılabilir** olarak sınıflandırdı (S3: tek yazarlı, değişmez, HLC sıralı olaylar). Aşama 0 başka oturumda sürüyor. Bu belge ilgili dosyalara dokunmaz.
-- **Bu belgeye bağı:** V1'in önerdiği "değişmez taban + günlük" deseni ADR-0001 ve `local-db` WAL'ı ile **aynı ilke**. Üç ayrı yerde kanıtlanmış olması, desenin yeni bir icat olmadığını, uygulamanın kendi ilkesi olduğunu gösteriyor.
+> Ürün sahibinin kapsam ekiyle genişletildi (2026-11-26). Sözlük sırası önceliğinde (veri bütünlüğü) **en üstte** yer alır. Numara, mevcut sırayı bozmamak için korundu. Bu bölüm yalnız araştırmadır: senkron motoru yazılmadı, `collection-replication.js` ve sync dosyaları **okundu ama değiştirilmedi**. Uygulama yolu ADR-0001'in aşamalarıdır.
+
+**Kısa cevap:** Teknik olarak **zorunlu değil** **[Güçlü çıkarım]**. Repo, sipariş ve genel senkronda bu sorunu zaten tek yazarlı, değişmez paketlerle çözmüş. Koleksiyonun bu yolun dışında kalmasının nedeni desenin kendisi değil, genel yolun **katlama anında yetki denetimi yapmaması**.
+
+**Alternatif:** Her cihaz yalnız kendisine ait, değişmez değişiklik kayıtlarını yayımlar (`.../<owner>/<device>/<seq>-<id>`). Diğer cihazlar bunları okuyup yerel durumlarını deterministik olarak katlar (fold). OneDrive yalnız taşıma katmanıdır, doğruluk ona bağlı değildir.
+
+#### Bugün neden böyle (kanıt)
+
+| Bulgu | Kanıt |
+| --- | --- |
+| Koleksiyon, sahip başına **tüm-belge zarfı** olarak yayımlanıyor. Yazım `withFileLeaseAsync` kirası altında yapılıyor. CAS yarışı için üç ayrı kod var: `COLLECTION_REPLICA_CONFLICT`, `_STALE`, `_ANCESTRY_CONFLICT`. | **[Doğrulandı]** `collection-replication.js:24,29` |
+| Yayım maliyeti zarf boyutuyla doğrusal büyüyor. Source yorumundaki ölçüm (Linux, 30.000 satır, **6,7 MB** zarf): normal yayım kirası ~123 ms, kira altında birleşim +~1,08 sn (~160 ms/MB). Başka makinelerin kira bekleme sınırı 3 sn olduğu için 2 MiB'tan büyük zarfta birleşim kiradan çıkarılıyor (`MERGE_UNDER_LEASE_MAX_BYTES`). | **[Doğrulandı: source yorumu]** `collection-replication.js:30-36`. Kapsam ekindeki "~9 MB" bu oturumda **doğrulanmadı [Bilinmiyor]**. |
+| Koleksiyon genel delta yolundan bilinçli olarak çıkarıldı: "emekli havuz genel senkrona dönerse karantinadan sonra başka cihazda dirilebilir". | **[Doğrulandı]** `collection-replication.js:13-20` |
+| Genel senkron dosyalarında yetki kavramı hiç geçmiyor: `delta-store.js`, `sync-package.js`, `sync-settings.js` ve `local-db.js` içinde `permission`, `authori[sz]`, `canEdit` ve `grant` aramaları 0 eşleşme verdi. | **[Doğrulandı: grep]**. Yani genel katlama, bir olayın yazarının o olayı yazmaya yetkili olup olmadığını denetlemiyor. |
+| Desen repoda zaten var: cihaz başına `.ready` ve `.sync.gz` paketleri; "bu cihaz yalnız kendi taşıma dosyalarını budar" kuralı; varsayılan 30 günlük paket saklama; monoton HLC. | **[Doğrulandı]** `sync-settings.js:25,34,414-416`; `sync-package.js:14,196`; `hlc.js:1-5` |
+| Aynı göç daha önce başka ortak veriler için yapıldı. `delta-store.js` başındaki yorumda ölçüm: SMB üzerindeki ortak JSON'a tek kayıt 52 senkron FS çağrısı yapıyor ve 3 ms ağ gecikmesinde ~19 kullanıcıda kilit zaman aşımı (409) başlıyor. Hedef olarak "yerel DB + delta paketleri" ve alan bazlı birleşim yazılmış. | **[Doğrulandı: source yorumu]** `delta-store.js:7-24` |
+| `hlc.js` saat kaymasını yalnız **iz olarak kaydediyor** (5 dk eşik, `onSkew`), olayı reddetmiyor ya da kırpmıyor. | **[Doğrulandı]** `hlc.js:5,76-79` |
+| Diğer oturumun bulgusu: tüm-belge zarf modelinde sırasız teslimde (OneDrive eski sürümü yenisinden sonra getirince) yeni düzenleme geri alınıyor, ve bu düzeltme öncesi kodda da görülmüş. | **[Muhtemel]**: diğer oturumun raporu; bu oturumda yeniden koşulmadı. Aşama 0 dalındaki ilgili korunan iddia: `tests/collection-sync-multi-device-v20261125.test.js:332` ("newer value overwritten by stale copy"). |
+
+**Koleksiyonu genel yoldan çıkarma kararı zorunlu mu?** O günkü genel yol için **zorunluydu**: yetki denetimi olmayan bir katlamaya izinli veri konamaz. Mimari olarak ise **tarihsel**: yetki katlama anında denetlenirse (ADR-0001 kuralı 4) kararın nedeni ortadan kalkar ve Koleksiyon aynı taşıma desenini kullanabilir. Bunun için genel yolun kendisi değişmek zorunda değil; Koleksiyon kendi namespace'inde aynı deseni yetki farkındalığıyla uygulayabilir.
+
+**Sırasız teslim neden yapısal bir sınır olabilir [Güçlü çıkarım]:** Tek `parentSha256` taşıyan tüm-belge zarfında, okuyucu geç gelen eski bir kopyayı eşzamanlı bir daldan ayırt edemez. Bunu ayırt etmek için nedensel soy bilgisi gerekir. Aşama 0 zarfa sınırlı bir soy listesi (son 32 kimlik) ekliyor; bu, 32 nesle kadar olan durumları kapatır. Daha derin bir gecikmede sınır sürer. Cihaz başına sıra numarası taşıyan değişmez kayıtlarda ise her yazarın sırası kaydın kendisindedir (fiilen bir sürüm vektörü). Geç gelen eski kayıt ya zaten görülmüştür (yinelenen sayılır) ya da HLC'ye göre doğru yere katlanır.
+
+#### Alternatif hangi mevcut sorunları ortadan kaldırır?
+
+| Sorun | Ortadan kalkar mı? | Gerekçe ve kalan risk |
+| --- | --- | --- |
+| Kilit/kira (`shared-file-transaction.js`) | **Doğruluk aracı olarak kalkar** | Ortak değiştirilebilir hedef kalmaz. Kira yalnız aynı makinedeki süreçleri sıraya koymak için yerel olarak kalabilir (ADR-0001 §2). |
+| OneDrive `-PC` çakışma kopyası | **Kalkar** | Her dosyanın tek yazarı ve değişmez bir adı var; aynı dosyaya iki yazar düşmez. **Kalan risk [Hipotez]:** aynı `deviceId`'nin iki kurulumda çoğalması (klonlanmış profil veya yedekten geri dönüş). Kimlik çakışmasının tespiti gerekir (`installation-fingerprint.js` var; bu amaçla yeterli olup olmadığı **[Bilinmiyor]**). |
+| Yayım maliyeti (tüm-belge zarfının yeniden yazımı) | **Kalkar** | Yayım yalnız değişen satırların kaydına iner. Yerine periyodik checkpoint maliyeti gelir; bu maliyet seyrek ve tek yazarlıdır. |
+| Sırasız teslim | **Doğruluk için kalkar** (ön koşullu) | Ön koşul: katlama, **varış sırasına değil olay kümesine** bağlı olmalı. Alan başına HLC + `deviceId` ile son yazan kazanır (LWW) kuralı değişmeli ve birleşmelidir, bu yüzden geç gelen olay yeniden katlama gerektirmez. Çakışma kaydı ise "kaybeden değer" kümesi olarak tutulmalıdır, varış sırasına göre değil. |
+| CAS yarışları | **Kalkar** | Karşılaştırılıp değiştirilecek ortak bir dosya yoktur. Üç yarış kodu ve kira altı birleşim dalı gereksizleşir. |
+
+#### Getirdiği yeni karmaşıklıklar
+
+| Karmaşıklık | Zorluk | Önerilen ele alış | Etiket |
+| --- | --- | --- | --- |
+| **Yetkinin katlama anında denetlenmesi** | Olay, yazarının o HLC anındaki yetkisiyle kabul ya da reddedilir; yetki değişikliği de HLC'li bir olaydır (ADR-0001 kuralı 4). İptali görmüş bir cihaz, HLC alma kuralı gereği iptalden küçük bir damga üretemez. Ama iptali **hiç görmemiş ve saati geri alınmış** bir cihaz iptalden "önceymiş gibi" görünen bir olay üretebilir. Güvenilir merkezi bir saat yok, bu yüzden HLC gerçek zamanı kanıtlayamaz. | İptalden **sonra varan** ve yazarı iptal edilmiş her olay, HLC'si ne olursa olsun ne sessizce uygulanır ne sessizce atılır. Sahip için **inceleme kuyruğuna** düşer. Bu, ilke 01 (sessiz kayıp yok) ve yetki güvenliğini birlikte korur. Ürün kararı gerektirir (§7). | Hipotez (güvenlik sınırı) |
+| **Saat kayması** | İleri kaymış bir cihaz LWW'de uzun süre "kazanır". `hlc.js` bunu yalnız izliyor. Katlama sırasında "şimdi"ye göre kırpmak determinizmi bozar, çünkü her cihazın "şimdi"si farklıdır. | Deterministik kural: eşik üstü kayma, kırpma yerine **çakışma işareti** üretir. Kazanan HLC sırasıyla seçilir ama kayma görünür kılınır. Alternatif olarak sınır, katlanan kümenin içinden türetilir (ör. sahip checkpoint'inin HLC'si). | Bilinmiyor (seçenek değerlendirilmedi) |
+| **Kayıt birikimi, compaction ve checkpoint sahipliği** | Genel senkronda paketler 30 gün sonra budanıyor. 30 günden uzun çevrimdışı kalan bir cihaz yalnız kayıtlarla yetişemez. | Sahip cihaz değişmez, özetle doğrulanan checkpoint yayımlar. Checkpoint hızlandırıcıdır, otorite değildir. Birden fazla Moderatör cihazında kimin yazacağı ADR-0001 §5 kararıdır. Ufku aşan cihaz checkpoint'ten yeniden önyüklenir. | Doğrulandı (saklama) / Hipotez (çözüm) |
+| **Okuma maliyeti (N cihaz × olay)** | Her yoklamada N cihaz klasörü listelenir. OneDrive çok sayıda küçük dosyada istemci yükü getirir **[Muhtemel]**. | Cihaz başına sıra imleci (yalnız yeni dosyalar), cihaz başına demet (`gzipBundleMode` zaten var) ve checkpoint ile sınırlama. Ölçüm Aşama 1'de (L2). | Hipotez |
+| **Silme tombstone'larının ömrü** | Tombstone erken budanırsa ufkun ötesindeki çevrimdışı kopya silinen satırı diriltir. Bu, bugün zaten testle korunan bir gereksinim ("çevrimdışı eski kopya silinen satırı diriltmez", Aşama 0 dalı). `local-db` tombstone'u yalnız yeniden oluşturmada siliyor gibi görünüyor **[Muhtemel]** (`local-db.js:1088,1185`). | Tombstone, ancak checkpoint onu içerdikten **ve** saklama ufku geçtikten sonra budanır. Ufkun ötesindeki cihaz kendi yerel kayıtlarını birleştirmeden önce checkpoint'ten yeniden önyüklenir; kayıtları çakışma olarak sunulur. | Hipotez |
+| **Eski sürüm uyumluluğu ve geçiş** | Karışık sürüm döneminde eski istemci yalnız zarf okur ve yazar. | Gölge çift yazım (ADR-0001 Aşama 1–2). Zarfı yalnız sahip üretir; eski istemcinin zarfa yazdığı değişikliği sahip bir köprü ile olaya çevirir. Bu köprü, geçiş döneminin en karmaşık parçasıdır. | Hipotez |
+| **Deterministik katlama** | Katlama; `Date.now`, yerel ayar, varış sırası ve kayan nokta toplama sırasına bağlı olmamalıdır. Yetki değerlendirmesi de yalnız olay kümesinden gelmelidir. | Sıralama `(HLC, deviceId, eventId)`. Özellik testi: aynı olay kümesinin rastgele teslim permütasyonları **aynı durum özetini** vermeli. | Hipotez (test yok) |
+
+#### Üç seviye
+
+- **S1:** Kira süreleri ve eşikleri, `MERGE_UNDER_LEASE_MAX_BYTES`, zarfın sıkıştırılması. Sorunu küçültür, kapatmaz (ADR-0001 §4).
+- **S2:** Zarfa sınırlı soy zinciri ya da sürüm vektörü eklemek (Aşama 0: son 32 kimlik) veya zarfı satır shard'larına bölmek. Sırasız teslimi kendi derinliğine kadar kapatır, kira ve CAS kalır.
+- **S3:** Ortak yayım dosyasını kaldırmak: tek yazarlı, değişmez kayıtlar; OneDrive yalnız taşıma. Kira, `-PC` kopyası, CAS ve tüm-belge yeniden yazımı **ihtiyaç olarak** ortadan kalkar.
+
+#### Doğrulama (Goodhart'a karşı)
+
+- Mevcut 20 cihazlı simülatörde (`tests/helpers/collection-sync-sim.js`) OneDrive davranışları: sırasız teslim, aynı dosyanın eski sürümünün geri gelmesi, gecikmeli ve eksik teslim, `-PC` kopyası, ±1 gün saat kayması, iptal ile çevrimdışı yazım yarışı, 31 gün çevrimdışı cihaz, kopyalanmış `deviceId`.
+- Özellik testi: rastgele teslim permütasyonu ve tekrarlı teslim aynı durum özetini vermeli; sessiz kayıp her zaman 0 olmalı (her kaybeden değer çakışma kaydında).
+- **Simülatörün sınırı:** simülatör OneDrive'ı modelliyor, OneDrive'ın kendisi değil. Gerçek iki Windows makine ve OneDrive ile soak testi gerekir. Bu container'da **BLOCKED**.
+
+#### Kazanım, risk, geri alınabilirlik
+
+- **Kazanım:** Bilinen veri kaybı sınıfının yapısal olarak kapanması, kira beklemesinin ve tüm-belge yayım maliyetinin kalkması. Süre etkisi **[Hipotez]**, Aşama 1'de ölçülür.
+- **Risk:** Yetki ve saat sınırları (yukarıda), geçiş köprüsü, P1 çok kullanıcılı veri. İkinci model incelemesi zorunlu adaydır (CLAUDE.md §3.1).
+- **Geri alınabilirlik:** Gölge modda tam. Geçişten sonra bayrakla zarf okumaya dönülebilir; olay günlüğü silinmez (ADR-0001 Aşama 2).
+
+**ADR-0001'e eklenmesi önerilen üç açık nokta (bu araştırmadan):**
+1. İptalden sonra varan, yazarı iptal edilmiş olaylar inceleme kuyruğuna alınır; HLC'ye göre kabul edilmez.
+2. İleri saat kayması için deterministik bir kural (kırpma değil, çakışma işareti).
+3. Tombstone budama ufku, 30 günlük paket saklamasına ve checkpoint'ten yeniden önyüklemeye bağlanır.
+
+**Bu belgeye bağı:** V1'in önerdiği "değişmez taban + günlük" deseni, ADR-0001 ve `local-db` WAL'ı ile **aynı ilke**. Üç ayrı yerde kanıtlanmış olması, desenin yeni bir icat olmadığını, uygulamanın kendi ilkesi olduğunu gösteriyor.
 
 ### Özet tablo
 
@@ -225,7 +293,7 @@ Sıralama §0'daki öncelik sırasına göre etkiyi izler. Her varsayımda **S1*
 | V7 | Modül başına tablo davranışı | **Kaldırılabilir** (ürün kararı gerekebilir) | Doğruluk/sadelik | Orta | Orta |
 | V8 | Global ortam üzerinden bağlanma zorunlu | **Tarihsel; kaldırılabilir** | Kararlılık/sadelik | Orta (birikimli) | Düşük (yeni kodda) |
 | V9 | Regresyon metin sözleşmesiyle önlenir | **Kaldırılabilir** (V8'e bağlı) | Kararlılık | Orta | Düşük |
-| V10 | Çok yazarlı dosya + kira | **Kaldırılabilir** (ADR-0001) | Veri bütünlüğü | Çok yüksek | Kapsam dışı |
+| V10 | Birden fazla cihaz aynı yayım dosyasına yazmalı | **Kaldırılabilir** (ADR-0001 aşamaları); öncelikte **1.** | Veri bütünlüğü | Çok yüksek | Orta-yüksek (yetki/saat sınırları, geçiş) |
 
 **Zorunlu kalan kabuller:** yerel öncelikli dağıtım ve ortak klasör, bağımlılıksız portable kurulum, Electron/Node çalışma zamanı, tek şirket içi AI yolu, TR/EN. Bunlar korunur. Önerilerin hiçbiri bunları gevşetmez.
 
@@ -235,7 +303,7 @@ Sıralama §0'daki öncelik sırasına göre etkiyi izler. Her varsayımda **S1*
 
 **Neden bu:** Ölçülmüş en büyük maliyet bu. BASELINE §5 de bunu 1 numaralı aday sayıyor. Hedeflenen veri türetilmiş ve yeniden üretilebilir, bu yüzden veri kaybı riski yapısal olarak yok. Desen uygulamanın içinde zaten kanıtlanmış (local-db WAL). Gölge altyapısının bir kısmı mevcut (`cp-row-patch-log` `settle` sayaçları). Kapsam dar: yalnız CP satır kaydı ve yalnız `rowPatchIncrementalSafe` yamaları. ADR-0001'in dosyalarına ve sync yoluna dokunmaz.
 
-**Neden diğerleri değil:** V5 paralel oturumda yürüyor. V2 ve V7 daha geniş etki alanına sahip ve ürün kararı gerektirebilir. V6 pahalı. V10 kapsam dışı.
+**Neden diğerleri değil:** V10 öncelikte birinci, ama uygulama yolu ADR-0001'in aşamaları; onun pilotu Aşama 1 gölge moddur ve bu belge ikinci bir pilot açmaz. V5 paralel oturumda yürüyor. V2 ve V7 daha geniş etki alanına sahip ve ürün kararı gerektirebilir. V6 pahalı. V10 kapsam dışı.
 
 **Daha düşük riskli alternatif:** Ürün sahibi daha küçük bir adım isterse V2'nin alt kümesi seçilebilir: **Ex→Retail ve LT'yi projeksiyonda bir kez üretmek.** Bu iki alan saf tarih farkıdır (`OPD`, `Ex-factory`, `Retail Date`, kurallar). İkisi de CP ve Siparişler geri düşüş listelerinden çıkar. Kazancı küçük, riski düşük.
 
@@ -263,7 +331,8 @@ Sıralama §0'daki öncelik sırasına göre etkiyi izler. Her varsayımda **S1*
 
 1. **Sütun filtresi anlamı (T5):** Koleksiyonda sayısal/aralık/revizyon filtresi yokluğu bilinçli mi? Genel Bakış boyut filtresinin `norm()` eşitliği istenen davranış mı?
 2. **Boş sayı (T1, V5):** Boş hücre toplamlarda 0 mı sayılır, yoksa "yok" olarak dışarıda mı kalır? Paralel veri sözleşmesi pilotuyla birlikte karar verilmeli.
-3. **Pilot seçimi (§6):** V1 (yüksek kazanç, P1) ya da daha küçük alternatif V2 alt kümesi (Ex→Retail/LT).
+3. **İptal edilen yazarın sonradan varan olayları (V10):** inceleme kuyruğu mu (öneri), HLC'ye göre kabul mü, yoksa ret mi?
+4. **Pilot seçimi (§6):** V1 (yüksek kazanç, P1) ya da daha küçük alternatif V2 alt kümesi (Ex→Retail/LT).
 
 ---
 
