@@ -3480,11 +3480,17 @@ function tableImageCopyErrorText(code){
   if(code==='empty')return en?'No rows to copy were found.':'Kopyalanacak satır bulunamadı.';
   if(code==='tooManyRows')return en?`A PNG can hold at most ${Copy.FILE_MAX_ROWS} rows; select fewer rows.`:`PNG en fazla ${Copy.FILE_MAX_ROWS} satır taşır; daha az satır seçin.`;
   if(code==='tooLarge')return en?'The selection is too large for a single image; select fewer rows or columns.':'Seçim tek görsele sığmayacak kadar büyük; daha az satır veya sütun seçin.';
+  if(code==='tooHeavy')return en?'The image cannot be reduced below the 8 MB e-mail limit; select fewer rows or columns.':'Görsel 8 MB e-posta sınırının altına indirilemiyor; daha az satır veya sütun seçin.';
   return en?'The image could not be created.':'Görsel oluşturulamadı.';
 }
-function offerTableImageFile(count){
+function tableImageCopySizeText(bytes){
+  return `${(Number(bytes||0)/1048576).toLocaleString(appLang==='en'?'en-GB':'tr-TR',{maximumFractionDigits:1,minimumFractionDigits:1})} MB`;
+}
+function offerTableImageFile(count,reason=''){
   const en=appLang==='en',max=window.BLTableImageCopy.CLIPBOARD_MAX_ROWS;
-  const message=count>max
+  const message=reason==='bytes'
+    ?(en?'The image exceeds 8 MB at clipboard resolution. Save it as a PNG file at a slightly lower resolution instead.':'Görsel pano çözünürlüğünde 8 MB\'ı aşıyor. Biraz daha düşük çözünürlükte PNG dosyası olarak kaydedin.')
+    :count>max
     ?(en?`${count} rows are too many for the clipboard (max ${max}). Save the image as a PNG file instead.`:`${count} satır panoya fazla (en fazla ${max}). Görseli PNG dosyası olarak kaydedin.`)
     :(en?'The image is too large for the clipboard. Save it as a PNG file instead.':'Görsel panoya sığmayacak kadar büyük. PNG dosyası olarak kaydedin.');
   showToast(message,{kind:'warning',duration:0,actions:[{id:'png',label:en?'Save as PNG':'PNG olarak kaydet',primary:true}],onAction:(id,context)=>{
@@ -3506,13 +3512,13 @@ async function copyActiveTableAsImage({mode='clipboard',source='auto'}={}){
     const selection=await pending.resolve();
     if(!selection||!selection.rows||!selection.rows.length)throw Object.assign(new Error('empty'),{code:'empty'});
     const result=await Copy.render({...selection,mode});
-    if(result.error)throw Object.assign(new Error(result.error),{code:result.error,detail:result.detail});
+    if(result.error)throw Object.assign(new Error(result.error),{code:result.error,detail:result.detail,reason:result.reason});
     return result;
   })();
   try{
     if(mode==='file'){
       const result=await job,name=Copy.saveFile(result.blob,Copy.fileName(tab));
-      showToast(en?`${result.rowCount} rows saved as PNG: ${name}`:`${result.rowCount} satır PNG olarak kaydedildi: ${name}`,{kind:'success'});
+      showToast(en?`${result.rowCount} rows saved as PNG (${tableImageCopySizeText(result.bytes)}): ${name}`:`${result.rowCount} satır PNG olarak kaydedildi (${tableImageCopySizeText(result.bytes)}): ${name}`,{kind:'success'});
       return true;
     }
     // Pano yazımı hemen (blob sözüyle) başlar: çizim sürerken kullanıcı etkileşimi düşmez.
@@ -3526,11 +3532,11 @@ async function copyActiveTableAsImage({mode='clipboard',source='auto'}={}){
       }});
       return false;
     }
-    showToast(en?`${render.value.rowCount} rows copied as image. Paste with Ctrl+V into Excel, Outlook or Teams.`:`${render.value.rowCount} satır görsel olarak kopyalandı. Excel, Outlook veya Teams'e Ctrl+V ile yapıştırın.`,{kind:'success'});
+    showToast(en?`${render.value.rowCount} rows copied as image (${tableImageCopySizeText(render.value.bytes)}). Paste with Ctrl+V into Excel, Outlook or Teams.`:`${render.value.rowCount} satır görsel olarak kopyalandı (${tableImageCopySizeText(render.value.bytes)}). Excel, Outlook veya Teams'e Ctrl+V ile yapıştırın.`,{kind:'success'});
     return true;
   }catch(error){
     const code=error&&error.code||'failed';
-    if(code==='needsFile'){offerTableImageFile(pending.count);return false;}
+    if(code==='needsFile'){offerTableImageFile(pending.count,error.reason);return false;}
     if(code==='failed')console.warn('[table-image-copy]',error&&error.detail||error);
     showToast(tableImageCopyErrorText(code),{kind:'error'});
     return false;

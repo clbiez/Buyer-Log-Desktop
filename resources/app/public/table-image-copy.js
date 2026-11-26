@@ -24,6 +24,7 @@
          38 MB SVG üretiyordu); pseudo-element'ler de yerel olarak çizilir.
          Yalnız aynı kökenden stil, font ve model görseli okunur; hiçbir şey
          dışarı gönderilmez.
+       · PNG en fazla MAX_PNG_BYTES (8 MiB) olur: e-postaya yapıştırma sınırı.
        · Pano en fazla CLIPBOARD_MAX_ROWS satır taşır (Windows panosuna dev
          bitmap yazmak Excel/Outlook'u kilitler). Fazlası PNG dosyası olarak
          kaydedilir (FILE_MAX_ROWS'a kadar).
@@ -38,6 +39,11 @@
     file:{maxRows:FILE_MAX_ROWS,maxArea:64e6,preferredRatio:2,minRatio:0.75},
   };
   const IMAGE_LOAD_TIMEOUT_MS=8000;
+  // E-postaya yapıştırılan/eklenen PNG en fazla 8 MiB (≈8,4 MB). Aşılırsa çözünürlük
+  // kademeli düşürülür (SVG vektördür; yalnız tuval yeniden çizilir), modun
+  // okunabilirlik tabanının (minRatio) altına inilmez.
+  const MAX_PNG_BYTES=8*1024*1024;
+  const MAX_SHRINK_STEPS=4;
   const TRANSPARENT_PIXEL='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
   const CHROME_SELECTOR='.thFilterBtn,.colResizer,input[type="checkbox"],.kolSyntheticFilterBtn';
 
@@ -61,6 +67,15 @@
     const pixelRatio=Math.floor(ratio*100)/100;
     if(!(pixelRatio>=limits.minRatio))return {ok:false,reason:mode==='file'?'tooLarge':'needsFile',width:w,height:h};
     return {ok:true,width:w,height:h,pixelRatio,pixelWidth:Math.round(w*pixelRatio),pixelHeight:Math.round(h*pixelRatio)};
+  }
+
+  /* Saf: PNG bayt sınırı aşıldıysa bir sonraki pixelRatio. PNG boyutu yaklaşık
+     piksel alanıyla orantılıdır: oran karekökle küçülür, alanda ~%10 güvenlik payıyla.
+     Sığıyorsa aynı oran; tabanın altına inmek gerekiyorsa null. */
+  function nextPixelRatio(currentRatio,bytes,minRatio,maxBytes=MAX_PNG_BYTES){
+    if(!(Number(bytes)>maxBytes))return currentRatio;
+    const next=Math.floor(currentRatio*Math.sqrt(maxBytes/Number(bytes))*0.95*100)/100;
+    return next>=minRatio&&next<currentRatio?next:null;
   }
 
   function fileName(tableKey,date=new Date()){
@@ -311,7 +326,7 @@
 
   /* Yeni üretilmiş satırlardan PNG blob üretir. Sonuç: {blob,rowCount,width,height,pixelRatio,timings}
      veya {error:'needsFile'|'tooLarge'|'empty'|'failed'}. */
-  async function render({table,rows,keepLeaf=null,mode='clipboard'}){
+  async function render({table,rows,keepLeaf=null,mode='clipboard',maxBytes=MAX_PNG_BYTES}){
     const snapshot=buildSnapshotTable({table,rows,keepLeaf});
     if(!snapshot||!snapshot.rowCount)return {error:'empty'};
     let frame=null;const now=()=>(root.performance&&root.performance.now?root.performance.now():Date.now()),started=now(),timings={};
@@ -330,18 +345,27 @@
       if(!plan.ok)return {error:plan.reason};
       const image=await decodeSvg(svgDocument({doc,css,width:plan.width,height:plan.height}));
       timings.decode=Math.round(now()-started);
-      const canvas=root.document.createElement('canvas');
-      canvas.width=plan.pixelWidth;canvas.height=plan.pixelHeight;
-      const context=canvas.getContext('2d');
       const background=win.getComputedStyle(doc.body).backgroundColor;
-      context.fillStyle=background&&background!=='rgba(0, 0, 0, 0)'&&background!=='transparent'?background:'#ffffff';
-      context.fillRect(0,0,canvas.width,canvas.height);
-      context.drawImage(image,0,0,canvas.width,canvas.height);
-      const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
-      canvas.width=canvas.height=0;
-      if(!blob)return {error:'failed'};
+      const fill=background&&background!=='rgba(0, 0, 0, 0)'&&background!=='transparent'?background:'#ffffff';
+      const minRatio=modeLimits(mode).minRatio;
+      let ratio=plan.pixelRatio,blob=null,pixelWidth=0,pixelHeight=0;
+      for(let step=0;;step++){
+        const canvas=root.document.createElement('canvas');
+        pixelWidth=canvas.width=Math.round(plan.width*ratio);pixelHeight=canvas.height=Math.round(plan.height*ratio);
+        const context=canvas.getContext('2d');
+        context.fillStyle=fill;context.fillRect(0,0,canvas.width,canvas.height);
+        context.drawImage(image,0,0,canvas.width,canvas.height);
+        blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+        canvas.width=canvas.height=0;
+        if(!blob)return {error:'failed'};
+        if(blob.size<=maxBytes)break;
+        const next=nextPixelRatio(ratio,blob.size,minRatio,maxBytes);
+        // Pano tabanında sığmıyorsa dosya yolu (daha düşük taban) önerilir.
+        if(next==null||step>=MAX_SHRINK_STEPS)return {error:mode==='file'?'tooHeavy':'needsFile',reason:'bytes',bytes:blob.size};
+        ratio=next;
+      }
       timings.total=Math.round(now()-started);
-      return {blob,rowCount:snapshot.rowCount,width:plan.pixelWidth,height:plan.pixelHeight,pixelRatio:plan.pixelRatio,timings};
+      return {blob,bytes:blob.size,rowCount:snapshot.rowCount,width:pixelWidth,height:pixelHeight,pixelRatio:ratio,timings};
     }catch(error){
       return {error:'failed',detail:error&&error.message||String(error)};
     }finally{
@@ -365,5 +389,5 @@
     return name;
   }
 
-  return {CLIPBOARD_MAX_ROWS,FILE_MAX_ROWS,rowPlan,rasterPlan,fileName,buildSnapshotTable,snapshotDocumentHtml,render,writeClipboard,saveFile};
+  return {CLIPBOARD_MAX_ROWS,FILE_MAX_ROWS,MAX_PNG_BYTES,rowPlan,rasterPlan,nextPixelRatio,fileName,buildSnapshotTable,snapshotDocumentHtml,render,writeClipboard,saveFile};
 });
