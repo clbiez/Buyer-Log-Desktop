@@ -107,22 +107,47 @@ function publicationConfirmed(ownerStateValue, envelope, installationId) {
    sırasına duyarlı karşılaştırma yalnız değişmemiş satırı fazladan ekleyebilir;
    fazladan satır zararsızdır (uygulanınca aynı durum), eksik satır kayıptır.
    Uygulama, farkı üreten yayımın tam durumunu önceki durumdan yeniden kurar. */
-function workspaceDelta(before, after) {
-  const beforeRows = new Map((Array.isArray(before && before.rows) ? before.rows : []).map(row => [mergeRowKey(row), row]));
-  const upserts = [], seen = new Set();
-  for (const row of Array.isArray(after && after.rows) ? after.rows : []) {
-    const key = mergeRowKey(row); seen.add(key);
-    const previous = beforeRows.get(key);
-    if (!previous || mergeRowRevision(previous) !== mergeRowRevision(row) || JSON.stringify(previous) !== JSON.stringify(row)) upserts.push(row);
+/* Tam eşitlik, string üretmeden: aynı anahtar kümesi ve her değer === ya da
+   (iç içe nesnede) aynı JSON. Hiçbir farkı kaçırmaz; anahtar sırasına duyarsız. */
+function sameRowShallow(a, b) {
+  if (a === b) return true;
+  let count = 0;
+  for (const key in a) {
+    if (!Object.prototype.hasOwnProperty.call(a, key)) continue;
+    count += 1;
+    if (!Object.prototype.hasOwnProperty.call(b, key)) return false;
+    const x = a[key], y = b[key];
+    if (x === y) continue;
+    if (x === null || y === null || typeof x !== 'object' || typeof y !== 'object') return false;
+    if (!sameValue(x, y)) return false;
   }
-  const deletes = [...beforeRows.keys()].filter(key => !seen.has(key));
+  for (const key in b) if (Object.prototype.hasOwnProperty.call(b, key)) count -= 1;
+  return count === 0;
+}
+function workspaceDelta(before, after) {
+  const beforeList = Array.isArray(before && before.rows) ? before.rows : [];
+  const afterList = Array.isArray(after && after.rows) ? after.rows : [];
+  const beforeRows = new Map();
+  for (const row of beforeList) beforeRows.set(mergeRowKey(row), row);
+  const upserts = [], seen = new Set();
+  let orderChanged = beforeList.length !== afterList.length;
+  for (let index = 0; index < afterList.length; index++) {
+    const row = afterList[index], key = mergeRowKey(row);
+    seen.add(key);
+    if (!orderChanged && mergeRowKey(beforeList[index]) !== key) orderChanged = true;
+    const previous = beforeRows.get(key);
+    if (!previous || mergeRowRevision(previous) !== mergeRowRevision(row) || !sameRowShallow(previous, row)) upserts.push(row);
+  }
+  const deletes = [];
+  for (const key of beforeRows.keys()) if (!seen.has(key)) deletes.push(key);
   const meta = {}, metaDeletes = [];
   for (const key of new Set([...Object.keys(before || {}), ...Object.keys(after || {})])) {
     if (key === 'rows') continue;
     if (!Object.prototype.hasOwnProperty.call(after || {}, key)) metaDeletes.push(key);
     else if (!sameValue((before || {})[key], after[key])) meta[key] = after[key];
   }
-  return { order: (Array.isArray(after && after.rows) ? after.rows : []).map(mergeRowKey), upserts, deletes, meta, metaDeletes };
+  // Sıra yalnız değiştiyse saklanır; değişmediyse önceki sıra korunur, yeni satırlar sona eklenir.
+  return { order: orderChanged ? afterList.map(mergeRowKey) : null, upserts, deletes, meta, metaDeletes };
 }
 function applyWorkspaceDelta(before, delta) {
   const rows = new Map((Array.isArray(before && before.rows) ? before.rows : []).map(row => [mergeRowKey(row), row]));
@@ -131,7 +156,7 @@ function applyWorkspaceDelta(before, delta) {
   const out = { ...(before || {}) };
   for (const key of delta.metaDeletes || []) delete out[key];
   Object.assign(out, delta.meta || {});
-  out.rows = (delta.order || [...rows.keys()]).map(key => rows.get(key)).filter(Boolean);
+  out.rows = (Array.isArray(delta.order) ? delta.order : [...rows.keys()]).map(key => rows.get(key)).filter(Boolean);
   return out;
 }
 
