@@ -1,0 +1,15 @@
+{
+ "note": "benchmark-client-computation.js; fresh process each; cases sort (30k rows both directions) and reader (5000 rows)",
+ "elapsedMs": {
+  "sort": [
+   264.572741,
+   337.921613,
+   278.244047
+  ],
+  "reader": [
+   10.068259999999995,
+   11.910340000000005,
+   10.867809000000008
+  ]
+ }
+}

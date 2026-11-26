@@ -1,0 +1,181 @@
+{
+ "env": {
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "cpuCount": 4,
+  "node": "v22.23.5",
+  "revision": "d772bab62d53838461b455bc634823d1158763bb",
+  "chromium": "158.0.8127.36"
+ },
+ "startup": {
+  "overview": [
+   {
+    "primaryScreenReadyMs": 1601.300000000003,
+    "startupReadyMs": 1606.800000000003,
+    "startupCompleteMs": 1715.3999999999942,
+    "longTaskCount": 26,
+    "longTaskTotalMs": 5474,
+    "maxLongTaskMs": 757,
+    "rows": 30000,
+    "domRows": 0
+   },
+   {
+    "primaryScreenReadyMs": 1511.5,
+    "startupReadyMs": 1518.3999999999942,
+    "startupCompleteMs": 1610.6000000000058,
+    "longTaskCount": 19,
+    "longTaskTotalMs": 4932,
+    "maxLongTaskMs": 608,
+    "rows": 30000,
+    "domRows": 0
+   },
+   {
+    "primaryScreenReadyMs": 1376.7000000000116,
+    "startupReadyMs": 1385.5999999999767,
+    "startupCompleteMs": 1483.0999999999767,
+    "longTaskCount": 20,
+    "longTaskTotalMs": 4702,
+    "maxLongTaskMs": 567,
+    "rows": 30000,
+    "domRows": 0
+   }
+  ],
+  "koleksiyon": [
+   {
+    "primaryScreenReadyMs": 1177.5,
+    "startupReadyMs": 1182.300000000003,
+    "startupCompleteMs": 1244.5,
+    "longTaskCount": 14,
+    "longTaskTotalMs": 3410,
+    "maxLongTaskMs": 708,
+    "rows": 0,
+    "domRows": 0
+   },
+   {
+    "primaryScreenReadyMs": 1203.3999999999942,
+    "startupReadyMs": 1208.8999999999942,
+    "startupCompleteMs": 1310.5,
+    "longTaskCount": 13,
+    "longTaskTotalMs": 3391,
+    "maxLongTaskMs": 614,
+    "rows": 0,
+    "domRows": 0
+   },
+   {
+    "primaryScreenReadyMs": 1133.7000000000116,
+    "startupReadyMs": 1139,
+    "startupCompleteMs": 1250.100000000035,
+    "longTaskCount": 13,
+    "longTaskTotalMs": 3112,
+    "maxLongTaskMs": 562,
+    "rows": 0,
+    "domRows": 0
+   }
+  ],
+  "cp": [
+   {
+    "primaryScreenReadyMs": 4393.300000000003,
+    "startupReadyMs": 4399.699999999997,
+    "startupCompleteMs": 4485.5,
+    "longTaskCount": 15,
+    "longTaskTotalMs": 5504,
+    "maxLongTaskMs": 1726,
+    "rows": 24982,
+    "domRows": 50
+   },
+   {
+    "primaryScreenReadyMs": 4388.600000000006,
+    "startupReadyMs": 4396.5,
+    "startupCompleteMs": 4485.899999999994,
+    "longTaskCount": 17,
+    "longTaskTotalMs": 5494,
+    "maxLongTaskMs": 1631,
+    "rows": 24982,
+    "domRows": 50
+   },
+   {
+    "primaryScreenReadyMs": 4219.200000000012,
+    "startupReadyMs": 4225.099999999977,
+    "startupCompleteMs": 4311.5,
+    "longTaskCount": 16,
+    "longTaskTotalMs": 5814,
+    "maxLongTaskMs": 1519,
+    "rows": 24982,
+    "domRows": 50
+   }
+  ],
+  "orders": [
+   {
+    "primaryScreenReadyMs": 17295.800000000003,
+    "startupReadyMs": 17302.800000000003,
+    "startupCompleteMs": 17323.499999999985,
+    "longTaskCount": 12,
+    "longTaskTotalMs": 1718,
+    "maxLongTaskMs": 365,
+    "rows": 30000,
+    "domRows": 50
+   },
+   {
+    "primaryScreenReadyMs": 16748.199999999983,
+    "startupReadyMs": 16754.199999999983,
+    "startupCompleteMs": 16773.50000000003,
+    "longTaskCount": 8,
+    "longTaskTotalMs": 1248,
+    "maxLongTaskMs": 356,
+    "rows": 30000,
+    "domRows": 50
+   },
+   {
+    "primaryScreenReadyMs": 17084.79999999999,
+    "startupReadyMs": 17092.899999999965,
+    "startupCompleteMs": 17149.599999999977,
+    "longTaskCount": 10,
+    "longTaskTotalMs": 1538,
+    "maxLongTaskMs": 311,
+    "rows": 30000,
+    "domRows": 50
+   }
+  ],
+  "switch-cp": [
+   {
+    "ms": 928.3999999999942,
+    "rows": 24982
+   },
+   {
+    "ms": 5887.200000000012,
+    "rows": 24982
+   },
+   {
+    "ms": 5366.399999999965,
+    "rows": 24982
+   }
+  ],
+  "switch-orders": [
+   {
+    "ms": 831.8999999999942,
+    "rows": 30000
+   },
+   {
+    "ms": 767.3999999999942,
+    "rows": 30000
+   },
+   {
+    "ms": 720.3999999999651,
+    "rows": 30000
+   }
+  ],
+  "switch-koleksiyon": [
+   {
+    "ms": 163.90000000000873,
+    "rows": 0
+   },
+   {
+    "ms": 186.29999999998836,
+    "rows": 0
+   },
+   {
+    "ms": 137,
+    "rows": 0
+   }
+  ]
+ }
+}

@@ -1,0 +1,971 @@
+{
+ "environment": {
+  "platform": "linux",
+  "arch": "x64",
+  "node": "v22.23.5",
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "cpuCount": 4,
+  "totalMemoryBytes": 16868675584
+ },
+ "options": {
+  "rows": 30000,
+  "runs": 3,
+  "pairs": 0,
+  "saves": 16,
+  "intervalMs": 2500,
+  "idleMs": 15000,
+  "appRoot": "/home/user/Buyer-Log-Desktop/resources/app",
+  "candidateRoot": null,
+  "sourceFixture": "",
+  "keepFixture": false,
+  "env": {}
+ },
+ "summaryTable": "metric | main median (samples)\nack.p50Ms | 29 (26, 29, 29)\nack.p95Ms | 91 (104, 91, 54)\nvisible.p50Ms | 333 (332, 334, 333)\nvisible.p95Ms | 461 (461, 482, 459)\nstatusLag.p50Ms | 3 (3, 3, 3)\nstatusLag.p95Ms | 19 (15, 19, 22)\nstatusLag.maxMs | 168 (108, 168, 183)\nordersRead.p50Ms | 1851 (1851, 1731, 2138)\nordersRead.p95Ms | 4201 (2377, 4201, 7628)\nordersRead.maxMs | 4201 (2377, 4201, 7628)\nlastSettledMs | 3534 (3534, 3205, 3592)\nmainCpuMs | 2450 (2450, 2330, 2520)\nmainCpuPerSaveMs | 153 (153, 146, 158)\nprocessCpuMs | 94250 (94250, 93430, 95660)\nidleBeforeRssMB | 185 (185, 182, 189)\nidleAfterRssMB | 502 (502, 501, 532)\npeakRssMB | 1697 (1715, 1605, 1697)",
+ "runs": [
+  {
+   "label": "main",
+   "revision": "d772bab62d53838461b455bc634823d1158763bb",
+   "status": "passed",
+   "idleBeforeRssMB": 185,
+   "lastSettledMs": 3534,
+   "flowWallMs": 41047,
+   "idleAfterRssMB": 502,
+   "peakRssMB": 1715,
+   "mainCpuMs": 2450,
+   "processCpuMs": 94250,
+   "mainCpuPerSaveMs": 153,
+   "saves": [
+    {
+     "i": 0,
+     "tab": "A",
+     "kind": "notes",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 104,
+     "visibleMs": 407
+    },
+    {
+     "i": 1,
+     "tab": "B",
+     "kind": "delType",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 23,
+     "visibleMs": 328
+    },
+    {
+     "i": 2,
+     "tab": "A",
+     "kind": "dates",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 20,
+     "visibleMs": 322
+    },
+    {
+     "i": 3,
+     "tab": "B",
+     "kind": "notes",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 36,
+     "visibleMs": 338
+    },
+    {
+     "i": 4,
+     "tab": "A",
+     "kind": "delType",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 24,
+     "visibleMs": 334
+    },
+    {
+     "i": 5,
+     "tab": "B",
+     "kind": "dates",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 21,
+     "visibleMs": 432
+    },
+    {
+     "i": 6,
+     "tab": "A",
+     "kind": "notes",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 23,
+     "visibleMs": 327
+    },
+    {
+     "i": 7,
+     "tab": "B",
+     "kind": "delType",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 27,
+     "visibleMs": 329
+    },
+    {
+     "i": 8,
+     "tab": "A",
+     "kind": "dates",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 26,
+     "visibleMs": 326
+    },
+    {
+     "i": 9,
+     "tab": "B",
+     "kind": "notes",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 37,
+     "visibleMs": 346
+    },
+    {
+     "i": 10,
+     "tab": "A",
+     "kind": "delType",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 29,
+     "visibleMs": 332
+    },
+    {
+     "i": 11,
+     "tab": "B",
+     "kind": "dates",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 19,
+     "visibleMs": 320
+    },
+    {
+     "i": 12,
+     "tab": "A",
+     "kind": "notes",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 18,
+     "visibleMs": 439
+    },
+    {
+     "i": 13,
+     "tab": "B",
+     "kind": "delType",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 28,
+     "visibleMs": 461
+    },
+    {
+     "i": 14,
+     "tab": "A",
+     "kind": "dates",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 27,
+     "visibleMs": 330
+    },
+    {
+     "i": 15,
+     "tab": "B",
+     "kind": "notes",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 27,
+     "visibleMs": 339
+    }
+   ],
+   "reads": [
+    {
+     "i": 0,
+     "ms": 1808,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 1,
+     "ms": 2377,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 2,
+     "ms": 2265,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 3,
+     "ms": 1975,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 4,
+     "ms": 1680,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 5,
+     "ms": 2120,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 6,
+     "ms": 1877,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 7,
+     "ms": 1826,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 8,
+     "ms": 1836,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 9,
+     "ms": 1954,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 10,
+     "ms": 1927,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 11,
+     "ms": 1685,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 12,
+     "ms": 1710,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 13,
+     "ms": 1975,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 14,
+     "ms": 1851,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 15,
+     "ms": 1576,
+     "status": 200,
+     "cache": "hit"
+    }
+   ],
+   "lag": {
+    "count": 162,
+    "p50Ms": 3,
+    "p95Ms": 15,
+    "maxMs": 108
+   },
+   "ack": {
+    "p50Ms": 26,
+    "p95Ms": 104
+   },
+   "visible": {
+    "p50Ms": 332,
+    "p95Ms": 461,
+    "missing": 0
+   },
+   "ordersRead": {
+    "p50Ms": 1851,
+    "p95Ms": 2377,
+    "maxMs": 2377,
+    "misses": 0
+   },
+   "pair": null,
+   "order": 1,
+   "metrics": {
+    "ack.p50Ms": 26,
+    "ack.p95Ms": 104,
+    "visible.p50Ms": 332,
+    "visible.p95Ms": 461,
+    "statusLag.p50Ms": 3,
+    "statusLag.p95Ms": 15,
+    "statusLag.maxMs": 108,
+    "ordersRead.p50Ms": 1851,
+    "ordersRead.p95Ms": 2377,
+    "ordersRead.maxMs": 2377,
+    "lastSettledMs": 3534,
+    "mainCpuMs": 2450,
+    "mainCpuPerSaveMs": 153,
+    "processCpuMs": 94250,
+    "idleBeforeRssMB": 185,
+    "idleAfterRssMB": 502,
+    "peakRssMB": 1715
+   }
+  },
+  {
+   "label": "main",
+   "revision": "d772bab62d53838461b455bc634823d1158763bb",
+   "status": "passed",
+   "idleBeforeRssMB": 182,
+   "lastSettledMs": 3205,
+   "flowWallMs": 40720,
+   "idleAfterRssMB": 501,
+   "peakRssMB": 1605,
+   "mainCpuMs": 2330,
+   "processCpuMs": 93430,
+   "mainCpuPerSaveMs": 146,
+   "saves": [
+    {
+     "i": 0,
+     "tab": "A",
+     "kind": "notes",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 91,
+     "visibleMs": 392
+    },
+    {
+     "i": 1,
+     "tab": "B",
+     "kind": "delType",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 25,
+     "visibleMs": 331
+    },
+    {
+     "i": 2,
+     "tab": "A",
+     "kind": "dates",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 41,
+     "visibleMs": 440
+    },
+    {
+     "i": 3,
+     "tab": "B",
+     "kind": "notes",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 39,
+     "visibleMs": 427
+    },
+    {
+     "i": 4,
+     "tab": "A",
+     "kind": "delType",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 38,
+     "visibleMs": 339
+    },
+    {
+     "i": 5,
+     "tab": "B",
+     "kind": "dates",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 25,
+     "visibleMs": 482
+    },
+    {
+     "i": 6,
+     "tab": "A",
+     "kind": "notes",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 24,
+     "visibleMs": 328
+    },
+    {
+     "i": 7,
+     "tab": "B",
+     "kind": "delType",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 25,
+     "visibleMs": 325
+    },
+    {
+     "i": 8,
+     "tab": "A",
+     "kind": "dates",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 29,
+     "visibleMs": 339
+    },
+    {
+     "i": 9,
+     "tab": "B",
+     "kind": "notes",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 30,
+     "visibleMs": 330
+    },
+    {
+     "i": 10,
+     "tab": "A",
+     "kind": "delType",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 17,
+     "visibleMs": 318
+    },
+    {
+     "i": 11,
+     "tab": "B",
+     "kind": "dates",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 29,
+     "visibleMs": 336
+    },
+    {
+     "i": 12,
+     "tab": "A",
+     "kind": "notes",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 45,
+     "visibleMs": 471
+    },
+    {
+     "i": 13,
+     "tab": "B",
+     "kind": "delType",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 22,
+     "visibleMs": 326
+    },
+    {
+     "i": 14,
+     "tab": "A",
+     "kind": "dates",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 29,
+     "visibleMs": 332
+    },
+    {
+     "i": 15,
+     "tab": "B",
+     "kind": "notes",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 32,
+     "visibleMs": 334
+    }
+   ],
+   "reads": [
+    {
+     "i": 0,
+     "ms": 1756,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 1,
+     "ms": 1687,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 2,
+     "ms": 1673,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 3,
+     "ms": 1723,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 4,
+     "ms": 1731,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 5,
+     "ms": 1899,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 6,
+     "ms": 1977,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 7,
+     "ms": 1960,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 8,
+     "ms": 2007,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 9,
+     "ms": 4201,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 10,
+     "ms": 1854,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 11,
+     "ms": 1719,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 12,
+     "ms": 1703,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 13,
+     "ms": 1781,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 14,
+     "ms": 1561,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 15,
+     "ms": 1385,
+     "status": 200,
+     "cache": "hit"
+    }
+   ],
+   "lag": {
+    "count": 160,
+    "p50Ms": 3,
+    "p95Ms": 19,
+    "maxMs": 168
+   },
+   "ack": {
+    "p50Ms": 29,
+    "p95Ms": 91
+   },
+   "visible": {
+    "p50Ms": 334,
+    "p95Ms": 482,
+    "missing": 0
+   },
+   "ordersRead": {
+    "p50Ms": 1731,
+    "p95Ms": 4201,
+    "maxMs": 4201,
+    "misses": 0
+   },
+   "pair": null,
+   "order": 2,
+   "metrics": {
+    "ack.p50Ms": 29,
+    "ack.p95Ms": 91,
+    "visible.p50Ms": 334,
+    "visible.p95Ms": 482,
+    "statusLag.p50Ms": 3,
+    "statusLag.p95Ms": 19,
+    "statusLag.maxMs": 168,
+    "ordersRead.p50Ms": 1731,
+    "ordersRead.p95Ms": 4201,
+    "ordersRead.maxMs": 4201,
+    "lastSettledMs": 3205,
+    "mainCpuMs": 2330,
+    "mainCpuPerSaveMs": 146,
+    "processCpuMs": 93430,
+    "idleBeforeRssMB": 182,
+    "idleAfterRssMB": 501,
+    "peakRssMB": 1605
+   }
+  },
+  {
+   "label": "main",
+   "revision": "d772bab62d53838461b455bc634823d1158763bb",
+   "status": "passed",
+   "idleBeforeRssMB": 189,
+   "lastSettledMs": 3592,
+   "flowWallMs": 41115,
+   "idleAfterRssMB": 532,
+   "peakRssMB": 1697,
+   "mainCpuMs": 2520,
+   "processCpuMs": 95660,
+   "mainCpuPerSaveMs": 158,
+   "saves": [
+    {
+     "i": 0,
+     "tab": "A",
+     "kind": "notes",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 54,
+     "visibleMs": 364
+    },
+    {
+     "i": 1,
+     "tab": "B",
+     "kind": "delType",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 40,
+     "visibleMs": 339
+    },
+    {
+     "i": 2,
+     "tab": "A",
+     "kind": "dates",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 33,
+     "visibleMs": 337
+    },
+    {
+     "i": 3,
+     "tab": "B",
+     "kind": "notes",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 20,
+     "visibleMs": 325
+    },
+    {
+     "i": 4,
+     "tab": "A",
+     "kind": "delType",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 25,
+     "visibleMs": 326
+    },
+    {
+     "i": 5,
+     "tab": "B",
+     "kind": "dates",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 33,
+     "visibleMs": 333
+    },
+    {
+     "i": 6,
+     "tab": "A",
+     "kind": "notes",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 31,
+     "visibleMs": 333
+    },
+    {
+     "i": 7,
+     "tab": "B",
+     "kind": "delType",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 25,
+     "visibleMs": 334
+    },
+    {
+     "i": 8,
+     "tab": "A",
+     "kind": "dates",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 30,
+     "visibleMs": 331
+    },
+    {
+     "i": 9,
+     "tab": "B",
+     "kind": "notes",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 32,
+     "visibleMs": 332
+    },
+    {
+     "i": 10,
+     "tab": "A",
+     "kind": "delType",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 29,
+     "visibleMs": 330
+    },
+    {
+     "i": 11,
+     "tab": "B",
+     "kind": "dates",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 27,
+     "visibleMs": 328
+    },
+    {
+     "i": 12,
+     "tab": "A",
+     "kind": "notes",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 22,
+     "visibleMs": 325
+    },
+    {
+     "i": 13,
+     "tab": "B",
+     "kind": "delType",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 38,
+     "visibleMs": 338
+    },
+    {
+     "i": 14,
+     "tab": "A",
+     "kind": "dates",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 16,
+     "visibleMs": 383
+    },
+    {
+     "i": 15,
+     "tab": "B",
+     "kind": "notes",
+     "status": 200,
+     "applied": 1,
+     "conflicts": 0,
+     "ackMs": 28,
+     "visibleMs": 459
+    }
+   ],
+   "reads": [
+    {
+     "i": 0,
+     "ms": 5065,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 1,
+     "ms": 2744,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 2,
+     "ms": 2296,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 3,
+     "ms": 2049,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 4,
+     "ms": 2132,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 5,
+     "ms": 2138,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 6,
+     "ms": 2469,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 7,
+     "ms": 2079,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 10,
+     "ms": 2472,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 8,
+     "ms": 7628,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 9,
+     "ms": 5368,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 11,
+     "ms": 2494,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 12,
+     "ms": 2050,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 13,
+     "ms": 1627,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 14,
+     "ms": 1707,
+     "status": 200,
+     "cache": "hit"
+    },
+    {
+     "i": 15,
+     "ms": 1619,
+     "status": 200,
+     "cache": "hit"
+    }
+   ],
+   "lag": {
+    "count": 162,
+    "p50Ms": 3,
+    "p95Ms": 22,
+    "maxMs": 183
+   },
+   "ack": {
+    "p50Ms": 29,
+    "p95Ms": 54
+   },
+   "visible": {
+    "p50Ms": 333,
+    "p95Ms": 459,
+    "missing": 0
+   },
+   "ordersRead": {
+    "p50Ms": 2138,
+    "p95Ms": 7628,
+    "maxMs": 7628,
+    "misses": 0
+   },
+   "pair": null,
+   "order": 3,
+   "metrics": {
+    "ack.p50Ms": 29,
+    "ack.p95Ms": 54,
+    "visible.p50Ms": 333,
+    "visible.p95Ms": 459,
+    "statusLag.p50Ms": 3,
+    "statusLag.p95Ms": 22,
+    "statusLag.maxMs": 183,
+    "ordersRead.p50Ms": 2138,
+    "ordersRead.p95Ms": 7628,
+    "ordersRead.maxMs": 7628,
+    "lastSettledMs": 3592,
+    "mainCpuMs": 2520,
+    "mainCpuPerSaveMs": 158,
+    "processCpuMs": 95660,
+    "idleBeforeRssMB": 189,
+    "idleAfterRssMB": 532,
+    "peakRssMB": 1697
+   }
+  }
+ ]
+}

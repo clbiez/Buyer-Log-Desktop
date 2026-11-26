@@ -1,0 +1,292 @@
+{
+ "tool": "benchmark-erp-readmodel",
+ "environment": {
+  "platform": "linux",
+  "arch": "x64",
+  "node": "v22.23.5",
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "cpuCount": 4,
+  "totalMemoryBytes": 16868675584,
+  "cpuQuota": null,
+  "browser": "headless Chromium (Playwright)"
+ },
+ "options": {
+  "rows": 30000,
+  "runs": 3,
+  "pairs": 0,
+  "appRoot": "/home/user/Buyer-Log-Desktop/resources/app",
+  "candidateRoot": null,
+  "modules": [
+   "cp",
+   "orders",
+   "koleksiyon",
+   "backlog"
+  ],
+  "postOpenTimeoutMs": 180000,
+  "settleMs": 1500,
+  "moduleTimeoutMs": 300000,
+  "topN": 15,
+  "sourceFixture": "",
+  "keepFixture": false,
+  "postOpenWindowMs": 0,
+  "earlyModule": "",
+  "earlyDelayMs": 0,
+  "collectionRows": 0,
+  "backlogSettle": false,
+  "quotationCpRows": 0,
+  "openCostingRecords": 0,
+  "openCostingType": "",
+  "quotationCycles": 0,
+  "finalIdleMs": 0,
+  "flags": {}
+ },
+ "fixture": {
+  "synthetic": true,
+  "rows": 30000,
+  "seed": 7,
+  "generatedAt": "2026-11-26T15:43:18.924Z",
+  "hashes": {
+   "ASAS - Demo.xlsx": "126b17eb33427f5f517af0a3425a54ca021524131406558c970a1fd5954d4374",
+   "Antrepo - Demo.xlsx": "8f3a6698df588db61fcaab031cd3114cc3494955622621b14824060b7e25311a",
+   "LFL - Demo.xlsx": "30b3a72ee58e95c04fa9bb078f712ba52843983fcdd98edbd2eb3e4f41871d63"
+  }
+ },
+ "summary": {
+  "main": {
+   "postOpen.durationMs": {
+    "median": 16821,
+    "samples": [
+     16536.8,
+     16821,
+     17020.5
+    ]
+   },
+   "postOpen.longTaskCount": {
+    "median": 22,
+    "samples": [
+     18,
+     22,
+     25
+    ]
+   },
+   "postOpen.longTaskTotalMs": {
+    "median": 4519.3,
+    "samples": [
+     3918.2,
+     4519.3,
+     5388.6
+    ]
+   },
+   "postOpen.longTaskMaxMs": {
+    "median": 821,
+    "samples": [
+     822,
+     681,
+     821
+    ]
+   },
+   "postOpen.lagMaxMs": {
+    "median": 787.3,
+    "samples": [
+     787.3,
+     728.8,
+     795.1
+    ]
+   },
+   "postOpen.lagOver200": {
+    "median": 9,
+    "samples": [
+     7,
+     9,
+     10
+    ]
+   },
+   "postOpen.jsHeapMB": {
+    "median": 240.5,
+    "samples": [
+     210.1,
+     240.5,
+     338.2
+    ]
+   },
+   "startup.completeMs": {
+    "median": 1318.5,
+    "samples": [
+     1318.5,
+     1433.2,
+     1200.8
+    ]
+   },
+   "startup.longTaskTotalMs": {
+    "median": 309.8,
+    "samples": [
+     309.8,
+     490.7,
+     243.4
+    ]
+   },
+   "final.jsHeapMB": {
+    "median": 263.2,
+    "samples": [
+     263.2,
+     257.4,
+     351.1
+    ]
+   },
+   "cpCards.sinceStartupMs": {
+    "median": 5489.9,
+    "samples": [
+     5580.4,
+     5489.9,
+     5166.6
+    ]
+   },
+   "cpCards.sinceNavigationMs": {
+    "median": 6898.9,
+    "samples": [
+     6898.9,
+     6923.1,
+     6367.4
+    ]
+   },
+   "server.rssMB": {
+    "median": 2642,
+    "samples": [
+     2462.1,
+     2642,
+     2665.1
+    ]
+   },
+   "server.peakMB": {
+    "median": 2675.1,
+    "samples": [
+     2573.5,
+     2687,
+     2675.1
+    ]
+   },
+   "flowMap.sinceStartupMs": {
+    "median": 13564.1,
+    "samples": [
+     null,
+     13071.3,
+     14056.8
+    ]
+   },
+   "module.cp.openMs": {
+    "median": 1363.4,
+    "samples": [
+     2209.2,
+     1363.4,
+     799.2
+    ]
+   },
+   "module.cp.longTaskMaxMs": {
+    "median": 759,
+    "samples": [
+     759,
+     952.3,
+     402
+    ]
+   },
+   "module.orders.openMs": {
+    "median": 812.8,
+    "samples": [
+     799.8,
+     857.1,
+     812.8
+    ]
+   },
+   "module.orders.longTaskMaxMs": {
+    "median": 373,
+    "samples": [
+     373,
+     368,
+     378
+    ]
+   },
+   "module.koleksiyon.openMs": {
+    "median": 174.4,
+    "samples": [
+     174.4,
+     176.1,
+     173.3
+    ]
+   },
+   "module.koleksiyon.longTaskMaxMs": {
+    "median": 96.6,
+    "samples": [
+     104.3,
+     96.4,
+     96.6
+    ]
+   },
+   "module.backlog.openMs": {
+    "median": 171.7,
+    "samples": [
+     194.3,
+     171.7,
+     146.3
+    ]
+   },
+   "module.backlog.longTaskMaxMs": {
+    "median": 113.6,
+    "samples": [
+     113.6,
+     114.4,
+     87.5
+    ]
+   },
+   "payload.totalMB": {
+    "median": 154,
+    "samples": [
+     154,
+     154,
+     154
+    ]
+   },
+   "payload./api/page-projection/orders.KB": {
+    "median": 78831.4,
+    "samples": [
+     78831.4,
+     78831.4,
+     78831.4
+    ]
+   },
+   "payload./api/page-projection/cp.KB": {
+    "median": 66621.7,
+    "samples": [
+     66621.7,
+     66621.7,
+     66621.7
+    ]
+   },
+   "payload./api/page-projection/overview.KB": {
+    "median": 12223.1,
+    "samples": [
+     12223.1,
+     12223.1,
+     12223.1
+    ]
+   },
+   "payload./api/data.KB": {
+    "median": 14.7,
+    "samples": [
+     14.7,
+     14.7,
+     14.7
+    ]
+   },
+   "payload./api/page-projection/collection-catalog.KB": {
+    "median": 1.6,
+    "samples": [
+     1.6,
+     1.6,
+     1.6
+    ]
+   }
+  }
+ },
+ "summaryTable": "metric | main median | main samples\n--- | --- | ---\npostOpen.durationMs | 16821 | 16536.8, 16821, 17020.5\npostOpen.longTaskCount | 22 | 18, 22, 25\npostOpen.longTaskTotalMs | 4519.3 | 3918.2, 4519.3, 5388.6\npostOpen.longTaskMaxMs | 821 | 822, 681, 821\npostOpen.lagMaxMs | 787.3 | 787.3, 728.8, 795.1\npostOpen.lagOver200 | 9 | 7, 9, 10\npostOpen.jsHeapMB | 240.5 | 210.1, 240.5, 338.2\nstartup.completeMs | 1318.5 | 1318.5, 1433.2, 1200.8\nstartup.longTaskTotalMs | 309.8 | 309.8, 490.7, 243.4\nfinal.jsHeapMB | 263.2 | 263.2, 257.4, 351.1\ncpCards.sinceStartupMs | 5489.9 | 5580.4, 5489.9, 5166.6\ncpCards.sinceNavigationMs | 6898.9 | 6898.9, 6923.1, 6367.4\nserver.rssMB | 2642 | 2462.1, 2642, 2665.1\nserver.peakMB | 2675.1 | 2573.5, 2687, 2675.1\nflowMap.sinceStartupMs | 13564.1 | \u2014, 13071.3, 14056.8\nmodule.cp.openMs | 1363.4 | 2209.2, 1363.4, 799.2\nmodule.cp.longTaskMaxMs | 759 | 759, 952.3, 402\nmodule.orders.openMs | 812.8 | 799.8, 857.1, 812.8\nmodule.orders.longTaskMaxMs | 373 | 373, 368, 378\nmodule.koleksiyon.openMs | 174.4 | 174.4, 176.1, 173.3\nmodule.koleksiyon.longTaskMaxMs | 96.6 | 104.3, 96.4, 96.6\nmodule.backlog.openMs | 171.7 | 194.3, 171.7, 146.3\nmodule.backlog.longTaskMaxMs | 113.6 | 113.6, 114.4, 87.5\npayload.totalMB | 154 | 154, 154, 154\npayload./api/page-projection/orders.KB | 78831.4 | 78831.4, 78831.4, 78831.4\npayload./api/page-projection/cp.KB | 66621.7 | 66621.7, 66621.7, 66621.7\npayload./api/page-projection/overview.KB | 12223.1 | 12223.1, 12223.1, 12223.1\npayload./api/data.KB | 14.7 | 14.7, 14.7, 14.7\npayload./api/page-projection/collection-catalog.KB | 1.6 | 1.6, 1.6, 1.6",
+ "status": "passed"
+}
