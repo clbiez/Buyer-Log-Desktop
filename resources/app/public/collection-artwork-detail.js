@@ -222,7 +222,9 @@
     }
     const body = [...byTech].map(([tech, groups]) => groups
       .map(group => `<span class="blCellChip"><b>${esc(en ? group.en : group.tr)}</b><i>${group.count}</i></span>`).join('')
-      + (tech ? `<span class="blCellTag" data-tone="${toneOf([...groups[0].techniques][0])}">${esc(tech)}</span>` : '')).join('');
+      + (tech ? `<span class="blCellTag" data-tone="${toneOf([...groups[0].techniques][0])}">${esc(tech)}</span>`
+        // Başka bölgede teknik varken tekniksiz grup nötr etiket alır; yoksa teknik yanındaki gruba ait görünürdü.
+        : byTech.size > 1 ? `<span class="blCellTag" title="${esc(en ? 'No technique' : 'Teknik yok')}">${NO_TECH}</span>` : '')).join('');
     return `<div class="blCellLine">${tag}<span class="blCellBody">${body}</span><span class="blCellTotal">${part.total}</span></div>`;
   }
   function cardsOf(model, en) {
@@ -417,17 +419,16 @@
     const current = row[ART_KEY] == null ? '' : String(row[ART_KEY]);
     const tracked = Object.prototype.hasOwnProperty.call(row, PLM_KEY);
     const lastPlm = String(row[PLM_KEY] == null ? '' : row[PLM_KEY]);
-    const variants = entry ? plmVariants(entry) : null;
-    const plmOwned = !current.trim() || (tracked && current === lastPlm) || Boolean(variants && variants.has(current));
-    const id = String(row.id);
+    // Sıcak yol (her render, tüm satırlar): varyant kümesi yalnız gerektiğinde okunur.
+    const variants = () => (entry ? plmVariants(entry) : null);
+    const plmOwned = !current.trim() || (tracked && current === lastPlm) || Boolean(entry && variants().has(current));
     let changed = false;
     if (plmOwned && current !== summary) { row[ART_KEY] = summary; changed = true; }
-    const plmChanged = !tracked || (lastPlm !== summary && !(variants && variants.has(lastPlm)));
-    if (!plmOwned && summary && plmChanged) {
-      state.conflicts.set(id, { row, summary });
+    if (!plmOwned && summary && (!tracked || (lastPlm !== summary && !(entry && variants().has(lastPlm))))) {
+      state.conflicts.set(String(row.id), { row, summary });
       return changed;
     }
-    state.conflicts.delete(id);
+    if (state.conflicts.size) state.conflicts.delete(String(row.id));
     if (!tracked || row[PLM_KEY] !== summary) row[PLM_KEY] = summary;
     return changed;
   }

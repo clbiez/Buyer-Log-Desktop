@@ -3,14 +3,101 @@
   "publishedAt": "2026-11-26",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Artwork Detayı kartlarla düzenlenir",
-    "en": "Artwork Detail is edited with cards"
+    "tr": "Artwork kart editörü ve korunan manuel alanlar",
+    "en": "Artwork card editor and protected manual fields"
   },
   "summary": {
-    "tr": "Koleksiyon'da Artwork Detayı çift tıkla açılan kart editöründe bölge, teknik ve adetle düzenlenir; elle yazılan özet de kart olarak görünür.",
-    "en": "In Collection, Artwork Detail is edited in a double-click card editor by region, technique and count; manually typed summaries also show as cards."
+    "tr": "Artwork Detayı kart editörüyle düzenlenir, Artwork/Kumaş hücreleri kart ya da metin gösterilebilir ve PLM SYNC elle değiştirilmiş alanları onaysız ezmez.",
+    "en": "Artwork Detail is edited with a card editor, Artwork/Fabric cells can show cards or text, and PLM SYNC no longer overwrites manual edits without approval."
   },
   "changes": [
+    {
+      "id": "collection-plm-manual-conflict",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "PLM SYNC elle değiştirdiğiniz alanı onaysız ezmez",
+        "en": "PLM SYNC no longer overwrites your manual edits without approval"
+      },
+      "body": {
+        "tr": "PLM SYNC veya PLM aktarımı, elle değiştirdiğiniz bir alana (Kumaş, Renk, Sezon, Fit, Line, Lisans… ve Artwork Detayı) farklı bir değer getirecekse önce sorar: her çakışma için model, mevcut (manuel) değer ve PLM'den gelen değer gösterilir; Manueli koru veya PLM değerini al seçilir, istenirse aynı karar kalan çakışmalara uygulanır. İptal hiçbir şeyi değiştirmez. Korunan manuel değer, PLM aynı kaldıkça sonraki senkronlarda tekrar sorulmaz; PLM yeniden değişirse sorulur. Boş ya da PLM'den gelmiş değerler eskisi gibi sessizce güncellenir.",
+        "en": "When PLM SYNC or a PLM import would put a different value into a field you edited manually (Fabric, Colour, Season, Fit, Line, License… and Artwork Detail), it asks first: each conflict shows the model, the current (manual) value and the value from PLM; choose Keep manual or Use PLM value, optionally for all remaining conflicts. Cancel changes nothing. A kept manual value is not asked again while PLM stays the same; it is asked again if PLM changes. Empty or PLM-sourced values are still updated silently."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-plm-manual-conflict.png",
+        "alt": {
+          "tr": "Demo veride manuel alan onay penceresi: Kumaş · 1 / 3, mevcut manuel değer ve PLM'den gelen değer, kalanlara uygula seçeneği, Manueli koru ve PLM değerini al düğmeleri",
+          "en": "Manual field approval dialog on demo data: Fabric · 1 / 3, current manual value and value from PLM, apply-to-remaining option, Keep manual and Use PLM value buttons"
+        },
+        "caption": {
+          "tr": "Demo veride PLM'in elle değiştirilmiş kumaşa farklı değer getirdiği çakışma.",
+          "en": "On demo data, PLM brings a different value for a manually edited fabric."
+        }
+      }
+    },
+    {
+      "id": "collection-cell-view-toggle",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Artwork ve Kumaş hücreleri kart ya da düz metin olarak gösterilebilir",
+        "en": "Artwork and Fabric cells can be shown as cards or plain text"
+      },
+      "body": {
+        "tr": "Artwork Detayı ve Kumaş hücresinde sağ tık › Düz metne çevir / Karta çevir seçilen hücrelerin görünümünü değiştirir; seçili aralıktaki aynı sütun hücrelerine birlikte uygulanır ve geri alınabilir. Tercih hücreye kaydedilir, çalışma alanını açan herkes aynı görünümü görür; hücre metni değişmez. Düz metin görünümünde çift tık metni düzenler. Kart biçiminde olmayan değerde Karta çevir ilgili kart penceresini açar.",
+        "en": "In Artwork Detail and Fabric cells, right-click › Convert to plain text / Convert to cards changes how the selected cells are shown; it applies to the same column across the selected range and can be undone. The choice is saved on the cell, so everyone opening the workspace sees the same view; the cell text does not change. In plain text view double-click edits the text. For a value not in card format, Convert to cards opens the matching card dialog."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-cell-view-menu.png",
+        "alt": {
+          "tr": "Demo Koleksiyon'da Artwork Detayı hücresinin sağ tık menüsünde Düz metne çevir seçeneği",
+          "en": "Convert to plain text option in the right-click menu of an Artwork Detail cell on demo Collection data"
+        },
+        "caption": {
+          "tr": "Demo veride Artwork hücresinin sağ tık menüsü.",
+          "en": "Right-click menu of an Artwork cell on demo data."
+        }
+      }
+    },
+    {
+      "id": "collection-artwork-no-technique",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Tekniği bilinmeyen Artwork bölgesi kaydedilebilir",
+        "en": "Artwork regions with an unknown technique can be saved"
+      },
+      "body": {
+        "tr": "Bir bölgede teknik varken diğerinde yoksa (PLM'den eksik gelmiş ya da bilinmiyor) kart editörü artık kaydı reddetmez. Tekniksiz bölge metinde açık “—” işaretiyle (Ön: 1 | — • Arka: 1 | Pigment) ve kartta nötr “—” etiketiyle gösterilir; teknik yanlışlıkla diğer bölgeye ait görünmez. PLM'den gelen aynı durumdaki özet de bu açık biçimde yazılır.",
+        "en": "When one region has a technique and another does not (missing from PLM or unknown), the card editor no longer rejects the save. The region without a technique is written with an explicit “—” marker (Front: 1 | — • Back: 1 | Pigment) and shown with a neutral “—” tag on the card, so the technique no longer appears to belong to the other region. PLM summaries in the same situation use this explicit format too."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-artwork-no-technique.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: DEMO-006 satırında Front 1, nötr — etiketi, Back 1 ve Pigment kartları",
+          "en": "Demo Collection table: DEMO-006 row shows Front 1, a neutral — tag, Back 1 and Pigment chips"
+        },
+        "caption": {
+          "tr": "Demo veride tekniği bilinmeyen Ön bölgesi nötr “—” etiketiyle.",
+          "en": "On demo data, the Front region without a technique has a neutral “—” tag."
+        }
+      }
+    },
     {
       "id": "collection-artwork-card-editor",
       "type": "feature",

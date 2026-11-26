@@ -498,9 +498,9 @@ test('missing technique next to a known one is explicit (—) in editor, cards a
   const text = 'Ön: 1 | — • Arka: 1 | Pigment | Toplam: 2';
   same(api.editor.fromText(text).parts[0].rows, [{ region: 'Ön', technique: '', count: 1 }, { region: 'Arka', technique: 'Pigment', count: 1 }]);
   const cards = api.cellCards({ id: 1 }, text).inner;
-  assert.match(cards, /<b>Ön<\/b><i>1<\/i><\/span><span class="blCellChip"><b>Arka<\/b>|<b>Ön<\/b><i>1<\/i><\/span><span class="blCellChip">/);
-  assert.doesNotMatch(cards, /—<\/span>/, 'the marker is not drawn as a technique tag');
-  assert.equal((cards.match(/blCellTag/g) || []).length, 1, 'only Pigment gets a technique tag');
+  // Kartta da belirsizlik olmasın: tekniksiz bölge kısa, nötr "—" etiketi alır (renk tonu yok, ipucu "Teknik yok").
+  assert.match(cards, /<b>Ön<\/b><i>1<\/i><\/span><span class="blCellTag" title="Teknik yok">—<\/span><span class="blCellChip"><b>Arka<\/b><i>1<\/i><\/span><span class="blCellTag" data-tone="1">Pigment/);
+  assert.doesNotMatch(api.cellCards({ id: 1 }, 'Ön: 1 | Toplam: 1').inner, /Teknik yok/, 'no label when no region has a technique');
   assert.equal(api.editor.fromText('Ön: 1 | - • Arka: 1 | Pigment | Toplam: 2').parts[0].rows[0].technique, '', 'ASCII hyphen also means no technique');
   // PLM'den eksik teknikli BOM aynı açık biçimde özetlenir; eski belirsiz metin PLM'e ait sayılır.
   const entry = { plmId: '7', hasPrint: true, placements: [placeOf('front_body', 'Ön', 'Front', ''), placeOf('back_body', 'Arka', 'Back', 'Pigment')] };
