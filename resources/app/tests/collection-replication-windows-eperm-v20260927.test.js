@@ -53,11 +53,14 @@ test('Collection replication state transient EPERM rename kilidini retry ederek 
   });
 
   const originalRename = fsp.rename;
-  let attempts = 0;
+  let attempts = 0, firstSuccessAt = 0;
   fsp.rename = async (from, to) => {
     if (path.resolve(to) === path.resolve(stateFile)) {
       attempts += 1;
       if (attempts <= 2) throw eperm();
+      const result = await originalRename(from, to);
+      if (!firstSuccessAt) firstSuccessAt = attempts;
+      return result;
     }
     return originalRename(from, to);
   };
@@ -68,7 +71,9 @@ test('Collection replication state transient EPERM rename kilidini retry ederek 
     fsp.rename = originalRename;
   }
 
-  assert.equal(attempts, 3, 'iki geçici EPERM sonrası üçüncü rename başarılı olmalı');
+  // Yayım birden fazla state yazımı yapabilir (bekleyen yayım kaydı + taban);
+  // korunan davranış: ilk yazım iki geçici EPERM'den sonra üçüncü denemede tamamlanır.
+  assert.equal(firstSuccessAt, 3, 'iki geçici EPERM sonrası üçüncü rename başarılı olmalı');
   const status = await replication.status('owner-a');
   assert.equal(status.ok, true);
   assert.equal(status.state, 'up-to-date');

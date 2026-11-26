@@ -46,6 +46,127 @@ function envelopeChecksum(value) {
 }
 function envelopeChainChecksum(value) { return checksum({ sha256:value.sha256, parentSha256:value.parentSha256 || null }); }
 function envelopeIdentity(value) { return clean(value && value.chainSha256) || clean(value && value.sha256); }
+/* YAYIM KAPSAMA HARİTASI (ADR-0001 Aşama 0, version vector).
+   Zarf, kurulum kimliği → o kurulumun bu kopyaya dahil olan son yayımının
+   kimliği haritasını (`heads`) taşır. Değerler sayaç değil, içerik adresli
+   zarf kimliğidir: yedekten dönme/yeniden kurulum bir sayacı geri sarıp
+   yayımı "kapsanmış" gösteremez. Bir girdi yalnız o yayımın üzerine
+   (CAS ile ya da üç yönlü birleşimle) kurulan zarfa aktarılır; birleşim uzak
+   tarafın değişikliğini korur veya çakışma kaydına alır. Bu yüzden
+   "kapsanmış" = verisi bu kopyada ya da bilinçli çakışma çözümünde.
+   Geçmiş uzunluğuna bağlı sınır yoktur; boyut yayım yapan kurulum sayısıyla
+   büyür (kurulum başına ~110 bayt) ve girdiler budanmaz: budanan girdi
+   bekleyen yayımı temkinli tabana düşürürdü. Eski istemcilerin doğruladığı
+   sha256/chainSha256 değişmez; harita kendi özetiyle doğrulanır, tutmazsa
+   yok sayılır ve yalnız parentSha256 kalır (temkinli taraf). */
+function envelopeHeadsChecksum(value) { return checksum({ chainSha256: value.chainSha256, heads: value.heads }); }
+function envelopeHeads(value) {
+  if (!value || !plainMap(value.heads) || value.headsSha256 !== envelopeHeadsChecksum(value)) return null;
+  return value.heads;
+}
+function nextHeads(current, installationId, identity) {
+  const out = {};
+  for (const [key, value] of Object.entries(envelopeHeads(current) || {})) if (key !== installationId && typeof value === 'string' && clean(value)) out[key] = value;
+  out[installationId] = identity;
+  return out;
+}
+/* BEKLEYEN YAYIM. Bir cihazın yayımı, uzak kopyada onu kapsayan bir halef
+   görülene kadar onaylanmış sayılmaz: ayrı aynada cihaz kendi dosyasını
+   görür, bulut sonradan başka kopyayı seçebilir. Bekleyen yayımlar arasında
+   yabancı bir birleşim olmaz (her yabancı birleşim kaydı temizler), bu yüzden
+   bekleyen zincir ilk tabanın üstüne saf yerel değişikliklerdir. Saklanan:
+   ilk taban (tam kopya) + her yayımın küçük değişiklik farkı. Uzak kopyanın
+   kapsadığı yayımın tam tabanı böylece kesin kurulur; kapsanan yayım listede
+   yoksa ilk taban kullanılır (o durumda da kesin: uzak kopya bekleyenlerin
+   hiçbirini içermiyor). İlk tabana düşmek her zaman temkinli DEĞİLDİR: eski
+   taban, başka cihazın bilinçli geri almasını "yerel değişiklik kazandı" diye
+   ezebilir (bağımsız inceleme F1). Bu yüzden zincir yazım hatasında kırılmaz,
+   yarım günlük satırı onarılır; ilk tabana yalnız bozuk günlükte düşülür. */
+const CLEAR_PENDING_PUBLICATIONS = Object.freeze({ pendingLatest: null, pendingFirstBaseSha256: null, pendingFromEmpty: null, pendingChainBroken: null });
+function coveredPublicationId(envelope, installationId) {
+  const heads = envelopeHeads(envelope);
+  return clean(heads && installationId ? heads[installationId] : '');
+}
+function hasPendingPublication(ownerStateValue) { return Boolean(clean(ownerStateValue && ownerStateValue.pendingLatest)); }
+function coversLatest(ownerStateValue, envelope, installationId) {
+  const latest = clean(ownerStateValue && ownerStateValue.pendingLatest);
+  // Eski istemci haritayı düşürür ama parentSha256 zincirini sürdürür.
+  return Boolean(latest) && (coveredPublicationId(envelope, installationId) === latest || clean(envelope && envelope.parentSha256) === latest);
+}
+function isOwnLatestPublication(ownerStateValue, envelope) {
+  return hasPendingPublication(ownerStateValue) && envelopeIdentity(envelope) === clean(ownerStateValue.pendingLatest);
+}
+function publicationDisplaced(ownerStateValue, envelope, installationId) {
+  if (!hasPendingPublication(ownerStateValue) || !envelope || isOwnLatestPublication(ownerStateValue, envelope)) return false;
+  return !coversLatest(ownerStateValue, envelope, installationId);
+}
+function publicationConfirmed(ownerStateValue, envelope, installationId) {
+  if (!hasPendingPublication(ownerStateValue) || !envelope || isOwnLatestPublication(ownerStateValue, envelope)) return false;
+  return coversLatest(ownerStateValue, envelope, installationId);
+}
+/* Yayım farkı. _rev farklıysa satır farka girer; _rev eşitse içerik de
+   karşılaştırılır: farklı dallardan gelen satırlar aynı _rev'de farklı içerik
+   taşıyabilir (zincirin ilk farkı uzak kopyaya göre hesaplanır). Anahtar
+   sırasına duyarlı karşılaştırma yalnız değişmemiş satırı fazladan ekleyebilir;
+   fazladan satır zararsızdır (uygulanınca aynı durum), eksik satır kayıptır.
+   Uygulama, farkı üreten yayımın tam durumunu önceki durumdan yeniden kurar. */
+/* Tam eşitlik, string üretmeden: aynı anahtar kümesi ve her değer === ya da
+   (iç içe nesnede) aynı JSON. Hiçbir farkı kaçırmaz; anahtar sırasına duyarsız. */
+function sameRowShallow(a, b) {
+  if (a === b) return true;
+  let count = 0;
+  for (const key in a) {
+    if (!Object.prototype.hasOwnProperty.call(a, key)) continue;
+    count += 1;
+    if (!Object.prototype.hasOwnProperty.call(b, key)) return false;
+    const x = a[key], y = b[key];
+    if (x === y) continue;
+    if (x === null || y === null || typeof x !== 'object' || typeof y !== 'object') return false;
+    if (!sameValue(x, y)) return false;
+  }
+  for (const key in b) if (Object.prototype.hasOwnProperty.call(b, key)) count -= 1;
+  return count === 0;
+}
+function workspaceDelta(before, after) {
+  const beforeList = Array.isArray(before && before.rows) ? before.rows : [];
+  const afterList = Array.isArray(after && after.rows) ? after.rows : [];
+  const beforeRows = new Map();
+  for (const row of beforeList) beforeRows.set(mergeRowKey(row), row);
+  const upserts = [], seen = new Set();
+  for (let index = 0; index < afterList.length; index++) {
+    const row = afterList[index], key = mergeRowKey(row);
+    seen.add(key);
+    const previous = beforeRows.get(key);
+    if (!previous || mergeRowRevision(previous) !== mergeRowRevision(row) || !sameRowShallow(previous, row)) upserts.push(row);
+  }
+  const deletes = [];
+  for (const key of beforeRows.keys()) if (!seen.has(key)) deletes.push(key);
+  // Sıra yalnız gerçekten değiştiyse saklanır: silme ve sona ekleme göreli sırayı bozmaz.
+  // Uygulama: önceki sıra korunur, silinenler çıkar, yeni satırlar geliş sırasıyla sona eklenir.
+  const deleted = new Set(deletes);
+  const expected = [];
+  for (const row of beforeList) { const key = mergeRowKey(row); if (!deleted.has(key)) expected.push(key); }
+  for (const row of afterList) { const key = mergeRowKey(row); if (!beforeRows.has(key)) expected.push(key); }
+  let orderChanged = expected.length !== afterList.length;
+  for (let index = 0; !orderChanged && index < afterList.length; index++) if (mergeRowKey(afterList[index]) !== expected[index]) orderChanged = true;
+  const meta = {}, metaDeletes = [];
+  for (const key of new Set([...Object.keys(before || {}), ...Object.keys(after || {})])) {
+    if (key === 'rows') continue;
+    if (!Object.prototype.hasOwnProperty.call(after || {}, key)) metaDeletes.push(key);
+    else if (!sameValue((before || {})[key], after[key])) meta[key] = after[key];
+  }
+  return { order: orderChanged ? afterList.map(mergeRowKey) : null, upserts, deletes, meta, metaDeletes };
+}
+function applyWorkspaceDelta(before, delta) {
+  const rows = new Map((Array.isArray(before && before.rows) ? before.rows : []).map(row => [mergeRowKey(row), row]));
+  for (const key of delta.deletes || []) rows.delete(key);
+  for (const row of delta.upserts || []) rows.set(mergeRowKey(row), row);
+  const out = { ...(before || {}) };
+  for (const key of delta.metaDeletes || []) delete out[key];
+  Object.assign(out, delta.meta || {});
+  out.rows = (Array.isArray(delta.order) ? delta.order : [...rows.keys()]).map(key => rows.get(key)).filter(Boolean);
+  return out;
+}
 
 const OPTIONAL_SYNC_ERROR_CODES = new Set(['EPERM', 'EINVAL', 'ENOSYS', 'ENOTSUP', 'EOPNOTSUPP']);
 
@@ -292,6 +413,27 @@ function mergeCollectionWorkspaces(base, local, remote) {
   // aynı kimlik aynı model kabul edilir; farklı alanlar çakışma olarak döner.
   const hasBase = Boolean(base);
   const baseRows = rowsByKey(base && base.rows), localRows = rowsByKey(local && local.rows), remoteRows = rowsByKey(remote && remote.rows);
+  /* Tabanda olmayan aynı kimlik iki tarafta farklıysa iki durum vardır:
+     (a) iki cihaz aynı YENİ kimliği farklı modellere verdi: ikisi de korunur;
+     (b) silinip başka cihazlarda eşzamanlı düzenlenerek geri gelen AYNI satır:
+         çoğaltılmaz, alan alan birleşir (farklı alanda uzak değer kalır, yerel
+         değer çakışma). Ayrım: iki tarafta kalıcı recordId varsa o belirler;
+     yoksa kimlik tabandan sonra ayrıldıysa (id >= base.nextId; yeni kimlik
+     istemcide max(nextId, en büyük id + 1)'den ayrılır) ya da satır kimlik
+     alanları (plmId, modelKod) iki tarafta farklıysa (a), aksi halde (b). */
+  const baseNextId = Number(base && base.nextId);
+  const newSinceBase = key => !Number.isFinite(baseNextId) || !Number.isFinite(Number(key)) || Number(key) >= baseNextId;
+  const identityDiffers = (l, r) => ['plmId', 'modelKod'].some(field => clean(l && l[field]) && clean(r && r[field]) && clean(l[field]) !== clean(r[field]));
+  const sameRecord = (l, r) => {
+    const a = clean(l && (l.recordId || l._sharedRecordId)), b = clean(r && (r.recordId || r._sharedRecordId));
+    return a && b ? a === b : null;
+  };
+  const idCollision = (key, b, l, r) => {
+    if (!hasBase || b || sameValue(rowContent(l), rowContent(r))) return false;
+    const record = sameRecord(l, r);
+    if (record !== null) return !record;
+    return newSinceBase(key) || identityDiffers(l, r);
+  };
   const numericIds = [...baseRows.keys(), ...localRows.keys(), ...remoteRows.keys()].map(Number).filter(Number.isFinite);
   let nextId = Math.max(Number(local && local.nextId) || 1, Number(remote && remote.nextId) || 1, (numericIds.length ? Math.max(...numericIds) : 0) + 1);
   const rows = [];
@@ -305,7 +447,7 @@ function mergeCollectionWorkspaces(base, local, remote) {
       } else if (!(l == null && b)) rows.push(r);
       continue;
     }
-    if (hasBase && !b && !sameValue(rowContent(l), rowContent(r))) { rows.push(r); continue; } // kimlik çakışması: yerel satır aşağıda yeni kimlik alır
+    if (idCollision(key, b, l, r)) { rows.push(r); continue; } // kimlik çakışması: yerel satır aşağıda yeni kimlik alır
     const merged = mergeRowFields(b ? rowContent(b) : null, rowContent(l), rowContent(r), key, conflicts);
     merged._rev = sameValue(merged, rowContent(l)) ? mergeRowRevision(l) : Math.max(mergeRowRevision(l), mergeRowRevision(r)) + 1;
     rows.push(merged);
@@ -315,7 +457,7 @@ function mergeCollectionWorkspaces(base, local, remote) {
     if (!key) continue;
     const r = remoteRows.get(key), b = baseRows.get(key);
     if (r) {
-      if (hasBase && !b && !sameValue(rowContent(l), rowContent(r))) rows.push({ ...l, id: nextId++, _rev: mergeRowRevision(l) + 1 });
+      if (idCollision(key, b, l, r)) rows.push({ ...l, id: nextId++, _rev: mergeRowRevision(l) + 1 });
       continue;
     }
     if (b) {
@@ -342,7 +484,7 @@ function mergeCollectionWorkspaces(base, local, remote) {
   return { workspace, conflicts };
 }
 
-function createCollectionReplication({ workspaces, permissions, getSharedSyncRoot = async () => '', stateFile = '', onTrace = null, onApplied = null, trialPolicy = require('./update-trial-backend').createTrialWritePolicy(), mergeUnderLeaseMaxBytes = MERGE_UNDER_LEASE_MAX_BYTES } = {}) {
+function createCollectionReplication({ workspaces, permissions, getSharedSyncRoot = async () => '', stateFile = '', onTrace = null, onApplied = null, trialPolicy = require('./update-trial-backend').createTrialWritePolicy(), mergeUnderLeaseMaxBytes = MERGE_UNDER_LEASE_MAX_BYTES, getInstallationFingerprint = () => require('./installation-fingerprint').installationFingerprint() } = {}) {
   if (!workspaces || typeof workspaces.loadWorkspace !== 'function' || typeof workspaces.replaceWorkspaceReplica !== 'function') throw new Error('Collection workspace store is required.');
   if (!permissions || typeof permissions.accessLevel !== 'function') throw new Error('Collection permission store is required.');
   const trace = (event, detail) => { try { if (typeof onTrace === 'function') onTrace(event, detail); } catch (_) {} };
@@ -366,8 +508,31 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
   function normalizeState(raw) {
     return {
       version: REPLICATION_STATE_VERSION,
+      ...(raw && clean(raw.installationId) ? { installationId: clean(raw.installationId), installationFingerprint: clean(raw.installationFingerprint) } : {}),
       owners: raw && raw.owners && typeof raw.owners === 'object' && !Array.isArray(raw.owners) ? raw.owners : {},
     };
+  }
+  /* KURULUM KİMLİĞİ: yayım kapsama haritasının anahtarı. Bu kurulumun durum
+     dosyasında kalıcıdır ve bilgisayar + kullanıcı parmak izine bağlıdır: veri
+     klasörü başka bir bilgisayara kopyalanırsa yeni kimlik üretilir, iki
+     kurulum aynı girdiyi paylaşmaz. Kimlik değişince eski bekleyen yayım
+     kapsanmamış görünür ve temkinli tabanla birleşir (kayıp yok). */
+  let installationIdValue = '';
+  async function installationId() {
+    if (installationIdValue) return installationIdValue;
+    let fingerprint = '';
+    try { fingerprint = clean(getInstallationFingerprint()); } catch (_) {}
+    const ensure = async () => {
+      const state = await readState();
+      if (!state.installationId || (fingerprint && state.installationFingerprint && state.installationFingerprint !== fingerprint)) {
+        state.installationId = crypto.randomUUID();
+        state.installationFingerprint = fingerprint;
+        if (statePath) await writeJson(statePath, state); else volatileState = state;
+      }
+      return state.installationId;
+    };
+    installationIdValue = statePath ? await withFileLeaseAsync(statePath, ensure) : await ensure();
+    return installationIdValue;
   }
   async function readState() {
     if (!statePath) return normalizeState(volatileState);
@@ -408,13 +573,132 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     const file = baseFile(ownerId);
     if (!file) value = volatileBases.has(safeId(ownerId)) ? JSON.parse(volatileBases.get(safeId(ownerId))) : null;
     else { try { value = JSON.parse(await fsp.readFile(file, 'utf8')); } catch (_) { value = null; } }
-    return value && checksum(value) === expectedSha256 ? value : null;
+    if (value && checksum(value) === expectedSha256) return value;
+    // Taban, bekleyen ilk tabana taşınmış ama durum güncellenmeden süreç kesilmiş olabilir.
+    if (file) { try { const moved = JSON.parse(await fsp.readFile(pendingFirstFile(ownerId), 'utf8')); if (checksum(moved) === expectedSha256) return moved; } catch (_) {} }
+    return null;
   }
   async function writeBaseSnapshot(ownerId, workspace) {
     const file = baseFile(ownerId);
     if (!file) { volatileBases.set(safeId(ownerId), JSON.stringify(workspace)); return; }
     if (await readBaseSnapshot(ownerId, checksum(workspace))) return;
     await writeJson(file, workspace);
+  }
+  /* Bekleyen yayım tabanları. Yayım kirası altında yeni bir tam kopya yazmak
+     büyük zarfta kirayı uzatırdı: CAS doğrulanmış tabanın dosyası yalnız
+     yeniden adlandırılır (yayımdan sonra normal taban zaten yeniden yazılır).
+     Okuma içerik özetiyle yapılır ve üç dosyaya da bakar: yeniden adlandırma
+     kesilmiş olsa bile doğru içerik bulunur; bulunamazsa taban yok sayılır
+     (iki yönlü birleşim: satır düşmez, farklı alan çakışma olur). */
+  function pendingFirstFile(ownerId) { return statePath ? path.join(`${statePath}.bases`, `${safeId(ownerId)}.pending-first.json`) : ''; }
+  function pendingLogFile(ownerId) { return statePath ? path.join(`${statePath}.bases`, `${safeId(ownerId)}.pending-log.jsonl`) : ''; }
+  async function readPendingFirst(ownerId, expectedSha256) {
+    const sha = clean(expectedSha256);
+    if (!sha) return null;
+    if (!statePath) {
+      for (const key of [`${safeId(ownerId)}.pending-first`, safeId(ownerId)]) {
+        const raw = volatileBases.get(key);
+        const value = raw ? JSON.parse(raw) : null;
+        if (value && checksum(value) === sha) return value;
+      }
+      return null;
+    }
+    // Yeniden adlandırma kesilmiş olabilir: taban dosyası hâlâ o içerikte olabilir.
+    for (const file of [pendingFirstFile(ownerId), baseFile(ownerId)]) {
+      try {
+        const value = JSON.parse(await fsp.readFile(file, 'utf8'));
+        if (checksum(value) === sha) return value;
+      } catch (_) {}
+    }
+    return null;
+  }
+  async function readPendingLog(ownerId) {
+    let raw = '';
+    if (!statePath) raw = volatileBases.get(`${safeId(ownerId)}.pending-log`) || '';
+    else { try { raw = await fsp.readFile(pendingLogFile(ownerId), 'utf8'); } catch (_) { raw = ''; } }
+    const entries = [];
+    for (const line of raw.split('\n')) {
+      if (!line.trim()) continue;
+      try { const entry = JSON.parse(line); if (entry && clean(entry.id) && entry.delta) entries.push(entry); }
+      catch (_) { break; } // yarım kalmış son satır: önceki kayıtlar geçerli
+    }
+    return entries;
+  }
+  async function appendPendingLog(ownerId, entry, { reset = false } = {}) {
+    const line = `${JSON.stringify(entry)}\n`;
+    if (!statePath) {
+      const key = `${safeId(ownerId)}.pending-log`;
+      volatileBases.set(key, (reset ? '' : volatileBases.get(key) || '') + line);
+      return;
+    }
+    const file = pendingLogFile(ownerId);
+    await fsp.mkdir(path.dirname(file), { recursive: true });
+    if (reset) { await writeTextAtomic(file, line); return; }
+    // Yarım kalmış son satır (ekleme sırasında kesinti) yayımı hiç inmemiş bir
+    // kayda aittir: yeni satır ona yapışıp sonraki kayıtları erişilmez kılmasın.
+    // Yalnız son bayt okunur (günlük büyüse de ekleme maliyeti sabit kalır).
+    let tailIsNewline = true;
+    let handle = null;
+    try {
+      handle = await fsp.open(file, 'r');
+      const { size } = await handle.stat();
+      if (size > 0) { const byte = Buffer.alloc(1); await handle.read(byte, 0, 1, size - 1); tailIsNewline = byte[0] === 0x0a; }
+    } catch (_) { tailIsNewline = true; }
+    finally { if (handle) await handle.close().catch(() => {}); }
+    if (tailIsNewline) { await fsp.appendFile(file, line, 'utf8'); return; }
+    const existing = await fsp.readFile(file, 'utf8');
+    await writeTextAtomic(file, existing.slice(0, existing.lastIndexOf('\n') + 1) + line);
+  }
+  async function rewritePendingLog(ownerId, entries) {
+    const text = entries.map(entry => `${JSON.stringify(entry)}\n`).join('');
+    if (!statePath) { volatileBases.set(`${safeId(ownerId)}.pending-log`, text); return; }
+    await writeTextAtomic(pendingLogFile(ownerId), text);
+  }
+  async function writeTextAtomic(file, text) {
+    const temporary = `${file}.${process.pid}.${crypto.randomUUID()}.tmp`;
+    try { await fsp.writeFile(temporary, text, 'utf8'); await replaceFileWithRetry(temporary, file, { attempts: 8, baseDelayMs: 20 }); }
+    finally { await fsp.unlink(temporary).catch(() => {}); }
+  }
+  /* Bekleyen ilk taban kalıcı olmadan hub yazımına geçilmez: taşıma düşerse
+     kopya yazılır; o da düşerse yayım iptal edilir (yerel kayıt durur, sonraki
+     senkron yeniden dener). Sessiz devam, yerinden edilmede bekleyen silmeyi
+     geri getiriyordu (bağımsız inceleme F4). */
+  async function moveBaseToPendingFirst(ownerId, workspace) {
+    if (!statePath) { volatileBases.set(`${safeId(ownerId)}.pending-first`, JSON.stringify(workspace)); return; }
+    try { await replaceFileWithRetry(baseFile(ownerId), pendingFirstFile(ownerId), { attempts: 4, baseDelayMs: 20 }); return; }
+    catch (error) { trace('COLLECTION_REPLICA_PENDING_BASE_FAILED', { ownerId: clean(ownerId), error: error && (error.code || error.message), fallback: 'copy' }); }
+    try { await writeJson(pendingFirstFile(ownerId), workspace); }
+    catch (error) {
+      throw Object.assign(new Error('Koleksiyon bekleyen yayım tabanı kaydedilemedi; yayım ertelendi. / Collection pending publication base could not be saved; publish deferred.'), { code: 'COLLECTION_PENDING_BASE_UNSAVED', cause: error });
+    }
+  }
+  async function dropPendingBases(ownerId) {
+    if (!statePath) { volatileBases.delete(`${safeId(ownerId)}.pending-first`); volatileBases.delete(`${safeId(ownerId)}.pending-log`); return; }
+    for (const file of [pendingFirstFile(ownerId), pendingLogFile(ownerId)]) await fsp.unlink(file).catch(() => {});
+  }
+  /* Uzak kopyanın kapsadığı bekleyen yayımın tam durumu = ilk taban + o
+     yayıma kadarki farklar. Kapsanan yayım listede yoksa ilk taban. */
+  async function pendingBaseFor(owner, state, coveredId) {
+    // İlk yayım (uzak kopya yokken) zinciri boş durumdan başlatır: taban,
+    // boş çalışma alanına farklar uygulanarak kesin kurulur.
+    const first = state && state.pendingFromEmpty ? {} : await readPendingFirst(owner, state && state.pendingFirstBaseSha256);
+    if (!first || !coveredId || (state && state.pendingChainBroken)) return state && state.pendingFromEmpty ? null : first;
+    const entries = await readPendingLog(owner);
+    const index = entries.findIndex(entry => clean(entry.id) === coveredId);
+    if (index < 0) return first;
+    let workspace = first;
+    for (const entry of entries.slice(0, index + 1)) workspace = applyWorkspaceDelta(workspace, entry.delta);
+    return workspace;
+  }
+  async function mergeBaseFor(owner, envelope) {
+    const state = await ownerState(owner);
+    const me = await installationId();
+    if (publicationDisplaced(state, envelope, me)) {
+      const coveredId = coveredPublicationId(envelope, me) || clean(envelope && envelope.parentSha256);
+      trace('COLLECTION_REPLICA_PUBLICATION_DISPLACED', { ownerId: owner, remoteSha256: envelopeIdentity(envelope), coveredSha256: coveredId || null });
+      return { base: await pendingBaseFor(owner, state, coveredId), displaced: true };
+    }
+    return { base: await readBaseSnapshot(owner, state && state.baseWorkspaceSha256), displaced: false };
   }
   const PRESERVED_PER_OWNER = 5;
   async function preserveReadOnlyLocal(owner, local) {
@@ -432,13 +716,25 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
   async function recordBase(ownerId, envelope, state = 'up-to-date', detail = {}) {
     try { await writeBaseSnapshot(ownerId, envelope.workspace); }
     catch (error) { trace('COLLECTION_REPLICA_BASE_FAILED', { ownerId: clean(ownerId), error: error && error.message }); }
-    return updateOwnerState(ownerId, {
-      state, code: null, message: null,
-      baseEnvelopeSha256: envelopeIdentity(envelope),
-      baseWorkspaceSha256: checksum(envelope.workspace),
-      remoteRevision: Number(envelope.workspace && envelope.workspace._revision) || 0,
-      ...detail,
+    const baseWorkspaceSha256 = checksum(envelope.workspace);
+    const me = await installationId();
+    // Bekleyen yayım yalnız onu kapsayan bir halefle onaylanır; kendi dosyasını
+    // yeniden görmek onay değildir (geç yerinden edilme).
+    let cleared = false;
+    const result = await updateOwnerState(ownerId, current => {
+      const next = {
+        state, code: null, message: null,
+        baseEnvelopeSha256: envelopeIdentity(envelope),
+        baseWorkspaceSha256,
+        remoteRevision: Number(envelope.workspace && envelope.workspace._revision) || 0,
+        ...(publicationConfirmed(current, envelope, me) ? CLEAR_PENDING_PUBLICATIONS : {}),
+        ...detail,
+      };
+      cleared = hasPendingPublication(current) && !hasPendingPublication({ ...current, ...next });
+      return next;
     });
+    if (cleared) await dropPendingBases(ownerId);
+    return result;
   }
   function conflictError(code, message, detail = {}) {
     return Object.assign(new Error(message), { code, statusCode: 409, ...detail });
@@ -523,8 +819,7 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
       await recordBase(owner, envelope);
       return { synced: true, merged: false, ownerId: owner, revision: Number(envelope.workspace && envelope.workspace._revision) || 0, reason: 'READ_ONLY_ADOPTED' };
     }
-    const state = await ownerState(owner);
-    const base = await readBaseSnapshot(owner, state && state.baseWorkspaceSha256);
+    const { base, displaced } = await mergeBaseFor(owner, envelope);
     const local = workspaces.loadWorkspace(owner);
     const { workspace, conflicts } = mergeCollectionWorkspaces(base, local, envelope.workspace);
     const write = await workspaces.replaceWorkspaceReplica(owner, workspace, { expectedSha256: checksum(local) });
@@ -532,7 +827,9 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
       await recordConflict(owner, conflictError('COLLECTION_REPLICA_CONCURRENT_CHANGE', 'Koleksiyon birleştirilirken yerel kopya değişti; bir sonraki senkronda yeniden denenecek.'));
       return { synced: false, merged: false, ownerId: owner, reason: 'LOCAL_CHANGED_DURING_MERGE', conflict: true };
     }
-    await recordBase(owner, envelope);
+    // Yerinden edilen yayımın düzenlemeleri artık yerelde, yeni uzak tabanın
+    // üstünde duruyor: bekleyen yayım kaydı işini bitirdi.
+    await recordBase(owner, envelope, 'up-to-date', displaced ? CLEAR_PENDING_PUBLICATIONS : {});
     await recordMergeConflicts(owner, conflicts);
     trace('COLLECTION_REPLICA_MERGED', { ownerId: owner, revision: workspace._revision, conflicts: conflicts.length });
     let publication = null, publishError = null;
@@ -611,8 +908,7 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
      kopya bu arada değiştiyse yazılmaz ve yayım beklemede kalır. Kilit sırası
      hub → yerel çalışma alanı → replikasyon durumu; ters yön yoktur. */
   async function mergeWithinLease(owner, current) {
-    const state = await ownerState(owner);
-    const base = await readBaseSnapshot(owner, state && state.baseWorkspaceSha256);
+    const { base, displaced } = await mergeBaseFor(owner, current);
     const local = workspaces.loadWorkspace(owner);
     const { workspace, conflicts } = mergeCollectionWorkspaces(base, local, current.workspace);
     const write = await workspaces.replaceWorkspaceReplica(owner, workspace, { expectedSha256: checksum(local) });
@@ -621,7 +917,7 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     // reconcile() ile aynı sıra: birleşim yerelde yazıldığı anda taban ve
     // çakışmalar kaydedilir. Ardından hub yazımı düşerse kaybeden yerel değer
     // çakışma kaydında kalır ve sonraki senkron doğru tabanla devam eder.
-    await recordBase(owner, current);
+    await recordBase(owner, current, 'up-to-date', displaced ? CLEAR_PENDING_PUBLICATIONS : {});
     await recordMergeConflicts(owner, conflicts);
     // Yayımlanan kopya yerel deponun gerçek içeriğidir. Birleşimin üzerine
     // eklenmiş yerel kayıt (daha yüksek revizyon) onun soyundandır; daha düşük
@@ -629,6 +925,48 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     const reloaded = workspaces.loadWorkspace(owner);
     if ((Number(reloaded && reloaded._revision) || 0) < (Number(workspace && workspace._revision) || 0)) throw changed();
     return { workspace: reloaded, conflicts };
+  }
+  /* Hub yazımından ÖNCE kaydedilir: yazım düşerse bekleyen kayıt, uzak kopyayı
+     yayımdan önceki tabanla birleştirtir (o taban zaten uzak kopyadır) ve
+     kesilen yayımın düzenlemesi kaybolmaz. İlk bekleyen yayımda CAS
+     doğrulanmış taban dosyası ilk taban olur (yeniden adlandırma, tam yazım
+     yok); sonraki her yayım yalnız küçük farkını günlüğe ekler. */
+  async function markPendingPublication(owner, current, identity, workspace) {
+    const prior = await ownerState(owner) || {};
+    const startChain = async () => {
+      // İlk taban önce kalıcı olur (taşıma ya da kopya); olmazsa yayım iptal.
+      const baseMatchesCurrent = Boolean(current && prior.baseEnvelopeSha256 === envelopeIdentity(current) && clean(prior.baseWorkspaceSha256));
+      let firstSha = null;
+      if (current && baseMatchesCurrent) { await moveBaseToPendingFirst(owner, current.workspace); firstSha = clean(prior.baseWorkspaceSha256); }
+      else if (current) {
+        if (statePath) await writeJson(pendingFirstFile(owner), current.workspace);
+        else volatileBases.set(`${safeId(owner)}.pending-first`, JSON.stringify(current.workspace));
+        firstSha = checksum(current.workspace);
+      }
+      await appendPendingLog(owner, { id: identity, delta: workspaceDelta(current ? current.workspace : null, workspace) }, { reset: true });
+      await updateOwnerState(owner, { pendingLatest: identity, pendingFirstBaseSha256: firstSha, pendingFromEmpty: current ? null : true, pendingChainBroken: null });
+    };
+    if (!hasPendingPublication(prior)) return startChain();
+    if (current && envelopeIdentity(current) === clean(prior.pendingLatest)) {
+      await appendPendingLog(owner, { id: identity, delta: workspaceDelta(current.workspace, workspace) });
+      await updateOwnerState(owner, { pendingLatest: identity });
+      return;
+    }
+    /* Zincir son kaydımızın üstüne uzamıyor: son kayıt(lar)ın hub yazımı inmedi.
+       Uzak kopya (CAS ile tabanımız) zincirde inmiş bir kayıtsa günlük oradan
+       kesilip zincir sürdürülür; değilse inen bekleyen kayıt kalmamıştır ve zincir
+       uzak kopyadan yeniden başlar. İkisi de kesindir; eski ilk tabana düşmek
+       bilinçli geri almaları kaybettiriyordu (bağımsız inceleme F1). */
+    const entries = current ? await readPendingLog(owner) : [];
+    const index = current ? entries.findIndex(entry => clean(entry.id) === envelopeIdentity(current)) : -1;
+    if (index >= 0) {
+      await rewritePendingLog(owner, [...entries.slice(0, index + 1), { id: identity, delta: workspaceDelta(current.workspace, workspace) }]);
+      await updateOwnerState(owner, { pendingLatest: identity, pendingChainBroken: null });
+      trace('COLLECTION_REPLICA_PENDING_CHAIN_RESUMED', { ownerId: owner, dropped: entries.length - index - 1 });
+      return;
+    }
+    trace('COLLECTION_REPLICA_PENDING_CHAIN_RESTARTED', { ownerId: owner });
+    return startChain();
   }
   async function publishOwnerCas(ownerId, { mergeUnderLease = false } = {}) {
     const owner = clean(ownerId); if (!owner) throw Object.assign(new Error('Koleksiyon sahibi zorunludur.'), { code: 'COLLECTION_OWNER_REQUIRED' });
@@ -679,6 +1017,11 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
         const envelope = { version: REPLICATION_VERSION, ownerId: owner, parentSha256: current ? envelopeIdentity(current) : null, workspace };
         envelope.sha256 = envelopeChecksum(envelope);
         envelope.chainSha256 = envelopeChainChecksum(envelope);
+        envelope.heads = nextHeads(current, await installationId(), envelope.chainSha256);
+        envelope.headsSha256 = envelopeHeadsChecksum(envelope);
+        // Hub yazımından ÖNCE: yazım düşerse bekleyen kayıt, uzak kopyayı
+        // yayımdan önceki tabanla birleştirtir (o taban zaten uzak kopyadır).
+        await markPendingPublication(owner, current, envelopeIdentity(envelope), workspace);
         await writeJson(target, envelope);
         publishedEnvelope = envelope;
       });
@@ -758,7 +1101,9 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
       return { synced: false, ownerId: owner, revision: localRevision, reason: 'LOCAL_NEWER_DIVERGED', conflict: true };
     }
     const pristineLocal = localRevision === 0 && local && local.initialized === false;
-    const localUnchangedSinceBase = Boolean(base && base.baseWorkspaceSha256 === localWorkspaceSha256);
+    // Yerinden edilmiş yayımda taban kendi yayımımızdır: yerel kopya "değişmemiş"
+    // görünür ama düzenlemeleri uzak kopyada yoktur. Körlemesine benimseme kayıptır.
+    const localUnchangedSinceBase = Boolean(base && base.baseWorkspaceSha256 === localWorkspaceSha256) && !publicationDisplaced(base, envelope, await installationId());
     if (!pristineLocal && !localUnchangedSinceBase) {
       await authorizePublication();
       const merged = await reconcileUntilPublished(owner, envelope, { readOnly: publishReadOnly });
