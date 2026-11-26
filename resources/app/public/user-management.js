@@ -560,8 +560,8 @@
               olarak KAPALI olduğu için kullanıcı düğmeyi bulamadı. Artık her
               zaman görünen araç çubuğunda, arama kutusunun yanında. */ ''}
         ${store.canRefreshCatalog === false ? '' : `<button type="button" class="umBtn" data-act="refreshScopeCatalog" title="${esc(T(
-          'MAG, MMYG ve Buying Group seçeneklerini ASAS veri modelinden doğrudan okur. Bu okuma kaynak filtresine/ufka tabi değildir.',
-          'Reads the MAG, MMYG and Buying Group options straight from the ASAS data model. This read is not subject to the source filter or horizon.',
+          'MAG, MMYG ve Buying Group seçeneklerini ASAS veri modelinden doğrudan okur; MAG → MMYG → Marka Müdürlüğü eşlemesini de yeniler. Bu okuma kaynak filtresine/ufka tabi değildir.',
+          'Reads the MAG, MMYG and Buying Group options straight from the ASAS data model and also refreshes the MAG → MMYG → Brand Directorate mapping. This read is not subject to the source filter or horizon.',
         ))}"><svg class="ic"><use href="#i-refresh"/></svg>${esc(T('Seçenekleri ASAS’tan Tazele', 'Refresh options from ASAS'))}</button>`}
         ${store.actor && store.actor.canManageUsers ? `<button type="button" class="umBtn umBtnPrimary" data-act="newUser">＋ ${esc(T('Yeni Kullanıcı', 'New User'))}</button>` : ''}
       </div>

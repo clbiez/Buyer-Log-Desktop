@@ -29,6 +29,7 @@ module.exports = function registerModelConnectionRoutes(app, deps) {
     replaceModelConnections,
     resolveColumnTypes,
     userAccess,
+    refreshMerchMaster,
   } = deps;
 
 
@@ -172,6 +173,8 @@ app.post('/api/user-scope-catalog/refresh', userAccess.requireArea('source'), us
     }
     const merged = userAccess.mergeCatalogValues(values);
     const catalog = merged.catalog || {};
+    // Aynı elle tazeleme MAG → MMYG → ad → müdürlük eşlemesini de modelden yeniden okur (arka plan).
+    if (typeof refreshMerchMaster === 'function') refreshMerchMaster();
     userAccess.appendAudit(req.currentUser, 'USER_SCOPE_CATALOG_REFRESH', 'asas', {
       mags: (catalog.mags || []).length, mmygs: (catalog.mmygs || []).length, buyingGroups: (catalog.buyingGroups || []).length,
     });

@@ -376,6 +376,7 @@ const databaseCredentialStore = require('./lib/database-credential-store');
 const corporateIntegrationLab = require('./lib/corporate-integration-lab');
 const modelFields = require('./lib/model-fields');
 const merchHierarchy = require('./lib/merch-hierarchy');
+const merchMaster = require('./lib/merch-master');
 const plmFabricInfo = require('./lib/plm-fabric-info');
 const filterValueTypes = require('./lib/filter-value-types');
 const { loadFromModelConnections, ensureConnectionMapping, alignHorizonWithMapping, validateAntrepoIntegrity, resolveColumnTypes, effectiveScopes, buildConnectionQuery, isRelatedLookupError, applyRunMappingRepairs } = require('./lib/model-refresh');
@@ -4116,6 +4117,25 @@ app.get('/api/plm-style-links', userAccess.requireAnyArea('source', 'koleksiyon'
 });
 // PLM ana renk (elle düzeltme). Ön+arka model görseli yalnız ana renge
 // yazılır; kural ve öncelik plm-main-colour.js içindedir.
+// Model geneli merch eşlemesi (Ufuk'tan bağımsız; bkz. lib/merch-master.js). Dosya bir kez
+// okunur ve bellekte tutulur; veri yanıtındaki sürüm hesabı disk okuması yapmaz.
+const MERCH_MASTER_FILE = path.join(SERVER_DATA_ROOT, 'merch-master.json');
+let merchMasterCache;
+const merchMasterRefresher = merchMaster.createMasterRefresher({
+  loadConnections: () => (loadModelConnections().items || []),
+  runModelRows: input => modelQuery.runModelRows(input),
+  readFile: () => {
+    if (merchMasterCache === undefined) {
+      try { merchMasterCache = fs.existsSync(MERCH_MASTER_FILE) ? JSON.parse(fs.readFileSync(MERCH_MASTER_FILE, 'utf8')) : null; }
+      catch (err) { logRuntimeFailure('merchMasterRead', err); merchMasterCache = null; }
+    }
+    return merchMasterCache;
+  },
+  writeFile: value => { atomicWriteJson(MERCH_MASTER_FILE, value); merchMasterCache = value; },
+});
+function kickMerchMasterRefresh(reason) {
+  merchMasterRefresher.ensure({ reason }).catch(err => logRuntimeFailure('merchMasterRefresh', err));
+}
 // Merch hiyerarşisi (Marka Müdürlüğü › MMYG › MAG). Filtre listeleri kodun yanında ad ve
 // müdürlüğü göstermek için ister; veri kullanıcının kendi ASAS yenilemesinden gelir,
 // elle bakım yoktur. Eski snapshot'ta hiyerarşi yoksa yüklü satırlardan bir kez kurulur.
@@ -4127,7 +4147,12 @@ app.get('/api/merch-hierarchy', async (req, res) => {
     if (!merchHierarchy.isHierarchy(runtime.merchHierarchy) && (Array.isArray(runtime.asasOrders) && runtime.asasOrders.length || Array.isArray(runtime.lflRows) && runtime.lflRows.length)) {
       runtime.merchHierarchy = merchHierarchy.fromRuntimeRows(runtime.asasOrders, runtime.lflRows, { at: runtime.loadedAt || undefined });
     }
-    res.set('Cache-Control', 'no-store').json(merchHierarchy.publicView(runtime.merchHierarchy));
+    const master = merchMasterRefresher.read();
+    const status = merchMasterRefresher.status();
+    if (!status.builtAt) kickMerchMasterRefresh('missing'); // yalnız ilk kez; arka planda, yanıt beklemez
+    const view = merchHierarchy.publicView(merchMaster.overlay(runtime.merchHierarchy, master && master.hierarchy));
+    view.master = { builtAt: status.builtAt, pending: merchMasterRefresher.status().pending, error: status.error };
+    res.set('Cache-Control', 'no-store').json(view);
   } catch (err) {
     logRuntimeFailure('merchHierarchy', err);
     res.status(500).json({ error: String(err && err.message || err) });
@@ -8282,6 +8307,9 @@ async function loadFromModels(value, targets = null, options = {}) {
     },
   };
   throwIfRefreshSignalAborted(options.signal);
+  // Model geneli merch eşlemesi her yenilemede OKUNMAZ: yalnız kayıt yoksa, 7 günden eskiyse ya da bu
+  // yenilemede kayıtlı eşlemede olmayan yeni kod göründüyse (en sık 6 saatte bir) arka planda okunur.
+  if (asasMode === 'database') setImmediate(() => { const reason = merchMasterRefresher.needsRefresh(next.merchHierarchy); if (reason) kickMerchMasterRefresh(reason); });
   if (options.deferPublish) return next;
   return publishRefreshedRuntime(id, next);
 }
@@ -8837,7 +8865,7 @@ async function buildResponse(currentUser = null, options = {}) {
     sourceFolder: sourceFolderForUser(id),
     cpupdateInfo: active.cpupdateInfo,
     fabricHeaderInfo: active.fabricHeaderInfo || null,
-    merchHierarchyVersion: active.merchHierarchy && active.merchHierarchy.builtAt || null,
+    merchHierarchyVersion: [active.merchHierarchy && active.merchHierarchy.builtAt || '', merchMasterRefresher.status().builtAt || ''].join('|'),
     antrepoHeaderInfo: active.antrepoHeaderInfo || null,
     antrepoSourceMode: ['database', 'dashboard'].includes(overrides.antrepoSourceMode) ? overrides.antrepoSourceMode : 'excel',
     asasSourceMode: overrides.asasSourceMode === 'database' ? 'database' : 'excel',
@@ -12719,6 +12747,7 @@ require('./routes/horizon-template-routes')(app, {
 // ---- Veri modeli bağlantıları route'ları (şema, sorgu, çalıştırma) → server/routes/model-connection-routes.js ----
 require('./routes/model-connection-routes')(app, {
   MODEL_EXPORT_ROOT,
+  refreshMerchMaster: () => kickMerchMasterRefresh('manual'),
   alignHorizonWithMapping,
   apiError,
   ensureConnectionMapping,

@@ -329,6 +329,35 @@
           "en": "On demo data, manually typed Artwork Detail values appear as cards; free text stays plain."
         }
       }
+    },
+    {
+      "id": "merch-horizon-model-mapping",
+      "type": "improvement",
+      "module": {
+        "tr": "Ufuk filtreleri, widget'lar, tüm filtreler",
+        "en": "Horizon filters, widgets, all filters"
+      },
+      "title": {
+        "tr": "Ufuk filtrelerinde MMYG bağlamı ve Ufuk dışındaki kodlar için model geneli eşleme",
+        "en": "MMYG context in Horizon filters and model-wide mapping for codes outside the Horizon"
+      },
+      "body": {
+        "tr": "Ufuk düzenleyicisinde MAG değer seçicisi her kodun altında MMYG kodu, adı ve Marka Müdürlüğünü gösterir; arama adla da eşleşir ve seçili değer çiplerinin üstüne gelince tam zincir görünür. Modeldeki İngilizce alan adları (ör. Merch Sub-Group Code) da tanınır. Eşleme artık yalnız sizin Ufkunuzdaki satırlardan değil, ASAS modelinin tamamından da okunur; Ufuk dışındaki kodlar için \"Eşleme yok\" görünmez. Model listesi programa kalıcı kaydedilir ve her yenilemede okunmaz: ilk kez, bir ASAS yenilemesinde yeni bir kod göründüğünde (en sık 6 saatte bir) ya da kayıt 7 günden eskiyse arka planda tazelenir; Kullanıcı yönetimindeki \"ASAS'tan Tazele\" de aynı anda yeniler. Elle eşleme gerekmez. Modelde de bulunmayan kodlarda \"Eşleme yok\" nedenini ipucuyla söyler.",
+        "en": "In the Horizon editor, the MAG value picker shows each code's MMYG code, name and Brand Directorate underneath; search also matches names, and hovering a selected value chip shows the full chain. English model field names (e.g. Merch Sub-Group Code) are recognised too. The mapping is now also read from the whole ASAS model, not only from rows in your Horizon, so codes outside your Horizon no longer show \"No mapping\". The model list is stored in the program and is not read on every refresh: it refreshes in the background the first time, when an ASAS refresh shows a new code (at most every 6 hours) or when it is older than 7 days; \"Refresh from ASAS\" in User management refreshes it too. No manual mapping is needed. For codes that are not in the model either, \"No mapping\" explains why in a tooltip."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "merch-horizon-context.png",
+        "alt": {
+          "tr": "Demo Ufuk düzenleyicisinde MAG değer seçicisi: her kodun yanında MMYG ve müdürlük",
+          "en": "MAG value picker in the demo Horizon editor: MMYG and directorate next to each code"
+        },
+        "caption": {
+          "tr": "Demo veride Ufuk MAG seçicisi kodların hangi MMYG ve müdürlüğe ait olduğunu gösteriyor.",
+          "en": "On demo data, the Horizon MAG picker shows which MMYG and directorate each code belongs to."
+        }
+      }
     }
   ]
 }
