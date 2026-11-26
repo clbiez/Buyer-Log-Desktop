@@ -12225,6 +12225,15 @@ function ordersRecordRowsVisible(path,started,detail={}){
   window.BLPerf?.record?.(`orders.rowsVisible.${path}Ms`,ms);
   window.BLPerf?.mark?.('ORDERS_ROWS_VISIBLE',{path,ms:Math.round(ms*10)/10,...detail});
   try{window.dispatchEvent(new CustomEvent('bl:orders-rows-visible',{detail:{path,ms,...detail}}));}catch(_){}
+  ordersNotifyPainted();
+}
+/* Açılış bekleyicisi bildirimi. 'bl:orders-rows-visible' bir ÖLÇÜM olayıdır ve yalnız
+   sorgu yanıtında/eski yolda gönderilir; önbellekten çizim, sekme etkin değilken
+   ertelenen çizim ve hata yolu onu göndermez. Açılış bu yollarda satırlar görünse de
+   15 sn zaman aşımını bekliyordu. painted=false: çizim olmadan sonuçlandı (hata). */
+function ordersNotifyPainted(painted=true){
+  if(painted)ordersRM.paintCount++;
+  for(const waiter of [...ordersRM.paintWaiters])waiter(painted);
 }
 /* ================= SİPARİŞLER · OKUMA MODELİ PENCERELİ YOL (#1076 / WS3) =================
    Anahtar açıkken Siparişler tüm satırları indirmez. Filtre, arama ve sıralama
@@ -12258,6 +12267,8 @@ const ordersRM={
   windows:new Set(),pending:new Map(),wanted:new Set(),flushQueued:false,repaintFrame:0,
   facets:null,facetsKey:'',facetsSeq:0,optionsGeneration:'',
   columnFacets:new Map(),materialized:null,legacyReason:'',firstStarted:0,
+  // Açılış bekleyicisi: her çizim bildirir (bkz. ordersNotifyPainted).
+  paintWaiters:new Set(),paintCount:0,
 };
 // Depolama bir kez okunur: filteredOrders / sütun paneli gibi sık yollar her çağrıda okumaz.
 let ordersRMEnabledCache=null;
@@ -12474,6 +12485,7 @@ function ordersRMPaintTable(){
   const table=document.getElementById('ordersTable');if(table)table._blRenderedRowsSource=rows;
   bindOrdersImageHover();
   bindStatusBacklogDrilldown('ordersTable','orders');
+  ordersNotifyPainted();
 }
 function ordersRMHideSearchFeedback(){
   const panel=document.getElementById('ordersSearchFeedback');
@@ -12578,6 +12590,7 @@ function renderOrdersFromReadModel(){
     const message=(appLang==='en'?'Orders could not be loaded: ':'Siparişler yüklenemedi: ')+(error&&error.message||error);
     if(!ordersRM.rows)setOrdersLoadingState(false,message);
     showToast(message);
+    ordersNotifyPainted(false);
   });
   return true;
 }
@@ -20973,10 +20986,23 @@ async function waitForStartupPrimaryScreen(){
 // Açılış ekranı Siparişler ise ilk pencere görünene (ya da eski yol çizilene) kadar bekler.
 function waitForOrdersReadModelRows(){
   return new Promise(resolve=>{
-    const done=()=>{window.removeEventListener('bl:orders-rows-visible',done);resolve(true);};
-    window.addEventListener('bl:orders-rows-visible',done);
+    let finished=false,timer=null;
+    const finish=painted=>{
+      if(finished)return;
+      finished=true;
+      window.removeEventListener('bl:orders-rows-visible',onVisible);
+      ordersRM.paintWaiters.delete(finish);
+      clearTimeout(timer);
+      resolve(painted===true?true:Boolean(ordersRM.rows||state.orders));
+    };
+    const onVisible=()=>finish(true);
+    window.addEventListener('bl:orders-rows-visible',onVisible);
+    ordersRM.paintWaiters.add(finish);
     renderOrders();
-    setTimeout(()=>{window.removeEventListener('bl:orders-rows-visible',done);resolve(Boolean(ordersRM.rows||state.orders));},15000);
+    // Dinleyici kurulduktan SONRA durum kontrolü: önceden yapılmış çizim kaçmaz.
+    if(ordersRM.paintCount>0&&ordersRM.rows){finish(true);return;}
+    // Yedek: hiç çizim/olay gelmezse (beklenmeyen yol) açılış sonsuza dek beklemez.
+    if(!finished)timer=setTimeout(()=>finish(false),15000);
   });
 }
 function scheduleStartupScreenReady(callback){
