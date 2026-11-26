@@ -207,10 +207,13 @@ test('v7.42 · sıra YALNIZ gerçekten yeni sütunda ya da gerçek grup değişi
   assert.match(fn, /persistedBefore = new Set\(window\.BLColumnState/);
   assert.match(fn, /const isNew = !knownBefore\.has\(col\.k\) && !persistedBefore\.has\(col\.k\);/);
   assert.match(fn, /const placed = col\.formulaDef && col\.formulaDef\._placedGroup;/);
-  assert.match(fn, /const groupChanged = Boolean\(placed\) && nameKey\(placed\) !== nameKey\(col\.group\);/);
+  // Alanlar çekmecesindeki kişisel başlık col.group'a yazılır; yerleşim kararı
+  // tanımdaki başlığa (baseGroup) göre verilir, yoksa her eşitlemede sütun taşınırdı.
+  assert.match(fn, /const definitionGroup = Object\.prototype\.hasOwnProperty\.call\(col, 'baseGroup'\) \? col\.baseGroup : col\.group;/);
+  assert.match(fn, /const groupChanged = Boolean\(placed\) && nameKey\(placed\) !== nameKey\(definitionGroup\);/);
   assert.match(fn, /if \(isNew \|\| groupChanged\) \{/);
-  assert.match(fn, /placeInGroup\(tableKey, col\.k, col\.group\);/);
-  assert.match(fn, /rememberPlacedGroup\(tableKey, col\.formulaId, col\.group\);/);
+  assert.match(fn, /placeInGroup\(tableKey, col\.k, definitionGroup\);/);
+  assert.match(fn, /rememberPlacedGroup\(tableKey, col\.formulaId, definitionGroup\);/);
 });
 
 test('v7.42 · son yerleştirilen grup tanımın yanında saklanır, gereksiz yazma yok', () => {
@@ -256,8 +259,9 @@ test('v7.42 · veri tabanı sütunu persisted sırayı korur; yalnız yeni/grup 
   assert.match(fn, /persistedBefore=new Set\(savedColumnOrderKeys\('cp'\)\)/);
   assert.match(fn, /restoreLateManagedColumnState\('cp'\)/);
   assert.match(fn, /const isNew=!knownBefore\.has\(c\.k\)&&!persistedBefore\.has\(c\.k\);/);
-  assert.match(fn, /const groupChanged=previousGroup\.has\(c\.k\)&&groupKey\(previousGroup\.get\(c\.k\)\|\|''\)!==groupKey\(c\.group\);/);
-  assert.match(fn, /if\(isNew\|\|groupChanged\)placeColumnInGroup\('cp',c\.k,c\.group\);/);
+  assert.match(fn, /const definitionGroup=tableColumnBaseGroup\(c\);/);
+  assert.match(fn, /const groupChanged=previousGroup\.has\(c\.k\)&&groupKey\(previousGroup\.get\(c\.k\)\|\|''\)!==groupKey\(definitionGroup\);/);
+  assert.match(fn, /if\(isNew\|\|groupChanged\)placeColumnInGroup\('cp',c\.k,definitionGroup\);/);
 });
 
 test('v7.42 · sunucu grubu saklar; uydurmaz (§152)', () => {
