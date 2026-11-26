@@ -393,7 +393,11 @@ function demoImages() {
       await page.click(`button[data-tab="${tab}"]`);
       await page.waitForFunction(t => document.querySelector(`#view-${t}`)?.offsetParent && document.querySelectorAll(`#view-${t} table tbody tr`).length > 0, tab, { timeout: 60000 });
       await page.waitForTimeout(400);
-      const before = await page.evaluate(t => { const info = BLAIScreenData.table(t, { all: true }); return JSON.stringify(info.rows); }, tab);
+      // Orders öncelik/izleme alanlarını eşzamansız bir iş toplu doldurur (Priority, _trackingTags…);
+      // karşılaştırma için veri durulduktan sonra (art arda iki aynı anlık görüntü) alınır.
+      const snap = () => page.evaluate(t => JSON.stringify(BLAIScreenData.table(t, { all: true }).rows), tab);
+      let before = await snap();
+      for (let k = 0; k < 40; k++) { await page.waitForTimeout(300); const next = await snap(); if (next === before) break; before = next; }
       await page.click(btn); await page.click(`${menu} [data-output-studio="${tab}"]`);
       await page.waitForSelector('.psStudio .psDocCard', { timeout: 30000 }); await page.waitForTimeout(400);
       const info = await page.evaluate(t => { const S = BLPresentationStudio._state(), rows = BLAIScreenData.table(t, { all: false }).rows.length; return { cards: S.res.index.size, rows, source: S.doc.source, status: document.querySelector('.psStatus').textContent }; }, tab);
