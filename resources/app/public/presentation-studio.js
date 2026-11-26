@@ -693,11 +693,22 @@
   }
 
   /* ---------------- Açılır paneller ---------------- */
+  const fold = s => String(s || '').toLocaleLowerCase('tr').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ı/g, 'i');
+  const searchKey = f => esc(fold(`${S.meta.label(f)} ${f}`));
+  const searchBox = label => `<input type="search" class="psSearch" data-ps="search" value="${esc(S.popQuery || '')}" placeholder="${esc(L('Ara…', 'Search…'))}" aria-label="${esc(label)}" autocomplete="off" spellcheck="false">`;
+  const noMatch = () => `<p class="psHint" data-ps="noMatch" hidden>${esc(L('Eşleşen alan yok.', 'No matching field.'))}</p>`;
+  // Arama, panel yeniden çizildiğinde (ör. kart bilgisi işaretlenince) korunur.
+  function filterPop() {
+    const p = S.$('[data-ps="pop"]'), q = fold(S.popQuery).trim();
+    let shown = 0;
+    for (const el of p.querySelectorAll('[data-q]')) { const hit = !q || el.dataset.q.includes(q); el.hidden = !hit; if (hit) shown += 1; }
+    const empty = p.querySelector('[data-ps="noMatch"]'); if (empty) empty.hidden = shown > 0;
+  }
   function closePop() { if (!S) return; const p = S.$('[data-ps="pop"]'); p.hidden = true; p.dataset.kind = ''; S.popAnchor = null; }
   function openPop(kind, anchor) {
     const p = S.$('[data-ps="pop"]');
     if (!p.hidden && p.dataset.kind === kind) { closePop(); return; }
-    p.dataset.kind = kind; S.popAnchor = anchor; fillPop(kind); p.hidden = false;
+    p.dataset.kind = kind; S.popAnchor = anchor; S.popQuery = ''; fillPop(kind); p.hidden = false;
     const r = anchor.getBoundingClientRect();
     p.style.left = `${clamp(r.left, 8, root.innerWidth - p.offsetWidth - 8)}px`; p.style.top = `${Math.min(r.bottom + 6, root.innerHeight - p.offsetHeight - 8)}px`;
     root.BLMotionPlus?.play?.('overlay', p);
@@ -705,9 +716,10 @@
   }
   function fillPop(kind) {
     const p = S.$('[data-ps="pop"]'), s = S.doc.style, h = t => `<h4 class="psPopTitle">${esc(t)}</h4>`;
+    const searching = doc_.activeElement?.dataset?.ps === 'search' && p.contains(doc_.activeElement);
     if (kind === 'fields') {
       const on = s.fields, off = S.meta.ids.filter(f => !on.includes(f));
-      p.innerHTML = h(L('Kartta gösterilecek bilgiler', 'Details shown on cards')) + `<div class="psFieldList" data-ps="fieldList">${[...on, ...off].map((f, i) => `<label class="psField" draggable="${on.includes(f)}" data-f="${esc(f)}"><span class="psGrip" aria-hidden="true">${on.includes(f) ? sprite('grip') : ''}</span><input type="checkbox" data-fc="${esc(f)}"${on.includes(f) ? ' checked' : ''}><span>${esc(S.meta.label(f))}</span>${i === 0 && on.length ? `<small class="psSub">${esc(L('başlık', 'title'))}</small>` : ''}</label>`).join('')}</div>`
+      p.innerHTML = h(L('Kartta gösterilecek bilgiler', 'Details shown on cards')) + searchBox(L('Kart bilgisi ara', 'Search card details')) + `<div class="psFieldList" data-ps="fieldList">${[...on, ...off].map((f, i) => `<label class="psField" draggable="${on.includes(f)}" data-f="${esc(f)}" data-q="${searchKey(f)}"><span class="psGrip" aria-hidden="true">${on.includes(f) ? sprite('grip') : ''}</span><input type="checkbox" data-fc="${esc(f)}"${on.includes(f) ? ' checked' : ''}><span>${esc(S.meta.label(f))}</span>${i === 0 && on.length ? `<small class="psSub">${esc(L('başlık', 'title'))}</small>` : ''}</label>`).join('')}</div>` + noMatch()
         + `<label class="psToggle"><input type="checkbox" data-ps="labels"${s.labels ? ' checked' : ''}><span>${esc(L('Alan adlarını göster', 'Show field names'))}</span></label><p class="psHint">${esc(L('Sürükleyerek sıralayın. İlk bilgi kart başlığı olur.', 'Drag to reorder. The first detail becomes the card title.'))}</p>`;
     } else if (kind === 'design') {
       const sl = (k, label, unit) => { const [min, max, , step] = E().STYLE_SPEC[k]; return `<label class="psSlider"><span>${esc(label)}</span><output class="psNum" data-out="${k}">${s[k]}${unit}</output><input type="range" data-s="${k}" data-u="${unit}" min="${min}" max="${max}" step="${step}" value="${s[k]}"></label>`; };
@@ -721,7 +733,7 @@
         + `<button type="button" class="tbtn" data-rf="all"><b class="psOptTitle">${esc(L('Tümünü sıfırla', 'Reset everything'))}</b><span class="psSub">${esc(L('Sabitleri kaldırır, sunumu baştan dizer.', 'Removes pins and lays the presentation out again.'))}</span></button></div>`;
     } else if (kind === 'level') {
       const rem = S.meta.ids.filter(f => !S.doc.grouping.levels.includes(f));
-      p.innerHTML = h(L('Gruplama seviyesi ekle', 'Add grouping level')) + `<div class="psMenu psScroll">${rem.map(f => `<button type="button" class="tbtn" data-addlv="${esc(f)}">${esc(S.meta.label(f))}</button>`).join('')}</div>`;
+      p.innerHTML = h(L('Gruplama seviyesi ekle', 'Add grouping level')) + searchBox(L('Gruplama alanı ara', 'Search grouping fields')) + `<div class="psMenu psScroll">${rem.map(f => `<button type="button" class="tbtn" data-addlv="${esc(f)}" data-q="${searchKey(f)}">${esc(S.meta.label(f))}</button>`).join('')}</div>` + noMatch();
     } else if (kind === 'templates') {
       const saved = loadTemplates(), builtin = builtinTemplates();
       const row = (t, key, del) => `<div class="psTpl"><span><b>${esc(t.name)}</b><small class="psSub">${esc(t.hint || `${PAPER_LABEL()[t.page.preset] || t.page.preset} · ${t.grouping.levels.map(f => S.meta.label(f)).join(' › ') || L('grupsuz', 'ungrouped')}`)}</small></span><button type="button" class="tbtn" data-tpl="${key}">${esc(L('Uygula', 'Apply'))}</button>${del ? `<button type="button" class="tbtn psIcon" data-tdel="${del}" aria-label="${esc(L('Şablonu sil', 'Delete template'))}">${sprite('trash')}</button>` : ''}</div>`;
@@ -734,7 +746,8 @@
         + `<p class="psHint">${esc(L(`Sunumlar hesabınıza otomatik kaydedilir (en fazla ${MAX_DECKS}). Kayıt bilgileri her açılışta kaynak tablodan güncel okunur.`, `Presentations are saved to your account automatically (up to ${MAX_DECKS}). Record details are read fresh from the source table each time.`))}</p>`;
     } else if (kind === 'export') {
       p.innerHTML = h(L('Dışa aktar', 'Export')) + `<div class="psMenu"><button type="button" class="tbtn" data-ex="pdf"><b class="psOptTitle">PDF</b><span class="psSub">${esc(L('Önizlemedeki sayfaların aynısı, seçili sayfa ölçüsünde.', 'Exactly the previewed pages, in the selected page size.'))}</span></button><button type="button" class="tbtn" data-ex="pptx"><b class="psOptTitle">PowerPoint</b><span class="psSub">${esc(L('Düzenlenebilir kartlar ve metinler; aynı konum ve ölçü.', 'Editable cards and text; same positions and size.'))}</span></button></div>`;
-    }
+    }    const search = p.querySelector('[data-ps="search"]');
+    if (search) { filterPop(); if (searching) { search.focus({ preventScroll: true }); search.setSelectionRange(search.value.length, search.value.length); } }
   }
 
   /* ---------------- Dışa aktarma ---------------- */
@@ -902,7 +915,9 @@
       if (t.dataset.s) S.slider = false;
     });
     host.addEventListener('input', e => {
-      const t = e.target; if (!t.dataset.s) return;
+      const t = e.target;
+      if (t.dataset.ps === 'search') { S.popQuery = t.value; filterPop(); return; }
+      if (!t.dataset.s) return;
       if (!S.slider) { pushHistory(); S.slider = true; }
       S.doc.style[t.dataset.s] = Number(t.value);
       host.querySelector(`[data-out="${t.dataset.s}"]`).textContent = t.value + t.dataset.u;
@@ -935,6 +950,13 @@
     S.shell.addEventListener('keydown', onKey);
   }
   function onKey(e) {
+    if (e.key === 'Enter' && e.target.dataset.ps === 'search') {
+      // Enter ilk eşleşmeyi seçer: gruplama seviyesi eklenir ya da kart bilgisi açılıp kapanır.
+      e.preventDefault();
+      const first = S.$('[data-ps="pop"]').querySelector('[data-q]:not([hidden])');
+      if (first) (first.matches('[data-addlv]') ? first : first.querySelector('input[data-fc]'))?.click();
+      return;
+    }
     if (e.target.matches('input,select,textarea')) { if (e.key === 'Escape' && !S.$('[data-ps="pop"]').hidden) { e.stopPropagation(); closePop(); } return; }
     const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
     if (e.key === 'Escape') {

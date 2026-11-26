@@ -56,14 +56,16 @@
 .psPop{position:fixed;display:flex;flex-direction:column;gap:8px;width:320px;max-height:min(70vh,560px);padding:12px;overflow:auto}
 .psFieldList,.psScroll{max-height:320px;overflow:auto}
 .psFieldList{display:flex;flex-direction:column;gap:2px}
-.psField{display:flex;align-items:center;gap:8px;padding:4px 6px;cursor:pointer}
+.psField{flex:none;display:flex;align-items:center;gap:8px;padding:4px 6px;cursor:pointer}
 .psField small{margin-left:auto}
+.psSearch{width:100%;box-sizing:border-box}
+.psField[hidden],.psMenu>.tbtn[hidden]{display:none}
 .psGrip{display:grid;place-items:center;width:14px;cursor:grab}
 .psSlider{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 10px}
 .psSlider>input,.psSlider>select,.psSlider>.psSeg{grid-column:1/-1;width:100%}
 .psSlider>.psSeg>button{flex:1}
 .psMenu{display:flex;flex-direction:column;gap:4px}
-.psMenu>.tbtn,.psOptions>.tbtn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;height:auto;min-height:0;padding:8px 10px;text-align:left;white-space:normal}
+.psMenu>.tbtn,.psOptions>.tbtn{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:2px;height:auto;min-height:0;padding:8px 10px;text-align:left;white-space:normal}
 .psTpl{display:flex;align-items:center;gap:6px;padding:4px}
 .psTpl>span{display:flex;flex-direction:column;flex:1;min-width:0}
 .psTplSave{display:flex;gap:6px}

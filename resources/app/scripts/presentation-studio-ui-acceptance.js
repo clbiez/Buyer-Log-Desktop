@@ -65,10 +65,43 @@ function demoImages() {
 
     // Grupla: Fabric seviyesi ekle (çok seviyeli).
     await page.click('.psStudio [data-pop="level"]');
-    const fabricLevel = await page.$('.psPop [data-addlv="col.fabric"]');
-    assert.ok(fabricLevel, 'Fabric sütunu gruplama seçeneği olarak listelenir');
-    await fabricLevel.click(); await page.waitForTimeout(200);
+    assert.ok(await page.$('.psPop [data-addlv="col.fabric"]'), 'Fabric sütunu gruplama seçeneği olarak listelenir');
+    // Uzun listede satırlar sıkışıp üst üste binmez; arama kutusu odakta gelir.
+    // Demo veride ~12 alan var; gerçek koleksiyonlarda 50+ sütun olur. Listeyi geçici satırlarla uzatıp ölç.
+    const rows = await page.$eval('.psPop .psMenu', menu => {
+      const extra = Array.from({ length: 50 }, (_, i) => { const b = menu.firstElementChild.cloneNode(true); b.removeAttribute('data-addlv'); b.removeAttribute('data-q'); b.dataset.probe = String(i); menu.append(b); return b; });
+      const out = [...menu.children].map(el => { const r = el.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, h: r.height, shrink: getComputedStyle(el).flexShrink }; });
+      extra.forEach(b => b.remove());
+      return out;
+    });
+    assert.ok(rows.length > 50, 'uzun alan listesi');
+    for (let i = 0; i < rows.length; i += 1) { assert.equal(rows[i].shrink, '0', `satır ${i} küçülebilir`); assert.ok(rows[i].h >= 24, `satır ${i} yüksekliği ${rows[i].h}`); if (i) assert.ok(rows[i].top >= rows[i - 1].bottom - 0.5, `satır ${i} öncekiyle çakışıyor`); }
+    assert.equal(await page.evaluate(() => document.activeElement?.dataset?.ps), 'search', 'arama kutusu odakta');
+    await page.screenshot({ path: path.join(OUT, `level-list-${THEME}.png`), clip: await page.$eval('.psPop', el => { const r = el.getBoundingClientRect(); return { x: Math.max(0, r.x - 330), y: Math.max(0, r.y - 110), width: 980, height: Math.min(560, r.height + 140) }; }) });
+    await page.keyboard.type('zzqq'); await page.waitForTimeout(80);
+    assert.equal(await page.$$eval('.psPop [data-addlv]:not([hidden])', els => els.length), 0);
+    assert.equal(await page.$eval('.psPop [data-ps="noMatch"]', el => el.hidden), false, 'eşleşme yok mesajı');
+    await page.fill('.psPop [data-ps="search"]', 'FABRİC'); await page.waitForTimeout(80);
+    const visible = await page.$$eval('.psPop [data-addlv]:not([hidden])', els => els.map(el => el.dataset.addlv));
+    assert.ok(visible.includes('col.fabric'), 'büyük harf / Türkçe İ ile arama eşleşir: ' + visible);
+    await page.screenshot({ path: path.join(OUT, `level-search-${THEME}.png`), clip: await page.$eval('.psPop', el => { const r = el.getBoundingClientRect(); return { x: Math.max(0, r.x - 330), y: Math.max(0, r.y - 110), width: 980, height: 420 }; }) });
+    if (visible[0] === 'col.fabric') await page.keyboard.press('Enter'); else await page.click('.psPop [data-addlv="col.fabric"]');
+    await page.waitForTimeout(200);
+    assert.equal(await page.$('.psPop:not([hidden])'), null, 'seçimden sonra panel kapanır');
     assert.deepEqual(await page.evaluate(() => BLPresentationStudio._state().doc.grouping.levels), ['productGroup', 'col.fabric']);
+    // Kart bilgileri: arama, Enter ile aç/kapat; arama metni ve odak yeniden çizimde korunur.
+    await page.click('.psStudio [data-pop="fields"]');
+    const fieldsBefore = await page.evaluate(() => [...BLPresentationStudio._state().doc.style.fields]);
+    await page.keyboard.type('season'); await page.waitForTimeout(80);
+    const firstField = await page.$eval('.psPop [data-q]:not([hidden])', el => el.dataset.f);
+    await page.keyboard.press('Enter'); await page.waitForTimeout(200);
+    const fieldsAfter = await page.evaluate(() => [...BLPresentationStudio._state().doc.style.fields]);
+    assert.notDeepEqual(fieldsAfter, fieldsBefore, 'Enter ilk eşleşen kart bilgisini değiştirir');
+    assert.equal(fieldsAfter.includes(firstField), !fieldsBefore.includes(firstField));
+    assert.deepEqual(await page.evaluate(() => ({ ps: document.activeElement?.dataset?.ps, v: document.activeElement?.value })), { ps: 'search', v: 'season' });
+    await page.keyboard.press('Enter'); await page.waitForTimeout(200);
+    assert.deepEqual(await page.evaluate(() => [...BLPresentationStudio._state().doc.style.fields]), fieldsBefore, 'ikinci Enter geri alır');
+    await page.keyboard.press('Escape'); await page.waitForTimeout(100);
 
     // Serbest sürükleme (Alt) → sabit kart; diğerleri akmaya devam eder.
     const pageBox = await page.$eval('.psPageWrap .psPage', el => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });

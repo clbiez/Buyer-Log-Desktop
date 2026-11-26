@@ -33,3 +33,18 @@ test('eski sunum stüdyosu tamamen kaldırıldı; LCW AI çıktı düzenleyicisi
   assert.match(read('server/lib/lcwai/lcwai-errors.js'), /OUTPUT_LEGACY_STUDIO: \{ status: 410, tr: '[^']+', en: '[^']+' \}/);
   assert.match(read('public/lcwai-chat.js'), /ensureFeature\('lcwaiOutputEditor'\)/);
 });
+
+test('uzun alan listeleri (gruplama seviyesi, kart bilgileri) okunur ve aranabilir', () => {
+  const css = read('public/presentation-studio.css'), studio = read('public/presentation-studio.js');
+  // Kaydırılan flex listede düğmeler küçülüp üst üste binmez (min-height:0 + flex-shrink regresyonu).
+  assert.match(css, /\.psMenu>\.tbtn,\.psOptions>\.tbtn\{flex:none;/);
+  assert.match(css, /\.psField\{flex:none;/);
+  for (const kind of ['level', 'fields']) {
+    const start = studio.indexOf(`kind === '${kind}'`), block = studio.slice(start, studio.indexOf('} else if', start + 20));
+    assert.match(block, /searchBox\(/, kind + ' arama kutusu');
+    assert.match(block, /data-q="/, kind + ' aranabilir satırlar');
+  }
+  assert.match(studio, /function filterPop\(\)/);
+  assert.match(studio, /const fold = s => String\(s \|\| ''\)\.toLocaleLowerCase\('tr'\)\.normalize\('NFD'\)/);
+  assert.match(studio, /if \(t\.dataset\.ps === 'search'\) \{ S\.popQuery = t\.value; filterPop\(\); return; \}/);
+});

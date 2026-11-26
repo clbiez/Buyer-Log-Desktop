@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-26",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Sunum Stüdyosu: okunur ve aranabilir alan listeleri",
+    "en": "Presentation Studio: readable, searchable field lists"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Sunum Stüdyosu’nda gruplama ve kart bilgisi listeleri çok sütunlu tablolarda okunur ve arama kutusuyla filtrelenir.",
+    "en": "In Presentation Studio, grouping and card detail lists stay readable in tables with many columns and can be filtered with a search box."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "presentation-studio-field-lists",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · CP · Siparişler",
+        "en": "Collection · CP · Orders"
+      },
+      "title": {
+        "tr": "Sunum Stüdyosu: gruplama ve kart bilgisi listeleri okunur ve aranabilir",
+        "en": "Presentation Studio: grouping and card detail lists are readable and searchable"
+      },
+      "body": {
+        "tr": "Çok sütunlu tablolarda Gruplama seviyesi ekle listesindeki alan adları üst üste binip okunmuyordu; artık her satır tam yüksekliğinde görünür ve liste kaydırılır. Gruplama seviyesi ve Kart bilgileri listelerine arama kutusu eklendi: büyük/küçük harf ve Türkçe karakter farkı gözetmeden arar, Enter ilk eşleşmeyi seçer.",
+        "en": "In tables with many columns, field names in the Add grouping level list overlapped and could not be read; each row now keeps its full height and the list scrolls. The grouping level and Card details lists have a search box: it ignores case and Turkish character differences, and Enter picks the first match."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "presentation-studio-field-search.png",
+        "alt": {
+          "tr": "Demo veriyle Sunum Stüdyosu: Gruplama seviyesi ekle panelinde arama kutusu ve tam yükseklikte okunan alan listesi",
+          "en": "Presentation Studio with demo data: the Add grouping level panel with a search box and a list of fully readable fields"
+        },
+        "caption": {
+          "tr": "Demo veride Gruplama seviyesi ekle paneli: arama kutusu ve okunur alan satırları.",
+          "en": "The Add grouping level panel on demo data: search box and readable field rows."
+        }
+      }
+    }
+  ]
 }
