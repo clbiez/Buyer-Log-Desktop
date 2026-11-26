@@ -15,7 +15,8 @@
 2. İş kuralı çekirdeği (fiyat, transit, öncelik, lisansör) **zaten tek kaynakta** (`public/business-rules.js`, 67 dışa aktarım, 57 tüketici dosyası; `app-main.js`, `parse.js` ve `server.js` yalnız delege ediyor) **[Doğrulandı]**. Tekrar çekirdekte değil; **ilkellerde** (sayı zorlama, kaçış, normalize) ve **mekanizmalarda** (filtre, sorgu yolu, türetme zinciri, projeksiyon güncelleme).
 3. Ölçülen davranış farkı var: 40 sayı zorlama tanımı en az 6 farklı anlam taşıyor (`null`→0 ya da `null`; `"1,5"`→`null` ya da 1,5; `"1.234,56"`→1,234) **[Doğrulandı: deney]**. Sütun filtresinin anlamı da modüle göre değişiyor **[Doğrulandı: source]**.
 4. **Öncelikte birinci varsayım (V10, kapsam eki):** birden fazla cihazın aynı yayım dosyasına yazması gerekli değil. Tek yazarlı değişmez kayıtlar kira, `-PC` kopyası, CAS ve tüm-belge yayım maliyetini ihtiyaç olarak kaldırır. Karşılığında yetki/saat sınırı, tombstone ufku ve geçiş köprüsü getirir; yolu ADR-0001'dir.
-5. **Önerilen ilk pilot:** CP satır kaydında **projeksiyon yeniden yazımına duyulan ihtiyacı kaldırmak**. Projeksiyon "değişmez taban + kalıcı satır yama günlüğü" olarak temsil edilir; tam yeniden yazım yalnız boşta sıkıştırma (compaction) olur. Bu, uygulamanın `local-db.js` WAL'ında zaten kanıtlanmış desenin aynısı. Faz 0 davranışı değiştirmez, yalnız gölge eşitliği ölçer (§6).
+5. **V1 bağımsız ölçümü (§6A):** kayıt başına ≈6,7 CPU-sn'nin %97'si işçilerde. Bunun %99,4'ü bütün dosya temsilinden (serileştirme, zlib, parse, kopya, GC) geliyor; iş kuralı hesabı yalnız %0,6. Prototipte taban + günlük kaydı 6.533 ms'den 11 ms'ye indiriyor, çıktı eşit. Ayrıca Siparişler'in 17 sn'lik soğuk açılışının ~15 sn'si **kaçırılan bir olay + 15 sn zaman aşımı**; tek satırlık prototip düzeltmesi bunu 2,15 sn'ye indiriyor (1 koşu).
+6. **Önerilen ilk pilot:** CP satır kaydında **projeksiyon yeniden yazımına duyulan ihtiyacı kaldırmak**. Projeksiyon "değişmez taban + kalıcı satır yama günlüğü" olarak temsil edilir; tam yeniden yazım yalnız boşta sıkıştırma (compaction) olur. Bu, uygulamanın `local-db.js` WAL'ında zaten kanıtlanmış desenin aynısı. Faz 0 davranışı değiştirmez, yalnız gölge eşitliği ölçer (§6).
 
 ---
 
@@ -324,6 +325,155 @@ Sıralama §0'daki öncelik sırasına göre etkiyi izler. Her varsayımda **S1*
   - Sadelik: CP için `cp-row-patch-log` süreç içi zinciri ve TTL yolu kaldırılabilir hale gelir. Silme ancak eşdeğer test geçince yapılır.
 - **Geri dönüş:** Bayrak kapanınca bugünkü yeniden yazım yolu döner. Günlük türetilmiş veridir ve silinebilir. Kaynak ve override biçimi değişmez.
 - **Bilinçli olarak kapsam dışı:** `overrides.json`'ın kayıt başına tam okunup yazılması (BASELINE §5 aday 3, ayrı iş), tarih temizleme yamaları (Faz 2: açık "temizlendi" değeri), Siparişler ve Genel Bakış modülleri (Faz 2).
+
+> Bu bölüm §6A'daki ölçümlerle **güncellendi**. Faz 0–1 kabul ölçütlerinin ölçülmüş tabanı ve okuma yolu ödünleşimi §6A.6'dadır.
+
+---
+
+## 6A · V1 doğrulama ve alternatifler (bağımsız ölçüm, 2026-11-26)
+
+**Ortam:** Linux container, 4 vCPU, Node v22.23.5, `main` @ `d772bab`, sentetik 30.000 satır (seed 7). Ölçümler seri koşuldu. Repo kodu değişmedi. Araçlar scratchpad'de: `benchmark-cp-save-flow.js`'in kopyasına iş parçacığı başına `/proc` CPU'su ve CDP ile ana iş parçacığı + işçi profili eklendi, ölçüm mantığı aynı bırakıldı. **Windows/Electron temsil edilmez.** Kullanıcı bekleme süresi (wall) ile CPU süresi ayrı verilmiştir.
+
+### 6A.1 · "5,9 CPU-sn/kayıt" bulgusunun bağımsız tekrarı
+
+| Koşu (16 kayıt, 2,5 sn aralık) | Süreç CPU | Ana iş parçacığı CPU | İşçi iş parçacıkları (`node`) | libuv | Siparişler okuma bekleme p50 | Kayıt onayı p50 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Okumalı #1 / #2 / #3 | 107,3 / 109,5 / 101,3 sn | 2,46 / 2,70 / 2,74 sn | 104,4 / 106,3 / 98,1 sn | 0,4 sn | 7,36 / 7,48 / 4,58 sn | 21 / 27 / 21 ms |
+| Okumasız (Siparişler okuması yok) | 106,0 sn | 2,29 sn | 103,4 sn | 0,3 sn | — | 22 ms |
+
+- **[Doğrulandı]** Medyan **107,3 sn / 16 kayıt ≈ 6,7 CPU-sn/kayıt** (BASELINE: 5,9). Mertebe tekrarlandı.
+- **[Doğrulandı]** CPU'nun **%97'si işçi iş parçacıklarında**. Ana iş parçacığı kayıt başına 143–171 ms. Kayıt onayı 21–27 ms. Yani kullanıcı kaydı beklemiyor; bedel arka planda ödeniyor.
+- **[Doğrulandı, tek okumasız koşu]** Siparişler okumalarının CPU payı gürültü içinde (okumalı medyan 107,3, okumasız 106,0 sn). Okuma **CPU harcamıyor, bekliyor**. Bekleme p50 4,6–7,5 sn ve BASELINE'da 1,85 sn: büyük varyans.
+- **Bekleme açıklaması [Güçlü çıkarım]:** Okuma `pendingRewritesSettled`'ı bekliyor. Kayıt başına ~6,5 CPU-sn'lik yeniden yazım, 2,5 sn'lik kayıt aralığında 3 işçiye düşüyor (kapasite ~7,5 CPU-sn), yani doygunluğa yakın bir kuyruk oluşuyor. Bu yüzden bekleme süresi ortam gürültüsüne çok duyarlı.
+
+### 6A.2 · Bileşenlere ayrım (CDP profili, profilli tek koşu: süreç 118,5 sn)
+
+**İşçiler** (3 aktif `projection-rewrite-worker`, toplam meşgul 99,44 sn; 2 işçi boşta):
+
+| Bileşen | sn (16 kayıt) | Pay | Kayıt başına |
+| --- | --- | --- | --- |
+| Serileştirme (`json-dates.stringifyWithDates`) | 27,55 | %27,7 | 1,72 sn |
+| zlib gzip + gunzip (`writeSync` yaprağı) | 20,98 | %21,1 | 1,31 sn |
+| GC | 19,31 | %19,4 | 1,21 sn |
+| `JSON.parse` + işçi `run` öz süresi | 16,18 | %16,3 | 1,01 sn |
+| Buffer kopyalama/dönüşüm (`slice`, `utf8Write`, `_copyActual`) | 14,68 | %14,8 | 0,92 sn |
+| **Satır yaması ve iş kuralı hesabı** (`applyStep`, `projectionPatchMatches`, `parse.js`, motorlar) | **0,56** | **%0,6** | **0,035 sn** |
+
+**Ana iş parçacığı** (meşgul 3,44 sn; profilleyici ek yükü dahil):
+
+| Bileşen | sn | Pay |
+| --- | --- | --- |
+| Yeniden yazım orkestrasyonu, SHA-256 checksum, nesil yazımı (`page-projection-cache`) | 0,81 | %23,6 |
+| GC | 0,76 | %22,2 |
+| **Override belgesi okuma/yazma** (`db.js`, delta, durable/shared-file, fsync) | **0,60** | %17,4 (≈ 37 ms/kayıt) |
+| HTTP yanıtı + **Siparişler okuması** (`server.js` rotası, `res.send`) | 0,59 | %17,1 |
+| İşçi IPC (`projection-rewrite-pool`) | 0,14 | %4,2 |
+| Satır yaması/hesap | 0,03 | %1,0 |
+
+**Sonuç [Doğrulandı]:** Hesap zaten artımlı ve maliyetin %0,6'sı. Kalan **%99,4, türetilmiş verinin bütün dosya olarak temsilinden** geliyor: çöz, ayrıştır, serileştir, sıkıştır, kopyala, GC. Bu yüzden "Ex→Retail/LT'yi sunucuda bir kez hesapla" alternatifi kayıt maliyetini **düşürmez**. Onun değeri okuma modeli kapsamındadır (V2/V3) ve ölçülmedi.
+
+### 6A.3 · Hazır veri neden bütün olarak yeniden yazılıyor ve kim bütün dosyaya ihtiyaç duyuyor?
+
+Projeksiyon modül başına tek bir gzip JSON. Her yeniden yazım yeni bir **nesil klasörü** oluşturuyor. Kaynak kod sözleşmesi: "eski yol her kayıtta bütün modülleri ayrıştırır, yamalar ve stringifyWithDates ile yeniden yazar" (`projection-rewrite.js:6-11`) **[Doğrulandı]**. Fixture'da bir nesil cp 68,2, orders 80,7, order-summary 42,3 ve overview 12,5 MB çözülmüş veri içeriyor. Değişmeyen `overview.json.gz` de yeni nesle aynı boyutta ama farklı inode ile kopyalanmış **[Doğrulandı: `stat`]**.
+
+Bütün dosyayı okuyan tüketiciler **[Doğrulandı: source]**:
+
+| Tüketici | Yol | Bütün dosyaya gerçekten ihtiyacı var mı? |
+| --- | --- | --- |
+| Tarayıcı tam satır yükü | `GET /api/page-projection/:module` (`server.js:9086-9098`) → `fetchProjectionWithFallback` → `state.cp`/`state.orders` (`app-main.js:2680-2700`). Arka plan ısınması, okuma modeli açıkken bile CP ve Siparişler tam yükünü indiriyor (açılış zaman çizelgesinde `BACKGROUND_WARMUP` → `CP_LOAD_READY rows=24982`) | Yükleme anında **tam veri kümesine** ihtiyacı var, ama kayıt sonrası **yeniden yazılmış dosyaya** değil. İstemci canlı satır yamalarını zaten uyguluyor. |
+| Okuma modeli ve compute işçileri | `loadProjection` → `ensureComputedProjection` → `readProjectionCompressed` (`server.js:9039-9060`; `read-model-routes.js:46`, `cp-computed-routes.js:33`, `overview-model-routes.js:28`, `prewarm-scheduler`) → işçide gunzip+parse → veri kümesi LRU'su | Bellekteki veri kümesi bir kez yüklenir; sonraki değişiklikler yama olarak uygulanabilir. `cp-row-patch-log` CP için bunu zaten bellekte yapıyor. |
+| Eski `/api/data/*` zarfı ve açılış `buildResponse` | `server.js:8766`, `9150-9241` | Tam veri kümesi; aynı durum. |
+| `/api/model-images/registry/cp` | `server.js:9165` | Aynı. |
+
+**Cevap:** Hiçbir tüketici **kayıttan sonra yeniden yazılmış bütün dosyaya** ihtiyaç duymuyor. Tüketicilerin ihtiyacı **yükleme anında tam veri kümesi**. Bu ihtiyaç "taban + yama günlüğü" ile karşılanabilir. Kayıt yolundaki bütün dosya yeniden yazımı tamamen kaldırılabilir **[Güçlü çıkarım; prototiple eşdeğerliği Doğrulandı, §6A.4]**. Bütün dosya üretimi iki yerde kalır: (1) sıkıştırma, (2) tarayıcı tam yükü. Tarayıcı tam yükünün kalkması V3'e bağlıdır.
+
+### 6A.4 · Mevcut mekanizma + iki alternatif (izole prototip, ölçüm öncesi eşitlik)
+
+**Prototip:** `scratchpad/proto/mech.js`, commit edilmedi. Üç mekanizma da aynı fixture nesil dosyalarını, üretimdeki `projection-rewrite.js` çekirdeğini (`rowPatchContext`, `applySteps`, `serializeProjection`) ve benchmark'la aynı 16 kayıt karışımını (not / Del. Type / Retail Date) kullanıyor. Her mekanizma ayrı süreçte, tek iş parçacığında koşuyor; 3 tur, dönüşümlü sıra (M0-M1-M2, M2-M1-M0, M0-M1-M2).
+
+- **M0 · Mevcut:** Her kayıtta 5 modül için gunzip → parse → yama → (değiştiyse) serialize → gzip l4 → atomik yazım + SHA-256.
+- **M1 · V1: değişmez taban + kalıcı yama günlüğü.** Kayıt, günlüğe tek satır ekler (fsync dahil). Okuyucu (işçi veri kümesi gibi ayrıştırılmış bellek) yamayı uygular. Tam yeniden yazım ayrı bir **sıkıştırma** adımıdır.
+- **M2 · (a) Satır bazlı güncellenebilir temsil:** 1.000 satırlık gzip parçalar ve sipariş kodu → parça dizini. Kayıtta yalnız etkilenen parça yeniden yazılır. Bütün dosya isteyen tüketici için birleştirme gerekir.
+- (b) "artımlı projeksiyon" ayrı aday olarak alınmadı: hesap **zaten artımlı** (§6A.2). (c) "silinip yeniden oluşturulabilen önbellek" ayrı aday değil, mevcut bir **özellik** (§6A.5); M1'i güvenli kılan da budur.
+
+**Doğruluk eşitliği (ölçümden önce) [Doğrulandı]:** 16 kayıttan sonra 5 modülün kanonik özeti (üst düzey anahtarları sıralanmış `serializeProjection` SHA-256'sı) üç mekanizmada da **eşit**, her 3 turda. Değişen modüller: cp, orders, order-summary. Değişmeyenler: overview, collection-catalog. Sınır: prototip, üretimdeki ardışık kayıtları toplu işleme (`ROW_REWRITE_MAX_BATCH`) davranışını modellemiyor. M0 kayıt başına ayrı uygulanıyor, bu bir üst sınırdır. Özellik tabanlı rastgele diziler ve süreç öldürme senaryoları **koşulmadı**.
+
+| Ölçüm (3 tur, medyan; ham değerler) | M0 · mevcut | M1 · taban + günlük (V1) | M2 · satır parçaları (a) |
+| --- | --- | --- | --- |
+| **Kayıt başına CPU** | **6.533 ms** (6.468 / 6.634 / 6.533) | **11 ms** (11 / 13 / 11) | **127 ms** (115 / 144 / 127) |
+| 16 kayıt toplam CPU (tek seferlik işler dahil) | 110,96 sn | 10,69 sn | 11,59 sn |
+| Tek seferlik / dönemsel iş | — | Okuyucunun ilk yüklemesi 4,10 sn (bugün de var); sıkıştırma 3,37 sn (5 modül, N kayıtta bir) | Parçalama 5,90 sn; **bütün dosya isteyen her okumada birleştirme 3,55 sn** |
+| Tepe RSS (tek süreçli prototip) | 969 MB | 1.100 MB (5 modül bellekte) | 857 MB |
+| Kanonik çıktı | referans | eşit (3/3) | eşit (3/3) |
+| Aşama dökümü (16 kayıt) | gunzip 9,97 · parse 45,82 · yama 0,96 · serialize 24,53 · gzip 22,03 · yazım+sha 0,35 sn | günlük+fsync 0,08 · okuyucu yaması 0,29 sn | parça çöz 0,74 · yama 0,03 · parça serialize+gzip 1,20 sn |
+
+**Doğrulama notu [Doğrulandı]:** M0 prototipi kayıt başına 6,53 CPU-sn veriyor. Bu, sunucuda ölçülen 6,7 CPU-sn/kayıt ile örtüşüyor; prototip üretim maliyetini yeniden üretiyor.
+
+**Karşılaştırma:**
+- **M1:** Kayıt yolunda ~%99,8 daha az CPU [Doğrulandı: prototip]. Bedeli sıkıştırma (3,4 sn, seyrek ve boşta) ve okuyucuların günlüğü uygulama zorunluluğu. Bellek etkisi prototipte +131 MB; üretimdeki işçi LRU'su bu veri kümesini zaten tutuyor, net etki **[Bilinmiyor]**.
+- **M2:** Kayıt yolu ucuz (127 ms), ama bütün dosya isteyen her okuma 3,55 sn birleştirme ödüyor ve **tüm tüketicilerin depolama biçimi** değişiyor. Bugün bütün dosya isteyen tüketiciler çok (§6A.3), bu yüzden maliyeti okumaya kaydırıyor. **Şimdilik reddedilir.** V3 tam satır yükünü kaldırırsa yeniden değerlendirilebilir.
+
+### 6A.5 · Asıl iş verisi ve türetilmiş performans önbelleği
+
+| Katman | Doğruluk kaynağı mı? | Kalıcılık / senkron / yedek |
+| --- | --- | --- |
+| `overrides.json` (DATA_DIR), kaynak ASAS/Excel, yerel DB | **Evet** (asıl iş verisi) | Atomik yazım + fsync + delta aynası; yedek ve senkron kapsamında |
+| `local-data/page-cache/<user>/<gen>/*.json.gz` + `manifest.json` (+ `.bak`) | **Hayır**: türetilmiş ve yeniden üretilebilir (bozuk ya da yarım yazım geçersiz sayılır ve yeniden hesaplanır: `page-projection-cache.js:459`) | **Yedekten hariç** (`backup-service.js:131` `page-cache`), **tam geri yüklemeden hariç** (`full-restore-service.js:155`), yerel kökte ve ortak klasörde değil **[Doğrulandı]** |
+
+Türetilmiş veri için gereksiz olabilecek kalıcılık ve doğrulama işleri:
+1. **Her kayıtta tam nesil yazımı.** Değişmeyen modül dosyaları da yeni nesle kopyalanıyor **[Doğrulandı: aynı boyut, farklı inode]**. Türetilmiş veri için kayıt başına disk yazımı ve klasör değişimi; V1 bunu kaldırır.
+2. **Her okuma ve yazımda sıkıştırılmış dosyanın SHA-256'sı** (ana iş parçacığında 0,57 sn/16 kayıt + okumalar). Gzip'in kendi CRC32'si açma sırasında zaten doğrulanıyor. Yeniden üretilebilir bir önbellek için ek kriptografik özetin gerekliliği **[Muhtemel değil]**, küçük kalem (~36 ms/kayıt).
+3. `manifest.json.bak`: türetilmiş önbellek için yedek kopya. Maliyeti ihmal edilebilir (14 KB), gerekliliği **[Bilinmiyor]**.
+
+Türetilmiş veri hiçbir senkron, yedek veya ortak klasör mekanizmasına girmiyor; bu doğru tasarım **[Doğrulandı]**. Gereksiz iş kalıcılıkta değil, **kayıt başına yeniden üretimin yazılmasında**.
+
+### 6A.5b · Siparişler soğuk açılışı (17 sn) — kök neden bulundu
+
+`benchmark-startup-orders.js --module orders` (repo betiği, değişmeden) zaman çizelgesi:
+
+| İşaret | Mevcut (ms) | Prototip yamalı kopya (ms) |
+| --- | --- | --- |
+| `ORDERS_ROWS_VISIBLE` (okuma modeli ilk pencere, 30.000 satır) | **785** | 835 |
+| `UI_FIRST_RENDER` | 1.502 | 1.228 |
+| `UI_READY` / `primaryScreenReadyMs` | **17.133 / 17.224** | **2.065 / 2.147** |
+| `AUTH_USER_LOAD_READY` ("after-ui") | 17.237 | 2.354 |
+| İlk `BACKGROUND_WARMUP_START` | 18.725 | 3.824 |
+| Uzun görev toplamı (10 sn pencere) | 1.721 | 4.224 |
+| Satır / DOM satırı / hata | 30.000 / 50 / 0 | 30.000 / 50 / 0 |
+
+- **Kök neden [Doğrulandı: source + runtime]:** `waitForOrdersReadModelRows` (`app-main.js:20974-20981`) `bl:orders-rows-visible` olayını bekliyor ve **15.000 ms** zaman aşımıyla çözülüyor. Satırlar 785 ms'de görünür olmuş ve olay o anda yayılmış, ama dinleyici daha sonra ekleniyor. Dinleyiciden sonra çağrılan `renderOrders()` aynı imza ve önbellekteki satırlarla `renderOrdersFromReadModel`'in önbellek dalına (`app-main.js` `if(signature===ordersRM.signature&&ordersRM.rows)`) giriyor. Bu dal olay **yaymıyor**, bu yüzden bekleme tam zaman aşımı kadar sürüyor (17,1 − 15,0 ≈ 2,1 sn = dinleyicinin eklendiği an).
+- **Prototip [Doğrulandı: 1 koşu / kol, L2 değil]:** Scratchpad'deki uygulama kopyasında önbellek dalına tek satır olay yayımı eklendi. `primaryScreenReadyMs` 17,2 → 2,15 sn oldu; satır ve DOM sayısı aynı kaldı, hata yok. Repo kodu değişmedi.
+- **Açılışta zorunlu veri yükü:** İlk pencere okuma modelinden 785 ms'de geliyor. Sayfa ilk ekran için tam Siparişler projeksiyonunu beklemiyor. Tam CP ve Siparişler satırları, `UI_READY`'den **sonra** arka plan ısınmasında iniyor **[Doğrulandı: zaman çizelgesi]**.
+- **Görünmeyen işlerin etkisi:** Mevcut durumda ısınma ve kimlik yükleme, yapay 15 sn beklemenin **arkasına** itiliyor. Düzeltmede bunlar öne geliyor, bu yüzden 10 sn penceredeki uzun görev toplamı 1,7 → 4,2 sn çıkıyor. Bu yeni iş değil, aynı işin ölçüm penceresine girmesi. Ama kabul ölçütünde ayrıca izlenmeli: ısınmanın etkileşimi bozmadığı **[Bilinmiyor]**.
+- **Kullanıcıya etkisi [Bilinmiyor]:** BootGuard `autoContinue` ile çalışma alanı daha erken açılıyor olabilir; kullanıcının 15 sn boyunca neyi beklediği ekran üzerinden doğrulanmadı. Kesin olan: `bl:primary-screen-ready` dinleyicileri, after-ui kimlik yüklemesi ve arka plan ısınması 15 sn gecikiyor.
+- **Ölçüm tanımı notu:** Betiğin hazır koşulu `state.orders.rows.length>0` (tam satır). Okuma modeli açıkken "kullanıcı satırları gördü" anı `ORDERS_ROWS_VISIBLE`'dır; ikisi ayrı raporlanmalı.
+
+### 6A.6 · Önerilen en küçük izole pilotlar ve önceden yazılmış kabul ölçütleri
+
+Peşinen seçilmedi: ölçüm iki ayrı, birbirinden bağımsız pilot gösteriyor. Küçük olan önce.
+
+**Pilot A · Siparişler açılış bekleme olayı (P2, tek satır, V1'den bağımsız).** Önbellek dalında `bl:orders-rows-visible` yayılır, ya da `waitForOrdersReadModelRows` satırlar zaten görünürse hemen çözülür.
+- Kabul (L2, `benchmark-startup-orders.js --module orders`, ≥3 dönüşümlü Main/aday çifti):
+  - `primaryScreenReadyMs` medyanı ≤ 3.000 ms (prototip 2.147).
+  - Satır ve DOM satırı sayısı Main ile aynı; hata 0.
+  - Okuma modeli kapalı yol (`BL_ORDERS_READ_MODEL=false`) davranışı değişmez.
+  - Genel Bakış / Koleksiyon / CP açılışında gerileme yok.
+  - Olay önbellek dalında tekrar tekrar değil, bir bekleme başına çözülür (davranış testi: satırlar dinleyiciden önce görünür olduğunda bekleme 15 sn'yi beklemeden çözülür; RED → GREEN).
+  - Isınmanın öne gelmesiyle artan uzun görevler ayrıca raporlanır.
+- Geri dönüş: tek satırın geri alınması.
+
+**Pilot B · V1, kayıt yolunda bütün dosya yeniden yazımının kaldırılması (P1, bayraklı).** Kapsam:
+- Yalnız `rowPatchIncrementalSafe` yamaları ve yalnız CP satır kaydı rotası.
+- Günlük `page-cache/<user>/<gen>/patches.log`: türetilmiş, nesille birlikte silinir.
+- İşçi veri kümeleri günlüğü kendi uyguladıkları sıra numarasından itibaren uygular.
+- Sıkıştırma tetikleyicileri: boşta, günlük ≥ N ya da bütün dosya isteyen okuma öncesi, **yalnız istenen modül** için.
+- Kabul (önceden yazıldı):
+  - **Veri bütünlüğü:** `overrides.json` yazım yolu ve içeriği bit bit aynı. Günlük ve nesil silinince projeksiyon kaynaktan yeniden üretilebilir (test).
+  - **Doğruluk:** Her sıkıştırma çıktısının kanonik özeti, gölgede çalışan M0 yolunun özetine eşit. Özellik tabanlı ≥10.000 rastgele kayıt dizisi (aynı satıra ardışık yazım, no-op, bağlam ve transit kuralı değişimi, yerel gün dönümü, iki sekme, ekleme ile onay arasında `kill -9`): fark 0.
+  - **Kararlılık:** Tepe RSS, Main'in L2 medyanını aşmaz.
+  - **Performans (L2, `benchmark-cp-save-flow.js --pairs 3`):** Okumasız akışta süreç CPU'su Main'e göre **≥ %80 düşer** (prototip beklentisi ~%95+; eşik bilinçli olarak temkinli). Kayıt onayı p50 gerilemez.
+  - **Ödünleşim:** Okumalı akışta Siparişler okuma beklemesi **ayrıca** raporlanır. Bu benchmark her 2,5 sn'de bir bütün dosya okuyor; bu, M1 için en kötü desen, çünkü her okuma sıkıştırma tetikler. Gerileme varsa pilot BLOCKED olur ve tarayıcıya "taban + günlük kuyruğu" sunma seçeneği (istemci yamaları zaten uyguluyor) ayrı karar olarak getirilir.
+- Geri dönüş: bayrak kapalıyken bugünkü yol. Günlük silinebilir.
 
 ---
 
