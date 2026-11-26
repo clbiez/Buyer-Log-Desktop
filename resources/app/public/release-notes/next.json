@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-26",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Alanlar: sütunu sürükleyerek başka ana başlığa taşı",
+    "en": "Fields: drag a column under another heading"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Alanları düzenle ekranında CP, Siparişler ve Koleksiyon sütunları sürükle-bırakla başka bir ana başlığa taşınır; tablodaki başlık bandı da hemen değişir. Seçim kişiseldir ve Alanları sıfırla ile geri alınır.",
+    "en": "In Edit fields, CP, Orders and Collection columns can be dragged under another heading; the heading band in the table updates right away. The choice is personal and Reset fields undoes it."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "table-fields-cross-group-heading",
+      "type": "feature",
+      "module": {
+        "tr": "CP · Siparişler · Koleksiyon",
+        "en": "CP · Orders · Collection"
+      },
+      "title": {
+        "tr": "Alanlar: sütunu sürükleyerek başka ana başlığa taşı",
+        "en": "Fields: drag a column under another heading"
+      },
+      "body": {
+        "tr": "Alanları düzenle ekranında bir sütunu başka bir ana başlığın sütunlarının arasına ya da başlık satırına sürükleyip bırakınca sütun o başlığa geçer; tablodaki başlık bandı da hemen değişir. Daha önce yalnız Koleksiyon'a eklenen sütunlar taşınabiliyordu; artık CP ve Siparişler'deki tüm sütunlar ile Koleksiyon'un sistem sütunları da taşınır. Seçim sütun sırası gibi size özeldir, ortak sütun tanımlarını değiştirmez. Görsel, checklist, fiyat ve Endeksmatik sütunları yerinde kalır. Alanları sıfırla taşınan sütunları kendi başlıklarına geri koyar.",
+        "en": "In Edit fields, drag a column between the columns of another heading, or onto the heading row, to move it under that heading; the heading band in the table updates right away. Previously only columns you added in Collection could be moved; now every CP and Orders column and Collection's built-in columns can be moved too. The choice is personal, like column order, and does not change shared column definitions. Picture, checklist, pricing and Endeksmatik columns stay in place. Reset fields puts moved columns back under their own headings."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-fields-cross-group.png",
+        "alt": {
+          "tr": "Demo veriyle CP Alanlar ekranı: Product Description sütunu sürüklenerek Order Details başlığının altına taşınmış",
+          "en": "CP Fields screen with demo data: the Product Description column dragged under the Order Details heading"
+        },
+        "caption": {
+          "tr": "Demo veride Product Description, Model Details'ten Order Details başlığına sürüklendi.",
+          "en": "On demo data, Product Description was dragged from Model Details to Order Details."
+        }
+      }
+    }
+  ]
 }
