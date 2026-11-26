@@ -21,7 +21,12 @@
  *
  * Kullanım:
  *   node tools/soak/soak-start.js --root C:\BuyerLogSoak\A --hub "C:\Users\<ad>\OneDrive\BuyerLogSoakHub" --machine A
- *   [--app <resources\app>] [--port 6294] [--rows 2000] [--seed-rows 40] [--no-browser] [--check-only]
+ *   [--app <resources\app>] [--install <BuyerLog.exe klasörü>] [--port 6294] [--rows 2000]
+ *   [--seed-rows 40] [--no-browser] [--check-only]
+ *
+ * Bağımlılıklar: GitHub kaynak ZIP'i node_modules taşımaz. Eksikse kurulu uygulamanın
+ * çekirdeğinden (--install altındaki resources\app ya da .buyerlog-versions\<sürüm>\app)
+ * kod klasörüne KOPYALANIR; kuruluma yazılmaz. Sabit sürümlü paketler sürüm eşitliğiyle denetlenir.
  */
 
 const fs = require('fs');
@@ -42,6 +47,10 @@ const app = path.resolve(arg('--app', path.join(__dirname, '..', '..', 'resource
 const port = Number(arg('--port', '6294'));
 const rows = Number(arg('--rows', '2000')), seedRows = Number(arg('--seed-rows', '40'));
 if (!fs.existsSync(path.join(app, 'server', 'server.js'))) fail(`Uygulama kodu bulunamadı / app code not found: ${app}`);
+for (let dir = app; ; dir = path.dirname(dir)) {
+  if (fs.existsSync(path.join(dir, 'BuyerLog.exe'))) fail(`Test kodu bir Buyer Log kurulumunun içinde (${dir}). Dal ZIP'ini kurulumun dışında ayrı bir klasöre açın.`);
+  if (path.dirname(dir) === dir) break;
+}
 if (!Number.isInteger(port) || port < 1024 || port > 65535 || port === 6194) fail('Port 1024–65535 arasında ve gerçek uygulamanın 6194 portundan farklı olmalı. / Port must differ from the real app (6194).');
 
 // --- 1-2: soak kökü
@@ -87,6 +96,30 @@ fs.writeFileSync(configFile, JSON.stringify({ ...config, port, host: '127.0.0.1'
 
 console.log(`[SOAK] Güvenlik kontrolleri geçti / checks passed · makine ${machine} · kök ${rootAbs} · hub ${hubAbs} · port ${port}`);
 if (flag('--check-only')) process.exit(0);
+
+// --- Çalışma zamanı bağımlılıkları: eksikse kurulu çekirdekten kod klasörüne kopyalanır (kuruluma yazılmaz)
+const pkg = JSON.parse(fs.readFileSync(path.join(app, 'package.json'), 'utf8'));
+const deps = Object.entries(pkg.dependencies || {});
+const depVersion = (base, name) => { try { return JSON.parse(fs.readFileSync(path.join(base, 'node_modules', ...name.split('/'), 'package.json'), 'utf8')).version; } catch (_) { return null; } };
+const depsProblem = base => deps.map(([name, spec]) => {
+  const version = depVersion(base, name);
+  if (!version) return `${name} yok`;
+  return /^\d+\.\d+\.\d+$/.test(spec) && version !== spec ? `${name} ${version} ≠ ${spec}` : null;
+}).filter(Boolean);
+if (depsProblem(app).length) {
+  const install = arg('--install');
+  if (!install) fail(`Bağımlılıklar eksik (${depsProblem(app).join(', ')}). --install ile BuyerLog.exe klasörünü verin.`);
+  const versionsDir = path.join(install, '.buyerlog-versions');
+  const cores = [path.join(install, 'resources', 'app')];
+  if (fs.existsSync(versionsDir)) for (const name of fs.readdirSync(versionsDir)) cores.unshift(path.join(versionsDir, name, 'app'));
+  const usable = cores.filter(core => fs.existsSync(path.join(core, 'node_modules')))
+    .sort((a, b) => fs.statSync(path.join(b, 'node_modules')).mtimeMs - fs.statSync(path.join(a, 'node_modules')).mtimeMs)
+    .find(core => depsProblem(core).length === 0);
+  if (!usable) fail(`Kurulumda uyumlu bağımlılık bulunamadı (${install}). Kurulu sürüm test dalından çok eskiyse güncelleyin. / No compatible node_modules in the install.`);
+  console.log(`[SOAK] Bağımlılıklar kopyalanıyor (salt okuma kaynak) / copying dependencies from: ${usable}`);
+  fs.cpSync(path.join(usable, 'node_modules'), path.join(app, 'node_modules'), { recursive: true });
+  if (depsProblem(app).length) fail(`Bağımlılık kopyası eksik: ${depsProblem(app).join(', ')}`);
+}
 
 // --- Demo veri (her makinede aynı seed: aynı sentetik kaynak)
 if (!fs.existsSync(path.join(paths.source, 'ASAS - Demo.xlsx'))) {

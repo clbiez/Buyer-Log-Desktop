@@ -13,5 +13,5 @@ if not exist "%~3" (
 )
 rem Kurulu BuyerLog.exe yalniz Node calisma zamani olarak kullanilir; kurulum ve verisi degismez.
 set ELECTRON_RUN_AS_NODE=1
-"%~3" "%~dp0soak-start.js" --root "C:\BuyerLogSoak\%~1" --hub "%~2" --machine %~1 %4 %5 %6 %7 %8 %9
+"%~3" "%~dp0soak-start.js" --root "C:\BuyerLogSoak\%~1" --hub "%~2" --machine %~1 --install "%~dp3." %4 %5 %6 %7 %8 %9
 endlocal
