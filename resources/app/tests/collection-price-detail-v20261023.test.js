@@ -33,7 +33,7 @@ test('external TR Landed single value changes TRY input only; invalid tokens and
  linked.add('trFx');assert.equal(validate(2,'trLanded','BL-TR-LANDED:1').reason,'linked');
 });
 test('row exports expand price details without changing the grid column metadata',()=>{
- assert.match(cut('async function buildCollectionStyledCopy(','/* ==================================================================='),/const descriptors=kolExportDescriptors\(\)/);
+ assert.match(cut('async function buildCollectionStyledCopy(','/* ==================================================================='),/const descriptors=Array\.isArray\(options\.descriptors\)\?options\.descriptors:kolExportDescriptors\(\);/);
  assert.match(cut('async function kolExportWithImages(','function kolStyleExportValue('),/d.kind==='priceDetail'[\s\S]*kolPriceDetailRaw\(d.field,r\)[\s\S]*KOL_PRICE_DETAIL_NUMFMT\[d.field.type\]/);
  assert.match(APP,/colsFn:\s*\(\)=>kolDisplayDescriptors\(\)/);
 });

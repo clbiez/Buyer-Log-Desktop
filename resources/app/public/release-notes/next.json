@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-26",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Sunum Stüdyosu: grupları birleştirme, ayrılan kart için grup alanı, satır satır başlıklar; Alanlar: sütunu sürükleyerek başka ana başlığa taşı",
-    "en": "Presentation Studio: merge groups, group areas for separated cards, line-by-line titles; Fields: drag a column under another heading"
+    "tr": "Sunum Stüdyosu: grupları birleştirme, ayrılan kart için grup alanı, satır satır başlıklar; Alanlar: sütunu sürükleyerek başka ana başlığa taşı; özel sütunlarla kopyala ve hassas sütunlar",
+    "en": "Presentation Studio: merge groups, group areas for separated cards, line-by-line titles; Fields: drag a column under another heading; copy custom columns and sensitive columns"
   },
   "summary": {
-    "tr": "Sunum Stüdyosu’nda bir kartı başka bir kartın ya da grubun üzerine bırakmak iki grubu birleştirir; grubundan ayrılan kartlar kendi grup alanına alınıp boyutlandırılabilir. Grup başlığında her gruplama seviyesi ve takım parçası ayrı satırda; başlık yazı boyutu kart yazısından ayrı ayarlanır. Grup alanı boyutlandırılınca kartlar alanı orantılı doldurur; görsellerin arkasındaki gri zemin kaldırıldı. Alanları düzenle ekranında CP, Siparişler ve Koleksiyon sütunları sürükle-bırakla başka bir ana başlığa taşınır; tablodaki başlık bandı da hemen değişir. Seçim kişiseldir ve Alanları sıfırla ile geri alınır.",
-    "en": "In Presentation Studio, dropping a card onto another card or group merges the two groups; cards separated from their group can get their own resizable group area. Group titles show each grouping level and set part on its own line, and the title text size is set separately from the card text. Resizing a group area scales its cards to fill it, and the grey background behind images was removed. In Edit fields, CP, Orders and Collection columns can be dragged under another heading; the heading band in the table updates right away. The choice is personal and Reset fields undoes it."
+    "tr": "Sunum Stüdyosu’nda bir kartı başka bir kartın ya da grubun üzerine bırakmak iki grubu birleştirir; grubundan ayrılan kartlar kendi grup alanına alınıp boyutlandırılabilir. Grup başlığında her gruplama seviyesi ve takım parçası ayrı satırda; başlık yazı boyutu kart yazısından ayrı ayarlanır. Grup alanı boyutlandırılınca kartlar alanı orantılı doldurur; görsellerin arkasındaki gri zemin kaldırıldı. Alanları düzenle ekranında CP, Siparişler ve Koleksiyon sütunları sürükle-bırakla başka bir ana başlığa taşınır; tablodaki başlık bandı da hemen değişir. Seçim kişiseldir ve Alanları sıfırla ile geri alınır. CP, Siparişler ve Koleksiyon'da satırlar seçtiğiniz sütunlarla ve sırayla kopyalanır; hassas işaretli sütunlar (varsayılan: Retail tarihi, Ex→Retail, MB tarihi/hafta/ay; Koleksiyon'da fiyat analizi, Endeksmatik, avantaj, onaylı fiyat ve üretici) seçim çubuğundaki “Hassaslar gizli” ile kopyadan çıkarılır. Ctrl+C ve normal Kopyala değişmez.",
+    "en": "In Presentation Studio, dropping a card onto another card or group merges the two groups; cards separated from their group can get their own resizable group area. Group titles show each grouping level and set part on its own line, and the title text size is set separately from the card text. Resizing a group area scales its cards to fill it, and the grey background behind images was removed. In Edit fields, CP, Orders and Collection columns can be dragged under another heading; the heading band in the table updates right away. The choice is personal and Reset fields undoes it. In CP, Orders and Collection, rows can be copied with the columns you choose, in your order; columns marked sensitive (by default Retail date, Ex→Retail, MB date/week/month; in Collection also price analysis, Endeksmatik, advantage, approved price and manufacturer) are left out with “Hide sensitive” in the selection bar. Ctrl+C and normal Copy are unchanged."
   },
   "changes": [
     {
@@ -95,6 +95,35 @@
         "caption": {
           "tr": "Demo veride Product Description, Model Details'ten Order Details başlığına sürüklendi.",
           "en": "On demo data, Product Description was dragged from Model Details to Order Details."
+        }
+      }
+    },
+    {
+      "id": "copy-column-profiles",
+      "type": "feature",
+      "module": {
+        "tr": "CP · Siparişler · Koleksiyon",
+        "en": "CP · Orders · Collection"
+      },
+      "title": {
+        "tr": "Özel sütunlarla kopyala ve hassas sütunlar",
+        "en": "Copy custom columns and sensitive columns"
+      },
+      "body": {
+        "tr": "Satır işaretlenince açılan seçim çubuğunda “Hassaslar gizli” düğmesi, işaretli satırları görünür sütunlarla ama hassas sütunlar çıkarılmış olarak kopyalar; hemen sağındaki kalem hassas sütun listesini açar. Varsayılan hassaslar: Retail tarihi, Ex→Retail ve MB tarihi/hafta/ay; Koleksiyon'da ayrıca Previous Season, LFL, Sezon Etkisi, Hedefe Fark, onaylı üretici ve fiyat ile Endeksmatik & Avantaj sütunları. Liste kişiseldir ve istediğiniz zaman değiştirilebilir. Kopyala ▾ ve sağ tık menüsündeki “Özel sütunlarla kopyala” yalnız seçtiğiniz sütunları, belirlediğiniz sırayla kopyalar; işaretli satır yoksa CP/Siparişler'de seçili hücre aralığının satırları kullanılır. Ctrl+C ve normal Kopyala eskisi gibi tüm görünür sütunları kopyalar.",
+        "en": "When rows are checked, the “Hide sensitive” button in the selection bar copies them with the visible columns but without the sensitive ones; the pencil right next to it opens the sensitive column list. Default sensitive columns: Retail date, Ex→Retail and MB date/week/month; in Collection also Previous Season, LFL, Season Impact, Diff. to Target, approved manufacturer and price, and the Endeksmatik & Advantage columns. The list is personal and can be changed at any time. “Copy custom columns” in Copy ▾ and the right-click menu copies only the columns you chose, in your order; with no checked rows, CP/Orders use the rows of the selected cell range. Ctrl+C and normal Copy still copy all visible columns."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "copy-column-profiles.png",
+        "alt": {
+          "tr": "Demo Koleksiyon tablosu: Hassas sütunlar penceresinde özel kopya sütunları ve hassas işaretli MB hafta/ay ile onaylı üretici fiyatı",
+          "en": "Demo Collection table: Sensitive columns window with custom copy columns and MB week/month and approved manufacturer price marked sensitive"
+        },
+        "caption": {
+          "tr": "Seçim çubuğundaki kalemle açılan Hassas sütunlar penceresi (demo veri).",
+          "en": "The Sensitive columns window opened with the pencil in the selection bar (demo data)."
         }
       }
     }

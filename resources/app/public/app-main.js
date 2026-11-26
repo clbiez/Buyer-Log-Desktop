@@ -3567,6 +3567,14 @@ document.getElementById('navCopyMenuBtn')?.addEventListener('click',event=>{
     {label:appLang==='en'?'Copy without headers':'Başlıksız kopyala',run:()=>copyGridSelection(false)},
   ];
   if(tableImageCopySupported())items.push({label:appLang==='en'?'Copy as image':'Görsel olarak kopyala',run:()=>void copyActiveTableAsImage()});
+  const copyColumnsTab=document.body.dataset.activeTab||'';
+  if(window.BLCopyColumnsAction?.supported(copyColumnsTab)){
+    items.push(
+      {label:appLang==='en'?'Copy custom columns':'Özel sütunlarla kopyala',run:()=>void copyRowsWithCopyColumns(copyColumnsTab,'profile')},
+      {label:appLang==='en'?'Copy without sensitive columns':'Hassaslar gizli kopyala',run:()=>void copyRowsWithCopyColumns(copyColumnsTab,'safe')},
+      {label:appLang==='en'?'Copy columns & sensitive fields…':'Kopyalama sütunları ve hassas alanlar…',run:()=>openCopyColumnsEditor(copyColumnsTab)},
+    );
+  }
   items.push({label:appLang==='en'?'Clipboard diagnostics':'Pano hata teşhisi',run:openClipboardDiagnostics});
   items.forEach(item=>{
     const node=document.createElement('button');node.type='button';node.setAttribute('role','menuitem');
@@ -10090,7 +10098,8 @@ async function kolRecordImageCopyCell(record){
     style:`border:1px solid #B4B8BD;padding:2px;vertical-align:middle;text-align:center;width:${dims.w+8}px;height:${dims.h+8}px;`,
   };
 }
-async function buildCollectionStyledCopy(selSet){
+async function buildCollectionStyledCopy(selSet,options){
+  options=options||{};
   const meta=TABLE_META.kolTable;
   const all=meta.rowsFn();
   const records=selSet&&selSet.size
@@ -10098,8 +10107,10 @@ async function buildCollectionStyledCopy(selSet){
     : all;
   if(!records.length) return null;
 
-  const descriptors=kolExportDescriptors();
-  const pictureVisible=!kolPictureHidden;
+  // options.descriptors / options.picture: Özel veya hassas-gizli kopya sütunları.
+  const descriptors=Array.isArray(options.descriptors)?options.descriptors:kolExportDescriptors();
+  const pictureVisible=typeof options.picture==='boolean'?options.picture:!kolPictureHidden;
+  if(!descriptors.length&&!pictureVisible) return null;
   const matrix=BLTableExport.buildMatrix({
     records, columns:descriptors,
     columnLabel:col=>col.label||col.k,
@@ -10286,13 +10297,17 @@ async function cpOrdersRecordImageCopyCells(records,dims){
   });
 }
 function cpOrdersImageDims(tableKey){return tableKey==='orders'?ordersImageDims():cpImageDims();}
-async function buildManagedTableStyledCopy(tableKey, rows, selSet){
+async function buildManagedTableStyledCopy(tableKey, rows, selSet, options){
+  options=options||{};
+  // options.columns: Özel/hassas-gizli kopya sütun listesi; yoksa görünür sütunlar.
+  // options.records: hücre aralığından gelen, zaten hazırlanmış kayıtlar (sırası korunur).
   const all=selSet?.size?managedSelectionSourceRows(tableKey):(Array.isArray(rows)?rows:[]);
-  const records=selSet&&selSet.size
+  const records=Array.isArray(options.records)?options.records:selSet&&selSet.size
     ? all.filter(row=>selSet.has(row._id)||selSet.has(Number(row._id))||selSet.has(String(row._id)))
     : all;
   if(!records.length) return null;
-  const cols=visibleCols(tableKey);
+  const cols=Array.isArray(options.columns)?options.columns:visibleCols(tableKey);
+  if(!cols.length) return null;
   /* computeFlags SATIR BAŞINA bir kez. Önce hem hücre metninde hem hücre
      stilinde ayrı ayrı çağrılıyordu; 60 sütunluk bir tabloda bu, satır başına
      120 kez iş kuralı + tarih hesabı demekti ve çok satırlı kopyalama
@@ -10411,6 +10426,111 @@ async function copyManagedTableLikeExcel(tableKey, rows, selSet, btnId){
   const ok = await copyRichToClipboard(built.html, built.plain);
   flashCopyBtn(btnId, ok, built.count);
 }
+
+/* ---------- Özel sütunlarla / hassaslar gizli kopyalama (CP · Siparişler · Koleksiyon) ----------
+   Ctrl+C ve normal Kopyala değişmez. Bu iki yol aynı kayıt kaynaklı kopya
+   üreticisini (buildManagedTableStyledCopy / buildCollectionStyledCopy) yalnız
+   farklı bir sütun listesiyle çağırır; hücre metni, biçim ve görsel aynıdır.
+   Sütun profili ve hassas işaretleri public/copy-column-profiles.js'tedir. */
+const KOL_COPY_PICTURE_KEY='__kolPicture__';
+function copyColumnsCatalog(tableKey){
+  if(tableKey==='cp'||tableKey==='orders'){
+    const cols=COLS_BY_TABLE[tableKey]||[],byKey=new Map(cols.map(c=>[c.k,c]));
+    const order=[...new Set([...(colmgr[tableKey]?.order||[]).filter(k=>byKey.has(k)),...cols.map(c=>c.k)])];
+    const items=order.map(k=>{const c=byKey.get(k);return {key:k,label:tableColumnLabel(tableKey,c),group:c.group||'',groupLabel:c.group?tableColumnGroupLabel(c.group):''};});
+    return {items,visibleKeys:visibleCols(tableKey).map(c=>c.k),columns:cols};
+  }
+  if(tableKey==='koleksiyon'){
+    kolPriceDetailCache=new WeakMap();
+    const descriptors=kolExpandPriceDetails(kolDisplayDescriptors({all:true}));
+    const groupOf=d=>d.col?.group||KOL_SYNTHETIC_COL_META[d.k]?.group||d.field?.group||KOL_PRICE_VIEW_COLS[d.k]?.group||'';
+    const item=(key,label,group)=>({key,label,group,groupLabel:group?tableColumnGroupLabel(group):''});
+    const items=[item(KOL_COPY_PICTURE_KEY,L('Picture'),'Model Detayları'),...descriptors.map(d=>item(d.k,d.label||d.k,groupOf(d)))];
+    const visibleKeys=[...(kolPictureHidden?[]:[KOL_COPY_PICTURE_KEY]),...kolExportDescriptors().map(d=>d.k)];
+    return {items,visibleKeys,descriptors};
+  }
+  return null;
+}
+// Modül ilk kullanımda yüklenir; açılışta indirilmez/çalıştırılmaz.
+async function loadCopyColumnProfiles(){
+  if(window.BLCopyColumnProfiles)return window.BLCopyColumnProfiles;
+  try{await window.BLPerf?._loadScript?.('copy-column-profiles.js?rev=1');}
+  catch(error){showToast((appLang==='en'?'Copy column settings could not be loaded: ':'Kopyalama sütun ayarı yüklenemedi: ')+(error&&error.message||error),{kind:'error'});}
+  return window.BLCopyColumnProfiles||null;
+}
+async function openCopyColumnsEditor(tableKey,options){
+  options=options||{};
+  const P=await loadCopyColumnProfiles(),catalog=P&&copyColumnsCatalog(tableKey);
+  if(!P||!catalog)return false;
+  return P.openEditor({module:tableKey,catalog:catalog.items,visibleKeys:catalog.visibleKeys,focus:options.focus||'profile',onSave:(entry,ok)=>{
+    if(!ok){showToast(appLang==='en'?'Copy column settings could not be saved.':'Kopyalama sütun ayarı kaydedilemedi.',{kind:'error'});return;}
+    window.BLSelectionBar?.refresh?.();
+    if(typeof options.then==='function'){void options.then();return;}
+    showToast(appLang==='en'?'Copy column settings saved.':'Kopyalama sütun ayarı kaydedildi.',{kind:'success'});
+  }});
+}
+async function copyRowsWithCopyColumns(tableKey,mode){
+  const P=await loadCopyColumnProfiles(),en=appLang==='en';
+  const catalog=P&&copyColumnsCatalog(tableKey);if(!catalog)return false;
+  const entry=P.getEntry(tableKey),sensitive=P.sensitiveSet(tableKey,catalog.items,entry);
+  let keys=null;
+  if(mode==='profile'){
+    keys=P.profileKeys(catalog.items,entry);
+    if(!keys){
+      showToast(en?'Choose the custom copy columns first.':'Önce özel kopya sütunlarını seçin.');
+      openCopyColumnsEditor(tableKey,{focus:'profile',then:()=>copyRowsWithCopyColumns(tableKey,'profile')});
+      return false;
+    }
+  }
+  const noRows=()=>{showToast(en?'Check rows or select a cell range first.':'Önce satır işaretleyin veya hücre aralığı seçin.');return false;};
+  let built=null,hidden=0,columnCount=0;
+  if(tableKey==='koleksiyon'){
+    if(!kolSelected||!kolSelected.size){showToast(L('Kopyalamak için önce satır seç.'));return false;}
+    commitActiveTableEditor({refresh:false});
+    let descriptors,picture;
+    if(mode==='profile'){
+      descriptors=P.orderedByKeys(catalog.descriptors,d=>d.k,keys);
+      picture=keys.includes(KOL_COPY_PICTURE_KEY);
+    }else{
+      const visible=kolExportDescriptors(),kept=P.withoutSensitive(visible,d=>d.k,sensitive);
+      descriptors=kept.columns;
+      picture=!kolPictureHidden&&!sensitive.has(KOL_COPY_PICTURE_KEY);
+      hidden=kept.hidden+(!kolPictureHidden&&sensitive.has(KOL_COPY_PICTURE_KEY)?1:0);
+    }
+    columnCount=descriptors.length+(picture?1:0);
+    if(!columnCount){showToast(en?'No columns left to copy.':'Kopyalanacak sütun kalmadı.');return false;}
+    built=await buildCollectionStyledCopy(kolSelected,{descriptors,picture});
+  }else if(tableKey==='cp'||tableKey==='orders'){
+    const checked=tableKey==='cp'?state.cpSelected:state.ordersSelected;
+    let selSet=null,records=null;
+    if(checked&&checked.size){
+      if(!await (tableKey==='cp'?cpPrepareAllRows():ordersPrepareAllRows()))return false;
+      selSet=checked;
+    }else{
+      const snapshot=await window.BLGridClipboard?.selectionSnapshot?.(tableKey==='orders'?'ordersTable':'cpTable');
+      if(!snapshot||!snapshot.rows.length)return noRows();
+      records=snapshot.rows;
+    }
+    let cols;
+    if(mode==='profile')cols=P.orderedByKeys(catalog.columns,c=>c.k,keys);
+    else{const kept=P.withoutSensitive(visibleCols(tableKey),c=>c.k,sensitive);cols=kept.columns;hidden=kept.hidden;}
+    columnCount=cols.length;
+    if(!columnCount){showToast(en?'No columns left to copy.':'Kopyalanacak sütun kalmadı.');return false;}
+    built=await buildManagedTableStyledCopy(tableKey,null,selSet,{columns:cols,records});
+  }else return false;
+  if(!built)return noRows();
+  const ok=await copyRichToClipboard(built.html,built.plain);
+  if(!ok){showToast(en?'Copy failed':'Kopyalama başarısız',{kind:'error'});return false;}
+  showToast(mode==='profile'
+    ?(en?`${built.count} row(s) copied with ${columnCount} custom column(s).`:`${built.count} satır, ${columnCount} özel sütunla kopyalandı.`)
+    :(en?`${built.count} row(s) copied · ${hidden} sensitive column(s) hidden.`:`${built.count} satır kopyalandı · ${hidden} hassas sütun gizlendi.`),{kind:'success'});
+  return true;
+}
+window.BLCopyColumnsAction={
+  supported:tableKey=>['cp','orders','koleksiyon'].includes(tableKey),
+  copy:copyRowsWithCopyColumns,
+  edit:openCopyColumnsEditor,
+};
 
 async function copyRows(tableKey, rows, selectedSet, btnId, computeFn){
   const chosen = rows.filter(r=>selectedSet.has(r._id));

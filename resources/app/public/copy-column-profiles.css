@@ -1,0 +1,29 @@
+/* Kopyalama sütunları ve hassas alanlar penceresi (copy-column-profiles.js).
+   Yalnız yerleşim: yüzey, kenarlık, katman, renk ve yazı ortak Manifest
+   sınıflarından gelir (kolSpreadsheetPaste*, .hint, .tbtn, .iconbtn). */
+.blCopyColsOverlay{position:fixed;inset:0;display:grid;place-items:center;padding:16px}
+.blCopyColsCard{display:flex;flex-direction:column;width:min(640px,calc(100vw - 32px));max-height:min(720px,calc(100vh - 32px))}
+.blCopyColsHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 14px}
+.blCopyColsHead b,.blCopyColsHead span{display:block}
+.blCopyColsHead span{margin-top:4px}
+.blCopyColsTools{display:flex;align-items:center;gap:10px;padding:10px 14px}
+.blCopyColsSearch{flex:1 1 auto;min-width:0;height:var(--ui-control-height)}
+.blCopyColsSummary{flex:0 0 auto}
+.blCopyColsHeadRow,.blCopyColsRow{display:grid;grid-template-columns:72px minmax(0,1fr) 112px 64px;align-items:center;gap:8px;padding:0 14px}
+.blCopyColsHeadRow{padding-bottom:6px}
+.blCopyColsList{flex:1 1 auto;min-height:120px;overflow:auto}
+.blCopyColsRow{min-height:38px;padding-top:2px;padding-bottom:2px}
+.blCopyColsRow input[type="checkbox"]{justify-self:center}
+.blCopyColsLabel{display:flex;flex-direction:column;min-width:0}
+.blCopyColsLabel b,.blCopyColsLabel .hint{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.blCopyColsSensitive{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:var(--ui-control-height-small);padding:0 8px}
+.blCopyColsSensitive .ic{width:14px;height:14px}
+.blCopyColsMove{display:inline-flex;gap:2px;justify-self:end}
+.blCopyColsMove .iconbtn{width:var(--ui-control-height-small);height:var(--ui-control-height-small)}
+.blCopyColsEmpty{padding:18px 14px}
+.blCopyColsFoot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px}
+.blCopyColsFootStart,.blCopyColsFootEnd{display:flex;flex-wrap:wrap;gap:6px}
+.blSelectionBar .blSelectionEdit{width:var(--ui-control-height);height:var(--ui-control-height)}
+@media (max-width:560px){
+  .blCopyColsHeadRow,.blCopyColsRow{grid-template-columns:40px minmax(0,1fr) 96px 56px;gap:6px;padding:0 10px}
+}
