@@ -20,7 +20,7 @@ function browser({channel=true,locks=true,channelThrows=false,lockRejects=false}
   }
   const lockApi={request(name,options,fn){if(typeof options==='function'){fn=options;options={};}if(lockRejects)return Promise.reject(Error('disabled'));return new Promise((resolve,reject)=>{const entry={signal:options.signal,fn:async lock=>{await fn(lock);resolve();}};if(!waiters.has(name))waiters.set(name,[]);waiters.get(name).push(entry);options.signal?.addEventListener('abort',()=>reject(Object.assign(Error('aborted'),{name:'AbortError'})));grant(name);});}};
   function tab(id,user={id:'same-user',iamRevision:1,permissions:{read:true}}){
-    const nativeListeners=new Set(),events=[],patches=[],resync=[],win=new EventTarget(),doc=new EventTarget();doc.visibilityState='visible';
+    const nativeListeners=new Set(),events=[],patches=[],windowChanges=[],resync=[],win=new EventTarget(),doc=new EventTarget();doc.visibilityState='visible';
     Object.assign(win,{buyerLogDesktop:{workspace:{onTabActivity(callback){nativeListeners.add(callback);return ()=>nativeListeners.delete(callback);}}},BL_CLIENT_ID:id,BL_USER_CONTEXT:user,setTimeout:setTimer,setInterval(fn,ms){const repeat=()=>{fn();setTimer(repeat,ms);};return setTimer(repeat,ms);},dispatchEvent:win.dispatchEvent.bind(win)});
     const context=vm.createContext({window:win,document:doc,navigator:{onLine:true,...(locks?{locks:lockApi}:{})},state:{currentUser:user},
       ...(channel?{BroadcastChannel:Channel}:{}),AbortController,CustomEvent:class extends Event{constructor(type,options){super(type);this.detail=options?.detail;}},
@@ -28,11 +28,11 @@ function browser({channel=true,locks=true,channelThrows=false,lockRejects=false}
       fetch(url,options){return new Promise((resolve,reject)=>{const req={id,url,options,resolve:n=>resolve({ok:true,json:async()=>n}),fail:reject};requests.push(req);options?.signal?.addEventListener('abort',()=>{req.aborted=true;reject(Object.assign(Error('aborted'),{name:'AbortError'}));});});},
       setTimeout:setTimer,clearTimeout:id=>timers.delete(id),clearInterval:id=>timers.delete(id),liveSyncConnected:false,
       renderSyncStatusBadge(){},syncStatusModalRenderer:null,refreshSharedMasterClient:async()=>{},refreshPricingRulesFromServer:async()=>{},
-      applyRemoteRowPatches:rows=>patches.push(rows),loadFromServer:async()=>{},kolHandleRemoteChange:async()=>{},initKolWorkspaces:async()=>{},liveSyncResyncAfterGap:()=>resync.push(now),
+      applyRemoteRowPatches:rows=>patches.push(rows),ordersRMSourceChanged:reason=>windowChanges.push(reason),loadFromServer:async()=>{},kolHandleRemoteChange:async()=>{},initKolWorkspaces:async()=>{},liveSyncResyncAfterGap:()=>resync.push(now),
     });
     win.addEventListener('bl-shared-revision',e=>events.push(structuredClone(e.detail)));
     vm.runInContext(code,context);
-    const result={id,win,doc,context,events,patches,resync,nativeListeners,nativeActivity(active){for(const callback of nativeListeners)callback({active,tabId:id});},close(){win.dispatchEvent(new Event('pagehide'));},access(profile){win.BL_USER_CONTEXT=profile;context.state.currentUser=profile;win.dispatchEvent(new Event('bl:user-access-applied'));}};
+    const result={id,win,doc,context,events,patches,windowChanges,resync,nativeListeners,nativeActivity(active){for(const callback of nativeListeners)callback({active,tabId:id});},close(){win.dispatchEvent(new Event('pagehide'));},access(profile){win.BL_USER_CONTEXT=profile;context.state.currentUser=profile;win.dispatchEvent(new Event('bl:user-access-applied'));}};
     tabs.push(result);return result;
   }
   async function tick(ms){const end=now+ms;for(let steps=0;steps<10000;steps++){await flush();const next=[...timers].filter(([,t])=>t.at<=end).sort((a,b)=>a[1].at-b[1].at)[0];if(!next){now=end;await flush();return;}now=next[1].at;timers.delete(next[0]);next[1].fn();}throw Error('timer loop');}
@@ -76,6 +76,8 @@ test('different users/access revisions do not share events, and old in-flight co
 });
 test('normal SSE patches, origin suppression and reconnect resync remain shared',async()=>{
   const b=browser(),a=b.tab('a'),f=b.tab('b');await b.flush();const s=b.sources[0];s.onopen();s.onmessage({data:JSON.stringify({area:'orders',mode:'patch',rowPatches:[{id:1}],originClientId:'b'})});await b.flush();assert.equal(a.patches.length,1);assert.equal(f.patches.length,0);
+  // Okuma modeli penceresi de aynı yamayla güncellenir; yazan sekme kendi olayını yine yok sayar.
+  assert.deepEqual(a.windowChanges,['remote-row-patch']);assert.deepEqual(f.windowChanges,[]);
   s.readyState=2;s.onerror();await b.tick(1000);b.sources[1].onopen();await b.flush();assert.equal(a.resync.length,1);assert.equal(f.resync.length,1);
 });
 test('closing a waiting follower removes it from lock handoff and stops all of its work',async()=>{

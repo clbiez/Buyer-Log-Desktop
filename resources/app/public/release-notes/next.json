@@ -230,6 +230,29 @@
           "en": "Screen content is the same; only the startup wait is gone."
         }
       }
+    },
+    {
+      "id": "orders-fresh-after-cp-edit",
+      "type": "fix",
+      "module": {
+        "tr": "Siparişler · CP",
+        "en": "Orders · CP"
+      },
+      "title": {
+        "tr": "Siparişler: CP'de yapılan düzenleme aynı pencerede hemen görünür",
+        "en": "Orders: an edit made in CP shows up right away in the same window"
+      },
+      "body": {
+        "tr": "CP'de bir satırı (ör. Supp. FOB) düzenledikten sonra Siparişler'e geçildiğinde, yeni sorgu yapılana ya da sayfa yenilenene kadar eski değer görünebiliyordu. Siparişler artık kaydın sunucuda onaylanmasından ve ekip arkadaşının satır değişikliğinden sonra güncel değeri yeniden okur.",
+        "en": "After editing a row in CP (e.g. Supp. FOB), switching to Orders could show the old value until a new search or a page reload. Orders now reads the current value again once the save is confirmed by the server and after a teammate's row change."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekranın düzeni değişmedi; yalnız gösterilen değer artık güncel.",
+          "en": "The screen layout is unchanged; only the value shown is now current."
+        }
+      }
     }
   ]
 }
