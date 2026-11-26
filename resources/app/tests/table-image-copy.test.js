@@ -171,3 +171,15 @@ test('PNG bayt sınırı render döngüsünde uygulanır; aşan görsel panoya y
   assert.match(app, /if\(code==='tooHeavy'\)\{const limit=tableImageCopySizeText\(Copy\.MAX_PNG_BYTES,0\);/);
   assert.match(app, /satır görsel olarak kopyalandı \(\$\{tableImageCopySizeText\(render\.value\.bytes\)\}\)/);
 });
+
+test('alttaki seçim çubuğu CP/Orders/Koleksiyon’da işaretli satırları görsel olarak kopyalar (TR/EN)', () => {
+  const bar = read('selection-action-bar.js');
+  for (const key of ['cp', 'orders', 'koleksiyon']) {
+    assert.match(bar, new RegExp(`${key}:\\{unit:\\[[^\\]]+\\],actions:\\[\\['copy','[^']+'\\],\\['image',''\\],`));
+  }
+  assert.match(bar, /image:\{icon:'#i-picture',label:\['Görsel olarak kopyala','Copy as image'\]\}/);
+  // Yalnız destekli sayfada çizilir; işaretli satırları hedefler.
+  assert.match(bar, /if\(!root\.BLTableImageCopyAction\?\.supported\?\.\(key\)\)return '';/);
+  assert.match(bar, /if\(button\.dataset\.selectionImage!==undefined\)\{void root\.BLTableImageCopyAction\?\.copy\?\.\(\{source:'checked'\}\);/);
+  assert.match(read('app-main.js'), /function tableImageCopySupported\(tab=currentActiveTab\(\)\)/);
+});

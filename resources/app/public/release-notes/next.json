@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-26",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Seçim çubuğunda Görsel olarak kopyala",
+    "en": "Copy as image in the selection bar"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "CP, Siparişler ve Koleksiyon'da satır işaretlenince alttaki seçim çubuğunda Görsel olarak kopyala da görünür; işaretli satırlar tek tıkla PNG olarak panoya kopyalanır.",
+    "en": "In CP, Orders and Collection, the selection bar that appears when rows are checked now also offers Copy as image; checked rows are copied to the clipboard as a PNG with one click."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "selection-bar-image-copy",
+      "type": "improvement",
+      "module": {
+        "tr": "CP · Siparişler · Koleksiyon",
+        "en": "CP · Orders · Collection"
+      },
+      "title": {
+        "tr": "Seçim çubuğundan görsel olarak kopyala",
+        "en": "Copy as image from the selection bar"
+      },
+      "body": {
+        "tr": "Satır veya model işaretlendiğinde alttaki seçim çubuğunda Kopyala’nın yanında Görsel olarak kopyala düğmesi bulunur. Düğme işaretli satırları, Kopyala menüsündeki seçenekle aynı kurallarla (aydınlık tema, en fazla 6 MB, panoda en fazla 50 satır) PNG olarak panoya kopyalar.",
+        "en": "When rows or models are checked, the selection bar shows a Copy as image button next to Copy. It copies the checked rows to the clipboard as a PNG with the same rules as the Copy menu option (light theme, at most 6 MB, up to 50 rows on the clipboard)."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "selection-bar-image-copy.png",
+        "alt": {
+          "tr": "Demo CP tablosu: 4 satır seçiliyken alttaki seçim çubuğunda Kopyala, Görsel olarak kopyala, Excel ve Araçlar düğmeleri",
+          "en": "Demo CP table: with 4 rows selected, the selection bar shows Copy, Copy as image, Excel and Tools"
+        },
+        "caption": {
+          "tr": "Demo veride seçim çubuğu Görsel olarak kopyala düğmesini gösterir.",
+          "en": "On demo data, the selection bar shows the Copy as image button."
+        }
+      }
+    }
+  ]
 }

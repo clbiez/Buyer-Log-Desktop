@@ -14,12 +14,14 @@
     return 0;
   };
   const PAGES=Object.freeze({
-    cp:{unit:['satır seçili','rows selected'],actions:[['copy','navCopy'],['excel','cpExcelBtn'],['tools','cpToolsBtn']]},
-    orders:{unit:['satır seçili','rows selected'],actions:[['copy','navCopy'],['excel','navExcelBtn'],['tools','ordersToolsBtn']]},
-    koleksiyon:{unit:['model seçili','models selected'],actions:[['copy','kolCopySelectedBtn'],['excel','kolExcelBtn'],['tools','kolToolsBtn']]},
+    cp:{unit:['satır seçili','rows selected'],actions:[['copy','navCopy'],['image',''],['excel','cpExcelBtn'],['tools','cpToolsBtn']]},
+    orders:{unit:['satır seçili','rows selected'],actions:[['copy','navCopy'],['image',''],['excel','navExcelBtn'],['tools','ordersToolsBtn']]},
+    koleksiyon:{unit:['model seçili','models selected'],actions:[['copy','kolCopySelectedBtn'],['image',''],['excel','kolExcelBtn'],['tools','kolToolsBtn']]},
   });
   const ACTIONS=Object.freeze({
     copy:{icon:'#i-copy',label:['Kopyala','Copy']},
+    // Araç çubuğunda karşılığı yok: işaretli satırları doğrudan görsel olarak kopyalar.
+    image:{icon:'#i-picture',label:['Görsel olarak kopyala','Copy as image']},
     excel:{icon:'#i-file-export',label:['Excel','Excel']},
     tools:{icon:'#i-bl-tools',label:['Araçlar','Tools']},
   });
@@ -52,6 +54,7 @@
         if(panel.hidden){drawPanel();panel.hidden=false;bar.querySelector('[data-selection-details]')?.setAttribute('aria-expanded','true');root.BLMotionPlus?.play?.('overlay',panel);panel.querySelector('button')?.focus();}else closePanel(true);
         return;
       }
+      if(button.dataset.selectionImage!==undefined){void root.BLTableImageCopyAction?.copy?.({source:'checked'});schedule();return;}
       if(button.dataset.selectionDismiss!==undefined){if(lastKey==='cp'||lastKey==='orders'){root.BLManagedSelection?.clear(lastKey);schedule();return;}dismissedAt=lastKey+':'+lastCount;hide();return;}
       const target=doc.getElementById(button.dataset.selectionTarget||'');
       if(target&&!target.disabled)target.click();
@@ -85,6 +88,11 @@
   function render(key,count,data){
     const page=PAGES[key];
     const items=page.actions.map(([action,id])=>{
+      if(action==='image'){
+        if(!root.BLTableImageCopyAction?.supported?.(key))return '';
+        const meta=ACTIONS.image,label=T(meta.label[0],meta.label[1]);
+        return `<button type="button" class="tbtn blSelectionAction" data-selection-image><svg class="ic" aria-hidden="true"><use href="${meta.icon}"/></svg><span>${label}</span></button>`;
+      }
       const target=doc.getElementById(id);
       if(!target)return '';
       const meta=ACTIONS[action],label=T(meta.label[0],meta.label[1]);
