@@ -364,3 +364,106 @@ test('grup alanı: boş sayfada bile sığmayan alan sonsuz sayfa üretmez', () 
   assert.equal(res.index.size, 12);
   assert.ok(res.pages.length < 20, 'sayfa sayısı sınırlı: ' + res.pages.length);
 });
+
+test('başlık yazı boyutu kart yazısından ayrı: başlık bandı hfs ile, kart metni fs ile ölçeklenir', () => {
+  const { doc, groupOf } = setup(24, ['fabric']);
+  assert.equal(doc.style.hfs, 10, 'varsayılan başlık 10 pt (önceki fs×1,25 ile aynı görünüm)');
+  const g0 = E.layout(doc, groupOf).g;
+  doc.style.hfs = 16;
+  const g1 = E.layout(doc, groupOf).g;
+  assert.ok(g1.hH > g0.hH && Math.abs(g1.hLine - 16 * 1.3) < 0.01);
+  assert.equal(g1.th, g0.th, 'kart metni yüksekliği değişmez');
+  assert.equal(E.normalizeStyle({ hfs: 99 }).hfs, 24); assert.equal(E.normalizeStyle({}).hfs, 10);
+});
+
+test('grubundan ayrılmış kart kendi grup alanına alınır; gruplar kartı bırakınca birleşir', () => {
+  const { data, doc, groupOf } = setup(24, ['fabric']);
+  const snapshot = JSON.stringify(data);
+  let res = E.layout(doc, groupOf);
+  const g = res.g, merinos = doc.order.filter(id => groupOf(id).vals[0] === 'Merinos');
+  // Ayrılmış (sabit) kart → kendi elle grubu + alan; özgün başlık metni korunur, özgün grup akışta kalır.
+  E.pinAt(doc, merinos[0], { page: 'p1', x: g.w - g.m - g.cellW, y: g.h - g.m - g.cellH, w: g.cellW, h: g.cellH });
+  const key = E.splitGroup(doc, [merinos[0]], groupOf);
+  assert.notEqual(key, groupOf(merinos[0]).key);
+  E.setArea(doc, key, { page: 'p1', x: g.w - g.m - g.cellW, y: g.m, w: g.cellW, h: 0 });
+  res = E.layout(doc, groupOf);
+  const items = res.pages.flatMap(p => p.items);
+  const hdr = items.find(i => i.kind === 'hdr' && i.area === key);
+  assert.ok(hdr && hdr.vals[0] === 'Merinos', 'başlık metni özgün grubunki');
+  assert.equal(items.filter(i => i.kind === 'card' && i.area === key).length, 1);
+  assert.ok(items.some(i => i.kind === 'hdr' && i.key === groupOf(merinos[1]).key && !i.area), 'özgün grup akışta ayrı');
+  assert.equal(res.index.get(merinos[0]).pinned, undefined, 'sabitleme kalktı, alanda akıyor');
+  // Kalıcılık
+  const round = E.normalizeDoc(JSON.parse(JSON.stringify(doc)), { ids: doc.order });
+  assert.deepEqual(round.splits[key], { vals: ['Merinos'] });
+  // Birleştirme: Pamuk grubunun tüm kartları Kaşmir grubuna katılır.
+  const pamuk = groupOf(doc.order.find(id => groupOf(id).vals[0] === 'Pamuk')).key, kasmir = groupOf(doc.order.find(id => groupOf(id).vals[0] === 'Kaşmir')).key;
+  const n = E.mergeGroups(doc, pamuk, kasmir, groupOf);
+  assert.equal(n, 6);
+  res = E.layout(doc, groupOf);
+  assert.equal(res.pages.flatMap(p => p.items).filter(i => i.kind === 'hdr' && i.key === pamuk).length, 0);
+  assert.equal(res.pages.flatMap(p => p.items).filter(i => i.kind === 'hdr' && i.key === kasmir).reduce((m, h) => Math.max(m, h.count), 0), 12);
+  assert.equal(JSON.stringify(data), snapshot, 'kaynak veri değişmez');
+  assertClean(res);
+});
+
+test('grup alanları ve sabit kartlar üst üste binmez: alan engelin altına kayar, aşağıdaki engele kadar büyür', () => {
+  const { doc, groupOf } = setup(40, ['fabric']);
+  let res = E.layout(doc, groupOf);
+  const g = res.g, keys = [...new Set(doc.order.map(id => groupOf(id).key))];
+  // İkinci alan birincinin ortasına bırakılır; sabit kart da birinci alanın altına konur.
+  E.setArea(doc, keys[0], { page: 'p1', x: g.m, y: g.h * 0.4, w: 2 * g.cellW + g.gap, h: 0 });
+  E.setArea(doc, keys[1], { page: 'p1', x: g.m, y: g.m, w: 2 * g.cellW + g.gap, h: 0 });
+  res = E.layout(doc, groupOf);
+  assertClean(res);
+  const items = res.pages.flatMap(p => p.items);
+  for (const k of keys.slice(0, 2)) assert.equal(items.filter(i => i.kind === 'card' && i.area === k).length, doc.order.filter(id => groupOf(id).key === k).length, 'kart kaybı yok');
+  assert.ok(res.pages.length >= 2);
+});
+
+test('grup bazlı kart boyutu: boyutlanmış alanda kartlar alanı orantılı doldurur; kart eklenince küçülür', () => {
+  const { doc, groupOf } = setup(40, ['fabric']);
+  let res = E.layout(doc, groupOf);
+  const g = res.g, key = groupOf(doc.order[0]).key;
+  const fill = () => {
+    res = E.layout(doc, groupOf);
+    const items = res.pages.flatMap(p => p.items), ar = items.find(i => i.kind === 'area' && i.key === key && !i.cont);
+    const cards = items.filter(i => i.kind === 'card' && i.area === key);
+    return { ar, cards, right: Math.max(...cards.map(c => c.x + c.w)), bottom: Math.max(...cards.map(c => c.y + c.h)) };
+  };
+  // Alan elle boyutlandı (h > 0): kartlar genişliği ve yüksekliği doldurur, boş alan kalmaz.
+  E.setArea(doc, key, { page: 'p1', x: g.m, y: g.m, w: 420, h: 360 });
+  let f = fill();
+  assert.equal(f.cards.length, 10, 'grubun tüm kartları tek alanda');
+  assert.ok(Math.abs(f.right - (f.ar.x + f.ar.w)) < 0.5, 'sağ kenar dolu');
+  assert.ok(Math.abs(f.bottom - (f.ar.y + f.ar.h)) < 0.5, 'alt kenar dolu');
+  assert.ok(Math.abs(f.ar.h - 360) < 0.5);
+  assertClean(res);
+  const w10 = f.cards[0].w;
+  // Gruba kart eklenince (birleşme) aynı alanda kartlar küçülür.
+  const other = groupOf(doc.order.find(id => groupOf(id).key !== key)).key;
+  E.mergeGroups(doc, other, key, groupOf);
+  f = fill();
+  assert.equal(f.cards.length, 20);
+  assert.ok(f.cards[0].w * f.cards[0].h < w10 * f.cards[0].h * 1.0001 || f.cards[0].w < w10, 'kartlar küçüldü');
+  assert.ok(Math.abs(f.bottom - (f.ar.y + f.ar.h)) < 0.5 && Math.abs(f.right - (f.ar.x + f.ar.w)) < 0.5);
+  // Otomatik boyut (h = 0): genel kart ölçüsü.
+  E.setArea(doc, key, { page: 'p1', x: g.m, y: g.m, w: 420, h: 0 });
+  f = fill();
+  assert.ok(Math.abs(f.cards[0].w - g.cellW) < 0.01 && Math.abs(f.cards[0].h - g.cellH) < 0.01);
+  assertClean(res);
+});
+
+test('grup bazlı kart boyutu: yalnız genişlik daralırsa alan aşağı büyür, kartlar genişliği doldurur', () => {
+  const { doc, groupOf } = setup(24, ['fabric']);
+  let res = E.layout(doc, groupOf);
+  const g = res.g, key = groupOf(doc.order[0]).key;
+  E.setArea(doc, key, { page: 'p1', x: g.m, y: g.m, w: 100, h: g.hH + g.cellH + 10 });
+  res = E.layout(doc, groupOf);
+  const items = res.pages.flatMap(p => p.items), ar = items.find(i => i.kind === 'area' && i.key === key), cards = items.filter(i => i.kind === 'card' && i.area === key);
+  assert.ok(ar.fit && cards.length === 6);
+  assert.ok(Math.abs(Math.max(...cards.map(c => c.x + c.w)) - (ar.x + ar.w)) < 0.5);
+  assert.ok(Math.abs(Math.max(...cards.map(c => c.y + c.h)) - (ar.y + ar.h)) < 0.5);
+  assert.ok(ar.h > g.hH + g.cellH + 10, 'alan büyüdü');
+  assertClean(res);
+});

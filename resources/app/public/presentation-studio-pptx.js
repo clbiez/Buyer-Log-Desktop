@@ -95,7 +95,6 @@
         continue;
       }
       let inner = b.rect('Card', el.x, el.y, el.w, el.h, { fill: palette.card, shadow: el.style === 'shadow' });
-      inner += b.rect('Image area', el.imageBox.x, el.imageBox.y, el.imageBox.w, el.imageBox.h, { fill: palette.image });
       const media = el.image && images.get(el.image.src);
       if (media) inner += b.picture('Picture', el.image.x, el.image.y, el.image.w, el.image.h, media.name, titles[el.id] || el.id);
       if (el.lines.length) inner += lineShapes(b, el.lines, chip);

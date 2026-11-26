@@ -1,14 +1,73 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-26",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Sunum Stüdyosu: grupları birleştirme, ayrılan kart için grup alanı, satır satır başlıklar",
+    "en": "Presentation Studio: merge groups, group areas for separated cards, line-by-line titles"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Sunum Stüdyosu’nda bir kartı başka bir kartın ya da grubun üzerine bırakmak iki grubu birleştirir; grubundan ayrılan kartlar kendi grup alanına alınıp boyutlandırılabilir. Grup başlığında her gruplama seviyesi ve takım parçası ayrı satırda; başlık yazı boyutu kart yazısından ayrı ayarlanır. Grup alanı boyutlandırılınca kartlar alanı orantılı doldurur; görsellerin arkasındaki gri zemin kaldırıldı.",
+    "en": "In Presentation Studio, dropping a card onto another card or group merges the two groups; cards separated from their group can get their own resizable group area. Group titles show each grouping level and set part on its own line, and the title text size is set separately from the card text. Resizing a group area scales its cards to fill it, and the grey background behind images was removed."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "presentation-studio-merge-split-titles",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · CP · Siparişler",
+        "en": "Collection · CP · Orders"
+      },
+      "title": {
+        "tr": "Sunum Stüdyosu: grupları birleştir, ayrılan karta grup alanı, satır satır grup başlığı",
+        "en": "Presentation Studio: merge groups, group area for separated cards, line-by-line group titles"
+      },
+      "body": {
+        "tr": "Bir kartı başka bir kartın, grubun ya da grubundan ayrılmış bir kartın üzerine bıraktığınızda iki grup tek başlık altında birleşir (Shift ile yalnız o kart taşınır; Ctrl+Z geri alır). Grubundan ayırdığınız kartın başlığını sürükleyince kart, özgün başlık metniyle kendi grup alanına alınır; alanı diğer grup alanları gibi taşıyıp kenarından boyutlandırabilirsiniz. Grup alanları birbirinin ve sabit kartların üstüne binmez. Grup başlığında her gruplama seviyesi ayrı satırda, takım modellerinin A/B/C parçaları da kendi satırlarında görünür. Tasarım’da başlık yazı boyutu ve kart yazı boyutu ayrı ayarlanır. Kaynak veri değişmez.",
+        "en": "Dropping a card onto another card, a group or a card separated from its group merges the two groups under one title (hold Shift to move only that card; Ctrl+Z undoes). Dragging the title of a card you separated from its group gives it its own group area with the original title text; move and resize it from its edges like any group area. Group areas no longer overlap each other or pinned cards. Group titles show each grouping level on its own line, and the A/B/C parts of set models on their own lines too. In Design, title text size and card text size are set separately. Source data does not change."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "presentation-studio-groups-merge.png",
+        "alt": {
+          "tr": "Demo modellerle Sunum Stüdyosu: grup başlıklarında ürün grubu ve kumaş ayrı satırlarda, büyütülmüş başlık yazısı ve tam metinli uzun başlık",
+          "en": "Presentation Studio with demo models: product group and fabric on separate lines in group titles, a larger title text and a long title shown in full"
+        },
+        "caption": {
+          "tr": "Demo veride satır satır grup başlıkları; başlık yazısı kart yazısından ayrı boyutta.",
+          "en": "Line-by-line group titles on demo data; title text sized separately from card text."
+        }
+      }
+    },
+    {
+      "id": "presentation-studio-group-card-size",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · CP · Siparişler",
+        "en": "Collection · CP · Orders"
+      },
+      "title": {
+        "tr": "Sunum Stüdyosu: grup bazlı kart boyutu, görsellerde gri zemin yok",
+        "en": "Presentation Studio: card size per group, no grey behind images"
+      },
+      "body": {
+        "tr": "Grup alanını kenarından büyütüp küçülttüğünüzde içindeki model kartları alanı orantılı olarak doldurur; boş alan kalmaz. Gruba yeni kart eklendiğinde kartlar aynı alana sığacak şekilde küçülür; alan yetmezse aşağı doğru büyür. Böylece kart ölçüsü Tasarım’daki genel ayarın yanında grup bazında da belirlenebilir; alan araç çubuğundaki Otomatik kart boyutu genel ölçüye döndürür. Kart görsellerinin arkasındaki gri zemin kaldırıldı; görsel kartın zemin rengi üzerinde görünür (PDF ve PowerPoint dahil).",
+        "en": "When you resize a group area from its edges, the model cards inside fill the area proportionally, leaving no empty space. When a card is added to the group, the cards shrink to fit the same area; if the area is too small it grows downward. Card size can now be set per group alongside the general Design setting; Automatic card size in the area toolbar returns to the general size. The grey background behind card images was removed; images sit on the card background (PDF and PowerPoint included)."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "presentation-studio-group-card-size.png",
+        "alt": {
+          "tr": "Demo modellerle Sunum Stüdyosu: daraltılmış bir grup alanında kartlar alanı dolduracak şekilde küçülmüş; alan araç çubuğunda Otomatik kart boyutu ve Akışa döndür; görsellerin arkası beyaz",
+          "en": "Presentation Studio with demo models: cards in a narrowed group area shrink to fill it; the area toolbar shows Automatic card size and Return to flow; images on a white background"
+        },
+        "caption": {
+          "tr": "Demo veride grup alanına göre ölçeklenen kartlar.",
+          "en": "Cards scaled to the group area on demo data."
+        }
+      }
+    }
+  ]
 }
