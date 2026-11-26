@@ -512,14 +512,119 @@ Peşinen seçilmedi: ölçüm iki ayrı, birbirinden bağımsız pilot gösteriy
 
 **Karar:** Yalnız G1–G9'un tümü geçerse PASS. Ölçümden sonra hiçbir eşik gevşetilmez; ölçülemeyen kapı BLOCKED sayılır.
 
+### 6B.1 · Uygulama (kod: `c800f90b`, bayrak varsayılan KAPALI)
+
+- `server/lib/page-projection-cache.js`: Bayrak açıkken `runRowRewriteBatch` modül dosyalarını yeniden yazmaz. Adımlar aktif neslin `patches.log` dosyasına eklenir. Manifest eski yolun yeni manifestiyle aynı alanları taşır, artı `patchLog` (nesil, taban bağlamı, giriş/adım/bayt).
+- Sıkıştırma `materializePatchLogUnlocked`'tır: mevcut `runRowRewriteSteps` + `writeGenerationUnlocked`. Tetikleyiciler:
+  - eşleşen bağlamla okuma (`readProjectionCompressed`, `readReusableProjections`);
+  - araya giren her mutasyon (`writeGeneration`, `writeCompressedGeneration`, `reuseGeneration`, `rewriteGeneration`, `writeProjection`, `writeBacklog`, bayrak kapalı `runRowRewriteBatch`);
+  - boşta kalma (30 sn);
+  - kesin eşik (ekleme 64 girişi ya da 8 MiB'ı aşacaksa önce sıkıştır).
+- Yırtık ya da uyuşmayan günlük kullanıcı önbelleğini atar. Bekleyen günlüklü `.bak` aday listesine girmez.
+- `server/server.js`: Okuma modeli doğrulamasının CP satırları (`deferredCpRows`) sıkıştırmada üretilir. Satır eşlemesi günlükteki küresel adım sırasıyla yapılır, böylece yeniden başlatmaya dayanır.
+- Günlük `local-data/page-cache/` altında: yedekten, tam geri yüklemeden ve ortak klasörden **hariç**. Türetilmiş veriye kalıcılık, senkron ya da yedek yükü eklenmedi **[Doğrulandı: yol + §6A.5]**.
+- Dokunulmayanlar: `public/app-main.js`, `collection-replication.js`, sync dosyaları. Sürüm notu yok, çünkü bayrak kapalı ve kullanıcıya görünen değişiklik yok.
+
+### 6B.2 · Sonuçlar (30k, seed 7, `d772bab` + pilot, Linux container 4 vCPU; seri; 3 ABBA çifti)
+
+Çift farkı = açık − kapalı. A/A maksimumu = kapalı koşuların ikili mutlak farklarının maksimumu.
+
+**S1 · Uzun oturum** (200 düzenleme, 1 sn aralık, 35 sn boşta, son okuma; pencere ≈ 236 sn):
+
+| Metrik | Kapalı medyan [ham] | Açık medyan [ham] | Oran | Çift farkları | A/A maks | Karar |
+| --- | --- | --- | --- | --- | --- | --- |
+| **Süreç toplam CPU** | **546,7 sn** [546,7 / 552,4 / 541,4] | **33,9 sn** [33,0 / 36,5 / 33,9] | **0,062** | −513,7 / −515,9 / −507,5 sn | 10,9 sn | **Kazanç kanıtlı (−%93,8)** |
+| Ana iş parçacığı CPU | 13,08 sn [12,65 / 13,21 / 13,08] | 6,31 sn [6,16 / 6,46 / 6,31] | 0,48 | −6,49 / −6,75 / −6,77 sn | 0,56 sn | Kazanç |
+| Kayıt onayı p50 | 22 ms [21 / 22 / 24] | 17 ms [17 / 18 / 17] | 0,77 | −4 / −4 / −7 ms | 3 ms | Kazanç |
+| Tepe RSS | 1.829 MB [1.829 / 1.906 / 1.787] | 1.596 MB [1.526 / 1.609 / 1.596] | 0,87 | −303 / −297 / −191 MB | 119 MB | Kazanç |
+| Disk yazımı `wchar` | 1.393 MB [1.497 / 1.393 / 1.364] | 80,8 MB [80,8 ×3] | 0,058 | −1.417 / −1.313 / −1.283 MB | 134 MB | Kazanç |
+| Disk `write_bytes` | 1.409 MB | 101 MB [101 ×3] | 0,072 | −1.409 / −1.308 / −1.279 MB | 131 MB | Kazanç |
+| Son okumanın bitişi (`lastSettled`) | 36,67 sn | 36,66 sn | 1,00 | +69 / +85 / −32 ms | 103 ms | Ayırt edilemez |
+
+- **Sıkıştırma (açık):** her koşuda 4 kez (3 eşik + 1 boşta), her biri 2,1–2,6 sn duvar süresi. 197 ekleme (ardışık kayıtlar birleşti). En çok 64 giriş ve 42,8 KB günlük. Atılan önbellek: 0.
+- Ölçüm notu: iş parçacığı başına `/proc` toplamı, pencere içinde sonlanan işçileri kaçırıyor. Bu yüzden toplam için **süreç CPU'su** esas alındı.
+
+**S2 · Okumalı kayıt akışı** (16 kayıt, 2,5 sn, her aralıkta Siparişler bütün dosya okuması):
+
+| Metrik | Kapalı medyan [ham] | Açık medyan [ham] | Çift farkları | A/A maks | Karar |
+| --- | --- | --- | --- | --- | --- |
+| Süreç toplam CPU | 91,5 sn [91,5 / 91,8 / 90,9] | 90,7 sn [95,3 / 90,6 / 90,7] | +3,82 / −1,15 / −0,20 sn | 0,86 sn | Ayırt edilemez |
+| **Siparişler okuma bekleme p50** | **1.767 ms** [1.710 / 1.767 / 1.768] | **4.778 ms** [5.099 / 4.778 / 4.676] | +3.389 / +3.011 / +2.908 ms | 58 ms | **GERİLEME** |
+| Son kayıttan okumanın bitişi | 3.330 ms | 4.339 ms | +1.061 / +524 / +1.147 ms | 323 ms | **GERİLEME** |
+| Kayıt onayı p50 | 25 ms | 20 ms | −5 / −5 / −5 ms | 3 ms | Kazanç |
+| Tepe RSS | 1.634 MB | 1.622 MB | +152 / −181 / −71 MB | 259 MB | Ayırt edilemez |
+| Disk `wchar` | 336,2 MB | 318,6 MB | −29 / −17 / −18 MB | 0 | Kazanç (küçük) |
+
+- **Sıkıştırma (açık):** 16 kez, hepsi okuma kaynaklı (her kayıttan sonra günlükte 1 giriş), medyan ~2,1 sn.
+
+**S3 · Beklenmedik kapanma** (30 kayıt, 300 ms aralık, onaydan hemen sonra `SIGKILL`; kol başına 1 koşu):
+
+| | Kapalı | Açık |
+| --- | --- | --- |
+| Yeniden başlatma → giriş | 798 ms | 795 ms |
+| Soğuk ilk CP okuması | **7.551 ms** (önbellek ıskaladı: bekleyen yeniden yazım kayboldu, kaynaktan yeniden üretim) | **3.090 ms** (önbellek isabetli: günlük kalıcıydı, okuma tek sıkıştırma yaptı) |
+| Sıcak ikinci okuma | 434 ms | 437 ms |
+| Son değer doğrulaması (not + Retail Date) | 20/20 | 20/20 |
+
+**Eşitlik:**
+- Birim testte (`tests/projection-patch-log-v20261126.test.js`) 200 düzenlemenin her birinden sonra, işçi ve ana iş parçacığı yollarında okunan içerik, manifest ve CP satırları eski yolla aynı.
+- 30k in-process kontrolde (scratchpad `eq30k.js`, 5 modül, 24.982 CP satırı) ilk 10 düzenlemenin her birinden sonra ve 200'de içerik, manifest ve CP satırları eşit **[Doğrulandı]**.
+
+### 6B.3 · Kapı kararları
+
+| Kapı | Sonuç |
+| --- | --- |
+| G1 S1 toplam CPU ≥ %80 düşüş | **PASS**: −%93,8 (oran 0,062); üç çift de negatif ve A/A maksimumunun ~47 katı |
+| G2 ana iş parçacığı ve kayıt onayı | PASS (S1 kazanç, S2 ayırt edilemez; kayıt onayı iki senaryoda kazanç) |
+| G3 S2 toplam CPU ve Siparişler okuma bekleme | **FAIL**: CPU ayırt edilemez, okuma bekleme p50 +3,0 sn (oran 2,7), üç çift de pozitif ve A/A maksimumunun üstünde |
+| G4 tepe RSS | PASS |
+| G5 disk yazımı | PASS (S1 −%94) |
+| G6 günlük sınırı | PASS (≤ 64 giriş, ≤ 42,8 KB; sıkıştırma sayısı ve süresi yukarıda) |
+| G7 eşitlik | PASS |
+| G8 dayanıklılık | PASS (S3 her iki kolda doğru; açık kolda soğuk okuma daha hızlı; birim testler) |
+| G9 mevcut testler | PASS: `npm test -- projection-patch-log projection-rewrite page-cache page-projection cp-shared-edit` 47/47; değişen yollara atıf yapan 10 dosya 53 geçti, 1 önceden atlanan. Tam `npm test` koşulmadı (merge öncesi kapı). |
+
+**Karar: BLOCKED.** G3 önceden yazılmış kurala göre FAIL. Eşik gevşetilmedi; pilot varsayılan kapalı kalır.
+
+**Neden [Doğrulandı: sayaçlar + kaynak]:** S2'de her kayıttan sonra bütün dosya okunuyor. Bu yüzden her okuma tek girişli günlüğü **okuma anında** sıkıştırıyor: 16 kayıt, 16 sıkıştırma, eski yolla aynı iş miktarı, toplam CPU değişmiyor. Eski yolda yeniden yazım kayıt anında başlıyordu ve okuma (kayıttan ~1,25 sn sonra) onun kalan kısmını bekliyordu. Pilotta ise iş okuma geldiğinde başlıyor ve okuma tamamını bekliyor: **+~3 sn**. Bu, ürün sahibinin uyardığı "maliyeti ötelemek" durumunun okuma gecikmesindeki karşılığı. Toplam CPU kazancı ancak okumalar arasında kayıtlar biriktiğinde oluşuyor (S1).
+
+**Bilinmeyen [Bilinmiyor]:** Gerçek arayüzde (okuma modeli varsayılan açık) bir CP kaydından sonra bütün dosya okuması ne sıklıkla oluyor? S2 bilerek en kötü desendir. Gerçek dağılım ölçülmedi: Playwright ile CP hücre düzenlemesi sırasında `/api/page-projection/*` ve `/api/read-model/*` isteklerinin sayılması gerekir.
+
+### 6B.4 · Sonraki adım (uygulanmadı; yeni ölçüm ve önceden yazılmış kabul gerekir)
+
+Okuma yolunun sıkıştırmayı **beklememesi** gerekiyor, yani okuyucunun günlüğü kendisinin uygulaması. Öneri **B2**, aynı bayrak altında:
+1. **Okuma modeli ve compute işçileri:** önbellekteki veri kümesi günlük kuyruğunu uygular (bugün `cp-row-patch-log` CP hesabı için bunu bellek içi yapıyor). Böylece okuma sıkıştırma tetiklemez.
+2. **Tarayıcı tam yükü (`/api/page-projection/:module`):** iki seçenek, ürün ve kapsam kararı.
+   - (a) Taban + günlük kuyruğu sunulur, istemci mevcut canlı yama uygulamasıyla uygular (`public/app-main.js` değişir; Siparişler açılış düzeltmesi bittikten sonra).
+   - (b) Yalnız istenen modül sıkıştırılır (modül başına günlük ofseti). Gecikme azalır ama okuma yolunda kalır.
+3. Kabul, aynı G1–G9 ve aynı S2 kuralıyla. Ek olarak gerçek arayüz okuma desenini (yukarıdaki [Bilinmiyor]) ölçen bir S4 senaryosu.
+
+Alternatif "kayıttan kısa süre sonra arka planda sıkıştır" (debounce) bilerek önerilmiyor. Ardışık düzenleme aralığı debounce'tan uzunsa S1 kazancını yok eder; kısaysa S2 gecikmesini çözmez. Ödünleşimi tek eşikle çözülemez **[Güçlü çıkarım]**.
+
+### 6B.5 · Geçiş ve eski kodun kaldırılma planı (yalnız PASS sonrası)
+
+İki kalıcı mekanizma tutulmaz. Sıra şöyle; her adım ayrı PR:
+1. **B2 + yeniden ölçüm**, G1–G9 PASS.
+2. **TEST kanalında açık** (bir sürüm). Sayaçlar sıfır olmalı: `patchLog.discarded`, `cp-row-patch-log.settledFailed`, `rowPatchMismatches`. Eşitlik gölgesi: TEST'te örneklenmiş sıkıştırma çıktısı eski yolla karşılaştırılır.
+3. **Varsayılan açık.** Bayrak yalnız acil geri dönüş için bir sürüm kalır.
+4. **Kaldırma:**
+   - (a) `runRowRewriteBatch`'in kayıt başına yeniden yazım dalı; yalnız sıkıştırma kalır.
+   - (b) `server.js` `BL_PROJECTION_REWRITE_INCREMENTAL=0` eski `rewriteGeneration` transform yolu.
+   - (c) `cp-row-patch-log` bellek içi, TTL'li zincir; okuma modeli kalıcı günlüğü tükettiğinde aynı işin ikinci mekanizmasıdır.
+   - (d) Bayrağın kendisi.
+   - Parite testlerindeki eski yol transform'u, kaldırma tamamlanana kadar **oracle** olarak testte kalır, sonra sıkıştırma paritesine dönüştürülür.
+
+Ölçüm araçları scratchpad'dedir (`bench-pilot.js`, `hook.js`, `decide.js`, `eq30k.js`) ve commit edilmedi. Kalıcılaştırılması gerekirse ayrı bir iş olarak `scripts/` altına alınır.
+
 ---
 
 ## 7 · Ürün sahibinin vermesi gereken kararlar
 
 1. **Sütun filtresi anlamı (T5):** Koleksiyonda sayısal/aralık/revizyon filtresi yokluğu bilinçli mi? Genel Bakış boyut filtresinin `norm()` eşitliği istenen davranış mı?
 2. **Boş sayı (T1, V5):** Boş hücre toplamlarda 0 mı sayılır, yoksa "yok" olarak dışarıda mı kalır? Paralel veri sözleşmesi pilotuyla birlikte karar verilmeli.
-3. **İptal edilen yazarın sonradan varan olayları (V10):** inceleme kuyruğu mu (öneri), HLC'ye göre kabul mü, yoksa ret mi?
-4. **Pilot seçimi (§6):** V1 (yüksek kazanç, P1) ya da daha küçük alternatif V2 alt kümesi (Ex→Retail/LT).
+3. **Pilot B'nin devamı (§6B.4):** tarayıcı tam yükünde seçenek (a) istemci günlüğü uygular ya da (b) modül bazında sıkıştırma; ayrıca gerçek arayüz okuma deseninin ölçülmesi.
+4. **İptal edilen yazarın sonradan varan olayları (V10):** inceleme kuyruğu mu (öneri), HLC'ye göre kabul mü, yoksa ret mi?
+5. **Pilot seçimi (§6):** V1 (yüksek kazanç, P1) ya da daha küçük alternatif V2 alt kümesi (Ex→Retail/LT).
 
 ---
 
