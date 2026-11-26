@@ -59,15 +59,15 @@ test('sorting reorders models by any column, keeps empty values last and toggles
   assert.match(String(store.get('lcw.pricingDesk.matrixLayout.v1')),/"key":"quotes","dir":-1/);
 });
 
-test('column widths clamp, persist per user and keep sticky columns aligned',()=>{
+test('column widths clamp, persist per user and only Models is frozen',()=>{
   const {api}=desk(),context={summary:['quantity','inStoreMonth'],extra:['season']},layout={visible:[{name:'Demo Mill A'}],other:[]};
   const keys=Array.from(api.matrixColumnKeys(context,layout,true));
   assert.deepEqual(keys,['model','summary','target','quotes','refs','ctx:season','mfr:Demo Mill A','add']);
   api.matrixLayout.widths.model=20;api.matrixLayout.widths.quotes=260;
   assert.equal(api.colWidth('model'),120,'minimum width protects the column');
   const g=api.matrixGeometry(keys);
-  assert.deepEqual(JSON.parse(JSON.stringify(g.lefts)),{model:0,summary:120,target:280,quotes:368});
-  assert.equal(g.total,120+160+88+260+290+150+104+124);
+  assert.deepEqual(JSON.parse(JSON.stringify(g.lefts)),{model:0},'only the Models column is frozen');
+  assert.equal(g.total,120+104+88+260+124+150+104+124);
 });
 
 test('clipboard header follows the new column set',()=>{
@@ -115,6 +115,13 @@ test('Unapproved only keeps open models, survives a server acknowledgement and i
   api.setColumnHidden(req,'refs',false);assert.match(String(store.get('lcw.pricingDesk.matrixLayout.v1')),/"unapprovedOnly":true/);
   assert.doesNotMatch(deskSource,/bulkApproveCandidates|data-pd-bulk/,'bulk approval is removed from the desk');
   assert.equal(E.bulkApproveCandidates,undefined);
+});
+
+test('compact references and value-only Quantity / MB Month cells',()=>{
+  assert.match(deskSource,/<span class="pdRefRow" title="\$\{esc\(tip\)\}"><span class="blCellStackLabel">\$\{esc\(refShort\(key\)\)\}<\/span>/);
+  assert.match(deskSource,/context\.summary\.map\(key=>`<b>\$\{esc\(api\.fieldValue\(req,model\.first,key\)\|\|'—'\)\}<\/b>`\)/,'labels live only in the header');
+  assert.doesNotMatch(deskSource,/pdQuotesScroll|--pd-l-quotes/);
+  assert.doesNotMatch(read('pricing-desk.css'),/\.pdMatrix \.(?:pdTarget|pdQuotesCol|pdSummary)\{position:sticky/);
 });
 
 function quotes(lang){

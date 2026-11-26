@@ -93,16 +93,13 @@
 .pdMatrix thead th.pdNum{text-align:right}
 .pdMatrix .pdModelHead,.pdMatrix .pdModelCell{position:sticky;left:0}
 .pdMatrix tbody td,.pdMatrix tbody th{padding:4px 8px;vertical-align:middle}
-/* Sabit sütunlar (Model · Adet/MB Ay · Hedef · Teklif & Onay) genişlikleri JS'te
-   kullanıcı ayarından hesaplanan --pd-l-* değişkenleriyle hizalanır. */
-.pdMatrix .pdTarget,.pdMatrix .pdQuotesCol{position:sticky}
-.pdMatrix .pdTarget{left:var(--pd-l-target,0px)}
-.pdMatrix .pdQuotesCol{left:var(--pd-l-quotes,0px)}
+/* Yalnız Model sütunu donar; diğer sütunlar tabloyla birlikte yatayda kayar. */
 .pdMatrix tbody tr{height:44px}
 .pdMatrix tbody td.pdQuotesCol,.pdMatrix tbody td.pdRefsCol{padding:3px 8px;vertical-align:middle;overflow:hidden}
-.pdMatrix tbody td.pdRefsCol{position:relative}
-.pdMatrix.pdQuotesScroll tbody td.pdQuotesCol{position:relative;left:auto}
-.pdMatrix.pdQuotesScroll thead th.pdQuotesCol{left:auto}
+.pdMatrix tbody td.pdRefsCol,.pdMatrix tbody td.pdQuotesCol{position:relative}
+.pdRefsCompact{display:grid;grid-template-columns:auto auto;align-items:center;justify-content:start;gap:2px 8px}
+.pdRefRow{display:contents}
+.pdRefTail{display:inline-flex;align-items:center;gap:4px;min-width:0;white-space:nowrap}
 .pdIconBtn{display:inline-grid;place-items:center;width:var(--ui-control-height-small);padding:0}
 .pdMatrix td.pdQuotesCol:hover .kolManualBtn,.pdMatrix td.pdQuotesCol:focus-within .kolManualBtn{opacity:1}
 .pdTargetBox{display:flex;align-items:center;justify-content:space-between;gap:4px;min-width:0}
@@ -335,9 +332,7 @@ td.kolPriceStripTd:hover .kolManualBtn,td.kolPriceStripTd:focus-within .kolManua
 .pdRoundQuote{display:inline-flex;align-items:center;gap:5px;padding:3px 5px}
 
 /* Collection context and per-user column selection. */
-.pdMatrix .pdSummary{position:sticky;left:var(--pd-l-summary,200px)}
-td.pdSummary>span{display:flex;flex-direction:column;gap:2px}
-td.pdSummary>span>span{display:flex;align-items:center;justify-content:space-between;gap:6px}
+td.pdSummary>span{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .pdSummary b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pdCollectionValue{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pdColumnsPanel{display:flex;flex-direction:column;gap:8px;margin:8px 10px;padding:12px}
