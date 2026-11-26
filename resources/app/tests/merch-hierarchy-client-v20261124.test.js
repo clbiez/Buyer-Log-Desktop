@@ -117,3 +117,23 @@ test('hover ipucu: tam zincir, tablo çizimine dokunmaz, tek belge dinleyicisi',
   assert.match(src, /headerCache/, 'başlık çözümü tablo başına önbellekli');
   assert.doesNotMatch(app.slice(app.indexOf('function cellHtml('), app.indexOf('function cellPlainText(')), /BLMerchHierarchy/, 'hücre çizimi değişmedi');
 });
+
+test('Ufuk / model alan adları tanınır; Kod\'suz ad sütunları koda eşlenmez', () => {
+  for (const key of ['Model Özellikleri · Merch Sub-Group Code', 'Siparis Bilgileri::Merch Sub-Group Code', "'Urun'[Merch Alt Grup Kod]", 'Merch Sub-Group'])
+    assert.equal(M.fieldOf(key), 'mag', key);
+  for (const key of ['Merch Brand Age Group Code', 'Siparis Bilgileri · Merch Marka Yaş Grup Kod']) assert.equal(M.fieldOf(key), 'mmyg', key);
+  assert.equal(M.fieldOf('Siparis Bilgileri · Marka Müdürlükleri'), 'brandDirectorate');
+  for (const key of ['Merch Brand Age Group', 'Merch Marka Yaş Grup', 'Model Özellikleri · Season']) assert.equal(M.fieldOf(key), '', key);
+  const filter = read('data-management-filter.js'), picker = read('data-management-picker.js');
+  assert.match(filter, /function merchFieldOf\(condition, sourceId = context\.sourceId\)/);
+  assert.match(filter, /return hint && hint !== String\(value\) \? \{ value, label: value, hint \}/, 'seçicide bağlam ikinci satırda');
+  assert.equal((filter.match(/data-merch-value="\$\{esc\(value\)\}"/g) || []).length, 2, 'Basit ve eşli düzenleyici çiplerinde ipucu');
+  assert.match(picker, /\$\{entry\.hint \|\| ''\} \$\{entry\.label\}/, 'seçici araması ikinci satırı da tarar');
+});
+
+test('"Eşleme yok" nedenini söyler: model listesinde yok ya da model eşlemesi henüz okunmadı', () => {
+  M.setData({ ...DATA, master: { builtAt: '2026-11-26T00:00:00Z' } });
+  assert.match(M.ctxHtml('mag', 'ZZ9'), /title="Bu kod ASAS modelindeki/);
+  M.setData({ ...DATA, master: { builtAt: null } });
+  assert.match(M.ctxHtml('mag', 'ZZ9'), /title="Model geneli eşleme henüz okunmadı/);
+});

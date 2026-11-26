@@ -29,7 +29,7 @@
   var FIELDS=['mag','mmyg','brandDirectorate'];
   // Kanonik kayıt defterinde bulunmayan modül-içi satır anahtarları.
   var ROW_KEYS={merch:'mag',mags:'mag',magRaw:'mag',ageGroup:'mmyg',mmygs:'mmyg',mmygRaw:'mmyg',brandDirectorate:'brandDirectorate',directorate:'brandDirectorate'};
-  var data=null,version=null,loading=null,listeners=[];
+  var data=null,version=null,loading=null,listeners=[],masterRetry=0;
 
   // Aktif dil render anında okunur (dil değişiminde bayat metin kalmaz).
   function lang(){var d=root.document&&root.document.documentElement;return String((d&&d.lang)||root.appLang||'tr').toLowerCase().indexOf('en')===0?'en':'tr';}
@@ -38,8 +38,20 @@
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
   function lower(s){try{return String(s||'').toLocaleLowerCase('tr-TR');}catch(_){return String(s||'').toLowerCase();}}
 
-  function fieldOf(key){
-    var k=String(key==null?'':key).trim();if(!k)return '';
+  /* Model/İngilizce sütun adları (Ufuk, Veri Yönetimi ve widget'lar modeldeki adı
+     gösterir: "Merch Sub-Group Code"). Kanonik kayıt defterine eklenmez; yalnız görüntü
+     bağlamı için tanınır. Anahtarlar token biçimindedir (büyük harf, Türkçe karaktersiz). */
+  var MODEL_NAMES={
+    // Yalnız KOD sütunları: Kod'suz "Merch Brand Age Group" gibi adlar ad tutabilir (TR'de
+    // "Merch Marka Yaş Grup" addır); "Merch Sub-Group" kayıt defterindeki "Merch Alt Grup" ile eşdeğerdir.
+    'MERCH SUB GROUP CODE':'mag','MERCH SUBGROUP CODE':'mag','MERCH SUB GROUP':'mag','MERCHANDISE SUB GROUP CODE':'mag','MERCH ALT GRUP KODU':'mag','MAG KODU':'mag','MAG CODE':'mag', // i18n-ignore
+    'MERCH BRAND AGE GROUP CODE':'mmyg','BRAND AGE GROUP CODE':'mmyg','MERCH MARKA YAS GRUP KODU':'mmyg','MMYG KODU':'mmyg','MMYG CODE':'mmyg', // i18n-ignore
+    'MARKA MUDURLUGU':'brandDirectorate','BRAND DIRECTORATE':'brandDirectorate','BRAND DIRECTORATES':'brandDirectorate','MARKA DIREKTORLUGU':'brandDirectorate','MARKA DIREKTORLUKLERI':'brandDirectorate' // i18n-ignore
+  };
+  var TR_FOLD={'ı':'I','İ':'I','ş':'S','Ş':'S','ğ':'G','Ğ':'G','ü':'U','Ü':'U','ö':'O','Ö':'O','ç':'C','Ç':'C'};
+  function tokenOf(v){return String(v==null?'':v).replace(/[ıİşŞğĞüÜöÖçÇ]/g,function(ch){return TR_FOLD[ch];}).toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();}
+  var fieldCache=new Map();
+  function fieldOfOne(k){
     if(FIELDS.indexOf(k)>=0)return k;
     if(ROW_KEYS[k])return ROW_KEYS[k];
     var CF=root.BLCanonicalFields;
@@ -48,7 +60,18 @@
       if(!hit){var mods=['cp','orders','backlog','overview','lfl','logistics','antrepo','collection'];for(var i=0;i<mods.length&&!hit;i++)hit=CF.canonicalId(mods[i],k);}
       if(hit&&FIELDS.indexOf(hit)>=0)return hit;
     }
-    return '';
+    return MODEL_NAMES[tokenOf(k)]||'';
+  }
+  function fieldOf(key){
+    var k=String(key==null?'':key).trim();if(!k)return '';
+    if(fieldCache.has(k))return fieldCache.get(k);
+    // "Tablo · Sütun", "Tablo::Sütun", "'Tablo'[Sütun]" → önce tamamı, sonra yalnız sütun kısmı.
+    var bracket=k.match(/\[([^\]]+)\]\s*$/);
+    var parts=[k,bracket&&bracket[1],k.split('::').pop(),k.split('·').pop()].map(function(p){return String(p||'').trim();}).filter(Boolean);
+    var out='';for(var i=0;i<parts.length&&!out;i++)out=fieldOfOne(parts[i]);
+    if(fieldCache.size>2000)fieldCache.clear();
+    fieldCache.set(k,out);
+    return out;
   }
 
   function noteVersion(next){
@@ -67,6 +90,8 @@
       .then(function(r){return r.ok?r.json():null;})
       .then(function(json){
         if(json&&json.mag&&json.mmyg){data=json;listeners.slice().forEach(function(fn){try{fn(data);}catch(_){}});}
+        // Model geneli eşleme sunucuda arka planda hazırlanıyorsa bir kez, kısa süre sonra yeniden istenir.
+        if(json&&json.master&&json.master.pending&&!masterRetry){masterRetry=setTimeout(function(){if(data)data._stale=true;ensure();},20000);}
         return data;
       })
       .catch(function(){return data;})
@@ -117,7 +142,12 @@
   function ctxHtml(field,value){
     var d=describe(field,value);
     if(!d)return '';
-    if(d.missing)return '<span class="blMerchCtx blMerchCtxMissing">'+esc(L('Eşleme yok','No mapping'))+'</span>';
+    if(d.missing){
+      var why=data&&data.master&&data.master.builtAt
+        ?L('Bu kod ASAS modelindeki MAG/MMYG listesinde yok (eski, geçersiz ya da başka kaynaktan gelen kod).','This code is not in the ASAS model MAG/MMYG list (old, invalid or from another source).')
+        :L('Model geneli eşleme henüz okunmadı; ASAS model bağlantısıyla bir yenileme sonrası tamamlanır.','The model-wide mapping has not been read yet; it completes after a refresh with the ASAS model connection.');
+      return '<span class="blMerchCtx blMerchCtxMissing" title="'+esc(why)+'">'+esc(L('Eşleme yok','No mapping'))+'</span>';
+    }
     var parts=[];
     if(d.line1)parts.push('<span class="blMerchCtxLine">'+esc(d.line1)+'</span>');
     if(d.line2)parts.push('<span class="blMerchCtxLine blMerchCtxSub">'+esc(field==='mmyg'?d.line2:directorateShort(d.line2))+'</span>');

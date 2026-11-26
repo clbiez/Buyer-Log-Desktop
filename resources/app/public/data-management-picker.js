@@ -135,8 +135,8 @@
     if (field) {
       field.addEventListener('input', () => {
         const needle = field.value.trim().toLocaleLowerCase('tr');
-        /* Gruplu listede tablo/klasör adıyla da aranır (Excel alan listesi gibi). */
-        draw(needle ? list.filter(entry => `${grouped ? pathOf(entry).join(' ') + ' ' + (entry.hint || '') + ' ' : ''}${entry.label}`.toLocaleLowerCase('tr').includes(needle)) : list);
+        /* Gruplu listede tablo/klasör adıyla, her listede ikinci satırla (ör. MAG'ın MMYG adı) da aranır. */
+        draw(needle ? list.filter(entry => `${grouped ? pathOf(entry).join(' ') + ' ' : ''}${entry.hint || ''} ${entry.label}`.toLocaleLowerCase('tr').includes(needle)) : list);
       });
       /* Klavye: ↓ listeye iner; Enter (serbest değer yoksa) ilk eşleşmeyi seçer. */
       field.addEventListener('keydown', event => {

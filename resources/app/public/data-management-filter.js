@@ -565,7 +565,7 @@
     // Kontroller KAYDEDİLECEK işlece göre çizilir: korunan IAS koşulunun işleci ASAS'tan farklı olabilir.
     const arity = operatorArity(target && target.op ? target.op : condition.op);
     const values = target && (arity === 'list' || arity === 'single')
-      ? `${(target.values || []).map((value, valueIndex) => `<button type="button" class="dmfChip" data-pair-drop-value="${ref}:${valueIndex}"
+      ? `${(target.values || []).map((value, valueIndex) => `<button type="button" class="dmfChip" data-pair-drop-value="${ref}:${valueIndex}"${merchFieldOf(target, pair.sourceId) ? ` data-merch-field="${merchFieldOf(target, pair.sourceId)}" data-merch-value="${esc(value)}"` : ''}
           title="${esc(T('Kaldır', 'Remove'))}">${esc(value)} ×</button>`).join('')}
          <button type="button" class="dmfAddValue" data-pair-pick-value="${ref}">+ ${esc(T('değer', 'value'))}</button>` : '';
     const range = target && (arity === 'range' || arity === 'from' || arity === 'to') ? `
@@ -651,8 +651,10 @@
       : '';
     const logicalOnly = condition.field && meta && !meta.dynamic && livePhysicalAvailable;
 
+    // Seçili değer çipleri: MAG/MMYG/Müdürlük ise üstüne gelince hiyerarşi ipucu (ortak modül).
+    const chipMerch = merchFieldOf(condition);
     const values = (condition.values || []).map((value, valueIndex) =>
-      `<button type="button" class="dmfChip" data-drop-value="${groupIndex}:${index}:${valueIndex}"
+      `<button type="button" class="dmfChip" data-drop-value="${groupIndex}:${index}:${valueIndex}"${chipMerch ? ` data-merch-field="${chipMerch}" data-merch-value="${esc(value)}"` : ''}
         title="${esc(T('Kaldır', 'Remove'))}">${esc(value)} ×</button>`).join('');
 
     return `<div class="dmfRow">
@@ -875,7 +877,7 @@
     const pool = [...new Set([...(condition.values || []).map(String), ...entry.values])];
     const fq = foldText(q);
     // MAG/MMYG/Marka Müdürlüğü koşullarında arama MMYG adı ve müdürlükle de eşleşir.
-    const merchField = window.BLMerchHierarchy?.fieldOf?.(condition.field) || '';
+    const merchField = merchFieldOf(condition, sourceId);
     const matched = pool.filter(value => !fq || foldText(value).includes(fq) || (merchField && foldText(window.BLMerchHierarchy.searchText(merchField, value)).includes(fq)))
       .sort((a, b) => Number(selected.has(b)) - Number(selected.has(a)));
     return { entry, base, q, selected, matched, visible: matched.slice(0, VISIBLE_LIMIT) };
@@ -892,7 +894,7 @@
         <button type="button" data-dmf-all-visible="${esc(listKey)}">${esc(T('Görünenleri seç', 'Select visible'))}</button>
         <button type="button" data-dmf-none="${esc(listKey)}">${esc(T('Seçimi kaldır', 'Clear selection'))}</button>
       </div>
-      <div class="blvFilterValues dmfValueList"${window.BLMerchHierarchy?.fieldOf?.(condition.field) ? ` data-merch-field="${esc(condition.field)}" data-merch-item=".blvFilterValue" data-merch-text="span"` : ''}>${rows
+      <div class="blvFilterValues dmfValueList"${merchFieldOf(condition, sourceId) ? ` data-merch-field="${merchFieldOf(condition, sourceId)}" data-merch-item=".blvFilterValue" data-merch-text="span"` : ''}>${rows
         || `<div class="blvFilterNoValue">${esc(loading ? T('Değerler database\'den okunuyor…', 'Reading values from the database…') : T('Eşleşen değer yok.', 'No matching values.'))}</div>`}</div>
       <label class="dmfFreeValue"><span>${esc(T('Listede yoksa yazın, Enter ile ekleyin', 'Not in the list? Type it and press Enter'))}</span>
         <input type="text" data-dmf-free="${esc(listKey)}" autocomplete="off" placeholder="${esc(T('değer', 'value'))}"></label>
@@ -1468,6 +1470,16 @@
   const closePicker = () => window.BLDataPicker?.close?.();
   const openPicker = (anchor, items, onPick, options) => window.BLDataPicker?.open?.(anchor, items, onPick, options);
 
+  /* Koşul alanı MAG / MMYG / Marka Müdürlüğü mü? Alan adı modelden geldiği için ("Merch
+     Sub-Group Code", "Tablo · Sütun") hem koşul alanı hem görünen etiketler denenir. */
+  function merchFieldOf(condition, sourceId = context.sourceId) {
+    const H = window.BLMerchHierarchy;
+    if (!H || !condition) return '';
+    const meta = condition.field ? fieldMeta(condition, sourceId) : null;
+    return [condition.field, condition.name, meta && meta.tr, meta && meta.en, meta && meta.header]
+      .map(ref => (ref ? H.fieldOf(ref) : '')).find(Boolean) || '';
+  }
+
   async function pickValue(anchor, condition, sourceId = context.sourceId, onAdded = null) {
     const meta = fieldMeta(condition, sourceId);
     const params = new URLSearchParams({ target: context.moduleId, sourceId, field: condition.field, limit: '500' });
@@ -1492,9 +1504,13 @@
     }
     /* MAG/MMYG koşullarında seçenek metni MMYG adı ve Marka Müdürlüğünü de taşır
        (aranabilir); koşula yazılan değer yine ham koddur. */
-    const merchField = window.BLMerchHierarchy?.fieldOf?.(condition.field) || '';
+    const merchField = merchFieldOf(condition, sourceId);
     if (merchField) { try { await window.BLMerchHierarchy.ensure(); } catch (_) { /* bağlamsız devam */ } }
-    const entries = values.map(value => ({ value, label: merchField ? window.BLMerchHierarchy.optionText(merchField, value) : value }));
+    // Etiket ham kod; MMYG adı ve Marka Müdürlüğü ikinci satırda (seçici aramada ikinci satırı da tarar).
+    const entries = values.map(value => {
+      const hint = merchField ? window.BLMerchHierarchy.optionText(merchField, value).replace(/^.*? — /, '') : '';
+      return hint && hint !== String(value) ? { value, label: value, hint } : { value, label: value };
+    });
     openPicker(anchor, entries, value => {
       if (!condition.values.includes(value)) condition.values.push(value);
       message = note; messageTone = note ? 'warn' : 'info';
