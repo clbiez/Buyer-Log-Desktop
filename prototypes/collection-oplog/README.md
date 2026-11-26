@@ -104,6 +104,54 @@ Testlerin bulup düzelttiği tasarım açıkları:
 - Uygulanmış kayıt kümesi çok yavaş büyüyor (49 bin düzenlemede ~0,3 MB); cihaz başına sınır değeri (watermark) gerekir.
 - Görünüm her seferinde tam üretiliyor; artımlı görünüm (yalnız değişen hücre) ölçülmedi.
 
+## İterasyon 3 — tekilleştirme geçmişle büyümez (`oplog-incremental.js`)
+
+İterasyon 2'de uygulanmış kayıt kimlikleri listesi düzenleme başına ~9 bayt büyüyordu. Artık kayıt kimliği (cihaz, seq) ve tekilleştirme cihaz başına iki alandır.
+
+| Kavram | Tanım |
+| --- | --- |
+| Kesintisiz sınır (`floor`) | `1..floor` arasının **tamamı** sıraya alınmıştır. **Alınan en yüksek seq değildir:** `floor+1`'den ileri gelen kayıt sınırı ilerletmez, öncülünü bekler. |
+| Seyrek istisnalar | Sınır içinde olup uygulanmamış kayıtlar: `held` (izin yok), `blocked` (başka cihazdan öncül bekliyor). Geçicidir; checkpoint kayıtların kendisini taşır. |
+| "Sürüm biliniyor mu" | seq ≤ floor ve istisna değil (uygulandı ya da kesin reddedildi). |
+| Budama (`canPrune`) | Kayıt dosyası yalnız checkpoint'te sınır içinde ve istisna dışındaysa silinebilir. Emekli cihazın sınırı silinmez; silinirse eski kayıtlar yeni sanılıp iki kez uygulanır. |
+| Yedekten dönüş | Üretici her kayda `chain` ve `prevChain` yazar; alıcı yalnız karşılaştırır. Aynı cihaz kimliğiyle farklı geçmiş `device-fork` karantinasına düşer. Cihaz tarafı kapı (`publishGate`): kendi kimliği için Hub'da ya da checkpoint sınırında yerel seq'inden ileri kanıt görürse yayımlamaz, çevrimdışıyken körlemesine yayımlamaz. |
+| Yeniden kurulum | Yeni cihaz kimliği 1'den başlar; eski cihazın sınırı korunur. |
+
+**Doğrulama:** 14 test geçti. Önceki 7 test korundu; 7 yeni test eklendi:
+- Sırasız teslim.
+- Kalıcı eksik kayıt: görünür bekleme; checkpoint sonrası da sürüyor.
+- Yedekten dönüş: sınırdaki içerik farkı ve zincir uyuşmazlığı; iki teslim sırası; yayım kapısı.
+- Yeniden kurulum.
+- İstisnaların budamadan sağ çıkması.
+- 20.000 kayıtlık ters sıralı teslimde yığın taşmaması.
+- Rastgele senaryo: 12 seed × 5 karıştırma; tekrarlı teslim ve yarıda checkpoint dahil.
+
+**Önceki motorla eşdeğerlik** (`adc9359`, 40 seed, 480 hücre):
+- Sıralı teslimde baş sürüm ve çakışma listesi farkı 0.
+- 400 karıştırma ve 400 yarıda checkpoint→açılış koşusunda fark 0; tam teslimde bekleyen 0.
+- Kullanıcıya görünen çakışma listesi 400 karıştırmada teslim sırasına bağlı değil.
+
+**Bu iterasyonda yakalanan hatalar:**
+- **Doğruluk:** İzin gelince bekleyen kayıt yeniden denenmeden önce `held`'den çıkarılıyordu. Aradaki pencerede ona dayanan kayıt önce uygulanıp ezilmiş sürümü baş bıraktı (400 karıştırmanın 25'inde). Rastgele test bunu yakalıyor: düzeltme geri alınınca düşüyor (RED), düzeltmeyle geçiyor (GREEN).
+- **Performans:** Alıcıda kayıt başına özet hesabı kayıt almayı +%62 yavaşlatıyordu (10/10 çift). Zincir üreticiye taşındı; kalan +%12 de kayıt başına yinelenen anahtar üretimi ve nesne yaratmaktandı, kaldırıldı.
+
+**Ölçüm** (30 bin satır × 18 alan, 50 bin düzenleme, Linux container; v2 = `adc9359`):
+
+| Ölçüt | v2 | v3 | Karar |
+| --- | --- | --- | --- |
+| Tekilleştirme durumu | 455.778 B | 73 B | büyüme kaldırıldı |
+| Checkpoint | 18,38 MB | 18,14 MB | — |
+| Kayıt alma (10 dönüşümlü çift, medyan) | 247,5 ms | 244 ms | PASS: 2/10 çift pozitif, A/A −52…+13 |
+| Checkpoint'ten açılış (6 çift) | 438–485 ms | 432–518 ms | PASS: işaret karışık, A/A −28…+61 |
+| Kayıt alma sonrası heap | 162,6 MB | 161,4 MB | −1,2 MB |
+
+**Bilinen sınırlar:**
+- Alıcı, sınırının **gerisinde** kalan çatallanmış kaydı tanıyamaz. Çatal sınırı geçince yakalanır; kalıcı önlem cihaz tarafı yayım kapısıdır.
+- `publishGate` iterasyon 1 cihaz modülüne (`oplog-device.js`, tam katlama kullanıyor) bağlanmadı.
+- Aynı cihazın kaydı, nedensel bağımlılığı olmasa da öncülünü bekler. Eksik dosya sessiz atlama yerine görünür beklemeye dönüşür; bunun bedeli bekleme gecikmesidir.
+- Silinen ve aynı anda düzenlenen satırda iç işaret (`resurrected` ya da `deleteConflict`) teslim sırasına bağlıdır. Kullanıcıya görünen çakışma ikisinde de aynıdır.
+- Üretim entegrasyonu yok; çakışma politikası (A) değişmedi.
+
 ## Mevcut çakışma politikası bu modelde hangi koşulda korunur?
 
 Mevcut kural: eşzamanlı aynı alanda önce yayımlanan kalır, diğeri çakışma kaydına düşer.
