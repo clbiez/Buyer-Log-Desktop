@@ -152,6 +152,24 @@ Testlerin bulup düzelttiği tasarım açıkları:
 - Silinen ve aynı anda düzenlenen satırda iç işaret (`resurrected` ya da `deleteConflict`) teslim sırasına bağlıdır. Kullanıcıya görünen çakışma ikisinde de aynıdır.
 - Üretim entegrasyonu yok; çakışma politikası (A) değişmedi.
 
+## Üç ayrı kontrol: nedensellik, çatallanma, içerik bütünlüğü
+
+Bunlar farklı soruları yanıtlar; biri diğerinin yerine geçmez.
+
+| Kontrol | Soru | İterasyon 3'te kim, nasıl | Yakaladığı | Yakalamadığı |
+| --- | --- | --- | --- | --- |
+| **Nedensellik** | Kaydın dayandığı sürümler ve aynı cihazın önceki kaydı uygulandı mı? | Alıcı: `prev`/`observed` kimlikleri ve kesintisiz cihaz sınırı. | Eksik, geç ve sırasız kayıt: uygulanmaz, görünür bekler. | İçeriği değişmiş ama okunabilir kayıt. |
+| **Çatallanma** | Aynı cihaz kimliğiyle iki farklı geçmiş var mı? | Üretici her kayda `chain = sha256(prevChain \| içerik)` ve `prevChain` yazar. Alıcı **hesaplamaz**, yalnız karşılaştırır. | Yedekten dönüş: sınırdaki kayıtta içerik farkı ve sınırı geçen ilk kayıtta zincir uyuşmazlığı. | Sınırın gerisinde kalan çatal (cihaz tarafı `publishGate` kapatır); içeriği değişmiş kayıt (`chain` alanı aynı kaldıkça). |
+| **İçerik bütünlüğü** | Okunan kayıt, yazılanla aynı mı? | **İterasyon 3'te yok.** | Yalnız okunamayan ya da yarım JSON: `readJsonDir` dosyayı yok sayar; cihaz sırası sayesinde ardılları görünür bekler, sessizce atlanmaz. | **Okunabilir ama değişmiş içerik: tespit edilmez ve uygulanır.** |
+
+Zincir değeri içeriği kapsadığı için alıcı onu yeniden hesaplayarak içeriği de doğrulayabilirdi. Ölçülen maliyet: motorun kayıt alma yolunda kayıt başına ~3 µs, kayıt alma CPU'sunda +%62 (50 bin kayıt, 10/10 çift). Bu yüzden motora konmadı. İçerik bütünlüğü üretimde ayrı bir kontrol olarak gereklidir (aşağıda).
+
+## Üretim entegrasyonu ön koşulları (açık; bu aşamada uygulanmayacak)
+
+1. **`publishGate` cihaz modülüne bağlanmalı.** Cihaz yayımdan önce kendi kimliği için kanıtı okur: Hub'daki kendi kayıtları ve checkpoint sınırı. Kanıt yerel seq'ten ilerideyse yeni cihaz kimliği alır ve yayımlanmamış kayıtlarını o kimlikle yeniden numaralar. Kanıt okunamıyorsa yayımlamaz. Bugün yalnız saf fonksiyon ve testi var; `oplog-device.js` (iterasyon 1, tam katlama) bunu kullanmıyor. Bu bağlanmadan yedekten dönüş güvencesi uçtan uca değildir.
+2. **İçerik bütünlüğü G/Ç sınırında doğrulanmalı.** Kayıt Hub'dan ilk okunduğunda, yerel kopyaya alınmadan önce bir kez doğrulanır. Motorda ve her açılışta doğrulanmaz. Uyuşmayan kayıt reddedilmez: görünür karantinaya alınır. Yöntem (zincir özetini yeniden hesaplamak ya da ayrı bir dosya özeti) ölçümle seçilmeli. Maliyetin yalnız ilk alımda ödeneceği [Hipotez]; ölçülmedi.
+3. Sınırın gerisindeki çatal için tek koruma 1. maddedir. Alıcı tarafında ek mekanizma önerilmiyor; o, sınır başına geçmiş tutmak, yani kaldırılan büyümeyi geri getirmek demektir.
+
 ## Mevcut çakışma politikası bu modelde hangi koşulda korunur?
 
 Mevcut kural: eşzamanlı aynı alanda önce yayımlanan kalır, diğeri çakışma kaydına düşer.
