@@ -21,7 +21,7 @@
   const PAPERS = Object.freeze({ A3: [297, 420], A4: [210, 297], A5: [148, 210], '16:9': [190.5, 338.67], '4:3': [190.5, 254], square: [190.5, 190.5], custom: null });
   const FONTS = Object.freeze(['Arial', 'Calibri', 'Segoe UI', 'Verdana', 'Tahoma', 'Trebuchet MS', 'Georgia', 'Times New Roman']);
   const CARD_STYLES = Object.freeze(['frame', 'shadow', 'plain']);
-  const STYLE_SPEC = Object.freeze({ fs: [6, 14, 8, 0.5], img: [0.6, 1.7, 1.05, 0.05], cardW: [60, 320, 112, 2], gap: [2, 30, 10, 1], margin: [6, 80, 26, 1] });
+  const STYLE_SPEC = Object.freeze({ fs: [6, 14, 8, 0.5], hfs: [6, 24, 10, 0.5], img: [0.6, 1.7, 1.05, 0.05], cardW: [60, 320, 112, 2], gap: [2, 30, 10, 1], margin: [6, 80, 26, 1] });
   const LIMITS = Object.freeze({ cards: 2000, levels: 4, fields: 14, pages: 400, templates: 30, label: 80, title: 120, customMin: 50, customMax: 1200 });
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const num = (v, d) => (Number.isFinite(Number(v)) ? Number(v) : d);
@@ -39,12 +39,12 @@
   }
 
   function defaultStyle(fields) {
-    return { font: 'Arial', fs: 8, img: 1.05, cardW: 112, gap: 10, margin: 26, labels: false, card: 'frame', keepGroups: false, chips: true, fabricCode: true, fields: (fields || []).slice(0, LIMITS.fields) };
+    return { font: 'Arial', fs: 8, hfs: 10, img: 1.05, cardW: 112, gap: 10, margin: 26, labels: false, card: 'frame', keepGroups: false, chips: true, fabricCode: true, fields: (fields || []).slice(0, LIMITS.fields) };
   }
   const SOURCES = Object.freeze(['koleksiyon', 'cp', 'orders']);
   function createDoc({ ids = [], fields = [], levels = [], title = '', source = 'koleksiyon' } = {}) {
     return { v: 2, source: SOURCES.includes(source) ? source : 'koleksiyon', title: text(title, LIMITS.title), page: { preset: 'A4', orient: 'landscape', cw: 297, ch: 210 }, style: defaultStyle(fields),
-      grouping: { levels: levels.slice(0, LIMITS.levels), breakTop: false }, pages: [{ id: 'p1', flow: true, auto: true }], cards: {}, order: ids.slice(0, LIMITS.cards), areas: {}, labels: {}, seq: 2 };
+      grouping: { levels: levels.slice(0, LIMITS.levels), breakTop: false }, pages: [{ id: 'p1', flow: true, auto: true }], cards: {}, order: ids.slice(0, LIMITS.cards), areas: {}, splits: {}, labels: {}, seq: 2 };
   }
   function normalizeStyle(raw, allowedFields) {
     const s = raw && typeof raw === 'object' ? raw : {}, out = defaultStyle([]);
@@ -69,6 +69,16 @@
     }
     return out;
   }
+  /* Grubundan ayrılan kartlar için elle grup: anahtar → { vals } (başlık metni özgün grubunkidir). */
+  function normalizeSplits(raw) {
+    const out = {};
+    for (const [k, v] of Object.entries(raw && typeof raw === 'object' ? raw : {}).slice(0, 400)) {
+      if (typeof k !== 'string' || k.length > 2000 || !v || !Array.isArray(v.vals)) continue;
+      out[k] = { vals: v.vals.slice(0, LIMITS.levels).map(x => text(x, 200)) };
+    }
+    return out;
+  }
+  const splitVals = (doc, k) => (doc.splits && doc.splits[k] ? doc.splits[k].vals : null);
   function normalizePage(raw) {
     const p = raw && typeof raw === 'object' ? raw : {};
     return { preset: Object.prototype.hasOwnProperty.call(PAPERS, p.preset) ? p.preset : 'A4', orient: p.orient === 'portrait' ? 'portrait' : 'landscape',
@@ -105,16 +115,16 @@
     }
     const labels = {};
     for (const [k, v] of Object.entries(d.labels && typeof d.labels === 'object' ? d.labels : {}).slice(0, 2000)) if (typeof k === 'string' && k.length <= 2000) { const t = text(v, LIMITS.label); if (t) labels[k] = t; }
-    const areas = normalizeAreas(d.areas, pageIds);
+    const areas = normalizeAreas(d.areas, pageIds), splits = normalizeSplits(d.splits);
     const seq = Math.max(num(d.seq, 2), ...pages.map(p => Number(p.id.slice(1)) + 1));
-    return { v: 2, source: SOURCES.includes(d.source) ? d.source : 'koleksiyon', title: text(d.title, LIMITS.title), page: normalizePage(d.page), style: normalizeStyle(d.style, fields), grouping: normalizeGrouping(d.grouping, fields), pages, cards, order, areas, labels, seq };
+    return { v: 2, source: SOURCES.includes(d.source) ? d.source : 'koleksiyon', title: text(d.title, LIMITS.title), page: normalizePage(d.page), style: normalizeStyle(d.style, fields), grouping: normalizeGrouping(d.grouping, fields), pages, cards, order, areas, splits, labels, seq };
   }
 
   /* Metin planı (ölçüm çizim modülünde yapılır): fieldLines[i] alanın kartta
      kaç satır alacağı, hdrLines(h, w) grup başlığının w genişliğinde kaç satır
      gerektirdiği. Son yerleşimin planı belgeye bağlanır; resolvePinned/findFree
      aynı hücre ölçüsünü kullanır. Plan yoksa her alan ve başlık tek satırdır. */
-  const TEXT = new WeakMap(), lineCount = v => Math.max(1, Math.min(6, Math.round(Number(v) || 1)));
+  const TEXT = new WeakMap(), lineCount = v => Math.max(1, Math.min(12, Math.round(Number(v) || 1)));
   function textHeight(s, lines) {
     const n = s.fields.length;
     if (!n) return 4;
@@ -127,7 +137,7 @@
     const { w, h } = pageSize(doc.page), s = doc.style, m = Math.min(s.margin, w / 5, h / 5), gap = s.gap;
     const cx = m, cy = m, cw = w - 2 * m, ch = h - 2 * m;
     const cols = Math.max(1, Math.round((cw + gap) / (s.cardW + gap))), cellW = (cw - gap * (cols - 1)) / cols;
-    const hH = doc.grouping.levels.length ? s.fs * 1.25 * 1.55 + 5 : 0, hGap = hH ? 5 : 0, th = textHeight(s, text && text.fieldLines), groupGap = Math.max(gap * 1.6, 8);
+    const hH = doc.grouping.levels.length ? s.hfs * 1.55 + 5 : 0, hGap = hH ? 5 : 0, th = textHeight(s, text && text.fieldLines), groupGap = Math.max(gap * 1.6, 8);
     let cellH = cellW * s.img + th;
     if (cellH > ch - hH - hGap) cellH = ch - hH - hGap;
     /* Dengeli doldurma: satır yüksekliği hedefin ±%20'si içinde ayarlanır;
@@ -136,7 +146,7 @@
     const n0 = Math.max(1, Math.floor((ch + step) / (cellH + lead + step))), up = fit(n0 + 1), down = fit(n0);
     if (up >= cellH * 0.8 && up - th > 20) cellH = up; else if (down <= cellH * 1.2) cellH = down;
     const rows = Math.max(1, Math.floor((ch - hH - hGap + gap) / (cellH + gap)));
-    const fieldLines = s.fields.map((_, i) => lineCount(text && text.fieldLines && text.fieldLines[i])), hLine = s.fs * 1.25 * 1.3;
+    const fieldLines = s.fields.map((_, i) => lineCount(text && text.fieldLines && text.fieldLines[i])), hLine = s.hfs * 1.3;
     // Başlık bandı: grup adının w genişliğinde gerektirdiği satır kadar uzar.
     const hdrH = hd => (!hH ? 0 : hH + (text && typeof text.hdrLines === 'function' ? lineCount(text.hdrLines(hd, hd.w)) - 1 : 0) * hLine);
     return { w, h, m, cx, cy, cw, ch, bottom: cy + ch, gap, cols, cellW, cellH, th, hH, hGap, cap: cols * rows, groupGap, fieldLines, hLine, hdrH };
@@ -164,7 +174,7 @@
       if (c && (c.excluded || c.pinned)) continue;
       const key = effectiveKey(doc, id, groupOf);
       if (skip && skip.has(key)) continue; // grup alanındaki kartlar akışa girmez
-      if (!map.has(key)) map.set(key, { key, vals: valsOf.get(key) || key.split(SEP), items: [] });
+      if (!map.has(key)) map.set(key, { key, vals: valsOf.get(key) || splitVals(doc, key) || key.split(SEP), items: [] });
       map.get(key).items.push(id);
     }
     const groups = [...map.values()].sort((a, b) => compareVals(a.vals, b.vals, n));
@@ -286,7 +296,7 @@
     /* Grubundan ayrı sabitlenen kart: aynı sayfada grubun akan başlığı yoksa
        kartın hemen üstüne kendi başlığı konur (akış o bandı boş bırakır). */
     const pinHdr = (it, count) => {
-      const key = effectiveKey(doc, it.id, groupOf), hd = { kind: 'hdr', key, vals: valsOf.get(key) || key.split(SEP), cont: false, count, x: it.x, w: it.w, pinOf: it.id };
+      const key = effectiveKey(doc, it.id, groupOf), hd = { kind: 'hdr', key, vals: valsOf.get(key) || splitVals(doc, key) || key.split(SEP), cont: false, count, x: it.x, w: it.w, pinOf: it.id };
       hd.h = g.hdrH(hd); hd.y = it.y - g.hGap - hd.h; return hd;
     };
     const pad = (it, need) => {
@@ -306,22 +316,57 @@
         if (doc.areas[k] && pageIds.has(doc.areas[k].page)) (byKey.get(k) || byKey.set(k, []).get(k)).push(id);
       }
       for (const [k, ids] of byKey) {
-        const a = doc.areas[k], w = clamp(a.w, g.cellW, g.w - 2 * g.m), spec = { key: k, page: a.page, x: clamp(a.x, 0, g.w - w), y: clamp(a.y, 0, g.h - g.hH), w, h: a.h, ids, total: ids.length, vals: valsOf.get(k) || k.split(SEP), cont: false };
+        const a = doc.areas[k], w = clamp(a.w, g.cellW, g.w - 2 * g.m), spec = { key: k, page: a.page, x: clamp(a.x, 0, g.w - w), y: clamp(a.y, 0, g.h - g.hH), w, h: a.h, ids, total: ids.length, vals: valsOf.get(k) || splitVals(doc, k) || k.split(SEP), cont: false };
         (areaSpecs.get(a.page) || areaSpecs.set(a.page, []).get(a.page)).push(spec);
         areaKeys.add(k);
       }
       for (const list of areaSpecs.values()) list.sort((p, q) => p.y - q.y || p.x - q.x);
     }
-    const placeArea = (sp, force) => {
+    /* obs: sayfadaki sabit kartlar ve önce yerleşen alanlar. Alan bunlarla çakışıyorsa altına kayar;
+       aşağı doğru yalnız bir sonraki engele (ya da sayfa sonuna) kadar büyür, kalanlar sonraki sayfada sürer. */
+    const placeArea = (sp, force, obs = []) => {
       const hd = { kind: 'hdr', key: sp.key, vals: sp.vals, cont: sp.cont, count: sp.total, x: sp.x, y: sp.y, w: sp.w, area: sp.key };
       hd.h = g.hdrH(hd);
-      const cols = Math.max(1, Math.floor((sp.w + g.gap + 0.01) / (g.cellW + g.gap))), top = sp.y + hd.h + g.hGap;
-      let rows = Math.min(Math.ceil(sp.ids.length / cols), Math.max(0, Math.floor((g.bottom - top + g.gap + 0.01) / (g.cellH + g.gap))));
-      if (!rows && force) rows = 1; // boş sayfada bile sığmıyorsa bir satır zorla (sonsuz sayfa üretme)
+      const minH = hd.h + g.hGap + g.cellH;
+      let y = sp.y;
+      for (let k = 0; k < 40; k++) {
+        const bl = obs.filter(o => overlaps({ x: sp.x, y, w: sp.w, h: minH }, o));
+        if (!bl.length) break;
+        y = Math.max(...bl.map(o => o.y + o.h)) + g.gap;
+      }
+      const below = obs.filter(o => o.x < sp.x + sp.w && o.x + o.w > sp.x && o.y >= y).map(o => o.y - g.gap);
+      const limit = Math.min(g.bottom, ...below);
+      hd.y = y;
+      /* Grup bazlı kart boyutu: alan elle boyutlandıysa (h > 0) kartlar alanı orantılı doldurur. Sütun sayısı,
+         görsel oranı genel karta en yakın ve boş hücresi en az olan seçenektir; kart eklenince kartlar küçülür.
+         Kartlar çok küçülürse (genişlik < 40 pt) genel ölçüyle akıp sayfa sonunda devam eder. */
+      if (sp.h > 0 && !sp.cont) {
+        const H = Math.min(sp.h, limit - y), bodyH = H - hd.h - g.hGap, n = sp.ids.length, ratio = (g.cellH - g.th) / g.cellW;
+        let best = null, grow = null;
+        for (let c = 1; c <= Math.min(n, 24); c++) {
+          const rws = Math.ceil(n / c), cwW = (sp.w - (c - 1) * g.gap) / c;
+          if (cwW < 40) break;
+          const chMax = (bodyH - (rws - 1) * g.gap) / rws, cwH = (chMax - g.th) / ratio, size = Math.min(cwW, cwH);
+          // Alan yüksekliğine sığan en büyük kart (eşitlikte daha az boş hücre).
+          if (chMax - g.th >= 16 && size >= 40 && (!best || size > best.size + 0.01 || (Math.abs(size - best.size) <= 0.01 && c * rws - n < best.empty))) best = { c, cw: cwW, ch: chMax, size, empty: c * rws - n, h: H };
+          // Hiçbiri sığmazsa: genişliği dolduran doğal oranlı kartlarla alan aşağı büyür (sayfa sınırına kadar).
+          const chN = cwW * ratio + g.th, total = hd.h + g.hGap + rws * chN + (rws - 1) * g.gap;
+          if (y + total <= limit + 0.01 && (!grow || cwW > grow.cw)) grow = { c, cw: cwW, ch: chN, h: Math.max(H, total) };
+        }
+        const pick = best || grow;
+        if (pick) {
+          const top2 = y + hd.h + g.hGap, items = [{ kind: 'area', key: sp.key, x: sp.x, y, w: sp.w, h: pick.h, cont: sp.cont, fit: true }, hd];
+          sp.ids.forEach((id, i) => items.push({ kind: 'card', id, x: sp.x + (i % pick.c) * (pick.cw + g.gap), y: top2 + Math.floor(i / pick.c) * (pick.ch + g.gap), w: pick.cw, h: pick.ch, area: sp.key }));
+          return { items, rest: [] };
+        }
+      }
+      const cols = Math.max(1, Math.floor((sp.w + g.gap + 0.01) / (g.cellW + g.gap))), top = y + hd.h + g.hGap;
+      let rows = Math.min(Math.ceil(sp.ids.length / cols), Math.max(0, Math.floor((limit - top + g.gap + 0.01) / (g.cellH + g.gap))));
+      if (!rows && force && !obs.length) rows = 1; // boş sayfada bile sığmıyorsa bir satır zorla (sonsuz sayfa üretme)
       const n = Math.min(sp.ids.length, rows * cols);
       if (!n) return { items: [], rest: sp.ids };
-      const bodyH = rows * (g.cellH + g.gap) - g.gap, h = Math.max(sp.h || 0, Math.min(hd.h + g.hGap + bodyH, g.h - sp.y));
-      const items = [{ kind: 'area', key: sp.key, x: sp.x, y: sp.y, w: sp.w, h: Math.min(h, g.h - sp.y), cont: sp.cont }, hd];
+      const bodyH = rows * (g.cellH + g.gap) - g.gap, h = Math.min(Math.max(sp.h || 0, hd.h + g.hGap + bodyH), Math.max(hd.h + g.hGap + bodyH, limit - y), g.h - y);
+      const items = [{ kind: 'area', key: sp.key, x: sp.x, y, w: sp.w, h, cont: sp.cont }, hd];
       for (let i = 0; i < n; i++) items.push({ kind: 'card', id: sp.ids[i], x: sp.x + (i % cols) * (g.cellW + g.gap), y: top + Math.floor(i / cols) * (g.cellH + g.gap), w: g.cellW, h: g.cellH, area: sp.key });
       return { items, rest: sp.ids.slice(n) };
     };
@@ -332,7 +377,8 @@
       const fill = (pid, items) => {
         const specs = [...carry, ...(areaSpecs.get(pid) || [])]; carry = [];
         for (const sp of specs) {
-          const r = placeArea(sp, sp.cont && Math.abs(sp.y - g.cy) < 0.01);
+          const obs = items.filter(it => it.kind === 'area' || it.pinned).map(it => ({ x: it.x - g.gap / 2, y: it.y - g.gap / 2, w: it.w + g.gap, h: it.h + g.gap }));
+          const r = placeArea(sp, sp.cont && Math.abs(sp.y - g.cy) < 0.01, obs);
           items.push(...r.items);
           if (r.rest.length) carry.push({ ...sp, y: g.cy, h: 0, cont: true, ids: r.rest });
         }
@@ -484,6 +530,26 @@
     doc.areas[key] = { page: rect.page, x: Math.max(0, Number(rect.x) || 0), y: Math.max(0, Number(rect.y) || 0), w: Math.max(20, Number(rect.w) || 20), h: Math.max(0, Number(rect.h) || 0) };
   }
   function clearArea(doc, key) { if (doc.areas) delete doc.areas[key]; }
+  /* Grubundan ayrılmış (sabit) kartları kendi elle grubuna alır: yeni anahtar, özgün başlık metni.
+     Kartların sabitlemesi kalkar; çağıran alanı (setArea) bu anahtara verir. Kaynak veri değişmez. */
+  function splitGroup(doc, ids, groupOf) {
+    const base = effectiveKey(doc, ids[0], groupOf);
+    const vals = splitVals(doc, base) || (groupOf(ids[0]).key === base ? groupOf(ids[0]).vals : base.split(SEP));
+    let n = 1, key;
+    do key = `${base}\u0002${n++}`; while ((doc.splits && doc.splits[key]) || doc.order.some(id => effectiveKey(doc, id, groupOf) === key));
+    if (!doc.splits) doc.splits = {};
+    doc.splits[key] = { vals: vals.slice() };
+    for (const id of ids) { const c = doc.cards[id] || (doc.cards[id] = {}); c.pinned = false; c.vgroup = key; }
+    return key;
+  }
+  /* İki grubu birleştirir: kaynak gruptaki tüm kartlar hedef grubun anahtarını alır (görsel; kaynak veri değişmez). */
+  function mergeGroups(doc, fromKey, toKey, groupOf) {
+    if (fromKey === toKey) return 0;
+    let n = 0;
+    for (const id of doc.order) if (effectiveKey(doc, id, groupOf) === fromKey) { setGroup(doc, id, toKey, groupOf); n++; }
+    if (doc.areas && doc.areas[fromKey]) delete doc.areas[fromKey];
+    return n;
+  }
   function setGroup(doc, id, key, groupOf) { const c = doc.cards[id] || (doc.cards[id] = {}); if (key === groupOf(id).key) delete c.vgroup; else c.vgroup = key; }
   /* Sıraya ekleme: kartlar hedef kartın önüne/arkasına ve hedefin görsel grubuna taşınır. */
   function insertAt(doc, ids, targetId, after, groupOf) {
@@ -563,7 +629,7 @@
     return { ok: true, missing: [...new Set(missing)], unpinned, levelsChanged };
   }
 
-  return { MM, SEP, PAPERS, FONTS, CARD_STYLES, STYLE_SPEC, LIMITS, overlaps, pageSize, createDoc, resizeAll, groupAt, setArea, clearArea, normalizeDoc, normalizeStyle, normalizePage, geometry, textHeight,
+  return { MM, SEP, PAPERS, FONTS, CARD_STYLES, STYLE_SPEC, LIMITS, overlaps, pageSize, createDoc, resizeAll, groupAt, setArea, clearArea, splitGroup, mergeGroups, normalizeDoc, normalizeStyle, normalizePage, geometry, textHeight,
     buildChunks, layoutPageFlow, layoutPageBlocks, layout, conflicts, findFree, resolvePinned, pageChangeConflicts, applyPageChange,
     effectiveKey, pinAt, unpin, insertAt, setGroup, align, templateOf, normalizeTemplate, applyTemplate };
 });
