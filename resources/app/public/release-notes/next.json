@@ -7,8 +7,8 @@
     "en": "Presentation Studio: group areas, chip view, full text, pinned card titles, resizing together"
   },
   "summary": {
-    "tr": "Sunum Stüdyosu’nda grup başlığı sürüklenerek grup kendi alanına alınır, kartlarıyla birlikte taşınır ve boyutlandırılır; alan yetmezse büyür, sayfa bitince sonraki sayfada devam eder. Kumaş ve Artwork Detail tablodaki gibi çip olarak görünür (kumaş kodu gizlenebilir, metne çevrilebilir); kart bilgileri ve grup başlıkları tam metinle görünür; serbest yerleştirilen kartlar grup başlığını korur, başka gruba bırakılan kart o gruba elle katılır. Birden çok kart birlikte boyutlandırılır; gruplama ve kart bilgisi listeleri okunur ve aranabilir.",
-    "en": "In Presentation Studio, dragging a group title gives the group its own area that moves and resizes together with its cards; the area grows when needed and continues on the next page. Fabric and Artwork Detail appear as chips like in the table (fabric code can be hidden, or switched to text); card details and group titles show in full; freely placed cards keep their group title and a card dropped into another group joins it manually. Several cards can be resized together; grouping and card detail lists are readable and searchable."
+    "tr": "Sunum Stüdyosu’nda grup başlığı sürüklenerek grup kendi alanına alınır, kartlarıyla birlikte taşınır ve boyutlandırılır; alan yetmezse büyür, sayfa bitince sonraki sayfada devam eder. Kumaş ve Artwork Detail tablodaki gibi çip olarak görünür (kumaş kodu gizlenebilir, metne çevrilebilir); kart bilgileri ve grup başlıkları tam metinle görünür; serbest yerleştirilen kartlar grup başlığını korur, başka gruba bırakılan kart o gruba elle katılır. Birden çok kart birlikte boyutlandırılır; gruplama ve kart bilgisi listeleri okunur ve aranabilir. Sunumlar taslak olarak kaydedilir; taslağa dönüldüğünde Koleksiyon’daki düzeltmeler sunuma yansır.",
+    "en": "In Presentation Studio, dragging a group title gives the group its own area that moves and resizes together with its cards; the area grows when needed and continues on the next page. Fabric and Artwork Detail appear as chips like in the table (fabric code can be hidden, or switched to text); card details and group titles show in full; freely placed cards keep their group title and a card dropped into another group joins it manually. Several cards can be resized together; grouping and card detail lists are readable and searchable. Presentations can be saved as drafts; corrections made in Collection appear when you return to a draft."
   },
   "changes": [
     {
@@ -124,6 +124,35 @@
         "caption": {
           "tr": "Demo veride kendi alanına alınmış ve tek sütuna daraltılmış grup.",
           "en": "A group given its own area and narrowed to one column on demo data."
+        }
+      }
+    },
+    {
+      "id": "presentation-studio-drafts",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · CP · Siparişler",
+        "en": "Collection · CP · Orders"
+      },
+      "title": {
+        "tr": "Sunum Stüdyosu: taslak olarak kaydet, kaldığın yerden devam et",
+        "en": "Presentation Studio: save as draft and continue where you left off"
+      },
+      "body": {
+        "tr": "Sunumu Taslağı kaydet ile saklayın; kaydedilen taslak sonraki her değişiklikte otomatik güncellenir. Sunum Oluştur’a bastığınızda aynı kaynağın taslakları listelenir: yeni sunum başlatabilir ya da bir taslağa devam edebilirsiniz; son çalıştığınız sayfa ve yakınlık korunur. Taslak açılırken model bilgileri tablodan güncel okunur: sunumu hazırlarken fark ettiğiniz bir hatayı Koleksiyon’da düzeltip taslağa döndüğünüzde düzeltme sunumda görünür ve kaç modelin güncellendiği bildirilir; yerleşim, sabit kartlar ve grup alanları korunur. Kaydedilmemiş bir sunumu kapatırken kaydetmek isteyip istemediğiniz sorulur; açıp kapattığınız sunumlar artık taslak listesini doldurmaz.",
+        "en": "Keep a presentation with Save draft; a saved draft then updates automatically with every change. Create Presentation lists drafts of the same source: start a new presentation or continue a draft, returning to the page and zoom you last used. Model details are read fresh from the table when a draft opens: fix a mistake in Collection while preparing the presentation, return to the draft and the correction appears, with a notice of how many models were updated; the layout, pinned cards and group areas are kept. Closing an unsaved presentation asks whether to save it, and presentations you only open and close no longer fill the draft list."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "presentation-studio-drafts.png",
+        "alt": {
+          "tr": "Demo veride Sunum oluştur penceresi: seçili 24 modelle yeni sunum veya Demo taslak taslağına devam seçenekleri",
+          "en": "The Create presentation window on demo data: options for a new presentation with 24 selected models or to continue the Demo taslak draft"
+        },
+        "caption": {
+          "tr": "Sunum Oluştur’da yeni sunum ya da kayıtlı taslağa devam (demo veri).",
+          "en": "Create Presentation offers a new presentation or continuing a saved draft (demo data)."
         }
       }
     }

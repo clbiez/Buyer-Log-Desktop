@@ -213,14 +213,30 @@
 
   /* ---------------- Kalıcılık (sunumlar, şablonlar) ---------------- */
   let saveTimer = 0;
-  function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(saveDeck, 900); }
-  function saveDeck() {
+  /* Taslaklar: yeni sunum yalnız "Taslağı kaydet" ile saklanır (açıp kapatmak listeyi doldurmaz);
+     kaydedilmiş taslak her değişiklikte otomatik güncellenir. Taslak, kart başına kısa bir parmak izi
+     (snap) ve son görünüm (sayfa, yakınlık) taşır: yeniden açılınca tablodaki güncel bilgiler okunur,
+     değişen modeller bildirilir, kullanıcı kaldığı sayfadan devam eder. */
+  function scheduleSave() { if (S && !S.saved) { S.dirty = true; renderStatus(); return; } clearTimeout(saveTimer); saveTimer = setTimeout(saveDeck, 900); }
+  const fingerprint = m => { let h = 0x811c9dc5; const str = JSON.stringify(m.values); for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
+  function saveDraft() {
     if (!S) return;
+    const first = !S.saved;
+    S.saved = true; S.dirty = false;
+    clearTimeout(saveTimer); saveDeck();
+    if (S.saveState === 'saved') toast(first ? L(`“${S.doc.title || L('Adsız sunum', 'Untitled presentation')}” taslak olarak kaydedildi. Taslaklar’dan kaldığınız yerden devam edebilirsiniz.`, `“${S.doc.title || 'Untitled presentation'}” was saved as a draft. Continue where you left off from Drafts.`) : L('Taslak kaydedildi.', 'Draft saved.'));
+  }
+  function saveDeck() {
+    if (!S || !S.saved) return;
     const index = readJson(KEY.decks, []).filter(d => d && d.id !== S.deckId);
-    const entry = { id: S.deckId, title: S.doc.title || L('Adsız sunum', 'Untitled presentation'), updatedAt: new Date().toISOString(), count: S.doc.order.length, source: S.tab };
+    const entry = { id: S.deckId, title: S.doc.title || L('Adsız sunum', 'Untitled presentation'), updatedAt: new Date().toISOString(), count: S.doc.order.length, source: S.tab, draft: true };
     index.unshift(entry);
     const removed = index.splice(MAX_DECKS);
-    if (!writeJson(KEY.deck(S.deckId), S.doc)) { S.saveState = 'error'; renderStatus(); return; }
+    const snap = {};
+    // Modeller oturum boyunca değişmez: parmak izi bir kez hesaplanır, otomatik kayıtta yeniden kullanılır.
+    if (!S.fp) S.fp = new Map();
+    for (const id of S.doc.order) { const m = S.models.get(id); if (!m) continue; if (!S.fp.has(id)) S.fp.set(id, fingerprint(m)); snap[id] = S.fp.get(id); }
+    if (!writeJson(KEY.deck(S.deckId), { ...S.doc, snap, view: { page: S.activePage, zoom: S.zoom } })) { S.saveState = 'error'; renderStatus(); return; }
     writeJson(KEY.decks, index);
     for (const d of removed) removeKey(KEY.deck(d.id));
     if (removed.length) toast(L(`En fazla ${MAX_DECKS} sunum saklanır; en eski “${removed[0].title}” kaldırıldı.`, `Up to ${MAX_DECKS} presentations are kept; the oldest “${removed[0].title}” was removed.`));
@@ -252,10 +268,24 @@
     const rows = mode === 'selected' ? info.rows.filter(row => selected.has(String(info.rowId(row)))) : info.rows;
     if (!rows.length) { toast(L('Önce modelleri seçin veya filtreyi değiştirin.', 'Select models first or change the filter.'), 'warning'); return; }
     if (rows.length > E().LIMITS.cards) { toast(L(`Bir sunumda en fazla ${E().LIMITS.cards.toLocaleString('tr-TR')} model kullanılabilir. Seçimi veya filtreyi daraltın.`, `A presentation supports up to ${E().LIMITS.cards.toLocaleString('en-GB')} models. Narrow the selection or filter.`), 'warning'); return; }
+    const drafts = readJson(KEY.decks, []).filter(d => d && (d.source || 'koleksiyon') === tab).slice(0, 5);
+    if (drafts.length && !scope) { chooseDraft(tab, drafts, rows.length, mode); return; }
     const src = readSource(rows, info, mode, tab), ids = [...src.models.keys()];
     const fields = defaultFields(src.meta.ids, tab), title = sourceOf(tab).title();
     const docModel = E().createDoc({ ids, fields: fields.length ? fields : src.meta.ids.slice(0, 4), levels: defaultLevels(src.meta.ids), title, source: tab });
-    start({ ...src, doc: docModel, deckId: 'd' + Date.now().toString(36), scope: mode, tab });
+    start({ ...src, doc: docModel, deckId: 'd' + Date.now().toString(36), scope: mode, tab, saved: false });
+  }
+  /* Aynı kaynağın taslağı varsa: yeni sunum ya da taslağa devam. */
+  function chooseDraft(tab, drafts, n, mode) {
+    const when = d => new Date(d.updatedAt).toLocaleString(isEn() ? 'en-GB' : 'tr-TR', { dateStyle: 'medium', timeStyle: 'short' });
+    const newLabel = mode === 'selected' ? L(`Seçili ${n} modelle yeni sunum`, `New presentation with ${n} selected models`) : L(`Filtrelenmiş ${n} kayıtla yeni sunum`, `New presentation with ${n} filtered records`);
+    dialog(`<h3 id="psDlgTitle">${esc(L('Sunum oluştur', 'Create presentation'))}</h3><p>${esc(L('Yeni bir sunum başlatın ya da kayıtlı bir taslaktan kaldığınız yerden devam edin. Taslaklar açılırken model bilgileri tablodan güncel okunur.', 'Start a new presentation or continue a saved draft where you left off. Model details are read fresh from the table when a draft opens.'))}</p>
+      <div class="psOptions"><button type="button" class="tbtn" data-m="new"><b class="psOptTitle">${esc(newLabel)}</b><span class="psSub">${esc(L('Boş bir düzenle başlar; kaydetmek için Taslağı kaydet.', 'Starts with a fresh layout; use Save draft to keep it.'))}</span></button>
+      ${drafts.map(d => `<button type="button" class="tbtn" data-m="d:${esc(d.id)}"><b class="psOptTitle">${esc(L('Taslağa devam et: ', 'Continue draft: '))}${esc(d.title)}</b><span class="psSub">${esc(L(`${d.count} kayıt · ${when(d)}`, `${d.count} records · ${when(d)}`))}</span></button>`).join('')}</div>
+      <div class="modalFoot"><button type="button" class="tbtn" data-m="cancel">${esc(L('Vazgeç', 'Cancel'))}</button></div>`, choice => {
+      if (choice === 'new') openSelection(tab, mode).catch(err => toast(err.message, 'error'));
+      else if (choice && choice.startsWith('d:')) openDeck(choice.slice(2)).catch(err => toast(err.message, 'error'));
+    });
   }
   async function openDeck(deckId) {
     await ensureScripts();
@@ -270,7 +300,11 @@
     const src = readSource(rows, info, 'saved', tab), ids = [...src.models.keys()];
     const docModel = E().normalizeDoc(raw, { ids: (raw.order || []).map(String).filter(id => src.models.has(id)), fields: src.meta.ids });
     const missing = wanted.size - ids.length;
-    start({ ...src, doc: docModel, deckId, scope: 'saved', tab });
+    // Taslak kaydedildiğinden beri tabloda bilgisi değişen modeller (parmak izi karşılaştırması).
+    const snap = raw.snap && typeof raw.snap === 'object' ? raw.snap : null;
+    const changed = snap ? ids.filter(id => snap[id] && snap[id] !== fingerprint(src.models.get(id))).length : 0;
+    start({ ...src, doc: docModel, deckId, scope: 'saved', tab, saved: true, view: raw.view });
+    if (changed > 0) toast(L(`${changed} modelin bilgisi ${name} tablosunda güncellenmiş; taslak güncel bilgilerle açıldı.`, `${changed} models were updated in ${name}; the draft opened with the current details.`));
     if (missing > 0) toast(L(`${missing} kayıt ${name} tablosunda bulunamadı ve sunumdan çıkarıldı.`, `${missing} records were not found in ${name} and were removed from the presentation.`), 'warning');
   }
 
@@ -279,8 +313,14 @@
     S = { ...init, sel: new Set(), hist: [], fut: [], zoom: 1, activePage: 'p1', dims: new Map(), chipCache: new Map(), perf: { layout: 0, render: 0 }, saveState: '', pageHtml: new Map(), act: null, measure: R().canvasMeasure(doc_) };
     S.dataHash = hashModels(); S.chipKinds = chipKinds(S.tab);
     buildShell();
-    relayout(); fitZoom(); render();
-    scheduleSave();
+    relayout(); fitZoom();
+    // Kaldığı yerden: son sayfa ve yakınlık.
+    const view = init.view && typeof init.view === 'object' ? init.view : null;
+    if (view && S.doc.pages.some(p => p.id === view.page)) S.activePage = view.page;
+    if (view && Number.isFinite(Number(view.zoom))) S.zoom = clamp(Number(view.zoom), 0.25, 3);
+    render();
+    if (view && S.activePage !== S.doc.pages[0].id) S.host.querySelector(`.psPageWrap[data-ps-page="${CSS.escape(S.activePage)}"]`)?.scrollIntoView({ block: 'start' });
+    if (S.saved) scheduleSave();
     root.BLMotionPlus?.play?.('overlay', S.shell);
   }
   function hashModels() {
@@ -289,6 +329,15 @@
     for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
     return (h >>> 0).toString(16).padStart(8, '0');
   }
+  /* Kaydedilmemiş yeni sunumda değişiklik varsa çıkmadan önce sorar. */
+  function confirmLeave(next) {
+    if (!S || S.saved || !S.dirty) { next(); return; }
+    dialog(`<h3 id="psDlgTitle">${esc(L('Sunum taslak olarak kaydedilsin mi?', 'Save the presentation as a draft?'))}</h3><p>${esc(L('Kaydederseniz Sunum Oluştur’dan kaldığınız yerden devam edebilirsiniz; model bilgileri açılışta tablodan güncel okunur.', 'If you save it, you can continue where you left off from Create Presentation; model details are read fresh from the table when it opens.'))}</p>
+      <div class="modalFoot"><button type="button" class="tbtn" data-m="cancel">${esc(L('Vazgeç', 'Cancel'))}</button><button type="button" class="tbtn" data-m="discard">${esc(L('Kaydetmeden çık', 'Leave without saving'))}</button><button type="button" class="tbtn primary" data-m="save">${esc(L('Taslağı kaydet', 'Save draft'))}</button></div>`, choice => {
+      if (choice === 'save') { saveDraft(); next(); } else if (choice === 'discard') next();
+    });
+  }
+  function requestClose() { confirmLeave(close); }
   function close() {
     if (!S) return;
     clearTimeout(saveTimer); saveDeck();
@@ -311,7 +360,7 @@
         <button type="button" class="tbtn psIcon" data-ps="undo">${sprite('arrow-back-up')}</button><button type="button" class="tbtn psIcon" data-ps="redo">${sprite('arrow-forward-up')}</button>
         <span class="psGrow"></span>
         <span class="psZoom"><button type="button" class="tbtn psIcon" data-ps="zoomOut">−</button><output class="psNum" data-ps="zoomVal"></output><button type="button" class="tbtn psIcon" data-ps="zoomIn">+</button><button type="button" class="tbtn" data-ps="zoomFit"></button></span>
-        <button type="button" class="tbtn" data-pop="decks"></button><button type="button" class="tbtn" data-pop="templates"></button>
+        <button type="button" class="tbtn" data-ps="saveDraft"></button><button type="button" class="tbtn" data-pop="decks"></button><button type="button" class="tbtn" data-pop="templates"></button>
         <button type="button" class="tbtn primary" data-pop="export"></button><button type="button" class="tbtn psIcon" data-ps="close">${sprite('x')}</button></header>
       <div class="psBar" role="toolbar">
         <span class="psLbl" data-l="group"></span><span class="psChips" data-ps="chips"></span><label class="psToggle" data-ps="brkWrap"><input type="checkbox" data-ps="brk"><span data-l="brk"></span></label>
@@ -332,7 +381,7 @@
     S.host = host; S.shell = host.firstElementChild;
     const $ = sel => host.querySelector(sel);
     S.$ = $;
-    root.BLLayerSystem?.openDialog?.(host, { onClose: close });
+    root.BLLayerSystem?.openDialog?.(host, { onClose: requestClose });
     bindShell();
     localize();
   }
@@ -347,7 +396,9 @@
     label('[data-ps="zoomOut"]', L('Uzaklaştır', 'Zoom out')); label('[data-ps="zoomIn"]', L('Yakınlaştır', 'Zoom in')); label('[data-ps="close"]', L('Kapat', 'Close'));
     label('[data-ps="addPage"]', L('Serbest sayfa ekle', 'Add free page'));
     t('[data-ps="zoomFit"]', L('Sığdır', 'Fit'));
-    $('[data-pop="decks"]').innerHTML = `${sprite('folder')}<span>${esc(L('Sunumlarım', 'My presentations'))}</span>`;
+    $('[data-pop="decks"]').innerHTML = `${sprite('folder')}<span>${esc(L('Taslaklar', 'Drafts'))}</span>`;
+    $('[data-ps="saveDraft"]').innerHTML = `${sprite('device-floppy')}<span>${esc(L('Taslağı kaydet', 'Save draft'))}</span>`;
+    $('[data-ps="saveDraft"]').title = L('Sunumu taslak olarak kaydeder; sonra Sunum Oluştur’dan kaldığınız yerden devam edersiniz', 'Saves the presentation as a draft; later continue where you left off from Create Presentation');
     $('[data-pop="templates"]').innerHTML = `${sprite('layout-dashboard')}<span>${esc(L('Şablonlar', 'Templates'))}</span>`;
     $('[data-pop="export"]').innerHTML = `${sprite('file-export')}<span>${esc(L('Dışa aktar', 'Export'))}</span>`;
     $('[data-pop="fields"]').innerHTML = `${sprite('columns-3')}<span>${esc(L('Kart bilgileri', 'Card details'))}</span>`;
@@ -489,7 +540,8 @@
     if (S.omitted && S.omitted.length) parts.push(`<span class="psBad" title="${esc(S.omitted.join(', '))}">${esc(L('Çok sayıda kayıt nedeniyle bazı sütunlar alınmadı', 'Some columns were skipped because of the record count'))}</span>`);
     parts.push('<span class="psGrow"></span>');
     parts.push(`<span title="${esc(L('Kart taşıma, gruplama ve sabitleme yalnız sunumu değiştirir', 'Moving, grouping and pinning cards only change the presentation'))}" class="${same ? 'psOk' : 'psBad'}">${esc(same ? L(`${sourceName()} verisi değişmedi`, `${sourceName()} data unchanged`) : L('Kaynak veri değişti', 'Source data changed'))}</span>`);
-    parts.push(`<span>${esc(S.saveState === 'error' ? L('Kaydedilemedi', 'Not saved') : S.saveState === 'saved' ? L('Hesabınıza kaydedildi', 'Saved to your account') : '')}</span>`);
+    parts.push(!S.saved ? `<span class="${S.dirty ? 'psBad' : ''}">${esc(S.dirty ? L('Taslak kaydedilmedi', 'Draft not saved') : L('Yeni sunum · kaydedilmedi', 'New presentation · not saved'))}</span>`
+      : `<span>${esc(S.saveState === 'error' ? L('Kaydedilemedi', 'Not saved') : S.saveState === 'saved' ? L('Taslak hesabınıza kaydedildi', 'Draft saved to your account') : '')}</span>`);
     parts.push('<span class="psNum" data-ps="perf"></span>');
     const status = S.$('[data-ps="status"]');
     setHtml(status, parts.join(''));
@@ -965,8 +1017,8 @@
         + `<div class="psTplSave"><input data-ps="tplName" maxlength="60" placeholder="${esc(L('Şablon adı', 'Template name'))}" aria-label="${esc(L('Şablon adı', 'Template name'))}"><button type="button" class="tbtn" data-ps="tplSave">${esc(L('Kaydet', 'Save'))}</button></div><p class="psHint">${esc(L('Şablon sayfa ölçüsünü, gruplamayı, kart bilgilerini ve tasarımı saklar; kart konumları sunuma özeldir.', 'A template stores the page size, grouping, card details and design; card positions belong to the presentation.'))}</p>`;
     } else if (kind === 'decks') {
       const decks = readJson(KEY.decks, []);
-      p.innerHTML = h(L('Sunumlarım', 'My presentations')) + (decks.length ? `<div class="psMenu psScroll">${decks.map(d => `<div class="psTpl"><span><b>${esc(d.title)}</b><small class="psSub">${esc(L(`${sourceOf(d.source).name()} · ${d.count} kayıt · ${new Date(d.updatedAt).toLocaleString('tr-TR')}`, `${sourceOf(d.source).name()} · ${d.count} records · ${new Date(d.updatedAt).toLocaleString('en-GB')}`))}</small></span>${d.id === S.deckId ? `<small class="psSub">${esc(L('açık', 'open'))}</small>` : `<button type="button" class="tbtn" data-deck="${esc(d.id)}">${esc(L('Aç', 'Open'))}</button><button type="button" class="tbtn psIcon" data-ddel="${esc(d.id)}" aria-label="${esc(L('Sunumu sil', 'Delete presentation'))}">${sprite('trash')}</button>`}</div>`).join('')}</div>` : `<p class="psHint">${esc(L('Henüz kayıtlı sunum yok.', 'No saved presentations yet.'))}</p>`)
-        + `<p class="psHint">${esc(L(`Sunumlar hesabınıza otomatik kaydedilir (en fazla ${MAX_DECKS}). Kayıt bilgileri her açılışta kaynak tablodan güncel okunur.`, `Presentations are saved to your account automatically (up to ${MAX_DECKS}). Record details are read fresh from the source table each time.`))}</p>`;
+      p.innerHTML = h(L('Taslaklar', 'Drafts')) + (decks.length ? `<div class="psMenu psScroll">${decks.map(d => `<div class="psTpl"><span><b>${esc(d.title)}</b><small class="psSub">${esc(L(`${sourceOf(d.source).name()} · ${d.count} kayıt · ${new Date(d.updatedAt).toLocaleString('tr-TR')}`, `${sourceOf(d.source).name()} · ${d.count} records · ${new Date(d.updatedAt).toLocaleString('en-GB')}`))}</small></span>${d.id === S.deckId ? `<small class="psSub">${esc(L('açık', 'open'))}</small>` : `<button type="button" class="tbtn" data-deck="${esc(d.id)}">${esc(L('Aç', 'Open'))}</button><button type="button" class="tbtn psIcon" data-ddel="${esc(d.id)}" aria-label="${esc(L('Sunumu sil', 'Delete presentation'))}">${sprite('trash')}</button>`}</div>`).join('')}</div>` : `<p class="psHint">${esc(L('Henüz kayıtlı taslak yok. Taslağı kaydet ile bu sunumu saklayın.', 'No saved drafts yet. Use Save draft to keep this presentation.'))}</p>`)
+        + `<p class="psHint">${esc(L(`Kaydedilen taslaklar her değişiklikte hesabınıza otomatik güncellenir (en fazla ${MAX_DECKS}). Taslak açılırken model bilgileri tablodan güncel okunur; tabloda yaptığınız düzeltmeler sunuma yansır.`, `Saved drafts update in your account with every change (up to ${MAX_DECKS}). Model details are read fresh from the table when a draft opens, so corrections you make in the table appear in the presentation.`))}</p>`;
     } else if (kind === 'export') {
       p.innerHTML = h(L('Dışa aktar', 'Export')) + `<div class="psMenu"><button type="button" class="tbtn" data-ex="pdf"><b class="psOptTitle">PDF</b><span class="psSub">${esc(L('Önizlemedeki sayfaların aynısı, seçili sayfa ölçüsünde.', 'Exactly the previewed pages, in the selected page size.'))}</span></button><button type="button" class="tbtn" data-ex="pptx"><b class="psOptTitle">PowerPoint</b><span class="psSub">${esc(L('Düzenlenebilir kartlar ve metinler; aynı konum ve ölçü.', 'Editable cards and text; same positions and size.'))}</span></button></div>`;
     }    const search = p.querySelector('[data-ps="search"]');
@@ -1092,7 +1144,8 @@
       if (ps === 'zoomIn') return setZoom(S.zoom * 1.15);
       if (ps === 'zoomOut') return setZoom(S.zoom / 1.15);
       if (ps === 'zoomFit') { fitZoom(); S.pageHtml.clear(); return render(); }
-      if (ps === 'close') return close();
+      if (ps === 'close') return requestClose();
+      if (ps === 'saveDraft') return saveDraft();
       if (ps === 'addPage') return pageAction(S.doc.pages[S.doc.pages.length - 1].id, 'add');
       if (ps === 'fixConf') { let un = 0; commit(() => { un = E().resolvePinned(S.doc); }); toast(un ? L(`${un} kart akışa döndü.`, `${un} cards returned to flow.`) : L('Çakışmalar çözüldü.', 'Overlaps resolved.')); return; }
       if (ps === 'tplSave') {
@@ -1122,7 +1175,7 @@
       const tp = t.closest('[data-tpl]');
       if (tp) { const k = tp.dataset.tpl, tpl = k[0] === 'b' ? builtinTemplates()[Number(k.slice(1))] : loadTemplates()[Number(k.slice(1))]; closePop(); if (tpl) applyTemplate(tpl); return; }
       const td = t.closest('[data-tdel]'); if (td) { const list = loadTemplates(); list.splice(Number(td.dataset.tdel) - 1, 1); writeJson(KEY.templates, list); fillPop('templates'); return; }
-      const dk = t.closest('[data-deck]'); if (dk) { closePop(); openDeck(dk.dataset.deck).catch(err => toast(err.message, 'error')); return; }
+      const dk = t.closest('[data-deck]'); if (dk) { closePop(); const id = dk.dataset.deck; confirmLeave(() => openDeck(id).catch(err => toast(err.message, 'error'))); return; }
       const dd = t.closest('[data-ddel]');
       if (dd) { const id = dd.dataset.ddel, list = readJson(KEY.decks, []); const d = list.find(x => x.id === id); if (d && root.confirm(L(`“${d.title}” sunumu silinsin mi? Kaynak veriler etkilenmez.`, `Delete the “${d.title}” presentation? Source data is not affected.`))) { writeJson(KEY.decks, list.filter(x => x.id !== id)); removeKey(KEY.deck(id)); fillPop('decks'); } return; }
       const ex = t.closest('[data-ex]'); if (ex) { closePop(); runExport(ex.dataset.ex); }

@@ -74,3 +74,20 @@ test('kumaş kodu gizlenebilir: üstte ad, altta karışım ve gramaj; seçenek 
   const out = fn([{ label: '', items: [{ kind: 'code', t: '214233' }, { kind: 'chip', t: 'Three Thread', sub: '260 gsm' }], fabric: { code: '214233', type: 'Three Thread', weight: '260 gsm', mix: '65% Cotton', eco: '' } }, { label: '', items: [{ kind: 'chip', t: '65% Cotton' }] }]);
   assert.deepEqual(out, [{ label: '', items: [{ kind: 'chip', t: 'Three Thread' }] }, { label: '', items: [{ kind: 'chip', t: '65% Cotton' }, { kind: 'meta', t: '260 gsm' }] }]);
 });
+
+test('taslaklar: yeni sunum yalnız Taslağı kaydet ile saklanır; açılışta tablodan güncel okunur, değişen modeller bildirilir, kaldığı yer korunur', () => {
+  const studio = read('public/presentation-studio.js');
+  assert.match(studio, /function saveDeck\(\) \{\n    if \(!S \|\| !S\.saved\) return;/, 'kaydedilmemiş sunum depoya yazılmaz');
+  assert.match(studio, /start\(\{ \.\.\.src, doc: docModel, deckId: 'd' \+ Date\.now\(\)\.toString\(36\), scope: mode, tab, saved: false \}\);/);
+  assert.match(studio, /start\(\{ \.\.\.src, doc: docModel, deckId, scope: 'saved', tab, saved: true, view: raw\.view \}\);/);
+  assert.match(studio, /writeJson\(KEY\.deck\(S\.deckId\), \{ \.\.\.S\.doc, snap, view: \{ page: S\.activePage, zoom: S\.zoom \} \}\)/);
+  assert.match(studio, /const changed = snap \? ids\.filter\(id => snap\[id\] && snap\[id\] !== fingerprint\(src\.models\.get\(id\)\)\)\.length : 0;/);
+  assert.match(studio, /if \(drafts\.length && !scope\) \{ chooseDraft\(tab, drafts, rows\.length, mode\); return; \}/);
+  assert.match(studio, /root\.BLLayerSystem\?\.openDialog\?\.\(host, \{ onClose: requestClose \}\);/, 'Escape de kaydetme sorusundan geçer');
+  for (const t of ["L('Taslağı kaydet', 'Save draft')", "L('Kaydetmeden çık', 'Leave without saving')", "L('Taslaklar', 'Drafts')", "L('Taslağa devam et: ', 'Continue draft: ')"]) assert.ok(studio.includes(t), t);
+  // Taslak kaydı motorun normalizeDoc'undan geçer: ek alanlar (snap, view) belgeyi bozmaz.
+  const E = require('../public/presentation-studio-engine.js');
+  const doc = E.createDoc({ ids: ['a', 'b'], fields: ['x'] });
+  const round = E.normalizeDoc({ ...doc, snap: { a: 'x1' }, view: { page: 'p1', zoom: 1.2 } }, { ids: ['a', 'b'], fields: ['x'] });
+  assert.deepEqual(round.order, ['a', 'b']); assert.equal(round.snap, undefined);
+});
