@@ -78,7 +78,10 @@ function nextHeads(current, installationId, identity) {
    ilk taban (tam kopya) + her yayımın küçük değişiklik farkı. Uzak kopyanın
    kapsadığı yayımın tam tabanı böylece kesin kurulur; kapsanan yayım listede
    yoksa ilk taban kullanılır (o durumda da kesin: uzak kopya bekleyenlerin
-   hiçbirini içermiyor). Kayıt bozulursa ilk tabana düşülür (temkinli). */
+   hiçbirini içermiyor). İlk tabana düşmek her zaman temkinli DEĞİLDİR: eski
+   taban, başka cihazın bilinçli geri almasını "yerel değişiklik kazandı" diye
+   ezebilir (bağımsız inceleme F1). Bu yüzden zincir yazım hatasında kırılmaz,
+   yarım günlük satırı onarılır; ilk tabana yalnız bozuk günlükte düşülür. */
 const CLEAR_PENDING_PUBLICATIONS = Object.freeze({ pendingLatest: null, pendingFirstBaseSha256: null, pendingFromEmpty: null, pendingChainBroken: null });
 function coveredPublicationId(envelope, installationId) {
   const heads = envelopeHeads(envelope);

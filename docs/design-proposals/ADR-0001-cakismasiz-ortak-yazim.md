@@ -212,3 +212,30 @@ Her düzeltmeden sonra yeni seed kümesi koşuldu. Bağımsız incelemede oracle
 | Performans | Yayım +25–40 ms (%6–9). Ürün sahibi bütünlük bedeli olarak kabul etti. |
 | Açık riskler | Sırasız teslim ve düşmanca bulut açıkları sürüyor ve düzeltme öncesinde de vardı. Gerçek OneDrive davranışı doğrulanmadı. Bağımsız ikinci model incelemesi ve tam `npm test` sonuçları ayrıca raporlanır. |
 | Öneri | Yayımlanırsa "bilinen açıkları kapatan tam çözüm" değil, "ölçülmüş risk azaltma" olarak yayımlanmalı. Önce TEST kanalında iki gerçek Windows + OneDrive makinesiyle kısa bir ıslatma (soak) testi yapılmalı. |
+
+## 10 · Bağımsız ikinci model incelemesi (2026-11-26) ve düzeltmeler
+
+İnceleme farklı bir modelle, yalnız diff ve test üzerinden yapıldı. **§7–§8'deki iki iddia yanlış çıktı:**
+- "Kapsanan yayım listede yoksa / zincir kırılırsa ilk tabana düşülür; bu temkinlidir, kayıp olmaz."
+- "120 seed'de 0 ihlal." Testteki kesinti hiçbir zaman gerçek bir hub yazım hatası üretmediği için bu sonuç yazım hatalarını kapsamıyordu.
+
+| # | Bulgu | Doğrulama | Düzeltme | Test |
+| --- | --- | --- | --- | --- |
+| F1 | Hub yazımı düşünce zincir kalıcı "kırık" sayılıyor ve eski ilk tabana düşülüyor; başka cihazın bilinçli geri alması (A→B→A) sessizce kayboluyor | İnceleme betiği bu oturumda yeniden üretildi [Doğrulandı] | Uzak kopya günlükte inmiş bir kayıtsa günlük oradan kesilip zincir sürer, değilse zincir uzak kopyadan yeniden başlar. İkisi de kesin: yayım yolunda uzak kopya CAS ile tabanımızdır, yabancı her birleşim kaydı zaten temizler. | `collection-sync-write-failures` F1, RED→GREEN |
+| F4 | Taban dosyasının bekleyen ilk tabana taşınması düşünce hata yutuluyor; yerinden edilmede bekleyen silme geri geliyor | Yeniden üretildi [Doğrulandı] | Taşıma düşerse kopya yazılır; o da düşerse yayım iptal edilir. Dosya işlemleri durum güncellemesinden önce yapılır; taban okuması taşınmış dosyaya da bakar. | F4, RED→GREEN |
+| F5a | Yarım yazılmış son günlük satırı, sonraki kayıtları erişilmez kılıyor | Kod okuması + test | Eklemeden önce yarım son satır kesilir; o satır yayımı inmemiş bir kayda aittir. | F5, RED→GREEN |
+| F5b | Satır ekleme/silme farkı ~30k kimlikli tüm sıra dizisini taşıyor | Test | Sıra yalnız gerçek sıra değişiminde saklanır. | F5, RED→GREEN |
+| F2 | Nedensellik testindeki "kesintili yayım" hedefi dizine çevirdiği için okumada düşüyor; bekleyen-kayıt yolunu hiç çalıştırmıyordu | İnceleme 40 seed'de 7 ihlal gösterdi | Kesinti artık gerçek hub yazım hatası (atomik yeniden adlandırmada `EIO`) | — |
+| F3 | Oracle'ın silme denetiminde "üzerine yazılmış değer" muafiyeti yoktu; yanlış alarm veriyordu | Seed 26421 | Muafiyet eklendi | — |
+
+**Düzeltme sonrası** (gerçek hub yazım hatasıyla):
+- Nedensellik modeli, gerçekçi bulut, 120 seed (incelemenin ihlal bulduğu 26401–26440 aralığı dahil): kesin ihlal 0.
+- Bilinen sınır (bildirilmiş, `todo`) 11/120 seed'de görülüyor.
+- Düşmanca bulut, 40 seed: 4 seed kesin ihlalli (bilinen kardeş dal sınırı).
+- Tek sahipli model: 292 seed, 0 ihlal.
+
+**Hâlâ açık:**
+- Rastgele üreteç benzersiz değer kullandığı için "eski değere geri alma" (A→B→A) üretemiyor; bu durum yalnız deterministik testlerle kapsanıyor.
+- Tek kurulumlu kullanıcıda bekleyen kayıt hiç onaylanmıyor; günlük ve ilk taban dosyası birikir. Bir saklama politikası gerekir; şimdilik ölçülmedi.
+- Bozuk (ortası yarım) günlükte ilk tabana düşülür ve bu kayıp üretebilir. Bu durum yalnız disk bozulmasında beklenir.
+- Gerçek OneDrive davranışı doğrulanmadı.
