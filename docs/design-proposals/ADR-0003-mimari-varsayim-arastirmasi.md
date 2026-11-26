@@ -616,6 +616,42 @@ Alternatif "kayıttan kısa süre sonra arka planda sıkıştır" (debounce) bil
 
 Ölçüm araçları scratchpad'dedir (`bench-pilot.js`, `hook.js`, `decide.js`, `eq30k.js`) ve commit edilmedi. Kalıcılaştırılması gerekirse ayrı bir iş olarak `scripts/` altına alınır.
 
+## 6C · B2: "sıkıştırma beklemeden güncel okuma" — kabul ölçütleri ve fizibilite (2026-11-26)
+
+**Kabul ölçütleri** (ürün sahibinin metni; ölçümden önce sabit, değiştirilmez):
+1. Uzun oturum toplam CPU (sıkıştırma dahil) ≥ %80 azalma (B1 S1 senaryosu, aynı veri).
+2. Disk yazımında anlamlı düşüş (B1 ölçüm yöntemi; değer ve oran).
+3. Siparişler okuma bekleme ve CP ilk okuma: bayrak kapalıya göre tekrarlanabilir gerileme yok. L2: ≥ 3 sıra-dönüşümlü çift, ham örnekler + medyan; çift farkları aynı işaretteyse gerileme sayılır; A/A gürültüsü ayrıca.
+4. Kayıttan hemen sonra okuma güncel ve tutarlı (sıkıştırma beklenmeden).
+5. SIGKILL sonrası güvenli toparlanma (≥ 20 deneme, sıkıştırma ortasında öldürme dahil).
+6. Eski ve yeni yol arasında tam veri eşitliği (her koşuda).
+7. Yeni mükerrer okuma/hesaplama motoru yok (diff'te gerekçeyle).
+
+Sınırlar: okuyucu ya da modül başına ayrı günlük uygulama mekanizması yok. Tarayıcıya günlük uygulatmak yalnız tek ortak okuma yolu oysa olabilir. Maliyeti başka modüle, iş parçacığına ya da zamana taşımak çözüm değil.
+
+**Araştırma: mevcut ortak okuma katmanı "sabit taban + bellek içi günlük" ile güncel veri sunabilir mi? [Doğrulandı: source]**
+
+| Bulgu | Kanıt |
+| --- | --- |
+| Sunucudaki tek ortak okuma yolu `ensureComputedProjection` → `readProjectionCompressed`. Çıktısı modülün **bütün sıkıştırılmış baytları**dır. Bellekte ortak, çözülmüş bir temsil yok. | `server.js:9039-9060`; tüketiciler `server.js:9098` (sayfa projeksiyonu), `9150-9241` (eski `/api/data`), `9165` (görsel kaydı), `read-model-routes.js:46`, `cp-computed-routes.js:33`, `overview-model-routes.js:28`, `prewarm-scheduler` |
+| Bütün dosya tüketicisi (`/api/page-projection/:module`) baytları **çözmeden** HTTP gzip gövdesi olarak geçirir. Bugün hızlı olmasının nedeni bu. | `compute-response.js:3-16` (`Content-Encoding: gzip`, `res.end(buffer)`) |
+| Okuma modeli işçisi baytları kendisi çözer ve satırları `normalizeRows` ile **dönüştürülmüş** biçimde (Date vb.) tutar. Ham projeksiyon biçimi işçide yok. | `query-engine.js:14-21`, `read-model-worker.js:25-29` |
+| Bellekte "taban + adımlar" yalnız CP hesaplanmış yolunda var. Orada adımlar, dönüştürülmüş satırı ham biçime çevirip yamalayıp geri dönüştüren **ayrı bir uygulama döngüsü** ile uygulanır. Bu döngü `projection-rewrite.applySteps`'ten ayrıdır, yani **zaten mevcut bir tekrar**. | `read-model/cp-computed-task.js:88-113` (`virtualDataset`: `diskRow` → `applyIncrementalProjectionPatch` → `workerRow`) |
+| İstemci, normal bir CP satır kaydından sonra bütün Siparişler dosyasını yeniden **okumuyor**. `ensureOrdersLoaded` `state.orders` varken erken döner; yeniden okuma yalnız ilk açılış/ısınma, yeni sekme, `force` (ör. eksik adet işareti, yenileme) durumlarında. Kayıt sonrası güncelleme canlı satır yamalarıyla geliyor. | `app-main.js:2873-2874`, `7338`, `19014` **[Muhtemel: kaynaktan; gerçek arayüzde istek sayımı yapılmadı]** |
+
+**Sonuç: B2, verilen kısıtlarla ölçüt 3'ü yapı gereği karşılayamaz. Karar: BLOCKED (kod yazılmadı, ölçüm yapılmadı).**
+- Bütün dosya okuyucusuna güncel veri vermenin yalnız iki yolu var: (a) yeni baytları üretmek, bu B1'deki sıkıştırmadır ve okuma bekleme gerilemesi yaşanır; (b) sözleşmeyi "taban baytları + adımlar" yapmak, bu da her tüketiciye (tarayıcı, okuma modeli işçisi, CP hesaplanmış, eski `/api/data`) ayrı uygulama demektir. (b) ölçüt 7'yi ve "okuyucu başına mekanizma yok" sınırını ihlal eder. Tarayıcı tek ortak okuma yolu olmadığı için istisnaya da girmez.
+- Ortak katmanda bellek içi bir temsil eklemek, ancak bütün dosya okumasında yeniden serileştirme + sıkıştırma ile mümkün. Bu, maliyeti okumaya taşımaktır ve sınır dışıdır.
+- Kapsam kendiliğinden genişletilmedi; B3 denenmedi.
+
+**Ürün sahibine seçenekler** (her biri ayrı karar ve yeni önceden yazılmış kabul ister):
+- **O1 · Okuma yolunu tekleştir (mimari).** Tek bir bellek içi veri kümesi servisi (okuma modeli işçisi) bütün sunucu okumalarının tek kaynağı olur, bütün dosya HTTP yanıtı dahil. Günlük orada tek bir yerde uygulanır. Bedel: bütün dosya yanıtı her okumada üretilir; bu okumaların seyrekliği (yukarıdaki [Muhtemel]) ölçülmeden karar verilemez. Kapsamı pilotu aşar.
+- **O2 · Tekrarı kaldırarak birleştir.** `projection-rewrite.applySteps` ile `cp-computed-task.virtualDataset` **tek bir** adım uygulama fonksiyonunda birleştirilir. Okuma modeli sorguları (CP/Siparişler `query`/`facets`) bu tek fonksiyonla taban + adımlardan beslenir. Bütün dosya okuması seyrek olduğu için B1'deki gibi okumada sıkıştırır. Bu, ölçüt 7'yi "mevcut iki döngüyü bire indir" biçiminde karşılar. Ama ölçüt 3'ün bütün dosya okuması yine B1 davranışındadır; o senaryoda gerileme sürer. Ölçüt 3'ün gerçek arayüz okuma deseniyle yeniden tanımlanması ürün kararıdır.
+- **O3 · Önce ölç, sonra karar ver.** Gerçek arayüzde (Playwright, 30k) CP hücre düzenlemeleri sırasında `/api/page-projection/*` ve `/api/read-model/*` isteklerini say. Bu, S2 deseninin gerçek kullanımı temsil edip etmediğini belirler. Kod değişikliği gerektirmez, en düşük maliyetli adımdır.
+- **Önerim: O3, sonra gerekirse O2.** O1 ancak O3 bütün dosya okumalarının kayıtlardan sonra sık olduğunu gösterirse değerlendirilmeli.
+
+B1 kodu (`c800f90b`) bayrak kapalı haliyle dalda kalır. Davranışı değiştirmez. Karar O3'e kadar ertelenir.
+
 ---
 
 ## 7 · Ürün sahibinin vermesi gereken kararlar
