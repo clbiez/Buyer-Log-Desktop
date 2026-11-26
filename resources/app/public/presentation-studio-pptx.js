@@ -53,13 +53,43 @@
     return { rect, textBox, picture, group, rels };
   }
 
+  /* Çip satırı: her çip parçası dolgulu dikdörtgen + ortalı metin, üstünde çerçeve; metin atomları ayrı metin kutusu. */
+  function atomShapes(b, l, x0, lh, chip) {
+    const top = l.y + l.box.top, h = l.box.h;
+    return l.atoms.map(a => {
+      if (a.type === 'chip') {
+        let off = x0 + a.x, out = '';
+        for (const sg of a.segs) {
+          out += b.rect('Chip', off, top, sg.w, h, { fill: sg.fill }) + b.textBox('Chip text', off, top, sg.w, [{ lh: h, runs: [{ t: sg.t, size: a.size, bold: sg.bold, color: sg.ink }] }], 'ctr');
+          off += sg.w;
+        }
+        return out + b.rect('Chip frame', x0 + a.x, top, a.w, h, { line: a.line, lineW: 0.6 });
+      }
+      if (a.type === 'part') return b.rect('Part', x0 + a.x, top, a.w, h, { fill: chip.part }) + b.textBox('Part text', x0 + a.x, top, a.w, [{ lh: h, runs: [{ t: a.t, size: a.size, bold: true, color: chip.partInk }] }], 'ctr');
+      return b.textBox('Text', x0 + a.x, l.y, Math.max(1, a.w + 1), [{ lh, runs: [{ t: a.t, size: a.size, bold: a.bold, color: a.color }] }]);
+    }).join('');
+  }
+  /* Ardışık düz metin satırları tek metin kutusunda (düzenlenebilir paragraflar); çip satırları şekil olarak. */
+  function lineShapes(b, lines, chip, x0 = null) {
+    let out = '', block = [];
+    const flush = () => { if (block.length) out += b.textBox('Card text', block[0].x, block[0].y, block[0].w, block); block = []; };
+    for (const l of lines) {
+      if (l.atoms) { flush(); out += atomShapes(b, l, x0 == null ? l.x : x0, l.lh, chip); continue; }
+      if (block.length && Math.abs(block[block.length - 1].y + block[block.length - 1].lh - l.y) > 0.01) flush();
+      block.push(l);
+    }
+    flush();
+    return out;
+  }
   /* images: src → { name, base64, ext } (yalnız JPEG/PNG). titles: kart kimliği → erişilebilir ad. */
-  function slideXml(page, images, palette, lang, titles) {
+  function slideXml(page, images, palette, lang, titles, chip) {
     const b = slideBuilder(page.font, lang), shapes = [];
     for (const el of page.elements) {
+      if (el.type === 'area') continue; // grup alanı çerçevesi yalnız editörde
       if (el.type === 'hdr') {
-        const inner = b.textBox('Group title', el.x, el.textY, Math.max(1, el.w - el.count.w - 4), [{ lh: el.size * 1.3, runs: el.runs }])
-          + b.textBox('Group count', el.x + el.w - el.count.w - 4, el.textY + (el.size - el.count.size), el.count.w + 4, [{ lh: el.count.size * 1.3, runs: [el.count] }], 'r')
+        const cw = el.count ? el.count.w + 4 : 0;
+        const inner = (el.lines.length ? (el.lines[0].atoms ? el.lines.map(l => atomShapes(b, l, el.x, el.lh, chip)).join('') : b.textBox('Group title', el.x, el.lines[0].y, Math.max(1, el.w - cw), el.lines.map(l => ({ lh: el.lh, runs: l.runs })))) : '')
+          + (el.count ? b.textBox('Group count', el.x + el.w - cw, el.count.y, cw, [{ lh: el.count.size * 1.3, runs: [el.count] }], 'r') : '')
           + b.rect('Group rule', el.rule.x, el.rule.y, el.rule.w, el.rule.h, { fill: palette.rule });
         shapes.push(b.group('Group', { x: el.x, y: el.y, w: el.w, h: el.h }, inner));
         continue;
@@ -68,7 +98,7 @@
       inner += b.rect('Image area', el.imageBox.x, el.imageBox.y, el.imageBox.w, el.imageBox.h, { fill: palette.image });
       const media = el.image && images.get(el.image.src);
       if (media) inner += b.picture('Picture', el.image.x, el.image.y, el.image.w, el.image.h, media.name, titles[el.id] || el.id);
-      if (el.lines.length) inner += b.textBox('Card text', el.lines[0].x, el.lines[0].y, el.lines[0].w, el.lines);
+      if (el.lines.length) inner += lineShapes(b, el.lines, chip);
       if (el.style === 'frame') inner += b.rect('Card frame', el.x + 0.3, el.y + 0.3, el.w - 0.6, el.h - 0.6, { line: palette.line, lineW: 0.6 });
       shapes.push(b.group(`Card ${titles[el.id] || el.id}`, { x: el.x, y: el.y, w: el.w, h: el.h }, inner));
     }
@@ -82,7 +112,7 @@
   const dataUrlParts = src => { const m = /^data:image\/(jpeg|jpg|png);base64,([A-Za-z0-9+/=]+)$/i.exec(String(src || '')); return m ? { ext: m[1].toLowerCase() === 'png' ? 'png' : 'jpeg', base64: m[2] } : null; };
 
   /* list: render.build() çıktısı (görsel src'leri data URL). Döner: JSZip örneği. */
-  function build(JSZip, list, { title = '', lang = 'tr', palette, titles = {}, date = new Date() } = {}) {
+  function build(JSZip, list, { title = '', lang = 'tr', palette, titles = {}, date = new Date(), chip = { part: '#374454', partInk: '#FFFFFF' } } = {}) {
     const zip = new JSZip(), langTag = lang === 'en' ? 'en-US' : 'tr-TR', images = new Map();
     for (const page of list.pages) for (const el of page.elements) if (el.type === 'card' && el.image && !images.has(el.image.src)) {
       const part = dataUrlParts(el.image.src);
@@ -91,7 +121,7 @@
       images.set(el.image.src, { name, ...part });
       zip.file(`ppt/media/${name}`, part.base64, { base64: true });
     }
-    const slides = list.pages.map(p => slideXml(p, images, palette, langTag, titles));
+    const slides = list.pages.map(p => slideXml(p, images, palette, langTag, titles, chip));
     const W = Math.min(51206400, Math.max(914400, e(list.w))), H = Math.min(51206400, Math.max(914400, e(list.h)));
     const created = date.toISOString().replace(/\.\d{3}Z$/, 'Z');
     zip.file('[Content_Types].xml', `${HEAD}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpeg" ContentType="image/jpeg"/><Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/><Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/><Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/><Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/><Override PartName="/ppt/presProps.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presProps+xml"/><Override PartName="/ppt/viewProps.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.viewProps+xml"/><Override PartName="/ppt/tableStyles.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.tableStyles+xml"/>${slides.map((_, i) => `<Override PartName="/ppt/slides/slide${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`).join('')}<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`);

@@ -36578,6 +36578,28 @@ function fabricCardChipsHtml(card,summary){
     mix:mix?`<span class="blCellChip isShrink"><b>${escapeHtml(mix)}</b></span>`:'',
   };
 }
+/* Sunum Stüdyosu için kumaş hücresinin yapısal çip modeli (HTML değil): hücredeki
+   görünümle aynı parçalar. Kartı olmayan/çözülemeyen değerde null (metin kullanılır). */
+function fabricCardCellModel(val){
+  const list=kolFabricParts(String(val||''));
+  if(!list.length||!list.every(part=>kolFabricCards.has(part.code)))return null;
+  const piece=text=>{const value=norm(text);return value&&value!=='-'&&value!=='—'?value:'';};
+  const parts=[];
+  for(const part of list){
+    const card=kolFabricCards.get(part.code),pieces=window.BLFabricSegments?.parse?.(kolFabricSummary(card));
+    if(!pieces)return null;
+    const type=piece(pieces[0]),weight=piece(pieces[2]),mix=piece(pieces[3]),eco=norm(window.BLFabricCards?.summarySustainability?.(card?.details?.sustainability)??card?.details?.sustainability);
+    const head=[{kind:'code',t:part.code}];
+    if(type||weight)head.push({kind:'chip',t:type||weight,sub:type&&weight?weight:''});
+    if(eco)head.push({kind:'tag',t:eco,tone:'eco'});
+    parts.push({label:part.label||'',head,mix:mix?[{kind:'chip',t:mix}]:[],fabric:{code:part.code,type,weight,mix,eco}});
+  }
+  // Tek kumaş: üstte kod + tip|gramaj, altta karışım. A/B: parça başına tek satır (hücreyle aynı).
+  // Her parçanın ilk satırı ham parçaları (fabric) taşır: Sunum Stüdyosu kod gizlenince satırları yeniden kurar.
+  return parts.length===1
+    ?[{label:parts[0].label,items:parts[0].head,fabric:parts[0].fabric},...(parts[0].mix.length?[{label:'',items:parts[0].mix}]:[])]
+    :parts.map(p=>({label:p.label,items:[...p.head,...p.mix],fabric:p.fabric}));
+}
 /* Kumaş hücresinin içi: Koleksiyon, CP ve Orders aynı görünümü kullanır. */
 function fabricCardCellParts(val){
   const en=appLang==='en',raw=String(val||''),list=kolFabricParts(raw);
@@ -36617,6 +36639,16 @@ function cpFabricCellHtml(row){
   const cell=fabricCardCellParts(raw);
   return `<td class="cpFabricTd ${cell.cls}" data-cp-fabric="1" title="${escapeHtml(cell.title)}">${cell.inner}</td>`;
 }
+/* Sunum Stüdyosu: çip gösterimi olan sütunlar ve satırdan yapısal çip modeli. */
+window.BLCellChips=Object.freeze({
+  columns:Object.freeze({koleksiyon:Object.freeze({fabric:'fabric',artworkDetail:'artwork'}),cp:Object.freeze({[CP_FABRIC_PLM_KEY]:'fabric'}),orders:Object.freeze({[CP_FABRIC_PLM_KEY]:'fabric'})}),
+  model(kind,row,key){
+    if(!row)return null;
+    if(kind==='fabric'){kolFabricCardsEnsureLoaded();return fabricCardCellModel(row[key]);}
+    if(kind==='artwork')return window.BLCollectionArtworkDetail?.cellModel?.(row,row[key])||null;
+    return null;
+  },
+});
 function cpFabricRowForCell(cell){
   const tr=cell?.closest?.('tr[data-id]'),table=cell?.closest?.('table');
   if(!tr||!table)return null;

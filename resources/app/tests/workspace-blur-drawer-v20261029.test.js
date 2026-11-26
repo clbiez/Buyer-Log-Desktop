@@ -62,3 +62,23 @@ test('other visible dialog keeps workspace blur active after detail close',()=>{
   assert.equal(ui.layer.dataset.blur,'dialog');
   ui.state.otherDialog=false;ui.tick();assert.equal(ui.layer.dataset.blur,'');
 });
+
+test('[data-blur-skip] alanındaki değişiklikler tüm belgeyi tarayan sync\'i tetiklemez', () => {
+  const frames = [], observers = [];
+  let scans = 0;
+  const document = {
+    body: { append() {} }, documentElement: { dataset: { rail: '' } },
+    createElement: () => ({ dataset: {}, setAttribute() {} }),
+    querySelectorAll: () => { scans++; return []; }, querySelector: () => null, addEventListener: () => {},
+  };
+  class MutationObserver { constructor(cb) { observers.push(cb); } observe() {} }
+  vm.runInNewContext(SOURCE, { document, MutationObserver, getComputedStyle: () => ({}), requestAnimationFrame: cb => frames.push(cb) });
+  const flush = () => { for (const cb of frames.splice(0)) cb(); };
+  scans = 0;
+  const inside = { nodeType: 1, closest: sel => (sel === '[data-blur-skip]' ? {} : null) };
+  const outside = { nodeType: 1, closest: () => null };
+  observers[0]([{ target: inside }, { target: { nodeType: 3, parentElement: inside } }]); flush();
+  assert.equal(scans, 0, 'yalnız atlanan alan değişti');
+  observers[0]([{ target: inside }, { target: outside }]); flush();
+  assert.equal(scans, 1, 'alan dışında değişiklik var');
+});

@@ -235,6 +235,29 @@
     byLang[lang] = out;
     return out;
   }
+  /* Sunum Stüdyosu: hücre kartlarının yapısal modeli (HTML değil). Bölgeler
+     tekniğe göre gruplanır, her grubu teknik etiketi izler; hücreyle aynı. */
+  function cellModel(row, value) {
+    const plmId = plmIdOfRow(row);
+    const entry = plmId ? state.cache.get(plmId) : null;
+    if (!entry) return null;
+    const text = String(value == null ? '' : value);
+    if (!text || text !== cachedSummary(entry)) return null;
+    const model = modelFor(entry);
+    if (!model) return null;
+    const en = isEn();
+    return model.parts.map(part => {
+      if (!part.total) return { label: part.label, items: [{ kind: 'none', t: `— ${en ? 'No print' : 'Baskı yok'}` }], total: '' };
+      const byTech = new Map();
+      for (const group of part.groups) { const tech = [...group.techniques].join(' + '); if (!byTech.has(tech)) byTech.set(tech, []); byTech.get(tech).push(group); }
+      const items = [];
+      for (const [tech, groups] of byTech) {
+        for (const group of groups) items.push({ kind: 'chip', t: en ? group.en : group.tr, sub: String(group.count) });
+        if (tech) items.push({ kind: 'tag', t: tech, tone: String(toneOf([...groups[0].techniques][0])) });
+      }
+      return { label: part.label, items, total: String(part.total) };
+    });
+  }
   function aiStatus(entry) {
     const status = entry && entry.ai && entry.ai.status || 'not-needed';
     if (status === 'resolved') return L('LCW AI doğruladı', 'LCW AI verified');
@@ -487,6 +510,7 @@
     openBom,
     summaryFor,
     cellCards,
+    cellModel,
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true });

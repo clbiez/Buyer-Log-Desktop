@@ -18,6 +18,9 @@
 .psSeg{display:inline-flex}
 .psSeg>button{display:grid;place-items:center;min-width:32px;height:30px;padding:0 8px;cursor:pointer}
 .psCustom{display:inline-flex;align-items:center;gap:4px}
+.psChipMode{display:inline-flex;align-items:center;gap:8px}
+.psChipMode[hidden]{display:none}
+.psChipMode .psToggle[hidden]{display:none}
 .psCustom input{width:72px}
 .psBody{display:grid;grid-template-columns:172px minmax(0,1fr);min-height:0}
 .psRail{display:flex;flex-direction:column;gap:10px;padding:10px;overflow:auto;min-height:0}
@@ -40,12 +43,17 @@
 .psBadge .ic{width:8pt;height:8pt}
 .psPin{right:3pt}
 .psMoved{left:3pt}
-.psHandle{position:absolute;width:9px;height:9px}
-.psHandle[data-h="nw"]{left:-5px;top:-5px;cursor:nwse-resize}.psHandle[data-h="ne"]{right:-5px;top:-5px;cursor:nesw-resize}
-.psHandle[data-h="sw"]{left:-5px;bottom:-5px;cursor:nesw-resize}.psHandle[data-h="se"]{right:-5px;bottom:-5px;cursor:nwse-resize}
-.psHandle[data-h="n"]{left:calc(50% - 5px);top:-5px;cursor:ns-resize}.psHandle[data-h="s"]{left:calc(50% - 5px);bottom:-5px;cursor:ns-resize}
-.psHandle[data-h="w"]{top:calc(50% - 5px);left:-5px;cursor:ew-resize}.psHandle[data-h="e"]{top:calc(50% - 5px);right:-5px;cursor:ew-resize}
-.psDocHdr{cursor:text}
+.psHandle{position:absolute;width:10px;height:10px}
+/* Tutamaçlar kartın içinde: kart overflow:hidden olduğundan dışarı taşan kısım tıklanamaz. */
+.psHandle[data-h="nw"]{left:0;top:0;cursor:nwse-resize}.psHandle[data-h="ne"]{right:0;top:0;cursor:nesw-resize}
+.psHandle[data-h="sw"]{left:0;bottom:0;cursor:nesw-resize}.psHandle[data-h="se"]{right:0;bottom:0;cursor:nwse-resize}
+.psHandle[data-h="n"]{left:calc(50% - 5px);top:0;cursor:ns-resize}.psHandle[data-h="s"]{left:calc(50% - 5px);bottom:0;cursor:ns-resize}
+.psHandle[data-h="w"]{top:calc(50% - 5px);left:0;cursor:ew-resize}.psHandle[data-h="e"]{top:calc(50% - 5px);right:0;cursor:ew-resize}
+.psDocHdr{cursor:grab}
+.psArea{pointer-events:none}
+.psArea .psHandle{pointer-events:auto}
+.psAreaGhost{position:absolute;pointer-events:none}
+.psAreaGhost[hidden]{display:none}
 .psGuides{position:absolute;inset:0;pointer-events:none}
 .psGuide,.psInsert,.psMarquee{position:absolute;pointer-events:none}
 .psDragLayer{position:fixed;inset:0;pointer-events:none}
@@ -56,14 +64,16 @@
 .psPop{position:fixed;display:flex;flex-direction:column;gap:8px;width:320px;max-height:min(70vh,560px);padding:12px;overflow:auto}
 .psFieldList,.psScroll{max-height:320px;overflow:auto}
 .psFieldList{display:flex;flex-direction:column;gap:2px}
-.psField{display:flex;align-items:center;gap:8px;padding:4px 6px;cursor:pointer}
+.psField{flex:none;display:flex;align-items:center;gap:8px;padding:4px 6px;cursor:pointer}
 .psField small{margin-left:auto}
+.psSearch{width:100%;box-sizing:border-box}
+.psField[hidden],.psMenu>.tbtn[hidden]{display:none}
 .psGrip{display:grid;place-items:center;width:14px;cursor:grab}
 .psSlider{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 10px}
 .psSlider>input,.psSlider>select,.psSlider>.psSeg{grid-column:1/-1;width:100%}
 .psSlider>.psSeg>button{flex:1}
 .psMenu{display:flex;flex-direction:column;gap:4px}
-.psMenu>.tbtn,.psOptions>.tbtn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;height:auto;min-height:0;padding:8px 10px;text-align:left;white-space:normal}
+.psMenu>.tbtn,.psOptions>.tbtn{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:2px;height:auto;min-height:0;padding:8px 10px;text-align:left;white-space:normal}
 .psTpl{display:flex;align-items:center;gap:6px;padding:4px}
 .psTpl>span{display:flex;flex-direction:column;flex:1;min-width:0}
 .psTplSave{display:flex;gap:6px}
@@ -71,5 +81,7 @@
 .psStatus{display:flex;align-items:center;gap:14px;padding:5px 14px;flex-wrap:wrap}
 .psOptions{display:flex;flex-direction:column;gap:8px;margin:12px 0}
 .psDialogCard{width:min(540px,calc(100vw - 32px))}
+/* Belge çip öğeleri (yalnız yerleşim): presentation-studio-render.js DOC_CSS ile aynı metin. */
+.psC{position:absolute;white-space:pre}.psS{position:absolute;top:0;height:100%;text-align:center}.psP{position:absolute;text-align:center}.psT{position:absolute;top:0;white-space:pre}
 .psPrintFrame{position:fixed;left:-10000px;top:0;width:1px;height:1px;visibility:hidden}
 @media (max-width:900px){.psBody{grid-template-columns:minmax(0,1fr)}.psRail{display:none}.psCanvas{padding:8px 12px 64px}}
