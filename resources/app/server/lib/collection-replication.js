@@ -46,6 +46,47 @@ function envelopeChecksum(value) {
 }
 function envelopeChainChecksum(value) { return checksum({ sha256:value.sha256, parentSha256:value.parentSha256 || null }); }
 function envelopeIdentity(value) { return clean(value && value.chainSha256) || clean(value && value.sha256); }
+/* SOY LİSTESİ (ADR-0001 Aşama 0). Tek parentSha256, ayrı OneDrive aynalarında
+   bir yayımın yerinden edildiğini halefin halefinde gösteremez. Zarf en yakın
+   atadan başlayarak sınırlı bir kimlik listesi taşır. Eski istemcilerin
+   doğruladığı sha256/chainSha256 değişmez; liste kendi özetiyle doğrulanır,
+   tutmazsa yok sayılır (yalnız parentSha256 kalır: temkinli taraf). */
+const ANCESTRY_MAX = 32;
+function envelopeAncestryChecksum(value) { return checksum({ chainSha256: value.chainSha256, ancestry: value.ancestry }); }
+function envelopeAncestry(value) {
+  if (!value) return [];
+  if (Array.isArray(value.ancestry) && value.ancestrySha256 === envelopeAncestryChecksum(value)) return value.ancestry.map(clean).filter(Boolean);
+  return [clean(value.parentSha256)].filter(Boolean);
+}
+function nextAncestry(current) {
+  if (!current) return [];
+  const out = [];
+  for (const id of [envelopeIdentity(current), ...envelopeAncestry(current)]) if (id && !out.includes(id)) out.push(id);
+  return out.slice(0, ANCESTRY_MAX);
+}
+/* BEKLEYEN YAYIM. Bir cihazın yayımı, uzak zincirde onu soyunda taşıyan bir
+   halef görülene kadar onaylanmış sayılmaz: ayrı aynada cihaz kendi dosyasını
+   görür, bulut sonradan başka kopyayı seçebilir. Bekleyen yayım varken onu
+   soyunda taşımayan uzak kopya "yerinden edilmiş" sayılır ve yayımdan önceki
+   tabanla birleştirilir. Yanlış pozitif yalnız fazladan çakışma kaydı üretir;
+   sessiz kayıp üretmez. */
+const PENDING_PUBLICATIONS_MAX = 32;
+const CLEAR_PENDING_PUBLICATIONS = Object.freeze({ pendingPublications: [], prePublishBaseWorkspaceSha256: null });
+function pendingPublicationsOf(ownerStateValue) {
+  return (ownerStateValue && Array.isArray(ownerStateValue.pendingPublications) ? ownerStateValue.pendingPublications : []).map(clean).filter(Boolean);
+}
+function publicationDisplaced(ownerStateValue, envelope) {
+  const pending = pendingPublicationsOf(ownerStateValue);
+  if (!pending.length || !envelope) return false;
+  const latest = pending[pending.length - 1];
+  return envelopeIdentity(envelope) !== latest && !envelopeAncestry(envelope).includes(latest);
+}
+function publicationConfirmed(ownerStateValue, envelope) {
+  const pending = pendingPublicationsOf(ownerStateValue);
+  if (!pending.length || !envelope) return false;
+  const latest = pending[pending.length - 1];
+  return envelopeIdentity(envelope) !== latest && envelopeAncestry(envelope).includes(latest);
+}
 
 const OPTIONAL_SYNC_ERROR_CODES = new Set(['EPERM', 'EINVAL', 'ENOSYS', 'ENOTSUP', 'EOPNOTSUPP']);
 
@@ -416,6 +457,44 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     if (await readBaseSnapshot(ownerId, checksum(workspace))) return;
     await writeJson(file, workspace);
   }
+  /* Yayımdan önceki taban. Yayım kirası altında yeni bir tam kopya yazmak
+     büyük zarfta kirayı uzatırdı: CAS doğrulanmış tabanın dosyası yalnız
+     yeniden adlandırılır (yayımdan sonra normal taban zaten yeniden yazılır).
+     Okumada özet doğrulanır; tutmazsa taban yok sayılır (iki yönlü birleşim). */
+  function prePublishBaseFile(ownerId) { return statePath ? path.join(`${statePath}.bases`, `${safeId(ownerId)}.prepublish.json`) : ''; }
+  async function readPrePublishBase(ownerId, expectedSha256) {
+    if (!clean(expectedSha256)) return null;
+    const file = prePublishBaseFile(ownerId);
+    if (!file) {
+      const raw = volatileBases.get(`${safeId(ownerId)}.prepublish`);
+      const value = raw ? JSON.parse(raw) : null;
+      return value && checksum(value) === expectedSha256 ? value : null;
+    }
+    try {
+      const value = JSON.parse(await fsp.readFile(file, 'utf8'));
+      if (checksum(value) === expectedSha256) return value;
+    } catch (_) {}
+    // Yeniden adlandırma tamamlanmadan kesilmiş olabilir: taban dosyası hâlâ o içerikte olabilir.
+    return readBaseSnapshot(ownerId, expectedSha256);
+  }
+  async function keepBaseAsPrePublish(ownerId) {
+    const file = baseFile(ownerId), target = prePublishBaseFile(ownerId);
+    if (!file) {
+      const raw = volatileBases.get(safeId(ownerId));
+      if (raw) volatileBases.set(`${safeId(ownerId)}.prepublish`, raw);
+      return;
+    }
+    try { await replaceFileWithRetry(file, target, { attempts: 4, baseDelayMs: 20 }); }
+    catch (error) { trace('COLLECTION_REPLICA_PREPUBLISH_BASE_FAILED', { ownerId: clean(ownerId), error: error && (error.code || error.message) }); }
+  }
+  async function mergeBaseFor(owner, envelope) {
+    const state = await ownerState(owner);
+    if (publicationDisplaced(state, envelope)) {
+      trace('COLLECTION_REPLICA_PUBLICATION_DISPLACED', { ownerId: owner, remoteSha256: envelopeIdentity(envelope), pending: pendingPublicationsOf(state).length });
+      return { base: await readPrePublishBase(owner, state.prePublishBaseWorkspaceSha256), displaced: true };
+    }
+    return { base: await readBaseSnapshot(owner, state && state.baseWorkspaceSha256), displaced: false };
+  }
   const PRESERVED_PER_OWNER = 5;
   async function preserveReadOnlyLocal(owner, local) {
     if (!statePath || !local || local.initialized === false) return null;
@@ -432,13 +511,17 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
   async function recordBase(ownerId, envelope, state = 'up-to-date', detail = {}) {
     try { await writeBaseSnapshot(ownerId, envelope.workspace); }
     catch (error) { trace('COLLECTION_REPLICA_BASE_FAILED', { ownerId: clean(ownerId), error: error && error.message }); }
-    return updateOwnerState(ownerId, {
+    const baseWorkspaceSha256 = checksum(envelope.workspace);
+    // Bekleyen yayım yalnız onu soyunda taşıyan bir halefle onaylanır; kendi
+    // dosyasını yeniden görmek onay değildir (geç yerinden edilme).
+    return updateOwnerState(ownerId, current => ({
       state, code: null, message: null,
       baseEnvelopeSha256: envelopeIdentity(envelope),
-      baseWorkspaceSha256: checksum(envelope.workspace),
+      baseWorkspaceSha256,
       remoteRevision: Number(envelope.workspace && envelope.workspace._revision) || 0,
+      ...(publicationConfirmed(current, envelope) ? CLEAR_PENDING_PUBLICATIONS : {}),
       ...detail,
-    });
+    }));
   }
   function conflictError(code, message, detail = {}) {
     return Object.assign(new Error(message), { code, statusCode: 409, ...detail });
@@ -523,8 +606,7 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
       await recordBase(owner, envelope);
       return { synced: true, merged: false, ownerId: owner, revision: Number(envelope.workspace && envelope.workspace._revision) || 0, reason: 'READ_ONLY_ADOPTED' };
     }
-    const state = await ownerState(owner);
-    const base = await readBaseSnapshot(owner, state && state.baseWorkspaceSha256);
+    const { base, displaced } = await mergeBaseFor(owner, envelope);
     const local = workspaces.loadWorkspace(owner);
     const { workspace, conflicts } = mergeCollectionWorkspaces(base, local, envelope.workspace);
     const write = await workspaces.replaceWorkspaceReplica(owner, workspace, { expectedSha256: checksum(local) });
@@ -532,7 +614,9 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
       await recordConflict(owner, conflictError('COLLECTION_REPLICA_CONCURRENT_CHANGE', 'Koleksiyon birleştirilirken yerel kopya değişti; bir sonraki senkronda yeniden denenecek.'));
       return { synced: false, merged: false, ownerId: owner, reason: 'LOCAL_CHANGED_DURING_MERGE', conflict: true };
     }
-    await recordBase(owner, envelope);
+    // Yerinden edilen yayımın düzenlemeleri artık yerelde, yeni uzak tabanın
+    // üstünde duruyor: bekleyen yayım kaydı işini bitirdi.
+    await recordBase(owner, envelope, 'up-to-date', displaced ? CLEAR_PENDING_PUBLICATIONS : {});
     await recordMergeConflicts(owner, conflicts);
     trace('COLLECTION_REPLICA_MERGED', { ownerId: owner, revision: workspace._revision, conflicts: conflicts.length });
     let publication = null, publishError = null;
@@ -611,8 +695,7 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
      kopya bu arada değiştiyse yazılmaz ve yayım beklemede kalır. Kilit sırası
      hub → yerel çalışma alanı → replikasyon durumu; ters yön yoktur. */
   async function mergeWithinLease(owner, current) {
-    const state = await ownerState(owner);
-    const base = await readBaseSnapshot(owner, state && state.baseWorkspaceSha256);
+    const { base, displaced } = await mergeBaseFor(owner, current);
     const local = workspaces.loadWorkspace(owner);
     const { workspace, conflicts } = mergeCollectionWorkspaces(base, local, current.workspace);
     const write = await workspaces.replaceWorkspaceReplica(owner, workspace, { expectedSha256: checksum(local) });
@@ -621,7 +704,7 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     // reconcile() ile aynı sıra: birleşim yerelde yazıldığı anda taban ve
     // çakışmalar kaydedilir. Ardından hub yazımı düşerse kaybeden yerel değer
     // çakışma kaydında kalır ve sonraki senkron doğru tabanla devam eder.
-    await recordBase(owner, current);
+    await recordBase(owner, current, 'up-to-date', displaced ? CLEAR_PENDING_PUBLICATIONS : {});
     await recordMergeConflicts(owner, conflicts);
     // Yayımlanan kopya yerel deponun gerçek içeriğidir. Birleşimin üzerine
     // eklenmiş yerel kayıt (daha yüksek revizyon) onun soyundandır; daha düşük
@@ -629,6 +712,31 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     const reloaded = workspaces.loadWorkspace(owner);
     if ((Number(reloaded && reloaded._revision) || 0) < (Number(workspace && workspace._revision) || 0)) throw changed();
     return { workspace: reloaded, conflicts };
+  }
+  /* Onaylanmamış yayım zinciri boyunca taban, ilk onaylanmamış yayımdan
+     önceki uzak kopyada sabit kalır: aynı cihazın art arda yayımları birlikte
+     yerinden edilebilir. */
+  async function markPendingPublication(owner, current, identity) {
+    const prior = await ownerState(owner);
+    const pending = pendingPublicationsOf(prior);
+    let prePublishBaseWorkspaceSha256 = pending.length ? clean(prior.prePublishBaseWorkspaceSha256) || null : null;
+    let keepBase = false;
+    if (!pending.length && current) {
+      if (prior && prior.baseEnvelopeSha256 === envelopeIdentity(current) && clean(prior.baseWorkspaceSha256)) {
+        prePublishBaseWorkspaceSha256 = clean(prior.baseWorkspaceSha256);
+        keepBase = true;
+      } else {
+        const file = prePublishBaseFile(owner);
+        if (file) await writeJson(file, current.workspace);
+        else volatileBases.set(`${safeId(owner)}.prepublish`, JSON.stringify(current.workspace));
+        prePublishBaseWorkspaceSha256 = checksum(current.workspace);
+      }
+    }
+    await updateOwnerState(owner, {
+      pendingPublications: [...pending, identity].slice(-PENDING_PUBLICATIONS_MAX),
+      prePublishBaseWorkspaceSha256,
+    });
+    if (keepBase) await keepBaseAsPrePublish(owner);
   }
   async function publishOwnerCas(ownerId, { mergeUnderLease = false } = {}) {
     const owner = clean(ownerId); if (!owner) throw Object.assign(new Error('Koleksiyon sahibi zorunludur.'), { code: 'COLLECTION_OWNER_REQUIRED' });
@@ -679,6 +787,11 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
         const envelope = { version: REPLICATION_VERSION, ownerId: owner, parentSha256: current ? envelopeIdentity(current) : null, workspace };
         envelope.sha256 = envelopeChecksum(envelope);
         envelope.chainSha256 = envelopeChainChecksum(envelope);
+        envelope.ancestry = nextAncestry(current);
+        envelope.ancestrySha256 = envelopeAncestryChecksum(envelope);
+        // Hub yazımından ÖNCE: yazım düşerse bekleyen kayıt, uzak kopyayı
+        // yayımdan önceki tabanla birleştirtir (o taban zaten uzak kopyadır).
+        await markPendingPublication(owner, current, envelopeIdentity(envelope));
         await writeJson(target, envelope);
         publishedEnvelope = envelope;
       });
@@ -758,7 +871,9 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
       return { synced: false, ownerId: owner, revision: localRevision, reason: 'LOCAL_NEWER_DIVERGED', conflict: true };
     }
     const pristineLocal = localRevision === 0 && local && local.initialized === false;
-    const localUnchangedSinceBase = Boolean(base && base.baseWorkspaceSha256 === localWorkspaceSha256);
+    // Yerinden edilmiş yayımda taban kendi yayımımızdır: yerel kopya "değişmemiş"
+    // görünür ama düzenlemeleri uzak kopyada yoktur. Körlemesine benimseme kayıptır.
+    const localUnchangedSinceBase = Boolean(base && base.baseWorkspaceSha256 === localWorkspaceSha256) && !publicationDisplaced(base, envelope);
     if (!pristineLocal && !localUnchangedSinceBase) {
       await authorizePublication();
       const merged = await reconcileUntilPublished(owner, envelope, { readOnly: publishReadOnly });
