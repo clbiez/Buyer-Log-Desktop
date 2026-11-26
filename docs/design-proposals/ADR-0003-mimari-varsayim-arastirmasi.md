@@ -1,0 +1,382 @@
+# ADR-0003 · Mimari varsayım araştırması: neyi hızlandırmalı, neyi ortadan kaldırmalı
+
+- **Durum:** Araştırma ve öneri. Uygulama kodu, test, CLAUDE.md veya AGENTS.md değiştirilmedi.
+- **Tarih:** 2026-11-26 · **Kaynak:** `main` @ `d772bab`
+- **Kapsam dışı:** Koleksiyon ortak yazım düzeltmesi (ADR-0001 Aşama 0, `server/lib/collection-replication.js`, sync dosyaları). Burada yalnız referans olarak geçer.
+- **Kanıt kaynakları:** güncel source, `git log` (son 400 first-parent commit), bu oturumda koşulan statik sayımlar ve iki küçük davranış deneyi (scratchpad'de, commit edilmedi), paralel oturumun ölçüm raporu `docs/performance/BASELINE_2026-11.md` (dal `claude/perf-baseline-2026-11`, Linux container + Chromium, **Electron/Windows değil**).
+- **Kanıt etiketleri:** **[Doğrulandı]** source, test, ölçüm veya bu oturumda koşulan deney · **[Muhtemel]** güçlü dolaylı kanıt · **[Hipotez]** sınanmadı · **[Bilinmiyor]** veri yetersiz.
+- **Öncelik sırası (sözlük sırası, ağırlıklı puan yok):** veri bütünlüğü > doğruluk > kararlılık > performans > mimari sadelik > kullanıcı deneyimi. Alt seviyedeki kazanç üst seviyedeki kaybı telafi edemez.
+
+---
+
+## 0 · Özet
+
+1. Buyer Log'un yavaşlığının ve tekrarının büyük kısmı tek bir kökten geliyor: **türetilmiş veri, tek bir yerde ve bir kez üretilmiyor.** Aynı türetme istemcide yapılıyor, sunucuda aynası tutuluyor (17 parite testi var), her satır kaydında tüm modül projeksiyonu yeniden yazılıyor ve aynı "satır değişti" bilgisi üç ayrı mekanizmayla taşınıyor.
+2. İş kuralı çekirdeği (fiyat, transit, öncelik, lisansör) **zaten tek kaynakta** (`public/business-rules.js`, 67 dışa aktarım, 57 tüketici dosyası; `app-main.js`, `parse.js` ve `server.js` yalnız delege ediyor) **[Doğrulandı]**. Tekrar çekirdekte değil; **ilkellerde** (sayı zorlama, kaçış, normalize) ve **mekanizmalarda** (filtre, sorgu yolu, türetme zinciri, projeksiyon güncelleme).
+3. Ölçülen davranış farkı var: 40 sayı zorlama tanımı en az 6 farklı anlam taşıyor (`null`→0 ya da `null`; `"1,5"`→`null` ya da 1,5; `"1.234,56"`→1,234) **[Doğrulandı: deney]**. Sütun filtresinin anlamı da modüle göre değişiyor **[Doğrulandı: source]**.
+4. **Önerilen ilk pilot:** CP satır kaydında **projeksiyon yeniden yazımına duyulan ihtiyacı kaldırmak**. Projeksiyon "değişmez taban + kalıcı satır yama günlüğü" olarak temsil edilir; tam yeniden yazım yalnız boşta sıkıştırma (compaction) olur. Bu, uygulamanın `local-db.js` WAL'ında zaten kanıtlanmış desenin aynısı. Faz 0 davranışı değiştirmez, yalnız gölge eşitliği ölçer (§6).
+
+---
+
+## 1 · Buyer Log bugün neden bu mimariyle çalışıyor
+
+| Kabul | Neden bugün böyle (kanıt) | Zorunlu mu? |
+| --- | --- | --- |
+| Yerel öncelikli; her kullanıcı makinesinde yerel Node/Express sunucusu; paylaşım ortak klasörle (OneDrive/SMB) | Ürünün dağıtım modeli; merkezi sunucu ADR-0001'de altyapı/yetki kararı gerektirdiği için reddedildi **[Doğrulandı: ADR-0001 §4]** | **Zorunlu** (ürün kararı). Bu belge bu kabulü korur. |
+| Portable, bağımlılıksız kurulum; yerel DB tek JSON zarfı + WAL | `server/lib/local-db.js:3-9`: ".db soneki var ama bağımlılıksız JSON zarfı, portable Node kurulumu bağımlılıksız kalsın diye" **[Doğrulandı]**. Bağımlılıklar: `express`, `xlsx` (vendor), `resedit`, `msgreader` | **Zorunlu** (yerel ikili modül yok). Biçim (tek JSON) **tarihsel**. Electron 44'ün Node'unda `node:sqlite` durumu **[Bilinmiyor]** (ADR-0001 §1). |
+| Sunucu Electron'un Node'unda, renderer Chromium | `electron/backend.js` **[Doğrulandı: ADR-0001]** | Zorunlu |
+| Arayüz derleme adımı olmayan klasik script'ler; modüller `window.*` ile bağlanır | `public/index.html` 130 `<script>`, 0 `type="module"`; `package.json` içinde bundler yok **[Doğrulandı]** | **Tarihsel.** Chromium yerel ES modüllerini derleme adımı olmadan destekler ve sayfa Express'ten (http) sunulur **[Muhtemel]**. Bağımlılıksız ilke ES modül kullanımını engellemez. |
+| CP/Siparişler satırı, kaynak (Excel/ASAS) başlığı anahtarlı serbest nesne (`row['Order Code']`); Koleksiyon satırı camelCase (`plmId`, `modelKod`) | Excel'den büyüme; kanonik katman sonradan eklendi (`canonical-fields.js`) | **Tarihsel.** |
+| Türetilmiş alanlar istemcide açılışta yeniden üretilir; sunucu aynası tutulur | `server/lib/read-model/overview-row-prep.js:2-11`: "Projeksiyon bu alanları ham taşır; istemci açılışta yeniden türetir. Karar katmanı türetilmiş değerleri okuduğu için sunucu da aynısını yapmalıdır" **[Doğrulandı]** | **Tarihsel.** JSON `Date` taşıyamadığı için tarih zorlaması istemcide kalmış **[Muhtemel]**; gün ordinal'i (tamsayı) bu kısıtı kaldırır. |
+| Satır kaydı sonrası modül projeksiyonları yeniden yazılır | `server/lib/page-projection-cache.js:377` `runRowRewriteBatch`; `cp-row-patch-log.js:6`: "sayfa önbelleği yeniden yazımı, 30k'da 6–10 sn" **[Doğrulandı: source yorumu]** | **Tarihsel.** Projeksiyon türetilmiş, yeniden üretilebilir bir önbellektir; tam dosya olarak tutulması zorunlu değil. |
+| Ortak klasörde çok yazarlı değiştirilebilir dosyalar + kira | ADR-0001 §1 | **Kaldırılabilir**, ADR-0001'in konusu. |
+
+---
+
+## 2 · Ölçülen envanter
+
+Bu oturumda statik olarak ölçüldü **[Doğrulandı]**, aksi yazmadıkça. Komutlar Ek A'da.
+
+| Gösterge | Değer |
+| --- | --- |
+| `public/app-main.js` | 46.235 satır; 2.575 fonksiyon bildirimi (2.479 üst düzey). Adında filter 105, group 73, render 120 geçen fonksiyon (büyük/küçük harf duyarsız) |
+| `app-main.js` büyümesi | 36.860 (2026-10-09) → 39.403 (10-25) → 40.945 (11-10) → 46.235 (11-26): 48 günde +9.375 satır |
+| `server/server.js` / `server/lib` | 13.615 satır / 277 girdi (332 `.js`, alt klasörler dahil) |
+| `public/` | 283 JS dosyası, ~200 bin satır (vendor dahil) |
+| Testler | 1.540 `*.test.js` (2026-10-09'da 897) |
+| Üst düzey değiştirilebilir durum (`app-main.js`) | 270 satır `let`/`var` bildirimi; `state.*` 35 farklı anahtar, 90 atama noktası; 111 farklı `window.X =` adı (tüm `public/`'te 218) |
+| Tam tablo yeniden çizim tetikleyicileri | `renderCP(` 81, `renderOrders*(` 75, `renderOverview*(` 53 çağrı noktası |
+| Önbellek modülleri | Adında *cache* geçen 7 modül; `server/lib`'de `Map` + cache kullanan 62 dosya |
+| Zamanlayıcı | `setInterval` 28 dosyada 50 çağrı |
+| İşçiler | 4 tarayıcı işçisi + 3 sunucu işçisi; compute havuzu en fazla 2 işçi, okuma modeli işçisi 4 girdi / 768 MiB'lık veri kümesi LRU'su (`read-model-worker.js:20`) |
+| i18n | 7.894 `L(`/`T(` çağrısı, 454 `isEn()?` üçlüsü; **189 yerel `L`/`T`/`isEn` tanımı** |
+
+**Paralel oturumdan alınan ölçümler** (`BASELINE_2026-11.md`, 30k sentetik, 3 koşu medyanı, Linux container). Windows/Electron'u temsil etmez:
+
+| Metrik | Medyan |
+| --- | --- |
+| İlk kullanılabilir ekran: Genel Bakış / Koleksiyon / CP / Siparişler (soğuk) | 1.512 / 1.178 / 4.389 / 17.085 ms |
+| CP kayıt onayı p50 | 29 ms (p95 göstergesi 91) |
+| CP kayıt akışı sırasında Siparişler okuması p50 | 1.851 ms |
+| Son kayıttan projeksiyon yazımlarının bitişi | 3.534 ms |
+| Süreç CPU'su (16 kayıt) | ≈ 5,9 CPU-sn/kayıt (okuma ve yazım ayrıştırılamadı) |
+| Sunucu RSS: boşta → akış sonrası → tepe | 185 → 502 → 1.697 MB |
+| `/api/page-projection/*` çözülmüş yük | orders 78,8 + cp 66,6 + overview 12,2 = 154 MB |
+
+---
+
+## 3 · Tekrar haritası
+
+"Bağımsız uygulama" = kendi mantığını taşıyan tanım. Tek kaynağa delege eden sarmalayıcı sayılmadı.
+
+| # | Mekanizma | Nerede (ölçülen) | Davranış farkı var mı? |
+| --- | --- | --- | --- |
+| T1 | **Sayı zorlama** (`num`, `toNum`, `toNumber`, `parseNumber`…) | 40 tanım / 36 dosya | **Var [Doğrulandı: deney, Ek B].** `app-main.js:548` `toNum(null)=0` ama `toNum(undefined)=null`; `app-main.js:24761` `''`→`null`, `:24732` `''`→0; `backlog-delivery-engine` her geçersizi 0 yapar; `postfob`/`tryd` yalnız `number` kabul eder; `fx-calculation-engine` `"1,5"`→1,5 ama `"1.234,56"`→**1,234**, `"12abc"`→12; `collection-price-drawer` `NaN` döner. Bu girdilerin üretimde gerçekten bu fonksiyonlara ulaşıp ulaşmadığı **[Bilinmiyor]**. |
+| T2 | **HTML kaçışı** (`esc`, `escapeHtml`…) | 94 tanım / 92 dosya | Çoğu eşdeğer. **2 dosyada** global `escapeHtml` yoksa **kaçışsız** fallback: `plm-image-package-import.js:23`, `plm-operations.js:58` **[Doğrulandı: source]**. Çağrı anında global'in her zaman var olduğu **[Muhtemel]**; istismar edilebilirlik **[Hipotez, düşük]**. |
+| T3 | Metin normalizasyonu (`norm`, `normKey`, `turkNorm`…) | 31 tanım / 28 dosya; `toLocale*Case('tr')` 121 dosyada | **[Bilinmiyor]**, ölçülmedi. |
+| T4 | Klonlama / hash / parmak izi | 63 tanım / 58 dosya; 72 / 55 | Önemsiz olması **[Muhtemel]**; ölçülmedi. |
+| T5 | **Sütun filtresi anlamı** | CP/Siparişler: `prepareColFilter` (aralık, sayısal kural, revizyon modu, değer listesi). Koleksiyon: `passesKolColFilters` (`app-main.js:30931`, yalnız küme eşitliği). Genel Bakış: `passesOvDimFilters` (`:13900`, `norm(row[col])` eşitliği). Sunucu: `read-model-query.js` | **Var [Doğrulandı: source].** Koleksiyonda sayısal/aralık/revizyon filtresi yok. Bunun bilinçli bir ürün kararı olup olmadığı **[Bilinmiyor]** → ürün sahibi. |
+| T6 | Filtre durumu kalıcılığı | `save/load{Cp,Orders,Ov}DimFilters` (3 çift) + Koleksiyon ayrı + `core*FilterState` | Anahtar ve biçim farkı **[Muhtemel]**. |
+| T7 | **Sorgu yolu ikiliği** | İstemci tam satır yolu (`filteredCP`, `filteredOrders`) ile sunucu okuma modeli (`/api/read-model/{cp,orders}/{query,facets}`), ikisi de varsayılan açık ve geri düşmeli | Fark **yasaklanmış**, çünkü sunucu türetilmiş sütunları bilmiyor ve istemci yola düşüyor: `CP_RM_CLIENT_DERIVED_KEYS` = Supp. FOB, Licensor, Ex→Retail, LT, PLM Numune, Fabric (PLM) + 4 sütun tipi (`app-main.js:11351`); Siparişler'de 5 anahtar (`:12252`). Eşitliği **17 parite testi** koruyor. |
+| T8 | **Türetme zinciri** | İstemci `normalizeCPDates` → `applyCpApprovalDate` → `rebuildCpLogisticCaches` (`app-main.js:1893`, `:1902`, `:7554`) ile sunucu aynası `overview-row-prep.js` | Fark yok, parite testiyle kilitli **[Doğrulandı: test var; bu oturumda koşulmadı]**. Bedeli iki uygulama ve tarayıcıda açılışta 30k satırın yeniden türetilmesi. |
+| T9 | **`computePriorityFlags` girdi derlemesi** (13 alan) | 4 bağımsız nokta: `app-main.js:1055`, `server/lib/parse.js:2127`, `read-model/cp-computed-task.js:192`, `cp-readiness-engine.js:322` | Kural tek kaynakta, **girdi eşlemesi dört yerde**. LT: istemci `daysBetween`, sunucu ordinal farkı; ikisi de ordinal tabanlı, yani eşdeğer **[Doğrulandı: source]**. `rules` istemcide global `state.overrides.transitRules`, sunucuda parametre. `today` her yerde `new Date()`. |
+| T10 | Tarih zorlama (`coerceDateLoose`) | `app-main.js:1848` ile `read-model-query.js:115` | **Fark bulunmadı [Doğrulandı: deney, Ek B]**: 120.019 örnek × 3 saat dilimi. **Sınır:** istemci `window.XLSX.SSF` yüklüyse Excel seri tarihinde başka dala geçer; bu dal test edilemedi **[Bilinmiyor]**. |
+| T11 | **"Satır değişti" bilgisinin taşınması** | (a) tam modül yeniden yazımı `runRowRewriteBatch`, (b) bellek içi CP yama günlüğü `cp-row-patch-log.js` (TTL 15 dk, süreç içi), (c) canlı satır yaması `liveRowPatchesFor` | Üçünün de "artımlı güvenli" kuralı aynı (`server.js:10445` `rowPatchIncrementalSafe`). **Tarih temizleme** (`null`/`''`) üçünde de tam yeniden yüklemeye düşüyor **[Doğrulandı: source]**. |
+| T12 | i18n yardımcıları | 189 yerel `L`/`T`/`isEn` tanımı (ör. `app-main.js:39` `const L=(tr,en)=>appLang==='en'?en:tr`) | Fark **[Bilinmiyor]**, düşük risk. Bekçi testi kapsıyor. |
+| T13 | Satır anahtar temsili | CP/Siparişler başlık anahtarlı (`app-main`'de yalnız çok kelimeli başlıkla ≥210 doğrudan erişim; `'Order Code'` 63 kez), Koleksiyon camelCase; köprü `BLCanonicalFields.canonicalValue` (28 çağrı) | İki temsil var. Kanonik katman köprü kuruyor ama temsili tekleştirmiyor. |
+
+**Tek kaynakta olanlar [Doğrulandı]:** `roundHalfUp`, `normalizeTransitDelType`, `calculateSuppFobWithRule`, `resolveTransitDays`, `resolveExFactoryDate`, `computePriorityFlags`. `app-main.js`, `parse.js`, `server.js`, `resource-rule-service.js` ve `open-costing.js` bunlara yalnız delege ediyor. Para dışı yuvarlamada `Math.round(x*100)/100` 11 dosyada var; para hesabını etkileyen tek örnek `lfl.js:1736` medyanı **[Muhtemel]**.
+
+---
+
+## 4 · Ölçütler tablosu
+
+| Ölçüt | Nasıl ölçüldü | Değer | Etiket |
+| --- | --- | --- | --- |
+| Aynı iş kuralının bağımsız uygulama noktası | Statik sayım (§3) | Öncelik girdisi 4; CP türetme zinciri 2; sütun filtresi anlamı 4; sayı zorlama 40 tanım, ≥6 anlam | Doğrulandı |
+| Bir özellik değişikliğinde dokunulan dosya | `git log --first-parent -400`, 300+ dosyalık toplu commitler hariç (399 commit) | Tüm dosyalar medyan 9 (p90 29); runtime kodu medyan 2 (p90 10). `(P1)/(P2)` etiketli 47 özellik/düzeltme: runtime medyan **6**, p90 12 | Doğrulandı |
+| Sıcak dosya yoğunlaşması | Aynı örneklem | `app-main.js` commitlerin **%44**'ünde (176/399), `index.html` %18, `server.js` %18; istemci ve sunucu JS'i aynı committe %26 (102) | Doğrulandı |
+| Modüller arası bağımlılık | Script etiketi / global adı sayımı | 130 klasik script, 218 `window.X` adı; bağımlılık grafiği statik olarak çıkarılamıyor (yükleme sırası ve global'lerle örtük) | Doğrulandı (sayım); grafik Bilinmiyor |
+| Paylaşılan değiştirilebilir global durum | §2 | 270 üst düzey `let`/`var` satırı; `state` 35 anahtar / 90 yazım noktası | Doğrulandı |
+| Kullanıcı işleminin tetiklediği gereksiz hesaplama | BASELINE §4 + source | Tek satır kaydı → modül başına onlarca MB JSON çöz/karşılaştır/gzip/yaz; ≈5,9 CPU-sn/kayıt (ayrıştırılmamış); okuma, yazımın bitmesini bekliyor (p50 1,85 sn) | Boyutlar ve süreler Doğrulandı; tam payı Muhtemel |
+| Bellekteki gereksiz kopyalar | Source okuma | Aynı satırların ≥5 kopyası: sunucu runtime kaynağı, disk projeksiyonu, okuma modeli işçisi LRU'su (≤768 MiB), compute işçileri (≤2), renderer `state.cp`/`state.orders` (geri düşüş yolunda), Genel Bakış row-prep kopyası. RSS tepe 1,7 GB (kayıt akışı), 2,6 GB (erp-readmodel) | Kopya sayısı Muhtemel; RSS Doğrulandı |
+| Bağımsız test edilebilirlik | Test dosyası sınıflaması | 1.540 testin **628**'i `app-main.js` kaynağını okuyor; 262'si fonksiyon *kaynağını ayrıştırıp* vm'de çalıştırıyor (`tests/helpers/app-main-functions.js`); ~366'sı kaynak metin sözleşmesi. Çıkarıcı bile gizli global'lere takıldı (`_isoDayCache`, `window.XLSX`, Ek B) | Sayım Doğrulandı; "366 yalnız metin" sınıflaması Muhtemel |
+| Hata yayılma alanı | Yapı | `app-main.js` tek klasik script: bir sözdizimi ya da üst düzey çalışma hatası tüm modülleri düşürür | Muhtemel (denenmedi) |
+| Yeni özellik geliştirme maliyeti | Doğrudan ölçüm yok | Vekil gösterge: P1/P2 commit başına 6 runtime dosyası ve %44 `app-main` çakışma yüzeyi | Bilinmiyor (vekil Doğrulandı) |
+
+---
+
+## 5 · On varsayım × üç seviye
+
+Sıralama §0'daki öncelik sırasına göre etkiyi izler. Her varsayımda **S1** optimizasyon, **S2** mimari dönüşüm, **S3** problemin ortadan kaldırılmasıdır.
+
+### V1 · "Bir satır değişince türetilmiş projeksiyon dosyaları yeniden yazılmalıdır"
+
+- **Neden böyle:** Projeksiyon modül başına tek bir gzip JSON (`page-projection-cache.js`). Artımlı satır yaması (`projection-row-patch.js`, bu klonun geçmişi 2026-10-09'dan önceye inmiyor) var, ama yama sonucu yine **tüm modül dosyası** olarak yazılıyor. #1096 (2026-11-20) `cp-row-patch-log.js` ile okumanın yazımı beklememesi için ikinci, bellek içi bir yol ekledi **[Doğrulandı: source + git]**.
+- **Zorunlu mu:** Hayır, **tarihsel**. Projeksiyon türetilmiş ve yeniden üretilebilir bir önbellektir. Doğruluk kaynağı `overrides.json` ve kaynak verisidir.
+- **S1:** Gzip seviyesini düşürmek, değişmeyen modülü atlamak (kısmen var: yalnız `changed`), toplu yazım (`ROW_REWRITE_MAX_BATCH` var).
+- **S2:** Projeksiyonu satır bloklarına (shard) bölmek; yalnız değişen bloğu yazmak.
+- **S3:** **Projeksiyon = değişmez taban + kalıcı, sıralı satır yama günlüğü.** Kayıt yalnız günlüğe bir satır ekler. Okuyucular (sayfa projeksiyonu, okuma modeli işçisi, canlı olay) aynı günlüğü uygular. Tam yeniden yazım yalnız boşta ya da günlük eşiği aşınca **sıkıştırma** olur. Bu, `local-db.js:453-512` WAL'ının aynı deseni: "50.000 satırda küçük yazım 207 ms" sorununu orada bu desen çözdü. Böylece T11'deki üç mekanizma tek günlüğe iner; `cp-row-patch-log`'un süreç içi TTL'li zinciri ve "zincir koptu → gerçek nesli bekle" yolu gereksizleşir. Ek S3: tarih temizlemeyi açık bir **temizlendi** değeriyle temsil etmek, `rowPatchIncrementalSafe`'in `null`/`''` istisnasını, yani tam yeniden yüklemeye düşüşü kaldırır.
+- **Doğrulama (Goodhart'a karşı):** Gölge modda her kayıtta `taban+günlük` sonucunun satır özeti, tam yeniden yazımın özetiyle karşılaştırılır (`cp-row-patch-log` `settle` sayaçları zaten bu iş için var). Özellik tabanlı rastgele düzenleme dizileri: aynı satıra ardışık yazım, no-op, bağlam (`contextHash`) değişimi, transit kuralı değişimi, yerel gün dönümü, kayıt ile sıkıştırma arasında `kill -9`, eşzamanlı iki sekme. Mevcut testlerin kapsamadığı durum: günlük ile taban nesli uyuşmadığında okuyucunun ne yaptığı.
+- **Beklenen kazanım:** Kayıt başına modül yeniden yazımı ortadan kalkar; okuma yazımı beklemez. Ölçülmüş taban: 5,9 CPU-sn/kayıt, okuma p50 1,85 sn, yerleşme 3,5 sn, RSS tepe 1,7 GB. Ne kadar düşeceği **[Hipotez]**, Faz 1'de L2 ile ölçülür.
+- **Risk:** Doğruluk (yanlış görüntü). Veri kaybı riski yok, çünkü kaynaklar dokunulmadan kalır ve projeksiyon her zaman yeniden üretilebilir. Günlük ve taban nesil eşleşmesi kritik.
+- **Geri alınabilirlik:** Yüksek. Bayrak kapanınca bugünkü yeniden yazım yolu döner; günlük silinebilir türetilmiş veridir.
+
+### V2 · "Türetilmiş alanlar okuma anında (istemcide) yeniden türetilir, sunucu aynasını tutar"
+
+- **Neden böyle:** `overview-row-prep.js:8-11` (yukarıda alıntı). JSON'da `Date` yok, istemci tarih nesnesiyle çalışıyor. `applyCpApprovalDate` (`app-main.js:1902`) `row['Ex-factory']`'yi **yerinde** değiştiriyor ve ham değeri `_asasExFactory`'ye taşıyor. Aynı alan adı bağlama göre iki farklı anlam taşıyor **[Doğrulandı]**.
+- **Zorunlu mu:** Hayır. Tarih için gün ordinal'i (tamsayı) okuma modelinde zaten kullanılıyor (`dateOrdinal`).
+- **S1:** Türetmeyi işçide yapmak; yalnız görünür satırları türetmek.
+- **S2:** Türetme zincirini paylaşılan saf bir UMD modülüne çıkarmak (`business-rules.js` gibi). İstemci ve sunucu aynı kodu çalıştırır, parite testi birim testine dönüşür.
+- **S3:** **Türetme projeksiyon üretiminde bir kez yapılır; istemci türetmez.** Türetilmiş değerler ayrı adlı alanlar olarak taşınır (ör. `exFactoryAsas` ve `exFactoryEffective`). Böylece "aynı ad, iki anlam" durumu temsil edilemez hale gelir. `CP_RM_CLIENT_DERIVED_KEYS` listesi boşaldıkça istemci tam satır yoluna düşmez (V3) ve 17 parite testinin ihtiyacı ortadan kalkar.
+- **Doğruluk sınırı:** Türetme **ortam girdileri** okuyor: `computeFlags` `new Date()` ve global `state.overrides.transitRules` okuyor (`app-main.js:1054-1064`) **[Doğrulandı]**. Bir kez türetmek, bu girdilerin anahtar olarak açıkça modellenmesini gerektirir. `derived-input-keys.js` yerel günü ve override'ları zaten anahtara katıyor. Dil, kullanıcı tercihi, closure içindeki config gibi diğer girdiler satır satır denetlenmeli. Sunucu ve renderer aynı makinede çalıştığı için saat dilimi farkı olmaz; gece yarısı dönümü olur.
+- **Doğrulama:** Faz 0'da istemci türetmesini gölgede çalıştırıp sunucu değerleriyle satır satır karşılaştırmak. Gün dönümü, saat dilimi ve `XLSX` yüklü/yüksüz yollarda fuzz (T10'daki sınır).
+- **Kazanım:** Tek uygulama, açılışta 30k satırın istemcide türetilmemesi, okuma modeli kapsamının genişlemesi. Süre etkisi **[Hipotez]**.
+- **Risk:** Orta. 10 `computeFlags` çağrı noktası ve yerinde değiştirmeye dayanan kod var.
+- **Geri alınabilirlik:** Alan alan yapılırsa yüksek (bir alan, bir bayrak).
+
+### V3 · "Modül verisi arayüze tam satır kümesi olarak gelmelidir"
+
+- **Neden böyle:** Tarihsel `/api/data/*` ve `page-projection` tam yük (154 MB). Okuma modeli pencereli yolu (#1076, #1078) bu varsayımı CP ve Siparişler için **kısmen kaldırdı** ama geri düşüş koşulları var: kaydedilmemiş düzenleme, kısmi görünüm, türetilmiş sütun filtreleri ve pencere satırlarında düzenleme ("alt PR 3") **[Doğrulandı: `app-main.js:11330-11348`, `:12231-12245`]**.
+- **Zorunlu mu:** Hayır. Geri düşüşlerin çoğu V2'nin sonucu.
+- **S1:** Tam yükü işçide çözmek, gzip aktarımı (var).
+- **S2:** Pencereli yolu düzenlemeye genişletmek.
+- **S3:** **Arayüz yalnız pencere + düzenleme tamponu tutar.** Geri düşüş listesi V2 ile boşaltılır ve istemci tam satır yolu kaldırılır. Sorgu yolu ikiliği (T7) böylece biter.
+- **Doğrulama:** Her geri düşüş nedeni için sayaç (`legacyReason` alanı zaten var). Saha telemetrisi yerine yerel, anonim 30k fixture'da neden dağılımını ölçmek.
+- **Kazanım:** Siparişler soğuk açılışı (17 sn) ve renderer belleği. Ne kadar olacağı **[Hipotez]**.
+- **Risk:** Orta-yüksek (düzenleme UX'i). **Geri alınabilirlik:** Mevcut anahtarlar (`BL_CP_READ_MODEL`, `BL_ORDERS_READ_MODEL`) sayesinde yüksek.
+
+### V4 · "Önbellek geçerliliği içerik hash'iyle kanıtlanmalıdır"
+
+- **Neden böyle:** `derived-input-keys.js:2-5` "loadedAt içerik kimliği sayılmaz". Kaynak tümüyle `JSON.stringify` + SHA-256'dan geçiyor. Yorum: "60k satırda 1,5–2,3 sn'lik tek olay döngüsü bloğu", bu yüzden kooperatif sürüm yazılmış **[Doğrulandı: source yorumu; bu ADR'de ölçülmedi]**.
+- **Zorunlu mu:** Kısmen. Hash dışarıdan gelen ve beyan edilmeyen değişikliği yakalar, ki bu doğruluk lehinedir. Ama yalnız **hash'lenen** girdiyi görür: saat, yerel gün (eklenmiş), dil, config, closure ve global okumaları görmez (V2'deki `transitRules` örneği).
+- **S1:** Kooperatif hash (var), WeakMap ile tekrar önleme (var).
+- **S2:** Kaynak yüklenirken bir kez hash'leyip kaynak nesnesine iliştirmek.
+- **S3:** **Kaynak değişimi yalnız bilinen yazım sınırlarından geçer** (yenileme içe aktarımı, override yazımı, kural değişimi). Bu sınırlarda monoton bir **nesil** artırılır ve anahtar `(kaynak nesli, override nesli, ortam girdileri)` olur, içerik hash'i gerekmez. Hash yalnız gölge denetçi olarak ve seyrek çalışır.
+- **Doğruluk sınırı:** Nesil sayacı, beyan edilmemiş bir yazım yolunu **kaçırır**. Hash de beyan edilmemiş bir *girdiyi* kaçırır. İkisi de "izlenen katman dışını" görmez. Bu yüzden S3 tek başına güvenli değil. Gölgede hash ve nesil birlikte koşmalı, uyuşmazlık sayacı sıfır olmadan geçilmemeli.
+- **Kazanım:** Ana iş parçacığı blokları. Değeri **[Bilinmiyor]**, ölçülmeli. **Risk:** Doğruluk (bayat önbellek). **Geri alınabilirlik:** Yüksek.
+
+### V5 · "Eksik, boş ve sayısal değerleri her tüketici kendi yorumlar"
+
+- **Neden böyle:** Modüller bağımsız yazılmış (T1: 40 tanım, ≥6 anlam). `''`→0 ile `''`→`null` farkı toplamları ve ortalamaları değiştirir **[Doğrulandı: deney]**. Üretimde etkisi **[Bilinmiyor]**.
+- **Zorunlu mu:** Hayır.
+- **S1:** Tek `num()` yardımcısına geçmek. Ama farklı anlamları zorla eşitlemek davranış değiştirir, bu yüzden S1 tek başına riskli.
+- **S2:** Tipli okuyucular (`readNumber(row, canonicalId)`) kanonik alan tanımından tip alır.
+- **S3:** **Değer, içe aktarım sınırında bir kez sınıflandırılır:** `Değer(n) | Yok | Bilinmiyor (+kaynak)`. Tüketici ham dizeyi hiç görmez ve "boş mu, sıfır mı" sorusu her tüketicide ayrıca sorulmaz.
+- **Not:** Bu yön paralel oturumda pilot olarak yürüyor ("Veri sözleşmesi pilotu: Bilinmiyor/Yok/Değer+Kaynak"). Bu ADR onu yineleme yerine referans alır. T1 matrisi o pilot için bir girdi olabilir.
+- **Doğrulama:** Her tüketicide eski ve yeni okuyucu çıktısını anonim 30k fixture üzerinde fark raporuyla karşılaştırmak. Fark çıkan her yer bir ürün kararıdır.
+- **Risk:** Doğruluk. Bugünkü bazı toplamlar bilinçli olarak 0 kabul ediyor olabilir. **Geri alınabilirlik:** Tüketici tüketici ilerlenirse yüksek.
+
+### V6 · "Satır, kaynak başlığı anahtarlı serbest bir nesnedir"
+
+- **Neden böyle:** Excel kökeni. CP/Siparişler başlık anahtarlı, Koleksiyon camelCase (T13). `canonical-fields` + module binding sonradan köprü olarak geldi **[Doğrulandı]**.
+- **Zorunlu mu:** Hayır, ama **en pahalı** dönüşüm bu.
+- **S1:** Kanonik okuma yardımcısının kapsamını artırmak (CLAUDE.md §4 bunu zaten istiyor).
+- **S2:** Okuma katmanında kanonik görünüm (proxy/adapter).
+- **S3:** İçe aktarım sınırında satır **kanonik ID anahtarlı** üretilir. Kaynak başlığı yalnız eşleme ve görüntü meta verisidir. Ham başlık eşleştirmesi mimari olarak imkânsız hale gelir.
+- **Risk:** Yüksek: geniş etki alanı, kayıtlı görünümler, formüller, dışa aktarım başlıkları. **Öneri:** Pilot değil. V2'de yeni türetilmiş alanlar **kanonik adla** doğsun; temsil zamanla ve kendiliğinden göç etsin.
+
+### V7 · "Her modül kendi tablo davranışını (filtre, kalıcılık, sorgu) uygular"
+
+- **Neden böyle:** Modüller farklı zamanlarda eklendi (T5, T6). Paylaşılan parçalar sonradan çıkarıldı (`table-search-*.js`, `quick-filter-groups.js`).
+- **Zorunlu mu:** Hayır. Davranış farklarının bir kısmı **ürün kararı** olabilir (§7).
+- **S1:** Ortak yardımcıları daha çok modülde kullanmak.
+- **S2:** Tek tablo denetleyicisi; modül yalnız kolon şeması ve veri kaynağı verir.
+- **S3:** **Filtre anlamı kolon tipinden türetilir.** Modül filtre *kodu* yazmaz, yalnız kolonu tipiyle beyan eder. Aynı filtre tanımı istemcide ve `read-model-query`'de aynı yorumlayıcıyla çalışır. Böylece T5, T6 ve T7 birlikte kapanır.
+- **Doğrulama:** Mevcut filtre durumlarının (kayıtlı görünümler, `BLStorage`) yeni yorumlayıcıyla aynı satır kümesini verdiğini anonim fixture üzerinde kanıtlamak. Modüller arasındaki bilinçli farklar önce ürün sahibine listelenir.
+- **Risk:** Orta (kullanıcı alışkanlığı). **Geri alınabilirlik:** Modül modül yapılırsa yüksek.
+
+### V8 · "Derleme adımı olmadığı için modüller global ortam üzerinden bağlanmak zorundadır"
+
+- **Neden böyle:** 130 klasik script, 218 `window.X`. `app-main.js` %44 committe değişiyor ve 48 günde 9.375 satır büyüdü **[Doğrulandı]**.
+- **Zorunlu mu:** **Hayır, tarihsel.** Yerel ES modülleri (`<script type="module">`, import map) derleme adımı ve bağımlılık gerektirmez **[Muhtemel; Electron'da denenmedi]**.
+- **S1:** `app-main.js`'ten yeni dosyalara taşıma (bugünkü gidişat).
+- **S2:** Yeni kodu ES modülü olarak yazmak ve açık import kullanmak.
+- **S3:** **Değişikliğin etki alanını yapıyla sınırlamak:** her özellik kendi durumunun sahibidir ve dışarıya yalnız açık API verir. Global'e yazmak lint ile yasaklanır (yeni dosyalar için). Bağımlılık grafiği statik olur; "bu değişiklik neyi etkiler" sorusu ölçülebilir hale gelir.
+- **Doğrulama:** Sıcak dosya oranını (`app-main` %44) ve P1/P2 commit başına runtime dosya medyanını (6) her çeyrek yeniden ölçmek. Hedef: oranın düşmesi; satır sayısı hedef değildir.
+- **Risk:** Yükleme sırası ve script sıralamasına bağlı mevcut sözleşmeler (`tests/helpers/script-loading.js`). **Geri alınabilirlik:** Dosya başına.
+
+### V9 · "Regresyon, kaynak metin sözleşmeleriyle önlenir"
+
+- **Neden böyle:** `app-main.js` Node'da bütün olarak çalıştırılamıyor (`app-main-functions.js:4-9`). 628 test bu kaynağı okuyor, 262'si fonksiyonu kaynaktan ayrıştırıp çalıştırıyor **[Doğrulandı]**.
+- **Zorunlu mu:** Hayır, V8'in sonucu.
+- **Goodhart riski:** Metin sözleşmesi davranışı değil **yazımı** doğrular. Davranışı koruyan bir yeniden düzenlemeyi kırmızıya çevirir, davranışı bozan ama metni koruyan değişikliği yeşil geçirir. Bu oturumdaki deney, çıkarılan fonksiyonun gizli global'lere (`_isoDayCache`, `window.XLSX`) bağlı olduğunu gösterdi. Test, üretimdeki ortamı değil, verilen stub'ı test ediyor.
+- **S1:** Sözleşme testlerini birleştirmek ve hızlandırmak.
+- **S2:** Saf hesapları modüllere taşıyıp canlı birim testine geçmek.
+- **S3:** **Davranış, saf ve import edilebilir modüllerde toplanır.** Regresyon özellik tabanlı testle ve modüller arası parite testiyle korunur. Kaynak metin sözleşmesi yalnız gerçekten metinsel olan değişmezlerde kalır (i18n bekçisi, script sırası, güvenlik işaretleri).
+- **Doğrulama:** Mutasyon denemesi. Hedef fonksiyonda küçük bir davranış değişikliği yapılır ve kaç testin yakaladığına bakılır. Davranışı koruyan bir yeniden adlandırma yapılır ve kaç testin yanlışlıkla kırıldığına bakılır. **[Bilinmiyor]**, koşulmadı.
+- **Risk:** Koruduğu regresyon bilinmeden test silinmez (CLAUDE.md §3 adım 7). Dönüşüm yalnız, eşdeğer davranış testi eklendikten sonra eski sözleşmenin yerine geçer. **Geri alınabilirlik:** Yüksek.
+
+### V10 · "Ortak klasörde çok yazarlı değiştirilebilir dosyalar kira ile korunabilir"
+
+- **Kapsam dışı; yalnız referans.** ADR-0001 bu varsayımı **kaldırılabilir** olarak sınıflandırdı (S3: tek yazarlı, değişmez, HLC sıralı olaylar). Aşama 0 başka oturumda sürüyor. Bu belge ilgili dosyalara dokunmaz.
+- **Bu belgeye bağı:** V1'in önerdiği "değişmez taban + günlük" deseni ADR-0001 ve `local-db` WAL'ı ile **aynı ilke**. Üç ayrı yerde kanıtlanmış olması, desenin yeni bir icat olmadığını, uygulamanın kendi ilkesi olduğunu gösteriyor.
+
+### Özet tablo
+
+| # | Varsayım | Sınıf | Birincil öncelik ekseni | S3 kazancı | Risk |
+| --- | --- | --- | --- | --- | --- |
+| V1 | Satır kaydı projeksiyonu yeniden yazdırır | **Kaldırılabilir** | Kararlılık, performans | Yüksek (ölçülü maliyet) | Düşük-orta (türetilmiş önbellek) |
+| V2 | Türetme istemcide + sunucu aynası | **Kaldırılabilir** | Doğruluk | Yüksek | Orta |
+| V3 | Arayüz tam satır alır | **Kısmen kaldırıldı; kaldırılabilir** | Performans | Yüksek | Orta-yüksek |
+| V4 | Önbellek içerik hash'iyle kanıtlanır | **Kısmen zorunlu** | Doğruluk/performans | Orta | Orta |
+| V5 | Her tüketici değeri kendi yorumlar | **Kaldırılabilir** (paralel pilot) | Doğruluk | Yüksek | Orta |
+| V6 | Satır başlık anahtarlı serbest nesne | **Kaldırılabilir, pahalı** | Doğruluk/sadelik | Yüksek | Yüksek |
+| V7 | Modül başına tablo davranışı | **Kaldırılabilir** (ürün kararı gerekebilir) | Doğruluk/sadelik | Orta | Orta |
+| V8 | Global ortam üzerinden bağlanma zorunlu | **Tarihsel; kaldırılabilir** | Kararlılık/sadelik | Orta (birikimli) | Düşük (yeni kodda) |
+| V9 | Regresyon metin sözleşmesiyle önlenir | **Kaldırılabilir** (V8'e bağlı) | Kararlılık | Orta | Düşük |
+| V10 | Çok yazarlı dosya + kira | **Kaldırılabilir** (ADR-0001) | Veri bütünlüğü | Çok yüksek | Kapsam dışı |
+
+**Zorunlu kalan kabuller:** yerel öncelikli dağıtım ve ortak klasör, bağımlılıksız portable kurulum, Electron/Node çalışma zamanı, tek şirket içi AI yolu, TR/EN. Bunlar korunur. Önerilerin hiçbiri bunları gevşetmez.
+
+---
+
+## 6 · Önerilen ilk pilot: CP satır kaydında projeksiyon yeniden yazımını kaldırmak (V1)
+
+**Neden bu:** Ölçülmüş en büyük maliyet bu. BASELINE §5 de bunu 1 numaralı aday sayıyor. Hedeflenen veri türetilmiş ve yeniden üretilebilir, bu yüzden veri kaybı riski yapısal olarak yok. Desen uygulamanın içinde zaten kanıtlanmış (local-db WAL). Gölge altyapısının bir kısmı mevcut (`cp-row-patch-log` `settle` sayaçları). Kapsam dar: yalnız CP satır kaydı ve yalnız `rowPatchIncrementalSafe` yamaları. ADR-0001'in dosyalarına ve sync yoluna dokunmaz.
+
+**Neden diğerleri değil:** V5 paralel oturumda yürüyor. V2 ve V7 daha geniş etki alanına sahip ve ürün kararı gerektirebilir. V6 pahalı. V10 kapsam dışı.
+
+**Daha düşük riskli alternatif:** Ürün sahibi daha küçük bir adım isterse V2'nin alt kümesi seçilebilir: **Ex→Retail ve LT'yi projeksiyonda bir kez üretmek.** Bu iki alan saf tarih farkıdır (`OPD`, `Ex-factory`, `Retail Date`, kurallar). İkisi de CP ve Siparişler geri düşüş listelerinden çıkar. Kazancı küçük, riski düşük.
+
+**Risk sınıfı:** P1 (geniş kapsamlı performans/güvenilirlik). Performans kademesi **L2**. İkinci model incelemesi Faz 1 diff'inde değerlendirilir.
+
+### Faz 0 · Gölge ölçüm (davranış değişmez)
+
+- Her CP satır kaydında `taban + yama günlüğü` sonucunun etkilenen satır özetini, tam yeniden yazımın (`settle`) ürettiği özetle karşılaştır. Sayaçlar: `settledOk`, `settledFailed`, kayıt başına yeniden yazılan bayt ve modül sayısı. Bu sayaç, BASELINE §3'te eksikliği yazılan "tek siparişte yeniden hesaplanan iş miktarı" ölçümünü de sağlar.
+- **Kabul:** `benchmark-cp-save-flow.js --rows 30000` ve özellik tabanlı rastgele düzenleme üretecinde (≥10.000 düzenleme; aynı satıra ardışık yazım, no-op, bağlam ve kural değişimi, yerel gün dönümü, iki sekme, kayıt ile yeniden yazım arasında süreç öldürme) **`settledFailed = 0`**. Mevcut CP kayıt testleri geçer. Kayıt onayında L2 gerileme yok.
+
+### Faz 1 · Bayrakla geçiş
+
+- Yama günlüğü kalıcı olur: kullanıcı başına, projeksiyon nesline bağlı, append-only, kayıt sırası numaralı. Sayfa projeksiyonu, okuma modeli işçisi ve canlı olay aynı günlüğü tüketir. Okuma `pendingRewritesSettled`'ı beklemez. Tam yeniden yazım boşta ya da eşik aşılınca sıkıştırma olarak çalışır.
+- **Kabul (L2, BASELINE ile aynı script ve ortam, ≥3 dönüşümlü çift):**
+  - Veri bütünlüğü ve doğruluk: Faz 0 sayaçları sıfır kalır. `kill -9` sonrası açılışta sunulan projeksiyon, sıfırdan tam üretimle bayt bayt değilse **satır özeti düzeyinde** eşittir.
+  - Kararlılık: sunucu RSS tepesi tabanı (1.697 MB) aşmaz.
+  - Performans: kayıt akışında Siparişler okuması (taban p50 1.851 ms) ve süreç CPU'su (taban ≈5,9 CPU-sn/kayıt) tekrarlanabilir biçimde düşer. Kayıt onayı (taban p50 29 ms) gerilemez. Sayısal hedefi ürün sahibi Faz 0 verisiyle belirler. Bu belge hedef uydurmaz.
+  - Sadelik: CP için `cp-row-patch-log` süreç içi zinciri ve TTL yolu kaldırılabilir hale gelir. Silme ancak eşdeğer test geçince yapılır.
+- **Geri dönüş:** Bayrak kapanınca bugünkü yeniden yazım yolu döner. Günlük türetilmiş veridir ve silinebilir. Kaynak ve override biçimi değişmez.
+- **Bilinçli olarak kapsam dışı:** `overrides.json`'ın kayıt başına tam okunup yazılması (BASELINE §5 aday 3, ayrı iş), tarih temizleme yamaları (Faz 2: açık "temizlendi" değeri), Siparişler ve Genel Bakış modülleri (Faz 2).
+
+---
+
+## 7 · Ürün sahibinin vermesi gereken kararlar
+
+1. **Sütun filtresi anlamı (T5):** Koleksiyonda sayısal/aralık/revizyon filtresi yokluğu bilinçli mi? Genel Bakış boyut filtresinin `norm()` eşitliği istenen davranış mı?
+2. **Boş sayı (T1, V5):** Boş hücre toplamlarda 0 mı sayılır, yoksa "yok" olarak dışarıda mı kalır? Paralel veri sözleşmesi pilotuyla birlikte karar verilmeli.
+3. **Pilot seçimi (§6):** V1 (yüksek kazanç, P1) ya da daha küçük alternatif V2 alt kümesi (Ex→Retail/LT).
+
+---
+
+## 8 · Kalıcı mimari ilkeler
+
+Ürün sahibinin önerdiği on ilke. Her biri bu belgedeki bir kanıta bağlanmıştır.
+
+| No | İlke | Bu belgedeki karşılığı |
+| --- | --- | --- |
+| 01 | **Veri bütünlüğü:** hiçbir performans kazancı sessiz veri kaybını meşrulaştıramaz. | V10/ADR-0001; V1'de türetilmiş veri ile kaynak ayrımı |
+| 02 | **Doğruluk:** geçersiz durumlar mimari seviyede engellenir. | V2 ("aynı ad, iki anlam" `Ex-factory`), V5 (boş/0/bilinmiyor), V1 ("temizlendi" değeri) |
+| 03 | **Determinizm:** aynı girdi aynı sonucu verir; saat, yerel gün, dil ve config açık girdidir. | V2/V4 ortam girdileri (`new Date()`, global `transitRules`) |
+| 04 | **Yerel bağımsızlık:** yerel işlem ortak klasöre ve ağa bağımlı olmadan çalışır. | §1 zorunlu kabul |
+| 05 | **Minimum işlem:** gereksiz işlemi kaldırmak hızlandırmaktan değerlidir. | V1 (yeniden yazım yerine günlük), V2 (yeniden türetme yok) |
+| 06 | **Tekil iş kuralı:** bir kural ve onun girdi eşlemesi tek yerde yaşar. | T9 (4 girdi derleme noktası), T1, T5 |
+| 07 | **Sınırlı etki alanı:** bir değişikliğin etkileyebileceği alan yapıyla sınırlanır ve ölçülebilir. | V8 (%44 sıcak dosya), V9 |
+| 08 | **Ölçülebilir üstünlük:** yeni mekanizma, eskisinden üstün olduğu ölçülmeden yerine geçmez. | CLAUDE.md §3.2 kademeleri; Faz 0 gölge sayaçları |
+| 09 | **Geri döndürülebilirlik:** her dönüşümün bayrağı, gölge modu ve geri dönüş yolu vardır. | V1–V9 geri alınabilirlik satırları |
+| 10 | **Sadeleşme:** yeni mekanizma geldiğinde eskisi kaldırılır; paralel kalıcı yol bırakılmaz. | T7, T11 (aynı işi yapan iki-üç mekanizma) |
+
+**Her geliştirmede sorulacak soru:** *"Bu ihtiyaç için gerçekten yeni kod gerekiyor mu, yoksa mevcut sistemin çalışma şeklini değiştirerek ihtiyacı karşılayıp eski kodun bir kısmını kaldırabilir miyim?"*
+
+### 8.1 · CLAUDE.md / AGENTS.md entegrasyon önerisi (uygulanmadı)
+
+**İlke:** Mükerrer talimat dosyası yok. Mevcut kurallarla çakışan bir şey eklenmez, yalnız mevcut kurallarda karşılığı olmayan kısım eklenir. Aşağıdaki metinler önerilir; CLAUDE.md ve AGENTS.md **değiştirilmedi**.
+
+**Olası çakışmalar ve çözümleri:**
+
+| Gerilim | Çözüm |
+| --- | --- |
+| İlke 10 "eski kodu kaldır" ↔ §3 adım 2 "görev dışı refactor/cleanup ekleme" | Kaldırma yalnız **görevin etki alanında** ve eşdeğer davranış testiyle yapılır. Alan dışında kalan, ayrı öneri olarak raporlanır. |
+| Öncelik sırasında UX'in son olması ↔ §2 "ürün sahibinin bilinçli UX/iş kuralı tercihini teknik kusur sayma" | Sıra **teknik ödünleşimler** içindir; ürün sahibinin UX ve iş kuralı kararını geçersiz kılmaz. |
+| İlke 08 ↔ §3.2 performans kademesi | §3.2'ye atıf yapılır; ilke tekrar yazılmaz. |
+| İlke 06 ↔ §4 canonical alan kuralı | §4'teki kural ilkenin özel halidir; ikisi birlikte durur. |
+| İlke 09 ↔ §3.1 "Merge ≠ TEST ≠ STABLE" | Birbirini tamamlar; ek kural gerekmez. |
+
+**Öneri 1 · CLAUDE.md'de §4'ün başına yeni alt bölüm `§4.0 · Kalıcı mimari ilkeler`** (≈14 satır):
+
+```markdown
+### 4.0 · Kalıcı mimari ilkeler
+
+Teknik ödünleşimde sıra (sözlük sırası, puanlama yok): **veri bütünlüğü >
+doğruluk > kararlılık > performans > mimari sadelik > UX**. Alttaki kazanç
+üsttekindeki kaybı telafi etmez; sıra ürün sahibinin UX/iş kuralı kararını
+geçersiz kılmaz.
+
+01 Sessiz veri kaybı hiçbir kazançla meşrulaşmaz · 02 Geçersiz durum temsil
+edilemez olmalı · 03 Aynı girdi → aynı sonuç; saat/yerel gün/dil/config açık
+girdidir · 04 Yerel işlem ortak klasöre/ağa bağlı değildir · 05 Gereksiz işlemi
+kaldırmak, hızlandırmaktan önce gelir · 06 Bir kural ve girdi eşlemesi tek
+yerde · 07 Değişikliğin etki alanı yapıyla sınırlı · 08 Ölçülmeden üstünlük
+yok (§3.2) · 09 Bayrak/gölge/geri dönüş yolu · 10 Yeni mekanizma gelince eskisi
+kalkar; paralel kalıcı yol bırakılmaz (yalnız görevin etki alanında, eşdeğer
+testle — §3 adım 2).
+```
+
+**Öneri 2 · CLAUDE.md §3 "Uygulama akışı", adım 2'nin sonuna bir cümle:**
+
+```markdown
+   Yeni kod yazmadan önce sor: bu ihtiyaç, mevcut sistemin çalışma şeklini
+   değiştirip eski kodun bir kısmını kaldırarak karşılanabilir mi? (§4.0)
+```
+
+**Öneri 3 · AGENTS.md "Çalışma" listesine tek madde ve "Ayrıntı haritası"na ek:**
+
+```markdown
+- Ödünleşim sırası: veri bütünlüğü > doğruluk > kararlılık > performans >
+  sadelik > UX. Yeni kod yerine çalışma şeklini değiştirip kod kaldırmayı önce
+  değerlendir; ilkeler `CLAUDE.md` §4.0.
+```
+
+Ayrıntı haritasında `§4 mimari değişmezler` ifadesi `§4.0 mimari ilkeler · §4 mimari değişmezler` olur.
+
+**Neden bu yerler:** §2 iletişim ve kanıt, §3 iş akışı, §4 değişmezler bölümüdür. İlkeler değişmezlerin gerekçesi olduğu için §4'ün başına aittir. Soru iş akışına ait olduğu için §3'e girer. AGENTS.md kendi başına yeterli kalmalı ama kısa olmalı; bu yüzden tek madde yeter.
+
+---
+
+## Ek A · Ölçüm komutları (yeniden üretim)
+
+`resources/app` içinden:
+
+```bash
+# boyutlar ve büyüme
+wc -l public/app-main.js server/server.js
+for c in $(git rev-list origin/main | tail -1) HEAD; do git show $c:resources/app/public/app-main.js | wc -l; done
+# fonksiyon adları (filter/group/render)
+grep -oE "^\s*(async\s+)?function\s+[A-Za-z_$][A-Za-z0-9_$]*" public/app-main.js | awk '{print $NF}' | grep -ci filter
+# global durum
+grep -cE '^(let|var) ' public/app-main.js
+grep -oE "state\.[a-zA-Z_]+\s*=[^=]" public/app-main.js | sed -E 's/\s*=.*//' | sort -u | wc -l
+# yardımcı aileleri (ör. sayı zorlama)
+grep -rEoH "(function\s+|(const|let|var)\s+)(num|toNum|parseNum|parseNumber|toNumber|numOrNull|asNumber|safeNum)\s*(=|\()" public server shared --include=*.js | grep -v vendor/
+# test sınıflaması
+grep -lE "app-main\.js" tests/*.test.js | wc -l
+grep -lE "app-main\.js" tests/*.test.js | xargs grep -lE "vm\.|new Function|extractFunction|app-main-functions" | wc -l
+# git dokunma örneklemesi (kökten)
+git log -400 --first-parent --format='@%h %s' --name-only origin/main   # >300 dosyalık commitler hariç tutuldu
+```
+
+## Ek B · Davranış deneyleri (scratchpad, commit edilmedi)
+
+**B1 · Sayı zorlama matrisi.** Kaynaktaki tek satırlık tanımlar birebir kopyalandı.
+
+| Uygulama | `null` | `undefined` | `''` | `'1,5'` | `'1.234,56'` | `'12abc'` |
+| --- | --- | --- | --- | --- | --- | --- |
+| `app-main.js:548 toNum` | 0 | null | 0 | null | null | null |
+| `app-main.js:24761` | null | null | null | null | null | null |
+| `app-main.js:24732` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `backlog-delivery-engine` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `lfl.js` (public) | 0 | null | 0 | null | null | null |
+| `postfob`/`tryd` | null | null | null | null | null | null |
+| `fx-calculation-engine` | null | null | null | **1,5** | **1,234** | **12** |
+| `collection-price-drawer` | NaN | NaN | NaN | NaN | NaN | NaN |
+| `read-model/backlog-v3-model` (sunucu) | null | null | 0 | null | null | null |
+
+**B2 · Tarih zorlama paritesi.** `tests/helpers/app-main-functions.js` ile `app-main.js` `coerceDateLoose` zinciri çıkarıldı ve `read-model-query.internals.coerceDateLoose` ile gün ordinal'i karşılaştırıldı. 20 elle seçilmiş örnek ve 6 biçimde 20.000 rastgele tarih kullanıldı; saat dilimleri `Europe/Istanbul`, `Europe/Berlin`, `America/New_York`. Sonuç: 120.019 örnekte **0 gerçek fark**. Tek fark, vm bağlamları arasında `instanceof Date`'in başarısız olmasından doğan bir artefakttır. Çıkarım sırasında fonksiyonun gizli global'lere bağlı olduğu görüldü: `_isoDayCache`, `ISO_DAY_CACHE_MAX`, `window.XLSX`. `window.XLSX` yüklüyken istemcinin Excel seri tarihi için kullandığı `XLSX.SSF.parse_date_code` dalı test edilemedi (container'da `node_modules/xlsx` yok).
