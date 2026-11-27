@@ -125,6 +125,13 @@
     if(!response.ok){const error=new Error(data.error||response.statusText||qLang('Quotation işlemi başarısız.','Quotation operation failed.'));error.code=data.code;error.status=response.status;throw error;}
     return data;
   }
+  // Sunucuda artık bulunmayan alanlar temizlenir, kalanlar üzerine yazılır; nesne kimliği korunur.
+  function qMergeRequestInPlace(existing,normalized){
+    if(!existing||existing===normalized)return normalized;
+    Object.keys(existing).forEach(key=>{ if(!Object.prototype.hasOwnProperty.call(normalized,key)) delete existing[key]; });
+    Object.assign(existing,normalized);
+    return existing;
+  }
   /*
    * Sunucudan dönen kaydı yerel depoya yazar.
    *
@@ -147,11 +154,7 @@
     // Fiyat Defteri kancası (sunucu hâli + bekleyen satır değişiklikleri); bkz. qAfterServerRequest.
     const after=typeof qAfterServerRequest==='function'?qAfterServerRequest:null;
     if(index<0){st.requests.unshift(normalized);if(after)after(normalized,normalized);qPersistLocal();return normalized;}
-    const existing=st.requests[index];
-    if(existing===normalized){if(after)after(existing,normalized);qPersistLocal();return existing;}
-    // Sunucuda artık bulunmayan alanlar temizlenir, kalanlar üzerine yazılır.
-    Object.keys(existing).forEach(key=>{ if(!Object.prototype.hasOwnProperty.call(normalized,key)) delete existing[key]; });
-    Object.assign(existing,normalized);
+    const existing=qMergeRequestInPlace(st.requests[index],normalized);
     if(after)after(existing,normalized);
     qPersistLocal();return existing;
   }
@@ -166,7 +169,8 @@
   const qServerState=new Map(),qExpectedState=new Map(),qPendingLines=new Map();
   const qLineStateKeys=['price','approved','dropped'];
   const qClonePlain=value=>JSON.parse(JSON.stringify(value));
-  function qRememberServerState(req){if(req?.id){qServerState.set(req.id,qClonePlain(req));qExpectedState.set(req.id,qClonePlain(req));}}
+  // İki haritanın değerleri salt okunurdur (yalnız .set ile değiştirilir); tek kopya paylaşılır.
+  function qRememberServerState(req){if(req?.id){const copy=qClonePlain(req);qServerState.set(req.id,copy);qExpectedState.set(req.id,copy);}}
   function qReapplyPendingLines(req){
     let touched=false;
     (req?.items||[]).forEach(item=>{const pending=qPendingLines.get(`${req.id}\u0000${item.id}`);if(pending){Object.assign(item,pending.patch);touched=true;}});
@@ -237,7 +241,11 @@
         }
         BLStorage.setItem(MIGRATION_KEY,'1');
       }
-      qState={version:2,requests:(Array.isArray(data.requests)?data.requests:[]).map(qNormalizeRequest).map(qTrackOwners)};
+      // Açık masanın dinleyicileri render anındaki talep nesnesini tutar; görünen içerik
+      // değişmediğinde yeniden çizim yapılmaz. Yeni nesne vermek, sonraki düzenlemeyi
+      // (ör. tablodan üretici ekleme) depoda olmayan nesneye yazdırır: kimlik korunur.
+      const previous=new Map(qLoad().requests.map(req=>[req.id,req]));
+      qState={version:2,requests:(Array.isArray(data.requests)?data.requests:[]).map(qNormalizeRequest).map(req=>{const existing=previous.get(req.id);previous.delete(req.id);return qMergeRequestInPlace(existing,req);}).map(qTrackOwners)};
       qServerState.clear();qExpectedState.clear();
       qState.requests.forEach(req=>{qRememberServerState(req);qReapplyPendingLines(req);});
       qHydrated=true;qPersistLocal();
