@@ -2874,7 +2874,8 @@ async function ensureOrdersLoaded(options={}){
   if(!options.force&&state.orders){window.BLModulePreparation?.setStatus('orders','ready');return true;}
   if(ordersLoadPromise)return ordersLoadPromise;
   window.BLModulePreparation?.setStatus('orders','loading');
-  if(currentActiveTab()==='orders')setOrdersLoadingState(true);
+  // Okuma modeli penceresi satırları zaten gösteriyorsa tam yükleme arka planda sürer; tablo gizlenmez.
+  if(currentActiveTab()==='orders'&&!(ordersReadModelEnabled()&&ordersRM.rows))setOrdersLoadingState(true);
   ordersLoadPromise=(async()=>{
     try{
       const result=await fetchOrdersProjection();if(result.cancelled){window.BLModulePreparation?.setStatus('orders','pending');return false;}
