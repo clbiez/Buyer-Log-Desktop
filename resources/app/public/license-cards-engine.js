@@ -134,6 +134,12 @@
     for(const c of Array.isArray(cards)?cards:[]){const k=key(c.licensor);if(!seen.has(k))seen.set(k,text(c.licensor));}
     return [...seen.entries()].sort((a,b)=>(a[0]==='')-(b[0]==='')||a[1].localeCompare(b[1],'tr')).map(([value,label])=>({value,label}));
   }
+  // Non-DTR manufacturer names that are not already a card licensor, in the same shape.
+  function manufacturerOptions(manufacturers,licensors){
+    const taken=new Set((Array.isArray(licensors)?licensors:[]).map(o=>key(o.label))),seen=new Map();
+    for(const name of Array.isArray(manufacturers)?manufacturers:[]){const k=key(name);if(k&&!taken.has(k)&&!seen.has(k))seen.set(k,text(name));}
+    return [...seen.entries()].sort((a,b)=>a[1].localeCompare(b[1],'tr')).map(([value,label])=>({value,label}));
+  }
   // One row per card (license × licensor); several licensors are never merged.
   /* Licensor name nuances ("ERMODA" / "ERMODA UK LTD") of one license are shown as one row.
      mergeKey is BLBusinessRules.licensorMergeKey; split lists the keys the user separated.
@@ -242,5 +248,5 @@
     for(const k of new Set([...Object.keys(a),...Object.keys(b)])){const seen=new Set();out[k]=[...(a[k]||[]),...(b[k]||[])].filter(o=>o&&!seen.has(o.value)&&seen.add(o.value));}
     return out;
   }
-  return Object.freeze({periodEnd,RATE_FIELDS,INHERITS,rateInput,rateValue,adoptLegacyHologram,APPROVERS,cardImage,primaryContract,parseRate,rateError,mapSummary,licensorOptions,groupCards,mergeSummary,pasteMap,rows,latestContract,currentContracts,nextContractPeriod,previousDay,contracts,ruleStatus,statistics,portalHref,symbolUrl,today});
+  return Object.freeze({periodEnd,RATE_FIELDS,INHERITS,rateInput,rateValue,adoptLegacyHologram,APPROVERS,cardImage,primaryContract,parseRate,rateError,mapSummary,licensorOptions,manufacturerOptions,groupCards,mergeSummary,pasteMap,rows,latestContract,currentContracts,nextContractPeriod,previousDay,contracts,ruleStatus,statistics,portalHref,symbolUrl,today});
 });
