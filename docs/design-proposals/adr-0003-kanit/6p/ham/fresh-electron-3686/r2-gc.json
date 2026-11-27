@@ -1,0 +1,756 @@
+{
+ "trials": [
+  {
+   "code": 4100007,
+   "domBefore": "Gemi",
+   "bStatus": 200,
+   "ackMs": 15,
+   "cpState": 11058,
+   "cpDom": 14635,
+   "ordersState": 12230,
+   "ordersDom": 12230,
+   "lastCpDom": "Uçak",
+   "lastCpTxt": "Uçak▾",
+   "cpEvents": [
+    {
+     "ms": 315,
+     "via": "sse",
+     "d": "{\"area\":\"orders\",\"ownerId\":null,\"at\":\"2026-11-27T18:21:08.627Z\",\"originClientId\":\"\",\"mode\":\"reload\"}"
+    }
+   ],
+   "cpLfs": [
+    {
+     "ms": 316,
+     "endMs": 632,
+     "args": [
+      false
+     ]
+    }
+   ],
+   "cpNet": [
+    {
+     "ms": 319,
+     "endMs": 331,
+     "p": "/api/data"
+    },
+    {
+     "ms": 634,
+     "endMs": 5167,
+     "p": "/api/page-projection/cp"
+    },
+    {
+     "ms": 634,
+     "endMs": 8544,
+     "p": "/api/page-projection/orders"
+    },
+    {
+     "ms": 635,
+     "endMs": 6521,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 2934,
+     "endMs": 6849,
+     "p": "/api/shared-revisions"
+    },
+    {
+     "ms": 6809,
+     "endMs": 11992,
+     "p": "/api/read-model/cp/facets"
+    },
+    {
+     "ms": 9250,
+     "endMs": 10483,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 9250,
+     "endMs": 11082,
+     "p": "/api/page-projection/collection-catalog"
+    },
+    {
+     "ms": 9253,
+     "endMs": 10483,
+     "p": "/api/data-cleanup/reminder"
+    },
+    {
+     "ms": 10884,
+     "endMs": 14136,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 11992,
+     "endMs": 14245,
+     "p": "/api/read-model/cp/computed"
+    },
+    {
+     "ms": 13846,
+     "endMs": 13849,
+     "p": "/api/shared-revisions"
+    },
+    {
+     "ms": 14136,
+     "endMs": 14298,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 14298,
+     "endMs": 14353,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 14601,
+     "endMs": 14666,
+     "p": "/api/read-model/cp/facets"
+    }
+   ],
+   "ordersEvents": [
+    {
+     "ms": 733,
+     "via": "bc",
+     "d": "{\"type\":\"event\",\"payload\":{\"area\":\"orders\",\"ownerId\":null,\"at\":\"2026-11-27T18:21:08.627Z\",\"originClientId\":\"\",\"mode\":\"reload\"},\"context\":\"[\\\"moderator\\\",3,\\\"mod"
+    },
+    {
+     "ms": 6843,
+     "via": "bc",
+     "d": "{\"type\":\"revisions\",\"revisions\":{\"schemaVersion\":1,\"revision\":2,\"entities\":{\"collection\":{\"revision\":1,\"updatedAt\":\"2026-11-27T18:20:32.819Z\",\"actorId\":\"moderat"
+    },
+    {
+     "ms": 13849,
+     "via": "bc",
+     "d": "{\"type\":\"revisions\",\"revisions\":{\"schemaVersion\":1,\"revision\":2,\"entities\":{\"collection\":{\"revision\":1,\"updatedAt\":\"2026-11-27T18:20:32.819Z\",\"actorId\":\"moderat"
+    }
+   ],
+   "ordersLfs": [
+    {
+     "ms": 733,
+     "endMs": 6829,
+     "args": [
+      false
+     ]
+    }
+   ],
+   "ordersNet": [
+    {
+     "ms": 715,
+     "endMs": 8658,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 715,
+     "endMs": 8953,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 737,
+     "endMs": 6553,
+     "p": "/api/data"
+    },
+    {
+     "ms": 6831,
+     "endMs": 10153,
+     "p": "/api/page-projection/cp"
+    },
+    {
+     "ms": 6831,
+     "endMs": 11500,
+     "p": "/api/page-projection/orders"
+    },
+    {
+     "ms": 6845,
+     "endMs": 10698,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 11011,
+     "endMs": 12269,
+     "p": "/api/read-model/orders/facets"
+    },
+    {
+     "ms": 12198,
+     "endMs": 12269,
+     "p": "/api/page-projection/collection-catalog"
+    },
+    {
+     "ms": 12198,
+     "endMs": 13037,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 12198,
+     "endMs": 13045,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 13006,
+     "endMs": 14255,
+     "p": "/api/read-model/cp/computed"
+    },
+    {
+     "ms": 13265,
+     "endMs": 13294,
+     "p": "/api/read-model/orders/facets"
+    },
+    {
+     "ms": 13529,
+     "endMs": 13568,
+     "p": "/api/read-model/orders/query"
+    }
+   ]
+  },
+  {
+   "code": 4100009,
+   "domBefore": "Gemi",
+   "bStatus": 200,
+   "ackMs": 17,
+   "cpState": 11110,
+   "cpDom": 18618,
+   "ordersState": 10198,
+   "ordersDom": 10198,
+   "lastCpDom": "Uçak",
+   "lastCpTxt": "Uçak▾",
+   "cpEvents": [
+    {
+     "ms": 315,
+     "via": "sse",
+     "d": "{\"area\":\"orders\",\"ownerId\":null,\"at\":\"2026-11-27T18:21:30.450Z\",\"originClientId\":\"\",\"mode\":\"reload\"}"
+    }
+   ],
+   "cpLfs": [
+    {
+     "ms": 316,
+     "endMs": 562,
+     "args": [
+      false
+     ]
+    }
+   ],
+   "cpNet": [
+    {
+     "ms": 317,
+     "endMs": 330,
+     "p": "/api/data"
+    },
+    {
+     "ms": 577,
+     "endMs": 5058,
+     "p": "/api/page-projection/cp"
+    },
+    {
+     "ms": 577,
+     "endMs": 9224,
+     "p": "/api/page-projection/orders"
+    },
+    {
+     "ms": 577,
+     "endMs": 6411,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 6032,
+     "endMs": 10266,
+     "p": "/api/shared-revisions"
+    },
+    {
+     "ms": 6637,
+     "endMs": 15309,
+     "p": "/api/read-model/cp/facets"
+    },
+    {
+     "ms": 10196,
+     "endMs": 10826,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 10196,
+     "endMs": 11788,
+     "p": "/api/page-projection/collection-catalog"
+    },
+    {
+     "ms": 11105,
+     "endMs": 15341,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 15309,
+     "endMs": 18242,
+     "p": "/api/read-model/cp/computed"
+    },
+    {
+     "ms": 15342,
+     "endMs": 18303,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 17266,
+     "endMs": 17270,
+     "p": "/api/shared-revisions"
+    },
+    {
+     "ms": 18276,
+     "endMs": 18351,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 18589,
+     "endMs": 18711,
+     "p": "/api/read-model/cp/facets"
+    }
+   ],
+   "ordersEvents": [
+    {
+     "ms": 316,
+     "via": "bc",
+     "d": "{\"type\":\"event\",\"payload\":{\"area\":\"orders\",\"ownerId\":null,\"at\":\"2026-11-27T18:21:30.450Z\",\"originClientId\":\"\",\"mode\":\"reload\"},\"context\":\"[\\\"moderator\\\",3,\\\"mod"
+    },
+    {
+     "ms": 10264,
+     "via": "bc",
+     "d": "{\"type\":\"revisions\",\"revisions\":{\"schemaVersion\":1,\"revision\":3,\"entities\":{\"collection\":{\"revision\":1,\"updatedAt\":\"2026-11-27T18:20:32.819Z\",\"actorId\":\"moderat"
+    },
+    {
+     "ms": 17270,
+     "via": "bc",
+     "d": "{\"type\":\"revisions\",\"revisions\":{\"schemaVersion\":1,\"revision\":3,\"entities\":{\"collection\":{\"revision\":1,\"updatedAt\":\"2026-11-27T18:20:32.819Z\",\"actorId\":\"moderat"
+    }
+   ],
+   "ordersLfs": [
+    {
+     "ms": 316,
+     "endMs": 699,
+     "args": [
+      false
+     ]
+    }
+   ],
+   "ordersNet": [
+    {
+     "ms": 319,
+     "endMs": 330,
+     "p": "/api/data"
+    },
+    {
+     "ms": 700,
+     "endMs": 5010,
+     "p": "/api/page-projection/cp"
+    },
+    {
+     "ms": 700,
+     "endMs": 9283,
+     "p": "/api/page-projection/orders"
+    },
+    {
+     "ms": 700,
+     "endMs": 10261,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 10113,
+     "endMs": 10701,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 10113,
+     "endMs": 11813,
+     "p": "/api/page-projection/collection-catalog"
+    },
+    {
+     "ms": 10113,
+     "endMs": 11806,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 10113,
+     "endMs": 11813,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 11801,
+     "endMs": 18242,
+     "p": "/api/read-model/cp/computed"
+    },
+    {
+     "ms": 12172,
+     "endMs": 13458,
+     "p": "/api/read-model/orders/facets"
+    },
+    {
+     "ms": 13444,
+     "endMs": 13450,
+     "p": "/api/data-cleanup/reminder"
+    },
+    {
+     "ms": 13460,
+     "endMs": 13520,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 13537,
+     "endMs": 13563,
+     "p": "/api/read-model/orders/facets"
+    }
+   ]
+  },
+  {
+   "code": 4100010,
+   "domBefore": "Gemi",
+   "bStatus": 200,
+   "ackMs": 19,
+   "cpState": 11986,
+   "cpDom": 14506,
+   "ordersState": 9538,
+   "ordersDom": 9538,
+   "lastCpDom": "Uçak",
+   "lastCpTxt": "Uçak▾",
+   "cpEvents": [
+    {
+     "ms": 319,
+     "via": "sse",
+     "d": "{\"area\":\"orders\",\"ownerId\":null,\"at\":\"2026-11-27T18:21:56.255Z\",\"originClientId\":\"\",\"mode\":\"reload\"}"
+    }
+   ],
+   "cpLfs": [
+    {
+     "ms": 319,
+     "endMs": 609,
+     "args": [
+      false
+     ]
+    }
+   ],
+   "cpNet": [
+    {
+     "ms": 321,
+     "endMs": 335,
+     "p": "/api/data"
+    },
+    {
+     "ms": 628,
+     "endMs": 5428,
+     "p": "/api/page-projection/cp"
+    },
+    {
+     "ms": 628,
+     "endMs": 8873,
+     "p": "/api/page-projection/orders"
+    },
+    {
+     "ms": 628,
+     "endMs": 6880,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 6219,
+     "endMs": 9809,
+     "p": "/api/shared-revisions"
+    },
+    {
+     "ms": 7130,
+     "endMs": 12166,
+     "p": "/api/read-model/cp/facets"
+    },
+    {
+     "ms": 9809,
+     "endMs": 10769,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 9809,
+     "endMs": 12018,
+     "p": "/api/page-projection/collection-catalog"
+    },
+    {
+     "ms": 11981,
+     "endMs": 12307,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 12171,
+     "endMs": 14142,
+     "p": "/api/read-model/cp/computed"
+    },
+    {
+     "ms": 12308,
+     "endMs": 14197,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 14185,
+     "endMs": 14246,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 14478,
+     "endMs": 14536,
+     "p": "/api/read-model/cp/facets"
+    }
+   ],
+   "ordersEvents": [
+    {
+     "ms": 320,
+     "via": "bc",
+     "d": "{\"type\":\"event\",\"payload\":{\"area\":\"orders\",\"ownerId\":null,\"at\":\"2026-11-27T18:21:56.255Z\",\"originClientId\":\"\",\"mode\":\"reload\"},\"context\":\"[\\\"moderator\\\",3,\\\"mod"
+    },
+    {
+     "ms": 9780,
+     "via": "bc",
+     "d": "{\"type\":\"revisions\",\"revisions\":{\"schemaVersion\":1,\"revision\":4,\"entities\":{\"collection\":{\"revision\":1,\"updatedAt\":\"2026-11-27T18:20:32.819Z\",\"actorId\":\"moderat"
+    }
+   ],
+   "ordersLfs": [
+    {
+     "ms": 320,
+     "endMs": 1012,
+     "args": [
+      false
+     ]
+    }
+   ],
+   "ordersNet": [
+    {
+     "ms": 321,
+     "endMs": 336,
+     "p": "/api/data"
+    },
+    {
+     "ms": 1032,
+     "endMs": 5535,
+     "p": "/api/page-projection/cp"
+    },
+    {
+     "ms": 1032,
+     "endMs": 8855,
+     "p": "/api/page-projection/orders"
+    },
+    {
+     "ms": 1032,
+     "endMs": 9560,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 9533,
+     "endMs": 10956,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 9533,
+     "endMs": 12018,
+     "p": "/api/page-projection/collection-catalog"
+    },
+    {
+     "ms": 9534,
+     "endMs": 11400,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 9534,
+     "endMs": 11428,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 11314,
+     "endMs": 12316,
+     "p": "/api/read-model/cp/computed"
+    },
+    {
+     "ms": 11677,
+     "endMs": 11884,
+     "p": "/api/read-model/orders/facets"
+    }
+   ]
+  },
+  {
+   "code": 4100011,
+   "domBefore": "Gemi",
+   "bStatus": 200,
+   "ackMs": 18,
+   "cpState": 9937,
+   "cpDom": 13477,
+   "ordersState": 8917,
+   "ordersDom": 8917,
+   "lastCpDom": "Uçak",
+   "lastCpTxt": "Uçak▾",
+   "cpEvents": [
+    {
+     "ms": 316,
+     "via": "sse",
+     "d": "{\"area\":\"orders\",\"ownerId\":null,\"at\":\"2026-11-27T18:22:17.948Z\",\"originClientId\":\"\",\"mode\":\"reload\"}"
+    }
+   ],
+   "cpLfs": [
+    {
+     "ms": 316,
+     "endMs": 562,
+     "args": [
+      false
+     ]
+    }
+   ],
+   "cpNet": [
+    {
+     "ms": 319,
+     "endMs": 328,
+     "p": "/api/data"
+    },
+    {
+     "ms": 573,
+     "endMs": 4741,
+     "p": "/api/page-projection/cp"
+    },
+    {
+     "ms": 573,
+     "endMs": 8085,
+     "p": "/api/page-projection/orders"
+    },
+    {
+     "ms": 573,
+     "endMs": 6343,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 2086,
+     "endMs": 6549,
+     "p": "/api/shared-revisions"
+    },
+    {
+     "ms": 6521,
+     "endMs": 10889,
+     "p": "/api/read-model/cp/facets"
+    },
+    {
+     "ms": 8953,
+     "endMs": 9631,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 8953,
+     "endMs": 10618,
+     "p": "/api/page-projection/collection-catalog"
+    },
+    {
+     "ms": 9932,
+     "endMs": 10942,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 10889,
+     "endMs": 13167,
+     "p": "/api/read-model/cp/computed"
+    },
+    {
+     "ms": 10942,
+     "endMs": 13210,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 13191,
+     "endMs": 13237,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 13443,
+     "endMs": 13510,
+     "p": "/api/read-model/cp/facets"
+    },
+    {
+     "ms": 13546,
+     "endMs": 13549,
+     "p": "/api/shared-revisions"
+    }
+   ],
+   "ordersEvents": [
+    {
+     "ms": 317,
+     "via": "bc",
+     "d": "{\"type\":\"event\",\"payload\":{\"area\":\"orders\",\"ownerId\":null,\"at\":\"2026-11-27T18:22:17.948Z\",\"originClientId\":\"\",\"mode\":\"reload\"},\"context\":\"[\\\"moderator\\\",3,\\\"mod"
+    },
+    {
+     "ms": 6547,
+     "via": "bc",
+     "d": "{\"type\":\"revisions\",\"revisions\":{\"schemaVersion\":1,\"revision\":5,\"entities\":{\"collection\":{\"revision\":1,\"updatedAt\":\"2026-11-27T18:20:32.819Z\",\"actorId\":\"moderat"
+    },
+    {
+     "ms": 13549,
+     "via": "bc",
+     "d": "{\"type\":\"revisions\",\"revisions\":{\"schemaVersion\":1,\"revision\":5,\"entities\":{\"collection\":{\"revision\":1,\"updatedAt\":\"2026-11-27T18:20:32.819Z\",\"actorId\":\"moderat"
+    }
+   ],
+   "ordersLfs": [
+    {
+     "ms": 318,
+     "endMs": 831,
+     "args": [
+      false
+     ]
+    }
+   ],
+   "ordersNet": [
+    {
+     "ms": 319,
+     "endMs": 337,
+     "p": "/api/data"
+    },
+    {
+     "ms": 837,
+     "endMs": 4801,
+     "p": "/api/page-projection/cp"
+    },
+    {
+     "ms": 838,
+     "endMs": 8034,
+     "p": "/api/page-projection/orders"
+    },
+    {
+     "ms": 838,
+     "endMs": 8953,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 8873,
+     "endMs": 9476,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 8873,
+     "endMs": 10675,
+     "p": "/api/page-projection/collection-catalog"
+    },
+    {
+     "ms": 8873,
+     "endMs": 10675,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 8874,
+     "endMs": 10675,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 10669,
+     "endMs": 13155,
+     "p": "/api/read-model/cp/computed"
+    },
+    {
+     "ms": 10974,
+     "endMs": 12202,
+     "p": "/api/read-model/orders/facets"
+    },
+    {
+     "ms": 12205,
+     "endMs": 12266,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 12283,
+     "endMs": 12310,
+     "p": "/api/read-model/orders/facets"
+    }
+   ]
+  }
+ ],
+ "errors": [],
+ "single": false,
+ "lfsWrapped": [
+  true
+ ]
+}

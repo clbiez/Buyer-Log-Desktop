@@ -1,0 +1,22 @@
+# betikler/probe-gc.js çıktısı (2026-11-27, PR head 782d48e read-model-worker.js). Komut:
+#   NODE_OPTIONS= ELECTRON_RUN_AS_NODE=1 <electron> [--max-old-space-size=H] probe-gc.js <read-model-worker.js>
+#   NODE_OPTIONS= node [--max-old-space-size=H] probe-gc.js <read-model-worker.js>
+#   NODE_OPTIONS="--max-old-space-size=3686" ELECTRON_RUN_AS_NODE=1 <electron> probe-gc.js <read-model-worker.js>
+# İşçi resourceLimits.maxOldGenerationSizeMb=1024 ister. Çıktı oturum dökümünden birebir aktarılmıştır.
+== electron heap=none
+{"versions":{"node":"24.20.0","electron":"44.3.0"},"execArgv":[],"workerLimitMB":1174,"gc":{"beforeMB":60,"afterMB":5,"ms":12},"exposeGcLeft":"undefined"}
+== node heap=none
+{"versions":{"node":"22.23.5","electron":null},"execArgv":[],"workerLimitMB":1124,"gc":{"beforeMB":91,"afterMB":7,"ms":13},"exposeGcLeft":"undefined"}
+== electron heap=3686
+{"versions":{"node":"24.20.0","electron":"44.3.0"},"execArgv":["--max-old-space-size=3686"],"workerLimitMB":3966,"gc":{"beforeMB":60,"afterMB":5,"ms":8},"exposeGcLeft":"undefined"}
+== node heap=3686
+{"versions":{"node":"22.23.5","electron":null},"execArgv":["--max-old-space-size=3686"],"workerLimitMB":3915,"gc":{"beforeMB":93,"afterMB":7,"ms":11},"exposeGcLeft":"undefined"}
+== electron heap=4096
+{"versions":{"node":"24.20.0","electron":"44.3.0"},"execArgv":["--max-old-space-size=4096"],"workerLimitMB":4396,"gc":{"beforeMB":60,"afterMB":5,"ms":15},"exposeGcLeft":"undefined"}
+== node heap=4096
+{"versions":{"node":"22.23.5","electron":null},"execArgv":["--max-old-space-size=4096"],"workerLimitMB":4345,"gc":{"beforeMB":93,"afterMB":7,"ms":8},"exposeGcLeft":"undefined"}
+== electron NODE_OPTIONS=3686
+{"versions":{"node":"24.20.0","electron":"44.3.0"},"execArgv":[],"workerLimitMB":3966,"gc":{"beforeMB":60,"afterMB":5,"ms":11},"exposeGcLeft":"undefined"}
+
+# Electron altında karar eşitlik testi (decisionMs farkı kontrolü):
+#   NODE_OPTIONS= ELECTRON_RUN_AS_NODE=1 <electron> --test tests/read-model-cp-computed-parity.test.js  → tests 5, pass 3, fail 0, skipped 2

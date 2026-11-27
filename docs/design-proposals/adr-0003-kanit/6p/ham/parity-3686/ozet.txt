@@ -1,0 +1,6 @@
+r1-baseoff.json  err 0 503 3/6 spawn 8 gc 0 [] skip 0 peakMB 2906 wRetMaxMB 863 cpuTot 87530 noteReady 7703 fobReady 7697 digest 5ac8eef8fa41
+r2-proff.json    err 0 503 3/6 spawn 9 gc 0 [] skip 0 peakMB 2930 wRetMaxMB 863 cpuTot 82560 noteReady 7754 fobReady 7218 digest 5ac8eef8fa41
+r3-proff.json    err 0 503 3/6 spawn 8 gc 0 [] skip 0 peakMB 2971 wRetMaxMB 862 cpuTot 88070 noteReady 7753 fobReady 7827 digest 5ac8eef8fa41
+r4-baseoff.json  err 0 503 3/6 spawn 8 gc 0 [] skip 0 peakMB 2940 wRetMaxMB 863 cpuTot 88300 noteReady 7742 fobReady 7806 digest 5ac8eef8fa41
+r5-baseoff.json  err 0 503 3/6 spawn 8 gc 0 [] skip 0 peakMB 3228 wRetMaxMB 863 cpuTot 87990 noteReady 7698 fobReady 7826 digest 5ac8eef8fa41
+r6-proff.json    err 0 503 3/6 spawn 8 gc 0 [] skip 0 peakMB 3146 wRetMaxMB 863 cpuTot 88260 noteReady 7634 fobReady 7594 digest 5ac8eef8fa41

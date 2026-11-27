@@ -1,0 +1,92 @@
+
+> buyer-log-desktop@8.0.22 test
+> node tests/run-tests.js
+
+[Buyer Log tests] 1557 test dosyası, 12 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/12 (300 dosya)
+tests 1864 · pass 1804 · fail 0 · cancelled 0 · skipped 60 · todo 0
+[Buyer Log tests] Batch 1/12 süresi: 29.1s.
+
+[Buyer Log tests] Batch 2/12 (300 dosya)
+
+✖ nedensel bulut: geri gelen satırda çakışma kaydına düşen yeni değer / yanlış çakışma (tests/collection-sync-causal-cloud-v20261126.test.js:215:1)
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   '26402 2|not: newer a49n lost to its ancestor  (reported)',
++   '26402 a: conflict demoted newer a49n under its ancestor '
++ ]
+- []
+
+    at TestContext.<anonymous> (/home/user/Buyer-Log-Desktop/resources/app/tests/collection-sync-causal-cloud-v20261126.test.js:218:10)
+
+✖ sırasız teslim: eski sürüm yenisinden sonra gelirse yeni düzenleme geri alınmaz (tests/collection-sync-publication-limits-v20261126.test.js:126:1)
+AssertionError [ERR_ASSERTION]: stale delivery must not revert a newer edit
+
+'' !== 'a2'
+
+    at TestContext.<anonymous> (/home/user/Buyer-Log-Desktop/resources/app/tests/collection-sync-publication-limits-v20261126.test.js:138:10)
+
+✖ düşmanca bulut: eski tabanlı yükleme kazanırsa kardeş dal kaybı (tests/collection-sync-randomized-cloud-v20261126.test.js:162:1)
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   '26211 a: row 19 = , expected c-30',
++   '26211 a: row 17 = , expected c-43',
++   '26211 b: row 19 = , expected c-30',
++   '26211 b: row 17 = , expected c-43',
++   '26211 c: row 19 = , expected c-30',
++   '26211 c: row 17 = , expected c-43',
++   '26211 c: 2 false conflict(s): [["17","not","c-43"],["19","not","c-30"]]'
++ ]
+- []
+
+    at TestContext.<anonymous> (/home/user/Buyer-Log-Desktop/resources/app/tests/collection-sync-randomized-cloud-v20261126.test.js:165:10)
+tests 2261 · pass 2255 · fail 0 · cancelled 0 · skipped 3 · todo 3
+[Buyer Log tests] Batch 2/12 süresi: 82.4s.
+
+[Buyer Log tests] Batch 3/12 (300 dosya)
+tests 1982 · pass 1981 · fail 0 · cancelled 0 · skipped 0 · todo 1
+[Buyer Log tests] Batch 3/12 süresi: 43.6s.
+
+[Buyer Log tests] Batch 4/12 (300 dosya)
+tests 2271 · pass 2267 · fail 0 · cancelled 0 · skipped 4 · todo 0
+[Buyer Log tests] Batch 4/12 süresi: 73.1s.
+
+[Buyer Log tests] Batch 5/12 (300 dosya)
+tests 1982 · pass 1980 · fail 0 · cancelled 0 · skipped 2 · todo 0
+[Buyer Log tests] Batch 5/12 süresi: 61.0s.
+
+[Buyer Log tests] Batch 6/12 (51 dosya)
+tests 427 · pass 427 · fail 0 · cancelled 0 · skipped 0 · todo 0
+[Buyer Log tests] Batch 6/12 süresi: 7.3s.
+
+[Buyer Log tests] Batch 7/12 (1 dosya)
+tests 4 · pass 3 · fail 0 · cancelled 0 · skipped 1 · todo 0
+[Buyer Log tests] Batch 7/12 süresi: 40.8s.
+
+[Buyer Log tests] Batch 8/12 (1 dosya)
+tests 4 · pass 4 · fail 0 · cancelled 0 · skipped 0 · todo 0
+[Buyer Log tests] Batch 8/12 süresi: 0.2s.
+
+[Buyer Log tests] Batch 9/12 (1 dosya)
+tests 12 · pass 12 · fail 0 · cancelled 0 · skipped 0 · todo 0
+[Buyer Log tests] Batch 9/12 süresi: 3.4s.
+
+[Buyer Log tests] Batch 10/12 (1 dosya)
+tests 8 · pass 8 · fail 0 · cancelled 0 · skipped 0 · todo 0
+[Buyer Log tests] Batch 10/12 süresi: 0.1s.
+
+[Buyer Log tests] Batch 11/12 (1 dosya)
+tests 8 · pass 8 · fail 0 · cancelled 0 · skipped 0 · todo 0
+[Buyer Log tests] Batch 11/12 süresi: 4.4s.
+
+[Buyer Log tests] Batch 12/12 (1 dosya)
+tests 15 · pass 14 · fail 0 · cancelled 0 · skipped 1 · todo 0
+[Buyer Log tests] Batch 12/12 süresi: 14.9s.
+
+[Buyer Log tests] PASS — 1557 test dosyası (360.4s).
+exit 0

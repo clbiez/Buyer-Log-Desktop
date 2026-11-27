@@ -1,0 +1,397 @@
+{
+ "arm": "pregc",
+ "app": "/tmp/claude-0/-home-user-Buyer-Log-Desktop/3ec04415-63af-5b6f-94d3-3a146562a817/scratchpad/wt/base/resources/app",
+ "gapMs": 14000,
+ "edits": [
+  {
+   "i": 0,
+   "double": false,
+   "code": 4100013,
+   "kind": "suppFob",
+   "save": {
+    "ms": 72.42526300000463,
+    "status": 200,
+    "body": "{\"ok\":true,\"overrides\":{\"notesmap\":{\"4100013|FCB GALAXY T-SHIRT|M01\":{\"Notes\":\"\",\"NotesHtml\":\"\",\"EkNot\":\"\",\"EkNotHtml\":\"\"}},\"submap\":{},\"suppfobmap\":{\"4100013|F"
+   },
+   "cp": {
+    "ms": 10152.976341999994,
+    "status": 503,
+    "code": "COMPUTE_ESTIMATE_EXCEEDED"
+   },
+   "cpWaitMs": 10225,
+   "digest": "5ac8eef8fa417093abbde49a70fc05db49e0659c",
+   "orders": {
+    "ms": 3850.6823349999977,
+    "status": 200,
+    "timing": {
+     "loadMs": 889.429962000002,
+     "queryMs": 16.098814000000857,
+     "totalMs": 905.8449309999996,
+     "rows": 30000
+    }
+   },
+   "cpuMs": 18480,
+   "windowMs": 28098
+  },
+  {
+   "i": 1,
+   "double": false,
+   "code": 4100488,
+   "kind": "note",
+   "save": {
+    "ms": 31.711585999997624,
+    "status": 200,
+    "body": "{\"ok\":true,\"updated\":1,\"overrides\":{\"notesmap\":{\"4100013|FCB GALAXY T-SHIRT|M01\":{\"Notes\":\"\",\"NotesHtml\":\"\",\"EkNot\":\"\",\"EkNotHtml\":\"\"},\"4100488|DISNEY GALAXY T-"
+   },
+   "cp": {
+    "ms": 10625.771390999995,
+    "status": 200,
+    "delta": false,
+    "rows": 24982,
+    "timing": {
+     "loadMs": 1177.051142999997,
+     "queryMs": 3368.703435000003,
+     "totalMs": 4545.759051000001,
+     "reused": false,
+     "phases": {
+      "hostMs": 63.23841099999845,
+      "decisionMs": 2910.326841000002,
+      "priorityMs": 286.44222499999887,
+      "checklistMs": 3.833715000000666
+     },
+     "datasetReloaded": true,
+     "rowPatch": null,
+     "service": {
+      "captureMs": 3,
+      "contextMs": 1,
+      "tasksMs": 0,
+      "leaseMs": 5928,
+      "rowPatch": {
+       "miss": "no-chain"
+      },
+      "computeMs": 10565
+     },
+     "route": {
+      "prepareMs": 0,
+      "totalMs": 10572,
+      "attempt": 1
+     }
+    }
+   },
+   "cpWaitMs": 10752,
+   "digest": "5ac8eef8fa417093abbde49a70fc05db49e0659c",
+   "orders": {
+    "ms": 3995.3284259999928,
+    "status": 200,
+    "timing": {
+     "loadMs": 1028.9217070000013,
+     "queryMs": 11.170816000005289,
+     "totalMs": 1040.1715130000011,
+     "rows": 30000
+    }
+   },
+   "cpuMs": 22180,
+   "windowMs": 28774
+  },
+  {
+   "i": 2,
+   "double": false,
+   "code": 4100967,
+   "kind": "suppFob",
+   "save": {
+    "ms": 22.65376900001138,
+    "status": 200,
+    "body": "{\"ok\":true,\"overrides\":{\"notesmap\":{\"4100013|FCB GALAXY T-SHIRT|M01\":{\"Notes\":\"\",\"NotesHtml\":\"\",\"EkNot\":\"\",\"EkNotHtml\":\"\"},\"4100488|DISNEY GALAXY T-SHIRT|M01\":{"
+   },
+   "cp": {
+    "ms": 6351.150399999999,
+    "status": 200,
+    "delta": true,
+    "rows": 0,
+    "timing": {
+     "loadMs": 1225.9980260000011,
+     "queryMs": 1517.5953049999953,
+     "totalMs": 2743.597078999999,
+     "reused": false,
+     "phases": {
+      "hostMs": 0,
+      "decisionMs": 1.5915820000082022,
+      "priorityMs": 0.1334610000048997,
+      "checklistMs": 0.041710000004968606,
+      "sourceMs": 1411.305011000004,
+      "incremental": {
+       "changed": 1,
+       "targets": 2
+      }
+     },
+     "datasetReloaded": true,
+     "rowPatch": null,
+     "service": {
+      "captureMs": 3,
+      "contextMs": 1,
+      "tasksMs": 0,
+      "leaseMs": 3585,
+      "rowPatch": {
+       "miss": "no-chain"
+      },
+      "computeMs": 6343
+     },
+     "route": {
+      "prepareMs": 0,
+      "totalMs": 6348,
+      "attempt": 1
+     }
+    }
+   },
+   "cpWaitMs": 6374,
+   "digest": "5ac8eef8fa417093abbde49a70fc05db49e0659c",
+   "orders": {
+    "ms": 4021.859276999996,
+    "status": 200,
+    "timing": {
+     "loadMs": 1081.584566000005,
+     "queryMs": 15.297607000000426,
+     "totalMs": 1096.9809169999935,
+     "rows": 30000
+    }
+   },
+   "cpuMs": 16550,
+   "windowMs": 24425
+  },
+  {
+   "i": 3,
+   "double": false,
+   "code": 4100231,
+   "kind": "note",
+   "save": {
+    "ms": 19.09935000000405,
+    "status": 200,
+    "body": "{\"ok\":true,\"updated\":1,\"overrides\":{\"notesmap\":{\"4100013|FCB GALAXY T-SHIRT|M01\":{\"Notes\":\"\",\"NotesHtml\":\"\",\"EkNot\":\"\",\"EkNotHtml\":\"\"},\"4100488|DISNEY GALAXY T-"
+   },
+   "cp": {
+    "ms": 10163.441769000012,
+    "status": 503,
+    "code": "COMPUTE_ESTIMATE_EXCEEDED"
+   },
+   "cpWaitMs": 10183,
+   "digest": "5ac8eef8fa417093abbde49a70fc05db49e0659c",
+   "orders": {
+    "ms": 4152.890319000013,
+    "status": 200,
+    "timing": {
+     "loadMs": 1090.0048939999979,
+     "queryMs": 13.625740000003134,
+     "totalMs": 1103.6899299999932,
+     "rows": 30000
+    }
+   },
+   "cpuMs": 22960,
+   "windowMs": 28364
+  },
+  {
+   "i": 4,
+   "double": false,
+   "code": 4100717,
+   "kind": "suppFob",
+   "save": {
+    "ms": 16.337205999996513,
+    "status": 200,
+    "body": "{\"ok\":true,\"overrides\":{\"notesmap\":{\"4100013|FCB GALAXY T-SHIRT|M01\":{\"Notes\":\"\",\"NotesHtml\":\"\",\"EkNot\":\"\",\"EkNotHtml\":\"\"},\"4100488|DISNEY GALAXY T-SHIRT|M01\":{"
+   },
+   "cp": {
+    "ms": 7673.129255000007,
+    "status": 200,
+    "delta": false,
+    "rows": 24982,
+    "timing": {
+     "loadMs": 1152.82538200001,
+     "queryMs": 3069.5176829999837,
+     "totalMs": 4222.352568999995,
+     "reused": false,
+     "phases": {
+      "hostMs": 22.181698999993387,
+      "decisionMs": 2636.8664040000003,
+      "priorityMs": 284.12572400001227,
+      "checklistMs": 7.454780000000028
+     },
+     "datasetReloaded": true,
+     "rowPatch": null,
+     "service": {
+      "captureMs": 3,
+      "contextMs": 1,
+      "tasksMs": 0,
+      "leaseMs": 3305,
+      "rowPatch": {
+       "miss": "no-chain"
+      },
+      "computeMs": 7631
+     },
+     "route": {
+      "prepareMs": 0,
+      "totalMs": 7638,
+      "attempt": 1
+     }
+    }
+   },
+   "cpWaitMs": 7787,
+   "digest": "5ac8eef8fa417093abbde49a70fc05db49e0659c",
+   "orders": {
+    "ms": 4048.869406999991,
+    "status": 200,
+    "timing": {
+     "loadMs": 1047.0419490000058,
+     "queryMs": 15.351884000003338,
+     "totalMs": 1062.5511649999971,
+     "rows": 30000
+    }
+   },
+   "cpuMs": 17650,
+   "windowMs": 25854
+  },
+  {
+   "i": 5,
+   "double": false,
+   "code": 4101201,
+   "kind": "note",
+   "save": {
+    "ms": 20.28000100000645,
+    "status": 200,
+    "body": "{\"ok\":true,\"updated\":1,\"overrides\":{\"notesmap\":{\"4100013|FCB GALAXY T-SHIRT|M01\":{\"Notes\":\"\",\"NotesHtml\":\"\",\"EkNot\":\"\",\"EkNotHtml\":\"\"},\"4100488|DISNEY GALAXY T-"
+   },
+   "cp": {
+    "ms": 8970.996823000023,
+    "status": 200,
+    "delta": true,
+    "rows": 0,
+    "timing": {
+     "loadMs": 1327.7949540000118,
+     "queryMs": 1642.8445159999828,
+     "totalMs": 2970.643716999999,
+     "reused": false,
+     "phases": {
+      "hostMs": 0,
+      "decisionMs": 1.320501999987755,
+      "priorityMs": 0.09053600000333972,
+      "checklistMs": 0.03670700002112426,
+      "sourceMs": 1529.3981820000045,
+      "incremental": {
+       "changed": 1,
+       "targets": 2
+      }
+     },
+     "datasetReloaded": true,
+     "rowPatch": null,
+     "service": {
+      "captureMs": 2,
+      "contextMs": 1,
+      "tasksMs": 0,
+      "leaseMs": 5980,
+      "rowPatch": {
+       "miss": "no-chain"
+      },
+      "computeMs": 8964
+     },
+     "route": {
+      "prepareMs": 0,
+      "totalMs": 8968,
+      "attempt": 1
+     }
+    }
+   },
+   "cpWaitMs": 8992,
+   "digest": "5ac8eef8fa417093abbde49a70fc05db49e0659c",
+   "orders": {
+    "ms": 4268.102787999989,
+    "status": 200,
+    "timing": {
+     "loadMs": 1291.9524690000108,
+     "queryMs": 14.743015999993077,
+     "totalMs": 1306.77017600002,
+     "rows": 30000
+    }
+   },
+   "cpuMs": 23040,
+   "windowMs": 27289
+  }
+ ],
+ "errors": [],
+ "bootMs": 25931,
+ "open": {
+  "ms": 5253.993409999999,
+  "status": 200,
+  "delta": false,
+  "rows": 24982,
+  "timing": {
+   "loadMs": 1039.4594860000002,
+   "queryMs": 3734.364419,
+   "totalMs": 4773.827631,
+   "reused": false,
+   "phases": {
+    "hostMs": 33.90351600000031,
+    "decisionMs": 3107.7212680000002,
+    "priorityMs": 460.72536000000036,
+    "checklistMs": 5.421336999999767
+   },
+   "datasetReloaded": true,
+   "rowPatch": null,
+   "service": {
+    "captureMs": 10,
+    "contextMs": 2,
+    "tasksMs": 0,
+    "leaseMs": 24,
+    "rowPatch": {
+     "miss": "no-base"
+    },
+    "computeMs": 4892
+   },
+   "route": {
+    "prepareMs": 307,
+    "totalMs": 5220,
+    "attempt": 1
+   }
+  }
+ },
+ "datasetRows": 24982,
+ "final": {
+  "ms": 4354.476532000001,
+  "status": 503,
+  "code": "COMPUTE_ESTIMATE_EXCEEDED",
+  "count": 24982,
+  "digest": "5ac8eef8fa417093abbde49a70fc05db49e0659c"
+ },
+ "verifyRead": {
+  "ms": 4554.85663200001,
+  "status": 200,
+  "delta": false,
+  "rows": 24982,
+  "timing": {
+   "loadMs": 1111.9852539999993,
+   "queryMs": 3291.7455469999986,
+   "totalMs": 4403.736256000004,
+   "reused": false,
+   "phases": {
+    "hostMs": 22.722555000014836,
+    "decisionMs": 2746.050854000001,
+    "priorityMs": 370.40901999999187,
+    "checklistMs": 4.539915000001201
+   },
+   "datasetReloaded": true,
+   "rowPatch": null,
+   "service": {
+    "captureMs": 3,
+    "contextMs": 2,
+    "tasksMs": 0,
+    "leaseMs": 9,
+    "rowPatch": {
+     "miss": "current"
+    },
+    "computeMs": 4517
+   },
+   "route": {
+    "prepareMs": 0,
+    "totalMs": 4527,
+    "attempt": 1
+   }
+  }
+ }
+}

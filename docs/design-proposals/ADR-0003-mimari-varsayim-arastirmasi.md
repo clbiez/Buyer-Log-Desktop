@@ -1551,6 +1551,76 @@ A–D'nin ana STATUS'a etkisi, yalnız §6M verisinden (`6m/primary6.json`, yeni
 **Ölçüm düzeneği.** `adr-0003-kanit/kit/` (README'de komutlar). Pre kolu `c6e2f658` uzakta yok:
 `b7b172d` + `fdf2f758` cherry-pick ile yeniden oluşturulur.
 
+## 6P · Electron yeniden ölçüm ve 503 PR kapanışı (2026-11-27)
+
+**Neden.** Üretimde sunucu `BuyerLog.exe` → `ELECTRON_RUN_AS_NODE=1` → `server/watchdog.js` ile, Electron'un
+gömülü Node'unda koşar (`electron/backend.js:7`). Sürüm: Electron 44.3.0 = Node 24.20.0. Önceki tüm L2'ler
+sandbox Node 22.23.5 ile koştu. Bu bölüm aynı kit'le Electron 44.3.0 Linux x64 altında yeniden ölçer.
+NODE_OPTIONS: `--use-openssl-ca --max-old-space-size=3686`. Ham veri, SHA'lar ve komutlar: `adr-0003-kanit/6p/`.
+
+### 6P.1 · 503 pilotu (PR #1249) — kapatıldı, merge yok
+
+| Ölçüm | Node 22.23.5 | Electron 44.3.0 |
+|---|---|---|
+| Heap bayrağı işçi `resourceLimits`'ini ezer (1024 istendi; 3686 ile) | evet, 3915 MB | evet, 3966 MB |
+| L2 6 kayıt / koşu, kapalı → açık | 503 9/18 → 0/18 (3686 ve 8192) | 503 0/12 iki kolda (off on on off) |
+| Uzun oturum | ~41–44 dk, 200 kayıt / kol: 503 99/200 → 0/200 | ~20 dk, 120 kayıt / kol: 503 0/120 ve 0/120 |
+| 4 kollu #1236 × 503 | — (2/15 koşuda durduruldu) | 503 0/90; GC 0 |
+| Not L2 (§6P.2) | — | 503 0/54 |
+| GC yeniden ölçüm sayısı (açık kol) | 2–3 / koşu; uzun oturumda 100 | 0 (hiç tetiklenmedi; mekanizma no-op) |
+| İşçi retained maks | 863 MB | 348–477 MB |
+| CP `decisionMs` | ~2,6–2,8 sn | 1–3 ms (Electron'da karar eşitlik testi geçiyor) |
+
+- **[Doğrulandı]** Üretim temsilî ortamda bu senaryolarda 503 oluşmadı. Mekanizma no-op; gerekliliği kanıtlanmadı. Node 22'deki 503'ler üretimi temsil etmiyor.
+- **[Hipotez]** retained farkının nedeni: karar motoru `vm` bağlamında çalışıyor (`overview-decision-host.js`). Node 22 ile 24 arasındaki `vm` global erişim maliyeti ve çöp üretimi farkı muhtemel neden; araştırılmadı.
+- **Teknik risk** (kapanış gerekçesinin parçası): mekanizma `gc` işlevini almak için çalışma anında `v8.setFlagsFromString('--expose-gc')` açıp hemen kapatır.
+  - Bu, süreç geneli bir V8 bayrağı değişikliğidir. Node belgeleri çalışma anında bayrak değiştirmenin davranışının tanımsız olabileceğini belirtir.
+  - Kısa pencerede başka iş parçacıklarının oluşturduğu bağlamlar `gc` global'ini görebilir.
+  - Electron/Node sürüm yükseltmelerinde kırılabilir.
+- **Yeniden değerlendirme koşulu.** Gerçek Windows/Electron ortamında aynı kök nedenli 503 kanıtlanırsa yeniden ele alınır: işçi `resourceLimits`'inin süreç heap bayrağıyla ezilmesi → GC'siz retained → `COMPUTE_ESTIMATE_EXCEEDED`.
+- **Korunanlar:**
+  - Dal `claude/compute-503-gc-recheck` (`782d48e`), kod ve testler.
+  - Kit (`adr-0003-kanit/kit/`) ve `6p/betikler/`.
+  - §6K bulguları, Node 22 için tarihsel kanıt olarak.
+
+### 6P.2 · Not kaydı L2 (Electron) — PASS
+
+Kollar:
+- pre = `3dfc951` (#1243 squash'ının ebeveyni), o dönemin istemci gövdesiyle (Supp. FOB'ta `delType` var).
+- main = `38ef051`, #1243 gövdesiyle.
+- mainAA = main tekrarı.
+
+Düzen: P M A | A M P | P M A. Koşu başına 3 not + 3 Supp. FOB. Aynı t0 = kayıt isteği öncesi istemci zamanı.
+
+| Kol medyanı | pre | main | Blok farkı main − pre | A/A |
+|---|---|---|---|---|
+| Not ready (CP + Siparişler) | 10504 ms | 4879 ms | −5507 / −5525 / −5923 | −247 / −330 / +32 |
+| Not cpWait | 7165 | 4084 | −2951 / −3060 / −3302 | −261 / −293 / +88 |
+| Not CPU / kayıt | 18660 | 12890 | −5250 / −5770 / −6920 | −1330 / −290 / +1060 |
+| Supp. FOB ready | 9057 | 4841 | −4106 / −4448 / −4291 | +125 / +135 / +11 |
+| 503 | 0/18 | 0/18 | — | mainAA 0/18 |
+
+- **[Doğrulandı] PASS (§3.2).** Electron'da #1243 sonrası not kaydında gerileme yok; ready ~5,5 sn kısa ve A/A ≤ 0,33 sn. Veri özeti 9/9 koşuda aynı.
+- **Atıf sınırı.** Fark 3dfc951..38ef051 arasındaki tüm main değişikliklerinin (#1243–#1247) ve istemci gövdesi farkının toplam etkisidir; yalnız #1243'e atfedilmez.
+- **Mekanizma [Hipotez].** Ölçümdeki not gövdesi (`/batch`) iki kolda da aynı ve `delType` içermez; fark yalnız Supp. FOB gövdesindedir. Muhtemel yol: pre kolunda aynı koşudaki Supp. FOB kayıtları `delType` override yazıyor (#1241 sonrası), bu da sonraki okumaları tam yeniden kurulum yoluna sokuyor. #1243 bu yazımı kaldırdı. Not gövdesinin kendisinin tetiklediği ölçülmedi.
+- **§6I'daki Node 22 BLOCKED (+0,7–1,2 sn) tarihsel kanıt olarak korunur.** O ölçüm Node 22'de, 503 karışıklığı altında yapılmıştı.
+
+### 6P.3 · #1236 × 503 (Electron, `e379c92`) ve uzak gecikme
+
+- **4 kollu.** CP hazır ~3,8–4,9 sn → 0,18–0,31 sn. İkisi hazır:
+  - seq: −1,5…−2,8 sn.
+  - par: −1,2…−1,7 sn.
+  - Siparişler par modunda A/A içinde.
+  - Sunucu CPU −24%.
+  - gc kolu none ile eşdeğer.
+- **Uzak gecikme** (fresh2, U2 Del. Type, 16 deneme): CP DOM 12,9–18,6 sn (Node 22 §6N'de 19,6–39,5 sn).
+  - SSE ~0,32 sn.
+  - `page-projection/cp` 4,7–7,5 sn; `page-projection/orders` 8,0–12,0 sn.
+  - Tek `cp/computed` 12,3–18,2 sn.
+  - Siparişler DOM 8,9–12,8 sn.
+  - Kod değişikliği yok.
+- **Electron bellek.** Uzun oturumda RSS eğimi kapalı +84, açık +200 MB/10 dk. GC 0 olduğu için kod yolu aynı; RSS 20 dakikada sabitlenmedi **[Bilinmiyor]**. 90–120 dk dayanıklılık testi ayrı oturumda yapılacak.
+
 ## 7 · Ürün sahibinin vermesi gereken kararlar
 
 1. **Sütun filtresi anlamı (T5):** Koleksiyonda sayısal/aralık/revizyon filtresi yokluğu bilinçli mi? Genel Bakış boyut filtresinin `norm()` eşitliği istenen davranış mı?

@@ -1,0 +1,31 @@
+off  {"f":"r1-off.json","ack":17,"sse":318,"bc":684,"lfs":319,"lfsEnd":636,"projCp":5144,"projOr":11840,"cpComputed":14453,"cpComputedN":1,"ordersCpComputedN":1,"cpState":11846,"cpDom":14810,"ordersState":12674,"ordersDom":12674}
+off  {"f":"r1-off.json","ack":14,"sse":315,"bc":316,"lfs":316,"lfsEnd":541,"projCp":4967,"projOr":8318,"cpComputed":17031,"cpComputedN":1,"ordersCpComputedN":1,"cpState":10983,"cpDom":17415,"ordersState":9023,"ordersDom":9023}
+off  {"f":"r1-off.json","ack":12,"sse":311,"bc":312,"lfs":312,"lfsEnd":544,"projCp":4978,"projOr":8595,"cpComputed":14104,"cpComputedN":1,"ordersCpComputedN":1,"cpState":11584,"cpDom":14374,"ordersState":9373,"ordersDom":9373}
+off  {"f":"r1-off.json","ack":16,"sse":318,"bc":319,"lfs":318,"lfsEnd":607,"projCp":5239,"projOr":8517,"cpComputed":13811,"cpComputedN":1,"ordersCpComputedN":1,"cpState":11611,"cpDom":14106,"ordersState":9217,"ordersDom":9217}
+gc   {"f":"r2-gc.json","ack":15,"sse":315,"bc":733,"lfs":316,"lfsEnd":632,"projCp":5167,"projOr":11500,"cpComputed":14245,"cpComputedN":1,"ordersCpComputedN":1,"cpState":11058,"cpDom":14635,"ordersState":12230,"ordersDom":12230}
+gc   {"f":"r2-gc.json","ack":17,"sse":315,"bc":316,"lfs":316,"lfsEnd":562,"projCp":5058,"projOr":9283,"cpComputed":18242,"cpComputedN":1,"ordersCpComputedN":1,"cpState":11110,"cpDom":18618,"ordersState":10198,"ordersDom":10198}
+gc   {"f":"r2-gc.json","ack":19,"sse":319,"bc":320,"lfs":319,"lfsEnd":609,"projCp":5428,"projOr":8855,"cpComputed":14142,"cpComputedN":1,"ordersCpComputedN":1,"cpState":11986,"cpDom":14506,"ordersState":9538,"ordersDom":9538}
+gc   {"f":"r2-gc.json","ack":18,"sse":316,"bc":317,"lfs":316,"lfsEnd":562,"projCp":4741,"projOr":8034,"cpComputed":13167,"cpComputedN":1,"ordersCpComputedN":1,"cpState":9937,"cpDom":13477,"ordersState":8917,"ordersDom":8917}
+gc   {"f":"r3-gc.json","ack":21,"sse":321,"bc":715,"lfs":321,"lfsEnd":650,"projCp":5314,"projOr":12013,"cpComputed":16595,"cpComputedN":1,"ordersCpComputedN":1,"cpState":11163,"cpDom":17015,"ordersState":12778,"ordersDom":12778}
+gc   {"f":"r3-gc.json","ack":13,"sse":313,"bc":314,"lfs":313,"lfsEnd":608,"projCp":5155,"projOr":8977,"cpComputed":14864,"cpComputedN":1,"ordersCpComputedN":1,"cpState":11626,"cpDom":15193,"ordersState":9742,"ordersDom":9742}
+gc   {"f":"r3-gc.json","ack":19,"sse":319,"bc":64,"lfs":319,"lfsEnd":574,"projCp":5459,"projOr":8947,"cpComputed":12337,"cpComputedN":1,"ordersCpComputedN":1,"cpState":12034,"cpDom":12864,"ordersState":9775,"ordersDom":9775}
+gc   {"f":"r3-gc.json","ack":13,"sse":313,"bc":313,"lfs":313,"lfsEnd":571,"projCp":5428,"projOr":9342,"cpComputed":14987,"cpComputedN":1,"ordersCpComputedN":1,"cpState":11847,"cpDom":15304,"ordersState":10364,"ordersDom":10364}
+off  {"f":"r4-off.json","ack":18,"sse":317,"bc":600,"lfs":318,"lfsEnd":585,"projCp":7504,"projOr":9132,"cpComputed":12603,"cpComputedN":1,"ordersCpComputedN":1,"cpState":11016,"cpDom":12958,"ordersState":9836,"ordersDom":9836}
+off  {"f":"r4-off.json","ack":22,"sse":322,"bc":322,"lfs":322,"lfsEnd":633,"projCp":4883,"projOr":8370,"cpComputed":16223,"cpComputedN":1,"ordersCpComputedN":1,"cpState":10867,"cpDom":16624,"ordersState":9136,"ordersDom":9136}
+off  {"f":"r4-off.json","ack":13,"sse":312,"bc":313,"lfs":312,"lfsEnd":556,"projCp":4925,"projOr":8740,"cpComputed":13804,"cpComputedN":1,"ordersCpComputedN":1,"cpState":10812,"cpDom":14127,"ordersState":9980,"ordersDom":9980}
+off  {"f":"r4-off.json","ack":20,"sse":322,"bc":333,"lfs":327,"lfsEnd":828,"projCp":5701,"projOr":8969,"cpComputed":13905,"cpComputedN":1,"ordersCpComputedN":1,"cpState":12066,"cpDom":14216,"ordersState":9825,"ordersDom":9825}
+
+aşama (ms, t0 = PATCH)        off aralık | medyan   gc aralık | medyan
+ack            12–22         | 16.5   13–21         | 17.5
+sse            311–322       | 317.5   313–321       | 315.5
+bc             312–684       | 320.5   64–733        | 316.5
+lfs            312–327       | 318   313–321       | 316
+lfsEnd         541–828       | 596   562–650       | 591
+projCp         4883–7504     | 5061   4741–5459     | 5240.5
+projOr         8318–11840    | 8667.5   8034–12013    | 9130
+cpComputed     12603–17031   | 14004.5   12337–18242   | 14554.5
+cpComputedN    1–1           | 1   1–1           | 1
+cpState        10812–12066   | 11300   9937–12034    | 11394.5
+cpDom          12958–17415   | 14295   12864–18618   | 14914
+ordersState    9023–12674    | 9599   8917–12778    | 9986.5
+ordersDom      9023–12674    | 9599   8917–12778    | 9986.5

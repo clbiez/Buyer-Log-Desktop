@@ -1,0 +1,4 @@
+r1-eoff.json     err 0 503 0/6 spawn 2 gc 0 [] skip 0 peakMB 2153 wRetMaxMB 348 cpuTot 68200 noteReady 4533 fobReady 4617 digest 5ac8eef8fa41
+r2-egc.json      err 0 503 0/6 spawn 2 gc 0 [] skip 0 peakMB 2175 wRetMaxMB 346 cpuTot 68250 noteReady 4669 fobReady 4703 digest 5ac8eef8fa41
+r3-egc.json      err 0 503 0/6 spawn 2 gc 0 [] skip 0 peakMB 2164 wRetMaxMB 351 cpuTot 66420 noteReady 4514 fobReady 4539 digest 5ac8eef8fa41
+r4-eoff.json     err 0 503 0/6 spawn 2 gc 0 [] skip 0 peakMB 2150 wRetMaxMB 347 cpuTot 66430 noteReady 4386 fobReady 4682 digest 5ac8eef8fa41

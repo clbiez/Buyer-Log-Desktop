@@ -1,0 +1,1 @@
+pre1243 3dfc951ce903f7c67c70a61b4caecf48ea809ad7 (AB_INTENT=0, o dönemin istemci gövdesi) main 38ef0516bd2874b141f73bf9c98d23cb635a7b0a (AB_INTENT=1) runtime=electron-44.3.0 ELECTRON_RUN_AS_NODE=1 NODE_OPTIONS=--use-openssl-ca --max-old-space-size=3686

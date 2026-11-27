@@ -1,0 +1,15 @@
+süre dk 19.3 kayıt 120 hata 0
+dilim(dk) rssMed rssMax hwm mainHeapMed mainHeapMax wRetMed wRetMax jobs gc gcSkip exceeded spawn exit
+0         1825 2795 2912 58 337 184 477 119 0 0 0 4 2
+5         1936 2853 2943 70 79 179 477 128 0 0 0 2 2
+10        1950 2844 2975 81 88 179 477 128 0 0 0 3 3
+15        1953 2989 3112 82 84 179 477 109 0 0 0 2 2
+eğim (5. dk sonrası, MB/10dk): rss 84.2 mainHeap 12.6 workerRetained -1.6
+GC zamanları (dk): 
+GC ms:  serbest MB: 
+GC arası sn min/med: null null
+işçi oluşturma (dk): 0.4 0.6 3.1 4.5 6.1 9.5 11.0 12.4 13.8 15.2 17.4
+CP okuma 503: 0 / 120 Siparişler !200: 0 kayıt !2xx: 0
+suppFob n 60 cpWait med 3579 ready med 4294
+note n 60 cpWait med 3569 ready med 4327
+final digest 5ac8eef8fa41 count 24982
