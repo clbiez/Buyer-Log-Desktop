@@ -263,7 +263,7 @@
       if(!rule)return null;
       const country=direct?window.BLCanonicalFields.canonicalValue(row,mode,'country'):kolPricingRuleContext(row).country,total=effectiveRoyalty(rule,country),hologram=hologramFor(rule,country);
       if(!Number.isFinite(total)||total<0||total>=100||!Number.isFinite(hologram)||hologram<0)return null;
-      return {license:rule.license||'',licensor:rule.licensor||'',royalty:total,hologramCost:hologram,baseRoyalty:Number(rule.royalty),commission:commission(rule,country)};
+      return {license:rule.license||'',licensor:rule.licensor||'',royalty:total,hologramCost:hologram,baseRoyalty:api.pricingRuleRoyaltyForCountry(rule,country),commission:commission(rule,country)};
     }catch(_){return null;}
   };
 

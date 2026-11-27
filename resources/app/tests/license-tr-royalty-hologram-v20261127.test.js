@@ -109,3 +109,10 @@ test('lisans kartı TR/YD royalty, komisyon ve hologram kolonlarını iki dilde 
   assert.match(ui, /E\.adoptLegacyHologram\(/);
   assert.match(ui, /Boş bırakılırsa YD değeri kullanılır\.','When empty, the international value is used\./);
 });
+
+test('Endeksmatik satırın ülkesine göre efektif TR/YD royalty ve hologram kullanır', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'public', 'license-royalty-commissions.js'), 'utf8');
+  const block = src.slice(src.indexOf('endeksmatikRoyaltyRule=function'), src.indexOf('function parseSuppFobPreviewValue'));
+  assert.match(block, /total=effectiveRoyalty\(rule,country\),hologram=hologramFor\(rule,country\)/);
+  assert.match(block, /royalty:total,hologramCost:hologram,baseRoyalty:api\.pricingRuleRoyaltyForCountry\(rule,country\)/);
+});
