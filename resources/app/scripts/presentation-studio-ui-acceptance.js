@@ -57,7 +57,7 @@ function demoImages() {
     await page.waitForSelector('.psStudio .psDocCard', { timeout: 30000 });
     await page.waitForTimeout(600);
     const state = () => page.evaluate(() => { const S = BLPresentationStudio._state(); return { cards: S.res.index.size, pages: S.res.pages.length, conflicts: S.res.conflicts.size, pinned: Object.values(S.doc.cards).filter(c => c.pinned).length, moved: Object.values(S.doc.cards).filter(c => c.vgroup != null).length, page: S.doc.page, cols: S.res.g.cols }; });
-    const clean = () => page.evaluate(() => { const S = BLPresentationStudio._state(), E = BLPresentationEngine, g = S.res.g; let bad = 0; for (const p of S.res.pages) { for (const it of p.items) if (it.x < -0.01 || it.y < -0.01 || it.x + it.w > g.w + 0.01 || it.y + it.h > g.h + 0.01) bad++; const own = (a, b) => a.kind === 'area' && b.area === a.key; for (let i = 0; i < p.items.length; i++) for (let j = i + 1; j < p.items.length; j++) { const a = p.items[i], b = p.items[j]; if (!own(a, b) && !own(b, a) && E.overlaps(a, b)) bad++; } } return bad; });
+    const clean = () => page.evaluate(() => { const S = BLPresentationStudio._state(), E = BLPresentationEngine, g = S.res.g; let bad = 0; for (const p of S.res.pages) { for (const it of p.items) if (it.x < g.m - 0.01 || it.y < g.m - 0.01 || it.x + it.w > g.w - g.m + 0.01 || it.y + it.h > g.h - g.m + 0.01) bad++; const own = (a, b) => a.kind === 'area' && b.area === a.key; for (let i = 0; i < p.items.length; i++) for (let j = i + 1; j < p.items.length; j++) { const a = p.items[i], b = p.items[j]; if (!own(a, b) && !own(b, a) && E.overlaps(a, b)) bad++; } } return bad; });
     let s = await state();
     assert.equal(s.cards, 24, 'seçili 24 model sunumda'); assert.equal(await clean(), 0);
     assert.equal(s.page.preset, 'A4'); assert.equal(s.page.orient, 'landscape');
@@ -146,8 +146,8 @@ function demoImages() {
     // Uzun grup başlığı: dar grupta tam metin birden çok satıra kırılır ("…" yok); kartlar bandın altında.
     const LONG = 'Three Thread Brushed · 30/70/14 · 260 gsm · 65% Cotton 35% Poliester';
     const narrowKey = await page.evaluate(() => { const S = BLPresentationStudio._state(); const h = S.res.pages[0].items.filter(i => i.kind === 'hdr').sort((a, b) => a.w - b.w)[0]; return h.key; });
-    page.once('dialog', d => d.accept(LONG));
-    await page.dblclick(`.psPageWrap .psDocHdr[data-hdr="${narrowKey.replace(/"/g, '\\"')}"]`); await page.waitForTimeout(400);
+    await page.dblclick(`.psPageWrap .psDocHdr[data-hdr="${narrowKey.replace(/"/g, '\\"')}"]`); await page.waitForTimeout(250);
+    await page.fill('.psDialog [data-ps="rename"]', LONG); await page.click('.psDialog [data-m="ok"]'); await page.waitForTimeout(400);
     const hdrCheck = await page.evaluate(key => {
       const S = BLPresentationStudio._state(), el = S.list.pages.flatMap(p => p.elements).find(e => e.type === 'hdr' && e.key === key);
       const dom = [...document.querySelectorAll('.psPageWrap .psDocHdr')].find(h => h.dataset.hdr === key);
@@ -258,8 +258,10 @@ function demoImages() {
     const hb0 = await page.$eval(`.psPageWrap .psDocHdr[data-hdr="${areaKey.replace(/"/g, '\\"')}"]`, el => { const r = el.getBoundingClientRect(); return { x: r.x + 10, y: r.y + r.height / 2 }; });
     const pb0 = await page.$eval('.psPageWrap .psPage', el => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });
     await page.mouse.move(hb0.x, hb0.y); await page.mouse.down(); await page.mouse.move(hb0.x + 20, hb0.y + 20, { steps: 4 });
-    assert.ok(await page.$('.psDragLayer .psAreaGhost:not([hidden])'), 'sürüklerken alan önizlemesi');
-    await page.mouse.move(pb0.x + pb0.w * 0.72, pb0.y + pb0.h * 0.08, { steps: 10 }); await page.mouse.up(); await page.waitForTimeout(400);
+    await page.mouse.move(pb0.x + pb0.w * 0.72, pb0.y + pb0.h * 0.08, { steps: 10 }); await page.waitForTimeout(120);
+    // Canlı önizleme: sürüklerken grup alanı belgede ve sayfada; öteki gruplar şimdiden yer açar.
+    assert.ok(await page.evaluate(k => { const S = BLPresentationStudio._state(); return S.act?.type === 'areaDrag' && Boolean(S.doc.areas[k]) && S.res.pages.some(p => p.items.some(i => i.kind === 'area' && i.key === k)); }, areaKey), 'sürüklerken canlı önizleme');
+    await page.mouse.up(); await page.waitForTimeout(400);
     let ar = await page.evaluate(k => { const S = BLPresentationStudio._state(); const items = S.res.pages.flatMap((p, i) => p.items.map(it => ({ ...it, pi: i }))); return { spec: S.doc.areas && S.doc.areas[k], areas: items.filter(i => i.kind === 'area' && i.key === k).map(i => ({ pi: i.pi, cont: i.cont, x: i.x, y: i.y, w: i.w, h: i.h })), cards: items.filter(i => i.kind === 'card' && i.area === k).length, flowHdr: items.filter(i => i.kind === 'hdr' && i.key === k && !i.area && !i.pinOf).length, dom: Boolean(document.querySelector(`.psArea[data-area="${CSS.escape(k)}"]`)), sel: S.areaSel }; }, areaKey);
     assert.ok(ar.spec && ar.areas.length >= 1 && ar.dom, 'grup alanı oluştu: ' + JSON.stringify(ar));
     assert.equal(ar.cards, groupTotal, 'grubun tüm kartları alanda');
@@ -310,6 +312,68 @@ function demoImages() {
     const autoS = await page.evaluate(k => { const S = BLPresentationStudio._state(); const c = S.res.pages.flatMap(p => p.items).find(i => i.kind === 'card' && i.area === k); return { h: S.doc.areas[k].h, cw: c.w, g: S.res.g.cellW }; }, areaKey);
     assert.ok(autoS.h === 0 && Math.abs(autoS.cw - autoS.g) < 0.01, 'otomatik boyut: ' + JSON.stringify(autoS));
     assert.equal(await clean(), 0);
+    // Kartları yay: alan sayfanın altına taşınınca kartlar sonraki sayfada sürer; alan sağa genişletilince
+    // kart ölçüsü korunarak taşan kartlar alana katılır (sığdırma yerine).
+    const areaHdrSel = `.psPageWrap .psDocHdr[data-area-hdr="${areaKey.replace(/"/g, '\\"')}"]`;
+    let ah0 = await page.$eval(areaHdrSel, el => { const r = el.getBoundingClientRect(); return { x: r.x + 12, y: r.y + r.height / 2 }; });
+    await page.mouse.move(ah0.x, ah0.y); await page.mouse.down(); await page.mouse.move(ah0.x + 10, ah0.y + 10, { steps: 3 });
+    await page.mouse.move(pb0.x + pb0.w * 0.05, pb0.y + pb0.h * 0.6, { steps: 10 }); await page.mouse.up(); await page.waitForTimeout(400);
+    const spreadInfo = () => page.evaluate(k => { const S = BLPresentationStudio._state(), all = S.res.pages.flatMap((p, i) => p.items.map(it => ({ ...it, pi: i }))), a = all.find(i => i.kind === 'area' && i.key === k && !i.cont); const main = all.filter(i => i.kind === 'card' && i.area === k && i.pi === a.pi && i.y >= a.y && i.y < a.y + a.h); return { spec: S.doc.areas[k], main: main.length, total: all.filter(i => i.kind === 'card' && i.area === k).length, cw: main[0] && main[0].w, g: S.res.g.cellW, cont: all.some(i => i.kind === 'area' && i.key === k && i.cont), x: a.x, w: a.w }; }, areaKey);
+    let sp0 = await spreadInfo();
+    assert.ok(sp0.cont && sp0.main < sp0.total, 'alan sayfa sonunda devam ediyor: ' + JSON.stringify(sp0));
+    const hE2 = await (await page.$(`.psArea[data-area="${areaKey.replace(/"/g, '\\"')}"]:not(.isCont) .psHandle[data-ah="e"]`)).boundingBox();
+    await page.mouse.move(hE2.x + hE2.width / 2, hE2.y + hE2.height / 2); await page.mouse.down(); await page.mouse.move(hE2.x + hE2.width / 2 + oneCol * 1.15, hE2.y + hE2.height / 2, { steps: 6 }); await page.mouse.up(); await page.waitForTimeout(400);
+    let sp1 = await spreadInfo();
+    assert.equal(sp1.spec.mode, 'spread', 'taşan grup: kartları yay');
+    assert.ok(sp1.main > sp0.main && Math.abs(sp1.cw - sp1.g) < sp1.g * 0.35 && sp1.total === sp0.total, 'kart ölçüsü korunarak taşan kartlar alana katıldı: ' + JSON.stringify({ sp0, sp1 }));
+    assert.equal(await clean(), 0);
+    assert.ok(await page.$eval('.psFloat', el => !el.hidden && Boolean(el.querySelector('[data-fa-mode="spread"][aria-pressed="true"]'))), 'araç çubuğu: Kartları yay seçili');
+    await page.evaluate(() => document.querySelectorAll('[data-ui-feedback-region]').forEach(el => { el.style.visibility = 'hidden'; }));
+    await page.screenshot({ path: path.join(OUT, `group-area-spread-${THEME}.png`) });
+    // Başka bir grup bu alanın üstüne taşınır: bırakılan grup yerini alır, öteki alan biçimini koruyarak yer değiştirir.
+    const other = await page.evaluate(() => { const S = BLPresentationStudio._state(); const h = S.res.pages[0].items.find(i => i.kind === 'hdr' && !i.area && !i.pinOf); return h && h.key; });
+    if (other) {
+      const before = await page.evaluate(k => { const S = BLPresentationStudio._state(), all = S.res.pages.flatMap((p, i) => p.items.map(it => ({ ...it, pi: i }))), a = all.find(i => i.kind === 'area' && i.key === k && !i.cont); return { w: a.w, h: a.h, n: all.filter(i => i.kind === 'card' && i.area === k && i.pi === a.pi && i.y >= a.y && i.y < a.y + a.h).length }; }, areaKey);
+      const oh = await page.$eval(`.psPageWrap .psDocHdr[data-hdr="${other.replace(/"/g, '\\"')}"]:not([data-area-hdr])`, el => { const r = el.getBoundingClientRect(); return { x: r.x + 10, y: r.y + r.height / 2 }; });
+      const tgt = await page.$eval(`.psArea[data-area="${areaKey.replace(/"/g, '\\"')}"]:not(.isCont)`, el => { const r = el.getBoundingClientRect(); return { x: r.x + 14, y: r.y + 8 }; });
+      await page.mouse.move(oh.x, oh.y); await page.mouse.down(); await page.mouse.move(oh.x + 10, oh.y + 10, { steps: 3 });
+      await page.mouse.move(tgt.x, tgt.y, { steps: 12 }); await page.mouse.up(); await page.waitForTimeout(400);
+      const after = await page.evaluate(k => { const S = BLPresentationStudio._state(), all = S.res.pages.flatMap((p, i) => p.items.map(it => ({ ...it, pi: i }))), a = all.find(i => i.kind === 'area' && i.key === k && !i.cont); return { w: a.w, h: a.h, n: all.filter(i => i.kind === 'card' && i.area === k && i.pi === a.pi && i.y >= a.y && i.y < a.y + a.h).length }; }, areaKey);
+      assert.ok(Math.abs(after.w - before.w) < 0.5 && Math.abs(after.h - before.h) < 0.5 && after.n === before.n, 'öteki alan biçimini korudu: ' + JSON.stringify({ before, after }));
+      assert.ok(await page.evaluate(k => Boolean(BLPresentationStudio._state().doc.areas[k]), other), 'taşınan grup kendi alanında');
+      assert.equal(await clean(), 0);
+      await page.screenshot({ path: path.join(OUT, `group-area-move-${THEME}.png`) });
+      await page.keyboard.press('Control+z'); await page.waitForTimeout(300);
+      assert.equal(await page.evaluate(k => Boolean(BLPresentationStudio._state().doc.areas[k]), other), false, 'tek adımda geri alınır');
+    }
+    // Seçili olmayan alan renklendirilmez (iş bitince gri zemin kalmaz). Esc seçimi kaldırır (editörü kapatmaz).
+    await page.click(areaHdrSel); await page.waitForTimeout(200);
+    assert.equal(await page.evaluate(() => BLPresentationStudio._state().areaSel), areaKey);
+    await page.keyboard.press('Escape'); await page.waitForTimeout(200);
+    assert.equal(await page.$('.psDialog'), null, 'Esc yalnız seçimi kaldırır');
+    assert.equal(await page.evaluate(() => BLPresentationStudio._state().areaSel), null);
+    assert.equal(await page.$eval('.psArea', el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)', 'seçili olmayan alanın zemini yok');
+    // Alanı olmayan gruba tıklama: seçim çerçevesi ve kenar tutamakları açılır; tutamaktan boyutlanınca grup alana alınır.
+    const flowKey = await page.evaluate(() => { const S = BLPresentationStudio._state(); const h = S.res.pages[0].items.find(i => i.kind === 'hdr' && !i.area && !i.pinOf); return h && h.key; });
+    if (flowKey) {
+      const fh = await page.$eval(`.psPageWrap .psDocHdr[data-hdr="${flowKey.replace(/"/g, '\\"')}"]:not([data-area-hdr])`, el => { const r = el.getBoundingClientRect(); return { x: r.x + 10, y: r.y + r.height / 2 }; });
+      await page.mouse.click(fh.x, fh.y); await page.waitForTimeout(250);
+      assert.equal(await page.$$eval('.psArea.isVirtual .psHandle[data-ah]', els => els.length), 4, 'tıklayınca kenar tutamakları');
+      assert.ok(await page.$eval('.psFloat', el => !el.hidden), 'grup bilgisi');
+      const vh = await (await page.$('.psArea.isVirtual .psHandle[data-ah="s"]')).boundingBox();
+      await page.mouse.move(vh.x + vh.width / 2, vh.y + vh.height / 2); await page.mouse.down(); await page.mouse.move(vh.x + vh.width / 2, vh.y + vh.height / 2 + 40, { steps: 5 }); await page.mouse.up(); await page.waitForTimeout(400);
+      assert.ok(await page.evaluate(k => { const S = BLPresentationStudio._state(); return Boolean(S.doc.areas[k] && S.doc.areas[k].h > 0) && S.areaSel === k && !S.frame; }, flowKey), 'boyutlanan grup alana alındı');
+      assert.equal(await clean(), 0);
+      await page.keyboard.press('Control+z'); await page.waitForTimeout(300);
+    }
+    // Yeniden adlandırma uygulama içi pencerede (masaüstünde window.prompt yok).
+    const rh = await page.$eval('.psPageWrap .psDocHdr', el => { const r = el.getBoundingClientRect(); return { x: r.x + 10, y: r.y + r.height / 2, key: el.dataset.hdr }; });
+    await page.mouse.dblclick(rh.x, rh.y); await page.waitForTimeout(250);
+    assert.ok(await page.$('.psDialog [data-ps="rename"]'), 'yeniden adlandırma penceresi');
+    await page.fill('.psDialog [data-ps="rename"]', 'Sunum Başlığı'); await page.keyboard.press('Enter'); await page.waitForTimeout(300);
+    assert.equal(await page.evaluate(k => BLPresentationStudio._state().doc.labels[k], rh.key), 'Sunum Başlığı');
+    await page.keyboard.press('Control+z'); await page.waitForTimeout(300);
+    await page.click(areaHdrSel); await page.waitForTimeout(200);
     await page.evaluate(() => document.querySelectorAll('[data-ui-feedback-region]').forEach(el => { el.style.visibility = ''; }));
     // PDF/PPTX çerçevesiz; Koleksiyon verisi değişmez.
     assert.equal(await page.evaluate(() => { const S = BLPresentationStudio._state(); return BLPresentationRender.documentHtml(S.list, 't').includes('psArea'); }), false);

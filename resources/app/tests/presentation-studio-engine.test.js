@@ -19,7 +19,8 @@ function setup(n = 60, levels = ['fabric', 'productGroup']) {
 function assertClean(res) {
   const g = res.g;
   for (const p of res.pages) {
-    for (const it of p.items) assert.ok(it.x >= -0.01 && it.y >= -0.01 && it.x + it.w <= g.w + 0.01 && it.y + it.h <= g.h + 0.01, `${p.id} ${it.kind} sayfa dışında`);
+    // Her öğe sayfa kenar boşluğunun (baskı payı) içinde kalır.
+    for (const it of p.items) assert.ok(it.x >= g.m - 0.01 && it.y >= g.m - 0.01 && it.x + it.w <= g.w - g.m + 0.01 && it.y + it.h <= g.h - g.m + 0.01, `${p.id} ${it.kind} ${it.id || it.key} kenar boşluğu dışında: ${JSON.stringify([it.x, it.y, it.w, it.h])}`);
     // Grup alanı çerçevesi kendi başlığını ve kartlarını içerir; başka öğeyle örtüşmesi hatadır.
     const own = (a, b) => a.kind === 'area' && b.area === a.key;
     for (let i = 0; i < p.items.length; i++) for (let j = i + 1; j < p.items.length; j++) {
@@ -466,4 +467,123 @@ test('grup bazlı kart boyutu: yalnız genişlik daralırsa alan aşağı büyü
   assert.ok(Math.abs(Math.max(...cards.map(c => c.y + c.h)) - (ar.y + ar.h)) < 0.5);
   assert.ok(ar.h > g.hH + g.cellH + 10, 'alan büyüdü');
   assertClean(res);
+});
+
+test('kenar boşluğu: alan, sabit kart ve boş yer arama sayfa kenar boşluğunun dışına çıkmaz', () => {
+  const { doc, groupOf } = setup(40, ['fabric']);
+  let res = E.layout(doc, groupOf);
+  const g = res.g, key = groupOf(doc.order[0]).key, other = doc.order.find(id => groupOf(id).key !== key);
+  E.setArea(doc, key, { page: 'p1', x: 0, y: 0, w: g.w, h: 0 });
+  doc.cards[other] = { pinned: true, page: 'p1', x: g.w - 20, y: g.h - 20, w: g.cellW, h: g.cellH };
+  res = E.layout(doc, groupOf);
+  assertClean(res);
+  const ar = res.pages[0].items.find(i => i.kind === 'area');
+  assert.ok(Math.abs(ar.x - g.m) < 0.01 && Math.abs(ar.w - g.cw) < 0.01, 'alan kenar boşluğuna oturur');
+  const pin = res.index.get(other);
+  assert.ok(Math.abs(pin.x + pin.w - (g.w - g.m)) < 0.01 && Math.abs(pin.y + pin.h - (g.h - g.m)) < 0.01, 'sabit kart kenar boşluğunun içinde');
+  const fr = E.findFree({ x: 0, y: 0, w: 50, h: 50 }, [], g);
+  assert.ok(fr.x >= g.m - 0.01 && fr.y >= g.m - 0.01);
+});
+
+test('grup alanı taşınınca öndeki alan yerini korur; çakışan alan biçimi bozulmadan bütün olarak yer değiştirir', () => {
+  const { doc, groupOf } = setup(40, ['fabric']);
+  let res = E.layout(doc, groupOf);
+  const g = res.g, keys = [...new Set(doc.order.map(id => groupOf(id).key))];
+  const shape = k => {
+    const items = res.pages.flatMap(p => p.items), ar = items.find(i => i.kind === 'area' && i.key === k && !i.cont);
+    return { ar, cards: items.filter(i => i.kind === 'card' && i.area === k).map(c => [c.x - ar.x, c.y - ar.y, c.w, c.h].map(v => Math.round(v * 10) / 10)) };
+  };
+  E.setArea(doc, keys[0], { page: 'p1', x: g.m, y: g.m, w: 3 * g.cellW + 2 * g.gap, h: 300 });
+  res = E.layout(doc, groupOf);
+  const before = shape(keys[0]);
+  // İkinci alan birincinin üstüne bırakılır (en son taşınan önde).
+  E.setArea(doc, keys[1], { page: 'p1', x: g.m + 20, y: g.m + 10, w: 2 * g.cellW + g.gap, h: 260 });
+  res = E.layout(doc, groupOf);
+  assertClean(res);
+  const moved = shape(keys[1]), pushed = shape(keys[0]);
+  assert.ok(Math.abs(moved.ar.x - (g.m + 20)) < 0.01 && Math.abs(moved.ar.y - (g.m + 10)) < 0.01, 'bırakılan alan bırakıldığı yerde');
+  assert.equal(E.overlaps(moved.ar, pushed.ar), false);
+  assert.deepEqual(pushed.cards, before.cards, 'öteki alanın kart dizilimi aynı');
+  assert.ok(Math.abs(pushed.ar.w - before.ar.w) < 0.01 && Math.abs(pushed.ar.h - before.ar.h) < 0.01, 'öteki alanın ölçüsü aynı');
+  // Önceki alan yeniden taşınınca o öne geçer.
+  E.setArea(doc, keys[0], { page: 'p1', x: g.m + 20, y: g.m + 10, w: before.ar.w, h: 300 });
+  res = E.layout(doc, groupOf);
+  assertClean(res);
+  assert.ok(Math.abs(shape(keys[0]).ar.x - (g.m + 20)) < 0.01);
+  assert.ok(doc.areas[keys[0]].z > doc.areas[keys[1]].z);
+  const round = E.normalizeDoc(JSON.parse(JSON.stringify(doc)), { ids: doc.order });
+  assert.equal(round.areas[keys[0]].z, doc.areas[keys[0]].z);
+});
+
+test('kartları yay: kartlar genel ölçüde alanı doldurur, sığmayanlar sonraki sayfada sürer; alan büyüyünce kartlar alana katılır', () => {
+  const { doc, groupOf } = setup(60, ['fabric']);
+  let res = E.layout(doc, groupOf);
+  const g = res.g, key = groupOf(doc.order[0]).key, total = doc.order.filter(id => groupOf(id).key === key).length; // 15
+  const look = () => {
+    res = E.layout(doc, groupOf);
+    const all = res.pages.flatMap((p, i) => p.items.map(it => ({ ...it, pi: i })));
+    const ar = all.find(i => i.kind === 'area' && i.key === key && !i.cont), main = all.filter(i => i.kind === 'card' && i.area === key && i.pi === ar.pi && i.y >= ar.y && i.y < ar.y + ar.h);
+    return { ar, main, all: all.filter(i => i.kind === 'card' && i.area === key) };
+  };
+  const w2 = 2 * g.cellW + g.gap, h1 = g.hH + g.hGap + g.cellH + 4;
+  E.setArea(doc, key, { page: 'p1', x: g.m, y: g.m, w: w2, h: h1, mode: 'spread' });
+  let f = look();
+  assertClean(res);
+  assert.equal(f.main.length, 2, 'bir satır × iki sütun');
+  assert.ok(f.main.every(c => Math.abs(c.w - g.cellW) < 1), 'genel kart ölçüsü korunur');
+  assert.equal(f.all.length, total, 'kalanlar devam alanında, kart kaybı yok');
+  // Alan sağa doğru genişler: yeni sütun eklenir, kart ölçüsü korunur.
+  E.setArea(doc, key, { page: 'p1', x: g.m, y: g.m, w: 3 * g.cellW + 2 * g.gap, h: h1 });
+  f = look();
+  assert.equal(f.main.length, 3);
+  assert.ok(f.main.every(c => Math.abs(c.w - g.cellW) < 1));
+  // Yeni sütun sığmayacak kadar genişlerse mevcut kartlar büyür (boş alan kalmaz).
+  E.setArea(doc, key, { page: 'p1', x: g.m, y: g.m, w: 3 * g.cellW + 2 * g.gap + g.cellW * 0.5, h: h1 + g.cellH * 0.5 });
+  f = look();
+  assert.equal(f.main.length, 3);
+  assert.ok(f.main[0].w > g.cellW + 1, 'kartlar büyüdü');
+  assert.ok(f.main.every(c => c.x + c.w <= f.ar.x + f.ar.w + 0.01 && c.y + c.h <= f.ar.y + f.ar.h + 0.01));
+  // Alan tüm kartları genel ölçüde alacak kadar büyürse "sığdır" gibi doldurur.
+  E.setArea(doc, key, { page: 'p1', x: g.m, y: g.m, w: g.cw, h: g.ch });
+  f = look();
+  assert.equal(f.main.length, total);
+  assert.ok(Math.abs(Math.max(...f.main.map(c => c.y + c.h)) - (f.ar.y + f.ar.h)) < 0.5, 'alt kenar dolu');
+  assert.equal(E.normalizeDoc(JSON.parse(JSON.stringify(doc)), { ids: doc.order }).areas[key].mode, 'spread');
+});
+
+test('çakışan alana sayfada yer kalmazsa alan bölünmeden bütün olarak sonraki sayfaya geçer', () => {
+  const { doc, groupOf } = setup(40, ['fabric']);
+  let res = E.layout(doc, groupOf);
+  const g = res.g, keys = [...new Set(doc.order.map(id => groupOf(id).key))];
+  E.setArea(doc, keys[0], { page: 'p1', x: g.m, y: g.m, w: 3 * g.cellW + 2 * g.gap, h: g.ch * 0.6 });
+  res = E.layout(doc, groupOf);
+  const n0 = res.pages[0].items.filter(i => i.kind === 'card' && i.area === keys[0]).length;
+  // Tüm genişliği ve sayfanın yarısından fazlasını kaplayan alan üstüne bırakılır.
+  E.setArea(doc, keys[1], { page: 'p1', x: g.m, y: g.m + 30, w: g.cw, h: g.ch * 0.6 });
+  res = E.layout(doc, groupOf);
+  assertClean(res);
+  const all = res.pages.flatMap((p, i) => p.items.map(it => ({ ...it, pi: i })));
+  const a0 = all.filter(i => i.kind === 'area' && i.key === keys[0]);
+  assert.equal(a0.length, 1, 'alan bölünmedi');
+  assert.equal(a0[0].pi, 1, 'sonraki sayfaya geçti');
+  assert.equal(all.filter(i => i.kind === 'card' && i.area === keys[0]).length, n0);
+  assert.equal(all.find(i => i.kind === 'area' && i.key === keys[1]).pi, 0);
+});
+
+test('grupları bütün tut: grup alanı/sabit kart çevresinde grup bloğu dikdörtgen kalır (boşluklu, L biçimli blok yok)', () => {
+  const { doc, groupOf } = setup(60, ['fabric']);
+  doc.style.keepGroups = true;
+  let res = E.layout(doc, groupOf);
+  const g = res.g, keys = [...new Set(doc.order.map(id => groupOf(id).key))];
+  // Sayfanın ortasında bir grup alanı: öteki gruplar onun çevresinde bölünmeden dizilir.
+  E.setArea(doc, keys[0], { page: 'p1', x: g.m + 2 * (g.cellW + g.gap), y: g.m + 40, w: 2 * g.cellW + g.gap, h: 0 });
+  res = E.layout(doc, groupOf);
+  assertClean(res);
+  for (const p of res.pages) for (const hd of p.items.filter(i => i.kind === 'hdr' && !i.area && !i.pinOf)) {
+    const w = Math.round((hd.w + g.gap) / (g.cellW + g.gap)), top = hd.y + hd.h + g.hGap;
+    const cards = p.items.filter(i => i.kind === 'card' && !i.area && !i.pinned && i.x >= hd.x - 0.1 && i.x < hd.x + hd.w && i.y >= top - 0.1 && E.effectiveKey(doc, i.id, groupOf) === hd.key).sort((a, b) => a.y - b.y || a.x - b.x);
+    cards.forEach((c, i) => {
+      assert.ok(Math.abs(c.x - (hd.x + (i % w) * (g.cellW + g.gap))) < 0.1 && Math.abs(c.y - (top + Math.floor(i / w) * (g.cellH + g.gap))) < 0.1, `${hd.key}: ${i}. kart blok ızgarasında boşluksuz`);
+    });
+  }
 });
