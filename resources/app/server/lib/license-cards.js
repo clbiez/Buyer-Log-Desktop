@@ -210,7 +210,8 @@ function normalizeRules(incoming, card, deps) {
     const rule = { id: text(raw.id) || 'license-rule-' + crypto.randomUUID(), opdStart: date('opdStart'), opdEnd: date('opdEnd'),
       categories: businessRules.pricingRuleCategories(raw),
       seasons: deps.normalizePricingRuleSeasons(raw.seasons != null ? raw.seasons : raw.season), license: card.license, licensor: card.licensor,
-      royalty: rateNumber(raw.royalty), trCommission: nullableNumber(raw.trCommission), ydCommission: nullableNumber(raw.ydCommission), hologramCost: rateNumber(raw.hologramCost),
+      royalty: rateNumber(raw.royalty), trRoyalty: nullableNumber(raw.trRoyalty), trCommission: nullableNumber(raw.trCommission), ydCommission: nullableNumber(raw.ydCommission),
+      hologramCost: rateNumber(raw.hologramCost), trHologramCost: nullableNumber(raw.trHologramCost),
       legacyTrHologramCost: nullableNumber(raw.legacyTrHologramCost), legacyYdHologramCost: nullableNumber(raw.legacyYdHologramCost),
       legacyRuleIds: Array.isArray(raw.legacyRuleIds) ? raw.legacyRuleIds.map(String).filter(Boolean) : [], migratedFromCountrySplit: raw.migratedFromCountrySplit === true };
     const commissions = [rule.trCommission, rule.ydCommission].filter(value => value != null);
@@ -218,9 +219,12 @@ function normalizeRules(incoming, card, deps) {
       || (rule.opdStart && rule.opdEnd && rule.opdStart > rule.opdEnd)
       || rule.categories.length > 100 || rule.categories.some(value=>value.length>200)
       || (rule.royalty !== null && (!Number.isFinite(rule.royalty) || rule.royalty < 0 || rule.royalty > 100))
-      || (!commissions.length && !optional) || commissions.some(value => !Number.isFinite(value) || value < 0 || value + (rule.royalty || 0) > 100)
+      || (rule.trRoyalty != null && (!Number.isFinite(rule.trRoyalty) || rule.trRoyalty < 0 || rule.trRoyalty > 100))
+      || (!commissions.length && !optional) || commissions.some(value => !Number.isFinite(value) || value < 0)
+      || (rule.trCommission != null && rule.trCommission + (rule.trRoyalty ?? rule.royalty ?? 0) > 100)
+      || (rule.ydCommission != null && rule.ydCommission + (rule.royalty || 0) > 100)
       || (rule.hologramCost !== null && (!Number.isFinite(rule.hologramCost) || rule.hologramCost < 0))
-      || [rule.legacyTrHologramCost, rule.legacyYdHologramCost].some(value => value != null && (!Number.isFinite(value) || value < 0))) {
+      || [rule.trHologramCost, rule.legacyTrHologramCost, rule.legacyYdHologramCost].some(value => value != null && (!Number.isFinite(value) || value < 0))) {
       fail('LICENSE_RULES_INVALID', 'Kural oranları veya tarih aralığı geçersiz. / Invalid rule rates or date range.');
     }
     return rule;

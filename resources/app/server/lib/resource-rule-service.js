@@ -97,9 +97,11 @@ function normalizePricingRules(incoming,options={}){
       licensor: String(r.licensor != null ? r.licensor : (r.manufacturer || '')).trim(),
       license: String(r.license || '').trim(),
       royalty: BLBusinessRules.pricingRuleRatesOptional(r) ? nullablePercent(r.royalty) : Number(r.royalty),
+      trRoyalty: nullablePercent(r.trRoyalty),
       trCommission: nullablePercent(r.trCommission),
       ydCommission: nullablePercent(r.ydCommission),
       hologramCost: BLBusinessRules.pricingRuleRatesOptional(r) ? nullableMoney(r.hologramCost) : Number(r.hologramCost),
+      trHologramCost: nullableMoney(r.trHologramCost),
       legacyTrHologramCost: nullableMoney(r.legacyTrHologramCost),
       legacyYdHologramCost: nullableMoney(r.legacyYdHologramCost),
       legacyRuleIds: Array.isArray(r.legacyRuleIds) ? r.legacyRuleIds.map(String).filter(Boolean) : [],
@@ -109,9 +111,11 @@ function normalizePricingRules(incoming,options={}){
       const optional = BLBusinessRules.pricingRuleRatesOptional(r), royalty = r.royalty == null ? 0 : r.royalty;
       const commissions = [r.trCommission, r.ydCommission].filter(value => value != null);
       const commissionValid = (commissions.length > 0 || optional) && commissions.every(value => Number.isFinite(value) && value >= 0 && value <= 100);
-      const totalValid = (r.trCommission == null || royalty + r.trCommission <= 100)
+      const trRoyaltyValid = r.trRoyalty == null || (Number.isFinite(r.trRoyalty) && r.trRoyalty >= 0 && r.trRoyalty <= 100);
+      const totalValid = trRoyaltyValid && (r.trCommission == null || (r.trRoyalty ?? royalty) + r.trCommission <= 100)
         && (r.ydCommission == null || royalty + r.ydCommission <= 100);
-      const legacyHologramValid = (r.legacyTrHologramCost == null || (Number.isFinite(r.legacyTrHologramCost) && r.legacyTrHologramCost >= 0))
+      const legacyHologramValid = (r.trHologramCost == null || (Number.isFinite(r.trHologramCost) && r.trHologramCost >= 0))
+        && (r.legacyTrHologramCost == null || (Number.isFinite(r.legacyTrHologramCost) && r.legacyTrHologramCost >= 0))
         && (r.legacyYdHologramCost == null || (Number.isFinite(r.legacyYdHologramCost) && r.legacyYdHologramCost >= 0));
       return (!r.opdStart || !r.opdEnd || r.opdStart <= r.opdEnd)
         && r.licensor && r.license

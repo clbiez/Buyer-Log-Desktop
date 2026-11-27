@@ -752,7 +752,11 @@
 
   function pricingRuleCommissionForCountry(rule, countryOrGroup) {
     if (!rule || typeof rule !== 'object') return null;
-    const group = pricingRuleCountryGroup(countryOrGroup);
+    return commissionForGroup(rule, pricingRuleCountryGroup(countryOrGroup));
+  }
+
+  // Ülke grubu satır başına bir kez normalleştirilir (30k satırlık sıcak yol).
+  function commissionForGroup(rule, group) {
     if (!group) return null;
     const key = group === 'TR' ? 'trCommission' : 'ydCommission';
     if (Object.prototype.hasOwnProperty.call(rule, key)) {
@@ -766,12 +770,26 @@
     return 0;
   }
 
+  // `royalty` YD (ve TR için ayrı değer girilmemişse TR) royalty'sidir.
+  // `trRoyalty` boşsa TR, YD royalty'sini kullanır: eski kayıtlar aynen hesaplanır.
+  // Komisyon ayrı bir kavramdır ve tarafın royalty'sine eklenir.
+  function pricingRuleRoyaltyForCountry(rule, countryOrGroup) {
+    if (!rule || typeof rule !== 'object') return null;
+    return royaltyForGroup(rule, pricingRuleCountryGroup(countryOrGroup));
+  }
+  function royaltyForGroup(rule, group) {
+    const own = group === 'TR' && rule.trRoyalty != null && String(rule.trRoyalty).trim() !== '';
+    const royalty = pricingRuleNumber(own ? rule.trRoyalty : rule.royalty);
+    return royalty != null && royalty >= 0 && royalty <= 100 ? royalty : null;
+  }
+
   function pricingRuleEffectiveRoyalty(rule, countryOrGroup) {
     if (!rule || typeof rule !== 'object') return null;
-    const royalty = pricingRuleNumber(rule.royalty);
-    if (royalty == null || royalty < 0 || royalty > 100) return null;
+    const group = pricingRuleCountryGroup(countryOrGroup);
+    const royalty = royaltyForGroup(rule, group);
+    if (royalty == null) return null;
     if (countryOrGroup == null || String(countryOrGroup).trim() === '') return royalty;
-    const commission = pricingRuleCommissionForCountry(rule, countryOrGroup);
+    const commission = commissionForGroup(rule, group);
     if (commission == null) return null;
     const total = pricingRuleRate(royalty + commission);
     return Number.isFinite(total) && total >= 0 && total <= 100 ? total : null;
@@ -780,6 +798,11 @@
   function pricingRuleHologramForCountry(rule, countryOrGroup) {
     if (!rule || typeof rule !== 'object') return null;
     const group = pricingRuleCountryGroup(countryOrGroup);
+    // TR hologramı ayrı girilmişse o kullanılır; boşsa eski TR/YD ayrımı, o da yoksa YD hologramı.
+    if (group === 'TR' && rule.trHologramCost != null && String(rule.trHologramCost).trim() !== '') {
+      const own = pricingRuleNumber(rule.trHologramCost);
+      return own != null && own >= 0 ? own : null;
+    }
     const legacyKey = group === 'TR' ? 'legacyTrHologramCost' : group === 'YD' ? 'legacyYdHologramCost' : '';
     if (legacyKey && Object.prototype.hasOwnProperty.call(rule, legacyKey)) {
       const legacy = pricingRuleNumber(rule[legacyKey]);
@@ -1042,6 +1065,7 @@
     pricingRuleCountryGroup,
     pricingRuleRate,
     pricingRuleCommissionForCountry,
+    pricingRuleRoyaltyForCountry,
     pricingRuleEffectiveRoyalty,
     pricingRuleHologramForCountry,
     restoreOmittedCategoryScopes, pricingRuleCategories, pricingRuleCategoryMatches, pricingRuleCategoryScopesOverlap, prioritizeCategoryRules,
