@@ -602,3 +602,14 @@ test('LCW AI gruplaması: kayıtlı sonuç ve "ai:" seviyesi korunur; kategorile
   assert.deepEqual(order, ['Zeta', 'Alfa', 'Belirsiz', 'Sınıflandırılmadı']);
   assert.ok(base);
 });
+
+test('LCW AI gruplaması: sınır aşılsa da etkin seviyenin sonucu taslakla korunur', () => {
+  const AI = require('../public/presentation-studio-ai.js');
+  const { doc } = setup(12, ['fabric']);
+  doc.ai = {};
+  for (let i = 1; i <= 9; i++) doc.ai['a' + i] = { q: 'S' + i, cats: ['A'], vals: { [doc.order[0]]: 'A' }, at: 'x' };
+  doc.grouping.levels = ['fabric', 'ai:a9'];
+  const round = E.normalizeDoc(JSON.parse(JSON.stringify(doc)), { ids: doc.order, fields: ['fabric', 'productGroup'], normalizeAi: AI.normalizeGrouping });
+  assert.deepEqual(round.grouping.levels, ['fabric', 'ai:a9']);
+  assert.ok(round.ai.a9); assert.equal(Object.keys(round.ai).length, E.LIMITS.aiGroupings);
+});

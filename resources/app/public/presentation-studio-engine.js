@@ -22,7 +22,7 @@
   const FONTS = Object.freeze(['Arial', 'Calibri', 'Segoe UI', 'Verdana', 'Tahoma', 'Trebuchet MS', 'Georgia', 'Times New Roman']);
   const CARD_STYLES = Object.freeze(['frame', 'shadow', 'plain']);
   const STYLE_SPEC = Object.freeze({ fs: [6, 14, 8, 0.5], hfs: [6, 24, 10, 0.5], img: [0.6, 1.7, 1.05, 0.05], cardW: [60, 320, 112, 2], gap: [2, 30, 10, 1], margin: [6, 80, 26, 1] });
-  const LIMITS = Object.freeze({ cards: 2000, levels: 4, fields: 14, pages: 400, templates: 30, label: 80, title: 120, customMin: 50, customMax: 1200 });
+  const LIMITS = Object.freeze({ cards: 2000, levels: 4, aiGroupings: 8, fields: 14, pages: 400, templates: 30, label: 80, title: 120, customMin: 50, customMax: 1200 });
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const num = (v, d) => (Number.isFinite(Number(v)) ? Number(v) : d);
   const overlaps = (a, b) => a.x < b.x + b.w - 0.01 && a.x + a.w > b.x + 0.01 && a.y < b.y + b.h - 0.01 && a.y + a.h > b.y + 0.01;
@@ -124,7 +124,10 @@
     const areas = normalizeAreas(d.areas, pageIds), splits = normalizeSplits(d.splits);
     const seq = Math.max(num(d.seq, 2), ...pages.map(p => Number(p.id.slice(1)) + 1));
     const ai = {};
-    if (normalizeAi) for (const [id, g] of Object.entries(d.ai && typeof d.ai === 'object' ? d.ai : {}).slice(0, 8)) { if (!/^a\d{1,6}$/.test(id)) continue; const n = normalizeAi(g, order); if (n) ai[id] = n; }
+    // Sınır aşılırsa önce gruplamada kullanılan sonuçlar korunur (etkin seviye asla düşmez).
+    const activeAi = new Set((d.grouping && Array.isArray(d.grouping.levels) ? d.grouping.levels : []).map(String).filter(f => f.startsWith('ai:')).map(f => f.slice(3)));
+    const aiEntries = Object.entries(d.ai && typeof d.ai === 'object' ? d.ai : {}).filter(([id]) => /^a\d{1,6}$/.test(id)).sort(([a], [b]) => Number(activeAi.has(b)) - Number(activeAi.has(a)));
+    if (normalizeAi) for (const [id, g] of aiEntries) { if (Object.keys(ai).length >= LIMITS.aiGroupings) break; const n = normalizeAi(g, order); if (n) ai[id] = n; }
     const levelFields = fields ? [...fields, ...Object.keys(ai).map(id => 'ai:' + id)] : null;
     return { v: 2, source: SOURCES.includes(d.source) ? d.source : 'koleksiyon', title: text(d.title, LIMITS.title), page: normalizePage(d.page), style: normalizeStyle(d.style, fields), grouping: normalizeGrouping(d.grouping, levelFields), pages, cards, order, areas, splits, labels, ai, seq };
   }

@@ -1141,8 +1141,8 @@
   const aiShort = (q, n = 32) => { const t = String(q || '').replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
   function aiLevelLabel(id) { const g = S && S.doc.ai && S.doc.ai[id]; return `LCW AI · ${g ? aiShort(g.q) : id}`; }
   const strHash = str => { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
-  // Modelin bilgisi ya da görseli değişince LCW AI sonucu "güncel değil" sayılır (yeniden incelemeye aday).
-  const aiPrint = m => `${fingerprint(m)}.${strHash(String((m.identity && m.identity.source) || ''))}`;
+  // Modelin LCW AI'a giden TAM kaydı (kısaltmasız) ya da görseli değişince sonuç "güncel değil" sayılır.
+  const aiPrint = m => `${strHash(JSON.stringify(aiRecord(m.id)))}.${strHash(String((m.identity && m.identity.source) || ''))}`;
   function aiStale(id) {
     const g = S.doc.ai[id], out = [];
     for (const mid of S.doc.order) { const m = S.models.get(mid), c = S.doc.cards[mid]; if (!m || (c && c.excluded)) continue; if (g.vals[mid] == null || g.fp[mid] !== aiPrint(m)) out.push(mid); }
@@ -1255,6 +1255,8 @@
   function aiApply({ id, question, res, merge }) {
     const key = id || 'a' + (Math.max(0, ...Object.keys(S.doc.ai).map(k => Number(k.slice(1)) || 0)) + 1), f = 'ai:' + key;
     commit(() => {
+      // Saklanan gruplama sayısı sınırlı (E().LIMITS.aiGroupings): yer açmak için kullanılmayan en eski sonuçlar atılır.
+      if (!S.doc.ai[key]) for (const old of Object.keys(S.doc.ai).filter(k => !S.doc.grouping.levels.includes('ai:' + k)).sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)))) { if (Object.keys(S.doc.ai).length < E().LIMITS.aiGroupings) break; delete S.doc.ai[old]; }
       const prev = merge && S.doc.ai[key] ? S.doc.ai[key] : null, vals = prev ? { ...prev.vals } : {}, fp = prev ? { ...prev.fp } : {}, why = prev ? { ...prev.why } : {};
       for (const [mid, v] of Object.entries(res.vals)) { vals[mid] = v; fp[mid] = aiPrint(S.models.get(mid)); if (v === AI().UNSURE && res.why[mid]) why[mid] = res.why[mid]; else delete why[mid]; }
       S.doc.ai[key] = AI().normalizeGrouping({ q: question, cats: res.cats, vals, fp, why, at: new Date().toISOString() }, S.doc.order);
