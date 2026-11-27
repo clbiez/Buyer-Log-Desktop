@@ -1,0 +1,2 @@
+[Buyer Log tests] PASS — 1558 test dosyası (288.1s).
+exit 0

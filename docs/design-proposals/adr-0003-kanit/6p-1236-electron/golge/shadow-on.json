@@ -1,0 +1,187 @@
+{
+ "arm": "on",
+ "runtime": {
+  "exec": "/home/user/el/node_modules/electron/dist/electron",
+  "node": "24.20.0",
+  "electron": "44.3.0",
+  "NODE_OPTIONS": "--use-openssl-ca --max-old-space-size=3686"
+ },
+ "edits": [
+  {
+   "kind": "Supp. FOB PATCH (delType yok)",
+   "id": "11",
+   "status": 200,
+   "text": ""
+  },
+  {
+   "kind": "not /batch",
+   "id": "408",
+   "status": 200,
+   "text": ""
+  },
+  {
+   "kind": "/batch-suppfob",
+   "status": 200
+  },
+  {
+   "kind": "POST /rows not",
+   "id": "1599",
+   "status": 200,
+   "text": ""
+  },
+  {
+   "kind": "Retail PATCH",
+   "id": "1996",
+   "status": 200,
+   "text": ""
+  },
+  {
+   "kind": "In-Store PATCH",
+   "id": "2393",
+   "status": 200,
+   "text": ""
+  },
+  {
+   "kind": "Supp. FOB + not aynı satır ardışık",
+   "id": "2790",
+   "status": 200,
+   "text": ""
+  },
+  {
+   "kind": "U2 Del. Type PATCH (tam yol)",
+   "id": "4",
+   "status": 200,
+   "text": ""
+  },
+  {
+   "kind": "U1 Supp. FOB (U2 Del. Type satırı)",
+   "id": "4",
+   "status": 200,
+   "text": ""
+  },
+  {
+   "kind": "U1 not /batch (U2 Del. Type satırı)",
+   "id": "4",
+   "status": 200,
+   "text": ""
+  }
+ ],
+ "reads": [
+  {
+   "label": "open",
+   "rowPatch": {
+    "miss": "no-base"
+   },
+   "datasetRowPatch": null,
+   "lease": 5043,
+   "reloaded": true,
+   "retries": 0
+  },
+  {
+   "label": "pilot T1",
+   "rowPatch": {
+    "steps": 8,
+    "pending": 8,
+    "verified": false
+   },
+   "datasetRowPatch": {
+    "ms": 16.829303999998956,
+    "rows": 8
+   },
+   "lease": 0,
+   "reloaded": false,
+   "retries": 0
+  },
+  {
+   "label": "after U2 Del. Type",
+   "rowPatch": {
+    "miss": "no-chain"
+   },
+   "datasetRowPatch": null,
+   "lease": 3083,
+   "reloaded": true,
+   "retries": 0
+  },
+  {
+   "label": "T2",
+   "rowPatch": {
+    "steps": 2,
+    "pending": 0,
+    "verified": true
+   },
+   "datasetRowPatch": {
+    "ms": 56.005676000000676,
+    "rows": 1
+   },
+   "lease": 0,
+   "reloaded": false,
+   "retries": 0
+  },
+  {
+   "label": "V3 full",
+   "rowPatch": {
+    "miss": "no-base"
+   },
+   "datasetRowPatch": null,
+   "lease": 5202,
+   "reloaded": true,
+   "retries": 0
+  }
+ ],
+ "checks": {
+  "delTypeReadPilot": false,
+  "delTypeAfterU1Saves": "Uçak",
+  "exFactoryAfter": null,
+  "v1_v3_phase1": {},
+  "v2_v3_all": {},
+  "t1_t3_phase1": [],
+  "t1_t3_allRows_exceptLater": 0,
+  "t2_t3_allRows": 0,
+  "delTypeV3": "Uçak",
+  "totalRows": 24982,
+  "pilotT1": true
+ },
+ "errors": [],
+ "mod2Login": 200,
+ "pilotRead": {
+  "label": "pilot T1",
+  "rowPatch": {
+   "steps": 8,
+   "pending": 8,
+   "verified": false
+  },
+  "datasetRowPatch": {
+   "ms": 16.829303999998956,
+   "rows": 8
+  },
+  "lease": 0,
+  "reloaded": false,
+  "retries": 0
+ },
+ "segmentField": true,
+ "delTypeRow": {
+  "id": "4",
+  "before": "Gemi",
+  "u2": "Uçak",
+  "prodOnly": true
+ },
+ "delTypeStoredAfterU2": {
+  "4100005|FCB CREW PIJAMA|H04": "Uçak"
+ },
+ "exFactorySkipped": [],
+ "exFactoryScan": {
+  "rows": 24982,
+  "automatic": 24982,
+  "withEx": 24982
+ },
+ "exFactoryCandidates": 0,
+ "exFactoryRow": null,
+ "exFactoryNote": "30k fixture: elle düzenlenebilir Ex-factory satırı yok (tümü yükleme onayı); sunucu yazımdan önce 409 AUTOMATIC_DATE_READ_ONLY döner",
+ "delTypeStoredAfterU1": {
+  "4100005|FCB CREW PIJAMA|H04": "Uçak"
+ },
+ "cacheRemoved": [
+  "local/page-cache/moderator",
+  "local/page-cache/moderator"
+ ]
+}

@@ -50,6 +50,9 @@ node scripts/generate-demo-data.js "$SRC" --rows 30000 --seed 7
 | `primary6.js` | Birincil segment: okuma modeli (R) ↔ parse.js (P) tüm satır karşılaştırması (İ/I/Ç katlamalı) |
 | `run-l2.sh` | 503 / not L2 (5 kol, 3 blok, A/A) |
 | `run-t0.sh` | #1236 t0 (off / on / A/A, 3 blok) |
+| `shadow4.js` | #1236 bağımsız gölge (6j/shadow3 + #1241/#1243 koruması): U2 Del. Type tam yol + U1 Supp. FOB/not sonrası korunur, Ex-factory adayı (otomatik olmayan) |
+| `run-t0-electron.sh` | `run-t0.sh` ile aynı kol düzeni, Electron (`ELECTRON_RUN_AS_NODE=1`, `EL=<ikili>`) |
+| `soak.js` + `hook-soak.js` + `analyze-soak.js` | Uzun oturum bellek dayanıklılığı: tek sunucu, Supp. FOB / not + CP + Siparişler döngüsü, havuz/şerit stats, dakika serisi |
 
 ## 3 · Komutlar
 

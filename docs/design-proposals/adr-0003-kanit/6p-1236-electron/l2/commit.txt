@@ -1,0 +1,1 @@
+commit 6492c2aec21ea8e853ec39e2a12ff0dc3b0c76bd runtime electron 44.3.0 node 24.20.0 ELECTRON_RUN_AS_NODE=1 NODE_OPTIONS=--use-openssl-ca --max-old-space-size=3686
