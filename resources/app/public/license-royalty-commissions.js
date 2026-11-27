@@ -73,15 +73,20 @@
       const opdStart=normalizePricingRuleDate(r&&r.opdStart),opdEnd=normalizePricingRuleDate(r&&r.opdEnd);
       const seasons=normalizePricingRuleSeasons((r&&r.seasons)!=null?r.seasons:(r&&r.season));
       const licensor=norm(r&&r.licensor)||norm(r&&r.manufacturer),license=norm(r&&r.license);
-      const royalty=Number(r&&r.royalty),trCommission=optionalPercent(r&&r.trCommission),ydCommission=optionalPercent(r&&r.ydCommission),hologramCost=Number(r&&r.hologramCost);
+      const royalty=Number(r&&r.royalty),trRoyalty=optionalPercent(r&&r.trRoyalty),trCommission=optionalPercent(r&&r.trCommission),ydCommission=optionalPercent(r&&r.ydCommission),hologramCost=Number(r&&r.hologramCost),trHologramCost=optionalMoney(r&&r.trHologramCost);
+      if(trRoyalty!=null&&(trRoyalty<0||trRoyalty>100))return;
+      if(trHologramCost!=null&&trHologramCost<0)return;
+      if((r&&r.trRoyalty!=null&&String(r.trRoyalty).trim()!==''&&trRoyalty==null)||(r&&r.trHologramCost!=null&&String(r.trHologramCost).trim()!==''&&trHologramCost==null))return;
       if(opdStart&&opdEnd&&dateOrdinal(opdStart)>dateOrdinal(opdEnd))return;
       if(!licensor||!license||!Number.isFinite(royalty)||royalty<0||royalty>100||!Number.isFinite(hologramCost)||hologramCost<0)return;
       if(trCommission==null&&ydCommission==null)return;
-      if((trCommission!=null&&(trCommission<0||trCommission>100||royalty+trCommission>100))||(ydCommission!=null&&(ydCommission<0||ydCommission>100||royalty+ydCommission>100)))return;
+      if((trCommission!=null&&(trCommission<0||trCommission>100||(trRoyalty??royalty)+trCommission>100))||(ydCommission!=null&&(ydCommission<0||ydCommission>100||royalty+ydCommission>100)))return;
       const categories=api.pricingRuleCategories(r);
       const key=[categories.map(turknorm).join('~'),opdStart,opdEnd,seasons.map(turknorm).join('~'),turknorm(licensor),turknorm(license),trCommission==null?'':'TR',ydCommission==null?'':'YD'].join('|');
       if(seen.has(key))return;seen.add(key);
       const item={id:String((r&&r.id)||('rule-'+Date.now()+'-'+i)),opdStart,opdEnd,seasons,categories,licensor,license,royalty,trCommission,ydCommission,hologramCost};
+      if(trRoyalty!=null)item.trRoyalty=trRoyalty;
+      if(trHologramCost!=null)item.trHologramCost=trHologramCost;
       const legacyTr=optionalMoney(r&&r.legacyTrHologramCost),legacyYd=optionalMoney(r&&r.legacyYdHologramCost);
       if(legacyTr!=null)item.legacyTrHologramCost=legacyTr;
       if(legacyYd!=null)item.legacyYdHologramCost=legacyYd;
@@ -137,7 +142,7 @@
   automaticSuppFobRuleMeta=function(rule,applied,country){
     if(!rule)return null;
     const group=api.pricingRuleCountryGroup(country),countryCommission=commission(rule,group),total=effectiveRoyalty(rule,group),hologram=hologramFor(rule,group);
-    return {source:'rule',ruleId:String(rule.id||''),opdStart:rule.opdStart||'',opdEnd:rule.opdEnd||'',seasons:normalizePricingRuleSeasons(rule.seasons!=null?rule.seasons:rule.season),licensor:rule.licensor,license:rule.license,royalty:Number(rule.royalty),trCommission:rule.trCommission,ydCommission:rule.ydCommission,commissionGroup:group,commission:countryCommission,effectiveRoyalty:total,hologramCost:hologram,applied:applied===true};
+    return {source:'rule',ruleId:String(rule.id||''),opdStart:rule.opdStart||'',opdEnd:rule.opdEnd||'',seasons:normalizePricingRuleSeasons(rule.seasons!=null?rule.seasons:rule.season),licensor:rule.licensor,license:rule.license,royalty:api.pricingRuleRoyaltyForCountry(rule,group),trCommission:rule.trCommission,ydCommission:rule.ydCommission,commissionGroup:group,commission:countryCommission,effectiveRoyalty:total,hologramCost:hologram,applied:applied===true};
   };
   calculateSuppFobWithRule=function(fob,rule,country){return api.calculateSuppFobWithRule(fob,rule,country);};
   calculateSuppFobFromRule=function(fob,opd,country,season,licensor,license,category){

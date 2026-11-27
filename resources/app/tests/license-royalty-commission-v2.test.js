@@ -53,7 +53,7 @@ test('tek taraflı eski kayıt diğer ülkeye yanlışlıkla uygulanmaz', () => 
 test('unified cards expose country commissions and both Final FOB directions', () => {
   const cards=fs.readFileSync(path.join(ROOT,'public/license-cards.js'),'utf8');
   assert.match(INDEX,/license-royalty-commissions\.js/);
-  assert.match(cards,/num\('trCommission','%'\)/);assert.match(cards,/num\('ydCommission','%'\)/);
+  assert.match(cards,/\['trCommission','TR kom\.','TR comm\.','%'\],\['ydCommission','YD kom\.','Intl comm\.','%'\]/);assert.match(cards,/RATE_COLS\.map\(\(\[key,,,suffix\]\)=>num\(key,suffix\)\)/);
   assert.match(cards,/lcQuickYd/);assert.match(cards,/lcQuickTr/);
   assert.match(UI,/switchTab\('licensecards'\)/);
   assert.doesNotMatch(UI,/id="_ruleCountry"|id="_suppFobRulesModal"/);
