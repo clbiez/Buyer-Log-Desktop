@@ -928,8 +928,9 @@ Bu yüzden "bu değişiklik bu görünümü etkilemez" kararı, elle tutulan ala
 
 | Kontrol | Sonuç | Kanıt |
 |---|---|---|
-| Tam `npm test`, bayrak kapalı | **FAIL** (4 test). Aynı 4 test `b386cbe`'de de düşüyor: 3 collection-sync (`causal-cloud:215`, `publication-limits:126`, `randomized-cloud:162`) + `runtime-package-scope:32`. Önceden var, pilotla ilgisiz **[Doğrulandı: aynı testler temiz `b386cbe` çalışma ağacında]** | `ham/tam-test-kapali.txt` |
-| Tam `npm test`, bayrak açık | **FAIL**, aynı 4 test, başka fark yok | `ham/tam-test-acik.txt` |
+| Tam `npm test`, bayrak kapalı (bu ortam) | 1 gerçek hata: `runtime-package-scope:32`. Nedeni çalışma ağacında `node_modules`'un sembolik bağ olması (ortam). 3 collection-sync ✖ işareti **todo** testleri, başarısızlık sayılmıyor (`fail 1 · todo 3`). **Düzeltme:** ilk yazımda "FAIL (4 test)" denmişti, yanlıştı. | `ham/tam-test-kapali.txt` |
+| Tam `npm test`, bayrak açık (bu ortam) | Aynı, başka fark yok | `ham/tam-test-acik.txt` |
+| Tam `npm test`, temiz kurulum (`npm ci`), bayrak kapalı ve açık | PASS, 1548 dosya **[Ana oturum bildirdi; bu oturumda yeniden koşulmadı]** | PR #1236 |
 | Gerçek sunucu: ardışık 3 kayıt, `/batch` (5 satır, 2 Del. Type), `/batch-suppfob` (5), aynı opsiyon | PASS: sanal yol, kira 0, karar 0,5–1,3 ms | `ham/senaryo.json` P1–P2 |
 | importance tek başına / importance + Supp. FOB / importance sonrası başka alan | PASS: importance zinciri kurmaz (`no-chain` → kira); sonraki kayıt yine sanal | P3a–c |
 | 409 bayat revizyon / 403 yetkisiz | PASS: kayıt reddedildi, günlüğe yazılmadı, okuma değişmedi | P4a–b |
