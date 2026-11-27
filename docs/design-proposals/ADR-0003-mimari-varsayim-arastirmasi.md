@@ -814,6 +814,8 @@ Sonuç: Düzenlemeyi yapan sekmedeki Siparişler penceresi, kullanıcı filtre, 
 | Yapılandırma (transit kuralı) | yeni barındırıcı + tam hesap; 0 fark |
 | Başka kullanıcının kaydı | zincir kurmaz → projeksiyon kirası (gerçek nesil) |
 
+**Sınır (§6G'de bulundu):** Bu testin "tam hesap" tabanı, aynı **artımlı** yama fonksiyonuyla (`applyIncrementalProjectionPatch`) yamalanmış veri üzerinde yapılır. Yani karar hesabının artımlı ↔ tam eşitliğini kanıtlar, **artımlı yama ↔ tam projeksiyon kurulumu** eşitliğini kanıtlamaz. Mevcut `read-model-cp-row-patch` paritesinde de aynı kör nokta var. Tam kurulumla karşılaştırma §6G'de önceden var olan bir Del. Type hatasını gösterdi.
+
 Ek olarak üç pilot koşusunun son okumasında mevcut `verifyRows` (gerçek neslin yamalı satırları ↔ işçideki sanal satırlar) çalıştı: `verified:true`, uyuşmazlık yok **[Doğrulandı: 3/3 koşu]**.
 
 **Gerçek sunucuda kapsanmayanlar** (çok kullanıcılı sunucu ve saat kaydırma koşulmadı):
@@ -915,6 +917,127 @@ Bu yüzden "bu değişiklik bu görünümü etkilemez" kararı, elle tutulan ala
 - Kullanıcı tarafını, ana oturumun güncellik göstergesiyle karşıla: eski değer uyarısız kalmasın.
 - Maliyet tarafında yeniden sorgunun kendisini değil, **önündeki beklemeyi** hedefle: yukarıdaki 1. ve 2. öneriler (sanal veri kümesi / içerik anahtarı).
 - Görünümün etkilenmediğini önceden tahmin eden bir kısa devre **önerilmez**.
+
+## 6G · Pilot PR öncesi doğrulama, 503 kök nedeni, modül geçerlilik anahtarı (2026-11-27)
+
+**Sabit commit:** pilot `06095e1c` (değişmedi). Araçlar ve ham sonuçlar: `docs/design-proposals/adr-0003-kanit/6g/`.
+- Ölçüm/arıza kancası `hook.js` repo dışıdır, `NODE_OPTIONS=-r` ile yüklenir ve ürün kodunu değiştirmez.
+- Saat kaydırma da bu kancadadır. Barındırıcılar kurulmadan önce aynı `Date` yapıcısına yerleşir.
+
+### 6G.1 · Doğrulama tablosu
+
+| Kontrol | Sonuç | Kanıt |
+|---|---|---|
+| Tam `npm test`, bayrak kapalı | **FAIL** (4 test). Aynı 4 test `b386cbe`'de de düşüyor: 3 collection-sync (`causal-cloud:215`, `publication-limits:126`, `randomized-cloud:162`) + `runtime-package-scope:32`. Önceden var, pilotla ilgisiz **[Doğrulandı: aynı testler temiz `b386cbe` çalışma ağacında]** | `ham/tam-test-kapali.txt` |
+| Tam `npm test`, bayrak açık | **FAIL**, aynı 4 test, başka fark yok | `ham/tam-test-acik.txt` |
+| Gerçek sunucu: ardışık 3 kayıt, `/batch` (5 satır, 2 Del. Type), `/batch-suppfob` (5), aynı opsiyon | PASS: sanal yol, kira 0, karar 0,5–1,3 ms | `ham/senaryo.json` P1–P2 |
+| importance tek başına / importance + Supp. FOB / importance sonrası başka alan | PASS: importance zinciri kurmaz (`no-chain` → kira); sonraki kayıt yine sanal | P3a–c |
+| 409 bayat revizyon / 403 yetkisiz | PASS: kayıt reddedildi, günlüğe yazılmadı, okuma değişmedi | P4a–b |
+| Başka kullanıcı (ikinci moderatör oturumu) | PASS: A'da `no-chain` → kira (gerçek nesil); A'nın sonraki kaydı yine sanal | P5, P5b |
+| Yapılandırma (`PUT /api/transit-rules`) | PASS: yeni barındırıcı + tam hesap | P6 |
+| Gün dönümü (+1 gün saat) | PASS: ilk okuma tam hesap, sonraki kayıt sanal | P7 |
+| Günlük kaydında istisna | PASS: kayıt 200, okuma `no-chain` → kira | P8a |
+| `verifyRows` uyuşmazlığı (settle satırı bozuldu) | PASS: ilk okuma sanal; settle sonrası `miss:"mismatch"` → kira + tam hesap | P8b |
+| Yeniden yazım başarısız (`settle ok:false`) | PASS: `miss:"rewrite-failed"` → kira | P8c |
+| Kontrol noktaları K1–K3 (SIGTERM yeniden başlatma → soğuk tam hesap) | PASS: sonuç özeti 24.982 satırda eşit, dokunulan 21/22/25 satırda satır farkı 0 | `checks` |
+| K4: kayıttan hemen sonra SIGKILL | Kayıt kalıcı (değer 999 mevcut), sonuç özeti eşit; **2 satırda satır alanı farkı** → 6G.2 | K4, K5 |
+
+**Not:** K1–K3'te SIGTERM, projeksiyon önbelleğini (artımlı yamalanmış nesil) korur. Yalnız K4 (SIGKILL) tam kurulumu zorladı ve farkı o gösterdi.
+
+### 6G.2 · Önceden var olan veri doğruluğu hatası (P1, pilottan bağımsız)
+
+**[Doğrulandı: gerçek sunucu, alan düzeyi; bayrak kapalı ve açık birebir aynı]** `kill.js` üç görünümü karşılaştırır:
+- V1: kayıttan hemen sonra;
+- V2: yeniden yazım bittikten sonra (artımlı nesil);
+- V3: projeksiyon önbelleği silinip tam kurulum.
+
+Sonuç: **V1 = V2** (pilot, artımlı yeniden yazıma sadık). **V2 ≠ V3**, Del. Type düzenlenen iki satırda:
+- **satır 408** (`PATCH` Del. Type Gemi→Uçak): artımlı nesilde `Del. Type` "Gemi", `Ant. Arrival` 2027-03-31 kalıyor. Tam kurulumda "Uçak" / 2027-02-04.
+- **satır 202** (`/batch` Del. Type Kamyon): `_logisticSegments`, `_logisticDelTypeValues`, `_logisticArrivalValues` eski kalıyor.
+
+**Kök neden [Doğrulandı: source]:**
+- `applyIncrementalProjectionPatch` (`projection-row-patch.js`) `row['Del. Type']`'ı yazıp `applyFormulas` çalıştırıyor, ama `_logisticSegments`'i güncellemiyor.
+- Okuma modeli işçisi `prepareCpRows` → `rebuildLogisticCaches` (`overview-row-prep.js:53-56`) ise `Del. Type`, `Ant. Arrival`, `STATUS` ve `HANDOVER Tarihi`'ni birincil segmentten **yeniden yazıyor**. Düzenleme geri dönüyor.
+- İstemcide aynı işi `syncCpProductionLogisticSegment` (`app-main.js:7576`) yapıyor; sunucuda karşılığı yok.
+
+**Etki:**
+- CP okuma modeli bu satırların kararını ve pencerelerini eski Del. Type / Ant. Arrival ile üretiyor. Bir sonraki tam projeksiyon kurulumuna kadar sürüyor.
+- Override kaydı doğru, kayıp yok.
+- `POST /rows` aynı yama fonksiyonunu kullanıyor; o yolun da etkilenmesi **[Muhtemel]**, ayrıca ölçülmedi.
+
+**Neden kaçtı:** Hem `read-model-cp-row-patch` paritesi hem §6F gölge testi tabanı aynı artımlı fonksiyonla kuruyor (6F.3 sınır notu).
+
+**Öneri (kod yok, ayrı karar):**
+- Sunucu yamasına istemcideki segment eşitlemesinin karşılığını tek tanımla eklemek;
+- ya da segmentli satırda `delType` / `dates` yamasını artımlı-güvensiz sayıp tam yola düşürmek.
+- Her iki durumda da regresyon testinin tabanı **tam kurulum** olmalı.
+
+### 6G.3 · 503 `COMPUTE_ESTIMATE_EXCEEDED` kök nedeni (salt okunur + ölçüm)
+
+**Karar yolu [Doğrulandı: source]:**
+- `compute-pool.js:77-79`: işçi yanıtındaki `retainedBytes + outputBytes > slot.residentBytes + job.estimatedBytes` ise ya da bütçe aşılıyorsa `retire(slot, COMPUTE_ESTIMATE_EXCEEDED)`. İşçi sonlandırılır.
+- Barındırıcılar, veri kümeleri ve `entry.current` kaybolur; sonraki okuma soğuk tam hesap yapar.
+- `retainedBytes`, `read-model-worker.js:72/83`'te `process.memoryUsage().heapUsed + arrayBuffers` olarak, **çöp toplama olmadan** iş bitiminde ölçülür.
+- Bütçe `read-model-pool.js:31`: `min(1 GiB, RAM/4)` → bu makinede 1 GiB; ≥4 GB RAM'li her makinede 1 GiB.
+
+**Tahmine dahil olan/olmayan [Doğrulandı: source]:**
+- Sıcak veri kümesi yükleme tahmini `datasetLoadEstimate` = `96 MiB + 6 × sıkıştırılmamış + girdi` (≈491 MB, 30k).
+- Dahil değil:
+  - (i) yeni veri kümesi kurulurken bellekte kalan **önceki nesil satırları** (`entry.current.rows`, `previous.source`/`out` Map'leri). İş bitene kadar yaşar, iş sonunda çöp olur.
+  - (ii) önceki işin **toplanmamış çöpü**. `heapUsed` bunu sonraki işe yazar.
+
+**Ölçüm [Doğrulandı: kanca, gerçek sunucu, 30k]:**
+- Veri kümesi yükleyen iş sonrası "retained" **571–795 MB**.
+- Bir sonraki ucuz işte, veri değişmeden **205–260 MB** (GC sonrası canlı küme).
+- Aşım örnekleri:
+  - yükleme işi: sınır 751 MB, ölçülen 776 MB;
+  - ardından gelen `warmOnly` işi: tahmin 96 MB, sınır 368–722 MB, ölçülen 575–795 MB.
+- Yani 503'ün bir kısmı, **işin kendisinin değil, önceki işin çöpünün** bu işe yazılmasıdır **[Güçlü çıkarım: aynı veriyle ardışık ölçümlerde 575 → 256 MB düşüş]**.
+
+**Bütçe sığmayınca ikinci yol:** `reserved = workerBase + resident + aktif + …`. Şişkin `resident` (≈574–648 MB) + 491 MB tahmin bütçeyi aşıyor. Havuz boştaki işçiyi kapatıp yer açıyor; barındırıcı düşüyor ve soğuk tam hesap oluyor. Bu, P3b ve P6'daki `hostMs > 0` + tam hesapla uyumlu **[Muhtemel]**.
+
+**Pilot 503'ü ortadan kaldırdı mı? [Doğrulandı]** Hayır.
+- Pilot, eski kayıt yollarında veri kümesi yükleme yoluna **girilmesini** önlüyor: L2'de açık kolda 0/21 503, kapalıda 10/21.
+- Bayrak açıkken bile kira yolları hâlâ yükleme yapıyor ve 503 görüldü (kanca günlüğünde 3 aşım, `kill.js`'de 1 yeniden deneme):
+  - başka kullanıcı;
+  - importance;
+  - yapılandırma ve gün dönümü;
+  - güvensiz yama;
+  - doğrulama uyuşmazlığı.
+
+**Çözüm yönü (kod yok; bütçe/limit artırmak çözüm sayılmaz):**
+- Ölçümü "iş sonrası canlı küme"ye yaklaştırmak, ya da tahmine önceki neslin satırlarını açıkça eklemek;
+- önceki nesil satırlarını yeni yükleme öncesi bırakmak (özet karşılaştırması için yalnız özet Map'i tutmak).
+
+Hangisinin güvenli olduğu ayrı ölçüm ister **[Hipotez]**.
+
+### 6G.4 · Modülün kendi girdilerine bağlı geçerlilik anahtarı uygulanabilir mi?
+
+**`activeGeneration` kullanımları [Doğrulandı: source]:**
+1. Modül dosyalarının disk konumu (`modulePath(userId, activeGeneration, module)`).
+2. Manifest'in atomik değişimi, `previousGeneration` ve `.bak` kurtarma (`page-projection-cache.js:106-127, 235-282`).
+3. `reuseGeneration`: `moduleInputKeys` eşleşirse yeniden kullanım (`server.js:8674`).
+4. Zarf ve yanıt başlıkları (`X-Page-Cache-Generation`, `cachedGeneration`: `server.js:9052-9099, 9169`). `public/`'te tüketici bulunamadı.
+5. Backlog varyant yolu ve tutarlılık denetimi (`page-projection-cache.js:489-515`).
+6. Okuma modeli veri kümesi anahtarı `activeGeneration:checksum16` (`read-model-service.js:48`, `cp-computed-service.js:140`, `overview-model-service.js:98`).
+
+**İçerik kimliği zaten var:** modül `checksum` = sıkıştırılmış baytların SHA-256'sı, yazımda hesaplanır. Değişmeyen modül baytları taşınınca checksum aynı kalır. Yeni tam tarama gerekmez.
+
+**Ama anahtarda ikinci bir sürüm daha var [Doğrulandı: source]:**
+- Veri kümesi anahtarı `hash([captured.key, …, generation])`.
+- `captured.key` = `{userId, contextHash, accessHash, sourceToken}` (`compute-read-guard.js:8-10`).
+- `contextHash` (`computeReadContext`) paylaşılan override revizyonunu ve günü içerir, **her kayıtta değişir**.
+- Bu yüzden yalnız `activeGeneration`'ı checksum'la değiştirmek yetmez. Anahtar `userId + accessHash + sourceToken + modül checksum` olmalı. `contextHash` ise yalnız güncellik kapısında (`assertResponse`) kalmalı.
+
+**Güvenli mi? [Muhtemel, kanıtlanmadı]:**
+- Bayt içeriği aynıysa sorgu sonucu aynıdır. Veri kümesi yalnız baytlardan çözülür; `today` sorgudadır.
+- Ancak `contextHash`'in anahtardaki başka bir rolü (erişim kapsamı değişimi, kaynak yenilemesi) `accessHash` / `sourceToken`'da tam kapsanmalı. Bunun kanıtı gerekir.
+
+**Kazanç sınırlı:** Bir Supp. FOB kaydında cp, orders ve order-summary içerik olarak gerçekten değişiyor. Bu üçü için checksum değişir, yeniden yükleme yine olur. Kazanç yalnız değişmeyen modüllerde (overview, collection-catalog) ve bunların okuma modelleri açıkken.
+
+**`derived-input-keys` neden aday değil:** Anahtar bütün override'ı tek parça özetliyor. Modül başına "kendi girdisi"ne inmek, hangi override alanını hangi modülün okuduğunu bilmeyi, yani elle tutulan bir listeyi gerektirir. Kurala aykırı.
+
+**Satır yaması günlüğü:** Değişen satırların kimliğini zaten taşıyor. Değişen modüllerde tam yeniden yükleme yerine yama uygulamanın tek mevcut yolu bu (CP'de var). Siparişler'e taşınması ayrı karar (§6F.5-1).
 
 ## 7 · Ürün sahibinin vermesi gereken kararlar
 

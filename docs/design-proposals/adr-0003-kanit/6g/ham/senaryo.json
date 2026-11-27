@@ -1,0 +1,537 @@
+{
+ "steps": [
+  {
+   "name": "P0 A açılış",
+   "ms": 9347,
+   "open": {
+    "status": 200,
+    "ms": 9330,
+    "delta": false,
+    "rows": 24982,
+    "inc": null,
+    "decisionMs": 2583.8898800000006,
+    "hostMs": 19.834802999999738,
+    "rowPatch": {
+     "miss": "no-base"
+    },
+    "lease": 5005
+   }
+  },
+  {
+   "name": "P1 ardışık 3 kayıt (her biri okuma)",
+   "ms": 465,
+   "out": [
+    {
+     "save": 200,
+     "read": {
+      "status": 200,
+      "ms": 124,
+      "delta": true,
+      "rows": 0,
+      "inc": {
+       "changed": 1,
+       "targets": 2,
+       "rowPatch": true
+      },
+      "decisionMs": 0.9637510000011389,
+      "hostMs": 0,
+      "rowPatch": {
+       "steps": 1,
+       "pending": 1,
+       "verified": false
+      },
+      "lease": 0
+     }
+    },
+    {
+     "save": 200,
+     "read": {
+      "status": 200,
+      "ms": 171,
+      "delta": true,
+      "rows": 0,
+      "inc": {
+       "changed": 1,
+       "targets": 1,
+       "rowPatch": true
+      },
+      "decisionMs": 0.7491529999988416,
+      "hostMs": 0,
+      "rowPatch": {
+       "steps": 1,
+       "pending": 2,
+       "verified": false
+      },
+      "lease": 0
+     }
+    },
+    {
+     "save": 200,
+     "read": {
+      "status": 200,
+      "ms": 86,
+      "delta": true,
+      "rows": 0,
+      "inc": {
+       "changed": 1,
+       "targets": 2,
+       "rowPatch": true
+      },
+      "decisionMs": 0.6202069999999367,
+      "hostMs": 0,
+      "rowPatch": {
+       "steps": 1,
+       "pending": 3,
+       "verified": false
+      },
+      "lease": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "P2a /batch (5 satır, 2 Del. Type değişimi)",
+   "ms": 165,
+   "save": 200,
+   "text": "",
+   "read": {
+    "status": 200,
+    "ms": 99,
+    "delta": true,
+    "rows": 0,
+    "inc": {
+     "changed": 5,
+     "targets": 8,
+     "rowPatch": true
+    },
+    "decisionMs": 1.236814999998387,
+    "hostMs": 0,
+    "rowPatch": {
+     "steps": 1,
+     "pending": 4,
+     "verified": false
+    },
+    "lease": 0
+   }
+  },
+  {
+   "name": "P2b /batch-suppfob (5 satır)",
+   "ms": 106,
+   "save": 200,
+   "text": "",
+   "read": {
+    "status": 200,
+    "ms": 93,
+    "delta": true,
+    "rows": 0,
+    "inc": {
+     "changed": 5,
+     "targets": 10,
+     "rowPatch": true
+    },
+    "decisionMs": 1.1418240000002697,
+    "hostMs": 0,
+    "rowPatch": {
+     "steps": 1,
+     "pending": 5,
+     "verified": false
+    },
+    "lease": 0
+   }
+  },
+  {
+   "name": "P2c aynı opsiyon: biri düzenlenir (Del. Type)",
+   "ms": 113,
+   "save": 200,
+   "ids": 2,
+   "read": {
+    "status": 200,
+    "ms": 99,
+    "delta": true,
+    "rows": 0,
+    "inc": {
+     "changed": 1,
+     "targets": 2,
+     "rowPatch": true
+    },
+    "decisionMs": 0.4996160000009695,
+    "hostMs": 0,
+    "rowPatch": {
+     "steps": 1,
+     "pending": 6,
+     "verified": false
+    },
+    "lease": 0
+   }
+  },
+  {
+   "name": "P3a importance tek başına",
+   "ms": 6972,
+   "save": 200,
+   "text": "",
+   "read": {
+    "status": 200,
+    "ms": 6955,
+    "delta": true,
+    "rows": 1,
+    "inc": {
+     "changed": 2,
+     "targets": 4
+    },
+    "decisionMs": 0.8933240000005753,
+    "hostMs": 0,
+    "rowPatch": {
+     "miss": "no-chain"
+    },
+    "lease": 4671
+   }
+  },
+  {
+   "name": "P3b importance + Supp. FOB aynı kayıtta",
+   "ms": 8247,
+   "save": 200,
+   "text": "",
+   "read": {
+    "status": 200,
+    "ms": 8217,
+    "delta": false,
+    "rows": 24982,
+    "inc": null,
+    "decisionMs": 2497.4475469999998,
+    "hostMs": 28.53672699999879,
+    "rowPatch": {
+     "miss": "no-chain"
+    },
+    "lease": 4072
+   }
+  },
+  {
+   "name": "P3c importance sonrası başka alan",
+   "ms": 184,
+   "save": 200,
+   "read": {
+    "status": 200,
+    "ms": 163,
+    "delta": true,
+    "rows": 0,
+    "inc": {
+     "changed": 1,
+     "targets": 2,
+     "rowPatch": true
+    },
+    "decisionMs": 1.010697000001528,
+    "hostMs": 0,
+    "rowPatch": {
+     "steps": 1,
+     "pending": 1,
+     "verified": false
+    },
+    "lease": 0
+   }
+  },
+  {
+   "name": "P4a 409 bayat revizyon",
+   "ms": 16,
+   "save": 409,
+   "code": "REVISION_CONFLICT",
+   "read": {
+    "status": 200,
+    "ms": 11,
+    "delta": true,
+    "rows": 0,
+    "inc": null,
+    "rowPatch": null
+   }
+  },
+  {
+   "name": "P4b yetkisiz kullanıcı",
+   "ms": 8,
+   "save": 403,
+   "code": "ORDER_VIEW_ONLY",
+   "read": {
+    "status": 200,
+    "ms": 6,
+    "delta": true,
+    "rows": 0,
+    "inc": null,
+    "rowPatch": null
+   }
+  },
+  {
+   "name": "P5 başka kullanıcı (B) Supp. FOB + Del. Type",
+   "ms": 6640,
+   "saves": [
+    200,
+    200
+   ],
+   "read": {
+    "status": 200,
+    "ms": 6603,
+    "delta": true,
+    "rows": 0,
+    "inc": {
+     "changed": 2,
+     "targets": 2
+    },
+    "decisionMs": 0.8944190000038361,
+    "hostMs": 0,
+    "rowPatch": {
+     "miss": "no-chain"
+    },
+    "lease": 4200
+   }
+  },
+  {
+   "name": "P5b A kendi kaydı (B sonrası)",
+   "ms": 146,
+   "save": 200,
+   "read": {
+    "status": 200,
+    "ms": 130,
+    "delta": true,
+    "rows": 0,
+    "inc": {
+     "changed": 1,
+     "targets": 2,
+     "rowPatch": true
+    },
+    "decisionMs": 0.7482830000008107,
+    "hostMs": 0,
+    "rowPatch": {
+     "steps": 1,
+     "pending": 1,
+     "verified": false
+    },
+    "lease": 0
+   }
+  },
+  {
+   "name": "P6 yapılandırma: transit kuralı",
+   "ms": 8149,
+   "put": 200,
+   "putText": "",
+   "save": 200,
+   "read": {
+    "status": 200,
+    "ms": 8099,
+    "delta": false,
+    "rows": 24982,
+    "inc": null,
+    "decisionMs": 2436.411745000005,
+    "hostMs": 21.34274500000174,
+    "rowPatch": {
+     "miss": "no-chain"
+    },
+    "lease": 4081
+   }
+  },
+  {
+   "name": "P7 gün dönümü (+1 gün) + kayıt",
+   "ms": 5201,
+   "readBefore": {
+    "status": 200,
+    "ms": 4254,
+    "delta": false,
+    "rows": 24982,
+    "inc": null,
+    "decisionMs": 2651.4220849999992,
+    "hostMs": 3.610226999999213,
+    "rowPatch": {
+     "miss": "no-chain"
+    },
+    "lease": 5
+   },
+   "save": 200,
+   "read": {
+    "status": 200,
+    "ms": 125,
+    "delta": true,
+    "rows": 0,
+    "inc": {
+     "changed": 1,
+     "targets": 4,
+     "rowPatch": true
+    },
+    "decisionMs": 2.4677449999999226,
+    "hostMs": 0,
+    "rowPatch": {
+     "steps": 1,
+     "pending": 1,
+     "verified": false
+    },
+    "lease": 0
+   }
+  },
+  {
+   "name": "P8a enjeksiyon: günlük kaydı istisnası",
+   "ms": 5241,
+   "save": 200,
+   "read": {
+    "status": 200,
+    "ms": 4006,
+    "delta": true,
+    "rows": 0,
+    "inc": {
+     "changed": 1,
+     "targets": 2
+    },
+    "decisionMs": 1.1410219999997935,
+    "hostMs": 0,
+    "rowPatch": {
+     "miss": "no-chain"
+    },
+    "lease": 1461
+   }
+  },
+  {
+   "name": "P8b enjeksiyon: settle bozuk satır → doğrulama uyuşmazlığı",
+   "ms": 17593,
+   "save": 200,
+   "first": {
+    "status": 200,
+    "ms": 137,
+    "delta": true,
+    "rows": 0,
+    "inc": {
+     "changed": 1,
+     "targets": 1,
+     "rowPatch": true
+    },
+    "decisionMs": 0.7269130000004225,
+    "hostMs": 0,
+    "rowPatch": {
+     "steps": 1,
+     "pending": 1,
+     "verified": false
+    },
+    "lease": 0
+   },
+   "afterSettle": {
+    "status": 200,
+    "ms": 4206,
+    "delta": false,
+    "rows": 24982,
+    "inc": null,
+    "decisionMs": 2494.9000989999986,
+    "hostMs": 19.195878999998968,
+    "rowPatch": {
+     "miss": "mismatch"
+    },
+    "lease": 13
+   }
+  },
+  {
+   "name": "P8c enjeksiyon: yeniden yazım başarısız (settle ok:false)",
+   "ms": 15718,
+   "save": 200,
+   "first": {
+    "status": 200,
+    "ms": 149,
+    "delta": true,
+    "rows": 0,
+    "inc": {
+     "changed": 1,
+     "targets": 2,
+     "rowPatch": true
+    },
+    "decisionMs": 0.9122900000002119,
+    "hostMs": 0,
+    "rowPatch": {
+     "steps": 1,
+     "pending": 1,
+     "verified": false
+    },
+    "lease": 0
+   },
+   "afterSettle": {
+    "status": 200,
+    "ms": 2333,
+    "delta": true,
+    "rows": 0,
+    "inc": {
+     "changed": 0,
+     "targets": 0
+    },
+    "hostMs": 0,
+    "rowPatch": {
+     "miss": "rewrite-failed"
+    },
+    "lease": 17
+   }
+  },
+  {
+   "name": "P9 kayıt sonrası süreç öldürme",
+   "ms": 28,
+   "save": 200
+  }
+ ],
+ "checks": [
+  {
+   "name": "K1 (P1–P6)",
+   "kill": false,
+   "pilotDigest": "583076805a18feaf810c7b127183273b018015a7",
+   "coldDigest": "583076805a18feaf810c7b127183273b018015a7",
+   "equal": true,
+   "count": 24982,
+   "coldStatus": 200,
+   "touched": 21,
+   "rowDiff": []
+  },
+  {
+   "name": "K2 (gün dönümü)",
+   "kill": false,
+   "pilotDigest": "9670b6e46add02c03273b38f9ee08ddbe2db2018",
+   "coldDigest": "9670b6e46add02c03273b38f9ee08ddbe2db2018",
+   "equal": true,
+   "count": 24982,
+   "coldStatus": 200,
+   "touched": 22,
+   "rowDiff": []
+  },
+  {
+   "name": "K3 (enjeksiyonlar)",
+   "kill": false,
+   "pilotDigest": "9670b6e46add02c03273b38f9ee08ddbe2db2018",
+   "coldDigest": "9670b6e46add02c03273b38f9ee08ddbe2db2018",
+   "equal": true,
+   "count": 24982,
+   "coldStatus": 200,
+   "touched": 25,
+   "rowDiff": []
+  },
+  {
+   "name": "K4 (SIGKILL hemen kayıttan sonra)",
+   "kill": true,
+   "pilotDigest": "9670b6e46add02c03273b38f9ee08ddbe2db2018",
+   "coldDigest": "9670b6e46add02c03273b38f9ee08ddbe2db2018",
+   "equal": true,
+   "count": 24982,
+   "coldStatus": 200,
+   "touched": 25,
+   "rowDiff": [
+    "348",
+    "936"
+   ]
+  },
+  {
+   "name": "K5 (K4 sonrası temiz yeniden başlatma)",
+   "kill": false,
+   "pilotDigest": "9670b6e46add02c03273b38f9ee08ddbe2db2018",
+   "coldDigest": "9670b6e46add02c03273b38f9ee08ddbe2db2018",
+   "equal": true,
+   "count": 24982,
+   "coldStatus": 200,
+   "touched": 25,
+   "rowDiff": []
+  }
+ ],
+ "errors": [],
+ "users": {
+  "mod2": 201,
+  "buyer3": 201,
+  "meId": true,
+  "mkText": "",
+  "mk2Text": ""
+ },
+ "killValue": 999
+}

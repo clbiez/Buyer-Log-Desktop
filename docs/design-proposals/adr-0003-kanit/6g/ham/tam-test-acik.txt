@@ -1,0 +1,11 @@
+tests 1864 · pass 1804 · fail 0 · cancelled 0 · skipped 60 · todo 0
+tests 2253 · pass 2247 · fail 0 · cancelled 0 · skipped 3 · todo 3
+tests 2001 · pass 2001 · fail 0 · cancelled 0 · skipped 0 · todo 0
+tests 2246 · pass 2240 · fail 0 · cancelled 0 · skipped 6 · todo 0
+tests 2011 · pass 2010 · fail 1 · cancelled 0 · skipped 0 · todo 0
+real	4m1.733s
+✖ nedensel bulut: geri gelen satırda çakışma kaydına düşen yeni değer / yanlış çakışma (tests/collection-sync-causal-cloud-v20261126.test.js:215:1)
+✖ sırasız teslim: eski sürüm yenisinden sonra gelirse yeni düzenleme geri alınmaz (tests/collection-sync-publication-limits-v20261126.test.js:126:1)
+✖ düşmanca bulut: eski tabanlı yükleme kazanırsa kardeş dal kaybı (tests/collection-sync-randomized-cloud-v20261126.test.js:162:1)
+✖ no file the backend and its dependencies load at runtime is excluded from the package (tests/runtime-package-scope.test.js:32:1)
+[Buyer Log tests] Hatanın kaynağı için üstteki ✖ kayıtlarını (dosya:satır + hata) inceleyin; tam akış için --verbose.

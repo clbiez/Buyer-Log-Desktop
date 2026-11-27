@@ -1,0 +1,439 @@
+{
+ "arm": "on",
+ "edits": [
+  {
+   "name": "patch suppFob",
+   "id": "11",
+   "code": 4100013,
+   "status": 200,
+   "text": ""
+  },
+  {
+   "name": "patch delType",
+   "id": "408",
+   "code": 4100488,
+   "status": 200,
+   "text": ""
+  },
+  {
+   "name": "patch notes",
+   "id": "805",
+   "code": 4100967,
+   "status": 200,
+   "text": ""
+  },
+  {
+   "name": "batch suppFob+delType",
+   "id": "202",
+   "code": 4100231,
+   "status": 200,
+   "text": ""
+  },
+  {
+   "name": "batch-suppfob",
+   "id": "599",
+   "code": 4100717,
+   "status": 200,
+   "text": ""
+  },
+  {
+   "name": "patch importance",
+   "id": "996",
+   "code": 4101201,
+   "status": 200,
+   "text": ""
+  },
+  {
+   "name": "patch importance+suppFob",
+   "id": "393",
+   "code": 4100470,
+   "status": 200,
+   "text": ""
+  }
+ ],
+ "diffs": {
+  "v1_v2": {},
+  "v2_v3": {
+   "202": [
+    {
+     "k": "_logisticSegments",
+     "a": [
+      {
+       "id": "production-0",
+       "kind": "production",
+       "partialNo": null,
+       "synthetic": "production",
+       "userShortage": false,
+       "priority": 1,
+       "quantity": 1880,
+       "status": "Üretimde",
+       "arrival": "2027-02-01T00:00:00.000Z",
+       "entry": null,
+       "basisDates": null,
+       "delType": "Gemi",
+       "handover": null,
+       "sourceRow": null,
+       "importFile": "",
+       "containerNo": "",
+       "vesselName": ""
+      },
+      {
+       "id": "partial-0",
+       "kind": "partial",
+       "partialNo": 1,
+       "synthetic": "",
+       "userShortage": false,
+       "priority": 3,
+       "quantity": 2720,
+       "status": "Depoda",
+       "arrival": "2027-01-05T00:00:00.000Z",
+       "entry": null,
+       "basisDates": null,
+       "delType": "UCAK",
+       "handover": "2026-12-19T00:00:00.000Z",
+       "sourceRow": 87,
+       "importFile": "",
+       "containerNo": "",
+       "vesselName": ""
+      }
+     ],
+     "b": [
+      {
+       "id": "production-0",
+       "kind": "production",
+       "partialNo": null,
+       "synthetic": "production",
+       "userShortage": false,
+       "priority": 1,
+       "quantity": 1880,
+       "status": "Üretimde",
+       "arrival": null,
+       "entry": null,
+       "basisDates": null,
+       "delType": "Kamyon",
+       "handover": null,
+       "sourceRow": null,
+       "importFile": "",
+       "containerNo": "",
+       "vesselName": ""
+      },
+      {
+       "id": "partial-0",
+       "kind": "partial",
+       "partialNo": 1,
+       "synthetic": "",
+       "userShortage": false,
+       "priority": 3,
+       "quantity": 2720,
+       "status": "Depoda",
+       "arrival": "2027-01-05T00:00:00.000Z",
+       "entry": null,
+       "basisDates": null,
+       "delType": "UCAK",
+       "handover": "2026-12-19T00:00:00.000Z",
+       "sourceRow": 87,
+       "importFile": "",
+       "containerNo": "",
+       "vesselName": ""
+      }
+     ]
+    },
+    {
+     "k": "_logisticDelTypeValues",
+     "a": [
+      "Gemi",
+      "Uçak"
+     ],
+     "b": [
+      "Kamyon",
+      "Uçak"
+     ]
+    },
+    {
+     "k": "_logisticArrivalValues",
+     "a": [
+      "2027-02-01T00:00:00.000Z",
+      "2027-01-05T00:00:00.000Z"
+     ],
+     "b": [
+      "2027-01-05T00:00:00.000Z"
+     ]
+    }
+   ],
+   "408": [
+    {
+     "k": "Ant. Arrival",
+     "a": "2027-03-31T00:00:00.000Z",
+     "b": "2027-02-04T00:00:00.000Z"
+    },
+    {
+     "k": "Del. Type",
+     "a": "Gemi",
+     "b": "Uçak"
+    },
+    {
+     "k": "_logisticSegments",
+     "a": [
+      {
+       "id": "production-0",
+       "kind": "production",
+       "partialNo": null,
+       "synthetic": "production",
+       "userShortage": false,
+       "priority": 1,
+       "quantity": 5900,
+       "status": "Üretimde",
+       "arrival": "2027-03-31T00:00:00.000Z",
+       "entry": null,
+       "basisDates": null,
+       "delType": "Gemi",
+       "handover": null,
+       "sourceRow": null,
+       "importFile": "",
+       "containerNo": "",
+       "vesselName": ""
+      }
+     ],
+     "b": [
+      {
+       "id": "production-0",
+       "kind": "production",
+       "partialNo": null,
+       "synthetic": "production",
+       "userShortage": false,
+       "priority": 1,
+       "quantity": 5900,
+       "status": "Üretimde",
+       "arrival": "2027-02-04T00:00:00.000Z",
+       "entry": null,
+       "basisDates": null,
+       "delType": "Uçak",
+       "handover": null,
+       "sourceRow": null,
+       "importFile": "",
+       "containerNo": "",
+       "vesselName": ""
+      }
+     ]
+    },
+    {
+     "k": "_logisticDelTypeValues",
+     "a": [
+      "Gemi"
+     ],
+     "b": [
+      "Uçak"
+     ]
+    },
+    {
+     "k": "_logisticArrivalValues",
+     "a": [
+      "2027-03-31T00:00:00.000Z"
+     ],
+     "b": [
+      "2027-02-04T00:00:00.000Z"
+     ]
+    }
+   ]
+  },
+  "v1_v3": {
+   "202": [
+    {
+     "k": "_logisticSegments",
+     "a": [
+      {
+       "id": "production-0",
+       "kind": "production",
+       "partialNo": null,
+       "synthetic": "production",
+       "userShortage": false,
+       "priority": 1,
+       "quantity": 1880,
+       "status": "Üretimde",
+       "arrival": "2027-02-01T00:00:00.000Z",
+       "entry": null,
+       "basisDates": null,
+       "delType": "Gemi",
+       "handover": null,
+       "sourceRow": null,
+       "importFile": "",
+       "containerNo": "",
+       "vesselName": ""
+      },
+      {
+       "id": "partial-0",
+       "kind": "partial",
+       "partialNo": 1,
+       "synthetic": "",
+       "userShortage": false,
+       "priority": 3,
+       "quantity": 2720,
+       "status": "Depoda",
+       "arrival": "2027-01-05T00:00:00.000Z",
+       "entry": null,
+       "basisDates": null,
+       "delType": "UCAK",
+       "handover": "2026-12-19T00:00:00.000Z",
+       "sourceRow": 87,
+       "importFile": "",
+       "containerNo": "",
+       "vesselName": ""
+      }
+     ],
+     "b": [
+      {
+       "id": "production-0",
+       "kind": "production",
+       "partialNo": null,
+       "synthetic": "production",
+       "userShortage": false,
+       "priority": 1,
+       "quantity": 1880,
+       "status": "Üretimde",
+       "arrival": null,
+       "entry": null,
+       "basisDates": null,
+       "delType": "Kamyon",
+       "handover": null,
+       "sourceRow": null,
+       "importFile": "",
+       "containerNo": "",
+       "vesselName": ""
+      },
+      {
+       "id": "partial-0",
+       "kind": "partial",
+       "partialNo": 1,
+       "synthetic": "",
+       "userShortage": false,
+       "priority": 3,
+       "quantity": 2720,
+       "status": "Depoda",
+       "arrival": "2027-01-05T00:00:00.000Z",
+       "entry": null,
+       "basisDates": null,
+       "delType": "UCAK",
+       "handover": "2026-12-19T00:00:00.000Z",
+       "sourceRow": 87,
+       "importFile": "",
+       "containerNo": "",
+       "vesselName": ""
+      }
+     ]
+    },
+    {
+     "k": "_logisticDelTypeValues",
+     "a": [
+      "Gemi",
+      "Uçak"
+     ],
+     "b": [
+      "Kamyon",
+      "Uçak"
+     ]
+    },
+    {
+     "k": "_logisticArrivalValues",
+     "a": [
+      "2027-02-01T00:00:00.000Z",
+      "2027-01-05T00:00:00.000Z"
+     ],
+     "b": [
+      "2027-01-05T00:00:00.000Z"
+     ]
+    }
+   ],
+   "408": [
+    {
+     "k": "Ant. Arrival",
+     "a": "2027-03-31T00:00:00.000Z",
+     "b": "2027-02-04T00:00:00.000Z"
+    },
+    {
+     "k": "Del. Type",
+     "a": "Gemi",
+     "b": "Uçak"
+    },
+    {
+     "k": "_logisticSegments",
+     "a": [
+      {
+       "id": "production-0",
+       "kind": "production",
+       "partialNo": null,
+       "synthetic": "production",
+       "userShortage": false,
+       "priority": 1,
+       "quantity": 5900,
+       "status": "Üretimde",
+       "arrival": "2027-03-31T00:00:00.000Z",
+       "entry": null,
+       "basisDates": null,
+       "delType": "Gemi",
+       "handover": null,
+       "sourceRow": null,
+       "importFile": "",
+       "containerNo": "",
+       "vesselName": ""
+      }
+     ],
+     "b": [
+      {
+       "id": "production-0",
+       "kind": "production",
+       "partialNo": null,
+       "synthetic": "production",
+       "userShortage": false,
+       "priority": 1,
+       "quantity": 5900,
+       "status": "Üretimde",
+       "arrival": "2027-02-04T00:00:00.000Z",
+       "entry": null,
+       "basisDates": null,
+       "delType": "Uçak",
+       "handover": null,
+       "sourceRow": null,
+       "importFile": "",
+       "containerNo": "",
+       "vesselName": ""
+      }
+     ]
+    },
+    {
+     "k": "_logisticDelTypeValues",
+     "a": [
+      "Gemi"
+     ],
+     "b": [
+      "Uçak"
+     ]
+    },
+    {
+     "k": "_logisticArrivalValues",
+     "a": [
+      "2027-03-31T00:00:00.000Z"
+     ],
+     "b": [
+      "2027-02-04T00:00:00.000Z"
+     ]
+    }
+   ]
+  }
+ },
+ "errors": [],
+ "retries503": 1,
+ "v2Timing": {
+  "captureMs": 4,
+  "contextMs": 1,
+  "tasksMs": 0,
+  "leaseMs": 6,
+  "rowPatch": {
+   "miss": "current"
+  },
+  "computeMs": 39
+ },
+ "cacheFiles": [
+  "local/page-cache/moderator/manifest.json",
+  "local/page-cache/moderator/manifest.json.bak"
+ ]
+}
