@@ -154,7 +154,10 @@
     // Fiyat Defteri kancası (sunucu hâli + bekleyen satır değişiklikleri); bkz. qAfterServerRequest.
     const after=typeof qAfterServerRequest==='function'?qAfterServerRequest:null;
     if(index<0){st.requests.unshift(normalized);if(after)after(normalized,normalized);qPersistLocal();return normalized;}
-    const existing=qMergeRequestInPlace(st.requests[index],normalized);
+    // Aynı talebin gönderilmemiş yapı kaydı kuyruktaysa bu (eski) yanıt onun req
+    // nesnesine birleşmez: aradaki düzenleme (ör. ikinci üretici) silinmez. Sunucu
+    // hâli yine hatırlanır; son kaydın yanıtı birleşir.
+    const existing=qStructuralSaves.has(normalized.id)?st.requests[index]:qMergeRequestInPlace(st.requests[index],normalized);
     if(after)after(existing,normalized);
     qPersistLocal();return existing;
   }

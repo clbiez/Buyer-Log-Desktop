@@ -30,7 +30,7 @@ function loadReplaceRequest(store) {
   assert.ok(match, 'qReplaceRequest bulunamadı');
   const merge = SRC.match(/function qMergeRequestInPlace\(existing,normalized\)\{[\s\S]*?\n  \}/);
   assert.ok(merge, 'qMergeRequestInPlace bulunamadı');
-  const factory = new Function('qNormalizeRequest', 'qLoad', 'qPersistLocal', `${merge[0]}\nreturn (${match[0]})`);
+  const factory = new Function('qNormalizeRequest', 'qLoad', 'qPersistLocal', `const qStructuralSaves=new Map();${merge[0]}\nreturn (${match[0]})`);
   return factory(
     request => JSON.parse(JSON.stringify(request)), // sunucu yanıtı her zaman yeni nesnedir
     () => store,

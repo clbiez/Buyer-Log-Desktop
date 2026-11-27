@@ -103,7 +103,7 @@ test('yapı kaydı sayacı sunucu yanıtından sonra, hydrate/birleştirmeden ö
 // Uçtan uca (gerçek qSave/qQueue/qPlanSave/qHydrateShared/qReplaceRequest): Codex'in
 // bildirdiği sıra. Kuyruk önceki bir işle bloke → B eklenir ve kaydedilir → canlı
 // refresh hydrate eder → kuyruk serbest kalır → PUT gövdesinde B bulunmalı.
-function saveFlow(src) {
+function saveFlow(src, { gatePuts = false } = {}) {
   const cut = (a, b) => { const s = src.indexOf(a), e = src.indexOf(b, s); assert.ok(s > 0 && e > s, a); return src.slice(s, e); };
   const block = src.includes('  function qMergeRequestInPlace(')
     ? cut('  function qMergeRequestInPlace(', '\n  // Quotation içeriği')
@@ -112,9 +112,9 @@ function saveFlow(src) {
   const puts = [];
   let release;
   const ctx = {
-    serverJson: JSON.stringify([serverReq]), puts, gate: new Promise(resolve => { release = resolve; }),
+    serverJson: JSON.stringify([serverReq]), puts, putGates: [], gate: new Promise(resolve => { release = resolve; }),
     qApi: async (url, options = {}) => {
-      if (options.method === 'PUT') { const body = JSON.parse(options.body); puts.push(body); return { request: body }; }
+      if (options.method === 'PUT') { const body = JSON.parse(options.body); puts.push(body); if (gatePuts) await new Promise(resolve => ctx.putGates.push(resolve)); return { request: body }; }
       return { profiles: [], requests: JSON.parse(ctx.serverJson) };
     },
   };
@@ -150,4 +150,22 @@ test('Codex P1: kuyruktaki yapı kaydı hydrate sonrasında da B ile gönderilir
   assert.deepEqual(puts[0].manufacturers.map(m => m.name), ['A', 'B']);
   assert.deepEqual(puts[0].items.map(item => item.id), ['l1', 'l2']);
   assert.deepEqual([...active.manufacturers.map(m => m.name)], ['A', 'B'], 'ekrandaki talep B ile kalır');
+});
+
+test('önceki PUT yanıt beklerken eklenen üretici, o yanıtın birleşmesiyle kaybolmaz', async () => {
+  // Main'de de vardı: PUT1 yanıtı (B yok) kuyruktaki PUT2'nin req nesnesine birleşip B'yi siliyordu.
+  const { ctx, puts } = saveFlow(source, { gatePuts: true });
+  const tick = () => new Promise(resolve => setTimeout(resolve, 5));
+  const req = ctx.state().requests[0];
+  req.note = 'X'; ctx.save(req); await tick();             // PUT1 uçuşta
+  req.manufacturers.push({ name: 'B' });
+  req.items.push({ id: 'l2', modelKey: 'm1', manufacturer: 'B', price: '' });
+  ctx.save(req);                                           // PUT2 kuyrukta
+  ctx.putGates.shift()(); await tick();                    // PUT1 yanıtı gelir
+  while (ctx.putGates.length) { ctx.putGates.shift()(); await tick(); }
+  await ctx.flush();
+  assert.equal(puts.length, 2);
+  assert.deepEqual(puts[1].manufacturers.map(m => m.name), ['A', 'B'], 'PUT2 B ile gider');
+  assert.equal(puts[1].note, 'X');
+  assert.deepEqual([...ctx.state().requests[0].manufacturers.map(m => m.name)], ['A', 'B']);
 });
