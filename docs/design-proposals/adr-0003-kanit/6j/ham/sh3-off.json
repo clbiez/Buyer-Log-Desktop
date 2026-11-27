@@ -1,0 +1,97 @@
+{
+ "arm": "off",
+ "edits": [
+  {
+   "kind": "Supp. FOB PATCH (delType yok)",
+   "id": "11",
+   "status": 200,
+   "text": ""
+  },
+  {
+   "kind": "not /batch",
+   "id": "408",
+   "status": 200,
+   "text": ""
+  },
+  {
+   "kind": "/batch-suppfob",
+   "status": 200
+  },
+  {
+   "kind": "POST /rows not",
+   "id": "1599",
+   "status": 200,
+   "text": ""
+  },
+  {
+   "kind": "Retail PATCH",
+   "id": "1996",
+   "status": 200,
+   "text": ""
+  },
+  {
+   "kind": "In-Store PATCH",
+   "id": "2393",
+   "status": 200,
+   "text": ""
+  },
+  {
+   "kind": "Supp. FOB + not aynı satır ardışık",
+   "id": "2790",
+   "status": 200,
+   "text": ""
+  },
+  {
+   "kind": "Del. Type POST /rows (tam yol)",
+   "id": "187",
+   "status": 200,
+   "text": ""
+  }
+ ],
+ "reads": [
+  {
+   "rowPatch": {
+    "miss": "no-base"
+   },
+   "lease": 28,
+   "retries": 0
+  },
+  {
+   "rowPatch": {
+    "miss": "no-chain"
+   },
+   "lease": 10,
+   "retries": 1
+  },
+  {
+   "rowPatch": {
+    "miss": "no-chain"
+   },
+   "lease": 5896,
+   "retries": 0
+  },
+  {
+   "rowPatch": {
+    "miss": "no-base"
+   },
+   "lease": 5848,
+   "retries": 0
+  }
+ ],
+ "checks": {
+  "v1_v3_phase1": {},
+  "v2_v3_all": {},
+  "t1_t3_phase1": [],
+  "t1_t3_allRows_exceptLater": 0,
+  "t2_t3_allRows": 0,
+  "totalRows": 24982
+ },
+ "errors": [],
+ "pilotRead": {
+  "rowPatch": {
+   "miss": "no-chain"
+  },
+  "lease": 10,
+  "retries": 1
+ }
+}

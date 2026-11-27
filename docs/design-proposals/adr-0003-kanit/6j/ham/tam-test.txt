@@ -1,0 +1,5 @@
+[Buyer Log tests] PASS — 1555 test dosyası (347.3s).
+[Buyer Log tests] PASS — 1555 test dosyası (335.0s).
+commit 211863f6b253c9304a6705e529689e6673b9228e
+off exit 0
+on exit 0

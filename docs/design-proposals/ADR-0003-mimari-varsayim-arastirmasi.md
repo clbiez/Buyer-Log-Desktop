@@ -1165,6 +1165,45 @@ Kod değiştirilmedi. Gerçek Chromium DOM olayları kullanıldı: çift tık, m
 - Backlog RİSK (`computeBacklogRisk`) segment satırı başına hesaplanıyor; birincil seçimden bağımsız.
 - Diğer satırlarda Priority'nin değişip değişmediği ölçülmedi **[Bilinmiyor]**. Seçim değiştirilmedi.
 
+## 6J · #1236 güncel main'e taşındı: test, bağımsız gölge, L2; çapraz istemci güncelliği (2026-11-27)
+
+**Commit:** `211863f6` = `claude/cp-karar-pilot`, merge `origin/main 27dbaf0` (rebase yok). Merge yok, bayrak varsayılan kapalı. Ham sonuçlar: `adr-0003-kanit/6j/`.
+
+**Tam test [Doğrulandı]:** temiz `npm ci` çalışma ağacında bayrak kapalı ve açık: ikisi de PASS, 1555 dosya, 0 başarısız.
+
+**Bağımsız gölge [Doğrulandı: gerçek sunucu, 30k]:**
+- **Taban:** projeksiyon önbelleği silinip sıfırdan tam kurulum (V3/T3). Taban artımlı yama fonksiyonundan geçmiyor.
+- **Pilot kayıtları:** Supp. FOB (`PATCH`, gövdede `delType` yok), not `/batch`, `/batch-suppfob` (2 satır), `POST /rows` not, Retail, In-Store, aynı satırda ardışık Supp. FOB + not.
+- **Bayrak açık:** pilot okuması sanal yoldan geldi (8 adım, kira beklemesi 0).
+  - V1 ↔ V3: dokunulan satırlarda alan farkı 0.
+  - T1 ↔ T3: 24.982 satırın tamamında karar demeti farkı 0 (sonradan tam yola giden Del. Type satırı hariç).
+  - V2/T2 ↔ V3/T3: 0.
+- **Bayrak kapalı:** aynı sonuç (0 fark).
+
+**L2 (sabit `211863f6`, bayrak kapalı/açık, A B B A A B, 3 çift):**
+
+| Ölçü (medyan) | Supp. FOB | Not |
+|---|---|---|
+| Kayıt → CP yanıtı | 7,93 → 0,245 sn (−%96,9; çiftler −7,66 / −7,60 / −8,37) | 7,22 → 0,184 sn (−%97,5) |
+| Kayıt → CP + Siparişler hazır | 9,03 → 4,03 sn | 8,35 → 4,35 sn |
+| Sunucu CPU | 16,9 → 10,0 sn | 15,0 → 11,4 sn |
+| Siparişler | 1,16 → 3,77 sn (bekleme kayması) | 1,06 → 4,03 sn |
+
+- Kapalı kolda Supp. FOB CP okumalarının 9/9'u 503 aldı; açık kolda 0.
+- Son okuma özeti 6/6 koşuda aynı.
+- Del. Type ve Ex-factory artık tam kuruluma gidiyor; pilot kapsamı dışında.
+
+**Çapraz istemci güncelliği (bayrak kapalı = main davranışı, 3 deneme):** U2 Del. Type değiştirir; U1'de iki sekme açık (CP ve Siparişler).
+- **[Doğrulandı]** `loadFromServer(false)` iki sekmede de ~315 ms'de tetikleniyor. İki sekme de `/api/data` ve `page-projection/cp`, `/orders` istiyor.
+- **[Doğrulandı]** Süreler:
+  - Siparişler (veri = ekran): 5,8 / 9,3 / 9,9 sn;
+  - CP satır verisi: 11,5 / 11,7 / 12,4 sn;
+  - CP ekranı (Del. Type hücresi): 37,4 / 31,5 / 33,5 sn.
+- **[Muhtemel]** Del. Type yaması artımlı değil; U2'nin yazımı U1'in bağlamını kaydırdığı için U1'in projeksiyonu tam yeniden kuruluyor. İkinci istek dalgası ancak 5,7–10,3 sn'de başlıyor.
+- **[Hipotez]** CP ekranının ek ~20 sn'si sonraki `cp/query` ve `cp/computed` turlarından geliyor (yanıt süreleri ölçülmedi).
+- Aynı kullanıcının iki sekmesi aynı tam yeniden yüklemeyi iki kez başlatıyor **[Doğrulandı: istek listesi]**.
+- Çözüm önerilmedi.
+
 ## 7 · Ürün sahibinin vermesi gereken kararlar
 
 1. **Sütun filtresi anlamı (T5):** Koleksiyonda sayısal/aralık/revizyon filtresi yokluğu bilinçli mi? Genel Bakış boyut filtresinin `norm()` eşitliği istenen davranış mı?

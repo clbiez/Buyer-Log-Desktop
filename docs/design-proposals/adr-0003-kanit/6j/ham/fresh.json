@@ -1,0 +1,370 @@
+{
+ "trials": [
+  {
+   "code": 4100007,
+   "bStatus": 200,
+   "ackMs": 17,
+   "cpState": 11516,
+   "cpDom": 37408,
+   "ordersState": 5761,
+   "ordersDom": 5761,
+   "ordersRM": true,
+   "lastOrdersDom": "Uçak",
+   "lastCpDom": "Uçak",
+   "cpLoadFromServer": [
+    {
+     "ms": 316,
+     "args": [
+      false
+     ]
+    }
+   ],
+   "ordersLoadFromServer": [
+    {
+     "ms": 316,
+     "args": [
+      false
+     ]
+    }
+   ],
+   "cpNet": [
+    {
+     "ms": 325,
+     "p": "/api/data"
+    },
+    {
+     "ms": 600,
+     "p": "/api/page-projection/cp"
+    },
+    {
+     "ms": 600,
+     "p": "/api/page-projection/orders"
+    },
+    {
+     "ms": 600,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 5657,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 5657,
+     "p": "/api/page-projection/collection-catalog"
+    },
+    {
+     "ms": 7105,
+     "p": "/api/data-cleanup/reminder"
+    },
+    {
+     "ms": 11490,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 13678,
+     "p": "/api/read-model/cp/computed"
+    },
+    {
+     "ms": 22646,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 32281,
+     "p": "/api/read-model/cp/computed"
+    }
+   ],
+   "ordersNet": [
+    {
+     "ms": 316,
+     "p": "/api/page-projection/orders"
+    },
+    {
+     "ms": 324,
+     "p": "/api/data"
+    },
+    {
+     "ms": 470,
+     "p": "/api/page-projection/cp"
+    },
+    {
+     "ms": 470,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 3614,
+     "p": "/api/read-model/cp/computed"
+    },
+    {
+     "ms": 5734,
+     "p": "/api/page-projection/collection-catalog"
+    },
+    {
+     "ms": 5735,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 5735,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 12977,
+     "p": "/api/read-model/cp/computed"
+    },
+    {
+     "ms": 12995,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 13032,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 28508,
+     "p": "/api/read-model/cp/computed"
+    },
+    {
+     "ms": 31281,
+     "p": "/api/data-cleanup/reminder"
+    }
+   ]
+  },
+  {
+   "code": 4100009,
+   "bStatus": 200,
+   "ackMs": 16,
+   "cpState": 11740,
+   "cpDom": 31517,
+   "ordersState": 9280,
+   "ordersDom": 9280,
+   "ordersRM": true,
+   "lastOrdersDom": "Uçak",
+   "lastCpDom": "Uçak",
+   "cpLoadFromServer": [
+    {
+     "ms": 317,
+     "args": [
+      false
+     ]
+    }
+   ],
+   "ordersLoadFromServer": [
+    {
+     "ms": 318,
+     "args": [
+      false
+     ]
+    }
+   ],
+   "cpNet": [
+    {
+     "ms": 320,
+     "p": "/api/data"
+    },
+    {
+     "ms": 569,
+     "p": "/api/page-projection/cp"
+    },
+    {
+     "ms": 569,
+     "p": "/api/page-projection/orders"
+    },
+    {
+     "ms": 569,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 9906,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 9906,
+     "p": "/api/page-projection/collection-catalog"
+    },
+    {
+     "ms": 10991,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 11317,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 16015,
+     "p": "/api/read-model/cp/computed"
+    },
+    {
+     "ms": 20894,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 25930,
+     "p": "/api/read-model/cp/query"
+    }
+   ],
+   "ordersNet": [
+    {
+     "ms": 320,
+     "p": "/api/data"
+    },
+    {
+     "ms": 757,
+     "p": "/api/page-projection/cp"
+    },
+    {
+     "ms": 757,
+     "p": "/api/page-projection/orders"
+    },
+    {
+     "ms": 757,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 9235,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 9235,
+     "p": "/api/page-projection/collection-catalog"
+    },
+    {
+     "ms": 9235,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 9235,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 11263,
+     "p": "/api/read-model/cp/computed"
+    },
+    {
+     "ms": 12883,
+     "p": "/api/read-model/orders/query"
+    }
+   ]
+  },
+  {
+   "code": 4100010,
+   "bStatus": 200,
+   "ackMs": 14,
+   "cpState": 12393,
+   "cpDom": 33497,
+   "ordersState": 9871,
+   "ordersDom": 9871,
+   "ordersRM": true,
+   "lastOrdersDom": "Uçak",
+   "lastCpDom": "Uçak",
+   "cpLoadFromServer": [
+    {
+     "ms": 314,
+     "args": [
+      false
+     ]
+    }
+   ],
+   "ordersLoadFromServer": [
+    {
+     "ms": 315,
+     "args": [
+      false
+     ]
+    }
+   ],
+   "cpNet": [
+    {
+     "ms": 316,
+     "p": "/api/data"
+    },
+    {
+     "ms": 638,
+     "p": "/api/page-projection/cp"
+    },
+    {
+     "ms": 638,
+     "p": "/api/page-projection/orders"
+    },
+    {
+     "ms": 638,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 10289,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 10289,
+     "p": "/api/page-projection/collection-catalog"
+    },
+    {
+     "ms": 11149,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 12026,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 17577,
+     "p": "/api/read-model/cp/computed"
+    },
+    {
+     "ms": 17595,
+     "p": "/api/read-model/cp/query"
+    },
+    {
+     "ms": 28010,
+     "p": "/api/read-model/cp/query"
+    }
+   ],
+   "ordersNet": [
+    {
+     "ms": 316,
+     "p": "/api/data"
+    },
+    {
+     "ms": 819,
+     "p": "/api/page-projection/cp"
+    },
+    {
+     "ms": 820,
+     "p": "/api/page-projection/orders"
+    },
+    {
+     "ms": 821,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 9837,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 9837,
+     "p": "/api/page-projection/collection-catalog"
+    },
+    {
+     "ms": 9837,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 9837,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 12063,
+     "p": "/api/read-model/cp/computed"
+    },
+    {
+     "ms": 14073,
+     "p": "/api/read-model/orders/query"
+    },
+    {
+     "ms": 22723,
+     "p": "/api/read-model/cp/computed"
+    }
+   ]
+  }
+ ],
+ "errors": [],
+ "lfsWrapped": true
+}
