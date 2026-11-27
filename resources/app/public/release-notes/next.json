@@ -573,8 +573,8 @@
         "en": "Pricing Desk: a manufacturer added from the table shows up right away"
       },
       "body": {
-        "tr": "Fiyat Masası açıkken ortak fiyat verisi arka planda yenilendikten sonra (ör. kendi kaydınızın ya da başka kullanıcının değişikliğinin ardından) + Üretici ile eklenen üretici kaydediliyor ama tabloda görünmüyordu; ancak başka ekrana gidip dönünce geliyordu. Artık yenileme ekrandaki talebi yerinde günceller; eklenen üretici ve boş fiyat hücreleri matriste hemen açılır.",
-        "en": "While the Pricing Desk was open, after the shared pricing data refreshed in the background (e.g. following your own save or another user's change), a manufacturer added with + Manufacturer was saved but did not show in the table; it appeared only after leaving and returning to the screen. The refresh now updates the request on screen in place, so the added manufacturer and its empty price cells open in the matrix right away."
+        "tr": "Fiyat Masası açıkken ortak fiyat verisi arka planda yenilendikten sonra (ör. kendi kaydınızın ya da başka kullanıcının değişikliğinin ardından) + Üretici ile eklenen üretici kaydediliyor ama tabloda görünmüyordu; ancak başka ekrana gidip dönünce geliyordu. Artık yenileme ekrandaki talebi yerinde günceller; eklenen üretici ve boş fiyat hücreleri matriste hemen açılır. Önceki kayıt sunucuya giderken art arda eklenen ikinci üretici de artık kaybolmaz; iki üretici de kaydedilir.",
+        "en": "While the Pricing Desk was open, after the shared pricing data refreshed in the background (e.g. following your own save or another user's change), a manufacturer added with + Manufacturer was saved but did not show in the table; it appeared only after leaving and returning to the screen. The refresh now updates the request on screen in place, so the added manufacturer and its empty price cells open in the matrix right away. A second manufacturer added while the previous save is still on its way to the server is no longer lost; both manufacturers are saved."
       },
       "visual": {
         "kind": "screenshot",
