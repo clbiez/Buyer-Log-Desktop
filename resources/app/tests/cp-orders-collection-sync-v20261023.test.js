@@ -232,6 +232,8 @@ test('B3 · ensureOrdersLoaded force:true ile yüklü state.orders varlığında
     },
     ordersLoadPromise: null,backgroundWarmupUnrendered:new Set(),
     appLang: 'tr',
+    // Okuma modeli kapalı (eski yol): yükleniyor durumu koşulu ensureOrdersLoaded içinde okunur.
+    ordersReadModelEnabled: () => false, ordersRM: { rows: null },
     setOrdersLoadingState: () => {},
     fetchOrdersProjection: async () => {
       fetchCalls += 1;

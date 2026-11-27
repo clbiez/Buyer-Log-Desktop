@@ -253,6 +253,35 @@
           "en": "The screen layout is unchanged; only the value shown is now current."
         }
       }
+    },
+    {
+      "id": "orders-refresh-indicator",
+      "type": "improvement",
+      "module": {
+        "tr": "Siparişler",
+        "en": "Orders"
+      },
+      "title": {
+        "tr": "Siparişler: güncellenen liste “Güncelleniyor…” ile işaretlenir, tablo görünür kalır",
+        "en": "Orders: a list being refreshed is marked “Updating…” and the table stays visible"
+      },
+      "body": {
+        "tr": "CP'de bir değişiklik kaydedildikten ya da bir ekip arkadaşının satır değişikliği geldikten sonra Siparişler listesi yeniden okunurken araç çubuğunda “Güncelleniyor…” görünür; tablo, filtreler ve seçim yerinde kalır. Güncelleme başarısız olursa “Güncellenemedi: gösterilen değerler eski olabilir” uyarısı ve Tekrar dene düğmesi çıkar. Açılıştan sonraki arka plan hazırlığı da Siparişler tablosunu artık yükleniyor ekranıyla gizlemez.",
+        "en": "After a change is saved in CP or a teammate's row change arrives, “Updating…” appears in the toolbar while the Orders list is read again; the table, filters and selection stay in place. If the update fails, “Could not update: values shown may be out of date” appears with a Retry button. Background preparation after startup no longer hides the Orders table behind a loading screen."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-refresh-indicator.png",
+        "alt": {
+          "tr": "Demo veriyle Siparişler: araç çubuğunda “Güncelleniyor…” yazısı, altında 30.000 satırlık tablo, filtreler ve sayfalama görünür",
+          "en": "Orders with demo data: “Updating…” in the toolbar, with the 30,000-row table, filters and paging visible below"
+        },
+        "caption": {
+          "tr": "CP değişikliğinden sonra liste yenilenirken tablo görünür kalır.",
+          "en": "The table stays visible while the list refreshes after a CP change."
+        }
+      }
     }
   ]
 }

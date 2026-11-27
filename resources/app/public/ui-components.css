@@ -1541,6 +1541,8 @@ html[data-ui-system="manifest"] .toolbar select {font-size:var(--ui-font-xs) !im
 }
 html[data-ui-system="manifest"] .toolbar .count {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
 }
+html[data-ui-system="manifest"] .toolbar .count.ordersRefreshState[data-state="error"] {color:var(--ui-danger) !important
+}
 html[data-ui-system="manifest"] .toolbar button.tbtn,html[data-ui-system="manifest"] .toolbar label.tbtn {background:var(--ui-surface) !important;font-size:var(--ui-font-xs) !important;color:var(--ui-text-secondary) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 html[data-ui-system="manifest"] .toolbar button.tbtn:hover,html[data-ui-system="manifest"] .toolbar label.tbtn:hover {color:var(--ui-selected-ink) !important;background:var(--ui-selected) !important
