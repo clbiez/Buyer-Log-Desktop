@@ -1,7 +1,7 @@
 /* License cards — list view and compact approval map editor.
    Layout only: colour, type, radius and motion come from Buyer Log tokens. */
 .licenseCardsPage{min-width:0}
-.lcPage{--lc-cols:58px 60px minmax(150px,1.5fr) minmax(110px,1fr) repeat(3,minmax(70px,.48fr)) minmax(78px,.55fr) minmax(150px,1fr) minmax(118px,.85fr) 118px;
+.lcPage{--lc-cols:58px 60px minmax(150px,1.5fr) minmax(110px,1fr) repeat(4,minmax(66px,.42fr)) repeat(2,minmax(74px,.5fr)) minmax(150px,1fr) minmax(118px,.85fr) 118px;
   padding:var(--ui-space-3) var(--ui-space-4) 0;position:relative;min-height:100%}
 .lcSpacer{flex:1}
 
@@ -22,7 +22,7 @@
 
 /* Table */
 .lcTable{overflow-x:auto}
-.lcHead,.lcRow{display:grid;grid-template-columns:var(--lc-cols);align-items:center;column-gap:var(--ui-space-2);min-width:1120px;padding:0 var(--ui-space-2)}
+.lcHead,.lcRow{display:grid;grid-template-columns:var(--lc-cols);align-items:center;column-gap:var(--ui-space-2);min-width:1300px;padding:0 var(--ui-space-2)}
 .lcHead{position:sticky;top:0;min-height:var(--ui-table-row-height)}
 .lcSort{display:inline-flex;align-items:center;gap:3px;padding:0;cursor:pointer;justify-self:start}
 .lcSort.isNum{justify-self:end}.lcSort .ic{width:11px;height:11px}
@@ -71,7 +71,7 @@
 .lcPaneWide{grid-column:1/-1}
 .lcPane{min-width:0;display:flex;flex-direction:column;gap:6px}
 .lcPane>header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px}.lcPane>header small{flex:1}
-.lcContractHead,.lcContract{display:grid;grid-template-columns:76px 118px 118px minmax(80px,1fr) repeat(4,minmax(62px,.5fr));gap:4px;align-items:center}
+.lcContractHead,.lcContract{display:grid;grid-template-columns:76px 118px 118px minmax(80px,1fr) repeat(6,minmax(62px,.5fr));gap:4px;align-items:center}
 .lcContract{padding:3px 0}
 .lcContract input[type=date],.lcContract input:not(.lcRate),.lcFields input,.lcFields textarea{width:100%;min-width:0;height:var(--ui-control-height);padding:0 6px}
 .lcFields textarea{height:auto;min-height:48px;padding:4px 6px;resize:vertical}
@@ -212,7 +212,7 @@ body[data-active-tab="licensecards"] main{height:calc(100dvh - var(--ui-topbar-h
 .lcQuick .lcField{flex:1;min-width:85px}.lcQuick .lcQuickRule{flex:2.5;min-width:200px}
 .lcQuick .lcField input,.lcQuick .lcField select,.lcCreate .lcField input{width:100%;min-width:0;box-sizing:border-box}
 .lcQuick small{max-width:140px}
-.lcContractHead,.lcContract{grid-template-columns:76px 118px 118px minmax(90px,1fr) minmax(100px,1fr) repeat(4,minmax(65px,.5fr)) 190px;min-width:1200px}
+.lcContractHead,.lcContract{grid-template-columns:76px 118px 118px minmax(90px,1fr) minmax(100px,1fr) repeat(6,minmax(65px,.5fr)) 190px;min-width:1340px}
 .lcPaneWide{min-width:0;overflow-x:auto}
 @media(max-width:850px){.lcQuick,.lcCreate{flex-wrap:wrap}.lcQuick small{max-width:none}.lcToolbar .lcChips{flex-basis:100%}}
 /* Card editing owns a compact dialog; the list never grows an inline form. */

@@ -2874,7 +2874,8 @@ async function ensureOrdersLoaded(options={}){
   if(!options.force&&state.orders){window.BLModulePreparation?.setStatus('orders','ready');return true;}
   if(ordersLoadPromise)return ordersLoadPromise;
   window.BLModulePreparation?.setStatus('orders','loading');
-  if(currentActiveTab()==='orders')setOrdersLoadingState(true);
+  // Okuma modeli penceresi satırları zaten gösteriyorsa tam yükleme arka planda sürer; tablo gizlenmez.
+  if(currentActiveTab()==='orders'&&!(ordersReadModelEnabled()&&ordersRM.rows))setOrdersLoadingState(true);
   ordersLoadPromise=(async()=>{
     try{
       const result=await fetchOrdersProjection();if(result.cancelled){window.BLModulePreparation?.setStatus('orders','pending');return false;}
@@ -4842,6 +4843,8 @@ function ordersColumnsFromCp(cpCols){
 const ORDERS_COLS = ordersColumnsFromCp(CP_COLS);
 // PLM BOM kumaş metni; hücre/filtre Koleksiyon kumaş kartı katmanını kullanır.
 const CP_FABRIC_PLM_KEY='Fabric (PLM)';
+// PLM BOM baskı özeti; hücre Koleksiyon Artwork Detayı ile aynı bölge kartlarını çizer.
+const CP_ARTWORK_PLM_KEY='Artwork Detail';
 /* CP/Orders PLM detayları sadece yerel BOM yan deposundan okunur. ASAS satırları
    kalıcı olarak değiştirilmez; aynı modelin siparişleri aynı veriyi görür. */
 function cpPlmDetailsSync(){
@@ -7623,6 +7626,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
     return `<td class="${schema.sortType==='number'?'num':''}"${display?` title="${escapeHtml(display)}"`:''}>${escapeHtml(display)}</td>`;
   }
   if((tableKey==='cp'||tableKey==='orders')&&c.k===CP_FABRIC_PLM_KEY) return cpFabricCellHtml(r);
+  if((tableKey==='cp'||tableKey==='orders')&&c.k===CP_ARTWORK_PLM_KEY) return cpArtworkCellHtml(r);
   // Tarih revizyonları okla, onay ve hesaplanan farklar noktayla çizilir.
   // Siparişler'de Priority'nin revizyon öncesi karşılığı hesaplanmaz (iş yükünü
   // ikiye katlar); bu yüzden orada Priority yalnız güncel değeriyle çizilir.
@@ -12270,6 +12274,8 @@ const ordersRM={
   // Açılış bekleyicisi: her çizim bildirir (bkz. ordersNotifyPainted).
   paintWaiters:new Set(),paintCount:0,
   sourceRenderTimer:null, // CP yazımı / uzak yama sonrası birleştirilmiş yeniden çizim (bkz. ordersRMSourceChanged)
+  // Güncellik göstergesi: değişiklikten sonraki sürüm (epoch) sorgusu gelene kadar "Güncelleniyor…" (bkz. ordersRMMarkRefreshing).
+  refreshEpoch:null,refreshFailed:false,
 };
 // Depolama bir kez okunur: filteredOrders / sütun paneli gibi sık yollar her çağrıda okumaz.
 let ordersRMEnabledCache=null;
@@ -12565,14 +12571,16 @@ function renderOrdersFromReadModel(){
     ordersRMRequestFacets(spec,signature);
     return true;
   }
-  const seq=++ordersRM.seq,started=performance.now();
+  const seq=++ordersRM.seq,started=performance.now(),epoch=ordersRM.epoch;
   if(!ordersRM.rows)setOrdersLoadingState(true);
+  ordersRMRenderRefreshState(); // dil değişimi ve sekme geçişinde metin/aria güncel kalır
   // Önce ilk pencere (D1: satırlar görünür), sayaçlar ardından: tek işçide sıraya girer.
   ordersRMPost('/api/read-model/orders/query',ordersRMQueryBody(spec,0,ORDERS_RM_WINDOW)).then(payload=>{
     if(seq!==ordersRM.seq)return;
     ordersRM.generation=String(payload.generation||'');
     const result=payload.result||{};
     ordersRMResetStore(signature,spec,result);
+    ordersRMRefreshSettled(epoch,true);
     ordersRMPlace(0,ordersRMDecorate(result.rows||[]));
     ordersRM.windows.add(0);
     if(currentActiveTab()!=='orders'){_deferredTabRenders.add('orders');return;}
@@ -12585,12 +12593,15 @@ function renderOrdersFromReadModel(){
       // Sunucu bu sorguyu değerlendiremiyor (desteklenmeyen filtre ya da sınır aşımı,
       // ör. 20.000'den fazla işaretli satır): bu sorgu için eski yol.
       ordersRM.legacyReason='server:'+(error.code||'400');ordersRM.signature='';ordersRM.unsupportedSignature=signature;
+      // Eski yol satırları (state.orders) eşlerle ve uzak yamalarla zaten güncel; yoksa yeniden yüklenir.
+      ordersRMRefreshSettled(epoch,true);
       if(!state.orders)void ensureOrdersLoaded();else renderOrdersNowLegacyOnly();
       return;
     }
     const message=(appLang==='en'?'Orders could not be loaded: ':'Siparişler yüklenemedi: ')+(error&&error.message||error);
     if(!ordersRM.rows)setOrdersLoadingState(false,message);
     showToast(message);
+    ordersRMRefreshSettled(epoch,false);
     ordersNotifyPainted(false);
   });
   return true;
@@ -12779,11 +12790,43 @@ window.addEventListener('bl:global-flow-data-changed',event=>{
    görünmüyorsa yalnız geçersizleşir; sonraki açılış yeniden sorgular. Görünürse art arda gelenler tek çizimde birleşir. */
 function ordersRMSourceChanged(reason){
   if(!ordersReadModelEnabled()||!ordersRM.rows)return;
-  ordersRMInvalidate(reason);
+  ordersRMInvalidate(reason);ordersRMMarkRefreshing();
   if(currentActiveTab()!=='orders'||ordersRM.sourceRenderTimer)return;
   ordersRM.sourceRenderTimer=setTimeout(()=>{ordersRM.sourceRenderTimer=null;if(currentActiveTab()==='orders')renderOrders();},250);
 }
 window.addEventListener('buyerlog:cp-write-ack',()=>ordersRMSourceChanged('cp-write-ack'));
+/* Güncellik göstergesi (performans çözümü değildir). Tablo gizlenmez; satırlar, filtreler ve seçim korunur.
+   Yalnız işaretleyen değişiklikten sonraki sürümün (epoch) sorgusu başarıyla gelince kalkar; yerini alan
+   eski sorgu yanıtı kaldırmaz. Sorgu başarısızsa eski değer sessizce güncel sayılmaz: hata + Tekrar dene. */
+function ordersRMMarkRefreshing(){
+  ordersRM.refreshEpoch=ordersRM.epoch;ordersRM.refreshFailed=false;
+  ordersRMRenderRefreshState();
+}
+function ordersRMRefreshSettled(epoch,ok){
+  if(ordersRM.refreshEpoch==null)return;
+  if(!ok)ordersRM.refreshFailed=true;
+  else if(epoch>=ordersRM.refreshEpoch){ordersRM.refreshEpoch=null;ordersRM.refreshFailed=false;}
+  ordersRMRenderRefreshState();
+}
+function ordersRMRenderRefreshState(){
+  if(!ordersReadModelEnabled()){ordersRM.refreshEpoch=null;ordersRM.refreshFailed=false;}
+  const el=document.getElementById('ordersRefreshState'),table=document.getElementById('ordersTable');
+  const pending=ordersRM.refreshEpoch!=null,failed=pending&&ordersRM.refreshFailed;
+  if(table){if(pending&&!failed)table.setAttribute('aria-busy','true');else table.removeAttribute('aria-busy');}
+  if(!el)return;
+  if(!pending){el.hidden=true;el.textContent='';delete el.dataset.state;return;}
+  const appearing=el.hidden;
+  if(failed){
+    el.dataset.state='error';
+    el.innerHTML=`<span>${escapeHtml(appLang==='en'?'Could not update: values shown may be out of date.':'Güncellenemedi: gösterilen değerler eski olabilir.')}</span> <button type="button" class="tbtn" data-orders-refresh-retry>${escapeHtml(appLang==='en'?'Retry':'Tekrar dene')}</button>`;
+  }else{el.dataset.state='busy';el.textContent=appLang==='en'?'Updating…':'Güncelleniyor…';}
+  el.hidden=false;
+  if(appearing)window.BLMotionPlus?.play?.('card',el);
+}
+document.addEventListener('click',event=>{
+  if(!event.target?.closest?.('[data-orders-refresh-retry]'))return;
+  ordersRMInvalidate('refresh-retry');ordersRMMarkRefreshing();renderOrders();
+});
 function ordersRMInvalidate(reason){
   ordersRM.epoch++;ordersRM.seq++;ordersRM.facetsSeq++;ordersRM.signature='';ordersRM.facets=null;ordersRM.facetsKey='';ordersRM.columnFacets.clear();ordersRM.materialized=null;
   window.BLPerf?.mark?.('ORDERS_READ_MODEL_INVALIDATED',{reason:reason||'data'});
@@ -12793,7 +12836,7 @@ window.BLOrdersReadModel={
   setEnabled(value){
     try{(window.BLStorage||localStorage).setItem(ORDERS_RM_STORAGE_KEY,value?'1':'0');}catch(_){}
     ordersRMEnabledCache=Boolean(value);
-    ordersRMInvalidate('toggle');renderOrders();return ordersReadModelEnabled();
+    ordersRMInvalidate('toggle');ordersRMRenderRefreshState();renderOrders();return ordersReadModelEnabled();
   },
   status:()=>({enabled:ordersReadModelEnabled(),windowed:ordersRMWindowedActive(),legacyReason:ordersRM.legacyReason,total:ordersRM.total,
     loadedWindows:ordersRM.windows.size,generation:ordersRM.generation}),
@@ -12903,7 +12946,7 @@ function applyAcknowledgedCpDraft(prepared,data){
   for(const {row,before,after}of prepared.rows){
     if(!['cp','orders','orderSummary'].some(table=>state[table]?.rows?.includes(row)))continue;
     for(const key of new Set([...Object.keys(before),...Object.keys(after)])){
-      if(['_pricingManualWrite','_pricingHistoryRestore','_subManufacturerWrite'].includes(key))continue;
+      if(['_pricingManualWrite','_pricingHistoryRestore','_subManufacturerWrite','_delTypeWrite'].includes(key))continue;
       if(equal(before[key],after[key])||!equal(row[key],before[key]))continue;
       if(Object.hasOwn(after,key))row[key]=structuredClone(after[key]);else delete row[key];
     }
@@ -13091,6 +13134,7 @@ function applyHistoryAction(action, direction, options={}){
     if(snapshot.licensor)historyKeys.add('Licensor');
   }
   if(historyKeys.has('Sub-Manufacturer')&&!action.pricing)row._subManufacturerWrite={};
+  if(historyKeys.has('Del. Type'))row._delTypeWrite={};
   if(historyKeys.has('Del. Type'))syncCpProductionLogisticSegment(row,row['Del. Type']);
   else if(historyKeys.has('Ex-factory'))syncCpProductionLogisticSegment(row);
   applyFormulas(row);
@@ -13526,6 +13570,7 @@ function commitCpEditor(t, options={}){
   const previousPricing=kind==='licensor'?captureCpPricingHistory(row,true):null;
   row[key] = t.value;
   if(kind==='deltype'){
+    row._delTypeWrite={}; // açık kullanıcı niyeti: yalnız bu durumda Del. Type kaydedilir (bkz. syncOverrideToServer)
     syncCpProductionLogisticSegment(row,t.value);
     applyFormulas(row); invalidateUnifiedPriorityDecisions('cp-delivery-type-edit'); markDirty(id); pushUndo({id, fields:[{key,prev,next:t.value}]});
     syncOrderLinePeersFromCpRow(row, ['Del. Type'], {render:refresh});
@@ -16471,7 +16516,9 @@ function syncOverridesFromRow(row){
   notes.Notes=nextNotes;notes.NotesHtml=row.NotesHtml||'';
   notes.EkNot=nextEkNot;notes.EkNotHtml=row['Ek NotHtml']||'';
   state.overrides.notesmap[key]=notes;
-  if(row['Del. Type'])state.overrides.delmap[key]=row['Del. Type'];
+  /* Del. Type yalnız açık kullanıcı niyetiyle yazılır. Görünen değer IAS parsiyelinden türetilmiş olabilir; not /
+     Supp. FOB gibi ilgisiz bir kayıt override oluşturmaz, mevcut override'ı ya da başkasının değişikliğini ezmez. */
+  if(row._delTypeWrite&&row['Del. Type'])state.overrides.delmap[key]=row['Del. Type'];
   const isDtr=turknorm(row.Licensor)==='DTR';
   if(isDtr){
     row['Sub-Manufacturer']=norm(row.Manufacturer);
@@ -16995,9 +17042,10 @@ window.BLCpRowSave={
 function syncOverrideToServer(orderCode,notes,row){
   if(!window.SERVER_BACKED)return;
   schedulePendingOverrideWrite(`notes:${overrideSyncKey(row, orderCode)}`, typeof cpRowSaveDebounce==='function'?cpRowSaveDebounce(500):500, ()=>{
-    const restore=row._pricingHistoryRestore,manualWrite=row._pricingManualWrite,subWrite=row._subManufacturerWrite;
+    const restore=row._pricingHistoryRestore,manualWrite=row._pricingManualWrite,subWrite=row._subManufacturerWrite,delWrite=row._delTypeWrite;
     const body=(()=>{
-        const body={...lineIdentity(row),notes,delType:row['Del. Type']||undefined};
+        // Del. Type yalnız açık düzenleme niyetiyle (_delTypeWrite) gönderilir; aksi halde sunucu delmap'i değiştirmez.
+        const body={...lineIdentity(row),notes,delType:delWrite?(row['Del. Type']||undefined):undefined};
         if(turknorm(row.Licensor)!=='DTR'&&(!restore?.licensor||subWrite))body.subManufacturer=norm(row['Sub-Manufacturer']);
         if(row._licensorManual===true&&Object.hasOwn(state.overrides.licensormap||{},overrideSyncKey(row,orderCode)))body.licensor=norm(row.Licensor);
         // An imported (CP update) value is not re-sent as a manual price with a note save.
@@ -17029,6 +17077,7 @@ function syncOverrideToServer(orderCode,notes,row){
       if(restore&&row._pricingHistoryRestore===restore)delete row._pricingHistoryRestore;
       if(manualWrite&&row._pricingManualWrite===manualWrite)delete row._pricingManualWrite;
       if(subWrite&&row._subManufacturerWrite===subWrite)delete row._subManufacturerWrite;
+      if(delWrite&&row._delTypeWrite===delWrite)delete row._delTypeWrite;
     }).catch(err=>{console.warn('Sunucuya kaydedilemedi:',err.message);if(err.code!=='REVISION_CONFLICT')notifyOverrideSaveError(appLang==='en'?'The change could not be saved to the server.':'Değişiklik sunucuya kaydedilemedi.');});
   });
 }
@@ -37075,9 +37124,28 @@ function cpFabricCellHtml(row){
   const cell=fabricCardCellParts(raw);
   return `<td class="cpFabricTd ${cell.cls}" data-cp-fabric="1" title="${escapeHtml(cell.title)}">${cell.inner}</td>`;
 }
+/* CP / Orders "Artwork Detail" hücresi: satırdaki PLM özet metni değişmez
+   (filtre, sıralama, kopyala, Excel aynı metni kullanır); hücre Koleksiyon'la
+   aynı bölge kartlarını gösterir. Kart modeli özet metninden kurulur (CP/Orders
+   satırları Koleksiyon PLM sahiplik/görünüm bayraklarını taşımaz); özet
+   biçimine uymayan metin (eski Set Style özeti) düz metin kalır. */
+// Aynı özet çok satırda tekrarlar; hücre HTML'i metin + dil başına bir kez kurulur.
+const cpArtworkCellCache={tr:new Map(),en:new Map()};
+function cpArtworkCellHtml(row){
+  const raw=String(row?.[CP_ARTWORK_PLM_KEY]??'').trim();
+  const api=raw?window.BLCollectionArtworkDetail:null;
+  if(!api?.cellCards)return `<td${raw?` title="${escapeHtml(raw)}"`:''}>${escapeHtml(raw)}</td>`;
+  const cache=cpArtworkCellCache[appLang==='en'?'en':'tr'],hit=cache.get(raw);
+  if(hit!==undefined)return hit;
+  if(cache.size>=5000)cache.clear();
+  const art=api.cellCards(null,raw);
+  const html=art?`<td class="cpArtworkTd ${art.cls}" title="${escapeHtml(raw)}">${art.inner}</td>`:`<td title="${escapeHtml(raw)}">${escapeHtml(raw)}</td>`;
+  cache.set(raw,html);
+  return html;
+}
 /* Sunum Stüdyosu: çip gösterimi olan sütunlar ve satırdan yapısal çip modeli. */
 window.BLCellChips=Object.freeze({
-  columns:Object.freeze({koleksiyon:Object.freeze({fabric:'fabric',artworkDetail:'artwork'}),cp:Object.freeze({[CP_FABRIC_PLM_KEY]:'fabric'}),orders:Object.freeze({[CP_FABRIC_PLM_KEY]:'fabric'})}),
+  columns:Object.freeze({koleksiyon:Object.freeze({fabric:'fabric',artworkDetail:'artwork'}),cp:Object.freeze({[CP_FABRIC_PLM_KEY]:'fabric',[CP_ARTWORK_PLM_KEY]:'artwork'}),orders:Object.freeze({[CP_FABRIC_PLM_KEY]:'fabric',[CP_ARTWORK_PLM_KEY]:'artwork'})}),
   model(kind,row,key){
     if(!row)return null;
     if(kind==='fabric'){kolFabricCardsEnsureLoaded();return fabricCardCellModel(row[key]);}
@@ -37568,7 +37636,7 @@ function openFabricCardDialog(rawText,{trigger=null,code:wantedCode='',collectio
         details[key]=snapshot&&value===snapshot.displayed?snapshot.original:value;
       });
       const segmentResult=segmentEditor?.result();
-      if(!segmentResult?.ok){status.textContent=segmentResult?.error||(en?'Complete all four summary segments first.':'Önce dört özet parçasını tamamlayın.');return;}
+      if(!segmentResult?.ok){status.textContent=segmentResult?.error||(en?'Check the summary segments first.':'Önce özet parçalarını kontrol edin.');return;}
       const card=api.normalizeCard({code:saveCode,summary:segmentResult.summary,summaryEn:segmentResult.summaryEn,details,summarySource:source,raw:saveExisting&&saveExisting.raw||(freeText?rowRaw:raw)});
       if(!card){status.textContent=en?'Enter valid fabric summary segments.':'Geçerli kumaş özeti parçalarını girin.';return;}
       card.summarySegments=segmentResult.summarySegments;

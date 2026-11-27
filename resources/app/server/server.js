@@ -10446,6 +10446,8 @@ function rowPatchIncrementalSafe(patch) {
   if (!patch || typeof patch !== 'object') return false;
   if (Object.keys(patch).some(key => !ROW_PATCH_INCREMENTAL_KEYS.has(key))) return false;
   if (patch.dates && Object.values(patch.dates).some(value => value == null || value === '')) return false;
+  // Lojistik segment girdisi (Del. Type, Ex-factory) artımlı uygulanamaz: tek tanım projection-row-patch.js.
+  if (require('./lib/projection-row-patch').patchTouchesLogisticSegments(patch)) return false;
   return true;
 }
 /* v7.19 — Canlı olayın yama olarak gidip gidemeyeceğine karar verir.

@@ -74,7 +74,13 @@
     if(error?.code==='LICENSE_PROFILE_INVALID')return T('Bir kart alanı çok uzun veya geçersiz.','A card field is too long or invalid.');
     return T('İşlem tamamlanamadı. Bağlantıyı kontrol edip yeniden deneyin.','The operation could not be completed. Check your connection and retry.');
   }
-  const RATE_ERRORS={royalty:['Royalty 0–100 arasında olmalı.','Royalty must be between 0 and 100.'],'commission-missing':['TR veya YD komisyonundan en az biri girilmeli.','Enter at least the TR or international commission.'],commission:['Komisyon 0–100 olmalı; royalty ile toplamı %100’ü aşamaz.','Commission must be 0–100 and with royalty cannot exceed 100%.'],hologram:['Hologram tutarı 0 veya daha büyük olmalı.','Hologram cost must be 0 or more.'],date:['OPD bitişi başlangıçtan önce olamaz.','OPD end cannot be before its start.']};
+  // TR/YD rates of one contract. royalty/hologramCost are the international (YD) fields.
+  const RATE_COLS=Object.freeze([['trRoyalty','TR royalty','TR royalty','%'],['royalty','YD royalty','Intl royalty','%'],['trCommission','TR kom.','TR comm.','%'],['ydCommission','YD kom.','Intl comm.','%'],['trHologramCost','TR hologram','TR hologram','$'],['hologramCost','YD hologram','Intl hologram','$']]);
+  const rateLabel=key=>{const c=RATE_COLS.find(x=>x[0]===key);return c?T(c[1],c[2]):key;};
+  // An empty TR royalty/hologram uses the YD value; the placeholder shows which one.
+  const ratePlaceholder=(rule,key)=>{if(!rule)return '';if(!E.INHERITS[key])return '—';const v=fmtRate(E.rateValue(rule,key));return v?`= ${v}`:'—';};
+  const rateTitle=key=>E.INHERITS[key]?T('Boş bırakılırsa YD değeri kullanılır.','When empty, the international value is used.'):'';
+  const RATE_ERRORS={royalty:['YD royalty 0–100 arasında olmalı; Non-DTR sözleşmede zorunludur (DTR’de boş = royalty yok).','International royalty must be between 0 and 100; it is required for non-DTR contracts (blank on DTR = no royalty).'],'tr-royalty':['TR royalty 0–100 arasında olmalı.','TR royalty must be between 0 and 100.'],'tr-hologram':['TR hologram tutarı 0 veya daha büyük olmalı.','TR hologram cost must be 0 or more.'],'commission-missing':['Non-DTR sözleşmede TR veya YD komisyonundan en az biri girilmeli.','Enter at least the TR or international commission for a non-DTR contract.'],commission:['Komisyon 0–100 olmalı; aynı taraftaki royalty ile toplamı %100’ü aşamaz.','Commission must be 0–100 and with the same side’s royalty cannot exceed 100%.'],hologram:['YD hologram tutarı 0 veya daha büyük olmalı; Non-DTR sözleşmede zorunludur.','International hologram cost must be 0 or more; it is required for non-DTR contracts.'],date:['OPD bitişi başlangıçtan önce olamaz.','OPD end cannot be before its start.']};
   async function api(url,options={}){
     const r=await fetch(url,{cache:'no-store',credentials:'same-origin',...options,headers:{...(options.body?{'Content-Type':'application/json'}:{}),...(window.BL_CLIENT_ID?{'X-Client-Id':window.BL_CLIENT_ID}:{}),...(options.headers||{})}});
     const data=await r.json().catch(()=>({}));
@@ -163,9 +169,9 @@
     return `<span class="lcMini" title="${esc(tip)}">${dots}${row.map.length>8?`<em>+${row.map.length-8}</em>`:''}<b>${row.map.length} ${esc(T('adım','steps'))}</b></span>`;
   }
   function rateCell(row,d,key,suffix){
-    const rule=d?ruleOf(d,d.primaryId):row.primary.rule,value=rule?fmtRate(rule[key]):'';
-    const disabled=!rule||!canEdit()||d?.saving||d?.conflict;
-    return `<label class="lcRateCell"><input class="lcRate" data-lc-rate="${key}" data-id="${esc(row.id)}" inputmode="decimal" value="${esc(value)}" placeholder="${rule?'—':''}" aria-label="${esc(row.license)} ${esc(key)}" ${disabled?'disabled':''}><span>${suffix}</span></label>`;
+    const rule=d?ruleOf(d,d.primaryId):row.primary.rule,value=rule?fmtRate(E.rateInput(rule,key)):'';
+    const disabled=!rule||!canEdit()||d?.saving||d?.conflict,title=rateTitle(key);
+    return `<label class="lcRateCell"><input class="lcRate" data-lc-rate="${key}" data-id="${esc(row.id)}" inputmode="decimal" value="${esc(value)}" placeholder="${esc(ratePlaceholder(rule,key))}" ${title?`title="${esc(title)}"`:''} aria-label="${esc(row.license)} ${esc(rateLabel(key))}" ${disabled?'disabled':''}><span>${suffix}</span></label>`;
   }
   function licensorList(){return `<datalist id="lcLicensorList">${E.licensorOptions(S.data?.cards||[]).filter(o=>o.value).map(o=>`<option value="${esc(o.label)}"></option>`).join('')}</datalist>`;}
   // An empty licensor is filled in place; a licensor that is set never changes (peers key
@@ -194,7 +200,7 @@
       ${thumb(row,d)}
       <button type="button" class="lcName" aria-haspopup="dialog" data-lc-act="expand" data-id="${esc(row.id)}" aria-expanded="${open}"><b data-no-i18n>${esc(row.license)}</b><small data-no-i18n>${esc(seasons(rule))} · ${esc(rule?.categories?.join(', ')||T('Tüm kategoriler','All categories'))}</small></button>
       ${licensorCell(row)}
-      ${rateCell(row,d,'royalty','%')}${rateCell(row,d,'trCommission','%')}${rateCell(row,d,'ydCommission','%')}${rateCell(row,d,'hologramCost','$')}
+      ${RATE_COLS.map(([key,,,suffix])=>rateCell(row,d,key,suffix)).join('')}
       <span class="lcPeriod">${rule?`${statusBadge(status)}<small>${esc(range(rule))}${row.primary.extraActive?` · +${row.primary.extraActive} ${esc(T('kapsam','scopes'))}`:''}</small>`:(canEdit()&&row.licensor?`<button type="button" class="lcBtn sm" data-lc-act="addContract" data-id="${esc(row.id)}"><svg class="ic"><use href="#i-plus"/></svg>${esc(T('Sözleşme ekle','Add contract'))}</button>`:statusBadge('none'))}</span>
       <span class="lcMapWrap${S.clip?' hasClip':''}"><button type="button" class="lcMapCell" data-lc-act="map" data-id="${esc(row.id)}" title="${esc(T('Onay haritasını aç','Open approval map'))}">${miniMap(row)}</button>${mapClipTools(row)}</span>
       <span class="lcRowTools">
@@ -207,13 +213,13 @@
   }
   function contractRow(card,d,r){
     const id=esc(r.id),dis=!canEdit()||d?.saving||d?.conflict?'disabled':'',status=E.ruleStatus(r,E.today());
-    const num=(k,suffix)=>`<label class="lcRateCell"><input class="lcRate" data-lc-rule="${id}" data-lc-key="${k}" data-id="${esc(card.id)}" inputmode="decimal" value="${esc(fmtRate(r[k]))}" ${dis}><span>${suffix}</span></label>`;
+    const num=(k,suffix)=>`<label class="lcRateCell"><input class="lcRate" data-lc-rule="${id}" data-lc-key="${k}" data-id="${esc(card.id)}" inputmode="decimal" value="${esc(fmtRate(E.rateInput(r,k)))}" placeholder="${esc(ratePlaceholder(r,k))}" ${rateTitle(k)?`title="${esc(rateTitle(k))}"`:''} aria-label="${esc(rateLabel(k))}" ${dis}><span>${suffix}</span></label>`;
     return `<div class="lcContract${status==='active'?' isActive':''}">${statusBadge(status)}
       <input type="date" data-lc-rule="${id}" data-lc-key="opdStart" data-id="${esc(card.id)}" value="${esc(r.opdStart||'')}" aria-label="${esc(T('OPD başlangıç','OPD start'))}" ${dis}>
       <input type="date" data-lc-rule="${id}" data-lc-key="opdEnd" data-id="${esc(card.id)}" value="${esc(r.opdEnd||'')}" aria-label="${esc(T('OPD bitiş','OPD end'))}" ${dis}>
       <input data-lc-rule="${id}" data-lc-key="seasons" data-id="${esc(card.id)}" value="${esc((Array.isArray(r.seasons)?r.seasons:[]).join(', '))}" placeholder="${esc(T('Tüm sezonlar','All seasons'))}" aria-label="${esc(T('Sezonlar','Seasons'))}" ${dis}>
       <input data-lc-rule="${id}" data-lc-key="categories" data-id="${esc(card.id)}" value="${esc((r.categories||[]).join(', '))}" placeholder="${esc(T('Tüm kategoriler','All categories'))}" aria-label="${esc(T('Kategoriler (virgülle ayırın)','Categories (comma separated)'))}" ${dis}>
-      ${num('royalty','%')}${num('trCommission','%')}${num('ydCommission','%')}${num('hologramCost','$')}
+      ${RATE_COLS.map(([key,,,suffix])=>num(key,suffix)).join('')}
       <span class="lcInline"><small title="${esc(T('Eşleşen CP satırları','Matched CP rows'))}">${window.BLLicenseDataBridge?.matches?.(r)||0}</small><button type="button" class="lcBtn sm" data-lc-act="checkRule" data-rule-id="${id}">${esc(T('Hesapla','Calculate'))}</button>${canEdit()&&!d?.conflict?`<button type="button" class="lcBtn sm" data-lc-act="applyRule" data-id="${esc(card.id)}" data-rule-id="${id}" ${dis}>${esc(T('Uygula','Apply'))}</button><button type="button" class="lcIconBtn" data-lc-act="deleteRule" data-id="${esc(card.id)}" data-rule-id="${id}" title="${esc(T('Sözleşmeyi sil','Delete contract'))}" ${dis}><svg class="ic"><use href="#i-trash"/></svg></button>`:''}</span></div>`;
   }
   function statsHtml(card){
@@ -226,10 +232,10 @@
   function editorContract(card,d,r){
     const dis=!canEdit()||d?.saving||d?.conflict?'disabled':'',id=esc(r.id),cid=esc(card.id);
     const field=(key,label,value,type='text',placeholder='')=>`<label class="lcField"><span>${esc(label)}</span><input type="${type}" data-lc-rule="${id}" data-lc-key="${key}" data-id="${cid}" value="${esc(value)}" placeholder="${esc(placeholder)}" ${dis}></label>`;
-    const rate=(key,label,suffix)=>`<div class="lcField"><span>${esc(label)}</span><label class="lcRateCell"><input class="lcRate" data-lc-rule="${id}" data-lc-key="${key}" data-id="${cid}" inputmode="decimal" value="${esc(fmtRate(r[key]))}" aria-label="${esc(label)}" ${dis}><span>${suffix}</span></label></div>`;
+    const rate=(key,label,suffix)=>`<div class="lcField"><span>${esc(label)}</span><label class="lcRateCell"><input class="lcRate" data-lc-rule="${id}" data-lc-key="${key}" data-id="${cid}" inputmode="decimal" value="${esc(fmtRate(E.rateInput(r,key)))}" placeholder="${esc(ratePlaceholder(r,key))}" ${rateTitle(key)?`title="${esc(rateTitle(key))}"`:''} aria-label="${esc(label)}" ${dis}><span>${suffix}</span></label></div>`;
     return `<div class="lcContract lcEditorContract"><div class="lcContractTools">${statusBadge(E.ruleStatus(r,E.today()))}<span class="lcSpacer"></span><button type="button" class="lcBtn sm" data-lc-act="checkRule" data-rule-id="${id}">${esc(T('Hesapla','Calculate'))}</button>${canEdit()&&!d?.conflict?`<button type="button" class="lcBtn sm" data-lc-act="applyRule" data-id="${cid}" data-rule-id="${id}" ${dis}>${esc(T('Uygula','Apply'))}</button><button type="button" class="lcIconBtn" data-lc-act="deleteRule" data-id="${cid}" data-rule-id="${id}" title="${esc(T('Sözleşmeyi sil','Delete contract'))}" aria-label="${esc(T('Sözleşmeyi sil','Delete contract'))}" ${dis}><svg class="ic"><use href="#i-trash"/></svg></button>`:''}</div>
       ${field('opdStart',T('OPD başlangıç','OPD start'),r.opdStart||'','date')}${field('opdEnd',T('OPD bitiş','OPD end'),r.opdEnd||'','date')}${field('seasons',T('Sezonlar','Seasons'),(r.seasons||[]).join(', '),'text',T('Tüm sezonlar','All seasons'))}${field('categories',T('Kategoriler','Categories'),(r.categories||[]).join(', '),'text',T('Tüm kategoriler','All categories'))}
-      ${rate('royalty','Royalty','%')}${rate('trCommission',T('TR kom.','TR comm.'),'%')}${rate('ydCommission',T('YD kom.','Intl comm.'),'%')}${rate('hologramCost','Hologram','$')}</div>`;
+      ${RATE_COLS.map(([key,tr,en,suffix])=>rate(key,T(tr,en),suffix)).join('')}</div>`;
   }
   // Closing keeps pending card edits; Cancel explicitly discards them.
   function closeEditor(){
@@ -308,7 +314,7 @@
     return [...byId.values()];
   }
   function quickHtml(){
-    const rules=quickRules(),search=window.BLTableSearch,terms=search?.parseTerms(S.query),label=r=>[r.license,r.licensor,r.categories?.join(', ')||T('Tüm kategoriler','All categories'),r._draft?T('Taslak','Draft'):'',E.ruleStatus(r,E.today())==='expired'?T('Geçmiş','Expired'):'',seasons(r),range(r),`Royalty ${r.royalty}%`].join(' · ');
+    const rules=quickRules().filter(r=>r.royalty!=null&&r.royalty!==''),search=window.BLTableSearch,terms=search?.parseTerms(S.query),label=r=>[r.license,r.licensor,r.categories?.join(', ')||T('Tüm kategoriler','All categories'),r._draft?T('Taslak','Draft'):'',E.ruleStatus(r,E.today())==='expired'?T('Geçmiş','Expired'):'',seasons(r),range(r),quickRoyalty(r)].join(' · ');
     const visible=rules.filter(r=>!search||search.matches(label(r),terms,{plainMode:'contains'})).sort((a,b)=>Number(E.ruleStatus(a,E.today())==='expired')-Number(E.ruleStatus(b,E.today())==='expired'));
     S.quick=S.quick||{source:'supp',values:{}};
     if(!rules.some(r=>r.id===S.quick.ruleId))S.quick.ruleId=visible[0]?.id||'';
@@ -316,6 +322,10 @@
     if(chosen&&!visible.includes(chosen))visible.unshift(chosen);
     const input=(key,id,tr,en)=>`<label class="lcField"><span>${esc(T(tr,en))}</span><input id="${id}" data-lc-quick="${key}" inputmode="decimal" value="${esc(S.quick.values[key]||'')}" aria-label="${esc(T(tr,en))}"></label>`;
     return `<div class="lcQuick" role="group" aria-label="${esc(T('Hızlı FOB hesabı','Quick FOB calculator'))}"><label class="lcField lcQuickRule"><span>${esc(T('Hızlı FOB · sözleşme','Quick FOB · contract'))}</span><select id="lcQuickRule" aria-label="${esc(T('Hesaplama sözleşmesi','Calculator contract'))}">${visible.map(r=>`<option value="${esc(r.id)}" ${r.id===S.quick.ruleId?'selected':''}>${esc(label(r))}</option>`).join('')||`<option value="">${esc(T('Önce sözleşme ekleyin','Add a contract first'))}</option>`}</select></label>${input('supp','lcQuickSupp','Supp. FOB (USD)','Supp. FOB (USD)')}<span>⇄</span>${input('yd','lcQuickYd','Final FOB YD','Final FOB Overseas')}${input('tr','lcQuickTr','Final FOB TR','Final FOB TR')}<button type="button" class="lcBtn sm" data-lc-act="quickClear">${esc(T('Temizle','Clear'))}</button><small id="lcQuickStatus" role="status"></small></div>`;
+  }
+  function quickRoyalty(r){
+    const tr=fmtRate(E.rateValue(r,'trRoyalty')),yd=fmtRate(r.royalty);
+    return tr===yd?`Royalty ${yd}%`:`Royalty TR ${tr}% / ${T('YD','Intl')} ${yd}%`;
   }
   function runQuick(){
     const quick=S.quick,api=window.BLBusinessRules,status=document.getElementById('lcQuickStatus');if(!quick||!status||!api)return;
@@ -340,15 +350,15 @@
   }
 
   function contractsHtml(rows){
-    const F=[['license','Lisans','License'],['licensor','Lisansör','Licensor'],['opd','OPD aralığı','OPD range'],['seasons','Sezonlar','Seasons'],['categories','Kategoriler','Categories'],['royalty','Royalty %','Royalty %'],['trCommission','TR kom. %','TR comm. %'],['ydCommission','YD kom. %','Intl comm. %'],['hologramCost','Hologram','Hologram'],['matches','Eşleşen','Matched']];
+    const F=[['license','Lisans','License'],['licensor','Lisansör','Licensor'],['opd','OPD aralığı','OPD range'],['seasons','Sezonlar','Seasons'],['categories','Kategoriler','Categories'],...RATE_COLS.map(([key,tr,en,suffix])=>[key,suffix==='%'?tr+' %':tr,suffix==='%'?en+' %':en]),['matches','Eşleşen','Matched']];
     const filters=S.contractFilters||{},sort=S.contractSort||{key:'opd',dir:'asc'},all=[];
-    const value=(r,c,k)=>k==='license'?c.license:k==='licensor'?c.licensor:k==='opd'?range(r)+' '+[r.opdStart,r.opdEnd].filter(Boolean).map(v=>v.slice(8,10)+'.'+v.slice(5,7)+'.'+v.slice(2,4)).join(' '):k==='seasons'?seasons(r):k==='categories'?r.categories?.join(', ')||T('Tüm kategoriler','All categories'):k==='matches'?window.BLLicenseDataBridge?.matches?.(r)||0:r[k];
+    const value=(r,c,k)=>k==='license'?c.license:k==='licensor'?c.licensor:k==='opd'?range(r)+' '+[r.opdStart,r.opdEnd].filter(Boolean).map(v=>v.slice(8,10)+'.'+v.slice(5,7)+'.'+v.slice(2,4)).join(' '):k==='seasons'?seasons(r):k==='categories'?r.categories?.join(', ')||T('Tüm kategoriler','All categories'):k==='matches'?window.BLLicenseDataBridge?.matches?.(r)||0:E.rateValue(r,k);
     for(const row of rows)for(const card of [row.card,...row.merged||[]]){
       const d=S.drafts.get(card.id);
-      for(const r of d?.rules||card.rules||[])if(F.every(([key])=>!filters[key]||window.BLTableSearch.matches(value(r,card,key),window.BLTableSearch.parseTerms(['royalty','trCommission','ydCommission','hologramCost','matches'].includes(key)?filters[key].replace(/(\d),(\d)/g,'$1.$2'):filters[key]),{plainMode:'contains'})))all.push({card,d,r});
+      for(const r of d?.rules||card.rules||[])if(F.every(([key])=>!filters[key]||window.BLTableSearch.matches(value(r,card,key),window.BLTableSearch.parseTerms([...E.RATE_FIELDS,'matches'].includes(key)?filters[key].replace(/(\d),(\d)/g,'$1.$2'):filters[key]),{plainMode:'contains'})))all.push({card,d,r});
     }
-    all.sort((a,b)=>{const x=value(a.r,a.card,sort.key),y=value(b.r,b.card,sort.key);const ordinal=(value,fallback)=>{const day=Date.parse(value);return Number.isFinite(day)?day:fallback;};const cmp=sort.key==='opd'?(ordinal(a.r.opdStart,-Infinity)-ordinal(b.r.opdStart,-Infinity)||ordinal(a.r.opdEnd,Infinity)-ordinal(b.r.opdEnd,Infinity)):['royalty','trCommission','ydCommission','hologramCost','matches'].includes(sort.key)?(x==null?Infinity:Number(x))-(y==null?Infinity:Number(y)):sort.key==='seasons'?window.BLBusinessRules.compareSeasonLists(a.r.seasons||a.r.season,b.r.seasons||b.r.season):String(x||'').localeCompare(String(y||''),'tr');return (sort.dir==='desc'?-cmp:cmp)||String(a.r.id).localeCompare(String(b.r.id));});
-    return `<div class="lcContractFilters" role="group" aria-label="${esc(T('Sözleşme filtreleri ve sıralama','Contract filters and sorting'))}">${F.map(([key,tr,en])=>`<label class="lcField"><button type="button" class="lcSort" data-lc-contract-sort="${key}" aria-label="${esc(T(tr+' sıralama',en+' sort'))}">${esc(T(tr,en))}${sort.key===key?(sort.dir==='asc'?' ↑':' ↓'):''}</button><input type="search" data-lc-contract-filter="${key}" value="${esc(filters[key]||'')}" aria-label="${esc(T(tr+' filtresi',en+' filter'))}"></label>`).join('')}<button type="button" class="lcBtn sm" data-lc-act="clearContractFilters">${esc(T('Filtreleri temizle','Clear filters'))}</button></div><small class="lcMuted">${all.length} ${esc(T('sözleşme','contracts'))}</small><div class="lcContractHead"><span></span><span>${esc(T('OPD başlangıç','OPD start'))}</span><span>${esc(T('OPD bitiş','OPD end'))}</span><span>${esc(T('Sezonlar','Seasons'))}</span><span>${esc(T('Kategoriler','Categories'))}</span><span lang="en">Royalty</span><span>${esc(T('TR kom.','TR comm.'))}</span><span>${esc(T('YD kom.','Intl comm.'))}</span><span lang="en">Hologram</span><span>${esc(T('İşlemler','Actions'))}</span></div>${all.map(({card,d,r})=>`<div class="lcContractRecord"><div class="lcContractIdentity"><label class="lcCheck"><input type="checkbox" data-lc-select="${esc(card.id)}" ${S.selected.has(card.id)?'checked':''} aria-label="${esc(T('Atlas için seç','Select for atlas'))}"></label><b data-no-i18n>${esc(card.license)}</b><span data-no-i18n>${esc(card.licensor)}</span><button type="button" class="lcBtn sm" data-lc-act="openContract" data-rule-id="${esc(r.id)}">${esc(T('Kartı aç','Open card'))}</button>${isDirty(d)?`<button type="button" class="lcBtn primary sm" data-lc-act="save" data-id="${esc(card.id)}" ${d.saving||d.conflict?'disabled':''}>${esc(T('Kaydet','Save'))}</button><button type="button" class="lcBtn sm" data-lc-act="discard" data-id="${esc(card.id)}">${esc(T('Vazgeç','Cancel'))}</button>`:''}${d?.error||d?.conflict?`<span role="alert">${esc(d.conflict?T('Kart değişti; taslağınız korunuyor.','Card changed; your draft is kept.'):d.error)}</span>`:''}</div>${contractRow(card,d,r)}</div>`).join('')||`<p class="lcEmpty">${esc(T('Eşleşen sözleşme yok.','No matching contracts.'))}</p>`}`;
+    all.sort((a,b)=>{const x=value(a.r,a.card,sort.key),y=value(b.r,b.card,sort.key);const ordinal=(value,fallback)=>{const day=Date.parse(value);return Number.isFinite(day)?day:fallback;};const cmp=sort.key==='opd'?(ordinal(a.r.opdStart,-Infinity)-ordinal(b.r.opdStart,-Infinity)||ordinal(a.r.opdEnd,Infinity)-ordinal(b.r.opdEnd,Infinity)):[...E.RATE_FIELDS,'matches'].includes(sort.key)?(x==null?Infinity:Number(x))-(y==null?Infinity:Number(y)):sort.key==='seasons'?window.BLBusinessRules.compareSeasonLists(a.r.seasons||a.r.season,b.r.seasons||b.r.season):String(x||'').localeCompare(String(y||''),'tr');return (sort.dir==='desc'?-cmp:cmp)||String(a.r.id).localeCompare(String(b.r.id));});
+    return `<div class="lcContractFilters" role="group" aria-label="${esc(T('Sözleşme filtreleri ve sıralama','Contract filters and sorting'))}">${F.map(([key,tr,en])=>`<label class="lcField"><button type="button" class="lcSort" data-lc-contract-sort="${key}" aria-label="${esc(T(tr+' sıralama',en+' sort'))}">${esc(T(tr,en))}${sort.key===key?(sort.dir==='asc'?' ↑':' ↓'):''}</button><input type="search" data-lc-contract-filter="${key}" value="${esc(filters[key]||'')}" aria-label="${esc(T(tr+' filtresi',en+' filter'))}"></label>`).join('')}<button type="button" class="lcBtn sm" data-lc-act="clearContractFilters">${esc(T('Filtreleri temizle','Clear filters'))}</button></div><small class="lcMuted">${all.length} ${esc(T('sözleşme','contracts'))}</small><div class="lcContractHead"><span></span><span>${esc(T('OPD başlangıç','OPD start'))}</span><span>${esc(T('OPD bitiş','OPD end'))}</span><span>${esc(T('Sezonlar','Seasons'))}</span><span>${esc(T('Kategoriler','Categories'))}</span>${RATE_COLS.map(([,tr,en])=>`<span>${esc(T(tr,en))}</span>`).join('')}<span>${esc(T('İşlemler','Actions'))}</span></div>${all.map(({card,d,r})=>`<div class="lcContractRecord"><div class="lcContractIdentity"><label class="lcCheck"><input type="checkbox" data-lc-select="${esc(card.id)}" ${S.selected.has(card.id)?'checked':''} aria-label="${esc(T('Atlas için seç','Select for atlas'))}"></label><b data-no-i18n>${esc(card.license)}</b><span data-no-i18n>${esc(card.licensor)}</span><button type="button" class="lcBtn sm" data-lc-act="openContract" data-rule-id="${esc(r.id)}">${esc(T('Kartı aç','Open card'))}</button>${isDirty(d)?`<button type="button" class="lcBtn primary sm" data-lc-act="save" data-id="${esc(card.id)}" ${d.saving||d.conflict?'disabled':''}>${esc(T('Kaydet','Save'))}</button><button type="button" class="lcBtn sm" data-lc-act="discard" data-id="${esc(card.id)}">${esc(T('Vazgeç','Cancel'))}</button>`:''}${d?.error||d?.conflict?`<span role="alert">${esc(d.conflict?T('Kart değişti; taslağınız korunuyor.','Card changed; your draft is kept.'):d.error)}</span>`:''}</div>${contractRow(card,d,r)}</div>`).join('')||`<p class="lcEmpty">${esc(T('Eşleşen sözleşme yok.','No matching contracts.'))}</p>`}`;
   }
   function render(){
     if(!visible())return;
@@ -376,7 +386,7 @@
     }
     const rows=currentRows(),editorRow=rows.find(r=>r.id===S.expanded),n=counts(),opts=E.licensorOptions(S.data.cards),selectedVisible=rows.filter(r=>S.selected.has(r.id)).length,favoriteCount=allRows().filter(isFavorite).length;
     const chip=(key,tr,en,count)=>`<button type="button" class="lcChip" data-lc-status="${key}" aria-pressed="${S.status===key}">${esc(T(tr,en))}<small>${count}</small></button>`;
-    const head=(key,tr,en,cls='')=>`<button type="button" class="lcSort ${cls}" data-lc-sort="${key}" ${['royalty','hologramCost'].includes(key)?'lang="en"':''} aria-sort="${S.sort.key===key?(S.sort.dir==='asc'?'ascending':'descending'):'none'}">${esc(T(tr,en))}${S.sort.key===key?`<svg class="ic"><use href="#i-chevron-${S.sort.dir==='asc'?'up':'down'}"/></svg>`:''}</button>`;
+    const head=(key,tr,en,cls='')=>`<button type="button" class="lcSort ${cls}" data-lc-sort="${key}" aria-sort="${S.sort.key===key?(S.sort.dir==='asc'?'ascending':'descending'):'none'}">${esc(T(tr,en))}${S.sort.key===key?`<svg class="ic"><use href="#i-chevron-${S.sort.dir==='asc'?'up':'down'}"/></svg>`:''}</button>`;
     S.host.innerHTML=`<div class="lcPage">
       <div class="lcToolbar">
         <button type="button" class="lcBtn" data-lc-act="contractView" aria-pressed="${Boolean(S.contractView)}">${esc(S.contractView?T('Kart tablosu','Card table'):T('Sözleşme tablosu','Contract table'))}</button>
@@ -404,7 +414,7 @@
       <div class="lcTable${S.animate?' isEntering':''}" role="table" aria-label="${esc(T('Lisans kartları','License cards'))}">
         <div class="lcHead" role="row" ${S.contractView?'hidden':''}>
           <span class="lcPick"><label class="lcCheck"><input type="checkbox" data-lc-select-all ${rows.length&&selectedVisible===rows.length?'checked':''} aria-label="${esc(T('Listelenenlerin tümünü seç','Select all listed'))}"></label><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg></span>
-          <span></span>${head('license','Lisans','License')}${head('licensor','Lisansör','Licensor')}${head('royalty','Royalty','Royalty','isNum')}${head('trCommission','TR kom.','TR comm.','isNum')}${head('ydCommission','YD kom.','Intl comm.','isNum')}${head('hologramCost','Hologram','Hologram','isNum')}<span>${esc(T('Geçerlilik','Validity'))}</span>${head('map','Onay haritası','Approval map')}<span></span>
+          <span></span>${head('license','Lisans','License')}${head('licensor','Lisansör','Licensor')}${RATE_COLS.map(([key,tr,en])=>head(key,tr,en,'isNum')).join('')}<span>${esc(T('Geçerlilik','Validity'))}</span>${head('map','Onay haritası','Approval map')}<span></span>
         </div>
         ${S.contractView?contractsHtml(rows):rows.map(rowHtml).join('')||`<div class="lcEmpty"><svg class="ic"><use href="#i-license-cards"/></svg><b>${esc(S.query||S.licensor!=null||S.status!=='all'||S.favoritesOnly?T('Eşleşen lisans yok','No matching licenses'):T('Henüz lisans kartı yok','No license cards yet'))}</b><span>${esc(S.favoritesOnly?T('Lisans satırındaki yıldızla kendi favorilerinizi ekleyin veya filtreleri değiştirin.','Use the star on a license row to add your own favorites, or change the filters.'):S.query||S.licensor!=null||S.status!=='all'?T('Arama veya filtreleri değiştirin.','Change the search or filters.'):T('ASAS kaynağını kontrol edip yenileyin.','Check the ASAS source and refresh.'))}</span></div>`}
       </div>
@@ -440,7 +450,7 @@
     if(!c){d.conflict=true;render();return;}
     if(!isDirty(d)){dropDraft(id);render();return;}
     const rules=changedRules(d);
-    for(const r of rules){const problem=E.rateError(r);if(problem){d.error=T(...RATE_ERRORS[problem])+(r.opdStart?` (${r.opdStart})`:'');render();return;}}
+    for(const r of rules){const problem=E.rateError(r,c.licensor);if(problem){d.error=T(...RATE_ERRORS[problem])+(r.opdStart?` (${r.opdStart})`:'');render();return;}}
     const body={editToken:d.editToken,profile:changedProfile(d)};
     if(d.deletedRuleIds?.length)body.deletedRuleIds=d.deletedRuleIds;
     if(d.cover!==undefined){
@@ -668,6 +678,14 @@
     }
     if(a==='removeCover'){const d=ensureDraft(id);if(d){d.cover='';render();}}
   }
+  // A YD edit updates the "= value" hint of the TR fields that inherit it (row and editor).
+  function syncInheritedPlaceholders(id,d,rule){
+    for(const key of Object.keys(E.INHERITS)){
+      const inputs=[...S.host.querySelectorAll(`[data-lc-rule="${CSS.escape(rule.id)}"][data-lc-key="${key}"]`)];
+      if(rule.id===d.primaryId)inputs.push(...S.host.querySelectorAll(`[data-row="${CSS.escape(id)}"] [data-lc-rate="${key}"]`));
+      for(const input of inputs)input.placeholder=ratePlaceholder(rule,key);
+    }
+  }
   // Inline and panel edits write into the card's draft; no re-render while typing.
   function onInput(e){
     const el=e.target,id=el.dataset.id;
@@ -678,6 +696,8 @@
     if(el.id==='lcSearch'){S.query=el.value;S.animate=true;return render();}
     if(!id||!canEdit())return;
     const d=ensureDraft(id);if(!d||d.saving||d.conflict)return;
+    const rateKey=el.dataset.lcRate??(el.dataset.lcRule!=null&&E.RATE_FIELDS.includes(el.dataset.lcKey)?el.dataset.lcKey:null);
+    if(['hologramCost','trHologramCost'].includes(rateKey))E.adoptLegacyHologram(ruleOf(d,el.dataset.lcRate!=null?d.primaryId:el.dataset.lcRule));
     if(el.dataset.lcRate!=null){const r=ruleOf(d,d.primaryId);if(!r)return;r[el.dataset.lcRate]=E.parseRate(el.value);el.classList.toggle('isInvalid',Number.isNaN(r[el.dataset.lcRate]));
       const twin=S.host.querySelector(`[data-lc-rule="${CSS.escape(r.id)}"][data-lc-key="${el.dataset.lcRate}"]`);if(twin&&twin!==el)twin.value=el.value;}
     else if(el.dataset.lcRule!=null){const r=ruleOf(d,el.dataset.lcRule),k=el.dataset.lcKey;if(!r)return;
@@ -689,12 +709,7 @@
       if(E.RATE_FIELDS.includes(k)){el.classList.toggle('isInvalid',Number.isNaN(r[k]));if(r.id===d.primaryId){const twin=S.host.querySelector(`[data-row="${CSS.escape(id)}"] [data-lc-rate="${k}"]`);if(twin)twin.value=el.value;}}}
     else if(el.dataset.lcProfile)d.profile[el.dataset.lcProfile]=el.value;
     const changed=el.dataset.lcRate?ruleOf(d,d.primaryId):el.dataset.lcRule?ruleOf(d,el.dataset.lcRule):null;
-    if(changed&&(el.dataset.lcRate==='hologramCost'||el.dataset.lcKey==='hologramCost')){
-      const original=d.snapshot.rules.find(r=>r.id===changed.id)||d.newRuleBaselines[changed.id];
-      for(const key of ['legacyTrHologramCost','legacyYdHologramCost']){
-        if(original&&Number(changed.hologramCost)===Number(original.hologramCost)&&Object.hasOwn(original,key))changed[key]=original[key];else delete changed[key];
-      }
-    }
+    if(changed&&rateKey)syncInheritedPlaceholders(id,d,changed);
     d.error='';syncRow(id);
   }
   // Images are scaled in the browser so a cover stays well inside the 2 MB atlas limit.

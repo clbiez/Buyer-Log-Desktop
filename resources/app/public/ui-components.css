@@ -1541,6 +1541,8 @@ html[data-ui-system="manifest"] .toolbar select {font-size:var(--ui-font-xs) !im
 }
 html[data-ui-system="manifest"] .toolbar .count {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
 }
+html[data-ui-system="manifest"] .toolbar .count.ordersRefreshState[data-state="error"] {color:var(--ui-danger) !important
+}
 html[data-ui-system="manifest"] .toolbar button.tbtn,html[data-ui-system="manifest"] .toolbar label.tbtn {background:var(--ui-surface) !important;font-size:var(--ui-font-xs) !important;color:var(--ui-text-secondary) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 html[data-ui-system="manifest"] .toolbar button.tbtn:hover,html[data-ui-system="manifest"] .toolbar label.tbtn:hover {color:var(--ui-selected-ink) !important;background:var(--ui-selected) !important
@@ -16274,11 +16276,11 @@ html[data-ui-system="manifest"] .psThumbHdr {background:var(--ui-text-muted)
 }
 html[data-ui-system="manifest"] .psThumbArea {background:color-mix(in srgb,var(--ui-accent) 18%,transparent)
 }
-html[data-ui-system="manifest"] .psArea {background:color-mix(in srgb,var(--ui-accent) 5%,transparent)
+html[data-ui-system="manifest"] .psArea:hover {background:color-mix(in srgb,var(--ui-accent) 4%,transparent)
 }
-html[data-ui-system="manifest"] .psArea.isSel {background:color-mix(in srgb,var(--ui-accent) 12%,transparent)
+html[data-ui-system="manifest"] .psArea.isSel {background:color-mix(in srgb,var(--ui-accent) 8%,transparent)
 }
-html[data-ui-system="manifest"] .psAreaGhost {background:color-mix(in srgb,var(--ui-accent) 14%,transparent);z-index:var(--ui-z-tooltip)
+html[data-ui-system="manifest"] .psArea.isVirtual {background:color-mix(in srgb,var(--ui-accent) 10%,transparent)
 }
 html[data-ui-system="manifest"] .psOk {color:var(--ui-success)
 }

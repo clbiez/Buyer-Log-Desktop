@@ -418,9 +418,9 @@
   function editorAttrs(el) {
     if (el.type === 'area') {
       const on = S.areaSel === el.key;
-      return { attr: ` data-area="${esc(el.key)}"`, cls: (on ? ' isSel' : '') + (el.cont ? ' isCont' : ''), inner: on && !el.cont ? ['e', 's', 'se', 'w'].map(d => `<span class="psHandle" data-h="${d}" data-ah="${d}"></span>`).join('') : '' };
+      return { attr: ` data-area="${esc(el.key)}" title="${esc(L('Grup alanı · tıklayın: seçin ve kenarlardan boyutlandırın · sürükleyin: taşıyın', 'Group area · click to select and resize from the edges · drag to move'))}"`, cls: (on ? ' isSel' : '') + (el.cont ? ' isCont' : ''), inner: on && !el.cont ? AREA_HANDLES.map(d => `<span class="psHandle" data-h="${d}" data-ah="${d}"></span>`).join('') : '' };
     }
-    if (el.type === 'hdr') return { attr: ` data-hdr="${esc(el.key)}"${el.area ? ` data-area-hdr="${esc(el.key)}"` : ''}${!el.area && el.pins ? ` data-pins="${esc(el.pins.join('\u001f'))}"` : ''} title="${esc(el.area ? L('Sürükleyerek grup alanını taşıyın · çift tıklayarak yeniden adlandırın', 'Drag to move the group area · double-click to rename') : L('Sürükleyerek grubu kendi alanına alın · çift tıklayarak yeniden adlandırın', 'Drag to give the group its own area · double-click to rename'))}"`, cls: '', inner: '' };
+    if (el.type === 'hdr') return { attr: ` data-hdr="${esc(el.key)}"${el.area ? ` data-area-hdr="${esc(el.key)}"` : ''}${!el.area && el.pins ? ` data-pins="${esc(el.pins.join('\u001f'))}"` : ''} title="${esc(el.area ? L('Tıklayın: grup alanını seçin · sürükleyin: taşıyın · çift tıklayın: yeniden adlandırın', 'Click to select the group area · drag to move · double-click to rename') : L('Tıklayın: grubu seçip kenarlardan boyutlandırın · sürükleyin: grubu taşıyın · çift tıklayın: yeniden adlandırın', 'Click to select the group and resize from the edges · drag to move the group · double-click to rename'))}"`, cls: '', inner: '' };
     const c = S.doc.cards[el.id] || {}, sel = S.sel.has(el.id), primary = sel && S.primary === el.id;
     const cls = (sel ? ' isSel' : '') + (S.res.conflicts.has(el.id) ? ' isConflict' : '') + (el.pinned ? ' isPinned' : '');
     let inner = '';
@@ -430,6 +430,22 @@
     const m = S.models.get(el.id);
     return { attr: ` data-id="${esc(el.id)}" tabindex="-1" role="button" aria-label="${esc((m ? m.title : el.id) + (sel ? L(' · seçili', ' · selected') : ''))}"`, cls, inner };
   }
+  /* Henüz alanı olmayan grubun seçim çerçevesi (başlığa tıklanınca): kenar tutamaklarından boyutlanınca
+     grup kendi alanına alınır. Çerçeve kartları örtmez (yalnız tutamaklar tıklanır). */
+  const AREA_HANDLES = ['e', 's', 'se', 'w'];
+  function frameHtml(f) {
+    const r2 = v => Math.round(v * 100) / 100;
+    return `<div class="psArea isSel isVirtual" data-area="${esc(f.key)}" data-virtual="1" style="position:absolute;left:${r2(f.x)}pt;top:${r2(f.y)}pt;width:${r2(f.w)}pt;height:${r2(f.h)}pt">${AREA_HANDLES.map(d => `<span class="psHandle" data-h="${d}" data-ah="${d}"></span>`).join('')}</div>`;
+  }
+  /* Akıştaki grubun (veya grubundan ayrılmış sabit kartların) bu sayfadaki kapladığı dikdörtgen. */
+  function groupFrame(key, pageId, pins) {
+    const parts = pageItems(pageId).filter(i => (i.kind === 'hdr' && i.key === key && !i.area && (pins ? i.pins && i.pins.some(p => pins.includes(p)) : !i.pinOf))
+      || (i.kind === 'card' && !i.area && (pins ? pins.includes(i.id) : !i.pinned && E().effectiveKey(S.doc, i.id, groupOf) === key)));
+    if (!parts.length) return null;
+    const x = Math.min(...parts.map(i => i.x)), y = Math.min(...parts.map(i => i.y));
+    return { key, page: pageId, pins: pins || null, x, y, w: Math.max(...parts.map(i => i.x + i.w)) - x, h: Math.max(...parts.map(i => i.y + i.h)) - y, n: parts.filter(i => i.kind === 'card').length };
+  }
+  const clearFrame = () => { S.areaSel = null; S.frame = null; };
   function render() {
     if (!S) return;
     const t = performance.now();
@@ -472,7 +488,7 @@
         + `<button type="button" class="tbtn psIcon" data-pa="add" aria-label="${esc(L('Sonrasına serbest sayfa ekle', 'Add a free page after'))}" title="${esc(L('Sonrasına serbest sayfa ekle', 'Add a free page after'))}">${sprite('plus')}</button><button type="button" class="tbtn psIcon" data-pa="del" aria-label="${esc(L('Sayfayı sil', 'Delete page'))}" title="${esc(L('Sayfayı sil', 'Delete page'))}"${total < 2 ? ' disabled' : ''}>${sprite('trash')}</button>`;
       if (S.toolsHtml && S.toolsHtml.size > 2000) S.toolsHtml.clear();
       (S.toolsHtml || (S.toolsHtml = new Map())).set(page.id + '|' + toolKey, tools);
-      const html = `<div class="psPageTools">${tools}</div><div class="psPage" style="width:${g.w}pt;height:${g.h}pt;transform:scale(${S.zoom});background:${R().DOC.paper};font-family:${esc(R().fontStack(S.doc.style.font))}">${page.elements ? R().elementsHtml(page, { attrs: editorAttrs, lite: quick }) : ''}<div class="psGuides"></div></div>`;
+      const html = `<div class="psPageTools">${tools}</div><div class="psPage" style="width:${g.w}pt;height:${g.h}pt;transform:scale(${S.zoom});background:${R().DOC.paper};font-family:${esc(R().fontStack(S.doc.style.font))}">${page.elements ? R().elementsHtml(page, { attrs: editorAttrs, lite: quick }) : ''}${S.frame && S.frame.page === page.id ? frameHtml(S.frame) : ''}<div class="psGuides"></div></div>`;
       let w = wrappers.get(page.id);
       if (!w) { w = doc_.createElement('div'); w.className = 'psPageWrap'; w.dataset.psPage = page.id; }
       // Değişmeyen boyut/durum yeniden yazılmaz (her karede yüzlerce sayfada stil yeniden hesabını önler).
@@ -617,9 +633,9 @@
   }
   const pageItems = id => (S.res.pages.find(p => p.id === id) || { items: [] }).items;
   const pinnedRects = (id, except) => pageItems(id).filter(i => i.kind === 'card' && i.pinned && !except.has(i.id));
-  function snapTargets(id, except) {
+  function snapTargets(id, except, skip = null) {
     const g = S.res.g, xs = [g.m, g.w / 2, g.w - g.m], ys = [g.m, g.h / 2, g.h - g.m];
-    for (const it of pageItems(id)) { if (it.kind === 'card' && except.has(it.id)) continue; xs.push(it.x, it.x + it.w / 2, it.x + it.w); ys.push(it.y, it.y + it.h / 2, it.y + it.h); }
+    for (const it of pageItems(id)) { if ((it.kind === 'card' && except.has(it.id)) || (skip && skip(it))) continue; xs.push(it.x, it.x + it.w / 2, it.x + it.w); ys.push(it.y, it.y + it.h / 2, it.y + it.h); }
     return { xs, ys };
   }
   function snap(vals, targets, th) { let best = null; for (const v of vals) for (const t of targets) { const d = t - v; if (Math.abs(d) < th && (!best || Math.abs(d) < Math.abs(best.d))) best = { d, t }; } return best; }
@@ -634,7 +650,7 @@
   }
   function tip(e, text, bad) { const t = S.$('[data-ps="tip"]'); t.hidden = false; t.textContent = text; t.classList.toggle('isBad', Boolean(bad)); t.style.left = `${e.clientX + 14}px`; t.style.top = `${e.clientY + 18}px`; }
   const hideTip = () => { S.$('[data-ps="tip"]').hidden = true; };
-  const selectOnly = id => { S.sel = new Set([id]); S.primary = id; S.areaSel = null; };
+  const selectOnly = id => { S.sel = new Set([id]); S.primary = id; clearFrame(); };
 
   function onPointerDown(e) {
     if (e.button !== 0) return;
@@ -644,8 +660,16 @@
     if (wrap && wrap.dataset.psPage !== S.activePage) { S.activePage = wrap.dataset.psPage; S.host.querySelectorAll('.psPageWrap').forEach(w => w.toggleAttribute('data-active', w === wrap)); renderThumbs(); }
     const ah = e.target.closest('.psArea .psHandle[data-ah]');
     if (ah) {
-      const key = ah.closest('.psArea').dataset.area, it = areaItem(key);
-      if (it) { S.act = { type: 'areaResize', key, dir: ah.dataset.ah, start: { ...it }, page: it.page, sx: e.clientX, sy: e.clientY, last: { x: it.x, y: it.y, w: it.w, h: it.h } }; e.preventDefault(); return; }
+      const box = ah.closest('.psArea'), key = box.dataset.area, virtual = box.dataset.virtual === '1' && S.frame, it = virtual ? { ...S.frame } : areaItem(key);
+      if (it) {
+        // Grubun başka sayfaya taşan kartları varsa alan büyüyünce kartlar genel ölçüde kalıp alana katılır
+        // (kartları yay); yoksa kartlar alanla orantılı büyür/küçülür (kartları sığdır).
+        const all = S.res.pages.flatMap(p => p.items.map(i => ({ i, p: p.id })));
+        const total = virtual ? S.doc.order.filter(id => { const c = S.doc.cards[id]; return !(c && c.excluded) && (it.pins ? it.pins.includes(id) : !(c && c.pinned) && E().effectiveKey(S.doc, id, groupOf) === key); }).length : all.filter(x => x.i.kind === 'card' && x.i.area === key).length;
+        const inMain = virtual ? it.n : all.filter(x => x.p === it.page && x.i.kind === 'card' && x.i.area === key && x.i.y >= it.y && x.i.y < it.y + it.h).length;
+        S.act = { type: 'areaResize', key, dir: ah.dataset.ah, start: { ...it }, page: it.page, sx: e.clientX, sy: e.clientY, last: { x: it.x, y: it.y, w: it.w, h: it.h }, overflow: total > inMain, virtual: Boolean(virtual), pins: virtual ? it.pins : null };
+        e.preventDefault(); return;
+      }
     }
     const h = e.target.closest('.psHandle');
     if (h) {
@@ -669,11 +693,17 @@
       S.act = { type: 'hdrPress', key: hdr.dataset.hdr, area: hdr.dataset.areaHdr != null, pins: hdr.dataset.pins ? hdr.dataset.pins.split('\u001f') : null, page: hdr.closest('.psPageWrap')?.dataset.psPage, sx: e.clientX, sy: e.clientY };
       return;
     }
+    // Grup alanının boş yerine tıklama: alan seçilir; sürükleme: alan taşınır.
+    const areaBody = e.target.closest('.psArea:not(.isVirtual)');
+    if (areaBody && !areaBody.classList.contains('isCont')) {
+      S.act = { type: 'hdrPress', key: areaBody.dataset.area, area: true, pins: null, page: areaBody.closest('.psPageWrap')?.dataset.psPage, sx: e.clientX, sy: e.clientY };
+      e.preventDefault(); return;
+    }
     const page = e.target.closest('.psPage');
     if (page) {
       const pid = page.closest('.psPageWrap').dataset.psPage, p = toPage(pid, e.clientX, e.clientY);
       if (!e.shiftKey) S.sel.clear();
-      S.areaSel = null;
+      clearFrame();
       S.act = { type: 'marquee', page: pid, x0: p.x, y0: p.y, base: new Set(S.sel) };
       render(); e.preventDefault(); return;
     }
@@ -682,8 +712,10 @@
   function onPointerMove(e) {
     if (!S || !S.act) return;
     const a = S.act;
-    if (a.type === 'press' && Math.hypot(e.clientX - a.sx, e.clientY - a.sy) > 4) startDrag();
-    if (a.type === 'hdrPress' && Math.hypot(e.clientX - a.sx, e.clientY - a.sy) > 4) startAreaDrag(a);
+    // Sürükleme yalnız düğme basılıyken başlar (tıklamadan sonra gecikmeli gelen fare hareketi sürükleme sayılmaz).
+    const held = (e.buttons & 1) === 1;
+    if (a.type === 'press' && held && Math.hypot(e.clientX - a.sx, e.clientY - a.sy) > 4) startDrag();
+    if (a.type === 'hdrPress' && held && Math.hypot(e.clientX - a.sx, e.clientY - a.sy) > 4) { startAreaDrag(a); if (!S.act) return; }
     if (S.act.type === 'areaDrag') return moveAreaDrag(e);
     if (S.act.type === 'areaResize') return moveAreaResize(e);
     if (S.act.type === 'drag') moveDrag(e);
@@ -695,7 +727,11 @@
     const a = S.act; S.act = null;
     if (a.type === 'areaDrag') return endAreaDrag(a);
     if (a.type === 'areaResize') return endAreaResize(a);
-    if (a.type === 'hdrPress') { if (a.area) { S.areaSel = a.key; S.sel.clear(); } else S.areaSel = null; render(); return; }
+    if (a.type === 'hdrPress') {
+      // Tıklama: grup seçilir ve kenar tutamakları açılır (alanı olmayan grupta seçim çerçevesi).
+      S.sel.clear(); S.frame = a.area ? null : groupFrame(a.key, a.page, a.pins); S.areaSel = a.area || S.frame ? a.key : null;
+      render(); return;
+    }
     if (a.type === 'drag') endDrag(a);
     else if (a.type === 'resize') endResize(a);
     else if (a.type === 'marquee') { S.host.querySelectorAll('.psMarquee').forEach(m => m.remove()); render(); }
@@ -767,7 +803,9 @@
     const T = snapTargets(pid, a.ids), th = 7 / P.k, sx = snap([bb.x, bb.x + bb.w / 2, bb.x + bb.w], T.xs, th), sy = snap([bb.y, bb.y + bb.h / 2, bb.y + bb.h], T.ys, th);
     if (sx) ox += sx.d; if (sy) oy += sy.d;
     const nx = bb.x + (sx ? sx.d : 0), ny = bb.y + (sy ? sy.d : 0);
-    ox += clamp(nx, 0, Math.max(0, g.w - bb.w)) - nx; oy += clamp(ny, 0, Math.max(0, g.h - bb.h)) - ny;
+    // Sayfa kenar boşluğunun içinde; grup başlığına (seviye başına bir satır) üstte yer kalır.
+    const top = g.m + (g.hH ? g.hH + Math.max(0, S.doc.grouping.levels.length - 1) * g.hLine + g.hGap : 0);
+    ox += clamp(nx, g.m, Math.max(g.m, g.w - g.m - bb.w)) - nx; oy += clamp(ny, top, Math.max(top, g.h - g.m - bb.h)) - ny;
     a.mode = 'free'; a.off = { x: ox, y: oy };
     const obs = pinnedRects(pid, a.ids), final = a.items.map(i => ({ x: i.it.x + ox, y: i.it.y + oy, w: i.it.w, h: i.it.h }));
     a.bad = final.some(r => obs.some(o => E().overlaps(r, o)));
@@ -852,8 +890,8 @@
     if (d.includes('n')) { const sn = snap([y], T.ys, th); if (sn) { y += sn.d; h -= sn.d; gy = sn.t; } }
     if (w < minW) { if (d.includes('w')) x -= minW - w; w = minW; }
     if (h < minH) { if (d.includes('n')) y -= minH - h; h = minH; }
-    if (x < 0) { w += x; x = 0; } if (y < 0) { h += y; y = 0; }
-    w = Math.min(w, g.w - x); h = Math.min(h, g.h - y);
+    if (x < g.m) { w += x - g.m; x = g.m; } if (y < g.m) { h += y - g.m; y = g.m; }
+    w = Math.min(w, g.w - g.m - x); h = Math.min(h, g.h - g.m - y);
     const r = { x, y, w, h };
     if (pinnedRects(a.page, skip).some(o => E().overlaps(r, o))) { tip(e, L('Başka bir sabit kartla çakışıyor', 'Overlaps another pinned card'), true); return; }
     a.last = r;
@@ -883,76 +921,114 @@
     return null;
   }
   function startAreaDrag(a) {
-    const g = S.res.g, area = areaItem(a.key);
-    const hdr = area ? null : S.res.pages.flatMap(p => p.items).find(i => i.kind === 'hdr' && i.key === a.key && (a.pins ? i.pinOf && a.pins.includes(i.pinOf) : !i.pinOf));
-    const w = area ? area.w : Math.max(g.cellW, hdr ? hdr.w : g.cellW), h = area ? area.h : (hdr ? hdr.h : g.hH) + g.hGap + g.cellH;
-    const ghost = doc_.createElement('div'); ghost.className = 'psAreaGhost';
-    S.$('[data-ps="drag"]').appendChild(ghost);
-    S.act = { type: 'areaDrag', key: a.key, pins: area ? null : a.pins, w, h, minH: area ? area.h : 0, ghost, sx: a.sx, sy: a.sy, page: null, x: 0, y: 0 };
-    S.areaSel = a.key; S.sel.clear(); placeFloat();
+    const g = S.res.g, area = areaItem(a.key), src = area || groupFrame(a.key, a.page, a.pins);
+    if (!src || !a.page) { S.act = null; return; }
+    const P0 = toPage(a.page, a.sx, a.sy), spec = S.doc.areas && S.doc.areas[a.key];
+    // Canlı önizleme: alan sürüklenirken belge geçici olarak güncellenir, öteki gruplar biçimlerini koruyarak
+    // yer değiştirir. Tek geri alma adımı; bırakma alanı dışında bırakılırsa iptal edilir.
+    // Alanı olmayan grup: alan genişliği grubun kart sayısına göre (en çok çerçevesi kadar sütun); boş sütun kalmaz.
+    let w = src.w;
+    if (!area) {
+      const n = a.pins ? a.pins.length : S.doc.order.filter(id => { const c = S.doc.cards[id]; return !(c && (c.excluded || c.pinned)) && E().effectiveKey(S.doc, id, groupOf) === a.key; }).length;
+      const cols = Math.max(1, Math.min(n || 1, Math.floor((src.w + g.gap + 0.01) / (g.cellW + g.gap))));
+      w = cols * g.cellW + (cols - 1) * g.gap;
+    }
+    pushHistory();
+    S.act = { type: 'areaDrag', key: a.key, origKey: a.key, pins: area ? null : a.pins, w: clamp(w, Math.min(g.cellW, g.cw), g.cw), minH: spec ? spec.h : 0, mode: spec ? spec.mode : undefined, dx: P0.x - src.x, dy: P0.y - src.y, base: S.hist[S.hist.length - 1], page: null, x: 0, y: 0, last: '' };
+    S.areaSel = a.key; S.frame = null; S.sel.clear(); hideFloat();
+  }
+  function previewArea(a, pid, x, y) {
+    const sig = `${pid}|${x.toFixed(1)}|${y.toFixed(1)}`;
+    if (sig === a.last) return;
+    a.last = sig;
+    if (pid == null) { S.doc = JSON.parse(a.base); a.key = a.origKey; a.split = false; }
+    else {
+      // Grubundan ayrılmış kartın başlığı: kartlar kendi elle grubuna (özgün başlık metniyle) ve alanına alınır.
+      if (a.pins && !a.split) { a.key = E().splitGroup(S.doc, a.pins, groupOf); a.split = true; }
+      E().setArea(S.doc, a.key, { page: pid, x, y, w: a.w, h: a.minH, mode: a.mode });
+    }
+    S.areaSel = pid == null ? null : a.key; S.slider = true;
+    cancelAnimationFrame(S.raf); S.raf = requestAnimationFrame(() => { if (!S) return; relayout(); render(); });
   }
   function moveAreaDrag(e) {
     const a = S.act, g = S.res.g;
     const thumb = doc_.elementFromPoint(e.clientX, e.clientY)?.closest?.('.psThumb');
     S.host.querySelectorAll('.psThumb').forEach(t => t.toggleAttribute('data-drop', t === thumb));
     if (thumb) {
-      a.page = thumb.dataset.th; a.x = g.m; a.y = g.m; a.ghost.hidden = true;
+      a.page = thumb.dataset.th; a.x = g.m; a.y = g.m; guides(null); previewArea(a, a.page, g.m, g.m);
       tip(e, L(`Grubu Sayfa ${S.doc.pages.findIndex(p => p.id === a.page) + 1}’e taşı`, `Move the group to page ${S.doc.pages.findIndex(p => p.id === a.page) + 1}`)); return;
     }
     const pid = pageAt(e.clientX, e.clientY); a.page = pid;
-    if (!pid) { a.ghost.hidden = true; tip(e, L('Bırakma alanı dışında · iptal', 'Outside the drop area · cancel')); return; }
-    const P = toPage(pid, e.clientX, e.clientY);
-    let x = clamp(P.x - Math.min(40, a.w / 2), 0, g.w - a.w), y = clamp(P.y - 8, 0, g.h - g.hH);
-    const T = snapTargets(pid, new Set()), th = 7 / P.k, sx = snap([x, x + a.w], T.xs, th), sy = snap([y], T.ys, th);
+    if (!pid) { guides(null); previewArea(a, null); tip(e, L('Bırakma alanı dışında · iptal', 'Outside the drop area · cancel')); return; }
+    const P = toPage(pid, e.clientX, e.clientY), maxY = g.bottom - g.hH - g.hGap - g.th - 24;
+    // Alan sayfa kenar boşluğunun içinde kalır (baskıda kesilmez).
+    let x = clamp(P.x - a.dx, g.m, g.w - g.m - a.w), y = clamp(P.y - a.dy, g.m, maxY);
+    const own = it => it.key === a.key || it.area === a.key, T = snapTargets(pid, new Set(), own), th = 7 / P.k, sx = snap([x, x + a.w], T.xs, th), sy = snap([y], T.ys, th);
     if (sx) x += sx.d; if (sy) y += sy.d;
-    a.x = clamp(x, 0, g.w - a.w); a.y = clamp(y, 0, g.h - g.hH);
-    Object.assign(a.ghost.style, { left: `${P.r.left + a.x * P.k}px`, top: `${P.r.top + a.y * P.k}px`, width: `${a.w * P.k}px`, height: `${Math.min(a.h, g.h - a.y) * P.k}px` });
-    a.ghost.hidden = false;
+    a.x = clamp(x, g.m, g.w - g.m - a.w); a.y = clamp(y, g.m, maxY);
     guides(pid, sx ? sx.t : null, sy ? sy.t : null);
-    tip(e, L('Grup alanı · kartlar alanın içinde akar', 'Group area · cards flow inside the area'));
+    previewArea(a, pid, a.x, a.y);
+    tip(e, L('Grubu taşı · öteki gruplar biçimini koruyarak yer açar', 'Move the group · other groups make room without changing shape'));
   }
   function endAreaDrag(a) {
-    a.ghost.remove(); hideTip(); guides(null);
+    hideTip(); guides(null); cancelAnimationFrame(S.raf); S.slider = false;
     S.host.querySelectorAll('.psThumb[data-drop]').forEach(t => t.removeAttribute('data-drop'));
-    if (!a.page) { render(); return; }
-    // Grubundan ayrılmış kartın başlığı: kartlar kendi elle grubuna (özgün başlık metniyle) ve alanına alınır.
-    let key = a.key;
-    commit(() => { if (a.pins) key = E().splitGroup(S.doc, a.pins, groupOf); E().setArea(S.doc, key, { page: a.page, x: a.x, y: a.y, w: a.w, h: a.minH }); });
-    S.areaSel = key; render();
+    if (!a.page || !a.last) { S.doc = JSON.parse(S.hist.pop()); S.areaSel = null; relayout(); render(); return; }
+    S.fut = []; S.areaSel = a.key; S.frame = null;
+    relayout(); render(); scheduleSave();
   }
   function moveAreaResize(e) {
-    const a = S.act, g = S.res.g, el = S.host.querySelector(`.psArea[data-area="${CSS.escape(a.key)}"]`);
-    if (!el) return;
+    const a = S.act, g = S.res.g;
     const P = toPage(a.page, e.clientX, e.clientY), dx = (e.clientX - a.sx) / P.k, dy = (e.clientY - a.sy) / P.k, s = a.start, d = a.dir;
     let x = s.x, w = s.w, h = s.h;
     if (d.includes('e')) w = s.w + dx;
     if (d.includes('w')) { w = s.w - dx; x = s.x + dx; }
     if (d.includes('s')) h = s.h + dy;
-    // Grup bazlı kart boyutu: kartlar alanın yeni ölçüsünü orantılı doldurur (motor: placeArea). Canlı önizleme.
-    const minW = Math.max(60, g.cellW * 0.45);
+    // Grup bazlı kart boyutu (motor: placeArea). Alan sayfa kenar boşluğunun içinde kalır. Canlı önizleme.
+    const minW = Math.min(g.cellW, g.cw);
     if (w < minW) { if (d.includes('w')) x -= minW - w; w = minW; }
-    x = clamp(x, 0, g.w - w); w = Math.min(w, g.w - x); h = clamp(h, g.hH + g.th + 24, g.h - s.y);
+    if (x < g.m) { w -= g.m - x; x = g.m; }
+    w = Math.min(w, g.w - g.m - x); h = clamp(h, g.hH + g.th + 24, g.bottom - s.y);
     a.last = { x, y: s.y, w, h };
-    if (!a.pushed) { pushHistory(); a.pushed = true; S.slider = true; }
-    S.doc.areas[a.key] = { page: a.page, x, y: s.y, w, h };
+    // Grubun başka sayfaya taşan kartı varsa: kartları yay (genel ölçü, alan büyüdükçe kartlar alana katılır);
+    // yoksa kartları sığdır (kartlar alanla orantılı büyür/küçülür).
+    const mode = a.overflow ? 'spread' : 'fit';
+    if (!a.pushed) {
+      pushHistory(); a.pushed = true; S.slider = true;
+      if (a.virtual && a.pins) a.key = E().splitGroup(S.doc, a.pins, groupOf);
+      S.frame = null; S.areaSel = a.key;
+    }
+    E().setArea(S.doc, a.key, { page: a.page, x, y: s.y, w, h, mode });
     cancelAnimationFrame(S.raf); S.raf = requestAnimationFrame(() => { if (!S) return; relayout(); render(); });
-    tip(e, L(`${Math.round(w / E().MM)} × ${Math.round(h / E().MM)} mm · kartlar alana orantılı sığar`, `${Math.round(w / E().MM)} × ${Math.round(h / E().MM)} mm · cards scale to fit the area`));
+    const size = `${Math.round(w / E().MM)} × ${Math.round(h / E().MM)} mm · `;
+    tip(e, size + (mode === 'spread' ? L('kart boyutu korunur · taşan kartlar alana katılır', 'card size is kept · overflowing cards join the area') : L('kartlar alana orantılı sığar', 'cards scale to fit the area')));
   }
   function endAreaResize(a) {
     hideTip(); cancelAnimationFrame(S.raf); S.slider = false;
     if (!a.pushed) { render(); return; }
     const r = a.last, s = a.start;
-    if (Math.abs(r.w - s.w) < 0.5 && Math.abs(r.h - s.h) < 0.5 && Math.abs(r.x - s.x) < 0.5) { S.doc = JSON.parse(S.hist.pop()); relayout(); render(); return; }
-    S.fut = []; relayout(); render(); scheduleSave();
+    if (Math.abs(r.w - s.w) < 0.5 && Math.abs(r.h - s.h) < 0.5 && Math.abs(r.x - s.x) < 0.5) { S.doc = JSON.parse(S.hist.pop()); clearFrame(); relayout(); render(); return; }
+    S.fut = []; S.areaSel = a.key; relayout(); render(); scheduleSave();
   }
   function placeAreaFloat(f) {
+    if (S.frame) {
+      const el = S.host.querySelector('.psArea.isVirtual');
+      if (!el) { clearFrame(); return false; }
+      f.innerHTML = `<span class="psFloatInfo">${esc(L(`Grup · ${S.frame.n} model · kenarlardan boyutlandırın, başlıktan sürükleyip taşıyın`, `Group · ${S.frame.n} models · resize from the edges, drag the title to move`))}</span>`;
+      f.hidden = false;
+      const r = el.getBoundingClientRect(), fw = f.offsetWidth;
+      f.style.left = `${clamp(r.left, 8, root.innerWidth - fw - 8)}px`; f.style.top = `${Math.max(8, r.top - f.offsetHeight - 8)}px`;
+      return true;
+    }
     const it = areaItem(S.areaSel), el = it && S.host.querySelector(`.psArea[data-area="${CSS.escape(S.areaSel)}"]`);
     if (!it || !el) { S.areaSel = null; return false; }
     const n = S.res.pages.flatMap(p => p.items).filter(i => i.kind === 'card' && i.area === S.areaSel).length;
     const label = L('Grup alanını kaldır: kartlar otomatik akışa döner', 'Remove the group area: cards return to automatic flow');
     const spec = S.doc.areas && S.doc.areas[S.areaSel], auto = L('Kart boyutunu genel tasarım ölçüsüne döndür', 'Return card size to the general design size');
     const autoBtn = spec && spec.h > 0 ? `<button type="button" class="tbtn" data-fa-area="auto" title="${esc(auto)}" aria-label="${esc(auto)}"><span>${esc(L('Otomatik kart boyutu', 'Automatic card size'))}</span></button>` : '';
-    f.innerHTML = `<span class="psFloatInfo">${esc(L(`Grup alanı · ${n} model`, `Group area · ${n} models`))}</span>${autoBtn}<button type="button" class="tbtn" data-fa-area="out" title="${esc(label)}" aria-label="${esc(label)}">${svg('flow')}<span>${esc(L('Akışa döndür', 'Return to flow'))}</span></button>`;
+    const spread = spec && spec.mode === 'spread';
+    const modes = spec && spec.h > 0 ? `<span class="psSeg" role="group" aria-label="${esc(L('Kart yerleşimi', 'Card layout'))}"><button type="button" data-fa-mode="fit" aria-pressed="${!spread}" title="${esc(L('Grubun tüm kartları alana orantılı sığar', 'All cards of the group scale to fit the area'))}">${esc(L('Kartları sığdır', 'Fit cards'))}</button><button type="button" data-fa-mode="spread" aria-pressed="${spread}" title="${esc(L('Kartlar genel ölçüde alanı doldurur; sığmayanlar sonraki sayfada sürer', 'Cards keep the general size and fill the area; the rest continue on the next page'))}">${esc(L('Kartları yay', 'Spread cards'))}</button></span>` : '';
+    f.innerHTML = `<span class="psFloatInfo">${esc(L(`Grup alanı · ${n} model`, `Group area · ${n} models`))}</span>${modes}${autoBtn}<button type="button" class="tbtn" data-fa-area="out" title="${esc(label)}" aria-label="${esc(label)}">${svg('flow')}<span>${esc(L('Akışa döndür', 'Return to flow'))}</span></button>`;
     f.hidden = false;
     const r = el.getBoundingClientRect(), fw = f.offsetWidth;
     f.style.left = `${clamp(r.left, 8, root.innerWidth - fw - 8)}px`; f.style.top = `${Math.max(8, r.top - f.offsetHeight - 8)}px`;
@@ -1009,6 +1085,24 @@
     root.BLLayerSystem?.openDialog?.(overlay, { onClose: () => finish('cancel') });
     root.BLMotionPlus?.play?.('overlay', overlay.firstElementChild);
     overlay.querySelector('[data-m]')?.focus();
+  }
+
+  /* Grup başlığını yeniden adlandırma: uygulama içi pencere (masaüstü uygulamada window.prompt yoktur). */
+  function renameGroup(key) {
+    const current = S.doc.labels[key] || '';
+    const vals = (S.res.pages.flatMap(p => p.items).find(it => it.kind === 'hdr' && it.key === key) || { vals: [] }).vals.filter(Boolean).join(' · ');
+    let value = current || vals;
+    dialog(`<h3 id="psDlgTitle">${esc(L('Grup başlığı', 'Group title'))}</h3><p>${esc(L('Boş bırakılırsa veri değeri kullanılır. Kaynak veri değişmez.', 'Leave empty to use the data value. Source data is unchanged.'))}</p>
+      <input type="text" class="psTitle psRename" data-ps="rename" maxlength="${E().LIMITS.label}" value="${esc(value)}" aria-label="${esc(L('Grup başlığı', 'Group title'))}">
+      <div class="modalFoot"><button type="button" class="tbtn" data-m="cancel">${esc(L('Vazgeç', 'Cancel'))}</button><button type="button" class="tbtn primary" data-m="ok">${esc(L('Kaydet', 'Save'))}</button></div>`, choice => {
+      if (choice !== 'ok') return;
+      commit(() => { const v = value.trim().slice(0, E().LIMITS.label); if (v && v !== vals) S.doc.labels[key] = v; else delete S.doc.labels[key]; });
+    });
+    const input = doc_.querySelector('.psDialog [data-ps="rename"]');
+    if (!input) return;
+    input.addEventListener('input', () => { value = input.value; });
+    input.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); input.closest('.psDialog').querySelector('[data-m="ok"]').click(); } });
+    input.focus(); input.select();
   }
 
   /* ---------------- Açılır paneller ---------------- */
@@ -1205,8 +1299,14 @@
       const th = t.closest('[data-th]'); if (th) { S.activePage = th.dataset.th; host.querySelector(`.psPageWrap[data-ps-page="${CSS.escape(S.activePage)}"]`)?.scrollIntoView({ block: 'start' }); render(); return; }
       const back = t.closest('[data-back]'); if (back) return commit(() => { delete S.doc.cards[back.dataset.back].excluded; });
       const fa = t.closest('[data-fa]'); if (fa) return selAction(fa.dataset.fa);
-      const fa2 = t.closest('[data-fa-area="auto"]'); if (fa2 && S.areaSel) { const key = S.areaSel; commit(() => { const sp = S.doc.areas[key]; if (sp) S.doc.areas[key] = { ...sp, h: 0 }; }); return; }
-      const fo = t.closest('[data-fa-area]'); if (fo && S.areaSel) { const key = S.areaSel; S.areaSel = null; commit(() => E().clearArea(S.doc, key)); toast(L('Grup alanı kaldırıldı; kartlar otomatik akışa döndü.', 'Group area removed; cards returned to automatic flow.')); return; }
+      const fm = t.closest('[data-fa-mode]'); if (fm && S.areaSel && S.doc.areas[S.areaSel]) { const key = S.areaSel, sp = S.doc.areas[key]; commit(() => E().setArea(S.doc, key, { ...sp, mode: fm.dataset.faMode === 'spread' ? 'spread' : 'fit' })); return; }
+      const fa2 = t.closest('[data-fa-area="auto"]'); if (fa2 && S.areaSel) {
+        // Genel kart ölçüsüne dönüş: alan genişliği tam sütun sayısına oturur (sağda boş şerit kalmaz).
+        const key = S.areaSel, g = S.res.g;
+        commit(() => { const sp = S.doc.areas[key]; if (!sp) return; const cols = Math.max(1, Math.floor((Math.min(sp.w, g.cw) + g.gap + 0.01) / (g.cellW + g.gap))); E().setArea(S.doc, key, { ...sp, w: cols * g.cellW + (cols - 1) * g.gap, h: 0 }); });
+        return;
+      }
+      const fo = t.closest('[data-fa-area]'); if (fo && S.areaSel) { const key = S.areaSel; clearFrame(); commit(() => E().clearArea(S.doc, key)); toast(L('Grup alanı kaldırıldı; kartlar otomatik akışa döndü.', 'Group area removed; cards returned to automatic flow.')); return; }
       const rm = t.closest('[data-rmlv]'); if (rm) { const lv = [...S.doc.grouping.levels]; lv.splice(Number(rm.dataset.rmlv), 1); return setLevels(lv); }
       const add = t.closest('[data-addlv]'); if (add) { closePop(); return setLevels([...S.doc.grouping.levels, add.dataset.addlv]); }
       const rf = t.closest('[data-rf]');
@@ -1247,14 +1347,7 @@
       host.querySelector(`[data-out="${t.dataset.s}"]`).textContent = t.value + t.dataset.u;
       cancelAnimationFrame(S.raf); S.raf = requestAnimationFrame(() => { relayout(); render(); scheduleSave(); });
     });
-    host.addEventListener('dblclick', e => {
-      const h = e.target.closest('.psDocHdr'); if (!h) return;
-      const key = h.dataset.hdr, current = S.doc.labels[key] || '';
-      const vals = (S.res.pages.flatMap(p => p.items).find(it => it.kind === 'hdr' && it.key === key) || { vals: [] }).vals.filter(Boolean).join(' · ');
-      const next = root.prompt(L('Grup başlığı (boş bırakılırsa veri değeri kullanılır)', 'Group title (leave empty to use the data value)'), current || vals);
-      if (next == null) return;
-      commit(() => { const v = next.trim().slice(0, E().LIMITS.label); if (v && v !== vals) S.doc.labels[key] = v; else delete S.doc.labels[key]; });
-    });
+    host.addEventListener('dblclick', e => { const h = e.target.closest('.psDocHdr'); if (h) renameGroup(h.dataset.hdr); });
     // Sürükle-bırak listeleri (gruplama seviyeleri, kart alanları, sayfa sırası)
     let dragList = null;
     host.addEventListener('dragstart', e => {
@@ -1286,6 +1379,7 @@
     if (e.key === 'Escape') {
       if (!S.$('[data-ps="pop"]').hidden) { e.stopPropagation(); closePop(); return; }
       if (S.sel.size) { e.stopPropagation(); S.sel.clear(); render(); return; }
+      if (S.areaSel) { e.stopPropagation(); clearFrame(); render(); return; }
       return; // katman sistemi editörü kapatır
     }
     if (mod && k === 'z') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; }
@@ -1301,7 +1395,7 @@
       commit(() => {
         ids.forEach(id => { if (!S.res.index.get(id)?.pinned) E().pinAt(S.doc, id, S.res.index.get(id)); });
         for (const id of ids) {
-          const c = S.doc.cards[id], r = { ...c, x: clamp(c.x + dir[0] * step, 0, g.w - c.w), y: clamp(c.y + dir[1] * step, 0, g.h - c.h) };
+          const c = S.doc.cards[id], r = { ...c, x: clamp(c.x + dir[0] * step, g.m, g.w - g.m - c.w), y: clamp(c.y + dir[1] * step, g.m, g.h - g.m - c.h) };
           const obs = Object.entries(S.doc.cards).filter(([k2, o]) => k2 !== id && o.pinned && !o.excluded && o.page === c.page && !S.sel.has(k2)).map(([, o]) => o);
           if (!obs.some(o => E().overlaps(r, o))) { c.x = r.x; c.y = r.y; }
         }
