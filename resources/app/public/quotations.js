@@ -177,6 +177,11 @@
     if(touched)qExpectedState.set(req.id,qClonePlain(req));
     return req;
   }
+  /* Kuyrukta gönderilmemiş yapı kaydı (tam PUT) olan talepler. PUT gövdesi görev
+     çalışınca req nesnesinden kurulur; bu sırada gelen hydrate o nesneyi sunucu
+     hâliyle ezerse kullanıcının düzenlemesi (ör. yeni üretici) gönderilmeden kaybolur. */
+  const qStructuralSaves=new Map();
+  function qStructuralSave(id,delta){const next=(qStructuralSaves.get(id)||0)+delta;if(next>0)qStructuralSaves.set(id,next);else qStructuralSaves.delete(id);}
   const qSamePriceText=(a,b)=>{const x=qMoneyNumber(a),y=qMoneyNumber(b);if(Number.isFinite(x)||Number.isFinite(y))return Number.isFinite(x)&&Number.isFinite(y)&&Math.round(x*10000)===Math.round(y*10000);return qNorm(a)===qNorm(b);};
   const qRequestShape=req=>JSON.stringify({note:req.note,capacityConfirmed:!!req.capacityConfirmed,manufacturers:req.manufacturers,models:req.models||[],sortOrder:req.sortOrder,items:(req.items||[]).map(item=>{const copy={...item};['price','approved','dropped','rev','updatedAt','updatedBy','history'].forEach(key=>delete copy[key]);return copy;})});
   function qPlanSave(req){
@@ -244,10 +249,15 @@
       // Açık masanın dinleyicileri render anındaki talep nesnesini tutar; görünen içerik
       // değişmediğinde yeniden çizim yapılmaz. Yeni nesne vermek, sonraki düzenlemeyi
       // (ör. tablodan üretici ekleme) depoda olmayan nesneye yazdırır: kimlik korunur.
+      // Gönderilmemiş yapı kaydı olan talep ezilmez; sunucu hâli (revler) yine
+      // hatırlanır, kayıt yanıtı qReplaceRequest ile birleşir.
       const previous=new Map(qLoad().requests.map(req=>[req.id,req]));
-      qState={version:2,requests:(Array.isArray(data.requests)?data.requests:[]).map(qNormalizeRequest).map(req=>{const existing=previous.get(req.id);previous.delete(req.id);return qMergeRequestInPlace(existing,req);}).map(qTrackOwners)};
       qServerState.clear();qExpectedState.clear();
-      qState.requests.forEach(req=>{qRememberServerState(req);qReapplyPendingLines(req);});
+      qState={version:2,requests:(Array.isArray(data.requests)?data.requests:[]).map(qNormalizeRequest).map(req=>{
+        const existing=previous.get(req.id);previous.delete(req.id);qRememberServerState(req);
+        return existing&&qStructuralSaves.has(req.id)?existing:qMergeRequestInPlace(existing,req);
+      }).map(qTrackOwners)};
+      qState.requests.forEach(qReapplyPendingLines);
       qHydrated=true;qPersistLocal();
       qProjectForeignLineEdits();
       qNotifyCollectionQuotes();
@@ -286,14 +296,19 @@
       if(plan.structural)structural.push(req);
     });
     if(!structural.length)return true;
+    structural.forEach(req=>qStructuralSave(req.id,1));
     qQueue(async()=>{
       for(const req of structural){
         // Her satır, bilinen son sunucu revizyonuyla gönderilir: başka bir
         // kullanıcının bu arada girdiği fiyat bu kayıtla ezilmez.
         const known=new Map((qServerState.get(req.id)?.items||[]).map(item=>[item.id,item.rev||0]));
         const body={...req,items:(req.items||[]).map(item=>known.has(item.id)?{...item,rev:known.get(item.id)}:item)};
-        try{const data=await qApi(`/api/quotations/${encodeURIComponent(req.id)}`,{method:'PUT',body:JSON.stringify(body)});if(data.request)qReplaceRequest(data.request);}
-        catch(err){qSaveFailureSerial++;qSaveFailureError=err;if(typeof showToast==='function')showToast((err?.message||qLang('Quotation kaydedilemedi.','Quotation could not be saved.')));if(err?.status===403)await qHydrateShared(true);}
+        // Sayaç yanıttan hemen sonra düşer: 403 yolundaki hydrate yetkisiz yerel hâli korumaz.
+        let data=null,err=null;
+        try{data=await qApi(`/api/quotations/${encodeURIComponent(req.id)}`,{method:'PUT',body:JSON.stringify(body)});}catch(error){err=error;}
+        qStructuralSave(req.id,-1);
+        if(!err){if(data.request)qReplaceRequest(data.request);continue;}
+        qSaveFailureSerial++;qSaveFailureError=err;if(typeof showToast==='function')showToast((err?.message||qLang('Quotation kaydedilemedi.','Quotation could not be saved.')));if(err?.status===403)await qHydrateShared(true);
       }
     });
     return true;

@@ -24,15 +24,14 @@ function slice(startMarker, endMarker) {
   return source.slice(start, end);
 }
 
-function fixture(serverRequests) {
+function fixture(serverRequests, { pending = [] } = {}) {
   const local = [{ id: 'q1', ownerId: 'u1', updatedAt: '1', manufacturers: [{ name: 'A' }], items: [{ id: 'l1', modelKey: 'm1', manufacturer: 'A', price: '' }], stale: true }];
   const ctx = {
     qState: { version: 2, requests: local }, qHydrated: true, qProfiles: [],
     MIGRATION_KEY: 'mig', BLStorage: { getItem: () => '1', setItem() {} },
-    qServerState: new Map(), qExpectedState: new Map(),
     qApi: async () => ({ profiles: [], requests: JSON.parse(JSON.stringify(serverRequests)) }),
     qNormalizeRequest: req => JSON.parse(JSON.stringify(req)),
-    qTrackOwners: req => req, qRememberServerState() {}, qReapplyPendingLines: req => req,
+    qTrackOwners: req => req, qReapplyPendingLines: req => req,
     qPersistLocal() {}, qProjectForeignLineEdits() {}, qNotifyCollectionQuotes() {},
     qLang: tr => tr, showToast() {},
   };
@@ -40,6 +39,11 @@ function fixture(serverRequests) {
   vm.createContext(ctx);
   vm.runInContext(`var qState=this.qState,qHydrated=this.qHydrated,qProfiles=this.qProfiles;
     function qLoad(){return qState;}
+    const qServerState=new Map(),qExpectedState=new Map();this.serverState=qServerState;
+    const qClonePlain=value=>JSON.parse(JSON.stringify(value));
+    ${slice('  function qRememberServerState(', '\n')}
+    ${slice('  const qStructuralSaves=', '\n  function qPlanSave(')}
+    ${JSON.stringify(pending)}.forEach(id=>qStructuralSave(id,1));
     ${slice('  function qMergeRequestInPlace(', '\n  function qReplaceRequest(')}
     ${slice('  async function qHydrateShared(', '\n  /* Koleksiyon')}
     this.hydrate=qHydrateShared;this.state=()=>qState;`, ctx);
@@ -73,4 +77,77 @@ test('sunucudan gelen yeni talep eklenir, sunucuda olmayan talep düşer', async
   const g = fixture([]);
   await g.hydrate(true);
   assert.deepEqual(g.state().requests, []);
+});
+
+test('kuyrukta gönderilmemiş yapı kaydı olan talep hydrate ile ezilmez (Codex P1)', async () => {
+  // Kullanıcı B üreticisini ekledi; PUT kuyrukta bekliyor, gövde görev çalışınca req'ten kurulur.
+  const f = fixture(server, { pending: ['q1'] });
+  const rendered = f.state().requests[0];
+  rendered.manufacturers.push({ name: 'B' });
+  rendered.items.push({ id: 'l2', modelKey: 'm1', manufacturer: 'B', price: '' });
+  await f.hydrate(true);
+  assert.equal(f.state().requests[0], rendered, 'bekleyen kayıt depoda kalır');
+  assert.deepEqual(rendered.manufacturers.map(m => m.name), ['A', 'B'], 'kuyruktaki PUT B ile gönderilir');
+  assert.equal(rendered.items.length, 2);
+  assert.deepEqual([...f.serverState.get('q1').manufacturers.map(m => m.name)], ['A'], 'sunucu hâli (revler) yine sunucudan hatırlanır');
+});
+
+test('yapı kaydı sayacı sunucu yanıtından sonra, hydrate/birleştirmeden önce düşer', () => {
+  const body = slice('  function qSave(requests=null){', '\n  // Quotation içeriği');
+  const put = body.slice(body.indexOf('qQueue(async()=>{'));
+  const done = put.indexOf('qStructuralSave(req.id,-1)');
+  assert.ok(body.indexOf('qStructuralSave(req.id,1)') > 0 && body.indexOf('qStructuralSave(req.id,1)') < body.indexOf('qQueue(async()=>{'), 'kayıt kuyruğa girerken işaretlenir');
+  assert.ok(done > 0 && done < put.indexOf('qReplaceRequest(') && done < put.indexOf('qHydrateShared(true)'), '403 yolu yetkisiz yerel hâli korumaz');
+});
+
+// Uçtan uca (gerçek qSave/qQueue/qPlanSave/qHydrateShared/qReplaceRequest): Codex'in
+// bildirdiği sıra. Kuyruk önceki bir işle bloke → B eklenir ve kaydedilir → canlı
+// refresh hydrate eder → kuyruk serbest kalır → PUT gövdesinde B bulunmalı.
+function saveFlow(src) {
+  const cut = (a, b) => { const s = src.indexOf(a), e = src.indexOf(b, s); assert.ok(s > 0 && e > s, a); return src.slice(s, e); };
+  const block = src.includes('  function qMergeRequestInPlace(')
+    ? cut('  function qMergeRequestInPlace(', '\n  // Quotation içeriği')
+    : cut('  function qReplaceRequest(request){', '\n  // Quotation içeriği');
+  const serverReq = { id: 'q1', ownerId: 'u1', updatedAt: '1', manufacturers: [{ name: 'A' }], items: [{ id: 'l1', modelKey: 'm1', manufacturer: 'A', price: '', rev: 1 }] };
+  const puts = [];
+  let release;
+  const ctx = {
+    serverJson: JSON.stringify([serverReq]), puts, gate: new Promise(resolve => { release = resolve; }),
+    qApi: async (url, options = {}) => {
+      if (options.method === 'PUT') { const body = JSON.parse(options.body); puts.push(body); return { request: body }; }
+      return { profiles: [], requests: JSON.parse(ctx.serverJson) };
+    },
+  };
+  vm.createContext(ctx);
+  vm.runInContext(`const MIGRATION_KEY='mig';let qProfiles=[],qHydrated=true,qSaveQueue=Promise.resolve(),qSaveFailureSerial=0,qSaveFailureError=null;
+    const BLStorage={getItem:()=>'1',setItem(){}},qApi=this.qApi,qItemOwners=new WeakMap();
+    const qNorm=v=>v==null?'':String(v).trim(),qMoneyNumber=v=>{const n=Number(String(v).replace(',','.'));return String(v).trim()&&Number.isFinite(n)?n:NaN;};
+    const qLang=t=>t,showToast=()=>{},qPersistLocal=()=>true,qProjectForeignLineEdits=()=>{},qOpenWorkspaceSignature=()=>'',qRefreshOpenWorkspace=()=>{};
+    const qNormalizeRequest=r=>JSON.parse(JSON.stringify(r)),qTrackOwners=r=>r;
+    let qState={version:2,requests:JSON.parse(this.serverJson)};function qLoad(){return qState;}
+    ${block}
+    qState.requests.forEach(qRememberServerState);
+    this.state=()=>qState;this.save=qSave;this.hydrate=qHydrateShared;this.queue=qQueue;this.flush=()=>qSaveQueue;`, ctx);
+  return { ctx, puts, release };
+}
+
+async function codexScenario(src) {
+  const { ctx, puts, release } = saveFlow(src);
+  const req = ctx.state().requests[0];           // matrisin kapattığı nesne
+  ctx.queue(() => ctx.gate);                     // önceki kayıt hâlâ sürüyor
+  req.manufacturers.push({ name: 'B' });
+  req.items.push({ id: 'l2', modelKey: 'm1', manufacturer: 'B', price: '' });
+  ctx.save(req);                                 // yapı kaydı kuyrukta
+  await ctx.hydrate(true);                       // canlı senkron refresh'i
+  release();
+  await ctx.flush();
+  return { puts, active: ctx.state().requests.find(item => item.id === 'q1') };
+}
+
+test('Codex P1: kuyruktaki yapı kaydı hydrate sonrasında da B ile gönderilir ve tabloda kalır', async () => {
+  const { puts, active } = await codexScenario(source);
+  assert.equal(puts.length, 1);
+  assert.deepEqual(puts[0].manufacturers.map(m => m.name), ['A', 'B']);
+  assert.deepEqual(puts[0].items.map(item => item.id), ['l1', 'l2']);
+  assert.deepEqual([...active.manufacturers.map(m => m.name)], ['A', 'B'], 'ekrandaki talep B ile kalır');
 });
