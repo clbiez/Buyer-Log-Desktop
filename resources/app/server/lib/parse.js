@@ -1034,7 +1034,7 @@ function automaticRuleMeta(rule, applied, country) {
     manufacturer: licensor,
     licensor,
     license: String(rule.license || ''),
-    royalty: Number(rule.royalty),
+    royalty: BLBusinessRules.pricingRuleRoyaltyForCountry(rule, commissionGroup),
     trCommission: optional(rule.trCommission),
     ydCommission: optional(rule.ydCommission),
     commission: BLBusinessRules.pricingRuleCommissionForCountry(rule, commissionGroup),
