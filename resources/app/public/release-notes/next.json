@@ -369,6 +369,29 @@
           "en": "Artwork Detail in CP now uses the same cards as Collection."
         }
       }
+    },
+    {
+      "id": "cp-logistic-deltype-edit-kept",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Siparişler",
+        "en": "CP · Orders"
+      },
+      "title": {
+        "tr": "CP: Del. Type ve Ex-factory düzenlemesi sunucu görünümünde geri dönmez",
+        "en": "CP: Del. Type and Ex-factory edits no longer revert in the server view"
+      },
+      "body": {
+        "tr": "Bir satırda Del. Type ya da Ex-factory değiştirildiğinde kayıt doğru tutuluyordu, ancak CP ve Siparişler listeleri ile öncelik hesabı bir sonraki tam yenilemeye kadar eski Del. Type ve tahmini antrepo tarihini kullanabiliyordu. Bu iki alan artık her kayıttan sonra lojistik bilgisiyle birlikte yeniden hesaplanır; yüklenmiş parsiyellerin kaynak değerleri değişmez. Bu iki alandaki kayıt sonrası güncelleme birkaç saniye daha uzun sürebilir.",
+        "en": "When Del. Type or Ex-factory was changed on a row, the save itself was correct, but the CP and Orders lists and the priority calculation could keep using the old Del. Type and estimated warehouse date until the next full refresh. These two fields are now recalculated together with the logistics data after every save; source values of loaded partial shipments do not change. The update after saving these two fields may take a few seconds longer."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekran düzeni değişmedi; yalnız kayıttan sonra gösterilen değer artık doğru.",
+          "en": "The screen layout is unchanged; only the value shown after saving is now correct."
+        }
+      }
     }
   ]
 }
