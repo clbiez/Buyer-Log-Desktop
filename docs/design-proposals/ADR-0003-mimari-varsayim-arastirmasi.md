@@ -678,7 +678,7 @@ B1 kodu (`c800f90b`) bayrak kapalı haliyle dalda kalır. Davranışı değişti
 **Okuma sıklığı sonucu [Doğrulandı: ölçüm]:**
 - **Siparişler hiçbir senaryoda tam projeksiyon okumadı.** İlk açılış, yeni sekme, yenileme ve yeniden başlatmada okuma modeli sorgusu kullandı.
 - Tam okuma yalnız **CP'nin açılışında** var (aynı sekmede ilk geçiş ve yeniden başlatma sonrası): 4,87 MB.
-- Her CP düzenlemesinden sonra **4,94 MB'lık `read-model/cp/computed`** isteği oluşuyor (S1). Bu, kayıt başına en büyük okuma trafiği.
+- ~~Her CP düzenlemesinden sonra 4,94 MB'lık `read-model/cp/computed` isteği oluşuyor (S1).~~ **Düzeltme (§6E):** Bu istek CP açılışının ilk hesaplanmış sütun yüklemesidir ve S1 adımına denk gelmiştir. Düzenleme onu tetiklemiyor.
 - B1'in S2'de (B1 değerlendirmesindeki) cezalandırdığı desen, yani kayıttan sonra bütün dosya okuması, gerçek arayüzde Siparişler için **oluşmadı**.
 
 **Kullanıcı bekleme (mevcut vs B1):**
@@ -715,6 +715,55 @@ Sonuç: Düzenlemeyi yapan sekmedeki Siparişler penceresi, kullanıcı filtre, 
   1. **Güncellik hatası (öncelikli, doğruluk):** Düzenlemeyi yapan sekmede Siparişler penceresi eski veri gösteriyor. Düzeltme yönü ürün kararı: pencerenin yerel düzenlemede geçersizleşmesi mi, yoksa okuma modeli satırlarına yerel eş güncellemesi mi? İkincisi yeni bir uygulama döngüsü olmamalı (ilke 06).
   2. Her CP düzenlemesinden sonraki 4,94 MB `cp/computed` okuması, kayıt başına en büyük trafik. Gerekliliği ayrıca incelenmeli.
   3. B1 kodunun (`c800f90b`, bayrak kapalı) dalda tutulması ya da geri alınması.
+
+## 6E · CP ↔ Siparişler veri akışı incelemesi (salt okunur, `b386cbe` = TEST 8.0.20)
+
+**Ölçüm:** Tek koşu, bayrak kapalı, 30k sentetik veri, Playwright Chromium, gerçek DOM düzenlemesi (Supp. FOB). İstek ve yanıt gövdeleri yakalandı. Araç `scratchpad/o3/probe-e.js`; kod değişmedi.
+
+**Gerçek akış (bir Supp. FOB düzenlemesi; ms ve bayt ölçülmüş, kanıt etiketiyle):**
+1. **Kayıt:** `PATCH /api/overrides/<kod>`, onay 305–361 ms **[Doğrulandı]**. Sunucu override belgesini yazar, projeksiyon yeniden yazımını kuyruğa alır (`queueProjectionCacheRowPatches`) ve canlı yamayı diğer istemcilere gönderir.
+2. **Projeksiyon yeniden yazımı:** cp, orders, order-summary ve overview modüllerinin bütün dosyaları, ≈ 6,5 CPU-sn (§6A.2) **[Doğrulandı]**. Duvar süresi bu koşuda yaklaşık 3–3,9 sn (aşağıdaki kalan süreden) **[Muhtemel]**.
+3. **İstemci CP:** `cpRowSaveSettled` → `cpRMInvalidate('row-save')` → `cp/query` (4 KB). Sunucu yeni nesilde CP veri kümesini yeniden yükler (`loadMs` 0,91–1,06 sn) ve **karar sütunlarını bütün veri kümesi için yeniden hesaplar** (`computeMs` 2,35–3,89 sn, `reused:false`) **[Doğrulandı: yanıt timing]**. Supp. FOB karar girdisi değil (`computePriorityFlags` girdileri, §3 T9) **[Doğrulandı: source]**, yani bu hesap bu düzenleme için gereksiz.
+4. **İstemci Siparişler (#1232):** `buyerlog:cp-write-ack` → pencere geçersizleşir → geçişte 1× `orders/query` (534 KB). İstemcide 3,84–4,80 sn sürer; bunun **0,85–0,95 sn'si işçide veri kümesi yeniden yüklemesi**, **13 ms'si sorgu**, kalan **~3–3,9 sn'si işçi öncesi sunucu beklemesi**: `ensureComputedProjection` → `readProjectionCompressed` → `pendingRewritesSettled`, yani yeniden yazımın bitmesini beklemek **[Doğrulandı: timing + source; bekleme payı kalan süreden çıkarıldı, Muhtemel]**. Önceki doğrulamadaki 6,3–9,4 sn aynı yapıdadır ama daha yüklü bir anda ölçülmüştür.
+5. **`cp/computed` (soru 1–3):** 5,07 MB'lık tam yanıt yalnız **CP açılışında** bir kez geliyor (`since` yok, 24.982 satır, sunucu 3,15 sn, `decisionMs` 2,77 sn). Üç düzenleme ve bir çift düzenlemeden sonra **hiç `cp/computed` isteği olmadı** **[Doğrulandı: 1 koşu]**. §6D'deki atıf düzeltildi.
+   - İstemci yanıttan yalnız FIELDS alanlarını `_id` ile satırlara uygular: `id, priority, calculationStatus, trackingTags, priorityTags, actionReasons, signals, basePriority, checklist, orderKey, optionId` (`cp-computed-task.js:42`, `app-main.js` `applyCpComputedColumns`).
+   - Delta mekanizması zaten var: `since` token'ı ve işçide satır özeti geçmişi (`cp-computed-task.js:385-394`). İstemci `applied.rows===rows` olduğunda `since` gönderiyor (`app-main.js:1624-1627`).
+   - Tam yanıtın değişmiş kısmı (soru 2) ölçülemedi, çünkü düzenleme sonrası tam yanıt oluşmadı. Soru 2'nin dayandığı varsayım ölçümle çürüdü.
+
+**Sorulara kısa cevaplar:**
+- **S1–S3:** `cp/computed`'ı tetikleyen düzenleme değil, CP açılışı (yukarıda).
+- **S4:** Tam veri yanıtı olmadan iş davranışı korunabilir. Düzenleme sonrası tam yanıt zaten yok. Supp. FOB'a bağlı hesaplanmış sütun yok; tarih, Del. Type ve statü ise karar girdileri **[Doğrulandı: source]**.
+- **S5:** Bekleme ≈ yeniden yazım beklemesi (~3–3,9 sn) + Siparişler veri kümesi yeniden yüklemesi (0,85–0,95 sn) + sorgu (13 ms) + 534 KB aktarım. Sıkıştırma yok (bayrak kapalı).
+- **S6:**
+  - Canlı olaylar yazan sekmeyi bilerek atlıyor; #1232 bunu yeniden sorguyla çözdü.
+  - `projection-row-patch` satır düzeyinde ama sonucu bütün dosya olarak yazıyor, ve okuma modeli okuması bu yazımı bekliyor.
+  - `derived-input-keys` ve nesil anahtarı, override değişince yeni nesil üretiyor. Okuma modeli işçisi veri kümesini nesil anahtarıyla tuttuğu için her düzenlemede baştan yüklüyor.
+  - Bellekte "taban + yama" yalnız CP hesaplanmış yolunda var (§6C).
+- **S7:** Evet, aynı değişiklik birden çok yerde yeniden işleniyor **[Doğrulandı]**:
+  - (i) dört modülün bütün dosya yeniden yazımı;
+  - (ii) Siparişler işçi veri kümesinin baştan yüklenmesi (~0,9 sn);
+  - (iii) CP işçi veri kümesinin yeniden yüklenmesi (~1 sn) ve **bütün karar sütunlarının yeniden hesabı** (2,3–3,9 sn), alan karar girdisi olmasa bile.
+  - Genel Bakış bu akışta açılmadı, ölçülmedi.
+- **S8:** Eski yanıtın yeniyi ezmesine karşı mevcut korumalar **[Doğrulandı: source]**:
+  - `cp/computed`: `isCurrent` kontrolü (`app-main.js:1621-1632`, `CP_COMPUTED_STALE_RESULT`).
+  - Siparişler: `ordersRMInvalidate` `seq`/`epoch`'u artırır, yanıt `seq` eşleşmezse atılır.
+  - Ölçüm: <200 ms arayla iki düzenleme tek kayda birleşti. Siparişler önce eski, sonra son değeri gösterdi; ara değer hiç görünmedi.
+  - Ezme gözlenmedi; tek senaryo, tek koşu.
+
+**Değerlendirme (a → c):**
+- **(a) Mevcut mekanizmayı iyileştirme — en küçük uygulanabilir adım:** Düzenlenen alanlar karar girdisi değilse (Supp. FOB, not, lisansör…) CP okuma modeli **karar sütunlarını yeniden hesaplamasın**, yani önceki nesildeki hesap yeniden kullanılsın. Girdi kümesi `computePriorityFlags` ve checklist girdilerinden statik olarak çıkarılabilir.
+  - Etki: bu düzenleme türlerinde kayıt başına 2,3–3,9 sn işçi CPU'su gider **[Hipotez: ölçülmedi]**.
+  - Risk: girdi kümesi eksik çıkarılırsa bayat öncelik oluşur. Bu yüzden önce gölgede eski hesapla karşılaştırma gerekir (V4 doğruluk sınırı: global/ortam okumaları).
+- **(b) Alternatif mevcut mekanizma:** Siparişler okuması için `cp-row-patch-log` sanal veri kümesinin kullanılması. §6C'de "ikinci uygulama döngüsü" gerekçesiyle BLOCKED; O2 olmadan önerilmez.
+- **(c) Tam veri aktarımını kaldırma:** Düzenleme sonrası tam veri aktarımı zaten yok. Asıl maliyet aktarım değil, **sunucu tarafında yeniden üretim** (bütün dosya yeniden yazımı ve veri kümelerinin yeniden yüklenmesi). Bunu kaldırmanın yolu B1/B2'nin konusu ve BLOCKED.
+
+**Ayrı bulgu — veri güncelliği ve UX [Doğrulandı: ölçüm]:** #1232 sonrası Siparişler doğru değere dönüyor. Ama yeniden sorgu bitene kadar (bu koşuda 3,8–4,8 sn, önceki doğrulamada 6–9 sn) tablo **eski değeri uyarısız** gösteriyor. Bu bir doğruluk/UX bulgusudur; sorgu performansının yerine geçmez.
+- **En küçük çözüm önerisi:** Kod bu incelemede yazılmadı.
+  - Geçersizleştirme ile yeni yanıt arasında tabloyu gizlemeden `#ordersTable` üzerinde `aria-busy="true"` ayarlanır.
+  - Araç çubuğunda mevcut `uiState--loading` ya da `aria-busy` deseniyle küçük bir durum etiketi gösterilir: **"Güncelleniyor…" / "Updating…"**. Bu desen bugün toplam hücresinde kullanılıyor (`app-main.js:8889`).
+  - Görünüş ve kayboluş için BLMotionPlus'ın ortak solma sınıfı kullanılır (DESIGN_SYSTEM §6). `prefers-reduced-motion` korunur.
+  - Yanıt gelince ya da `seq` atlanınca etiket kaldırılır.
+  - `setOrdersLoadingState(true)` kullanılmamalı: tabloyu boş durumla değiştirir, veriyi gizler.
 
 ---
 
