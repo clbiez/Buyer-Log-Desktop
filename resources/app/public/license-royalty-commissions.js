@@ -73,14 +73,18 @@
       const opdStart=normalizePricingRuleDate(r&&r.opdStart),opdEnd=normalizePricingRuleDate(r&&r.opdEnd);
       const seasons=normalizePricingRuleSeasons((r&&r.seasons)!=null?r.seasons:(r&&r.season));
       const licensor=norm(r&&r.licensor)||norm(r&&r.manufacturer),license=norm(r&&r.license);
-      const royalty=Number(r&&r.royalty),trRoyalty=optionalPercent(r&&r.trRoyalty),trCommission=optionalPercent(r&&r.trCommission),ydCommission=optionalPercent(r&&r.ydCommission),hologramCost=Number(r&&r.hologramCost),trHologramCost=optionalMoney(r&&r.trHologramCost);
+      // DTR contracts have no royalty/commission/hologram: null = none (BLBusinessRules.pricingRuleRatesOptional).
+      const optional=api.pricingRuleRatesOptional({licensor}),blank=v=>v==null||String(v).trim()==='';
+      const royalty=optional&&blank(r&&r.royalty)?null:Number(r&&r.royalty),trCommission=optionalPercent(r&&r.trCommission),ydCommission=optionalPercent(r&&r.ydCommission),hologramCost=optional&&blank(r&&r.hologramCost)?null:Number(r&&r.hologramCost),royaltyTotal=royalty==null?0:royalty;
+      // TR royalty/hologram are optional; blank inherits the international (YD) value.
+      const trRoyalty=optionalPercent(r&&r.trRoyalty),trHologramCost=optionalMoney(r&&r.trHologramCost),trRoyaltyTotal=trRoyalty??royaltyTotal;
       if(trRoyalty!=null&&(trRoyalty<0||trRoyalty>100))return;
       if(trHologramCost!=null&&trHologramCost<0)return;
-      if((r&&r.trRoyalty!=null&&String(r.trRoyalty).trim()!==''&&trRoyalty==null)||(r&&r.trHologramCost!=null&&String(r.trHologramCost).trim()!==''&&trHologramCost==null))return;
+      if((!blank(r&&r.trRoyalty)&&trRoyalty==null)||(!blank(r&&r.trHologramCost)&&trHologramCost==null))return;
       if(opdStart&&opdEnd&&dateOrdinal(opdStart)>dateOrdinal(opdEnd))return;
-      if(!licensor||!license||!Number.isFinite(royalty)||royalty<0||royalty>100||!Number.isFinite(hologramCost)||hologramCost<0)return;
-      if(trCommission==null&&ydCommission==null)return;
-      if((trCommission!=null&&(trCommission<0||trCommission>100||(trRoyalty??royalty)+trCommission>100))||(ydCommission!=null&&(ydCommission<0||ydCommission>100||royalty+ydCommission>100)))return;
+      if(!licensor||!license||(royalty!=null&&(!Number.isFinite(royalty)||royalty<0||royalty>100))||(hologramCost!=null&&(!Number.isFinite(hologramCost)||hologramCost<0)))return;
+      if(trCommission==null&&ydCommission==null&&!optional)return;
+      if((trCommission!=null&&(trCommission<0||trCommission>100||trRoyaltyTotal+trCommission>100))||(ydCommission!=null&&(ydCommission<0||ydCommission>100||royaltyTotal+ydCommission>100)))return;
       const categories=api.pricingRuleCategories(r);
       const key=[categories.map(turknorm).join('~'),opdStart,opdEnd,seasons.map(turknorm).join('~'),turknorm(licensor),turknorm(license),trCommission==null?'':'TR',ydCommission==null?'':'YD'].join('|');
       if(seen.has(key))return;seen.add(key);
