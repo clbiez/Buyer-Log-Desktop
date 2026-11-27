@@ -1298,7 +1298,7 @@ Ham örnekler `6k/l2-ozet.txt`.
 | on | 0/6 | 4 | 2 (194, 122) | 2941 | `52aa7fa77911` |
 | off | 3/6 | 8 | — | 2967 | `52aa7fa77911` |
 
-503, 8192'ye özgü değil; politika değerinde de aynı. Electron'un gömülü Node'unda ölçülmedi [Hipotez].
+503, 8192'ye özgü değil; politika değerinde de aynı. Koşu başına 6 okumada 0/6 genel garanti değildir (§6O.a). Electron'un gömülü Node'unda ölçülmedi [Hipotez].
 Ham veri `6k/ham/h3686`.
 
 **Karar:** 503 pilotu PASS (503 26/54 → 0/36; bütçe ve denetim değişmedi; tepe RSS A/A içinde). Not
@@ -1366,7 +1366,7 @@ Siparişler isteğinin sunucu aşamaları (medyan ms, off → on):
   modunda Siparişler'in kendi isteği 503 almadı.
 - **Veri eşitliği [Doğrulandı].** 9/9 koşu son tam okuma özeti `52aa7fa77911`.
 
-**Karar:** 1,1 → 3,8 sn ölçüm referansı kaymasıdır, gerçek Siparişler gecikmesi değil. Merge yok, bayrak
+**Karar:** 1,1 → 3,8 sn ölçüm referansı kaymasıdır, gerçek Siparişler gecikmesi değil. **Sınır:** `par` modunda Siparişler'de +0,1–0,45 sn kalıntı A/A aralığında; bu "maliyet yok" değil, [Bilinmiyor] (§6O.b). Merge yok, bayrak
 varsayılan kapalı.
 
 ## 6M · Birincil segment kuralı değerlendirmesi (2026-11-27, kod değişikliği yok)
@@ -1489,6 +1489,67 @@ CPU ölçülmedi [Bilinmiyor].
 
 **Kapsam dışı (talimat gereği).** Kontrol sıklığını artırmak veya yeni senkron mekanizması yazmak
 çözüm olarak değerlendirilmedi.
+
+## 6O · Kapanış: açık kararlar ve bilinen sınırlar (2026-11-27, ürün sahibi kararları)
+
+Bu bölüm kayıttır; yeni ölçüm yapılmadı.
+
+**a · 503.**
+- Bağımsız PR onaylandı (varsayılan kapalı; ayrı oturumda hazırlanacak). Merge ve varsayılanı açma
+  ayrı karardır.
+- Koşu başına 6 okumalık 0/6 (toplam 0/36 + 0/12) genel garanti değildir.
+- **Kök neden:** süreç geneli `--max-old-space-size` işçi `resourceLimits` değerini ezer. Node 22.23.5'te
+  ana oturumda da bağımsız doğrulandı: bayraksız 1072 MB, 4096 bayrakla 4144 MB.
+- Sandbox `NODE_OPTIONS=--max-old-space-size=8192` karıştırıcısı nedeniyle §6J / §6K / §6L mutlak
+  değerleri üretimi temsil etmeyebilir. Electron'da davranış [Hipotez].
+
+**b · #1236.**
+- Merge yok, bayrak kapalı.
+- 503 düzeltmesinden sonra 4 kollu karşılaştırma yapılacak: ikisi kapalı / yalnız CP / yalnız 503 /
+  ikisi açık.
+- `par` modunda Siparişler'de +0,1–0,45 sn kalıntı A/A içinde → [Bilinmiyor] ("maliyet yok" değil).
+
+**c · Birincil segment: değerlendirilecek kural (ürün sahibi).**
+- **A)** Miktarı 0 parsiyel tek başına üretim bakiyesi değildir; gerçek kalan üretim miktarı esastır.
+- **B)** Eksik Yükleme ayrı istisna olarak korunur; otomatik olarak üretim / lojistik aşamasına
+  dönüştürülmez.
+- **C)** Üretim bakiyesi yoksa, yolda + depoda karışık parsiyelde tamamlanmamış lojistik aşama esastır.
+- **D)** Ana STATUS = operasyonel olarak en geride kalan tamamlanmamış aşama.
+- Ana STATUS seçimi ile tarih / Priority / risk anlamları ayrı tutulur. IAS segmentlerine dokunulmaz.
+- **Davranış değişikliğinin ön koşulları:** gerçek veride Priority etkisinin güvenilir ölçümü ve
+  gecikmiş üretim bakiyeli bağımsız beklenen-değer testleri. Şu an kod yok.
+
+A–D'nin ana STATUS'a etkisi, yalnız §6M verisinden (`6m/primary6.json`, yeni koşu yok):
+
+| Kategori (satır) | A–D ana STATUS | P (parse.js) ile | R (`partials[0]`) ile | Not |
+|---|---|---|---|---|
+| yalnız üretim (17.274) | Üretimde | aynı | aynı | — |
+| yolda + üretim (2.665) | Üretimde (D: en geride = üretim) | aynı | **2.665 farklı** (R = Yolda) | — |
+| depoda + üretim (2.707) | Üretimde | aynı | **2.707 farklı** (R = Depoda) | 4100023/L02 |
+| parsiyel "Üretimde" (miktar 0) + üretim (2.331) | Üretimde (A: üretim segmentinin bakiyesi esas) | aynı | aynı | Her iki segment de Üretimde, STATUS değişmez. Örneklerde üretim segmenti miktarı > 0; 2.331 satırın tamamında > 0 olduğu doğrulanmadı [Bilinmiyor] |
+| hepsi yolda (3): kıtlık + Yüklemede / Yolda | Yüklemede / Yolda (B: kıtlık istisna) | aynı | aynı | Kıtlığın ayrı gösterimi tanımsız [Bilinmiyor] |
+| hepsi depoda (2): kıtlık (Depoda - Eksik Yükleme) + Depoda | Depoda (B) | aynı | aynı | — |
+| üretimsiz yolda + depoda karışık (C) | tamamlanmamış lojistik aşama | — | — | Fixture'da satır yok [Bilinmiyor] |
+
+- **STATUS dışı alanlar.** Del. Type, Ant. Arrival, HANDOVER ve Priority, kural gereği STATUS'tan ayrı
+  tanımlanacak. Bunların A–D altındaki değeri henüz tanımsız → [Bilinmiyor].
+  - Mevcut ayrışma büyüklüğü (R ≠ P) §6M tablosundadır.
+  - Priority: fixture'da 24.982 / 24.982 satır iki yolda ON_TRACK. Gerçek veri etkisi [Bilinmiyor].
+
+**d · Uzak gecikme.**
+- Bulgular kayıt altında (§6N); yeni geliştirme yok.
+- 503 sonrası gerçek gecikme 503 oturumunda yeniden ölçülecek.
+- İleriki hedef: lojistik segment güncellemesi için tam yeniden yükleme zorunluluğunun mevcut ortak iş
+  kurallarıyla kaldırılması.
+- Not / Del. Type cihazlar arası taşınmama politikası değişmez.
+
+**e · Kapsam.**
+- TEST 8.0.22 ve STABLE 8.0.18 korunur.
+- B1 / B2 BLOCKED.
+- Aşama 0 için gerçek çok cihazlı OneDrive doğrulaması STABLE ön koşuludur.
+
+**Ölçüm düzeneği.** `adr-0003-kanit/kit/` (README'de komutlar). Pre kolu `c6e2f658` uzakta yok:
+`b7b172d` + `fdf2f758` cherry-pick ile yeniden oluşturulur.
 
 ## 7 · Ürün sahibinin vermesi gereken kararlar
 
