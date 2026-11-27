@@ -70,7 +70,7 @@ const classicFrame = d => {
    '#currentUserBtn',
    '.topRefreshMenu button',
    ':is(.toolbarMoreMenu,.railAppearanceMenu,#corporateConnections) :is(',
-   '.topRefreshDetail',
+   ':is(.topRefreshDetail,.blTip,',
    'thead tr.groupRow th',
    'thead tr.colRow th.groupBoundary'
  ];
@@ -197,6 +197,19 @@ test('Module containers, KPI cards, empty states and menu items carry the shared
  const frame=css.slice(css.indexOf(':is(.panel,.cardBox,.modalCard,'),css.indexOf('border:1px solid var(--ui-group-divider) !important;',css.indexOf(':is(.panel,.cardBox,.modalCard,')));
  for(const cls of ['.mfpCard','.mfpTile','.psaCard','.psaKpi','.pricingMetric','.ocWorkspace','.dmPanel','.autoWorkspace','.lcwaiChatMain','.lcTable','.uiState','.kpiGroup','.gfKpi'])assert.ok(frame.includes(cls),cls);
  assert.match(css,/:is\(\.toolbarMoreMenu,\.railAppearanceMenu,#corporateConnections\) :is\([^)]*\) \{border:1px solid var\(--ui-group-divider\) !important;box-shadow:none !important/);
+});
+// Hover ipuçları (hücre önizleme, araç ipucu, grafik ipuçları) tek ortak kuraldan
+// 1px sınır + overlay gölgesi alır; sınırsız beyaz ipucu tablo zemininde kayboluyordu.
+test('Every surface-coloured hover tooltip carries the shared frame from one rule',()=>{
+ const css=read('ui-components.css');
+ const m=css.match(/:is\((\.topRefreshDetail,\.blTip,[^)]*)\),\s*html\[data-ui-system="manifest"\] #view-koleksiyon\.kolSpreadsheetWorkspace #kolTable td\.kolSpreadsheetReadonly:hover::after \{border:1px solid var\(--ui-group-divider\) !important;box-shadow:var\(--ui-shadow-overlay\) !important;\}/);
+ assert.ok(m,'shared tooltip frame rule');
+ const listed=m[1].split(',');
+ for(const cls of ['.topRefreshDetail','.blTip','.kolTextPreviewPopup','.bpaTip','.ovBdTip','.ovCollectionMonthTip','.globalFlowTooltip','.backlogChartTooltip'])assert.ok(listed.includes(cls),cls);
+ // Hiçbir ipucu kuralı ortak sınırı/gölgeyi geri almaz veya ayrıca tanımlamaz.
+ const tipNames=listed.map(c=>c.slice(1)).concat(['kolSpreadsheetReadonly:hover::after']);
+ const own=entries.filter(d=>d.file==='ui-components.css'&&/^(border|box-shadow)$/.test(d.prop)&&tipNames.some(n=>d.selector.includes(n))&&!d.selector.startsWith(':is(.topRefreshDetail,.blTip,'));
+ assert.deepEqual(own.map(d=>`${d.selector} ${d.prop}`),[]);
 });
 test('Main column separators cover both header tiers; classic frames do not add a body grid',()=>{
  const ids=['#cpTable','#ordersTable','#kolTable'];
