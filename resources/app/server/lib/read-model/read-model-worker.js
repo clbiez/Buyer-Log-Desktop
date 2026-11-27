@@ -63,13 +63,31 @@ function execute(task,payload){
   return {body,timing:{loadMs,queryMs,totalMs:performance.now()-started,rows:dataset.rows.length}};
 }
 
+/* 503 pilotu (BUYER_LOG_COMPUTE_GC_RECHECK=1): heapUsed çöp toplanmadan ölçülür ve önceki
+   işlerden kalan erişilemez nesneleri de içerir. Ölçüm havuzun kabul sınırını aşıyorsa tek
+   bir tam GC sonrası yeniden ölçülür; sınır ve havuz denetimi değişmez. Bayrak kapalıyken
+   davranış aynıdır. */
+let gcFn;
+function forceGc(){
+  if(gcFn===undefined){try{require('node:v8').setFlagsFromString('--expose-gc');gcFn=require('node:vm').runInNewContext('gc');}catch(_){gcFn=null;}}
+  if(typeof gcFn!=='function')return false;gcFn();return true;
+}
+function retainedMetrics(limitBytes,outputBytes,{enabled=process.env.BUYER_LOG_COMPUTE_GC_RECHECK==='1',memoryUsage=()=>process.memoryUsage(),gc=forceGc}={}){
+  let memory=memoryUsage(),retainedBytes=memory.heapUsed+memory.arrayBuffers;
+  if(!enabled||!Number.isSafeInteger(limitBytes)||retainedBytes+outputBytes<=limitBytes)return {retainedBytes};
+  const before=retainedBytes,started=performance.now();
+  if(!gc())return {retainedBytes};
+  memory=memoryUsage();retainedBytes=memory.heapUsed+memory.arrayBuffers;
+  return {retainedBytes,gcRecheck:{beforeBytes:before,gcMs:performance.now()-started}};
+}
+
 if(parentPort)parentPort.on('message',message=>{
   if(message?.type!=='run'||Object.hasOwn(ASYNC_TASKS,message.task))return;
   const start=performance.now();
   try{
     const value=execute(message.task,message.payload||{});
-    const memory=process.memoryUsage(),outputBytes=(value.body?Buffer.byteLength(value.body):value.buffer?value.buffer.byteLength:0)+4096;
-    parentPort.postMessage({type:'result',id:message.id,ok:true,value,metrics:{threadId,executionMs:performance.now()-start,retainedBytes:memory.heapUsed+memory.arrayBuffers,outputBytes}});
+    const outputBytes=(value.body?Buffer.byteLength(value.body):value.buffer?value.buffer.byteLength:0)+4096;
+    parentPort.postMessage({type:'result',id:message.id,ok:true,value,metrics:{threadId,executionMs:performance.now()-start,...retainedMetrics(message.retainedLimitBytes,outputBytes),outputBytes}});
   }catch(error){parentPort.postMessage({type:'result',id:message.id,ok:false,error:{code:error?.code||'COMPUTE_WORKER_FAILED'}});}
 });
 // Asenkron görevler (karar barındırıcısı kurar); aynı veri kümesi önbelleğini paylaşır.
@@ -79,8 +97,8 @@ if(parentPort)parentPort.on('message',message=>{
   if(message?.type!=='run'||!Object.hasOwn(ASYNC_TASKS,message.task))return;
   const start=performance.now();
   Promise.resolve().then(()=>require(ASYNC_TASKS[message.task]).execute(message.payload||{},{cache,engine})).then(value=>{
-    const memory=process.memoryUsage(),outputBytes=(value.body?Buffer.byteLength(value.body):0)+4096;
-    parentPort.postMessage({type:'result',id:message.id,ok:true,value,metrics:{threadId,executionMs:performance.now()-start,retainedBytes:memory.heapUsed+memory.arrayBuffers,outputBytes}});
+    const outputBytes=(value.body?Buffer.byteLength(value.body):0)+4096;
+    parentPort.postMessage({type:'result',id:message.id,ok:true,value,metrics:{threadId,executionMs:performance.now()-start,...retainedMetrics(message.retainedLimitBytes,outputBytes),outputBytes}});
   }).catch(error=>{parentPort.postMessage({type:'result',id:message.id,ok:false,error:{code:error?.code||'COMPUTE_WORKER_FAILED'}});});
 });
-module.exports={execute,createDatasetCache,cache};
+module.exports={execute,createDatasetCache,cache,retainedMetrics};

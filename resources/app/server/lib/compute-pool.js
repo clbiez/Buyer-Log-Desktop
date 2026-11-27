@@ -116,7 +116,10 @@ function createComputePool(options={}){
     slot.worker.ref?.();peak();
     job.timer.unref?.();
     job.postStartedAt=performance.now();
-    try{slot.worker.postMessage({type:'run',id:job.id,task:job.task,payload:job.payload},job.transferList);job.postMessageMs=performance.now()-job.postStartedAt;job.payload=null;job.transferList=null;}
+    // İşçinin ölçümü aşarsa çöp toplama sonrası yeniden ölçebilmesi için kabul sınırı gönderilir
+    // (BUYER_LOG_COMPUTE_GC_RECHECK pilotu); havuzun received() denetimi aynen geçerlidir.
+    const retainedLimitBytes=Math.min(slot.residentBytes+job.estimatedBytes,budget-(reserved()-slot.residentBytes-slot.estimatedBytes));
+    try{slot.worker.postMessage({type:'run',id:job.id,task:job.task,payload:job.payload,retainedLimitBytes},job.transferList);job.postMessageMs=performance.now()-job.postStartedAt;job.payload=null;job.transferList=null;}
     catch(_){void retire(slot,failure('COMPUTE_WORKER_FAILED'));}
   }
   function pump(){
