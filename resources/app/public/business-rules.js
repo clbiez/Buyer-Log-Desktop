@@ -741,6 +741,15 @@
     return Number.isFinite(value) ? Number(value.toFixed(10)) : value;
   }
 
+  // DTR (iç tedarik) sözleşmesinde royalty, komisyon ve hologram yoktur: boş
+  // alan "yok" demektir, 0 değildir. Non-DTR sözleşmede oranlar Final FOB'u
+  // belirlediği için zorunlu kalır. Fiyat hesabı DTR satırında kural kullanmaz
+  // (Final FOB = Supp. FOB); boş oranlı kural hiçbir ülkeye fiyat uygulamaz.
+  function pricingRuleRatesOptional(rule) {
+    const licensor = rule && typeof rule === 'object' ? (rule.licensor != null ? rule.licensor : rule.manufacturer) : '';
+    return turkNorm(norm(licensor)) === 'DTR';
+  }
+
   function pricingRuleCommissionForCountry(rule, countryOrGroup) {
     if (!rule || typeof rule !== 'object') return null;
     const group = pricingRuleCountryGroup(countryOrGroup);
@@ -1041,6 +1050,7 @@
     roundFractionHalfUp,
     calculateSuppFobWithRule,
     calculateFinalFobWithRule,
+    pricingRuleRatesOptional,
     seasonNumberLetterParts,
     monthParts,
     chronologyParts,

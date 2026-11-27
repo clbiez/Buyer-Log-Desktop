@@ -74,7 +74,7 @@
     if(error?.code==='LICENSE_PROFILE_INVALID')return T('Bir kart alanı çok uzun veya geçersiz.','A card field is too long or invalid.');
     return T('İşlem tamamlanamadı. Bağlantıyı kontrol edip yeniden deneyin.','The operation could not be completed. Check your connection and retry.');
   }
-  const RATE_ERRORS={royalty:['Royalty 0–100 arasında olmalı.','Royalty must be between 0 and 100.'],'commission-missing':['TR veya YD komisyonundan en az biri girilmeli.','Enter at least the TR or international commission.'],commission:['Komisyon 0–100 olmalı; royalty ile toplamı %100’ü aşamaz.','Commission must be 0–100 and with royalty cannot exceed 100%.'],hologram:['Hologram tutarı 0 veya daha büyük olmalı.','Hologram cost must be 0 or more.'],date:['OPD bitişi başlangıçtan önce olamaz.','OPD end cannot be before its start.']};
+  const RATE_ERRORS={royalty:['Royalty 0–100 arasında olmalı; Non-DTR sözleşmede zorunludur (DTR’de boş = royalty yok).','Royalty must be between 0 and 100; it is required for non-DTR contracts (blank on DTR = no royalty).'],'commission-missing':['Non-DTR sözleşmede TR veya YD komisyonundan en az biri girilmeli.','Enter at least the TR or international commission for a non-DTR contract.'],commission:['Komisyon 0–100 olmalı; royalty ile toplamı %100’ü aşamaz.','Commission must be 0–100 and with royalty cannot exceed 100%.'],hologram:['Hologram tutarı 0 veya daha büyük olmalı; Non-DTR sözleşmede zorunludur.','Hologram cost must be 0 or more; it is required for non-DTR contracts.'],date:['OPD bitişi başlangıçtan önce olamaz.','OPD end cannot be before its start.']};
   async function api(url,options={}){
     const r=await fetch(url,{cache:'no-store',credentials:'same-origin',...options,headers:{...(options.body?{'Content-Type':'application/json'}:{}),...(window.BL_CLIENT_ID?{'X-Client-Id':window.BL_CLIENT_ID}:{}),...(options.headers||{})}});
     const data=await r.json().catch(()=>({}));
@@ -308,7 +308,7 @@
     return [...byId.values()];
   }
   function quickHtml(){
-    const rules=quickRules(),search=window.BLTableSearch,terms=search?.parseTerms(S.query),label=r=>[r.license,r.licensor,r.categories?.join(', ')||T('Tüm kategoriler','All categories'),r._draft?T('Taslak','Draft'):'',E.ruleStatus(r,E.today())==='expired'?T('Geçmiş','Expired'):'',seasons(r),range(r),`Royalty ${r.royalty}%`].join(' · ');
+    const rules=quickRules().filter(r=>r.royalty!=null&&r.royalty!==''),search=window.BLTableSearch,terms=search?.parseTerms(S.query),label=r=>[r.license,r.licensor,r.categories?.join(', ')||T('Tüm kategoriler','All categories'),r._draft?T('Taslak','Draft'):'',E.ruleStatus(r,E.today())==='expired'?T('Geçmiş','Expired'):'',seasons(r),range(r),`Royalty ${r.royalty}%`].join(' · ');
     const visible=rules.filter(r=>!search||search.matches(label(r),terms,{plainMode:'contains'})).sort((a,b)=>Number(E.ruleStatus(a,E.today())==='expired')-Number(E.ruleStatus(b,E.today())==='expired'));
     S.quick=S.quick||{source:'supp',values:{}};
     if(!rules.some(r=>r.id===S.quick.ruleId))S.quick.ruleId=visible[0]?.id||'';
@@ -440,7 +440,7 @@
     if(!c){d.conflict=true;render();return;}
     if(!isDirty(d)){dropDraft(id);render();return;}
     const rules=changedRules(d);
-    for(const r of rules){const problem=E.rateError(r);if(problem){d.error=T(...RATE_ERRORS[problem])+(r.opdStart?` (${r.opdStart})`:'');render();return;}}
+    for(const r of rules){const problem=E.rateError(r,c.licensor);if(problem){d.error=T(...RATE_ERRORS[problem])+(r.opdStart?` (${r.opdStart})`:'');render();return;}}
     const body={editToken:d.editToken,profile:changedProfile(d)};
     if(d.deletedRuleIds?.length)body.deletedRuleIds=d.deletedRuleIds;
     if(d.cover!==undefined){

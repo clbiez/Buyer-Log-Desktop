@@ -196,7 +196,9 @@ function normalizeRules(incoming, card, deps) {
   const rules = businessRules.migrateLicenseRoyaltyRules(incoming);
   const numeric = value => ['number', 'string'].includes(typeof value) ? Number(value) : NaN;
   const nullableNumber = value => value == null || text(value) === '' ? null : numeric(value);
-  const requiredNumber = value => value == null || text(value) === '' ? NaN : numeric(value);
+  // DTR contracts have no royalty/commission/hologram: blank is stored as null (none).
+  const optional = businessRules.pricingRuleRatesOptional({ licensor: card.licensor });
+  const rateNumber = value => value == null || text(value) === '' ? (optional ? null : NaN) : numeric(value);
   return rules.map(raw => {
     if(raw.categories!=null&&(!Array.isArray(raw.categories)||raw.categories.length>100||raw.categories.some(value=>typeof value!=='string'||value.length>200)))fail('LICENSE_RULES_INVALID','Geçerli kategori listesi girin. / Enter a valid category list.');
     if ((raw.license && pairKey(raw.license, raw.licensor || card.licensor) !== pairKey(card.license, card.licensor)) || (raw.licensor && canonical.token(raw.licensor) !== canonical.token(card.licensor))) fail('LICENSE_RULE_SCOPE', 'Kural bu lisans ve lisansöre ait olmalı. / Rule must belong to this license and licensor.');
@@ -208,16 +210,16 @@ function normalizeRules(incoming, card, deps) {
     const rule = { id: text(raw.id) || 'license-rule-' + crypto.randomUUID(), opdStart: date('opdStart'), opdEnd: date('opdEnd'),
       categories: businessRules.pricingRuleCategories(raw),
       seasons: deps.normalizePricingRuleSeasons(raw.seasons != null ? raw.seasons : raw.season), license: card.license, licensor: card.licensor,
-      royalty: requiredNumber(raw.royalty), trCommission: nullableNumber(raw.trCommission), ydCommission: nullableNumber(raw.ydCommission), hologramCost: requiredNumber(raw.hologramCost),
+      royalty: rateNumber(raw.royalty), trCommission: nullableNumber(raw.trCommission), ydCommission: nullableNumber(raw.ydCommission), hologramCost: rateNumber(raw.hologramCost),
       legacyTrHologramCost: nullableNumber(raw.legacyTrHologramCost), legacyYdHologramCost: nullableNumber(raw.legacyYdHologramCost),
       legacyRuleIds: Array.isArray(raw.legacyRuleIds) ? raw.legacyRuleIds.map(String).filter(Boolean) : [], migratedFromCountrySplit: raw.migratedFromCountrySplit === true };
     const commissions = [rule.trCommission, rule.ydCommission].filter(value => value != null);
     if (!card.licensor || rule.id.length > 200 || rule.seasons.length > 100 || rule.seasons.some(season => season.length > 200)
       || (rule.opdStart && rule.opdEnd && rule.opdStart > rule.opdEnd)
       || rule.categories.length > 100 || rule.categories.some(value=>value.length>200)
-      || !Number.isFinite(rule.royalty) || rule.royalty < 0 || rule.royalty > 100
-      || !commissions.length || commissions.some(value => !Number.isFinite(value) || value < 0 || value + rule.royalty > 100)
-      || !Number.isFinite(rule.hologramCost) || rule.hologramCost < 0
+      || (rule.royalty !== null && (!Number.isFinite(rule.royalty) || rule.royalty < 0 || rule.royalty > 100))
+      || (!commissions.length && !optional) || commissions.some(value => !Number.isFinite(value) || value < 0 || value + (rule.royalty || 0) > 100)
+      || (rule.hologramCost !== null && (!Number.isFinite(rule.hologramCost) || rule.hologramCost < 0))
       || [rule.legacyTrHologramCost, rule.legacyYdHologramCost].some(value => value != null && (!Number.isFinite(value) || value < 0))) {
       fail('LICENSE_RULES_INVALID', 'Kural oranları veya tarih aralığı geçersiz. / Invalid rule rates or date range.');
     }

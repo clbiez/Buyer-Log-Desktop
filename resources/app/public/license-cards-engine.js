@@ -81,12 +81,14 @@
   }
   const exact=n=>Number(n.toFixed(10));
   // Same limits as the server (server/lib/license-cards.js normalizeRules).
-  function rateError(rule){
-    const r=rule||{},royalty=r.royalty,commissions=[r.trCommission,r.ydCommission].filter(v=>v!=null);
-    if(royalty==null||!Number.isFinite(royalty)||royalty<0||royalty>100)return 'royalty';
-    if(!commissions.length)return 'commission-missing';
-    if(commissions.some(v=>!Number.isFinite(v)||v<0||exact(v+royalty)>100))return 'commission';
-    if(r.hologramCost==null||!Number.isFinite(r.hologramCost)||r.hologramCost<0)return 'hologram';
+  // DTR contracts carry no royalty/commission/hologram: blank means none
+  // (BLBusinessRules.pricingRuleRatesOptional). Entered values are still checked.
+  function rateError(rule,licensor){
+    const r=rule||{},optional=key(licensor!=null?licensor:r.licensor)==='DTR',royalty=r.royalty,commissions=[r.trCommission,r.ydCommission].filter(v=>v!=null);
+    if(royalty==null?!optional:(!Number.isFinite(royalty)||royalty<0||royalty>100))return 'royalty';
+    if(!commissions.length&&!optional)return 'commission-missing';
+    if(commissions.some(v=>!Number.isFinite(v)||v<0||exact(v+(royalty||0))>100))return 'commission';
+    if(r.hologramCost==null?!optional:(!Number.isFinite(r.hologramCost)||r.hologramCost<0))return 'hologram';
     const a=date(r.opdStart),b=date(r.opdEnd);
     if(a===null||b===null||(a&&b&&a>b))return 'date';
     return '';
