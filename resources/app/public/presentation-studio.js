@@ -40,6 +40,9 @@
   const removeKey = key => { try { storage()?.removeItem(key); } catch (_) {} };
 
   let S = null; // açık oturum
+  const AI = () => root.BLPresentationAI;
+  /* LCW AI gruplama seviyesi: "ai:<id>" → S.doc.ai[id] (yalnız bu sunumda; kaynak tabloya yazılmaz). */
+  const aiId = f => (typeof f === 'string' && f.startsWith('ai:') ? f.slice(3) : null);
   // Yalnız içerik değişince yazar: gereksiz DOM değişimi ve genel gözlemci işi oluşmaz.
   const setHtml = (el, html) => { if (el && el.__psHtml !== html) { el.innerHTML = html; el.__psHtml = html; } };
 
@@ -76,7 +79,9 @@
       let identity = null; try { identity = root.BLAIScreenData.rowImage(tab, rows[i]); } catch (_) { identity = null; }
       models.set(String(rec.id), Object.freeze({ id: String(rec.id), title: item.title, values: Object.freeze({ ...rec.values }), keys: Object.freeze({ ...rec.keys }), identity, row: rows[i] }));
     });
-    return { models, meta, omitted: built.source.omittedColumns || [] };
+    // LCW AI incelemesi için tam kayıt okuyucusu (kısaltmasız; BLOutputSource.fullRecord).
+    const reader = { module: sourceOf(tab).module, readRow: info.canonicalRow || (row => row), columns: info.columns || [] };
+    return { models, meta, reader, omitted: built.source.omittedColumns || [] };
   }
   const defaultFields = (ids, tab) => sourceOf(tab).fields.filter(id => ids.includes(id)).slice(0, 5);
   const defaultLevels = ids => ['productGroup'].filter(id => ids.includes(id));
@@ -139,18 +144,35 @@
     return g;
   }
   function groupCacheCheck() {
-    const ck = S.doc.grouping.levels.join('\u0001') + (isEn() ? 'e' : 't');
+    const ck = S.doc.grouping.levels.join('\u0001') + (isEn() ? 'e' : 't') + aiSig();
     if (S.groupCacheKey !== ck || !S.groupCache) { S.groupCacheKey = ck; S.groupCache = new Map(); }
     S.groupCacheLevels = S.doc.grouping.levels;
   }
   function groupOfRaw(m, lv) {
-    const keys = lv.map(f => String(m.keys[f] == null ? '' : m.keys[f]));
-    return { key: keys.join(E().SEP), vals: lv.map(f => formatValue(S.meta.type(f), m.values[f])) };
+    if (!lv.some(aiId)) {
+      const keys = lv.map(f => String(m.keys[f] == null ? '' : m.keys[f]));
+      return { key: keys.join(E().SEP), vals: lv.map(f => formatValue(S.meta.type(f), m.values[f])) };
+    }
+    const keys = [], vals = [], ord = [];
+    for (const f of lv) {
+      const id = aiId(f);
+      if (id) { const a = aiValue(m, id); keys.push(a.key); vals.push(a.val); ord.push(a.ord); }
+      else { keys.push(String(m.keys[f] == null ? '' : m.keys[f])); vals.push(formatValue(S.meta.type(f), m.values[f])); ord.push(null); }
+    }
+    return { key: keys.join(E().SEP), vals, ord };
   }
+  /* AI kategorisi: kategoriler LCW AI'ın verdiği sırayla; "Belirsiz" ve "Sınıflandırılmadı" sonda. */
+  function aiValue(m, id) {
+    const g = S.doc.ai && S.doc.ai[id], v = g ? g.vals[m.id] : undefined;
+    if (!g || v == null) return { key: '\u0003none', val: L('Sınıflandırılmadı', 'Not classified'), ord: 1e6 + 1 };
+    if (v === AI().UNSURE) return { key: '\u0003unsure', val: L('Belirsiz', 'Uncertain'), ord: 1e6 };
+    return { key: 'c:' + v, val: v, ord: Math.max(0, g.cats.indexOf(v)) };
+  }
+  const aiSig = () => Object.entries((S && S.doc.ai) || {}).map(([id, g]) => `${id}:${g.at}:${Object.keys(g.vals).length}`).join(',');
   /* Metin planı yalnız alanlar, yazı, kart genişliği veya başlık adları değişince yeniden ölçülür. */
   function textPlan() {
     const st = S.doc.style, cellW = E().geometry(S.doc, null).cellW;
-    const vkey = [st.fields.join(','), st.labels, st.chips, st.fabricCode, S.doc.grouping.levels.join(','), S.doc.order.length, isEn()].join('|');
+    const vkey = [st.fields.join(','), st.labels, st.chips, st.fabricCode, S.doc.grouping.levels.join(','), S.doc.order.length, isEn(), aiSig()].join('|');
     const key = [vkey, st.fs, st.hfs, st.font, cellW.toFixed(2), JSON.stringify(S.doc.labels)].join('|');
     if (S.plan) S.plan.approx = Boolean(S.slider);
     if (S.plan && S.planKey === key) return S.plan;
@@ -296,19 +318,25 @@
     const rows = info.rows.filter(row => wanted.has(String(info.rowId(row))));
     if (!rows.length) { toast(L(`Bu sunumdaki kayıtlar artık ${name} tablosunda yok.`, `The records in this presentation are no longer in ${name}.`), 'warning'); return; }
     const src = readSource(rows, info, 'saved', tab), ids = [...src.models.keys()];
-    const docModel = E().normalizeDoc(raw, { ids: (raw.order || []).map(String).filter(id => src.models.has(id)), fields: src.meta.ids });
+    const docModel = E().normalizeDoc(raw, { ids: (raw.order || []).map(String).filter(id => src.models.has(id)), fields: src.meta.ids, normalizeAi: AI().normalizeGrouping });
     const missing = wanted.size - ids.length;
     // Taslak kaydedildiğinden beri tabloda bilgisi değişen modeller (parmak izi karşılaştırması).
     const snap = raw.snap && typeof raw.snap === 'object' ? raw.snap : null;
     const changed = snap ? ids.filter(id => snap[id] && snap[id] !== fingerprint(src.models.get(id))).length : 0;
     start({ ...src, doc: docModel, deckId, scope: 'saved', tab, saved: true, view: raw.view });
     if (changed > 0) toast(L(`${changed} modelin bilgisi ${name} tablosunda güncellenmiş; taslak güncel bilgilerle açıldı.`, `${changed} models were updated in ${name}; the draft opened with the current details.`));
+    const aiStale = aiPending();
+    if (aiStale) toast(L(`LCW AI gruplamasından sonra ${aiStale} model eklendi ya da değişti. Grup çipindeki LCW AI seviyesine tıklayıp yeniden inceletebilirsiniz.`, `${aiStale} models were added or changed after the LCW AI grouping. Click the LCW AI level chip to have them reviewed again.`), 'warning');
     if (missing > 0) toast(L(`${missing} kayıt ${name} tablosunda bulunamadı ve sunumdan çıkarıldı.`, `${missing} records were not found in ${name} and were removed from the presentation.`), 'warning');
   }
 
   function start(init) {
     close();
     S = { ...init, sel: new Set(), hist: [], fut: [], zoom: 1, activePage: 'p1', dims: new Map(), chipCache: new Map(), perf: { layout: 0, render: 0 }, saveState: '', pageHtml: new Map(), act: null, measure: R().canvasMeasure(doc_) };
+    if (!S.doc.ai) S.doc.ai = {};
+    // Gruplama seviyesi adı: LCW AI seviyesi kullanıcının sorusuyla gösterilir.
+    const baseMeta = S.meta;
+    S.meta = { ...baseMeta, baseLabel: baseMeta.label, label: f => (aiId(f) ? aiLevelLabel(aiId(f)) : baseMeta.label(f)), type: f => (aiId(f) ? 'text' : baseMeta.type(f)) };
     S.dataHash = hashModels(); S.chipKinds = chipKinds(S.tab);
     buildShell();
     relayout(); fitZoom();
@@ -526,7 +554,7 @@
   function renderBar() {
     const $ = S.$, d = S.doc, lv = d.grouping.levels, size = E().pageSize(d.page);
     if (doc_.activeElement !== $('[data-ps="title"]')) $('[data-ps="title"]').value = d.title;
-    setHtml($('[data-ps="chips"]'), lv.map((f, i) => `<span class="psChip" draggable="true" data-lv="${i}" title="${esc(L('Sürükleyerek seviye sırasını değiştirin', 'Drag to reorder levels'))}"><b class="psChipNo">${i + 1}</b>${esc(S.meta.label(f))}<button type="button" class="psChipX" data-rmlv="${i}" aria-label="${esc(L(`${S.meta.label(f)} seviyesini kaldır`, `Remove ${S.meta.label(f)} level`))}">${sprite('x')}</button></span>`).join('')
+    setHtml($('[data-ps="chips"]'), lv.map((f, i) => `<span class="psChip" draggable="true" data-lv="${i}" title="${esc(L('Sürükleyerek seviye sırasını değiştirin', 'Drag to reorder levels'))}"><b class="psChipNo">${i + 1}</b>${aiId(f) ? `<button type="button" class="psChipAi" data-ai-open="${esc(aiId(f))}" title="${esc(L('LCW AI gruplamasını görüntüle, eksikleri inceletin ya da yeniden gruplayın', 'View the LCW AI grouping, review missing models or group again'))}">${esc(S.meta.label(f))}</button>` : esc(S.meta.label(f))}<button type="button" class="psChipX" data-rmlv="${i}" aria-label="${esc(L(`${S.meta.label(f)} seviyesini kaldır`, `Remove ${S.meta.label(f)} level`))}">${sprite('x')}</button></span>`).join('')
       + (lv.length < E().LIMITS.levels ? `<button type="button" class="tbtn" data-pop="level">${sprite('plus')}<span>${esc(lv.length ? L('Seviye', 'Level') : L('Grup ekle', 'Add group'))}</span></button>` : ''));
     $('[data-ps="brk"]').checked = d.grouping.breakTop; $('[data-ps="brkWrap"]').hidden = !lv.length;
     $('[data-ps="paper"]').value = d.page.preset;
@@ -1085,6 +1113,7 @@
     root.BLLayerSystem?.openDialog?.(overlay, { onClose: () => finish('cancel') });
     root.BLMotionPlus?.play?.('overlay', overlay.firstElementChild);
     overlay.querySelector('[data-m]')?.focus();
+    return { el: overlay, close: choice => finish(choice) };
   }
 
   /* Grup başlığını yeniden adlandırma: uygulama içi pencere (masaüstü uygulamada window.prompt yoktur). */
@@ -1103,6 +1132,139 @@
     input.addEventListener('input', () => { value = input.value; });
     input.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); input.closest('.psDialog').querySelector('[data-m="ok"]').click(); } });
     input.focus(); input.select();
+  }
+
+  /* ---------------- LCW AI ile grupla ----------------
+     Modeller görselleri ve TÜM bilgileriyle (eksiksiz; BLPresentationAI paketler ve doğrular) LCW AI'a
+     gider; kategoriler kullanıcının sorusuyla belirlenir. Sonuç önizlenir, yalnız onayla bu sunumun
+     gruplama seviyesi olur; tabloya ve hesaplara (LFL vb.) hiçbir şey yazılmaz. */
+  const aiShort = (q, n = 32) => { const t = String(q || '').replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
+  function aiLevelLabel(id) { const g = S && S.doc.ai && S.doc.ai[id]; return `LCW AI · ${g ? aiShort(g.q) : id}`; }
+  const strHash = str => { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
+  // Modelin bilgisi ya da görseli değişince LCW AI sonucu "güncel değil" sayılır (yeniden incelemeye aday).
+  const aiPrint = m => `${fingerprint(m)}.${strHash(String((m.identity && m.identity.source) || ''))}`;
+  function aiStale(id) {
+    const g = S.doc.ai[id], out = [];
+    for (const mid of S.doc.order) { const m = S.models.get(mid), c = S.doc.cards[mid]; if (!m || (c && c.excluded)) continue; if (g.vals[mid] == null || g.fp[mid] !== aiPrint(m)) out.push(mid); }
+    return out;
+  }
+  const aiPending = () => Object.keys(S.doc.ai || {}).filter(id => S.doc.grouping.levels.includes('ai:' + id)).reduce((n, id) => n + aiStale(id).length, 0);
+  const aiModels = () => S.doc.order.filter(id => S.models.has(id) && !(S.doc.cards[id] && S.doc.cards[id].excluded));
+  const aiImage = id => { const m = S.models.get(id); return (m && m.identity && m.identity.source) || null; };
+  // Tüm bilgiler: kaynak tablonun sunuma açık her alanı (boşlar atlanır; uzun değer bölünür, kesilmez).
+  function aiRecord(id) {
+    const m = S.models.get(id), r = S.reader;
+    const full = r && m.row && root.BLOutputSource.fullRecord ? root.BLOutputSource.fullRecord({ module: r.module, row: m.row, readRow: r.readRow, columns: r.columns, lang: isEn() ? 'en' : 'tr' }) : null;
+    return [{ label: L('Model', 'Model'), value: m.title }, ...(full || S.meta.ids.map(f => ({ label: S.meta.baseLabel(f), value: formatValue(S.meta.type(f), m.values[f]) })))];
+  }
+  function aiLoadImage(src) { return new Promise((resolve, reject) => { const img = new Image(); img.decoding = 'async'; img.onload = () => resolve(img); img.onerror = reject; img.src = src; }); }
+  /* Etiketli paftalar (4 × 3 kare, 360 px): her karenin altında paketteki anahtar (M1, M2…). Okunamayan
+     görsel paftaya girmez; model yine de bilgileriyle gönderilir ve önizlemede listelenir. */
+  async function aiSheets(list) {
+    const COLS = 4, ROWS = 3, T = 360, LB = 40, per = COLS * ROWS, out = [];
+    const loaded = await Promise.all(list.map(x => aiLoadImage(x.src).then(img => ({ ...x, img }), () => ({ ...x, img: null }))));
+    const ok = loaded.filter(x => x.img && x.img.naturalWidth);
+    for (let i = 0; i < ok.length; i += per) {
+      const part = ok.slice(i, i + per), c = doc_.createElement('canvas');
+      c.width = COLS * T; c.height = Math.ceil(part.length / COLS) * (T + LB);
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, c.width, c.height);
+      part.forEach((x, j) => {
+        const cx = (j % COLS) * T, cy = Math.floor(j / COLS) * (T + LB), k = Math.min((T - 12) / x.img.naturalWidth, (T - 12) / x.img.naturalHeight), w = x.img.naturalWidth * k, h = x.img.naturalHeight * k;
+        ctx.drawImage(x.img, cx + (T - w) / 2, cy + (T - h) / 2, w, h);
+        ctx.fillStyle = '#111111'; ctx.font = 'bold 26px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(x.key, cx + T / 2, cy + T + LB / 2);
+        ctx.strokeStyle = '#999999'; ctx.lineWidth = 1; ctx.strokeRect(cx + 0.5, cy + 0.5, T - 1, T + LB - 1);
+      });
+      let blob = null;
+      try { blob = await new Promise(resolve => c.toBlob(resolve, 'image/jpeg', 0.9)); } catch (_) { blob = null; }
+      if (blob) out.push({ name: `BuyerLog-grouping-${out.length + 1}.jpg`, blob, ids: part.map(x => x.id) });
+    }
+    return out;
+  }
+  const aiReason = code => ({ 'too-large': L('bilgisi tek isteğe kesilmeden sığmadı', 'its details did not fit one request without cutting'), 'no-answer': L('LCW AI geçerli cevap vermedi', 'LCW AI gave no valid answer'), missing: L('LCW AI cevabında yer almadı', 'it was missing from the LCW AI answer'), LCWAI_CANCELLED: L('iptal edildi', 'cancelled') }[code] || (root.BuyerLogAI && root.BuyerLogAI.errorText ? root.BuyerLogAI.errorText({ code }) : code));
+  /* Soru penceresi: yeni gruplama (id yok) ya da mevcut gruplamayı baştan yeniden yapma. */
+  function aiAsk(id = null) {
+    if (!root.BuyerLogAI || !AI()) { toast(L('LCW AI bu ekranda kullanılamıyor.', 'LCW AI is not available on this screen.'), 'error'); return; }
+    const prev = id && S.doc.ai[id], ids = aiModels(), withImg = ids.filter(aiImage).length, est = Math.ceil(ids.length / AI().LIMITS.batchModels) + (id ? 0 : 1);
+    if (!id && S.doc.grouping.levels.length >= E().LIMITS.levels) { toast(L(`En çok ${E().LIMITS.levels} gruplama seviyesi kullanılabilir.`, `At most ${E().LIMITS.levels} grouping levels can be used.`), 'warning'); return; }
+    let question = prev ? prev.q : '';
+    const d = dialog(`<h3 id="psDlgTitle">${esc(L('LCW AI ile grupla', 'Group with LCW AI'))}</h3>
+      <p>${esc(L('Modelleri nasıl gruplamak istediğinizi yazın. LCW AI her modelin görselini ve tüm bilgilerini inceler, kategorileri sorunuza göre belirler.', 'Describe how you want the models grouped. LCW AI inspects each model’s image and all of its details and sets the categories from your request.'))}</p>
+      <textarea class="psTitle psAiQuestion" data-ps="aiQ" rows="3" maxlength="${AI().LIMITS.questionChars}" placeholder="${esc(L('Ör. Yaka tipine göre ayır: kapüşonlu, bisiklet yaka, fermuarlı', 'E.g. Split by neckline: hooded, crew neck, zip'))}" aria-label="${esc(L('Gruplama isteği', 'Grouping request'))}">${esc(question)}</textarea>
+      <p class="psSub">${esc(L(`${ids.length} model (${withImg} görselli) eksiksiz gönderilir; yaklaşık ${est} LCW AI isteği. Sonuç yalnız bu sunumda kullanılır, tabloya yazılmaz.`, `${ids.length} models (${withImg} with images) are sent in full; about ${est} LCW AI requests. The result is used only in this presentation and is not written to the table.`))}</p>
+      <div class="modalFoot"><button type="button" class="tbtn" data-m="cancel">${esc(L('Vazgeç', 'Cancel'))}</button><button type="button" class="tbtn primary" data-m="run">${esc(L('Başlat', 'Start'))}</button></div>`, choice => {
+      if (choice !== 'run') return;
+      if (!question.trim()) { toast(L('Gruplama isteğini yazın.', 'Write the grouping request.'), 'warning'); return; }
+      aiRun({ id, question: question.trim(), cats: null, ids });
+    });
+    const input = d.el.querySelector('[data-ps="aiQ"]');
+    input.addEventListener('input', () => { question = input.value; });
+    input.focus();
+  }
+  /* Mevcut LCW AI seviyesi: kategoriler, eksik/değişen modeller; eksikleri aynı kategorilerle inceletme. */
+  function aiManage(id) {
+    const g = S.doc.ai[id]; if (!g) return;
+    const stale = aiStale(id), counts = aiCounts(g.vals, g.cats);
+    dialog(`<h3 id="psDlgTitle">${esc(aiLevelLabel(id))}</h3><p>${esc(g.q)}</p>${aiCountsHtml(counts)}
+      <p class="psSub">${esc(stale.length ? L(`${stale.length} model gruplamadan sonra eklendi ya da bilgisi/görseli değişti.`, `${stale.length} models were added or had their details/image changed after the grouping.`) : L('Tüm modeller güncel.', 'All models are up to date.'))} ${esc(L('Sonuç yalnız bu sunumdadır; tabloya ve hesaplara yazılmaz.', 'The result lives only in this presentation; it is not written to the table or used in calculations.'))}</p>
+      <div class="modalFoot"><button type="button" class="tbtn" data-m="cancel">${esc(L('Kapat', 'Close'))}</button><button type="button" class="tbtn" data-m="again">${esc(L('Baştan yeniden grupla', 'Group again from scratch'))}</button>${stale.length ? `<button type="button" class="tbtn primary" data-m="stale">${esc(L(`Eksik ve değişenleri incelet (${stale.length})`, `Review missing and changed (${stale.length})`))}</button>` : ''}</div>`, choice => {
+      if (choice === 'again') aiAsk(id);
+      else if (choice === 'stale') aiRun({ id, question: g.q, cats: g.cats, ids: stale, merge: true });
+    });
+  }
+  function aiCounts(vals, cats) {
+    const n = new Map([...cats, AI().UNSURE].map(c => [c, 0]));
+    for (const v of Object.values(vals)) n.set(v, (n.get(v) || 0) + 1);
+    return n;
+  }
+  const aiCountsHtml = counts => `<ul class="psAiCats">${[...counts].filter(([c, k]) => k || c !== AI().UNSURE).map(([c, k]) => `<li><span>${esc(c === AI().UNSURE ? L('Belirsiz', 'Uncertain') : c)}</span><b>${k}</b></li>`).join('')}</ul>`;
+  async function aiRun({ id, question, cats, ids, merge = false }) {
+    const ai = root.BuyerLogAI, controller = new AbortController();
+    const prog = dialog(`<h3 id="psDlgTitle">${esc(L('LCW AI modelleri inceliyor', 'LCW AI is reviewing the models'))}</h3><p data-ps="aiProg">${esc(L('Hazırlanıyor…', 'Preparing…'))}</p><div class="modalFoot"><button type="button" class="tbtn" data-m="cancel">${esc(L('İptal', 'Cancel'))}</button></div>`, choice => { if (choice === 'cancel') controller.abort(); });
+    const line = prog.el.querySelector('[data-ps="aiProg"]');
+    const phase = { images: L('görseller hazırlanıyor', 'preparing images'), upload: L('görseller yükleniyor', 'uploading images'), ask: L('LCW AI inceliyor', 'LCW AI is reviewing'), done: L('tamamlandı', 'done') };
+    let res;
+    try {
+      res = await AI().runGrouping({
+        ids, question, cats, signal: controller.signal,
+        recordOf: aiRecord, imageOf: aiImage, drawSheets: aiSheets,
+        upload: (blob, name) => ai.uploadFile(new File([blob], name, { type: 'image/jpeg' }), { signal: controller.signal }),
+        ask: payload => ai.ask({ source: AI().SOURCE, task: payload.task, context: payload.context, attachments: payload.attachments, signal: controller.signal }),
+        onProgress: p => { if (line) line.textContent = L(`${p.done} / ${p.total} model sınıflandı · ${p.requests}. istek · ${phase[p.phase] || ''}`, `${p.done} / ${p.total} models classified · request ${p.requests} · ${phase[p.phase] || ''}`); },
+      });
+    } finally { prog.close('done'); }
+    if (!S) return;
+    aiPreview({ id, question, ids, res, merge });
+  }
+  /* Önizleme: kategori başına model sayısı, belirsiz ve tamamlanamayan modeller (nedenleriyle). Uygulanmazsa sunum değişmez. */
+  function aiPreview({ id, question, ids, res, merge }) {
+    const title = mid => esc((S.models.get(mid) || {}).title || mid);
+    const failed = Object.entries(res.failed), unsure = Object.entries(res.vals).filter(([, v]) => v === AI().UNSURE);
+    if (!res.cats.length) { toast(L('LCW AI kategori belirleyemedi; isteği netleştirip tekrar deneyin.', 'LCW AI could not set categories; clarify the request and try again.') + (res.stopped ? ` (${aiReason(res.stopped.code)})` : ''), 'error'); return; }
+    const list = (rows, why) => rows.length ? `<ul class="psAiList psScroll">${rows.map(([mid, v]) => `<li><b>${title(mid)}</b> <span class="psSub">${esc(why(mid, v))}</span></li>`).join('')}</ul>` : '';
+    dialog(`<h3 id="psDlgTitle">${esc(L('LCW AI gruplaması', 'LCW AI grouping'))}</h3><p>${esc(question)}</p>${aiCountsHtml(aiCounts(res.vals, res.cats))}
+      ${res.stopped ? `<p class="psBad">${esc(L(`İşlem durdu: ${aiReason(res.stopped.code)}.`, `Stopped: ${aiReason(res.stopped.code)}.`))}</p>` : ''}
+      ${unsure.length ? `<p><b>${esc(L(`Belirsiz: ${unsure.length} model`, `Uncertain: ${unsure.length} models`))}</b></p>${list(unsure, mid => res.why[mid] || '')}` : ''}
+      ${failed.length ? `<p class="psBad">${esc(L(`Tamamlanamadı: ${failed.length} model — tahmin edilmedi, “Sınıflandırılmadı” grubunda kalır.`, `Not completed: ${failed.length} models — not guessed; they stay in “Not classified”.`))}</p>${list(failed, (mid, code) => aiReason(code))}` : ''}
+      <p class="psSub">${esc(L(`${ids.length} modelin tamamı gönderildi (${res.requests} istek)${res.noImage.length ? `; ${res.noImage.length} model görselsiz, yalnız bilgileriyle incelendi` : ''}. Sonuç yalnız bu sunumda kullanılır.`, `All ${ids.length} models were sent (${res.requests} requests)${res.noImage.length ? `; ${res.noImage.length} models had no readable image and were reviewed from their details` : ''}. The result is used only in this presentation.`))}</p>
+      <div class="modalFoot"><button type="button" class="tbtn" data-m="cancel">${esc(L('Vazgeç', 'Cancel'))}</button><button type="button" class="tbtn primary" data-m="apply">${esc(id ? L('Güncelle', 'Update') : L('Gruplamaya ekle', 'Add to grouping'))}</button></div>`, choice => {
+      if (choice !== 'apply' || !S) return;
+      aiApply({ id, question, res, merge });
+    });
+  }
+  function aiApply({ id, question, res, merge }) {
+    const key = id || 'a' + (Math.max(0, ...Object.keys(S.doc.ai).map(k => Number(k.slice(1)) || 0)) + 1), f = 'ai:' + key;
+    commit(() => {
+      const prev = merge && S.doc.ai[key] ? S.doc.ai[key] : null, vals = prev ? { ...prev.vals } : {}, fp = prev ? { ...prev.fp } : {}, why = prev ? { ...prev.why } : {};
+      for (const [mid, v] of Object.entries(res.vals)) { vals[mid] = v; fp[mid] = aiPrint(S.models.get(mid)); if (v === AI().UNSURE && res.why[mid]) why[mid] = res.why[mid]; else delete why[mid]; }
+      S.doc.ai[key] = AI().normalizeGrouping({ q: question, cats: res.cats, vals, fp, why, at: new Date().toISOString() }, S.doc.order);
+      if (!S.doc.grouping.levels.includes(f)) {
+        // Seviye değişimi setLevels gibi: görsel grup taşımaları ve özel başlıklar yeni anahtarlara uymaz.
+        S.doc.grouping.levels = [...S.doc.grouping.levels, f].slice(0, E().LIMITS.levels);
+        for (const c of Object.values(S.doc.cards)) delete c.vgroup; S.doc.labels = {};
+      }
+    });
+    toast(L('LCW AI gruplaması uygulandı. Çipten sırasını değiştirebilir, Ctrl+Z ile geri alabilirsiniz.', 'The LCW AI grouping was applied. Reorder it from its chip or undo with Ctrl+Z.'));
   }
 
   /* ---------------- Açılır paneller ---------------- */
@@ -1146,7 +1308,9 @@
         + `<button type="button" class="tbtn" data-rf="all"><b class="psOptTitle">${esc(L('Tümünü sıfırla', 'Reset everything'))}</b><span class="psSub">${esc(L('Sabitleri kaldırır, sunumu baştan dizer.', 'Removes pins and lays the presentation out again.'))}</span></button></div>`;
     } else if (kind === 'level') {
       const rem = S.meta.ids.filter(f => !S.doc.grouping.levels.includes(f));
-      p.innerHTML = h(L('Gruplama seviyesi ekle', 'Add grouping level')) + searchBox(L('Gruplama alanı ara', 'Search grouping fields')) + `<div class="psMenu psScroll">${rem.map(f => `<button type="button" class="tbtn" data-addlv="${esc(f)}" data-q="${searchKey(f)}">${esc(S.meta.label(f))}</button>`).join('')}</div>` + noMatch();
+      const saved = Object.keys(S.doc.ai || {}).map(id => 'ai:' + id).filter(f => !S.doc.grouping.levels.includes(f));
+      const aiBtn = `<button type="button" class="tbtn" data-ai-new data-q="${esc(fold(`lcw ai ${L('yapay zeka görsel ile grupla', 'artificial intelligence image group')}`))}"><b class="psOptTitle">${esc(L('LCW AI ile grupla…', 'Group with LCW AI…'))}</b><span class="psSub">${esc(L('Görselleri ve tüm model bilgileriyle, sizin sorunuza göre', 'By images and all model details, as you ask'))}</span></button>`;
+      p.innerHTML = h(L('Gruplama seviyesi ekle', 'Add grouping level')) + searchBox(L('Gruplama alanı ara', 'Search grouping fields')) + `<div class="psMenu psScroll">${aiBtn}${saved.map(f => `<button type="button" class="tbtn" data-addlv="${esc(f)}" data-q="${esc(fold(S.meta.label(f)))}">${esc(S.meta.label(f))}</button>`).join('')}${rem.map(f => `<button type="button" class="tbtn" data-addlv="${esc(f)}" data-q="${searchKey(f)}">${esc(S.meta.label(f))}</button>`).join('')}</div>` + noMatch();
     } else if (kind === 'templates') {
       const saved = loadTemplates(), builtin = builtinTemplates();
       const row = (t, key, del) => `<div class="psTpl"><span><b>${esc(t.name)}</b><small class="psSub">${esc(t.hint || `${PAPER_LABEL()[t.page.preset] || t.page.preset} · ${t.grouping.levels.map(f => S.meta.label(f)).join(' › ') || L('grupsuz', 'ungrouped')}`)}</small></span><button type="button" class="tbtn" data-tpl="${key}">${esc(L('Uygula', 'Apply'))}</button>${del ? `<button type="button" class="tbtn psIcon" data-tdel="${del}" aria-label="${esc(L('Şablonu sil', 'Delete template'))}">${sprite('trash')}</button>` : ''}</div>`;
@@ -1309,6 +1473,8 @@
       const fo = t.closest('[data-fa-area]'); if (fo && S.areaSel) { const key = S.areaSel; clearFrame(); commit(() => E().clearArea(S.doc, key)); toast(L('Grup alanı kaldırıldı; kartlar otomatik akışa döndü.', 'Group area removed; cards returned to automatic flow.')); return; }
       const rm = t.closest('[data-rmlv]'); if (rm) { const lv = [...S.doc.grouping.levels]; lv.splice(Number(rm.dataset.rmlv), 1); return setLevels(lv); }
       const add = t.closest('[data-addlv]'); if (add) { closePop(); return setLevels([...S.doc.grouping.levels, add.dataset.addlv]); }
+      if (t.closest('[data-ai-new]')) { closePop(); return aiAsk(); }
+      const aio = t.closest('[data-ai-open]'); if (aio) return aiManage(aio.dataset.aiOpen);
       const rf = t.closest('[data-rf]');
       if (rf) {
         closePop();

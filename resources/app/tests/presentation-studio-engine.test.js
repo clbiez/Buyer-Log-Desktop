@@ -587,3 +587,18 @@ test('grupları bütün tut: grup alanı/sabit kart çevresinde grup bloğu dikd
     });
   }
 });
+
+test('LCW AI gruplaması: kayıtlı sonuç ve "ai:" seviyesi korunur; kategoriler AI sırasıyla, belirsiz/sınıflandırılmamış sonda', () => {
+  const AI = require('../public/presentation-studio-ai.js');
+  const { doc, groupOf: base } = setup(24, ['fabric']);
+  doc.ai = { a1: { q: 'Yaka', cats: ['Zeta', 'Alfa'], vals: Object.fromEntries(doc.order.slice(0, 20).map((id, i) => [id, i % 3 === 2 ? '?' : i % 2 ? 'Alfa' : 'Zeta'])), at: 'x' } };
+  doc.grouping.levels = ['ai:a1'];
+  const round = E.normalizeDoc(JSON.parse(JSON.stringify(doc)), { ids: doc.order, fields: ['fabric', 'productGroup'], normalizeAi: AI.normalizeGrouping });
+  assert.deepEqual(round.grouping.levels, ['ai:a1']); assert.equal(Object.keys(round.ai.a1.vals).length, 20);
+  assert.deepEqual(E.normalizeDoc(JSON.parse(JSON.stringify(doc)), { ids: doc.order, fields: ['fabric'] }).grouping.levels, [], 'kancasız: AI seviyesi atılır');
+  const g = round.ai.a1, groupOf = id => { const v = g.vals[id], ord = v == null ? 3 : v === '?' ? 2 : g.cats.indexOf(v); const val = v == null ? 'Sınıflandırılmadı' : v === '?' ? 'Belirsiz' : v; return { key: 'k' + ord, vals: [val], ord: [ord] }; };
+  const res = E.layout(round, groupOf);
+  const order = res.pages.flatMap(p => p.items).filter(i => i.kind === 'hdr' && !i.cont).map(h => h.vals[0]);
+  assert.deepEqual(order, ['Zeta', 'Alfa', 'Belirsiz', 'Sınıflandırılmadı']);
+  assert.ok(base);
+});
