@@ -66,7 +66,10 @@
       if(states.some(x=>x==='translating'||x==='failed'||x==='invalid'||x==='review')||stale.some(Boolean))
         return {ok:false,message:L('Çevirileri tamamlayın veya manuel olarak düzeltin.','Complete translations or edit them manually.')};
       const checked=engine.validatePair(values.tr,values.en);
-      return checked.ok?{ok:true}:{ok:false,message:L('Dört parçada ayraç, iplik, gramaj ve sayısal değerleri kontrol edin.','Check separators, yarn, weight and numeric values in all four segments.')};
+      if(checked.ok)return {ok:true};
+      if(checked.code==='FABRIC_SEGMENTS_EMPTY')return {ok:false,message:L('En az bir özet parçası girin.','Enter at least one summary segment.')};
+      if(checked.code==='FABRIC_SEGMENTS_INCOMPLETE')return {ok:false,message:L('Her parça TR ve EN olarak birlikte dolu ya da birlikte boş olmalı.','Each segment must be filled in both TR and EN, or left empty in both.')};
+      return {ok:false,message:L('Dolu parçalarda ayraç, iplik, gramaj ve sayısal değerleri kontrol edin.','Check separators, yarn, weight and numeric values in the filled segments.')};
     }
     function cancel(index){if(timers[index])clearTimeout(timers[index]);timers[index]=null;tokens[index]++;}
     async function requestAI(index,lang,other,text,token){
@@ -97,6 +100,12 @@
     function translate(index){
       cancel(index);
       const lang=source,other=target(),text=engine.clean(values[lang][index]),token=tokens[index];
+      // An empty source segment is a valid "no value"; its automatic translation is cleared too.
+      if(!text){
+        if(!overrides[other][index]){values[other][index]='';states[index]='ready';stale[index]=false;}
+        else{states[index]='manual';stale[index]=true;}
+        repaint();return;
+      }
       if(!engine.validPiece(text)){states[index]='invalid';if(!overrides[other][index])values[other][index]='';repaint();return;}
       if(overrides[other][index]){states[index]='manual';stale[index]=true;repaint();return;}
       const known=engine.translateKnown(text,engine.FIELDS[index],lang);
