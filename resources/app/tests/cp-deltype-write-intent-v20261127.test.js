@@ -23,8 +23,9 @@ const { loadAppMainFunctions, extractFunction } = require('./helpers/app-main-fu
 
 const SOURCE = fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js'), 'utf8');
 
-function syncHarness({ fail = false } = {}) {
+function syncHarness({ fail = false, rowSave = false } = {}) {
   const sent = [];
+  const settles = [];
   let settle;
   const globals = {
     window: { SERVER_BACKED: true },
@@ -37,14 +38,16 @@ function syncHarness({ fail = false } = {}) {
     turknorm: value => String(value || '').toUpperCase(),
     norm: value => String(value ?? '').trim(),
     importedSuppFob: () => false,
-    cpRowSavePlan: () => null, // eski PATCH yolu
-    enqueueOverrideMutation: (_kind, url, opts) => { sent.push({ url, body: JSON.parse(opts.body) }); return new Promise((resolve, reject) => { settle = () => (fail ? reject(new Error('x')) : resolve({})); }); },
+    // rowSave: CP satır kaydı (POST /rows) — plan yalnız gövdedeki dokunulmuş birimleri taşır.
+    cpRowSavePlan: (_row, _code, body) => (rowSave ? { patch: body.delType !== undefined ? { delType: body.delType } : { notes: body.notes }, units: body.delType !== undefined ? ['delType'] : ['notes:Notes'] } : null),
+    cpRowSaveSend: (_row, _code, patch) => { sent.push({ url: '/api/overrides/rows', body: patch }); return new Promise((resolve, reject) => { const fn = () => (fail ? reject(new Error('x')) : resolve({})); settles.push(fn); settle = fn; }); },
+    enqueueOverrideMutation: (_kind, url, opts) => { sent.push({ url, body: JSON.parse(opts.body) }); return new Promise((resolve, reject) => { const fn = () => (fail ? reject(new Error('x')) : resolve({})); settles.push(fn); settle = fn; }); },
     notifyOverrideSaveError: () => {},
     appLang: 'tr',
     console: { warn: () => {} },
   };
   const fns = loadAppMainFunctions(['syncOverrideToServer'], globals);
-  return { ...fns, sent, settle: async () => { settle(); await new Promise(r => setImmediate(r)); } };
+  return { ...fns, sent, settle: async () => { settle(); await new Promise(r => setImmediate(r)); }, settleAt: async i => { settles[i](); await new Promise(r => setImmediate(r)); } };
 }
 const cpRow = extra => ({ 'Order Code': 4100001, 'Model Name': 'MODEL-1', 'C.Code': 'C01', 'Del. Type': 'Uçak', Licensor: 'DTR', ...extra });
 
@@ -92,3 +95,30 @@ test('niyet yalnız kullanıcının Del. Type düzenlemesinde ve geri al / yinel
   assert.match(SOURCE, /\['_pricingManualWrite','_pricingHistoryRestore','_subManufacturerWrite','_delTypeWrite'\]\.includes\(key\)/);
   assert.equal((SOURCE.match(/_delTypeWrite=\{\}/g) || []).length, 2, 'no other path claims Del. Type intent');
 });
+
+for (const rowSave of [false, true]) {
+  const pathName = rowSave ? 'POST /rows' : 'eski PATCH';
+  test(`${pathName}: açık düzenleme → onay niyeti temizler → başka kullanıcının değeri gelir → ilgisiz kayıt onu ezmez`, async () => {
+    const h = syncHarness({ rowSave });
+    const row = cpRow({ _delTypeWrite: {}, 'Del. Type': 'Uçak' });
+    h.syncOverrideToServer(4100001, {}, row);
+    assert.equal(h.sent[0].body.delType, 'Uçak');
+    await h.settle();
+    assert.equal(Object.hasOwn(row, '_delTypeWrite'), false, 'intent cleared after a successful save');
+    row['Del. Type'] = 'Kara'; // başka kullanıcının canlı değişikliği satıra yansıdı (niyet yok)
+    h.syncOverrideToServer(4100001, { Notes: 'ilgisiz' }, row);
+    assert.equal(Object.hasOwn(h.sent[1].body, 'delType'), false, 'unrelated save never carries Del. Type');
+  });
+  test(`${pathName}: eski kaydın onayı daha yeni yazma niyetini temizlemez`, async () => {
+    const h = syncHarness({ rowSave });
+    const row = cpRow({ _delTypeWrite: {}, 'Del. Type': 'Uçak' });
+    h.syncOverrideToServer(4100001, {}, row); // kayıt 1 (yolda)
+    const newer = {}; row._delTypeWrite = newer; row['Del. Type'] = 'Kara'; // kayıt 1 onaylanmadan yeni düzenleme
+    await h.settleAt(0); // kayıt 1 onayı
+    assert.equal(row._delTypeWrite, newer, 'newer intent survives the older acknowledgement');
+    h.syncOverrideToServer(4100001, {}, row);
+    assert.equal(h.sent[1].body.delType, 'Kara');
+    await h.settleAt(1);
+    assert.equal(Object.hasOwn(row, '_delTypeWrite'), false);
+  });
+}
