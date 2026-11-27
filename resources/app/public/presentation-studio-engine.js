@@ -58,7 +58,9 @@
     out.fields = [...new Set(Array.isArray(s.fields) ? s.fields.map(String) : [])].filter(f => !allowed || allowed.has(f)).slice(0, LIMITS.fields);
     return out;
   }
-  /* Grup alanları: grup anahtarı → { page, x, y, w, h } (h en az yükseklik; alan kartlara göre büyür). */
+  /* Grup alanları: grup anahtarı → { page, x, y, w, h, mode?, z? }. h = 0: kartlar genel ölçüde, alan
+     kartlara göre büyür. h > 0: mode 'fit' (varsayılan) tüm kartları alana sığdırır; 'spread' kartları
+     genel ölçüde tutup alanı doldurur, sığmayanlar sonraki sayfada sürer. z: son taşınan/boyutlanan önde. */
   function normalizeAreas(raw, pageIds) {
     const out = {};
     for (const [k, a] of Object.entries(raw && typeof raw === 'object' ? raw : {}).slice(0, 400)) {
@@ -66,6 +68,8 @@
       const [x, y, w, h] = [a.x, a.y, a.w, a.h].map(Number);
       if (![x, y, w].every(Number.isFinite)) continue;
       out[k] = { page: a.page, x: Math.max(0, x), y: Math.max(0, y), w: Math.max(20, w), h: Number.isFinite(h) ? Math.max(0, h) : 0 };
+      if (a.mode === 'spread') out[k].mode = 'spread';
+      if (Number.isFinite(Number(a.z)) && Number(a.z) > 0) out[k].z = Math.min(1e9, Math.round(Number(a.z)));
     }
     return out;
   }
@@ -252,7 +256,12 @@
       while (idx < ids.length && r < 500) {
         const ry = top + r * (g.cellH + g.gap);
         if (ry + g.cellH > g.bottom + 0.01) break;
-        for (let j = 0; j < w && idx < ids.length; j++) { const rc = { x: colX(g, c + j), y: ry, w: g.cellW, h: g.cellH }; if (!hit(rc)) { pl.push({ ...rc, id: ids[idx++] }); bottom = Math.max(bottom, ry + g.cellH); } }
+        // Blok dikdörtgen kalır: satırda gereken hücrelerden biri engelliyse (alan/sabit kart) blok o satırda biter;
+        // kartlar engelin çevresine dağılıp L biçimli, boşluklu blok oluşmaz.
+        const need = Math.min(w, ids.length - idx);
+        if (obs.length && obs.some(o => o.y < ry + g.cellH - 0.01 && o.y + o.h > ry + 0.01 && o.x < colX(g, c + need - 1) + g.cellW - 0.01 && o.x + o.w > colX(g, c) + 0.01)) break;
+        for (let j = 0; j < need; j++) pl.push({ x: colX(g, c + j), y: ry, w: g.cellW, h: g.cellH, id: ids[idx++] });
+        bottom = Math.max(bottom, ry + g.cellH);
         r++;
       }
       return { y, w, c, bw, hh, pl, bottom, complete: idx >= ids.length, empty: w * Math.ceil(ids.length / w) - ids.length };
@@ -288,7 +297,9 @@
       const c = doc.cards[id];
       if (!c || !c.pinned || c.excluded) continue;
       if (!pageIds.has(c.page)) { c.pinned = false; continue; }
-      (pinned[c.page] || (pinned[c.page] = [])).push({ kind: 'card', id, pinned: true, x: c.x, y: c.y, w: c.w, h: c.h });
+      // Sabit kart da sayfa kenar boşluğunun içinde gösterilir (baskıda kesilmez).
+      const k = Math.min(1, g.cw / c.w, g.ch / c.h), w = c.w * k, h = c.h * k;
+      (pinned[c.page] || (pinned[c.page] = [])).push({ kind: 'card', id, pinned: true, x: clamp(c.x, g.m, g.w - g.m - w), y: clamp(c.y, g.m, g.bottom - h), w, h });
     }
     const place = doc.style.keepGroups ? layoutPageBlocks : layoutPageFlow;
     const valsOf = new Map();
@@ -316,11 +327,14 @@
         if (doc.areas[k] && pageIds.has(doc.areas[k].page)) (byKey.get(k) || byKey.set(k, []).get(k)).push(id);
       }
       for (const [k, ids] of byKey) {
-        const a = doc.areas[k], w = clamp(a.w, g.cellW, g.w - 2 * g.m), spec = { key: k, page: a.page, x: clamp(a.x, 0, g.w - w), y: clamp(a.y, 0, g.h - g.hH), w, h: a.h, ids, total: ids.length, vals: valsOf.get(k) || splitVals(doc, k) || k.split(SEP), cont: false };
+        // Alan sayfa kenar boşluğunun (baskı payı) içinde kalır.
+        const a = doc.areas[k], w = clamp(a.w, Math.min(g.cellW, g.cw), g.cw), y = clamp(a.y, g.m, g.bottom - g.hH - g.hGap - g.th - 24);
+        const spec = { key: k, page: a.page, x: clamp(a.x, g.m, g.w - g.m - w), y, w, h: a.h > 0 ? Math.min(a.h, g.bottom - y) : 0, mode: a.mode === 'spread' ? 'spread' : 'fit', z: a.z || 0, ids, total: ids.length, vals: valsOf.get(k) || splitVals(doc, k) || k.split(SEP), cont: false };
         (areaSpecs.get(a.page) || areaSpecs.set(a.page, []).get(a.page)).push(spec);
         areaKeys.add(k);
       }
-      for (const list of areaSpecs.values()) list.sort((p, q) => p.y - q.y || p.x - q.x);
+      // Öncelik: son taşınan/boyutlanan alan yerini korur; ötekiler onun etrafında bütün olarak yer değiştirir.
+      for (const list of areaSpecs.values()) list.sort((p, q) => q.z - p.z || p.y - q.y || p.x - q.x);
     }
     /* obs: sayfadaki sabit kartlar ve önce yerleşen alanlar. Alan bunlarla çakışıyorsa altına kayar;
        aşağı doğru yalnız bir sonraki engele (ya da sayfa sonuna) kadar büyür, kalanlar sonraki sayfada sürer. */
@@ -340,6 +354,22 @@
       /* Grup bazlı kart boyutu: alan elle boyutlandıysa (h > 0) kartlar alanı orantılı doldurur. Sütun sayısı,
          görsel oranı genel karta en yakın ve boş hücresi en az olan seçenektir; kart eklenince kartlar küçülür.
          Kartlar çok küçülürse (genişlik < 40 pt) genel ölçüyle akıp sayfa sonunda devam eder. */
+      /* Kartları yay: genel kart ölçüsüyle alana kaç satır/sütun sığıyorsa o kadar kart alınır; yeni satır/sütun
+         sığmayan artan pay mevcut kartları büyütür (boş alan kalmaz). Sığmayanlar sonraki sayfada aynı başlıkla
+         sürer. Hepsi sığıyorsa "sığdır" gibi davranır. */
+      if (sp.h > 0 && !sp.cont && sp.mode === 'spread') {
+        const H = Math.min(sp.h, limit - y), bodyH = H - hd.h - g.hGap;
+        const c = Math.max(1, Math.floor((sp.w + g.gap + 0.01) / (g.cellW + g.gap))), r = Math.max(1, Math.floor((bodyH + g.gap + 0.01) / (g.cellH + g.gap)));
+        if (c * r < sp.ids.length) {
+          // Hücreler alanı iki yönde de tam kaplar (boş şerit kalmaz); görsel kutusu içinde orantılı kalır.
+          const cw = (sp.w - (c - 1) * g.gap) / c, ch = (bodyH - (r - 1) * g.gap) / r, top2 = y + hd.h + g.hGap;
+          if (cw >= 40 && ch - g.th >= 16) {
+            const items = [{ kind: 'area', key: sp.key, x: sp.x, y, w: sp.w, h: H, cont: false, fit: true, mode: 'spread' }, hd];
+            for (let i = 0; i < c * r; i++) items.push({ kind: 'card', id: sp.ids[i], x: sp.x + (i % c) * (cw + g.gap), y: top2 + Math.floor(i / c) * (ch + g.gap), w: cw, h: ch, area: sp.key });
+            return { items, rest: sp.ids.slice(c * r) };
+          }
+        }
+      }
       if (sp.h > 0 && !sp.cont) {
         const H = Math.min(sp.h, limit - y), bodyH = H - hd.h - g.hGap, n = sp.ids.length, ratio = (g.cellH - g.th) / g.cellW;
         let best = null, grow = null;
@@ -355,7 +385,7 @@
         }
         const pick = best || grow;
         if (pick) {
-          const top2 = y + hd.h + g.hGap, items = [{ kind: 'area', key: sp.key, x: sp.x, y, w: sp.w, h: pick.h, cont: sp.cont, fit: true }, hd];
+          const top2 = y + hd.h + g.hGap, items = [{ kind: 'area', key: sp.key, x: sp.x, y, w: sp.w, h: pick.h, cont: sp.cont, fit: true, mode: sp.mode }, hd];
           sp.ids.forEach((id, i) => items.push({ kind: 'card', id, x: sp.x + (i % pick.c) * (pick.cw + g.gap), y: top2 + Math.floor(i / pick.c) * (pick.ch + g.gap), w: pick.cw, h: pick.ch, area: sp.key }));
           return { items, rest: [] };
         }
@@ -365,27 +395,53 @@
       if (!rows && force && !obs.length) rows = 1; // boş sayfada bile sığmıyorsa bir satır zorla (sonsuz sayfa üretme)
       const n = Math.min(sp.ids.length, rows * cols);
       if (!n) return { items: [], rest: sp.ids };
-      const bodyH = rows * (g.cellH + g.gap) - g.gap, h = Math.min(Math.max(sp.h || 0, hd.h + g.hGap + bodyH), Math.max(hd.h + g.hGap + bodyH, limit - y), g.h - y);
+      const bodyH = rows * (g.cellH + g.gap) - g.gap, h = Math.min(Math.max(sp.h || 0, hd.h + g.hGap + bodyH), Math.max(hd.h + g.hGap + bodyH, limit - y), g.bottom - y);
       const items = [{ kind: 'area', key: sp.key, x: sp.x, y, w: sp.w, h, cont: sp.cont }, hd];
       for (let i = 0; i < n; i++) items.push({ kind: 'card', id: sp.ids[i], x: sp.x + (i % cols) * (g.cellW + g.gap), y: top + Math.floor(i / cols) * (g.cellH + g.gap), w: g.cellW, h: g.cellH, area: sp.key });
       return { items, rest: sp.ids.slice(n) };
     };
     const areaPad = it => ({ x: it.x - g.gap / 2, y: it.y - g.gap / 2, w: it.w + g.gap, h: it.h + g.gap });
+    /* Önde olan alanla/sabit kartla çakışan alan biçimi bozulmadan (aynı ölçü, aynı kart dizilimi) en yakın
+       boş konuma bütün olarak taşınır. Sayfada yer yoksa null: eski davranış (altına kayar, kalanı sürer). */
+    const moveWhole = (sp, obs) => {
+      const free = placeArea(sp, false, []), box = free.items[0];
+      if (!box) return null;
+      const hit = r => obs.some(o => overlaps(r, o));
+      if (!hit(box)) return free;
+      const W = box.w, H = box.h, xs = new Set([sp.x, g.m, g.w - g.m - W]), ys = new Set([sp.y, g.m, g.bottom - H]);
+      for (const o of obs) { xs.add(o.x + o.w + g.gap / 2); xs.add(o.x - W - g.gap / 2); ys.add(o.y + o.h + g.gap / 2); ys.add(o.y - H - g.gap / 2); }
+      let best = null;
+      for (const x of xs) for (const y of ys) {
+        const r = { x, y, w: W, h: H };
+        if (x < g.m - 0.01 || y < g.m - 0.01 || x + W > g.w - g.m + 0.01 || y + H > g.bottom + 0.01 || hit(r)) continue;
+        const d = (x - sp.x) ** 2 + (y - sp.y) ** 2;
+        if (!best || d < best.d) best = { x, y, d };
+      }
+      if (!best) return null;
+      const out = placeArea({ ...sp, x: best.x, y: best.y }, false, []);
+      return out.items[0] && !hit(out.items[0]) ? out : null;
+    };
     const run = need => {
       const queue = buildChunks(doc, g, groupOf, areaKeys), out = [];
       let carry = [];
       const fill = (pid, items) => {
-        const specs = [...carry, ...(areaSpecs.get(pid) || [])]; carry = [];
+        // Sayfanın kendi alanları önce (öncelik sırasıyla), önceki sayfadan devam edenler sonra.
+        const specs = [...(areaSpecs.get(pid) || []), ...carry]; carry = [];
         for (const sp of specs) {
           const obs = items.filter(it => it.kind === 'area' || it.pinned).map(it => ({ x: it.x - g.gap / 2, y: it.y - g.gap / 2, w: it.w + g.gap, h: it.h + g.gap }));
-          const r = placeArea(sp, sp.cont && Math.abs(sp.y - g.cy) < 0.01, obs);
+          const whole = !sp.cont && obs.length ? moveWhole(sp, obs) : null;
+          // Sayfada bütün olarak yer yoksa alan biçimi bozulmadan sonraki sayfaya geçer (en çok 3 sayfa ötelenir).
+          if (!sp.cont && obs.length && !whole && (sp.moved || 0) < 3) { carry.push({ ...sp, moved: (sp.moved || 0) + 1 }); continue; }
+          const r = whole || placeArea(sp, sp.cont && Math.abs(sp.y - g.cy) < 0.01, obs);
           items.push(...r.items);
           if (r.rest.length) carry.push({ ...sp, y: g.cy, h: 0, cont: true, ids: r.rest });
         }
       };
       const obstacles = items => items.filter(it => it.kind === 'area' || it.pinned).map(it => (it.kind === 'area' ? areaPad(it) : pad(it, need)));
+      // Başlık bandı gereken sabit kart, başlığı üst kenar boşluğuna taşmayacak kadar aşağıda gösterilir.
+      const room = it => { if (!need || !need.has(it.id)) return it; const top = pinHdr(it, 1).y; return top >= g.m - 0.01 ? it : { ...it, y: Math.min(it.y + g.m - top, g.bottom - it.h) }; };
       for (const p of doc.pages) {
-        const items = [...(pinned[p.id] || [])];
+        const items = (pinned[p.id] || []).map(room);
         fill(p.id, items);
         if (p.flow && queue.length) items.push(...place(queue, obstacles(items), g));
         out.push({ id: p.id, items });
@@ -427,7 +483,7 @@
         }
         for (const r of runs) {
           const hd = pinHdr({ id: r.id, x: r.x, y: r.y, w: r.x2 - r.x }, r.ids.length); hd.pins = r.ids;
-          if (hd.y >= -0.01 && !p.items.some(o => !r.ids.includes(o.id) && overlaps(hd, o))) p.items.push(hd);
+          if (hd.y >= g.m - 0.01 && !p.items.some(o => !r.ids.includes(o.id) && overlaps(hd, o))) p.items.push(hd);
         }
       }
     }
@@ -452,7 +508,7 @@
 
   /* En yakın boş konum (sayfa sınırı içinde, engellerle çakışmadan). */
   function findFree(rect, obs, g, step = 6) {
-    const fits = r => r.x >= -0.01 && r.y >= -0.01 && r.x + r.w <= g.w + 0.01 && r.y + r.h <= g.h + 0.01 && !obs.some(o => overlaps(r, o));
+    const fits = r => r.x >= g.m - 0.01 && r.y >= g.m - 0.01 && r.x + r.w <= g.w - g.m + 0.01 && r.y + r.h <= g.h - g.m + 0.01 && !obs.some(o => overlaps(r, o));
     if (fits(rect)) return rect;
     const c = [];
     for (let x = g.m; x + rect.w <= g.w - g.m + 0.01; x += step) for (let y = g.m; y + rect.h <= g.h - g.m + 0.01; y += step) c.push({ x, y, d: (x - rect.x) ** 2 + (y - rect.y) ** 2 });
@@ -489,7 +545,8 @@
     const pins = doc.order.map(id => doc.cards[id]).filter(c => c && c.pinned && !c.excluded);
     if (mode === 'flow') for (const id of bad) doc.cards[id].pinned = false;
     if (mode === 'scale') { const sx = nd.w / od.w, sy = nd.h / od.h, k = Math.min(sx, sy); for (const c of pins) { c.x *= sx; c.y *= sy; c.w *= k; c.h *= k; } }
-    for (const c of pins) if (c.pinned) { c.x = clamp(c.x, 0, Math.max(0, nd.w - c.w)); c.y = clamp(c.y, 0, Math.max(0, nd.h - c.h)); }
+    const m = geometry(doc).m;
+    for (const c of pins) if (c.pinned) { c.x = clamp(c.x, m, Math.max(m, nd.w - m - c.w)); c.y = clamp(c.y, m, Math.max(m, nd.h - m - c.h)); }
     return resolvePinned(doc);
   }
 
@@ -527,7 +584,11 @@
   /* Grubu kendi alanına alır / alanı taşır-boyutlar (sayfa, konum, genişlik, en az yükseklik). */
   function setArea(doc, key, rect) {
     if (!doc.areas) doc.areas = {};
-    doc.areas[key] = { page: rect.page, x: Math.max(0, Number(rect.x) || 0), y: Math.max(0, Number(rect.y) || 0), w: Math.max(20, Number(rect.w) || 20), h: Math.max(0, Number(rect.h) || 0) };
+    const prev = doc.areas[key], mode = rect.mode !== undefined ? rect.mode : prev && prev.mode;
+    // z: son taşınan/boyutlanan alan önde (çakışmada yerini korur).
+    const top = Math.max(0, ...Object.values(doc.areas).map(a => a.z || 0)), z = prev && prev.z && prev.z === top ? top : top + 1;
+    doc.areas[key] = { page: rect.page, x: Math.max(0, Number(rect.x) || 0), y: Math.max(0, Number(rect.y) || 0), w: Math.max(20, Number(rect.w) || 20), h: Math.max(0, Number(rect.h) || 0), z };
+    if (mode === 'spread') doc.areas[key].mode = 'spread';
   }
   function clearArea(doc, key) { if (doc.areas) delete doc.areas[key]; }
   /* Grubundan ayrılmış (sabit) kartları kendi elle grubuna alır: yeni anahtar, özgün başlık metni.
