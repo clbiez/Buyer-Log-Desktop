@@ -96,26 +96,28 @@ function normalizePricingRules(incoming,options={}){
       seasons: normalizePricingRuleSeasons(r.seasons != null ? r.seasons : r.season),
       licensor: String(r.licensor != null ? r.licensor : (r.manufacturer || '')).trim(),
       license: String(r.license || '').trim(),
-      royalty: Number(r.royalty),
+      royalty: BLBusinessRules.pricingRuleRatesOptional(r) ? nullablePercent(r.royalty) : Number(r.royalty),
       trCommission: nullablePercent(r.trCommission),
       ydCommission: nullablePercent(r.ydCommission),
-      hologramCost: Number(r.hologramCost),
+      hologramCost: BLBusinessRules.pricingRuleRatesOptional(r) ? nullableMoney(r.hologramCost) : Number(r.hologramCost),
       legacyTrHologramCost: nullableMoney(r.legacyTrHologramCost),
       legacyYdHologramCost: nullableMoney(r.legacyYdHologramCost),
       legacyRuleIds: Array.isArray(r.legacyRuleIds) ? r.legacyRuleIds.map(String).filter(Boolean) : [],
       migratedFromCountrySplit: r.migratedFromCountrySplit === true,
     })).filter(r => {
+      // DTR: royalty/commission/hologram are optional (null = none); entered values are still checked.
+      const optional = BLBusinessRules.pricingRuleRatesOptional(r), royalty = r.royalty == null ? 0 : r.royalty;
       const commissions = [r.trCommission, r.ydCommission].filter(value => value != null);
-      const commissionValid = commissions.length > 0 && commissions.every(value => Number.isFinite(value) && value >= 0 && value <= 100);
-      const totalValid = (r.trCommission == null || r.royalty + r.trCommission <= 100)
-        && (r.ydCommission == null || r.royalty + r.ydCommission <= 100);
+      const commissionValid = (commissions.length > 0 || optional) && commissions.every(value => Number.isFinite(value) && value >= 0 && value <= 100);
+      const totalValid = (r.trCommission == null || royalty + r.trCommission <= 100)
+        && (r.ydCommission == null || royalty + r.ydCommission <= 100);
       const legacyHologramValid = (r.legacyTrHologramCost == null || (Number.isFinite(r.legacyTrHologramCost) && r.legacyTrHologramCost >= 0))
         && (r.legacyYdHologramCost == null || (Number.isFinite(r.legacyYdHologramCost) && r.legacyYdHologramCost >= 0));
       return (!r.opdStart || !r.opdEnd || r.opdStart <= r.opdEnd)
         && r.licensor && r.license
-        && Number.isFinite(r.royalty) && r.royalty >= 0 && r.royalty <= 100
+        && ((optional && r.royalty === null) || (Number.isFinite(r.royalty) && r.royalty >= 0 && r.royalty <= 100))
         && commissionValid && totalValid
-        && Number.isFinite(r.hologramCost) && r.hologramCost >= 0
+        && ((optional && r.hologramCost === null) || (Number.isFinite(r.hologramCost) && r.hologramCost >= 0))
         && legacyHologramValid;
     });
     for (let i = 0; i < rules.length; i++) {
