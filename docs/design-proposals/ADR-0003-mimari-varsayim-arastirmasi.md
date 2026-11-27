@@ -767,6 +767,155 @@ Sonuç: Düzenlemeyi yapan sekmedeki Siparişler penceresi, kullanıcı filtre, 
 
 ---
 
+## 6F · CP karar pilotu, modüller arası geçersizleştirme ve Siparişler görünüm geçerliliği (2026-11-27)
+
+**Kapsam:** Ürün sahibi kararı; küçük ve yalıtılmış. Pilot dalı `claude/cp-karar-pilot`, commit **`06095e1c`** (`b386cbe` üstü), bayrak `BUYER_LOG_CP_ROWPATCH_LEGACY=1`, **varsayılan kapalı**. PR, merge, TEST, STABLE yok. B1/B2 BLOCKED kalır. Siparişler güncellik göstergesi ana oturumun dalında; bu bölüm `ordersRM*` koduna dokunmaz. Araçlar ve ham sonuçlar: `docs/design-proposals/adr-0003-kanit/6f/`.
+
+### 6F.1 · Varsayım düzeltmesi: karar hesabı zaten içerik tabanlı ve artımlı
+
+- **[Doğrulandı: source]** `cp-computed-task.js` `ensureComputed`, yeni nesilde önceki sonucu yalnız imza aynıysa kullanır. İmza `[answersVersion, tasksSignature, yerel gün]`. Yapılandırma, kurallar, PLM, transit kuralları, dil, kullanıcı ve kapsam barındırıcı anahtarındadır (`hostKeyOf`); değişince yeni barındırıcı ve tam hesap yapılır.
+- Satırın tamamı, hesaplanmış alanlar hariç, `rowDigest` ile özetlenir. Artımlı plan şunları hedefler: kaynak özeti değişen satırlar + aynı sipariş/opsiyon grubundaki satırlar (`incrementalPlan`).
+  - Yani "veri değişti" ile "karar girdisi değişti" ayrımı alan listesiyle değil, **satır içeriğiyle** yapılıyor.
+  - Karar girdisi olmayan bir alan değişince yalnız o satır ve grubu yeniden hesaplanır.
+- **[Doğrulandı: ölçüm]** E2 (Supp. FOB): `decisionMs` 1,24 ms (`changed:1, targets:1`). Bu pilotta: `decisionMs` medyanı 1 ms (aralık 1–9 ms).
+  - Daraltılmış bir "karar girdisi" alan kümesi en fazla ~1 ms kazandırır. Karşılığında bayat öncelik riski taşır. **Önerilmez ve yapılmadı.**
+- **[Doğrulandı: ölçüm]** Kullanıcının tablosundaki "karar 2,35–3,89 sn" iki kaynaktan geliyor:
+  - (a) Düzenleme sonrası ilk okuma `503 COMPUTE_ESTIMATE_EXCEEDED` ile düşüyor. İşçi emekli ediliyor, barındırıcı ve önceki sonuç kayboluyor, sonraki okuma **soğuk tam hesap** yapıyor (Q8 deseni).
+  - (b) Artımlı yolda `sourceMs` ≈ 1,4–1,65 sn: 24.982 satırın tamamı yeniden özetleniyor.
+  - Bu kayıt yolunda satır yaması günlüğü hiç kullanılmıyor. Neden: Supp. FOB/fiyat kaydı eski `PATCH /api/overrides/:kod` yolundan gidiyor ve bu yol `cp-row-patch-log`'a yazmıyor (`rowPatch.miss:"no-chain"`).
+
+### 6F.2 · Pilot: eski kayıt yollarını mevcut satır yaması günlüğüne bağlamak
+
+- **Değişiklik** (`server.js`, ~20 satır): `PATCH /api/overrides/:kod`, `/batch` ve `/batch-suppfob` artık:
+  - okuma bağlamı damgasını **yazımdan önce** alır;
+  - yazımın hemen ardından yamayı mevcut `recordCpRowPatches` ile günlüğe ekler;
+  - `rowPatch`'i projeksiyon yeniden yazımına geçirir (`settle` → mevcut `verifyRows`).
+- **Yeni motor yok.** Alan kuralı, uygulama, zincir ve doğrulama `POST /rows` (cp-row-save) ile aynı kod.
+  - Güvenli olmayan tek bir öğe bile varsa kayıt yapılmaz (`subManufacturer`, `licensor`, `pricingRestore`…). Okuma bugünkü yola döner.
+- **Kapsam dışı bırakılan:** `importance` yaması.
+  - **[Doğrulandı: test]** Günlüğün kayıtlı bağlamı `importancemap` ve önem ayarlarını taşımıyor. Sanal satır gerçek nesilden farklı çıkıyor.
+  - Bu, doğrulamanın yakalayacağı ama ilk okumada yanlış değer gösterecek bir boşluktur. Bugüne kadar görünmüyordu, çünkü satır kaydı bu alanı yazmıyor.
+- **Bulunan ve düzeltilen pilot hatası:** İlk sürüm damgayı yazımdan sonra alıyordu (damga paylaşılan revizyonu içerir). Zincir hiç kurulmadı.
+  - Gerçek sunucu duman koşusu bunu yakaladı. Süreç içi testler sunucu kablolamasını görmediği için kaçırmıştı.
+  - Kalıcı önlem: kaynak sözleşmesi testi şunları denetliyor: sıra (bağlam → damga → yazım → kayıt → yeniden yazım), araya `await` girmemesi, aynı yamanın kullanılması.
+
+### 6F.3 · Gölge doğrulama: 0 fark
+
+**[Doğrulandı: test]** `tests/cp-decision-pilot-shadow-v20261127.test.js` (2k fixture, iki yetki kapsamı). Her adımda pilot sonucu (sanal yama + artımlı karar) aynı gerçek nesil üzerinde **ayrı, sıfır durumlu barındırıcıda tam hesapla** karşılaştırılır: satır özeti ve sonuç demeti.
+
+| Senaryo | Sonuç |
+|---|---|
+| Karar girdisi olmayan: Supp. FOB (manuel/kural), not | 0 fark; hedef = değişen satır (+grup) |
+| Doğrudan karar girdisi: Ex-factory, Retail, In-Store, Del. Type | 0 fark; sonuç gerçekten değişti (boş parite değil) |
+| Dolaylı: aynı opsiyonu paylaşan satırlardan biri | 0 fark; hedef > değişen (grup kapanışı) |
+| Çoklu hücre: tek kayıtta 60 satır | 0 fark |
+| Ardışık ve eşzamanlı: 3 kayıt tek okuma, aynı hücre A→B; 3 ardışık okuma | 0 fark; son değer kazanır |
+| Gün dönümü (kaydırılabilir saat) | tam hesaba düşer; 0 fark |
+| Yapılandırma (transit kuralı) | yeni barındırıcı + tam hesap; 0 fark |
+| Başka kullanıcının kaydı | zincir kurmaz → projeksiyon kirası (gerçek nesil) |
+
+Ek olarak üç pilot koşusunun son okumasında mevcut `verifyRows` (gerçek neslin yamalı satırları ↔ işçideki sanal satırlar) çalıştı: `verified:true`, uyuşmazlık yok **[Doğrulandı: 3/3 koşu]**.
+
+**Gerçek sunucuda kapsanmayanlar** (çok kullanıcılı sunucu ve saat kaydırma koşulmadı):
+- başka kullanıcı
+- gün dönümü
+- yapılandırma
+
+Bunlar süreç içi testle kanıtlandı.
+
+### 6F.4 · Ölçüm (L2)
+
+**Kurulum:**
+- Sabit commit `06095e1c`. Tek değişken bayrak.
+- Sıra A B B A A B: 3 çift, her koşu taze sunucu.
+- 30k sentetik (seed 7, CP 24.982 satır).
+- Gerçek istemci Supp. FOB gövdesi (`{model, ccode, notes, delType, suppFob, suppFobMeta}`, Playwright ile yakalandı).
+- Koşu başına 6 kayıt + 1 çift kayıt. Her kayıttan hemen sonra: `cp/computed since` (istemcinin onay sonrası isteği), ardından `orders/query`.
+- Kayıtlar arası 14 sn. CPU: sunucu süreci (`/proc`), pencere = kayıt + okumalar + arka plan yeniden yazımı.
+
+| Ölçü (koşu medyanı) | Kapalı | Açık | Çift farkı (açık−kapalı) |
+|---|---|---|---|
+| Kayıt → CP karar sütunları yanıtı | 6.858 / 7.049 / 6.932 ms | 247 / 207 / 285 ms | −6.611 / −6.842 / −6.647 |
+| CP okuması başarısız (503) | 10 / 21 | 0 / 21 | — |
+| `decisionMs` | 2.583 / 2.920 / 2.764 | 2 / 1 / 1 | −2.581 / −2.919 / −2.763 |
+| CP veri kümesi yeniden yükleme `loadMs` | 1.204 / 1.073 / 1.233 | 0 / 0 / 0 | −1.204 / −1.072 / −1.232 |
+| Yeniden yazımı bekleme `leaseMs` | 2.385 / 2.269 / 2.263 | 0 / 0 / 0 | −2.385 / −2.269 / −2.263 |
+| Pencere toplam sunucu CPU | 15.650 / 16.340 / 16.250 ms | 9.720 / 9.350 / 10.360 ms | −5.930 / −6.990 / −5.890 |
+| Kayıt → CP + Siparişler ikisi de hazır (ardışık) | 8.082 / 8.468 / 8.162 ms | 3.517 / 3.469 / 3.937 ms | ≈ −4,6 sn |
+| `orders/query` (kendi başlangıcından) | 1.096 / 1.194 / 1.134 | 3.238 / 3.248 / 3.643 | +2,1 / +2,1 / +2,5 sn |
+
+**Veri eşitliği [Doğrulandı]:** CP hesaplanmış sütun demetlerinin özeti, her adımda ve son tam okumada **6 koşunun 6'sında aynı** (`52aa7fa77911…`).
+
+**Yorum ve sınırlar:**
+- **Kazanç [Doğrulandı: bu ortam].** Kapalı kolda CP okumasının yarısı 503 ile düşüyor, kalanı soğuk tam hesap yapıyor. Açık kol bu yolu hiç çalıştırmıyor. Bu yüzden kazanç büyük oranda "503 + soğuk tam hesap + kira beklemesi"nin ortadan kalkmasıdır, karar hesabının hızlanması değildir.
+- **503 sıklığı [Bilinmiyor].** Sıklık bu kapsayıcının hesaplama havuzu bellek bütçesine bağlı. Kullanıcı makinelerindeki sıklık ölçülmedi.
+- **503'ün kök nedeni [Hipotez].** Sıcak barındırıcıyla yeni nesil yüklenirken `datasetLoadEstimate` önceki neslin bellekte tutulan satırlarını (`entry.current.rows`, karşılaştırma için) hesaba katmıyor. Ayrı karar konusu; düzeltilmedi.
+- **`orders/query` artışı ek maliyet değil, bekleme kayması.** Kapalı kolda Siparişler sorgusu, CP okuması yeniden yazımı zaten beklediği için yazım bittikten sonra başlıyor. Açık kolda CP hemen döndüğü için Siparişler sorgusu yeniden yazımı kendisi bekliyor.
+  - Kayıttan Siparişler hazır olana kadar geçen süre açık kolda ~3,3–3,9 sn. Bu, §6E'nin bayrak kapalı tek koşusundaki 3,84–4,80 sn ile aynı büyüklükte.
+  - Siparişler'i hızlandırmıyor, yavaşlattığı da gösterilmedi.
+  - **[Muhtemel]:** Kapalı kolda "yalnız Siparişler" senaryosu bu protokolde ölçülmedi.
+- **Kabul:** Pilotun hedefi olan ölçümler PASS:
+  - CP bekleme, karar hesabı, veri kümesi yüklemesi, CPU: 3/3 çiftte aynı yönde, büyük fark;
+  - veri eşitliği ve gölge fark 0.
+  - Siparişler bekleyişi kapsam dışı ve değişmedi.
+  - Bayrağı varsayılan açmak ayrı karar ister.
+
+### 6F.5 · Modüller arası geçersizleştirme: neden bir hücre 4 modül dosyası + 2 veri kümesi?
+
+**[Doğrulandı: source]**
+- `runRowRewriteBatch` önceki nesildeki **bütün modülleri** (cp, overview, orders, order-summary, collection-catalog) okuyup işçide açar. Yamayı `projectionPatchMatches` ile **sipariş/satır kimliğine** göre uygular.
+- Bir modülde eşleşen satır varsa o modülün **bütün dosyası** yeniden serileştirilip sıkıştırılır. Eşleşme yoksa eski baytlar taşınır (`changed=false`).
+- Ardından **yeni nesil** (`activeGeneration`) yazılır.
+- Okuma modeli veri kümesi anahtarı `activeGeneration:<modül checksum>`. Nesil değişince içeriği değişmeyen modülün veri kümesi bile yeniden yüklenir.
+
+| Ne | Gerçekten etkilenen | Gereksiz geçersizleşen |
+|---|---|---|
+| Projeksiyon dosyası | Düzenlenen satır: cp, orders, order-summary (§6A eşitlik ölçümü: bu üçü değişti) | Değişen modüllerin **diğer bütün satırlarının** yeniden serileştirilmesi; değişmeyen overview/collection-catalog'un yine açılıp ayrıştırılması |
+| CP veri kümesi | 1 satır | Bütün veri kümesinin yeniden çözülmesi (~1,0–1,2 sn) + bütün satırların özeti (~1,4–1,65 sn). **Pilotla eski kayıt yollarında kalktı** (yukarıda) |
+| Siparişler veri kümesi | 1 satır (Supp. FOB Siparişler'de görünür) | Bütün veri kümesinin yeniden çözülmesi (0,84–1,57 sn, bu ölçüm) ve yeniden yazımın beklenmesi |
+| Değişmeyen modülün veri kümesi | yok | Anahtarda `activeGeneration` olduğu için yeniden yükleme **[Muhtemel]**: Genel Bakış bu akışta açılmadı |
+
+**Mevcut mekanizmaların yeniden kullanılabilirliği (öneri; kod ayrı karar):**
+1. **Satır yaması günlüğü + sanal veri kümesi** (CP'de var, pilotla genişledi): Siparişler okuma modeline taşınması, 13 ms'lik sorgudan önceki 2–3 sn'lik yazım beklemesini ve ~1 sn yüklemeyi kaldırır. Ancak §6C'deki "ikinci uygulama döngüsü" itirazı burada da geçerli. Önce CP pilotunun sahada bayrakla doğrulanması gerekir. **[Hipotez: ölçülmedi]**
+2. **İçerik anahtarı:** Veri kümesi anahtarından `activeGeneration`'ı çıkarıp modül checksum'ı + kullanıcı/erişim anahtarıyla tutmak. Değişmeyen modülün yeniden yüklenmesini kaldırır. Risk: checksum'ın sıkıştırılmış baytların kimliği olduğunun ve erişim kapsamının anahtarda kaldığının kanıtlanması. **[Hipotez]**
+3. **live-events:** Diğer istemcilere `rowPatches` zaten gidiyor. Yazan sekme kendi olayını atlıyor (#1232). Sunucu tarafı yeniden üretimi azaltmaz.
+4. **Dosya düzeyi tam yeniden yazım:** Granülerlik sorunu B1/B2'nin konusu. BLOCKED kalır.
+
+### 6F.6 · Siparişler görünüm geçerliliği: bir veri değişikliği görünümü gerçekten geçersiz kılıyor mu?
+
+**Görünümün bağımlılıkları mevcut tanımlardan kısmen çıkarılabiliyor [Doğrulandı: source].** `ordersReadModelSpec` / `ordersRMQueryBody` şunları açıkça adlandırıyor:
+- filtre anahtarları (sütun filtreleri, boyut filtreleri, üst seçiciler, Active/Inactive, `status/del/season/exf` grupları, seçili satır filtresi `_id in`);
+- `sort.key`;
+- `search`. Arama, `columns` içindeki **bütün görünen sütunların** metninde yapılır; arama açıksa her görünen alan bağımlılıktır.
+- Facet isteği: `kpi:true` (pri/status/del/season/exf sayaçları), `sums:['Order Quantity']`, `footer` (`visibleCols` içindeki miktar sütunları + `cpOrdersAverageFooterCols` ortalamaları + seçim) ve `distinct`.
+
+**Kesin belirlenemeyen kısım [Doğrulandı: source].** Türetilmiş sütunların ham girdileri bildirimsel bir yerde yok, kodda gömülü:
+- `applyFormulas` (Ex→Retail, LT), lojistik segment, Priority ve fiyat kuralı;
+- `ORDERS_RM_CLIENT_DERIVED_KEYS` (`Priority`, `Supp. FOB`, `Licensor`, `Ex→Retail`, `LT`) ve `syncOrderLinePeersFromCpRow`'un `allowed`/`scheduleChanged` kümeleri zaten **elle tutulan alan listeleri**;
+- `derived-input-keys` alan düzeyinde değil; bütün kaynak, override ve gün özetini veriyor.
+
+Bu yüzden "bu değişiklik bu görünümü etkilemez" kararı, elle tutulan alan listesi olmadan güvenilir biçimde verilemez. Örnek: KPI `pri` sayacı her istekte var ve tarih/Del. Type'tan türeyen Priority'ye bağlı.
+
+**Paylaşılan nesne kimliğinin sınırları [Doğrulandı: source]:**
+- Pencere satırları ancak `ordersRMAdoptFullRows` sonrası `state.orders` nesneleridir. Koşulu: tam satırlar yüklü ve `_id` + `_matchOcode` + `Order Code` + `C.Code` tutuyor.
+- Hazırlıktan önce paylaşılan nesne yok.
+- `server-orders-deferred` geçersizleştirir ama **adopt etmez**.
+- `server-orders-hydrated` ve `orders-projection-loaded` yeni nesnelerle adopt eder.
+- Uzak cihaz yaması (`applyRemoteRowPatches` → `remoteRowLists`) `state.orders` satırlarını yerinde günceller. Sunucu veri kümesini, pencere üyeliğini, sıralamayı ve sayaçları güncellemez.
+- Okuma modeli açma/kapama ve epoch: `ordersRMInvalidate` her şeyi atar.
+- 400 → eski yol: pencere yok, eski tam tablo yolu.
+- Yerinde güncelleme yalnız değeri tazeler. **Üyelik, sıra, sayfalama, sayaç ve toplamlar** sunucunun eski veri kümesinden kalır.
+
+**Yanıt:**
+- Değer düzeyinde, adopt edilmiş satırlarda yerinde güncelleme doğru değeri ~1 sn'de gösteriyor (ana oturum bulgusu). Bu durumda yeniden sorgu yalnız şunlar için gerekli: üyelik/sıra (filtre, arama, sıralama), sayaçlar/toplamlar/facet'ler ve türetilmiş sütunlar.
+- Bunların hangisinin etkilendiğini alan listesi olmadan güvenilir bilmenin yolu yok. Tek içerik tabanlı alternatif, sorguyu yeni veride yeniden çalıştırıp karşılaştırmak, yani bugünkü yeniden sorgunun kendisi.
+
+**En küçük uygulanabilir çözüm (öneri; kod yok):**
+- Yeniden sorguyu **koru**.
+- Kullanıcı tarafını, ana oturumun güncellik göstergesiyle karşıla: eski değer uyarısız kalmasın.
+- Maliyet tarafında yeniden sorgunun kendisini değil, **önündeki beklemeyi** hedefle: yukarıdaki 1. ve 2. öneriler (sanal veri kümesi / içerik anahtarı).
+- Görünümün etkilenmediğini önceden tahmin eden bir kısa devre **önerilmez**.
+
 ## 7 · Ürün sahibinin vermesi gereken kararlar
 
 1. **Sütun filtresi anlamı (T5):** Koleksiyonda sayısal/aralık/revizyon filtresi yokluğu bilinçli mi? Genel Bakış boyut filtresinin `norm()` eşitliği istenen davranış mı?

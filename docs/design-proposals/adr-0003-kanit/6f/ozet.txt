@@ -1,0 +1,95 @@
+
+r1-off.json arm off errors 0 open 4271 final {"status":200,"count":24982,"digest":"52aa7fa77911","verified":{"miss":"no-chain"}}
+   cpWaitMs     [6225,6514,6547,8376,6904,6858,9010]
+   cpStatus     [503,200,503,200,503,200,503]
+   decisionMs   [null,2583,null,3073,null,2547,null]
+   sourceMs     [null,null,null,null,null,null,null]
+   loadMs       [null,922,null,1204,null,1213,null]
+   leaseMs      [null,2162,null,3284,null,2385,null]
+   ordersMs     [996,952,1023,1096,1238,1224,1162]
+   ordersLoadMs [873,892,965,1028,1170,1166,1102]
+   cpuMs        [12940,14890,14120,18040,16800,15650,22090]
+   status503    4
+   rowPatch     ["COMPUTE_ESTIMATE_EXCEEDED","{\"miss\":\"no-chain\"}","COMPUTE_ESTIMATE_EXCEEDED","{\"miss\":\"no-chain\"}","COMPUTE_ESTIMATE_EXCEEDED","{\"miss\":\"no-chain\"}","COMPUTE_ESTIMATE_EXCEEDED"]
+   digests      ["52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7"]
+
+r2-on.json arm on errors 0 open 4804 final {"status":200,"count":24982,"digest":"52aa7fa77911","verified":{"steps":0,"pending":0,"verified":true}}
+   cpWaitMs     [266,197,247,231,279,194,288]
+   cpStatus     [200,200,200,200,200,200,200]
+   decisionMs   [1,2,3,6,1,1,5]
+   sourceMs     [null,null,null,null,null,null,null]
+   loadMs       [0,0,0,0,0,0,0]
+   leaseMs      [0,0,0,0,0,0,0]
+   ordersMs     [3085,3388,3120,3101,3238,3635,5741]
+   ordersLoadMs [841,1088,930,826,1027,1181,1190]
+   cpuMs        [9720,9340,9820,8560,9340,9910,16480]
+   status503    0
+   rowPatch     ["{\"steps\":1,\"pending\":1,\"verified\":false}","{\"steps\":1,\"pending\":2,\"verified\":false}","{\"steps\":1,\"pending\":3,\"verified\":false}","{\"steps\":1,\"pending\":4,\"verified\":false}","{\"steps\":1,\"pending\":5,\"verified\":false}","{\"steps\":1,\"pending\":6,\"verified\":false}","{\"steps\":2,\"pending\":8,\"verified\":false}"]
+   digests      ["52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7"]
+
+r3-on.json arm on errors 0 open 4750 final {"status":200,"count":24982,"digest":"52aa7fa77911","verified":{"steps":0,"pending":0,"verified":true}}
+   cpWaitMs     [246,292,197,207,211,179,157]
+   cpStatus     [200,200,200,200,200,200,200]
+   decisionMs   [1,1,2,1,1,1,1]
+   sourceMs     [null,null,null,null,null,null,null]
+   loadMs       [0,0,0,0,0,0,0]
+   leaseMs      [0,0,0,0,0,0,0]
+   ordersMs     [3212,3177,3417,3248,3408,3127,5247]
+   ordersLoadMs [949,860,1168,1028,984,1032,885]
+   cpuMs        [9350,9210,9510,9650,9170,8780,14810]
+   status503    0
+   rowPatch     ["{\"steps\":1,\"pending\":1,\"verified\":false}","{\"steps\":1,\"pending\":2,\"verified\":false}","{\"steps\":1,\"pending\":3,\"verified\":false}","{\"steps\":1,\"pending\":4,\"verified\":false}","{\"steps\":1,\"pending\":5,\"verified\":false}","{\"steps\":1,\"pending\":6,\"verified\":false}","{\"steps\":2,\"pending\":8,\"verified\":false}"]
+   digests      ["52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7"]
+
+r4-off.json arm off errors 0 open 4855 final {"status":200,"count":24982,"digest":"52aa7fa77911","verified":{"miss":"current"}}
+   cpWaitMs     [6910,6986,6810,7582,7317,7049,7376]
+   cpStatus     [503,200,503,200,503,200,200]
+   decisionMs   [null,2887,null,3092,null,2953,2]
+   sourceMs     [null,null,null,null,null,null,1653]
+   loadMs       [null,1036,null,1222,null,1109,957]
+   leaseMs      [null,2264,null,2274,null,2242,4532]
+   ordersMs     [1109,1111,1035,1214,1329,1419,1194]
+   ordersLoadMs [1012,1050,966,1135,1265,1362,1139]
+   cpuMs        [13910,14440,15130,16340,17260,16500,20040]
+   status503    3
+   rowPatch     ["COMPUTE_ESTIMATE_EXCEEDED","{\"miss\":\"no-chain\"}","COMPUTE_ESTIMATE_EXCEEDED","{\"miss\":\"no-chain\"}","COMPUTE_ESTIMATE_EXCEEDED","{\"miss\":\"no-chain\"}","{\"miss\":\"no-chain\"}"]
+   digests      ["52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7"]
+
+r5-off.json arm off errors 0 open 4342 final {"status":200,"count":24982,"digest":"52aa7fa77911","verified":{"miss":"current"}}
+   cpWaitMs     [6719,6863,6665,7334,6932,7144,7881]
+   cpStatus     [503,200,503,200,503,200,200]
+   decisionMs   [null,2625,null,3245,null,2903,1]
+   sourceMs     [null,null,null,null,null,null,1416]
+   loadMs       [null,1081,null,1253,null,1329,1212]
+   leaseMs      [null,2370,null,1957,null,2156,5073]
+   ordersMs     [949,1299,1221,1254,1127,1134,967]
+   ordersLoadMs [838,1222,1153,1178,1062,1068,912]
+   cpuMs        [13570,14440,15260,16250,16280,16550,21770]
+   status503    3
+   rowPatch     ["COMPUTE_ESTIMATE_EXCEEDED","{\"miss\":\"no-chain\"}","COMPUTE_ESTIMATE_EXCEEDED","{\"miss\":\"no-chain\"}","COMPUTE_ESTIMATE_EXCEEDED","{\"miss\":\"no-chain\"}","{\"miss\":\"no-chain\"}"]
+   digests      ["52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7"]
+
+r6-on.json arm on errors 0 open 4402 final {"status":200,"count":24982,"digest":"52aa7fa77911","verified":{"steps":0,"pending":0,"verified":true}}
+   cpWaitMs     [299,296,285,294,227,181,164]
+   cpStatus     [200,200,200,200,200,200,200]
+   decisionMs   [2,9,2,1,1,1,1]
+   sourceMs     [null,null,null,null,null,null,null]
+   loadMs       [0,0,0,0,0,0,0]
+   leaseMs      [0,0,0,0,0,0,0]
+   ordersMs     [3709,3245,3497,3643,3319,3922,5905]
+   ordersLoadMs [1568,1017,1094,1208,1008,1244,1114]
+   cpuMs        [10360,9880,10140,10890,10060,11410,17320]
+   status503    0
+   rowPatch     ["{\"steps\":1,\"pending\":1,\"verified\":false}","{\"steps\":1,\"pending\":2,\"verified\":false}","{\"steps\":1,\"pending\":3,\"verified\":false}","{\"steps\":1,\"pending\":4,\"verified\":false}","{\"steps\":1,\"pending\":5,\"verified\":false}","{\"steps\":1,\"pending\":6,\"verified\":false}","{\"steps\":2,\"pending\":8,\"verified\":false}"]
+   digests      ["52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7","52aa7fa7"]
+
+Koşu medyanları ve çiftler
+cpWaitMs    off [6858,7049,6932] on [247,207,285] medOff 6932 medOn 247 pairΔ(on-off) [-6611,-6842,-6647]
+decisionMs  off [2583,2920,2764] on [2,1,1] medOff 2764 medOn 1 pairΔ(on-off) [-2581,-2919,-2763]
+loadMs      off [1204,1073,1233] on [0,0,0] medOff 1204 medOn 0 pairΔ(on-off) [-1204,-1072,-1232]
+leaseMs     off [2385,2269,2263] on [0,0,0] medOff 2269 medOn 0 pairΔ(on-off) [-2385,-2269,-2263]
+ordersMs    off [1096,1194,1134] on [3238,3248,3643] medOff 1134 medOn 3248 pairΔ(on-off) [2142,2054,2509]
+cpuMs       off [15650,16340,16250] on [9720,9350,10360] medOff 16250 medOn 9720 pairΔ(on-off) [-5930,-6990,-5890]
+
+adım başına farklı özet sayısı (1 = bütün koşular aynı): [1,1,1,1,1,1,1]
+son tam okuma özetleri: ["52aa7fa77911","52aa7fa77911","52aa7fa77911","52aa7fa77911","52aa7fa77911","52aa7fa77911"]
