@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-26",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Sunum Stüdyosu: grupları birleştirme, ayrılan kart için grup alanı, satır satır başlıklar, kartları sığdır/yay; Alanlar: sütunu sürükleyerek başka ana başlığa taşı; özel sütunlarla kopyala ve hassas sütunlar; Fiyat Masası: net onay görünümü ve Koleksiyon fiyat sütunları; Siparişler: açılışta gereksiz 15 sn bekleme kaldırıldı; Koleksiyon: OneDrive'da aynı anda kaydedilen düzenleme kaybolmaz; Siparişler: CP düzenlemesi aynı pencerede hemen görünür; Siparişler: güncellenen liste “Güncelleniyor…” ile işaretlenir; Lisans Kartları: DTR sözleşmesi royalty/komisyon/hologram boş kaydedilir",
-    "en": "Presentation Studio: merge groups, group areas for separated cards, line-by-line titles, fit/spread cards; Fields: drag a column under another heading; copy custom columns and sensitive columns; Pricing Desk: clear approval state and Collection price columns; Orders: unnecessary 15-second startup wait removed; Collection: edits saved at the same time over OneDrive are no longer lost; Orders: a CP edit shows up right away in the same window; Orders: a refreshing list is marked “Updating…”; License Cards: DTR contracts save with blank royalty/commission/hologram"
+    "tr": "Sunum Stüdyosu: grupları birleştirme, ayrılan kart için grup alanı, satır satır başlıklar, kartları sığdır/yay; Alanlar: sütunu sürükleyerek başka ana başlığa taşı; özel sütunlarla kopyala ve hassas sütunlar; Fiyat Masası: net onay görünümü ve Koleksiyon fiyat sütunları; Siparişler: açılışta gereksiz 15 sn bekleme kaldırıldı; Koleksiyon: OneDrive'da aynı anda kaydedilen düzenleme kaybolmaz; Siparişler: CP düzenlemesi aynı pencerede hemen görünür; Siparişler: güncellenen liste “Güncelleniyor…” ile işaretlenir; Kumaş kartı: boş özet parçasıyla kaydedilir; CP ve Siparişler: Artwork Detayı Koleksiyon'daki gibi kartlarla görünür; Lisans Kartları: DTR sözleşmesi royalty/komisyon/hologram boş kaydedilir",
+    "en": "Presentation Studio: merge groups, group areas for separated cards, line-by-line titles, fit/spread cards; Fields: drag a column under another heading; copy custom columns and sensitive columns; Pricing Desk: clear approval state and Collection price columns; Orders: unnecessary 15-second startup wait removed; Collection: edits saved at the same time over OneDrive are no longer lost; Orders: a CP edit shows up right away in the same window; Orders: a refreshing list is marked “Updating…”; Fabric card: saves with an empty summary segment; CP and Orders: Artwork Detail shows cards like Collection; License Cards: DTR contracts save with blank royalty/commission/hologram"
   },
   "summary": {
-    "tr": "Sunum Stüdyosu’nda bir kartı başka bir kartın ya da grubun üzerine bırakmak iki grubu birleştirir; grubundan ayrılan kartlar kendi grup alanına alınıp boyutlandırılabilir. Grup başlığında her gruplama seviyesi ve takım parçası ayrı satırda; başlık yazı boyutu kart yazısından ayrı ayarlanır. Grup alanı boyutlandırılınca kartlar alanı orantılı doldurur; görsellerin arkasındaki gri zemin kaldırıldı. Gruba tıklayınca kenar tutamakları açılır; taşan grubu büyütmek kartları genel ölçüde tutup alana katar (Kartları yay), taşınan grup öteki grupların biçimini bozmaz ve her şey sayfa kenar boşluğunun içinde kalır. Alanları düzenle ekranında CP, Siparişler ve Koleksiyon sütunları sürükle-bırakla başka bir ana başlığa taşınır; tablodaki başlık bandı da hemen değişir. Seçim kişiseldir ve Alanları sıfırla ile geri alınır. CP, Siparişler ve Koleksiyon'da satırlar seçtiğiniz sütunlarla ve sırayla kopyalanır; hassas işaretli sütunlar (varsayılan: Retail tarihi, Ex→Retail, MB tarihi/hafta/ay; Koleksiyon'da fiyat analizi, Endeksmatik, avantaj, onaylı fiyat ve üretici) seçim çubuğundaki “Hassaslar gizli” ile kopyadan çıkarılır. Ctrl+C ve normal Kopyala değişmez. Fiyat Masası’nda onaylı fiyat hücresi her zaman yeşil ve ONAYLI etiketiyle görünür; Hedef, Teklif & Onay ve kompakt PS / LFL / SE sütunları Koleksiyon verisiyle gelir, sütunlar sıralanır, genişletilir ve gizlenir, Yalnız onaysız filtresi eklendi, toplu onay kaldırıldı ve tablo üstündeki alan küçüldü. Koleksiyona aktarımda Supp. FOB boşsa FOB ve Manufacturer alınır. Buyer Log Siparişler ekranıyla açıldığında satırlar görünür görünmez açılış tamamlanır; gereksiz 15 saniyelik bekleme kaldırıldı. Aynı Koleksiyon sayfası iki bilgisayarda aynı anda kaydedildiğinde OneDrive'ın ayırdığı düzenleme artık kaybolmaz; diğer bilgisayarın değişiklikleriyle birleştirilir. CP'de bir satır düzenlendikten sonra Siparişler, kayıt sunucuda onaylanınca ve ekip arkadaşının satır değişikliğinden sonra güncel değeri yeniden okur; yeni arama ya da yenileme gerekmez. Siparişler listesi yeniden okunurken araç çubuğunda “Güncelleniyor…” görünür; tablo, filtreler ve seçim yerinde kalır. Güncelleme başarısız olursa eski değerlerin güncel olmayabileceği bildirilir ve Tekrar dene sunulur. Açılış hazırlığı Siparişler tablosunu artık gizlemez. Lisans Kartları'nda DTR lisansörlü sözleşme royalty, TR/YD komisyon ve hologram boş bırakılarak kaydedilir; boş alan “yok” anlamına gelir, 0 yazılmaz.",
-    "en": "In Presentation Studio, dropping a card onto another card or group merges the two groups; cards separated from their group can get their own resizable group area. Group titles show each grouping level and set part on its own line, and the title text size is set separately from the card text. Resizing a group area scales its cards to fill it, and the grey background behind images was removed. Clicking a group shows its resize handles; enlarging an overflowing group keeps the general card size and pulls more cards in (Spread cards), moving a group no longer reshapes other groups, and everything stays inside the page margins. In Edit fields, CP, Orders and Collection columns can be dragged under another heading; the heading band in the table updates right away. The choice is personal and Reset fields undoes it. In CP, Orders and Collection, rows can be copied with the columns you choose, in your order; columns marked sensitive (by default Retail date, Ex→Retail, MB date/week/month; in Collection also price analysis, Endeksmatik, advantage, approved price and manufacturer) are left out with “Hide sensitive” in the selection bar. Ctrl+C and normal Copy are unchanged. In Pricing Desk an approved price cell is always green with an APPROVED label; Target, Quotes & Approval and compact PS / LFL / SI columns come from Collection data, columns can be sorted, resized and hidden, an Unapproved only filter was added, bulk approval was removed and the area above the table is smaller. Import to Collection uses FOB and Manufacturer when Supp. FOB is blank. When Buyer Log opens on the Orders screen, startup finishes as soon as the rows are visible; the unnecessary 15-second wait was removed. When the same Collection page is saved on two computers at the same time, the edit OneDrive set aside is no longer lost; it is merged with the other computer's changes. After a row is edited in CP, Orders reads the current value again once the save is confirmed by the server and after a teammate's row change; no new search or reload is needed. While the Orders list is read again, “Updating…” appears in the toolbar; the table, filters and selection stay in place. If the update fails, you are told the values may be out of date and can retry. Startup preparation no longer hides the Orders table. In License Cards a DTR contract saves with royalty, TR/international commission and hologram left blank; blank means none and is not stored as 0."
+    "tr": "Sunum Stüdyosu’nda bir kartı başka bir kartın ya da grubun üzerine bırakmak iki grubu birleştirir; grubundan ayrılan kartlar kendi grup alanına alınıp boyutlandırılabilir. Grup başlığında her gruplama seviyesi ve takım parçası ayrı satırda; başlık yazı boyutu kart yazısından ayrı ayarlanır. Grup alanı boyutlandırılınca kartlar alanı orantılı doldurur; görsellerin arkasındaki gri zemin kaldırıldı. Gruba tıklayınca kenar tutamakları açılır; taşan grubu büyütmek kartları genel ölçüde tutup alana katar (Kartları yay), taşınan grup öteki grupların biçimini bozmaz ve her şey sayfa kenar boşluğunun içinde kalır. Alanları düzenle ekranında CP, Siparişler ve Koleksiyon sütunları sürükle-bırakla başka bir ana başlığa taşınır; tablodaki başlık bandı da hemen değişir. Seçim kişiseldir ve Alanları sıfırla ile geri alınır. CP, Siparişler ve Koleksiyon'da satırlar seçtiğiniz sütunlarla ve sırayla kopyalanır; hassas işaretli sütunlar (varsayılan: Retail tarihi, Ex→Retail, MB tarihi/hafta/ay; Koleksiyon'da fiyat analizi, Endeksmatik, avantaj, onaylı fiyat ve üretici) seçim çubuğundaki “Hassaslar gizli” ile kopyadan çıkarılır. Ctrl+C ve normal Kopyala değişmez. Fiyat Masası’nda onaylı fiyat hücresi her zaman yeşil ve ONAYLI etiketiyle görünür; Hedef, Teklif & Onay ve kompakt PS / LFL / SE sütunları Koleksiyon verisiyle gelir, sütunlar sıralanır, genişletilir ve gizlenir, Yalnız onaysız filtresi eklendi, toplu onay kaldırıldı ve tablo üstündeki alan küçüldü. Koleksiyona aktarımda Supp. FOB boşsa FOB ve Manufacturer alınır. Buyer Log Siparişler ekranıyla açıldığında satırlar görünür görünmez açılış tamamlanır; gereksiz 15 saniyelik bekleme kaldırıldı. Aynı Koleksiyon sayfası iki bilgisayarda aynı anda kaydedildiğinde OneDrive'ın ayırdığı düzenleme artık kaybolmaz; diğer bilgisayarın değişiklikleriyle birleştirilir. CP'de bir satır düzenlendikten sonra Siparişler, kayıt sunucuda onaylanınca ve ekip arkadaşının satır değişikliğinden sonra güncel değeri yeniden okur; yeni arama ya da yenileme gerekmez. Siparişler listesi yeniden okunurken araç çubuğunda “Güncelleniyor…” görünür; tablo, filtreler ve seçim yerinde kalır. Güncelleme başarısız olursa eski değerlerin güncel olmayabileceği bildirilir ve Tekrar dene sunulur. Açılış hazırlığı Siparişler tablosunu artık gizlemez. Kumaş kartında gramaj gibi bir özet parçası TR ve EN’de boş bırakıldığında kart artık kaydedilir; tabloda boş parça gösterilmez. CP ve Siparişler'de Artwork Detayı sütunu artık düz metin yerine Koleksiyon'daki bölge kartlarıyla (bölge · adet · teknik · toplam) görünür. Lisans Kartları'nda DTR lisansörlü sözleşme royalty, TR/YD komisyon ve hologram boş bırakılarak kaydedilir; boş alan “yok” anlamına gelir, 0 yazılmaz.",
+    "en": "In Presentation Studio, dropping a card onto another card or group merges the two groups; cards separated from their group can get their own resizable group area. Group titles show each grouping level and set part on its own line, and the title text size is set separately from the card text. Resizing a group area scales its cards to fill it, and the grey background behind images was removed. Clicking a group shows its resize handles; enlarging an overflowing group keeps the general card size and pulls more cards in (Spread cards), moving a group no longer reshapes other groups, and everything stays inside the page margins. In Edit fields, CP, Orders and Collection columns can be dragged under another heading; the heading band in the table updates right away. The choice is personal and Reset fields undoes it. In CP, Orders and Collection, rows can be copied with the columns you choose, in your order; columns marked sensitive (by default Retail date, Ex→Retail, MB date/week/month; in Collection also price analysis, Endeksmatik, advantage, approved price and manufacturer) are left out with “Hide sensitive” in the selection bar. Ctrl+C and normal Copy are unchanged. In Pricing Desk an approved price cell is always green with an APPROVED label; Target, Quotes & Approval and compact PS / LFL / SI columns come from Collection data, columns can be sorted, resized and hidden, an Unapproved only filter was added, bulk approval was removed and the area above the table is smaller. Import to Collection uses FOB and Manufacturer when Supp. FOB is blank. When Buyer Log opens on the Orders screen, startup finishes as soon as the rows are visible; the unnecessary 15-second wait was removed. When the same Collection page is saved on two computers at the same time, the edit OneDrive set aside is no longer lost; it is merged with the other computer's changes. After a row is edited in CP, Orders reads the current value again once the save is confirmed by the server and after a teammate's row change; no new search or reload is needed. While the Orders list is read again, “Updating…” appears in the toolbar; the table, filters and selection stay in place. If the update fails, you are told the values may be out of date and can retry. Startup preparation no longer hides the Orders table. A fabric card now saves when a summary segment such as weight is left empty in both TR and EN; the table skips the empty segment. In CP and Orders, the Artwork Detail column now shows the same region cards as Collection (region · count · technique · total) instead of plain text. In License Cards a DTR contract saves with royalty, TR/international commission and hologram left blank; blank means none and is not stored as 0."
   },
   "changes": [
     {
@@ -309,6 +309,87 @@
         "caption": {
           "tr": "CP değişikliğinden sonra liste yenilenirken tablo görünür kalır.",
           "en": "The table stays visible while the list refreshes after a CP change."
+        }
+      }
+    },
+    {
+      "id": "fabric-card-empty-segment-save",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · CP · Siparişler",
+        "en": "Collection · CP · Orders"
+      },
+      "title": {
+        "tr": "Kumaş kartı: boş özet parçasıyla kaydetme",
+        "en": "Fabric card: save with an empty summary segment"
+      },
+      "body": {
+        "tr": "Kumaş kartında Tür, İplik, Gramaj veya İçerik parçalarından biri hem TR hem EN’de boş bırakıldığında Kaydet artık “ayraç, iplik, gramaj…” uyarısıyla engellenmez; kart kaydedilir ve boş parça kartı yeniden açtığınızda boş kalır. Kaynak dilde bir parçayı silmek otomatik çevirisini de temizler. Dolu gramaj yine sayısal olmalı; bir parça yalnız tek dilde doluysa ya da dört parça da boşsa kayıt açık bir mesajla durdurulur.",
+        "en": "When one of the Type, Yarn, Weight or Composition segments of a fabric card is left empty in both TR and EN, Save is no longer blocked by the “Check separators, yarn, weight…” message; the card is saved and the segment stays empty when you reopen it. Clearing a segment in the source language also clears its automatic translation. A filled weight must still be numeric; saving stops with a clear message when a segment is filled in only one language or all four are empty."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "fabric-card-empty-segment.png",
+        "alt": {
+          "tr": "Demo kumaş kodu 900201 için kumaş kartı: Gramaj TR ve EN’de boş, diğer parçalar dolu ve doğrulama uyarısı yok",
+          "en": "Fabric card for demo fabric code 900201: Weight empty in TR and EN, other segments filled and no validation message"
+        },
+        "caption": {
+          "tr": "Gramajı boş kart doğrulama uyarısı olmadan kaydedilebilir.",
+          "en": "A card with an empty weight can be saved without a validation message."
+        }
+      }
+    },
+    {
+      "id": "cp-orders-artwork-cards",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Siparişler",
+        "en": "CP · Orders"
+      },
+      "title": {
+        "tr": "CP ve Siparişler: Artwork Detayı kartlarla görünür",
+        "en": "CP and Orders: Artwork Detail shown as cards"
+      },
+      "body": {
+        "tr": "CP ve Siparişler'deki Artwork Detayı sütunu, Koleksiyon'daki gibi bölge kartlarını gösterir: her baskı bölgesi adediyle, teknik renkli etiketle ve toplam sağda; takım modellerinde A/B parçaları ayrı satırda. Hücrenin değeri değişmez; filtre, sıralama, kopyalama ve Excel aynı PLM özet metnini kullanmaya devam eder. Özet biçimine uymayan eski metinler düz metin olarak kalır. Sunum Stüdyosu'nda CP/Siparişler kartları da Artwork için çip görünümünü kullanır.",
+        "en": "The Artwork Detail column in CP and Orders shows the same region cards as Collection: each print region with its count, the technique as a coloured tag and the total on the right; set models list A/B parts on separate lines. The cell value does not change; filters, sorting, copy and Excel keep using the same PLM summary text. Older text that does not match the summary format stays as plain text. Presentation Studio also uses the chip view for Artwork on CP/Orders cards."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-orders-artwork-cards.png",
+        "alt": {
+          "tr": "Demo veriyle CP: Artwork Detayı sütununda Ön/Arka/Sol Kol bölge kartları, Pigment/Transfer/Plastisol etiketleri, Baskı yok ve A/B takım parçaları",
+          "en": "CP with demo data: Front/Back/Left Sleeve region cards in the Artwork Detail column, Pigment/Transfer/Plastisol tags, No print and A/B set parts"
+        },
+        "caption": {
+          "tr": "CP'de Artwork Detayı artık Koleksiyon'daki kartlarla görünür.",
+          "en": "Artwork Detail in CP now uses the same cards as Collection."
+        }
+      }
+    },
+    {
+      "id": "cp-logistic-deltype-edit-kept",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Siparişler",
+        "en": "CP · Orders"
+      },
+      "title": {
+        "tr": "CP: Del. Type ve Ex-factory düzenlemesi sunucu görünümünde geri dönmez",
+        "en": "CP: Del. Type and Ex-factory edits no longer revert in the server view"
+      },
+      "body": {
+        "tr": "Bir satırda Del. Type ya da Ex-factory değiştirildiğinde kayıt doğru tutuluyordu, ancak CP ve Siparişler listeleri ile öncelik hesabı bir sonraki tam yenilemeye kadar eski Del. Type ve tahmini antrepo tarihini kullanabiliyordu. Bu iki alan artık her kayıttan sonra lojistik bilgisiyle birlikte yeniden hesaplanır; yüklenmiş parsiyellerin kaynak değerleri değişmez. Bu iki alandaki kayıt sonrası güncelleme birkaç saniye daha uzun sürebilir.",
+        "en": "When Del. Type or Ex-factory was changed on a row, the save itself was correct, but the CP and Orders lists and the priority calculation could keep using the old Del. Type and estimated warehouse date until the next full refresh. These two fields are now recalculated together with the logistics data after every save; source values of loaded partial shipments do not change. The update after saving these two fields may take a few seconds longer."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekran düzeni değişmedi; yalnız kayıttan sonra gösterilen değer artık doğru.",
+          "en": "The screen layout is unchanged; only the value shown after saving is now correct."
         }
       }
     },

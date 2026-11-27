@@ -8,6 +8,10 @@
   'use strict';
   const FIELDS=Object.freeze(['type','yarn','weight','composition']);
   const SEPARATOR=' · ',BAD=/[·•|;\r\n]/;
+  // A segment may be blank in both languages (e.g. unknown weight). The stored
+  // summarySegments keep '' ; the composed summary keeps its 4 slots with this
+  // marker so tables can still split it, and parse() turns it back into ''.
+  const EMPTY_PIECE='—';
   const TERMS=Object.freeze([
     ['Üç İplik Şardonlu','Brushed Three Thread',['3 iplik şardonlu','brushed 3 thread']],
     ['Üç İplik Şardonsuz','Unbrushed Three Thread',['3 iplik şardonsuz','unbrushed 3 thread']],
@@ -30,8 +34,15 @@
   function numbers(value){return (clean(value).match(/\d+(?:[.,]\d+)?/g)||[]).map(v=>v.replace(',','.'));}
   function numbersMatch(a,b){const x=numbers(a),y=numbers(b);return x.length===y.length&&x.every((v,i)=>v===y[i]);}
   function validPiece(value){const x=clean(value);return !!x&&x.length<=500&&!BAD.test(x);}
-  function parse(summary){const pieces=String(summary||'').split(SEPARATOR);return pieces.length===4&&pieces.every(validPiece)?pieces.map(clean):null;}
-  function compose(parts){return Array.isArray(parts)&&parts.length===4&&parts.every(validPiece)?parts.map(clean).join(SEPARATOR):'';}
+  function slotPiece(value){return !clean(value)||validPiece(value);}
+  function parse(summary){
+    const pieces=String(summary||'').split(SEPARATOR).map(x=>clean(x)===EMPTY_PIECE?'':x);
+    return pieces.length===4&&pieces.every(slotPiece)&&pieces.some(x=>clean(x))?pieces.map(clean):null;
+  }
+  function compose(parts){
+    return Array.isArray(parts)&&parts.length===4&&parts.every(slotPiece)&&parts.some(x=>clean(x))
+      ?parts.map(x=>clean(x)||EMPTY_PIECE).join(SEPARATOR):'';
+  }
   function weight(text){const m=clean(text).match(/^(\d+(?:[.,]\d+)?)\s*(?:gsm|gr|g|g\/m2|g\/m²)?$/i);return m?m[1].replace(',','.')+' gsm':null;}
   function translateKnown(value,field,from){
     const text=clean(value);
@@ -64,10 +75,13 @@
     return changed&&!leftover&&numbersMatch(text,rest)?{status:'known',value:rest}:{status:'needs-ai',value:''};
   }
   function validatePair(tr,en){
-    if(!Array.isArray(tr)||!Array.isArray(en)||tr.length!==4||en.length!==4||!tr.every(validPiece)||!en.every(validPiece))
+    if(!Array.isArray(tr)||!Array.isArray(en)||tr.length!==4||en.length!==4||!tr.every(slotPiece)||!en.every(slotPiece))
       return {ok:false,code:'FABRIC_SEGMENTS_INVALID'};
+    if(tr.some((x,i)=>!clean(x)!==!clean(en[i])))return {ok:false,code:'FABRIC_SEGMENTS_INCOMPLETE'};
+    if(!tr.some(x=>clean(x)))return {ok:false,code:'FABRIC_SEGMENTS_EMPTY'};
     const yarnTechnical=x=>clean(x).replace(/[^\d\/.,]/g,'').replace(/,/g,'.');
-    if(yarnTechnical(tr[1])!==yarnTechnical(en[1])||weight(tr[2])===null||weight(tr[2])!==weight(en[2]))
+    const weightOk=!clean(tr[2])||(weight(tr[2])!==null&&weight(tr[2])===weight(en[2]));
+    if(yarnTechnical(tr[1])!==yarnTechnical(en[1])||!weightOk)
       return {ok:false,code:'FABRIC_TECHNICAL_MISMATCH'};
     if(![1,2,3].every(i=>numbersMatch(tr[i],en[i])))
       return {ok:false,code:'FABRIC_NUMBERS_MISMATCH'};
@@ -80,5 +94,5 @@
     if(tr&&en&&validatePair(tr,en).ok)return {tr,en,legacy:false};
     return {tr:tr||['','','',''],en:en||['','','',''],legacy:Boolean(card&&card.summary)};
   }
-  return Object.freeze({FIELDS,SEPARATOR,TERMS,clean,parse,compose,validPiece,weight,numbers,numbersMatch,translateKnown,validatePair,fromCard});
+  return Object.freeze({FIELDS,SEPARATOR,EMPTY_PIECE,TERMS,clean,parse,compose,validPiece,weight,numbers,numbersMatch,translateKnown,validatePair,fromCard});
 });
