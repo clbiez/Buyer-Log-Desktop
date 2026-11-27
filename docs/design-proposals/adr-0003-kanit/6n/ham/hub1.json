@@ -1,0 +1,157 @@
+{
+ "trials": [
+  {
+   "code": 4100012,
+   "val": 200.53,
+   "saveAck": 36,
+   "saveStatus": 200,
+   "publishMs": 101,
+   "publishStatus": 200,
+   "publishErr": null,
+   "hubChanges": [
+    "c375ffe5-73ed-4be1-9e3e-0f4b70be680e:2"
+   ],
+   "applyMs": 238,
+   "applyStatus": 200,
+   "applyErr": null,
+   "bEvents": [
+    {
+     "ms": 1271,
+     "blk": "data: {\"area\":\"sync\",\"mode\":\"status\",\"at\":\"2026-11-27T12:29:03.791Z\",\"status\":{\"sharedSyncRoot\":\"/tmp/buyerlog-hub-FGxIvH\",\"syncPeriodMinutes\":5,\"localDbPath\":\"/tmp/buyerlog-startup-o3-oC1CNv/local/Bu"
+    },
+    {
+     "ms": 1321,
+     "blk": "data: {\"area\":\"sync\",\"mode\":\"status\",\"at\":\"2026-11-27T12:29:03.841Z\",\"status\":{\"sharedSyncRoot\":\"/tmp/buyerlog-hub-FGxIvH\",\"syncPeriodMinutes\":5,\"localDbPath\":\"/tmp/buyerlog-startup-o3-oC1CNv/local/Bu"
+    },
+    {
+     "ms": 1342,
+     "blk": "data: {\"area\":\"sync\",\"mode\":\"status\",\"at\":\"2026-11-27T12:29:03.862Z\",\"status\":{\"sharedSyncRoot\":\"/tmp/buyerlog-hub-FGxIvH\",\"syncPeriodMinutes\":5,\"localDbPath\":\"/tmp/buyerlog-startup-o3-oC1CNv/local/Bu"
+    },
+    {
+     "ms": 1354,
+     "blk": "data: {\"area\":\"sync\",\"mode\":\"status\",\"at\":\"2026-11-27T12:29:03.873Z\",\"status\":{\"sharedSyncRoot\":\"/tmp/buyerlog-hub-FGxIvH\",\"syncPeriodMinutes\":5,\"localDbPath\":\"/tmp/buyerlog-startup-o3-oC1CNv/local/Bu"
+    },
+    {
+     "ms": 1367,
+     "blk": "data: {\"area\":\"sync\",\"mode\":\"status\",\"at\":\"2026-11-27T12:29:03.887Z\",\"status\":{\"sharedSyncRoot\":\"/tmp/buyerlog-hub-FGxIvH\",\"syncPeriodMinutes\":5,\"localDbPath\":\"/tmp/buyerlog-startup-o3-oC1CNv/local/Bu"
+    },
+    {
+     "ms": 1656,
+     "blk": "data: {\"area\":\"orders\",\"ownerId\":null,\"at\":\"2026-11-27T12:29:04.176Z\",\"originClientId\":null,\"mode\":\"reload\"}"
+    }
+   ],
+   "totalFromT0": null
+  },
+  {
+   "code": 4100020,
+   "val": 201.97,
+   "saveAck": 36,
+   "saveStatus": 200,
+   "publishMs": 69,
+   "publishStatus": 200,
+   "publishErr": null,
+   "hubChanges": [
+    "725151d7-973e-4f21-94da-b54c613890d3:1",
+    "c375ffe5-73ed-4be1-9e3e-0f4b70be680e:2"
+   ],
+   "applyMs": 68,
+   "applyStatus": 200,
+   "applyErr": null,
+   "bEvents": [
+    {
+     "ms": 1138,
+     "blk": "data: {\"area\":\"sync\",\"mode\":\"status\",\"at\":\"2026-11-27T12:30:08.164Z\",\"status\":{\"sharedSyncRoot\":\"/tmp/buyerlog-hub-FGxIvH\",\"syncPeriodMinutes\":5,\"localDbPath\":\"/tmp/buyerlog-startup-o3-oC1CNv/local/Bu"
+    },
+    {
+     "ms": 1140,
+     "blk": "data: {\"area\":\"sync\",\"mode\":\"status\",\"at\":\"2026-11-27T12:30:08.166Z\",\"status\":{\"sharedSyncRoot\":\"/tmp/buyerlog-hub-FGxIvH\",\"syncPeriodMinutes\":5,\"localDbPath\":\"/tmp/buyerlog-startup-o3-oC1CNv/local/Bu"
+    },
+    {
+     "ms": 1149,
+     "blk": "data: {\"area\":\"sync\",\"mode\":\"status\",\"at\":\"2026-11-27T12:30:08.175Z\",\"status\":{\"sharedSyncRoot\":\"/tmp/buyerlog-hub-FGxIvH\",\"syncPeriodMinutes\":5,\"localDbPath\":\"/tmp/buyerlog-startup-o3-oC1CNv/local/Bu"
+    },
+    {
+     "ms": 1157,
+     "blk": "data: {\"area\":\"sync\",\"mode\":\"status\",\"at\":\"2026-11-27T12:30:08.183Z\",\"status\":{\"sharedSyncRoot\":\"/tmp/buyerlog-hub-FGxIvH\",\"syncPeriodMinutes\":5,\"localDbPath\":\"/tmp/buyerlog-startup-o3-oC1CNv/local/Bu"
+    },
+    {
+     "ms": 1164,
+     "blk": "data: {\"area\":\"sync\",\"mode\":\"status\",\"at\":\"2026-11-27T12:30:08.190Z\",\"status\":{\"sharedSyncRoot\":\"/tmp/buyerlog-hub-FGxIvH\",\"syncPeriodMinutes\":5,\"localDbPath\":\"/tmp/buyerlog-startup-o3-oC1CNv/local/Bu"
+    },
+    {
+     "ms": 1463,
+     "blk": "data: {\"area\":\"orders\",\"ownerId\":null,\"at\":\"2026-11-27T12:30:08.485Z\",\"originClientId\":null,\"mode\":\"reload\"}"
+    }
+   ],
+   "totalFromT0": null
+  },
+  {
+   "code": 4100027,
+   "val": 202.13,
+   "saveAck": 23,
+   "saveStatus": 200,
+   "publishMs": 87,
+   "publishStatus": 200,
+   "publishErr": null,
+   "hubChanges": [
+    "725151d7-973e-4f21-94da-b54c613890d3:1",
+    "c375ffe5-73ed-4be1-9e3e-0f4b70be680e:2"
+   ],
+   "applyMs": 53,
+   "applyStatus": 200,
+   "applyErr": null,
+   "bEvents": [
+    {
+     "ms": 1132,
+     "blk": "data: {\"area\":\"sync\",\"mode\":\"status\",\"at\":\"2026-11-27T12:31:12.493Z\",\"status\":{\"sharedSyncRoot\":\"/tmp/buyerlog-hub-FGxIvH\",\"syncPeriodMinutes\":5,\"localDbPath\":\"/tmp/buyerlog-startup-o3-oC1CNv/local/Bu"
+    },
+    {
+     "ms": 1132,
+     "blk": "data: {\"area\":\"sync\",\"mode\":\"status\",\"at\":\"2026-11-27T12:31:12.494Z\",\"status\":{\"sharedSyncRoot\":\"/tmp/buyerlog-hub-FGxIvH\",\"syncPeriodMinutes\":5,\"localDbPath\":\"/tmp/buyerlog-startup-o3-oC1CNv/local/Bu"
+    },
+    {
+     "ms": 1138,
+     "blk": "data: {\"area\":\"sync\",\"mode\":\"status\",\"at\":\"2026-11-27T12:31:12.500Z\",\"status\":{\"sharedSyncRoot\":\"/tmp/buyerlog-hub-FGxIvH\",\"syncPeriodMinutes\":5,\"localDbPath\":\"/tmp/buyerlog-startup-o3-oC1CNv/local/Bu"
+    },
+    {
+     "ms": 1150,
+     "blk": "data: {\"area\":\"sync\",\"mode\":\"status\",\"at\":\"2026-11-27T12:31:12.512Z\",\"status\":{\"sharedSyncRoot\":\"/tmp/buyerlog-hub-FGxIvH\",\"syncPeriodMinutes\":5,\"localDbPath\":\"/tmp/buyerlog-startup-o3-oC1CNv/local/Bu"
+    },
+    {
+     "ms": 1154,
+     "blk": "data: {\"area\":\"sync\",\"mode\":\"status\",\"at\":\"2026-11-27T12:31:12.516Z\",\"status\":{\"sharedSyncRoot\":\"/tmp/buyerlog-hub-FGxIvH\",\"syncPeriodMinutes\":5,\"localDbPath\":\"/tmp/buyerlog-startup-o3-oC1CNv/local/Bu"
+    },
+    {
+     "ms": 1451,
+     "blk": "data: {\"area\":\"orders\",\"ownerId\":null,\"at\":\"2026-11-27T12:31:12.813Z\",\"originClientId\":null,\"mode\":\"reload\"}"
+    }
+   ],
+   "totalFromT0": null
+  }
+ ],
+ "errors": [],
+ "setup": {
+  "initialize": {
+   "ms": 1386,
+   "status": 200,
+   "err": null
+  },
+  "configure": {
+   "status": 202,
+   "err": null
+  },
+  "lastStatus": {
+   "status": "error",
+   "phase": "error",
+   "message": "Kullanıcı verileri Shared Hub’dan alınamadı. · Yerel hesapla giriş yapılabilir; eşitleme daha sonra devam eder."
+  },
+  "bootstrapMs": 1023,
+  "bLogin": "ok",
+  "queries": {
+   "a": 200,
+   "b": 200,
+   "bErr": null
+  },
+  "sse": 200
+ }
+}

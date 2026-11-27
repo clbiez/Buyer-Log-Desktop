@@ -1,0 +1,519 @@
+{
+ "cats": {
+  "parsiyel(Üretimde) + üretim": [
+   {
+    "key": "4100000/E03",
+    "segments": [
+     {
+      "kind": "partial",
+      "status": "Üretimde",
+      "delType": "GEMI",
+      "arrival": "2026-12-06",
+      "handover": null,
+      "qty": 0
+     },
+     {
+      "kind": "production",
+      "status": "Üretimde",
+      "delType": "Gemi",
+      "arrival": "2026-12-18",
+      "handover": null,
+      "qty": 4600
+     }
+    ],
+    "cpReadModel_partials0": {
+     "STATUS": "Üretimde",
+     "Del. Type": "Gemi",
+     "Ant. Arrival": "2026-12-06",
+     "HANDOVER": null,
+     "Priority": "ON_TRACK"
+    },
+    "raw_parseJs": {
+     "STATUS": "Üretimde",
+     "Del. Type": "GEMI",
+     "Ant. Arrival": "2026-12-06",
+     "HANDOVER": null,
+     "Priority": "ON_TRACK"
+    }
+   },
+   {
+    "key": "4100014/H04",
+    "segments": [
+     {
+      "kind": "partial",
+      "status": "Üretimde",
+      "delType": "TIR",
+      "arrival": "2026-12-03",
+      "handover": null,
+      "qty": 0
+     },
+     {
+      "kind": "production",
+      "status": "Üretimde",
+      "delType": "Gemi",
+      "arrival": "2026-12-30",
+      "handover": null,
+      "qty": 2400
+     }
+    ],
+    "cpReadModel_partials0": {
+     "STATUS": "Üretimde",
+     "Del. Type": "TIR",
+     "Ant. Arrival": "2026-12-03",
+     "HANDOVER": null,
+     "Priority": "ON_TRACK"
+    },
+    "raw_parseJs": {
+     "STATUS": "Üretimde",
+     "Del. Type": "TIR",
+     "Ant. Arrival": "2026-12-03",
+     "HANDOVER": null,
+     "Priority": "ON_TRACK"
+    }
+   }
+  ],
+  "yalnız üretim": [
+   {
+    "key": "4100002/E03",
+    "segments": [
+     {
+      "kind": "production",
+      "status": "Üretimde",
+      "delType": "Gemi",
+      "arrival": "2027-03-04",
+      "handover": null,
+      "qty": 5100
+     }
+    ],
+    "cpReadModel_partials0": {
+     "STATUS": "Üretimde",
+     "Del. Type": "Gemi",
+     "Ant. Arrival": "2027-03-04",
+     "HANDOVER": null,
+     "Priority": "ON_TRACK"
+    },
+    "raw_parseJs": {
+     "STATUS": "Üretimde",
+     "Del. Type": "Gemi",
+     "Ant. Arrival": "2027-03-04",
+     "HANDOVER": null,
+     "Priority": "ON_TRACK"
+    }
+   },
+   {
+    "key": "4100003/B07",
+    "segments": [
+     {
+      "kind": "production",
+      "status": "Üretimde",
+      "delType": "Gemi",
+      "arrival": "2027-04-16",
+      "handover": null,
+      "qty": 3600
+     }
+    ],
+    "cpReadModel_partials0": {
+     "STATUS": "Üretimde",
+     "Del. Type": "Gemi",
+     "Ant. Arrival": "2027-04-16",
+     "HANDOVER": null,
+     "Priority": "ON_TRACK"
+    },
+    "raw_parseJs": {
+     "STATUS": "Üretimde",
+     "Del. Type": "Gemi",
+     "Ant. Arrival": "2027-04-16",
+     "HANDOVER": null,
+     "Priority": "ON_TRACK"
+    }
+   }
+  ],
+  "depoda + üretim": [
+   {
+    "key": "4100023/L02",
+    "segments": [
+     {
+      "kind": "production",
+      "status": "Üretimde",
+      "delType": "Gemi",
+      "arrival": "2027-01-04",
+      "handover": null,
+      "qty": 2520
+     },
+     {
+      "kind": "partial",
+      "status": "Depoda",
+      "delType": "GEMI",
+      "arrival": "2026-12-15",
+      "handover": "2026-11-27",
+      "qty": 1680
+     }
+    ],
+    "cpReadModel_partials0": {
+     "STATUS": "Depoda",
+     "Del. Type": "Gemi",
+     "Ant. Arrival": "2026-12-15",
+     "HANDOVER": "2026-11-27",
+     "Priority": "ON_TRACK"
+    },
+    "raw_parseJs": {
+     "STATUS": "Üretimde",
+     "Del. Type": "Gemi",
+     "Ant. Arrival": "2027-01-04",
+     "HANDOVER": null,
+     "Priority": "ON_TRACK"
+    }
+   },
+   {
+    "key": "4100044/K01",
+    "segments": [
+     {
+      "kind": "production",
+      "status": "Üretimde",
+      "delType": "Gemi",
+      "arrival": "2026-12-27",
+      "handover": null,
+      "qty": 2230
+     },
+     {
+      "kind": "partial",
+      "status": "Depoda",
+      "delType": "TIR",
+      "arrival": "2026-12-14",
+      "handover": "2026-11-26",
+      "qty": 2570
+     }
+    ],
+    "cpReadModel_partials0": {
+     "STATUS": "Depoda",
+     "Del. Type": "TIR",
+     "Ant. Arrival": "2026-12-14",
+     "HANDOVER": "2026-11-26",
+     "Priority": "ON_TRACK"
+    },
+    "raw_parseJs": {
+     "STATUS": "Üretimde",
+     "Del. Type": "Gemi",
+     "Ant. Arrival": "2026-12-27",
+     "HANDOVER": null,
+     "Priority": "ON_TRACK"
+    }
+   }
+  ],
+  "yolda + üretim": [
+   {
+    "key": "4100025/B07",
+    "segments": [
+     {
+      "kind": "production",
+      "status": "Üretimde",
+      "delType": "Gemi",
+      "arrival": "2026-12-21",
+      "handover": null,
+      "qty": 950
+     },
+     {
+      "kind": "partial",
+      "status": "Yolda",
+      "delType": "GEMI",
+      "arrival": "2026-12-04",
+      "handover": null,
+      "qty": 50
+     }
+    ],
+    "cpReadModel_partials0": {
+     "STATUS": "Yolda",
+     "Del. Type": "Gemi",
+     "Ant. Arrival": "2026-12-04",
+     "HANDOVER": null,
+     "Priority": "ON_TRACK"
+    },
+    "raw_parseJs": {
+     "STATUS": "Üretimde",
+     "Del. Type": "Gemi",
+     "Ant. Arrival": "2026-12-21",
+     "HANDOVER": null,
+     "Priority": "ON_TRACK"
+    }
+   },
+   {
+    "key": "4100027/B07",
+    "segments": [
+     {
+      "kind": "production",
+      "status": "Üretimde",
+      "delType": "Gemi",
+      "arrival": "2026-12-05",
+      "handover": null,
+      "qty": 2400
+     },
+     {
+      "kind": "partial",
+      "status": "Yolda",
+      "delType": "GEMI",
+      "arrival": "2026-11-04",
+      "handover": null,
+      "qty": 3600
+     }
+    ],
+    "cpReadModel_partials0": {
+     "STATUS": "Yolda",
+     "Del. Type": "Gemi",
+     "Ant. Arrival": "2026-11-04",
+     "HANDOVER": null,
+     "Priority": "ON_TRACK"
+    },
+    "raw_parseJs": {
+     "STATUS": "Üretimde",
+     "Del. Type": "Gemi",
+     "Ant. Arrival": "2026-12-05",
+     "HANDOVER": null,
+     "Priority": "ON_TRACK"
+    }
+   }
+  ],
+  "hepsi yolda (ya da kısmen)": [
+   {
+    "key": "4105535/M01",
+    "segments": [
+     {
+      "kind": "shortage",
+      "status": "Eksik Yükleme",
+      "delType": "Gemi",
+      "arrival": "2027-02-06",
+      "handover": null,
+      "qty": 310
+     },
+     {
+      "kind": "partial",
+      "status": "Yüklemede",
+      "delType": "TIR",
+      "arrival": "2027-01-03",
+      "handover": null,
+      "qty": 2790
+     }
+    ],
+    "cpReadModel_partials0": {
+     "STATUS": "Yüklemede",
+     "Del. Type": "TIR",
+     "Ant. Arrival": "2027-01-03",
+     "HANDOVER": null,
+     "Priority": "ON_TRACK"
+    },
+    "raw_parseJs": {
+     "STATUS": "Yüklemede",
+     "Del. Type": "TIR",
+     "Ant. Arrival": "2027-01-03",
+     "HANDOVER": null,
+     "Priority": "ON_TRACK"
+    }
+   },
+   {
+    "key": "4114733/E03",
+    "segments": [
+     {
+      "kind": "shortage",
+      "status": "Eksik Yükleme",
+      "delType": "Gemi",
+      "arrival": "2027-01-26",
+      "handover": null,
+      "qty": 200
+     },
+     {
+      "kind": "partial",
+      "status": "Yolda",
+      "delType": "UCAK",
+      "arrival": "2027-01-07",
+      "handover": null,
+      "qty": 1800
+     }
+    ],
+    "cpReadModel_partials0": {
+     "STATUS": "Yolda",
+     "Del. Type": "Uçak",
+     "Ant. Arrival": "2027-01-07",
+     "HANDOVER": null,
+     "Priority": "ON_TRACK"
+    },
+    "raw_parseJs": {
+     "STATUS": "Yolda",
+     "Del. Type": "UCAK",
+     "Ant. Arrival": "2027-01-07",
+     "HANDOVER": null,
+     "Priority": "ON_TRACK"
+    }
+   }
+  ],
+  "hepsi depoda": [
+   {
+    "key": "4113920/M01",
+    "segments": [
+     {
+      "kind": "shortage",
+      "status": "Depoda - Eksik Yükleme",
+      "delType": "Gemi",
+      "arrival": "2027-01-27",
+      "handover": null,
+      "qty": 310
+     },
+     {
+      "kind": "partial",
+      "status": "Depoda",
+      "delType": "UCAK",
+      "arrival": "2027-01-01",
+      "handover": "2026-12-21",
+      "qty": 2790
+     }
+    ],
+    "cpReadModel_partials0": {
+     "STATUS": "Depoda",
+     "Del. Type": "Uçak",
+     "Ant. Arrival": "2027-01-01",
+     "HANDOVER": "2026-12-21",
+     "Priority": "ON_TRACK"
+    },
+    "raw_parseJs": {
+     "STATUS": "Depoda",
+     "Del. Type": "UCAK",
+     "Ant. Arrival": "2027-01-01",
+     "HANDOVER": "2026-12-21",
+     "Priority": "ON_TRACK"
+    }
+   },
+   {
+    "key": "4117916/G05",
+    "segments": [
+     {
+      "kind": "shortage",
+      "status": "Depoda - Eksik Yükleme",
+      "delType": "Gemi",
+      "arrival": "2027-01-07",
+      "handover": null,
+      "qty": 100
+     },
+     {
+      "kind": "partial",
+      "status": "Depoda",
+      "delType": "GEMI",
+      "arrival": "2027-01-07",
+      "handover": "2026-12-20",
+      "qty": 900
+     }
+    ],
+    "cpReadModel_partials0": {
+     "STATUS": "Depoda",
+     "Del. Type": "Gemi",
+     "Ant. Arrival": "2027-01-07",
+     "HANDOVER": "2026-12-20",
+     "Priority": "ON_TRACK"
+    },
+    "raw_parseJs": {
+     "STATUS": "Depoda",
+     "Del. Type": "GEMI",
+     "Ant. Arrival": "2027-01-07",
+     "HANDOVER": "2026-12-20",
+     "Priority": "ON_TRACK"
+    }
+   }
+  ]
+ },
+ "counts": {
+  "parsiyel(Üretimde) + üretim": 2331,
+  "yalnız üretim": 17274,
+  "depoda + üretim": 2707,
+  "yolda + üretim": 2665,
+  "hepsi yolda (ya da kısmen)": 3,
+  "hepsi depoda": 2
+ },
+ "diff": {
+  "parsiyel(Üretimde) + üretim": {
+   "n": 2331,
+   "Del. Type": 33,
+   "Ant. Arrival": 36
+  },
+  "yalnız üretim": {
+   "n": 17274
+  },
+  "depoda + üretim": {
+   "n": 2707,
+   "STATUS": 2707,
+   "Ant. Arrival": 2687,
+   "HANDOVER": 2707,
+   "Del. Type": 1783
+  },
+  "yolda + üretim": {
+   "n": 2665,
+   "STATUS": 2665,
+   "Ant. Arrival": 2648,
+   "Del. Type": 1788
+  },
+  "hepsi yolda (ya da kısmen)": {
+   "n": 3
+  },
+  "hepsi depoda": {
+   "n": 2
+  }
+ },
+ "prioDist": {
+  "ON_TRACK": 24982
+ },
+ "rawPrioDist": {
+  "ON_TRACK": 24982
+ },
+ "dtSamples": [
+  {
+   "key": "4100420/G05",
+   "A": "TIR",
+   "B": "Gemi",
+   "segs": [
+    "production:Üretimde:Gemi:undefined",
+    "partial:Üretimde:TIR:undefined"
+   ]
+  },
+  {
+   "key": "4100610/B07",
+   "A": "Uçak",
+   "B": "Gemi",
+   "segs": [
+    "production:Üretimde:Gemi:undefined",
+    "partial:Üretimde:UCAK:undefined"
+   ]
+  },
+  {
+   "key": "4102068/M01",
+   "A": "TIR",
+   "B": "Gemi",
+   "segs": [
+    "production:Üretimde:Gemi:undefined",
+    "partial:Üretimde:TIR:undefined"
+   ]
+  },
+  {
+   "key": "4102733/M01",
+   "A": "TIR",
+   "B": "Gemi",
+   "segs": [
+    "production:Üretimde:Gemi:undefined",
+    "partial:Üretimde:TIR:undefined"
+   ]
+  },
+  {
+   "key": "4105004/P06",
+   "A": "Uçak",
+   "B": "Gemi",
+   "segs": [
+    "production:Üretimde:Gemi:undefined",
+    "partial:Üretimde:UCAK:undefined"
+   ]
+  },
+  {
+   "key": "4105271/P06",
+   "A": "Uçak",
+   "B": "Gemi",
+   "segs": [
+    "production:Üretimde:Gemi:undefined",
+    "partial:Üretimde:UCAK:undefined"
+   ]
+  }
+ ]
+}

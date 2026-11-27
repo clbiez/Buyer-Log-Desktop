@@ -1369,6 +1369,127 @@ Siparişler isteğinin sunucu aşamaları (medyan ms, off → on):
 **Karar:** 1,1 → 3,8 sn ölçüm referansı kaymasıdır, gerçek Siparişler gecikmesi değil. Merge yok, bayrak
 varsayılan kapalı.
 
+## 6M · Birincil segment kuralı değerlendirmesi (2026-11-27, kod değişikliği yok)
+
+**Önerilen kural (ürün sahibi):** siparişin tamamlanmamış kısmının operasyonel durumu esas alınır.
+- Üretim bakiyesi varsa → üretim bilgisi.
+- Üretim bitmiş, lojistik sürüyorsa → tamamlanmamış lojistik aşaması.
+- Tamamen depodaysa → Depoda.
+- IAS kaynak değerleri korunur.
+
+**Mevcut iki yol [Doğrulandı · source + veri].**
+- **P · parse.js** (`cpLogisticPriority`, `37831dc06`): ilk kıtlık-dışı segment. Dizi sırasına
+  bağlıdır.
+- **R · prep + istemci** (`rebuildLogisticCaches`, #1085): `partials[0]`, yani ilk parsiyel segment.
+  Parsiyel yoksa üretim.
+
+**Veri.** 30k seed-7 fixture, CP 24.982 satır, main `fdf2f758`. Okuma modeli (R) ile ham projeksiyon
+(P) tüm satırlarda alan alan karşılaştırıldı; büyük/küçük harf ve İ/I/Ç katlaması uygulandı. Betik ve
+çıktı `adr-0003-kanit/6m/primary6.*`.
+
+| Kategori (satır) | Örnek | P · parse.js | R · partials[0] | U · önerilen kural | R ≠ P satır |
+|---|---|---|---|---|---|
+| yalnız üretim (17.274) | 4100002/E03 | Üretimde · Gemi · 04.03 · — | aynı | aynı | 0 |
+| yolda + üretim (2.665) | 4100025/B07: üretim 950 ad. Gemi 21.12; parsiyel 50 ad. Yolda GEMI 04.12 | Üretimde · Gemi · 21.12 · — | Yolda · Gemi · 04.12 · — | = P | STATUS 2665, Ant. Arrival 2648, Del. Type 1788 |
+| depoda + üretim (2.707) | **4100023/L02**: üretim 2.520 ad. Gemi 04.01; parsiyel 1.680 ad. Depoda 15.12, HO 27.11 | Üretimde · Gemi · 04.01 · — | Depoda · Gemi · 15.12 · 27.11 | = P | STATUS 2707, HANDOVER 2707, Ant. Arrival 2687, Del. Type 1783 |
+| hepsi yolda (3) | 4105535/M01: kıtlık (Eksik Yükleme) + parsiyel Yüklemede TIR 03.01 | Yüklemede · TIR · 03.01 · — | aynı | Yüklemede (kıtlık tamamlanmamış sayılmazsa) | 0 |
+| hepsi depoda (2) | 4113920/M01: kıtlık (Depoda - Eksik Yükleme) + parsiyel Depoda UÇAK 01.01, HO 21.12 | Depoda · Uçak · 01.01 · 21.12 | aynı | Depoda | 0 |
+| parsiyel Üretimde + üretim (2.331) | 4100014/H04: parsiyel Üretimde TIR 03.12 (miktar 0); üretim 2.400 ad. Gemi 30.12 | genelde parsiyel (dizi sırası) | parsiyel | üretim → Gemi · 30.12 (karar gerekir) | Del. Type 33, Ant. Arrival 36 (üretim önde olan satırlar) |
+
+Sütun biçimi: STATUS · Del. Type · Ant. Arrival · HANDOVER. Priority ve risk satırları aşağıda.
+
+**Priority / risk etkisi.**
+- **[Doğrulandı · source]** Karar motoru satır düzeyindeki STATUS'u kullanır
+  (`business-rules.js:506`, `:581`). Üretim statüsünde gecikme tabanı `max(Ex-factory, bugün)` + yol
+  süresi olur ve retail tarihine karşı gecikme denetlenir. Üretim dışı statüde gecikme tabanı yoktur
+  ve tahmini varış parsiyelin Ant. Arrival'ıdır. Del. Type yol süresi kuralını seçer.
+- **R'nin sonucu.** yolda/depoda + üretim satırlarında (5.372, %21,5) R kalan üretim bakiyesini
+  gecikme denetiminden çıkarır. 4100023/L02'de 2.520 adet üretimde; satır Depoda / 15.12 görünür ve
+  üretim bakiyesinin geç kalması Priority'ye yansımaz [Güçlü Çıkarım].
+- P ve U bakiyeyi denetler.
+- **[Doğrulandı · veri]** Fixture'da 24.982 satırın tamamı iki yolda da ON_TRACK. Fixture bu farkı
+  sınamıyor; gerçek veride Priority değişim sayısı [Bilinmiyor].
+- Backlog RİSK segment bazında hesaplanır; birincil seçimden etkilenmez (§6I).
+
+**IAS kaynak değerleri.** Üç yol da `_logisticSegments` IAS değerlerini değiştirmez; yalnız satır
+düzeyi gösterim alanlarının hangi segmentten okunacağını seçer. U de aynı biçimde uygulanabilir.
+Del. Type gösterimi normalize edilir (GEMI → Gemi); bu mevcut davranıştır.
+
+**Değerlendirme.**
+- **U ≈ P.** Mevcut iki yolun ayrıştığı tek yerde (üretim + yolda/depoda parsiyel, 5.372 satır)
+  U, P ile aynı sonucu verir. R ile farkı tam olarak bu satırlardır.
+- **P'nin kusuru.** Dizi sırasına bağlıdır (parsiyel Üretimde + üretim kategorisinde 33–36 satır).
+  U açık öncelikle tanımlanırsa bu belirsizlik kalkar.
+- **Ürün sahibinin vermesi gereken kararlar:**
+  - (a) Statüsü "Üretimde" olan miktarı 0 parsiyel "üretim bakiyesi" sayılır mı? (2.331 satır;
+    U'yu harfiyen uygulamak bu satırlarda iki mevcut yoldan da farklı sonuç verir.)
+  - (b) Kıtlık (Eksik Yükleme) "tamamlanmamış lojistik aşaması" mı?
+  - (c) Üretimsiz, hem yolda hem depoda parsiyel varsa hangisi? Fixture'da örnek yok [Bilinmiyor].
+  - (d) Birden çok tamamlanmamış lojistik aşamasında sıra: en erken varış mı, en geri aşama mı?
+- Uygulama yapılmadı.
+
+## 6N · Uzak kullanıcı güncelleme gecikmesi (31–37 sn): salt okunur kök neden (2026-11-27)
+
+Kod değişikliği yok. Ölçümler main `fdf2f758` üzerinde (GC bayrağı kapalı = main davranışı, açık = §6K
+pilotu), 30k fixture, aynı sunucuda iki kullanıcı. U2 API ile Del. Type yazar (§6J ile aynı senaryo).
+U1'in iki sekmesi açık (CP + Siparişler); CP satırı arama ile görünür tutulur. Ham veri
+`adr-0003-kanit/6n/ham`, betikler `fresh2.js`, `hub.js`.
+
+**Önce kapsam düzeltmesi [Doğrulandı · source].**
+- §6J'deki 31–37 sn **aynı sunucudaki iki istemci** yoludur, makineler arası Hub yolu değildir.
+- Makineler arası yolda (`shared-sync-policy.js:41`, karar v20261009) yalnız `cp-order` alanları
+  `dates`, `subManufacturer`, `suppFob`, `suppFobMeta`, `importance` taşınır.
+- Not, teslim tipi ve shortage cihazda yereldir; uzak kullanıcıya hiç ulaşmaz.
+- Yazmayla tetiklenen Hub yayımı yoktur. Gönderen ve alan taraf aynı periyodik zamanlayıcıyla çalışır:
+  30 sn tik, varsayılan `syncPeriodMinutes` = 5 (`server.js:489`, `sync-settings.js:177`).
+- Kodda `fs.watch` / chokidar yok.
+
+### 6N.1 · Aşama tablosu
+
+t0 = U2 PATCH gönderimi. Değerler 4 deneme/koşu üzerinden aralıktır.
+
+| # | Aşama | Mekanizma (kaynak) | Ölçüm | Kanıt |
+|---|---|---|---|---|
+| 1 | Yerel kayıt | PATCH → `overrides.json` + delta-store aynası (`server.js:10564`) | ack 12–50 ms (1 aykırı 156) | [Doğrulandı] |
+| 2 | Hub yayımı | `syncOnce` → `BUYER_LOG_SYNC/changes/<cihaz>/` paket | `sync-now` 69–101 ms (yerel disk, iki yerel sunucu). Bekleme: periyot ≤5 dk | süre [Doğrulandı · sandbox]; bekleme [Doğrulandı · source] |
+| 3 | OneDrive aktarımı | uygulama dışı | ölçülmedi | [Bilinmiyor] |
+| 4 | Uzak değişikliğin algılanması | alıcı `syncOnce`: `_head.json` sırası → paket indir → `applyRemoteDelta` | B `sync-now` 53–238 ms. Bekleme: periyot ≤5 dk. B'de `orders/reload` canlı olayı sync başlangıcından ~0,3–0,4 sn sonra | [Doğrulandı · sandbox] |
+| 5a | Projeksiyon güncellemesi (aynı sunucu) | yeni bağlam özeti → tam projeksiyon yeniden kurulumu (tek uçuş) | `page-projection/cp` bitişi 4,8–9,3 sn; `page-projection/orders` 5,2–10,6 sn | [Doğrulandı] |
+| 5b | Projeksiyon güncellemesi (Hub alıcısı) | aynı yol, `cpRemote` revizyonu ile | B'nin `cp/query`'si 60 sn içinde yeni değeri göstermedi | [Bilinmiyor] |
+| 6a | Canlı olay | SSE `orders/reload` (300 ms throttle) → lider sekme; BroadcastChannel → takipçi | lider 313–349 ms, takipçi +1 ms | [Doğrulandı] |
+| 6b | İstemci yeniden yükleme | her sekme `loadFromServer(false)` | çağrı 313–350 ms | [Doğrulandı] |
+| 6c | Siparişler arayüzü | yeni projeksiyon → state + DOM | 6,1–12,0 sn | [Doğrulandı] |
+| 6d | CP state | yeni projeksiyon + `cp/query` | 11,0–15,5 sn | [Doğrulandı] |
+| 6e | CP DOM, GC kapalı | yeniden yükleme `since` jetonunu düşürür → tam `cp/computed` (`app-main.js:1625`) + art arda `cp/query` | 31,9–39,5 sn (`cp/computed` 6–22 sn, bazen 2 istek) | süre [Doğrulandı]; ikinci istek 503 yeniden denemesi [Muhtemel] |
+| 6f | CP DOM, GC açık | aynı yol, 503'süz | 19,6–24,3 sn (bir koşu 33,2); `cp/computed` 3–6,5 sn | [Doğrulandı] |
+| 7 | Aynı kullanıcının iki sekmesi | uzak olayda `originClientId` boş; sekmeler arası tekilleştirme yok (`app-main.js:44572`, `44681`) | iki sekme de 313–350 ms'de tam yeniden yükleme başlatır. Siparişler sekmesi de kendi `cp/computed`'ını ister | [Doğrulandı] |
+
+**Tek sekme kontrolü** (GC açık, sıra tek / iki / tek, 4 deneme/koşu):
+
+| | Tek sekme | İki sekme |
+|---|---|---|
+| CP DOM | 19,6–21,8 ve 23,4–33,2 sn | 19,8–24,3 sn |
+| CP state | 11,0–15,5 sn | 13,0–15,3 sn |
+
+İkinci sekmenin bekleme süresine etkisi bu çözünürlükte ayırt edilemiyor. İstek ve CPU çiftlenmesi var;
+CPU ölçülmedi [Bilinmiyor].
+
+### 6N.2 · Kök neden (aynı sunucu, 31–37 sn)
+
+1. **[Doğrulandı]** Del. Type yazması (P1 sonrası artımlı güvenli değil) diğer istemcilere
+   `mode: reload` gönderir. Her sekme tam yeniden yükleme yapar.
+2. **[Doğrulandı]** Yeniden yükleme yeni satır dizisi kurar. `cp/computed` `since` jetonu düşer ve
+   tüm hesaplanmış sütunlar baştan hesaplanır (3–6,5 sn, 503'süz).
+3. **[Doğrulandı]** Projeksiyon yeniden kurulumu + indirme 5–9 sn sürer. CP'nin `cp/query` /
+   `cp/computed` zinciri bunun ardından sıralı ilerler.
+4. **[Muhtemel]** GC kapalıyken `cp/computed` 503 + yeniden deneme 10–15 sn ekler. §6K pilotuyla
+   CP DOM 31,9–39,5 → 19,6–24,3 sn.
+5. Makineler arası yolda gecikmenin ana bileşeni ölçülen işlem süreleri değil, iki taraftaki periyodik
+   bekleme (her biri 0–5 dk) + OneDrive [Bilinmiyor].
+
+**Kapsam dışı (talimat gereği).** Kontrol sıklığını artırmak veya yeni senkron mekanizması yazmak
+çözüm olarak değerlendirilmedi.
+
 ## 7 · Ürün sahibinin vermesi gereken kararlar
 
 1. **Sütun filtresi anlamı (T5):** Koleksiyonda sayısal/aralık/revizyon filtresi yokluğu bilinçli mi? Genel Bakış boyut filtresinin `norm()` eşitliği istenen davranış mı?
