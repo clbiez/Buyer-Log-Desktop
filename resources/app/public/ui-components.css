@@ -514,6 +514,8 @@ html[data-ui-system="manifest"] .globalFlowMeta {color:var(--ui-text-muted) !imp
 }
 html[data-ui-system="manifest"] .globalFlowMeta[data-tone="error"] {color:var(--ui-danger) !important
 }
+html[data-ui-system="manifest"] .ordersRefreshState[data-state="error"] {color:var(--ui-danger) !important
+}
 html[data-ui-system="manifest"] .globalFlowMeta[data-tone="warn"] {color:var(--ui-warning) !important
 }
 html[data-ui-system="manifest"] .globalFlowMeta[data-tone="loading"] {color:var(--ui-selected-ink) !important
