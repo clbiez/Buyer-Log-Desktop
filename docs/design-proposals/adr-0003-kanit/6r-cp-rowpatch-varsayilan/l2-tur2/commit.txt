@@ -1,0 +1,1 @@
+A 5440fdeb3741582a71046c1a63999bc278563f3a B 355d14f41cae349e74eff2b574f9c2f5010c686e runtime electron 44.3.0 node 24.20.0 ELECTRON_RUN_AS_NODE=1 NODE_OPTIONS=--use-openssl-ca --max-old-space-size=3686
