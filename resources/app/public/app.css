@@ -244,6 +244,10 @@ footer{padding:10px var(--ui-space-5) 26px;}
 .toolbar input[type=search]{flex:1;min-width:180px;padding:7px 11px;}
 .toolbar select{padding:6px 8px;}
 .toolbar .count{margin-left:auto;white-space:nowrap;}
+/* Siparişler güncellik göstergesi: ortak toolbar sayacı biçimi; hata yalnız ortak --ui-danger tokenıyla. */
+.toolbar .ordersRefreshState{display:inline-flex;align-items:center;gap:6px;}
+.toolbar .ordersRefreshState+.count{margin-left:8px;}
+.toolbar .ordersRefreshState[data-state="error"]{color:var(--ui-danger);}
 .toolbar :is(button,label).tbtn{padding:6px 11px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
 .toolbar :is(button,label).tbtn .ic{width:14px;height:14px;}
 .toolbar :is(button,label).tbtn:active{transform:scale(.97);}

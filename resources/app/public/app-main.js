@@ -12270,6 +12270,8 @@ const ordersRM={
   // Açılış bekleyicisi: her çizim bildirir (bkz. ordersNotifyPainted).
   paintWaiters:new Set(),paintCount:0,
   sourceRenderTimer:null, // CP yazımı / uzak yama sonrası birleştirilmiş yeniden çizim (bkz. ordersRMSourceChanged)
+  // Güncellik göstergesi: değişiklikten sonraki sürüm (epoch) sorgusu gelene kadar "Güncelleniyor…" (bkz. ordersRMMarkRefreshing).
+  refreshEpoch:null,refreshFailed:false,
 };
 // Depolama bir kez okunur: filteredOrders / sütun paneli gibi sık yollar her çağrıda okumaz.
 let ordersRMEnabledCache=null;
@@ -12565,14 +12567,16 @@ function renderOrdersFromReadModel(){
     ordersRMRequestFacets(spec,signature);
     return true;
   }
-  const seq=++ordersRM.seq,started=performance.now();
+  const seq=++ordersRM.seq,started=performance.now(),epoch=ordersRM.epoch;
   if(!ordersRM.rows)setOrdersLoadingState(true);
+  ordersRMRenderRefreshState(); // dil değişimi ve sekme geçişinde metin/aria güncel kalır
   // Önce ilk pencere (D1: satırlar görünür), sayaçlar ardından: tek işçide sıraya girer.
   ordersRMPost('/api/read-model/orders/query',ordersRMQueryBody(spec,0,ORDERS_RM_WINDOW)).then(payload=>{
     if(seq!==ordersRM.seq)return;
     ordersRM.generation=String(payload.generation||'');
     const result=payload.result||{};
     ordersRMResetStore(signature,spec,result);
+    ordersRMRefreshSettled(epoch,true);
     ordersRMPlace(0,ordersRMDecorate(result.rows||[]));
     ordersRM.windows.add(0);
     if(currentActiveTab()!=='orders'){_deferredTabRenders.add('orders');return;}
@@ -12585,12 +12589,15 @@ function renderOrdersFromReadModel(){
       // Sunucu bu sorguyu değerlendiremiyor (desteklenmeyen filtre ya da sınır aşımı,
       // ör. 20.000'den fazla işaretli satır): bu sorgu için eski yol.
       ordersRM.legacyReason='server:'+(error.code||'400');ordersRM.signature='';ordersRM.unsupportedSignature=signature;
+      // Eski yol satırları (state.orders) eşlerle ve uzak yamalarla zaten güncel; yoksa yeniden yüklenir.
+      ordersRMRefreshSettled(epoch,true);
       if(!state.orders)void ensureOrdersLoaded();else renderOrdersNowLegacyOnly();
       return;
     }
     const message=(appLang==='en'?'Orders could not be loaded: ':'Siparişler yüklenemedi: ')+(error&&error.message||error);
     if(!ordersRM.rows)setOrdersLoadingState(false,message);
     showToast(message);
+    ordersRMRefreshSettled(epoch,false);
     ordersNotifyPainted(false);
   });
   return true;
@@ -12779,11 +12786,43 @@ window.addEventListener('bl:global-flow-data-changed',event=>{
    görünmüyorsa yalnız geçersizleşir; sonraki açılış yeniden sorgular. Görünürse art arda gelenler tek çizimde birleşir. */
 function ordersRMSourceChanged(reason){
   if(!ordersReadModelEnabled()||!ordersRM.rows)return;
-  ordersRMInvalidate(reason);
+  ordersRMInvalidate(reason);ordersRMMarkRefreshing();
   if(currentActiveTab()!=='orders'||ordersRM.sourceRenderTimer)return;
   ordersRM.sourceRenderTimer=setTimeout(()=>{ordersRM.sourceRenderTimer=null;if(currentActiveTab()==='orders')renderOrders();},250);
 }
 window.addEventListener('buyerlog:cp-write-ack',()=>ordersRMSourceChanged('cp-write-ack'));
+/* Güncellik göstergesi (performans çözümü değildir). Tablo gizlenmez; satırlar, filtreler ve seçim korunur.
+   Yalnız işaretleyen değişiklikten sonraki sürümün (epoch) sorgusu başarıyla gelince kalkar; yerini alan
+   eski sorgu yanıtı kaldırmaz. Sorgu başarısızsa eski değer sessizce güncel sayılmaz: hata + Tekrar dene. */
+function ordersRMMarkRefreshing(){
+  ordersRM.refreshEpoch=ordersRM.epoch;ordersRM.refreshFailed=false;
+  ordersRMRenderRefreshState();
+}
+function ordersRMRefreshSettled(epoch,ok){
+  if(ordersRM.refreshEpoch==null)return;
+  if(!ok)ordersRM.refreshFailed=true;
+  else if(epoch>=ordersRM.refreshEpoch){ordersRM.refreshEpoch=null;ordersRM.refreshFailed=false;}
+  ordersRMRenderRefreshState();
+}
+function ordersRMRenderRefreshState(){
+  if(!ordersReadModelEnabled()){ordersRM.refreshEpoch=null;ordersRM.refreshFailed=false;}
+  const el=document.getElementById('ordersRefreshState'),table=document.getElementById('ordersTable');
+  const pending=ordersRM.refreshEpoch!=null,failed=pending&&ordersRM.refreshFailed;
+  if(table){if(pending&&!failed)table.setAttribute('aria-busy','true');else table.removeAttribute('aria-busy');}
+  if(!el)return;
+  if(!pending){el.hidden=true;el.textContent='';delete el.dataset.state;return;}
+  const appearing=el.hidden;
+  if(failed){
+    el.dataset.state='error';
+    el.innerHTML=`<span>${escapeHtml(appLang==='en'?'Could not update: values shown may be out of date.':'Güncellenemedi: gösterilen değerler eski olabilir.')}</span> <button type="button" class="tbtn" data-orders-refresh-retry>${escapeHtml(appLang==='en'?'Retry':'Tekrar dene')}</button>`;
+  }else{el.dataset.state='busy';el.textContent=appLang==='en'?'Updating…':'Güncelleniyor…';}
+  el.hidden=false;
+  if(appearing)window.BLMotionPlus?.play?.('card',el);
+}
+document.addEventListener('click',event=>{
+  if(!event.target?.closest?.('[data-orders-refresh-retry]'))return;
+  ordersRMInvalidate('refresh-retry');ordersRMMarkRefreshing();renderOrders();
+});
 function ordersRMInvalidate(reason){
   ordersRM.epoch++;ordersRM.seq++;ordersRM.facetsSeq++;ordersRM.signature='';ordersRM.facets=null;ordersRM.facetsKey='';ordersRM.columnFacets.clear();ordersRM.materialized=null;
   window.BLPerf?.mark?.('ORDERS_READ_MODEL_INVALIDATED',{reason:reason||'data'});
@@ -12793,7 +12832,7 @@ window.BLOrdersReadModel={
   setEnabled(value){
     try{(window.BLStorage||localStorage).setItem(ORDERS_RM_STORAGE_KEY,value?'1':'0');}catch(_){}
     ordersRMEnabledCache=Boolean(value);
-    ordersRMInvalidate('toggle');renderOrders();return ordersReadModelEnabled();
+    ordersRMInvalidate('toggle');ordersRMRenderRefreshState();renderOrders();return ordersReadModelEnabled();
   },
   status:()=>({enabled:ordersReadModelEnabled(),windowed:ordersRMWindowedActive(),legacyReason:ordersRM.legacyReason,total:ordersRM.total,
     loadedWindows:ordersRM.windows.size,generation:ordersRM.generation}),

@@ -26,12 +26,13 @@ const SOURCE = fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js
 
 function harness({ enabled = true, rows = [{ id: 1 }], tab = 'cp' } = {}) {
   const timers = [];
-  const calls = { invalidate: [], render: 0 };
+  const calls = { invalidate: [], render: 0, marked: 0 };
   const ordersRM = { rows, sourceRenderTimer: null };
   const globals = {
     ordersRM,
     ordersReadModelEnabled: () => enabled,
     ordersRMInvalidate: reason => calls.invalidate.push(reason),
+    ordersRMMarkRefreshing: () => { calls.marked++; }, // güncellik göstergesi (orders-rm-refresh-indicator testi)
     currentActiveTab: () => api.tab,
     renderOrders: () => { calls.render++; },
     setTimeout: (fn, ms) => { const timer = { fn, ms, cleared: false }; timers.push(timer); return timer; },
@@ -48,6 +49,7 @@ test('CP yazım onayı pencereyi geçersiz kılar; Siparişler görünmüyorsa s
   h.flush();
   assert.deepEqual(h.calls.invalidate, ['cp-write-ack']);
   assert.equal(h.calls.render, 0, 'no query while Orders is hidden');
+  assert.equal(h.calls.marked, 1, 'stale window is flagged as updating');
 });
 
 test('Siparişler görünürken art arda gelen değişiklikler tek yeniden çizimde birleşir', () => {
@@ -62,10 +64,10 @@ test('Siparişler görünürken art arda gelen değişiklikler tek yeniden çizi
 test('okuma modeli kapalıysa ya da pencere yüklenmediyse hiçbir şey yapılmaz (eski yol state.orders eşlerini zaten günceller)', () => {
   const off = harness({ enabled: false, tab: 'orders' });
   off.ordersRMSourceChanged('cp-write-ack'); off.flush();
-  assert.deepEqual(off.calls, { invalidate: [], render: 0 });
+  assert.deepEqual(off.calls, { invalidate: [], render: 0, marked: 0 });
   const empty = harness({ rows: null, tab: 'orders' });
   empty.ordersRMSourceChanged('cp-write-ack'); empty.flush();
-  assert.deepEqual(empty.calls, { invalidate: [], render: 0 });
+  assert.deepEqual(empty.calls, { invalidate: [], render: 0, marked: 0 });
 });
 
 test('kaynak sözleşmesi: onay sinyali ve uzak satır yaması pencereyi günceller; onaydan önce geçersizleştirilmez', () => {
