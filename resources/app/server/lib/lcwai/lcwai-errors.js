@@ -21,6 +21,7 @@ const CODES = Object.freeze({
   UNAVAILABLE: { status: 503, tr: 'LCW AI şu an hizmet veremiyor. Biraz sonra tekrar deneyin.', en: 'LCW AI is currently unavailable. Try again later.', retryable: true },
   STREAM_INTERRUPTED: { status: 502, tr: 'LCW AI yanıtı yarıda kesildi. Tekrar deneyin.', en: 'The LCW AI response was interrupted. Try again.', retryable: true },
   UPLOAD_FAILED: { status: 502, tr: 'Dosya LCW AI’a yüklenemedi.', en: 'The file could not be uploaded to LCW AI.', retryable: true },
+  CONTEXT_TOO_LARGE: { status: 413, tr: 'Gönderilecek veri tek LCW AI isteğine kesilmeden sığmıyor.', en: 'The data does not fit into one LCW AI request without being cut.' },
   FILE_TOO_LARGE: { status: 413, tr: 'Dosya LCW AI için çok büyük.', en: 'The file is too large for LCW AI.' },
   FILE_TYPE_NOT_ALLOWED: { status: 415, tr: 'Bu dosya türü LCW AI’a gönderilemez.', en: 'This file type cannot be sent to LCW AI.' },
   QUOTA_EXCEEDED: { status: 429, tr: 'LCW AI dosya kotanız doldu. Eski sohbet dosyalarını silip tekrar deneyin.', en: 'Your LCW AI file quota is full. Delete old chat files and try again.' },

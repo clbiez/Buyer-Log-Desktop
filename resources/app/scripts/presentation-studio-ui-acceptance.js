@@ -518,6 +518,52 @@ function demoImages() {
     assert.deepEqual(out, { html: true, pptx: true });
     await page.evaluate(() => { BLCollectionArtworkDetail.cellModel = window.__artModel; });
 
+    // LCW AI ile grupla (LCW AI bu ortamda yok: BuyerLogAI.ask/uploadFile sahte; gerçek istemci yolu, paketleme,
+    // paftalar ve doğrulama çalışır). Her model görseli ve tüm bilgisiyle tam bir kez gider; sonuç önizlenir, onayla
+    // seviye olur, taslakla saklanır; Koleksiyon verisi değişmez.
+    await page.evaluate(() => {
+      window.__ai = { calls: [], files: [] };
+      const pick = text => (/Hırka/.test(text) ? 'Önden açık' : /Süveter/.test(text) ? 'Kolsuz' : /Elbise/.test(text) ? 'Elbise' : 'Bisiklet yaka');
+      window.__aiReal = { ask: BuyerLogAI.ask, uploadFile: BuyerLogAI.uploadFile };
+      BuyerLogAI.uploadFile = async file => { const bmp = await createImageBitmap(file); window.__ai.files.push({ name: file.name, type: file.type, size: file.size, w: bmp.width, h: bmp.height }); return { fileId: 'demo-' + window.__ai.files.length, name: file.name }; };
+      BuyerLogAI.ask = async o => {
+        window.__ai.calls.push({ source: o.source, task: o.task, mode: o.context.mode, cats: o.context.categories, models: o.context.models.map(m => ({ k: m.k, image: m.image, first: m.fields[0], n: m.fields.length, max: Math.max(...m.fields.map(f => f.length)) })), attachments: o.attachments.map(a => a.name) });
+        await new Promise(r => setTimeout(r, 60));
+        const cats = o.context.mode === 'plan' ? ['Bisiklet yaka', 'Önden açık', 'Kolsuz', 'Elbise'] : o.context.categories;
+        return { truncated: false, data: { categories: cats, assignments: o.context.models.map((m, i) => (i === 0 ? `k=${m.k}|c=?|r=Görselde yaka seçilemiyor` : `k=${m.k}|c=${pick(m.fields.join(' '))}|r=demo`)) } };
+      };
+    });
+    await page.evaluate(() => { window.__aiBefore = JSON.stringify(kolRows); }); // önceki adımlar demo satırları çip örneğiyle değiştirdi
+    const aiIds = await page.evaluate(() => { const S = BLPresentationStudio._state(); return S.doc.order.filter(id => !(S.doc.cards[id] && S.doc.cards[id].excluded)); });
+    await page.click('.psStudio [data-pop="level"]'); await page.waitForTimeout(150);
+    await page.click('.psPop [data-ai-new]'); await page.waitForTimeout(150);
+    await page.fill('.psDialog [data-ps="aiQ"]', 'Yaka ve kesime göre ayır');
+    await page.click('.psDialog [data-m="run"]');
+    await page.waitForSelector('.psDialog [data-m="apply"]', { timeout: 30000 });
+    const aiSent = await page.evaluate(() => window.__ai);
+    const sentTitles = aiSent.calls.flatMap(c => c.models.map(m => m.first));
+    assert.ok(aiSent.calls.every(c => c.source === 'presentation-grouping' && c.task === 'Yaka ve kesime göre ayır'));
+    assert.equal(aiSent.calls[0].mode, 'plan'); assert.ok(aiSent.calls.slice(1).every(c => c.mode === 'classify' && c.cats.length === 4));
+    assert.equal(new Set(aiSent.calls.slice(1).flatMap(c => c.models.map(m => m.first))).size + aiSent.calls[0].models.length, aiIds.length, 'her model tam bir kez sınıflandırıldı: ' + JSON.stringify(sentTitles));
+    assert.ok(aiSent.calls.every(c => c.models.every(m => m.image !== 'none' && c.attachments.includes(m.image))), 'görselli her model kendi paftasında');
+    assert.ok(aiSent.calls.every(c => c.models.every(m => m.n >= 8 && m.max <= 2000)), 'tüm bilgiler, sunucu sınırını aşmayan parçalarla');
+    assert.ok(aiSent.files.length && aiSent.files.every(f => f.type === 'image/jpeg' && f.size > 1000 && f.w === 1440), 'etiketli JPEG paftalar: ' + JSON.stringify(aiSent.files.slice(0, 2)));
+    await page.evaluate(() => document.querySelectorAll('[data-ui-feedback-region]').forEach(el => { el.style.visibility = 'hidden'; }));
+    await page.screenshot({ path: path.join(OUT, `ai-group-preview-${THEME}.png`) });
+    await page.click('.psDialog [data-m="apply"]'); await page.waitForTimeout(400);
+    const aiDoc = await page.evaluate(() => { const S = BLPresentationStudio._state(), g = S.doc.ai.a1; return { levels: S.doc.grouping.levels, n: Object.keys(g.vals).length, cats: g.cats, unsure: Object.values(g.vals).filter(v => v === '?').length, hdrs: [...new Set(S.res.pages.flatMap(p => p.items).filter(i => i.kind === 'hdr').map(h => h.vals[h.vals.length - 1]))] }; });
+    assert.equal(aiDoc.levels[aiDoc.levels.length - 1], 'ai:a1'); assert.equal(aiDoc.n, aiIds.length);
+    assert.deepEqual(aiDoc.cats, ['Bisiklet yaka', 'Önden açık', 'Kolsuz', 'Elbise']);
+    assert.ok(aiDoc.unsure >= 1 && aiDoc.hdrs.includes('Belirsiz') && aiDoc.hdrs.includes('Önden açık'), JSON.stringify(aiDoc));
+    assert.equal(await clean(), 0);
+    await page.screenshot({ path: path.join(OUT, `ai-group-applied-${THEME}.png`) });
+    await page.evaluate(() => document.querySelectorAll('[data-ui-feedback-region]').forEach(el => { el.style.visibility = ''; }));
+    // Yönetim: seviye çipine tıkla → kategoriler; tümü güncel.
+    await page.click('.psStudio [data-ai-open="a1"]'); await page.waitForTimeout(200);
+    assert.match(await page.$eval('.psDialog', el => el.textContent), /Tüm modeller güncel|All models are up to date/);
+    await page.click('.psDialog [data-m="cancel"]'); await page.waitForTimeout(150);
+    assert.equal(await page.evaluate(() => JSON.stringify(kolRows) === window.__aiBefore), true, 'LCW AI gruplaması Koleksiyon verisine yazmaz');
+    // Tablodaki düzeltme sonrası değişen modeller yeniden incelenir (aynı kategorilerle, yalnız onlar).
     // Taslak: kaydet → kapat → tabloda model düzelt → Sunum Oluştur'dan taslağa devam: güncel bilgi, aynı düzen, aynı sayfa.
     await page.fill('.psStudio [data-ps="title"]', 'Demo taslak'); await page.keyboard.press('Tab'); await page.waitForTimeout(200);
     assert.match(await page.$eval('.psStatus', el => el.textContent), /kaydedilmedi|not saved/i, 'yeni sunum kaydedilmemiş görünür');
@@ -542,6 +588,20 @@ function demoImages() {
     assert.equal(back.page, saved.page, 'kaldığı sayfa'); assert.ok(Math.abs(back.zoom - saved.zoom) < 0.001, 'kaldığı yakınlık');
     assert.deepEqual(back.colours, edited, 'tablodaki düzeltme taslağa yansır');
     assert.match(back.toast, /2 modelin bilgisi Koleksiyon tablosunda güncellenmiş|2 models were updated in Collection/, back.toast);
+    assert.match(back.toast, /LCW AI gruplamasından sonra 2 model|2 models were added or changed after the LCW AI grouping/, 'değişen modeller için LCW AI uyarısı');
+    window_calls_before: {
+      const before = await page.evaluate(() => window.__ai.calls.length);
+      await page.click('.psStudio [data-ai-open="a1"]'); await page.waitForTimeout(200);
+      await page.click('.psDialog [data-m="stale"]');
+      await page.waitForSelector('.psDialog [data-m="apply"]', { timeout: 30000 });
+      const again = await page.evaluate(n => window.__ai.calls.slice(n), before);
+      assert.equal(again.length, 1); assert.equal(again[0].mode, 'classify'); assert.equal(again[0].models.length, 2, 'yalnız değişen 2 model');
+      await page.click('.psDialog [data-m="apply"]'); await page.waitForTimeout(300);
+      await page.click('.psStudio [data-ai-open="a1"]'); await page.waitForTimeout(200);
+      assert.match(await page.$eval('.psDialog', el => el.textContent), /Tüm modeller güncel|All models are up to date/);
+      await page.click('.psDialog [data-m="cancel"]'); await page.waitForTimeout(150);
+    }
+    await page.evaluate(() => { Object.assign(BuyerLogAI, window.__aiReal); });
     await page.click('.psStudio [data-ps="close"]'); await page.waitForTimeout(300);
     // Kaydedilmemiş yeni sunumda değişiklik → kapatırken sorulur; "Kaydetmeden çık" taslak eklemez.
     const draftsBefore = await page.evaluate(() => JSON.parse(BLStorage.getItem('bl.presentationStudio.decks.v1') || '[]').length);

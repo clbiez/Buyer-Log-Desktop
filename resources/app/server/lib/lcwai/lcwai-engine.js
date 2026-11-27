@@ -58,7 +58,11 @@ function createLcwAiEngine(options = {}) {
     const task = clean(input.task);
     if (!task) throw lcwAiError('BAD_REQUEST', { detail: 'empty-task' });
     if (task.length > config.LIMITS.maxTaskChars) throw lcwAiError('BAD_REQUEST', { detail: 'task-too-long' });
+    const contract = prompts.contractFor(prompts.normalizeSource(input.source));
+    // Kesintisiz sözleşme: bağlam ya da istem kısaltılacaksa hiç gönderilmez (eksik veriyle cevap alınmaz).
+    if (contract && contract.strict && !prompts.contextFits(input.context && typeof input.context === 'object' ? input.context : {})) throw lcwAiError('CONTEXT_TOO_LARGE', { detail: 'context' });
     const built = prompts.buildPrompt({ source: input.source, task, context: input.context, guide: input.guide, lang: input.lang });
+    if (contract && contract.strict && built.truncated) throw lcwAiError('CONTEXT_TOO_LARGE', { detail: 'prompt' });
     emit(input.onProgress, { phase: 'sending', requestId });
     let chars = 0;
     const result = await client.sendMessage(ownerId, {

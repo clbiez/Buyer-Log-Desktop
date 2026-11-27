@@ -16281,6 +16281,8 @@ html[data-ui-system="manifest"] .psThumbHdr {background:var(--ui-text-muted)
 }
 html[data-ui-system="manifest"] .psThumbArea {background:color-mix(in srgb,var(--ui-accent) 18%,transparent)
 }
+html[data-ui-system="manifest"] .psChipAi {background:transparent;border:0;padding:0;color:inherit;font:inherit;cursor:pointer;text-decoration:underline dotted
+}
 html[data-ui-system="manifest"] .psArea:hover {background:color-mix(in srgb,var(--ui-accent) 4%,transparent)
 }
 html[data-ui-system="manifest"] .psArea.isSel {background:color-mix(in srgb,var(--ui-accent) 8%,transparent)

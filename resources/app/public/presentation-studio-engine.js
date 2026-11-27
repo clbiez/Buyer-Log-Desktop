@@ -22,7 +22,7 @@
   const FONTS = Object.freeze(['Arial', 'Calibri', 'Segoe UI', 'Verdana', 'Tahoma', 'Trebuchet MS', 'Georgia', 'Times New Roman']);
   const CARD_STYLES = Object.freeze(['frame', 'shadow', 'plain']);
   const STYLE_SPEC = Object.freeze({ fs: [6, 14, 8, 0.5], hfs: [6, 24, 10, 0.5], img: [0.6, 1.7, 1.05, 0.05], cardW: [60, 320, 112, 2], gap: [2, 30, 10, 1], margin: [6, 80, 26, 1] });
-  const LIMITS = Object.freeze({ cards: 2000, levels: 4, fields: 14, pages: 400, templates: 30, label: 80, title: 120, customMin: 50, customMax: 1200 });
+  const LIMITS = Object.freeze({ cards: 2000, levels: 4, aiGroupings: 8, fields: 14, pages: 400, templates: 30, label: 80, title: 120, customMin: 50, customMax: 1200 });
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const num = (v, d) => (Number.isFinite(Number(v)) ? Number(v) : d);
   const overlaps = (a, b) => a.x < b.x + b.w - 0.01 && a.x + a.w > b.x + 0.01 && a.y < b.y + b.h - 0.01 && a.y + a.h > b.y + 0.01;
@@ -44,7 +44,7 @@
   const SOURCES = Object.freeze(['koleksiyon', 'cp', 'orders']);
   function createDoc({ ids = [], fields = [], levels = [], title = '', source = 'koleksiyon' } = {}) {
     return { v: 2, source: SOURCES.includes(source) ? source : 'koleksiyon', title: text(title, LIMITS.title), page: { preset: 'A4', orient: 'landscape', cw: 297, ch: 210 }, style: defaultStyle(fields),
-      grouping: { levels: levels.slice(0, LIMITS.levels), breakTop: false }, pages: [{ id: 'p1', flow: true, auto: true }], cards: {}, order: ids.slice(0, LIMITS.cards), areas: {}, splits: {}, labels: {}, seq: 2 };
+      grouping: { levels: levels.slice(0, LIMITS.levels), breakTop: false }, pages: [{ id: 'p1', flow: true, auto: true }], cards: {}, order: ids.slice(0, LIMITS.cards), areas: {}, splits: {}, labels: {}, ai: {}, seq: 2 };
   }
   function normalizeStyle(raw, allowedFields) {
     const s = raw && typeof raw === 'object' ? raw : {}, out = defaultStyle([]);
@@ -94,7 +94,9 @@
   }
   /* Kayıtlı belge yeniden açılırken: bilinmeyen kayıtlar ve sınır dışı
      değerler atılır, yeni seçilen kayıtlar sıranın sonuna eklenir. */
-  function normalizeDoc(raw, { ids = null, fields = null } = {}) {
+  /* ai: LCW AI gruplamaları (id → sonuç); normalizeAi verilirse (BLPresentationAI.normalizeGrouping) korunur,
+     gruplama seviyesi olarak "ai:<id>" kullanılabilir. Sonuç yalnız sunumdadır; kaynak veriye yazılmaz. */
+  function normalizeDoc(raw, { ids = null, fields = null, normalizeAi = null } = {}) {
     const d = raw && typeof raw === 'object' ? raw : {};
     const known = ids ? new Set(ids.map(String)) : null;
     let order = [...new Set(Array.isArray(d.order) ? d.order.map(String) : [])].filter(id => !known || known.has(id));
@@ -121,7 +123,13 @@
     for (const [k, v] of Object.entries(d.labels && typeof d.labels === 'object' ? d.labels : {}).slice(0, 2000)) if (typeof k === 'string' && k.length <= 2000) { const t = text(v, LIMITS.label); if (t) labels[k] = t; }
     const areas = normalizeAreas(d.areas, pageIds), splits = normalizeSplits(d.splits);
     const seq = Math.max(num(d.seq, 2), ...pages.map(p => Number(p.id.slice(1)) + 1));
-    return { v: 2, source: SOURCES.includes(d.source) ? d.source : 'koleksiyon', title: text(d.title, LIMITS.title), page: normalizePage(d.page), style: normalizeStyle(d.style, fields), grouping: normalizeGrouping(d.grouping, fields), pages, cards, order, areas, splits, labels, seq };
+    const ai = {};
+    // Sınır aşılırsa önce gruplamada kullanılan sonuçlar korunur (etkin seviye asla düşmez).
+    const activeAi = new Set((d.grouping && Array.isArray(d.grouping.levels) ? d.grouping.levels : []).map(String).filter(f => f.startsWith('ai:')).map(f => f.slice(3)));
+    const aiEntries = Object.entries(d.ai && typeof d.ai === 'object' ? d.ai : {}).filter(([id]) => /^a\d{1,6}$/.test(id)).sort(([a], [b]) => Number(activeAi.has(b)) - Number(activeAi.has(a)));
+    if (normalizeAi) for (const [id, g] of aiEntries) { if (Object.keys(ai).length >= LIMITS.aiGroupings) break; const n = normalizeAi(g, order); if (n) ai[id] = n; }
+    const levelFields = fields ? [...fields, ...Object.keys(ai).map(id => 'ai:' + id)] : null;
+    return { v: 2, source: SOURCES.includes(d.source) ? d.source : 'koleksiyon', title: text(d.title, LIMITS.title), page: normalizePage(d.page), style: normalizeStyle(d.style, fields), grouping: normalizeGrouping(d.grouping, levelFields), pages, cards, order, areas, splits, labels, ai, seq };
   }
 
   /* Metin planı (ölçüm çizim modülünde yapılır): fieldLines[i] alanın kartta
@@ -159,8 +167,10 @@
   // localeCompare her çağrıda karşılaştırıcı kurar; aynı seçeneklerle tek Collator (aynı sıralama).
   let collator = null;
   const cmp = (x, y) => (collator || (collator = typeof Intl !== 'undefined' && Intl.Collator ? new Intl.Collator('tr', { numeric: true, sensitivity: 'base' }) : { compare: (p, q) => p.localeCompare(q, 'tr', { numeric: true, sensitivity: 'base' }) })).compare(x, y);
-  function compareVals(a, b, n) {
+  /* ao/bo: seviye başına isteğe bağlı sıra numarası (ör. LCW AI kategorilerinin sırası); ikisinde de varsa önce o. */
+  function compareVals(a, b, n, ao = null, bo = null) {
     for (let i = 0; i < n; i++) {
+      if (ao && bo && ao[i] != null && bo[i] != null) { if (ao[i] !== bo[i]) return ao[i] - bo[i]; continue; }
       const x = String(a[i] == null ? '' : a[i]), y = String(b[i] == null ? '' : b[i]);
       if (!x !== !y) return x ? -1 : 1; // boş değerli gruplar sona
       const d = cmp(x, y);
@@ -171,8 +181,8 @@
   /* groupOf(id) → { key, vals } — anahtar normalize kimlik, vals görünen değerler. */
   function effectiveKey(doc, id, groupOf) { const c = doc.cards[id]; return c && c.vgroup != null ? c.vgroup : groupOf(id).key; }
   function buildChunks(doc, g, groupOf, skip = null) {
-    const n = doc.grouping.levels.length, map = new Map(), valsOf = new Map();
-    for (const id of doc.order) { const gi = groupOf(id); if (!valsOf.has(gi.key)) valsOf.set(gi.key, gi.vals); }
+    const n = doc.grouping.levels.length, map = new Map(), valsOf = new Map(), ordOf = new Map();
+    for (const id of doc.order) { const gi = groupOf(id); if (!valsOf.has(gi.key)) { valsOf.set(gi.key, gi.vals); if (gi.ord) ordOf.set(gi.key, gi.ord); } }
     for (const id of doc.order) {
       const c = doc.cards[id];
       if (c && (c.excluded || c.pinned)) continue;
@@ -181,7 +191,7 @@
       if (!map.has(key)) map.set(key, { key, vals: valsOf.get(key) || splitVals(doc, key) || key.split(SEP), items: [] });
       map.get(key).items.push(id);
     }
-    const groups = [...map.values()].sort((a, b) => compareVals(a.vals, b.vals, n));
+    const groups = [...map.values()].sort((a, b) => compareVals(a.vals, b.vals, n, ordOf.get(a.key), ordOf.get(b.key)));
     const out = []; let prev = null;
     for (const gr of groups) {
       const total = gr.items.length, k = doc.style.keepGroups ? Math.ceil(total / g.cap) : 1;

@@ -259,6 +259,19 @@ const CONTRACTS = Object.freeze({
     }),
     example:{translation:'Brushed Three Thread'},
   }),
+  /* Sunum Stüdyosu "LCW AI ile grupla": modeller görselleri (etiketli paftalar) ve tüm alanlarıyla
+     incelenir, kullanıcının sorusuna göre kategorilere ayrılır. strict: bağlam kesilmeden sığmazsa
+     istek gönderilmez (CONTEXT_TOO_LARGE); istemci paketi böler. Sonuç yalnız sunumda kullanılır. */
+  'presentation-grouping': Object.freeze({
+    label: { tr: 'Sunum gruplaması', en: 'Presentation grouping' },
+    strict: true,
+    fields: Object.freeze({
+      categories: { type: 'string[]', required: true, max: 60, items: 16, hint: { tr: 'Kategori adları (plan: sorudan 2–12 kısa ad; classify: CONTEXT.categories aynen)', en: 'Category names (plan: 2–12 short names from the question; classify: CONTEXT.categories exactly)' } },
+      assignments: { type: 'string[]', required: true, max: 200, items: 64, hint: { tr: 'CONTEXT.models içindeki her model için tam bir satır: "k=<anahtar>|c=<kategori ya da ?>|r=<en çok 80 karakter gerekçe>"', en: 'exactly one line per model in CONTEXT.models: "k=<key>|c=<category or ?>|r=<reason, max 80 characters>"' } },
+      explanation: { type: 'string', max: 600 },
+    }),
+    example: { categories: ['Kapüşonlu', 'Bisiklet yaka', 'Fermuarlı yaka'], assignments: ['k=M1|c=Kapüşonlu|r=Görselde kapüşon ve kanguru cep', 'k=M2|c=?|r=Görsel yok, alanlarda yaka bilgisi yok'], explanation: '…' },
+  }),
   'fabric-card': Object.freeze({
     label: { tr: 'Kumaş Kartı', en: 'Fabric Card' },
     fields: Object.freeze({
@@ -289,6 +302,18 @@ const DATA_QUERY_RULES = [
 function clean(value) { return String(value == null ? '' : value).trim(); }
 function normalizeSource(value) { return clean(value).toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'general'; }
 function contractFor(source) { return Object.prototype.hasOwnProperty.call(CONTRACTS, source) ? CONTRACTS[source] : null; }
+/* strict sözleşmeler için: bağlam sanitizeContext'te hiçbir kısaltmaya uğramadan geçer mi (metin boyu,
+   dizi uzunluğu, nesne alanı sayısı, derinlik, satır örneği sınırı)? Geçmezse istek gönderilmez. */
+function contextFits(value, depth = 0) {
+  const limits = config.LIMITS;
+  if (value == null || typeof value === 'number' || typeof value === 'boolean') return true;
+  if (typeof value === 'string') return value.length <= limits.maxContextStringChars;
+  if (typeof value !== 'object' || depth >= limits.maxContextDepth) return false;
+  if (Array.isArray(value)) return value.length <= limits.maxContextArrayItems && value.every(item => contextFits(item, depth + 1));
+  const entries = Object.entries(value);
+  if (entries.length > 200) return false;
+  return entries.every(([key, item]) => clean(key).length <= 80 && !SECRET_KEY_RE.test(clean(key)) && !(ROW_DATA_KEYS.test(clean(key)) && Array.isArray(item) && item.length > MAX_SAMPLE_ROWS) && contextFits(item, depth + 1));
+}
 
 /* Bağlamı güvenli hâle getirir:
    - sır taşıyabilecek anahtarlar (token, password, cookie…) atılır,
@@ -371,7 +396,10 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
   }
   if (Object.keys(safeContext).length) {
     lines.push('', english ? '=== CONTEXT (JSON) ===' : '=== BAĞLAM (JSON) ===');
-    contextIndex = lines.push(JSON.stringify(safeContext, null, 1).slice(0, 20000)) - 1;
+    // Kesintisiz (strict) sözleşmede bağlam sıkıştırılmış JSON olarak bütün gider; sığmazsa istem
+    // sınırı aşılır ve truncated işaretlenir (motor isteği göndermez). Diğer kaynaklarda eski sınır.
+    const ctxText = contract && contract.strict ? JSON.stringify(safeContext) : JSON.stringify(safeContext, null, 1);
+    contextIndex = lines.push(contract && contract.strict ? ctxText : ctxText.slice(0, 20000)) - 1;
   }
   lines.push('', english ? '=== USER REQUEST ===' : '=== KULLANICI İSTEĞİ ===');
   lines.push(request || (english ? '(empty)' : '(boş)'));
@@ -417,6 +445,10 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
         : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. Her değeri ekli rapor ya da mailde basıldığı gibi (özgün dil ve yazım) kopyala; yalnız "explanation" Türkçe olsun.');
     } else if (key === 'data-query') {
       lines.push(english ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Write question, options, assumptions and explanation in English.' : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. question, options, assumptions ve explanation Türkçe olsun.');
+    } else if (key === 'presentation-grouping') {
+      lines.push(english
+        ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Write category names and "r" reasons in the language of the user\'s request; "explanation" in English.'
+        : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. Kategori adlarını ve "r" gerekçelerini kullanıcının isteğinin dilinde, "explanation" alanını Türkçe yaz.');
     } else if (key === 'plm-id-extract' || key === 'fabric-card' || key === 'image-search') {
       lines.push(english
         ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Write "explanation" in English.'
@@ -457,6 +489,10 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
       lines.push(english
         ? 'Translate ONLY CONTEXT.text, one textile summary fragment from CONTEXT.sourceLanguage into CONTEXT.targetLanguage. No other text. Preserve every technical yarn count, fraction, slash, weight, unit, percentage, numeric value and original order exactly. Never invent textile specifications. Do not insert the middle dot, bullet, pipe, semicolon or newline. Do not translate code identifiers. Leave untranslatable terminology unchanged. The caller validates all numeric tokens and separators.'
         : 'Yalnız CONTEXT.text içindeki tek kumaş özeti parçasını CONTEXT.sourceLanguage dilinden CONTEXT.targetLanguage diline çevir. Ek açıklama yazma. Teknik iplik numarasını, kesri, eğik çizgiyi, gramajı, birimi, yüzdeleri, tüm sayıları ve sırasını aynen koru. Kumaş bilgisi uydurma. Ortanca nokta, madde imi, dikey çizgi, noktalı virgül veya satır sonu ekleme. Kodları çevirme. Çevrilemeyen teknik terimi değiştirme. İstemci sayıları ve ayraçları ayrıca doğrular.');
+    } else if (key === 'presentation-grouping') {
+      lines.push(english
+        ? 'The request is how the user wants the presentation models grouped. Every CONTEXT.models item is one model: "k" is its key, "image" names the attached contact sheet whose tile is labelled with that key (or "none"), and "fields" lists ALL of its data as "Label: value" (a value split over several items continues with "(cont.)"). Inspect the image AND the fields of every model. CONTEXT.mode "plan": choose 2–12 short, mutually exclusive categories that answer the request and fit these models. CONTEXT.mode "classify": copy CONTEXT.categories exactly into "categories" and use only those names. Write exactly one assignments line for every model, using its exact key; never skip, merge or invent keys. When the image and fields do not show enough evidence, write c=? and say why in r; never guess. A model without an image is classified from its fields only.'
+        : 'İstek, kullanıcının sunumdaki modelleri nasıl gruplamak istediğidir. CONTEXT.models içindeki her öğe bir modeldir: "k" anahtarıdır, "image" o anahtarla etiketli karenin bulunduğu ekli paftanın adıdır (ya da "none"), "fields" modelin TÜM bilgisini "Etiket: değer" olarak listeler (birden çok öğeye bölünmüş değer "(devam)" ile sürer). Her modelin görselini VE alanlarını incele. CONTEXT.mode "plan": isteği karşılayan ve bu modellere uyan, birbirini dışlayan 2–12 kısa kategori seç. CONTEXT.mode "classify": CONTEXT.categories değerlerini "categories" alanına aynen yaz ve yalnız bu adları kullan. Her model için tam anahtarıyla tam bir assignments satırı yaz; model atlama, birleştirme ya da anahtar uydurma. Görsel ve alanlar yeterli kanıt göstermiyorsa c=? yaz ve nedenini r içinde söyle; tahmin etme. Görseli olmayan model yalnız alanlarına göre sınıflandırılır.');
     } else if (key === 'fabric-card') {
       lines.push(english
         ? 'Each CONTEXT.fabrics item is "<code> :: <PLM fabric text>". Write one "cards" line for every code, using exactly that code. "summary" is what a buyer sees in the Collection table: the full fabric type, yarn count, weight and composition in that order. Write it twice: "summary" in Turkish (e.g. "Süprem · 30/1 Ne Penye · 150 gsm · 100% Pamuk") and "summaryEn" in English with standard textile terms (e.g. "Single Jersey · 30/1 Ne Combed · 150 gsm · 100% Cotton"); both carry exactly the same numbers. Product naming convention: spell this fibre as "Polyester" in the Turkish "summary" and "Poliester" in the English "summaryEn" (even though standard English usually spells it "Polyester"). Fill the other fields only from the text; leave a field empty rather than guessing. Never invent, round or compute a number: Buyer Log discards every value whose numbers are not written in the PLM text. Do not use the "|" character inside a value.'
@@ -653,4 +689,4 @@ function buildChatPrompt({ message, contexts, lang, firstMessage = true, sentMod
   return { prompt: `${head.slice(0, room)}\n${tail}`.slice(-config.LIMITS.maxPromptChars), modules, truncated: true };
 }
 
-module.exports = { CONTRACTS, MAX_SAMPLE_ROWS, CHAT_MAX_ROWS, buildChatPrompt, formatContextBlock, contractFor, normalizeSource, sanitizeContext, buildPrompt, extractJsonObject, parseStructured };
+module.exports = { CONTRACTS, MAX_SAMPLE_ROWS, CHAT_MAX_ROWS, buildChatPrompt, formatContextBlock, contractFor, contextFits, normalizeSource, sanitizeContext, buildPrompt, extractJsonObject, parseStructured };
