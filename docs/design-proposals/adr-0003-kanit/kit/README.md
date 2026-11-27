@@ -11,6 +11,13 @@ geçici sunucu ve sentetik veriyle çalışır. Parolalar sentetik test parolala
 - **NODE_OPTIONS:** Ortamdaki `--max-old-space-size` korunmalıdır. Süreç geneli bu bayrak işçi
   `resourceLimits` değerini ezer; bayrağı kaldırmak 503'ü gizler (ADR §6K.1). Üretim politikası
   değeriyle ölçmek için: `NODE_OPTIONS="--use-openssl-ca --max-old-space-size=3686"`.
+- **Üretim temsilî çalışma ortamı: Electron.** Üretimde sunucu `BuyerLog.exe` → `ELECTRON_RUN_AS_NODE=1` →
+  `server/watchdog.js` ile Electron'un gömülü Node'unda koşar (Electron 44.3.0 = Node 24.20.0). Sandbox'taki
+  Node 22.23.5 sonuçları mutlak değer olarak üretimi temsil etmez (PR #1249: Node 22'de 503 tekrarlanabilir,
+  Electron 44.3.0'da aynı senaryoda 503 ve GC 0; `decisionMs` Node 22'de ~2,7 sn, Electron'da 1–3 ms).
+  Önerilen koşu: `npm install electron@44.3.0` (repo dışı klasöre), ardından
+  `ELECTRON_RUN_AS_NODE=1 NODE_OPTIONS="--use-openssl-ca --max-old-space-size=3686" <electron> $KIT/ab3.js …`
+  (sunucu `process.execPath` ile aynı ikiliden başlatılır). Her sonuçta çalışma ortamı + NODE_OPTIONS yazılır.
 - Değişkenler:
   - `KIT=<bu klasörün tam yolu>`
   - `SRC=<fixture klasörü>`
