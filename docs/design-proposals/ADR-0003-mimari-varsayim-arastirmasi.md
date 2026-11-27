@@ -1128,6 +1128,17 @@ Kod değiştirilmedi. Gerçek Chromium DOM olayları kullanıldı: çift tık, m
 - Not yolu kodu iki kolda aynı, ama 3/3 blokta +0,7–1,2 sn fark var. Koşuların çoğunda CP okuması 503 ile düştüğü ve soğuk tam hesaba geçildiği için fark ayrıştırılamadı **[Bilinmiyor]**. Kabul için L2 tekrarı gerekir.
 - Son okuma özeti 9/9 koşuda aynı.
 
+**İki kullanıcı ve ardışık kayıt [Doğrulandı: gerçek tarayıcı, `46fc8d96` (uygulama kodu `3b23455`) ↔ main `57bb982`; satır kaydı açık ve kapalı]:**
+- "Kara" yerine `Gemi+Tır` kullanıldı (`DELTYPE_OPTS`'ta "Kara" yok).
+- **A senaryosu:** U1 açık "Uçak" kaydeder; U2 aynı satırı `Gemi+Tır` yapar; U1 bayat satırdan ilgisiz Supp. FOB ya da not kaydeder. İki varyant: canlı olay normal ve canlı olay `page.route` ile engelli.
+  - **Niyet:** U1'in gövdelerinde `delType` yok; `delmap` 4/4 satırda `Gemi+Tır`, iki yolda da.
+  - **main:** U1'in Supp. FOB gövdesi bayat "Uçak"ı taşıyor; 4 durumun 3'ünde U2'nin değeri ezildi.
+  - Not kaydı iki kolda da `delType` taşımıyor.
+- **B senaryosu:** ilk kayıt (`Uçak`) yanıt aşamasında tutuldu; bu sırada `Gemi+Tır` seçildi; kayıt 1 onaylandı.
+  - Kayıt 2 `Gemi+Tır` gönderdi.
+  - Ardından ilgisiz Supp. FOB, niyette `delType` taşımadı; main'de mevcut değeri taşıdı.
+  - `delmap` iki kolda da `Gemi+Tır`.
+
 **Journal [Doğrulandı: source + gerçek yerel DB, salt okunur]:**
 - CP kayıtları sipariş satırı başına `cp-order:<satır>` olarak tutuluyor. Olayın `patch` alanı yalnız değişen alanları içeriyor (`delivery`, `notes`, `suppFob`…); `userId`, `at` ve `revision` de var.
 - Main kökünde sessiz override `{notes, suppFob, suppFobMeta, delivery:"Gemi"}` olarak görünüyor. Listelenebilir.

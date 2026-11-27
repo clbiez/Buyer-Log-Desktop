@@ -1,0 +1,306 @@
+{
+ "app": "/home/user/main3/resources/app",
+ "rowSave": "on",
+ "kara": "Gemi+Tır",
+ "scen": {
+  "A-canlı-olay-normal": {
+   "steps": [
+    {
+     "kind": "suppFob",
+     "step": "1-2 U1 açık Uçak",
+     "sent": [
+      {
+       "m": "POST",
+       "p": "/api/overrides/rows",
+       "delType": [
+        "Uçak"
+       ],
+       "failed": false
+      }
+     ]
+    },
+    {
+     "kind": "suppFob",
+     "step": "3 U2 Gemi+Tır",
+     "status": 200,
+     "u1Row": {
+      "dt": "Uçak",
+      "intent": false
+     }
+    },
+    {
+     "kind": "suppFob",
+     "step": "4 U1 ilgisiz suppFob",
+     "sent": [
+      {
+       "m": "PATCH",
+       "p": "/api/overrides/4100002",
+       "delType": "Uçak",
+       "failed": false
+      }
+     ],
+     "u1Row": {
+      "dt": "Uçak",
+      "intent": false
+     }
+    },
+    {
+     "kind": "note",
+     "step": "1-2 U1 açık Uçak",
+     "sent": [
+      {
+       "m": "POST",
+       "p": "/api/overrides/rows",
+       "delType": [
+        "Uçak"
+       ],
+       "failed": false
+      }
+     ]
+    },
+    {
+     "kind": "note",
+     "step": "3 U2 Gemi+Tır",
+     "status": 200,
+     "u1Row": {
+      "dt": "Uçak",
+      "intent": false
+     }
+    },
+    {
+     "kind": "note",
+     "step": "4 U1 ilgisiz note",
+     "sent": [
+      {
+       "m": "POST",
+       "p": "/api/overrides/batch",
+       "delType": [
+        "—"
+       ],
+       "failed": false
+      }
+     ],
+     "u1Row": {
+      "dt": "Uçak",
+      "intent": false
+     }
+    }
+   ],
+   "liveRequests": 0
+  },
+  "A-canlı-olay-engelli": {
+   "steps": [
+    {
+     "kind": "suppFob",
+     "step": "1-2 U1 açık Uçak",
+     "sent": [
+      {
+       "m": "POST",
+       "p": "/api/overrides/rows",
+       "delType": [
+        "Uçak"
+       ],
+       "failed": false
+      }
+     ]
+    },
+    {
+     "kind": "suppFob",
+     "step": "3 U2 Gemi+Tır",
+     "status": 200,
+     "u1Row": {
+      "dt": "Uçak",
+      "intent": false
+     }
+    },
+    {
+     "kind": "suppFob",
+     "step": "4 U1 ilgisiz suppFob",
+     "sent": [
+      {
+       "m": "PATCH",
+       "p": "/api/overrides/4100004",
+       "delType": "Uçak",
+       "failed": false
+      }
+     ],
+     "u1Row": {
+      "dt": "Uçak",
+      "intent": false
+     }
+    },
+    {
+     "kind": "note",
+     "step": "1-2 U1 açık Uçak",
+     "sent": [
+      {
+       "m": "POST",
+       "p": "/api/overrides/rows",
+       "delType": [
+        "Uçak"
+       ],
+       "failed": false
+      }
+     ]
+    },
+    {
+     "kind": "note",
+     "step": "3 U2 Gemi+Tır",
+     "status": 200,
+     "u1Row": {
+      "dt": "Uçak",
+      "intent": false
+     }
+    },
+    {
+     "kind": "note",
+     "step": "4 U1 ilgisiz note",
+     "sent": [
+      {
+       "m": "POST",
+       "p": "/api/overrides/batch",
+       "delType": [
+        "—"
+       ],
+       "failed": false
+      }
+     ],
+     "u1Row": {
+      "dt": "Uçak",
+      "intent": false
+     }
+    }
+   ],
+   "liveRequests": 19
+  },
+  "B-ardışık": {
+   "steps": [
+    {
+     "step": "1 Uçak gönderildi (yanıt tutuluyor)",
+     "held": true,
+     "heldDelType": [
+      "Uçak"
+     ],
+     "u1Row": {
+      "dt": "Uçak",
+      "intent": false
+     }
+    },
+    {
+     "step": "2 Gemi+Tır seçildi (kayıt 1 onaylanmadan)",
+     "u1Row": {
+      "dt": "Gemi+Tır",
+      "intent": false
+     },
+     "requestsSoFar": [
+      {
+       "p": "/api/overrides/rows",
+       "done": false
+      }
+     ]
+    },
+    {
+     "step": "3 kayıt 1 onaylandı",
+     "u1Row": {
+      "dt": "Gemi+Tır",
+      "intent": false
+     }
+    },
+    {
+     "step": "4 kayıt 2",
+     "sent": [
+      {
+       "m": "POST",
+       "p": "/api/overrides/rows",
+       "delType": [
+        "Uçak"
+       ],
+       "failed": false
+      },
+      {
+       "m": "POST",
+       "p": "/api/overrides/rows",
+       "delType": [
+        "Gemi+Tır"
+       ],
+       "failed": false
+      }
+     ],
+     "u1Row": {
+      "dt": "Gemi+Tır",
+      "intent": false
+     }
+    },
+    {
+     "step": "5 ilgisiz Supp. FOB",
+     "sent": [
+      {
+       "m": "PATCH",
+       "p": "/api/overrides/4100006",
+       "delType": "Gemi+Tır",
+       "failed": false
+      }
+     ],
+     "u1Row": {
+      "dt": "Gemi+Tır",
+      "intent": false
+     }
+    }
+   ]
+  }
+ },
+ "errors": [],
+ "rows": {
+  "A-canlı-olay-normal-suppFob": {
+   "id": 1,
+   "code": 4100002,
+   "model": "HARRY Crew Kazak",
+   "ccode": "E03",
+   "dt": "Gemi"
+  },
+  "A-canlı-olay-normal-note": {
+   "id": 2,
+   "code": 4100003,
+   "model": "BARBIE Glitter Kazak",
+   "ccode": "B07",
+   "dt": "Gemi"
+  },
+  "A-canlı-olay-engelli-suppFob": {
+   "id": 3,
+   "code": 4100004,
+   "model": "DISNEY Crew T-shirt",
+   "ccode": "H04",
+   "dt": "Gemi"
+  },
+  "A-canlı-olay-engelli-note": {
+   "id": 4,
+   "code": 4100005,
+   "model": "FCB Crew Pijama",
+   "ccode": "H04",
+   "dt": "Gemi"
+  },
+  "B-ardışık": {
+   "id": 5,
+   "code": 4100006,
+   "model": "BARBIE Logo Pijama",
+   "ccode": "G05",
+   "dt": "Gemi"
+  }
+ },
+ "store": {
+  "delmap": {
+   "4100002|HARRY CREW KAZAK|E03": "Uçak",
+   "4100003|BARBIE GLITTER KAZAK|B07": "Gemi+Tır",
+   "4100004|DISNEY CREW T-SHIRT|H04": "Gemi+Tır",
+   "4100005|FCB CREW PIJAMA|H04": "Gemi+Tır",
+   "4100006|BARBIE LOGO PIJAMA|G05": "Gemi+Tır"
+  }
+ },
+ "delmapByRow": {
+  "A-canlı-olay-normal-suppFob": "Uçak",
+  "A-canlı-olay-normal-note": "Gemi+Tır",
+  "A-canlı-olay-engelli-suppFob": "Gemi+Tır",
+  "A-canlı-olay-engelli-note": "Gemi+Tır",
+  "B-ardışık": "Gemi+Tır"
+ }
+}
