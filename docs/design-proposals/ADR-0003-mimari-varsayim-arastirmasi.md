@@ -1292,6 +1292,70 @@ Ham örnekler `6k/l2-ozet.txt`.
 L2 PASS (GC açık); kapalı kolda <0,5 sn tutarlı fark [Bilinmiyor]. Varsayılan kapalı. Merge, TEST ve
 STABLE yok.
 
+## 6L · #1236 modüller arası maliyet: aynı t0'dan ölçüm (2026-11-27)
+
+**Soru.** §6J'de bayrak açıkken Siparişler süresi 1,1 → 3,8 sn çıktı. Bu gerçek bir gecikme mi, yoksa CP
+erken hazır olduğu için başlangıç noktasının kayması mı?
+
+**Tasarım.** Sabit commit `211863f6` (#1236 = pilot + main `27dbaf0`), `BUYER_LOG_CP_ROWPATCH_LEGACY`
+kapalı/açık + A/A (kapalı, ikinci etiket). Sıra off on offAA | offAA on off | off on offAA; 9 koşu.
+- **t0** = kayıt isteği gönderilmeden hemen önceki istemci zamanı (`Date.now()`). Tüm süreler t0'dan
+  yanıtın tamamlandığı ana kadardır.
+- Kayıt başına mod:
+  - `seq`: kayıt yanıtından sonra CP, ardından Siparişler (§6J ile aynı).
+  - `par`: kayıt yanıtından sonra CP ve Siparişler aynı anda.
+  - `ordersOnly`: önce yalnız Siparişler, sonra CP.
+  - Her mod için 1 Supp. FOB ve 1 not kaydı; koşu başına 6 kayıt.
+- 503'te istemci benzeri yeniden deneme: 500 ms, en çok 10 deneme.
+- İstek bazında sunucu aşamaları kancadan (`hook-t0.js`) çıkarıldı:
+  - `pre` = istek başı → ilk işçi işinin gönderimi (yakalama, bağlam, projeksiyon kurulumu, havuz kuyruğu);
+  - `worker` = işçi yürütme süresi;
+  - Siparişler `load` = işçide veri kümesi yükleme.
+- CPU: sunucu süreci (ana + işçi iş parçacıkları) kayıt penceresi başına. İstemci tarafı bu koşuda tarayıcı
+  değil Node betiğidir; tarayıcı CPU'su ölçülmedi [Bilinmiyor].
+- Ham veri `adr-0003-kanit/6l/ham`, özet ve ham örnekler `6l/t0-ozet.txt`.
+
+**Sonuçlar** (kol medyanı ms, koşu medyanlarından; blok farkı on−off / A/A):
+
+| Mod / kayıt | Siparişler hazır (t0) off → on | Blok on−off | A/A | CP hazır (t0) off → on | İkisi hazır (t0) off → on |
+|---|---|---|---|---|---|
+| seq / Supp. FOB | 16047 → 3868 | −10371 / −12179 / −12531 | +4 / −239 / +544 | 14760 → 275 | 16047 → 3868 |
+| seq / not | 13501 → 3905 | −9596 / −11903 / −4877 | +1684 / −760 / +2139 | 12520 → 273 | 13501 → 3905 |
+| par / Supp. FOB | 3635 → 3743 | +373 / +108 / +447 | +516 / +122 / +565 | 14123 → 245 | 14123 → 3743 |
+| par / not | 3950 → 4026 | +148 / +45 / +76 | +7 / −246 / +1222 | 13964 → 209 | 13964 → 4026 |
+| ordersOnly / Supp. FOB | 4569 → 3720 | −431 / −849 / −454 | −150 / −1323 / +435 | — | 8330 → 3883 |
+| ordersOnly / not | 3568 → 4259 | +17 / −771 / +988 | +602 / −1362 / +1047 | — | 14828 → 4435 |
+
+Siparişler isteğinin sunucu aşamaları (medyan ms, off → on):
+
+| Mod | `pre` | `worker` (`load`) | CP isteği `pre` |
+|---|---|---|---|
+| seq | 47–50 → 2281–2399 | 1151–1162 → 1101–1260 | 2545–2852 → 7–9 |
+| par | 2398–2597 → 2694–2928 | 1198–1247 → 1060–1080 | 2381–2561 → 10–14 |
+| ordersOnly | 2508–2912 → 2633–2694 | 1092–1523 → 1040–1413 | — |
+
+- **[Doğrulandı] Kayma.** `seq` modunda Siparişler'in `pre` süresi 50 ms → 2,3–2,4 sn artıyor, CP'nin `pre`
+  süresi ise 2,5–2,9 sn → 7–9 ms düşüyor. Bu ~2,4 sn, CP ve Siparişler'in ortak ön koşuludur (yazma
+  sonrası sayfa projeksiyonu yeniden kurulumu). Bayrak kapalıyken CP bu bedeli öder ve Siparişler hazır
+  projeksiyonu bulur. Açıkken CP satır yamasıyla bekleme olmadan döner ve bedeli sıradaki Siparişler
+  isteği öder.
+- **[Doğrulandı] Kalıcı gerileme yok.** Aynı t0'dan ve istekler eşzamanlıyken (`par`) Siparişler hazır
+  süresi off/on aynı (blok farkları +45…+447 ms, A/A −246…+1222 ms). CP hiç istenmediğinde (`ordersOnly`)
+  fark A/A içinde, işaret karışık. Siparişler işçi yüklemesi (~1,0–1,5 sn) iki kolda da var: her yazma
+  yeni projeksiyon nesli üretir. 13 ms'lik sorgu bu sürenin içinde değil.
+- **[Doğrulandı]** CP kazanımı Siparişler'e maliyet aktarılarak elde edilmedi. İkisinin birlikte hazır
+  olması t0'dan seq ~13,5–16,0 → ~3,9 sn, par ~14,0 → ~3,7–4,0 sn. Toplam sunucu CPU'su kayıt penceresi
+  başına ~20–24 → ~9,7–11 sn.
+- **Uyarı.** Bu dalda (#1236) 503 GC düzeltmesi yok. Kapalı kolda CP okumalarının çoğu 503 + yeniden
+  deneme içerir (`503/yeniden deneme` satırı, `t0-ozet.txt`), bu da kapalı CP süresini ~13–15 sn'ye
+  çıkarır. Tek denemede kapalı CP ~6,6–7,3 sn (az örnek); §6K'de GC açıkken ~6–8,5 sn. CP kazanım
+  büyüklüğü bu nedenle kapalı kolda abartılıdır. Siparişler sonucu bundan etkilenmez: `par`
+  modunda Siparişler'in kendi isteği 503 almadı.
+- **Veri eşitliği [Doğrulandı].** 9/9 koşu son tam okuma özeti `52aa7fa77911`.
+
+**Karar:** 1,1 → 3,8 sn ölçüm referansı kaymasıdır, gerçek Siparişler gecikmesi değil. Merge yok, bayrak
+varsayılan kapalı.
+
 ## 7 · Ürün sahibinin vermesi gereken kararlar
 
 1. **Sütun filtresi anlamı (T5):** Koleksiyonda sayısal/aralık/revizyon filtresi yokluğu bilinçli mi? Genel Bakış boyut filtresinin `norm()` eşitliği istenen davranış mı?
