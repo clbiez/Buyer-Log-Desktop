@@ -1288,6 +1288,19 @@ Ham örnekler `6k/l2-ozet.txt`.
   pre 9539.
 - **Veri eşitliği [Doğrulandı].** 15 koşunun son tam okuma özeti aynı: `52aa7fa77911`.
 
+**Üretim heap bayrağıyla kontrol [Doğrulandı · sandbox Node].** `NODE_OPTIONS=--max-old-space-size=3686`
+(8 GB makinenin politika değeri), main `fdf2f758`, sıra off on on off:
+
+| Koşu | 503 | İşçi oluşturma | GC yeniden ölçüm (ms) | Tepe RSS MB | Veri özeti |
+|---|---|---|---|---|---|
+| off | 3/6 | 8 | — | 3221 | `52aa7fa77911` |
+| on | 0/6 | 4 | 2 (119, 241) | 2897 | `52aa7fa77911` |
+| on | 0/6 | 4 | 2 (194, 122) | 2941 | `52aa7fa77911` |
+| off | 3/6 | 8 | — | 2967 | `52aa7fa77911` |
+
+503, 8192'ye özgü değil; politika değerinde de aynı. Electron'un gömülü Node'unda ölçülmedi [Hipotez].
+Ham veri `6k/ham/h3686`.
+
 **Karar:** 503 pilotu PASS (503 26/54 → 0/36; bütçe ve denetim değişmedi; tepe RSS A/A içinde). Not
 L2 PASS (GC açık); kapalı kolda <0,5 sn tutarlı fark [Bilinmiyor]. Varsayılan kapalı. Merge, TEST ve
 STABLE yok.
