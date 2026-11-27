@@ -1204,6 +1204,94 @@ Kod değiştirilmedi. Gerçek Chromium DOM olayları kullanıldı: çift tık, m
 - Aynı kullanıcının iki sekmesi aynı tam yeniden yüklemeyi iki kez başlatıyor **[Doğrulandı: istek listesi]**.
 - Çözüm önerilmedi.
 
+## 6K · 503 kararlılık pilotu ve not kaydı L2 (2026-11-27)
+
+**Değişiklik (dal `claude/compute-503-gc-recheck`, `fdf2f758` = main `27dbaf0` + 1 commit; push/PR yok).**
+`BUYER_LOG_COMPUTE_GC_RECHECK=1` iken read-model işçisinin `retainedBytes` ölçümü havuzun kabul
+sınırını aşarsa işçi **tek** tam GC çalıştırıp yeniden ölçer; havuz `received()` denetimi, bütçe ve iş
+tahmini aynen uygulanır. Havuz kabul sınırını (`retainedLimitBytes`) iş mesajına ekler. Bayrak kapalı
+→ davranış aynı. Sorgu başına GC yok: GC yalnız ölçüm sınırı aştığında çalışır (koşu başına 1–3 kez,
+~27+ işten). Filtreli testler: `compute-gc-recheck-v20261127`, `server-compute-pool`,
+`read-model-worker-pool` → 35/35. Tam `npm test` bu dal için koşulmadı.
+
+### 6K.1 · Kök neden düzeltmesi: işçi heap sınırı uygulanmıyor
+
+- **[Doğrulandı · Node 22 probu, `adr-0003-kanit/6k/probe*.js`]** Süreç genelindeki
+  `--max-old-space-size` bayrağı (komut satırı veya `NODE_OPTIONS`) işçinin
+  `resourceLimits.maxOldGenerationSizeMb` değerini geçersiz kılar: 1024 MB istenen işçinin heap sınırı
+  bayrakla 4345 / 8640 MB olur. İşçiye filtrelenmiş `execArgv` vermek düzeltmez (V8 bayrağı süreç
+  geneli).
+- **[Doğrulandı · source]** `server/watchdog.js` + `server-heap-policy.js`, RAM < ~15 GB makinelerde
+  sunucuya `--max-old-space-size=3686–4096` ekler; ≥16 GB'ta bayrak yok.
+- **[Muhtemel]** Bu nedenle üretimde <15 GB RAM makinelerde read-model işçisi büyük heap sınırıyla GC'yi
+  geciktirir; GC'siz `heapUsed` önceki işlerin çöpünü içerir → `COMPUTE_ESTIMATE_EXCEEDED` → işçi emekli
+  → 503. Electron'un gömülü Node'unda aynı davranış [Hipotez]; 3686 MB ile sandbox kontrolü ayrıca
+  raporlanır.
+- **Ölçüm karıştırıcısı [Doğrulandı].** Bu sandbox'ın `NODE_OPTIONS`'ı
+  `--max-old-space-size=8192` içerir. Önceki tüm L2'ler bu bayrakla koştu. İzolasyon (sıra X1 X2 X3 X3
+  X2 X1): saf `b7b172d` 503 2/2 koşu, pilot+bayrak kapalı 2/2; `NODE_OPTIONS`'ı yalnız `--require` ile
+  değiştiren kanca 0/2, boş preload 0/2. Yani 503'ü kanca değil 8192 bayrağının kalkması
+  engelliyordu. Bu bölümdeki ölçümler 8192'yi koruyarak kancalandı; kancalı kapalı kol 503'ü aynen
+  üretti (A/A dahil).
+
+### 6K.2 · L2 tasarımı
+
+Sabit commit: pre = `c6e2f658` (`b7b172d` + pilot), main = `fdf2f758`. Kollar: `mainoff`, `maingc`,
+`mainoffAA` (A/A: `mainoff` ile aynı), `preoff`, `pregc`. 3 blok, blok içi sıra dönüşümlü
+(ABCDE EDCBA ABCDE), 15 koşu. Koşu başına taze sunucu, 30k seed-7 kaynak (CP 24.982 satır), 6 kayıt
+(3 Supp. FOB, 3 not), kayıtlar arası 14 sn. Kullanıcı beklemesi: kayıt gönderiminden CP yanıtına
+(`cpWait`) ve + Siparişler sorgusuna (`ready`). CPU: sunucu süreci (ana + işçi iş parçacıkları,
+`/proc/pid/stat`), kayıt penceresi başına. Bellek: kanca (`hook-mem.js`) 1 sn'de RSS, `VmHWM` (tepe),
+ana heap; işçi sonucu `retainedBytes`, GC yeniden ölçüm; işçi oluşturma sayısı. Ham veri
+`adr-0003-kanit/6k/ham/ab7`, özet `6k/l2-ozet.txt`.
+
+### 6K.3 · 503 ve kararlılık sonuçları
+
+| Kol (3 koşu) | CP okuma 503 | İşçi oluşturma / koşu | GC yeniden ölçüm / koşu | Tepe RSS MB (VmHWM) | Medyan RSS MB | Ana heap maks MB | İşçi retained maks MB |
+|---|---|---|---|---|---|---|---|
+| mainoff | 9/18 | 8, 8, 8 | 0 | 3208, 3053, 3195 | 1603, 1623, 1647 | 307, 398, 308 | 863, 863, 861 |
+| mainoffAA | 8/18 | 8, 6, 9 | 0 | 3021, 3099, 3035 | 1545, 1673, 1609 | 334, 342, 428 | 863, 861, 861 |
+| maingc | **0/18** | 5, 3, 5 | 3, 1, 3 | 3174, 3273, 2965 | 1663, 1860, 1719 | 367, 353, 356 | 863, 863, 862 |
+| preoff | 9/18 | 9, 8, 9 | 0 | 2806, 3018, 2730 | 1617, 1619, 1522 | 307, 346, 306 | 571, 863, 568 |
+| pregc | **0/18** | 5, 6, 3 | 2, 3, 1 | 2870, 3030, 3244 | 1671, 1662, 1752 | 367, 353, 369 | 755, 754, 863 |
+
+- **[Doğrulandı]** Bayrak açık: 503 0/36, kapalı (A/A dahil) 26/54. Tüm 503 kodları
+  `COMPUTE_ESTIMATE_EXCEEDED`. Kancasız ek seri (`6k/ham/ab6`, 6 koşu) aynı örüntü: kapalı 3/6 her
+  koşuda, açık 0.
+- **[Doğrulandı]** GC yeniden ölçüm başına 312–322 MB serbest kaldı; GC süresi koşu medyanı
+  112–230 ms (işçi iş parçacığında; ana olay döngüsünü durdurmaz, ilgili isteğin süresine eklenir).
+- **[Doğrulandı]** İşçi oluşturma 8–9 → 3–6 / koşu (emekli olma azaldı).
+- **Bellek.** Tepe RSS farkı A/A aralığında (açık 2965–3273, kapalı+A/A 2730–3208). Medyan RSS açık
+  kolda +~50–100 MB [Muhtemel]: emekli olmayan işçi önbelleğini korur. İşçi retained tavanı değişmedi
+  (sınır altında).
+
+### 6K.4 · Not kaydı L2 (kullanıcı beklemesi, ms)
+
+Blok farkları (blok 1 / 2 / 3); A/A = `mainoffAA − mainoff`:
+
+| Not kaydı | gc açık − kapalı (main) | A/A | gc açık − kapalı (pre) | main − pre (gc açık) | main − pre (kapalı) |
+|---|---|---|---|---|---|
+| `cpWait` | −2599 / −2459 / −2422 | +494 / +1234 / −130 | −2337 / −737 / −2586 | +171 / −1358 / +693 | +433 / +364 / +529 |
+| `ready` (CP + Siparişler) | −2336 / −2258 / −2263 | +750 / +1421 / −22 | −2213 / −201 / −2331 | +329 / −1747 / +488 | +453 / +311 / +419 |
+| CPU / kayıt penceresi | −2150 / −1570 / −2970 | +1380 / +1820 / −1190 | −2120 / +160 / −1400 | +1170 / −1070 / −370 | +1200 / +660 / +1200 |
+
+Kol medyanları (`ready`, not): mainoff 9360, maingc 7102, mainoffAA 10531, preoff 9049, pregc 7115.
+Ham örnekler `6k/l2-ozet.txt`.
+
+- **[Doğrulandı]** Bayrak açık not kaydı beklemesini ~2,3 sn azaltır; üç blokta da A/A gürültüsünün
+  (≤1,4 sn) üstünde. Mekanizma: işçi emekli olmadığı için yeniden yükleme yok.
+- **§6I'daki BLOCKED (#1243 not +0,7–1,2 sn).** GC açıkken main − pre: +329 / −1747 / +488 (medyan
+  +329), işaret karışık, A/A içinde → **tekrarlanabilir gerileme yok, PASS**. Kapalı kolda +311–453 ms
+  tutarlı işaret var ama A/A genliğinin altında → bu çözünürlükte [Bilinmiyor].
+- **Supp. FOB.** Kapalı kollarda Supp. FOB okumalarının çoğu 503; `cpWait` başarısız yanıta kadarki
+  süredir, kullanıcı için yeniden deneme gerekir. Açık kolda başarılı medyan `ready`: main 9547,
+  pre 9539.
+- **Veri eşitliği [Doğrulandı].** 15 koşunun son tam okuma özeti aynı: `52aa7fa77911`.
+
+**Karar:** 503 pilotu PASS (503 26/54 → 0/36; bütçe ve denetim değişmedi; tepe RSS A/A içinde). Not
+L2 PASS (GC açık); kapalı kolda <0,5 sn tutarlı fark [Bilinmiyor]. Varsayılan kapalı. Merge, TEST ve
+STABLE yok.
+
 ## 7 · Ürün sahibinin vermesi gereken kararlar
 
 1. **Sütun filtresi anlamı (T5):** Koleksiyonda sayısal/aralık/revizyon filtresi yokluğu bilinçli mi? Genel Bakış boyut filtresinin `norm()` eşitliği istenen davranış mı?

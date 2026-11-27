@@ -1,0 +1,75 @@
+koşu             503 spawn gc gcMs  peakRSS rssMed rssMax mainHeap wRetMax cpuTot  digest
+r1-mainoff.json   3   8     0  null  3208    1603   2969   307      863     102190  52aa7fa77911  
+r2-maingc.json    0   5     3  229   3174    1663   3074   367      863     97220   52aa7fa77911  gcFreedMB=[312,322,319]
+r3-mainoffAA.json 3   8     0  null  3021    1545   2881   334      863     104280  52aa7fa77911  
+r4-preoff.json    3   9     0  null  2806    1617   2737   307      571     97320   52aa7fa77911  
+r5-pregc.json     0   5     2  176   2870    1671   2738   367      755     93610   52aa7fa77911  gcFreedMB=[320,319]
+r6-pregc.json     0   6     3  115   3030    1662   2817   353      754     100570  52aa7fa77911  gcFreedMB=[312,321,317]
+r7-preoff.json    3   8     0  null  3018    1619   2759   346      863     101150  52aa7fa77911  
+r8-mainoffAA.json 2   6     0  null  3099    1673   2851   342      861     111980  52aa7fa77911  
+r9-maingc.json    0   3     1  230   3273    1860   3136   353      863     92080   52aa7fa77911  gcFreedMB=[322]
+r10-mainoff.json  3   8     0  null  3053    1623   2807   398      863     100460  52aa7fa77911  
+r11-mainoff.json  3   8     0  null  3195    1647   2790   308      861     100580  52aa7fa77911  
+r12-maingc.json   0   5     3  226   2965    1719   2775   356      862     90750   52aa7fa77911  gcFreedMB=[322,317,312]
+r13-mainoffAA.json 3   9     0  null  3035    1609   2713   428      861     96890   52aa7fa77911  
+r14-preoff.json   3   9     0  null  2730    1522   2524   306      568     89790   52aa7fa77911  
+r15-pregc.json    0   3     1  112   3244    1752   2962   369      863     83930   52aa7fa77911  gcFreedMB=[312]
+
+kol medyanları (ham koşular)
+mainoff    n503=3[3,3,3] spawn=8[8,8,8] gc=0[0,0,0] peakRssMB=3195[3208,3053,3195] rssMedMB=1623[1603,1623,1647] mainHeapMaxMB=308[307,398,308] workerRetMaxMB=863[863,863,861] cpuTot=100580[102190,100460,100580]
+maingc     n503=0[0,0,0] spawn=5[5,3,5] gc=3[3,1,3] peakRssMB=3174[3174,3273,2965] rssMedMB=1719[1663,1860,1719] mainHeapMaxMB=356[367,353,356] workerRetMaxMB=863[863,863,862] cpuTot=92080[97220,92080,90750]
+mainoffAA  n503=3[3,2,3] spawn=8[8,6,9] gc=0[0,0,0] peakRssMB=3035[3021,3099,3035] rssMedMB=1609[1545,1673,1609] mainHeapMaxMB=342[334,342,428] workerRetMaxMB=861[863,861,861] cpuTot=104280[104280,111980,96890]
+preoff     n503=3[3,3,3] spawn=9[9,8,9] gc=0[0,0,0] peakRssMB=2806[2806,3018,2730] rssMedMB=1617[1617,1619,1522] mainHeapMaxMB=307[307,346,306] workerRetMaxMB=571[571,863,568] cpuTot=97320[97320,101150,89790]
+pregc      n503=0[0,0,0] spawn=5[5,6,3] gc=2[2,3,1] peakRssMB=3030[2870,3030,3244] rssMedMB=1671[1671,1662,1752] mainHeapMaxMB=367[367,353,369] workerRetMaxMB=755[755,754,863] cpuTot=93610[93610,100570,83930]
+
+=== suppFob (koşu medyanı; kol: ham koşu medyanları | kol medyanı)
+  cpWait  mainoff[8081,8392,8371]|8371 maingc[8547,5938,8539]|8539 mainoffAA[7726,8690,8347]|8347 preoff[7977,7413,7366]|7413 pregc[8433,9088,5064]|8433
+          bloklar [{"gc-off":466,"AA":-355,"pgc-poff":456,"mgc-pgc":114,"moff-poff":104},{"gc-off":-2454,"AA":298,"pgc-poff":1675,"mgc-pgc":-3150,"moff-poff":979},{"gc-off":168,"AA":-24,"pgc-poff":-2302,"mgc-pgc":3475,"moff-poff":1005}]
+  orders  mainoff[1112,1125,1200]|1125 maingc[1200,1320,1092]|1200 mainoffAA[1263,1221,1289]|1263 preoff[1388,1205,1134]|1205 pregc[1123,1429,1319]|1319
+          bloklar [{"gc-off":87,"AA":150,"pgc-poff":-264,"mgc-pgc":77,"moff-poff":-275},{"gc-off":194,"AA":95,"pgc-poff":224,"mgc-pgc":-109,"moff-poff":-80},{"gc-off":-107,"AA":90,"pgc-poff":184,"mgc-pgc":-227,"moff-poff":65}]
+  ready   mainoff[9077,9570,9770]|9570 maingc[10037,7289,9547]|9547 mainoffAA[8989,9784,9518]|9518 preoff[9365,8576,8500]|8576 pregc[9539,10517,6463]|9539
+          bloklar [{"gc-off":960,"AA":-88,"pgc-poff":174,"mgc-pgc":498,"moff-poff":-288},{"gc-off":-2280,"AA":214,"pgc-poff":1941,"mgc-pgc":-3228,"moff-poff":994},{"gc-off":-223,"AA":-252,"pgc-poff":-2037,"mgc-pgc":3084,"moff-poff":1270}]
+  cpu     mainoff[17530,17690,16420]|17530 maingc[18570,14850,16810]|16810 mainoffAA[16780,18660,17170]|17170 preoff[16070,16160,14220]|16070 pregc[15890,17630,14400]|15890
+          bloklar [{"gc-off":1040,"AA":-750,"pgc-poff":-180,"mgc-pgc":2680,"moff-poff":1460},{"gc-off":-2840,"AA":970,"pgc-poff":1470,"mgc-pgc":-2780,"moff-poff":1530},{"gc-off":390,"AA":750,"pgc-poff":180,"mgc-pgc":2410,"moff-poff":2200}]
+  ham cpWait/ready örnekleri:
+    r1-mainoff.json   [[503,8125,9077],[503,8081,9193],[200,6972,8439]]
+    r2-maingc.json    [[200,8390,9590],[200,9663,10781],[200,8547,10037]]
+    r3-mainoffAA.json [[503,8820,10227],[200,6840,7817],[200,7726,8989]]
+    r4-preoff.json    [[503,7857,9212],[503,8596,10036],[503,7977,9365]]
+    r5-pregc.json     [[200,8433,9539],[200,9704,10827],[200,5315,6612]]
+    r6-pregc.json     [[200,8115,9429],[200,9088,10517],[200,9848,11280]]
+    r7-preoff.json    [[503,7413,8576],[503,7349,8554],[503,10107,11685]]
+    r8-mainoffAA.json [[503,8690,9784],[200,7504,9088],[200,10421,11642]]
+    r9-maingc.json    [[200,9623,10909],[200,5938,7289],[200,5095,6415]]
+    r10-mainoff.json  [[503,8368,9493],[503,8671,9795],[503,8392,9570]]
+    r11-mainoff.json  [[503,8985,10116],[503,8191,9391],[503,8371,9770]]
+    r12-maingc.json   [[200,8539,10036],[200,8542,9547],[200,7983,9075]]
+    r13-mainoffAA.json [[503,7164,8462],[503,8347,9518],[503,8806,10095]]
+    r14-preoff.json   [[503,6624,7921],[503,7366,8500],[503,8183,9247]]
+    r15-pregc.json    [[200,7744,9063],[200,4533,5685],[200,5064,6463]]
+
+=== note (koşu medyanı; kol: ham koşu medyanları | kol medyanı)
+  cpWait  mainoff[8599,8167,8315]|8315 maingc[6000,5708,5893]|5893 mainoffAA[9093,9401,8185]|9093 preoff[8166,7803,7786]|7803 pregc[5829,7066,5200]|5829
+          bloklar [{"gc-off":-2599,"AA":494,"pgc-poff":-2337,"mgc-pgc":171,"moff-poff":433},{"gc-off":-2459,"AA":1234,"pgc-poff":-737,"mgc-pgc":-1358,"moff-poff":364},{"gc-off":-2422,"AA":-130,"pgc-poff":-2586,"mgc-pgc":693,"moff-poff":529}]
+  orders  mainoff[1182,1193,1246]|1193 maingc[1326,1367,1105]|1326 mainoffAA[1438,1444,1151]|1438 preoff[1112,1246,1081]|1112 pregc[1334,1783,1329]|1334
+          bloklar [{"gc-off":144,"AA":256,"pgc-poff":223,"mgc-pgc":-8,"moff-poff":70},{"gc-off":174,"AA":251,"pgc-poff":536,"mgc-pgc":-416,"moff-poff":-53},{"gc-off":-141,"AA":-94,"pgc-poff":248,"mgc-pgc":-225,"moff-poff":164}]
+  ready   mainoff[9781,9360,9286]|9360 maingc[7445,7102,7023]|7102 mainoffAA[10531,10781,9265]|10531 preoff[9328,9049,8867]|9049 pregc[7115,8849,6536]|7115
+          bloklar [{"gc-off":-2336,"AA":750,"pgc-poff":-2213,"mgc-pgc":329,"moff-poff":453},{"gc-off":-2258,"AA":1421,"pgc-poff":-201,"mgc-pgc":-1747,"moff-poff":311},{"gc-off":-2263,"AA":-22,"pgc-poff":-2331,"mgc-pgc":488,"moff-poff":419}]
+  cpu     mainoff[16970,16330,16560]|16560 maingc[14820,14760,13590]|14760 mainoffAA[18350,18150,15370]|18150 preoff[15770,15670,15360]|15670 pregc[13650,15830,13960]|13960
+          bloklar [{"gc-off":-2150,"AA":1380,"pgc-poff":-2120,"mgc-pgc":1170,"moff-poff":1200},{"gc-off":-1570,"AA":1820,"pgc-poff":160,"mgc-pgc":-1070,"moff-poff":660},{"gc-off":-2970,"AA":-1190,"pgc-poff":-1400,"mgc-pgc":-370,"moff-poff":1200}]
+  ham cpWait/ready örnekleri:
+    r1-mainoff.json   [[200,8190,9306],[200,8599,9781],[503,9237,10513]]
+    r2-maingc.json    [[200,6000,7445],[200,6300,7626],[200,5830,7084]]
+    r3-mainoffAA.json [[200,8442,9899],[503,9093,10531],[503,9382,10731]]
+    r4-preoff.json    [[200,7758,8870],[200,8166,9616],[200,8244,9328]]
+    r5-pregc.json     [[200,5781,7115],[200,7166,8643],[200,5829,6970]]
+    r6-pregc.json     [[200,5842,7655],[200,7465,8892],[200,7066,8849]]
+    r7-preoff.json    [[200,7803,9049],[200,7608,8868],[200,9234,10454]]
+    r8-mainoffAA.json [[200,9401,10781],[503,10259,11928],[200,6919,8363]]
+    r9-maingc.json    [[200,7093,8460],[200,5708,7018],[200,5658,7102]]
+    r10-mainoff.json  [[200,7795,8921],[200,8167,9360],[200,8315,9824]]
+    r11-mainoff.json  [[200,7938,9184],[200,8315,9286],[200,8629,10110]]
+    r12-maingc.json   [[200,5956,7061],[200,5893,7023],[200,5404,6479]]
+    r13-mainoffAA.json [[200,7765,8916],[200,8185,9265],[200,8218,9449]]
+    r14-preoff.json   [[200,7786,8867],[200,7883,9162],[200,7575,8518]]
+    r15-pregc.json    [[200,6060,7211],[200,5200,6536],[200,4795,6124]]
