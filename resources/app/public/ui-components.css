@@ -514,8 +514,6 @@ html[data-ui-system="manifest"] .globalFlowMeta {color:var(--ui-text-muted) !imp
 }
 html[data-ui-system="manifest"] .globalFlowMeta[data-tone="error"] {color:var(--ui-danger) !important
 }
-html[data-ui-system="manifest"] .ordersRefreshState[data-state="error"] {color:var(--ui-danger) !important
-}
 html[data-ui-system="manifest"] .globalFlowMeta[data-tone="warn"] {color:var(--ui-warning) !important
 }
 html[data-ui-system="manifest"] .globalFlowMeta[data-tone="loading"] {color:var(--ui-selected-ink) !important
@@ -1542,6 +1540,8 @@ html[data-ui-system="manifest"] .toolbar input[type=search]:focus {background:va
 html[data-ui-system="manifest"] .toolbar select {font-size:var(--ui-font-xs) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important
 }
 html[data-ui-system="manifest"] .toolbar .count {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .toolbar .count.ordersRefreshState[data-state="error"] {color:var(--ui-danger) !important
 }
 html[data-ui-system="manifest"] .toolbar button.tbtn,html[data-ui-system="manifest"] .toolbar label.tbtn {background:var(--ui-surface) !important;font-size:var(--ui-font-xs) !important;color:var(--ui-text-secondary) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
