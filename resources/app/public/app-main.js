@@ -4843,6 +4843,8 @@ function ordersColumnsFromCp(cpCols){
 const ORDERS_COLS = ordersColumnsFromCp(CP_COLS);
 // PLM BOM kumaş metni; hücre/filtre Koleksiyon kumaş kartı katmanını kullanır.
 const CP_FABRIC_PLM_KEY='Fabric (PLM)';
+// PLM BOM baskı özeti; hücre Koleksiyon Artwork Detayı ile aynı bölge kartlarını çizer.
+const CP_ARTWORK_PLM_KEY='Artwork Detail';
 /* CP/Orders PLM detayları sadece yerel BOM yan deposundan okunur. ASAS satırları
    kalıcı olarak değiştirilmez; aynı modelin siparişleri aynı veriyi görür. */
 function cpPlmDetailsSync(){
@@ -7624,6 +7626,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
     return `<td class="${schema.sortType==='number'?'num':''}"${display?` title="${escapeHtml(display)}"`:''}>${escapeHtml(display)}</td>`;
   }
   if((tableKey==='cp'||tableKey==='orders')&&c.k===CP_FABRIC_PLM_KEY) return cpFabricCellHtml(r);
+  if((tableKey==='cp'||tableKey==='orders')&&c.k===CP_ARTWORK_PLM_KEY) return cpArtworkCellHtml(r);
   // Tarih revizyonları okla, onay ve hesaplanan farklar noktayla çizilir.
   // Siparişler'de Priority'nin revizyon öncesi karşılığı hesaplanmaz (iş yükünü
   // ikiye katlar); bu yüzden orada Priority yalnız güncel değeriyle çizilir.
@@ -37115,9 +37118,28 @@ function cpFabricCellHtml(row){
   const cell=fabricCardCellParts(raw);
   return `<td class="cpFabricTd ${cell.cls}" data-cp-fabric="1" title="${escapeHtml(cell.title)}">${cell.inner}</td>`;
 }
+/* CP / Orders "Artwork Detail" hücresi: satırdaki PLM özet metni değişmez
+   (filtre, sıralama, kopyala, Excel aynı metni kullanır); hücre Koleksiyon'la
+   aynı bölge kartlarını gösterir. Kart modeli özet metninden kurulur (CP/Orders
+   satırları Koleksiyon PLM sahiplik/görünüm bayraklarını taşımaz); özet
+   biçimine uymayan metin (eski Set Style özeti) düz metin kalır. */
+// Aynı özet çok satırda tekrarlar; hücre HTML'i metin + dil başına bir kez kurulur.
+const cpArtworkCellCache={tr:new Map(),en:new Map()};
+function cpArtworkCellHtml(row){
+  const raw=String(row?.[CP_ARTWORK_PLM_KEY]??'').trim();
+  const api=raw?window.BLCollectionArtworkDetail:null;
+  if(!api?.cellCards)return `<td${raw?` title="${escapeHtml(raw)}"`:''}>${escapeHtml(raw)}</td>`;
+  const cache=cpArtworkCellCache[appLang==='en'?'en':'tr'],hit=cache.get(raw);
+  if(hit!==undefined)return hit;
+  if(cache.size>=5000)cache.clear();
+  const art=api.cellCards(null,raw);
+  const html=art?`<td class="cpArtworkTd ${art.cls}" title="${escapeHtml(raw)}">${art.inner}</td>`:`<td title="${escapeHtml(raw)}">${escapeHtml(raw)}</td>`;
+  cache.set(raw,html);
+  return html;
+}
 /* Sunum Stüdyosu: çip gösterimi olan sütunlar ve satırdan yapısal çip modeli. */
 window.BLCellChips=Object.freeze({
-  columns:Object.freeze({koleksiyon:Object.freeze({fabric:'fabric',artworkDetail:'artwork'}),cp:Object.freeze({[CP_FABRIC_PLM_KEY]:'fabric'}),orders:Object.freeze({[CP_FABRIC_PLM_KEY]:'fabric'})}),
+  columns:Object.freeze({koleksiyon:Object.freeze({fabric:'fabric',artworkDetail:'artwork'}),cp:Object.freeze({[CP_FABRIC_PLM_KEY]:'fabric',[CP_ARTWORK_PLM_KEY]:'artwork'}),orders:Object.freeze({[CP_FABRIC_PLM_KEY]:'fabric',[CP_ARTWORK_PLM_KEY]:'artwork'})}),
   model(kind,row,key){
     if(!row)return null;
     if(kind==='fabric'){kolFabricCardsEnsureLoaded();return fabricCardCellModel(row[key]);}
