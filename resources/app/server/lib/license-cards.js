@@ -445,7 +445,13 @@ function licensorMergesOf(overrides) {
   const raw = overrides && overrides.licensorMerges, entries = raw && raw.entries && typeof raw.entries === 'object' && !Array.isArray(raw.entries) ? raw.entries : {};
   return { entries, updatedAt: (raw && raw.updatedAt) || '', split: Object.keys(entries).filter(key => entries[key] && entries[key].split === true && !entries[key].source).sort() };
 }
-function setLicensorMerge(overrides, body, now = new Date().toISOString()) {
+// Non-DTR manufacturers are the licensors' TR accounts (FAN MANİA DIŞ TİCARET ≡ FAN MANIA):
+// they can be linked to a licensor so orders resolve their Licensor from the manufacturer.
+// The caller passes the projected manufacturer directory list; the stored list is the fallback.
+function mergeManufacturersOf(overrides, manufacturers) {
+  return businessRules.normalizeManufacturerList(Array.isArray(manufacturers) ? manufacturers : overrides && overrides.nonDtrManufacturers);
+}
+function setLicensorMerge(overrides, body, now = new Date().toISOString(), { manufacturers } = {}) {
   const current = licensorMergesOf(overrides);
   let key, entry;
   if (body && Object.hasOwn(body, 'source')) {
@@ -455,7 +461,7 @@ function setLicensorMerge(overrides, body, now = new Date().toISOString()) {
     if (!source || !target || source.length>200 || target.length>200 || typeof body.split!=='boolean'
         || businessRules.turkNorm(source)===businessRules.turkNorm(target))
       fail('LICENSE_MERGE_INVALID','İki farklı lisansör seçin. / Select two different licensors.');
-    const available=new Set(catalogue(overrides).map(card=>businessRules.turkNorm(card.licensor)).filter(Boolean));
+    const available=new Set([...catalogue(overrides).map(card=>card.licensor),...mergeManufacturersOf(overrides,manufacturers)].map(name=>businessRules.turkNorm(name)).filter(Boolean));
     if (!available.has(businessRules.turkNorm(source)) || !available.has(businessRules.turkNorm(target)))
       fail('LICENSE_MERGE_INVALID','Lisansörlerden biri bulunamadı. / One of the licensors was not found.');
     key='m:'+crypto.createHash('sha256').update(businessRules.turkNorm(source)).digest('hex').slice(0,24);
@@ -476,13 +482,13 @@ function setLicensorMerge(overrides, body, now = new Date().toISOString()) {
     licenseCards:revisionOf(overrides,'licenseCards')+1,pricingRules:revisionOf(overrides,'pricingRules')+1}};
   return {overrides:next,licensorMerges:licensorMergesOf(next)};
 }
-function responseOf(overrides, canEdit) {
+function responseOf(overrides, canEdit, { manufacturers } = {}) {
   const state = stateOf(overrides), rules = Array.isArray(overrides.pricingRules) ? overrides.pricingRules : [];
   const byPair = new Map();
   for (const rule of rules) { const key = pairKey(rule.license, rule.licensor); if (!byPair.has(key)) byPair.set(key, []); byPair.get(key).push(rule); }
   return { cards: visibleCatalogue(overrides).map(card => ({ ...card, editToken: editToken(card, rules), atlasToken: atlasToken(card), rules: byPair.get(pairKey(card.license, card.licensor)) || [] })),
     pricingRules: rules, revision: revisionOf(overrides, 'licenseCards'), pricingRevision: revisionOf(overrides, 'pricingRules'), initialized: state.initialized,
-    lastImportedAt: state.lastImportedAt, stageTemplates: templatesOf(overrides).items, licensorMerges: { split: licensorMergesOf(overrides).split, entries: licensorMergesOf(overrides).entries }, canEdit: Boolean(canEdit) };
+    lastImportedAt: state.lastImportedAt, stageTemplates: templatesOf(overrides).items, licensorMerges: { split: licensorMergesOf(overrides).split, entries: licensorMergesOf(overrides).entries }, nonDtrManufacturers: mergeManufacturersOf(overrides, manufacturers), canEdit: Boolean(canEdit) };
 }
 
 module.exports = { createCard, PROFILE_LIMITS, MAX_SYMBOL_BYTES, pairKey, cardId, stateOf, catalogue, visibleCatalogue, discoveryRowsFromOrders, setLicensor, templatesOf, licensorMergesOf, setLicensorMerge, normalizeTemplate, applyTemplate, linkTemplates, propagateTemplate, saveTemplate, deleteTemplate, revisionOf, assertRevision, discoverPairs, appendDiscovered, validateSymbol, normalizeProfile, normalizeRules, mergeRules, updateCard, responseOf };
