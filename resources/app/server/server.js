@@ -8880,7 +8880,7 @@ async function buildResponse(currentUser = null, options = {}) {
     modelRefresh: sourceFilterRequired ? null : (active.modelRefresh || null),
     lastRefreshResult: active.lastRefreshResult || null,
     pricingRules: Array.isArray(overrides.pricingRules) ? overrides.pricingRules : [],
-    licensorMerges: { split: require('./lib/license-cards').licensorMergesOf(overrides).split },
+    licensorMerges: (({ split, entries }) => ({ split, entries }))(require('./lib/license-cards').licensorMergesOf(overrides)),
     transitRules: Array.isArray(overrides.transitRules) ? overrides.transitRules : [],
     nonDtrManufacturers: BLBusinessRules.normalizeManufacturerList(overrides.nonDtrManufacturers),
     landedMultipliers: overrides.landedMultipliers || { tr: 1.05, overseas: 1.11 },
@@ -11069,6 +11069,8 @@ async function getLicenseDiscoveryRows(req){
 require('./lib/license-card-assets').configure({dir:path.join(require('./user-data').SERVER_DATA_ROOT,'license-card-assets'),getSharedSyncRoot:async()=>(await syncSettings.read()).sharedSyncRoot});
 const licenseCardService=require('./lib/license-card-service').createLicenseCardService({
   loadOverrides,saveOverrides,mutate:require('./db').mutateSharedResource,pricing:require('./lib/resource-rule-service'),
+  // Non-DTR manufacturer cards (licensors' TR accounts) are valid merge partners.
+  manufacturers:ov=>require('./lib/email-groups-store').nonDtrManufacturers(ov&&ov.nonDtrManufacturers),
   getDiscoveryRows:profile=>getLicenseDiscoveryRows({currentUser:profile}),discoveryStamp:profile=>String(cacheForUser(profile.id).loadedAt||''),
   publish:(profile,change)=>licenseCardSync.publish({currentUser:profile},change),
   changed:(profile,section,detail,context)=>publishSharedMasterChange(section,{currentUser:profile,headers:{'x-client-id':context?.originClientId||''}},detail),
@@ -11086,7 +11088,7 @@ app.get('/api/pricing-rules', (req, res) => {
   const ov = loadOverrides();
   const revision = Number(ov._revisions && ov._revisions.pricingRules) || 0;
   res.set('ETag', `"${revision}"`);
-  res.json({ rules: Array.isArray(ov.pricingRules) ? ov.pricingRules : [], revision, licensorMerges: { split: require('./lib/license-cards').licensorMergesOf(ov).split } });
+  res.json({ rules: Array.isArray(ov.pricingRules) ? ov.pricingRules : [], revision, licensorMerges: (({ split, entries }) => ({ split, entries }))(require('./lib/license-cards').licensorMergesOf(ov)) });
 });
 app.put('/api/pricing-rules', userAccess.requireArea('source'), userAccess.requirePermission('manageBusinessRules'), async (req, res) => {
   try {

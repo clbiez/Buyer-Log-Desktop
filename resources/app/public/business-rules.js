@@ -38,12 +38,19 @@
      ayırabilir (split listesi). Royalty eşleşmesi önce birebir adı, yoksa birleşik adı
      kullanır; böylece iki adın ayrı sözleşmeleri varsa her biri kendi sözleşmesini alır. */
   const LICENSOR_SUFFIX_TOKENS = new Set(['LTD', 'LIMITED', 'LTDSTI', 'STI', 'SIRKETI', 'AS', 'INC', 'INCORPORATED', 'LLC', 'LLP', 'PLC', 'CO', 'COMPANY', 'CORP', 'CORPORATION', 'GMBH', 'AG', 'SA', 'SAS', 'SARL', 'SRL', 'SPA', 'BV', 'NV', 'PTY', 'KG', 'OY', 'AB', 'TIC', 'SAN', 'VE', 'UK', 'US', 'USA', 'EU', 'TR']);
+  // Pure and called per order row by Non-DTR licensor matching: short names are memoized
+  // in a bounded map like turkNorm; the result is identical.
+  const LICENSOR_MERGE_KEY_CACHE = new Map();
   function licensorMergeKey(value) {
-    const full = turkNorm(value).replace(/[.'’]/g, '').replace(/[^A-Z0-9]+/g, ' ').trim();
+    const normalized = turkNorm(value), hit = LICENSOR_MERGE_KEY_CACHE.get(normalized);
+    if (hit !== undefined) return hit;
+    const full = normalized.replace(/[.'’]/g, '').replace(/[^A-Z0-9]+/g, ' ').trim();
     // Only trailing tokens are suffixes: "AS ROMA" stays itself, "ERMODA UK LTD" → "ERMODA".
     const tokens = full.split(' ').filter(Boolean);
     while (tokens.length > 1 && LICENSOR_SUFFIX_TOKENS.has(tokens[tokens.length - 1])) tokens.pop();
-    return tokens.join(' ');
+    const key = tokens.join(' ');
+    if (normalized.length <= 160) { if (LICENSOR_MERGE_KEY_CACHE.size >= 20000) LICENSOR_MERGE_KEY_CACHE.clear(); LICENSOR_MERGE_KEY_CACHE.set(normalized, key); }
+    return key;
   }
   function licensorMergeSplit(merges) {
     // Accepts the API shape {split:[keys]} or the stored shape {entries:{key:{split}}}.
@@ -306,7 +313,8 @@
     const wantedKey = turkNorm(wanted);
     const empty = { license: wanted, latestDate: '', licensors: [], ambiguous: false, licensorsLabel: '', displayValue: '' };
     if (!wantedKey) return empty;
-    const candidates = (Array.isArray(rules) ? rules : []).map(rule => {
+    // Only this license's contracts are date-parsed (same subset, same order as filtering after).
+    const candidates = rulesForLicense(rules, wantedKey).map(rule => {
       const start = validRuleDate(rule && rule.opdStart);
       const end = validRuleDate(rule && rule.opdEnd);
       return { rule, start, end };
@@ -396,21 +404,125 @@
     return found;
   }
 
+  /* Non-DTR üretici lisansörün kendi carisidir: aynı firma TR carisiyle üretici
+     ("FAN MANİA DIŞ TİCARET LTD. ŞTİ."), YD carisiyle sözleşme lisansörü ("FAN MANIA",
+     "Fan Mania General Trading L.L.C") olarak görünür. Eşleşme: Lisans Kartları'ndaki
+     birleştirme (otomatik ek grubu veya manuel bağ) ya da lisansör adının, hukuki ek
+     atılmış hâliyle, üretici adının baş kelimeleri olması ("ERMODA" → "ERMODA TEKSTİL
+     KONFEKSİYON") ve o lisansörün birleştirme grubu (ERMODA ≡ ERMODA UK LTD). DTR
+     hiçbir zaman üreticiden türetilmez. */
+  const LICENSOR_LEGAL_FORM_TOKENS = new Set([...LICENSOR_SUFFIX_TOKENS].filter(token => !['UK', 'US', 'USA', 'EU', 'TR'].includes(token)));
+  const LICENSOR_TOKEN_CACHE = new Map();
+  function licensorNameTokens(value, stripLegalForm) {
+    const raw = turkNorm(value), id = (stripLegalForm ? '1' : '0') + raw, hit = LICENSOR_TOKEN_CACHE.get(id);
+    if (hit) return hit;
+    const tokens = raw.replace(/[.'’]/g, '').replace(/[^A-Z0-9]+/g, ' ').trim().split(' ').filter(Boolean);
+    if (stripLegalForm) while (tokens.length > 1 && LICENSOR_LEGAL_FORM_TOKENS.has(tokens[tokens.length - 1])) tokens.pop();
+    if (LICENSOR_TOKEN_CACHE.size >= 20000) LICENSOR_TOKEN_CACHE.clear();
+    LICENSOR_TOKEN_CACHE.set(id, tokens);
+    return tokens;
+  }
+  function manufacturerMatchesLicensor(manufacturer, licensor, merges) {
+    if (!manufacturerKey(manufacturer) || !turkNorm(licensor) || turkNorm(licensor) === 'DTR') return false;
+    if (licensorsMerged(manufacturer, licensor, merges)) return true;
+    const own = licensorNameTokens(licensor, true), maker = licensorNameTokens(manufacturer, false);
+    return own.join(' ').length >= 3 && own.length <= maker.length && own.every((token, index) => maker[index] === token);
+  }
+  // Rule references grouped by license key, per immutable rules array (derived, never stored).
+  // Row resolution over 30k orders scans only the license's own contracts; fields stay live.
+  const RULE_INDEX = new WeakMap(), NO_MERGES = Object.freeze({});
+  function ruleIndex(rules) {
+    let index = RULE_INDEX.get(rules);
+    if (!index || index.size !== rules.length) {
+      index = { size: rules.length, byLicense: new Map(), licensors: new Map(), makers: new WeakMap() };
+      for (const rule of rules) {
+        if (!rule || typeof rule !== 'object') continue;
+        const key = turkNorm(norm(rule.license)), name = norm(rule.licensor), nameKey = turkNorm(name);
+        if (!index.byLicense.has(key)) index.byLicense.set(key, []);
+        index.byLicense.get(key).push(rule);
+        if (nameKey && !index.licensors.has(nameKey)) index.licensors.set(nameKey, name);
+      }
+      RULE_INDEX.set(rules, index);
+    }
+    return index;
+  }
+  function rulesForLicense(rules, wanted) {
+    if (!Array.isArray(rules)) return [];
+    return (ruleIndex(rules).byLicense.get(wanted) || []).filter(rule => turkNorm(norm(rule.license)) === wanted);
+  }
+  // The licensor groups (merge components) the manufacturer belongs to: its own group (a card
+  // merge) plus the group of every contract licensor that matches it by name. "ERMODA" matches
+  // "ERMODA TEKSTİL", so "ERMODA UK LTD" (same automatic group as ERMODA) is the same company.
+  function manufacturerLicensorGroups(rules, manufacturer, merges) {
+    const index = ruleIndex(rules), mergeKey = merges && typeof merges === 'object' ? merges : NO_MERGES;
+    let byMaker = index.makers.get(mergeKey);
+    if (!byMaker) { byMaker = new Map(); index.makers.set(mergeKey, byMaker); }
+    const key = manufacturerKey(manufacturer), hit = byMaker.get(key);
+    if (hit) return hit;
+    const groups = new Set([licensorGroupKey(manufacturer, merges)]);
+    for (const name of index.licensors.values()) if (manufacturerMatchesLicensor(manufacturer, name, merges)) groups.add(licensorGroupKey(name, merges));
+    if (byMaker.size >= 5000) byMaker.clear();
+    byMaker.set(key, groups);
+    return groups;
+  }
+  // Lisansın sözleşme lisansörlerinden Non-DTR üreticiyle aynı firma olanı. Farklı
+  // firmalara eşleşirse (iki ayrı birleştirme grubu) tahmin yapılmaz: null.
+  // nonDtr: the caller's isNonDtrManufacturer result (the list is normalized once per row);
+  // latest() lazily gives the rule-based state, needed only to rank several names.
+  function resolveManufacturerLicensor(license, rules, options, latest, nonDtr) {
+    const opts = options || {}, wanted = turkNorm(norm(license));
+    if (!wanted || !nonDtr) return null;
+    const own = rulesForLicense(rules, wanted);
+    if (!own.length) return null;
+    const makerGroups = manufacturerLicensorGroups(rules, opts.manufacturer, opts.licensorMerges);
+    const names = new Map(), matched = new Map();
+    for (const rule of own) {
+      const name = norm(rule.licensor), key = turkNorm(name);
+      if (!key || key === 'DTR') continue;
+      if (!matched.has(key)) matched.set(key, makerGroups.has(licensorGroupKey(name, opts.licensorMerges)));
+      if (!matched.get(key)) continue;
+      const start = validRuleDate(rule.opdStart), end = validRuleDate(rule.opdEnd);
+      if (start.invalid || end.invalid) continue;
+      const fresh = [start.ordinal == null ? -Infinity : start.ordinal, end.ordinal == null ? -Infinity : end.ordinal];
+      const prior = names.get(key);
+      if (!prior || fresh[0] > prior.fresh[0] || (fresh[0] === prior.fresh[0] && fresh[1] > prior.fresh[1])) names.set(key, { name: prior ? prior.name : name, fresh, date: norm(rule.opdStart) || norm(rule.opdEnd) || '' });
+    }
+    if (!names.size) return null;
+    const groups = new Set([...names.values()].map(item => licensorGroupKey(item.name, opts.licensorMerges)));
+    if (groups.size > 1) return null;
+    // Several names of one company: the manufacturer's own name, then the latest contract group.
+    const self = turkNorm(opts.manufacturer), current = new Set(names.size > 1 && typeof latest === 'function' ? (latest().licensors || []).map(turkNorm) : []);
+    const rank = item => [turkNorm(item.name) === self ? 1 : 0, current.has(turkNorm(item.name)) ? 1 : 0, item.fresh[0], item.fresh[1]];
+    const chosen = [...names.values()].sort((a, b) => {
+      const x = rank(a), y = rank(b);
+      for (let index = 0; index < x.length; index += 1) if (x[index] !== y[index]) return y[index] > x[index] ? 1 : -1;
+      return turkNorm(a.name).localeCompare(turkNorm(b.name));
+    })[0];
+    return {
+      license: norm(license), latestDate: chosen.date, licensors: [chosen.name], ambiguous: false,
+      licensorsLabel: chosen.name, displayValue: chosen.name, hasLicense: true, hasRule: true, status: 'resolved', source: 'manufacturer',
+    };
+  }
+
   // Orders use the manufacturer card's DTR classification before royalty rules,
   // unless every royalty contract of the license names a non-DTR licensor.
+  // A Non-DTR manufacturer that is the same company as one of the license's contract
+  // licensors decides the Licensor (options.licensorMerges carries the card merges).
   // Collection models keep their separate license-based selection policy.
   // Explicit source values and manual overrides are preserved by callers.
   function resolveOrderLicensor(license, rules, options) {
     const opts = options || {};
-    if (norm(license) && manufacturerKey(opts.manufacturer)
-      && classifyDtrByManufacturer(opts.manufacturer, opts.nonDtrManufacturers) === 'DTR'
+    const nonDtr = Boolean(norm(license) && manufacturerKey(opts.manufacturer) && isNonDtrManufacturer(opts.manufacturer, opts.nonDtrManufacturers));
+    if (norm(license) && manufacturerKey(opts.manufacturer) && !nonDtr
       && !licenseHasOnlyNonDtrContracts(license, rules)) {
       return {
         license: norm(license), latestDate: '', licensors: ['DTR'], ambiguous: false,
         licensorsLabel: 'DTR', displayValue: 'DTR', hasLicense: true, hasRule: false, status: 'resolved',
       };
     }
-    return resolveAutoLicensor(license, rules, opts);
+    let state = null;
+    const latest = () => state || (state = resolveAutoLicensor(license, rules, opts));
+    return resolveManufacturerLicensor(license, rules, opts, latest, nonDtr) || latest();
   }
 
   // Otomatik çözümün değer üretemediği, fakat kuralın da eksik olmadığı
@@ -1042,6 +1154,7 @@
     resolveLicenseLicensor,
     resolveAutoLicensor,
     resolveOrderLicensor,
+    manufacturerMatchesLicensor,
     licenseHasOnlyNonDtrContracts,
     isUnresolvedLicensorStatus,
     transitRuleSeasonMatches,

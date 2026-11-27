@@ -2338,7 +2338,7 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
     logisticByOrder.get(source).push(segment);
   });
   return filtered.map((o, i) => {
-    const derivedLicensor = norm(o.licensor) || pricingLicensorForLicense(o.license, ov.pricingRules, '', {manufacturer:o.manufacturer,nonDtrManufacturers:ov.nonDtrManufacturers});
+    const derivedLicensor = norm(o.licensor) || pricingLicensorForLicense(o.license, ov.pricingRules, '', {manufacturer:o.manufacturer,nonDtrManufacturers:ov.nonDtrManufacturers,licensorMerges:ov.licensorMerges});
     const hasLicensorOverride = overrideHas(ov.licensormap || {}, o);
     // Explicit order edits take precedence over manufacturer-based defaults.
     const licensor = o.license && hasLicensorOverride ? norm(overrideGet(ov.licensormap, o)) : derivedLicensor;
@@ -2531,7 +2531,7 @@ function buildSharedOrderProjectionRowsFromASAS(asasOrders, antrepoMap, override
 function buildOverviewSummaryRowsFromASAS(asasOrders, overrides) {
   const ov = overrides || {};
   return (Array.isArray(asasOrders) ? asasOrders : []).map((o, i) => {
-    const derivedLicensor = norm(o.licensor) || pricingLicensorForLicense(o.license, ov.pricingRules, '', {manufacturer:o.manufacturer,nonDtrManufacturers:ov.nonDtrManufacturers});
+    const derivedLicensor = norm(o.licensor) || pricingLicensorForLicense(o.license, ov.pricingRules, '', {manufacturer:o.manufacturer,nonDtrManufacturers:ov.nonDtrManufacturers,licensorMerges:ov.licensorMerges});
     const licensor = o.license && overrideHas(ov.licensormap || {}, o)
       ? norm(overrideGet(ov.licensormap, o))
       : derivedLicensor;
@@ -2568,7 +2568,7 @@ function buildOrderSummaryRowsFromASAS(asasOrders, antrepoMap, overrides) {
   const matchRule = matchRuleOf(ov);
   const T = toDateOnly(new Date());
   const built = asasOrders.map(o => {
-    const derivedLicensor = norm(o.licensor) || pricingLicensorForLicense(o.license, ov.pricingRules, '', {manufacturer:o.manufacturer,nonDtrManufacturers:ov.nonDtrManufacturers});
+    const derivedLicensor = norm(o.licensor) || pricingLicensorForLicense(o.license, ov.pricingRules, '', {manufacturer:o.manufacturer,nonDtrManufacturers:ov.nonDtrManufacturers,licensorMerges:ov.licensorMerges});
     const hasLicensorOverride = overrideHas(ov.licensormap || {}, o);
     const licensor = o.license && hasLicensorOverride ? norm(overrideGet(ov.licensormap, o)) : derivedLicensor;
     const hit = findAntrepoHit(antrepoMap, o, { rule: matchRule });
@@ -3489,7 +3489,7 @@ function buildBacklogGrouped(asasOrders, antrepoMap, overrides, opts, prepared=n
 // (path) ile ve pivotla AYNI filtre seçenekleriyle sunucuda yeniden çözülür.
 function backlogSubManufacturer(order, overrides) {
   if (!order) return '';
-  const derivedLicensor = norm(order.licensor) || pricingLicensorForLicense(order.license, overrides && overrides.pricingRules, '', {manufacturer:order.manufacturer,nonDtrManufacturers:overrides && overrides.nonDtrManufacturers});
+  const derivedLicensor = norm(order.licensor) || pricingLicensorForLicense(order.license, overrides && overrides.pricingRules, '', {manufacturer:order.manufacturer,nonDtrManufacturers:overrides && overrides.nonDtrManufacturers,licensorMerges:overrides && overrides.licensorMerges});
   const hasLicensorOverride = overrideHas((overrides && overrides.licensormap) || {}, order);
   const licensor = order.license && hasLicensorOverride ? norm(overrideGet(overrides.licensormap, order)) : derivedLicensor;
   if (licensor === 'DTR') return norm(order.manufacturer);
