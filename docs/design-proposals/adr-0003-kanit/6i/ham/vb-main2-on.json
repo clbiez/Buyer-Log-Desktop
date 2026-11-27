@@ -1,0 +1,491 @@
+{
+ "app": "/home/user/main2/resources/app",
+ "rowSave": "on",
+ "steps": [
+  {
+   "name": "1a not kaydı (R1)",
+   "sent": [
+    {
+     "m": "POST",
+     "p": "/api/overrides/batch",
+     "body": {
+      "items": [
+       {
+        "orderCode": 4100000,
+        "patch": {
+         "model": "DISNEY Classic Pijama",
+         "ccode": "E03",
+         "notes": {
+          "Notes": "pilot not A",
+          "NotesHtml": "pilot not A"
+         }
+        }
+       }
+      ]
+     },
+     "failed": false
+    }
+   ]
+  },
+  {
+   "name": "1b Supp. FOB (R1)",
+   "sent": [
+    {
+     "m": "PATCH",
+     "p": "/api/overrides/4100000",
+     "body": {
+      "model": "DISNEY Classic Pijama",
+      "ccode": "E03",
+      "notes": {
+       "Notes": "pilot not A",
+       "NotesHtml": "pilot not A",
+       "NotesAt": "2026-11-27T07:52:13.820Z",
+       "NotesBy": "moderator",
+       "NotesByName": "Gökberk",
+       "EkNot": "",
+       "EkNotHtml": ""
+      },
+      "delType": "Gemi",
+      "suppFob": 345.5,
+      "suppFobMeta": {
+       "source": "manual"
+      }
+     },
+     "failed": false
+    }
+   ]
+  },
+  {
+   "name": "2a açık Del. Type (R3) → Uçak",
+   "sent": [
+    {
+     "m": "POST",
+     "p": "/api/overrides/rows",
+     "body": {
+      "items": [
+       {
+        "orderCode": 4100002,
+        "patch": {
+         "model": "HARRY Crew Kazak",
+         "ccode": "E03",
+         "delType": "Uçak"
+        },
+        "base": {
+         "delType": ""
+        }
+       }
+      ]
+     },
+     "failed": false
+    }
+   ]
+  },
+  {
+   "name": "2b geri al (Ctrl+Z)",
+   "sent": [
+    {
+     "m": "POST",
+     "p": "/api/overrides/rows",
+     "body": {
+      "items": [
+       {
+        "orderCode": 4100002,
+        "patch": {
+         "model": "HARRY Crew Kazak",
+         "ccode": "E03",
+         "delType": "Gemi"
+        },
+        "base": {
+         "delType": "Uçak"
+        }
+       }
+      ]
+     },
+     "failed": false
+    }
+   ]
+  },
+  {
+   "name": "2c yinele (Ctrl+Y)",
+   "sent": [
+    {
+     "m": "POST",
+     "p": "/api/overrides/rows",
+     "body": {
+      "items": [
+       {
+        "orderCode": 4100002,
+        "patch": {
+         "model": "HARRY Crew Kazak",
+         "ccode": "E03",
+         "delType": "Uçak"
+        },
+        "base": {
+         "delType": "Gemi"
+        }
+       }
+      ]
+     },
+     "failed": false
+    }
+   ]
+  },
+  {
+   "name": "3a açık Del. Type (R6) → Uçak",
+   "sent": [
+    {
+     "m": "POST",
+     "p": "/api/overrides/rows",
+     "body": {
+      "items": [
+       {
+        "orderCode": 4100003,
+        "patch": {
+         "model": "BARBIE Glitter Kazak",
+         "ccode": "B07",
+         "delType": "Uçak"
+        },
+        "base": {
+         "delType": ""
+        }
+       }
+      ]
+     },
+     "failed": false
+    }
+   ]
+  },
+  {
+   "name": "3b not kaydı (R6)",
+   "sent": [
+    {
+     "m": "POST",
+     "p": "/api/overrides/batch",
+     "body": {
+      "items": [
+       {
+        "orderCode": 4100003,
+        "patch": {
+         "model": "BARBIE Glitter Kazak",
+         "ccode": "B07",
+         "notes": {
+          "Notes": "override sonrası not",
+          "NotesHtml": "override sonrası not"
+         }
+        }
+       }
+      ]
+     },
+     "failed": false
+    }
+   ]
+  },
+  {
+   "name": "4a açık Del. Type (R5) → Uçak",
+   "sent": [
+    {
+     "m": "POST",
+     "p": "/api/overrides/rows",
+     "body": {
+      "items": [
+       {
+        "orderCode": 4100004,
+        "patch": {
+         "model": "DISNEY Crew T-shirt",
+         "ccode": "H04",
+         "delType": "Uçak"
+        },
+        "base": {
+         "delType": ""
+        }
+       }
+      ]
+     },
+     "failed": false
+    }
+   ]
+  },
+  {
+   "name": "4b Del. Type temizle (—)",
+   "sent": [
+    {
+     "m": "POST",
+     "p": "/api/overrides/rows",
+     "body": {
+      "items": [
+       {
+        "orderCode": 4100004,
+        "patch": {
+         "model": "DISNEY Crew T-shirt",
+         "ccode": "H04",
+         "delType": "Gemi"
+        },
+        "base": {
+         "delType": "Uçak"
+        }
+       }
+      ]
+     },
+     "failed": false
+    }
+   ]
+  },
+  {
+   "name": "5 not yapıştırma (2 satır, ızgara)",
+   "selInfo": {
+    "sel": 2,
+    "status": ""
+   },
+   "overlay": [
+    "CP yapıştırma önizlemesi2 değişiklik · 0 salt okunur · 0 geçersiz · 0 atlananTarih bağımlılıkları hücre düzenlemeyle aynı kuralları izler.Kayıt / alanÖnceSonra4100005 · Notesyapıştır 14100006 · Notesy"
+   ],
+   "sent": []
+  },
+  {
+   "name": "6 B Del. Type yazarken A not kaydeder (R4)",
+   "error": "page.dblclick: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.noteCellTrigger[data-id=\"6\"][data-key=\"Notes\"]')\u001b[22m\n\u001b[2m    - locator resolved to <button data-id=\"6\" type=\"button\" data-key=\"Notes\" title=\"Not ekle…\" data-edit-owner=\"moderator\" class=\"noteCellTrigger empty\" data-lin",
+   "sent": []
+  }
+ ],
+ "errors": [
+  "aday yok: R2 lisansör DTR değil (Sub-Manufacturer)",
+  "6 B Del. Type yazarken A not kaydeder (R4): page.dblclick: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.noteCellTrigger[data-id=\"6\"][data-key=\"Notes\"]')\u001b[22m\n\u001b[2m    - locator resolved to <button data-id=\"6\" type=\"button\" data-key=\"Notes\" title=\"Not ekle…\" data-edit-owner=\"moderator\" class=\"noteCellTrigger empty\" data-lin"
+ ],
+ "rows": {
+  "R1 parsiyel+üretim (not + Supp. FOB)": {
+   "id": 0,
+   "code": 4100000,
+   "model": "DISNEY Classic Pijama",
+   "ccode": "E03",
+   "dt": "Gemi",
+   "lic": "DTR",
+   "segs": [
+    {
+     "kind": "partial",
+     "status": "Üretimde",
+     "delType": "GEMI",
+     "arrival": "2026-12-06T00:00:00.000Z"
+    },
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2026-12-18T00:00:00.000Z"
+    }
+   ]
+  },
+  "R3 yalnız üretim (açık Del. Type + undo/redo)": {
+   "id": 1,
+   "code": 4100002,
+   "model": "HARRY Crew Kazak",
+   "ccode": "E03",
+   "dt": "Gemi",
+   "lic": "DTR",
+   "segs": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-03-04T00:00:00.000Z"
+    }
+   ]
+  },
+  "R6 yalnız üretim (override + not)": {
+   "id": 2,
+   "code": 4100003,
+   "model": "BARBIE Glitter Kazak",
+   "ccode": "B07",
+   "dt": "Gemi",
+   "lic": "DTR",
+   "segs": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-04-16T00:00:00.000Z"
+    }
+   ],
+   "to": "Uçak"
+  },
+  "R5 yalnız üretim (override + temizle)": {
+   "id": 3,
+   "code": 4100004,
+   "model": "DISNEY Crew T-shirt",
+   "ccode": "H04",
+   "dt": "Gemi",
+   "lic": "DTR",
+   "segs": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-03-09T00:00:00.000Z"
+    }
+   ],
+   "to": "Uçak"
+  },
+  "P1 yapıştırma satırı 1": {
+   "id": 4,
+   "code": 4100005,
+   "model": "FCB Crew Pijama",
+   "ccode": "H04",
+   "dt": "Gemi",
+   "lic": "DTR",
+   "segs": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-04-09T00:00:00.000Z"
+    }
+   ]
+  },
+  "P2 yapıştırma satırı 2": {
+   "id": 5,
+   "code": 4100006,
+   "model": "BARBIE Logo Pijama",
+   "ccode": "G05",
+   "dt": "Gemi",
+   "lic": "DTR",
+   "segs": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-03-29T00:00:00.000Z"
+    }
+   ]
+  },
+  "R4 yalnız üretim (eşzamanlı)": {
+   "id": 6,
+   "code": 4100007,
+   "model": "LOONEY Varsity Hirka",
+   "ccode": "M01",
+   "dt": "Gemi",
+   "lic": "DTR",
+   "segs": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-04-16T00:00:00.000Z"
+    }
+   ],
+   "to": "Uçak"
+  }
+ },
+ "userB": 201,
+ "rowSaveEnabled": true,
+ "licensors": {
+  "DTR": 24982
+ },
+ "menuTries": [
+  2,
+  2,
+  2,
+  1
+ ],
+ "finalRows": {
+  "R1 parsiyel+üretim (not + Supp. FOB)": {
+   "dt": "Gemi",
+   "segs": [
+    {
+     "kind": "partial",
+     "status": "Üretimde",
+     "delType": "GEMI",
+     "arrival": "2026-12-06T00:00:00.000Z"
+    },
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2026-12-18T00:00:00.000Z"
+    }
+   ]
+  },
+  "R3 yalnız üretim (açık Del. Type + undo/redo)": {
+   "dt": "Uçak",
+   "segs": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Uçak",
+     "arrival": "2027-01-08T00:00:00.000Z"
+    }
+   ]
+  },
+  "R6 yalnız üretim (override + not)": {
+   "dt": "Uçak",
+   "segs": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Uçak",
+     "arrival": "2027-02-20T00:00:00.000Z"
+    }
+   ]
+  },
+  "R5 yalnız üretim (override + temizle)": {
+   "dt": "Gemi",
+   "segs": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-03-09T00:00:00.000Z"
+    }
+   ]
+  },
+  "P1 yapıştırma satırı 1": {
+   "dt": "Gemi",
+   "segs": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-04-09T00:00:00.000Z"
+    }
+   ]
+  },
+  "P2 yapıştırma satırı 2": {
+   "dt": "Gemi",
+   "segs": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-03-29T00:00:00.000Z"
+    }
+   ]
+  },
+  "R4 yalnız üretim (eşzamanlı)": {
+   "dt": "Gemi",
+   "segs": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-04-16T00:00:00.000Z"
+    }
+   ]
+  }
+ },
+ "store": {
+  "delmap": {
+   "4100000|DISNEY CLASSIC PIJAMA|E03": "Gemi",
+   "4100002|HARRY CREW KAZAK|E03": "Uçak",
+   "4100003|BARBIE GLITTER KAZAK|B07": "Uçak",
+   "4100004|DISNEY CREW T-SHIRT|H04": "Gemi"
+  },
+  "notesKeys": 2
+ },
+ "delmapByRow": {
+  "R1 parsiyel+üretim (not + Supp. FOB)": "Gemi",
+  "R3 yalnız üretim (açık Del. Type + undo/redo)": "Uçak",
+  "R6 yalnız üretim (override + not)": "Uçak",
+  "R5 yalnız üretim (override + temizle)": "Gemi",
+  "P1 yapıştırma satırı 1": null,
+  "P2 yapıştırma satırı 2": null,
+  "R4 yalnız üretim (eşzamanlı)": null
+ }
+}

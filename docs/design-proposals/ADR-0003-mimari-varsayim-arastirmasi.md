@@ -1087,6 +1087,73 @@ Bayrak kapalı. Kod değiştirilmedi. Araçlar ve ham sonuçlar: `adr-0003-kanit
 - Del. Type ikisinde de "Gemi".
 - Aynı satır CP ve Siparişler'de farklı durum ve varış gösteriyor. İş kuralı kararı; değiştirilmedi.
 
+## 6I · Del. Type yazma niyeti doğrulaması (2026-11-27)
+
+**Sabit commit'ler:**
+- niyet `3b23455` (`claude/deltype-write-intent`);
+- main `b7b172d` (P1 öncesi);
+- main `57bb982` (#1241 dahil).
+
+Kod değiştirilmedi. Gerçek Chromium DOM olayları kullanıldı: çift tık, menü, not penceresi, Ctrl+Z/Y, pano yapıştırma. Ham sonuçlar: `adr-0003-kanit/6i/`.
+
+**Kayıt gövdeleri ve sunucu `delmap`'i [Doğrulandı: gerçek tarayıcı + sunucu deposu]:**
+
+| Senaryo | main `b7b172d` | niyet `3b23455` |
+|---|---|---|
+| Supp. FOB (`PATCH`) | gövdede `delType:"Gemi"`; `delmap` sessizce "Gemi" | `delType` yok; `delmap` yok |
+| Not kaydı (`/batch`) | `delType` yok | `delType` yok |
+| Not yapıştırma, 2 satır (`/batch`) | her öğede `delType:"Gemi"` (sessiz override) | `delType` yok |
+| Açık Del. Type (satır kaydı açık: `POST /rows`; kapalı: `PATCH`) | gönderiliyor, `delmap`'e yazılıyor | aynı |
+| Geri al / yinele | eski / yeni değer gönderiliyor | aynı |
+| Bilinçli override + not | override korunuyor | aynı |
+| "—" ile temizleme | "Gemi" gönderiliyor (varsayılan) | aynı (değişmedi) |
+| Del. Type yapıştırma "Uçak×2" | `["Gemi","Uçak"]` | aynı (yapıştırma seçimi belirsiz; davranış eşit) |
+| B Del. Type yazarken A bayat satırdan Supp. FOB | gövde "Uçak" (canlı olay 500 ms gecikmeden önce satırı güncelledi); bu zamanlamada ezilme yok | `delType` yok; B'nin değeri yapı gereği korunur |
+
+**Sınırlar:**
+- Fikstürde lisansör yalnız DTR (24.982 satır), bu yüzden Sub-Manufacturer kaydı arayüzden sınanamadı **[Bilinmiyor]**.
+- Main'de ezilme penceresi (canlı olay gecikirse) yeniden üretilmedi **[Hipotez]**.
+
+**L2 (30k, 9 koşu, 3 dönüşümlü blok; medyanlar `b7b172d` / `57bb982` / niyet):**
+
+| | Supp. FOB | Not |
+|---|---|---|
+| Kayıt → CP + Siparişler hazır | 8,98 / 15,47 / 9,46 sn | 9,29 / 16,09 / 10,10 sn |
+| Siparişler | 1,25 / 4,90 / 1,15 sn | 1,21 / 5,38 / 1,44 sn |
+| Sunucu CPU | 16,4 / 20,4 / 16,9 sn | 16,4 / 25,0 / 18,2 sn |
+| Blok farkı (niyet − P1 öncesi), hazır | −0,30 / +0,48 / +0,16 sn | +0,72 / +1,16 / +0,84 sn |
+
+**Yorum:**
+- Supp. FOB'ta #1241 gerilemesi kalktı; P1 öncesi düzeye dönüş var.
+- Not yolu kodu iki kolda aynı, ama 3/3 blokta +0,7–1,2 sn fark var. Koşuların çoğunda CP okuması 503 ile düştüğü ve soğuk tam hesaba geçildiği için fark ayrıştırılamadı **[Bilinmiyor]**. Kabul için L2 tekrarı gerekir.
+- Son okuma özeti 9/9 koşuda aynı.
+
+**Journal [Doğrulandı: source + gerçek yerel DB, salt okunur]:**
+- CP kayıtları sipariş satırı başına `cp-order:<satır>` olarak tutuluyor. Olayın `patch` alanı yalnız değişen alanları içeriyor (`delivery`, `notes`, `suppFob`…); `userId`, `at` ve `revision` de var.
+- Main kökünde sessiz override `{notes, suppFob, suppFobMeta, delivery:"Gemi"}` olarak görünüyor. Listelenebilir.
+- Ancak eski `PATCH` yolundaki açık Del. Type düzenlemesi de `{notes, delivery}` olarak kaydediliyor. Bu yüzden aday listesi alan kümesinden çıkarılamaz; yeni değerin kaynak (ASAS) Del. Type ile karşılaştırılması gerekir **[Muhtemel]**.
+- **Saklama:** süre değil sayı tabanlı (`local-db.js` `JOURNAL_RETAIN_TAIL=1000`, `JOURNAL_PRUNE_MIN_BATCH=2000`).
+  - Yerleşmiş (yüklenmiş + onaylanmış) olaylar ≥3000 olunca budanır; son 1000 kalır. Açık olaylar hiç budanmaz.
+  - Yalnız yerel olaylar hemen yerleşmiş sayılır (`closeIfLocalOnly`).
+  - Journal cihaz başına; yalnız o cihazın olaylarını tutar.
+
+**Birincil segment [Doğrulandı: source + git + 1 satır]:**
+- `parse.js` `cpLogisticPriority` segmentleri en geride kalan aşama önce gelecek biçimde sıralıyor (1: üretim/kıtlık, 2: yolda, 3: depoda/retail). Tam kurulum ilk kıtlık-dışı segmenti alıyor. Kod `37831dc06` (2026-10-13, sürüm 7.0.272 sınırı); açıklama: "Ana durum, gerçek IAS parsiyellerinden (veya gerçek üretim satırından) gelir".
+- İstemci `rebuildCpLogisticCaches` (aynı sınır) ve okuma modeli `overview-row-prep` (`1dbb04949`, #1085, 2026-11-20, istemciyle parite için kopya) `partials[0]` kullanıyor.
+- Satır 4100023/L02, iki seçim yan yana:
+
+| Alan | ilk kıtlık-dışı (Siparişler, ham) | `partials[0]` (CP) |
+|---|---|---|
+| STATUS | Üretimde | Depoda |
+| Del. Type | Gemi | Gemi |
+| Ant. Arrival | 04.01 | 15.12 |
+| HANDOVER | yok | 27.11 |
+| Priority | ON_TRACK | ON_TRACK |
+
+- Segmentler (karıştırılmadan): kalan üretim bakiyesi 2.520 adet, Üretimde, 04.01; gerçekleşmiş parsiyel 1.680 adet, Depoda, 15.12, handover 27.11.
+- Backlog RİSK (`computeBacklogRisk`) segment satırı başına hesaplanıyor; birincil seçimden bağımsız.
+- Diğer satırlarda Priority'nin değişip değişmediği ölçülmedi **[Bilinmiyor]**. Seçim değiştirilmedi.
+
 ## 7 · Ürün sahibinin vermesi gereken kararlar
 
 1. **Sütun filtresi anlamı (T5):** Koleksiyonda sayısal/aralık/revizyon filtresi yokluğu bilinçli mi? Genel Bakış boyut filtresinin `norm()` eşitliği istenen davranış mı?

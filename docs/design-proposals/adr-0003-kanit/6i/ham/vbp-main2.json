@@ -1,0 +1,263 @@
+{
+ "app": "/home/user/main2/resources/app",
+ "rowSave": "on",
+ "steps": [
+  {
+   "name": "5a not yapıştırma (2 satır)",
+   "selInfo": null,
+   "overlay": [
+    "CP yapıştırma önizlemesi2 değişiklik · 0 salt okunur · 0 geçersiz · 0 atlananTarih bağımlılıkları hücre düzenlemeyle aynı kuralları izler.Kayıt / alanÖnceSonra4"
+   ],
+   "applied": true,
+   "after": [
+    "close"
+   ],
+   "sent": [
+    {
+     "m": "POST",
+     "p": "/api/overrides/batch",
+     "body": {
+      "items": [
+       {
+        "orderCode": "4100000",
+        "patch": {
+         "model": "DISNEY Classic Pijama",
+         "ccode": "E03",
+         "notes": {
+          "NotesAt": "2026-11-27T08:39:22.155Z",
+          "NotesBy": "moderator",
+          "NotesByName": "Gökberk",
+          "Notes": "yapıştır 1",
+          "NotesHtml": "",
+          "EkNot": "",
+          "EkNotHtml": ""
+         },
+         "delType": "Gemi"
+        }
+       },
+       {
+        "orderCode": "4100002",
+        "patch": {
+         "model": "HARRY Crew Kazak",
+         "ccode": "E03",
+         "notes": {
+          "NotesAt": "2026-11-27T08:39:22.248Z",
+          "NotesBy": "moderator",
+          "NotesByName": "Gökberk",
+          "Notes": "yapıştır 2",
+          "NotesHtml": "",
+          "EkNot": "",
+          "EkNotHtml": ""
+         },
+         "delType": "Gemi"
+        }
+       }
+      ]
+     },
+     "failed": false
+    }
+   ]
+  },
+  {
+   "name": "5b Del. Type yapıştırma (2 satır, Uçak)",
+   "selInfo": null,
+   "overlay": [
+    "CP yapıştırma önizlemesi2 değişiklik · 0 salt okunur · 0 geçersiz · 0 atlananTarih bağımlılıkları hücre düzenlemeyle aynı kuralları izler.Kayıt / alanÖnceSonra4"
+   ],
+   "applied": true,
+   "after": [
+    "close"
+   ],
+   "sent": [
+    {
+     "m": "POST",
+     "p": "/api/overrides/batch",
+     "body": {
+      "items": [
+       {
+        "orderCode": "4100000",
+        "patch": {
+         "model": "DISNEY Classic Pijama",
+         "ccode": "E03",
+         "notes": {
+          "Notes": "yapıştır 1",
+          "NotesHtml": "",
+          "NotesAt": "2026-11-27T08:39:22.283Z",
+          "NotesBy": "moderator",
+          "NotesByName": "Gökberk",
+          "EkNot": "",
+          "EkNotHtml": ""
+         },
+         "delType": "Gemi"
+        }
+       },
+       {
+        "orderCode": "4100002",
+        "patch": {
+         "model": "HARRY Crew Kazak",
+         "ccode": "E03",
+         "notes": {
+          "Notes": "yapıştır 2",
+          "NotesHtml": "",
+          "NotesAt": "2026-11-27T08:39:22.284Z",
+          "NotesBy": "moderator",
+          "NotesByName": "Gökberk",
+          "EkNot": "",
+          "EkNotHtml": ""
+         },
+         "delType": "Uçak"
+        }
+       }
+      ]
+     },
+     "failed": false
+    }
+   ]
+  },
+  {
+   "name": "6 B Del. Type yazar, A (bayat satır) hemen Supp. FOB kaydeder (R4)",
+   "bStatus": 200,
+   "bValue": "Uçak",
+   "aRowDtAtSave": "Uçak",
+   "sent": [
+    {
+     "m": "PATCH",
+     "p": "/api/overrides/4100003",
+     "body": {
+      "model": "BARBIE Glitter Kazak",
+      "ccode": "B07",
+      "notes": {
+       "Notes": "",
+       "NotesHtml": "",
+       "EkNot": "",
+       "EkNotHtml": ""
+      },
+      "delType": "Uçak",
+      "suppFob": 77.7,
+      "suppFobMeta": {
+       "source": "manual"
+      }
+     },
+     "failed": false
+    }
+   ]
+  }
+ ],
+ "errors": [],
+ "rows": {
+  "P1 yapıştırma satırı 1": {
+   "id": 0,
+   "code": 4100000,
+   "model": "DISNEY Classic Pijama",
+   "ccode": "E03",
+   "dt": "Gemi",
+   "lic": "DTR",
+   "segs": [
+    {
+     "kind": "partial",
+     "status": "Üretimde",
+     "delType": "GEMI",
+     "arrival": "2026-12-06T00:00:00.000Z"
+    },
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2026-12-18T00:00:00.000Z"
+    }
+   ]
+  },
+  "P2 yapıştırma satırı 2": {
+   "id": 1,
+   "code": 4100002,
+   "model": "HARRY Crew Kazak",
+   "ccode": "E03",
+   "dt": "Gemi",
+   "lic": "DTR",
+   "segs": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-03-04T00:00:00.000Z"
+    }
+   ]
+  },
+  "R4 yalnız üretim (eşzamanlı)": {
+   "id": 2,
+   "code": 4100003,
+   "model": "BARBIE Glitter Kazak",
+   "ccode": "B07",
+   "dt": "Gemi",
+   "lic": "DTR",
+   "segs": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-04-16T00:00:00.000Z"
+    }
+   ],
+   "to": "Uçak"
+  }
+ },
+ "userB": 201,
+ "rowSaveEnabled": true,
+ "licensors": {
+  "DTR": 24982
+ },
+ "finalRows": {
+  "P1 yapıştırma satırı 1": {
+   "dt": "Gemi",
+   "segs": [
+    {
+     "kind": "partial",
+     "status": "Üretimde",
+     "delType": "GEMI",
+     "arrival": "2026-12-06T00:00:00.000Z"
+    },
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Uçak",
+     "arrival": "2026-10-24T00:00:00.000Z"
+    }
+   ]
+  },
+  "P2 yapıştırma satırı 2": {
+   "dt": "Uçak",
+   "segs": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Uçak",
+     "arrival": "2027-01-08T00:00:00.000Z"
+    }
+   ]
+  },
+  "R4 yalnız üretim (eşzamanlı)": {
+   "dt": "Uçak",
+   "segs": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Uçak",
+     "arrival": "2027-02-20T00:00:00.000Z"
+    }
+   ]
+  }
+ },
+ "store": {
+  "delmap": {
+   "4100000|DISNEY CLASSIC PIJAMA|E03": "Gemi",
+   "4100002|HARRY CREW KAZAK|E03": "Uçak",
+   "4100003|BARBIE GLITTER KAZAK|B07": "Uçak"
+  },
+  "notesKeys": 2
+ },
+ "delmapByRow": {
+  "P1 yapıştırma satırı 1": "Gemi",
+  "P2 yapıştırma satırı 2": "Uçak",
+  "R4 yalnız üretim (eşzamanlı)": "Uçak"
+ }
+}

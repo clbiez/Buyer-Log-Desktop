@@ -1,0 +1,123 @@
+{
+ "cpReadModel": {
+  "STATUS": "Depoda",
+  "Del. Type": "Gemi",
+  "Ant. Arrival": "2026-12-15T00:00:00.000Z",
+  "HANDOVER Tarihi": "2026-11-27T00:00:00.000Z",
+  "Priority": "ON_TRACK",
+  "segments": [
+   {
+    "kind": "production",
+    "status": "Üretimde",
+    "delType": "Gemi",
+    "arrival": "2027-01-04T00:00:00.000Z",
+    "handover": null,
+    "quantity": 2520
+   },
+   {
+    "kind": "partial",
+    "status": "Depoda",
+    "delType": "GEMI",
+    "arrival": "2026-12-15T00:00:00.000Z",
+    "handover": "2026-11-27T00:00:00.000Z",
+    "quantity": 1680
+   }
+  ]
+ },
+ "cpComputed": {
+  "priority": "ON_TRACK",
+  "calculationStatus": "KNOWN",
+  "trackingTags": [],
+  "priorityTags": [],
+  "signals": [],
+  "basePriority": null
+ },
+ "key": {
+  "code": 4100023,
+  "model": "NASA Neon T-shirt",
+  "ccode": "L02"
+ },
+ "ordersReadModel": [
+  {
+   "STATUS": "Üretimde",
+   "Del. Type": "Gemi",
+   "Ant. Arrival": "2027-01-04",
+   "HANDOVER Tarihi": null,
+   "segments": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-01-04",
+     "handover": null,
+     "quantity": 2520
+    },
+    {
+     "kind": "partial",
+     "status": "Depoda",
+     "delType": "GEMI",
+     "arrival": "2026-12-15",
+     "handover": "2026-11-27",
+     "quantity": 1680
+    }
+   ]
+  }
+ ],
+ "files": [
+  "local/page-cache/moderator/mwyoyzte-6b97605675c9/cp.json.gz",
+  "local/page-cache/moderator/mwyoyzte-6b97605675c9/orders.json.gz"
+ ],
+ "raw:cp.json.gz": [
+  {
+   "STATUS": "Üretimde",
+   "Del. Type": "Gemi",
+   "Ant. Arrival": "2027-01-04",
+   "HANDOVER Tarihi": null,
+   "Priority": "ON_TRACK",
+   "segments": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-01-04",
+     "handover": null,
+     "quantity": 2520
+    },
+    {
+     "kind": "partial",
+     "status": "Depoda",
+     "delType": "GEMI",
+     "arrival": "2026-12-15",
+     "handover": "2026-11-27",
+     "quantity": 1680
+    }
+   ]
+  }
+ ],
+ "raw:orders.json.gz": [
+  {
+   "STATUS": "Üretimde",
+   "Del. Type": "Gemi",
+   "Ant. Arrival": "2027-01-04",
+   "HANDOVER Tarihi": null,
+   "segments": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-01-04",
+     "handover": null,
+     "quantity": 2520
+    },
+    {
+     "kind": "partial",
+     "status": "Depoda",
+     "delType": "GEMI",
+     "arrival": "2026-12-15",
+     "handover": "2026-11-27",
+     "quantity": 1680
+    }
+   ]
+  }
+ ]
+}
