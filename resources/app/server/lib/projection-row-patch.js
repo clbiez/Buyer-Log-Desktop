@@ -17,6 +17,20 @@ function projectionPatchMatches(row, item) {
   return true;
 }
 
+/* Lojistik segment girdileri — TEK tanım (P1, 2026-11-27).
+   Tam kurulumda (parse.js buildBacklogOperationalRows) üretim segmentinin Del. Type'ı delmap'ten, varışı Ex-factory +
+   Del. Type + transit kuralından üretilir; satırın Del. Type / Ant. Arrival / STATUS / HANDOVER alanları segmentten
+   türetilir (okuma modeli hazırlığı overview-row-prep rebuildLogisticCaches, istemci rebuildCpLogisticCaches).
+   applyIncrementalProjectionPatch segmentleri yeniden üretmez: bu girdileri değiştiren yama artımlı uygulanırsa
+   hazırlık eski segmentten eski değeri geri yazar (Del. Type Uçak → Gemi). Böyle bir yama hiçbir yolda artımlı
+   uygulanmaz (server.js rowPatchIncrementalSafe: canlı yama, projeksiyon önbelleği, satır yaması günlüğü) → tam kurulum.
+   Gerçekleşmiş IAS parsiyellerinin değerleri kaynaktan gelir; tam kurulum onlara dokunmaz. */
+function patchTouchesLogisticSegments(patch) {
+  if (!patch || typeof patch !== 'object') return false;
+  if (patch.delType != null) return true;
+  return Boolean(patch.dates && typeof patch.dates === 'object' && Object.prototype.hasOwnProperty.call(patch.dates, 'exFactory'));
+}
+
 /* options.cpStored: satır CP modülünün satırıdır (Orders / sipariş özeti satırı `_cpStored` taşımaz). */
 function applyIncrementalProjectionPatch(row, patch, overrides, includePriority = true, options = null) {
   if (patch.notes && typeof patch.notes === 'object') {
@@ -71,4 +85,4 @@ function applyIncrementalProjectionPatch(row, patch, overrides, includePriority 
   return row;
 }
 
-module.exports = { applyIncrementalProjectionPatch, projectionPatchMatches };
+module.exports = { applyIncrementalProjectionPatch, projectionPatchMatches, patchTouchesLogisticSegments };
