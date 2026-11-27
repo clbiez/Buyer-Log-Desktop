@@ -24,7 +24,11 @@ function projectionPatchMatches(row, item) {
    applyIncrementalProjectionPatch segmentleri yeniden üretmez: bu girdileri değiştiren yama artımlı uygulanırsa
    hazırlık eski segmentten eski değeri geri yazar (Del. Type Uçak → Gemi). Böyle bir yama hiçbir yolda artımlı
    uygulanmaz (server.js rowPatchIncrementalSafe: canlı yama, projeksiyon önbelleği, satır yaması günlüğü) → tam kurulum.
-   Gerçekleşmiş IAS parsiyellerinin değerleri kaynaktan gelir; tam kurulum onlara dokunmaz. */
+   Gerçekleşmiş IAS parsiyellerinin değerleri kaynaktan gelir; tam kurulum onlara dokunmaz.
+   KAPSAM: kural satırın segmentli olup olmadığına BAKMAZ (yama satırı bilmez; aktif her siparişin en az bir üretim
+   segmenti vardır). Del. Type ya da Ex-factory içeren BÜTÜN yamalar tam kurulum yoluna düşer — değer değişmemiş
+   görünse bile (eski kayıt gövdesi görünen Del. Type'ı gönderir; bkz. ADR-0003 §6H). Performans bedeli geçici
+   istisnadır (L2 FAIL, #1241). */
 function patchTouchesLogisticSegments(patch) {
   if (!patch || typeof patch !== 'object') return false;
   if (patch.delType != null) return true;
