@@ -125,6 +125,13 @@
     if(!response.ok){const error=new Error(data.error||response.statusText||qLang('Quotation işlemi başarısız.','Quotation operation failed.'));error.code=data.code;error.status=response.status;throw error;}
     return data;
   }
+  // Sunucuda artık bulunmayan alanlar temizlenir, kalanlar üzerine yazılır; nesne kimliği korunur.
+  function qMergeRequestInPlace(existing,normalized){
+    if(!existing||existing===normalized)return normalized;
+    Object.keys(existing).forEach(key=>{ if(!Object.prototype.hasOwnProperty.call(normalized,key)) delete existing[key]; });
+    Object.assign(existing,normalized);
+    return existing;
+  }
   /*
    * Sunucudan dönen kaydı yerel depoya yazar.
    *
@@ -147,11 +154,10 @@
     // Fiyat Defteri kancası (sunucu hâli + bekleyen satır değişiklikleri); bkz. qAfterServerRequest.
     const after=typeof qAfterServerRequest==='function'?qAfterServerRequest:null;
     if(index<0){st.requests.unshift(normalized);if(after)after(normalized,normalized);qPersistLocal();return normalized;}
-    const existing=st.requests[index];
-    if(existing===normalized){if(after)after(existing,normalized);qPersistLocal();return existing;}
-    // Sunucuda artık bulunmayan alanlar temizlenir, kalanlar üzerine yazılır.
-    Object.keys(existing).forEach(key=>{ if(!Object.prototype.hasOwnProperty.call(normalized,key)) delete existing[key]; });
-    Object.assign(existing,normalized);
+    // Aynı talebin gönderilmemiş yapı kaydı kuyruktaysa bu (eski) yanıt onun req
+    // nesnesine birleşmez: aradaki düzenleme (ör. ikinci üretici) silinmez. Sunucu
+    // hâli yine hatırlanır; son kaydın yanıtı birleşir.
+    const existing=qStructuralSaves.has(normalized.id)?st.requests[index]:qMergeRequestInPlace(st.requests[index],normalized);
     if(after)after(existing,normalized);
     qPersistLocal();return existing;
   }
@@ -166,13 +172,19 @@
   const qServerState=new Map(),qExpectedState=new Map(),qPendingLines=new Map();
   const qLineStateKeys=['price','approved','dropped'];
   const qClonePlain=value=>JSON.parse(JSON.stringify(value));
-  function qRememberServerState(req){if(req?.id){qServerState.set(req.id,qClonePlain(req));qExpectedState.set(req.id,qClonePlain(req));}}
+  // İki haritanın değerleri salt okunurdur (yalnız .set ile değiştirilir); tek kopya paylaşılır.
+  function qRememberServerState(req){if(req?.id){const copy=qClonePlain(req);qServerState.set(req.id,copy);qExpectedState.set(req.id,copy);}}
   function qReapplyPendingLines(req){
     let touched=false;
     (req?.items||[]).forEach(item=>{const pending=qPendingLines.get(`${req.id}\u0000${item.id}`);if(pending){Object.assign(item,pending.patch);touched=true;}});
     if(touched)qExpectedState.set(req.id,qClonePlain(req));
     return req;
   }
+  /* Kuyrukta gönderilmemiş yapı kaydı (tam PUT) olan talepler. PUT gövdesi görev
+     çalışınca req nesnesinden kurulur; bu sırada gelen hydrate o nesneyi sunucu
+     hâliyle ezerse kullanıcının düzenlemesi (ör. yeni üretici) gönderilmeden kaybolur. */
+  const qStructuralSaves=new Map();
+  function qStructuralSave(id,delta){const next=(qStructuralSaves.get(id)||0)+delta;if(next>0)qStructuralSaves.set(id,next);else qStructuralSaves.delete(id);}
   const qSamePriceText=(a,b)=>{const x=qMoneyNumber(a),y=qMoneyNumber(b);if(Number.isFinite(x)||Number.isFinite(y))return Number.isFinite(x)&&Number.isFinite(y)&&Math.round(x*10000)===Math.round(y*10000);return qNorm(a)===qNorm(b);};
   const qRequestShape=req=>JSON.stringify({note:req.note,capacityConfirmed:!!req.capacityConfirmed,manufacturers:req.manufacturers,models:req.models||[],sortOrder:req.sortOrder,items:(req.items||[]).map(item=>{const copy={...item};['price','approved','dropped','rev','updatedAt','updatedBy','history'].forEach(key=>delete copy[key]);return copy;})});
   function qPlanSave(req){
@@ -237,9 +249,18 @@
         }
         BLStorage.setItem(MIGRATION_KEY,'1');
       }
-      qState={version:2,requests:(Array.isArray(data.requests)?data.requests:[]).map(qNormalizeRequest).map(qTrackOwners)};
+      // Açık masanın dinleyicileri render anındaki talep nesnesini tutar; görünen içerik
+      // değişmediğinde yeniden çizim yapılmaz. Yeni nesne vermek, sonraki düzenlemeyi
+      // (ör. tablodan üretici ekleme) depoda olmayan nesneye yazdırır: kimlik korunur.
+      // Gönderilmemiş yapı kaydı olan talep ezilmez; sunucu hâli (revler) yine
+      // hatırlanır, kayıt yanıtı qReplaceRequest ile birleşir.
+      const previous=new Map(qLoad().requests.map(req=>[req.id,req]));
       qServerState.clear();qExpectedState.clear();
-      qState.requests.forEach(req=>{qRememberServerState(req);qReapplyPendingLines(req);});
+      qState={version:2,requests:(Array.isArray(data.requests)?data.requests:[]).map(qNormalizeRequest).map(req=>{
+        const existing=previous.get(req.id);previous.delete(req.id);qRememberServerState(req);
+        return existing&&qStructuralSaves.has(req.id)?existing:qMergeRequestInPlace(existing,req);
+      }).map(qTrackOwners)};
+      qState.requests.forEach(qReapplyPendingLines);
       qHydrated=true;qPersistLocal();
       qProjectForeignLineEdits();
       qNotifyCollectionQuotes();
@@ -278,14 +299,19 @@
       if(plan.structural)structural.push(req);
     });
     if(!structural.length)return true;
+    structural.forEach(req=>qStructuralSave(req.id,1));
     qQueue(async()=>{
       for(const req of structural){
         // Her satır, bilinen son sunucu revizyonuyla gönderilir: başka bir
         // kullanıcının bu arada girdiği fiyat bu kayıtla ezilmez.
         const known=new Map((qServerState.get(req.id)?.items||[]).map(item=>[item.id,item.rev||0]));
         const body={...req,items:(req.items||[]).map(item=>known.has(item.id)?{...item,rev:known.get(item.id)}:item)};
-        try{const data=await qApi(`/api/quotations/${encodeURIComponent(req.id)}`,{method:'PUT',body:JSON.stringify(body)});if(data.request)qReplaceRequest(data.request);}
-        catch(err){qSaveFailureSerial++;qSaveFailureError=err;if(typeof showToast==='function')showToast((err?.message||qLang('Quotation kaydedilemedi.','Quotation could not be saved.')));if(err?.status===403)await qHydrateShared(true);}
+        // Sayaç yanıttan hemen sonra düşer: 403 yolundaki hydrate yetkisiz yerel hâli korumaz.
+        let data=null,err=null;
+        try{data=await qApi(`/api/quotations/${encodeURIComponent(req.id)}`,{method:'PUT',body:JSON.stringify(body)});}catch(error){err=error;}
+        qStructuralSave(req.id,-1);
+        if(!err){if(data.request)qReplaceRequest(data.request);continue;}
+        qSaveFailureSerial++;qSaveFailureError=err;if(typeof showToast==='function')showToast((err?.message||qLang('Quotation kaydedilemedi.','Quotation could not be saved.')));if(err?.status===403)await qHydrateShared(true);
       }
     });
     return true;

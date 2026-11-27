@@ -28,7 +28,9 @@ const SRC = fs.readFileSync(path.join(__dirname, '..', 'public', 'quotations.js'
 function loadReplaceRequest(store) {
   const match = SRC.match(/function qReplaceRequest\(request\)\{[\s\S]*?\n  \}/);
   assert.ok(match, 'qReplaceRequest bulunamadı');
-  const factory = new Function('qNormalizeRequest', 'qLoad', 'qPersistLocal', `return (${match[0]})`);
+  const merge = SRC.match(/function qMergeRequestInPlace\(existing,normalized\)\{[\s\S]*?\n  \}/);
+  assert.ok(merge, 'qMergeRequestInPlace bulunamadı');
+  const factory = new Function('qNormalizeRequest', 'qLoad', 'qPersistLocal', `const qStructuralSaves=new Map();${merge[0]}\nreturn (${match[0]})`);
   return factory(
     request => JSON.parse(JSON.stringify(request)), // sunucu yanıtı her zaman yeni nesnedir
     () => store,
