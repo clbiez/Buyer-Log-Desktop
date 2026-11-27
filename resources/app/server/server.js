@@ -10540,7 +10540,7 @@ function recordCpRowPatches({user,before,items}){
         cpRowStored:cpRowStoredLib.pickCpRowStoredMaps(shared,items)}});
   }catch(error){logRuntimeFailure('cpRowPatchLog',error);return null;}
 }
-/* Pilot (ADR-0003 §6F; BUYER_LOG_CP_ROWPATCH_LEGACY=1, varsayılan KAPALI): eski kayıt yolları (PATCH /api/overrides/:kod,
+/* ADR-0003 §6F (#1236 pilotu; 2026-11-27 varsayılan, bayrak kaldırıldı): eski kayıt yolları (PATCH /api/overrides/:kod,
    /batch, /batch-suppfob) da artımlı uygulanabilir yamalarını aynı günlüğe yazar. Yeni mekanizma değildir: alan kuralı
    (rowPatchIncrementalSafe), uygulama (applyIncrementalProjectionPatch), zincir ve gerçek nesille doğrulama
    (settle → verifyRows) satır kaydıyla (cp-row-save) aynıdır. Tek öğe bile güvenli değilse kayıt yapılmaz (record null)
@@ -10549,9 +10549,10 @@ function recordCpRowPatches({user,before,items}){
    alınır (legacyCpReadBefore), kayıt yazımın hemen ardından yapılır (recordLegacyCpRowPatches).
    'importance' yaması kaydedilmez: applyImportanceToRow overrides.importancemap + önem ayarlarını okur, günlüğün kayıtlı
    bağlamı (notesmap, not sütunları, transit kuralları, cpRowStored) bunları taşımaz; sanal satır doğrulamaya kadar gerçek
-   nesilden farklı olurdu. Satır kaydı (POST /rows) bu alanı yazmadığından bugüne kadar görünmeyen bir boşluktur. */
+   nesilden farklı olurdu. Satır kaydı (POST /rows) bu alanı yazmadığından bugüne kadar görünmeyen bir boşluktur.
+   Çalışma zamanı anahtarı yoktur: zincir yok / doğrulama uyuşmazlığı (verifyRows) her zaman kira + tam hesaba döner. */
 function legacyCpReadBefore(beforeContext){
-  if(process.env.BUYER_LOG_CP_ROWPATCH_LEGACY!=='1'||!beforeContext)return null;
+  if(!beforeContext)return null;
   try{return computeReadContext(null,beforeContext).contextHash;}
   catch(error){logRuntimeFailure('cpRowPatchLegacy',error);return null;}
 }

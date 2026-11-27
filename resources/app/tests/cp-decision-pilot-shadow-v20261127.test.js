@@ -1,7 +1,7 @@
 'use strict';
 /* ADR-0003 §6F pilotu — CP karar hesaplaması gölge doğrulaması.
  *
- * Pilot (BUYER_LOG_CP_ROWPATCH_LEGACY=1) eski kayıt yollarının (PATCH /api/overrides/:kod, /batch, /batch-suppfob)
+ * Pilot (2026-11-27'den beri varsayılan; bayrak yok) eski kayıt yollarının (PATCH /api/overrides/:kod, /batch, /batch-suppfob)
  * yamalarını mevcut satır yaması günlüğüne yazar; okuma modeli bu yamaları işçideki son veri kümesine uygular ve
  * kararları mevcut içerik tabanlı artımlı planla (kaynak özeti değişen satırlar + sipariş/opsiyon grubu) yeniden hesaplar.
  * Bu test, her senaryoda pilot sonucunu AYNI veride, AYRI (sıfır durumlu) barındırıcıda yapılan TAM hesapla karşılaştırır.
@@ -210,11 +210,13 @@ test('pilot: başka kullanıcının kaydı bu kullanıcının zincirini kurmaz (
 });
 
 /* Kaynak sözleşmesi (server.js tek parça; rota testi tam sunucu ister): pilot üç eski rotada yazımın hemen ardından
-   kaydeder, rowPatch'i yeniden yazıma (settle → doğrulama) geçirir, varsayılan kapalıdır ve 'importance' yamasını almaz. */
-test('pilot kaynak sözleşmesi: eski rotalar günlüğe bayrakla yazar; damga yazımdan önce; importance kaydedilmez',()=>{
+   kaydeder, rowPatch'i yeniden yazıma (settle → doğrulama) geçirir, bayrak yoktur ve 'importance' yamasını almaz. */
+test('pilot kaynak sözleşmesi: eski rotalar günlüğe her zaman yazar (bayrak yok); damga yazımdan önce; importance kaydedilmez',()=>{
   const src=require('node:fs').readFileSync(require('node:path').join(__dirname,'..','server','server.js'),'utf8');
   const fn=src.slice(src.indexOf('function legacyCpReadBefore'),src.indexOf('function assertAutomaticDatesReadOnly'));
-  assert.match(fn,/process\.env\.BUYER_LOG_CP_ROWPATCH_LEGACY!=='1'/,'varsayılan kapalı');
+  // Bayrak kaldırıldı: çalışma zamanı anahtarı yok, ortam değişkeni dallanması kalmadı (yalnız bağlam yoksa kayıt yok).
+  assert.doesNotMatch(src,/BUYER_LOG_CP_ROWPATCH_LEGACY/,'bayrak kaldırıldı');
+  assert.match(fn,/function legacyCpReadBefore\(beforeContext\)\{\n\s*if\(!beforeContext\)return null;/,'yalnız bağlam yoksa damga yok');
   assert.match(fn,/computeReadContext\(null,beforeContext\)\.contextHash/,'satır kaydıyla aynı okuma bağlamı damgası');
   assert.match(fn,/'importance'/,'importance yaması kaydedilmez');
   assert.match(fn,/recordCpRowPatches\(\{user:currentUser,before:readBefore,items\}\)/,'satır kaydıyla aynı kayıt');
