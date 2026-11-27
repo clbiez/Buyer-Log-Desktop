@@ -63,6 +63,7 @@
     LCWAI_CANCELLED: { tr: 'LCW AI isteği iptal edildi.', en: 'The LCW AI request was cancelled.' },
     LCWAI_BUSY: { tr: 'Aynı anda çok fazla LCW AI isteği var. Öncekinin bitmesini bekleyin.', en: 'Too many LCW AI requests at once. Wait for the previous one to finish.' },
     LCWAI_BAD_REQUEST: { tr: 'LCW AI isteği geçersiz.', en: 'The LCW AI request is invalid.' },
+    LCWAI_CONTEXT_TOO_LARGE: { tr: 'Gönderilecek veri tek LCW AI isteğine kesilmeden sığmıyor.', en: 'The data does not fit into one LCW AI request without being cut.' },
     LCWAI_INTERNAL: { tr: 'LCW AI isteği tamamlanamadı.', en: 'The LCW AI request could not be completed.' },
   };
   const LOGIN_CODES = new Set(['LCWAI_AUTH_REQUIRED', 'LCWAI_SESSION_EXPIRED', 'LCWAI_BROWSER_UNAVAILABLE', 'LCWAI_LOGIN_TIMEOUT']);

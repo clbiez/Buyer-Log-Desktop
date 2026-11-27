@@ -15237,7 +15237,10 @@ async function persistPricingRules(rules,{expectedRevision=state.storeRevisions.
 // Licensor name merges (ERMODA ≡ ERMODA UK LTD) decide the royalty fallback match.
 function applyLicensorMerges(value){
   if(!value||!Array.isArray(value.split))return false;
-  const next={split:value.split.map(String).sort()};
+  // Manual links (m:… entries) must reach order Licensor/royalty matching too;
+  // an older server without entries keeps the split-only shape.
+  const entries=value.entries&&typeof value.entries==='object'&&!Array.isArray(value.entries)?value.entries:null;
+  const next=entries?{split:value.split.map(String).sort(),entries}:{split:value.split.map(String).sort()};
   if(JSON.stringify(next)===JSON.stringify(state.licensorMerges||{split:[]}))return false;
   state.licensorMerges=next;return true;
 }
@@ -32766,7 +32769,7 @@ function licenseLicensorStateForRow(row){
   const license=norm(row&&row.License);
   const rules=Array.isArray(state.overrides&&state.overrides.pricingRules)?state.overrides.pricingRules:[];
   const resolver=window.BLBusinessRules&&window.BLBusinessRules.resolveOrderLicensor;
-  if(typeof resolver==='function')return resolver(license,rules,{manufacturer:norm(row&&row.Manufacturer),nonDtrManufacturers:state.overrides&&state.overrides.nonDtrManufacturers});
+  if(typeof resolver==='function')return resolver(license,rules,{manufacturer:norm(row&&row.Manufacturer),nonDtrManufacturers:state.overrides&&state.overrides.nonDtrManufacturers,licensorMerges:state.licensorMerges});
   const resolved=license?kolResolveLicensorsForLicense(license):{license:'',latestDate:'',licensors:[],displayValue:''};
   return {...resolved,hasLicense:Boolean(license),hasRule:Boolean(resolved.displayValue),status:license?(resolved.displayValue?'resolved':'missing-rule'):'empty'};
 }

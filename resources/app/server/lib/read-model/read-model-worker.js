@@ -63,13 +63,60 @@ function execute(task,payload){
   return {body,timing:{loadMs,queryMs,totalMs:performance.now()-started,rows:dataset.rows.length}};
 }
 
+/* 503 pilotu — BUYER_LOG_COMPUTE_GC_RECHECK=1 (varsayılan KAPALI; değer tam olarak '1' olmalı).
+   Neden: süreç geneli --max-old-space-size (komut satırı veya NODE_OPTIONS; watchdog +
+   server-heap-policy <~15 GB RAM makinelerde 3686–4096 MB ekler) işçinin
+   resourceLimits.maxOldGenerationSizeMb değerini ezer. Büyük heap tavanında V8 GC'yi geciktirir;
+   GC'siz heapUsed önceki işlerin erişilemez nesnelerini de sayar → havuz received()
+   COMPUTE_ESTIMATE_EXCEEDED → işçi emekli → 503.
+   Tetik koşulu (hepsi birden): bayrak açık; havuz iş mesajında güvenli tamsayı retainedLimitBytes
+     gönderdi; ham ölçüm (heapUsed+arrayBuffers)+outputBytes bu sınırı aşıyor; bu işçide son GC'den
+     beri en az GC_RECHECK_MIN_INTERVAL_MS geçti.
+   Üst sınır: iş başına en fazla 1 GC (döngü/yeniden deneme yok) ve işçi iş parçacığı başına
+     GC_RECHECK_MIN_INTERVAL_MS içinde en fazla 1 GC. Bekleme içindeki aşımda GC yapılmaz, ham ölçüm
+     gider (bayrak kapalı davranış). Sınır altı ölçümde hiç GC yok → sorgu başına GC'ye dönüşemez.
+   GC sonrası hâlâ sınır üstünde: yeni ölçüm olduğu gibi raporlanır; havuz received() aynı denetimle
+     işçiyi emekli eder (COMPUTE_ESTIMATE_EXCEEDED). Yeniden deneme yok.
+   Değişmeyenler: havuz bütçesi, iş tahmini (estimatedBytes), received() kabul denetimi, işçi
+     emekliliği, resourceLimits ve ERR_WORKER_OUT_OF_MEMORY yolu. retainedLimitBytes yalnız ipucudur;
+     kabul kararı havuzda kalır. GC raporlanan sayıyı küçültür ama gerçek erişilebilir belleği
+     gizleyemez: GC sonrası heapUsed yalnız canlı nesneleri sayar.
+   global.gc erişimi: süreç zaten --expose-gc ile başladıysa globalThis.gc kullanılır. Değilse ilk
+     gerektiğinde v8.setFlagsFromString('--expose-gc') → vm.runInNewContext('gc') ile işçi
+     izolatının gc işlevi alınır ve bayrak hemen '--no-expose-gc' ile geri alınır. Yan etki: bu kısa
+     pencerede oluşturulan başka bağlam/izolatlar da gc global'i görebilir; Node bu API'yi çalışma
+     anında "tanımsız davranış" riskiyle belgeler. Erişim başarısızsa GC yapılmaz (ham ölçüm).
+     gc() eşzamanlı tam GC'dir; yalnız bu işçinin heap'inde çalışır (ölçülen ~110–240 ms), ana olay
+     döngüsünü durdurmaz, ilgili isteğin süresine eklenir. */
+const GC_RECHECK_MIN_INTERVAL_MS=5000;
+let gcFn;
+function forceGc(){
+  if(gcFn===undefined){
+    if(typeof globalThis.gc==='function')gcFn=globalThis.gc;
+    else{const v8=require('node:v8');try{v8.setFlagsFromString('--expose-gc');gcFn=require('node:vm').runInNewContext('gc');}catch(_){gcFn=null;}finally{try{v8.setFlagsFromString('--no-expose-gc');}catch(_){}}}
+  }
+  if(typeof gcFn!=='function')return false;gcFn();return true;
+}
+const gcState={lastAt:-Infinity};
+function retainedMetrics(limitBytes,outputBytes,{enabled=process.env.BUYER_LOG_COMPUTE_GC_RECHECK==='1',memoryUsage=()=>process.memoryUsage(),gc=forceGc,now=()=>performance.now(),state=gcState,minIntervalMs=GC_RECHECK_MIN_INTERVAL_MS}={}){
+  let memory=memoryUsage(),retainedBytes=memory.heapUsed+memory.arrayBuffers;
+  if(!enabled||!Number.isSafeInteger(limitBytes)||retainedBytes+outputBytes<=limitBytes)return {retainedBytes};
+  const started=now();
+  if(started-state.lastAt<minIntervalMs)return {retainedBytes,gcRecheckSkipped:'interval'};
+  const before=retainedBytes;
+  if(!gc())return {retainedBytes,gcRecheckSkipped:'unavailable'};
+  state.lastAt=started;
+  memory=memoryUsage();retainedBytes=memory.heapUsed+memory.arrayBuffers;
+  return {retainedBytes,gcRecheck:{beforeBytes:before,gcMs:now()-started}};
+}
+
 if(parentPort)parentPort.on('message',message=>{
   if(message?.type!=='run'||Object.hasOwn(ASYNC_TASKS,message.task))return;
   const start=performance.now();
   try{
     const value=execute(message.task,message.payload||{});
-    const memory=process.memoryUsage(),outputBytes=(value.body?Buffer.byteLength(value.body):value.buffer?value.buffer.byteLength:0)+4096;
-    parentPort.postMessage({type:'result',id:message.id,ok:true,value,metrics:{threadId,executionMs:performance.now()-start,retainedBytes:memory.heapUsed+memory.arrayBuffers,outputBytes}});
+    const outputBytes=(value.body?Buffer.byteLength(value.body):value.buffer?value.buffer.byteLength:0)+4096;
+    parentPort.postMessage({type:'result',id:message.id,ok:true,value,metrics:{threadId,executionMs:performance.now()-start,...retainedMetrics(message.retainedLimitBytes,outputBytes),outputBytes}});
   }catch(error){parentPort.postMessage({type:'result',id:message.id,ok:false,error:{code:error?.code||'COMPUTE_WORKER_FAILED'}});}
 });
 // Asenkron görevler (karar barındırıcısı kurar); aynı veri kümesi önbelleğini paylaşır.
@@ -79,8 +126,8 @@ if(parentPort)parentPort.on('message',message=>{
   if(message?.type!=='run'||!Object.hasOwn(ASYNC_TASKS,message.task))return;
   const start=performance.now();
   Promise.resolve().then(()=>require(ASYNC_TASKS[message.task]).execute(message.payload||{},{cache,engine})).then(value=>{
-    const memory=process.memoryUsage(),outputBytes=(value.body?Buffer.byteLength(value.body):0)+4096;
-    parentPort.postMessage({type:'result',id:message.id,ok:true,value,metrics:{threadId,executionMs:performance.now()-start,retainedBytes:memory.heapUsed+memory.arrayBuffers,outputBytes}});
+    const outputBytes=(value.body?Buffer.byteLength(value.body):0)+4096;
+    parentPort.postMessage({type:'result',id:message.id,ok:true,value,metrics:{threadId,executionMs:performance.now()-start,...retainedMetrics(message.retainedLimitBytes,outputBytes),outputBytes}});
   }).catch(error=>{parentPort.postMessage({type:'result',id:message.id,ok:false,error:{code:error?.code||'COMPUTE_WORKER_FAILED'}});});
 });
-module.exports={execute,createDatasetCache,cache};
+module.exports={execute,createDatasetCache,cache,retainedMetrics,GC_RECHECK_MIN_INTERVAL_MS};

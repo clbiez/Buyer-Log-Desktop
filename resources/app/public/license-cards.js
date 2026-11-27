@@ -563,7 +563,11 @@
   function mergePanel(){
     const list=E.mergeSummary(S.data.cards,mergeOpts());
     const options=E.licensorOptions(S.data.cards).filter(o=>o.value);
-    const picker=(id,selected,placeholder)=>`<select id="${id}" class="lcSelect" aria-label="${esc(placeholder)}"><option value="">${esc(placeholder)}</option>${options.map(o=>`<option value="${esc(o.label)}" ${selected===o.label?'selected':''}>${esc(o.label)}</option>`).join('')}</select>`;
+    // Non-DTR manufacturers are the licensors' TR accounts (ERMODA TEKSTİL ≡ ERMODA UK):
+    // linking one lets orders take their Licensor from the manufacturer.
+    const makers=E.manufacturerOptions(S.data.nonDtrManufacturers,options);
+    const opt=(o,selected)=>`<option value="${esc(o.label)}" ${selected===o.label?'selected':''}>${esc(o.label)}</option>`;
+    const picker=(id,selected,placeholder)=>`<select id="${id}" class="lcSelect" aria-label="${esc(placeholder)}"><option value="">${esc(placeholder)}</option>${makers.length?`<optgroup label="${esc(T('Lisansörler','Licensors'))}">${options.map(o=>opt(o,selected)).join('')}</optgroup><optgroup label="${esc(T('Non-DTR üreticiler','Non-DTR manufacturers'))}">${makers.map(o=>opt(o,selected)).join('')}</optgroup>`:options.map(o=>opt(o,selected)).join('')}</select>`;
     return `<div class="lcMergePanel" role="region" aria-label="${esc(T('Lisansör birleştirmeleri','Licensor merges'))}">
       <header><b>${esc(T('Lisansör birleştirmeleri','Licensor merges'))}</b><small>${esc(T('Benzer lisansör adları otomatik birleşir; farklı adları aşağıdan manuel eşleştirebilirsiniz. Her lisansörün sözleşmesi korunur ve royalty önce siparişteki adın sözleşmesini kullanır. Birleştirmeleri buradan geri alabilirsiniz.','Similar names merge automatically; you can also link different names below. Each licensor keeps its contracts and royalty uses the order’s own contract first. You can undo merges here.'))}</small></header>
       ${canEdit()?`<div class="lcManualMerge"><label><span>${esc(T('Lisansör','Licensor'))}</span>${picker('lcMergeSource',S.manualSource||'',T('Lisansör seçin','Choose licensor'))}</label><span aria-hidden="true">→</span><label><span>${esc(T('Birleştirilecek lisansör','Merge with'))}</span>${picker('lcMergeTarget',S.manualTarget||'',T('Hedef lisansör','Target licensor'))}</label><button type="button" class="lcBtn primary sm" data-lc-act="mergeManualAdd" ${S.merging?'disabled':''}>${esc(T('Manuel birleştir','Merge manually'))}</button></div>`:''}

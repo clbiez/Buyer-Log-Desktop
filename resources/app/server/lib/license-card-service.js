@@ -9,7 +9,7 @@ function assertSnapshot(overrides,expected){if(expected && JSON.stringify(sectio
 function createLicenseCardService(deps){
  const load=()=>deps.loadOverrides({projectManufacturers:false}),validators=deps.pricing||pricing;
  const mutate=work=>deps.mutate?deps.mutate('licenseCards',work):work({commit:async()=>{}});
- const read=()=>cards.responseOf(load(),false);
+ const read=()=>{const current=load();return cards.responseOf(current,false,{manufacturers:deps.manufacturers?.(current)});};
  async function published(profile,change){if(!deps.publish)return Object.keys(load().licenseCardOutbox||{}).length>0;try{const result=await deps.publish(profile,change);return Boolean(result?.pending||result?.ok===false);}catch(_){return true;}}
  async function notify(profile,change,saved,context){await deps.changed?.(profile,'licenseCards',{revision:cards.revisionOf(saved,'licenseCards'),cardId:change.card?.id,added:change.added},context);if(change.rulesChanged)await deps.changed?.(profile,'pricingRules',{revision:cards.revisionOf(saved,'pricingRules'),changedLicenses:[...new Set((change.cards||[change.card]).map(card=>card.license))]},context);}
  async function discovery(profile,{assertAuthority}={}){
@@ -101,7 +101,7 @@ function createLicenseCardService(deps){
  const create=(profile,body,opts)=>writeCards(profile,current=>{const r=cards.createCard(current,body);return {overrides:r.overrides,cards:[r.card]};},opts);
  const setLicensor=(profile,id,body,opts)=>writeCards(profile,current=>{const r=cards.setLicensor(current,id,body);return {overrides:r.overrides,cards:[r.card]};},opts);
  const saveTemplate=(profile,body,opts)=>writeCards(profile,current=>{const r=cards.saveTemplate(current,body);return {overrides:r.overrides,cards:r.cards,stageTemplates:cards.templatesOf(r.overrides)};},opts);
- const setLicensorMerge=(profile,body,opts)=>writeCards(profile,current=>{const r=cards.setLicensorMerge(current,body);return {overrides:r.overrides,cards:[],rulesChanged:true,licensorMerges:cards.licensorMergesOf(r.overrides)};},opts);
+ const setLicensorMerge=(profile,body,opts)=>writeCards(profile,current=>{const r=cards.setLicensorMerge(current,body,undefined,{manufacturers:deps.manufacturers?.(current)});return {overrides:r.overrides,cards:[],rulesChanged:true,licensorMerges:cards.licensorMergesOf(r.overrides)};},opts);
  // One-time move of inline images out of the overrides store (see license-card-assets).
  // Changed cards are re-published so peer records shrink too; same bytes → same URL everywhere.
  async function migrateAssets(profile={id:'system'},opts={}){
