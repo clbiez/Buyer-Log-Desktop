@@ -12946,7 +12946,7 @@ function applyAcknowledgedCpDraft(prepared,data){
   for(const {row,before,after}of prepared.rows){
     if(!['cp','orders','orderSummary'].some(table=>state[table]?.rows?.includes(row)))continue;
     for(const key of new Set([...Object.keys(before),...Object.keys(after)])){
-      if(['_pricingManualWrite','_pricingHistoryRestore','_subManufacturerWrite'].includes(key))continue;
+      if(['_pricingManualWrite','_pricingHistoryRestore','_subManufacturerWrite','_delTypeWrite'].includes(key))continue;
       if(equal(before[key],after[key])||!equal(row[key],before[key]))continue;
       if(Object.hasOwn(after,key))row[key]=structuredClone(after[key]);else delete row[key];
     }
@@ -13134,6 +13134,7 @@ function applyHistoryAction(action, direction, options={}){
     if(snapshot.licensor)historyKeys.add('Licensor');
   }
   if(historyKeys.has('Sub-Manufacturer')&&!action.pricing)row._subManufacturerWrite={};
+  if(historyKeys.has('Del. Type'))row._delTypeWrite={};
   if(historyKeys.has('Del. Type'))syncCpProductionLogisticSegment(row,row['Del. Type']);
   else if(historyKeys.has('Ex-factory'))syncCpProductionLogisticSegment(row);
   applyFormulas(row);
@@ -13569,6 +13570,7 @@ function commitCpEditor(t, options={}){
   const previousPricing=kind==='licensor'?captureCpPricingHistory(row,true):null;
   row[key] = t.value;
   if(kind==='deltype'){
+    row._delTypeWrite={}; // açık kullanıcı niyeti: yalnız bu durumda Del. Type kaydedilir (bkz. syncOverrideToServer)
     syncCpProductionLogisticSegment(row,t.value);
     applyFormulas(row); invalidateUnifiedPriorityDecisions('cp-delivery-type-edit'); markDirty(id); pushUndo({id, fields:[{key,prev,next:t.value}]});
     syncOrderLinePeersFromCpRow(row, ['Del. Type'], {render:refresh});
@@ -16514,7 +16516,9 @@ function syncOverridesFromRow(row){
   notes.Notes=nextNotes;notes.NotesHtml=row.NotesHtml||'';
   notes.EkNot=nextEkNot;notes.EkNotHtml=row['Ek NotHtml']||'';
   state.overrides.notesmap[key]=notes;
-  if(row['Del. Type'])state.overrides.delmap[key]=row['Del. Type'];
+  /* Del. Type yalnız açık kullanıcı niyetiyle yazılır. Görünen değer IAS parsiyelinden türetilmiş olabilir; not /
+     Supp. FOB gibi ilgisiz bir kayıt override oluşturmaz, mevcut override'ı ya da başkasının değişikliğini ezmez. */
+  if(row._delTypeWrite&&row['Del. Type'])state.overrides.delmap[key]=row['Del. Type'];
   const isDtr=turknorm(row.Licensor)==='DTR';
   if(isDtr){
     row['Sub-Manufacturer']=norm(row.Manufacturer);
@@ -17038,9 +17042,10 @@ window.BLCpRowSave={
 function syncOverrideToServer(orderCode,notes,row){
   if(!window.SERVER_BACKED)return;
   schedulePendingOverrideWrite(`notes:${overrideSyncKey(row, orderCode)}`, typeof cpRowSaveDebounce==='function'?cpRowSaveDebounce(500):500, ()=>{
-    const restore=row._pricingHistoryRestore,manualWrite=row._pricingManualWrite,subWrite=row._subManufacturerWrite;
+    const restore=row._pricingHistoryRestore,manualWrite=row._pricingManualWrite,subWrite=row._subManufacturerWrite,delWrite=row._delTypeWrite;
     const body=(()=>{
-        const body={...lineIdentity(row),notes,delType:row['Del. Type']||undefined};
+        // Del. Type yalnız açık düzenleme niyetiyle (_delTypeWrite) gönderilir; aksi halde sunucu delmap'i değiştirmez.
+        const body={...lineIdentity(row),notes,delType:delWrite?(row['Del. Type']||undefined):undefined};
         if(turknorm(row.Licensor)!=='DTR'&&(!restore?.licensor||subWrite))body.subManufacturer=norm(row['Sub-Manufacturer']);
         if(row._licensorManual===true&&Object.hasOwn(state.overrides.licensormap||{},overrideSyncKey(row,orderCode)))body.licensor=norm(row.Licensor);
         // An imported (CP update) value is not re-sent as a manual price with a note save.
@@ -17072,6 +17077,7 @@ function syncOverrideToServer(orderCode,notes,row){
       if(restore&&row._pricingHistoryRestore===restore)delete row._pricingHistoryRestore;
       if(manualWrite&&row._pricingManualWrite===manualWrite)delete row._pricingManualWrite;
       if(subWrite&&row._subManufacturerWrite===subWrite)delete row._subManufacturerWrite;
+      if(delWrite&&row._delTypeWrite===delWrite)delete row._delTypeWrite;
     }).catch(err=>{console.warn('Sunucuya kaydedilemedi:',err.message);if(err.code!=='REVISION_CONFLICT')notifyOverrideSaveError(appLang==='en'?'The change could not be saved to the server.':'Değişiklik sunucuya kaydedilemedi.');});
   });
 }

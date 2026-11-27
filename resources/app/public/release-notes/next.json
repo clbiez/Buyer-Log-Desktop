@@ -392,6 +392,29 @@
           "en": "The screen layout is unchanged; only the value shown after saving is now correct."
         }
       }
+    },
+    {
+      "id": "cp-unrelated-save-keeps-deltype",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Siparişler",
+        "en": "CP · Orders"
+      },
+      "title": {
+        "tr": "CP: not ya da fiyat kaydı Del. Type'ı değiştirmez",
+        "en": "CP: saving a note or price no longer changes Del. Type"
+      },
+      "body": {
+        "tr": "Bir satırda yalnız not, Supp. FOB ya da Sub-Manufacturer kaydedildiğinde ekranda görünen Del. Type da kaydediliyordu. Görünen değer yüklenmiş bir parsiyelden geldiğinde bu, kalan üretim bakiyesinin Del. Type'ını ve tahmini antrepo tarihini istemeden değiştirebiliyor, başka bir kullanıcının Del. Type değişikliğini de ezebiliyordu. Del. Type artık yalnız siz onu değiştirdiğinizde ya da geri al / yinele ile değiştiğinde kaydedilir; not ve fiyat kayıtları yine hızlı güncellenir. Önceden oluşmuş Del. Type kayıtları değiştirilmez.",
+        "en": "When only a note, Supp. FOB or Sub-Manufacturer was saved on a row, the Del. Type shown on screen was saved as well. When that value came from a loaded partial shipment, this could unintentionally change the Del. Type and estimated warehouse date of the remaining production balance, and could overwrite another user's Del. Type change. Del. Type is now saved only when you change it, or when undo / redo changes it; note and price saves update quickly again. Del. Type values stored earlier are not changed."
+      },
+      "visual": {
+        "kind": "none",
+        "reason": {
+          "tr": "Ekran düzeni değişmedi; yalnız kaydedilen alanlar değişti.",
+          "en": "The screen layout is unchanged; only which fields are saved has changed."
+        }
+      }
     }
   ]
 }
