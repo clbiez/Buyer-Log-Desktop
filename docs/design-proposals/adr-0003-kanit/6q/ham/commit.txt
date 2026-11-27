@@ -1,0 +1,1 @@
+main 53176623b3b7673d4a03ee0a9c422a6c6e1f8146 runtime electron 44.3.0 node 24.20.0 ELECTRON_RUN_AS_NODE=1 NODE_OPTIONS=--use-openssl-ca --max-old-space-size=3686 (+ --require hook-soak.js) BUYER_LOG_COMPUTE_GC_RECHECK=unset BUYER_LOG_CP_ROWPATCH_LEGACY=unset SOAK_MIN=110 SOAK_GAP_MS=15000 SOAK_CHECK_MIN=10

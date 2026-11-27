@@ -1,0 +1,299 @@
+{
+ "runtime": {
+  "exec": "/home/user/el/node_modules/electron/dist/electron",
+  "node": "24.20.0",
+  "electron": "44.3.0",
+  "NODE_OPTIONS": "--use-openssl-ca --max-old-space-size=3686 --require=/home/user/adr/docs/design-proposals/adr-0003-kanit/kit/hook-soak.js",
+  "gcRecheck": null,
+  "flag": null
+ },
+ "bootMs": 20657,
+ "datasetRows": 24982,
+ "durationMin": 110,
+ "edits": 349,
+ "saveStatus": {
+  "200": 349
+ },
+ "nonOkReads": 0,
+ "total503": 0,
+ "editsWith503": 0,
+ "memory": {
+  "rssStartMB": 1464,
+  "rssEndMB": 1515,
+  "rssPeakMB": 3130,
+  "hwmEndMB": 3138,
+  "heapStartMB": 51,
+  "heapEndMB": 125,
+  "heapPeakMB": 131,
+  "mainRetainedMaxMB": 281,
+  "laneRetainedMaxMB": 444
+ },
+ "slopeMBperHour": {
+  "rssMed": {
+   "first30": 626.3,
+   "last30": -106.1,
+   "all": 193.1
+  },
+  "heapMed": {
+   "first30": 101,
+   "last30": 10,
+   "all": 36.6
+  },
+  "mainRetained": {
+   "first30": 58.8,
+   "last30": 72.3,
+   "all": 8.3
+  },
+  "laneRetained": {
+   "first30": 40.3,
+   "last30": -35.2,
+   "all": 13.9
+  },
+  "rssMax": {
+   "first30": 1151.2,
+   "last30": -114.8,
+   "all": 238.8
+  }
+ },
+ "workers": {
+  "allLog": {
+   "spawns": 3,
+   "exits": 0,
+   "terminates": 0
+  },
+  "spawns": 0,
+  "exits": 0,
+  "terminates": 0,
+  "reasons": {},
+  "exitCodes": {}
+ },
+ "waits": {
+  "cpWaitMed": 3262,
+  "cpWaitP90": 3423,
+  "readyMed": 3915,
+  "readyP90": 4142,
+  "readyMax": 4753
+ },
+ "slices": [
+  {
+   "dk": "0-30",
+   "edits": 95,
+   "cpWaitMed": 3310,
+   "cpWaitP90": 3466,
+   "readyMed": 4003,
+   "readyP90": 4167,
+   "suppFobReadyMed": 4005.5,
+   "noteReadyMed": 3978,
+   "n503": 0,
+   "cpuMsPerEdit": 10090,
+   "rssMedMB": 1581,
+   "heapMedMB": 76
+  },
+  {
+   "dk": "30-60",
+   "edits": 95,
+   "cpWaitMed": 3258,
+   "cpWaitP90": 3421,
+   "readyMed": 3916,
+   "readyP90": 4142,
+   "suppFobReadyMed": 3916,
+   "noteReadyMed": 3911.5,
+   "n503": 0,
+   "cpuMsPerEdit": 7910,
+   "rssMedMB": 1805,
+   "heapMedMB": 103
+  },
+  {
+   "dk": "60-90",
+   "edits": 95,
+   "cpWaitMed": 3234,
+   "cpWaitP90": 3372,
+   "readyMed": 3882,
+   "readyP90": 4080,
+   "suppFobReadyMed": 3879.5,
+   "noteReadyMed": 3892,
+   "n503": 0,
+   "cpuMsPerEdit": 7930,
+   "rssMedMB": 1807,
+   "heapMedMB": 120
+  },
+  {
+   "dk": "90-111",
+   "edits": 64,
+   "cpWaitMed": 3239,
+   "cpWaitP90": 3448,
+   "readyMed": 3886,
+   "readyP90": 4155,
+   "suppFobReadyMed": 3887.5,
+   "noteReadyMed": 3884.5,
+   "n503": 0,
+   "cpuMsPerEdit": 8005,
+   "rssMedMB": 1848,
+   "heapMedMB": 124
+  }
+ ],
+ "checks": [
+  {
+   "label": "min10",
+   "equal": true,
+   "values": {
+    "checked": 32,
+    "ok": 32,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min20",
+   "equal": true,
+   "values": {
+    "checked": 63,
+    "ok": 63,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min30",
+   "equal": true,
+   "values": {
+    "checked": 95,
+    "ok": 95,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min40",
+   "equal": true,
+   "values": {
+    "checked": 127,
+    "ok": 127,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min50",
+   "equal": true,
+   "values": {
+    "checked": 159,
+    "ok": 159,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min60",
+   "equal": true,
+   "values": {
+    "checked": 190,
+    "ok": 190,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min70",
+   "equal": true,
+   "values": {
+    "checked": 222,
+    "ok": 222,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min80",
+   "equal": true,
+   "values": {
+    "checked": 254,
+    "ok": 254,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min90",
+   "equal": true,
+   "values": {
+    "checked": 285,
+    "ok": 285,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min100",
+   "equal": true,
+   "values": {
+    "checked": 317,
+    "ok": 317,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min110",
+   "equal": true,
+   "values": {
+    "checked": 349,
+    "ok": 349,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "final",
+   "equal": true,
+   "values": {
+    "checked": 349,
+    "ok": 349,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  }
+ ],
+ "baseline": {
+  "cacheRemoved": [
+   "local/page-cache/moderator",
+   "local/page-cache/moderator"
+  ],
+  "status": 200,
+  "digest": "5ac8eef8fa417093abbde49a70fc05db49e0659c",
+  "count": 24982,
+  "equalToFinal": true,
+  "values": {
+   "status": 200,
+   "checked": 349,
+   "ok": 349,
+   "bad": [],
+   "badCount": 0
+  }
+ },
+ "errors": []
+}
