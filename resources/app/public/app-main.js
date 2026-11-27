@@ -37608,7 +37608,7 @@ function openFabricCardDialog(rawText,{trigger=null,code:wantedCode='',collectio
         details[key]=snapshot&&value===snapshot.displayed?snapshot.original:value;
       });
       const segmentResult=segmentEditor?.result();
-      if(!segmentResult?.ok){status.textContent=segmentResult?.error||(en?'Complete all four summary segments first.':'Önce dört özet parçasını tamamlayın.');return;}
+      if(!segmentResult?.ok){status.textContent=segmentResult?.error||(en?'Check the summary segments first.':'Önce özet parçalarını kontrol edin.');return;}
       const card=api.normalizeCard({code:saveCode,summary:segmentResult.summary,summaryEn:segmentResult.summaryEn,details,summarySource:source,raw:saveExisting&&saveExisting.raw||(freeText?rowRaw:raw)});
       if(!card){status.textContent=en?'Enter valid fabric summary segments.':'Geçerli kumaş özeti parçalarını girin.';return;}
       card.summarySegments=segmentResult.summarySegments;

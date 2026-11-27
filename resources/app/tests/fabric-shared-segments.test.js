@@ -290,3 +290,41 @@ test('valid pairs and reviewed manual translations survive language switching, w
   h.language('tr');h.action('confirm',0);assert.equal(h.editor.result().ok,true);
   assert.equal(h.editor.result().summarySegments.en[0],'Custom Three Thread');h.editor.dispose();
 });
+
+test('empty summary segments are saveable when blank in both languages and round-trip through the summary',()=>{
+  const trGap=['Triko','30/2/2','','100% Pamuk'],enGap=['Knitwear','30/2/2','','100% Cotton'];
+  const checked=seg.validatePair(trGap,enGap);
+  assert.equal(checked.ok,true);
+  assert.deepEqual(checked.tr,trGap);
+  assert.equal(seg.compose(trGap),'Triko · 30/2/2 · '+seg.EMPTY_PIECE+' · 100% Pamuk');
+  assert.deepEqual(seg.parse(seg.compose(trGap)),trGap);
+  assert.deepEqual(seg.fromCard({summary:seg.compose(trGap),summaryEn:seg.compose(enGap)}),{tr:trGap,en:enGap,legacy:false});
+  // Half-filled segment and an all-empty summary stay invalid.
+  assert.equal(seg.validatePair(trGap,['Knitwear','30/2/2','180 gsm','100% Cotton']).code,'FABRIC_SEGMENTS_INCOMPLETE');
+  assert.equal(seg.validatePair(['','','',''],['','','','']).code,'FABRIC_SEGMENTS_EMPTY');
+  assert.equal(seg.compose(['','','','']),'');
+  // A filled weight is still a technical value.
+  assert.equal(seg.validatePair(['Triko','30/2/2','ağır','100% Pamuk'],['Knitwear','30/2/2','heavy','100% Cotton']).code,'FABRIC_TECHNICAL_MISMATCH');
+  const normalized=cards.normalizeCard({code:'12083',summarySegments:{tr:trGap,en:enGap},summarySource:'manual',raw:'12083-Triko'},'',{strictSegments:true});
+  assert.deepEqual(normalized.summarySegments.tr,trGap);
+  assert.deepEqual(seg.parse(normalized.summary),trGap);
+  assert.deepEqual(seg.parse(normalized.summaryEn),enGap);
+});
+
+test('editor saves a card with an empty segment and clearing a source segment clears its translation',()=>{
+  const h=editorHarness({card:{code:'12083',summarySegments:{tr:['Triko','30/2/2','','100% Pamuk'],en:['Knitwear','30/2/2','','100% Cotton']}}});
+  const first=h.editor.result();
+  assert.equal(first.ok,true);
+  assert.equal(first.summarySegments.en[2],'');
+  h.input('tr',1,'');
+  const cleared=h.editor.result();
+  assert.equal(cleared.ok,true);
+  assert.equal(cleared.summarySegments.en[1],'');
+  h.input('tr',1,'30/2/2');
+  assert.equal(h.editor.result().summarySegments.en[1],'30/2/2');
+  for(const i of [0,1,3])h.input('tr',i,'');
+  const empty=h.editor.result();
+  assert.equal(empty.ok,false);
+  assert.match(empty.error,/at least one/i);
+  h.editor.dispose();
+});
