@@ -1040,6 +1040,53 @@ Hangisinin güvenli olduğu ayrı ölçüm ister **[Hipotez]**.
 
 **Satır yaması günlüğü:** Değişen satırların kimliğini zaten taşıyor. Değişen modüllerde tam yeniden yükleme yerine yama uygulamanın tek mevcut yolu bu (CP'de var). Siparişler'e taşınması ayrı karar (§6F.5-1).
 
+## 6H · P1 lojistik segment düzeltmesinin gerçek sunucu doğrulaması (2026-11-27)
+
+**Sabit commit'ler:**
+- düzeltme `3b44c863` (`claude/p1-logistic-segment-incremental`);
+- taban main `51deb5d`.
+
+Bayrak kapalı. Kod değiştirilmedi. Araçlar ve ham sonuçlar: `adr-0003-kanit/6h/`.
+
+**Doğruluk: V1/V2/V3 alan düzeyi [Doğrulandı: gerçek sunucu, 30k]**
+- **main:** V2 ≠ V3.
+  - `PATCH` ve `POST /rows` Del. Type: Del. Type ve Ant. Arrival eski kalıyor. `POST /rows` satırında karar demeti de farklı.
+  - Kısmi sevk satırında segmentler farklı.
+  - Gövdesinde değişmemiş `delType` olan gerçek istemci Supp. FOB kaydında da segmentler farklı (değer `delmap` override'ı olarak yazılıyor).
+- **düzeltme:** V1 = V2 = V3. Şu durumlarda da eşit:
+  - tarih temizleme + geri döndürme sonrası;
+  - normal yeniden başlatma ve SIGKILL sonrası.
+- **düzeltme, diğer kontroller:**
+  - karar demetleri eşit; tek fark, T2'den sonra düzenlenen SIGKILL satırı;
+  - Siparişler satırları eşit;
+  - IAS parsiyel alanları değişmedi;
+  - otomatik onaylı satırda Ex-factory düzenlemesi `409 AUTOMATIC_DATE_READ_ONLY` (korunuyor);
+  - başka kullanıcının Del. Type olayı `mode:"reload"`, `rowPatches:null` (main'de `patch`).
+- **Fikstür sınırı (seed 7, ilk 5000 satır):** her satırda yükleme onayı var, bu yüzden onaysız Ex-factory düzenlemesi sınanamadı. Çoklu parsiyel, tam sevk ve aynı siparişin farklı rengi de yok **[Bilinmiyor: gerçek sunucuda kapsanmadı]**.
+
+**Maliyet (L2, A B B A A B, 3 çift, koşu medyanları):**
+
+| Ölçü | Del. Type (`POST /rows`): main → düzeltme | Supp. FOB (`PATCH`, gövdede `delType`): main → düzeltme |
+|---|---|---|
+| Kayıt → CP yanıtı | 0,25 → 6,42 sn (çift farkı +5,9 / +6,2 / +6,4) | 4,61 → 7,83 sn (+1,7 / +3,5 / +3,8) |
+| Kayıt → CP + Siparişler hazır | 3,36 → 10,27 sn | 5,64 → 11,35 sn |
+| Kira beklemesi / CP yükleme | 0 / 0 → 3,46 / 1,17 sn | 2,24 / 1,18 → 3,49 / 1,12 sn |
+| Sunucu CPU (pencere) | 8,7 → 15,8 sn | 12,2 → 15,8 sn |
+| CP 503 | 0/9 → 3/9 | 0/9 → 2/9 |
+
+**Yorum:**
+- main'in Del. Type'taki hızı **yanlış veriyle** geliyor (satır yaması zinciri eski segmentle hesaplıyor).
+- Düzeltmedeki maliyet doğruluk bedeli; karar ürün sahibinde.
+- Supp. FOB kontrolü **değişmemeliydi ama geriledi**. Neden: istemci gövdesi mevcut `delType`'ı da gönderiyor, `patchTouchesLogisticSegments` `delType != null` dediği için kayıt tam kuruluma düşüyor.
+- Ancak main ölçümü, değişmemiş `delType`'ın bile tam kurulumda segmenti değiştirdiğini gösterdi. Yani bu değer gerçekten bir segment girdisi; kuralı "değişmedi" diye gevşetmek doğruluğu bozar **[Doğrulandı: main V2≠V3, satır 12]**.
+- Gereksiz olan, istemcinin değişmemiş `delType`'ı göndermesi olabilir **[Hipotez]**.
+
+**Birincil segment tutarsızlığı [Doğrulandı: gerçek sunucu, satır 4100023/L02, parsiyel Depoda + üretim]:**
+- CP okuma modeli: STATUS "Depoda", Ant. Arrival 15.12 (partials[0], `overview-row-prep`).
+- Siparişler okuma modeli ve ham projeksiyon (cp ve orders): STATUS "Üretimde", Ant. Arrival 04.01 (ilk kıtlık-dışı segment, `parse.js`).
+- Del. Type ikisinde de "Gemi".
+- Aynı satır CP ve Siparişler'de farklı durum ve varış gösteriyor. İş kuralı kararı; değiştirilmedi.
+
 ## 7 · Ürün sahibinin vermesi gereken kararlar
 
 1. **Sütun filtresi anlamı (T5):** Koleksiyonda sayısal/aralık/revizyon filtresi yokluğu bilinçli mi? Genel Bakış boyut filtresinin `norm()` eşitliği istenen davranış mı?

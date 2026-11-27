@@ -1,0 +1,504 @@
+{
+ "app": "/home/user/fix/resources/app",
+ "edits": [
+  {
+   "kind": "kısmi sevk: Del. Type",
+   "who": "A",
+   "id": "0",
+   "code": 4100000,
+   "status": 200,
+   "code2": "",
+   "text": ""
+  },
+  {
+   "kind": "yalnız üretim: Del. Type (PATCH)",
+   "who": "A",
+   "id": "1",
+   "code": 4100002,
+   "status": 200,
+   "code2": "",
+   "text": ""
+  },
+  {
+   "kind": "yalnız üretim: Retail",
+   "who": "A",
+   "id": "2",
+   "code": 4100003,
+   "status": 200,
+   "code2": "",
+   "text": ""
+  },
+  {
+   "kind": "yalnız üretim: In-Store",
+   "who": "A",
+   "id": "3",
+   "code": 4100004,
+   "status": 200,
+   "code2": "",
+   "text": ""
+  },
+  {
+   "kind": "POST /rows: Del. Type",
+   "who": "A",
+   "id": "5",
+   "code": 4100006,
+   "status": 200,
+   "code2": "",
+   "text": ""
+  },
+  {
+   "kind": "otomatik onaylı satır: Ex-factory",
+   "who": "A",
+   "id": "7",
+   "code": 4100009,
+   "status": 409,
+   "code2": "AUTOMATIC_DATE_READ_ONLY",
+   "text": "{\"error\":\"Sipariş düzenlemesi kaydedilemedi.\",\"code\":\"AUTOMATIC_DATE_READ_ONLY\"}"
+  },
+  {
+   "kind": "Supp. FOB (A, gerçek istemci gövdesi, delType mevcut değer)",
+   "who": "A",
+   "id": "12",
+   "code": 4100014,
+   "status": 200,
+   "code2": "",
+   "text": ""
+  },
+  {
+   "kind": "başka kullanıcı (B): Del. Type",
+   "who": "B",
+   "id": "6",
+   "code": 4100007,
+   "status": 200,
+   "code2": "",
+   "text": ""
+  },
+  {
+   "kind": "Supp. FOB (B, gerçek istemci gövdesi, delType mevcut değer)",
+   "who": "B",
+   "id": "20",
+   "code": 4100023,
+   "status": 200,
+   "code2": "",
+   "text": ""
+  },
+  {
+   "kind": "  temizle",
+   "status": 200,
+   "text": ""
+  },
+  {
+   "kind": "tarih temizle (Retail) + geri döndür",
+   "who": "A",
+   "id": "4",
+   "code": 4100005,
+   "status": 200,
+   "code2": "",
+   "text": ""
+  },
+  {
+   "kind": "SIGKILL öncesi Del. Type",
+   "id": "58",
+   "status": 200
+  }
+ ],
+ "events": [
+  {
+   "t": 1795760416446,
+   "mode": "reload",
+   "rowPatches": null
+  },
+  {
+   "t": 1795760416767,
+   "mode": "reload",
+   "rowPatches": null
+  },
+  {
+   "t": 1795760419394,
+   "mode": "reload",
+   "rowPatches": null
+  },
+  {
+   "t": 1795760419720,
+   "mode": "reload",
+   "rowPatches": null
+  },
+  {
+   "t": 1795760420039,
+   "mode": "reload",
+   "rowPatches": null
+  },
+  {
+   "t": 1795760420668,
+   "mode": "reload",
+   "rowPatches": null
+  },
+  {
+   "t": 1795760465452,
+   "mode": "reload",
+   "rowPatches": null
+  },
+  {
+   "t": 1795760465768,
+   "mode": "reload",
+   "rowPatches": null
+  },
+  {
+   "t": 1795760467581,
+   "mode": "reload",
+   "rowPatches": null
+  },
+  {
+   "t": 1795760468393,
+   "mode": "reload",
+   "rowPatches": null
+  }
+ ],
+ "checks": {
+  "v1_v2": {},
+  "v2c_v3": {},
+  "v2_v3": {},
+  "v2restart_v3": {},
+  "kill_v3": {},
+  "tuplesTouchedDiff": [
+   "58:SIGKILL öncesi Del. Type"
+  ],
+  "tuplesAllDiff": 1,
+  "orders": {
+   "rows2": 7,
+   "rows3": 7,
+   "diff": {}
+  },
+  "partialChange": {},
+  "values": {
+   "0:kısmi sevk: Del. Type": {
+    "before": {
+     "dt": "Gemi",
+     "exf": "2026-10-09T00:00:00.000Z",
+     "arr": "2026-12-06T00:00:00.000Z",
+     "st": "Üretimde"
+    },
+    "v2": {
+     "dt": "Gemi",
+     "exf": "2026-10-09T00:00:00.000Z",
+     "arr": "2026-12-06T00:00:00.000Z",
+     "st": "Üretimde"
+    },
+    "v3": {
+     "dt": "Gemi",
+     "exf": "2026-10-09T00:00:00.000Z",
+     "arr": "2026-12-06T00:00:00.000Z",
+     "st": "Üretimde"
+    }
+   },
+   "1:yalnız üretim: Del. Type (PATCH)": {
+    "before": {
+     "dt": "Gemi",
+     "exf": "2026-12-24T00:00:00.000Z",
+     "arr": "2027-03-04T00:00:00.000Z",
+     "st": "Üretimde"
+    },
+    "v2": {
+     "dt": "Uçak",
+     "exf": "2026-12-24T00:00:00.000Z",
+     "arr": "2027-01-08T00:00:00.000Z",
+     "st": "Üretimde"
+    },
+    "v3": {
+     "dt": "Uçak",
+     "exf": "2026-12-24T00:00:00.000Z",
+     "arr": "2027-01-08T00:00:00.000Z",
+     "st": "Üretimde"
+    }
+   },
+   "2:yalnız üretim: Retail": {
+    "before": {
+     "dt": "Gemi",
+     "exf": "2027-02-05T00:00:00.000Z",
+     "arr": "2027-04-16T00:00:00.000Z",
+     "st": "Üretimde"
+    },
+    "v2": {
+     "dt": "Gemi",
+     "exf": "2027-02-05T00:00:00.000Z",
+     "arr": "2027-04-16T00:00:00.000Z",
+     "st": "Üretimde"
+    },
+    "v3": {
+     "dt": "Gemi",
+     "exf": "2027-02-05T00:00:00.000Z",
+     "arr": "2027-04-16T00:00:00.000Z",
+     "st": "Üretimde"
+    }
+   },
+   "3:yalnız üretim: In-Store": {
+    "before": {
+     "dt": "Gemi",
+     "exf": "2026-12-29T00:00:00.000Z",
+     "arr": "2027-03-09T00:00:00.000Z",
+     "st": "Üretimde"
+    },
+    "v2": {
+     "dt": "Gemi",
+     "exf": "2026-12-29T00:00:00.000Z",
+     "arr": "2027-03-09T00:00:00.000Z",
+     "st": "Üretimde"
+    },
+    "v3": {
+     "dt": "Gemi",
+     "exf": "2026-12-29T00:00:00.000Z",
+     "arr": "2027-03-09T00:00:00.000Z",
+     "st": "Üretimde"
+    }
+   },
+   "5:POST /rows: Del. Type": {
+    "before": {
+     "dt": "Gemi",
+     "exf": "2027-01-18T00:00:00.000Z",
+     "arr": "2027-03-29T00:00:00.000Z",
+     "st": "Üretimde"
+    },
+    "v2": {
+     "dt": "Uçak",
+     "exf": "2027-01-18T00:00:00.000Z",
+     "arr": "2027-02-02T00:00:00.000Z",
+     "st": "Üretimde"
+    },
+    "v3": {
+     "dt": "Uçak",
+     "exf": "2027-01-18T00:00:00.000Z",
+     "arr": "2027-02-02T00:00:00.000Z",
+     "st": "Üretimde"
+    }
+   },
+   "7:otomatik onaylı satır: Ex-factory": {
+    "before": {
+     "dt": "Gemi",
+     "exf": "2027-01-12T00:00:00.000Z",
+     "arr": "2027-03-23T00:00:00.000Z",
+     "st": "Üretimde"
+    },
+    "v2": {
+     "dt": "Gemi",
+     "exf": "2027-01-12T00:00:00.000Z",
+     "arr": "2027-03-23T00:00:00.000Z",
+     "st": "Üretimde"
+    },
+    "v3": {
+     "dt": "Gemi",
+     "exf": "2027-01-12T00:00:00.000Z",
+     "arr": "2027-03-23T00:00:00.000Z",
+     "st": "Üretimde"
+    }
+   },
+   "12:Supp. FOB (A, gerçek istemci gövdesi, delType mevcut değer)": {
+    "before": {
+     "dt": "TIR",
+     "exf": "2026-10-21T00:00:00.000Z",
+     "arr": "2026-12-03T00:00:00.000Z",
+     "st": "Üretimde"
+    },
+    "v2": {
+     "dt": "TIR",
+     "exf": "2026-10-21T00:00:00.000Z",
+     "arr": "2026-12-03T00:00:00.000Z",
+     "st": "Üretimde"
+    },
+    "v3": {
+     "dt": "TIR",
+     "exf": "2026-10-21T00:00:00.000Z",
+     "arr": "2026-12-03T00:00:00.000Z",
+     "st": "Üretimde"
+    }
+   },
+   "6:başka kullanıcı (B): Del. Type": {
+    "before": {
+     "dt": "Gemi",
+     "exf": "2027-02-05T00:00:00.000Z",
+     "arr": "2027-04-16T00:00:00.000Z",
+     "st": "Üretimde"
+    },
+    "v3": {
+     "dt": "Uçak",
+     "exf": "2027-02-05T00:00:00.000Z",
+     "arr": "2027-02-20T00:00:00.000Z",
+     "st": "Üretimde"
+    }
+   },
+   "20:Supp. FOB (B, gerçek istemci gövdesi, delType mevcut değer)": {
+    "before": {
+     "dt": "Gemi",
+     "exf": "2026-10-26T00:00:00.000Z",
+     "arr": "2026-12-15T00:00:00.000Z",
+     "st": "Depoda"
+    },
+    "v3": {
+     "dt": "Gemi",
+     "exf": "2026-10-26T00:00:00.000Z",
+     "arr": "2026-12-15T00:00:00.000Z",
+     "st": "Depoda"
+    }
+   },
+   "4:tarih temizle (Retail) + geri döndür": {
+    "before": {
+     "dt": "Gemi",
+     "exf": "2027-01-29T00:00:00.000Z",
+     "arr": "2027-04-09T00:00:00.000Z",
+     "st": "Üretimde"
+    },
+    "v3": {
+     "dt": "Gemi",
+     "exf": "2027-01-29T00:00:00.000Z",
+     "arr": "2027-04-09T00:00:00.000Z",
+     "st": "Üretimde"
+    }
+   },
+   "58:SIGKILL öncesi Del. Type": {
+    "before": {
+     "dt": "Gemi",
+     "exf": "2027-01-12T00:00:00.000Z",
+     "arr": "2027-03-23T00:00:00.000Z",
+     "st": "Üretimde"
+    },
+    "v3": {
+     "dt": "Uçak",
+     "exf": "2027-01-12T00:00:00.000Z",
+     "arr": "2027-01-27T00:00:00.000Z",
+     "st": "Üretimde"
+    }
+   }
+  }
+ },
+ "errors": [
+  "aday yok: çoklu segment",
+  "aday yok: tam sevk",
+  "aday yok: aynı sipariş farklı renk",
+  "Ex-factory kabul eden satır bulunamadı (40 aday, hepsi 409)"
+ ],
+ "rows": 5000,
+ "shapes": {
+  "parsiyel=1 üretim=1 kıtlık=0 onay=1": 1527,
+  "parsiyel=0 üretim=1 kıtlık=0 onay=1": 3472,
+  "parsiyel=1 üretim=0 kıtlık=1 onay=1": 1
+ },
+ "multiLineOrders": 0,
+ "eventsAfterB": [
+  {
+   "t": 1795760465452,
+   "mode": "reload",
+   "rowPatches": null
+  },
+  {
+   "t": 1795760465768,
+   "mode": "reload",
+   "rowPatches": null
+  }
+ ],
+ "segmentDetail": {
+  "0:kısmi sevk: Del. Type": {
+   "before": [
+    {
+     "kind": "partial",
+     "status": "Üretimde",
+     "delType": "GEMI",
+     "arrival": "2026-12-06T00:00:00.000Z"
+    },
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2026-12-18T00:00:00.000Z"
+    }
+   ],
+   "v3": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Uçak",
+     "arrival": "2026-10-24T00:00:00.000Z"
+    },
+    {
+     "kind": "partial",
+     "status": "Üretimde",
+     "delType": "GEMI",
+     "arrival": "2026-12-06T00:00:00.000Z"
+    }
+   ],
+   "rowV3": {
+    "dt": "Gemi",
+    "st": "Üretimde",
+    "arr": "2026-12-06T00:00:00.000Z"
+   }
+  },
+  "12:Supp. FOB (A, gerçek istemci gövdesi, delType mevcut değer)": {
+   "before": [
+    {
+     "kind": "partial",
+     "status": "Üretimde",
+     "delType": "TIR",
+     "arrival": "2026-12-03T00:00:00.000Z"
+    },
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2026-12-30T00:00:00.000Z"
+    }
+   ],
+   "v3": [
+    {
+     "kind": "partial",
+     "status": "Üretimde",
+     "delType": "TIR",
+     "arrival": "2026-12-03T00:00:00.000Z"
+    },
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "TIR",
+     "arrival": null
+    }
+   ],
+   "rowV3": {
+    "dt": "TIR",
+    "st": "Üretimde",
+    "arr": "2026-12-03T00:00:00.000Z"
+   }
+  },
+  "20:Supp. FOB (B, gerçek istemci gövdesi, delType mevcut değer)": {
+   "before": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-01-04T00:00:00.000Z"
+    },
+    {
+     "kind": "partial",
+     "status": "Depoda",
+     "delType": "GEMI",
+     "arrival": "2026-12-15T00:00:00.000Z"
+    }
+   ],
+   "v3": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-01-04T00:00:00.000Z"
+    },
+    {
+     "kind": "partial",
+     "status": "Depoda",
+     "delType": "GEMI",
+     "arrival": "2026-12-15T00:00:00.000Z"
+    }
+   ],
+   "rowV3": {
+    "dt": "Gemi",
+    "st": "Depoda",
+    "arr": "2026-12-15T00:00:00.000Z"
+   }
+  }
+ }
+}

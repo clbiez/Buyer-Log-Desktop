@@ -1,0 +1,93 @@
+{
+ "cpReadModel": {
+  "STATUS": "Depoda",
+  "Del. Type": "Gemi",
+  "Ant. Arrival": "2026-12-15T00:00:00.000Z",
+  "segments": [
+   {
+    "kind": "production",
+    "status": "Üretimde",
+    "delType": "Gemi",
+    "arrival": "2027-01-04T00:00:00.000Z"
+   },
+   {
+    "kind": "partial",
+    "status": "Depoda",
+    "delType": "GEMI",
+    "arrival": "2026-12-15T00:00:00.000Z"
+   }
+  ]
+ },
+ "key": {
+  "code": 4100023,
+  "model": "NASA Neon T-shirt",
+  "ccode": "L02"
+ },
+ "ordersReadModel": [
+  {
+   "STATUS": "Üretimde",
+   "Del. Type": "Gemi",
+   "Ant. Arrival": "2027-01-04",
+   "segments": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-01-04"
+    },
+    {
+     "kind": "partial",
+     "status": "Depoda",
+     "delType": "GEMI",
+     "arrival": "2026-12-15"
+    }
+   ]
+  }
+ ],
+ "files": [
+  "local/page-cache/moderator/mwym5j85-1c4579b135d3/cp.json.gz",
+  "local/page-cache/moderator/mwym5j85-1c4579b135d3/orders.json.gz"
+ ],
+ "raw:cp.json.gz": [
+  {
+   "STATUS": "Üretimde",
+   "Del. Type": "Gemi",
+   "Ant. Arrival": "2027-01-04",
+   "segments": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-01-04"
+    },
+    {
+     "kind": "partial",
+     "status": "Depoda",
+     "delType": "GEMI",
+     "arrival": "2026-12-15"
+    }
+   ]
+  }
+ ],
+ "raw:orders.json.gz": [
+  {
+   "STATUS": "Üretimde",
+   "Del. Type": "Gemi",
+   "Ant. Arrival": "2027-01-04",
+   "segments": [
+    {
+     "kind": "production",
+     "status": "Üretimde",
+     "delType": "Gemi",
+     "arrival": "2027-01-04"
+    },
+    {
+     "kind": "partial",
+     "status": "Depoda",
+     "delType": "GEMI",
+     "arrival": "2026-12-15"
+    }
+   ]
+  }
+ ]
+}
