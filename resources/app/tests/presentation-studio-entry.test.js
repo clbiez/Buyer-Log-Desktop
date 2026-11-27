@@ -52,7 +52,7 @@ test('uzun alan listeleri (gruplama seviyesi, kart bilgileri) okunur ve aranabil
 test('çip görünümü: Kumaş/Artwork yapısal modeli tablodaki kartlarla aynı kaynaktan; üst çubukta Çip/Metin seçeneği', () => {
   const app = read('public/app-main.js'), art = read('public/collection-artwork-detail.js'), studio = read('public/presentation-studio.js');
   assert.match(app, /function fabricCardCellModel\(val\)\{/);
-  assert.match(app, /window\.BLCellChips=Object\.freeze\(\{\n  columns:Object\.freeze\(\{koleksiyon:Object\.freeze\(\{fabric:'fabric',artworkDetail:'artwork'\}\),cp:Object\.freeze\(\{\[CP_FABRIC_PLM_KEY\]:'fabric'\}\),orders:/);
+  assert.match(app, /window\.BLCellChips=Object\.freeze\(\{\n  columns:Object\.freeze\(\{koleksiyon:Object\.freeze\(\{fabric:'fabric',artworkDetail:'artwork'\}\),cp:Object\.freeze\(\{\[CP_FABRIC_PLM_KEY\]:'fabric',\[CP_ARTWORK_PLM_KEY\]:'artwork'\}\),orders:Object\.freeze\(\{\[CP_FABRIC_PLM_KEY\]:'fabric',\[CP_ARTWORK_PLM_KEY\]:'artwork'\}\)/);
   assert.match(art, /function cellModel\(row, value\) \{/);
   assert.match(art, /    cellCards,\n    cellModel,\n/);
   assert.match(studio, /<span class="psSeg" data-ps="chipMode"><button type="button" data-v="chips"><\/button><button type="button" data-v="text"><\/button><\/span>/);
