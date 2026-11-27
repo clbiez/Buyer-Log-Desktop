@@ -40,6 +40,6 @@ test('value-showing custom pickers share the field boundary; grid cell triggers 
 
 test('unified license royalty workspace renders direct TR/EN pairs',()=>{
   const src=read('license-cards.js');
-  for(const pair of ["T('Uygula','Apply')","T('TR kom.','TR comm.')","T('YD kom.','Intl comm.')","T('Kaydet','Save')","T('Tümüne uygula','Apply to all')","T('Kategori oranı ekle','Add category rates')"])assert.ok(src.includes(pair),pair);
+  for(const pair of ["T('Uygula','Apply')","['trRoyalty','TR royalty','TR royalty','%']","['royalty','YD royalty','Intl royalty','%']","['trCommission','TR kom.','TR comm.','%']","['ydCommission','YD kom.','Intl comm.','%']","['hologramCost','YD hologram','Intl hologram','$']","T('Kaydet','Save')","T('Tümüne uygula','Apply to all')","T('Kategori oranı ekle','Add category rates')"])assert.ok(src.includes(pair),pair);
   assert.doesNotMatch(stripPairs(src),/>[^<>{}]*[çğıöşüÇĞİÖŞÜ][^<>{}]*</);
 });

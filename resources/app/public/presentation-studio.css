@@ -50,10 +50,10 @@
 .psHandle[data-h="n"]{left:calc(50% - 5px);top:0;cursor:ns-resize}.psHandle[data-h="s"]{left:calc(50% - 5px);bottom:0;cursor:ns-resize}
 .psHandle[data-h="w"]{top:calc(50% - 5px);left:0;cursor:ew-resize}.psHandle[data-h="e"]{top:calc(50% - 5px);right:0;cursor:ew-resize}
 .psDocHdr{cursor:grab}
-.psArea{pointer-events:none}
+.psArea{cursor:move}
+.psArea.isCont,.psArea.isVirtual{pointer-events:none}
 .psArea .psHandle{pointer-events:auto}
-.psAreaGhost{position:absolute;pointer-events:none}
-.psAreaGhost[hidden]{display:none}
+.psRename{width:100%}
 .psGuides{position:absolute;inset:0;pointer-events:none}
 .psGuide,.psInsert,.psMarquee{position:absolute;pointer-events:none}
 .psDragLayer{position:fixed;inset:0;pointer-events:none}

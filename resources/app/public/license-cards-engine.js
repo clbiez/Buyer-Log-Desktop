@@ -61,7 +61,34 @@
     return {rules:[next,...list],rule:next,closed};
   }
   /* ---- License list (rows, inline rates, compact approval map) ---- */
-  const RATE_FIELDS=Object.freeze(['royalty','trCommission','ydCommission','hologramCost']);
+  // `royalty` / `hologramCost` are the international (YD) values; an empty TR
+  // royalty or hologram inherits them (same order as BLBusinessRules pricing).
+  const RATE_FIELDS=Object.freeze(['trRoyalty','royalty','trCommission','ydCommission','trHologramCost','hologramCost']);
+  const INHERITS=Object.freeze({trRoyalty:'royalty',trHologramCost:'hologramCost'});
+  const has=(rule,k)=>Boolean(rule)&&rule[k]!=null&&text(rule[k])!=='';
+  // Value typed in the field; '' / null while a TR value inherits the YD one.
+  function rateInput(rule,key){
+    if(!rule)return null;
+    if(key==='hologramCost')return has(rule,'legacyYdHologramCost')?rule.legacyYdHologramCost:rule.hologramCost??null;
+    if(key==='trHologramCost')return has(rule,'trHologramCost')?rule.trHologramCost:has(rule,'legacyTrHologramCost')?rule.legacyTrHologramCost:null;
+    return rule[key]??null;
+  }
+  // Value the price uses (pricingRuleRoyaltyForCountry / pricingRuleHologramForCountry).
+  function rateValue(rule,key){
+    const own=rateInput(rule,key);
+    if(!rule||(own!=null&&text(own)!=='')||!INHERITS[key])return own;
+    return rule[INHERITS[key]]??null;
+  }
+  // Migrated TR/YD hologram pairs move into the explicit fields before a hologram edit,
+  // so editing one side never changes the other side's price.
+  function adoptLegacyHologram(rule){
+    if(!rule||!(Object.hasOwn(rule,'legacyTrHologramCost')||Object.hasOwn(rule,'legacyYdHologramCost')))return rule;
+    const tr=rateInput(rule,'trHologramCost'),yd=rateInput(rule,'hologramCost');
+    rule.hologramCost=yd;
+    if(!has(rule,'trHologramCost'))rule.trHologramCost=tr!=null&&text(tr)!==''&&Number(tr)!==Number(yd)?tr:null;
+    delete rule.legacyTrHologramCost;delete rule.legacyYdHologramCost;
+    return rule;
+  }
   // Card image: the atlas cover wins, the legacy symbol is the fallback.
   function cardImage(card){
     const cover=text(card&&card.processAtlas&&card.processAtlas.license&&card.processAtlas.license.cover);
@@ -81,12 +108,17 @@
   }
   const exact=n=>Number(n.toFixed(10));
   // Same limits as the server (server/lib/license-cards.js normalizeRules).
-  function rateError(rule){
-    const r=rule||{},royalty=r.royalty,commissions=[r.trCommission,r.ydCommission].filter(v=>v!=null);
-    if(royalty==null||!Number.isFinite(royalty)||royalty<0||royalty>100)return 'royalty';
-    if(!commissions.length)return 'commission-missing';
-    if(commissions.some(v=>!Number.isFinite(v)||v<0||exact(v+royalty)>100))return 'commission';
-    if(r.hologramCost==null||!Number.isFinite(r.hologramCost)||r.hologramCost<0)return 'hologram';
+  // DTR contracts carry no royalty/commission/hologram: blank means none
+  // (BLBusinessRules.pricingRuleRatesOptional). Entered values are still checked.
+  // An empty TR royalty/hologram inherits the international value.
+  function rateError(rule,licensor){
+    const r=rule||{},optional=key(licensor!=null?licensor:r.licensor)==='DTR',royalty=r.royalty,trRoyalty=r.trRoyalty??royalty,trHologram=rateInput(r,'trHologramCost');
+    if(royalty==null?!optional:(!Number.isFinite(royalty)||royalty<0||royalty>100))return 'royalty';
+    if(trRoyalty!=null&&(!Number.isFinite(trRoyalty)||trRoyalty<0||trRoyalty>100))return 'tr-royalty';
+    if(r.trCommission==null&&r.ydCommission==null&&!optional)return 'commission-missing';
+    if([[r.trCommission,trRoyalty],[r.ydCommission,royalty]].some(([v,base])=>v!=null&&(!Number.isFinite(v)||v<0||exact(v+(base||0))>100)))return 'commission';
+    if(r.hologramCost==null?!optional:(!Number.isFinite(r.hologramCost)||r.hologramCost<0))return 'hologram';
+    if(trHologram!=null&&(!Number.isFinite(trHologram)||trHologram<0))return 'tr-hologram';
     const a=date(r.opdStart),b=date(r.opdEnd);
     if(a===null||b===null||(a&&b&&a>b))return 'date';
     return '';
@@ -152,7 +184,7 @@
       return true;
     });
     const dir=sort&&sort.dir==='desc'?-1:1,k=sort&&sort.key||'license';
-    const val=row=>RATE_FIELDS.includes(k)?(row.primary.rule&&Number.isFinite(Number(row.primary.rule[k]))&&row.primary.rule[k]!==null?Number(row.primary.rule[k]):null):k==='licensor'?row.licensor:k==='map'?row.map.length:row.license;
+    const rate=row=>rateValue(row.primary.rule,k),val=row=>RATE_FIELDS.includes(k)?(rate(row)!=null&&text(rate(row))!==''&&Number.isFinite(Number(rate(row)))?Number(rate(row)):null):k==='licensor'?row.licensor:k==='map'?row.map.length:row.license;
     return list.sort((a,b)=>{
       const x=val(a),y=val(b);
       if(x===y)return a.license.localeCompare(b.license,'tr')||a.licensor.localeCompare(b.licensor,'tr');
@@ -210,5 +242,5 @@
     for(const k of new Set([...Object.keys(a),...Object.keys(b)])){const seen=new Set();out[k]=[...(a[k]||[]),...(b[k]||[])].filter(o=>o&&!seen.has(o.value)&&seen.add(o.value));}
     return out;
   }
-  return Object.freeze({periodEnd,RATE_FIELDS,APPROVERS,cardImage,primaryContract,parseRate,rateError,mapSummary,licensorOptions,groupCards,mergeSummary,pasteMap,rows,latestContract,currentContracts,nextContractPeriod,previousDay,contracts,ruleStatus,statistics,portalHref,symbolUrl,today});
+  return Object.freeze({periodEnd,RATE_FIELDS,INHERITS,rateInput,rateValue,adoptLegacyHologram,APPROVERS,cardImage,primaryContract,parseRate,rateError,mapSummary,licensorOptions,groupCards,mergeSummary,pasteMap,rows,latestContract,currentContracts,nextContractPeriod,previousDay,contracts,ruleStatus,statistics,portalHref,symbolUrl,today});
 });
