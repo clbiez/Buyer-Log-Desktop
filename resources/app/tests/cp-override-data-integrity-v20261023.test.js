@@ -60,7 +60,9 @@ function extractFunction(source, name) {
 
 test('A1 · applyIncrementalProjectionPatch kural kaynaklı Supp. FOB bilgisini korur, manuel yamayı manuel bırakır', () => {
   const parseLib = require('../server/lib/parse');
-  const ctx = { parseLib, Object, Number, String, Set };
+  // Çıkarılan fonksiyonun modül içi yardımcıları (lojistik segment girdisi, tam kurulum işareti) aynı modülden.
+  const { patchTouchesLogisticSegments, rowPatchRequiresFullBuild } = require('../server/lib/projection-row-patch');
+  const ctx = { parseLib, Object, Number, String, Set, patchTouchesLogisticSegments, rowPatchRequiresFullBuild };
   vm.createContext(ctx);
   // #1078: satır yaması tek tanımı lib/projection-row-patch.js; server.js onu kullanır.
   assert.match(SERVER, /require\('\.\/lib\/projection-row-patch'\)/);
@@ -108,10 +110,17 @@ test('A2 · applyRemoteRowPatch noteColumns alanlarını uygular ve delType/Ex-f
     applyFormulas: () => { callOrder.push('applyFormulas'); },
     invalidateUnifiedPriorityDecisions: () => {},
     scheduleOverviewRender: () => {},
+    // Bakiye segmenti olmayan (segmentsiz) satır: Del. Type üretim vasıta kuralından; kaynağa dönüş sipariş anahtarı → Gemi.
+    state: { overrides: { delmap: {} } },
+    norm: value => String(value ?? '').trim(),
+    normalizeTransitDelType: require('../public/business-rules').normalizeTransitDelType,
+    cpLogisticHasDetails: r => Array.isArray(r && r._logisticSegments) && r._logisticSegments.length > 0,
+    rebuildCpLogisticCaches: () => { callOrder.push('rebuild'); },
     Object, Number, String, Set, Array, encodeURIComponent,
   };
   vm.createContext(ctx);
   vm.runInContext(extractFunction(APP, 'applyRemoteRowPatch'), ctx);
+  vm.runInContext(extractFunction(APP, 'cpDelTypeSourceValue'), ctx);
 
   const row = { 'Order Code': 4100001, 'Del. Type': 'Gemi', note_col_1: 'Eski', note_col_2: 'Kalmalı' };
   ctx.applyRemoteRowPatch(row, {
@@ -128,6 +137,19 @@ test('A2 · applyRemoteRowPatch noteColumns alanlarını uygular ve delType/Ex-f
   ctx.applyRemoteRowPatch(row, { dates: { exFactory: '2026-09-10' } });
   assert.equal(row['Ex-factory'], '2026-09-10');
   assert.deepEqual(JSON.parse(JSON.stringify(callOrder)), ['logistic:ex', 'applyFormulas']);
+
+  // BL-028 "Kaynağa dön" (delType:null) artık canlı yama: sipariş anahtarı yoksa sistem varsayılanı, varsa o.
+  callOrder.length = 0;
+  ctx.applyRemoteRowPatch(row, { delType: null });
+  assert.equal(row['Del. Type'], 'Gemi');
+  assert.deepEqual(JSON.parse(JSON.stringify(callOrder)), ['logistic:del:', 'applyFormulas']);
+  ctx.state.overrides.delmap['4100001'] = 'TIR';
+  ctx.applyRemoteRowPatch(row, { delType: null });
+  assert.equal(row['Del. Type'], 'TIR');
+  // Bakiye segmenti yok ama IAS parsiyeli var: Del. Type birincil segmentten yeniden türetilir (yamanın değeri yazılmaz).
+  callOrder.length = 0;
+  ctx.applyRemoteRowPatch({ 'Order Code': 4100002, 'Del. Type': 'Gemi', _logisticSegments: [{ kind: 'partial' }] }, { delType: 'Uçak' });
+  assert.deepEqual(JSON.parse(JSON.stringify(callOrder)), ['logistic:del:Uçak', 'rebuild', 'applyFormulas']);
 });
 
 test('A3 · saveDateOverrides yalnız dokunulan tarih alanlarını gönderir, ardışık debounce çağrılarını birleştirir ve touchedKeys verilmezse üç alanı korur', () => {

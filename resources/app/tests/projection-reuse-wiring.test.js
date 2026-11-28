@@ -6,7 +6,7 @@ const source=fs.readFileSync(path.join(__dirname,'../server/server.js'),'utf8');
 function fn(name){const start=source.indexOf(`function ${name}(`),asyncStart=source.indexOf(`async function ${name}(`);const at=asyncStart>=0?asyncStart:start;assert.ok(at>=0);return source.slice(at,source.indexOf('\n}',at)+2);}
 test.after(()=>fs.rmSync(root,{recursive:true,force:true}));
 test('incremental date/delivery edits retain logistics without reintroducing Orders priority',()=>{
-  const parseLib=require('../server/lib/parse'),c={parseLib};vm.createContext(c);
+  const parseLib=require('../server/lib/parse'),{patchTouchesLogisticSegments,rowPatchRequiresFullBuild}=require('../server/lib/projection-row-patch'),c={parseLib,patchTouchesLogisticSegments,rowPatchRequiresFullBuild};vm.createContext(c);
   const rowPatch=fs.readFileSync(path.join(__dirname,'../server/lib/projection-row-patch.js'),'utf8'),at=rowPatch.indexOf('function applyIncrementalProjectionPatch(');
   vm.runInContext(rowPatch.slice(at,rowPatch.indexOf('\n}',at)+2)+'\nglobalThis.patch=applyIncrementalProjectionPatch;',c);
   const row={'Order Code':1000,'Order Quantity':20,'Remaining Units':20,'Ex-factory':'2026-10-06','Retail Date':'2026-10-20',Country:'Turkey',Priority:'old'};

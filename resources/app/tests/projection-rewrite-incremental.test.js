@@ -26,7 +26,7 @@ function legacyTransform(clean, overrides, cpRows) {
     if (Array.isArray(payload.orderSummary)) lists.push(payload.orderSummary);
     for (const rows of lists) for (const row of rows) for (const item of clean) {
       if (projectionPatchMatches(row, item)) {
-        applyIncrementalProjectionPatch(row, item.patch, legacyContext, _module !== 'orders', { cpStored: _module === 'cp' && rows === payload.rows });
+        applyIncrementalProjectionPatch(row, item.patch, legacyContext, _module !== 'orders', { cpStored: _module === 'cp' && rows === payload.rows, orderSummary: rows === payload.orderSummary });
         if (cpRows && _module === 'cp' && rows === payload.rows && !cpRows.includes(row)) cpRows.push(row);
       }
     }

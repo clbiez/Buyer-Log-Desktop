@@ -24,6 +24,10 @@ test('v6.70 Logistics Flow Priority 1-2-3 sırası operasyonel segment durumunda
   assert.match(parse,/segment\._segmentKind === 'production'.*return 1/s);
   assert.match(parse,/statusKey === 'DEPODA'.*return 3/s);
   assert.match(parse,/return 2;/);
-  assert.match(parse,/cpLogisticPriority\(a\) - cpLogisticPriority\(b\)/);
+  // Akış sırası özet segment üzerinde tek karşılaştırıcıyla (tam kurulum + artımlı yeniden kurulum ortak);
+  // özet segmentin priority alanı yine cpLogisticPriority(segment)'tir.
+  assert.match(parse,/priority: cpLogisticPriority\(segment\)/);
+  assert.match(parse,/function compareCpLogisticSegments\(a, b\) \{\s*const priorityDiff = \(Number\(a && a\.priority\) \|\| 0\) - \(Number\(b && b\.priority\) \|\| 0\);/);
+  assert.match(parse,/\}\)\.sort\(compareCpLogisticSegments\);/);
   assert.match(app,/priority===1\?'Production \/ Shortage':priority===2\?'Pre-warehouse':'Warehouse'/);
 });
