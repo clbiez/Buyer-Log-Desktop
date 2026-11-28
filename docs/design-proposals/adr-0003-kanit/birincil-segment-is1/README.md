@@ -86,3 +86,10 @@ aşamanın daha geç vardığı vakalar (Yükleme+Yol, Yükleme+Gümrük, Yol+G�
 
 Gemi 70 / Uçak 15 / TIR 20 transit kuralı, bugün 28.11. Değişen satır = teslimat sonucu ya da risk sebebi değişen.
 Örnek satırlar JSON'da (4100023/L02, 4100044/K01, 4100025/B07, 4100027/B07, 4100014/H04, 4100026/H04).
+
+## Risk taraması ve 2a (`betikler/scan.js`, `scan2.js`; `ham/risk-tarama-once.json`, `risk-tarama-sonra.json`)
+
+`scan.js`: main motoru, main satırı ↔ yeni birincil (motor aynı) → STATUS seçimi yüzünden kalkan/eklenen sinyal ve sebep.
+`scan2.js`: önce = main motoru + main satırı; sonra = aday motoru (`302fc58`, segment bazlı HANDOVER_PENDING / ANTREPO_DELAY)
++ yeni birincil. Kalkan: HANDOVER_PENDING 2.588 → 0, ANTREPO_DELAY 234 + 212 → 0. Etkilenmeyen 17.279 satırda fark 0.
+Kalan: transit kuralı yok / vasıtayı kapsamıyorsa teslimat sonucu EXPECTED/ALREADY_LATE → UNKNOWN (414 satır) — karar bekliyor.
