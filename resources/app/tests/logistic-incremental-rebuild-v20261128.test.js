@@ -132,3 +132,28 @@ test('kaynağa dönüşte sipariş anahtarındaki Del. Type geçerli olur (satı
     if (name === 'yalnız üretim') assert.equal(truth.cp['Del. Type'], 'TIR');
   }
 });
+
+test('aynı siparişin iki rengi: yama yalnız eşleşen renge uygulanır, iki satır da tam kurulumla aynı', () => {
+  const { projectionPatchMatches } = require('../server/lib/projection-row-patch');
+  const iasRow = ias('Yol Operasyonları', 3000, '2026-12-04', 'Uçak', '2026-11-20');
+  const build = ov => {
+    const orders = parse.parseASASRows([asas(), asas({ 'Renk Kod': 'C02', 'Renk': 'BEYAZ' })], ov.antrepoMatchConfig).orders;
+    const map = parse.parseAntrepoRows([iasRow], ov.antrepoMatchConfig);
+    return json(parse.buildSharedOrderProjectionRowsFromASAS(parse.applyDateOverrides(orders, ov), map, ov).cp);
+  };
+  for (const patch of [{ delType: 'TIR' }, { dates: { exFactory: '2026-12-15' } }, { delType: null }]) {
+    const ov0 = overrides();
+    ov0.delmap[KEY] = 'Uçak';
+    const before = build(ov0);
+    const ov1 = overridesAfter(ov0, patch);
+    const truth = build(ov1);
+    const item = { orderCode: 4100001, patch: { model: 'MODEL-1', ccode: 'C01', ...patch } };
+    const got = before.map(row => {
+      const copy = json(row);
+      if (projectionPatchMatches(copy, item)) applyIncrementalProjectionPatch(copy, item.patch, ov1, true, {});
+      return json(copy);
+    });
+    for (let i = 0; i < truth.length; i += 1) assert.deepEqual(differingKeys(got[i], truth[i]), [], `${JSON.stringify(patch)} · ${truth[i]['C.Code']}`);
+    assert.equal(truth.length, 2);
+  }
+});
