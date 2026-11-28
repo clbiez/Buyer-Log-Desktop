@@ -41,6 +41,8 @@ for pair in "base:$BASE" "cand:$CAND"; do n=${pair%%:*}; sha=${pair#*:}
   if [ ! -d "$W/$n" ]; then git -C "$REPO" fetch -q origin "$sha" 2>/dev/null || true; git -C "$REPO" worktree add -q --detach "$W/$n" "$sha"; (cd "$W/$n/resources/app" && npm ci --ignore-scripts --silent); fi
 done
 APP_A="$W/base/resources/app"; APP_B="$W/cand/resources/app"
+# Kapı betikleri: varsayılan CAND ağacındaki; GATE_JS ile başka (ör. main'e yeni alınmış kapı) betiği verilebilir — uygulama ağacı yine CAND.
+GATE_JS=${GATE_JS:-$W/cand/.github/electron-gate/gate.js}
 { echo "base $(git -C "$W/base" rev-parse HEAD) (package.json $(node -p "require('$APP_A/package.json').version"))"
   echo "cand $(git -C "$W/cand" rev-parse HEAD) (package.json $(node -p "require('$APP_B/package.json').version"))"
   echo "electron $VER (ELECTRON_RUN_AS_NODE=1)"; echo "host node $(node -v) (yalnız test adımı ve analiz)"; echo "os $(uname -sr) $(nproc) vCPU $(awk '/MemTotal/{printf "%.1f GB", $2/1048576}' /proc/meminfo)"
@@ -55,7 +57,7 @@ run_el() { local app=$1; shift; (cd "$app" && env -u BUYER_LOG_CP_ROWPATCH_LEGAC
 verdict() { node -e "$1" "$2" && echo PASS || echo FAIL; }
 step() { local s=$1 D="$OUT/$1"; mkdir -p "$D"; case $s in
   test)   (cd "$APP_B" && BUYER_LOG_TEST_SLOWEST=40 npm test > "$D/test.log" 2>&1) && RES[$s]=PASS || RES[$s]=FAIL ;;
-  gate)   run_el "$APP_B" NODE_OPTIONS="--use-openssl-ca" "$EL" "$W/cand/.github/electron-gate/gate.js" --app "$APP_B" --fixture-app "$APP_B" \
+  gate)   run_el "$APP_B" NODE_OPTIONS="--use-openssl-ca" "$EL" "$GATE_JS" --app "$APP_B" --fixture-app "$APP_B" \
              --out "$D/run" --rows "$ROWS" --soak-min 15 --heap-mb 3686 --strict-known > "$D/gate.log" 2>&1 && RES[$s]=PASS || RES[$s]=FAIL
           cp "$D/run/gate-report.json" "$D/" 2>/dev/null || true ;;
   shadow|shadowbase) local app=$APP_B; if [ $s = shadowbase ]; then app=$APP_A; fi

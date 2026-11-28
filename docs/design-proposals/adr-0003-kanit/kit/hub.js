@@ -14,7 +14,7 @@
 // Aşamalar: kayıt → yayım (sync-now) → karşı taraf sync-now (algılama + uygulama) → projeksiyon (cp/query değeri).
 const L = require('./lib.js'), fs = require('fs'), os = require('os'), path = require('path');
 const [APP, SOURCE, OUT] = process.argv.slice(2);
-const rep = { runtime: { exec: process.execPath, node: process.versions.node, electron: process.versions.electron || null, NODE_OPTIONS: process.env.NODE_OPTIONS || '' }, trials: [], scenarios: {}, errors: [], setup: {} };
+const rep = { runtime: { exec: process.execPath, node: process.versions.node, electron: process.versions.electron || null, NODE_OPTIONS: process.env.NODE_OPTIONS || '', HUB_WAIT_MS: process.env.HUB_WAIT_MS || null, HUB_SYNC_EVERY: process.env.HUB_SYNC_EVERY || null }, trials: [], scenarios: {}, errors: [], setup: {} };
 const save = () => fs.writeFileSync(OUT, JSON.stringify(rep, null, 1));
 const today = (() => { const d = new Date(), p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; })();
 const iso = d => { const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };
@@ -41,32 +41,38 @@ const iso = d => { const p = n => String(n).padStart(2, '0'); return `${d.getFul
     if (qa.status !== 200 || qb.status !== 200) throw Error('cp/query A ' + qa.status + ' B ' + qb.status);
     const rowsA = qa.json.result.rows;
     const same = row => x => x['Order Code'] === row['Order Code'] && x['C.Code'] === row['C.Code'] && x['Model Name'] === row['Model Name'];
-    const syncNow = async app => { const a = Date.now(); const r = await j(app, '/api/sync-settings/sync-now', { method: 'POST', body: '{}' }); return { ms: Date.now() - a, status: r.status, err: r.status !== 200 ? r.text : null }; };
+    const syncNow = async app => { const a = Date.now(); const r = await j(app, '/api/sync-settings/sync-now', { method: 'POST', body: '{}' }); const st = (r.json && r.json.settings) || {}; return { at: new Date(a).toISOString(), ms: Date.now() - a, status: r.status, err: r.status !== 200 ? r.text : null, up: [st.uploadedPackages, st.uploadedEvents], down: [st.downloadedPackages, st.downloadedEvents], scanned: st.scannedPackages, pendingUpload: st.pendingUpload, lastError: st.lastError || null }; };
+    // Yayımlayan: kaydın Shared Hub delta kaydı (cp-shared-store mirrorPatchDetached) kayıt yanıtından SONRA eşzamansız
+    // kuyruğa girer; kayıttan hemen sonraki sync-now onu taşımayabilir (68cf1d3 / 8a29116 tanısı: up=[0,0], pendingUpload=1).
+    // Bu yüzden yayım, paket gerçekten yüklenene kadar (up>0) yinelenir; alıcı da paket inene kadar (down>0). Süreler raporlanır.
+    const untilSync = async (app, field, t0) => { const tries = []; for (let k = 0; k < 40; k++) { const r = await syncNow(app); tries.push(r); if (Number(r[field] && r[field][1]) > 0) return { ok: true, tries: tries.length, msFromSave: Date.now() - t0, last: r, first: tries[0] }; await L.delay(250); } return { ok: false, tries: tries.length, msFromSave: Date.now() - t0, last: tries[tries.length - 1], first: tries[0] }; };
+    const publishApply = async (from, to, t0) => { const publish = await untilSync(from, 'up', t0); const apply = await untilSync(to, 'down', t0); return { publish, apply }; };
     // Alıcı tarafta sync-now yinelenir: yayımlayanın paketi sync-now yanıtından sonra görünür olabilir (6N/6V: tek alım erken kaldı).
-    const waitValue = async (app, row, field, ok) => { const start = Date.now(); let polls = 0; for (; Date.now() - start < 60000;) { const r = await q(app); const hit = r.status === 200 && r.json.result.rows.find(same(row)); if (hit && ok(hit[field])) return { ms: Date.now() - start, value: hit[field], syncPolls: polls }; if (++polls % 4 === 0) await syncNow(app); await L.delay(250); } const r = await q(app); const hit = r.status === 200 && r.json.result.rows.find(same(row)); return { ms: null, value: hit ? hit[field] : '<yok>' }; };
+    const WAIT_MS = Number(process.env.HUB_WAIT_MS) || 60000, SYNC_EVERY = process.env.HUB_SYNC_EVERY == null ? 4 : Number(process.env.HUB_SYNC_EVERY); // tanı: 0 = alıcıda yinelenen sync-now yok
+    const waitValue = async (app, row, field, ok) => { const start = Date.now(); let polls = 0, syncs = 0; for (; Date.now() - start < WAIT_MS;) { const r = await q(app); const hit = r.status === 200 && r.json.result.rows.find(same(row)); if (hit && ok(hit[field])) return { ms: Date.now() - start, value: hit[field], polls, syncs }; if (SYNC_EVERY > 0 && ++polls % SYNC_EVERY === 0) { syncs++; await syncNow(app); } else if (SYNC_EVERY <= 0) polls++; await L.delay(250); } const r = await q(app); const hit = r.status === 200 && r.json.result.rows.find(same(row)); return { ms: null, value: hit ? hit[field] : '<yok>' }; };
     // (1) A → B Supp. FOB ×3 (6N ile aynı aşamalar)
     for (let i = 0; i < 3; i++) {
       const row = rowsA[10 + i * 7]; const val = Math.round((200 + i + 0.37) * 100) / 100; const tr = { kind: 'A→B suppFob', code: row['Order Code'], val }; const t0 = Date.now();
       const s = await j(A, '/api/overrides/' + row['Order Code'], { method: 'PATCH', body: JSON.stringify({ model: row['Model Name'], ccode: row['C.Code'], suppFob: val, suppFobMeta: { source: 'manual' } }) }); tr.saveStatus = s.status;
-      tr.publish = await syncNow(A); tr.apply = await syncNow(B);
+      Object.assign(tr, await publishApply(A, B, t0));
       const seen = await waitValue(B, row, 'Supp. FOB', v => Number(v) === val); tr.projectionAfterApplyMs = seen.ms; tr.bValue = seen.value; tr.totalFromT0 = seen.ms != null ? Date.now() - t0 : null;
       rep.trials.push(tr); save(); console.log(JSON.stringify(tr));
     }
     // (2) B → A dates.retailDate
     {
-      const row = rowsA[60]; const d = new Date(row['Retail Date'] || Date.now()); d.setDate(d.getDate() + 17); const target = iso(d); const sc = { code: row['Order Code'], target };
+      const row = rowsA[60]; const d = new Date(row['Retail Date'] || Date.now()); d.setDate(d.getDate() + 17); const target = iso(d); const sc = { code: row['Order Code'], target }; const t0 = Date.now();
       const s = await j(B, '/api/overrides/' + row['Order Code'], { method: 'PATCH', body: JSON.stringify({ model: row['Model Name'], ccode: row['C.Code'], dates: { retailDate: target } }) }); sc.saveStatus = s.status;
-      sc.publish = await syncNow(B); sc.apply = await syncNow(A);
+      Object.assign(sc, await publishApply(B, A, t0));
       const seen = await waitValue(A, row, 'Retail Date', v => String(v || '').slice(0, 10) === target); sc.aValue = seen.value; sc.ms = seen.ms;
       rep.scenarios.datesBtoA = sc; save(); console.log('dates', JSON.stringify(sc));
     }
     // (3) A → B subManufacturer (Licensor DTR olmayan satır)
     {
-      const row = rowsA.find((r, k) => k > 70 && String(r.Licensor || '').toUpperCase() !== 'DTR'); const target = 'HUB SUB ' + Date.now() % 1000; const sc = { code: row && row['Order Code'], target };
+      const row = rowsA.find((r, k) => k > 70 && String(r.Licensor || '').toUpperCase() !== 'DTR'); const target = 'HUB SUB ' + Date.now() % 1000; const sc = { code: row && row['Order Code'], target }; const t0 = Date.now();
       if (!row) { sc.status = 'N/A'; sc.reason = "fixture'da DTR olmayan satır yok (DTR satırında Sub-Manufacturer kaynaktan türer)"; rep.scenarios.subManufacturerAtoB = sc; save(); }
       else {
       const s = await j(A, '/api/overrides/' + row['Order Code'], { method: 'PATCH', body: JSON.stringify({ model: row['Model Name'], ccode: row['C.Code'], subManufacturer: target }) }); sc.saveStatus = s.status;
-      sc.publish = await syncNow(A); sc.apply = await syncNow(B);
+      Object.assign(sc, await publishApply(A, B, t0));
       const seen = await waitValue(B, row, 'Sub-Manufacturer', v => String(v || '') === target); sc.bValue = seen.value; sc.ms = seen.ms;
       rep.scenarios.subManufacturerAtoB = sc; save(); console.log('sub', JSON.stringify(sc));
     } }
