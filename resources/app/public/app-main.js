@@ -7577,6 +7577,13 @@ function rebuildCpLogisticCaches(row){
   row['Del. Type']=normalizeTransitDelType(primary.delType)||norm(primary.delType);
   row['HANDOVER Tarihi']=coerceDateLoose(primary.handover);
 }
+/* Düzenlenebilir Del. Type = üretim/kıtlık bakiyesinin vasıtası (hücre onu gösterir; sunucu delmap'i yalnız ona
+   uygular, parse.js backlogProductionDelType). Satırın görünen Del. Type'ı birincil segmentten (IAS parsiyeli
+   olabilir) türetilir; kayıt, yerel delmap ve geri al değeri oradan okunmaz (BL-029). Segmentsiz satır: satır değeri. */
+function cpEditableDelType(row){
+  const production=cpLogisticSegments(row).find(segment=>segment.kind==='production'||segment.kind==='shortage');
+  return production?(normalizeTransitDelType(production.delType)||norm(production.delType)||norm(row['Del. Type'])):row?.['Del. Type'];
+}
 function syncCpProductionLogisticSegment(row,nextDelType){
   const production=cpLogisticSegments(row).find(segment=>segment.kind==='production'||segment.kind==='shortage');
   if(!production) return false;
@@ -13566,7 +13573,7 @@ function commitCpEditor(t, options={}){
     if(refresh)refreshRowEverywhere(id);
     return true;
   }
-  const prev = row[key];
+  const prev = kind==='deltype' ? cpEditableDelType(row) : row[key];
   if(editableValuesEqual(prev,t.value)) return false;
   const previousPricing=kind==='licensor'?captureCpPricingHistory(row,true):null;
   row[key] = t.value;
@@ -16522,7 +16529,7 @@ function syncOverridesFromRow(row){
   state.overrides.notesmap[key]=notes;
   /* Del. Type yalnız açık kullanıcı niyetiyle yazılır. Görünen değer IAS parsiyelinden türetilmiş olabilir; not /
      Supp. FOB gibi ilgisiz bir kayıt override oluşturmaz, mevcut override'ı ya da başkasının değişikliğini ezmez. */
-  if(row._delTypeWrite&&row['Del. Type'])state.overrides.delmap[key]=row['Del. Type'];
+  if(row._delTypeWrite){const delType=cpEditableDelType(row);if(delType)state.overrides.delmap[key]=delType;}
   const isDtr=turknorm(row.Licensor)==='DTR';
   if(isDtr){
     row['Sub-Manufacturer']=norm(row.Manufacturer);
@@ -17049,7 +17056,7 @@ function syncOverrideToServer(orderCode,notes,row){
     const restore=row._pricingHistoryRestore,manualWrite=row._pricingManualWrite,subWrite=row._subManufacturerWrite,delWrite=row._delTypeWrite;
     const body=(()=>{
         // Del. Type yalnız açık düzenleme niyetiyle (_delTypeWrite) gönderilir; aksi halde sunucu delmap'i değiştirmez.
-        const body={...lineIdentity(row),notes,delType:delWrite?(row['Del. Type']||undefined):undefined};
+        const body={...lineIdentity(row),notes,delType:delWrite?(cpEditableDelType(row)||undefined):undefined};
         if(turknorm(row.Licensor)!=='DTR'&&(!restore?.licensor||subWrite))body.subManufacturer=norm(row['Sub-Manufacturer']);
         if(row._licensorManual===true&&Object.hasOwn(state.overrides.licensormap||{},overrideSyncKey(row,orderCode)))body.licensor=norm(row.Licensor);
         // An imported (CP update) value is not re-sent as a manual price with a note save.
@@ -18002,7 +18009,7 @@ async function applyCpGridPaste(plan,range){
     if(editorSnap?.route==='cp')commitManagedEditorSnapshot(editorSnap,{refresh:false});
     await settleOverrideWrites();
     const owner=orderLinePeerOwner(),revision=Number(state.storeRevisions.orders)||0,suppFob=Number(state.storeRevisions.suppFob)||0;
-    const snapshots=plan.ops.map(op=>{const row=state.cp?.rows?.find(item=>item._id===Number(op.row._partialViewSourceId??op.row._id));return {op,key:lineKeyOfRow(row),before:JSON.stringify(row),value:String(row?.[op.column.k]??'')};});
+    const snapshots=plan.ops.map(op=>{const row=state.cp?.rows?.find(item=>item._id===Number(op.row._partialViewSourceId??op.row._id));return {op,key:lineKeyOfRow(row),before:JSON.stringify(row),value:String((op.target==='deltype'?cpEditableDelType(row):row?.[op.column.k])??'')};});
     const guard=()=>owner===orderLinePeerOwner()&&!isAreaFrozen('cp')&&!(plan.clipboardModule==='orders'&&isAreaFrozen('orders'))&&revision===(Number(state.storeRevisions.orders)||0)&&suppFob===(Number(state.storeRevisions.suppFob)||0)&&snapshots.every(({op,key,before})=>{
       const current=state.cp?.rows?.find(row=>row._id===Number(op.row._partialViewSourceId??op.row._id));
       return current&&lineKeyOfRow(current)===key&&current._canEdit!==false&&JSON.stringify(current)===before&&cpPasteTarget(current,op.column)===op.target;
