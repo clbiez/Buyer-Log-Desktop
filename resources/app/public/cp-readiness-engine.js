@@ -288,26 +288,36 @@
     // Sevk edilmiş satırda gün Handover'a eklenir; kural başka bir taştan
     // sayılıyorsa (Uçtan Uca → Yükleme Talep) gün sunucunun taşıdığı baz
     // tarihleriyle düzeltilir.
-    const handoverValue = row && row[F.handover];
     const basisDates = row && row._ruleBasisDates && typeof row._ruleBasisDates === 'object' ? row._ruleBasisDates : null;
-    const transitInfo = BR.resolveTransitDays ? BR.resolveTransitDays({
-      delType: row && row[F.delType],
-      exFactory: row && row[F.exFactory],
-      season: row && row[F.season],
-      country: row && row[F.country],
-      status,
-      rules: context.transitRules,
-      anchor: handoverValue && basisDates ? 'handover' : null,
-      milestones: handoverValue && basisDates ? { handover: handoverValue, loadingRequest: basisDates.loadingRequest, actualLoading: basisDates.actualLoading } : null,
-      // Readiness hem üretim hem de yükleme/transit sonrası aşamaları analiz eder.
-      // Merkezi resolver'ın legacy production-only guard'ını global olarak
-      // değiştirmeden, bu çağrı noktasında tanımlı Transfer Lead Time Rule'u
-      // her operasyon aşamasında aratırız. Kural gerçekten yoksa resolver yine
-      // fallback gün + rule:null döndürür ve requireTransitRule bunu missing sayar.
-      forceRules: true,
-    }, ord) : null;
-    const transitRule = transitInfo && transitInfo.rule ? transitInfo.rule : null;
-    const transitDays = transitInfo && Number.isFinite(Number(transitInfo.days)) ? Number(transitInfo.days) : null;
+    const transitFor = target => {
+      const handoverValue = target && target[F.handover];
+      const info = BR.resolveTransitDays ? BR.resolveTransitDays({
+        delType: target && target[F.delType],
+        exFactory: target && target[F.exFactory],
+        season: target && target[F.season],
+        country: target && target[F.country],
+        status: text(target && target[F.status]),
+        rules: context.transitRules,
+        anchor: handoverValue && basisDates ? 'handover' : null,
+        milestones: handoverValue && basisDates ? { handover: handoverValue, loadingRequest: basisDates.loadingRequest, actualLoading: basisDates.actualLoading } : null,
+        // Readiness hem üretim hem de yükleme/transit sonrası aşamaları analiz eder.
+        // Merkezi resolver'ın legacy production-only guard'ını global olarak
+        // değiştirmeden, bu çağrı noktasında tanımlı Transfer Lead Time Rule'u
+        // her operasyon aşamasında aratırız. Kural gerçekten yoksa resolver yine
+        // fallback gün + rule:null döndürür ve requireTransitRule bunu missing sayar.
+        forceRules: true,
+      }, ord) : null;
+      return { rule: info && info.rule ? info.rule : null, days: info && Number.isFinite(Number(info.days)) ? Number(info.days) : null };
+    };
+    const deliveryFor = (target, transit, stage, signals) => (DE.analyzeOrder
+      ? DE.analyzeOrder(toDeliveryRow(target, transit.days, transit.rule, stage, signals), {
+        today, dateOrdinal: ord,
+        settings: { targetType: settings.targetType, requireTransitRule: settings.requireTransitRule },
+      })
+      : null);
+    const primaryTransit = transitFor(row);
+    const transitRule = primaryTransit.rule;
+    const transitDays = primaryTransit.days;
 
     /* CP operasyon sinyalleri KANONİK business-rules motorundan gelir.
        Handover şartları burada TEKRAR YAZILMAZ: structured HANDOVER_PENDING
@@ -330,6 +340,8 @@
       shortage: Number(shortageQty) > 0,
       shortageQty,
       shortageNote: Number(shortageQty) > 0 && row && row[F.shortageAllInWarehouse] === true,
+      // Segment riskleri (HANDOVER_PENDING, ANTREPO_DELAY) birincil segmentten bağımsız.
+      logisticSegments: row && row._logisticSegments,
       delType: row && row[F.delType],
       season: row && row[F.season],
       country: row && row[F.country],
@@ -340,12 +352,41 @@
 
     /* Teslimat sonucu KANONİK motordan; burada yeniden sınıflandırılmaz. */
     const stageFromStatus = DE.stageOf ? DE.stageOf(status) : 'UNKNOWN';
-    const delivery = DE.analyzeOrder
-      ? DE.analyzeOrder(toDeliveryRow(row, transitDays, transitRule, stageFromStatus, cpOperationalFlags && cpOperationalFlags.signals), {
-        today, dateOrdinal: ord,
-        settings: { targetType: settings.targetType, requireTransitRule: settings.requireTransitRule },
-      })
-      : null;
+    const operationalSignals = cpOperationalFlags && cpOperationalFlags.signals;
+    let delivery = deliveryFor(row, primaryTransit, stageFromStatus, operationalSignals);
+    /* Birincil segment üretim bakiyesiyken (ADR-0003 §6O.c) üretim bakiyesinin vasıtası için transit kuralı
+       yoksa teslimat sonucu hesaplanamaz. Bu durumda sevk edilmiş parsiyelin BİLİNEN varışından hesaplanan
+       sonuç (birincil seçim değişmeden önce satırın gösterdiği sonuç: lojistik akış sırasındaki ilk parsiyel)
+       korunur; kural eksikliği (transitRuleMissing → MISSING_TRANSIT_RULE) de görünür kalır. Kural varken
+       üretim bakiyesi hesabı geçerlidir. Ürün sahibi kararı: birincil segment değişikliği başka segmentin
+       mevcut riskini gizlemez. */
+    if (delivery && delivery.deliveryOutcome === 'UNKNOWN' && delivery.transitRuleMissing && stageFromStatus === 'PRODUCTION') {
+      const partial = (Array.isArray(row && row._logisticSegments) ? row._logisticSegments : []).find(segment => segment && segment.kind === 'partial');
+      if (partial) {
+        // Yalnız teslimat hesabı tekrarlanır (sinyaller zaten segment bazlı); karar/checklist yeniden kurulmaz.
+        const shippedRow = {
+          ...row,
+          [F.status]: partial.status,
+          [F.antArrival]: partial.arrival,
+          [F.delType]: (BR.normalizeTransitDelType && BR.normalizeTransitDelType(partial.delType)) || partial.delType,
+          [F.handover]: partial.handover,
+        };
+        const shippedStatus = text(partial.status);
+        const shipped = deliveryFor(shippedRow, transitFor(shippedRow), DE.stageOf ? DE.stageOf(shippedStatus) : 'UNKNOWN', operationalSignals);
+        if (shipped && shipped.deliveryOutcome && shipped.deliveryOutcome !== 'UNKNOWN') {
+          delivery = {
+            ...delivery,
+            deliveryOutcome: shipped.deliveryOutcome,
+            eta: shipped.eta,
+            etaSource: shipped.etaSource,
+            targetDate: shipped.targetDate,
+            scheduleBufferDays: shipped.scheduleBufferDays,
+            riskCause: shipped.riskCause,
+            confidence: shipped.confidence,
+          };
+        }
+      }
+    }
 
     const deliveryOutcome = delivery ? delivery.deliveryOutcome : 'UNKNOWN';
     const stage = delivery ? delivery.stage : stageFromStatus;

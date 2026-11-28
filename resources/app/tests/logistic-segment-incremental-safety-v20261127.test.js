@@ -118,8 +118,14 @@ test('tam kurulum + okuma modeli hazırlığı yalnız üretim satırında aynı
   assert.deepEqual([reopened['Del. Type'], iso(reopened['Ant. Arrival']), reopened.STATUS], ['Uçak', '2026-01-16', 'Üretimde']);
 });
 
-/* AYRI BULGU (iş kuralı kararı gerekir; bu düzeltmenin kapsamı dışında): parsiyel + üretim bakiyesi birlikteyken
-   "birincil segment" iki yerde farklı tanımlı. Tam kurulum (parse.js) ilk kıtlık-dışı segmenti (üretim) alır →
-   STATUS Üretimde; okuma modeli hazırlığı ve istemci (rebuildLogisticCaches / rebuildCpLogisticCaches) partials[0]
-   alır → STATUS Yol Operasyonları. Yamasız tam kurulum satırında bile hazırlık STATUS / Ant. Arrival'ı değiştirir. */
-test.todo('birincil segment tanımı tam kurulum ile okuma modeli hazırlığında aynı olmalı (iş kuralı teyidi bekleniyor)');
+/* Birincil segment artık tek kuraldır (BLBusinessRules.selectPrimaryLogisticSegment; kategori testleri
+   logistic-primary-segment-rule-v20261128.test.js). Yamasız tam kurulum satırını hazırlık değiştirmez. */
+test('birincil segment: tam kurulum ile okuma modeli hazırlığı parsiyel + üretim bakiyesinde aynı değeri verir', () => {
+  const ov = overrides();
+  const iasRows = [ias(), ias({ 'İthalat Dosya No': 'IMP-2', 'Konteyner No': 'CONT-2', 'Supplier Portal Statü': 'Depoda', 'Yükleme Toplam Adet': 2000, 'Vasita Tanim': 'Uçak', 'Tahmini Antrepo Giriş Tarihi': '2026-02-10' })];
+  const [row] = fullBuild(ov, { iasRows });
+  const reopened = JSON.parse(JSON.stringify(row));
+  prep.prepareCpRows([reopened]);
+  // 10.000 − (3.000 + 2.000) = 5.000 üretimde → Üretimde · Gemi · 01.01 + 70 = 12.03.
+  for (const r of [row, reopened]) assert.deepEqual([r.STATUS, r['Del. Type'], iso(r['Ant. Arrival']), r['HANDOVER Tarihi'] || null], ['Üretimde', 'Gemi', '2026-03-12', null]);
+});
