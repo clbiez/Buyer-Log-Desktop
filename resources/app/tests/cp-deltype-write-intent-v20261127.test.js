@@ -46,7 +46,9 @@ function syncHarness({ fail = false, rowSave = false } = {}) {
     appLang: 'tr',
     console: { warn: () => {} },
   };
-  const fns = loadAppMainFunctions(['syncOverrideToServer'], globals);
+  // BL-029: gövde düzenlenebilir Del. Type'ı cpEditableDelType ile okur (segmentsiz satırda satır değeri).
+  globals.normalizeTransitDelType = value => String(value ?? '').trim();
+  const fns = loadAppMainFunctions(['syncOverrideToServer', 'cpEditableDelType', 'cpLogisticSegments'], globals);
   return { ...fns, sent, settle: async () => { settle(); await new Promise(r => setImmediate(r)); }, settleAt: async i => { settles[i](); await new Promise(r => setImmediate(r)); } };
 }
 const cpRow = extra => ({ 'Order Code': 4100001, 'Model Name': 'MODEL-1', 'C.Code': 'C01', 'Del. Type': 'Uçak', Licensor: 'DTR', ...extra });
@@ -81,7 +83,8 @@ test('kayıt başarısızsa niyet korunur (yeniden denemede Del. Type yine gider
 
 test('yerel delmap yalnız açık Del. Type niyetiyle güncellenir', () => {
   const fn = extractFunction(SOURCE, 'syncOverridesFromRow');
-  assert.match(fn, /if\(row\._delTypeWrite&&row\['Del\. Type'\]\)state\.overrides\.delmap\[key\]=row\['Del\. Type'\];/);
+  // BL-029: değer satırın görünen (parsiyelden türetilebilen) Del. Type'ından değil düzenlenebilir değerden okunur.
+  assert.match(fn, /if\(row\._delTypeWrite\)\{const delType=cpEditableDelType\(row\);if\(delType\)state\.overrides\.delmap\[key\]=delType;\}/);
   assert.doesNotMatch(fn, /\n\s*if\(row\['Del\. Type'\]\)state\.overrides\.delmap\[key\]=/);
 });
 
