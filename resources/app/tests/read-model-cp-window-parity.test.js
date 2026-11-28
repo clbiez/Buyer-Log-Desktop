@@ -99,7 +99,9 @@ const CONTEXT=createContextLoader({
   // 2026-11-21: yerleşik kural yok; eski tanımlar kullanıcı kuralı olarak kurulur.
   preferences:{load:()=>({entries:Object.fromEntries(Object.entries(require('./fixtures/legacy-builtin-rules').storeEntries()).map(([k,v])=>[k,{value:v}]))})},
   roleEntries:()=>({'lcw.cp.assistant.v1':{value:JSON.stringify({settings:{targetType:'retail'},checklistSettings:{enabled:true}})}}),
-  managedRules:()=>({rules:[],deletedRuleIds:[],priorityCatalog:[],checklistStatuses:[],revision:0}),transitRules:()=>[{id:'t-sea',seasons:[],countries:[],delType:'',days:35,exfStart:'',exfEnd:''}],
+  managedRules:()=>({rules:[],deletedRuleIds:[],priorityCatalog:[],checklistStatuses:[],revision:0}),// Vasıta tipine bağlı kurallar (fixture vasıtaları). delType:'' hiçbir vasıtayla eşleşmez: üretim aşamasındaki
+  // satırlar kuralsız (UNKNOWN) kalır ve öncelik çeşitliliği yalnız sevk edilmiş satırlardan gelirdi.
+  transitRules:()=>['Gemi','Uçak','TIR','Gemi+Uçak','Kamyon'].map((delType,i)=>({id:'t-'+i,seasons:[],countries:[],delType,days:35,exfStart:'',exfEnd:''})),
   plmPayload:()=>({models:{},updatedAt:null}),checklistPayload:()=>({answers:{},tombstones:{}}),revision:()=>'r1',merge:(own,shared)=>Merge.merge(own,shared)})({id:'u'}).value;
 async function serverRun(projection,kind,request){
   const deps={cache:worker.cache,engine};

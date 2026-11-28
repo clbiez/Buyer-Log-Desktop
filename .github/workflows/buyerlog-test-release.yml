@@ -79,6 +79,12 @@ jobs:
           cache-dependency-path: resources/app/package-lock.json
       - name: Install and run full regression
         shell: pwsh
+        # Windows runner'da varsayılan TEMP (C:) küçük dosya yazımında çalışma diskinden (D:) 3–10× yavaş;
+        # Defender gerçek zamanlı koruma kapalı (teşhis run 46112553159). Dosya sistemi ağırlıklı senkron
+        # simülasyonları aynı runner ve aynı kodda 597 sn → 83 sn. Testler, süreler ve kapsam aynı.
+        env:
+          TEMP: ${{ runner.temp }}
+          TMP: ${{ runner.temp }}
         run: |
           npm ci --ignore-scripts
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

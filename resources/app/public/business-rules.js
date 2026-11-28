@@ -184,6 +184,66 @@
     return best;
   }
 
+  /* Birincil lojistik segment: CP / Siparişler satırının ana STATUS, Del. Type, Ant. Arrival ve
+     HANDOVER değerini veren segment. TEK TANIM: parse.js (tam kurulum), okuma modeli hazırlığı
+     (overview-row-prep) ve istemci (app-main rebuildCpLogisticCaches) bu fonksiyonu kullanır.
+     Ürün sahibi kuralı (ADR-0003 §6O.c):
+       A) Miktarı 0 olan üretim aşaması segmenti tek başına üretim bakiyesi değildir.
+       B) Eksik Yükleme ayrı istisnadır; seçilmez, aşamaya dönüştürülmez (başka segment yoksa yalnız o).
+       C) Üretim bakiyesi yoksa tamamlanmamış lojistik aşama depodan önce gelir.
+       D) Operasyonel olarak en geride kalan tamamlanmamış aşama seçilir.
+     Aynı aşamada: en erken varış → üretim bakiyesi → parsiyel no. Dizinin sırasından bağımsızdır.
+     Depoda ve Retaile Aktarım Bekleniyor aynı depo katmanıdır; bilinmeyen IAS statüsü (ör. "Yüklemede")
+     yükleme katmanında sayılır. Girdi parse.js cpLogisticSegmentsForOrder biçimidir
+     ({ kind, status, quantity, arrival, partialNo }); segmentlerin kendisi değiştirilmez. */
+  const PRIMARY_SEGMENT_STAGE_RANK = Object.freeze({
+    PRODUCTION: 10, UNKNOWN: 20, LOADING: 20, IN_TRANSIT: 30, CUSTOMS: 40, IN_WAREHOUSE: 50, AWAITING_RETAIL_TRANSFER: 50,
+  });
+  const PRIMARY_SEGMENT_KIND_ORDER = Object.freeze({ production: 0, partial: 1, shortage: 2 });
+  // IAS'ta yalnız birkaç statü metni vardır; satır başına yeniden normalleştirilmez (sıcak yol, ölçüldü).
+  const PRIMARY_SEGMENT_STAGE_CACHE = new Map();
+  function primarySegmentStage(status) {
+    if (typeof status !== 'string') return operationalStageOf(status);
+    let stage = PRIMARY_SEGMENT_STAGE_CACHE.get(status);
+    if (stage === undefined) {
+      stage = operationalStageOf(status);
+      if (PRIMARY_SEGMENT_STAGE_CACHE.size < 5000) PRIMARY_SEGMENT_STAGE_CACHE.set(status, stage);
+    }
+    return stage;
+  }
+  function primarySegmentRank(segment) {
+    if (!segment || typeof segment !== 'object' || segment.kind === 'shortage') return null;
+    const stage = segment.kind === 'production' ? 'PRODUCTION' : primarySegmentStage(segment.status);
+    if (stage === 'SHORTAGE') return null;
+    if (stage === 'PRODUCTION' && !(Number(segment.quantity) > 0)) return null;
+    return Object.prototype.hasOwnProperty.call(PRIMARY_SEGMENT_STAGE_RANK, stage) ? PRIMARY_SEGMENT_STAGE_RANK[stage] : PRIMARY_SEGMENT_STAGE_RANK.UNKNOWN;
+  }
+  function comparePrimarySegmentTies(a, b) {
+    const aDate = defaultDateOrdinal(a.arrival), bDate = defaultDateOrdinal(b.arrival);
+    if (aDate !== bDate) {
+      if (aDate == null) return 1;
+      if (bDate == null) return -1;
+      return aDate - bDate;
+    }
+    const kindDiff = (PRIMARY_SEGMENT_KIND_ORDER[a.kind] ?? 1) - (PRIMARY_SEGMENT_KIND_ORDER[b.kind] ?? 1);
+    if (kindDiff) return kindDiff;
+    return (Number(a.partialNo) || 0) - (Number(b.partialNo) || 0);
+  }
+  function selectPrimaryLogisticSegment(segments) {
+    const list = Array.isArray(segments) ? segments : [];
+    let best = null, bestRank = null;
+    for (const segment of list) {
+      const rank = primarySegmentRank(segment);
+      if (rank == null) continue;
+      if (best == null || rank < bestRank || (rank === bestRank && comparePrimarySegmentTies(segment, best) < 0)) { best = segment; bestRank = rank; }
+    }
+    if (best) return best;
+    // Seçilebilir aşama yoksa (yalnız 0 adetlik üretim ya da yalnız kıtlık): önce kıtlık dışı segment.
+    const objects = list.filter(segment => segment && typeof segment === 'object');
+    const pickFirst = items => items.reduce((winner, segment) => (winner == null || comparePrimarySegmentTies(segment, winner) < 0 ? segment : winner), null);
+    return pickFirst(objects.filter(segment => segment.kind !== 'shortage')) || pickFirst(objects);
+  }
+
   function isProductionStatus(value) {
     return operationalStageOf(value) === 'PRODUCTION';
   }
@@ -652,6 +712,40 @@
     return sign * (Math.floor(Math.abs(number) * factor + 0.5 + 1e-10) / factor);
   }
 
+  /* Segment riskleri (ADR-0003 §6O.c, ürün sahibi kararı 2a): lojistik segmentli satırda HANDOVER_PENDING
+     ve ANTREPO_DELAY, satırın görünen (birincil) segmentine değil ilgili HER segmente bakar; birincil segment
+     üretim bakiyesi olunca yoldaki parsiyelin bugünkü uyarısı gizlenmez. Yüklem bugünküyle aynıdır, yalnız
+     segment başına değerlendirilir; kıtlık segmenti ve kıtlıklı satır bugünkü gibi dışarıda kalır. Kıtlık dışı
+     segment yoksa null döner ve çağıran satır alanlarıyla eskisi gibi çalışır. Sıcak yol: dizi/kapanış yok. */
+  function segmentRiskStage(segment) {
+    return segment.kind === 'production' ? 'PRODUCTION' : primarySegmentStage(segment.status);
+  }
+  function segmentHandoverGap(segments, dateOrdinal) {
+    let seen = false;
+    for (let index = 0; index < segments.length; index += 1) {
+      const segment = segments[index];
+      if (!segment || typeof segment !== 'object' || segment.kind === 'shortage') continue;
+      seen = true;
+      const stage = segmentRiskStage(segment);
+      if (stage === 'PRODUCTION' || stage === 'SHORTAGE' || stage === 'IN_WAREHOUSE') continue;
+      if (dateOrdinal(segment.handover) == null) return true;
+    }
+    return seen ? false : null;
+  }
+  function segmentArrivalOverdue(segments, today, dateOrdinal) {
+    let seen = false;
+    for (let index = 0; index < segments.length; index += 1) {
+      const segment = segments[index];
+      if (!segment || typeof segment !== 'object' || segment.kind === 'shortage') continue;
+      seen = true;
+      const stage = segmentRiskStage(segment);
+      if (stage === 'SHORTAGE' || stage === 'IN_WAREHOUSE' || stage === 'AWAITING_RETAIL_TRANSFER') continue;
+      const arrival = dateOrdinal(segment.arrival);
+      if (arrival != null && arrival < today) return true;
+    }
+    return seen ? false : null;
+  }
+
   function computePriorityFlags(input, dateOrdinal = defaultDateOrdinal) {
     const values = input || {};
     const exFactory = dateOrdinal(values.exFactory);
@@ -707,22 +801,26 @@
     const mbGap = mbAntrepo != null && inStoreDate != null ? inStoreDate - mbAntrepo : null;
     const mbDelay = mbGap != null && mbGap < 14;
 
-    const handoverWarning = shipConfirmationDate != null
-      && handoverDate == null
-      && !production
-      && !shortage
-      && operationalStage !== 'IN_WAREHOUSE'
-      && today != null
-      && today - shipConfirmationDate >= 3;
+    // Tek segmentli satırda satırın STATUS / HANDOVER / Ant. Arrival alanları zaten o segmentten türetilir
+    // (selectPrimaryLogisticSegment): segment taraması aynı sonucu verir, atlanır (sıcak yol, ölçüldü).
+    const segments = Array.isArray(values.logisticSegments) && values.logisticSegments.length > 1 ? values.logisticSegments : null;
+    const handoverEligible = shipConfirmationDate != null && !shortage && today != null && today - shipConfirmationDate >= 3;
+    let handoverWarning = false;
+    if (handoverEligible) {
+      const fromSegments = segments ? segmentHandoverGap(segments, dateOrdinal) : null;
+      handoverWarning = fromSegments != null ? fromSegments
+        : (handoverDate == null && !production && operationalStage !== 'SHORTAGE' && operationalStage !== 'IN_WAREHOUSE');
+    }
     // Shortage satırındaki antrepo tarihi gerçek bir IAS varış kaydı değil,
     // Ex-Factory + transit varsayımıdır. Bu sentetik tarih üzerinden Ant. Delay
     // üretmek, siparişi hâlâ yükleme bekliyormuş gibi gösterirdi.
-    const antDelay = antArrival != null
-      && today != null
-      && antArrival < today
-      && !shortage
-      && operationalStage !== 'IN_WAREHOUSE'
-      && operationalStage !== 'AWAITING_RETAIL_TRANSFER';
+    let antDelay = false;
+    if (!shortage && today != null) {
+      const fromSegments = segments ? segmentArrivalOverdue(segments, today, dateOrdinal) : null;
+      antDelay = fromSegments != null ? fromSegments
+        : (antArrival != null && antArrival < today && operationalStage !== 'SHORTAGE'
+          && operationalStage !== 'IN_WAREHOUSE' && operationalStage !== 'AWAITING_RETAIL_TRANSFER');
+    }
     const discountDelayDays = exFactory != null && today != null ? today - exFactory : null;
     const discountWarning = production && discountDelayDays != null && discountDelayDays > 9;
 
@@ -1137,6 +1235,7 @@
     norm,
     turkNorm,
     operationalStageOf,
+    selectPrimaryLogisticSegment,
     isProductionStatus,
     isShortageStatus,
     isWarehouseShortageStatus,

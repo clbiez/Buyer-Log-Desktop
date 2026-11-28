@@ -35,6 +35,8 @@ function harness(row, { rowSave = false } = {}) {
     toNum: value => (value === '' || value == null ? null : Number(value)),
     coerceDateLoose: value => value, addDays: (date, days) => `${date}+${days}`,
     normalizeTransitDelType: value => NORMALIZE[norm(value).toLocaleLowerCase('tr-TR')] || '',
+    // rebuildCpLogisticCaches birincil segmenti tek ortak kuraldan seçer (üretimde global modül).
+    BLBusinessRules: require('../public/business-rules'),
     resolveTransitDaysForValues: delType => ({ days: delType === 'Uçak' ? 7 : 35 }),
     editableValuesEqual: (a, b) => norm(a) === norm(b),
     applyFormulas: () => {}, invalidateUnifiedPriorityDecisions: () => {},
@@ -61,7 +63,7 @@ function harness(row, { rowSave = false } = {}) {
   return { fns, sent, undo, edit };
 }
 
-// 820002: 40 adet IAS parsiyeli (Gemi, yolda) + 60 adet üretim bakiyesi. Görünen Del. Type birincil segmentten (parsiyel).
+// 820002: 40 adet IAS parsiyeli (Gemi, yolda) + 60 adet üretim bakiyesi. Görünen Del. Type birincil segmentten (üretim bakiyesi).
 const partialRow = (productionDelType = 'Gemi') => ({
   _id: 2, 'Order Code': 820002, 'Model Name': 'DEMO PARTIAL B', 'C.Code': 'BLK', Licensor: 'DTR',
   'Order Quantity': 100, 'Ex-factory': '2026-12-30', 'Del. Type': 'Gemi',
@@ -83,7 +85,9 @@ for (const rowSave of [false, true]) {
     const h = harness(row, { rowSave });
     assert.equal(h.edit('Uçak'), true);
     assert.equal(row._logisticSegments[1].delType, 'Uçak', 'production balance takes the user value');
-    assert.equal(row['Del. Type'], 'Gemi', 'row display still follows the primary (partial) segment');
+    // Birincil segment tek kuraldır (BLBusinessRules.selectPrimaryLogisticSegment): üretim bakiyesi en geride kalan
+    // aşama olduğundan görünen Del. Type da üretim segmentinden gelir (2026-11-28; önce partials[0]).
+    assert.equal(row['Del. Type'], 'Uçak', 'row display follows the primary segment = production balance');
     assert.equal(h.sent.length, 1);
     assert.equal(h.sent[0].body.delType, 'Uçak');
     assert.deepEqual(JSON.parse(JSON.stringify(h.undo[0].fields)), [{ key: 'Del. Type', prev: 'Gemi', next: 'Uçak' }]);

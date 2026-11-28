@@ -50,7 +50,8 @@ function rebuildLogisticCaches(row){
   row._logisticRemainingQty=Math.max(0,(toNum(row['Order Quantity'])||0)-row._logisticLoadedQty);
   row['Remaining Units']=row._logisticRemainingQty;
   row['%']=toNum(row['Order Quantity'])?((toNum(row['Order Quantity'])-row._logisticRemainingQty)/toNum(row['Order Quantity'])):'';
-  const primary=partials[0]||segments.find(s=>s&&s.kind!=='shortage')||segments[0];
+  // Tam kurulumla (parse.js) aynı tek kural; segment kaynak değerleri değişmez.
+  const primary=rules.selectPrimaryLogisticSegment(segments);
   row.STATUS=primary.status||'Üretimde'; // i18n-ignore
   row['Ant. Arrival']=coerceDateLoose(primary.arrival);
   row['Del. Type']=delType(primary.delType)||norm(primary.delType);
