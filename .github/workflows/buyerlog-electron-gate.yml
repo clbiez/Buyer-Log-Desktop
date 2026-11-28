@@ -87,7 +87,7 @@ jobs:
         run: |
           set -euo pipefail
           INST="$RUNNER_TEMP/installed/BuyerLog"
-          "$INST/BuyerLog.exe" "$GITHUB_WORKSPACE/.github/electron-gate/gate.js" --app "$INST/resources/app" --out "$RUNNER_TEMP/gate" \
+          "$INST/BuyerLog.exe" "$GITHUB_WORKSPACE/.github/electron-gate/gate.js" --app "$INST/resources/app" --fixture-app "$GITHUB_WORKSPACE/resources/app" --out "$RUNNER_TEMP/gate" \
             --rows "$ROWS" --soak-min "$SOAK_MINUTES" --heap-mb "$HEAP_MB"
       - name: Print gate report (raw evidence stays in the job log; no artifact storage)
         if: always()

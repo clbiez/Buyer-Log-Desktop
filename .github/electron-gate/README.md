@@ -53,7 +53,7 @@ yalnız FAIL ya da BLOCKED olduğunda kırmızı olur.
 
 ```bash
 EL=<electron@44.3.0>/dist/electron
-ELECTRON_RUN_AS_NODE=1 $EL .github/electron-gate/gate.js --app $PWD/resources/app --out /tmp/gate --rows 30000 --soak-min 15
+ELECTRON_RUN_AS_NODE=1 $EL .github/electron-gate/gate.js --app $PWD/resources/app --fixture-app $PWD/resources/app --out /tmp/gate --rows 30000 --soak-min 15
 ```
 
 Kapsam dışı (otomatikleştirilemez): gerçek Chromium arayüzü/pencere, gerçek

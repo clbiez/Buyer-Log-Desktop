@@ -15,7 +15,7 @@
  *
  * Kullanım:
  *   set ELECTRON_RUN_AS_NODE=1
- *   BuyerLog.exe gate.js --app <kurulu>\resources\app --out <klasör> [--rows 30000] [--soak-min 15] [--heap-mb 3686]
+ *   BuyerLog.exe gate.js --app <kurulu>\resources\app --fixture-app <kaynak>\resources\app --out <klasör> [--rows 30000] [--soak-min 15] [--heap-mb 3686]
  * Çıkış kodu: FAIL/BLOCKED yoksa 0 (PASS/WARN/KNOWN/XPASS engellemez); aksi 1. Rapor: <out>/gate-report.json + gate-summary.md.
  */
 const fs = require('fs');
@@ -31,6 +31,7 @@ function parseArgs(argv) {
     const key = argv[i];
     const next = argv[i + 1];
     if (key === '--app') out.app = path.resolve(next), i += 1;
+    else if (key === '--fixture-app') out.fixtureApp = path.resolve(next), i += 1;
     else if (key === '--out') out.out = path.resolve(next), i += 1;
     else if (key === '--rows') out.rows = Number(next), i += 1;
     else if (key === '--soak-min') out.soakMin = Number(next), i += 1;
@@ -39,6 +40,8 @@ function parseArgs(argv) {
     else throw new Error('Bilinmeyen argüman: ' + key);
   }
   if (!out.app || !out.out) throw new Error('--app ve --out zorunlu');
+  // Paketlenmiş uygulama demo üreticisini taşımaz (doğru: üretim paketi). Fixture kaynak ağacından üretilir.
+  if (!out.fixtureApp) out.fixtureApp = out.app;
   return out;
 }
 
@@ -61,7 +64,7 @@ const report = {
     execPath: process.execPath, node: process.versions.node, electron: process.versions.electron || null,
     platform: `${os.platform()} ${os.release()} ${os.arch()}`, cpus: `${os.cpus().length}× ${(os.cpus()[0] || {}).model || '?'}`,
     totalMemMb: Math.round(os.totalmem() / 1048576), NODE_OPTIONS: process.env.NODE_OPTIONS || '', commit: process.env.GITHUB_SHA || process.env.BUYER_LOG_GATE_COMMIT || null,
-    appVersion: null, rows: opt.rows, soakMin: opt.soakMin, heapMb: opt.heapMb,
+    appVersion: null, app: opt.app, fixtureApp: opt.fixtureApp, rows: opt.rows, soakMin: opt.soakMin, heapMb: opt.heapMb,
   },
   timings: {}, gates: [], http: { requests: 0, n503: 0, exhausted: 0, byPath: {} }, edits: [], soak: null, memory: null, stops: [], errors: [],
 };
@@ -78,9 +81,10 @@ function buildFixture() {
   const dir = path.join(OUT, 'source');
   fs.rmSync(dir, { recursive: true, force: true });
   const t = Date.now();
-  const g = spawnSync(process.execPath, [path.join(APP, 'scripts', 'generate-demo-data.js'), dir, '--rows', String(opt.rows), '--seed', '7'], { cwd: APP, encoding: 'utf8', env: process.env, maxBuffer: 64 * 1024 * 1024 });
+  const FIX = opt.fixtureApp;
+  const g = spawnSync(process.execPath, [path.join(FIX, 'scripts', 'generate-demo-data.js'), dir, '--rows', String(opt.rows), '--seed', '7'], { cwd: FIX, encoding: 'utf8', env: process.env, maxBuffer: 64 * 1024 * 1024 });
   if (g.status !== 0) throw new Error('fixture üretilemedi: ' + (g.stderr || g.stdout).slice(-2000));
-  const XLSX = require(path.join(APP, 'node_modules', 'xlsx'));
+  const XLSX = require(path.join(FIX, 'node_modules', 'xlsx'));
   const file = fs.readdirSync(dir).map(f => path.join(dir, f)).find(f => /^ASAS/i.test(path.basename(f)));
   const wb = XLSX.readFile(file);
   const name = wb.SheetNames[0];
