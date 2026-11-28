@@ -33,8 +33,9 @@ düzenlenebilir olur. Gerçek iş verisi kullanılmaz.
 | G02 | CP sorgu satırı = computed satırı |
 | G03 | Supp. FOB tekli + toplu görünür; tekli kayıt satır yaması yolunda |
 | G04 | Not tekli + toplu (5) görünür |
-| G05 | Del. Type (açık niyet) tam kurulum yolunda; sonraki Supp. FOB/not Del. Type'ı değiştirmez |
-| G06 | Elle düzenlenebilir Ex-factory PATCH + /batch 2xx, görünür; okuma tam kurulumda |
+| G05 | Del. Type (açık niyet, ikinci kullanıcı) görünür; sonraki Supp. FOB/not Del. Type'ı değiştirmez; okuma yolu satır yaması veya güvenli tam kurulum (#1260); satır sıfırdan tam kurulumla (G10) alan alan eşit |
+| G06 | Elle düzenlenebilir Ex-factory PATCH + /batch 2xx, görünür; okuma yolu satır yaması veya güvenli tam kurulum; satırlar tam kurulumla eşit |
+| G06b | #1260 artımlı lojistik yaması: aynı oturumun Del. Type kaydı ve en az bir Ex-factory kaydı satır yaması yolunda (rowPatch.steps>0) okunur, değer görünür, satır tam kurulumla eşit |
 | G07 | Otomatik Ex-factory 409 `AUTOMATIC_DATE_READ_ONLY`; değer korunur |
 | G08 | Aynı kullanıcının iki oturumu eşzamanlı yazar; iki alan korunur; iki oturum aynı veriyi görür |
 | G08b | Bayat oturum (#1257 istemci sözleşmesi: kırpılmış gövde + yalnız kendi onaylı yazımıyla ilerleyen `If-Match`): Supp. FOB kaydı başka oturumun yeni notunu ezmez (409 `REVISION_CONFLICT` ya da not korunur) |
