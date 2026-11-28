@@ -2189,6 +2189,13 @@
     closeMenu();
     commitCpEditor(editor);
   }
+  // BL-028: "—" ayrı kalır; bu eylem satırın manuel override'ını kaldırır (kaynak önceliğine döner).
+  function revert(){
+    if(!trigger) return;
+    const editor={dataset:{...trigger.dataset,kind:'deltype'}};
+    closeMenu();
+    window.revertCpDelTypeToSource?.(editor);
+  }
   function openMenu(btn){
     if(trigger===btn){closeMenu();return;}
     closeMenu(); trigger=btn; btn.setAttribute('aria-expanded','true');
@@ -2197,13 +2204,17 @@
     menu.className='delTypeMenu'; menu.setAttribute('role','listbox');
     const current=btn.dataset.value||'';
     const values=['',...DELTYPE_OPTS];
-    menu.innerHTML=values.map(v=>`<button type="button" class="delTypeOption" role="option" aria-selected="${v===current}" data-value="${escapeHtml(v)}">${escapeHtml(v?transitDelTypeDisplay(v):'—')}</button>`).join('');
+    const en=appLang==='en';
+    const revertHtml=window.cpDelTypeRevertAvailable?.(btn.dataset)
+      ?`<div class="impMenuSep" role="separator"></div><button type="button" class="delTypeOption delTypeRevert" role="option" aria-selected="false" data-action="revert" title="${escapeHtml(en?'Remove the manual Del. Type of this row; the value is recalculated from the source (default Sea for the production balance).':'Bu satırın manuel Del. Type kaydını kaldırır; değer kaynaktan yeniden hesaplanır (üretim bakiyesi için varsayılan Gemi).')}">${escapeHtml(en?'Revert to source':'Kaynağa dön')}</button>`
+      :'';
+    menu.innerHTML=values.map(v=>`<button type="button" class="delTypeOption" role="option" aria-selected="${v===current}" data-value="${escapeHtml(v)}">${escapeHtml(v?transitDelTypeDisplay(v):'—')}</button>`).join('')+revertHtml;
     document.body.appendChild(menu);
     const width=Math.max(rect.width,150);
     menu.style.width=width+'px';
     const maxH=Math.min(220,window.innerHeight-20);menu.style.maxHeight=maxH+'px';
     if(typeof window.positionBuyerLogPopup==='function')window.positionBuyerLogPopup(menu,btn,{gap:4});
-    menu.querySelectorAll('.delTypeOption').forEach(opt=>opt.addEventListener('click',e=>{e.stopPropagation();choose(opt.dataset.value||'');}));
+    menu.querySelectorAll('.delTypeOption').forEach(opt=>opt.addEventListener('click',e=>{e.stopPropagation();if(opt.dataset.action==='revert')revert();else choose(opt.dataset.value||'');}));
     requestAnimationFrame(()=>menu.querySelector('[aria-selected="true"]')?.focus());
   }
   document.addEventListener('click',e=>{
@@ -2217,7 +2228,7 @@
       e.preventDefault(); const opts=[...menu.querySelectorAll('.delTypeOption')]; const i=opts.indexOf(document.activeElement);
       opts[(i+(e.key==='ArrowDown'?1:-1)+opts.length)%opts.length]?.focus();
     }
-    if(menu&&e.key==='Enter'&&document.activeElement?.classList.contains('delTypeOption')){e.preventDefault();choose(document.activeElement.dataset.value||'');}
+    if(menu&&e.key==='Enter'&&document.activeElement?.classList.contains('delTypeOption')){e.preventDefault();if(document.activeElement.dataset.action==='revert')revert();else choose(document.activeElement.dataset.value||'');}
   });
   window.addEventListener('resize',closeMenu);
   window.addEventListener('scroll',event=>{if(event.target instanceof Element&&event.target.closest('.delTypeMenu'))return;closeMenu();},true);
