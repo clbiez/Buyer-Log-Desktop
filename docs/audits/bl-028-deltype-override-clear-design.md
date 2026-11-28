@@ -120,3 +120,10 @@ Durum: **Uygulandı** (`claude/bl-028-revert-source`, 2026-11-28). İlk tasarım
   - Bu satırda geri al, önceki değeri satır anahtarına açıkça yazar (kullanıcının açık isteği). O değer sipariş anahtarı temizliğinden sonra da kalır.
   - Durum yalnız bir yenileme aralığında oluşur.
 - **Kaynakla doğrulanıp kusur olmadığı görülen bulgu:** "Eşler eski değeri gösterir" iddiası. `rebuildCpLogisticCaches` satırın Del. Type'ını her temizlemede yeniden yazar.
+
+## Açık iş (2026-11-28, ürün sahibi kararıyla kayıtlı; başlatılmadı)
+
+- **BL-028-A · Sipariş anahtarlı eski override varken "Kaynağa dön" kaynak değerine dönemiyor.** Satır temizlenir, ancak kaynak önceliği (satır → sipariş → Gemi) gereği sipariş anahtarlı değer bir sonraki başarılı veri yenilemesine kadar görünür kalır; kullanıcıya bildirim gösterilir. [Doğrulandı: gerçek tarayıcı]
+  - Etki: yalnız bir yenileme aralığı; sipariş anahtarı yalnız kimliksiz PATCH ya da eski sürümlü eşten gelebilir [Muhtemel].
+  - Çözüm seçenekleri (ürün kararı gerekir): satıra açık "kaynak" işareti (tombstone; yeni veri temsili) ya da sipariş anahtarlı override'ların yenileme beklemeden geçersiz kılınması. Yenileme temizliğinin özgün niyeti [Bilinmiyor] (`f15966d`).
+  - Kayıt yolu birleştirme işiyle (BL-031-A) birlikte değerlendirilmeli; ayrı mekanizma kurulmamalı.
