@@ -8834,6 +8834,39 @@ html[data-ui-system="manifest"] .kolScopePanel .kolScopeOptions .tbtn,html[data-
 }
 html[data-ui-system="manifest"] .kolScopePanel [data-grant-picker] input[type="search"] {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font-size:var(--ui-font-2xs) !important
 }
+html[data-ui-system="manifest"] .kolPermHead strong {font-size:var(--ui-font-2xs) !important;font-weight:750 !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .kolPermCount,html[data-ui-system="manifest"] .kolPermHelp {font-size:var(--ui-font-2xs) !important;font-weight:600 !important;color:var(--ui-text-muted) !important;line-height:1.35
+}
+html[data-ui-system="manifest"] .kolPermCount {font-variant-numeric:tabular-nums
+}
+/* Sütun ayracı: 1px aralıktan görünen ortak ayraç tonu; modül kenarlık tanımlamaz. */
+html[data-ui-system="manifest"] .kolScopePanel.kolPermPanel {background:var(--ui-group-divider) !important
+}
+html[data-ui-system="manifest"] .kolPermCol {background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .kolPermPicker {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .kolPermPanel .kolPermRow {font-size:var(--ui-font-2xs) !important;color:var(--ui-text) !important;line-height:1.25
+}
+html[data-ui-system="manifest"] .kolPermPanel .kolPermRow:hover {background:var(--ui-row-hover) !important
+}
+html[data-ui-system="manifest"] .kolPermLevel,html[data-ui-system="manifest"] .kolPermMe {font-size:var(--ui-font-2xs) !important;font-weight:650 !important;color:var(--ui-text-muted) !important;background:transparent !important
+}
+html[data-ui-system="manifest"] .kolPermLevel.isEdit,html[data-ui-system="manifest"] .kolPermMe {color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .kolPermMe {background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .kolPermPanel .kolPermRow select {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font:inherit !important
+}
+html[data-ui-system="manifest"] .kolPermPanel .kolPermRow .tbtn,html[data-ui-system="manifest"] .kolPermAdd {font-size:var(--ui-font-2xs) !important;line-height:1
+}
+html[data-ui-system="manifest"] .kolPermRemove {background:transparent !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .kolPermRemove:hover {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .kolPermPicker input[type="search"] {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font-size:var(--ui-font-2xs) !important
+}
 @media (max-width:650px){
 html[data-ui-system="manifest"] .kolScopeSectionLabel {font-size:var(--ui-font-2xs) !important
 }
@@ -15547,7 +15580,7 @@ html[data-ui-system="manifest"] [data-ui-migrated="plan-execute"]:where(#view-ba
 html[data-ui-system="manifest"] :is(.toolbar,.tableActionToolbar) {
   border-bottom:1px solid var(--ui-row-divider) !important;
 }
-html[data-ui-system="manifest"] :is(.navActionBtn,.tbtn,.iconbtn,.upl-btn,.gsearch,.profileSelectTrigger,.lflButton,.ovHomePageTab,.ovBreakdownViewBtn,.ovHomeDrawerCard,.oabMultiTrigger,.cpaBtn,.cpaIconBtn,.cpaValueToggle,.cpaTagMiniBtn,.cpaScopePresetBtn,.cpaStatusBtn,.cpaQuestionPill,.cpaToneSwatch,.cpaCheckTile,.cpaOverviewMetric),
+html[data-ui-system="manifest"] :is(.navActionBtn,.tbtn,.iconbtn,.upl-btn,.gsearch,.profileSelectTrigger,.lflButton,.ovHomePageTab,.ovBreakdownViewBtn,.ovHomeDrawerCard,.oabMultiTrigger,.cpaBtn,.cpaIconBtn,.cpaValueToggle,.cpaTagMiniBtn,.cpaScopePresetBtn,.cpaStatusBtn,.cpaQuestionPill,.cpaToneSwatch,.cpaCheckTile,.cpaOverviewMetric,.kolPermLevel),
 html[data-ui-system="manifest"] :is(.toolbar,.tableActionToolbar) :is(input,select),
 html[data-ui-system="manifest"] .vfBar select,
 /* Backlog actions and segments use the same boundary as shared buttons. */

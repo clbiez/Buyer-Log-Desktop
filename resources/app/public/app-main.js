@@ -28012,11 +28012,51 @@ async function kolRevokePermission(granteeId){
   const res=await fetch(`/api/collection-permissions/${encodeURIComponent(granteeId)}`,{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
   const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||res.statusText);await kolLoadPermissions();renderKolScopeFilters();
 }
+/* Görünüm ve Yetkiler paneli seçimden sonra AÇIK kalır. Eskiden her değişiklik
+   <details> kabuğunu innerHTML ile yeniden üretiyor, panel kapalı doğuyor ve
+   kullanıcı her seçimde paneli yeniden açmak zorunda kalıyordu. Kabuk bir kez
+   kurulur; yalnız panel içeriği yenilenir. Liste kaydırması, açık kullanıcı
+   seçici, arama metni ve odak yeniden çizimde korunur. Art arda yapılan
+   seçimler kaybolmaz: istenen küme tutulur ve yüklemeler sırayla uygulanır. */
+let kolScopeDesiredOwnerIds=null,kolScopeApplying=false;
+function kolScopeOwnerKey(ids){return [...(ids||[])].map(String).sort().join('\n');}
+async function kolApplyScopeSelection(){
+  if(kolScopeApplying)return;
+  kolScopeApplying=true;
+  let applied=kolScopeOwnerKey(kolWorkspaceSelectedOwnerIds);
+  try{
+    while(kolScopeDesiredOwnerIds){
+      const ids=[...kolScopeDesiredOwnerIds],key=kolScopeOwnerKey(ids);
+      if(key===applied)break;
+      applied=key;
+      await kolSaveWorkspaceNow();
+      await kolLoadWorkspaceBatch(ids);
+    }
+  }catch(err){showToast(err.message);}
+  finally{kolScopeDesiredOwnerIds=null;kolScopeApplying=false;renderKolScopeFilters();}
+}
+function kolPlaceScopePanel(details){
+  const panel=details&&details.open&&details.querySelector('.kolScopePanel');
+  if(!panel||typeof window==='undefined')return;
+  panel.style.left='';
+  const rect=panel.getBoundingClientRect(),overflow=rect.right-(window.innerWidth-8);
+  if(overflow>0)panel.style.left=`${-Math.min(overflow,Math.max(0,rect.left-8))}px`;
+}
 function bindKolScopeOutsideClick(){
   if(kolScopeOutsideClickBound)return;
   document.addEventListener('click',event=>{
+    const bar=document.getElementById('kolScopeBar'),details=bar&&bar.querySelector('.kolScopeDim[open]');
+    if(!details)return;
+    // Tıklama anındaki yol: yeniden çizimle DOM'dan ayrılan panel düğmesi
+    // (Kaldır, Ekle) "dışarı tıklandı" sayılıp paneli kapatmaz.
+    const path=typeof event.composedPath==='function'?event.composedPath():[];
+    if(!path.includes(bar)&&!event.target.closest('#kolScopeBar'))details.open=false;
+  });
+  document.addEventListener('keydown',event=>{
+    if(event.key!=='Escape')return;
     const details=document.querySelector('#kolScopeBar .kolScopeDim[open]');
-    if(details&&!event.target.closest('#kolScopeBar'))details.open=false;
+    if(!details||!details.contains(document.activeElement))return;
+    details.open=false;details.querySelector('summary')?.focus();
   });
   kolScopeOutsideClickBound=true;
 }
@@ -28032,19 +28072,51 @@ function renderKolScopeFilters(){
   const view=Array.isArray(kolPermissionState&&kolPermissionState.view)?kolPermissionState.view:kolWorkspaceList.map(item=>({ownerId:item.ownerId,ownerName:item.ownerName,level:item.level}));
   const outgoing=Array.isArray(kolPermissionState&&kolPermissionState.outgoing)?kolPermissionState.outgoing:[];
   const users=Array.isArray(kolPermissionState&&kolPermissionState.users)?kolPermissionState.users.filter(item=>item.enabled!==false&&!outgoing.some(grant=>grant.granteeId===item.id)):[];
+  const selected=kolScopeDesiredOwnerIds||kolWorkspaceSelectedOwnerIds;
   const t=key=>escapeHtml(kolScopeText(key));
   document.getElementById('kolScopeBar')?.setAttribute('aria-label',kolScopeText('workspacePermissions'));
-  root.innerHTML=`<details class="kolScopeDim kolScopeWorkspace hasSelection"><summary aria-label="${t('workspacePermissions')}" title="${t('workspacePermissions')}"><svg class="ic kolScopeCompactIcon" aria-hidden="true"><use href="#i-users-group"/></svg><span class="kolScopeWorkspaceLabel">${t('workspacePermissions')}</span> <b>${kolWorkspaceSelectedOwnerIds.size}</b></summary><div class="kolScopePanel"><strong>${t('viewLabel')}</strong><small>${t('viewHelp')}</small><div class="kolScopeOptions">${view.map(item=>{const self=item.ownerId===currentId;return `<label><input type="checkbox" data-owner-id="${escapeHtml(item.ownerId)}"${kolWorkspaceSelectedOwnerIds.has(item.ownerId)?' checked':''}${self?' disabled':''}><span>${escapeHtml(item.ownerName||item.ownerId)} · ${t(item.level==='edit'?'edit':'view')}${self?` · ${t('me')}`:''}</span></label>`;}).join('')}</div><strong>${t('sharedPermissions')}</strong><div class="kolScopeOptions">${outgoing.map(item=>`<label><span>${escapeHtml(item.granteeName||item.granteeId)}</span><select data-grant-level="${escapeHtml(item.granteeId)}"><option value="view"${item.level==='view'?' selected':''}>${t('view')}</option><option value="edit"${item.level==='edit'?' selected':''}>${t('edit')}</option></select><button class="tbtn" type="button" data-grant-revoke="${escapeHtml(item.granteeId)}">${t('remove')}</button></label>`).join('')||`<small>${t('noGrants')}</small>`}</div><button class="tbtn" type="button" data-grant-add>+ ${t('addUser')}</button><div data-grant-picker hidden><input type="search" placeholder="${t('searchUser')}" aria-label="${t('searchUser')}"><div class="kolScopeOptions">${users.map(item=>`<label data-grant-user><span>${escapeHtml(item.displayName||item.username||item.id)}</span><button class="tbtn" type="button" data-grant-user-id="${escapeHtml(item.id)}">${t('add')}</button></label>`).join('')||`<small>${t('noUsers')}</small>`}</div></div></div></details>`;
-  root.querySelectorAll('[data-owner-id]').forEach(cb=>cb.addEventListener('change',async()=>{
-    const ids=new Set(kolWorkspaceSelectedOwnerIds);cb.checked?ids.add(cb.dataset.ownerId):ids.delete(cb.dataset.ownerId);
+  const summaryHtml=`<summary aria-label="${t('workspacePermissions')}" title="${t('workspacePermissions')}"><svg class="ic kolScopeCompactIcon" aria-hidden="true"><use href="#i-users-group"/></svg><span class="kolScopeWorkspaceLabel">${t('workspacePermissions')}</span> <b>${selected.size}</b></summary>`;
+  let details=root.querySelector(':scope>details.kolScopeWorkspace');
+  if(!details){
+    root.innerHTML=`<details class="kolScopeDim kolScopeWorkspace hasSelection">${summaryHtml}<div class="kolScopePanel kolPermPanel"></div></details>`;
+    details=root.firstElementChild;
+    details.addEventListener('toggle',()=>kolPlaceScopePanel(details));
+  }else{
+    const summary=details.querySelector('summary');
+    if(summary&&summary.outerHTML!==summaryHtml){const refocus=document.activeElement===summary;summary.outerHTML=summaryHtml;if(refocus)details.querySelector('summary')?.focus({preventScroll:true});}
+  }
+  const panel=details.querySelector('.kolScopePanel');
+  // Yeniden çizimde korunacak panel durumu.
+  const active=panel.contains(document.activeElement)?document.activeElement:null;
+  const focusKey=active&&['data-owner-id','data-grant-level','data-grant-revoke','data-grant-user-id','data-grant-add','data-grant-search'].filter(name=>active.hasAttribute(name)).map(name=>[name,active.getAttribute(name)])[0];
+  const scroll=[...panel.querySelectorAll('[data-perm-list]')].map(el=>[el.dataset.permList,el.scrollTop]);
+  const pickerOpen=Boolean(panel.querySelector('[data-grant-picker]:not([hidden])'));
+  const query=panel.querySelector('[data-grant-search]')?.value||'';
+  const levelChip=level=>`<span class="kolPermLevel${level==='edit'?' isEdit':''}">${t(level==='edit'?'edit':'view')}</span>`;
+  panel.innerHTML=`<section class="kolPermCol" aria-label="${t('viewLabel')}"><header class="kolPermHead"><strong>${t('viewLabel')}</strong><b class="kolPermCount">${selected.size}/${view.length}</b></header><small class="kolPermHelp">${t('viewHelp')}</small><div class="kolScopeOptions kolPermList" data-perm-list="view">${view.map(item=>{const self=item.ownerId===currentId,name=escapeHtml(item.ownerName||item.ownerId);return `<label class="kolPermRow"><input type="checkbox" data-owner-id="${escapeHtml(item.ownerId)}"${selected.has(item.ownerId)?' checked':''}${self?' disabled':''}><span class="kolPermName" title="${name}">${name}</span>${self?`<span class="kolPermMe">${t('me')}</span>`:levelChip(item.level)}</label>`;}).join('')}</div></section><section class="kolPermCol" aria-label="${t('sharedPermissions')}"><header class="kolPermHead"><strong>${t('sharedPermissions')}</strong><b class="kolPermCount">${outgoing.length}</b><button class="tbtn kolPermAdd" type="button" data-grant-add aria-expanded="${pickerOpen?'true':'false'}"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>${t('addUser')}</button></header><div class="kolPermPicker" data-grant-picker${pickerOpen?'':' hidden'}><input type="search" data-grant-search placeholder="${t('searchUser')}" aria-label="${t('searchUser')}"><div class="kolScopeOptions kolPermList" data-perm-list="picker">${users.map(item=>{const name=escapeHtml(item.displayName||item.username||item.id);return `<div class="kolPermRow" data-grant-user><span class="kolPermName" title="${name}">${name}</span><button class="tbtn" type="button" data-grant-user-id="${escapeHtml(item.id)}">${t('add')}</button></div>`;}).join('')||`<small>${t('noUsers')}</small>`}</div></div><div class="kolScopeOptions kolPermList" data-perm-list="outgoing">${outgoing.map(item=>{const name=escapeHtml(item.granteeName||item.granteeId);return `<div class="kolPermRow"><span class="kolPermName" title="${name}">${name}</span><select data-grant-level="${escapeHtml(item.granteeId)}" aria-label="${name} · ${t('sharedPermissions')}"><option value="view"${item.level==='view'?' selected':''}>${t('view')}</option><option value="edit"${item.level==='edit'?' selected':''}>${t('edit')}</option></select><button class="kolPermRemove" type="button" data-grant-revoke="${escapeHtml(item.granteeId)}" aria-label="${t('remove')}: ${name}" title="${t('remove')}"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button></div>`;}).join('')||`<small>${t('noGrants')}</small>`}</div></section>`;
+  const search=panel.querySelector('[data-grant-search]'),picker=panel.querySelector('[data-grant-picker]'),addButton=panel.querySelector('[data-grant-add]');
+  const filterUsers=()=>{const q=turknorm(search.value);panel.querySelectorAll('[data-grant-user]').forEach(row=>row.hidden=!turknorm(row.textContent).includes(q));};
+  if(search&&query){search.value=query;filterUsers();}
+  scroll.forEach(([key,top])=>{const el=panel.querySelector(`[data-perm-list="${key}"]`);if(el)el.scrollTop=top;});
+  if(focusKey){
+    const [name,value]=focusKey;
+    const target=[...panel.querySelectorAll(`[${name}]`)].find(node=>node.getAttribute(name)===value)||(pickerOpen?search:addButton);
+    target?.focus({preventScroll:true});
+  }
+  root.querySelectorAll('[data-owner-id]').forEach(cb=>cb.addEventListener('change',()=>{
+    const ids=new Set(kolScopeDesiredOwnerIds||kolWorkspaceSelectedOwnerIds);cb.checked?ids.add(cb.dataset.ownerId):ids.delete(cb.dataset.ownerId);
     if(!ids.size){cb.checked=true;showToast(kolScopeText('atLeastOneWorkspace'));return;}
-    try{await kolSaveWorkspaceNow();await kolLoadWorkspaceBatch([...ids]);}catch(err){showToast(err.message);renderKolScopeFilters();}
+    kolScopeDesiredOwnerIds=ids;
+    const count=details.querySelector('summary b');if(count)count.textContent=String(ids.size);
+    const own=panel.querySelector('[data-perm-list="view"]')?.closest('.kolPermCol')?.querySelector('.kolPermCount');if(own)own.textContent=`${ids.size}/${view.length}`;
+    void kolApplyScopeSelection();
   }));
-  root.querySelector('[data-grant-add]')?.addEventListener('click',()=>{const picker=root.querySelector('[data-grant-picker]');picker.hidden=!picker.hidden;});
-  const search=root.querySelector('[data-grant-picker] input[type="search"]');search?.addEventListener('input',()=>{const q=turknorm(search.value);root.querySelectorAll('[data-grant-user]').forEach(row=>row.hidden=!turknorm(row.textContent).includes(q));});
+  addButton?.addEventListener('click',()=>{picker.hidden=!picker.hidden;addButton.setAttribute('aria-expanded',picker.hidden?'false':'true');if(!picker.hidden)search?.focus();});
+  search?.addEventListener('input',filterUsers);
   root.querySelectorAll('[data-grant-user-id]').forEach(button=>button.addEventListener('click',async()=>{try{await kolChangePermission(button.dataset.grantUserId,'view');}catch(err){showToast(err.message);}}));
   root.querySelectorAll('[data-grant-level]').forEach(select=>select.addEventListener('change',async()=>{try{await kolChangePermission(select.dataset.grantLevel,select.value);}catch(err){showToast(err.message);}}));
   root.querySelectorAll('[data-grant-revoke]').forEach(button=>button.addEventListener('click',async()=>{try{await kolRevokePermission(button.dataset.grantRevoke);}catch(err){showToast(err.message);}}));
+  kolPlaceScopePanel(details);
 }
 /* ================================================================
    v7.23 — KOLEKSİYON PAYLAŞIMI: AĞ KESİNTİSİ KALICI SALT-OKUNUR YAPMASIN

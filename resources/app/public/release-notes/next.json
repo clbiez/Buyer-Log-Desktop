@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-28",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon: Görünüm ve Yetkiler paneli seçimden sonra açık kalır, listeler yan yana",
+    "en": "Collection: the View & Permissions panel stays open after each choice, lists side by side"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon'daki Görünüm ve Yetkiler paneli artık her seçimde kapanmaz: başka buyer'ların kayıtlarını işaretlemek, izin seviyesini değiştirmek, kullanıcı eklemek veya kaldırmak paneli açık bırakır. Art arda yapılan seçimler kaybolmaz. Erişebildiğiniz Koleksiyonlar ile paylaştığınız izinler yan yana, daha kompakt satırlarda görünür. Panel dışına tıklayınca veya Esc ile kapanır.",
+    "en": "The View & Permissions panel in Collection no longer closes after every choice: selecting other buyers' records, changing a permission level, adding or removing a user keep it open. Quick successive selections are no longer lost. The Collections you can access and the permissions you shared now sit side by side in more compact rows. The panel closes when you click outside it or press Esc."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "collection-view-permissions-panel-open-side-by-side",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Görünüm ve Yetkiler: panel açık kalır, listeler yan yana",
+        "en": "View & Permissions: panel stays open, lists side by side"
+      },
+      "body": {
+        "tr": "Koleksiyon'daki Görünüm ve Yetkiler paneli artık her seçimde kapanmaz: başka buyer'ların kayıtlarını işaretlemek, izin seviyesini değiştirmek, kullanıcı eklemek veya kaldırmak paneli açık bırakır. Art arda yapılan seçimler kaybolmaz. Erişebildiğiniz Koleksiyonlar ile paylaştığınız izinler yan yana, daha kompakt satırlarda görünür. Panel dışına tıklayınca veya Esc ile kapanır.",
+        "en": "The View & Permissions panel in Collection no longer closes after every choice: selecting other buyers' records, changing a permission level, adding or removing a user keep it open. Quick successive selections are no longer lost. The Collections you can access and the permissions you shared now sit side by side in more compact rows. The panel closes when you click outside it or press Esc."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-view-permissions-panel.png",
+        "alt": {
+          "tr": "Demo kullanıcılarla Görünüm ve Yetkiler paneli: solda erişilebilen Koleksiyonlar ve seviyeleri, sağda paylaşılan izinler, seviye seçimi ve kaldır düğmesi",
+          "en": "View & Permissions panel with demo users: accessible Collections and their levels on the left, shared permissions with level choice and remove button on the right"
+        },
+        "caption": {
+          "tr": "İki seçim yapıldıktan sonra panel açık; erişim ve paylaşım listeleri yan yana.",
+          "en": "Panel still open after two selections; access and sharing lists side by side."
+        }
+      }
+    }
+  ]
 }

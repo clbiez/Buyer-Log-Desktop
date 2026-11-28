@@ -54,6 +54,30 @@
 .kolScopePanel>[data-grant-add]{margin:6px 4px 2px}
 .kolScopePanel [data-grant-picker]{padding:5px 4px 0}
 .kolScopePanel [data-grant-picker] input[type="search"]{width:100%;height:27px;padding:0 8px}
+/* Görünüm ve Yetkiler: erişebildiklerim (sol) ve paylaştıklarım (sağ) yan yana;
+   satırlar tek satırlık, kontroller 24px. Dar ekranda sütunlar alt alta iner. */
+.kolScopePanel.kolPermPanel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1px;width:min(600px,calc(100vw - 16px));padding:0}
+.kolPermCol{display:flex;flex-direction:column;min-width:0;padding:8px 8px 10px}
+.kolPermHead{display:flex;align-items:center;gap:6px;min-height:24px;margin:0 4px 2px}
+.kolPermHead strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kolPermCount{flex:1 1 auto}
+.kolPermHelp{display:block;margin:0 4px 4px}
+.kolPermPanel .kolPermList{max-height:256px;padding-top:2px}
+.kolPermPanel .kolPermRow{display:flex;align-items:center;gap:6px;min-height:28px;padding:2px 4px}
+.kolPermPanel .kolPermRow[hidden]{display:none}
+.kolPermPanel .kolPermRow input[type="checkbox"]{flex:0 0 auto;margin:0}
+.kolPermPanel .kolPermRow>.kolPermName{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kolPermPanel .kolPermRow>.kolPermLevel,.kolPermPanel .kolPermRow>.kolPermMe{flex:0 0 auto;padding:1px 6px;white-space:nowrap}
+.kolPermPanel .kolPermRow select{flex:0 0 auto;height:24px;width:112px;padding:0 4px}
+.kolPermPanel .kolPermRow .tbtn,.kolPermAdd{flex:0 0 auto;min-height:24px;height:24px;padding:2px 8px}
+.kolPermAdd{display:inline-flex;align-items:center;gap:4px;margin-left:auto}
+.kolPermAdd .ic,.kolPermRemove .ic{width:13px;height:13px}
+.kolPermRemove{flex:0 0 auto;display:inline-grid;place-items:center;width:24px;height:24px;padding:0;cursor:pointer}
+.kolPermPicker{margin:2px 0 6px;padding:6px}
+.kolPermPicker input[type="search"]{width:100%;height:26px;padding:0 8px}
+@media(max-width:700px){
+  .kolScopePanel.kolPermPanel{grid-template-columns:minmax(0,1fr);width:min(360px,calc(100vw - 16px))}
+}
 
 /* Orta ekranlarda ikincil özet satır kırılmasına sebep olmasın. */
 @media(max-width:1200px){.kolScopeSummary{display:none}}
