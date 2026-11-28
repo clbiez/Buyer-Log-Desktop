@@ -1057,6 +1057,7 @@ function computeFlags(row){
     antArrival:row['Ant. Arrival'],handoverDate:row['HANDOVER Tarihi'],shipConfirmationDate:row['Buying Son Onay Tarihi'],
     status:row['STATUS'],shortage:Number(row._logisticShortageQty)>0,shortageQty:row._logisticShortageQty,
     shortageNote:Number(row._logisticShortageQty)>0 && row._logisticAllPartialsInWarehouse===true,
+    logisticSegments:row._logisticSegments,
     delType:row['Del. Type'],season:row.Season,country:row.Country,
     rules:state.overrides.transitRules,today:new Date()
   },dateOrdinal);
@@ -7570,12 +7571,58 @@ function rebuildCpLogisticCaches(row){
   row._logisticRemainingQty=Math.max(0,(toNum(row['Order Quantity'])||0)-row._logisticLoadedQty);
   row['Remaining Units']=row._logisticRemainingQty;
   row['%']=toNum(row['Order Quantity'])?((toNum(row['Order Quantity'])-row._logisticRemainingQty)/toNum(row['Order Quantity'])):'';
-  const primary=partials[0]||segments.find(s=>s&&s.kind!=='shortage')||segments[0];
+  // Sunucu (parse.js / okuma modeli) ile aynı tek kural: en geride kalan tamamlanmamış aşama.
+  const primary=BLBusinessRules.selectPrimaryLogisticSegment(segments);
   row.STATUS=primary.status||'Üretimde';
   row['Ant. Arrival']=coerceDateLoose(primary.arrival);
   row['Del. Type']=normalizeTransitDelType(primary.delType)||norm(primary.delType);
   row['HANDOVER Tarihi']=coerceDateLoose(primary.handover);
 }
+/* Düzenlenebilir Del. Type = üretim/kıtlık bakiyesinin vasıtası (hücre onu gösterir; sunucu delmap'i yalnız ona
+   uygular, parse.js backlogProductionDelType). Satırın görünen Del. Type'ı birincil segmentten (IAS parsiyeli
+   olabilir) türetilir; kayıt, yerel delmap ve geri al değeri oradan okunmaz (BL-029). Segmentsiz satır: satır değeri. */
+function cpEditableDelType(row){
+  const production=cpLogisticSegments(row).find(segment=>segment.kind==='production'||segment.kind==='shortage');
+  return production?(normalizeTransitDelType(production.delType)||norm(production.delType)||norm(row['Del. Type'])):row?.['Del. Type'];
+}
+/* BL-028 · Satırın kayıtlı (manuel) Del. Type override'ı var mı: sunucunun kayıtlı değeri (_cpStored; sipariş anahtarı
+   geri düşüşü dahil) ya da bu sekmenin henüz onaylanmamış açık düzenlemesi. */
+function cpDelTypeHasOverride(row){
+  // Satır kimliği (model + renk kodu) zorunlu: sunucu kimliksiz temizlemeyi reddeder (sipariş anahtarı diğer renkleri etkiler).
+  if(!row||!norm(row['Model Name'])||!norm(row['C.Code']))return false;
+  const write=row._delTypeWrite;
+  if(write)return !write.clear;
+  // Boş kayıtlı değer ('') zaten varsayılana düşer; satır kaydı onu "değişiklik yok" sayar → eylem sunulmaz.
+  const stored=cpRowStoredOf(row);
+  return Object.hasOwn(stored,'delType')&&String(stored.delType??'')!=='';
+}
+/* BL-028 · "Kaynağa dön / Revert to source": satırın manuel Del. Type override'ını KALDIRIR. Boş ya da "Gemi" kaydetmek
+   değildir ("—" seçeneği bugünkü anlamını korur). Gövde delType:null gönderir; sunucu yalnız bu satırın anahtarını siler ve
+   değer kaynak önceliğiyle (satır → sipariş anahtarı → sistem varsayılanı Gemi) tam kurulumda yeniden hesaplanır. Yerelde
+   üretim bakiyesi tam kurulum gelene kadar sistem varsayılanıyla eşitlenir. Geri al önceki değeri açık niyetle yazar. */
+function revertCpDelTypeToSource(t){
+  if(window.isSavingCpBulk?.()){showToast(appLang==='en'?'A bulk save is still pending. Retry after its result.':'Toplu kayıt sürüyor. Sonucundan sonra yeniden deneyin.');return false;}
+  if(!t||!t.dataset||isAreaFrozen('cp')||!state.cp||!Array.isArray(state.cp.rows))return false;
+  const row=resolveCpEditorRow(t);
+  if(!row)return false;
+  if(row._canEdit===false){showToast(L('Bu sipariş için yalnız görüntüleme yetkiniz var.'));return false;}
+  if(!cpDelTypeHasOverride(row))return false;
+  const id=row._id,prev=cpEditableDelType(row);
+  row._delTypeWrite={clear:true};
+  if(!syncCpProductionLogisticSegment(row,''))row['Del. Type']='Gemi';
+  const next=cpEditableDelType(row);
+  applyFormulas(row); invalidateUnifiedPriorityDecisions('cp-delivery-type-revert'); markDirty(id);
+  pushUndo({id,fields:[{key:'Del. Type',prev,next}],delTypeRevert:true});
+  syncOrderLinePeersFromCpRow(row,['Del. Type'],{render:true});
+  refreshRowEverywhere(id);
+  return true;
+}
+window.revertCpDelTypeToSource=revertCpDelTypeToSource;
+// Menü açılışında (hücre çiziminde değil) sorulur: tetikleyicinin satırı CP'de güncel kimlikle duruyor ve override'ı var mı.
+window.cpDelTypeRevertAvailable=dataset=>{
+  const row=state.cp?.rows?.find(item=>item._id===Number(dataset?.id));
+  return Boolean(row&&row._canEdit!==false&&(dataset.lineKey==null||dataset.lineKey===lineKeyOfRow(row))&&cpDelTypeHasOverride(row));
+};
 function syncCpProductionLogisticSegment(row,nextDelType){
   const production=cpLogisticSegments(row).find(segment=>segment.kind==='production'||segment.kind==='shortage');
   if(!production) return false;
@@ -13134,7 +13181,7 @@ function applyHistoryAction(action, direction, options={}){
     if(snapshot.licensor)historyKeys.add('Licensor');
   }
   if(historyKeys.has('Sub-Manufacturer')&&!action.pricing)row._subManufacturerWrite={};
-  if(historyKeys.has('Del. Type'))row._delTypeWrite={};
+  if(historyKeys.has('Del. Type'))row._delTypeWrite=action.delTypeRevert&&direction==='redo'?{clear:true}:{}; // BL-028: yinele yeniden kaynağa döner
   if(historyKeys.has('Del. Type'))syncCpProductionLogisticSegment(row,row['Del. Type']);
   else if(historyKeys.has('Ex-factory'))syncCpProductionLogisticSegment(row);
   applyFormulas(row);
@@ -13565,7 +13612,7 @@ function commitCpEditor(t, options={}){
     if(refresh)refreshRowEverywhere(id);
     return true;
   }
-  const prev = row[key];
+  const prev = kind==='deltype' ? cpEditableDelType(row) : row[key];
   if(editableValuesEqual(prev,t.value)) return false;
   const previousPricing=kind==='licensor'?captureCpPricingHistory(row,true):null;
   row[key] = t.value;
@@ -16521,7 +16568,8 @@ function syncOverridesFromRow(row){
   state.overrides.notesmap[key]=notes;
   /* Del. Type yalnız açık kullanıcı niyetiyle yazılır. Görünen değer IAS parsiyelinden türetilmiş olabilir; not /
      Supp. FOB gibi ilgisiz bir kayıt override oluşturmaz, mevcut override'ı ya da başkasının değişikliğini ezmez. */
-  if(row._delTypeWrite&&row['Del. Type'])state.overrides.delmap[key]=row['Del. Type'];
+  if(row._delTypeWrite?.clear)delete state.overrides.delmap[key]; // BL-028 "Kaynağa dön"
+  else if(row._delTypeWrite){const delType=cpEditableDelType(row);if(delType)state.overrides.delmap[key]=delType;}
   const isDtr=turknorm(row.Licensor)==='DTR';
   if(isDtr){
     row['Sub-Manufacturer']=norm(row.Manufacturer);
@@ -16788,6 +16836,7 @@ function cpRowUnitAssign(target,unit,value){
   if(group==='notes'){target.notes=target.notes||{};CP_ROW_NOTE_PAIRS[name].forEach((field,i)=>{target.notes[field]=value?value[i]:'';});}
   else if(group==='noteColumns'){target.noteColumns=target.noteColumns||{};target.noteColumns[name]=value==null?'':value;}
   else if(group==='dates'){target.dates=target.dates||{};target.dates[name]=value||null;}
+  else if(group==='delType'&&value===null)target.delType=null; // BL-028 "Kaynağa dön": temizleme '' değil null
   else target[group]=value==null?'':value;
   return target;
 }
@@ -16944,7 +16993,9 @@ function cpRowSaveSend(row,orderCode,patch,units){
     let data;
     try{data=await fetchJSON('/api/overrides/rows',{method:'POST',headers,body:JSON.stringify({items:[item]})});}
     catch(err){settle(null,false);throw err;}
-    if(data.revisions&&typeof data.revisions==='object')Object.entries(data.revisions).forEach(([name,value])=>{if(Number.isInteger(Number(value)))state.storeRevisions[name]=Number(value);});
+    // Satır kaydı global CAS kullanmaz: belirteç yalnız bu kaydın kendi artışıyla ilerler (override-sync.js adoptAckRevision).
+    // Yanıt `updated` taşımaz; yazan (noop olmayan) satır varsa dönen revizyon bu kaydın kendi revizyonudur.
+    if(data.revisions&&typeof data.revisions==='object')Object.entries(data.revisions).forEach(([name,value])=>window.adoptAckRevision?.(name,value,{own:name==='orders'&&(data.applied||[]).some(item=>item&&item.noop===false)}));
     // Onay: yalnız yeni düzenlemesi beklemeyen birimler haritaya yazılır; bekleyen yerel değer (sonraki kaydın
     // gövdesi buradan kurulur, ör. not sütunları) eski onaylı değerle ezilmez.
     const settledUnits=()=>{const entries=cpRowSave.units.get(key);return sent.filter(({unit,dirty})=>!entries?.get(unit)||entries.get(unit).dirty<=dirty).map(({unit})=>unit);};
@@ -16989,7 +17040,7 @@ function cpRowPatchUnits(patch){
     current.notes=patch.notes;
     for(const [name,pair] of Object.entries(CP_ROW_NOTE_PAIRS))if(pair.some(field=>Object.hasOwn(patch.notes,field)))units.push(`notes:${name}`);
   }
-  if(patch.delType!=null){current.delType=String(patch.delType);units.push('delType');}
+  if(Object.hasOwn(patch,'delType')){if(patch.delType!=null)current.delType=String(patch.delType);units.push('delType');} // null: kaynağa dön (BL-028)
   if(patch.subManufacturer!=null){current.subManufacturer=patch.subManufacturer;units.push('subManufacturer');}
   if(Object.hasOwn(patch,'licensor')){current.licensor=patch.licensor;units.push('licensor');}
   if(cpRowIsObject(patch.noteColumns)){current.noteColumns=patch.noteColumns;Object.keys(patch.noteColumns).forEach(id=>units.push(`noteColumns:${id}`));}
@@ -17042,17 +17093,40 @@ window.BLCpRowSave={
   legacyAcked:cpRowLegacyAcked,
 };
 
+/* P1 (2026-11-28) · Eski kayıt yolu (PATCH / toplu batch) alan bazlı karşılaştırma yapmaz; global revizyon CAS'ı tek
+   korumadır. Satır kaydı onayı (POST /rows) istemcinin global revizyonunu ilerletir ama diğer satırların değerini
+   yenilemez → bayat gövde (ör. Supp. FOB kaydındaki dokunulmamış not) başka oturumun daha yeni değerini sessizce
+   ezer. Satırın kayıtlı değeriyle (satır kaydının base'i: _cpStored, cpRowSnapshot ile aynı kaynak) aynı olan — bu sekmede
+   değiştirilmemiş — not çifti, not sütunu, alt üretici ve lisansör gönderilmez. Açık niyet (alt üretici yazımı,
+   fiyat geçmişi geri yüklemesi) alanı her zaman taşır. */
+function cpLegacyBodyWithoutUnchanged(row,body,{subWrite=null,restore=null}={}){
+  const stored=cpRowStoredOf(row),out={...body},text=value=>value==null?'':String(value);
+  if(cpRowIsObject(body.notes)){
+    const storedNotes=cpRowIsObject(stored.notes)?stored.notes:{},notes={};
+    for(const pair of Object.values(CP_ROW_NOTE_PAIRS))if(pair.some(field=>text(body.notes[field])!==text(storedNotes[field])))pair.forEach(field=>{notes[field]=text(body.notes[field]);});
+    if(Object.keys(notes).length)out.notes=notes;else delete out.notes;
+  }
+  if(cpRowIsObject(body.noteColumns)){
+    const storedColumns=cpRowIsObject(stored.noteColumns)?stored.noteColumns:{};
+    const columns=Object.fromEntries(Object.entries(body.noteColumns).filter(([id,value])=>text(value)!==text(storedColumns[id])));
+    if(Object.keys(columns).length)out.noteColumns=columns;else delete out.noteColumns;
+  }
+  if(Object.hasOwn(out,'subManufacturer')&&!subWrite&&text(out.subManufacturer)===text(stored.subManufacturer))delete out.subManufacturer;
+  if(Object.hasOwn(out,'licensor')&&!restore?.licensor&&text(out.licensor).trim()===text(stored.licensor).trim())delete out.licensor;
+  return out;
+}
 function syncOverrideToServer(orderCode,notes,row){
   if(!window.SERVER_BACKED)return;
   schedulePendingOverrideWrite(`notes:${overrideSyncKey(row, orderCode)}`, typeof cpRowSaveDebounce==='function'?cpRowSaveDebounce(500):500, ()=>{
     const restore=row._pricingHistoryRestore,manualWrite=row._pricingManualWrite,subWrite=row._subManufacturerWrite,delWrite=row._delTypeWrite;
     const body=(()=>{
         // Del. Type yalnız açık düzenleme niyetiyle (_delTypeWrite) gönderilir; aksi halde sunucu delmap'i değiştirmez.
-        const body={...lineIdentity(row),notes,delType:delWrite?(row['Del. Type']||undefined):undefined};
+        const body={...lineIdentity(row),notes,delType:delWrite?(delWrite.clear?null:(cpEditableDelType(row)||undefined)):undefined};
         if(turknorm(row.Licensor)!=='DTR'&&(!restore?.licensor||subWrite))body.subManufacturer=norm(row['Sub-Manufacturer']);
         if(row._licensorManual===true&&Object.hasOwn(state.overrides.licensormap||{},overrideSyncKey(row,orderCode)))body.licensor=norm(row.Licensor);
         // An imported (CP update) value is not re-sent as a manual price with a note save.
-        if(row._suppFobManual===true&&!importedSuppFob(row)&&Object.hasOwn(state.overrides.suppfobmap||{},overrideSyncKey(row,orderCode))&&(!restore?.licensor||manualWrite)){
+        // Supp. FOB yalnız açık niyetle (_pricingManualWrite) gider: önceki manuel fiyat ilgisiz kayıtta yeniden gönderilmez.
+        if(manualWrite&&row._suppFobManual===true&&!importedSuppFob(row)&&Object.hasOwn(state.overrides.suppfobmap||{},overrideSyncKey(row,orderCode))){
           body.suppFob=(row['Supp. FOB']!=null&&row['Supp. FOB']!=='')?Number(row['Supp. FOB']):null;
           body.suppFobMeta={source:'manual'};
         }
@@ -17072,15 +17146,22 @@ function syncOverrideToServer(orderCode,notes,row){
         return body;
       })();
     // #1078 alt PR 3: anahtar açıkken satır kaydı — yalnız dokunulan alanlar, alan bazlı karşılaştırma; fiyat alanları bugünkü yolda.
+    // Eski yol gövdesi (süzme) kuyrukta, gönderimden hemen önce kurulur: önceki eski yol kaydının onayı satırın kayıtlı değerini
+    // güncellemiş olur (A→B→A geri yazımı düşmez).
     const rowPlan=typeof cpRowSavePlan==='function'?cpRowSavePlan(row,orderCode,body):null;
     const sent=rowPlan
       ?(rowPlan.skip?Promise.resolve():cpRowSaveSend(row,orderCode,rowPlan.patch,rowPlan.units))
-      :enqueueOverrideMutation('orders',`/api/overrides/${orderCode}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    sent.then(()=>{
+      :enqueueOverrideMutation('orders',`/api/overrides/${orderCode}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:()=>JSON.stringify(cpLegacyBodyWithoutUnchanged(row,body,{subWrite,restore}))});
+    sent.then(data=>{
       if(restore&&row._pricingHistoryRestore===restore)delete row._pricingHistoryRestore;
       if(manualWrite&&row._pricingManualWrite===manualWrite)delete row._pricingManualWrite;
       if(subWrite&&row._subManufacturerWrite===subWrite)delete row._subManufacturerWrite;
       if(delWrite&&row._delTypeWrite===delWrite)delete row._delTypeWrite;
+      // BL-028: satır anahtarı silindi ama sipariş düzeyinde eski bir kayıt hâlâ geçerli (kaynak önceliği). Sonraki veri yenilemesi onu siler.
+      // Satır kaydı çakışması (başkasının değeri korundu) bu durum değildir; kendi uyarısı gösterilir.
+      if(delWrite?.clear&&!(data?.conflicts?.length)&&Object.hasOwn(cpRowStoredOf(row),'delType'))showToast(appLang==='en'
+        ?'This order still has an older order-level Del. Type. The row follows it until the next data refresh removes it.'
+        :'Bu siparişte sipariş düzeyinde eski bir Del. Type kaydı var. Satır, bir sonraki veri yenilemesi onu kaldırana kadar o değeri izler.');
     }).catch(err=>{console.warn('Sunucuya kaydedilemedi:',err.message);if(err.code!=='REVISION_CONFLICT')notifyOverrideSaveError(appLang==='en'?'The change could not be saved to the server.':'Değişiklik sunucuya kaydedilemedi.');});
   });
 }
@@ -18001,7 +18082,7 @@ async function applyCpGridPaste(plan,range){
     if(editorSnap?.route==='cp')commitManagedEditorSnapshot(editorSnap,{refresh:false});
     await settleOverrideWrites();
     const owner=orderLinePeerOwner(),revision=Number(state.storeRevisions.orders)||0,suppFob=Number(state.storeRevisions.suppFob)||0;
-    const snapshots=plan.ops.map(op=>{const row=state.cp?.rows?.find(item=>item._id===Number(op.row._partialViewSourceId??op.row._id));return {op,key:lineKeyOfRow(row),before:JSON.stringify(row),value:String(row?.[op.column.k]??'')};});
+    const snapshots=plan.ops.map(op=>{const row=state.cp?.rows?.find(item=>item._id===Number(op.row._partialViewSourceId??op.row._id));return {op,key:lineKeyOfRow(row),before:JSON.stringify(row),value:String((op.target==='deltype'?cpEditableDelType(row):row?.[op.column.k])??'')};});
     const guard=()=>owner===orderLinePeerOwner()&&!isAreaFrozen('cp')&&!(plan.clipboardModule==='orders'&&isAreaFrozen('orders'))&&revision===(Number(state.storeRevisions.orders)||0)&&suppFob===(Number(state.storeRevisions.suppFob)||0)&&snapshots.every(({op,key,before})=>{
       const current=state.cp?.rows?.find(row=>row._id===Number(op.row._partialViewSourceId??op.row._id));
       return current&&lineKeyOfRow(current)===key&&current._canEdit!==false&&JSON.stringify(current)===before&&cpPasteTarget(current,op.column)===op.target;
@@ -18712,6 +18793,13 @@ function refreshJobLostError(expectedJob,jobState){
   };
   return err;
 }
+/* P1 (2026-11-28) · Tam yükleme yanıtı kendi onayımızdan eski olabilir (yükleme yazmalarla eşitlenmez): eski yolların CAS
+   belirteçleri (orders, suppFob) geri gitmez; diğer anahtarlar gelen değeri alır. Açılışta override-sync.js'den önce çalışır. */
+function mergeStoreRevisions(current,incoming){
+  const merged={...(current||{}),...(incoming||{})};
+  for(const key of ['orders','suppFob'])if(Number.isInteger(Number(current?.[key]))&&Number(current[key])>Number(merged[key]))merged[key]=Number(current[key]);
+  return merged;
+}
 async function loadFromServer(force, targets){
   // İstemcinin eski snapshot'ı bir hedefi yanlış gruba dahil edip geçerli
   // filtre bulunamadı hatası üretebiliyordu. Her manuel yenilemeden önce aynı
@@ -18914,7 +19002,7 @@ async function waitForRefreshJob(expectedJob=null){
     // Kural seti revizyonu, storeRevisions birleştirilmeden ÖNCE saklanır; gelen
     // yanıtın bayat mı taze mi olduğu ancak bu değere bakarak anlaşılabilir.
     const knownPricingRulesRevision=Number(state.storeRevisions.pricingRules)||0;
-    state.storeRevisions={...state.storeRevisions,...(data.storeRevisions||{})};
+    state.storeRevisions=mergeStoreRevisions(state.storeRevisions,data.storeRevisions);
     /* Kişisel veriler (Not Defteri, mail şablonları, kayıtlı görünüm/filtreler)
        tarayıcıya özel localStorage'da duruyordu; başka bir tarayıcıda açınca
        görünmüyorlardı. Açılışta sunucudaki kopyayla birleştiriyoruz (v5.98). */

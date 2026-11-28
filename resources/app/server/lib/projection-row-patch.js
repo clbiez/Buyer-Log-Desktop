@@ -31,7 +31,8 @@ function projectionPatchMatches(row, item) {
    istisnadır (L2 FAIL, #1241). */
 function patchTouchesLogisticSegments(patch) {
   if (!patch || typeof patch !== 'object') return false;
-  if (patch.delType != null) return true;
+  // null ("Kaynağa dön": satır anahtarı silinir) da segment girdisidir; artımlı yol onu yok sayardı (#1241 geri gelir).
+  if (Object.prototype.hasOwnProperty.call(patch, 'delType')) return true;
   return Boolean(patch.dates && typeof patch.dates === 'object' && Object.prototype.hasOwnProperty.call(patch.dates, 'exFactory'));
 }
 

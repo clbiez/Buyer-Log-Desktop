@@ -2,7 +2,8 @@
 // LCW AI belge incelemesi (prepare-review) sayfadaki CP satırlarını sunucunun canlı
 // CP projeksiyonuyla alan alan karşılaştırır. Sayfa açılışında normalizeCPDates →
 // rebuildCpLogisticCaches skaler lojistik özetini (STATUS, Ant. Arrival, Del. Type,
-// HANDOVER Tarihi) kendi ana-segment kuralıyla yeniden yazar. Bu alanlar ortak
+// HANDOVER Tarihi) yeniden yazar (2026-11-28'den beri sunucuyla aynı tek ana-segment
+// kuralıyla; vasıta adı sayfada normalize edilir). Bu alanlar ortak
 // PAGE_DERIVED_FIELDS listesine alınmadan önce IAS parsiyeli olan HER siparişte
 // inceleme "Ekrandaki bir sipariş alanı güncel değil" hatasıyla düşüyordu.
 const test = require('node:test');
@@ -97,11 +98,19 @@ const scenarios = {
   ]),
 };
 
+// 2026-11-28: ana segment tek kuraldır (BLBusinessRules.selectPrimaryLogisticSegment); üretim bakiyesi
+// + parsiyelde sayfa ile sunucu artık aynı STATUS / Ant. Arrival / Del. Type'ı üretir. Kalan fark yalnız
+// sayfanın vasıta adını normalize etmesidir (GEMI → Gemi); tolerans yolu bu senaryoyla sınanır.
+const EXPECTED_DRIFT = {
+  'production remainder + IAS partials': [],
+  'fully loaded order (partial is the main segment)': ['Del. Type'],
+};
+
 for (const [name, build] of Object.entries(scenarios)) {
   test(`${name}: page drift is limited to page-derived fields and LCW AI review is prepared`, async () => {
     const rows = build(), server = snapshot(rows), client = snapshot(pageRows(rows));
     const drift = differing(server, client);
-    assert.ok(drift.length > 0, 'fixture reproduces the real page/server logistic divergence');
+    assert.deepEqual(drift, EXPECTED_DRIFT[name], 'exact page/server drift for this fixture');
     assert.deepEqual(drift.filter(key => !Assessment.pageDerived(key)), [], 'only page-derived display fields may differ');
     const ready = await (await prepare(rows))({ cp: client });
     assert.equal(ready.ok, true);
