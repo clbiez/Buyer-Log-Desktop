@@ -92,4 +92,6 @@ Gemi 70 / Uçak 15 / TIR 20 transit kuralı, bugün 28.11. Değişen satır = te
 `scan.js`: main motoru, main satırı ↔ yeni birincil (motor aynı) → STATUS seçimi yüzünden kalkan/eklenen sinyal ve sebep.
 `scan2.js`: önce = main motoru + main satırı; sonra = aday motoru (`302fc58`, segment bazlı HANDOVER_PENDING / ANTREPO_DELAY)
 + yeni birincil. Kalkan: HANDOVER_PENDING 2.588 → 0, ANTREPO_DELAY 234 + 212 → 0. Etkilenmeyen 17.279 satırda fark 0.
-Kalan: transit kuralı yok / vasıtayı kapsamıyorsa teslimat sonucu EXPECTED/ALREADY_LATE → UNKNOWN (414 satır) — karar bekliyor.
+Teslimat sonucu: `302fc58`'de transit kuralı yok / vasıtayı kapsamıyorsa EXPECTED/ALREADY_LATE → UNKNOWN (414 satır). Ürün sahibi kararıyla
+`373621e`: bu durumda lojistik akıştaki ilk parsiyelin bilinen sonucu korunur + MISSING_TRANSIT_RULE. `risk-tarama-sonra.json`
+(`373621e`): kalkan sinyal / sebep / geç sonuç iki kural kümesinde ve her kategoride 0.
