@@ -42,7 +42,7 @@ const FIELDS=['_id','Order Code','Model Name','C.Code','Del. Type','Ex-factory',
       prodOnly:meta.filter(r=>kinds(r).length&&kinds(r).every(k=>k==='production')),
       iasPartial:meta.filter(r=>kinds(r).includes('partial')&&kinds(r).includes('production')),
       shortage:meta.filter(r=>kinds(r).includes('shortage')),
-      multiColor:[...byOrder.values()].filter(list=>list.length>=2&&list.every(r=>kinds(r).length&&kinds(r).every(k=>k==='production'))),
+      multiColor:[...byOrder.values()].filter(list=>list.length>=2&&new Set(list.map(r=>r['C.Code'])).size>=2), // aynı siparişte ≥2 renk (segment türünden bağımsız)
     };
     rep.pool=Object.fromEntries(Object.entries(pool).map(([k,v])=>[k,v.length]));rep.rows=meta.length;save();
     const take=(list,i=0)=>{for(let k=0;k<list.length;k++){const r=list[(i*397+11+k)%list.length];if(free(r))return r;}return null;};
@@ -65,7 +65,7 @@ const FIELDS=['_id','Order Code','Model Name','C.Code','Del. Type','Ex-factory',
       rep.semantic.revert.storedAfterSet=delStored(rRev);
       await E('Kaynağa dön PATCH (delType:null)',rRev,r=>PATCH(r,{delType:null}));
       rep.semantic.revert.storedAfterRevert=delStored(rRev);}
-    else rep.semantic.revert={na:'30k fixture: tüm renkleri yalnız üretim segmentli çoklu renk siparişi yok'};
+    else rep.semantic.revert={na:'fixture: aynı siparişte ≥2 renk yok'};
     const rRr=take(pool.prodOnly,12);{const v=nextDel(rRr['Del. Type']);await E('Del. Type POST /rows (kaynağa dön öncesi)',rRr,r=>ROWS(r,{delType:v},{}));
       await E('Kaynağa dön POST /rows (delType:null, base)',rRr,r=>ROWS(r,{delType:null},{delType:v}));rep.semantic.revertRows={id:String(rRr._id),before:rRr['Del. Type'],stored:delStored(rRr)};}
     // 4 · Geri al / yinele: set → kaynağa dön → geri al (önceki override açık değerle) → yinele (yeniden temizle) → geri al
@@ -113,7 +113,8 @@ const FIELDS=['_id','Order Code','Model Name','C.Code','Del. Type','Ex-factory',
       undoV3:val(V3,rU,'Del. Type'),
       iasPartialV3:rI?(V3.get(String(rI._id))||{})._logisticSegments?.map(s=>[s.kind,s.delType,s.status]):null,
       shortageRowV3:rK?(V3.get(String(rK._id))||{})._logisticSegments?.map(s=>[s.kind,s.delType]):null,
-      exFactoryV3:rX?val(V3,rX,'Ex-factory'):null});
+      exFactoryV3:rX?val(V3,rX,'Ex-factory'):null,
+      shortageMarkV3:rep.semantic.shortageMark?(V3.get(rep.semantic.shortageMark.id)||{})._logisticSegments?.map(s=>[s.kind,s.delType,s.status,s.userShortage||false]):null});
     rep.pass=rep.errors.length===0&&Object.keys(rep.checks.v2_v3).length===0&&Object.keys(rep.checks.v4_v3).length===0&&rep.checks.t2_t3_rows===0&&rep.checks.t4_t3_rows===0;
   }catch(e){rep.errors.push(String(e.stack||e).slice(0,800));rep.pass=false;}
   finally{save();await app.stop();}
