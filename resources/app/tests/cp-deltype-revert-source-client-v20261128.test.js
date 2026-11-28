@@ -34,6 +34,8 @@ function harness(row, { rowSave = false, ackStored, ackData = {} } = {}) {
     normalizeTransitDelType: value => NORMALIZE[norm(value).toLocaleLowerCase('tr-TR')] || '',
     resolveTransitDaysForValues: delType => ({ days: delType === 'Uçak' ? 15 : 70 }),
     applyFormulas: () => {}, invalidateUnifiedPriorityDecisions: () => {},
+    // Birincil segment tek kuralı (#1254): rebuildCpLogisticCaches BLBusinessRules.selectPrimaryLogisticSegment kullanır.
+    BLBusinessRules: require('../public/business-rules'),
     syncOrderLinePeersFromCpRow: () => 0, refreshRowEverywhere: () => {},
     pushUndo: action => undo.push(action),
     markDirty: () => fns.syncOverrideToServer(row['Order Code'], {}, row),
