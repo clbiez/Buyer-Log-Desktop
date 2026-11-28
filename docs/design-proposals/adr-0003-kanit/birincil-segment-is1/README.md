@@ -111,4 +111,4 @@ hazırlanmış satır, Gemi 70 / Uçak 15 / TIR 20) da ölçer. Her koşuya `con
 
 Fonksiyon düzeyi (`cpf.js`, aynı süreç, 20 dönüşümlü örnek): computePriorityFlags main 52,0 → aday 59,6 ms (d8ca615), 53,6 / 55,7 →
 50,1 / 62,9 ms (cbd2bf0, iki koşu, işaret değişiyor). Kurulumda kalan küçük pozitif yön (+18 / +75 / +76, A/A aralığında) fixture'da
-transit kuralı olmadığı için 7.663 satırda çalışan parsiyel teslimat geri dönüşüne bağlanıyor [Muhtemel]; kural varken karar adımı nötr.
+transit kuralı olmadığı için 7.703 satırda (2.707 + 2.665 + 2.331) çalışan parsiyel teslimat geri dönüşüne bağlanıyor [Muhtemel]; kural varken karar adımı nötr.
