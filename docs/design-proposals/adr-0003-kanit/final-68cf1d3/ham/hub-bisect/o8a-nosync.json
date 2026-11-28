@@ -1,0 +1,419 @@
+{
+ "runtime": {
+  "exec": "/tmp/claude-0/-home-user-Buyer-Log-Desktop/037e4615-db23-5876-994a-5d75d0ead1cf/scratchpad/el/node_modules/electron/dist/electron",
+  "node": "24.20.0",
+  "electron": "44.3.0",
+  "NODE_OPTIONS": "--use-openssl-ca --max-old-space-size=3686",
+  "HUB_WAIT_MS": "120000",
+  "HUB_SYNC_EVERY": "0"
+ },
+ "trials": [
+  {
+   "kind": "A→B suppFob",
+   "code": 4100012,
+   "val": 200.37,
+   "saveStatus": 200,
+   "publish": {
+    "ms": 69,
+    "status": 200,
+    "err": null
+   },
+   "apply": {
+    "ms": 89,
+    "status": 200,
+    "err": null
+   },
+   "projectionAfterApplyMs": null,
+   "bValue": 5.01,
+   "totalFromT0": null
+  },
+  {
+   "kind": "A→B suppFob",
+   "code": 4100020,
+   "val": 201.37,
+   "saveStatus": 200,
+   "publish": {
+    "ms": 59,
+    "status": 200,
+    "err": null
+   },
+   "apply": {
+    "ms": 75,
+    "status": 200,
+    "err": null
+   },
+   "projectionAfterApplyMs": null,
+   "bValue": 4.83,
+   "totalFromT0": null
+  },
+  {
+   "kind": "A→B suppFob",
+   "code": 4100027,
+   "val": 202.37,
+   "saveStatus": 200,
+   "publish": {
+    "ms": 95,
+    "status": 200,
+    "err": null
+   },
+   "apply": {
+    "ms": 74,
+    "status": 200,
+    "err": null
+   },
+   "projectionAfterApplyMs": 55719,
+   "bValue": 202.37,
+   "totalFromT0": 55908
+  }
+ ],
+ "scenarios": {
+  "datesBtoA": {
+   "code": 4100072,
+   "target": "2027-04-21",
+   "saveStatus": 200,
+   "publish": {
+    "ms": 85,
+    "status": 200,
+    "err": null
+   },
+   "apply": {
+    "ms": 60,
+    "status": 200,
+    "err": null
+   },
+   "aValue": "2027-04-04T00:00:00.000Z",
+   "ms": null
+  },
+  "subManufacturerAtoB": {
+   "target": "HUB SUB 282",
+   "status": "N/A",
+   "reason": "fixture'da DTR olmayan satır yok (DTR satırında Sub-Manufacturer kaynaktan türer)"
+  },
+  "concurrentSuppFob": {
+   "code": 4100103,
+   "a": 311.11,
+   "b": 322.22,
+   "saves": [
+    200,
+    200
+   ],
+   "values": {
+    "A": 311.11,
+    "B": 311.11
+   },
+   "conflicts": {
+    "A": [],
+    "B": []
+   },
+   "noSilentLoss": false,
+   "sameOwnerLww": true,
+   "converged": true
+  }
+ },
+ "errors": [],
+ "setup": {
+  "secondUser": 201,
+  "initialize": {
+   "ms": 365,
+   "status": 200,
+   "err": null
+  },
+  "configure": {
+   "status": 202,
+   "err": null
+  },
+  "lastStatus": {
+   "status": "ready",
+   "phase": "ready",
+   "message": "Senkronizasyon tamamlandı · Buyer Log hazır",
+   "steps": {
+    "hub": {
+     "status": "done",
+     "label": "Shared Hub",
+     "detail": "Bağlandı"
+    },
+    "users": {
+     "status": "done",
+     "label": "Kullanıcılar ve yetkiler",
+     "current": 2,
+     "total": 2,
+     "detail": "2 kullanıcı · 2 aktif"
+    },
+    "master": {
+     "status": "done",
+     "label": "Sistem ayarları",
+     "current": 0,
+     "total": 0,
+     "detail": "rev 1 · 0/0 kayıt · Royalty 0 · E-mail 0 · FX 0 · Endeksmatik 0"
+    },
+    "business": {
+     "status": "done",
+     "label": "Ortak iş verileri",
+     "current": 1,
+     "total": 1,
+     "detail": "rev 1 · geri yüklenen 0 kayıt · local M/B 0/0"
+    },
+    "collections": {
+     "status": "done",
+     "label": "Koleksiyonlar",
+     "current": 0,
+     "total": 0,
+     "detail": "0 paylaşım yetkisi"
+    }
+   }
+  },
+  "bootstrapMs": 1036,
+  "bLogin": "ok",
+  "queries": {
+   "a": 200,
+   "b": 200,
+   "bErr": null
+  }
+ },
+ "diagnosis": [
+  {
+   "label": "senaryolar sonrası",
+   "apps": {
+    "A": {
+     "suppFobAtoB": {
+      "store": {},
+      "query": {
+       "suppFob": 200.37,
+       "retail": "2027-01-30T00:00:00.000Z",
+       "sub": "ATLAS KNIT"
+      },
+      "conflicts": 0
+     },
+     "datesBtoA": {
+      "store": {},
+      "query": {
+       "suppFob": 10.23,
+       "retail": "2027-04-21T00:00:00.000Z",
+       "sub": "DELTA TEXTILE"
+      },
+      "conflicts": 0
+     },
+     "subAtoB": {
+      "store": {},
+      "query": {
+       "suppFob": 10.05,
+       "retail": "2027-04-01T00:00:00.000Z",
+       "sub": "CHITTAGONG KNIT"
+      },
+      "conflicts": 0
+     },
+     "concurrent": {
+      "store": {},
+      "query": {
+       "suppFob": 311.11,
+       "retail": "2027-03-07T00:00:00.000Z",
+       "sub": "DELTA TEXTILE"
+      },
+      "conflicts": 0
+     }
+    },
+    "B": {
+     "suppFobAtoB": {
+      "store": {},
+      "query": {
+       "suppFob": 200.37,
+       "retail": "2027-01-30T00:00:00.000Z",
+       "sub": "ATLAS KNIT"
+      },
+      "conflicts": 0
+     },
+     "datesBtoA": {
+      "store": {},
+      "query": {
+       "suppFob": 10.23,
+       "retail": "2027-04-21T00:00:00.000Z",
+       "sub": "DELTA TEXTILE"
+      },
+      "conflicts": 0
+     },
+     "subAtoB": {
+      "store": {},
+      "query": {
+       "suppFob": 10.05,
+       "retail": "2027-04-01T00:00:00.000Z",
+       "sub": "CHITTAGONG KNIT"
+      },
+      "conflicts": 0
+     },
+     "concurrent": {
+      "store": {},
+      "query": {
+       "suppFob": 311.11,
+       "retail": "2027-03-07T00:00:00.000Z",
+       "sub": "DELTA TEXTILE"
+      },
+      "conflicts": 0
+     }
+    }
+   }
+  },
+  {
+   "label": "ek 2 senkron turu sonrası",
+   "apps": {
+    "A": {
+     "suppFobAtoB": {
+      "store": {},
+      "query": {
+       "suppFob": 200.37,
+       "retail": "2027-01-30T00:00:00.000Z",
+       "sub": "ATLAS KNIT"
+      },
+      "conflicts": 0
+     },
+     "datesBtoA": {
+      "store": {},
+      "query": {
+       "suppFob": 10.23,
+       "retail": "2027-04-21T00:00:00.000Z",
+       "sub": "DELTA TEXTILE"
+      },
+      "conflicts": 0
+     },
+     "subAtoB": {
+      "store": {},
+      "query": {
+       "suppFob": 10.05,
+       "retail": "2027-04-01T00:00:00.000Z",
+       "sub": "CHITTAGONG KNIT"
+      },
+      "conflicts": 0
+     },
+     "concurrent": {
+      "store": {},
+      "query": {
+       "suppFob": 311.11,
+       "retail": "2027-03-07T00:00:00.000Z",
+       "sub": "DELTA TEXTILE"
+      },
+      "conflicts": 0
+     }
+    },
+    "B": {
+     "suppFobAtoB": {
+      "store": {},
+      "query": {
+       "suppFob": 200.37,
+       "retail": "2027-01-30T00:00:00.000Z",
+       "sub": "ATLAS KNIT"
+      },
+      "conflicts": 0
+     },
+     "datesBtoA": {
+      "store": {},
+      "query": {
+       "suppFob": 10.23,
+       "retail": "2027-04-21T00:00:00.000Z",
+       "sub": "DELTA TEXTILE"
+      },
+      "conflicts": 0
+     },
+     "subAtoB": {
+      "store": {},
+      "query": {
+       "suppFob": 10.05,
+       "retail": "2027-04-01T00:00:00.000Z",
+       "sub": "CHITTAGONG KNIT"
+      },
+      "conflicts": 0
+     },
+     "concurrent": {
+      "store": {},
+      "query": {
+       "suppFob": 311.11,
+       "retail": "2027-03-07T00:00:00.000Z",
+       "sub": "DELTA TEXTILE"
+      },
+      "conflicts": 0
+     }
+    }
+   }
+  },
+  {
+   "label": "iki sunucu yeniden başlatıldı",
+   "apps": {
+    "A": {
+     "suppFobAtoB": {
+      "store": {},
+      "query": {
+       "suppFob": 200.37,
+       "retail": "2027-01-30T00:00:00.000Z",
+       "sub": "ATLAS KNIT"
+      },
+      "conflicts": 0
+     },
+     "datesBtoA": {
+      "store": {},
+      "query": {
+       "suppFob": 10.23,
+       "retail": "2027-04-21T00:00:00.000Z",
+       "sub": "DELTA TEXTILE"
+      },
+      "conflicts": 0
+     },
+     "subAtoB": {
+      "store": {},
+      "query": {
+       "suppFob": 10.05,
+       "retail": "2027-04-01T00:00:00.000Z",
+       "sub": "CHITTAGONG KNIT"
+      },
+      "conflicts": 0
+     },
+     "concurrent": {
+      "store": {},
+      "query": {
+       "suppFob": 311.11,
+       "retail": "2027-03-07T00:00:00.000Z",
+       "sub": "DELTA TEXTILE"
+      },
+      "conflicts": 0
+     }
+    },
+    "B": {
+     "suppFobAtoB": {
+      "store": {},
+      "query": {
+       "suppFob": 200.37,
+       "retail": "2027-01-30T00:00:00.000Z",
+       "sub": "ATLAS KNIT"
+      },
+      "conflicts": 0
+     },
+     "datesBtoA": {
+      "store": {},
+      "query": {
+       "suppFob": 10.23,
+       "retail": "2027-04-21T00:00:00.000Z",
+       "sub": "DELTA TEXTILE"
+      },
+      "conflicts": 0
+     },
+     "subAtoB": {
+      "store": {},
+      "query": {
+       "suppFob": 10.05,
+       "retail": "2027-04-01T00:00:00.000Z",
+       "sub": "CHITTAGONG KNIT"
+      },
+      "conflicts": 0
+     },
+     "concurrent": {
+      "store": {},
+      "query": {
+       "suppFob": 311.11,
+       "retail": "2027-03-07T00:00:00.000Z",
+       "sub": "DELTA TEXTILE"
+      },
+      "conflicts": 0
+     }
+    }
+   }
+  }
+ ],
+ "pass": false
+}

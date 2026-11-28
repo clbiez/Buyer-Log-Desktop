@@ -1,0 +1,231 @@
+{
+ "arm": "comb",
+ "app": "/home/user/final-68cf1d3/wt/cand/resources/app",
+ "version": "8.0.22",
+ "reps": 3,
+ "gapMs": 12000,
+ "runtime": {
+  "node": "24.20.0",
+  "electron": "44.3.0",
+  "NODE_OPTIONS": "--use-openssl-ca --max-old-space-size=3686"
+ },
+ "startup": {
+  "cold": {
+   "cacheDirsRemoved": 1,
+   "serverReadyMs": 666,
+   "ordersFirstRowMs": 10559,
+   "net": {
+    "byKind": {
+     "data:": {
+      "n": 1,
+      "bytes": 2497,
+      "maxMs": 51
+     },
+     "page-projection:orders": {
+      "n": 1,
+      "bytes": 6097591,
+      "maxMs": 7392
+     }
+    },
+    "totalApiBytes": 6121203,
+    "apiRequests": 26
+   },
+   "pageErrors": []
+  },
+  "warm": {
+   "serverReadyMs": 667,
+   "ordersFirstRowMs": 2736,
+   "net": {
+    "byKind": {
+     "data:": {
+      "n": 1,
+      "bytes": 5245,
+      "maxMs": 73
+     },
+     "read-model:orders/query": {
+      "n": 3,
+      "bytes": 1610789,
+      "maxMs": 1402
+     }
+    },
+    "totalApiBytes": 1637521,
+    "apiRequests": 23
+   },
+   "pageErrors": []
+  }
+ },
+ "saves": [
+  {
+   "kind": "Supp. FOB",
+   "i": 0,
+   "codes": [
+    4100015
+   ],
+   "save": {
+    "ms": 49.98991499999829,
+    "status": 200,
+    "attempts": 1,
+    "code": null,
+    "text": ""
+   },
+   "ackMs": 49.98991499999829,
+   "cp": {
+    "ms": 153.21998400000302,
+    "status": 200,
+    "attempts": 1,
+    "delta": true,
+    "rows": 0,
+    "rowPatch": {
+     "steps": 1,
+     "pending": 1,
+     "verified": false
+    },
+    "reloaded": false
+   },
+   "cpReadyMs": 203.40639199999714,
+   "orders": {
+    "ms": 6750.2873309999995,
+    "status": 200,
+    "attempts": 1
+   },
+   "ordersReadyMs": 6953.815798999996,
+   "cpuMs": 13070,
+   "windowMs": 18960
+  },
+  {
+   "kind": "not",
+   "i": 0,
+   "codes": [
+    4100718
+   ],
+   "save": {
+    "ms": 23.916491999989375,
+    "status": 200,
+    "attempts": 1,
+    "code": null,
+    "text": ""
+   },
+   "ackMs": 23.916491999989375,
+   "cp": {
+    "ms": 176.35069700000167,
+    "status": 200,
+    "attempts": 1,
+    "delta": true,
+    "rows": 0,
+    "rowPatch": {
+     "steps": 1,
+     "pending": 2,
+     "verified": false
+    },
+    "reloaded": false
+   },
+   "cpReadyMs": 200.36009499999636,
+   "orders": {
+    "ms": 6721.698426999996,
+    "status": 200,
+    "attempts": 1
+   },
+   "ordersReadyMs": 6922.087780999995,
+   "cpuMs": 11880,
+   "windowMs": 18932
+  },
+  {
+   "kind": "toplu Supp. FOB (5)",
+   "i": 0,
+   "codes": [
+    4101410,
+    4102097,
+    4102796,
+    4103476,
+    4104141
+   ],
+   "save": {
+    "ms": 29.272105000010924,
+    "status": 200,
+    "attempts": 1,
+    "code": null,
+    "text": ""
+   },
+   "ackMs": 29.272105000010924,
+   "cp": {
+    "ms": 154.93622300001152,
+    "status": 200,
+    "attempts": 1,
+    "delta": true,
+    "rows": 0,
+    "rowPatch": {
+     "steps": 1,
+     "pending": 3,
+     "verified": false
+    },
+    "reloaded": false
+   },
+   "cpReadyMs": 184.3353519999946,
+   "orders": {
+    "ms": 7177.023939999999,
+    "status": 200,
+    "attempts": 1
+   },
+   "ordersReadyMs": 7361.3953489999985,
+   "cpuMs": 12770,
+   "windowMs": 19371
+  },
+  {
+   "kind": "toplu not (5)",
+   "i": 0,
+   "codes": [
+    4104800,
+    4105460,
+    4106183,
+    4106880,
+    4107599
+   ],
+   "save": {
+    "ms": 24.937013999995543,
+    "status": 200,
+    "attempts": 1,
+    "code": null,
+    "text": ""
+   },
+   "ackMs": 24.937013999995543,
+   "cp": {
+    "ms": 171.59140599999228,
+    "status": 200,
+    "attempts": 1,
+    "delta": true,
+    "rows": 0,
+    "rowPatch": {
+     "steps": 1,
+     "pending": 4,
+     "verified": false
+    },
+    "reloaded": false
+   },
+   "cpReadyMs": 196.65059199999087,
+   "orders": {
+    "ms": 6885.649130000005,
+    "status": 200,
+    "attempts": 1
+   },
+   "ordersReadyMs": 7082.324703999999,
+   "cpuMs": 13080,
+   "windowMs": 19091
+  }
+ ],
+ "errors": [],
+ "bootMs": 28075,
+ "rows": 24982,
+ "pool": {
+  "prodOnly": 17274,
+  "exCandidates": 6295
+ },
+ "cpOpen": {
+  "ms": 96.95570399999997,
+  "status": 200,
+  "attempts": 1,
+  "delta": false,
+  "rows": 24982,
+  "rowPatch": null,
+  "reloaded": false
+ }
+}

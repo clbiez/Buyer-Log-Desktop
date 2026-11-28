@@ -1,0 +1,13 @@
+[final] test başlıyor (deneme 1) 10:04:29
+[final] test → PASS · cpuSome 21.55/31.64 · ioSome 10.03/19.36 · steal 0.91/1.37 · ÇEKİŞMELİ (ön sonuç) 10:11:18
+[final] test başlıyor (deneme 2) 10:11:18
+[final] test → PASS · cpuSome 20.63/33.98 · ioSome 9.58/19.1 · steal 0.85/1.31 · ÇEKİŞMELİ (ön sonuç) 10:17:47
+[final] gate başlıyor (deneme 1) 10:17:47
+[final] gate → FAIL · cpuSome 0.37/2.12 · ioSome 0.03/0.17 · steal 0.35/0.55 · SAKİN 10:34:32
+[final] shadow başlıyor (deneme 1) 10:34:32
+[final] shadow → PASS · cpuSome 0.51/3.18 · ioSome 0.09/0.65 · steal 0.54/0.79 · SAKİN 10:36:30
+[final] shadowbase başlıyor (deneme 1) 10:36:30
+[final] shadowbase → PASS (bilgi) · cpuSome 0.63/4.74 · ioSome 0.06/0.78 · steal 0.45/0.75 · SAKİN 10:38:26
+[final] hub başlıyor (deneme 1) 10:38:26
+[final] hub → FAIL · cpuSome 0.32/2.24 · ioSome 0.35/0.72 · steal 0.35/0.69 · SAKİN 10:44:39
+[final] perf başlıyor (deneme 1) 10:44:39

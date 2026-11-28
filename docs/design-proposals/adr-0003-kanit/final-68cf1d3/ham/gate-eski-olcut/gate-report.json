@@ -1,0 +1,521 @@
+{
+ "schemaVersion": 1,
+ "startedAt": "2026-11-28T10:17:47.502Z",
+ "env": {
+  "execPath": "/tmp/claude-0/-home-user-Buyer-Log-Desktop/037e4615-db23-5876-994a-5d75d0ead1cf/scratchpad/el/node_modules/electron/dist/electron",
+  "node": "24.20.0",
+  "electron": "44.3.0",
+  "platform": "linux 6.18.44-fc-v880 x64",
+  "cpus": "4× Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "totalMemMb": 16087,
+  "NODE_OPTIONS": "--use-openssl-ca",
+  "commit": null,
+  "appVersion": "8.0.22",
+  "strictKnown": true,
+  "app": "/home/user/final-68cf1d3/wt/cand/resources/app",
+  "fixtureApp": "/home/user/final-68cf1d3/wt/cand/resources/app",
+  "rows": 30000,
+  "soakMin": 15,
+  "heapMb": 3686
+ },
+ "timings": {
+  "fixtureMs": 13116,
+  "start:cold": 783,
+  "refreshMs": 26947,
+  "start:warm": 694,
+  "cpOpenMs": 4973,
+  "ordersOpenMs": 1022,
+  "start:restart": 717,
+  "start:rebuild": 806
+ },
+ "gates": [
+  {
+   "id": "G01",
+   "title": "Açılış: BuyerLog.exe → watchdog → server; 30k yenileme; sıcak açılışta CP + Siparişler",
+   "status": "PASS",
+   "detail": {
+    "coldMs": 783,
+    "warmMs": 694,
+    "refreshMs": 26947,
+    "cpOpenMs": 4973,
+    "cpRows": 24982,
+    "ordersStatus": 200,
+    "ordersMs": 1022
+   }
+  },
+  {
+   "id": "G02",
+   "title": "CP / Siparişler okuma: CP sorgu satırı = computed satırı",
+   "status": "PASS",
+   "detail": {
+    "cpQueryRows": 24982,
+    "computedRows": 24982
+   }
+  },
+  {
+   "id": "G03",
+   "title": "Supp. FOB tekli + toplu kayıt görünür; tekli kayıt satır yaması yolunda",
+   "status": "PASS",
+   "detail": {
+    "single": 200,
+    "bulk": 200,
+    "rowPatch": {
+     "steps": 1,
+     "pending": 1,
+     "verified": false
+    }
+   }
+  },
+  {
+   "id": "G04",
+   "title": "Not tekli + toplu (5) kayıt görünür",
+   "status": "PASS",
+   "detail": {
+    "single": 200,
+    "bulk": 200
+   }
+  },
+  {
+   "id": "G05",
+   "title": "Del. Type (açık niyet, ikinci kullanıcı) tam kurulumda; sonraki Supp. FOB/not Del. Type'ı değiştirmez",
+   "status": "PASS",
+   "detail": {
+    "status": 200,
+    "before": "Gemi",
+    "want": "Uçak",
+    "got": "Uçak",
+    "prodOnlyCandidates": 17269,
+    "readViaRowPatch": false
+   }
+  },
+  {
+   "id": "G06",
+   "title": "Elle düzenlenebilir Ex-factory PATCH + /batch 2xx, değer görünür, okuma tam kurulumda",
+   "status": "FAIL",
+   "detail": {
+    "patch": 200,
+    "batch": 200,
+    "manualCandidates": 6295,
+    "got": [
+     "2026-12-05T00:00:00.000Z",
+     "2027-01-25T00:00:00.000Z"
+    ],
+    "want": [
+     "2026-12-05",
+     "2027-01-25"
+    ]
+   }
+  },
+  {
+   "id": "G07",
+   "title": "Otomatik (yükleme onaylı) Ex-factory yazımı 409 AUTOMATIC_DATE_READ_ONLY; değer korunur",
+   "status": "PASS",
+   "detail": {
+    "status": 409,
+    "code": "AUTOMATIC_DATE_READ_ONLY",
+    "automaticCandidates": 18687
+   }
+  },
+  {
+   "id": "G08",
+   "title": "Çoklu istemci (aynı kullanıcının iki oturumu): eşzamanlı 4 yazım 2xx, aynı satırda iki alan da korunur, iki oturum aynı veriyi görür",
+   "status": "PASS",
+   "detail": {
+    "statuses": [
+     200,
+     200,
+     200,
+     200
+    ],
+    "values": {
+     "sharedFob": 77.75,
+     "sharedNote": "kapı B aynı satır",
+     "onlyAFob": 88.5,
+     "onlyBNote": "kapı B tekil"
+    },
+    "sameDigest": true,
+    "sameRows": true,
+    "tupleDiffCount": 0,
+    "rowDiffCount": 0,
+    "rowDiffExamples": []
+   }
+  },
+  {
+   "id": "G08b-eski",
+   "title": "Bilgi: #1257 öncesi istemci gövdesi (eski notes, If-Match yok) — sunucu bayat tam gövdeyi kabul eder mi",
+   "status": "INFO",
+   "detail": {
+    "finding": "syncOverrideToServer Supp. FOB kaydını PATCH /api/overrides/:oc yoluna gönderir ve gövdeye istemcinin bildiği notes alanını koyar (cpRowSaveEligible suppFob içeren gövdeyi satır kaydından çıkarır); sunucu notes alanını koşulsuz yazar → sessiz kayıp",
+    "statuses": [
+     200,
+     200
+    ],
+    "noteAfter": "",
+    "fobAfter": 66.25
+   }
+  },
+  {
+   "id": "G08c",
+   "title": "Bayat istemci: tekli Supp. FOB kaydı başka oturumun yeni Sub-Manufacturer değerini ezmemeli",
+   "status": "N/A",
+   "detail": {
+    "reason": "fixture'da DTR olmayan satır yok (istemci DTR satırında subManufacturer göndermez)",
+    "licensorCounts": {
+     "DTR": 24982
+    }
+   }
+  },
+  {
+   "id": "G08d-eski",
+   "title": "Bilgi: #1257 öncesi istemci gövdesi (not kaydında eski suppFob, If-Match yok)",
+   "status": "INFO",
+   "detail": {
+    "finding": "syncOverrideToServer, _suppFobManual satırda not kaydına suppFob ekler; gövde suppFob içerdiği için satır kaydı yerine eski PATCH yolu kullanılır",
+    "statuses": [
+     200,
+     200,
+     200
+    ],
+    "fobAfter": 10.5,
+    "noteAfter": "kapı A bayat not"
+   }
+  },
+  {
+   "id": "G08b",
+   "title": "Bayat oturum (#1257 istemci sözleşmesi): Supp. FOB kaydı başka oturumun yeni notunu ezmez (409 ya da not korunur)",
+   "status": "PASS",
+   "detail": {
+    "statuses": [
+     200,
+     200,
+     409
+    ],
+    "code": "REVISION_CONFLICT",
+    "noteAfter": "kapı B yeni not (modern)",
+    "fobAfter": 12.4,
+    "token": {
+     "orders": 16,
+     "suppFob": 10
+    }
+   }
+  },
+  {
+   "id": "G08d",
+   "title": "Bayat oturum (#1257 istemci sözleşmesi): not kaydı başka oturumun daha yeni Supp. FOB değerini ezmez (409 ya da Supp. FOB korunur)",
+   "status": "PASS",
+   "detail": {
+    "statuses": [
+     200,
+     200,
+     200
+    ],
+    "fobAfter": 20.75,
+    "noteAfter": "kapı A not (modern)",
+    "token": {
+     "orders": 18,
+     "suppFob": 11
+    }
+   }
+  },
+  {
+   "id": "G09",
+   "title": "Yeniden başlatma sonrası eşitlik (karar demeti + CP satırları)",
+   "status": "PASS",
+   "detail": {
+    "tuples": 24982,
+    "rowDiffs": [],
+    "rowDiffCount": 0
+   }
+  },
+  {
+   "id": "G10",
+   "title": "Sıfırdan tam kurulum (önbellek silinip yeniden başlatma) oturum verisiyle birebir",
+   "status": "PASS",
+   "detail": {
+    "cacheRemoved": [
+     "local/page-cache/moderator",
+     "local/page-cache/moderator"
+    ],
+    "rowDiffs": [],
+    "rowDiffCount": 0
+   }
+  },
+  {
+   "id": "G13",
+   "title": "Sınırlı süreli soak (15 dk): kayıtlar 2xx, artımlı birikim = tam okuma, yazılan değerler görünür",
+   "status": "PASS",
+   "detail": {
+    "iterations": 62,
+    "saves": {
+     "ok": 62,
+     "fail": 0
+    },
+    "valueBad": 0,
+    "incrementalEqualsFull": true,
+    "cpMedianMs": 128,
+    "cpP95Ms": 168,
+    "ordersMedianMs": 6343,
+    "rssThirds": {
+     "firstMb": 1558,
+     "lastMb": 1606
+    },
+    "heapThirds": {
+     "firstMb": 55,
+     "lastMb": 74
+    }
+   }
+  },
+  {
+   "id": "G11",
+   "title": "503: kurtarılamayan (20×500 ms yeniden deneme sonrası) = 0; toplam 503 raporlanır",
+   "status": "PASS",
+   "detail": {
+    "n503": 0,
+    "exhausted": 0,
+    "byPath": {},
+    "requests": 423
+   }
+  },
+  {
+   "id": "G12",
+   "title": "Bellek: heap sınırı = 3686 MB politika bütçesi, ana heap tepe < %85, işçi OOM yok, beklenmedik çıkış yok",
+   "status": "PASS",
+   "detail": {
+    "heapLimitMb": 3782,
+    "heapUsedMaxMb": 273,
+    "rssMaxMb": 2516,
+    "peakRssMb": 2722,
+    "retainedMaxMb": 371,
+    "poolRetainedMaxMb": 356,
+    "workerSpawns": 5,
+    "workerExits": 0,
+    "jobFailures": [],
+    "unexpectedExits": 0
+   }
+  },
+  {
+   "id": "G14",
+   "title": "Kapanış: backend.stop() sonrası sunucu süreci 20 sn içinde biter (öksüz süreç yok)",
+   "status": "PASS",
+   "detail": {
+    "stops": [
+     {
+      "label": "after-refresh",
+      "ms": 115,
+      "forced": false,
+      "orphan": false
+     },
+     {
+      "label": "restart",
+      "ms": 133,
+      "forced": false,
+      "orphan": false
+     },
+     {
+      "label": "rebuild",
+      "ms": 76,
+      "forced": false,
+      "orphan": false
+     },
+     {
+      "label": "final",
+      "ms": 158,
+      "forced": false,
+      "orphan": false
+     }
+    ]
+   }
+  }
+ ],
+ "http": {
+  "requests": 423,
+  "n503": 0,
+  "exhausted": 0,
+  "byPath": {}
+ },
+ "edits": [
+  {
+   "kind": "suppFob PATCH",
+   "status": 200,
+   "ms": 34,
+   "code": null
+  },
+  {
+   "kind": "batch-suppfob",
+   "status": 200,
+   "ms": 37,
+   "code": null
+  },
+  {
+   "kind": "note batch(1)",
+   "status": 200,
+   "ms": 19,
+   "code": null
+  },
+  {
+   "kind": "note batch(5)",
+   "status": 200,
+   "ms": 26,
+   "code": null
+  },
+  {
+   "kind": "delType PATCH",
+   "status": 200,
+   "ms": 21,
+   "code": null
+  },
+  {
+   "kind": "suppFob on delType row",
+   "status": 200,
+   "ms": 26,
+   "code": null
+  },
+  {
+   "kind": "note on delType row",
+   "status": 200,
+   "ms": 19,
+   "code": null
+  },
+  {
+   "kind": "exFactory PATCH",
+   "status": 200,
+   "ms": 2278,
+   "code": null
+  },
+  {
+   "kind": "exFactory batch",
+   "status": 200,
+   "ms": 39,
+   "code": null
+  },
+  {
+   "kind": "exFactory automatic",
+   "status": 409,
+   "ms": 36,
+   "code": "AUTOMATIC_DATE_READ_ONLY"
+  },
+  {
+   "kind": "concurrent",
+   "statuses": [
+    200,
+    200,
+    200,
+    200
+   ]
+  }
+ ],
+ "soak": {
+  "minutes": 15,
+  "gapMs": 8000,
+  "iterations": 62,
+  "saves": {
+   "ok": 62,
+   "fail": 0
+  },
+  "n503": 0,
+  "valueBad": 0,
+  "incrementalEqualsFull": true,
+  "cpMedianMs": 128,
+  "cpP95Ms": 168,
+  "ordersMedianMs": 6343,
+  "ordersP95Ms": 6933,
+  "rssThirds": {
+   "firstMb": 1558,
+   "lastMb": 1606
+  },
+  "heapThirds": {
+   "firstMb": 55,
+   "lastMb": 74
+  }
+ },
+ "memory": {
+  "hookLoaded": true,
+  "serverStarts": 4,
+  "heapLimitMb": 3782,
+  "samples": 987,
+  "rssMaxMb": 2516,
+  "peakRssMb": 2722,
+  "heapUsedMaxMb": 273,
+  "workerSpawns": 5,
+  "workerExits": 0,
+  "workerErrors": [],
+  "jobFailures": [],
+  "jobs": 352,
+  "retainedMaxMb": 371,
+  "poolRetainedMaxMb": 356,
+  "beforeRestart": {
+   "hookLoaded": true,
+   "serverStarts": 2,
+   "heapLimitMb": 3782,
+   "samples": 65,
+   "rssMaxMb": 2516,
+   "peakRssMb": 2722,
+   "heapUsedMaxMb": 273,
+   "workerSpawns": 2,
+   "workerExits": 0,
+   "workerErrors": [],
+   "jobFailures": [],
+   "jobs": 86,
+   "retainedMaxMb": 371,
+   "poolRetainedMaxMb": 325
+  }
+ },
+ "stops": [
+  {
+   "label": "after-refresh",
+   "ms": 115,
+   "forced": false,
+   "serverPid": 2714,
+   "orphan": false,
+   "orphanMs": 0
+  },
+  {
+   "label": "restart",
+   "ms": 133,
+   "forced": false,
+   "serverPid": 2750,
+   "orphan": false,
+   "orphanMs": 0
+  },
+  {
+   "label": "rebuild",
+   "ms": 76,
+   "forced": false,
+   "serverPid": 2800,
+   "orphan": false,
+   "orphanMs": 0
+  },
+  {
+   "label": "final",
+   "ms": 158,
+   "forced": false,
+   "serverPid": 2830,
+   "orphan": false,
+   "orphanMs": 0
+  }
+ ],
+ "errors": [],
+ "fixture": {
+  "dir": "/home/user/final-68cf1d3/gate/run/source",
+  "asasRows": 30000,
+  "loadingApprovalCleared": 7500
+ },
+ "users": {
+  "createStatus": 201,
+  "secondSessionDistinct": true
+ },
+ "licensorCounts": {
+  "DTR": 24982
+ },
+ "multiClient": {
+  "tupleCounts": [
+   24982,
+   24982
+  ],
+  "tupleDiffCount": 0,
+  "tupleDiffExamples": [],
+  "rowDiffCount": 0,
+  "rowDiffExamples": []
+ },
+ "finishedAt": "2026-11-28T10:34:32.429Z"
+}

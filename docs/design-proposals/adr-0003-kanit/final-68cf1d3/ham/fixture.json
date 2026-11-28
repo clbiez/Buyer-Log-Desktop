@@ -1,0 +1,12 @@
+{
+ "generator": "/home/user/final-68cf1d3/wt/cand/resources/app",
+ "rows": 30000,
+ "seed": 7,
+ "asasRows": 30000,
+ "loadingApprovalCleared": 7500,
+ "sha256": {
+  "ASAS - Demo.xlsx": "fd8c8dcf58c11b6a3489cef114a45d17bfbb61465539cfd654ee6b19880d17c1",
+  "Antrepo - Demo.xlsx": "def71cc01d482a69b60fbc36d25935447929838528f75ea624d1d84e932404e1",
+  "LFL - Demo.xlsx": "512ff1bf2373e8a4d4cc7d5bf9074dee867aa8de6c3df8e5786a580e06406352"
+ }
+}

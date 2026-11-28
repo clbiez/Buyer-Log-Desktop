@@ -1,0 +1,8 @@
+base 12521fcac6e6eaf233cd56a82d6ea5bd931c990f (package.json 8.0.18)
+cand 68cf1d3a323b2f790dc04e21c65d67b92fca809d (package.json 8.0.22)
+electron 44.3.0 node 24.20.0 (ELECTRON_RUN_AS_NODE=1)
+host node v22.23.5 (yalnız test adımı ve analiz)
+os Linux 6.18.44-fc-v880 4 vCPU 15.7 GB
+cpu Intel(R) Xeon(R) Processor @ 2.10GHz
+NODE_OPTIONS(ölçüm)=--use-openssl-ca --max-old-space-size=3686
+2026-11-28T11:13:51Z
