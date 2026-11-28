@@ -50,7 +50,7 @@ function harness(row, { rowSave = false } = {}) {
     importedSuppFob: () => false,
     cpRowSavePlan: (_row, _code, body) => (rowSave ? { patch: body.delType !== undefined ? { delType: body.delType } : {}, units: ['delType'] } : null),
     cpRowSaveSend: (_row, _code, patch) => { sent.push({ url: '/api/overrides/rows', body: patch }); return Promise.resolve({}); },
-    enqueueOverrideMutation: (_kind, url, opts) => { sent.push({ url, body: JSON.parse(opts.body) }); return Promise.resolve({}); },
+    enqueueOverrideMutation: (_kind, url, opts) => { sent.push({ url, body: JSON.parse(typeof opts.body === 'function' ? opts.body() : opts.body) }); return Promise.resolve({}); },
     notifyOverrideSaveError: () => {},
     console: { warn: () => {} },
   };

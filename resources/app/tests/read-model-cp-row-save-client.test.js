@@ -17,7 +17,7 @@ const BLOCK=SOURCE.slice(SOURCE.indexOf("const CP_ROW_SAVE_STORAGE_KEY='bl.cpRow
 // Gerçek revizyon belirteci kuralı (override-sync.js adoptAckRevision), düzeneğin state'ine bağlanır.
 const SYNC_SOURCE=fs.readFileSync(path.join(__dirname,'..','public','override-sync.js'),'utf8');
 let ADOPT=()=>{};
-function bindAdopt(ctx){vm.runInContext(extractFunction(SYNC_SOURCE,'adoptAckRevision')+';globalThis.__adopt=adoptAckRevision;',ctx);ADOPT=ctx.__adopt;}
+function bindAdopt(ctx){vm.runInContext('const ownAckedRevisions=new Map();'+extractFunction(SYNC_SOURCE,'adoptAckRevision')+';globalThis.__adopt=adoptAckRevision;',ctx);ADOPT=ctx.__adopt;}
 function load({responses=[],enabled=true,capturing=false,rows=[]}={}){
   const requests=[],toasts=[],refreshed=[];
   const ctx=vm.createContext({console,JSON,Object,Array,Map,Set,Promise,Number,String,Boolean,Error,Date,

@@ -41,7 +41,7 @@ function syncHarness({ fail = false, rowSave = false } = {}) {
     // rowSave: CP satır kaydı (POST /rows) — plan yalnız gövdedeki dokunulmuş birimleri taşır.
     cpRowSavePlan: (_row, _code, body) => (rowSave ? { patch: body.delType !== undefined ? { delType: body.delType } : { notes: body.notes }, units: body.delType !== undefined ? ['delType'] : ['notes:Notes'] } : null),
     cpRowSaveSend: (_row, _code, patch) => { sent.push({ url: '/api/overrides/rows', body: patch }); return new Promise((resolve, reject) => { const fn = () => (fail ? reject(new Error('x')) : resolve({})); settles.push(fn); settle = fn; }); },
-    enqueueOverrideMutation: (_kind, url, opts) => { sent.push({ url, body: JSON.parse(opts.body) }); return new Promise((resolve, reject) => { const fn = () => (fail ? reject(new Error('x')) : resolve({})); settles.push(fn); settle = fn; }); },
+    enqueueOverrideMutation: (_kind, url, opts) => { sent.push({ url, body: JSON.parse(typeof opts.body === 'function' ? opts.body() : opts.body) }); return new Promise((resolve, reject) => { const fn = () => (fail ? reject(new Error('x')) : resolve({})); settles.push(fn); settle = fn; }); },
     notifyOverrideSaveError: () => {},
     appLang: 'tr',
     console: { warn: () => {} },

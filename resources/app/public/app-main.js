@@ -16952,8 +16952,8 @@ function cpRowSaveSend(row,orderCode,patch,units){
     try{data=await fetchJSON('/api/overrides/rows',{method:'POST',headers,body:JSON.stringify({items:[item]})});}
     catch(err){settle(null,false);throw err;}
     // Satır kaydı global CAS kullanmaz: belirteç yalnız bu kaydın kendi artışıyla ilerler (override-sync.js adoptAckRevision).
-    // Yanıt `updated` taşımaz; yazan (noop olmayan) satır varsa kayıt revizyonu tam 1 artırmıştır.
-    if(data.revisions&&typeof data.revisions==='object')Object.entries(data.revisions).forEach(([name,value])=>window.adoptAckRevision?.(name,value,{ownBump:name==='orders'&&(data.applied||[]).some(item=>item&&item.noop===false)?1:0}));
+    // Yanıt `updated` taşımaz; yazan (noop olmayan) satır varsa dönen revizyon bu kaydın kendi revizyonudur.
+    if(data.revisions&&typeof data.revisions==='object')Object.entries(data.revisions).forEach(([name,value])=>window.adoptAckRevision?.(name,value,{own:name==='orders'&&(data.applied||[]).some(item=>item&&item.noop===false)}));
     // Onay: yalnız yeni düzenlemesi beklemeyen birimler haritaya yazılır; bekleyen yerel değer (sonraki kaydın
     // gövdesi buradan kurulur, ör. not sütunları) eski onaylı değerle ezilmez.
     const settledUnits=()=>{const entries=cpRowSave.units.get(key);return sent.filter(({unit,dirty})=>!entries?.get(unit)||entries.get(unit).dirty<=dirty).map(({unit})=>unit);};
@@ -17104,10 +17104,12 @@ function syncOverrideToServer(orderCode,notes,row){
         return body;
       })();
     // #1078 alt PR 3: anahtar açıkken satır kaydı — yalnız dokunulan alanlar, alan bazlı karşılaştırma; fiyat alanları bugünkü yolda.
+    // Eski yol gövdesi (süzme) kuyrukta, gönderimden hemen önce kurulur: önceki eski yol kaydının onayı satırın kayıtlı değerini
+    // güncellemiş olur (A→B→A geri yazımı düşmez).
     const rowPlan=typeof cpRowSavePlan==='function'?cpRowSavePlan(row,orderCode,body):null;
     const sent=rowPlan
       ?(rowPlan.skip?Promise.resolve():cpRowSaveSend(row,orderCode,rowPlan.patch,rowPlan.units))
-      :enqueueOverrideMutation('orders',`/api/overrides/${orderCode}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(cpLegacyBodyWithoutUnchanged(row,body,{subWrite,restore}))});
+      :enqueueOverrideMutation('orders',`/api/overrides/${orderCode}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:()=>JSON.stringify(cpLegacyBodyWithoutUnchanged(row,body,{subWrite,restore}))});
     sent.then(()=>{
       if(restore&&row._pricingHistoryRestore===restore)delete row._pricingHistoryRestore;
       if(manualWrite&&row._pricingManualWrite===manualWrite)delete row._pricingManualWrite;
@@ -18744,6 +18746,13 @@ function refreshJobLostError(expectedJob,jobState){
   };
   return err;
 }
+/* P1 (2026-11-28) · Tam yükleme yanıtı kendi onayımızdan eski olabilir (yükleme yazmalarla eşitlenmez): eski yolların CAS
+   belirteçleri (orders, suppFob) geri gitmez; diğer anahtarlar gelen değeri alır. Açılışta override-sync.js'den önce çalışır. */
+function mergeStoreRevisions(current,incoming){
+  const merged={...(current||{}),...(incoming||{})};
+  for(const key of ['orders','suppFob'])if(Number.isInteger(Number(current?.[key]))&&Number(current[key])>Number(merged[key]))merged[key]=Number(current[key]);
+  return merged;
+}
 async function loadFromServer(force, targets){
   // İstemcinin eski snapshot'ı bir hedefi yanlış gruba dahil edip geçerli
   // filtre bulunamadı hatası üretebiliyordu. Her manuel yenilemeden önce aynı
@@ -18946,7 +18955,7 @@ async function waitForRefreshJob(expectedJob=null){
     // Kural seti revizyonu, storeRevisions birleştirilmeden ÖNCE saklanır; gelen
     // yanıtın bayat mı taze mi olduğu ancak bu değere bakarak anlaşılabilir.
     const knownPricingRulesRevision=Number(state.storeRevisions.pricingRules)||0;
-    state.storeRevisions={...state.storeRevisions,...(data.storeRevisions||{})};
+    state.storeRevisions=mergeStoreRevisions(state.storeRevisions,data.storeRevisions);
     /* Kişisel veriler (Not Defteri, mail şablonları, kayıtlı görünüm/filtreler)
        tarayıcıya özel localStorage'da duruyordu; başka bir tarayıcıda açınca
        görünmüyorlardı. Açılışta sunucudaki kopyayla birleştiriyoruz (v5.98). */

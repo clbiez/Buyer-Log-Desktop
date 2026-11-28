@@ -40,7 +40,7 @@ function harness({ stored = {}, overrides = {} } = {}) {
     normalizeTransitDelType: value => norm(value),
     importedSuppFob: () => false,
     cpRowSavePlan: () => null, // eski yol (ör. gövdede Supp. FOB var ya da satır kaydı kapalı)
-    enqueueOverrideMutation: (_kind, url, opts) => { sent.push({ url, body: JSON.parse(opts.body) }); return Promise.resolve({}); },
+    enqueueOverrideMutation: (_kind, url, opts) => { sent.push({ url, body: JSON.parse(typeof opts.body === 'function' ? opts.body() : opts.body) }); return Promise.resolve({}); },
     notifyOverrideSaveError: () => {}, appLang: 'tr', console: { warn: () => {} },
   };
   const fns = loadAppMainFunctions(['syncOverrideToServer', 'cpLegacyBodyWithoutUnchanged', 'cpRowSnapshot', 'cpRowStoredOf', 'cpEditableDelType', 'cpLogisticSegments'], globals);

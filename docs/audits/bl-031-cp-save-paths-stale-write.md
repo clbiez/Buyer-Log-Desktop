@@ -46,13 +46,21 @@ Mevcut mekanizmalar kullanıldı; yeni paralel yol eklenmedi.
    - sunucu bu istekte o anahtarı CAS ile doğruladıysa,
    - ya da yeni değer yalnız bu yazmanın kendi artışıysa.
    
-   Satır kaydı yanıtı `updated` taşımadığı için kendi artış `applied[].noop`'tan çıkarılır. Aksi hâlde belirteç bayat kalır ve sıradaki eski yol yazması mevcut çakışma yoluna düşer (409 → uyarı + yeniden yükleme).
+   - Satır kaydı yanıtı `updated` taşımaz; kendi revizyon `applied[].noop`'tan anlaşılır.
+   - İki kuyruk eşzamanlı çalıştığı için kendi revizyonlar kaydedilir. Belirteç ardışık kendi revizyonları boyunca ilerler; onayların sırasız gelmesi yanlış çakışma üretmez.
+   - Tam yükleme CAS belirteçlerini geri götürmez (`mergeStoreRevisions`).
+   - Aksi hâlde belirteç bayat kalır ve sıradaki eski yol yazması mevcut çakışma yoluna düşer (409 → uyarı + yeniden yükleme).
+3. **Gövde kuyrukta kurulur.** Süzme, eski yol kuyruğunda gönderimden hemen önce yapılır. Böylece önceki kaydın onayı kayıtlı değeri güncellemiş olur ve yoldaki kayıt sırasında yapılan A→B→A geri yazımı düşmez.
+
+Bağımsız inceleme (oturum içi alt ajan, tek tur) iki kusur buldu ve ikisi düzeltildi:
+- yoldaki kayıt sırasında geri yazımın düşmesi,
+- sırasız onayda belirtecin takılı kalması.
 
 ## Doğrulama (gerçek tarayıcı, 3/3, düzeltme sonrası)
 
 | Senaryo | Önce | Sonra |
 |---|---|---|
-| Supp. FOB, dokunulmamış not (A kanal kapalı + başka satırda satır kaydı) | B'nin notu silindi | Not korundu; A'nın Supp. FOB'u kaydedildi |
+| Supp. FOB, dokunulmamış not (A kanal kapalı + başka satırda satır kaydı) | B'nin notu silindi | Not korundu. A'nın Supp. FOB'u, A'nın görmediği bir yazma araya girdiği için 409 ile reddedilir (uyarı + yeniden yükleme); kullanıcı yeniden girer. Bu, veri bütünlüğü > UX sırasının sonucu; birleşik çözüm (alan bazlı base) ikisini birden kaydeder |
 | Aynı alan Supp. FOB | B ezildi | A 409 + uyarı; B korundu |
 | Aynı alan toplu not yapıştırma | B ezildi | A 409; B korundu |
 | Tek kullanıcı, karışık yollar art arda | Hepsi kaydedildi | Hepsi kaydedildi; yanlış çakışma yok |

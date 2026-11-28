@@ -29,7 +29,7 @@ const json=value=>JSON.parse(JSON.stringify(value));
 // Gerçek revizyon belirteci kuralı (override-sync.js adoptAckRevision), düzeneğin state'ine bağlanır.
 const SYNC_SOURCE=fs.readFileSync(path.join(__dirname,'..','public','override-sync.js'),'utf8');
 let ADOPT=()=>{};
-function bindAdopt(ctx){vm.runInContext(extractFunction(SYNC_SOURCE,'adoptAckRevision')+';globalThis.__adopt=adoptAckRevision;',ctx);ADOPT=ctx.__adopt;}
+function bindAdopt(ctx){vm.runInContext('const ownAckedRevisions=new Map();'+extractFunction(SYNC_SOURCE,'adoptAckRevision')+';globalThis.__adopt=adoptAckRevision;',ctx);ADOPT=ctx.__adopt;}
 function client(rows){
   const requests=[],toasts=[];
   const ctx=vm.createContext({console,JSON,Object,Array,Map,Set,Promise,Number,String,Boolean,Error,Date,
@@ -206,7 +206,7 @@ test('wiring: projection builders, row patch paths and the page-cache context ha
   assert.match(server,/cpRowStored:cpRowStoredLib\.pickCpRowStoredMaps\(shared,items\)\}\}\);/);
   assert.match(server,/cpRowStoredVersion: 1,/,'eski önbellek satırları _cpStored taşımaz: bağlam değişir');
   assert.match(read('server/lib/read-model/cp-computed-task.js'),/applyIncrementalProjectionPatch\(raw,item\.patch,overrides,true,\{cpStored:true\}\)/);
-  assert.match(read('public/override-sync.js'),/window\.BLCpRowSave\?\.legacyAcked\?\.\(url,opts\.body,data\)/);
+  assert.match(read('public/override-sync.js'),/window\.BLCpRowSave\?\.legacyAcked\?\.\(url,requestOpts\.body,data\)/);
   assert.match(SOURCE,/legacyAcked:cpRowLegacyAcked,/);
   assert.doesNotMatch(extractFunction(SOURCE,'cpRowSnapshot'),/state\.overrides/,'base yerel haritalardan okunmaz');
 });
