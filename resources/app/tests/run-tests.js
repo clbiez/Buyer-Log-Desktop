@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { pathToFileURL } = require('node:url');
@@ -76,7 +77,30 @@ for (const file of isolatedTests) batches.push([rel(file)]);
 const requestedConcurrency = Number.parseInt(process.env.BUYER_LOG_TEST_CONCURRENCY || '4', 10);
 const testConcurrency = Number.isFinite(requestedConcurrency) && requestedConcurrency > 0 ? Math.min(requestedConcurrency, 16) : 4;
 
+// Dosya bazlı süre özeti (kompakt modda): en yavaş N dosya ve her batch'in kritik
+// yolu (en uzun dosya / duvar saati). CI süre karşılaştırması için ortam satırı da
+// yazılır; farklı runner donanımı aynı kodda süreyi değiştirebilir.
+const requestedSlowest = Number.parseInt(process.env.BUYER_LOG_TEST_SLOWEST || '15', 10);
+const slowestCount = Number.isFinite(requestedSlowest) && requestedSlowest >= 0 ? Math.min(requestedSlowest, 200) : 15;
+const timingsFile = !verbose && slowestCount > 0
+  ? path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'buyerlog-test-timings-')), 'timings.jsonl')
+  : '';
+const fileTimings = [];
+function readBatchTimings(batchNo) {
+  if (!timingsFile || !fs.existsSync(timingsFile)) return [];
+  const rows = fs.readFileSync(timingsFile, 'utf8').split('\n').filter(Boolean).map(line => {
+    try { return JSON.parse(line); } catch (_) { return null; }
+  }).filter(row => row && row.file && Number.isFinite(row.ms));
+  fs.rmSync(timingsFile, { force: true });
+  return rows.map(row => ({ ...row, batch: batchNo }));
+}
+function seconds(ms) {
+  return `${(ms / 1000).toFixed(1)}s`;
+}
+
 const startedAt = Date.now();
+const cpus = os.cpus();
+console.log(`[Buyer Log tests] Ortam: Node ${process.version}, ${os.platform()} ${os.release()} ${os.arch()}, CPU ${cpus.length}× ${(cpus[0] && cpus[0].model || '?').trim()}, RAM ${(os.totalmem() / 1024 ** 3).toFixed(1)} GB.`);
 console.log(`[Buyer Log tests] ${tests.length} test dosyası, ${batches.length} batch, concurrency=${testConcurrency}.`);
 
 for (let i = 0; i < batches.length; i += 1) {
@@ -86,11 +110,19 @@ for (let i = 0; i < batches.length; i += 1) {
   const reporterArgs = verbose ? [] : [`--test-reporter=${COMPACT_REPORTER}`];
   const result = spawnSync(process.execPath, ['--test', `--test-concurrency=${testConcurrency}`, ...reporterArgs, ...files], {
     cwd: APP_ROOT,
-    env: { ...process.env, BUYER_LOG_TEST_SUITE: '1' },
+    env: { ...process.env, BUYER_LOG_TEST_SUITE: '1', ...(timingsFile ? { BUYER_LOG_TEST_TIMINGS_FILE: timingsFile } : {}) },
     stdio: 'inherit',
     windowsHide: true,
   });
-  console.log(`[Buyer Log tests] Batch ${i + 1}/${batches.length} süresi: ${((Date.now() - batchStartedAt) / 1000).toFixed(1)}s.`);
+  const batchMs = Date.now() - batchStartedAt;
+  const batchTimings = readBatchTimings(i + 1);
+  fileTimings.push(...batchTimings);
+  const longest = batchTimings.reduce((best, row) => (!best || row.ms > best.ms ? row : best), null);
+  const fileSumMs = batchTimings.reduce((sum, row) => sum + row.ms, 0);
+  const critical = longest && files.length > 1
+    ? ` En uzun dosya ${seconds(longest.ms)} (${longest.file}); dosya süreleri toplamı ${seconds(fileSumMs)}.`
+    : '';
+  console.log(`[Buyer Log tests] Batch ${i + 1}/${batches.length} süresi: ${(batchMs / 1000).toFixed(1)}s.${critical}`);
   if (result.error) {
     console.error(`[Buyer Log tests] Test runner başlatılamadı: ${result.error.message}`);
     process.exit(1);
@@ -103,4 +135,14 @@ for (let i = 0; i < batches.length; i += 1) {
 }
 
 const elapsedSec = ((Date.now() - startedAt) / 1000).toFixed(1);
+if (fileTimings.length) {
+  const slowest = fileTimings.slice().sort((a, b) => b.ms - a.ms).slice(0, slowestCount);
+  console.log(`\n[Buyer Log tests] En yavaş ${slowest.length} dosya (duvar saati, alt süreç dahil; ${fileTimings.length} dosya ölçüldü):`);
+  for (const row of slowest) console.log(`  ${seconds(row.ms).padStart(8)}  b${row.batch}  ${row.file}`);
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    const md = ['### Buyer Log tests — en yavaş dosyalar', '', `Toplam ${elapsedSec}s · concurrency=${testConcurrency} · Node ${process.version} · CPU ${cpus.length}× ${(cpus[0] && cpus[0].model || '?').trim()}`, '', '| Süre | Batch | Dosya |', '|---:|---:|---|']
+      .concat(slowest.map(row => `| ${seconds(row.ms)} | ${row.batch} | \`${row.file}\` |`));
+    try { fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md.join('\n') + '\n'); } catch (_) { /* özet isteğe bağlı */ }
+  }
+}
 console.log(`\n[Buyer Log tests] PASS — ${tests.length} test dosyası (${elapsedSec}s).`);
