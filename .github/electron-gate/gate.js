@@ -229,6 +229,10 @@ async function computed(cookie, since) {
 const tupleMap = cols => new Map((cols.rows || []).map(x => [String(x[0]), JSON.stringify(x)]));
 const digestOf = map => crypto.createHash('sha1').update([...map.keys()].sort().map(id => id + '\u0000' + map.get(id)).join('\n')).digest('hex');
 const viaRowPatch = c => Boolean(c.rowPatch && c.rowPatch.steps > 0);
+// #1260 sonrası Del. Type / Ex-factory okuma yolu: satır yaması (steps>0) VEYA güvenli tam kurulum (kira yolu, rowPatch.miss;
+// yeniden kurulamayan satır rowPatchRequiresFullBuild ile buraya düşer). Başka/bilinmeyen yol kabul edilmez.
+const readPath = c => (viaRowPatch(c) ? 'rowPatch' : (c.rowPatch && Object.prototype.hasOwnProperty.call(c.rowPatch, 'miss') ? 'fullBuild:' + c.rowPatch.miss : 'unknown'));
+const allowedPath = c => /^(rowPatch|fullBuild:)/.test(readPath(c));
 async function ordersQuery(cookie) {
   const r = await call('POST', '/api/read-model/orders/query', { version: 1, offset: 0, limit: 100 }, cookie);
   return { status: r.status, ms: r.ms, rows: r.json && r.json.result && r.json.result.rows ? r.json.result.rows.length : null, total: r.json && r.json.result ? r.json.result.datasetRows || r.json.result.totalRows || null : null };
@@ -326,12 +330,18 @@ async function main() {
   const n1 = await edit('note batch(1)', () => call('POST', '/api/overrides/batch', { items: [{ orderCode: note1['Order Code'], patch: { ...line(note1), notes: notesOf(note1, 'kapı not tekli') } }] }, cookieA));
   const n2 = await edit('note batch(5)', () => call('POST', '/api/overrides/batch', { items: noteBulk.map((r, k) => ({ orderCode: r['Order Code'], patch: { ...line(r), notes: notesOf(r, 'kapı not toplu ' + k) } })) }, cookieA));
 
-  // G05 Del. Type (açık niyet, tam kurulum yolu) + aynı satıra Supp. FOB / not sonrası korunur (#1243).
+  // G05 Del. Type (açık niyet) + aynı satıra Supp. FOB / not sonrası korunur (#1243); yol satır yaması veya güvenli tam kurulum (#1260).
   const prodOnly = rows.filter(r => Array.isArray(r._logisticSegments) && r._logisticSegments.length && r._logisticSegments.every(s => s.kind === 'production') && r['Del. Type'] && !used.has(String(r['Order Code'])));
   const delRow = take(prodOnly.length ? prodOnly : plain);
   const newDel = delRow['Del. Type'] === 'Uçak' ? 'Gemi' : 'Uçak'; // i18n-ignore — Del. Type veri değeri
   const d1 = await edit('delType PATCH', () => call('PATCH', '/api/overrides/' + delRow['Order Code'], { ...line(delRow), delType: newDel }, cookieU2));
   const afterDel = await computed(cookieA);
+  // G06b: aynı oturumun Del. Type yazımı satır yaması yolunda okunmalı (#1260'ın kendisi). İkinci kullanıcının yazımı A'nın
+  // satır yaması zincirinde olmayabilir (kullanıcı kapsamlı günlük) → G05'te tam kurulum yolu da geçerlidir.
+  const delRowA = take(prodOnly.length ? prodOnly : plain);
+  const newDelA = delRowA['Del. Type'] === 'Uçak' ? 'Gemi' : 'Uçak'; // i18n-ignore — Del. Type veri değeri
+  const d2 = await edit('delType PATCH (same session)', () => call('PATCH', '/api/overrides/' + delRowA['Order Code'], { ...line(delRowA), delType: newDelA }, cookieA));
+  const afterDelA = await computed(cookieA);
   await edit('suppFob on delType row', () => call('PATCH', '/api/overrides/' + delRow['Order Code'], { ...line(delRow), notes: { Notes: delRow.Notes || '', NotesHtml: '', EkNot: delRow['Ek Not'] || '', EkNotHtml: '' }, suppFob: 55.5, suppFobMeta: { source: 'manual' } }, cookieA));
   await edit('note on delType row', () => call('POST', '/api/overrides/batch', { items: [{ orderCode: delRow['Order Code'], patch: { ...line(delRow), notes: notesOf(delRow, 'kapı del not') } }] }, cookieA));
 
@@ -411,10 +421,6 @@ async function main() {
   gate('G03', 'Supp. FOB tekli + toplu kayıt görünür; tekli kayıt satır yaması yolunda', pass(s1.status === 200 && s2.status === 200 && Number(v(fob1._id)['Supp. FOB']) === 123.25 && Number(v(fobA._id)['Supp. FOB']) === 200.5 && Number(v(fobB._id)['Supp. FOB']) === 201.5 && viaRowPatch(afterFob)),
     { single: s1.status, bulk: s2.status, rowPatch: afterFob.rowPatch });
   gate('G04', 'Not tekli + toplu (5) kayıt görünür', pass(n1.status === 200 && n2.status === 200 && v(note1._id).Notes === 'kapı not tekli' && noteBulk.every((r, k) => v(r._id).Notes === 'kapı not toplu ' + k)), { single: n1.status, bulk: n2.status });
-  gate('G05', 'Del. Type (açık niyet, ikinci kullanıcı) tam kurulumda; sonraki Supp. FOB/not Del. Type\'ı değiştirmez', pass(d1.status === 200 && v(delRow._id)['Del. Type'] === newDel && !viaRowPatch(afterDel) && Number(v(delRow._id)['Supp. FOB']) === 55.5 && v(delRow._id).Notes === 'kapı del not'),
-    { status: d1.status, before: delRow['Del. Type'], want: newDel, got: v(delRow._id)['Del. Type'], prodOnlyCandidates: prodOnly.length, readViaRowPatch: viaRowPatch(afterDel) });
-  gate('G06', 'Elle düzenlenebilir Ex-factory PATCH + /batch 2xx, değer görünür, okuma tam kurulumda', pass(e1.status < 300 && e2.status < 300 && String(v(exRow._id)['Ex-factory']).slice(0, 10) === exTarget && String(v(exBatchRow._id)['Ex-factory']).slice(0, 10) === exBatchTarget && !viaRowPatch(afterEx) && !viaRowPatch(afterExBatch)),
-    { patch: e1.status, batch: e2.status, manualCandidates: manual.length, got: [v(exRow._id)['Ex-factory'], v(exBatchRow._id)['Ex-factory']], want: [exTarget, exBatchTarget] });
   gate('G07', 'Otomatik (yükleme onaylı) Ex-factory yazımı 409 AUTOMATIC_DATE_READ_ONLY; değer korunur', pass(a1.status === 409 && a1.json && a1.json.code === 'AUTOMATIC_DATE_READ_ONLY' && v(autoRow._id)['Ex-factory'] === autoRow['Ex-factory']),
     { status: a1.status, code: a1.json && a1.json.code, automaticCandidates: automatic.length });
   const sameDigest = digestOf(tupleMap(sessionA.cols)) === digestOf(tupleMap(sessionB.cols));
@@ -477,6 +483,20 @@ async function main() {
   const rebuildDiff = [...live.keys()].filter(id => JSON.stringify(live.get(id)) !== JSON.stringify(liveRebuilt.get(id)));
   gate('G10', 'Sıfırdan tam kurulum (önbellek silinip yeniden başlatma) oturum verisiyle birebir', pass(removed.length > 0 && digestOf(tupleMap(rebuilt.cols)) === sessionDigest && rebuildDiff.length === 0 && liveRebuilt.size === live.size),
     { cacheRemoved: removed, rowDiffs: rebuildDiff.slice(0, 5), rowDiffCount: rebuildDiff.length });
+
+  // G05 / G06 / G06b (#1260 değişmezi): değer hedefle aynı + okuma yolu satır yaması VEYA güvenli tam kurulum + dokunulan
+  // satır sıfırdan tam kurulumla (G10 yeniden kurulumu) alan alan eşit. G06b: en az bir Del. Type ve bir Ex-factory adımı
+  // satır yaması yolunda (artımlı yolun gerçekten kullanıldığını sınar).
+  const sameAsRebuild = row => JSON.stringify(live.get(String(row._id))) === JSON.stringify(liveRebuilt.get(String(row._id)));
+  gate('G05', 'Del. Type (açık niyet, ikinci kullanıcı) görünür; sonraki Supp. FOB/not Del. Type\'ı değiştirmez; yol satır yaması veya güvenli tam kurulum; satır tam kurulumla eşit',
+    pass(d1.status === 200 && v(delRow._id)['Del. Type'] === newDel && Number(v(delRow._id)['Supp. FOB']) === 55.5 && v(delRow._id).Notes === 'kapı del not' && allowedPath(afterDel) && sameAsRebuild(delRow)),
+    { status: d1.status, before: delRow['Del. Type'], want: newDel, got: v(delRow._id)['Del. Type'], prodOnlyCandidates: prodOnly.length, path: readPath(afterDel), rowPatch: afterDel.rowPatch, equalToRebuild: sameAsRebuild(delRow) });
+  gate('G06', 'Elle düzenlenebilir Ex-factory PATCH + /batch 2xx, değer görünür; yol satır yaması veya güvenli tam kurulum; satırlar tam kurulumla eşit',
+    pass(e1.status < 300 && e2.status < 300 && String(v(exRow._id)['Ex-factory']).slice(0, 10) === exTarget && String(v(exBatchRow._id)['Ex-factory']).slice(0, 10) === exBatchTarget && allowedPath(afterEx) && allowedPath(afterExBatch) && sameAsRebuild(exRow) && sameAsRebuild(exBatchRow)),
+    { patch: e1.status, batch: e2.status, manualCandidates: manual.length, got: [v(exRow._id)['Ex-factory'], v(exBatchRow._id)['Ex-factory']], want: [exTarget, exBatchTarget], path: [readPath(afterEx), readPath(afterExBatch)], equalToRebuild: [sameAsRebuild(exRow), sameAsRebuild(exBatchRow)] });
+  gate('G06b', 'Artımlı lojistik yaması (#1260): aynı oturumun Del. Type ve Ex-factory kaydı satır yaması yolunda okunur, değer görünür, satır tam kurulumla eşit',
+    pass(d2.status === 200 && v(delRowA._id)['Del. Type'] === newDelA && viaRowPatch(afterDelA) && (viaRowPatch(afterEx) || viaRowPatch(afterExBatch)) && sameAsRebuild(delRowA)),
+    { delType: { status: d2.status, want: newDelA, got: v(delRowA._id)['Del. Type'], path: readPath(afterDelA), rowPatch: afterDelA.rowPatch, equalToRebuild: sameAsRebuild(delRowA) }, exFactory: { path: [readPath(afterEx), readPath(afterExBatch)] } });
 
   // G13 sınırlı süreli soak: Supp. FOB / not dönüşümlü → artımlı CP (since) + Siparişler; sonda tam okuma ↔ artımlı birikim.
   const soakStart = Date.now();
