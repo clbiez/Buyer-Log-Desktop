@@ -41,12 +41,16 @@ function syncHarness({ fail = false, rowSave = false } = {}) {
     // rowSave: CP satır kaydı (POST /rows) — plan yalnız gövdedeki dokunulmuş birimleri taşır.
     cpRowSavePlan: (_row, _code, body) => (rowSave ? { patch: body.delType !== undefined ? { delType: body.delType } : { notes: body.notes }, units: body.delType !== undefined ? ['delType'] : ['notes:Notes'] } : null),
     cpRowSaveSend: (_row, _code, patch) => { sent.push({ url: '/api/overrides/rows', body: patch }); return new Promise((resolve, reject) => { const fn = () => (fail ? reject(new Error('x')) : resolve({})); settles.push(fn); settle = fn; }); },
-    enqueueOverrideMutation: (_kind, url, opts) => { sent.push({ url, body: JSON.parse(opts.body) }); return new Promise((resolve, reject) => { const fn = () => (fail ? reject(new Error('x')) : resolve({})); settles.push(fn); settle = fn; }); },
+    enqueueOverrideMutation: (_kind, url, opts) => { sent.push({ url, body: JSON.parse(typeof opts.body === 'function' ? opts.body() : opts.body) }); return new Promise((resolve, reject) => { const fn = () => (fail ? reject(new Error('x')) : resolve({})); settles.push(fn); settle = fn; }); },
     notifyOverrideSaveError: () => {},
     appLang: 'tr',
     console: { warn: () => {} },
   };
-  const fns = loadAppMainFunctions(['syncOverrideToServer'], globals);
+  // BL-029: gövde düzenlenebilir Del. Type'ı cpEditableDelType ile okur (segmentsiz satırda satır değeri).
+  globals.normalizeTransitDelType = value => String(value ?? '').trim();
+  // P1 (eski yol bayat alanlar): gövde cpLegacyBodyWithoutUnchanged'den geçer.
+  Object.assign(globals, { cpRowIsObject: v => v !== null && typeof v === 'object' && !Array.isArray(v), CP_ROW_NOTE_PAIRS: { Notes: ['Notes', 'NotesHtml'], EkNot: ['EkNot', 'EkNotHtml'] }, CP_ROW_DATE_FIELDS: { exFactory: 'ex', retailDate: 'retail', inStoreDate: 'mb' } });
+  const fns = loadAppMainFunctions(['syncOverrideToServer', 'cpEditableDelType', 'cpLogisticSegments', 'cpLegacyBodyWithoutUnchanged', 'cpRowSnapshot', 'cpRowStoredOf'], globals);
   return { ...fns, sent, settle: async () => { settle(); await new Promise(r => setImmediate(r)); }, settleAt: async i => { settles[i](); await new Promise(r => setImmediate(r)); } };
 }
 const cpRow = extra => ({ 'Order Code': 4100001, 'Model Name': 'MODEL-1', 'C.Code': 'C01', 'Del. Type': 'Uçak', Licensor: 'DTR', ...extra });
@@ -57,7 +61,8 @@ test('ilgisiz kayıt (not / Supp. FOB) Del. Type göndermez — görünen değer
   h.syncOverrideToServer(4100001, { Notes: 'yeni not' }, row);
   assert.equal(h.sent.length, 1);
   assert.equal(Object.hasOwn(h.sent[0].body, 'delType'), false);
-  assert.deepEqual(h.sent[0].body.notes, { Notes: 'yeni not' });
+  // Eski yol not çiftini (metin + Html) taşır; yalnız değişen çift gider (P1, bayat not ezme düzeltmesi).
+  assert.deepEqual(JSON.parse(JSON.stringify(h.sent[0].body.notes)), { Notes: 'yeni not', NotesHtml: '' });
 });
 
 test('açık Del. Type düzenlemesi gönderilir; bayrak onaydan sonra kalkar, sonraki ilgisiz kayıt göndermez', async () => {
@@ -81,7 +86,8 @@ test('kayıt başarısızsa niyet korunur (yeniden denemede Del. Type yine gider
 
 test('yerel delmap yalnız açık Del. Type niyetiyle güncellenir', () => {
   const fn = extractFunction(SOURCE, 'syncOverridesFromRow');
-  assert.match(fn, /if\(row\._delTypeWrite&&row\['Del\. Type'\]\)state\.overrides\.delmap\[key\]=row\['Del\. Type'\];/);
+  // BL-029: değer satırın görünen (parsiyelden türetilebilen) Del. Type'ından değil düzenlenebilir değerden okunur.
+  assert.match(fn, /if\(row\._delTypeWrite\)\{const delType=cpEditableDelType\(row\);if\(delType\)state\.overrides\.delmap\[key\]=delType;\}/);
   assert.doesNotMatch(fn, /\n\s*if\(row\['Del\. Type'\]\)state\.overrides\.delmap\[key\]=/);
 });
 

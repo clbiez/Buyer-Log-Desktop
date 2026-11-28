@@ -12,6 +12,25 @@ function captureOverrideBatch(work){
   return {items:[...entries.values()],resolve:data=>waiters.forEach(item=>item.resolve(data)),reject:err=>waiters.forEach(item=>item.reject(err))};
 }
 function overrideRevisionKey(kind){return kind==='suppFob'?'suppFob':'orders';}
+/* P1 (2026-11-28) · Revizyon belirteci = "bu istemci depoyu bu sürüme kadar gördü". Eski kayıt yollarının (PATCH,
+   /batch, /batch-suppfob) tek koruması bu belirteçle yapılan global CAS'tır. Onay belirteci ancak sunucu bu istekte o
+   anahtarı doğruladıysa (verified: CAS) ya da yeni değer yalnız bu yazmanın kendi artışıysa (ownBump) ilerletir. Aksi
+   hâlde araya görülmemiş bir yazma girmiştir; belirteç bayat kalır ve sıradaki eski yol yazması mevcut çakışma yoluna
+   (409 → uyarı + yeniden yükleme) düşer. Eskiden her onay belirteci sunucu değerine taşıyor, satır kaydı ya da başka
+   satırın onayı görülmemiş değişikliği "görülmüş" sayıyordu: bayat gövde sessizce kazanıyordu. */
+// Kendi yazmalarımızın (henüz belirtece katılmamış) revizyonları: iki kuyruk (satır kaydı / eski yol) eşzamanlı çalışır,
+// onaylar sırasız gelebilir. Belirteç ardışık kendi revizyonları boyunca ilerler; araya giren yabancı revizyon onu durdurur.
+const ownAckedRevisions=new Map();
+function adoptAckRevision(key,value,{verified=false,own=false}={}){
+  const next=Number(value);if(!Number.isInteger(next))return;
+  const own_=ownAckedRevisions.get(key)||new Set();ownAckedRevisions.set(key,own_);
+  let current=Number(state.storeRevisions[key])||0;
+  if(verified&&next>current)current=next;
+  else if(own&&next>current)own_.add(next);
+  while(own_.has(current+1)){own_.delete(current+1);current++;}
+  for(const revision of own_)if(revision<=current)own_.delete(revision);
+  state.storeRevisions[key]=current;
+}
 function notifyOverrideSaveError(message){
   const now=Date.now();
   if(now-lastOverrideErrorToastAt>3500){lastOverrideErrorToastAt=now;showToast(message);}
@@ -19,7 +38,7 @@ function notifyOverrideSaveError(message){
 function enqueueOverrideMutation(kind,url,opts={}){
   if(overrideBatchCapture){
     if(kind!=='orders'||opts.method!=='PATCH'||!url.startsWith('/api/overrides/'))throw new Error('Unsupported bulk override');
-    const orderCode=url.slice('/api/overrides/'.length),patch=JSON.parse(opts.body),key=JSON.stringify([orderCode,patch.model||'',patch.ccode||'']);
+    const orderCode=url.slice('/api/overrides/'.length),patch=JSON.parse(typeof opts.body==='function'?opts.body():opts.body),key=JSON.stringify([orderCode,patch.model||'',patch.ccode||'']);
     const item=overrideBatchCapture.entries.get(key)||{orderCode,patch:{}};
     for(const [field,value]of Object.entries(patch))item.patch[field]=['notes','dates','noteColumns','pricingRestore'].includes(field)?{...(item.patch[field]||{}),...value}:value;
     overrideBatchCapture.entries.set(key,item);
@@ -28,18 +47,22 @@ function enqueueOverrideMutation(kind,url,opts={}){
   const revisionKey=overrideRevisionKey(kind);
   const task=async()=>{
     try{
-      const requestOpts={...opts,headers:{...(opts.headers||{})},expectedRevision:opts.expectedRevision??(Number(state.storeRevisions[revisionKey])||0)};
+      // Gövde işlev olabilir: kuyrukta, gönderimden hemen önce kurulur (önceki yazmanın onayı kayıtlı değeri güncellemiş olur).
+      const requestOpts={...opts,body:typeof opts.body==='function'?opts.body():opts.body,headers:{...(opts.headers||{})},expectedRevision:opts.expectedRevision??(Number(state.storeRevisions[revisionKey])||0)};
       // v6.44 — canlı senkron bu sekmenin kendi yazmasını ayırt edebilsin diye;
       // kendi yazdığın değişiklik için kendine yenileme tetiklemene gerek yok,
       // ekran zaten güncel.
       if(typeof window!=='undefined'&&window.BL_CLIENT_ID)requestOpts.headers['X-Client-Id']=window.BL_CLIENT_ID;
       if(kind==='orders'&&!Object.hasOwn(requestOpts.headers,'X-Supp-Fob-Revision'))requestOpts.headers['X-Supp-Fob-Revision']=String(Number(state.storeRevisions.suppFob)||0);
       const data=await fetchJSON(url,requestOpts);
-      if(Number.isInteger(Number(data.revision)))state.storeRevisions[revisionKey]=Number(data.revision);
-      if(data.revisions&&typeof data.revisions==='object')Object.entries(data.revisions).forEach(([key,value])=>{if(Number.isInteger(Number(value)))state.storeRevisions[key]=Number(value);});
+      // İsteğin CAS ile doğrulattığı anahtarlar: kendi revizyon anahtarı ve (orders yazması Supp. FOB taşıyorsa) suppFob.
+      const touchesSuppFob=kind==='orders'&&typeof requestOpts.body==='string'&&/"suppFob":/.test(requestOpts.body);
+      const verifiedKey=key=>key===revisionKey||(key==='suppFob'&&touchesSuppFob);
+      if(data.revision!=null)adoptAckRevision(revisionKey,data.revision,{verified:true});
+      if(data.revisions&&typeof data.revisions==='object')Object.entries(data.revisions).forEach(([key,value])=>adoptAckRevision(key,value,{verified:verifiedKey(key)}));
       if(data.overrides&&Number.isInteger(Number(data.overrides._revision)))state.storeRevisions.overrides=Number(data.overrides._revision);
       // CP satır kaydı base'i (`_cpStored`): yamanın yazdığı alanların kayıtlı değeri yanıttaki belgeden alınır.
-      try{if(kind==='orders'&&typeof window!=='undefined')window.BLCpRowSave?.legacyAcked?.(url,opts.body,data);}catch(_){}
+      try{if(kind==='orders'&&typeof window!=='undefined')window.BLCpRowSave?.legacyAcked?.(url,requestOpts.body,data);}catch(_){}
       try{if(kind==='orders'&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('buyerlog:cp-write-ack'));}catch(_){}
       return data;
     }catch(err){
@@ -66,5 +89,6 @@ if(typeof window!=='undefined'){
   window.overrideMutationsSettled=overrideMutationsSettled;
   window.enqueueOverrideMutation=enqueueOverrideMutation;
   window.captureOverrideBatch=captureOverrideBatch;
+  window.adoptAckRevision=adoptAckRevision;
   window.isCapturingOverrideBatch=()=>Boolean(overrideBatchCapture);
 }
