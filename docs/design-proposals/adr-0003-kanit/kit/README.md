@@ -52,7 +52,10 @@ node scripts/generate-demo-data.js "$SRC" --rows 30000 --seed 7
 | `run-t0.sh` | #1236 t0 (off / on / A/A, 3 blok) |
 | `shadow4.js` | #1236 bağımsız gölge (6j/shadow3 + #1241/#1243 koruması): U2 Del. Type tam yol + U1 Supp. FOB/not sonrası korunur, Ex-factory adayı (otomatik olmayan) |
 | `contention.js` | Çekişme göstergesi: PSI cpu/io/memory + steal + loadavg (5 sn JSONL); `summary` pencere özeti ve SAKİN/ÇEKİŞMELİ kararı. Her ölçümle birlikte kaydedilir |
-| `final-validation.sh` | Birleşik main nihai doğrulaması (Linux + Electron): test, kapı --strict-known, gölge, Electron L2, soak; adım başına çekişme özeti |
+| `final-validation.sh` | Birleşik main nihai doğrulaması (Linux + Electron), kollar 8.0.18 / birleşik / A/A: test, kapı --strict-known, shadow5 (her iki sürüm), hub, perf blokları, soak (birleşik + 8.0.18 kısa); adım başına çekişme özeti, SAKİN değilse adım tekrarı |
+| `shadow5.js` | Nihai (A) gölge eşitliği: artımlı ↔ yeniden başlatma ↔ sıfırdan tam kurulum; Supp. FOB, not, toplu, POST /rows, Del. Type, Ex-factory, Kaynağa dön (PATCH + /rows), geri al zinciri, IAS parsiyelli Del. Type + Eksik Adet, kıtlık segmentli satır, çoklu renk kardeş korunumu |
+| `perf3.js` + `analyze-perf3.js` | Nihai (B) kullanıcı algılı performans: soğuk/ılık açılış (Siparişler ilk satır), 6 kayıt türü → ack / kendi CP hazır / Siparişler hazır, pencere CPU, 503; kol özeti (A/A gürültü bandı) |
+| `fixture-ex.js` | Windows kapısıyla aynı fixture dönüşümü (her 4. ASAS satırında yükleme onayı boş → düzenlenebilir Ex-factory) + SHA-256 kaydı |
 | `run-t0-electron.sh` | `run-t0.sh` ile aynı kol düzeni, Electron (`ELECTRON_RUN_AS_NODE=1`, `EL=<ikili>`) |
 | `soak.js` + `hook-soak.js` + `analyze-soak.js` | Uzun oturum bellek dayanıklılığı: tek sunucu, Supp. FOB / not + CP + Siparişler döngüsü, havuz/şerit stats, dakika serisi |
 
@@ -87,14 +90,17 @@ veya tarayıcı çalıştırmayın. L2 eşzamanlı yükte geçersizdir.
 ```bash
 # Özel ölçüm slotu alınmadan başlatmayın; koşu boyunca başka yoğun süreç olmamalı.
 # OUT, OS geçici dizininin altında olamaz (betik reddeder).
-REPO=/home/user/Buyer-Log-Desktop BASE=d43150b CAND=<birleşik main SHA> \
-EL=<electron 44.3.0>/dist/electron OUT=$HOME/final-validation SOAK_MIN=110 \
-  docs/design-proposals/adr-0003-kanit/kit/final-validation.sh            # varsayılan: test gate shadow hub l2 soak
+REPO=/home/user/Buyer-Log-Desktop BASE=12521fcac6e6eaf233cd56a82d6ea5bd931c990f CAND=<birleşik main SHA> \
+EL=<electron 44.3.0>/dist/electron OUT=$HOME/final-<sha> SOAK_MIN=110 SOAK_BASE_MIN=30 BLOCKS=3 \
+  docs/design-proposals/adr-0003-kanit/kit/final-validation.sh   # varsayılan: test gate shadow shadowbase hub perf soak soakbase
 ```
 
-- Çıktı: `$OUT/ozet.md`. Her adımın sonucu ile adım penceresinin çekişme özeti (PSI cpu/io, steal; 60 sn boşta tabanla) birlikte yazılır. Ham dosyalar `$OUT/<adım>*`.
-- Tahmini süre: test ~6 dk, gate ~20 dk (30k + 15 dk soak), shadow ~5 dk, hub ~10 dk, l2 ~60 dk (9 kol), soak SOAK_MIN + ~5 dk.
+- BASE = STABLE 8.0.18 kaynak commit'i (12521fc, package.json 8.0.18; a7a92a1 yalnız sürüm notu görsellerini arşivler, JS farkı yok).
+- Çıktı: `$OUT/ozet.md` (adım sonucu + adım penceresi çekişmesi, 60 sn boşta taban), `$OUT/<adım>/` ham dosyalar, `$OUT/perf/perf-ozet.md`,
+  `$OUT/perf/runs.tsv` (koşu başına çekişme), `$OUT/tekrarlar.txt` (SAKİN olmayan denemeler, `<adım>.denemeN/`).
+- Tahmini süre: test ~10 dk, gate ~20 dk, shadow ×2 ~20 dk, hub ~10 dk, perf 3 blok × 3 kol × (~12 + ~6) dk ≈ 2,7 sa, soak 110 + 30 dk.
 - Windows yarısı (ebeveyn tetikler; ikisi de `ref=<birleşik main SHA>`):
   - `Buyer Log Tests` (`buyerlog-tests.yml`): Windows tam regresyon, `TEMP=runner.temp`.
   - `Buyer Log Windows Electron gate` (`buyerlog-electron-gate.yml`), `strict_known=true`: gerçek `BuyerLog.exe` kapısı.
-- Karar: çekişme özeti ÇEKİŞMELİ olan süre ölçümü (L2, soak bekleme) ön sonuçtur ve yeniden koşulur. Veri bütünlüğü kapıları çekişmeden bağımsızdır.
+- Karar: çekişme özeti SAKİN olmayan adım MAX_REPEAT kez yeniden koşar; yine SAKİN değilse süre ölçümü ön sonuçtur. Veri bütünlüğü kapıları
+  çekişmeden bağımsızdır (yine de aynı kurala tabidir). PSI ölçülen işin kendi yükünü içerir (ör. paralel `npm test`): boşta taban ve steal ile okunur.
