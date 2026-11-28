@@ -1,0 +1,105 @@
+{
+ "vaka": 14,
+ "siparislerDegisen": 4,
+ "cpDegisen": 4,
+ "satirlar": [
+  {
+   "kategori": "Yükleme Operasyonları + Yol Operasyonları (geride olan önce varır)",
+   "mainSiparisler": "Yükleme Operasyonları · TIR · 2026-12-04 · ",
+   "mainCP": "Yükleme Operasyonları · TIR · 2026-12-04 · ",
+   "aday": "Yükleme Operasyonları · TIR · 2026-12-04 · ",
+   "adayCpEsit": true
+  },
+  {
+   "kategori": "Yükleme Operasyonları + Yol Operasyonları (geride olan sonra varır)",
+   "mainSiparisler": "Yol Operasyonları · Gemi · 2026-12-04 · 2026-11-20",
+   "mainCP": "Yol Operasyonları · Gemi · 2026-12-04 · 2026-11-20",
+   "aday": "Yükleme Operasyonları · TIR · 2027-01-10 · ",
+   "adayCpEsit": true
+  },
+  {
+   "kategori": "Yükleme Operasyonları + Gümrük-Liman Operasyonları (geride olan önce varır)",
+   "mainSiparisler": "Yükleme Operasyonları · TIR · 2026-12-04 · ",
+   "mainCP": "Yükleme Operasyonları · TIR · 2026-12-04 · ",
+   "aday": "Yükleme Operasyonları · TIR · 2026-12-04 · ",
+   "adayCpEsit": true
+  },
+  {
+   "kategori": "Yükleme Operasyonları + Gümrük-Liman Operasyonları (geride olan sonra varır)",
+   "mainSiparisler": "Gümrük-Liman Operasyonları · Uçak · 2026-12-04 · 2026-11-20",
+   "mainCP": "Gümrük-Liman Operasyonları · Uçak · 2026-12-04 · 2026-11-20",
+   "aday": "Yükleme Operasyonları · TIR · 2027-01-10 · ",
+   "adayCpEsit": true
+  },
+  {
+   "kategori": "Yükleme Operasyonları + Depoda (geride olan önce varır)",
+   "mainSiparisler": "Yükleme Operasyonları · TIR · 2026-12-04 · ",
+   "mainCP": "Yükleme Operasyonları · TIR · 2026-12-04 · ",
+   "aday": "Yükleme Operasyonları · TIR · 2026-12-04 · ",
+   "adayCpEsit": true
+  },
+  {
+   "kategori": "Yükleme Operasyonları + Depoda (geride olan sonra varır)",
+   "mainSiparisler": "Yükleme Operasyonları · TIR · 2027-01-10 · ",
+   "mainCP": "Yükleme Operasyonları · TIR · 2027-01-10 · ",
+   "aday": "Yükleme Operasyonları · TIR · 2027-01-10 · ",
+   "adayCpEsit": true
+  },
+  {
+   "kategori": "Yol Operasyonları + Gümrük-Liman Operasyonları (geride olan önce varır)",
+   "mainSiparisler": "Yol Operasyonları · Gemi · 2026-12-04 · 2026-11-20",
+   "mainCP": "Yol Operasyonları · Gemi · 2026-12-04 · 2026-11-20",
+   "aday": "Yol Operasyonları · Gemi · 2026-12-04 · 2026-11-20",
+   "adayCpEsit": true
+  },
+  {
+   "kategori": "Yol Operasyonları + Gümrük-Liman Operasyonları (geride olan sonra varır)",
+   "mainSiparisler": "Gümrük-Liman Operasyonları · Uçak · 2026-12-04 · 2026-11-20",
+   "mainCP": "Gümrük-Liman Operasyonları · Uçak · 2026-12-04 · 2026-11-20",
+   "aday": "Yol Operasyonları · Gemi · 2027-01-10 · 2026-11-20",
+   "adayCpEsit": true
+  },
+  {
+   "kategori": "Yol Operasyonları + Depoda (geride olan önce varır)",
+   "mainSiparisler": "Yol Operasyonları · Gemi · 2026-12-04 · 2026-11-20",
+   "mainCP": "Yol Operasyonları · Gemi · 2026-12-04 · 2026-11-20",
+   "aday": "Yol Operasyonları · Gemi · 2026-12-04 · 2026-11-20",
+   "adayCpEsit": true
+  },
+  {
+   "kategori": "Yol Operasyonları + Depoda (geride olan sonra varır)",
+   "mainSiparisler": "Yol Operasyonları · Gemi · 2027-01-10 · 2026-11-20",
+   "mainCP": "Yol Operasyonları · Gemi · 2027-01-10 · 2026-11-20",
+   "aday": "Yol Operasyonları · Gemi · 2027-01-10 · 2026-11-20",
+   "adayCpEsit": true
+  },
+  {
+   "kategori": "Gümrük-Liman Operasyonları + Depoda (geride olan önce varır)",
+   "mainSiparisler": "Gümrük-Liman Operasyonları · Uçak · 2026-12-04 · 2026-11-20",
+   "mainCP": "Gümrük-Liman Operasyonları · Uçak · 2026-12-04 · 2026-11-20",
+   "aday": "Gümrük-Liman Operasyonları · Uçak · 2026-12-04 · 2026-11-20",
+   "adayCpEsit": true
+  },
+  {
+   "kategori": "Gümrük-Liman Operasyonları + Depoda (geride olan sonra varır)",
+   "mainSiparisler": "Gümrük-Liman Operasyonları · Uçak · 2027-01-10 · 2026-11-20",
+   "mainCP": "Gümrük-Liman Operasyonları · Uçak · 2027-01-10 · 2026-11-20",
+   "aday": "Gümrük-Liman Operasyonları · Uçak · 2027-01-10 · 2026-11-20",
+   "adayCpEsit": true
+  },
+  {
+   "kategori": "Yükleme + Yol + Depoda (geride olan en geç)",
+   "mainSiparisler": "Yol Operasyonları · Gemi · 2026-12-20 · 2026-11-20",
+   "mainCP": "Yol Operasyonları · Gemi · 2026-12-20 · 2026-11-20",
+   "aday": "Yükleme Operasyonları · TIR · 2027-01-10 · ",
+   "adayCpEsit": true
+  },
+  {
+   "kategori": "iki Yol (aynı aşama)",
+   "mainSiparisler": "Yol Operasyonları · Gemi · 2026-12-04 · 2026-11-20",
+   "mainCP": "Yol Operasyonları · Gemi · 2026-12-04 · 2026-11-20",
+   "aday": "Yol Operasyonları · Gemi · 2026-12-04 · 2026-11-20",
+   "adayCpEsit": true
+  }
+ ]
+}

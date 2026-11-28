@@ -62,3 +62,9 @@ EXPECTED/ALREADY_LATE):
 
 Blok farkları işaret değiştiriyor, A/A aralığında. Fonksiyon düzeyi (24.982 satır, 9 tekrar medyanı): eski seçim
 2,9 ms, yeni 2,9 ms (statü → aşama önbelleğiyle; önbelleksiz ilk sürüm 9,4 ms ölçüldü ve düzeltildi).
+
+## Sentetik: üretimsiz çoklu lojistik aşama (`betikler/multi.js`, `ham/sentetik-coklu-asama.json`)
+
+14 vaka (4 aşama ikilisi × 2 tarih sırası, 3 aşama, aynı aşamada iki parsiyel), kod öneri (1) ile (tarih/vasıta/HO
+STATUS'u veren segmentten). Değişen: Siparişler 4/14, CP 4/14 (main'de bu vakalarda CP = Siparişler). Hepsi geride kalan
+aşamanın daha geç vardığı vakalar (Yükleme+Yol, Yükleme+Gümrük, Yol+Gümrük, Yükleme+Yol+Depoda). 30k fixture'da 0 satır.
