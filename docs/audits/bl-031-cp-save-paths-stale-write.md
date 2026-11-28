@@ -72,3 +72,15 @@ Bağımsız inceleme (oturum içi alt ajan, tek tur) iki kusur buldu ve ikisi d�
 - **Bilinen sınır [Doğrulandı]:** Canlı kanal açıkken A, B'nin değerini görür; ancak A'nın belirteci canlı yamayla ilerlemez. A'nın sonraki eski yol yazması 409 + yeniden yükleme ile reddedilir. Bu sessiz değildir; kullanıcı düzenlemesini yeniden yapar. Bu davranış düzeltmeden önce de vardı.
 - **Kalıcı birleşik çözüm (öneri, ayrı iş):** Eski yolda kalan alanları satır kaydına (alan bazlı `base`) taşımak. Bu alanlar: Supp. FOB/meta, fiyat geçmişi geri yüklemesi, lisansör-fiyat atomikliği, önem, eksik adet, görsel. Böylece global CAS ve iki paralel kayıt yolu kalkar (CLAUDE.md §4.0 ilke 10).
   - Bu iş Supp. FOB revizyon zinciri ile `_cpStored` projeksiyonuna (cp-row-stored) Supp. FOB eklenmesini gerektirir. Fiyat doğruluğu riski taşıyan P1 kapsamdadır; bu PR'ı büyütmemek için ayrıldı.
+
+## Sonraki öncelikli mimari iş (2026-11-28, ürün sahibi kararıyla kayıtlı; başlatılmadı)
+
+**BL-031-A · Tek kayıt yolu ve canlı güncelleme ile revizyon belirtecinin tutarlılığı — birlikte değerlendirilecek tek iş.**
+
+İki sorun aynı kök nedenden gelir: CP'de iki paralel kayıt protokolü var (alan bazlı `base` karşılaştırmalı satır kaydı `POST /rows` ve global revizyon CAS'lı eski yollar `PATCH /:kod`, `/batch`, `/batch-suppfob`) ve global CAS belirteci canlı satır yamalarıyla tutarlı tutulamıyor.
+
+1. **Kayıt yollarının birleştirilmesi:** Eski yolda kalan alanlar (Supp. FOB/meta, fiyat geçmişi geri yüklemesi, lisansör-fiyat atomikliği, önem, eksik adet, görsel, toplu yapıştırma/içe aktarma) satır kaydının alan bazlı `base` sözleşmesine taşınır; global CAS ve paralel yol kalkar (CLAUDE.md §4.0 ilke 10). Gerektirdiği: Supp. FOB revizyon zinciri ve `_cpStored` projeksiyonuna (cp-row-stored) Supp. FOB.
+2. **Canlı güncelleme ↔ revizyon belirteci:** Bugün canlı satır yaması değeri getirir ama belirteci ilerletmez; bayat belirteçli istemcinin sonraki eski yol yazması 409 + uyarı + yeniden yükleme alır (sessiz kayıp yok; UX sürtünmesi). #1259'daki (lojistik artımlı güncelleme) Del. Type / Ex-factory canlı yamalarıyla bu durum daha sık görülebilir.
+   - (1) yapılırsa global CAS kalkacağı için (2) büyük ölçüde ortadan kalkar; bu yüzden ayrı bir "belirteç ilerletme" mekanizması kurulmamalı. Önce (1) tasarlanır, (2) onun kabul ölçütü olur.
+- Risk sınıfı: P1 (çok kullanıcılı veri tutarlılığı, fiyat doğruluğu). Bağımsız beklenen değerli testler, iki istemci gerçek sunucu senaryoları ve Windows `BuyerLog.exe` kapısı (G08b/G08d) kabul ölçütüdür.
+- İlgili açık iş: BL-028-A (sipariş anahtarlı eski override) aynı tasarımda ele alınır.
