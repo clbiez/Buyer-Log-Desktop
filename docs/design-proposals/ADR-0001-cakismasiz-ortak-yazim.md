@@ -309,3 +309,10 @@ Her düzeltmeden sonra yeni seed kümesi koşuldu. Bağımsız incelemede oracle
 - §11 performans istisnası aynen geçerlidir: S1/S3 **FAIL** kaydı korunur. TEST'e alınması ölçütün PASS sayıldığı anlamına gelmez.
 - **STABLE ön koşulu:** TEST kullanıcılarında Koleksiyon senkronu gözlemlenir. Bakılacaklar: OneDrive `-PC` çakışma kopyası sonrası kayıp, Senkron çakışmaları listesi, bekleyen yayım günlükleri (`*.pending-log.jsonl`), açılış ve yayım süresi. Açıklanamayan tek bir kayıp STABLE'ı durdurur.
 - `tools/soak/` (geliştirme dalında) isteğe bağlı olarak kullanılmaya devam eder; artık TEST için ön koşul değildir.
+
+## 14 · STABLE kapısı ve geri dönüş koşulu (ürün sahibi, 2026-11-27)
+
+- 8.0.20 TEST'te kalır. Aşama 0 için geri alma PR'ı açılmaz.
+- **Windows tam regresyonunun geçmesi gerçek OneDrive senkron davranışının doğrulandığı anlamına gelmez.** §13'te kaldırılan ön koşul **STABLE için geri gelir**: STABLE'dan önce gerçek iki Windows cihazı + gerçek OneDrive ile çok cihazlı doğrulama yapılır (`tools/soak/` ya da TEST kullanıcılarında eşdeğer gözlem).
+- Tek bir açıklanamayan veri kaybı STABLE terfisini engeller. Bilinen açıklar (düşman bulut modeli 4/40, sırasız teslim) ve §11 performans istisnası (S1/S3 FAIL) aynen geçerlidir.
+- **Geri dönüş koşulu:** Gerçek bir kayıp görülürse geri dönüş, yeni mekanizmanın oluşturduğu bekleyen yayım kayıtları (`<owner>.pending-first.json`, `<owner>.pending-log.jsonl`) ve henüz yayımlanmamış kullanıcı değişiklikleri güvence altına alınmadan yapılmaz. Eski sürüm bu dosyaları tanımaz; önce bekleyen yayım tamamlanır ya da kayıtlar dışa aktarılır, sonra geri dönülür.
