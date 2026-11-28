@@ -42,7 +42,8 @@ const iso = d => { const p = n => String(n).padStart(2, '0'); return `${d.getFul
     const rowsA = qa.json.result.rows;
     const same = row => x => x['Order Code'] === row['Order Code'] && x['C.Code'] === row['C.Code'] && x['Model Name'] === row['Model Name'];
     const syncNow = async app => { const a = Date.now(); const r = await j(app, '/api/sync-settings/sync-now', { method: 'POST', body: '{}' }); return { ms: Date.now() - a, status: r.status, err: r.status !== 200 ? r.text : null }; };
-    const waitValue = async (app, row, field, ok) => { const start = Date.now(); for (; Date.now() - start < 60000;) { const r = await q(app); const hit = r.status === 200 && r.json.result.rows.find(same(row)); if (hit && ok(hit[field])) return { ms: Date.now() - start, value: hit[field] }; await L.delay(250); } const r = await q(app); const hit = r.status === 200 && r.json.result.rows.find(same(row)); return { ms: null, value: hit ? hit[field] : '<yok>' }; };
+    // Alıcı tarafta sync-now yinelenir: yayımlayanın paketi sync-now yanıtından sonra görünür olabilir (6N/6V: tek alım erken kaldı).
+    const waitValue = async (app, row, field, ok) => { const start = Date.now(); let polls = 0; for (; Date.now() - start < 60000;) { const r = await q(app); const hit = r.status === 200 && r.json.result.rows.find(same(row)); if (hit && ok(hit[field])) return { ms: Date.now() - start, value: hit[field], syncPolls: polls }; if (++polls % 4 === 0) await syncNow(app); await L.delay(250); } const r = await q(app); const hit = r.status === 200 && r.json.result.rows.find(same(row)); return { ms: null, value: hit ? hit[field] : '<yok>' }; };
     // (1) A → B Supp. FOB ×3 (6N ile aynı aşamalar)
     for (let i = 0; i < 3; i++) {
       const row = rowsA[10 + i * 7]; const val = Math.round((200 + i + 0.37) * 100) / 100; const tr = { kind: 'A→B suppFob', code: row['Order Code'], val }; const t0 = Date.now();
@@ -61,12 +62,14 @@ const iso = d => { const p = n => String(n).padStart(2, '0'); return `${d.getFul
     }
     // (3) A → B subManufacturer (Licensor DTR olmayan satır)
     {
-      const row = rowsA.find((r, k) => k > 70 && String(r.Licensor || '').toUpperCase() !== 'DTR') || rowsA[71]; const target = 'HUB SUB ' + Date.now() % 1000; const sc = { code: row['Order Code'], target };
+      const row = rowsA.find((r, k) => k > 70 && String(r.Licensor || '').toUpperCase() !== 'DTR'); const target = 'HUB SUB ' + Date.now() % 1000; const sc = { code: row && row['Order Code'], target };
+      if (!row) { sc.status = 'N/A'; sc.reason = "fixture'da DTR olmayan satır yok (DTR satırında Sub-Manufacturer kaynaktan türer)"; rep.scenarios.subManufacturerAtoB = sc; save(); }
+      else {
       const s = await j(A, '/api/overrides/' + row['Order Code'], { method: 'PATCH', body: JSON.stringify({ model: row['Model Name'], ccode: row['C.Code'], subManufacturer: target }) }); sc.saveStatus = s.status;
       sc.publish = await syncNow(A); sc.apply = await syncNow(B);
       const seen = await waitValue(B, row, 'Sub-Manufacturer', v => String(v || '') === target); sc.bValue = seen.value; sc.ms = seen.ms;
       rep.scenarios.subManufacturerAtoB = sc; save(); console.log('sub', JSON.stringify(sc));
-    }
+    } }
     // (4) Eşzamanlı aynı alan: A ve B, yayım öncesi aynı satırın Supp. FOB'unu farklı değerle yazar.
     {
       const row = rowsA[90]; const sc = { code: row['Order Code'], a: 311.11, b: 322.22 };
@@ -82,9 +85,27 @@ const iso = d => { const p = n => String(n).padStart(2, '0'); return `${d.getFul
       const has = (list, v) => list.some(c => JSON.stringify(c).includes(String(v)));
       // Sessiz kayıp yok: her taraf karşı tarafın değerini ya değer ya çakışma kaydı olarak taşır.
       sc.noSilentLoss = (Number(sc.values.A) === sc.b || has(sc.conflicts.A, sc.b)) && (Number(sc.values.B) === sc.a || has(sc.conflicts.B, sc.a));
+      // Aynı kullanıcı (sahip) iki cihazda: politika deterministik LWW, çakışma kaydı yok (tests/sync-owner-lww-v20261009.test.js).
+      // Ölçüt: iki taraf aynı değere yakınsar ve değer iki yazımdan biridir. Farklı sahip/kullanıcı senaryosu bu kit'te yok.
+      sc.sameOwnerLww = true; sc.converged = Number(sc.values.A) === Number(sc.values.B) && [sc.a, sc.b].includes(Number(sc.values.A));
       rep.scenarios.concurrentSuppFob = sc; save(); console.log('concurrent', JSON.stringify(sc).slice(0, 800));
     }
-    rep.pass = rep.trials.every(t => t.projectionAfterApplyMs != null) && rep.scenarios.datesBtoA.ms != null && rep.scenarios.subManufacturerAtoB.ms != null && rep.scenarios.concurrentSuppFob.noSilentLoss === true;
+    // Tanı: her senaryonun satırı için iki sunucuda (a) kalıcı mağaza (data/overrides.json), (b) sorgu (cp/query),
+    // (c) çakışma listesi; sonra ek bir senkron turu ve iki sunucunun yeniden başlatılması (projeksiyon sıfırdan kurulur).
+    const ovf = app => { try { return JSON.parse(fs.readFileSync(path.join(app.root, 'data', 'overrides.json'), 'utf8')); } catch (_) { return {}; } };
+    const keyOf = row => `${row['Order Code']}|${row['Model Name']}|${row['C.Code']}`;
+    const probeRows = { suppFobAtoB: rowsA[10], datesBtoA: rowsA[60], subAtoB: rowsA.find((r, k) => k > 70 && String(r.Licensor || '').toUpperCase() !== 'DTR') || rowsA[71], concurrent: rowsA[90] };
+    const snapshot = async label => { const out = { label, apps: {} };
+      for (const [name, app] of [['A', A], ['B', B]]) { const o = ovf(app); const qr = (await q(app)).json.result.rows; const conf = (((await j(app, '/api/sync-conflicts')).json || {}).conflicts || []).filter(c => !c.resolved);
+        out.apps[name] = Object.fromEntries(Object.entries(probeRows).map(([k, row]) => { const hit = qr.find(same(row)) || {}; const key = keyOf(row);
+          return [k, { store: { suppFob: (o.suppfobmap || {})[key], dates: (o.datemap || {})[key], sub: (o.submap || {})[key] }, query: { suppFob: hit['Supp. FOB'], retail: hit['Retail Date'], sub: hit['Sub-Manufacturer'] }, conflicts: conf.filter(c => JSON.stringify(c).includes(String(row['Order Code']))).length }]; })); }
+      rep.diagnosis = rep.diagnosis || []; rep.diagnosis.push(out); save(); console.log('diag', JSON.stringify(out).slice(0, 1500)); };
+    await snapshot('senaryolar sonrası');
+    for (let round = 0; round < 2; round++) { await syncNow(A); await syncNow(B); }
+    await L.delay(2000); await snapshot('ek 2 senkron turu sonrası');
+    await A.stop(); await B.stop(); await A.start(); await B.start(); await A.login(); await B.login();
+    await snapshot('iki sunucu yeniden başlatıldı');
+    rep.pass = rep.trials.every(t => t.projectionAfterApplyMs != null) && rep.scenarios.datesBtoA.ms != null && (rep.scenarios.subManufacturerAtoB.status === 'N/A' || rep.scenarios.subManufacturerAtoB.ms != null) && rep.scenarios.concurrentSuppFob.converged === true;
   } catch (e) { rep.errors.push(String(e.stack || e).slice(0, 800)); rep.pass = false; }
   finally { save(); try { await A && A.stop(); } catch (_) {} try { await B && B.stop(); } catch (_) {} }
 })();

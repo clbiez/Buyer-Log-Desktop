@@ -35,3 +35,14 @@ Aynı runner (4× AMD EPYC 9V74), aynı kod. Defender gerçek zamanlı koruma ka
 **Doğrulama:** Buyer Log Tests run 46114356738 (cff0186, 4× AMD EPYC 9V45). Step env'de `TEMP: D:\a\_temp` görünüyor.
 - PASS, 1560 dosya, **440,2 sn**. Önceki c=4 koşusu 1729 sn idi.
 - Batch 2: 718 → 119,8 sn; kritik yol randomized-cloud 95,4 sn.
+
+## Kapı run 3 — #1257 sonrası (run 46120037740, head 0487102 = main 8a29116 + kapı)
+
+- **Ortam:** 4× AMD EPYC 9V74.
+- **Tüm kapılar PASS.** **G08b ve G08d normal kapı olarak geçti:**
+  - bayat oturumun Supp. FOB kaydı 409 `REVISION_CONFLICT` aldı, B'nin notu korundu;
+  - bayat oturumun not kaydı B'nin daha yeni Supp. FOB'unu korudu.
+- G08c N/A: 24.982 satırın tümü DTR. `G08b-eski` / `G08d-eski` INFO: #1257 öncesi istemci gövdesi; sunucu bayat tam gövdeyi kabul eder, koruma istemci sözleşmesindedir.
+- G12: heap sınırı 3782 MB, ana heap tepe 283 MB, RSS tepe 2795 MB, peak RSS 3026 MB.
+- G13: 71/71 kayıt.
+- Ham: `ham/run46120037740-gate-report.json`.

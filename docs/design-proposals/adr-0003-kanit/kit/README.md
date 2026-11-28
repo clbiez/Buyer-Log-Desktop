@@ -81,3 +81,20 @@ node $KIT/primary6.js $PWD $SRC /path/primary.json
 
 Her koşu kendi `/tmp/buyerlog-startup-o3-*` kökünü açar. Koşular arasında başka sunucu
 veya tarayıcı çalıştırmayın. L2 eşzamanlı yükte geçersizdir.
+
+## 4 · Birleşik main nihai doğrulaması (tek komut)
+
+```bash
+# Özel ölçüm slotu alınmadan başlatmayın; koşu boyunca başka yoğun süreç olmamalı.
+# OUT, OS geçici dizininin altında olamaz (betik reddeder).
+REPO=/home/user/Buyer-Log-Desktop BASE=d43150b CAND=<birleşik main SHA> \
+EL=<electron 44.3.0>/dist/electron OUT=$HOME/final-validation SOAK_MIN=110 \
+  docs/design-proposals/adr-0003-kanit/kit/final-validation.sh            # varsayılan: test gate shadow hub l2 soak
+```
+
+- Çıktı: `$OUT/ozet.md`. Her adımın sonucu ile adım penceresinin çekişme özeti (PSI cpu/io, steal; 60 sn boşta tabanla) birlikte yazılır. Ham dosyalar `$OUT/<adım>*`.
+- Tahmini süre: test ~6 dk, gate ~20 dk (30k + 15 dk soak), shadow ~5 dk, hub ~10 dk, l2 ~60 dk (9 kol), soak SOAK_MIN + ~5 dk.
+- Windows yarısı (ebeveyn tetikler; ikisi de `ref=<birleşik main SHA>`):
+  - `Buyer Log Tests` (`buyerlog-tests.yml`): Windows tam regresyon, `TEMP=runner.temp`.
+  - `Buyer Log Windows Electron gate` (`buyerlog-electron-gate.yml`), `strict_known=true`: gerçek `BuyerLog.exe` kapısı.
+- Karar: çekişme özeti ÇEKİŞMELİ olan süre ölçümü (L2, soak bekleme) ön sonuçtur ve yeniden koşulur. Veri bütünlüğü kapıları çekişmeden bağımsızdır.

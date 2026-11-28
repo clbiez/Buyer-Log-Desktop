@@ -11,6 +11,7 @@
 #   shadow : kit shadow4.js — bağımsız gölge: Supp. FOB/not/Del. Type/Ex-factory sonrası sıfırdan tam kurulum eşliği
 #   l2     : kit run-t0-electron-2app.sh — Electron L2 aynı-t0, BASE (A, A/A) ↔ CAND (B), 9 kol dönüşümlü
 #   soak   : kit soak.js — Electron bellek dayanıklılığı SOAK_MIN dk (§6Q yöntemi) + analyze-soak.js
+#   hub    : kit hub.js — iki gerçek sunucu + ortak Shared Hub: B bootstrap, A→B / B→A yakınsama, aynı sahip eşzamanlı LWW
 # Windows yarısı (ebeveyn/ürün sahibi tetikler, ref = CAND):
 #   - "Buyer Log Tests" (buyerlog-tests.yml) workflow_dispatch ref=CAND  → tam regresyon (Windows, TEMP=runner.temp)
 #   - "Buyer Log Windows Electron gate" workflow_dispatch ref=CAND strict_known=true → gerçek BuyerLog.exe kapısı
@@ -18,8 +19,12 @@ set -euo pipefail
 : "${REPO:?}" "${BASE:?}" "${CAND:?}" "${EL:?}" "${OUT:?}"
 SOAK_MIN=${SOAK_MIN:-110}; ROWS=${ROWS:-30000}
 KIT=$(cd "$(dirname "$0")" && pwd)
-STEPS=${*:-test gate shadow l2 soak}
-mkdir -p "$OUT"; W="$OUT/wt"; mkdir -p "$W"
+STEPS=${*:-test gate shadow hub l2 soak}
+# Worktree'ler OS geçici dizininin altında OLMAMALI: tests/user-data-temp-root-recovery.test.js çalışma alanı yolunun
+# geçici kökün dışında olduğunu varsayar; /tmp altındaki worktree'de bu test (ürün hatası olmadan) düşer (2026-11-28).
+TMPROOT=$(node -p "require('fs').realpathSync(require('os').tmpdir())"); mkdir -p "$OUT"; OUTREAL=$(cd "$OUT" && pwd -P)
+case "$OUTREAL/" in "$TMPROOT"/*) echo "OUT ($OUTREAL) OS geçici dizini ($TMPROOT) altında olamaz; ör. OUT=\$HOME/final-validation" >&2; exit 2;; esac
+W="$OUT/wt"; mkdir -p "$W"
 BASEOPT="--use-openssl-ca --max-old-space-size=3686"
 VER=$(ELECTRON_RUN_AS_NODE=1 "$EL" -e 'process.stdout.write(process.versions.electron+" node "+process.versions.node)')
 for pair in "base:$BASE" "cand:$CAND"; do n=${pair%%:*}; sha=${pair#*:}
@@ -44,6 +49,8 @@ for s in $STEPS; do T0[$s]=$(date -u +%FT%TZ); echo "[final] $s başlıyor $(dat
              NODE_OPTIONS="$BASEOPT --require=$KIT/hook-soak.js" SOAK_MIN="$SOAK_MIN" SOAK_GAP_MS=15000 SOAK_CHECK_MIN=10 "$EL" "$KIT/soak.js" "$APP_B" "$SRC" "$OUT/soak.json" > "$OUT/soak.log" 2>&1) || true
           mkdir -p "$OUT/soak-analiz"; node "$KIT/analyze-soak.js" "$OUT/soak.json" "$OUT/soak.hook" "$OUT/soak-analiz" > "$OUT/soak-analiz/ozet.txt" 2>&1 || true
           node -e "const r=require(process.argv[1]);const ch=r.checks||[];const ok=!r.errors.length&&ch.length>0&&ch.every(c=>c.equal&&c.values&&c.values.badCount===0)&&r.baseline&&r.baseline.equalToFinal&&r.edits.every(e=>e.save.status===200&&(e.cp.n503||0)===0&&(e.orders.n503||0)===0);console.log(ok?'PASS':'FAIL');process.exit(ok?0:1)" "$OUT/soak.json" > "$OUT/soak.verdict" && RES[soak]=PASS || RES[soak]=FAIL ;;
+  hub)    (cd "$APP_B" && ELECTRON_RUN_AS_NODE=1 NODE_OPTIONS="$BASEOPT" timeout 1800 "$EL" "$KIT/hub.js" "$APP_B" "$SRC" "$OUT/hub.json" > "$OUT/hub.log" 2>&1) || true
+          node -e "const r=require(process.argv[1]);process.exit(r.pass===true&&!r.errors.length?0:1)" "$OUT/hub.json" && RES[hub]=PASS || RES[hub]=FAIL ;;
   *) echo "bilinmeyen adım $s"; exit 2;;
 esac; T1[$s]=$(date -u +%FT%TZ); echo "[final] $s → ${RES[$s]} $(date -u +%T)"; done
 kill $CPID 2>/dev/null; sleep 1
