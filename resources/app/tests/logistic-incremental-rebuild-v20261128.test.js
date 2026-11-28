@@ -48,6 +48,7 @@ function incremental(row, patch, ov, includePriority) {
   applyIncrementalProjectionPatch(copy, { model: 'MODEL-1', ccode: 'C01', ...patch }, ov, includePriority, {});
   return json(copy);
 }
+const ORDER_KEY = '4100001';
 /* Tarih değerleri projeksiyonda iki biçimde durabilir: tam kurulum Date'i (JSON'da ISO zaman damgası, yerel gece
    yarısı), artımlı tarih yaması gün metni ('YYYY-MM-DD'; Retail / In-Store yamalarında da bugün böyle). Okuyucular
    (coerceDateLoose) ikisini aynı yerel güne çevirir; karşılaştırma bu yüzden yerel gün değeriyle yapılır. */
@@ -121,4 +122,13 @@ test('birincil segment bir IAS parsiyeline geçiyorsa artımlı yeniden kurulum 
   assert.deepEqual([result.ok, result.reason], [true, undefined], 'birincil değişmiyor (üretim bakiyesi önde kalır)');
   const flip = parse.refreshCpLogisticRow({ ...json(row), 'Ex-factory': '2027-02-01' }, { dates: { exFactory: '2027-02-01' } }, { transitRules: TRANSIT_RULES });
   assert.deepEqual([flip.ok, flip.reason], [false, 'primary-ias-change']);
+});
+
+test('kaynağa dönüşte sipariş anahtarındaki Del. Type geçerli olur (satır → sipariş → Gemi), artımlı = tam kurulum', () => {
+  // Sipariş düzeyinde TIR, satırda Uçak kayıtlı; satır kaynağa dönünce (null) değer sipariş anahtarından gelir.
+  const initial = () => ({ delmap: { [KEY]: 'Uçak', [ORDER_KEY]: 'TIR' } });
+  for (const name of ['yalnız üretim', 'üretim + yolda', 'tam yüklü (bakiye yok) yolda + depoda']) {
+    const truth = assertIncrementalEqualsFull({ ...SCENARIOS[name], initial }, { delType: null }, `${name} · sipariş anahtarı`);
+    if (name === 'yalnız üretim') assert.equal(truth.cp['Del. Type'], 'TIR');
+  }
 });

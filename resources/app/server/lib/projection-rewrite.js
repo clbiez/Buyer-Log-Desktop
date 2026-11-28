@@ -29,6 +29,7 @@ function dateOnlyISO(d) {
      notesmap[rowLineKey(row)] | notesmap[orderCodeKey]  (not yazarı/tarihi)
      importancemap (overrideGet: satır anahtarı | ham sipariş kodu) + importanceSettings
      noteColumnDefs, transitRules (tam liste)
+     delmap (satır | sipariş anahtarı; Del. Type yamasında etkin override — parse.effectiveRowDelTypeOverride)
    Eşleşen satırın sipariş kodu anahtarı yamanın sipariş kodu anahtarına eşittir; satır anahtarları
    orderCodeKey ile başlar. Bu yüzden ilk "|" öncesi parçası aynı sipariş koduna çözülen her anahtar
    alınır: aranabilecek her anahtarın üst kümesidir. */
@@ -47,7 +48,7 @@ function rowPatchContext(overrides, items, shared = null) {
   };
   return {
     notesmap: pick(ov.notesmap), importancemap: pick(ov.importancemap), importanceSettings: ov.importanceSettings,
-    noteColumnDefs: ov.noteColumnDefs, transitRules: ov.transitRules,
+    noteColumnDefs: ov.noteColumnDefs, transitRules: ov.transitRules, delmap: pick(ov.delmap),
     cpRowStored: cpRowStored.pickCpRowStoredMaps(shared || ov, items),
   };
 }
@@ -69,7 +70,7 @@ function applyStep(module, payload, step) {
       const row = rows[index];
       for (const item of step.items) {
         if (!projectionPatchMatches(row, item)) continue;
-        applyIncrementalProjectionPatch(row, item.patch, step.context, includePriority, { cpStored: module === 'cp' && rows === payload.rows });
+        applyIncrementalProjectionPatch(row, item.patch, step.context, includePriority, { cpStored: module === 'cp' && rows === payload.rows, orderSummary: rows === payload.orderSummary });
         (touched || (touched = new Set())).add(index);
         if (result.cpRows && rows === payload.rows && !result.cpRows.includes(row)) result.cpRows.push(row);
       }

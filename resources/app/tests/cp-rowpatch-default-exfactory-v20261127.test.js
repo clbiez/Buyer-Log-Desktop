@@ -7,8 +7,8 @@
  * Bu test sentetik kaynakta yükleme onayı ('Buying Son Onay Tarihi') boş satırlar üretir; böylece Ex-factory elle
  * düzenlenebilir ve şunlar gerçek sunucuda sabitlenir:
  *   1) Supp. FOB kaydı (PATCH, gövdede delType yok) sonrası CP okuması satır yaması yoluna girer (varsayılan açık).
- *   2) Elle düzenlenebilir satırda Ex-factory (PATCH ve /batch) 2xx; sonraki okuma satır yaması yoluna GİRMEZ (lojistik
- *      segment girdisi, rowPatchIncrementalSafe → patchTouchesLogisticSegments) ve değer görünür.
+ *   2) Elle düzenlenebilir satırda Ex-factory (PATCH ve /batch) 2xx; sonraki okuma da satır yaması yolunda (2026-11-28,
+ *      İş 2: lojistik segmentler artımlı yeniden kurulur, parse.refreshCpLogisticRow) ve değer görünür.
  *   3) Otomatik (yükleme onaylı) satırda Ex-factory yazımı 409 AUTOMATIC_DATE_READ_ONLY; değer korunur.
  *   4) Projeksiyon önbelleği silinip sıfırdan tam kurulum (yeniden başlatma) tabanı: dokunulan satırlar alan alan
  *      (Ex-factory, Ant. Arrival, STATUS, Del. Type, Supp. FOB …) ve tüm satırların karar demeti birebir.
@@ -101,7 +101,7 @@ const viaRowPatch=read=>Boolean(read.rowPatch&&read.rowPatch.steps>0);
 const line=row=>({model:row['Model Name'],ccode:row['C.Code']});
 const strip=row=>{const o={...row};delete o._rowIndex;return o;};
 
-test('CP satır yaması varsayılan: Supp. FOB yama yolunda; Ex-factory tam kurulumda; otomatik Ex-factory 409; sıfırdan tam kurulumla birebir',{timeout:600000},async t=>{
+test('CP satır yaması varsayılan: Supp. FOB ve Ex-factory yama yolunda; otomatik Ex-factory 409; sıfırdan tam kurulumla birebir',{timeout:600000},async t=>{
   const box=sandbox();t.after(async()=>{await box.stop();fs.rmSync(box.root,{recursive:true,force:true});});
   await box.start();
   const refresh=await box.send('/api/refresh',{});assert.ok(refresh.status<300,'refresh');
@@ -122,17 +122,31 @@ test('CP satır yaması varsayılan: Supp. FOB yama yolunda; Ex-factory tam kuru
   const afterFob=await computed(box);
   assert.equal(viaRowPatch(afterFob),true,'Supp. FOB sonrası okuma satır yaması yolunda: '+JSON.stringify(afterFob.rowPatch));
 
-  // 2) Elle düzenlenebilir Ex-factory: PATCH ve /batch → 2xx, okuma satır yaması yoluna girmez.
+  // 2) Elle düzenlenebilir Ex-factory: PATCH ve /batch → 2xx, okuma satır yaması yolunda (segmentler artımlı yeniden kurulur).
   const shift=(row,days)=>{const d=new Date(row['Ex-factory']);d.setDate(d.getDate()+days);return iso(d);};
   const exTarget=shift(exRow,10),exBatchTarget=shift(exBatchRow,-12);
   const ex=await box.send('/api/overrides/'+exRow['Order Code'],{...line(exRow),dates:{exFactory:exTarget}},'PATCH');
   assert.ok(ex.status>=200&&ex.status<300,'Ex-factory PATCH 2xx: '+JSON.stringify(ex.body).slice(0,200));
   const afterEx=await computed(box);
-  assert.equal(viaRowPatch(afterEx),false,'Ex-factory sonrası okuma tam kurulumda: '+JSON.stringify(afterEx.rowPatch));
+  assert.equal(viaRowPatch(afterEx),true,'Ex-factory sonrası okuma satır yaması yolunda: '+JSON.stringify(afterEx.rowPatch));
   const exBatch=await box.send('/api/overrides/batch',{items:[{orderCode:exBatchRow['Order Code'],patch:{...line(exBatchRow),dates:{exFactory:exBatchTarget}}}]});
   assert.ok(exBatch.status>=200&&exBatch.status<300,'Ex-factory /batch 2xx: '+JSON.stringify(exBatch.body).slice(0,200));
   const afterExBatch=await computed(box);
-  assert.equal(viaRowPatch(afterExBatch),false,'Ex-factory /batch sonrası okuma tam kurulumda: '+JSON.stringify(afterExBatch.rowPatch));
+  assert.equal(viaRowPatch(afterExBatch),true,'Ex-factory /batch sonrası okuma satır yaması yolunda: '+JSON.stringify(afterExBatch.rowPatch));
+
+  // 2b) Del. Type (PATCH, /batch) ve "Kaynağa dön" (delType:null) → satır yaması yolunda (İş 2); doğruluk 4)'te tabanla.
+  const delRow=take(rows),delBatchRow=take(rows),revertRow=take(rows);
+  for(const [label,send] of [
+    ['Del. Type PATCH',()=>box.send('/api/overrides/'+delRow['Order Code'],{...line(delRow),delType:'Uçak'},'PATCH')],
+    ['Del. Type /batch',()=>box.send('/api/overrides/batch',{items:[{orderCode:delBatchRow['Order Code'],patch:{...line(delBatchRow),delType:'TIR'}}]})],
+    ['Del. Type yaz',()=>box.send('/api/overrides/'+revertRow['Order Code'],{...line(revertRow),delType:'Uçak'},'PATCH')],
+    ['Del. Type kaynağa dön',()=>box.send('/api/overrides/'+revertRow['Order Code'],{...line(revertRow),delType:null},'PATCH')],
+  ]){
+    const response=await send();
+    assert.ok(response.status>=200&&response.status<300,label+' 2xx: '+JSON.stringify(response.body).slice(0,200));
+    const read=await computed(box);
+    assert.equal(viaRowPatch(read),true,label+' sonrası okuma satır yaması yolunda: '+JSON.stringify(read.rowPatch));
+  }
 
   // 3) Otomatik (yükleme onaylı) Ex-factory: 409, değer korunur.
   const auto=await box.send('/api/overrides/'+autoRow['Order Code'],{...line(autoRow),dates:{exFactory:shift(autoRow,5)}},'PATCH');
@@ -142,7 +156,7 @@ test('CP satır yaması varsayılan: Supp. FOB yama yolunda; Ex-factory tam kuru
   const session=await computed(box);
   const byId=list=>new Map(list.map(r=>[String(r._id),strip(r)]));
   const live=byId(await cpRows(box));
-  const ids=[fobRow,exRow,exBatchRow,autoRow].map(r=>String(r._id));
+  const ids=[fobRow,exRow,exBatchRow,autoRow,delRow,delBatchRow,revertRow].map(r=>String(r._id));
   assert.equal(String(live.get(String(exRow._id))['Ex-factory']).slice(0,10),exTarget,'Ex-factory PATCH değeri görünür');
   assert.equal(String(live.get(String(exBatchRow._id))['Ex-factory']).slice(0,10),exBatchTarget,'Ex-factory /batch değeri görünür');
   assert.equal(live.get(String(autoRow._id))['Ex-factory'],autoRow['Ex-factory'],'otomatik Ex-factory korunur');

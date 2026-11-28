@@ -2341,6 +2341,18 @@ function cpLogisticRowFields(logistic, fallback = {}) {
 function productionDelTypeValue(manual) {
   return normalizeTransitDelType(manual) || norm(manual) || 'Gemi';
 }
+/* Yazım sonrası satırın etkin Del. Type override'ı: tam kurulumdaki gibi delmap'te önce satır anahtarı, yoksa sipariş
+   anahtarı (overrideGet). Bağlam delmap taşımıyorsa yamanın değeri (satır anahtarına yazılan değer) kullanılır.
+   "Kaynağa dön" (null) yalnız satır anahtarını siler: sipariş anahtarı varsa o, yoksa sistem varsayılanı (Gemi). */
+function effectiveRowDelTypeOverride(row, patch, context) {
+  const map = context && context.delmap && typeof context.delmap === 'object' ? context.delmap : null;
+  if (!map) return patch && patch.delType;
+  return overrideGet(map, { ocode: row['Order Code'], model: row['Model Name'], ccode: row['C.Code'] });
+}
+function effectiveRowDelTypeOverrideHas(row, context) {
+  const map = context && context.delmap && typeof context.delmap === 'object' ? context.delmap : null;
+  return map ? overrideHas(map, { ocode: row['Order Code'], model: row['Model Name'], ccode: row['C.Code'] }) : null;
+}
 /* Artımlı lojistik yeniden kurulum (ADR-0003 §6O.d, İş 2): Del. Type / Ex-factory yaması satırın _logisticSegments'ini
    tam kurulumla AYNI kuralla günceller. Yalnız Buyer Log'un açtığı üretim / kıtlık bakiyesi segmenti değişir (vasıta:
    delmap kuralı; varış: estimateAntrepoDate(Ex-factory, vasıta, ülke/sezon/transit kuralı)); gerçekleşmiş IAS
@@ -2356,9 +2368,10 @@ function refreshCpLogisticRow(row, patch, context = {}) {
   const exFactoryChanged = Boolean(p.dates && typeof p.dates === 'object' && Object.prototype.hasOwnProperty.call(p.dates, 'exFactory'));
   if (!delTypeChanged && !exFactoryChanged) return { ok: true, changed: false };
   const before = BLBusinessRules.selectPrimaryLogisticSegment(segments);
+  const bakiyeDelType = delTypeChanged ? productionDelTypeValue(effectiveRowDelTypeOverride(row, p, context)) : null;
   const next = segments.map(segment => {
     if (!segment || (segment.kind !== 'production' && segment.kind !== 'shortage')) return segment;
-    const delType = delTypeChanged ? productionDelTypeValue(p.delType) : segment.delType;
+    const delType = delTypeChanged ? bakiyeDelType : segment.delType;
     const arrival = estimateAntrepoDate(row['Ex-factory'], delType, null, {
       season: row.Season, country: row.Country, status: segment.status,
       rules: context.transitRules, forceRules: true,
@@ -4174,7 +4187,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
 }
 
 module.exports = {
-  refreshCpLogisticRow, compareCpLogisticSegments,
+  refreshCpLogisticRow, compareCpLogisticSegments, productionDelTypeValue, effectiveRowDelTypeOverride, effectiveRowDelTypeOverrideHas,
   prepareBacklogQuery, buildBacklogFilterValues,
   calculateSuppFobByRule, findSuppFobRule, pricingLicensorForLicense, automaticRuleMeta,
   countryEN,
