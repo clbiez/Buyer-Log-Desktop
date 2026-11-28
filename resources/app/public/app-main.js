@@ -7596,6 +7596,13 @@ function cpDelTypeHasOverride(row){
   const stored=cpRowStoredOf(row);
   return Object.hasOwn(stored,'delType')&&String(stored.delType??'')!=='';
 }
+/* Kaynağa dönüşte satırın yeni Del. Type kaynağı: sunucu tam kurulumu gibi (parse.effectiveRowDelTypeOverride) satır
+   anahtarı silinince sipariş anahtarındaki değer, o da yoksa sistem varsayılanı (Gemi; syncCpProductionLogisticSegment). */
+function cpDelTypeSourceValue(row){
+  const map=state.overrides&&state.overrides.delmap;
+  const orderValue=map&&row?map[String(row['Order Code'])]:undefined;
+  return orderValue==null?'':orderValue;
+}
 /* BL-028 · "Kaynağa dön / Revert to source": satırın manuel Del. Type override'ını KALDIRIR. Boş ya da "Gemi" kaydetmek
    değildir ("—" seçeneği bugünkü anlamını korur). Gövde delType:null gönderir; sunucu yalnız bu satırın anahtarını siler ve
    değer kaynak önceliğiyle (satır → sipariş anahtarı → sistem varsayılanı Gemi) tam kurulumda yeniden hesaplanır. Yerelde
@@ -7609,7 +7616,7 @@ function revertCpDelTypeToSource(t){
   if(!cpDelTypeHasOverride(row))return false;
   const id=row._id,prev=cpEditableDelType(row);
   row._delTypeWrite={clear:true};
-  if(!syncCpProductionLogisticSegment(row,''))row['Del. Type']='Gemi';
+  if(!syncCpProductionLogisticSegment(row,cpDelTypeSourceValue(row)))row['Del. Type']=normalizeTransitDelType(cpDelTypeSourceValue(row))||norm(cpDelTypeSourceValue(row))||'Gemi';
   const next=cpEditableDelType(row);
   applyFormulas(row); invalidateUnifiedPriorityDecisions('cp-delivery-type-revert'); markDirty(id);
   pushUndo({id,fields:[{key:'Del. Type',prev,next}],delTypeRevert:true});
@@ -44492,7 +44499,6 @@ function applyRemoteRowPatch(row,patch){
     row._suppFobRule=row._suppFobManual?null:(row._suppFobMeta.ruleId||true);
     if(!row._suppFobManual)recalcSuppFobForRow(row);
   }
-  if(patch.delType!=null)row['Del. Type']=String(patch.delType);
   if(patch.dates&&typeof patch.dates==='object'){
     const dateFields={exFactory:'Ex-factory',retailDate:'Retail Date',inStoreDate:'In-Store (Model Budget)'};
     for(const [incoming,field] of Object.entries(dateFields))if(Object.prototype.hasOwnProperty.call(patch.dates,incoming))row[field]=String(patch.dates[incoming]);
@@ -44514,9 +44520,17 @@ function applyRemoteRowPatch(row,patch){
   }
   // Önem etiketi: başka pencerede/ekip arkadaşının seçtiği etiket aynı kuralla çözülür.
   if(Object.prototype.hasOwnProperty.call(patch,'importance'))window.BLOrderImportanceUI?.applyRemote(row,patch.importance);
-  if(patch.delType!=null)syncCpProductionLogisticSegment(row,patch.delType);
-  else if(patch.dates&&typeof patch.dates==='object'&&Object.prototype.hasOwnProperty.call(patch.dates,'exFactory'))syncCpProductionLogisticSegment(row);
-  if(patch.delType!=null||patch.dates){applyFormulas(row);invalidateUnifiedPriorityDecisions('remote-cp-decision-patch');scheduleOverviewRender('remote-cp-decision-patch');}
+  // Del. Type yaması (null "Kaynağa dön" dahil, BL-028) üretim bakiyesini sunucuyla aynı kaynak önceliğiyle eşitler.
+  const remoteDelType=Object.prototype.hasOwnProperty.call(patch,'delType');
+  if(remoteDelType){
+    const manual=patch.delType!=null?patch.delType:cpDelTypeSourceValue(row);
+    // Bakiye segmenti yoksa: segmentli satırın Del. Type'ı birincil segmentten, segmentsiz satırınki üretim vasıta kuralından.
+    if(!syncCpProductionLogisticSegment(row,manual)){
+      if(cpLogisticHasDetails(row))rebuildCpLogisticCaches(row);
+      else row['Del. Type']=normalizeTransitDelType(manual)||norm(manual)||'Gemi';
+    }
+  }else if(patch.dates&&typeof patch.dates==='object'&&Object.prototype.hasOwnProperty.call(patch.dates,'exFactory'))syncCpProductionLogisticSegment(row);
+  if(remoteDelType||patch.dates){applyFormulas(row);invalidateUnifiedPriorityDecisions('remote-cp-decision-patch');scheduleOverviewRender('remote-cp-decision-patch');}
   if(typeof cpRowSaveRemoteApplied==='function')cpRowSaveRemoteApplied(row,patch); // #1078
   return row;
 }

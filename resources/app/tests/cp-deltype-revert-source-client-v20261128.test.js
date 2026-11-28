@@ -53,7 +53,7 @@ function harness(row, { rowSave = false, ackStored, ackData = {} } = {}) {
     enqueueOverrideMutation: (_kind, url, opts) => { sent.push({ url, body: JSON.parse(typeof opts.body === 'function' ? opts.body() : opts.body) }); return ack(); },
     notifyOverrideSaveError: () => {}, console: { warn: () => {} },
   };
-  const fns = loadAppMainFunctions(['revertCpDelTypeToSource', 'cpDelTypeHasOverride', 'cpRowStoredOf', 'cpEditableDelType', 'syncCpProductionLogisticSegment', 'rebuildCpLogisticCaches', 'cpLogisticSegments', 'syncOverrideToServer', 'cpLegacyBodyWithoutUnchanged'], globals);
+  const fns = loadAppMainFunctions(['revertCpDelTypeToSource', 'cpDelTypeSourceValue', 'cpDelTypeHasOverride', 'cpRowStoredOf', 'cpEditableDelType', 'syncCpProductionLogisticSegment', 'rebuildCpLogisticCaches', 'cpLogisticSegments', 'syncOverrideToServer', 'cpLegacyBodyWithoutUnchanged'], globals);
   const revert = () => fns.revertCpDelTypeToSource({ dataset: { id: String(row._id), key: 'Del. Type', kind: 'deltype' } });
   return { fns, sent, undo, toasts, revert, flush: () => new Promise(resolve => setImmediate(resolve)) };
 }

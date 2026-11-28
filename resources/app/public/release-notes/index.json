@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "8.0.23",
+      "publishedAt": "2026-11-26",
+      "title": {
+        "tr": "Sunum Stüdyosu: grupları birleştirme, ayrılan kart için grup alanı, satır satır başlıklar, kartları sığdır/yay, LCW AI ile gruplama; Alanlar: sütunu sürükleyerek başka ana başlığa taşı; özel sütunlarla kopyala ve hassas sütunlar; Fiyat Masası: net onay görünümü ve Koleksiyon fiyat sütunları; Siparişler: açılışta gereksiz 15 sn bekleme kaldırıldı; Koleksiyon: OneDrive'da aynı anda kaydedilen düzenleme kaybolmaz; Siparişler: CP düzenlemesi aynı pencerede hemen görünür; Siparişler: güncellenen liste “Güncelleniyor…” ile işaretlenir; Kumaş kartı: boş özet parçasıyla kaydedilir; CP ve Siparişler: Artwork Detayı Koleksiyon'daki gibi kartlarla görünür; Lisans Kartları: DTR sözleşmesi royalty/komisyon/hologram boş kaydedilir; Lisans Kartları: TR ve YD için ayrı royalty ve hologram; CP: Del. Type ve Ex-factory düzenlemesi geri dönmez, not ya da fiyat kaydı Del. Type'ı değiştirmez; Tablolar ve grafikler: üzerine gelince açılan ipuçları artık çerçeveli; Lisans Kartları: Non-DTR üretici lisansörle birleştirilir, CP ve Siparişler'de Licensor üreticiden otomatik dolar; Fiyat Masası: tablodan eklenen üretici hemen görünür; CP: Supp. FOB, not ve toplu kayıttan sonra tablo tam yeniden hesaplamayı beklemeden güncellenir; CP: IAS parsiyeli siparişte Del. Type seçimi kaydedilir; CP: Supp. FOB kaydı başka kullanıcının daha yeni notunu silmez; CP: üretim bakiyesi süren siparişte ana durum ve Antrepo Varış Siparişler ile aynı; CP: Del. Type menüsünde “Kaynağa dön”; CP: ekip arkadaşının Del. Type ve Ex-factory değişikliği tabloyu baştan yüklemeden görünür",
+        "en": "Presentation Studio: merge groups, group areas for separated cards, line-by-line titles, fit/spread cards, grouping with LCW AI; Fields: drag a column under another heading; copy custom columns and sensitive columns; Pricing Desk: clear approval state and Collection price columns; Orders: unnecessary 15-second startup wait removed; Collection: edits saved at the same time over OneDrive are no longer lost; Orders: a CP edit shows up right away in the same window; Orders: a refreshing list is marked “Updating…”; Fabric card: saves with an empty summary segment; CP and Orders: Artwork Detail shows cards like Collection; License Cards: DTR contracts save with blank royalty/commission/hologram; License Cards: separate TR and international royalty and hologram; CP: Del. Type and Ex-factory edits no longer revert, and saving a note or price no longer changes Del. Type; Tables and charts: hover tooltips now have a frame; License Cards: Non-DTR manufacturers merge with their licensor, and CP and Orders fill Licensor from the manufacturer; Pricing Desk: a manufacturer added from the table shows up right away; CP: after a Supp. FOB, note or bulk save, the table updates without waiting for a full recalculation; CP: the Del. Type choice is saved on orders with an IAS partial; CP: a Supp. FOB save no longer erases another user's newer note; CP: for an order with production still open, the main status and Ant. Arrival match Orders; CP: “Revert to source” in the Del. Type menu; CP: a teammate's Del. Type and Ex-factory change shows up without reloading the whole table"
+      },
+      "stats": {
+        "features": 8,
+        "improvements": 6,
+        "fixes": 13
+      },
+      "file": "release-notes/8.0.23/release.json"
+    },
+    {
       "version": "8.0.18",
       "publishedAt": "2026-11-26",
       "title": {

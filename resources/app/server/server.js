@@ -10446,8 +10446,9 @@ function rowPatchIncrementalSafe(patch) {
   if (!patch || typeof patch !== 'object') return false;
   if (Object.keys(patch).some(key => !ROW_PATCH_INCREMENTAL_KEYS.has(key))) return false;
   if (patch.dates && Object.values(patch.dates).some(value => value == null || value === '')) return false;
-  // Lojistik segment girdisi (Del. Type, Ex-factory) artımlı uygulanamaz: tek tanım projection-row-patch.js.
-  if (require('./lib/projection-row-patch').patchTouchesLogisticSegments(patch)) return false;
+  // Lojistik segment girdisi (Del. Type, Ex-factory; null "Kaynağa dön" dahil) artık artımlıdır: satırın segmentleri
+  // tam kurulumla aynı kuralla yeniden kurulur (projection-row-patch.js → parse.refreshCpLogisticRow). Kurulamayan
+  // satır yazım anında güvenli tam kuruluma düşer (rowPatchRequiresFullBuild → kira + tam kurulum).
   return true;
 }
 /* v7.19 — Canlı olayın yama olarak gidip gidemeyeceğine karar verir.
@@ -10494,7 +10495,7 @@ async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, i
       if (Array.isArray(payload.orderSummary)) lists.push(payload.orderSummary);
       for (const rows of lists) for (const row of rows) for (const item of clean) {
         if (projectionPatchMatches(row,item)) {
-          applyIncrementalProjectionPatch(row,item.patch,legacyContext,_module!=='orders',{cpStored:_module==='cp'&&rows===payload.rows});
+          applyIncrementalProjectionPatch(row,item.patch,legacyContext,_module!=='orders',{cpStored:_module==='cp'&&rows===payload.rows,orderSummary:rows===payload.orderSummary});
           if (cpRows && _module==='cp' && rows===payload.rows && !cpRows.includes(row)) cpRows.push(row);
         }
       }
@@ -10537,6 +10538,8 @@ function recordCpRowPatches({user,before,items}){
     }
     return cpRowPatchLog().record({userId:String(user.id),before,after:read.contextHash,items,safe:rowPatchIncrementalSafe,
       context:{notesmap,noteColumnDefs:overrides.noteColumnDefs||[],transitRules:overrides.transitRules||[],
+        // Del. Type yamasında satırın etkin override'ı (satır | sipariş anahtarı): projeksiyon yeniden yazımıyla aynı seçim.
+        delmap:require('./lib/projection-rewrite').rowPatchContext(overrides,items).delmap||{},
         cpRowStored:cpRowStoredLib.pickCpRowStoredMaps(shared,items)}});
   }catch(error){logRuntimeFailure('cpRowPatchLog',error);return null;}
 }

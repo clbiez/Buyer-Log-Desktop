@@ -65,7 +65,7 @@ function datasetFor(spec,deps,loads){
    (normalizeRows) + prepareCpRows. Yalnız eşleşen satırlar kopyalanır; diğerleri aynı nesnedir.
    Satırlar yalnız temel veri kümesinde (kullanıcının yetki kapsamına süzülmüş projeksiyon) aranır:
    kapsam dışı sipariş yamada eşleşmez, veri kümesine girmez.
-   spec.virtual: { baseKey, steps:[{ items:[{orderCode,patch}], context:{notesmap,noteColumnDefs,transitRules} }] } */
+   spec.virtual: { baseKey, steps:[{ items:[{orderCode,patch}], context:{notesmap,noteColumnDefs,transitRules,delmap?} }] } */
 const projectionDate=d=>{const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;};
 const diskJson=value=>stringifyWithDates(value,projectionDate);
 function diskRow(row){
@@ -92,7 +92,7 @@ function virtualDataset(spec,{cache,engine},loads){
   const index=orderIndexOf(base),rows=base.rows.slice(),working=new Map();
   for(const step of Array.isArray(spec.virtual.steps)?spec.virtual.steps:[]){
     const context=step&&step.context||{};
-    const overrides={notesmap:context.notesmap||{},noteColumnDefs:context.noteColumnDefs||[],transitRules:context.transitRules||[],cpRowStored:context.cpRowStored||null};
+    const overrides={notesmap:context.notesmap||{},noteColumnDefs:context.noteColumnDefs||[],transitRules:context.transitRules||[],delmap:context.delmap||null,cpRowStored:context.cpRowStored||null};
     for(const item of Array.isArray(step&&step.items)?step.items:[]){
       for(const i of index.get(parseLib.orderCodeKey(item&&item.orderCode))||[]){
         const current=working.has(i)?working.get(i):rows[i];

@@ -17,18 +17,13 @@ function projectionPatchMatches(row, item) {
   return true;
 }
 
-/* Lojistik segment girdileri — TEK tanım (P1, 2026-11-27).
-   Tam kurulumda (parse.js buildBacklogOperationalRows) üretim segmentinin Del. Type'ı delmap'ten, varışı Ex-factory +
-   Del. Type + transit kuralından üretilir; satırın Del. Type / Ant. Arrival / STATUS / HANDOVER alanları segmentten
-   türetilir (okuma modeli hazırlığı overview-row-prep rebuildLogisticCaches, istemci rebuildCpLogisticCaches).
-   applyIncrementalProjectionPatch segmentleri yeniden üretmez: bu girdileri değiştiren yama artımlı uygulanırsa
-   hazırlık eski segmentten eski değeri geri yazar (Del. Type Uçak → Gemi). Böyle bir yama hiçbir yolda artımlı
-   uygulanmaz (server.js rowPatchIncrementalSafe: canlı yama, projeksiyon önbelleği, satır yaması günlüğü) → tam kurulum.
-   Gerçekleşmiş IAS parsiyellerinin değerleri kaynaktan gelir; tam kurulum onlara dokunmaz.
-   KAPSAM: kural satırın segmentli olup olmadığına BAKMAZ (yama satırı bilmez; aktif her siparişin en az bir üretim
-   segmenti vardır). Del. Type ya da Ex-factory içeren BÜTÜN yamalar tam kurulum yoluna düşer — değer değişmemiş
-   görünse bile (eski kayıt gövdesi görünen Del. Type'ı gönderir; bkz. ADR-0003 §6H). Performans bedeli geçici
-   istisnadır (L2 FAIL, #1241). */
+/* Lojistik segment girdileri — TEK tanım (P1 2026-11-27; artımlı yeniden kurulum 2026-11-28, ADR-0003 §6O.d İş 2).
+   Tam kurulumda (parse.js buildBacklogOperationalRows) üretim / kıtlık bakiyesi segmentinin Del. Type'ı delmap'ten,
+   varışı Ex-factory + Del. Type + transit kuralından üretilir; satırın Del. Type / Ant. Arrival / STATUS / HANDOVER
+   alanları birincil segmentten türetilir. Bu girdileri taşıyan yama (null "Kaynağa dön" dahil) applyIncrementalProjectionPatch
+   içinde parse.refreshCpLogisticRow ile tam kurulumun aynı fonksiyonlarıyla yeniden kurulur; gerçekleşmiş IAS
+   parsiyelleri kaynaktan gelir, dokunulmaz. Yeniden kurulamayan satır (rowPatchRequiresFullBuild) güvenli tam kuruluma
+   düşer. Kural satırın segmentli olup olmadığına bakmaz (yama satırı bilmez). */
 function patchTouchesLogisticSegments(patch) {
   if (!patch || typeof patch !== 'object') return false;
   // null ("Kaynağa dön": satır anahtarı silinir) da segment girdisidir; artımlı yol onu yok sayardı (#1241 geri gelir).
@@ -36,7 +31,11 @@ function patchTouchesLogisticSegments(patch) {
   return Boolean(patch.dates && typeof patch.dates === 'object' && Object.prototype.hasOwnProperty.call(patch.dates, 'exFactory'));
 }
 
-/* options.cpStored: satır CP modülünün satırıdır (Orders / sipariş özeti satırı `_cpStored` taşımaz). */
+function rowPatchRequiresFullBuild(reason) {
+  return Object.assign(new Error(`Satır yaması artımlı uygulanamaz (${reason}); tam kurulum gerekir.`), { code: 'ROW_PATCH_REQUIRES_FULL_BUILD', reason });
+}
+/* options.orderSummary: satır sipariş özeti listesindendir.
+   options.cpStored: satır CP modülünün satırıdır (Orders / sipariş özeti satırı `_cpStored` taşımaz). */
 function applyIncrementalProjectionPatch(row, patch, overrides, includePriority = true, options = null) {
   if (patch.notes && typeof patch.notes === 'object') {
     if (Object.prototype.hasOwnProperty.call(patch.notes,'Notes')) row.Notes=patch.notes.Notes==null?'':String(patch.notes.Notes);
@@ -60,7 +59,19 @@ function applyIncrementalProjectionPatch(row, patch, overrides, includePriority 
     row._suppFobOverride=true;
     row._suppFobRule=row._suppFobManual?null:(meta.ruleId||true);
   }
-  if (patch.delType != null) row['Del. Type']=String(patch.delType);
+  const delTypePatched = Object.prototype.hasOwnProperty.call(patch, 'delType');
+  // Segmentsiz satır: sipariş özeti satırı delmap değerini aynen gösterir (yoksa IAS vasıtası → kaynağa dönüş artımlı
+  // kurulamaz); segmentsiz CP / Siparişler satırı üretim vasıta kuralını (backlogProductionDelType) kullanır.
+  // Segmentli satırda Del. Type birincil segmentten türetilir (aşağıda refreshCpLogisticRow).
+  if (delTypePatched && !(Array.isArray(row._logisticSegments) && row._logisticSegments.length)) {
+    if (options && options.orderSummary) {
+      // Sipariş özeti delmap değerini aynen gösterir (bugünkü yama davranışı). Kaynağa dönüşte değer sipariş anahtarından
+      // gelir; o da yoksa IAS vasıtası / Gemi — satırda IAS kaydı olmadığı için tam kuruluma düşer.
+      if (patch.delType != null) row['Del. Type']=String(patch.delType);
+      else if (parseLib.effectiveRowDelTypeOverrideHas(row, overrides) === true) row['Del. Type']=String(parseLib.effectiveRowDelTypeOverride(row, patch, overrides) ?? '');
+      else throw rowPatchRequiresFullBuild('order-summary-deltype-source');
+    } else row['Del. Type']=parseLib.productionDelTypeValue(parseLib.effectiveRowDelTypeOverride(row, patch, overrides));
+  }
   if (patch.dates && typeof patch.dates === 'object') {
     const dateFields={exFactory:'Ex-factory',retailDate:'Retail Date',inStoreDate:'In-Store (Model Budget)'};
     for (const [incoming,field] of Object.entries(dateFields)) if (Object.prototype.hasOwnProperty.call(patch.dates,incoming)) row[field]=String(patch.dates[incoming]);
@@ -83,11 +94,19 @@ function applyIncrementalProjectionPatch(row, patch, overrides, includePriority 
     }
   }
   if (Object.prototype.hasOwnProperty.call(patch,'importance')) parseLib.applyImportanceToRow(row, overrides);
-  if (patch.delType != null || patch.dates) parseLib.applyFormulas(row, overrides.transitRules, includePriority);
+  // Lojistik segment girdisi (Del. Type, Ex-factory): segmentler tam kurulumla AYNI kuralla yeniden kurulur
+  // (parse.refreshCpLogisticRow). Kurulamıyorsa (birincil segment IAS parsiyeline geçer/ayrılır) yama güvenli tam
+  // kuruluma düşer: projeksiyon yeniden yazımı başarısız olur (sonraki okuma tam kurulum), satır yaması günlüğü kira +
+  // tam hesaba döner.
+  if (patchTouchesLogisticSegments(patch)) {
+    const refreshed = parseLib.refreshCpLogisticRow(row, patch, overrides);
+    if (!refreshed.ok) throw rowPatchRequiresFullBuild(refreshed.reason);
+  }
+  if (delTypePatched || patch.dates) parseLib.applyFormulas(row, overrides.transitRules, includePriority);
   /* CP satır kaydı base'i (`_cpStored`): bağlam paylaşılan belgenin kayıtlı değer haritalarını
      (overrides.cpRowStored, kayıt anında) taşıyorsa satırın kimliğiyle yeniden hesaplanır. */
   if (options && options.cpStored && overrides && overrides.cpRowStored && cpRowStored.patchTouchesCpRowStored(patch)) cpRowStored.setRowStored(row, overrides.cpRowStored);
   return row;
 }
 
-module.exports = { applyIncrementalProjectionPatch, projectionPatchMatches, patchTouchesLogisticSegments };
+module.exports = { applyIncrementalProjectionPatch, projectionPatchMatches, patchTouchesLogisticSegments, rowPatchRequiresFullBuild };

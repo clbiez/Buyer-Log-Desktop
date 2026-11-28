@@ -52,17 +52,23 @@ test('merkezi kural: yalnız lojistik segment girdisi (Del. Type, Ex-factory) ar
   for (const patch of [{ suppFob: 9.2 }, { notes: { Notes: 'x' } }, { importance: 'A' }, { noteColumns: { c1: 'x' } }, null]) assert.equal(patchTouchesLogisticSegments(patch), false);
 });
 
-test('kaynak sözleşmesi: kural tek yerde, canlı yama / projeksiyon önbelleği / satır yaması günlüğü aynı kontrolden geçer', () => {
+/* 2026-11-28 (İş 2): bu girdiler artık artımlı uygulanır — satırın segmentleri tam kurulumla aynı kuralla yeniden kurulur
+   (projection-row-patch → parse.refreshCpLogisticRow; eşitlik: logistic-incremental-rebuild-v20261128). Kurulamayan
+   satır yazım anında tam kuruluma düşer. Kural yine tek yerde: segment girdisi tanımı projection-row-patch.js'te,
+   güvenlik kontrolü (rowPatchIncrementalSafe) canlı yama / projeksiyon önbelleği / satır yaması günlüğünde aynı. */
+test('kaynak sözleşmesi: segment girdisi tek yerde yeniden kurulur; canlı yama / projeksiyon önbelleği / satır yaması günlüğü aynı kontrolden geçer', () => {
   const fn = SERVER.slice(SERVER.indexOf('function rowPatchIncrementalSafe('), SERVER.indexOf('function liveRowPatchesFor('));
-  assert.match(fn, /patchTouchesLogisticSegments\(patch\)\) return false;/);
+  assert.doesNotMatch(fn, /patchTouchesLogisticSegments/, 'segment inputs are no longer excluded from the incremental path');
+  const ROW_PATCH = fs.readFileSync(path.join(__dirname, '..', 'server', 'lib', 'projection-row-patch.js'), 'utf8');
+  assert.match(ROW_PATCH, /if \(patchTouchesLogisticSegments\(patch\)\) \{\s*const refreshed = parseLib\.refreshCpLogisticRow\(row, patch, overrides\);\s*if \(!refreshed\.ok\) throw rowPatchRequiresFullBuild\(refreshed\.reason\);/);
   assert.match(SERVER.slice(SERVER.indexOf('function liveRowPatchesFor('), SERVER.indexOf('function liveRowPatchesFor(') + 600), /rowPatchIncrementalSafe\(item\.patch\)/);
   assert.match(SERVER.slice(SERVER.indexOf('async function rewriteProjectionCacheForRowPatches('), SERVER.indexOf('async function rewriteProjectionCacheForRowPatches(') + 400), /rowPatchIncrementalSafe\(item\.patch\)/);
   assert.match(SERVER.slice(SERVER.indexOf('function recordCpRowPatches('), SERVER.indexOf('function recordCpRowPatches(') + 600), /safe:rowPatchIncrementalSafe/);
-  // Aynı güvenlik koşulu başka bir çağrı noktasında yeniden tanımlanmaz.
-  assert.equal((SERVER.match(/patchTouchesLogisticSegments/g) || []).length, 1);
+  // Segment girdisi kuralı sunucuda yeniden tanımlanmaz.
+  assert.equal((SERVER.match(/patchTouchesLogisticSegments/g) || []).length, 0);
 });
 
-test('artımlı yol bu girdilerde yanlış sonuç üretir (kuralın gerekçesi): tam kurulum Uçak, artımlı + hazırlık Gemi', () => {
+test('artımlı yol bu girdide tam kurulumla aynı sonucu üretir (önce: artımlı + hazırlık Gemi değerine dönüyordu)', () => {
   const ov = overrides();
   const before = fullBuild(ov)[0];
   ov.delmap[KEY_C01] = 'Uçak';
@@ -71,7 +77,8 @@ test('artımlı yol bu girdilerde yanlış sonuç üretir (kuralın gerekçesi):
   applyIncrementalProjectionPatch(incremental, { delType: 'Uçak', model: 'MODEL-1', ccode: 'C01' }, ov, true, {});
   prep.prepareCpRows([incremental]);
   assert.equal(truth['Del. Type'], 'Uçak');
-  assert.equal(incremental['Del. Type'], 'Gemi', 'incremental path reverts the edit — must not be used for this patch');
+  assert.deepEqual([incremental['Del. Type'], iso(incremental['Ant. Arrival'])], ['Uçak', iso(truth['Ant. Arrival'])], 'incremental path keeps the edit after read-model preparation');
+  assert.deepEqual(incremental._logisticSegments.map(s => [s.kind, s.delType, iso(s.arrival)]), seg(truth));
 });
 
 test('tam kurulum — yalnız üretim: Del. Type ve Ex-factory düzenlemesi segmente ve satıra açık değerlerle yansır', () => {
