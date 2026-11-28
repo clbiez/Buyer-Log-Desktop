@@ -9,6 +9,14 @@ name: Buyer Log Windows Electron gate
 on:
   workflow_dispatch:
     inputs:
+      ref:
+        description: Doğrulanacak commit/dal (boş = tetiklenen ref). Birleşik main nihai doğrulaması için SHA verin.
+        required: false
+        default: ''
+      strict_known:
+        description: Bilinen bulgular (KNOWN, ör. G08b) FAIL sayılsın mı (nihai doğrulama = true)
+        required: false
+        default: 'false'
       soak_minutes:
         description: Sınırlı soak süresi (dakika)
         required: false
@@ -44,9 +52,18 @@ jobs:
       SOAK_MINUTES: ${{ github.event.inputs.soak_minutes || '15' }}
       ROWS: ${{ github.event.inputs.rows || '30000' }}
       HEAP_MB: ${{ github.event.inputs.heap_mb || '3686' }}
+      STRICT_KNOWN: ${{ github.event.inputs.strict_known || 'false' }}
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+          persist-credentials: false
+      # Kapı betikleri iş akışının kendi commit'inden gelir; doğrulanan uygulama ağacı `ref`'tir.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: gate-tools
+          sparse-checkout: .github/electron-gate
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
@@ -87,8 +104,8 @@ jobs:
         run: |
           set -euo pipefail
           INST="$RUNNER_TEMP/installed/BuyerLog"
-          "$INST/BuyerLog.exe" "$GITHUB_WORKSPACE/.github/electron-gate/gate.js" --app "$INST/resources/app" --fixture-app "$GITHUB_WORKSPACE/resources/app" --out "$RUNNER_TEMP/gate" \
-            --rows "$ROWS" --soak-min "$SOAK_MINUTES" --heap-mb "$HEAP_MB"
+          "$INST/BuyerLog.exe" "$GITHUB_WORKSPACE/gate-tools/.github/electron-gate/gate.js" --app "$INST/resources/app" --fixture-app "$GITHUB_WORKSPACE/resources/app" --out "$RUNNER_TEMP/gate" \
+            --rows "$ROWS" --soak-min "$SOAK_MINUTES" --heap-mb "$HEAP_MB" $([ "$STRICT_KNOWN" = "true" ] && echo --strict-known)
       - name: Print gate report (raw evidence stays in the job log; no artifact storage)
         if: always()
         run: |

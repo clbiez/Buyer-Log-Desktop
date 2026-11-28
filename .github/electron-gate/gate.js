@@ -26,7 +26,7 @@ const crypto = require('crypto');
 const { spawnSync } = require('child_process');
 
 function parseArgs(argv) {
-  const out = { rows: 30000, soakMin: 15, heapMb: 3686, gapMs: 8000 };
+  const out = { rows: 30000, soakMin: 15, heapMb: 3686, gapMs: 8000, strictKnown: false };
   for (let i = 0; i < argv.length; i += 1) {
     const key = argv[i];
     const next = argv[i + 1];
@@ -37,6 +37,7 @@ function parseArgs(argv) {
     else if (key === '--soak-min') out.soakMin = Number(next), i += 1;
     else if (key === '--heap-mb') out.heapMb = Number(next), i += 1;
     else if (key === '--gap-ms') out.gapMs = Number(next), i += 1;
+    else if (key === '--strict-known') out.strictKnown = true;
     else throw new Error('Bilinmeyen argüman: ' + key);
   }
   if (!out.app || !out.out) throw new Error('--app ve --out zorunlu');
@@ -64,12 +65,14 @@ const report = {
     execPath: process.execPath, node: process.versions.node, electron: process.versions.electron || null,
     platform: `${os.platform()} ${os.release()} ${os.arch()}`, cpus: `${os.cpus().length}× ${(os.cpus()[0] || {}).model || '?'}`,
     totalMemMb: Math.round(os.totalmem() / 1048576), NODE_OPTIONS: process.env.NODE_OPTIONS || '', commit: process.env.GITHUB_SHA || process.env.BUYER_LOG_GATE_COMMIT || null,
-    appVersion: null, app: opt.app, fixtureApp: opt.fixtureApp, rows: opt.rows, soakMin: opt.soakMin, heapMb: opt.heapMb,
+    appVersion: null, strictKnown: opt.strictKnown, app: opt.app, fixtureApp: opt.fixtureApp, rows: opt.rows, soakMin: opt.soakMin, heapMb: opt.heapMb,
   },
   timings: {}, gates: [], http: { requests: 0, n503: 0, exhausted: 0, byPath: {} }, edits: [], soak: null, memory: null, stops: [], errors: [],
 };
 const save = () => fs.writeFileSync(path.join(OUT, 'gate-report.json'), JSON.stringify(report, null, 1));
 function gate(id, title, status, detail) {
+  // Nihai (birleşik main) doğrulamada bilinen bulgular normal kapıdır: KNOWN → FAIL.
+  if (opt.strictKnown && status === 'KNOWN') status = 'FAIL';
   report.gates.push({ id, title, status, detail });
   save();
   console.log(`[gate] ${status.padEnd(7)} ${id} ${title}${detail ? ' — ' + (typeof detail === 'string' ? detail : JSON.stringify(detail)).slice(0, 400) : ''}`);
