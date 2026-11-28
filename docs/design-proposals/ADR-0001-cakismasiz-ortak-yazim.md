@@ -316,3 +316,76 @@ Her düzeltmeden sonra yeni seed kümesi koşuldu. Bağımsız incelemede oracle
 - **Windows tam regresyonunun geçmesi gerçek OneDrive senkron davranışının doğrulandığı anlamına gelmez.** §13'te kaldırılan ön koşul **STABLE için geri gelir**: STABLE'dan önce gerçek iki Windows cihazı + gerçek OneDrive ile çok cihazlı doğrulama yapılır (`tools/soak/` ya da TEST kullanıcılarında eşdeğer gözlem).
 - Tek bir açıklanamayan veri kaybı STABLE terfisini engeller. Bilinen açıklar (düşman bulut modeli 4/40, sırasız teslim) ve §11 performans istisnası (S1/S3 FAIL) aynen geçerlidir.
 - **Geri dönüş koşulu:** Gerçek bir kayıp görülürse geri dönüş, yeni mekanizmanın oluşturduğu bekleyen yayım kayıtları (`<owner>.pending-first.json`, `<owner>.pending-log.jsonl`) ve henüz yayımlanmamış kullanıcı değişiklikleri güvence altına alınmadan yapılmaz. Eski sürüm bu dosyaları tanımaz; önce bekleyen yayım tamamlanır ya da kayıtlar dışa aktarılır, sonra geri dönülür.
+
+### 14.1 · Aşama 0 STABLE kapısının yeniden tanımı: sentetik + otomatik kapılar (2026-11-28)
+
+**Bağlam.** Ürün sahibi, gerçek cihaz, gerçek OneDrive ve elle test desteğinin istenmeyeceğini belirtti. Bu bölüm, §14'teki "gerçek iki Windows cihazı + gerçek OneDrive" ön koşulunun yerine konabilecek otomatik kapıları tanımlar. Kapılar iki ayrı sütundadır ve biri diğerinin yerine sayılmaz:
+
+- **(a) Simülasyon:** Linux/Windows Node'da, gerçek DB ve protokol kodu ile dosya sistemi/OneDrive aktarım modeli.
+- **(b) Gerçek ortam otomasyonu:** Windows runner'da gerçek paketlenmiş `BuyerLog.exe`.
+
+Otomatikleştirilemeyen noktalar ayrıca "doğrulanamayan artık risk" olarak listelenir. Bu riskin STABLE kararına etkisi **ürün sahibi kararıdır** (aşağıda). Aşağıdakiler bu bölümle **değişmez**:
+
+- §14'teki geri dönüş koşulu (pending-first / pending-log güvencesi);
+- tek açıklanamayan veri kaybının STABLE'ı durdurması kuralı;
+- bilinen açıklar (düşman bulut 4/40, sırasız teslim, nedensel bulut todo);
+- §11 performans istisnası (S1/S3 **FAIL** kaydı).
+
+Bir kapının PASS olması bu açıkları kapatmaz.
+
+**Ortak kural.** Kapılar STABLE adayının **aynı commit'inde** koşulur (TEST'te doğrulanan baytlar; STABLE yeniden derlenmez). Her sonuçta çalışma ortamı yazılır: Electron/Node sürümü, OS, CPU, NODE_OPTIONS, commit. Durumlar: **PASS / FAIL / BLOCKED**. Ölçülmeyen kapı BLOCKED'dır ve PASS sayılmaz.
+
+#### (a) Simülasyon kapıları
+
+| # | Ölçüt | Komut / iş akışı | PASS eşiği |
+|---|---|---|---|
+| S-A1 | CP paylaşılan alanlar (dates, subManufacturer, suppFob, suppFobMeta, importance): 10 cihaz, 300 işlem, 3 seed; gecikmeli, sırasız, yinelenen ve yarım teslim; `-PC` kopyası; bozuk nihai paket; HLC ±10 dk | `npm test -- sync-simulation-v20261009` | Tüm seed'ler: paylaşılan özet tek; açık çakışma 0; her alanın son değeri her cihazda; ardışık checkpoint; ek turda 0 paket indirme; not/kişisel kayıt sızıntısı 0 |
+| S-A2 | CP paylaşılan alanlarda yazar cihaz değiştirir. Aynı cihazın iki paketi sırasız teslim edilir; `-PC` kopyası enjekte edilir; saat ±1 sa. | `npm test -- cp-shared-fields-handoff-sim` | 3 seed: nedensel son değer her cihazda; açık çakışma 0; özet tek; not yerel. Model sırasız, yinelenen, yarım ve `-PC` teslimi gerçekten üretmiş olmalı |
+| S-A3 | Koleksiyon Aşama 0 simülasyonları | `npm test -- collection-sync-` | todo olmayan tüm testler PASS. **todo'lar (bilinen açıklar) açık kalır, PASS sayılmaz** |
+| S-A4 | OneDrive artefaktları (`-PC` kopyası, dirent) | `npm test -- onedrive-conflict-copies onedrive-hub-dirent` | PASS |
+| S-A5 | İki gerçek `server.js` + ortak Shared Hub klasörü: A kaydı → yayım → B algılama → B projeksiyonu | kit `hub.js` (adr-0003-kanit) | 3 deneme: B projeksiyonunda değer görünür; hata 0 |
+| S-A6 | Tam regresyon (Windows, Node 22) | `Buyer Log TEST release` → Full regression | PASS |
+
+#### (b) Gerçek ortam otomasyonu kapıları (Windows runner, paketlenmiş `BuyerLog.exe`)
+
+İş akışı `buyerlog-electron-gate.yml` (`workflow_dispatch`; yayın, secret ve imza yok):
+
+1. TEST artefaktı derleme betiği (`release:build`, yalnız derleme);
+2. kurulum paketi betiği (`build-installer.js`, SHA-sabitli `BuyerLog.exe`) → gerçek kurulum klasörü;
+3. sunucu `BackendProcess` ile başlatılır: `BuyerLog.exe` → `ELECTRON_RUN_AS_NODE` → `watchdog` → `server`.
+
+Veri: sentetik 30k fixture (seed 7; Ex-factory için yükleme onayı her 4. satırda boş). Heap bütçesi 3686 MB (<~15 GB RAM politikası).
+
+| # | Ölçüt | PASS eşiği |
+|---|---|---|
+| E-G01 | Soğuk ve sıcak açılış, 30k yenileme, CP + Siparişler okuma | 200; sıcak açılış < 90 sn |
+| E-G02 | CP sorgu satırı = computed satırı | eşit |
+| E-G03/G04 | Supp. FOB ve not, tekli + toplu | 2xx ve değer görünür; tekli Supp. FOB satır yaması yolunda |
+| E-G05 | Del. Type (açık niyet) | tam kurulum yolunda; sonraki Supp. FOB/not Del. Type'ı değiştirmez |
+| E-G06/G07 | Elle düzenlenebilir Ex-factory (PATCH + /batch); otomatik Ex-factory | 2xx, okuma tam kurulumda; otomatikte 409 `AUTOMATIC_DATE_READ_ONLY`, değer korunur |
+| E-G08 | Aynı sunucuya iki istemci, eşzamanlı yazım | 4/4 2xx; iki alan korunur; iki oturum aynı veriyi görür |
+| E-G08b | Bayat istemci: Supp. FOB kaydı başka oturumun yeni notunu ezmemeli | **Açık bulgu (KNOWN).** Aşağıdaki karar maddesine bakın |
+| E-G09/G10 | Yeniden başlatma ve sıfırdan tam kurulum eşitliği | karar demeti ve CP satırları birebir |
+| E-G11 | 503 | kurtarılamayan 0 (toplam > 0 ise WARN) |
+| E-G12 | Bellek | heap sınırı = 3686 ± 96 MB; ana heap tepe < %85; işçi OOM 0; beklenmedik çıkış 0 |
+| E-G13 | Sınırlı soak (15 dk) | kayıtlar 2xx; artımlı birikim = tam okuma; değerler görünür |
+| E-G14 | Kapanış | sunucu süreci 20 sn içinde biter (öksüz süreç 0) |
+
+**Tamamlayıcı kanıt (kapı değil):** Linux üzerinde Electron 44.3.0 ile 110 dk bellek soak'u (kit `soak.js`; §6Q ile aynı yöntem): 503, eşitlik, bekleme süreleri, RSS/heap eğimi. Windows'ta uzun soak bu kapı setinde yoktur.
+
+#### Doğrulanamayan artık risk (otomatikleştirilemez)
+
+1. **Gerçek OneDrive istemcisi.** Gerçek senkron zamanlaması, Files On-Demand yer tutucuları, istemcinin ürettiği gerçek `-PC` adlandırması, kısıtlama (throttling), duraklat/devam et, OneDrive ya da antivirüsün dosya kilitlemesi. Simülasyon bunları model kuralları kadar kapsar (§8 "test kapsamı ≠ garanti kapsamı").
+2. **Gerçek çok makine.** Farklı fiziksel saatler (ölçülen ±1 sa ötesi), farklı Windows hesapları ve antivirüs, uyku/hazırda bekletme, ağ kesintisi, uzun çevrimdışı.
+3. **Gerçek kullanıcı verisi.** 30k sentetik fixture dışındaki ölçek ve biçim, eski sürüm verisinin tuhaflıkları, karışık filo (eski + yeni istemci).
+4. **Gerçek arayüz ve güncelleme yaşam döngüsü.** Chromium arayüzü ve pencere davranışı; gerçek kurulumda güncelleyici ve deneme penceresi (bu kapılar sunucu yoluyla sınırlıdır).
+5. **Gün ölçeğinde oturum.** Otomatik soak 15 dk (Windows) ve 110 dk (Linux Electron) ile sınırlıdır.
+
+**STABLE kararına etkisi: ÜRÜN SAHİBİ KARARI [bekliyor].** Seçenekler:
+
+- (i) (a) ve (b) kapıları PASS olduğunda yukarıdaki artık riski açıkça kabul edip STABLE'a terfi etmek. TEST kullanıcı gözlemi (§13) sürer; açıklanamayan tek kayıp yine STABLE'ı durdurur.
+- (ii) §14'teki gerçek iki cihaz + gerçek OneDrive doğrulamasını STABLE ön koşulu olarak korumak.
+
+Bu belge kararı vermez. (i) seçilirse §14'ün ikinci maddesi bu bölümle değiştirilmiş sayılır. (ii) seçilirse bu kapılar ek kanıttır.
+
+**E-G08b kararı (ürün sahibi):** Bulgu Aşama 0 ve Koleksiyon senkronundan bağımsızdır. CP'de, aynı sunucuda bayat bir istemcinin Supp. FOB kaydı başka bir oturumun yeni notunu siler. Açıklaması olan bir veri kaybıdır. STABLE'dan önce düzeltilmesi ya da açıkça kabul edilmesi gerekir; kabul edilirse gerekçesi buraya yazılır.
