@@ -1057,6 +1057,7 @@ function computeFlags(row){
     antArrival:row['Ant. Arrival'],handoverDate:row['HANDOVER Tarihi'],shipConfirmationDate:row['Buying Son Onay Tarihi'],
     status:row['STATUS'],shortage:Number(row._logisticShortageQty)>0,shortageQty:row._logisticShortageQty,
     shortageNote:Number(row._logisticShortageQty)>0 && row._logisticAllPartialsInWarehouse===true,
+    logisticSegments:row._logisticSegments,
     delType:row['Del. Type'],season:row.Season,country:row.Country,
     rules:state.overrides.transitRules,today:new Date()
   },dateOrdinal);
@@ -7570,7 +7571,8 @@ function rebuildCpLogisticCaches(row){
   row._logisticRemainingQty=Math.max(0,(toNum(row['Order Quantity'])||0)-row._logisticLoadedQty);
   row['Remaining Units']=row._logisticRemainingQty;
   row['%']=toNum(row['Order Quantity'])?((toNum(row['Order Quantity'])-row._logisticRemainingQty)/toNum(row['Order Quantity'])):'';
-  const primary=partials[0]||segments.find(s=>s&&s.kind!=='shortage')||segments[0];
+  // Sunucu (parse.js / okuma modeli) ile aynı tek kural: en geride kalan tamamlanmamış aşama.
+  const primary=BLBusinessRules.selectPrimaryLogisticSegment(segments);
   row.STATUS=primary.status||'Üretimde';
   row['Ant. Arrival']=coerceDateLoose(primary.arrival);
   row['Del. Type']=normalizeTransitDelType(primary.delType)||norm(primary.delType);
