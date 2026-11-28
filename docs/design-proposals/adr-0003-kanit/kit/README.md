@@ -51,6 +51,8 @@ node scripts/generate-demo-data.js "$SRC" --rows 30000 --seed 7
 | `run-l2.sh` | 503 / not L2 (5 kol, 3 blok, A/A) |
 | `run-t0.sh` | #1236 t0 (off / on / A/A, 3 blok) |
 | `shadow4.js` | #1236 bağımsız gölge (6j/shadow3 + #1241/#1243 koruması): U2 Del. Type tam yol + U1 Supp. FOB/not sonrası korunur, Ex-factory adayı (otomatik olmayan) |
+| `contention.js` | Çekişme göstergesi: PSI cpu/io/memory + steal + loadavg (5 sn JSONL); `summary` pencere özeti ve SAKİN/ÇEKİŞMELİ kararı. Her ölçümle birlikte kaydedilir |
+| `final-validation.sh` | Birleşik main nihai doğrulaması (Linux + Electron): test, kapı --strict-known, gölge, Electron L2, soak; adım başına çekişme özeti |
 | `run-t0-electron.sh` | `run-t0.sh` ile aynı kol düzeni, Electron (`ELECTRON_RUN_AS_NODE=1`, `EL=<ikili>`) |
 | `soak.js` + `hook-soak.js` + `analyze-soak.js` | Uzun oturum bellek dayanıklılığı: tek sunucu, Supp. FOB / not + CP + Siparişler döngüsü, havuz/şerit stats, dakika serisi |
 

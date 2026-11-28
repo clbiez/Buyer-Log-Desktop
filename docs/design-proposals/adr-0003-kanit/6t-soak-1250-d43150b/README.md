@@ -1,4 +1,8 @@
-# 6T · #1250 sonrası Electron bellek dayanıklılığı (soak): main `d43150b` ↔ 6Q (`5317662`)
+# 6T · #1250 sonrası Electron bellek dayanıklılığı (soak): main `d43150b` ↔ 6Q (`5317662`) — **ÖN SONUÇ**
+
+> **ÖN SONUÇ (ürün sahibi kuralı, 2026-11-28).** Bu soak, ölçüm slotu kuralından önce koşuldu. Aynı pencerede başka oturumlar CPU/disk yoğun iş yaptı (aşağıda).
+> Oturumların aynı fiziksel makineyi paylaşıp paylaşmadığı bilinmiyor. Çekişme göstergesi (PSI/steal) bu koşuda kaydedilmedi; kit'e sonradan eklendi (`kit/contention.js`).
+> **Yetkili bellek ve L2 sonucu:** birleşik main üzerinde, özel slotla ve çekişme kaydıyla koşulacak nihai doğrulamadır (`kit/final-validation.sh`).
 
 **Ortam:**
 - Commit: main `d43150bcbe…` (yalıtılmış worktree). Kodu, 2026-11-28 05:07Z'deki main `825721c` ile aynı; aradaki fark yalnız doküman.
@@ -39,6 +43,22 @@ Değerlendirme:
   - 6Q'da emeklilik yoktu. Fark, #1250 ile değişen okuma yolunun şerit işçisinde biraz daha fazla bellek tutmasıyla uyumlu [Hipotez].
 - **Bekleme:** CP bekleme medyanı 3262 → 204 ms (16×). Bu, #1250 ile varsayılan olan satır yaması yolunun beklenen etkisidir. Zamanla kötüleşmiyor: dilimler 205 → 199 → 201 → 215 ms.
 - **Kapsam dışı:** Windows (gerçek `BuyerLog.exe`) uzun soak bu kanıtta yok. Windows kapısı 15 dk soak içerir (6U).
+
+## Eşzamanlı yük pencerelerinde sapma (ebeveynin bildirdiği yaklaşık saatler)
+
+| Pencere (UTC) | Kayıt | CP bekleme medyan / p90 | Hazır medyan / p90 | Sunucu CPU ms/kayıt medyan |
+|---|---:|---:|---:|---:|
+| Lojistik tam npm test 05:15–05:22 | 23 | 202 / 248 | 3208 / 3515 | 9860 |
+| Lojistik Electron L2 05:25–05:35 | 33 | 207 / 233 | 2938 / 3292 | 7460 |
+| Del. Type tam npm test / Chromium 05:30–05:50 | 67 | 193 / 239 | 2884 / 3180 | 7320 |
+| Pencereler birleşik | 106 | 201 / 239 | 2936 / 3339 | 7550 |
+| Pencere dışı | 258 | 207 / 248 | 3064 / 3417 | 8130 |
+
+- RSS ve heap dakika medyanları: pencere içi 1469 / 91 MB, dışı 1444 / 121 MB. Heap farkı oturumun ilerlemesinden gelir; pencereler oturumun ilk 40 dakikasında.
+- **[Muhtemel]** Bu pencerelerde bekleme süresi, sunucu CPU'su ya da RSS'te ölçülebilir sapma yok. Pencere içi değerler daha düşük bile.
+  - Bu, diğer oturumların bu container'ın CPU'sunu paylaşmadığıyla uyumlu. Yine de kanıt değil: PSI ve steal kaydı yok.
+  - 05:15–05:22 penceresi ısınma dilimine düşüyor; hazır medyanı 3208 ms.
+- **Bu oturumun kendi müdahalesi:** soak sırasında bu container'da kısa filtreli testler koştu: ~05:52Z iş akışı testleri 0,5 sn; ~05:54Z `compact-test-reporter` + `collection-sync-causal-cloud` 32 sn. Toplam 365 kaydın ~2'si etkilenmiş olabilir.
 
 ## Yeniden üretim
 
