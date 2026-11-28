@@ -54,7 +54,9 @@ function harness(row, { rowSave = false } = {}) {
     notifyOverrideSaveError: () => {},
     console: { warn: () => {} },
   };
-  const fns = loadAppMainFunctions(['commitCpEditor', 'syncCpProductionLogisticSegment', 'rebuildCpLogisticCaches', 'cpLogisticSegments', 'cpEditableDelType', 'syncOverrideToServer'], globals);
+  // P1 (eski yol bayat alanlar): gövde cpLegacyBodyWithoutUnchanged'den geçer.
+  Object.assign(globals, { cpRowIsObject: v => v !== null && typeof v === 'object' && !Array.isArray(v), CP_ROW_NOTE_PAIRS: { Notes: ['Notes', 'NotesHtml'], EkNot: ['EkNot', 'EkNotHtml'] }, CP_ROW_DATE_FIELDS: { exFactory: 'ex', retailDate: 'retail', inStoreDate: 'mb' } });
+  const fns = loadAppMainFunctions(['commitCpEditor', 'syncCpProductionLogisticSegment', 'rebuildCpLogisticCaches', 'cpLogisticSegments', 'cpEditableDelType', 'syncOverrideToServer', 'cpLegacyBodyWithoutUnchanged', 'cpRowSnapshot', 'cpRowStoredOf'], globals);
   const edit = value => fns.commitCpEditor({ dataset: { id: String(row._id), key: 'Del. Type', kind: 'deltype' }, value }, { refresh: false });
   return { fns, sent, undo, edit };
 }

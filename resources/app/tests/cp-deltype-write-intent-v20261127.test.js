@@ -48,7 +48,9 @@ function syncHarness({ fail = false, rowSave = false } = {}) {
   };
   // BL-029: gövde düzenlenebilir Del. Type'ı cpEditableDelType ile okur (segmentsiz satırda satır değeri).
   globals.normalizeTransitDelType = value => String(value ?? '').trim();
-  const fns = loadAppMainFunctions(['syncOverrideToServer', 'cpEditableDelType', 'cpLogisticSegments'], globals);
+  // P1 (eski yol bayat alanlar): gövde cpLegacyBodyWithoutUnchanged'den geçer.
+  Object.assign(globals, { cpRowIsObject: v => v !== null && typeof v === 'object' && !Array.isArray(v), CP_ROW_NOTE_PAIRS: { Notes: ['Notes', 'NotesHtml'], EkNot: ['EkNot', 'EkNotHtml'] }, CP_ROW_DATE_FIELDS: { exFactory: 'ex', retailDate: 'retail', inStoreDate: 'mb' } });
+  const fns = loadAppMainFunctions(['syncOverrideToServer', 'cpEditableDelType', 'cpLogisticSegments', 'cpLegacyBodyWithoutUnchanged', 'cpRowSnapshot', 'cpRowStoredOf'], globals);
   return { ...fns, sent, settle: async () => { settle(); await new Promise(r => setImmediate(r)); }, settleAt: async i => { settles[i](); await new Promise(r => setImmediate(r)); } };
 }
 const cpRow = extra => ({ 'Order Code': 4100001, 'Model Name': 'MODEL-1', 'C.Code': 'C01', 'Del. Type': 'Uçak', Licensor: 'DTR', ...extra });
@@ -59,7 +61,8 @@ test('ilgisiz kayıt (not / Supp. FOB) Del. Type göndermez — görünen değer
   h.syncOverrideToServer(4100001, { Notes: 'yeni not' }, row);
   assert.equal(h.sent.length, 1);
   assert.equal(Object.hasOwn(h.sent[0].body, 'delType'), false);
-  assert.deepEqual(h.sent[0].body.notes, { Notes: 'yeni not' });
+  // Eski yol not çiftini (metin + Html) taşır; yalnız değişen çift gider (P1, bayat not ezme düzeltmesi).
+  assert.deepEqual(JSON.parse(JSON.stringify(h.sent[0].body.notes)), { Notes: 'yeni not', NotesHtml: '' });
 });
 
 test('açık Del. Type düzenlemesi gönderilir; bayrak onaydan sonra kalkar, sonraki ilgisiz kayıt göndermez', async () => {

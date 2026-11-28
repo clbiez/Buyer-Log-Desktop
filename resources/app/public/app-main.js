@@ -17049,6 +17049,28 @@ window.BLCpRowSave={
   legacyAcked:cpRowLegacyAcked,
 };
 
+/* P1 (2026-11-28) · Eski kayıt yolu (PATCH / toplu batch) alan bazlı karşılaştırma yapmaz; global revizyon CAS'ı tek
+   korumadır. Satır kaydı onayı (POST /rows) istemcinin global revizyonunu ilerletir ama diğer satırların değerini
+   yenilemez → bayat gövde (ör. Supp. FOB kaydındaki dokunulmamış not) başka oturumun daha yeni değerini sessizce
+   ezer. Satırın kayıtlı değeriyle (satır kaydının base'i: _cpStored, cpRowSnapshot ile aynı kaynak) aynı olan — bu sekmede
+   değiştirilmemiş — not çifti, not sütunu, alt üretici ve lisansör gönderilmez. Açık niyet (alt üretici yazımı,
+   fiyat geçmişi geri yüklemesi) alanı her zaman taşır. */
+function cpLegacyBodyWithoutUnchanged(row,body,{subWrite=null,restore=null}={}){
+  const stored=cpRowStoredOf(row),out={...body},text=value=>value==null?'':String(value);
+  if(cpRowIsObject(body.notes)){
+    const storedNotes=cpRowIsObject(stored.notes)?stored.notes:{},notes={};
+    for(const pair of Object.values(CP_ROW_NOTE_PAIRS))if(pair.some(field=>text(body.notes[field])!==text(storedNotes[field])))pair.forEach(field=>{notes[field]=text(body.notes[field]);});
+    if(Object.keys(notes).length)out.notes=notes;else delete out.notes;
+  }
+  if(cpRowIsObject(body.noteColumns)){
+    const storedColumns=cpRowIsObject(stored.noteColumns)?stored.noteColumns:{};
+    const columns=Object.fromEntries(Object.entries(body.noteColumns).filter(([id,value])=>text(value)!==text(storedColumns[id])));
+    if(Object.keys(columns).length)out.noteColumns=columns;else delete out.noteColumns;
+  }
+  if(Object.hasOwn(out,'subManufacturer')&&!subWrite&&text(out.subManufacturer)===text(stored.subManufacturer))delete out.subManufacturer;
+  if(Object.hasOwn(out,'licensor')&&!restore?.licensor&&text(out.licensor).trim()===text(stored.licensor).trim())delete out.licensor;
+  return out;
+}
 function syncOverrideToServer(orderCode,notes,row){
   if(!window.SERVER_BACKED)return;
   schedulePendingOverrideWrite(`notes:${overrideSyncKey(row, orderCode)}`, typeof cpRowSaveDebounce==='function'?cpRowSaveDebounce(500):500, ()=>{
@@ -17059,7 +17081,8 @@ function syncOverrideToServer(orderCode,notes,row){
         if(turknorm(row.Licensor)!=='DTR'&&(!restore?.licensor||subWrite))body.subManufacturer=norm(row['Sub-Manufacturer']);
         if(row._licensorManual===true&&Object.hasOwn(state.overrides.licensormap||{},overrideSyncKey(row,orderCode)))body.licensor=norm(row.Licensor);
         // An imported (CP update) value is not re-sent as a manual price with a note save.
-        if(row._suppFobManual===true&&!importedSuppFob(row)&&Object.hasOwn(state.overrides.suppfobmap||{},overrideSyncKey(row,orderCode))&&(!restore?.licensor||manualWrite)){
+        // Supp. FOB yalnız açık niyetle (_pricingManualWrite) gider: önceki manuel fiyat ilgisiz kayıtta yeniden gönderilmez.
+        if(manualWrite&&row._suppFobManual===true&&!importedSuppFob(row)&&Object.hasOwn(state.overrides.suppfobmap||{},overrideSyncKey(row,orderCode))){
           body.suppFob=(row['Supp. FOB']!=null&&row['Supp. FOB']!=='')?Number(row['Supp. FOB']):null;
           body.suppFobMeta={source:'manual'};
         }
@@ -17082,7 +17105,7 @@ function syncOverrideToServer(orderCode,notes,row){
     const rowPlan=typeof cpRowSavePlan==='function'?cpRowSavePlan(row,orderCode,body):null;
     const sent=rowPlan
       ?(rowPlan.skip?Promise.resolve():cpRowSaveSend(row,orderCode,rowPlan.patch,rowPlan.units))
-      :enqueueOverrideMutation('orders',`/api/overrides/${orderCode}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      :enqueueOverrideMutation('orders',`/api/overrides/${orderCode}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(cpLegacyBodyWithoutUnchanged(row,body,{subWrite,restore}))});
     sent.then(()=>{
       if(restore&&row._pricingHistoryRestore===restore)delete row._pricingHistoryRestore;
       if(manualWrite&&row._pricingManualWrite===manualWrite)delete row._pricingManualWrite;

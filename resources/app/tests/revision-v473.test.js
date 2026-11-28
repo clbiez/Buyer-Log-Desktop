@@ -69,8 +69,12 @@ test('v4.73 DTR Sub-Mfr Manufacturer ile aynıdır; Non-DTR kayıt yoksa boş, g
 test('v4.73 boş Non-DTR Sub-Mfr kalıcı olarak yazılabilir', () => {
   assert.match(DB_SOURCE, /if \(patch\.subManufacturer != null\) ov\.submap\[oc\] = patch\.subManufacturer/);
   const save=require('./helpers/cp-note-write-context.cjs'),row={'Order Code':1,'Model Name':'MODEL','C.Code':'01',Licensor:'DEMO','Sub-Manufacturer':''};
-  const blank=save({...row}).writes[0];
+  // P1 (2026-11-28): boşaltma açık düzenlemedir (_subManufacturerWrite) ya da kayıtlı değerden farklıdır → '' gönderilir.
+  const blank=save({...row,_subManufacturerWrite:{}}).writes[0];
   assert.equal(Object.hasOwn(blank,'subManufacturer'),true);assert.equal(blank.subManufacturer,'');
+  const cleared=save({...row,_cpStored:{subManufacturer:'OLD SUB'}}).writes[0];
+  assert.equal(cleared.subManufacturer,'','clearing a stored value is sent');
+  assert.equal(Object.hasOwn(save({...row,_cpStored:{}}).writes[0],'subManufacturer'),false,'an untouched blank value is not re-sent');
   assert.equal(Object.hasOwn(save({...row,Licensor:'DTR',Manufacturer:'FACTORY'}).writes[0],'subManufacturer'),false,'DTR keeps its derived manufacturer rule');
 });
 
