@@ -712,6 +712,40 @@
     return sign * (Math.floor(Math.abs(number) * factor + 0.5 + 1e-10) / factor);
   }
 
+  /* Segment riskleri (ADR-0003 §6O.c, ürün sahibi kararı 2a): lojistik segmentli satırda HANDOVER_PENDING
+     ve ANTREPO_DELAY, satırın görünen (birincil) segmentine değil ilgili HER segmente bakar; birincil segment
+     üretim bakiyesi olunca yoldaki parsiyelin bugünkü uyarısı gizlenmez. Yüklem bugünküyle aynıdır, yalnız
+     segment başına değerlendirilir; kıtlık segmenti ve kıtlıklı satır bugünkü gibi dışarıda kalır. Kıtlık dışı
+     segment yoksa null döner ve çağıran satır alanlarıyla eskisi gibi çalışır. Sıcak yol: dizi/kapanış yok. */
+  function segmentRiskStage(segment) {
+    return segment.kind === 'production' ? 'PRODUCTION' : primarySegmentStage(segment.status);
+  }
+  function segmentHandoverGap(segments, dateOrdinal) {
+    let seen = false;
+    for (let index = 0; index < segments.length; index += 1) {
+      const segment = segments[index];
+      if (!segment || typeof segment !== 'object' || segment.kind === 'shortage') continue;
+      seen = true;
+      const stage = segmentRiskStage(segment);
+      if (stage === 'PRODUCTION' || stage === 'SHORTAGE' || stage === 'IN_WAREHOUSE') continue;
+      if (dateOrdinal(segment.handover) == null) return true;
+    }
+    return seen ? false : null;
+  }
+  function segmentArrivalOverdue(segments, today, dateOrdinal) {
+    let seen = false;
+    for (let index = 0; index < segments.length; index += 1) {
+      const segment = segments[index];
+      if (!segment || typeof segment !== 'object' || segment.kind === 'shortage') continue;
+      seen = true;
+      const stage = segmentRiskStage(segment);
+      if (stage === 'SHORTAGE' || stage === 'IN_WAREHOUSE' || stage === 'AWAITING_RETAIL_TRANSFER') continue;
+      const arrival = dateOrdinal(segment.arrival);
+      if (arrival != null && arrival < today) return true;
+    }
+    return seen ? false : null;
+  }
+
   function computePriorityFlags(input, dateOrdinal = defaultDateOrdinal) {
     const values = input || {};
     const exFactory = dateOrdinal(values.exFactory);
@@ -767,37 +801,26 @@
     const mbGap = mbAntrepo != null && inStoreDate != null ? inStoreDate - mbAntrepo : null;
     const mbDelay = mbGap != null && mbGap < 14;
 
-    /* Segment riskleri (ADR-0003 §6O.c, ürün sahibi kararı 2a): lojistik segmentli satırda HANDOVER_PENDING
-       ve ANTREPO_DELAY, satırın görünen (birincil) segmentine değil ilgili HER segmente bakar; birincil segment
-       üretim bakiyesi olunca yoldaki parsiyelin bugünkü uyarısı gizlenmez. Yüklem bugünküyle aynıdır, yalnız
-       segment başına değerlendirilir; kıtlık segmenti ve kıtlıklı satır bugünkü gibi dışarıda kalır.
-       Segmentsiz satır (ya da logisticSegments verilmeyen çağıran) satır alanlarıyla eskisi gibi çalışır. */
-    const riskSegments = Array.isArray(values.logisticSegments)
-      ? values.logisticSegments.filter(segment => segment && typeof segment === 'object' && segment.kind !== 'shortage')
-      : [];
-    const segmentStage = segment => (segment.kind === 'production' ? 'PRODUCTION' : primarySegmentStage(segment.status));
-    const handoverMissingAt = (stage, handover) => handover == null
-      && stage !== 'PRODUCTION' && stage !== 'SHORTAGE' && stage !== 'IN_WAREHOUSE';
-    const handoverGap = riskSegments.length
-      ? riskSegments.some(segment => handoverMissingAt(segmentStage(segment), dateOrdinal(segment.handover)))
-      : handoverMissingAt(operationalStage, handoverDate);
-    const handoverWarning = shipConfirmationDate != null
-      && handoverGap
-      && !shortage
-      && today != null
-      && today - shipConfirmationDate >= 3;
+    // Tek segmentli satırda satırın STATUS / HANDOVER / Ant. Arrival alanları zaten o segmentten türetilir
+    // (selectPrimaryLogisticSegment): segment taraması aynı sonucu verir, atlanır (sıcak yol, ölçüldü).
+    const segments = Array.isArray(values.logisticSegments) && values.logisticSegments.length > 1 ? values.logisticSegments : null;
+    const handoverEligible = shipConfirmationDate != null && !shortage && today != null && today - shipConfirmationDate >= 3;
+    let handoverWarning = false;
+    if (handoverEligible) {
+      const fromSegments = segments ? segmentHandoverGap(segments, dateOrdinal) : null;
+      handoverWarning = fromSegments != null ? fromSegments
+        : (handoverDate == null && !production && operationalStage !== 'SHORTAGE' && operationalStage !== 'IN_WAREHOUSE');
+    }
     // Shortage satırındaki antrepo tarihi gerçek bir IAS varış kaydı değil,
     // Ex-Factory + transit varsayımıdır. Bu sentetik tarih üzerinden Ant. Delay
     // üretmek, siparişi hâlâ yükleme bekliyormuş gibi gösterirdi.
-    const arrivalOverdueAt = (stage, arrival) => arrival != null
-      && today != null
-      && arrival < today
-      && stage !== 'SHORTAGE'
-      && stage !== 'IN_WAREHOUSE'
-      && stage !== 'AWAITING_RETAIL_TRANSFER';
-    const antDelay = !shortage && (riskSegments.length
-      ? riskSegments.some(segment => arrivalOverdueAt(segmentStage(segment), dateOrdinal(segment.arrival)))
-      : arrivalOverdueAt(operationalStage, antArrival));
+    let antDelay = false;
+    if (!shortage && today != null) {
+      const fromSegments = segments ? segmentArrivalOverdue(segments, today, dateOrdinal) : null;
+      antDelay = fromSegments != null ? fromSegments
+        : (antArrival != null && antArrival < today && operationalStage !== 'SHORTAGE'
+          && operationalStage !== 'IN_WAREHOUSE' && operationalStage !== 'AWAITING_RETAIL_TRANSFER');
+    }
     const discountDelayDays = exFactory != null && today != null ? today - exFactory : null;
     const discountWarning = production && discountDelayDays != null && discountDelayDays > 9;
 
