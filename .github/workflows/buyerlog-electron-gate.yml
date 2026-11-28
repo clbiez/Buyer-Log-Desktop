@@ -1,0 +1,97 @@
+name: Buyer Log Windows Electron gate
+# Gerçek paketlenmiş çalışma zamanı kapısı (yayın YOK). Aynı TEST artefaktı derleme
+# betiği (release:build, publish/imza yok) + yeni kullanıcı kurulum paketi betiği
+# (build-installer.js, SHA-sabitli BuyerLog.exe) ile kurulum klasörü üretilir;
+# sunucu, kurulu uygulamanın electron/backend.js BackendProcess yoluyla
+# BuyerLog.exe → ELECTRON_RUN_AS_NODE → server/watchdog.js olarak başlatılır.
+# Sentetik 30k fixture; secret, imza anahtarı veya yayın deposu kullanılmaz.
+# Actions kotası: yalnız elle tetikleme ve kapı dosyalarına dokunan kapı dalı push'u.
+on:
+  workflow_dispatch:
+    inputs:
+      soak_minutes:
+        description: Sınırlı soak süresi (dakika)
+        required: false
+        default: '15'
+      rows:
+        description: Sentetik fixture satırı
+        required: false
+        default: '30000'
+      heap_mb:
+        description: Sunucu heap bütçesi (MB; <~15 GB RAM makine politikası 3686)
+        required: false
+        default: '3686'
+  push:
+    branches: [claude/windows-electron-gate]
+    paths:
+      - .github/electron-gate/**
+      - .github/workflows/buyerlog-electron-gate.yml
+permissions:
+  contents: read
+concurrency:
+  group: buyerlog-electron-gate-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  electron-gate:
+    name: Windows packaged BuyerLog.exe gate
+    runs-on: windows-latest
+    timeout-minutes: 75
+    defaults:
+      run:
+        shell: bash
+        working-directory: resources/app
+    env:
+      SOAK_MINUTES: ${{ github.event.inputs.soak_minutes || '15' }}
+      ROWS: ${{ github.event.inputs.rows || '30000' }}
+      HEAP_MB: ${{ github.event.inputs.heap_mb || '3686' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: resources/app/package-lock.json
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Build TEST-equivalent app artifact (build-only, no publish, no signing)
+        run: |
+          set -euo pipefail
+          npm run release:build -- --allow-dirty
+          ls -la dist-updates
+      - name: Download SHA-pinned BuyerLog.exe runtime
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/in"
+          TAG="$(node -p "require('../../.github/installer/runtime.json').releaseTag")"
+          ASSET="$(node -p "require('../../.github/installer/runtime.json').asset")"
+          gh release download "$TAG" --repo "${{ github.repository }}" --pattern "$ASSET" --dir "$RUNNER_TEMP/in" --clobber
+      - name: Assemble full install folder (build-installer.js) and extract it
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "require('./package.json').version")"
+          SHA="$(node -p "require('../../.github/installer/runtime.json').sha256")"
+          CREATED="$(git log -1 --format=%cI)"
+          node scripts/build-installer.js --app-zip "dist-updates/BuyerLog-$VERSION.zip" --exe "$RUNNER_TEMP/in/BuyerLog.exe" \
+            --exe-sha256 "$SHA" --runtime-root "$GITHUB_WORKSPACE" --version "$VERSION" --created-at "$CREATED" --out "$RUNNER_TEMP/installer"
+          node -e "require('./electron/update/zip').extractZipSafe(process.argv[1],process.argv[2])" "$RUNNER_TEMP/installer/BuyerLog-Kurulum-$VERSION.zip" "$RUNNER_TEMP/installed"
+          ls "$RUNNER_TEMP/installed"
+          test -f "$RUNNER_TEMP/installed/BuyerLog/BuyerLog.exe"
+          test -f "$RUNNER_TEMP/installed/BuyerLog/resources/app/server/watchdog.js"
+      - name: Run gate with packaged BuyerLog.exe (ELECTRON_RUN_AS_NODE)
+        env:
+          ELECTRON_RUN_AS_NODE: '1'
+        run: |
+          set -euo pipefail
+          INST="$RUNNER_TEMP/installed/BuyerLog"
+          "$INST/BuyerLog.exe" "$GITHUB_WORKSPACE/.github/electron-gate/gate.js" --app "$INST/resources/app" --out "$RUNNER_TEMP/gate" \
+            --rows "$ROWS" --soak-min "$SOAK_MINUTES" --heap-mb "$HEAP_MB"
+      - name: Print gate report (raw evidence stays in the job log; no artifact storage)
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/gate/gate-report.json" ]; then echo '----- gate-report.json -----'; cat "$RUNNER_TEMP/gate/gate-report.json"; fi
+          for f in desktop.log; do if [ -f "$RUNNER_TEMP/gate/$f" ]; then echo "----- $f (tail) -----"; tail -n 60 "$RUNNER_TEMP/gate/$f"; fi; done
+          LOGS="$RUNNER_TEMP/gate/install/data/logs"; if [ -f "$LOGS/backend.log" ]; then echo '----- backend.log (tail) -----'; tail -n 80 "$LOGS/backend.log"; fi
