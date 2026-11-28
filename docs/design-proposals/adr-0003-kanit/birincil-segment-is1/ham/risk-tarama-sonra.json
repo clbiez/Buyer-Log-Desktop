@@ -1,0 +1,77 @@
+{
+ "Gemi70/Uçak15/TIR20": {
+  "miktar-0 parsiyel + üretim": {
+   "n": 2331,
+   "- sonuç:AT_RISK": 118,
+   "+ sinyal:DELIVERY_DELAY": 1234,
+   "+ sinyal:MODEL_BUDGET_DELAY": 1289,
+   "+ sebep:EXPECTED_LATE_FOR_TARGET": 1234,
+   "+ sonuç:EXPECTED_LATE": 1234,
+   "- sonuç:ON_TRACK": 1116
+  },
+  "diğer": {
+   "n": 17279
+  },
+  "üretim + depoda": {
+   "n": 2707,
+   "- sonuç:ON_TRACK": 1952,
+   "+ sinyal:DELIVERY_DELAY": 2707,
+   "+ sinyal:MODEL_BUDGET_DELAY": 2548,
+   "+ sinyal:DISCOUNT_DELAY": 2449,
+   "+ sebep:EXPECTED_LATE_FOR_TARGET": 2283,
+   "+ sebep:EX_FACTORY_OVERDUE": 2667,
+   "+ sebep:STALE_ORDER_NOT_LOADED": 2707,
+   "+ sonuç:EXPECTED_LATE": 2283,
+   "- sonuç:AT_RISK": 487,
+   "+ sinyal:ANTREPO_DELAY": 103,
+   "+ sebep:ALREADY_LATE_FOR_TARGET": 156,
+   "+ sonuç:ALREADY_LATE": 156,
+   "+ sebep:LOADING_WINDOW_IMMINENT": 40
+  },
+  "üretim + yolda/yüklemede": {
+   "n": 2665,
+   "- sonuç:ON_TRACK": 1425,
+   "+ sinyal:DELIVERY_DELAY": 2665,
+   "+ sinyal:MODEL_BUDGET_DELAY": 2508,
+   "+ sinyal:DISCOUNT_DELAY": 2414,
+   "+ sebep:EXPECTED_LATE_FOR_TARGET": 2367,
+   "+ sebep:EX_FACTORY_OVERDUE": 2615,
+   "+ sebep:STALE_ORDER_NOT_LOADED": 2665,
+   "+ sonuç:EXPECTED_LATE": 2367,
+   "- sonuç:UNKNOWN": 732,
+   "- sonuç:AT_RISK": 362,
+   "+ sebep:ALREADY_LATE_FOR_TARGET": 152,
+   "+ sonuç:ALREADY_LATE": 152,
+   "+ sebep:LOADING_WINDOW_IMMINENT": 50
+  }
+ },
+ "kural yok": {
+  "miktar-0 parsiyel + üretim": {
+   "n": 2331,
+   "+ sinyal:DELIVERY_DELAY": 1407,
+   "+ sinyal:MODEL_BUDGET_DELAY": 1424
+  },
+  "diğer": {
+   "n": 17279
+  },
+  "üretim + depoda": {
+   "n": 2707,
+   "+ sinyal:DELIVERY_DELAY": 2707,
+   "+ sinyal:MODEL_BUDGET_DELAY": 2548,
+   "+ sinyal:DISCOUNT_DELAY": 2449,
+   "+ sebep:EX_FACTORY_OVERDUE": 2667,
+   "+ sebep:STALE_ORDER_NOT_LOADED": 2707,
+   "+ sinyal:ANTREPO_DELAY": 103,
+   "+ sebep:LOADING_WINDOW_IMMINENT": 40
+  },
+  "üretim + yolda/yüklemede": {
+   "n": 2665,
+   "+ sinyal:DELIVERY_DELAY": 2665,
+   "+ sinyal:MODEL_BUDGET_DELAY": 2508,
+   "+ sinyal:DISCOUNT_DELAY": 2414,
+   "+ sebep:EX_FACTORY_OVERDUE": 2615,
+   "+ sebep:STALE_ORDER_NOT_LOADED": 2665,
+   "+ sebep:LOADING_WINDOW_IMMINENT": 50
+  }
+ }
+}
