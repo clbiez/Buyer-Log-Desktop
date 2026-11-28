@@ -20,7 +20,11 @@ set -euo pipefail
 SOAK_MIN=${SOAK_MIN:-110}; ROWS=${ROWS:-30000}
 KIT=$(cd "$(dirname "$0")" && pwd)
 STEPS=${*:-test gate shadow hub l2 soak}
-mkdir -p "$OUT"; W="$OUT/wt"; mkdir -p "$W"
+# Worktree'ler OS geçici dizininin altında OLMAMALI: tests/user-data-temp-root-recovery.test.js çalışma alanı yolunun
+# geçici kökün dışında olduğunu varsayar; /tmp altındaki worktree'de bu test (ürün hatası olmadan) düşer (2026-11-28).
+TMPROOT=$(node -p "require('fs').realpathSync(require('os').tmpdir())"); mkdir -p "$OUT"; OUTREAL=$(cd "$OUT" && pwd -P)
+case "$OUTREAL/" in "$TMPROOT"/*) echo "OUT ($OUTREAL) OS geçici dizini ($TMPROOT) altında olamaz; ör. OUT=\$HOME/final-validation" >&2; exit 2;; esac
+W="$OUT/wt"; mkdir -p "$W"
 BASEOPT="--use-openssl-ca --max-old-space-size=3686"
 VER=$(ELECTRON_RUN_AS_NODE=1 "$EL" -e 'process.stdout.write(process.versions.electron+" node "+process.versions.node)')
 for pair in "base:$BASE" "cand:$CAND"; do n=${pair%%:*}; sha=${pair#*:}
