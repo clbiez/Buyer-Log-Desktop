@@ -44,21 +44,31 @@ Değerlendirme:
 - **Bekleme:** CP bekleme medyanı 3262 → 204 ms (16×). Bu, #1250 ile varsayılan olan satır yaması yolunun beklenen etkisidir. Zamanla kötüleşmiyor: dilimler 205 → 199 → 201 → 215 ms.
 - **Kapsam dışı:** Windows (gerçek `BuyerLog.exe`) uzun soak bu kanıtta yok. Windows kapısı 15 dk soak içerir (6U).
 
-## Eşzamanlı yük pencerelerinde sapma (ebeveynin bildirdiği yaklaşık saatler)
+## Eşzamanlı yük pencerelerinde sapma (ebeveynin bildirdiği pencereler, UTC)
 
-| Pencere (UTC) | Kayıt | CP bekleme medyan / p90 | Hazır medyan / p90 | Sunucu CPU ms/kayıt medyan |
+Pencereler:
+- **Del. Type oturumu, tam npm test:** 04:59–05:05, 05:25–05:37, 05:44–05:50, 06:04–06:10, 06:39–06:45, 06:56–07:02.
+- **Del. Type oturumu, sunucu + Chromium:** 04:46–04:59, 05:15–05:25, 05:41–05:43, 05:52–06:03, 06:13–06:37 (yoğun), 06:54–07:00.
+- **Lojistik oturumu, tam npm test:** 05:15–05:22 ve 06:10:30–06:16:50.
+- **Lojistik oturumu, Electron L2:** ~05:25–05:35.
+
+Pencereler soak kayıtlarının **%76**'sını kapsıyor.
+
+| Pencere | Kayıt | CP bekleme medyan / p90 (ms) | Hazır medyan / p90 (ms) | Sunucu CPU ms/döngü medyan |
 |---|---:|---:|---:|---:|
-| Lojistik tam npm test 05:15–05:22 | 23 | 202 / 248 | 3208 / 3515 | 9860 |
-| Lojistik Electron L2 05:25–05:35 | 33 | 207 / 233 | 2938 / 3292 | 7460 |
-| Del. Type tam npm test / Chromium 05:30–05:50 | 67 | 193 / 239 | 2884 / 3180 | 7320 |
-| Pencereler birleşik | 106 | 201 / 239 | 2936 / 3339 | 7550 |
-| Pencere dışı | 258 | 207 / 248 | 3064 / 3417 | 8130 |
+| Del. Type tam npm test | 108 | 207 / 252 | 2990 / 3297 | 7520 |
+| Del. Type sunucu + Chromium | 170 | 202 / 243 | 3110 / 3434 | 9050 |
+| — yoğun 06:13–06:37 | 79 | 201 / 243 | 3107 / 3375 | 9150 |
+| Lojistik tam npm test | 44 | 195 / 234 | 3007 / 3497 | 8390 |
+| Lojistik Electron L2 | 33 | 207 / 233 | 2938 / 3292 | 7460 |
+| Herhangi bir pencere | 278 | 203 / 248 | 3036 / 3406 | 7900 |
+| **Hiçbir pencere (sakin)** | 86 | 209 / 248 | 2993 / 3393 | 7710 |
 
-- RSS ve heap dakika medyanları: pencere içi 1469 / 91 MB, dışı 1444 / 121 MB. Heap farkı oturumun ilerlemesinden gelir; pencereler oturumun ilk 40 dakikasında.
-- **[Muhtemel]** Bu pencerelerde bekleme süresi, sunucu CPU'su ya da RSS'te ölçülebilir sapma yok. Pencere içi değerler daha düşük bile.
-  - Bu, diğer oturumların bu container'ın CPU'sunu paylaşmadığıyla uyumlu. Yine de kanıt değil: PSI ve steal kaydı yok.
-  - 05:15–05:22 penceresi ısınma dilimine düşüyor; hazır medyanı 3208 ms.
-- **Bu oturumun kendi müdahalesi:** soak sırasında bu container'da kısa filtreli testler koştu: ~05:52Z iş akışı testleri 0,5 sn; ~05:54Z `compact-test-reporter` + `collection-sync-causal-cloud` 32 sn. Toplam 365 kaydın ~2'si etkilenmiş olabilir.
+- RSS ve heap dakika medyanları: pencere içi (84 dk) 1444 / 110 MB; sakin (27 dk) 1483 / 103 MB.
+- **Bekleme süreleri ve bellek [Muhtemel]:** Pencerelerde ölçülebilir sapma yok; fark gürültü düzeyinde.
+- **Sunucu CPU süresi [Hipotez]:** Del. Type sunucu + Chromium pencerelerinde döngü başına sunucu CPU süresi %17–19 yüksek (9050–9150 ↔ 7710 ms). Aynı iş için daha çok CPU zamanı harcanması, fiziksel çekirdek ya da önbellek paylaşımıyla uyumlu. Duvar saati bekleme süreleri etkilenmedi, çünkü döngü 15 sn boşluklu ve sunucu boşta kalıyor. Kanıt değil: PSI ve steal bu koşuda kaydedilmedi.
+- **Sonuç:** Bu soak'un veri bütünlüğü sonucu (eşitlik, 503 = 0, değer geri okuma) çekişmeden bağımsızdır. Bellek ve süre değerleri **ÖN SONUÇ**'tur; yetkili değer, nihai doğrulamanın çekişme kayıtlı özel slot koşusudur.
+- **Bu oturumun kendi müdahalesi:** soak sırasında bu container'da kısa filtreli testler koştu: ~05:52Z iş akışı testleri 0,5 sn; ~05:54Z `compact-test-reporter` + `collection-sync-causal-cloud` 32 sn. Etkilenmiş olabilecek kayıt ~2.
 
 ## Yeniden üretim
 
