@@ -16951,7 +16951,9 @@ function cpRowSaveSend(row,orderCode,patch,units){
     let data;
     try{data=await fetchJSON('/api/overrides/rows',{method:'POST',headers,body:JSON.stringify({items:[item]})});}
     catch(err){settle(null,false);throw err;}
-    if(data.revisions&&typeof data.revisions==='object')Object.entries(data.revisions).forEach(([name,value])=>{if(Number.isInteger(Number(value)))state.storeRevisions[name]=Number(value);});
+    // Satır kaydı global CAS kullanmaz: belirteç yalnız bu kaydın kendi artışıyla ilerler (override-sync.js adoptAckRevision).
+    // Yanıt `updated` taşımaz; yazan (noop olmayan) satır varsa dönen revizyon bu kaydın kendi revizyonudur.
+    if(data.revisions&&typeof data.revisions==='object')Object.entries(data.revisions).forEach(([name,value])=>window.adoptAckRevision?.(name,value,{own:name==='orders'&&(data.applied||[]).some(item=>item&&item.noop===false)}));
     // Onay: yalnız yeni düzenlemesi beklemeyen birimler haritaya yazılır; bekleyen yerel değer (sonraki kaydın
     // gövdesi buradan kurulur, ör. not sütunları) eski onaylı değerle ezilmez.
     const settledUnits=()=>{const entries=cpRowSave.units.get(key);return sent.filter(({unit,dirty})=>!entries?.get(unit)||entries.get(unit).dirty<=dirty).map(({unit})=>unit);};
@@ -17049,6 +17051,28 @@ window.BLCpRowSave={
   legacyAcked:cpRowLegacyAcked,
 };
 
+/* P1 (2026-11-28) · Eski kayıt yolu (PATCH / toplu batch) alan bazlı karşılaştırma yapmaz; global revizyon CAS'ı tek
+   korumadır. Satır kaydı onayı (POST /rows) istemcinin global revizyonunu ilerletir ama diğer satırların değerini
+   yenilemez → bayat gövde (ör. Supp. FOB kaydındaki dokunulmamış not) başka oturumun daha yeni değerini sessizce
+   ezer. Satırın kayıtlı değeriyle (satır kaydının base'i: _cpStored, cpRowSnapshot ile aynı kaynak) aynı olan — bu sekmede
+   değiştirilmemiş — not çifti, not sütunu, alt üretici ve lisansör gönderilmez. Açık niyet (alt üretici yazımı,
+   fiyat geçmişi geri yüklemesi) alanı her zaman taşır. */
+function cpLegacyBodyWithoutUnchanged(row,body,{subWrite=null,restore=null}={}){
+  const stored=cpRowStoredOf(row),out={...body},text=value=>value==null?'':String(value);
+  if(cpRowIsObject(body.notes)){
+    const storedNotes=cpRowIsObject(stored.notes)?stored.notes:{},notes={};
+    for(const pair of Object.values(CP_ROW_NOTE_PAIRS))if(pair.some(field=>text(body.notes[field])!==text(storedNotes[field])))pair.forEach(field=>{notes[field]=text(body.notes[field]);});
+    if(Object.keys(notes).length)out.notes=notes;else delete out.notes;
+  }
+  if(cpRowIsObject(body.noteColumns)){
+    const storedColumns=cpRowIsObject(stored.noteColumns)?stored.noteColumns:{};
+    const columns=Object.fromEntries(Object.entries(body.noteColumns).filter(([id,value])=>text(value)!==text(storedColumns[id])));
+    if(Object.keys(columns).length)out.noteColumns=columns;else delete out.noteColumns;
+  }
+  if(Object.hasOwn(out,'subManufacturer')&&!subWrite&&text(out.subManufacturer)===text(stored.subManufacturer))delete out.subManufacturer;
+  if(Object.hasOwn(out,'licensor')&&!restore?.licensor&&text(out.licensor).trim()===text(stored.licensor).trim())delete out.licensor;
+  return out;
+}
 function syncOverrideToServer(orderCode,notes,row){
   if(!window.SERVER_BACKED)return;
   schedulePendingOverrideWrite(`notes:${overrideSyncKey(row, orderCode)}`, typeof cpRowSaveDebounce==='function'?cpRowSaveDebounce(500):500, ()=>{
@@ -17059,7 +17083,8 @@ function syncOverrideToServer(orderCode,notes,row){
         if(turknorm(row.Licensor)!=='DTR'&&(!restore?.licensor||subWrite))body.subManufacturer=norm(row['Sub-Manufacturer']);
         if(row._licensorManual===true&&Object.hasOwn(state.overrides.licensormap||{},overrideSyncKey(row,orderCode)))body.licensor=norm(row.Licensor);
         // An imported (CP update) value is not re-sent as a manual price with a note save.
-        if(row._suppFobManual===true&&!importedSuppFob(row)&&Object.hasOwn(state.overrides.suppfobmap||{},overrideSyncKey(row,orderCode))&&(!restore?.licensor||manualWrite)){
+        // Supp. FOB yalnız açık niyetle (_pricingManualWrite) gider: önceki manuel fiyat ilgisiz kayıtta yeniden gönderilmez.
+        if(manualWrite&&row._suppFobManual===true&&!importedSuppFob(row)&&Object.hasOwn(state.overrides.suppfobmap||{},overrideSyncKey(row,orderCode))){
           body.suppFob=(row['Supp. FOB']!=null&&row['Supp. FOB']!=='')?Number(row['Supp. FOB']):null;
           body.suppFobMeta={source:'manual'};
         }
@@ -17079,10 +17104,12 @@ function syncOverrideToServer(orderCode,notes,row){
         return body;
       })();
     // #1078 alt PR 3: anahtar açıkken satır kaydı — yalnız dokunulan alanlar, alan bazlı karşılaştırma; fiyat alanları bugünkü yolda.
+    // Eski yol gövdesi (süzme) kuyrukta, gönderimden hemen önce kurulur: önceki eski yol kaydının onayı satırın kayıtlı değerini
+    // güncellemiş olur (A→B→A geri yazımı düşmez).
     const rowPlan=typeof cpRowSavePlan==='function'?cpRowSavePlan(row,orderCode,body):null;
     const sent=rowPlan
       ?(rowPlan.skip?Promise.resolve():cpRowSaveSend(row,orderCode,rowPlan.patch,rowPlan.units))
-      :enqueueOverrideMutation('orders',`/api/overrides/${orderCode}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      :enqueueOverrideMutation('orders',`/api/overrides/${orderCode}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:()=>JSON.stringify(cpLegacyBodyWithoutUnchanged(row,body,{subWrite,restore}))});
     sent.then(()=>{
       if(restore&&row._pricingHistoryRestore===restore)delete row._pricingHistoryRestore;
       if(manualWrite&&row._pricingManualWrite===manualWrite)delete row._pricingManualWrite;
@@ -18719,6 +18746,13 @@ function refreshJobLostError(expectedJob,jobState){
   };
   return err;
 }
+/* P1 (2026-11-28) · Tam yükleme yanıtı kendi onayımızdan eski olabilir (yükleme yazmalarla eşitlenmez): eski yolların CAS
+   belirteçleri (orders, suppFob) geri gitmez; diğer anahtarlar gelen değeri alır. Açılışta override-sync.js'den önce çalışır. */
+function mergeStoreRevisions(current,incoming){
+  const merged={...(current||{}),...(incoming||{})};
+  for(const key of ['orders','suppFob'])if(Number.isInteger(Number(current?.[key]))&&Number(current[key])>Number(merged[key]))merged[key]=Number(current[key]);
+  return merged;
+}
 async function loadFromServer(force, targets){
   // İstemcinin eski snapshot'ı bir hedefi yanlış gruba dahil edip geçerli
   // filtre bulunamadı hatası üretebiliyordu. Her manuel yenilemeden önce aynı
@@ -18921,7 +18955,7 @@ async function waitForRefreshJob(expectedJob=null){
     // Kural seti revizyonu, storeRevisions birleştirilmeden ÖNCE saklanır; gelen
     // yanıtın bayat mı taze mi olduğu ancak bu değere bakarak anlaşılabilir.
     const knownPricingRulesRevision=Number(state.storeRevisions.pricingRules)||0;
-    state.storeRevisions={...state.storeRevisions,...(data.storeRevisions||{})};
+    state.storeRevisions=mergeStoreRevisions(state.storeRevisions,data.storeRevisions);
     /* Kişisel veriler (Not Defteri, mail şablonları, kayıtlı görünüm/filtreler)
        tarayıcıya özel localStorage'da duruyordu; başka bir tarayıcıda açınca
        görünmüyorlardı. Açılışta sunucudaki kopyayla birleştiriyoruz (v5.98). */

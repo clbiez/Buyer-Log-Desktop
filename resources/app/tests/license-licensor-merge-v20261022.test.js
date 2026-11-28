@@ -159,8 +159,10 @@ test('review fixes: suffix-only key, own contract blocks the merged fallback, im
   const importedSave=save(row,{suppfobmap:{[key]:7},suppfobmetamap:{[key]:meta}});
   assert.equal(Object.hasOwn(importedSave.writes[0],'suppFob'),false,'note save must not resend an imported value as manual');
   assert.deepEqual(importedSave.overrides.suppfobmetamap[key],meta,'local normalization must preserve imported provenance');
-  const manualSave=save({...row,'Supp. FOB':12,_suppFobImported:undefined,_suppFobMeta:{source:'manual'}},{suppfobmap:{[key]:12},suppfobmetamap:{[key]:{source:'manual'}}});
+  // P1 (2026-11-28): manuel fiyat kendi açık düzenlemesiyle (_pricingManualWrite) kaydedilir; ilgisiz not kaydı onu yeniden göndermez.
+  const manualSave=save({...row,'Supp. FOB':12,_suppFobImported:undefined,_suppFobMeta:{source:'manual'},_pricingManualWrite:{}},{suppfobmap:{[key]:12},suppfobmetamap:{[key]:{source:'manual'}}});
   assert.equal(manualSave.writes[0].suppFob,12,'explicit manual values still persist');
+  assert.equal(Object.hasOwn(save({...row,'Supp. FOB':12,_suppFobImported:undefined,_suppFobMeta:{source:'manual'}},{suppfobmap:{[key]:12},suppfobmetamap:{[key]:{source:'manual'}}}).writes[0],'suppFob'),false,'an earlier manual price is not re-sent by an unrelated save');
   assert.deepEqual(manualSave.writes[0].suppFobMeta,{source:'manual'});
   const shared={version:1,license:{stages:[{id:'s',submissions:[{id:'r',addressId:'sh'}]}],addresses:[]},sharedAddresses:[{id:'sh',label:'Shared',text:'t'}],visualLibrary:[]};
   assert.deepEqual(E.pasteMap(shared,{id:'t',license:'L',licensor:'X'}).license.addresses.map(a=>a.id),['sh'],'routed shared addresses travel');
