@@ -95,3 +95,20 @@ Gemi 70 / Uçak 15 / TIR 20 transit kuralı, bugün 28.11. Değişen satır = te
 Teslimat sonucu: `302fc58`'de transit kuralı yok / vasıtayı kapsamıyorsa EXPECTED/ALREADY_LATE → UNKNOWN (414 satır). Ürün sahibi kararıyla
 `373621e`: bu durumda lojistik akıştaki ilk parsiyelin bilinen sonucu korunur + MISSING_TRANSIT_RULE. `risk-tarama-sonra.json`
 (`373621e`): kalkan sinyal / sebep / geç sonuç iki kural kümesinde ve her kategoride 0.
+
+## L2 · Electron 44.3.0, risk motoru değişikliği sonrası (`electron/son/`, slot 07:41Z–08:20Z)
+
+main `8a29116` ↔ aday; `one.js` artık kurulumu süreç başına 5 kez (REPB=5) ve karar adımını (`cp-readiness analyzeOrder`, 30k
+hazırlanmış satır, Gemi 70 / Uçak 15 / TIR 20) da ölçer. Her koşuya `contention.js` kaydı eşlik eder (hepsi SAKİN: cpu.some medyan
+≤ %0,24, steal medyan ≤ %0,4).
+
+| Koşu | Aday | Kurulum A/B (A/A) | Prep | İstemci | Karar | Not |
+|---|---|---|---|---|---|---|
+| ham3 | `2c58688` (REPB=1) | +498 / −69 / +466 (−87 / +159) | +29 / +10 / −45 | +3 / +11 / −10 | +26 / −9 / −63 | kurulum tek örnek, gürültülü |
+| ham4 | `2c58688` | +60 / +118 / +244 (+203 / +59) | −32 / +49 / +30 | −23 / +53 / −21 | +31 / +85 / +7 (−21 / −8) | karar yönü pozitif → optimizasyon |
+| ham5 | `d8ca615` (geri dönüş yalnız teslimat) | +73 / +122 / −98 (−68 / −15) | −11 / −21 / +4 | −28 / +44 / +8 | +33 / +35 / +80 (+17 / −16) | karar hâlâ pozitif |
+| ham6 | `cbd2bf0` (segment taraması döngü + tek segmentte yok) | +18 / +75 / +76 (−193 / −30) | −35 / +10 / −1 (−52 / +23) | −8 / 0 / −8 (−26 / −21) | +2 / +3 / −19 (+12 / −45) | son |
+
+Fonksiyon düzeyi (`cpf.js`, aynı süreç, 20 dönüşümlü örnek): computePriorityFlags main 52,0 → aday 59,6 ms (d8ca615), 53,6 / 55,7 →
+50,1 / 62,9 ms (cbd2bf0, iki koşu, işaret değişiyor). Kurulumda kalan küçük pozitif yön (+18 / +75 / +76, A/A aralığında) fixture'da
+transit kuralı olmadığı için 7.663 satırda çalışan parsiyel teslimat geri dönüşüne bağlanıyor [Muhtemel]; kural varken karar adımı nötr.
