@@ -207,7 +207,7 @@ async function refresh(cookie) {
   throw new Error('refresh zaman aşımı');
 }
 
-const FIELDS = ['_id', 'Order Code', 'Model Name', 'C.Code', 'Ex-factory', 'Ant. Arrival', 'STATUS', 'Del. Type', 'Supp. FOB', 'Notes', 'Ek Not', '_exFactoryRevision', '_logisticSegments'];
+const FIELDS = ['_id', 'Order Code', 'Model Name', 'C.Code', 'Ex-factory', 'Ant. Arrival', 'STATUS', 'Del. Type', 'Supp. FOB', 'Notes', 'Ek Not', 'Licensor', 'Sub-Manufacturer', '_exFactoryRevision', '_logisticSegments'];
 async function cpRows(cookie, fields = FIELDS) {
   const out = [];
   for (let offset = 0; ; offset += 1000) {
@@ -359,6 +359,19 @@ async function main() {
   const stale = take(plain);
   const staleNote = await call('POST', '/api/overrides/rows', noteRow(stale, 'kapı B önce yazdı'), cookieB);
   const staleFob = await call('PATCH', '/api/overrides/' + stale['Order Code'], { ...line(stale), notes: { Notes: stale.Notes || '', NotesHtml: '', EkNot: stale['Ek Not'] || '', EkNotHtml: '' }, suppFob: 66.25, suppFobMeta: { source: 'manual' } }, cookieA);
+  // Gerçek istemci gövdesi (syncOverrideToServer): DTR olmayan satırda subManufacturer da istemcinin bildiği değerle gider.
+  const clientBody = (r, extra) => ({ ...line(r), notes: { Notes: r.Notes || '', NotesHtml: '', EkNot: r['Ek Not'] || '', EkNotHtml: '' }, ...(String(r.Licensor || '').toUpperCase() !== 'DTR' ? { subManufacturer: r['Sub-Manufacturer'] || '' } : {}), ...extra });
+  const nonDtr = plain.filter(r => String(r.Licensor || '').toUpperCase() !== 'DTR');
+  // G08c: B Sub-Manufacturer'ı değiştirir; A (görmemiş) tekli Supp. FOB kaydeder.
+  const staleSub = take(nonDtr);
+  const subWrite = await call('PATCH', '/api/overrides/' + staleSub['Order Code'], { ...line(staleSub), subManufacturer: 'KAPI B ALT URETICI' }, cookieB);
+  const subFob = await call('PATCH', '/api/overrides/' + staleSub['Order Code'], clientBody(staleSub, { suppFob: 44.5, suppFobMeta: { source: 'manual' } }), cookieA);
+  // G08d: A satırda elle Supp. FOB yazar (satır manuel olur); B daha yeni Supp. FOB yazar; A (bayat) yalnız not
+  // kaydeder — gerçek istemci manuel Supp. FOB'lu satırın not kaydında suppFob'u da gönderir.
+  const staleNoteRow = take(nonDtr);
+  const fobA0 = await call('PATCH', '/api/overrides/' + staleNoteRow['Order Code'], clientBody(staleNoteRow, { suppFob: 10.5, suppFobMeta: { source: 'manual' } }), cookieA);
+  const fobB1 = await call('POST', '/api/overrides/batch-suppfob', { items: [{ orderCode: staleNoteRow['Order Code'], ...line(staleNoteRow), suppFob: 20.75 }] }, cookieB);
+  const noteA2 = await call('PATCH', '/api/overrides/' + staleNoteRow['Order Code'], clientBody(staleNoteRow, { notes: { Notes: 'kapı A bayat not', NotesHtml: 'kapı A bayat not', EkNot: '', EkNotHtml: '' }, suppFob: 10.5, suppFobMeta: { source: 'manual' } }), cookieA);
   report.edits.push({ kind: 'concurrent', statuses: [c1.status, c2.status, c3.status, c4.status] });
 
   await delay(1500);
@@ -400,6 +413,16 @@ async function main() {
     const reproduced = staleNote.status === 200 && staleFob.status === 200 && got.Notes !== 'kapı B önce yazdı';
     gate('G08b', 'Bayat istemci: tekli Supp. FOB kaydı (gövdede eski notes) başka oturumun yeni notunu ezmemeli', reproduced ? 'KNOWN' : 'XPASS',
       { finding: 'syncOverrideToServer Supp. FOB kaydını PATCH /api/overrides/:oc yoluna gönderir ve gövdeye istemcinin bildiği notes alanını koyar (cpRowSaveEligible suppFob içeren gövdeyi satır kaydından çıkarır); sunucu notes alanını koşulsuz yazar → sessiz kayıp', statuses: [staleNote.status, staleFob.status], noteAfter: got.Notes, fobAfter: got['Supp. FOB'] });
+  }
+  {
+    const sub = v(staleSub._id);
+    const reproducedC = subWrite.status === 200 && subFob.status === 200 && sub['Sub-Manufacturer'] !== 'KAPI B ALT URETICI';
+    gate('G08c', 'Bayat istemci: tekli Supp. FOB kaydı (gövdede eski subManufacturer) başka oturumun yeni Sub-Manufacturer değerini ezmemeli', reproducedC ? 'KNOWN' : 'XPASS',
+      { finding: 'G08b ile aynı yol: DTR olmayan satırda Supp. FOB kaydı gövdesi istemcinin bildiği subManufacturer değerini taşır', statuses: [subWrite.status, subFob.status], subAfter: sub['Sub-Manufacturer'], before: staleSub['Sub-Manufacturer'] });
+    const nr = v(staleNoteRow._id);
+    const reproducedD = fobA0.status === 200 && fobB1.status === 200 && noteA2.status === 200 && Number(nr['Supp. FOB']) !== 20.75;
+    gate('G08d', 'Bayat istemci: manuel Supp. FOB\'lu satırda not kaydı başka oturumun daha yeni Supp. FOB değerini ezmemeli', reproducedD ? 'KNOWN' : 'XPASS',
+      { finding: 'syncOverrideToServer, _suppFobManual satırda not kaydına suppFob ekler; gövde suppFob içerdiği için satır kaydı yerine eski PATCH yolu kullanılır', statuses: [fobA0.status, fobB1.status, noteA2.status], fobAfter: nr['Supp. FOB'], noteAfter: nr.Notes });
   }
   gate('G09', 'Yeniden başlatma sonrası eşitlik (karar demeti + CP satırları)', pass(digestOf(tupleMap(afterRestart.cols)) === sessionDigest && restartDiff.length === 0 && liveRestart.size === live.size),
     { tuples: tupleMap(afterRestart.cols).size, rowDiffs: restartDiff.slice(0, 5), rowDiffCount: restartDiff.length });
