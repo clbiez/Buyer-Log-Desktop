@@ -1,7 +1,8 @@
 # BL-030 · CP satır yaması pilotu (#1236) — Windows doğrulama planı
 
-Durum: **Plan onaylandı (2026-11-27); uygulanmadı.** İlgili: #1236 (main `5440fde`), #1241, #1243, ADR-0003 §6P.
-Bayrak: `BUYER_LOG_CP_ROWPATCH_LEGACY=1`. Varsayılan **KAPALI**. Kapalıyken davranış main ile aynıdır.
+Durum: **Geçersiz kaldı (2026-11-28).** Ürün sahibi elle / gerçek veriyle doğrulamayı kaldırdı; pilot #1250 (main `d43150b`) ile varsayılan yapıldı ve `BUYER_LOG_CP_ROWPATCH_LEGACY` bayrağı **kaldırıldı**. Aşağıdaki bayrak açma/kapama adımları artık uygulanamaz.
+Yerine: senaryolar (S1–S9) sentetik veri + otomatik doğrulamayla Windows/Electron otomatik kapısına (ADR-0001 §14 güncellemesi) taşınır. Güvenli tam hesap geri dönüşü korunur; çalışma zamanı anahtarı yoktur, geri dönüş = güvenli tam hesap + sürüm geri alma.
+İlgili: #1236, #1250, #1241, #1243, ADR-0003 §6P/§6R. Aşağıdaki metin tarihsel kayıttır.
 
 ## Hedef: pilot bayrağı kalıcı değildir
 
