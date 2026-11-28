@@ -842,6 +842,10 @@ function validatePricingRestore(patch) {
 function applyOrderPatch(ov, orderCode, patch, options = null) {
   const pricingRestore = validatePricingRestore(patch);
   const oc = overrideWriteKey(orderCode, patch);
+  /* BL-028 "Kaynağa dön": delType:null satırın manuel override'ını siler (değer kaynak önceliğiyle yeniden hesaplanır;
+     boş ya da "Gemi" yazılmaz). Yalnız satır kimliğiyle: sipariş anahtarını silmek o siparişin diğer renklerini etkiler. */
+  const clearDelType = Object.prototype.hasOwnProperty.call(patch, 'delType') && patch.delType === null;
+  if (clearDelType && oc === orderCode) throw Object.assign(new Error('Del. Type kaynağa döndürme için model ve renk kodu zorunlu. / Model and colour code are required to revert Del. Type to source.'), { code: 'VALIDATION_ERROR', statusCode: 400 });
   // Satır ilk kez düzenlendiğinde, o siparişe ait eski (sipariş bazlı) kayıt
   // tohum olarak alınır: notlar sıfırdan başlamaz.
   const seed = (map) => (oc === orderCode ? {} : { ...(map[orderCode] || {}) });
@@ -913,6 +917,7 @@ function applyOrderPatch(ov, orderCode, patch, options = null) {
     }
   }
   if (patch.delType != null) ov.delmap[oc] = patch.delType;
+  else if (clearDelType && ov.delmap) delete ov.delmap[oc];
   // CP görseli PLM ID + Colour Code kimliğine bağlıdır. Aynı PLM'nin farklı
   // renkleri ayrı görseller kullanır; aynı PLM+Colour Code kimliğini paylaşan
   // sipariş satırları ise tek görseli paylaşır. Boş değer silme tombstone'udur.
@@ -1040,7 +1045,7 @@ function verifyOrderOverridePatch(orderCode,patch,revision){
   const ov=loadOverrides(),key=overrideWriteKey(orderCode,patch);
   if(Number(ov._revisions.orders)!==revision)return false;
   const expected={subManufacturer:'submap',licensor:'licensormap',delType:'delmap'};
-  for(const [field,map]of Object.entries(expected))if(Object.hasOwn(patch,field)&&String(ov[map]?.[key]??'')!==String(field==='licensor'?patch[field].trim():patch[field]))return false;
+  for(const [field,map]of Object.entries(expected))if(Object.hasOwn(patch,field)&&String(ov[map]?.[key]??'')!==String(field==='licensor'?patch[field].trim():(patch[field]??'')))return false;
   for(const [field,value]of Object.entries(patch.notes||{}))if(!NOTE_AUTHOR_FIELDS.some(spec=>spec.field===field||spec.field+'Html'===field)||String(ov.notesmap?.[key]?.[field]??'')!==value)return false;
   for(const [field,value]of Object.entries(patch.dates||{}))if(!DATE_OVERRIDE_FIELDS[field]||String(ov.datemap?.[key]?.[DATE_OVERRIDE_FIELDS[field]]??'')!==value)return false;
   const columnIds=new Set((ov.noteColumnDefs||[]).map(def=>def.id));
@@ -1143,7 +1148,8 @@ function cpRowUnits(ov,orderCode,key,patch,base){
       add('notes',pair[0],pack(b),pack(patch.notes),pack(record),out=>{out.notes=out.notes||{};for(const name of pair)out.notes[name]=cpRowText(patch.notes[name]);},v=>v);
     }
   }
-  if(Object.hasOwn(patch,'delType')&&patch.delType!=null)add('delType','delType',base.delType,patch.delType,cpRowStored(ov,orderCode,key,'delmap'),out=>{out.delType=patch.delType;});
+  // null = "Kaynağa dön" (BL-028): kayıtlı değer '' ile karşılaştırılır, uygulama satır anahtarını siler (applyOrderPatch).
+  if(Object.hasOwn(patch,'delType'))add('delType','delType',base.delType,patch.delType,cpRowStored(ov,orderCode,key,'delmap'),out=>{out.delType=patch.delType;});
   if(Object.hasOwn(patch,'subManufacturer')&&patch.subManufacturer!=null)add('subManufacturer','subManufacturer',base.subManufacturer,patch.subManufacturer,cpRowStored(ov,orderCode,key,'submap'),out=>{out.subManufacturer=patch.subManufacturer;});
   if(Object.hasOwn(patch,'licensor')){
     const trim=value=>cpRowText(value).trim();
