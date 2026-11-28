@@ -2138,6 +2138,7 @@ function computeFlags(row, transitRules, todayValue = new Date()) {
     shortage: Number(row._logisticShortageQty) > 0,
     shortageQty: row._logisticShortageQty,
     shortageNote: Number(row._logisticShortageQty) > 0 && row._logisticAllPartialsInWarehouse === true,
+    logisticSegments: row._logisticSegments,
     delType: row['Del. Type'],
     season: row.Season,
     country: row.Country,

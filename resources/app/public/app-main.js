@@ -1057,6 +1057,7 @@ function computeFlags(row){
     antArrival:row['Ant. Arrival'],handoverDate:row['HANDOVER Tarihi'],shipConfirmationDate:row['Buying Son Onay Tarihi'],
     status:row['STATUS'],shortage:Number(row._logisticShortageQty)>0,shortageQty:row._logisticShortageQty,
     shortageNote:Number(row._logisticShortageQty)>0 && row._logisticAllPartialsInWarehouse===true,
+    logisticSegments:row._logisticSegments,
     delType:row['Del. Type'],season:row.Season,country:row.Country,
     rules:state.overrides.transitRules,today:new Date()
   },dateOrdinal);

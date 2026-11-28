@@ -162,8 +162,17 @@ test('D · üretim bakiyesi yok, yükleme + yolda: ana STATUS en geride kalan a�
   const { built, readModel, browser } = threePaths({ iasRows });
   for (const [label, row] of [['tam kurulum', built], ['okuma modeli', readModel], ['istemci', browser]]) assert.equal(row.STATUS, 'Yükleme Operasyonları', label);
 });
-// Ant. Arrival / Del. Type / HANDOVER bu durumda hangi segmentten: ürün sahibi teyidi bekleniyor (öneri: STATUS'u veren segment).
-test.todo('D · üretim bakiyesi yok, çoklu tamamlanmamış lojistik aşama: tarih / vasıta / handover kaynağı (teyit bekleniyor)');
+test('D · üretim bakiyesi yok, çoklu aşama: tarih / vasıta / handover STATUS\'u veren parsiyelden (ürün sahibi kararı 1a)', () => {
+  // Yükleme TIR 10.01 (handover yok) + Yol Gemi 04.12 (HO 20.11). Bugüne kadar Siparişler ve CP en erken varışı
+  // (Yol · Gemi · 04.12 · 20.11) gösteriyordu; artık dört alan aynı (en geride kalan) parsiyelden gelir.
+  const iasRows = [ias('Yükleme Operasyonları', 4900, '2027-01-10', 'TIR', ''), ias('Yol Operasyonları', 4900, '2026-12-04', 'Gemi', '2026-11-20')];
+  assertAllPaths({ iasRows }, { STATUS: 'Yükleme Operasyonları', delType: 'TIR', arrival: '2027-01-10', handover: null }, 'yükleme + yolda');
+});
+
+test('D · aynı aşamada iki parsiyel: mevcut seçim korunur (en erken varış)', () => {
+  const iasRows = [ias('Yol Operasyonları', 4900, '2027-01-10', 'Uçak', '2026-12-28'), ias('Yol Operasyonları', 4900, '2026-12-04', 'Gemi', '2026-11-20')];
+  assertAllPaths({ iasRows }, { STATUS: 'Yol Operasyonları', delType: 'Gemi', arrival: '2026-12-04', handover: '2026-11-20' }, 'iki yolda');
+});
 
 // ---------- Priority / risk: üretim bakiyesinin gecikmesi CP'de denetlenir ----------
 
@@ -206,6 +215,70 @@ test('Priority · gecikmesiz üretim bakiyesi + depoda parsiyel: üretim denetle
     assert.equal(result.stage, 'PRODUCTION', label);
     assert.equal(result.deliveryOutcome, 'ON_TRACK', label);
     assert.ok(!result.riskReasons.includes('EX_FACTORY_OVERDUE'), label);
+  }
+});
+
+// ---------- 2a: segment riskleri birincil seçimden bağımsız (ürün sahibi kararı) ----------
+// Satır artık "Üretimde" görünse de yoldaki parsiyelin bugünkü uyarıları kaybolmaz. Yüklem bugünküyle aynıdır,
+// yalnız satırın görünen segmenti yerine ilgili her segmentte değerlendirilir.
+
+const signalCodes = result => (result.signals || []).map(signal => signal.code);
+// Yükleme onayı 10.11 (bugün 28.11 → 18 gün ≥ 3). Onay Ex-factory'yi 10.11'e çeker (otomatik revizyon).
+const APPROVED = { 'Buying Son Onay Tarihi': '20261110' };
+
+test('HANDOVER_PENDING · üretim bakiyesi + handover\'ı eksik yoldaki parsiyel (2.588 satırlık kategori): uyarı korunur', () => {
+  const iasRows = [ias('Yol Operasyonları', 3000, '2026-12-04', 'Uçak', '')];
+  const { built, readModel, browser } = threePaths({ order: APPROVED, iasRows });
+  for (const [label, row] of [['tam kurulum', built], ['okuma modeli', readModel], ['istemci', browser]]) {
+    assert.equal(row.STATUS, 'Üretimde', label);
+    const result = decide(row);
+    assert.ok(result.riskReasons.includes('HANDOVER_PENDING'), `${label}: ${result.riskReasons}`);
+    assert.ok(signalCodes(result).includes('HANDOVER_PENDING'), label);
+    assert.equal(result.handoverWarning, true, label);
+  }
+});
+
+test('HANDOVER_PENDING · handover\'ı olan yoldaki parsiyel, depodaki parsiyel ya da yalnız üretim: uyarı yok (bugünkü gibi)', () => {
+  const cases = [
+    [ias('Yol Operasyonları', 3000, '2026-12-04', 'Uçak', '2026-11-20')],
+    [ias('Depoda', 3000, '2026-11-15', 'Uçak', '')],
+    [],
+  ];
+  for (const iasRows of cases) {
+    const { readModel } = threePaths({ order: APPROVED, iasRows });
+    const result = decide(readModel);
+    assert.ok(!result.riskReasons.includes('HANDOVER_PENDING'), JSON.stringify(iasRows.map(r => r['Supplier Portal Statü'])));
+    assert.ok(!signalCodes(result).includes('HANDOVER_PENDING'));
+  }
+});
+
+test('HANDOVER_PENDING · yükleme onayı 3 günden yeni: uyarı yok (bugünkü eşik)', () => {
+  const iasRows = [ias('Yol Operasyonları', 3000, '2026-12-04', 'Uçak', '')];
+  const { readModel } = threePaths({ order: { 'Buying Son Onay Tarihi': '20261127' }, iasRows });
+  assert.ok(!decide(readModel).riskReasons.includes('HANDOVER_PENDING'));
+});
+
+test('ANTREPO_DELAY · üretim bakiyesi (projeksiyon ileride) + antrepo tarihi geçmiş yoldaki parsiyel: sinyal korunur', () => {
+  // Ex-factory 10.01.2027 + 70 = 21.03.2027 (ileride); parsiyel varışı 20.11 < bugün 28.11, depoda değil.
+  const order = { 'Orijinal Exfactory Merch Tarih': '2027-01-10' };
+  const late = threePaths({ order, iasRows: [ias('Yol Operasyonları', 3000, '2026-11-20', 'Uçak', '2026-11-01')] });
+  for (const [label, row] of [['okuma modeli', late.readModel], ['istemci', late.browser]]) {
+    assert.equal(row.STATUS, 'Üretimde', label);
+    assert.ok(signalCodes(decide(row)).includes('ANTREPO_DELAY'), label);
+  }
+  // Kontrol: parsiyelin varışı ileride → sinyal yok; depodaki parsiyelin geçmiş varışı sinyal üretmez (bugünkü gibi).
+  const onTime = threePaths({ order, iasRows: [ias('Yol Operasyonları', 3000, '2026-12-10', 'Uçak', '2026-11-20')] });
+  assert.ok(!signalCodes(decide(onTime.readModel)).includes('ANTREPO_DELAY'));
+  const warehouse = threePaths({ order, iasRows: [ias('Depoda', 3000, '2026-11-20', 'Uçak', '2026-11-01')] });
+  assert.ok(!signalCodes(decide(warehouse.readModel)).includes('ANTREPO_DELAY'));
+});
+
+test('ANTREPO_DELAY · 0 adetlik Üretimde parsiyelin geçmiş IAS varışı (üretim bakiyesi ileride): bugünkü sinyal korunur', () => {
+  const order = { 'Orijinal Exfactory Merch Tarih': '2027-01-10' };
+  const { readModel, browser } = threePaths({ order, iasRows: [ias('Üretimde', 0, '2026-11-15', 'TIR', '')] });
+  for (const [label, row] of [['okuma modeli', readModel], ['istemci', browser]]) {
+    assert.equal(row['Del. Type'], 'Gemi', `${label}: A — tarih/vasıta üretim bakiyesinden`);
+    assert.ok(signalCodes(decide(row)).includes('ANTREPO_DELAY'), label);
   }
 });
 

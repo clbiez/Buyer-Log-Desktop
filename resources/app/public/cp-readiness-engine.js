@@ -330,6 +330,8 @@
       shortage: Number(shortageQty) > 0,
       shortageQty,
       shortageNote: Number(shortageQty) > 0 && row && row[F.shortageAllInWarehouse] === true,
+      // Segment riskleri (HANDOVER_PENDING, ANTREPO_DELAY) birincil segmentten bağımsız.
+      logisticSegments: row && row._logisticSegments,
       delType: row && row[F.delType],
       season: row && row[F.season],
       country: row && row[F.country],

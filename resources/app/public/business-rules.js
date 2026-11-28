@@ -767,22 +767,37 @@
     const mbGap = mbAntrepo != null && inStoreDate != null ? inStoreDate - mbAntrepo : null;
     const mbDelay = mbGap != null && mbGap < 14;
 
+    /* Segment riskleri (ADR-0003 §6O.c, ürün sahibi kararı 2a): lojistik segmentli satırda HANDOVER_PENDING
+       ve ANTREPO_DELAY, satırın görünen (birincil) segmentine değil ilgili HER segmente bakar; birincil segment
+       üretim bakiyesi olunca yoldaki parsiyelin bugünkü uyarısı gizlenmez. Yüklem bugünküyle aynıdır, yalnız
+       segment başına değerlendirilir; kıtlık segmenti ve kıtlıklı satır bugünkü gibi dışarıda kalır.
+       Segmentsiz satır (ya da logisticSegments verilmeyen çağıran) satır alanlarıyla eskisi gibi çalışır. */
+    const riskSegments = Array.isArray(values.logisticSegments)
+      ? values.logisticSegments.filter(segment => segment && typeof segment === 'object' && segment.kind !== 'shortage')
+      : [];
+    const segmentStage = segment => (segment.kind === 'production' ? 'PRODUCTION' : primarySegmentStage(segment.status));
+    const handoverMissingAt = (stage, handover) => handover == null
+      && stage !== 'PRODUCTION' && stage !== 'SHORTAGE' && stage !== 'IN_WAREHOUSE';
+    const handoverGap = riskSegments.length
+      ? riskSegments.some(segment => handoverMissingAt(segmentStage(segment), dateOrdinal(segment.handover)))
+      : handoverMissingAt(operationalStage, handoverDate);
     const handoverWarning = shipConfirmationDate != null
-      && handoverDate == null
-      && !production
+      && handoverGap
       && !shortage
-      && operationalStage !== 'IN_WAREHOUSE'
       && today != null
       && today - shipConfirmationDate >= 3;
     // Shortage satırındaki antrepo tarihi gerçek bir IAS varış kaydı değil,
     // Ex-Factory + transit varsayımıdır. Bu sentetik tarih üzerinden Ant. Delay
     // üretmek, siparişi hâlâ yükleme bekliyormuş gibi gösterirdi.
-    const antDelay = antArrival != null
+    const arrivalOverdueAt = (stage, arrival) => arrival != null
       && today != null
-      && antArrival < today
-      && !shortage
-      && operationalStage !== 'IN_WAREHOUSE'
-      && operationalStage !== 'AWAITING_RETAIL_TRANSFER';
+      && arrival < today
+      && stage !== 'SHORTAGE'
+      && stage !== 'IN_WAREHOUSE'
+      && stage !== 'AWAITING_RETAIL_TRANSFER';
+    const antDelay = !shortage && (riskSegments.length
+      ? riskSegments.some(segment => arrivalOverdueAt(segmentStage(segment), dateOrdinal(segment.arrival)))
+      : arrivalOverdueAt(operationalStage, antArrival));
     const discountDelayDays = exFactory != null && today != null ? today - exFactory : null;
     const discountWarning = production && discountDelayDays != null && discountDelayDays > 9;
 
