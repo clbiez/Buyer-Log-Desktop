@@ -1,0 +1,169 @@
+{
+ "tek kural 35 gün": {
+  "miktar-0 parsiyel + üretim": {
+   "n": 2331,
+   "stageChg": 0,
+   "outcome": {},
+   "critical": {
+    "lost": 0,
+    "gained": 0,
+    "both": 0
+   },
+   "reasons": {}
+  },
+  "yalnız üretim": {
+   "n": 17274,
+   "stageChg": 0,
+   "outcome": {},
+   "critical": {
+    "lost": 0,
+    "gained": 0,
+    "both": 0
+   },
+   "reasons": {}
+  },
+  "üretim + depoda": {
+   "n": 2707,
+   "stageChg": 2707,
+   "outcome": {
+    "ON_TRACK→UNKNOWN": 1952,
+    "AT_RISK→UNKNOWN": 487,
+    "EXPECTED_LATE→UNKNOWN": 243,
+    "ALREADY_LATE→UNKNOWN": 25
+   },
+   "critical": {
+    "lost": 265,
+    "gained": 0,
+    "both": 0
+   },
+   "reasons": {
+    "+EX_FACTORY_OVERDUE": 2667,
+    "+STALE_ORDER_NOT_LOADED": 2707,
+    "-EXPECTED_LATE_FOR_TARGET": 243,
+    "+LOADING_WINDOW_IMMINENT": 40,
+    "-ALREADY_LATE_FOR_TARGET": 25
+   }
+  },
+  "üretim + yolda/yüklemede": {
+   "n": 2665,
+   "stageChg": 2665,
+   "outcome": {
+    "ON_TRACK→UNKNOWN": 1425,
+    "EXPECTED_LATE→UNKNOWN": 130,
+    "AT_RISK→UNKNOWN": 362,
+    "ALREADY_LATE→UNKNOWN": 16
+   },
+   "critical": {
+    "lost": 143,
+    "gained": 0,
+    "both": 0
+   },
+   "reasons": {
+    "+EX_FACTORY_OVERDUE": 2615,
+    "+STALE_ORDER_NOT_LOADED": 2665,
+    "-HANDOVER_PENDING": 2588,
+    "-EXPECTED_LATE_FOR_TARGET": 130,
+    "+LOADING_WINDOW_IMMINENT": 50,
+    "-ALREADY_LATE_FOR_TARGET": 16
+   }
+  },
+  "kıtlık + parsiyel": {
+   "n": 5,
+   "stageChg": 0,
+   "outcome": {},
+   "critical": {
+    "lost": 0,
+    "gained": 0,
+    "both": 0
+   },
+   "reasons": {}
+  }
+ },
+ "Gemi70/Uçak15/TIR20": {
+  "miktar-0 parsiyel + üretim": {
+   "n": 2331,
+   "stageChg": 0,
+   "outcome": {
+    "AT_RISK→EXPECTED_LATE": 118,
+    "ON_TRACK→EXPECTED_LATE": 1116
+   },
+   "critical": {
+    "lost": 0,
+    "gained": 1211,
+    "both": 1081
+   },
+   "reasons": {
+    "+EXPECTED_LATE_FOR_TARGET": 1234
+   }
+  },
+  "yalnız üretim": {
+   "n": 17274,
+   "stageChg": 0,
+   "outcome": {},
+   "critical": {
+    "lost": 0,
+    "gained": 0,
+    "both": 1255
+   },
+   "reasons": {}
+  },
+  "üretim + depoda": {
+   "n": 2707,
+   "stageChg": 2707,
+   "outcome": {
+    "ON_TRACK→EXPECTED_LATE": 1835,
+    "AT_RISK→EXPECTED_LATE": 448,
+    "ON_TRACK→ALREADY_LATE": 117,
+    "AT_RISK→ALREADY_LATE": 39
+   },
+   "critical": {
+    "lost": 0,
+    "gained": 2402,
+    "both": 265
+   },
+   "reasons": {
+    "+EXPECTED_LATE_FOR_TARGET": 2283,
+    "+EX_FACTORY_OVERDUE": 2667,
+    "+STALE_ORDER_NOT_LOADED": 2707,
+    "+ALREADY_LATE_FOR_TARGET": 156,
+    "+LOADING_WINDOW_IMMINENT": 40
+   }
+  },
+  "üretim + yolda/yüklemede": {
+   "n": 2665,
+   "stageChg": 2665,
+   "outcome": {
+    "ON_TRACK→EXPECTED_LATE": 1332,
+    "UNKNOWN→EXPECTED_LATE": 695,
+    "AT_RISK→EXPECTED_LATE": 340,
+    "ON_TRACK→ALREADY_LATE": 93,
+    "AT_RISK→ALREADY_LATE": 22,
+    "UNKNOWN→ALREADY_LATE": 37
+   },
+   "critical": {
+    "lost": 0,
+    "gained": 2472,
+    "both": 143
+   },
+   "reasons": {
+    "+EXPECTED_LATE_FOR_TARGET": 2367,
+    "+EX_FACTORY_OVERDUE": 2615,
+    "+STALE_ORDER_NOT_LOADED": 2665,
+    "-HANDOVER_PENDING": 2588,
+    "+ALREADY_LATE_FOR_TARGET": 152,
+    "+LOADING_WINDOW_IMMINENT": 50
+   }
+  },
+  "kıtlık + parsiyel": {
+   "n": 5,
+   "stageChg": 0,
+   "outcome": {},
+   "critical": {
+    "lost": 0,
+    "gained": 0,
+    "both": 0
+   },
+   "reasons": {}
+  }
+ }
+}

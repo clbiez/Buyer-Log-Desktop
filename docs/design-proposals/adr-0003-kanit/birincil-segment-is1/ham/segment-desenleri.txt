@@ -1,0 +1,8 @@
+17274	production:PRODUCTION/production
+2707	partial:IN_WAREHOUSE + production:PRODUCTION/production
+2331	partial:PRODUCTION(0) + production:PRODUCTION/production
+1933	partial:IN_TRANSIT + production:PRODUCTION/production
+732	partial:UNKNOWN + production:PRODUCTION/production
+2	partial:IN_WAREHOUSE + shortage:SHORTAGE/shortage
+2	partial:IN_TRANSIT + shortage:SHORTAGE/shortage
+1	partial:UNKNOWN + shortage:SHORTAGE/shortage
