@@ -2225,20 +2225,28 @@ function antrepoVesselName(ias) {
   const at = resolveAntrepoColumn(headers, ANTREPO_COLUMN_RULES.vesselName);
   return at >= 0 ? (norm(fields[Object.keys(fields)[at]]) || '') : '';
 }
+/* Lojistik akış sırası — TEK tanım: özet segment ({ id, priority, arrival }) üzerinde çalışır; tam kurulum
+   (cpLogisticSegmentsForOrder) ve artımlı yeniden kurulum (refreshCpLogisticRow) aynı sırayı üretir.
+   id = `<tür>-<_segmentIndex>`; dizi sıralaması kararlıdır (eşitlikte kaynak sırası). */
+function cpLogisticSegmentIndex(item) {
+  const id = String(item && item.id || '');
+  return Number(id.slice(id.lastIndexOf('-') + 1)) || 0;
+}
+function compareCpLogisticSegments(a, b) {
+  const priorityDiff = (Number(a && a.priority) || 0) - (Number(b && b.priority) || 0);
+  if (priorityDiff) return priorityDiff;
+  const aDate = dateOrdinal(a && a.arrival), bDate = dateOrdinal(b && b.arrival);
+  if (aDate != null || bDate != null) {
+    if (aDate == null) return 1;
+    if (bDate == null) return -1;
+    if (aDate !== bDate) return aDate - bDate;
+  }
+  return cpLogisticSegmentIndex(a) - cpLogisticSegmentIndex(b);
+}
 function cpLogisticSegmentsForOrder(segments, opts = {}) {
   const needBasis = opts.needBasis === true;
   const source = Array.isArray(segments) ? segments : [];
-  return source.slice().sort((a, b) => {
-    const priorityDiff = cpLogisticPriority(a) - cpLogisticPriority(b);
-    if (priorityDiff) return priorityDiff;
-    const aDate = dateOrdinal(a && a._arr), bDate = dateOrdinal(b && b._arr);
-    if (aDate != null || bDate != null) {
-      if (aDate == null) return 1;
-      if (bDate == null) return -1;
-      if (aDate !== bDate) return aDate - bDate;
-    }
-    return (Number(a && a._segmentIndex) || 0) - (Number(b && b._segmentIndex) || 0);
-  }).map(segment => {
+  return source.map(segment => {
     const ias = segment && segment._iasRow ? segment._iasRow : null;
     return {
       id: `${segment && segment._segmentKind === 'production' ? 'production' : (segment && segment._segmentKind === 'shortage' ? 'shortage' : 'partial')}-${Number(segment && segment._segmentIndex) || 0}`,
@@ -2269,10 +2277,13 @@ function cpLogisticSegmentsForOrder(segments, opts = {}) {
       containerNo: ias ? (norm(ias.containerNo) || '') : '',
       vesselName: antrepoVesselName(ias),
     };
-  });
+  }).sort(compareCpLogisticSegments);
 }
 function cpLogisticSummary(segments, orderQty, opts = {}) {
-  const list = cpLogisticSegmentsForOrder(segments, opts);
+  return summarizeCpLogisticSegments(cpLogisticSegmentsForOrder(segments, opts), orderQty);
+}
+// Sıralanmış özet segmentlerden satırın lojistik özeti (tam kurulum ve artımlı yeniden kurulum ortak).
+function summarizeCpLogisticSegments(list, orderQty) {
   // Ana STATUS / Del. Type / Ant. Arrival / HANDOVER kaynağı: tek ortak kural (business-rules).
   const primary = BLBusinessRules.selectPrimaryLogisticSegment(list);
   const partials = list.filter(item => item.kind === 'partial');
@@ -2297,6 +2308,69 @@ function cpLogisticSummary(segments, orderQty, opts = {}) {
     delTypes: unique(list.map(item => item.delType)),
     arrivals: list.map(item => item.arrival).filter(Boolean),
   };
+}
+
+/* Lojistik özetten satır alanları — TEK eşleme: tam kurulum (buildOrderRowsFromASAS) ve artımlı yeniden kurulum
+   (refreshCpLogisticRow) aynı alanları aynı kuralla yazar. fallback: birincil segment yokken STATUS / Del. Type. */
+function cpLogisticRowFields(logistic, fallback = {}) {
+  const primary = logistic.primary;
+  return {
+    'HANDOVER Tarihi': primary ? primary.handover : null,
+    'Shipment Quantity': logistic.loadedQty,
+    'Remaining Units': logistic.remainingQty,
+    STATUS: primary ? primary.status : fallback.status,
+    'Ant. Arrival': primary ? primary.arrival : null,
+    'Del. Type': primary ? primary.delType : fallback.delType,
+    // Satırın Handover'ının (ana parsiyel) kural bazı tarihleri: CP teslimat motoru kural gününü Handover'a
+    // eklerken bazına göre düzeltir. Özet segmentteki basisDates yalnız IAS parsiyelinde ve kural baz istiyorsa dolu.
+    _ruleBasisDates: primary && primary.basisDates ? primary.basisDates : null,
+    _logisticSegments: logistic.segments,
+    _logisticStatusValues: logistic.statuses,
+    _logisticDelTypeValues: logistic.delTypes,
+    _logisticArrivalValues: logistic.arrivals,
+    _logisticProductionQty: logistic.productionQty,
+    _logisticShortageQty: logistic.shortageQty,
+    _logisticRemainingQty: logistic.remainingQty,
+    _logisticLoadedQty: logistic.loadedQty,
+    _logisticPartialCount: logistic.partialCount,
+    _logisticAllPartialsInWarehouse: logistic.allPartialsInWarehouse,
+    _logisticTotalQty: logistic.totalQty,
+  };
+}
+// Üretim / kıtlık bakiyesinin Del. Type'ı (backlogProductionDelType ile aynı kural; girdi delmap değeri ya da yama).
+function productionDelTypeValue(manual) {
+  return normalizeTransitDelType(manual) || norm(manual) || 'Gemi';
+}
+/* Artımlı lojistik yeniden kurulum (ADR-0003 §6O.d, İş 2): Del. Type / Ex-factory yaması satırın _logisticSegments'ini
+   tam kurulumla AYNI kuralla günceller. Yalnız Buyer Log'un açtığı üretim / kıtlık bakiyesi segmenti değişir (vasıta:
+   delmap kuralı; varış: estimateAntrepoDate(Ex-factory, vasıta, ülke/sezon/transit kuralı)); gerçekleşmiş IAS
+   parsiyelleri kaynaktan gelir, dokunulmaz. Sonra akış sırası, birincil segment ve satır alanları tam kurulumun
+   fonksiyonlarıyla yeniden türetilir. Satır, yama sonrası Ex-factory'yi (otomatik onay dahil) taşımalıdır.
+   Dönüş { ok:false } → çağıran güvenli tam kuruluma düşmelidir: birincil segment bir IAS parsiyeline geçiyor ya da
+   ondan ayrılıyorsa satırın IAS ek alanları (cpIasExtraValues) özetten yeniden kurulamaz. */
+function refreshCpLogisticRow(row, patch, context = {}) {
+  const segments = row && Array.isArray(row._logisticSegments) ? row._logisticSegments : null;
+  if (!segments || !segments.length) return { ok: true, changed: false };
+  const p = patch && typeof patch === 'object' ? patch : {};
+  const delTypeChanged = Object.prototype.hasOwnProperty.call(p, 'delType');
+  const exFactoryChanged = Boolean(p.dates && typeof p.dates === 'object' && Object.prototype.hasOwnProperty.call(p.dates, 'exFactory'));
+  if (!delTypeChanged && !exFactoryChanged) return { ok: true, changed: false };
+  const before = BLBusinessRules.selectPrimaryLogisticSegment(segments);
+  const next = segments.map(segment => {
+    if (!segment || (segment.kind !== 'production' && segment.kind !== 'shortage')) return segment;
+    const delType = delTypeChanged ? productionDelTypeValue(p.delType) : segment.delType;
+    const arrival = estimateAntrepoDate(row['Ex-factory'], delType, null, {
+      season: row.Season, country: row.Country, status: segment.status,
+      rules: context.transitRules, forceRules: true,
+    });
+    return { ...segment, delType, arrival: toDateOnly(arrival) || null };
+  }).sort(compareCpLogisticSegments);
+  const logistic = summarizeCpLogisticSegments(next, row['Order Quantity']);
+  const after = logistic.primary;
+  const iasPartial = segment => Boolean(segment && segment.kind === 'partial' && !segment.synthetic);
+  if ((before && before.id) !== (after && after.id) && (iasPartial(before) || iasPartial(after))) return { ok: false, reason: 'primary-ias-change' };
+  Object.assign(row, cpLogisticRowFields(logistic, { status: row.STATUS, delType: row['Del. Type'] }));
+  return { ok: true, changed: true };
 }
 
 // overrides: {notesmap, submap, suppfobmap, delmap} - DB'den gelir, tarayıcıdaki state.overrides'ın karşılığı
@@ -2382,10 +2456,7 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       return kind === primary.kind && partialNo === primary.partialNo;
     }) || null;
     const primaryIas = primarySegment && primarySegment._iasRow ? primarySegment._iasRow : null;
-    const status = primary ? primary.status : (isActive ? 'Üretimde' : 'Pasif');
-    const ant = primary ? primary.arrival : null;
-    const handover = primary ? primary.handover : null;
-    const delType = primary ? primary.delType : backlogProductionDelType(o, ov);
+    const lf = cpLogisticRowFields(logistic, { status: isActive ? 'Üretimde' : 'Pasif', delType: backlogProductionDelType(o, ov) });
     const sub = licensor === 'DTR' ? norm(o.manufacturer) : norm(overrideGet(ov.submap, o));
     const fobRounded = isFinite(o.fob) ? roundHalfUp(o.fob, 2) : null;
     const hasSuppfobOverride = overrideHas(ov.suppfobmap, o);
@@ -2421,12 +2492,12 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       _exFactoryRevision: o._exFactoryRevision || null,
       _asasRetailDate: asasBaseline(o, 'retail', '_asasRetail'),
       _asasInStore: asasBaseline(o, 'mb', '_asasMb'),
-      'HANDOVER Tarihi': handover, 'Retail Date': o.retail, 'Ex→Retail': '',
+      'HANDOVER Tarihi': lf['HANDOVER Tarihi'], 'Retail Date': o.retail, 'Ex→Retail': '',
       'Buying Son Onay Tarihi': o.shipConf, 'In-Store (Model Budget)': o.mb,
       // Üretici kartı termin performansı için ilk söz (gizli alan).
       _initialInspection: o.initialInspection || null,
-      'Order Quantity': o.qty, 'Shipment Quantity': logistic.loadedQty, 'Remaining Units': logistic.remainingQty, '%': o.qty ? (o.qty - logistic.remainingQty) / o.qty : '',
-      STATUS: status, 'Ant. Arrival': ant, 'Del. Type': delType,
+      'Order Quantity': o.qty, 'Shipment Quantity': lf['Shipment Quantity'], 'Remaining Units': lf['Remaining Units'], '%': o.qty ? (o.qty - logistic.remainingQty) / o.qty : '',
+      STATUS: lf.STATUS, 'Ant. Arrival': lf['Ant. Arrival'], 'Del. Type': lf['Del. Type'],
       // Aşama tahmini (bilgi kolonları; varsayılan gizli). En geç gelecek parsiyel.
       'Stage ETA': latestStage ? toDateOnly(latestStage.eta) : null,
       'Current Stage': latestStage ? latestStage.code : '',
@@ -2435,7 +2506,7 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       _stageWhy: latestStage ? (latestStage.why || null) : null,
       // Satırın Handover'ının (ana parsiyel) kural bazı tarihleri: CP teslimat
       // motoru kural gününü Handover'a eklerken bazına göre düzeltir.
-      _ruleBasisDates: primaryIas && transitRulesNeedBasis(ov && ov.transitRules) ? iasBasisDates(primaryIas) : null,
+      _ruleBasisDates: lf._ruleBasisDates,
       // Priority Rules (@stageDelaySigma): en çok geciken yoldaki parsiyelin σ değeri.
       _stageMaxSigma: stageMaxSigma,
       /* CP teslimat sonucu (@deliveryOutcome) aşama ETA'sını kullanır: en geç parsiyel.
@@ -2446,17 +2517,17 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
         currentStage: latestStage.code, openOverrunDays: latestStage.over, overrunSigma: latestStage.sigma,
         pRetail: latestStage.pRetail, pInStore: latestStage.pInStore,
       } : null,
-      _logisticSegments: logistic.segments,
-      _logisticStatusValues: logistic.statuses,
-      _logisticDelTypeValues: logistic.delTypes,
-      _logisticArrivalValues: logistic.arrivals,
-      _logisticProductionQty: logistic.productionQty,
-      _logisticShortageQty: logistic.shortageQty,
-      _logisticRemainingQty: logistic.remainingQty,
-      _logisticLoadedQty: logistic.loadedQty,
-      _logisticPartialCount: logistic.partialCount,
-      _logisticAllPartialsInWarehouse: logistic.allPartialsInWarehouse,
-      _logisticTotalQty: logistic.totalQty,
+      _logisticSegments: lf._logisticSegments,
+      _logisticStatusValues: lf._logisticStatusValues,
+      _logisticDelTypeValues: lf._logisticDelTypeValues,
+      _logisticArrivalValues: lf._logisticArrivalValues,
+      _logisticProductionQty: lf._logisticProductionQty,
+      _logisticShortageQty: lf._logisticShortageQty,
+      _logisticRemainingQty: lf._logisticRemainingQty,
+      _logisticLoadedQty: lf._logisticLoadedQty,
+      _logisticPartialCount: lf._logisticPartialCount,
+      _logisticAllPartialsInWarehouse: lf._logisticAllPartialsInWarehouse,
+      _logisticTotalQty: lf._logisticTotalQty,
       Notes: notesRec.Notes || '', 'Ek Not': notesRec.EkNot || '',
       NotesHtml:notesRec.NotesHtml||'', 'Ek NotHtml':notesRec.EkNotHtml||'',
       _notesAt: notesRec.NotesAt || '', _ekNotAt: notesRec.EkNotAt || '',
@@ -4103,6 +4174,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
 }
 
 module.exports = {
+  refreshCpLogisticRow, compareCpLogisticSegments,
   prepareBacklogQuery, buildBacklogFilterValues,
   calculateSuppFobByRule, findSuppFobRule, pricingLicensorForLicense, automaticRuleMeta,
   countryEN,
