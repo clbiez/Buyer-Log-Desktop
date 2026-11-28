@@ -1,0 +1,49 @@
+name: Buyer Log CI FS probe (teşhis, geçici)
+# Tek seferlik teşhis: Windows runner'da geçici dizin diski (C: varsayılan TEMP ↔ D: RUNNER_TEMP)
+# dosya sistemi ağırlıklı senkron simülasyonlarının süresini ne kadar etkiliyor. Merge edilmez.
+on:
+  push:
+    branches: [claude/ci-fs-probe]
+    paths: [.github/workflows/buyerlog-fs-probe.yml, .github/probe/**]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: windows-latest
+    timeout-minutes: 50
+    defaults:
+      run:
+        working-directory: resources/app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: resources/app/package-lock.json
+      - run: npm ci --ignore-scripts
+      - name: Runner disk / Defender / temp facts
+        shell: pwsh
+        run: |
+          "TEMP=$env:TEMP RUNNER_TEMP=$env:RUNNER_TEMP"
+          node -p "require('os').tmpdir()"
+          Get-PSDrive -PSProvider FileSystem | Format-Table Name,Used,Free -AutoSize | Out-String
+          try { Get-MpComputerStatus | Select-Object AMServiceEnabled,AntivirusEnabled,RealTimeProtectionEnabled,OnAccessProtectionEnabled | Format-List | Out-String } catch { "Defender durumu okunamadı: $_" }
+          try { (Get-MpPreference).ExclusionPath } catch { "exclusion okunamadı" }
+      - name: FS microbench (C temp vs D runner temp)
+        shell: pwsh
+        run: |
+          node ../../.github/probe/fsbench.js $env:TEMP
+          node ../../.github/probe/fsbench.js $env:RUNNER_TEMP
+          node ../../.github/probe/fsbench.js $env:TEMP
+          node ../../.github/probe/fsbench.js $env:RUNNER_TEMP
+      - name: A · heavy sync sims, default TEMP
+        shell: pwsh
+        run: npm test -- collection-sync-randomized-cloud collection-sync-multi-device collection-sync-causal-cloud
+      - name: B · same sims, TEMP/TMP = RUNNER_TEMP (D:)
+        shell: pwsh
+        run: |
+          $env:TEMP = $env:RUNNER_TEMP; $env:TMP = $env:RUNNER_TEMP
+          npm test -- collection-sync-randomized-cloud collection-sync-multi-device collection-sync-causal-cloud
