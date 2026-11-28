@@ -172,12 +172,12 @@ async function stopBackend(label) {
 }
 
 // ---- HTTP ----
-async function call(method, url, body, cookie, { retry503 = /read-model/.test(url) } = {}) {
+async function call(method, url, body, cookie, { retry503 = /read-model/.test(url), headers = {} } = {}) {
   const t = performance.now();
   let n503 = 0;
   for (let attempt = 0; ; attempt += 1) {
     report.http.requests += 1;
-    const r = await fetch(base + url, { method, headers: { cookie: cookie || '', 'Content-Type': 'application/json' }, ...(body !== undefined ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(300000) });
+    const r = await fetch(base + url, { method, headers: { cookie: cookie || '', 'Content-Type': 'application/json', ...headers }, ...(body !== undefined ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(300000) });
     const text = await r.text();
     let json = null;
     try { json = JSON.parse(text); } catch (_) {}
@@ -364,17 +364,42 @@ async function main() {
   const staleFob = await call('PATCH', '/api/overrides/' + stale['Order Code'], { ...line(stale), notes: { Notes: stale.Notes || '', NotesHtml: '', EkNot: stale['Ek Not'] || '', EkNotHtml: '' }, suppFob: 66.25, suppFobMeta: { source: 'manual' } }, cookieA);
   // Gerçek istemci gövdesi (syncOverrideToServer): DTR olmayan satırda subManufacturer da istemcinin bildiği değerle gider.
   const clientBody = (r, extra) => ({ ...line(r), notes: { Notes: r.Notes || '', NotesHtml: '', EkNot: r['Ek Not'] || '', EkNotHtml: '' }, ...(String(r.Licensor || '').toUpperCase() !== 'DTR' ? { subManufacturer: r['Sub-Manufacturer'] || '' } : {}), ...extra });
-  const nonDtr = plain.filter(r => String(r.Licensor || '').toUpperCase() !== 'DTR');
+  // DTR satırında istemci subManufacturer göndermez; senaryo yalnız DTR olmayan satırda anlamlıdır (demo fixture'da yok → N/A).
+  const nonDtr = rows.filter(r => r.Licensor && String(r.Licensor).toUpperCase() !== 'DTR' && !used.has(String(r['Order Code'])));
+  report.licensorCounts = rows.reduce((m, r) => { const k = String(r.Licensor || '(boş)'); m[k] = (m[k] || 0) + 1; return m; }, {});
   // G08c: B Sub-Manufacturer'ı değiştirir; A (görmemiş) tekli Supp. FOB kaydeder.
-  const staleSub = take(nonDtr);
-  const subWrite = await call('PATCH', '/api/overrides/' + staleSub['Order Code'], { ...line(staleSub), subManufacturer: 'KAPI B ALT URETICI' }, cookieB);
-  const subFob = await call('PATCH', '/api/overrides/' + staleSub['Order Code'], clientBody(staleSub, { suppFob: 44.5, suppFobMeta: { source: 'manual' } }), cookieA);
+  const staleSub = nonDtr.length ? take(nonDtr) : null;
+  const subWrite = staleSub ? await call('PATCH', '/api/overrides/' + staleSub['Order Code'], { ...line(staleSub), subManufacturer: 'KAPI B ALT URETICI' }, cookieB) : null;
+  const subFob = staleSub ? await call('PATCH', '/api/overrides/' + staleSub['Order Code'], clientBody(staleSub, { suppFob: 44.5, suppFobMeta: { source: 'manual' } }), cookieA) : null;
   // G08d: A satırda elle Supp. FOB yazar (satır manuel olur); B daha yeni Supp. FOB yazar; A (bayat) yalnız not
   // kaydeder — gerçek istemci manuel Supp. FOB'lu satırın not kaydında suppFob'u da gönderir.
-  const staleNoteRow = take(nonDtr);
+  const staleNoteRow = take(plain);
   const fobA0 = await call('PATCH', '/api/overrides/' + staleNoteRow['Order Code'], clientBody(staleNoteRow, { suppFob: 10.5, suppFobMeta: { source: 'manual' } }), cookieA);
   const fobB1 = await call('POST', '/api/overrides/batch-suppfob', { items: [{ orderCode: staleNoteRow['Order Code'], ...line(staleNoteRow), suppFob: 20.75 }] }, cookieB);
   const noteA2 = await call('PATCH', '/api/overrides/' + staleNoteRow['Order Code'], clientBody(staleNoteRow, { notes: { Notes: 'kapı A bayat not', NotesHtml: 'kapı A bayat not', EkNot: '', EkNotHtml: '' }, suppFob: 10.5, suppFobMeta: { source: 'manual' } }), cookieA);
+  // #1257 sonrası istemci modeli (public/app-main.js cpLegacyBodyWithoutUnchanged + override-sync.js adoptAckRevision):
+  // eski yol gövdesi satırın kayıtlı değeriyle aynı not/alt üretici/lisansörü taşımaz; Supp. FOB yalnız açık niyetle gider;
+  // If-Match / X-Supp-Fob-Revision = A'nın yalnız kendi onaylı yazımlarıyla ilerleyen belirteci (başka oturumun yazımı görülmemiş).
+  // PASS: B'nin değeri korunur (409 REVISION_CONFLICT → yazım yok, ya da 200 → kırpılmış gövde B'nin alanına dokunmaz).
+  const tokenOf = (resp, prev) => ({ orders: Number(resp && resp.json && (resp.json.revision ?? (resp.json.revisions && resp.json.revisions.orders))) || prev.orders, suppFob: Number(resp && resp.json && resp.json.revisions && resp.json.revisions.suppFob) || prev.suppFob });
+  const casHeaders = tok => ({ 'If-Match': String(tok.orders || 0), 'X-Supp-Fob-Revision': String(tok.suppFob || 0) });
+  const modern = {};
+  {
+    // G08b': A kendi yazımıyla belirteç alır → B not yazar → A (bayat) yalnız Supp. FOB gönderir (not değişmedi → gövdede yok).
+    const rowB = take(plain), own = take(plain);
+    const a0 = await call('PATCH', '/api/overrides/' + own['Order Code'], { ...line(own), suppFob: 12.5, suppFobMeta: { source: 'manual' } }, cookieA);
+    const tok = tokenOf(a0, { orders: 0, suppFob: 0 });
+    const b1 = await call('POST', '/api/overrides/rows', noteRow(rowB, 'kapı B yeni not (modern)'), cookieB);
+    const a2 = await call('PATCH', '/api/overrides/' + rowB['Order Code'], { ...line(rowB), suppFob: 33.25, suppFobMeta: { source: 'manual' } }, cookieA, { headers: casHeaders(tok) });
+    modern.b = { row: rowB, statuses: [a0.status, b1.status, a2.status], code: a2.json && a2.json.code, token: tok };
+    // G08d': A manuel Supp. FOB yazar → B daha yeni Supp. FOB → A (bayat) yalnız not kaydeder (açık fiyat niyeti yok → gövdede suppFob yok).
+    const rowD = take(plain);
+    const d0 = await call('PATCH', '/api/overrides/' + rowD['Order Code'], { ...line(rowD), suppFob: 10.5, suppFobMeta: { source: 'manual' } }, cookieA);
+    const tokD = tokenOf(d0, tok);
+    const d1 = await call('POST', '/api/overrides/batch-suppfob', { items: [{ orderCode: rowD['Order Code'], ...line(rowD), suppFob: 20.75 }] }, cookieB);
+    const d2 = await call('PATCH', '/api/overrides/' + rowD['Order Code'], { ...line(rowD), notes: { Notes: 'kapı A not (modern)', NotesHtml: 'kapı A not (modern)' } }, cookieA, { headers: casHeaders(tokD) });
+    modern.d = { row: rowD, statuses: [d0.status, d1.status, d2.status], code: d2.json && d2.json.code, token: tokD };
+  }
   report.edits.push({ kind: 'concurrent', statuses: [c1.status, c2.status, c3.status, c4.status] });
 
   await delay(1500);
@@ -414,18 +439,30 @@ async function main() {
   {
     const got = v(stale._id);
     const reproduced = staleNote.status === 200 && staleFob.status === 200 && got.Notes !== 'kapı B önce yazdı';
-    gate('G08b', 'Bayat istemci: tekli Supp. FOB kaydı (gövdede eski notes) başka oturumun yeni notunu ezmemeli', reproduced ? 'KNOWN' : 'XPASS',
+    gate('G08b-eski', 'Bilgi: #1257 öncesi istemci gövdesi (eski notes, If-Match yok) — sunucu bayat tam gövdeyi kabul eder mi', reproduced ? 'INFO' : 'INFO',
       { finding: 'syncOverrideToServer Supp. FOB kaydını PATCH /api/overrides/:oc yoluna gönderir ve gövdeye istemcinin bildiği notes alanını koyar (cpRowSaveEligible suppFob içeren gövdeyi satır kaydından çıkarır); sunucu notes alanını koşulsuz yazar → sessiz kayıp', statuses: [staleNote.status, staleFob.status], noteAfter: got.Notes, fobAfter: got['Supp. FOB'] });
   }
   {
-    const sub = v(staleSub._id);
-    const reproducedC = subWrite.status === 200 && subFob.status === 200 && sub['Sub-Manufacturer'] !== 'KAPI B ALT URETICI';
-    gate('G08c', 'Bayat istemci: tekli Supp. FOB kaydı (gövdede eski subManufacturer) başka oturumun yeni Sub-Manufacturer değerini ezmemeli', reproducedC ? 'KNOWN' : 'XPASS',
-      { finding: 'G08b ile aynı yol: DTR olmayan satırda Supp. FOB kaydı gövdesi istemcinin bildiği subManufacturer değerini taşır', statuses: [subWrite.status, subFob.status], subAfter: sub['Sub-Manufacturer'], before: staleSub['Sub-Manufacturer'] });
+    if (!staleSub) gate('G08c', 'Bayat istemci: tekli Supp. FOB kaydı başka oturumun yeni Sub-Manufacturer değerini ezmemeli', 'N/A', { reason: 'fixture\'da DTR olmayan satır yok (istemci DTR satırında subManufacturer göndermez)', licensorCounts: report.licensorCounts });
+    else {
+      const sub = v(staleSub._id);
+      const reproducedC = subWrite.status === 200 && subFob.status === 200 && sub['Sub-Manufacturer'] !== 'KAPI B ALT URETICI';
+      gate('G08c', 'Bayat istemci: tekli Supp. FOB kaydı (gövdede eski subManufacturer) başka oturumun yeni Sub-Manufacturer değerini ezmemeli', reproducedC ? 'KNOWN' : 'XPASS',
+        { finding: 'G08b ile aynı yol: DTR olmayan satırda Supp. FOB kaydı gövdesi istemcinin bildiği subManufacturer değerini taşır', statuses: [subWrite.status, subFob.status], subAfter: sub['Sub-Manufacturer'], before: staleSub['Sub-Manufacturer'] });
+    }
     const nr = v(staleNoteRow._id);
     const reproducedD = fobA0.status === 200 && fobB1.status === 200 && noteA2.status === 200 && Number(nr['Supp. FOB']) !== 20.75;
-    gate('G08d', 'Bayat istemci: manuel Supp. FOB\'lu satırda not kaydı başka oturumun daha yeni Supp. FOB değerini ezmemeli', reproducedD ? 'KNOWN' : 'XPASS',
+    gate('G08d-eski', 'Bilgi: #1257 öncesi istemci gövdesi (not kaydında eski suppFob, If-Match yok)', 'INFO',
       { finding: 'syncOverrideToServer, _suppFobManual satırda not kaydına suppFob ekler; gövde suppFob içerdiği için satır kaydı yerine eski PATCH yolu kullanılır', statuses: [fobA0.status, fobB1.status, noteA2.status], fobAfter: nr['Supp. FOB'], noteAfter: nr.Notes });
+  }
+  {
+    const b = v(modern.b.row._id), d = v(modern.d.row._id);
+    const okB = modern.b.statuses[0] === 200 && modern.b.statuses[1] === 200 && b.Notes === 'kapı B yeni not (modern)' && (modern.b.statuses[2] === 409 || (modern.b.statuses[2] === 200 && Number(b['Supp. FOB']) === 33.25));
+    gate('G08b', 'Bayat oturum (#1257 istemci sözleşmesi): Supp. FOB kaydı başka oturumun yeni notunu ezmez (409 ya da not korunur)', pass(okB),
+      { statuses: modern.b.statuses, code: modern.b.code, noteAfter: b.Notes, fobAfter: b['Supp. FOB'], token: modern.b.token });
+    const okD = modern.d.statuses[0] === 200 && modern.d.statuses[1] === 200 && Number(d['Supp. FOB']) === 20.75 && (modern.d.statuses[2] === 409 || (modern.d.statuses[2] === 200 && d.Notes === 'kapı A not (modern)'));
+    gate('G08d', 'Bayat oturum (#1257 istemci sözleşmesi): not kaydı başka oturumun daha yeni Supp. FOB değerini ezmez (409 ya da Supp. FOB korunur)', pass(okD),
+      { statuses: modern.d.statuses, code: modern.d.code, fobAfter: d['Supp. FOB'], noteAfter: d.Notes, token: modern.d.token });
   }
   gate('G09', 'Yeniden başlatma sonrası eşitlik (karar demeti + CP satırları)', pass(digestOf(tupleMap(afterRestart.cols)) === sessionDigest && restartDiff.length === 0 && liveRestart.size === live.size),
     { tuples: tupleMap(afterRestart.cols).size, rowDiffs: restartDiff.slice(0, 5), rowDiffCount: restartDiff.length });

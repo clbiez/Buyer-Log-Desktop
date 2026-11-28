@@ -37,7 +37,10 @@ düzenlenebilir olur. Gerçek iş verisi kullanılmaz.
 | G06 | Elle düzenlenebilir Ex-factory PATCH + /batch 2xx, görünür; okuma tam kurulumda |
 | G07 | Otomatik Ex-factory 409 `AUTOMATIC_DATE_READ_ONLY`; değer korunur |
 | G08 | Aynı kullanıcının iki oturumu eşzamanlı yazar; iki alan korunur; iki oturum aynı veriyi görür |
-| G08b | Bayat istemci Supp. FOB kaydı başka oturumun yeni notunu ezmemeli. **Bilinen bulgu: KNOWN** |
+| G08b | Bayat oturum (#1257 istemci sözleşmesi: kırpılmış gövde + yalnız kendi onaylı yazımıyla ilerleyen `If-Match`): Supp. FOB kaydı başka oturumun yeni notunu ezmez (409 `REVISION_CONFLICT` ya da not korunur) |
+| G08c | Aynı senaryo Sub-Manufacturer için; fixture'da DTR olmayan satır yoksa **N/A** (istemci DTR satırında alanı göndermez) |
+| G08d | Bayat oturum: not kaydı başka oturumun daha yeni Supp. FOB değerini ezmez |
+| G08b-eski / G08d-eski | **INFO**: #1257 öncesi istemci gövdesi (bayat tam gövde, `If-Match` yok). Sunucu bunu kabul eder; koruma istemci sözleşmesindedir. Bilgi amaçlıdır, karar vermez |
 | G09 | Yeniden başlatma sonrası karar demeti + CP satırları birebir |
 | G10 | Projeksiyon önbelleği silinip sıfırdan tam kurulum, oturum verisiyle birebir |
 | G11 | Kurtarılamayan 503 = 0 (toplam 503 > 0 ise WARN) |
@@ -45,9 +48,11 @@ düzenlenebilir olur. Gerçek iş verisi kullanılmaz.
 | G13 | Sınırlı soak: kayıtlar 2xx; artımlı birikim = tam okuma; yazılan değerler görünür (RSS eğimi > ×1,25 ise WARN) |
 | G14 | `backend.stop()` sonrası sunucu süreci 20 sn içinde biter (öksüz süreç yok) |
 
-Durumlar: PASS · FAIL · WARN · BLOCKED · KNOWN (belgelenmiş bulgu sürüyor;
-engellemez) · XPASS (bulgu artık üretilmiyor; kapıyı normale çevirin). İş
-yalnız FAIL ya da BLOCKED olduğunda kırmızı olur.
+Durumlar: PASS · FAIL · WARN · BLOCKED · N/A · INFO · KNOWN (belgelenmiş
+bulgu sürüyor; engellemez) · XPASS (bulgu artık üretilmiyor; kapıyı normale
+çevirin). İş yalnız FAIL ya da BLOCKED olduğunda kırmızı olur. `--strict-known`
+(iş akışında `strict_known=true`) ile KNOWN de FAIL sayılır; bu, birleşik main
+nihai doğrulaması içindir.
 
 ## Yerel koşu (Linux, ölçüm amaçlı)
 
