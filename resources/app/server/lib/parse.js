@@ -2272,7 +2272,8 @@ function cpLogisticSegmentsForOrder(segments, opts = {}) {
 }
 function cpLogisticSummary(segments, orderQty, opts = {}) {
   const list = cpLogisticSegmentsForOrder(segments, opts);
-  const primary = list[0] || null;
+  // Ana STATUS / Del. Type / Ant. Arrival / HANDOVER kaynağı: tek ortak kural (business-rules).
+  const primary = BLBusinessRules.selectPrimaryLogisticSegment(list);
   const partials = list.filter(item => item.kind === 'partial');
   // Status filtresi/sayaçları siparişin tüm akışını kapsar: parsiyel varken de
   // üretimde kalan bakiye 'Üretimde' süzgecinde bulunabilmeli. Eksik yükleme
@@ -2371,8 +2372,8 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       });
     }
     // Shortage sentetik bir operasyon notudur; CP/Orders STATUS alanına yazılmaz.
-    // Ana durum, gerçek IAS parsiyellerinden (veya gerçek üretim satırından) gelir.
-    const primary = logistic.segments.find(segment => segment.kind !== 'shortage') || logistic.primary;
+    // Ana durum en geride kalan tamamlanmamış aşamadan gelir (selectPrimaryLogisticSegment).
+    const primary = logistic.primary;
     const primarySegment = orderLogisticSegments.find(segment => {
       if (!primary) return false;
       const kind = segment._segmentKind === 'production' ? 'production' : (segment._segmentKind === 'shortage' ? 'shortage' : 'partial');

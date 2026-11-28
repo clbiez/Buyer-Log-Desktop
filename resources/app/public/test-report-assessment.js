@@ -16,9 +16,10 @@
   }
   // Display values the page derives itself; never evidence of stale order data.
   // Priority carries personal rule overlays. The scalar logistic summary is
-  // rebuilt by the page from the server's _logisticSegments with its own main
-  // segment choice (first IAS partial), while the server keeps the production
-  // remainder first; for a partially shipped order they legitimately differ.
+  // rebuilt by the page from the server's _logisticSegments with the same main
+  // segment rule (BLBusinessRules.selectPrimaryLogisticSegment), but the page
+  // normalizes the vehicle name (GEMI → Gemi) and applies unsaved local
+  // Del. Type / Ex-factory edits to the production segment before a reload.
   // The review packet always carries the server's canonical values.
   const PAGE_DERIVED_FIELDS = Object.freeze(['Priority', 'STATUS', 'Ant. Arrival', 'Del. Type', 'HANDOVER Tarihi']);
   const pageDerived = key => PAGE_DERIVED_FIELDS.indexOf(key) >= 0;

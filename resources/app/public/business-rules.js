@@ -184,6 +184,66 @@
     return best;
   }
 
+  /* Birincil lojistik segment: CP / Siparişler satırının ana STATUS, Del. Type, Ant. Arrival ve
+     HANDOVER değerini veren segment. TEK TANIM: parse.js (tam kurulum), okuma modeli hazırlığı
+     (overview-row-prep) ve istemci (app-main rebuildCpLogisticCaches) bu fonksiyonu kullanır.
+     Ürün sahibi kuralı (ADR-0003 §6O.c):
+       A) Miktarı 0 olan üretim aşaması segmenti tek başına üretim bakiyesi değildir.
+       B) Eksik Yükleme ayrı istisnadır; seçilmez, aşamaya dönüştürülmez (başka segment yoksa yalnız o).
+       C) Üretim bakiyesi yoksa tamamlanmamış lojistik aşama depodan önce gelir.
+       D) Operasyonel olarak en geride kalan tamamlanmamış aşama seçilir.
+     Aynı aşamada: en erken varış → üretim bakiyesi → parsiyel no. Dizinin sırasından bağımsızdır.
+     Depoda ve Retaile Aktarım Bekleniyor aynı depo katmanıdır; bilinmeyen IAS statüsü (ör. "Yüklemede")
+     yükleme katmanında sayılır. Girdi parse.js cpLogisticSegmentsForOrder biçimidir
+     ({ kind, status, quantity, arrival, partialNo }); segmentlerin kendisi değiştirilmez. */
+  const PRIMARY_SEGMENT_STAGE_RANK = Object.freeze({
+    PRODUCTION: 10, UNKNOWN: 20, LOADING: 20, IN_TRANSIT: 30, CUSTOMS: 40, IN_WAREHOUSE: 50, AWAITING_RETAIL_TRANSFER: 50,
+  });
+  const PRIMARY_SEGMENT_KIND_ORDER = Object.freeze({ production: 0, partial: 1, shortage: 2 });
+  // IAS'ta yalnız birkaç statü metni vardır; satır başına yeniden normalleştirilmez (sıcak yol, ölçüldü).
+  const PRIMARY_SEGMENT_STAGE_CACHE = new Map();
+  function primarySegmentStage(status) {
+    if (typeof status !== 'string') return operationalStageOf(status);
+    let stage = PRIMARY_SEGMENT_STAGE_CACHE.get(status);
+    if (stage === undefined) {
+      stage = operationalStageOf(status);
+      if (PRIMARY_SEGMENT_STAGE_CACHE.size < 5000) PRIMARY_SEGMENT_STAGE_CACHE.set(status, stage);
+    }
+    return stage;
+  }
+  function primarySegmentRank(segment) {
+    if (!segment || typeof segment !== 'object' || segment.kind === 'shortage') return null;
+    const stage = segment.kind === 'production' ? 'PRODUCTION' : primarySegmentStage(segment.status);
+    if (stage === 'SHORTAGE') return null;
+    if (stage === 'PRODUCTION' && !(Number(segment.quantity) > 0)) return null;
+    return Object.prototype.hasOwnProperty.call(PRIMARY_SEGMENT_STAGE_RANK, stage) ? PRIMARY_SEGMENT_STAGE_RANK[stage] : PRIMARY_SEGMENT_STAGE_RANK.UNKNOWN;
+  }
+  function comparePrimarySegmentTies(a, b) {
+    const aDate = defaultDateOrdinal(a.arrival), bDate = defaultDateOrdinal(b.arrival);
+    if (aDate !== bDate) {
+      if (aDate == null) return 1;
+      if (bDate == null) return -1;
+      return aDate - bDate;
+    }
+    const kindDiff = (PRIMARY_SEGMENT_KIND_ORDER[a.kind] ?? 1) - (PRIMARY_SEGMENT_KIND_ORDER[b.kind] ?? 1);
+    if (kindDiff) return kindDiff;
+    return (Number(a.partialNo) || 0) - (Number(b.partialNo) || 0);
+  }
+  function selectPrimaryLogisticSegment(segments) {
+    const list = Array.isArray(segments) ? segments : [];
+    let best = null, bestRank = null;
+    for (const segment of list) {
+      const rank = primarySegmentRank(segment);
+      if (rank == null) continue;
+      if (best == null || rank < bestRank || (rank === bestRank && comparePrimarySegmentTies(segment, best) < 0)) { best = segment; bestRank = rank; }
+    }
+    if (best) return best;
+    // Seçilebilir aşama yoksa (yalnız 0 adetlik üretim ya da yalnız kıtlık): önce kıtlık dışı segment.
+    const objects = list.filter(segment => segment && typeof segment === 'object');
+    const pickFirst = items => items.reduce((winner, segment) => (winner == null || comparePrimarySegmentTies(segment, winner) < 0 ? segment : winner), null);
+    return pickFirst(objects.filter(segment => segment.kind !== 'shortage')) || pickFirst(objects);
+  }
+
   function isProductionStatus(value) {
     return operationalStageOf(value) === 'PRODUCTION';
   }
@@ -1137,6 +1197,7 @@
     norm,
     turkNorm,
     operationalStageOf,
+    selectPrimaryLogisticSegment,
     isProductionStatus,
     isShortageStatus,
     isWarehouseShortageStatus,

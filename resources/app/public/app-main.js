@@ -7570,7 +7570,8 @@ function rebuildCpLogisticCaches(row){
   row._logisticRemainingQty=Math.max(0,(toNum(row['Order Quantity'])||0)-row._logisticLoadedQty);
   row['Remaining Units']=row._logisticRemainingQty;
   row['%']=toNum(row['Order Quantity'])?((toNum(row['Order Quantity'])-row._logisticRemainingQty)/toNum(row['Order Quantity'])):'';
-  const primary=partials[0]||segments.find(s=>s&&s.kind!=='shortage')||segments[0];
+  // Sunucu (parse.js / okuma modeli) ile aynı tek kural: en geride kalan tamamlanmamış aşama.
+  const primary=BLBusinessRules.selectPrimaryLogisticSegment(segments);
   row.STATUS=primary.status||'Üretimde';
   row['Ant. Arrival']=coerceDateLoose(primary.arrival);
   row['Del. Type']=normalizeTransitDelType(primary.delType)||norm(primary.delType);
