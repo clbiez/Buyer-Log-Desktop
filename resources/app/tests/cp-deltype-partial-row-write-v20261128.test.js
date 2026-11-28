@@ -50,11 +50,13 @@ function harness(row, { rowSave = false } = {}) {
     importedSuppFob: () => false,
     cpRowSavePlan: (_row, _code, body) => (rowSave ? { patch: body.delType !== undefined ? { delType: body.delType } : {}, units: ['delType'] } : null),
     cpRowSaveSend: (_row, _code, patch) => { sent.push({ url: '/api/overrides/rows', body: patch }); return Promise.resolve({}); },
-    enqueueOverrideMutation: (_kind, url, opts) => { sent.push({ url, body: JSON.parse(opts.body) }); return Promise.resolve({}); },
+    enqueueOverrideMutation: (_kind, url, opts) => { sent.push({ url, body: JSON.parse(typeof opts.body === 'function' ? opts.body() : opts.body) }); return Promise.resolve({}); },
     notifyOverrideSaveError: () => {},
     console: { warn: () => {} },
   };
-  const fns = loadAppMainFunctions(['commitCpEditor', 'syncCpProductionLogisticSegment', 'rebuildCpLogisticCaches', 'cpLogisticSegments', 'cpEditableDelType', 'syncOverrideToServer'], globals);
+  // P1 (eski yol bayat alanlar): gövde cpLegacyBodyWithoutUnchanged'den geçer.
+  Object.assign(globals, { cpRowIsObject: v => v !== null && typeof v === 'object' && !Array.isArray(v), CP_ROW_NOTE_PAIRS: { Notes: ['Notes', 'NotesHtml'], EkNot: ['EkNot', 'EkNotHtml'] }, CP_ROW_DATE_FIELDS: { exFactory: 'ex', retailDate: 'retail', inStoreDate: 'mb' } });
+  const fns = loadAppMainFunctions(['commitCpEditor', 'syncCpProductionLogisticSegment', 'rebuildCpLogisticCaches', 'cpLogisticSegments', 'cpEditableDelType', 'syncOverrideToServer', 'cpLegacyBodyWithoutUnchanged', 'cpRowSnapshot', 'cpRowStoredOf'], globals);
   const edit = value => fns.commitCpEditor({ dataset: { id: String(row._id), key: 'Del. Type', kind: 'deltype' }, value }, { refresh: false });
   return { fns, sent, undo, edit };
 }

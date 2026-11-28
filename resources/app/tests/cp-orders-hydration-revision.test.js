@@ -206,6 +206,8 @@ function fullLoader() {
       return {ok: true, json: async () => c.payload};
     },
   });
+  // P1 (2026-11-28): loadFromServer revizyonları mergeStoreRevisions ile birleştirir (CAS belirteçleri geri gitmez).
+  s.run(between('function mergeStoreRevisions(current,incoming){', 'async function loadFromServer(force, targets){'));
   s.run(between('async function loadFromServer(force, targets){', '\nlet sharedRevisionSnapshot='));
   return {...s, pricingCalls, async loadPayload(payload) {
     c.payload = payload;

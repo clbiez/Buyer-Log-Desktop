@@ -38,6 +38,8 @@ function harness(row, { rowSave = false, ackStored, ackData = {} } = {}) {
     pushUndo: action => undo.push(action),
     markDirty: () => fns.syncOverrideToServer(row['Order Code'], {}, row),
     cpRowIsObject: value => value !== null && typeof value === 'object' && !Array.isArray(value),
+    // #1257: eski yol gövdesi cpLegacyBodyWithoutUnchanged'den (kuyrukta) geçer.
+    CP_ROW_NOTE_PAIRS: { Notes: ['Notes', 'NotesHtml'], EkNot: ['EkNot', 'EkNotHtml'] },
     CP_NOTE_COLUMN_DEFS: [],
     schedulePendingOverrideWrite: (_key, _delay, run) => run(),
     cpRowSaveDebounce: ms => ms,
@@ -46,10 +48,10 @@ function harness(row, { rowSave = false, ackStored, ackData = {} } = {}) {
     importedSuppFob: () => false,
     cpRowSavePlan: (_row, _code, body) => (rowSave ? { patch: Object.hasOwn(body, 'delType') && body.delType !== undefined ? { delType: body.delType } : {}, units: ['delType'] } : null),
     cpRowSaveSend: (_row, _code, patch) => { sent.push({ url: '/api/overrides/rows', body: patch }); return ack(); },
-    enqueueOverrideMutation: (_kind, url, opts) => { sent.push({ url, body: JSON.parse(opts.body) }); return ack(); },
+    enqueueOverrideMutation: (_kind, url, opts) => { sent.push({ url, body: JSON.parse(typeof opts.body === 'function' ? opts.body() : opts.body) }); return ack(); },
     notifyOverrideSaveError: () => {}, console: { warn: () => {} },
   };
-  const fns = loadAppMainFunctions(['revertCpDelTypeToSource', 'cpDelTypeHasOverride', 'cpRowStoredOf', 'cpEditableDelType', 'syncCpProductionLogisticSegment', 'rebuildCpLogisticCaches', 'cpLogisticSegments', 'syncOverrideToServer'], globals);
+  const fns = loadAppMainFunctions(['revertCpDelTypeToSource', 'cpDelTypeHasOverride', 'cpRowStoredOf', 'cpEditableDelType', 'syncCpProductionLogisticSegment', 'rebuildCpLogisticCaches', 'cpLogisticSegments', 'syncOverrideToServer', 'cpLegacyBodyWithoutUnchanged'], globals);
   const revert = () => fns.revertCpDelTypeToSource({ dataset: { id: String(row._id), key: 'Del. Type', kind: 'deltype' } });
   return { fns, sent, undo, toasts, revert, flush: () => new Promise(resolve => setImmediate(resolve)) };
 }

@@ -14,10 +14,14 @@ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const {extractFunction}=require('./helpers/app-main-functions');
 const SOURCE=fs.readFileSync(path.join(__dirname,'..','public','app-main.js'),'utf8');
 const BLOCK=SOURCE.slice(SOURCE.indexOf("const CP_ROW_SAVE_STORAGE_KEY='bl.cpRowSave.v1';"),SOURCE.indexOf('window.BLCpRowSave={'));
+// Gerçek revizyon belirteci kuralı (override-sync.js adoptAckRevision), düzeneğin state'ine bağlanır.
+const SYNC_SOURCE=fs.readFileSync(path.join(__dirname,'..','public','override-sync.js'),'utf8');
+let ADOPT=()=>{};
+function bindAdopt(ctx){vm.runInContext('const ownAckedRevisions=new Map();'+extractFunction(SYNC_SOURCE,'adoptAckRevision')+';globalThis.__adopt=adoptAckRevision;',ctx);ADOPT=ctx.__adopt;}
 function load({responses=[],enabled=true,capturing=false,rows=[]}={}){
   const requests=[],toasts=[],refreshed=[];
   const ctx=vm.createContext({console,JSON,Object,Array,Map,Set,Promise,Number,String,Boolean,Error,Date,
-    window:{BL_CP_ROW_SAVE:enabled,BL_CLIENT_ID:'tab-1',isCapturingOverrideBatch:()=>capturing,dispatchEvent(){},BLPerf:null},
+    window:{adoptAckRevision:(...args)=>ADOPT(...args),BL_CP_ROW_SAVE:enabled,BL_CLIENT_ID:'tab-1',isCapturingOverrideBatch:()=>capturing,dispatchEvent(){},BLPerf:null},
     localStorage:{getItem:()=>null},CustomEvent:class{constructor(type){this.type=type;}},
     state:{cp:{rows},cpDirty:new Set(),overrides:{notesmap:{},delmap:{},submap:{},licensormap:{},noteColumnValues:{},datemap:{}},storeRevisions:{orders:0}},
     appLang:'tr',CP_NOTE_COLUMN_DEFS:[{id:'nc_a'},{id:'nc_b'}],requests,toasts,refreshed,
@@ -27,6 +31,7 @@ function load({responses=[],enabled=true,capturing=false,rows=[]}={}){
     showToast:message=>toasts.push(message),refreshRowEverywhere:id=>refreshed.push(id),loadFromServer:async()=>{ctx.reloaded=(ctx.reloaded||0)+1;},
     invalidateUnifiedPriorityDecisions(){},applyFormulas(){},syncCpProductionLogisticSegment(){},coerceDateLoose:value=>value?new Date(value+'T00:00:00'):null,
     pendingOverrideWriteCount:()=>0,currentActiveTab:()=>'overview',notifyOverrideSaveError(){}});
+  bindAdopt(ctx);
   vm.runInContext(`function overrideSyncKey(row,orderCode){return lineKeyOfRow(row)||String(orderCode==null?'':orderCode);}
     ${BLOCK}
     globalThis.api={cpRowSaveEnabled,cpRowSaveDebounce,cpUnsavedRowEdits,cpEditsBlockServerPaths,cpRowSnapshot,cpRowCaptureBase,cpRowTouch,cpRowTouchAction,cpRowSaveEligible,cpRowSavePlan,cpRowSaveDatePlan,
@@ -48,13 +53,16 @@ function edit(ctx,api,r,changes){
   ctx.state.overrides.noteColumnValues[key]={nc_a:r.nc_a||'',nc_b:r.nc_b||''};
   api.cpRowTouchAction({id:r._id,fields});
 }
+// Sunucu gibi: her yazan kayıt global orders revizyonunu 1 artırır (aynı sunucu nesnesi = aynı depo).
+const serverRevision=new WeakMap();
 const ack=server=>body=>{
   const item=body.items[0];
   for(const [field,value] of Object.entries(item.patch)){
     if(field==='model'||field==='ccode')continue;
     if(value&&typeof value==='object')server[field]={...(server[field]||{}),...value};else server[field]=value;
   }
-  return {applied:[{orderCode:item.orderCode,key,noop:false,current:JSON.parse(JSON.stringify(server))}],conflicts:[],revisions:{orders:5,suppFob:1}};
+  const revision=(serverRevision.get(server)||0)+1;serverRevision.set(server,revision);
+  return {applied:[{orderCode:item.orderCode,key,noop:false,current:JSON.parse(JSON.stringify(server))}],conflicts:[],revisions:{orders:revision,suppFob:0}}; // gerçek yanıt gibi: `updated` yok
 };
 
 test('only touched units are sent: an untouched source/stale display value (Del. Type) is never written',async()=>{
@@ -114,7 +122,7 @@ test('consecutive saves of the same unit rebase on ack and never conflict with t
   assert.equal(requests[0].body.items[0].base.delType,'Gemi');
   assert.equal(requests[1].body.items[0].base.delType,'Uçak','ikinci kayıt ilk kaydın onaylanmış değerini base alır');
   assert.equal(requests[0].headers['X-Client-Id'],'tab-1');
-  assert.equal(ctx.state.storeRevisions.orders,5,'global revizyon izlenir (toplu işlemler kendi yazmalarıyla 409 almaz)');
+  assert.equal(ctx.state.storeRevisions.orders,2,'global revizyon kendi yazmalarıyla izlenir (toplu işlemler kendi yazmalarıyla 409 almaz)');
   assert.equal(api.rowSave.inFlight.size,0);assert.equal(api.rowSave.units.size,0);
   assert.equal(ctx.state.overrides.delmap[key],'Kamyon');
 });
