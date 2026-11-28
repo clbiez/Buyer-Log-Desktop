@@ -1,0 +1,454 @@
+{
+ "schemaVersion": 1,
+ "startedAt": "2026-11-28T05:10:55.317Z",
+ "env": {
+  "execPath": "D:\\a\\_temp\\installed\\BuyerLog\\BuyerLog.exe",
+  "node": "24.20.0",
+  "electron": "44.3.0",
+  "platform": "win32 10.0.26100 x64",
+  "cpus": "4\u00d7 AMD EPYC 7763 64-Core Processor                ",
+  "totalMemMb": 16379,
+  "NODE_OPTIONS": "",
+  "commit": "57fc699b7f799c2fcd837669e0c2d55c7350ecab",
+  "appVersion": "8.0.22",
+  "app": "D:\\a\\_temp\\installed\\BuyerLog\\resources\\app",
+  "fixtureApp": "D:\\a\\Buyer-Log-Desktop\\Buyer-Log-Desktop\\resources\\app",
+  "rows": 30000,
+  "soakMin": 15,
+  "heapMb": 3686
+ },
+ "timings": {
+  "fixtureMs": 10209,
+  "start:cold": 778,
+  "refreshMs": 26735,
+  "start:warm": 721,
+  "cpOpenMs": 5442,
+  "ordersOpenMs": 780,
+  "start:restart": 713,
+  "start:rebuild": 702
+ },
+ "gates": [
+  {
+   "id": "G01",
+   "title": "A\u00e7\u0131l\u0131\u015f: BuyerLog.exe \u2192 watchdog \u2192 server; 30k yenileme; s\u0131cak a\u00e7\u0131l\u0131\u015fta CP + Sipari\u015fler",
+   "status": "PASS",
+   "detail": {
+    "coldMs": 778,
+    "warmMs": 721,
+    "refreshMs": 26735,
+    "cpOpenMs": 5442,
+    "cpRows": 24982,
+    "ordersStatus": 200,
+    "ordersMs": 780
+   }
+  },
+  {
+   "id": "G02",
+   "title": "CP / Sipari\u015fler okuma: CP sorgu sat\u0131r\u0131 = computed sat\u0131r\u0131",
+   "status": "PASS",
+   "detail": {
+    "cpQueryRows": 24982,
+    "computedRows": 24982
+   }
+  },
+  {
+   "id": "G03",
+   "title": "Supp. FOB tekli + toplu kay\u0131t g\u00f6r\u00fcn\u00fcr; tekli kay\u0131t sat\u0131r yamas\u0131 yolunda",
+   "status": "PASS",
+   "detail": {
+    "single": 200,
+    "bulk": 200,
+    "rowPatch": {
+     "steps": 1,
+     "pending": 1,
+     "verified": false
+    }
+   }
+  },
+  {
+   "id": "G04",
+   "title": "Not tekli + toplu (5) kay\u0131t g\u00f6r\u00fcn\u00fcr",
+   "status": "PASS",
+   "detail": {
+    "single": 200,
+    "bulk": 200
+   }
+  },
+  {
+   "id": "G05",
+   "title": "Del. Type (a\u00e7\u0131k niyet, ikinci kullan\u0131c\u0131) tam kurulumda; sonraki Supp. FOB/not Del. Type'\u0131 de\u011fi\u015ftirmez",
+   "status": "PASS",
+   "detail": {
+    "status": 200,
+    "before": "Gemi",
+    "want": "U\u00e7ak",
+    "got": "U\u00e7ak",
+    "prodOnlyCandidates": 17269,
+    "readViaRowPatch": false
+   }
+  },
+  {
+   "id": "G06",
+   "title": "Elle d\u00fczenlenebilir Ex-factory PATCH + /batch 2xx, de\u011fer g\u00f6r\u00fcn\u00fcr, okuma tam kurulumda",
+   "status": "PASS",
+   "detail": {
+    "patch": 200,
+    "batch": 200,
+    "manualCandidates": 6295,
+    "got": [
+     "2026-12-05T00:00:00.000Z",
+     "2027-01-25T00:00:00.000Z"
+    ],
+    "want": [
+     "2026-12-05",
+     "2027-01-25"
+    ]
+   }
+  },
+  {
+   "id": "G07",
+   "title": "Otomatik (y\u00fckleme onayl\u0131) Ex-factory yaz\u0131m\u0131 409 AUTOMATIC_DATE_READ_ONLY; de\u011fer korunur",
+   "status": "PASS",
+   "detail": {
+    "status": 409,
+    "code": "AUTOMATIC_DATE_READ_ONLY",
+    "automaticCandidates": 18687
+   }
+  },
+  {
+   "id": "G08",
+   "title": "\u00c7oklu istemci (ayn\u0131 kullan\u0131c\u0131n\u0131n iki oturumu): e\u015fzamanl\u0131 4 yaz\u0131m 2xx, ayn\u0131 sat\u0131rda iki alan da korunur, iki oturum ayn\u0131 veriyi g\u00f6r\u00fcr",
+   "status": "PASS",
+   "detail": {
+    "statuses": [
+     200,
+     200,
+     200,
+     200
+    ],
+    "values": {
+     "sharedFob": 77.75,
+     "sharedNote": "kap\u0131 B ayn\u0131 sat\u0131r",
+     "onlyAFob": 88.5,
+     "onlyBNote": "kap\u0131 B tekil"
+    },
+    "sameDigest": true,
+    "sameRows": true,
+    "tupleDiffCount": 0,
+    "rowDiffCount": 0,
+    "rowDiffExamples": []
+   }
+  },
+  {
+   "id": "G08b",
+   "title": "Bayat istemci: tekli Supp. FOB kayd\u0131 (g\u00f6vdede eski notes) ba\u015fka oturumun yeni notunu ezmemeli",
+   "status": "KNOWN",
+   "detail": {
+    "finding": "syncOverrideToServer Supp. FOB kayd\u0131n\u0131 PATCH /api/overrides/:oc yoluna g\u00f6nderir ve g\u00f6vdeye istemcinin bildi\u011fi notes alan\u0131n\u0131 koyar (cpRowSaveEligible suppFob i\u00e7eren g\u00f6vdeyi sat\u0131r kayd\u0131ndan \u00e7\u0131kar\u0131r); sunucu notes alan\u0131n\u0131 ko\u015fulsuz yazar \u2192 sessiz kay\u0131p",
+    "statuses": [
+     200,
+     200
+    ],
+    "noteAfter": "",
+    "fobAfter": 66.25
+   }
+  },
+  {
+   "id": "G09",
+   "title": "Yeniden ba\u015flatma sonras\u0131 e\u015fitlik (karar demeti + CP sat\u0131rlar\u0131)",
+   "status": "PASS",
+   "detail": {
+    "tuples": 24982,
+    "rowDiffs": [],
+    "rowDiffCount": 0
+   }
+  },
+  {
+   "id": "G10",
+   "title": "S\u0131f\u0131rdan tam kurulum (\u00f6nbellek silinip yeniden ba\u015flatma) oturum verisiyle birebir",
+   "status": "PASS",
+   "detail": {
+    "cacheRemoved": [
+     "local\\page-cache\\moderator",
+     "local\\page-cache\\moderator"
+    ],
+    "rowDiffs": [],
+    "rowDiffCount": 0
+   }
+  },
+  {
+   "id": "G13",
+   "title": "S\u0131n\u0131rl\u0131 s\u00fcreli soak (15 dk): kay\u0131tlar 2xx, art\u0131ml\u0131 birikim = tam okuma, yaz\u0131lan de\u011ferler g\u00f6r\u00fcn\u00fcr",
+   "status": "PASS",
+   "detail": {
+    "iterations": 64,
+    "saves": {
+     "ok": 64,
+     "fail": 0
+    },
+    "valueBad": 0,
+    "incrementalEqualsFull": true,
+    "cpMedianMs": 133,
+    "cpP95Ms": 354,
+    "ordersMedianMs": 5844,
+    "rssThirds": {
+     "firstMb": 1411,
+     "lastMb": 1480
+    },
+    "heapThirds": {
+     "firstMb": 54,
+     "lastMb": 75
+    }
+   }
+  },
+  {
+   "id": "G11",
+   "title": "503: kurtar\u0131lamayan (20\u00d7500 ms yeniden deneme sonras\u0131) = 0; toplam 503 raporlan\u0131r",
+   "status": "PASS",
+   "detail": {
+    "n503": 0,
+    "exhausted": 0,
+    "byPath": {},
+    "requests": 420
+   }
+  },
+  {
+   "id": "G12",
+   "title": "Bellek: heap s\u0131n\u0131r\u0131 = 3686 MB politika b\u00fct\u00e7esi, ana heap tepe < %85, i\u015f\u00e7i OOM yok, beklenmedik \u00e7\u0131k\u0131\u015f yok",
+   "status": "PASS",
+   "detail": {
+    "heapLimitMb": 3782,
+    "heapUsedMaxMb": 279,
+    "rssMaxMb": 2519,
+    "peakRssMb": 2754,
+    "retainedMaxMb": 408,
+    "poolRetainedMaxMb": 384,
+    "workerSpawns": 5,
+    "workerExits": 0,
+    "jobFailures": [],
+    "unexpectedExits": 0
+   }
+  },
+  {
+   "id": "G14",
+   "title": "Kapan\u0131\u015f: backend.stop() sonras\u0131 sunucu s\u00fcreci 20 sn i\u00e7inde biter (\u00f6ks\u00fcz s\u00fcre\u00e7 yok)",
+   "status": "PASS",
+   "detail": {
+    "stops": [
+     {
+      "label": "after-refresh",
+      "ms": 28,
+      "forced": false,
+      "orphan": false
+     },
+     {
+      "label": "restart",
+      "ms": 9,
+      "forced": false,
+      "orphan": false
+     },
+     {
+      "label": "rebuild",
+      "ms": 9,
+      "forced": false,
+      "orphan": false
+     },
+     {
+      "label": "final",
+      "ms": 7,
+      "forced": false,
+      "orphan": false
+     }
+    ]
+   }
+  }
+ ],
+ "http": {
+  "requests": 420,
+  "n503": 0,
+  "exhausted": 0,
+  "byPath": {}
+ },
+ "edits": [
+  {
+   "kind": "suppFob PATCH",
+   "status": 200,
+   "ms": 28,
+   "code": null
+  },
+  {
+   "kind": "batch-suppfob",
+   "status": 200,
+   "ms": 21,
+   "code": null
+  },
+  {
+   "kind": "note batch(1)",
+   "status": 200,
+   "ms": 37,
+   "code": null
+  },
+  {
+   "kind": "note batch(5)",
+   "status": 200,
+   "ms": 22,
+   "code": null
+  },
+  {
+   "kind": "delType PATCH",
+   "status": 200,
+   "ms": 46,
+   "code": null
+  },
+  {
+   "kind": "suppFob on delType row",
+   "status": 200,
+   "ms": 24,
+   "code": null
+  },
+  {
+   "kind": "note on delType row",
+   "status": 200,
+   "ms": 26,
+   "code": null
+  },
+  {
+   "kind": "exFactory PATCH",
+   "status": 200,
+   "ms": 1967,
+   "code": null
+  },
+  {
+   "kind": "exFactory batch",
+   "status": 200,
+   "ms": 147,
+   "code": null
+  },
+  {
+   "kind": "exFactory automatic",
+   "status": 409,
+   "ms": 69,
+   "code": "AUTOMATIC_DATE_READ_ONLY"
+  },
+  {
+   "kind": "concurrent",
+   "statuses": [
+    200,
+    200,
+    200,
+    200
+   ]
+  }
+ ],
+ "soak": {
+  "minutes": 15,
+  "gapMs": 8000,
+  "iterations": 64,
+  "saves": {
+   "ok": 64,
+   "fail": 0
+  },
+  "n503": 0,
+  "valueBad": 0,
+  "incrementalEqualsFull": true,
+  "cpMedianMs": 133,
+  "cpP95Ms": 354,
+  "ordersMedianMs": 5844,
+  "ordersP95Ms": 6730,
+  "rssThirds": {
+   "firstMb": 1411,
+   "lastMb": 1480
+  },
+  "heapThirds": {
+   "firstMb": 54,
+   "lastMb": 75
+  }
+ },
+ "memory": {
+  "hookLoaded": true,
+  "serverStarts": 4,
+  "heapLimitMb": 3782,
+  "samples": 994,
+  "rssMaxMb": 2519,
+  "peakRssMb": 2754,
+  "heapUsedMaxMb": 279,
+  "workerSpawns": 5,
+  "workerExits": 0,
+  "workerErrors": [],
+  "jobFailures": [],
+  "jobs": 360,
+  "retainedMaxMb": 408,
+  "poolRetainedMaxMb": 384,
+  "beforeRestart": {
+   "hookLoaded": true,
+   "serverStarts": 2,
+   "heapLimitMb": 3782,
+   "samples": 73,
+   "rssMaxMb": 2519,
+   "peakRssMb": 2754,
+   "heapUsedMaxMb": 279,
+   "workerSpawns": 2,
+   "workerExits": 0,
+   "workerErrors": [],
+   "jobFailures": [],
+   "jobs": 88,
+   "retainedMaxMb": 408,
+   "poolRetainedMaxMb": 384
+  }
+ },
+ "stops": [
+  {
+   "label": "after-refresh",
+   "ms": 28,
+   "forced": false,
+   "serverPid": 1728,
+   "orphan": false,
+   "orphanMs": 0
+  },
+  {
+   "label": "restart",
+   "ms": 9,
+   "forced": false,
+   "serverPid": 6824,
+   "orphan": false,
+   "orphanMs": 0
+  },
+  {
+   "label": "rebuild",
+   "ms": 9,
+   "forced": false,
+   "serverPid": 7440,
+   "orphan": false,
+   "orphanMs": 0
+  },
+  {
+   "label": "final",
+   "ms": 7,
+   "forced": false,
+   "serverPid": 6032,
+   "orphan": false,
+   "orphanMs": 0
+  }
+ ],
+ "errors": [],
+ "fixture": {
+  "dir": "D:\\a\\_temp\\gate\\source",
+  "asasRows": 30000,
+  "loadingApprovalCleared": 7500
+ },
+ "users": {
+  "createStatus": 201,
+  "secondSessionDistinct": true
+ },
+ "multiClient": {
+  "tupleCounts": [
+   24982,
+   24982
+  ],
+  "tupleDiffCount": 0,
+  "tupleDiffExamples": [],
+  "rowDiffCount": 0,
+  "rowDiffExamples": []
+ },
+ "finishedAt": "2026-11-28T05:27:48.607Z"
+}

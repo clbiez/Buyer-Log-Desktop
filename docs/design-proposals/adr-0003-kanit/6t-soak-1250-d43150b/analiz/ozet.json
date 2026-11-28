@@ -1,0 +1,303 @@
+{
+ "runtime": {
+  "exec": "/tmp/claude-0/-home-user-Buyer-Log-Desktop/037e4615-db23-5876-994a-5d75d0ead1cf/scratchpad/el/node_modules/electron/dist/electron",
+  "node": "24.20.0",
+  "electron": "44.3.0",
+  "NODE_OPTIONS": "--use-openssl-ca --max-old-space-size=3686 --require=/tmp/claude-0/-home-user-Buyer-Log-Desktop/037e4615-db23-5876-994a-5d75d0ead1cf/scratchpad/kit/kit/hook-soak.js",
+  "gcRecheck": null,
+  "flag": null
+ },
+ "bootMs": 29879,
+ "datasetRows": 24982,
+ "durationMin": 110,
+ "edits": 365,
+ "saveStatus": {
+  "200": 365
+ },
+ "nonOkReads": 0,
+ "total503": 0,
+ "editsWith503": 0,
+ "memory": {
+  "rssStartMB": 1397,
+  "rssEndMB": 997,
+  "rssPeakMB": 2826,
+  "hwmEndMB": 3066,
+  "heapStartMB": 50,
+  "heapEndMB": 125,
+  "heapPeakMB": 129,
+  "mainRetainedMaxMB": 203,
+  "laneRetainedMaxMB": 482
+ },
+ "slopeMBperHour": {
+  "rssMed": {
+   "first30": 474,
+   "last30": -240.7,
+   "all": 71.1
+  },
+  "heapMed": {
+   "first30": 102.3,
+   "last30": 8.6,
+   "all": 36.8
+  },
+  "mainRetained": {
+   "first30": -4.1,
+   "last30": 2.4,
+   "all": -1
+  },
+  "laneRetained": {
+   "first30": 54.2,
+   "last30": -54,
+   "all": -1.2
+  },
+  "rssMax": {
+   "first30": 1084,
+   "last30": -583.6,
+   "all": 42.4
+  }
+ },
+ "workers": {
+  "allLog": {
+   "spawns": 5,
+   "exits": 2,
+   "terminates": 2
+  },
+  "spawns": 2,
+  "exits": 2,
+  "terminates": 2,
+  "reasons": {
+   "after-result(budget/generation)": 2
+  },
+  "exitCodes": {
+   "1": 2
+  }
+ },
+ "waits": {
+  "cpWaitMed": 204,
+  "cpWaitP90": 248,
+  "readyMed": 3023,
+  "readyP90": 3406,
+  "readyMax": 4556
+ },
+ "slices": [
+  {
+   "dk": "0-30",
+   "edits": 100,
+   "cpWaitMed": 205,
+   "cpWaitP90": 262,
+   "readyMed": 3057.5,
+   "readyP90": 3515,
+   "suppFobReadyMed": 3076,
+   "noteReadyMed": 3042.5,
+   "n503": 0,
+   "cpuMsPerEdit": 8965,
+   "rssMedMB": 1409,
+   "heapMedMB": 78
+  },
+  {
+   "dk": "30-60",
+   "edits": 100,
+   "cpWaitMed": 199,
+   "cpWaitP90": 248,
+   "readyMed": 2938.5,
+   "readyP90": 3267,
+   "suppFobReadyMed": 2912,
+   "noteReadyMed": 2974.5,
+   "n503": 0,
+   "cpuMsPerEdit": 7525,
+   "rssMedMB": 1501,
+   "heapMedMB": 103
+  },
+  {
+   "dk": "60-90",
+   "edits": 99,
+   "cpWaitMed": 201,
+   "cpWaitP90": 243,
+   "readyMed": 3083,
+   "readyP90": 3375,
+   "suppFobReadyMed": 3062.5,
+   "noteReadyMed": 3092,
+   "n503": 0,
+   "cpuMsPerEdit": 8840,
+   "rssMedMB": 1454,
+   "heapMedMB": 121
+  },
+  {
+   "dk": "90-111",
+   "edits": 66,
+   "cpWaitMed": 215,
+   "cpWaitP90": 243,
+   "readyMed": 3076.5,
+   "readyP90": 3418,
+   "suppFobReadyMed": 3044,
+   "noteReadyMed": 3121,
+   "n503": 0,
+   "cpuMsPerEdit": 7920,
+   "rssMedMB": 1549,
+   "heapMedMB": 124
+  }
+ ],
+ "checks": [
+  {
+   "label": "min10",
+   "equal": true,
+   "values": {
+    "checked": 33,
+    "ok": 33,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min20",
+   "equal": true,
+   "values": {
+    "checked": 66,
+    "ok": 66,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min30",
+   "equal": true,
+   "values": {
+    "checked": 100,
+    "ok": 100,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min40",
+   "equal": true,
+   "values": {
+    "checked": 133,
+    "ok": 133,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min50",
+   "equal": true,
+   "values": {
+    "checked": 167,
+    "ok": 167,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min60",
+   "equal": true,
+   "values": {
+    "checked": 200,
+    "ok": 200,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min70",
+   "equal": true,
+   "values": {
+    "checked": 233,
+    "ok": 233,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min80",
+   "equal": true,
+   "values": {
+    "checked": 266,
+    "ok": 266,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min90",
+   "equal": true,
+   "values": {
+    "checked": 299,
+    "ok": 299,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min100",
+   "equal": true,
+   "values": {
+    "checked": 332,
+    "ok": 332,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "min110",
+   "equal": true,
+   "values": {
+    "checked": 365,
+    "ok": 365,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  },
+  {
+   "label": "final",
+   "equal": true,
+   "values": {
+    "checked": 365,
+    "ok": 365,
+    "bad": 0
+   },
+   "count": 24982,
+   "inc": "5ac8eef8fa41",
+   "full": "5ac8eef8fa41"
+  }
+ ],
+ "baseline": {
+  "cacheRemoved": [
+   "local/page-cache/moderator",
+   "local/page-cache/moderator"
+  ],
+  "status": 200,
+  "digest": "5ac8eef8fa417093abbde49a70fc05db49e0659c",
+  "count": 24982,
+  "equalToFinal": true,
+  "values": {
+   "status": 200,
+   "checked": 365,
+   "ok": 365,
+   "bad": [],
+   "badCount": 0
+  }
+ },
+ "errors": []
+}

@@ -1,0 +1,1 @@
+Electron 44.3.0 Node 24.20.0; NODE_OPTIONS=--use-openssl-ca --max-old-space-size=3686 --require=hook-soak.js; GC_RECHECK unset; ROWPATCH_LEGACY unset; Linux 6.18.44-fc-v880; 4 vCPU; started 2026-11-28T05:07:50Z

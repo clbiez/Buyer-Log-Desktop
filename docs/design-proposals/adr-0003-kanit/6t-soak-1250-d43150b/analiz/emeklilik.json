@@ -1,0 +1,18 @@
+[
+ {
+  "t": 4119044,
+  "wid": 2,
+  "reason": "after-result(budget/generation)",
+  "lastTask": "read-model-query",
+  "r": 482,
+  "limit": null
+ },
+ {
+  "t": 6148229,
+  "wid": 3,
+  "reason": "after-result(budget/generation)",
+  "lastTask": "read-model-query",
+  "r": 482,
+  "limit": null
+ }
+]
