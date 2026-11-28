@@ -205,17 +205,39 @@ async function runCausalScenario(seed, { staleUploadWins = 0, steps = 70, rows: 
 const KNOWN_LIMIT = /\(reported\)$|false conflict|conflict demoted newer/;
 const strict = failures => failures.filter(item => !KNOWN_LIMIT.test(item));
 
+/* Senaryo seed'e göre deterministiktir: aynı seed aynı hata listesini ve aynı izi
+   (log) üretir. Bu yüzden seed başına TEK koşu, katı denetim ile bilinen sınır
+   (todo) testine paylaştırılır; seed, adım, cihaz ve doğrulamalar değişmez.
+   Önceden todo testi aynı 10 senaryoyu birebir yeniden koşuyordu (dosya süresinin
+   yarısı; Windows tam regresyonunun kritik yolu). Varsayım aşağıdaki determinizm
+   testiyle sınanır: varsayım bozulursa test düşer ve paylaşım kaldırılmalıdır. */
+const scenarioRuns = new Map();
+function scenarioOnce(seed) {
+  if (!scenarioRuns.has(seed)) scenarioRuns.set(seed, runCausalScenario(seed));
+  return scenarioRuns.get(seed);
+}
+
 for (const seed of SEEDS) {
   test(`nedensel bulut sırası (seed ${seed}): sessiz kayıp, yanlış silme, çoğaltma, gereksiz geri gelme yok`, { timeout: TIMEOUT_MS }, async () => {
-    const { failures, log } = await runCausalScenario(seed);
+    const { failures, log } = await scenarioOnce(seed);
     assert.deepEqual(strict(failures), [], `seed ${seed}\n${log.join('\n')}`);
   });
 }
 
 test('nedensel bulut: geri gelen satırda çakışma kaydına düşen yeni değer / yanlış çakışma', { todo: 'silme öncesi satır tabanı gerektirir: Aşama 1 olay günlüğü (ADR-0001)', timeout: TIMEOUT_MS * 2 }, async () => {
   const known = [];
-  for (const seed of SEEDS) known.push(...(await runCausalScenario(seed)).failures.filter(item => KNOWN_LIMIT.test(item)).map(item => `${seed} ${item}`));
+  for (const seed of SEEDS) known.push(...(await scenarioOnce(seed)).failures.filter(item => KNOWN_LIMIT.test(item)).map(item => `${seed} ${item}`));
   assert.deepEqual(known, []);
+});
+
+test('nedensel bulut senaryosu deterministik: aynı seed yeniden koşulunca hata listesi ve iz birebir aynı (paylaşılan koşu varsayımı)', { timeout: TIMEOUT_MS }, async () => {
+  const seed = SEEDS[0];
+  const shared = await scenarioOnce(seed);
+  const fresh = await runCausalScenario(seed);
+  assert.deepEqual(fresh.failures, shared.failures);
+  assert.deepEqual(fresh.log, shared.log);
+  assert.equal(fresh.writes, shared.writes);
+  assert.equal(fresh.conflicts, shared.conflicts);
 });
 
 module.exports = { runCausalScenario };
