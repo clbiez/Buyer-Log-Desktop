@@ -12,6 +12,17 @@ function captureOverrideBatch(work){
   return {items:[...entries.values()],resolve:data=>waiters.forEach(item=>item.resolve(data)),reject:err=>waiters.forEach(item=>item.reject(err))};
 }
 function overrideRevisionKey(kind){return kind==='suppFob'?'suppFob':'orders';}
+/* P1 (2026-11-28) · Revizyon belirteci = "bu istemci depoyu bu sürüme kadar gördü". Eski kayıt yollarının (PATCH,
+   /batch, /batch-suppfob) tek koruması bu belirteçle yapılan global CAS'tır. Onay belirteci ancak sunucu bu istekte o
+   anahtarı doğruladıysa (verified: CAS) ya da yeni değer yalnız bu yazmanın kendi artışıysa (ownBump) ilerletir. Aksi
+   hâlde araya görülmemiş bir yazma girmiştir; belirteç bayat kalır ve sıradaki eski yol yazması mevcut çakışma yoluna
+   (409 → uyarı + yeniden yükleme) düşer. Eskiden her onay belirteci sunucu değerine taşıyor, satır kaydı ya da başka
+   satırın onayı görülmemiş değişikliği "görülmüş" sayıyordu: bayat gövde sessizce kazanıyordu. */
+function adoptAckRevision(key,value,{verified=false,ownBump=0}={}){
+  const next=Number(value);if(!Number.isInteger(next))return;
+  const current=Number(state.storeRevisions[key])||0;
+  if(verified?next>=current:next===current+ownBump)state.storeRevisions[key]=next;
+}
 function notifyOverrideSaveError(message){
   const now=Date.now();
   if(now-lastOverrideErrorToastAt>3500){lastOverrideErrorToastAt=now;showToast(message);}
@@ -35,8 +46,11 @@ function enqueueOverrideMutation(kind,url,opts={}){
       if(typeof window!=='undefined'&&window.BL_CLIENT_ID)requestOpts.headers['X-Client-Id']=window.BL_CLIENT_ID;
       if(kind==='orders'&&!Object.hasOwn(requestOpts.headers,'X-Supp-Fob-Revision'))requestOpts.headers['X-Supp-Fob-Revision']=String(Number(state.storeRevisions.suppFob)||0);
       const data=await fetchJSON(url,requestOpts);
-      if(Number.isInteger(Number(data.revision)))state.storeRevisions[revisionKey]=Number(data.revision);
-      if(data.revisions&&typeof data.revisions==='object')Object.entries(data.revisions).forEach(([key,value])=>{if(Number.isInteger(Number(value)))state.storeRevisions[key]=Number(value);});
+      // İsteğin CAS ile doğrulattığı anahtarlar: kendi revizyon anahtarı ve (orders yazması Supp. FOB taşıyorsa) suppFob.
+      const touchesSuppFob=kind==='orders'&&typeof opts.body==='string'&&/"suppFob":/.test(opts.body);
+      const verifiedKey=key=>key===revisionKey||(key==='suppFob'&&touchesSuppFob);
+      if(data.revision!=null)adoptAckRevision(revisionKey,data.revision,{verified:true});
+      if(data.revisions&&typeof data.revisions==='object')Object.entries(data.revisions).forEach(([key,value])=>adoptAckRevision(key,value,{verified:verifiedKey(key)}));
       if(data.overrides&&Number.isInteger(Number(data.overrides._revision)))state.storeRevisions.overrides=Number(data.overrides._revision);
       // CP satır kaydı base'i (`_cpStored`): yamanın yazdığı alanların kayıtlı değeri yanıttaki belgeden alınır.
       try{if(kind==='orders'&&typeof window!=='undefined')window.BLCpRowSave?.legacyAcked?.(url,opts.body,data);}catch(_){}
@@ -66,5 +80,6 @@ if(typeof window!=='undefined'){
   window.overrideMutationsSettled=overrideMutationsSettled;
   window.enqueueOverrideMutation=enqueueOverrideMutation;
   window.captureOverrideBatch=captureOverrideBatch;
+  window.adoptAckRevision=adoptAckRevision;
   window.isCapturingOverrideBatch=()=>Boolean(overrideBatchCapture);
 }

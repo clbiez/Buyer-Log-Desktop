@@ -26,10 +26,14 @@ const actor={id:'u1',name:'User 1'};
 const json=value=>JSON.parse(JSON.stringify(value));
 
 // Yeni oturum: boş override haritaları; satırlar sunucu projeksiyonundan (paylaşılan belgeyle) gelir.
+// Gerçek revizyon belirteci kuralı (override-sync.js adoptAckRevision), düzeneğin state'ine bağlanır.
+const SYNC_SOURCE=fs.readFileSync(path.join(__dirname,'..','public','override-sync.js'),'utf8');
+let ADOPT=()=>{};
+function bindAdopt(ctx){vm.runInContext(extractFunction(SYNC_SOURCE,'adoptAckRevision')+';globalThis.__adopt=adoptAckRevision;',ctx);ADOPT=ctx.__adopt;}
 function client(rows){
   const requests=[],toasts=[];
   const ctx=vm.createContext({console,JSON,Object,Array,Map,Set,Promise,Number,String,Boolean,Error,Date,
-    window:{BL_CP_ROW_SAVE:true,BL_CLIENT_ID:'tab-1',isCapturingOverrideBatch:()=>false,dispatchEvent(){},BLPerf:null},
+    window:{adoptAckRevision:(...args)=>ADOPT(...args),BL_CP_ROW_SAVE:true,BL_CLIENT_ID:'tab-1',isCapturingOverrideBatch:()=>false,dispatchEvent(){},BLPerf:null},
     localStorage:{getItem:()=>null},CustomEvent:class{constructor(type){this.type=type;}},
     state:{cp:{rows},cpDirty:new Set(),overrides:{notesmap:{},delmap:{},submap:{},licensormap:{},noteColumnValues:{},datemap:{}},storeRevisions:{orders:0}},
     appLang:'tr',CP_NOTE_COLUMN_DEFS:[],requests,toasts,
@@ -39,6 +43,7 @@ function client(rows){
     showToast:message=>toasts.push(message),refreshRowEverywhere(){},loadFromServer:async()=>{},
     invalidateUnifiedPriorityDecisions(){},applyFormulas(){},syncCpProductionLogisticSegment(){},coerceDateLoose:value=>value,
     pendingOverrideWriteCount:()=>0,currentActiveTab:()=>'overview',notifyOverrideSaveError(){}});
+  bindAdopt(ctx);
   vm.runInContext(`${extractFunction(SOURCE,'turknorm')}
     ${extractFunction(SOURCE,'lineKeyOfRow')}
     function overrideSyncKey(row,orderCode){return lineKeyOfRow(row)||String(orderCode==null?'':orderCode);}

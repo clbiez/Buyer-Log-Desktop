@@ -16951,7 +16951,9 @@ function cpRowSaveSend(row,orderCode,patch,units){
     let data;
     try{data=await fetchJSON('/api/overrides/rows',{method:'POST',headers,body:JSON.stringify({items:[item]})});}
     catch(err){settle(null,false);throw err;}
-    if(data.revisions&&typeof data.revisions==='object')Object.entries(data.revisions).forEach(([name,value])=>{if(Number.isInteger(Number(value)))state.storeRevisions[name]=Number(value);});
+    // Satır kaydı global CAS kullanmaz: belirteç yalnız bu kaydın kendi artışıyla ilerler (override-sync.js adoptAckRevision).
+    // Yanıt `updated` taşımaz; yazan (noop olmayan) satır varsa kayıt revizyonu tam 1 artırmıştır.
+    if(data.revisions&&typeof data.revisions==='object')Object.entries(data.revisions).forEach(([name,value])=>window.adoptAckRevision?.(name,value,{ownBump:name==='orders'&&(data.applied||[]).some(item=>item&&item.noop===false)?1:0}));
     // Onay: yalnız yeni düzenlemesi beklemeyen birimler haritaya yazılır; bekleyen yerel değer (sonraki kaydın
     // gövdesi buradan kurulur, ör. not sütunları) eski onaylı değerle ezilmez.
     const settledUnits=()=>{const entries=cpRowSave.units.get(key);return sent.filter(({unit,dirty})=>!entries?.get(unit)||entries.get(unit).dirty<=dirty).map(({unit})=>unit);};
