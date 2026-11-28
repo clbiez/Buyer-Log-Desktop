@@ -1,0 +1,130 @@
+{
+ "miktar-0 parsiyel + üretim": {
+  "n": 2331,
+  "degisen": 1234,
+  "yon": {
+   "AT_RISK → EXPECTED_LATE": 118,
+   "ON_TRACK → EXPECTED_LATE": 1116
+  },
+  "sinyalEklenen": {
+   "EXPECTED_LATE_FOR_TARGET": 1234
+  },
+  "sinyalKalkan": {},
+  "ornek": [
+   {
+    "satir": "4100014/H04",
+    "exFactory": "2026-10-23",
+    "retail": "2026-12-18",
+    "segmentler": [
+     "partial:Üretimde:0:TIR:2026-12-05:HO —",
+     "production:Üretimde:2400:Gemi:2027-01-01:HO —"
+    ],
+    "once": "Üretimde · TIR · 2026-12-05 → AT_RISK [EX_FACTORY_OVERDUE,STALE_ORDER_NOT_LOADED,DATE_SYNC_MISMATCH]",
+    "sonra": "Üretimde · Gemi · 2027-01-01 → EXPECTED_LATE [EXPECTED_LATE_FOR_TARGET,EX_FACTORY_OVERDUE,STALE_ORDER_NOT_LOADED,DATE_SYNC_MISMATCH]"
+   },
+   {
+    "satir": "4100026/H04",
+    "exFactory": "2026-10-18",
+    "retail": "2026-12-20",
+    "segmentler": [
+     "partial:Üretimde:0:UCAK:2026-12-11:HO —",
+     "production:Üretimde:2100:Gemi:2026-12-27:HO —"
+    ],
+    "once": "Üretimde · Uçak · 2026-12-11 → ON_TRACK [EX_FACTORY_OVERDUE,STALE_ORDER_NOT_LOADED,DATE_SYNC_MISMATCH]",
+    "sonra": "Üretimde · Gemi · 2026-12-27 → EXPECTED_LATE [EXPECTED_LATE_FOR_TARGET,EX_FACTORY_OVERDUE,STALE_ORDER_NOT_LOADED,DATE_SYNC_MISMATCH]"
+   }
+  ]
+ },
+ "üretim + depoda": {
+  "n": 2707,
+  "degisen": 2707,
+  "yon": {
+   "ON_TRACK → EXPECTED_LATE": 1835,
+   "AT_RISK → EXPECTED_LATE": 448,
+   "ON_TRACK → ALREADY_LATE": 117,
+   "AT_RISK → ALREADY_LATE": 39,
+   "EXPECTED_LATE → EXPECTED_LATE": 243,
+   "ALREADY_LATE → ALREADY_LATE": 25
+  },
+  "sinyalEklenen": {
+   "EXPECTED_LATE_FOR_TARGET": 2283,
+   "EX_FACTORY_OVERDUE": 2667,
+   "STALE_ORDER_NOT_LOADED": 2707,
+   "ALREADY_LATE_FOR_TARGET": 156,
+   "LOADING_WINDOW_IMMINENT": 40
+  },
+  "sinyalKalkan": {},
+  "ornek": [
+   {
+    "satir": "4100023/L02",
+    "exFactory": "2026-10-28",
+    "retail": "2026-12-24",
+    "segmentler": [
+     "production:Üretimde:2520:Gemi:2027-01-06:HO —",
+     "partial:Depoda:1680:GEMI:2026-12-17:HO 2026-11-29"
+    ],
+    "once": "Depoda · Gemi · 2026-12-17 → ON_TRACK [DATE_SYNC_MISMATCH]",
+    "sonra": "Üretimde · Gemi · 2027-01-06 → EXPECTED_LATE [EXPECTED_LATE_FOR_TARGET,EX_FACTORY_OVERDUE,STALE_ORDER_NOT_LOADED,DATE_SYNC_MISMATCH]"
+   },
+   {
+    "satir": "4100044/K01",
+    "exFactory": "2026-10-20",
+    "retail": "2026-12-21",
+    "segmentler": [
+     "production:Üretimde:2230:Gemi:2026-12-29:HO —",
+     "partial:Depoda:2570:TIR:2026-12-16:HO 2026-11-28"
+    ],
+    "once": "Depoda · TIR · 2026-12-16 → AT_RISK [DATE_SYNC_MISMATCH]",
+    "sonra": "Üretimde · Gemi · 2026-12-29 → EXPECTED_LATE [EXPECTED_LATE_FOR_TARGET,EX_FACTORY_OVERDUE,STALE_ORDER_NOT_LOADED,DATE_SYNC_MISMATCH]"
+   }
+  ]
+ },
+ "üretim + yolda/yüklemede": {
+  "n": 2665,
+  "degisen": 2665,
+  "yon": {
+   "ON_TRACK → EXPECTED_LATE": 1332,
+   "EXPECTED_LATE → EXPECTED_LATE": 130,
+   "UNKNOWN → EXPECTED_LATE": 695,
+   "AT_RISK → EXPECTED_LATE": 340,
+   "ON_TRACK → ALREADY_LATE": 93,
+   "AT_RISK → ALREADY_LATE": 22,
+   "ALREADY_LATE → ALREADY_LATE": 16,
+   "UNKNOWN → ALREADY_LATE": 37
+  },
+  "sinyalEklenen": {
+   "EXPECTED_LATE_FOR_TARGET": 2367,
+   "EX_FACTORY_OVERDUE": 2615,
+   "STALE_ORDER_NOT_LOADED": 2665,
+   "ALREADY_LATE_FOR_TARGET": 152,
+   "LOADING_WINDOW_IMMINENT": 50
+  },
+  "sinyalKalkan": {
+   "HANDOVER_PENDING": 2588
+  },
+  "ornek": [
+   {
+    "satir": "4100025/B07",
+    "exFactory": "2026-10-14",
+    "retail": "2026-12-31",
+    "segmentler": [
+     "production:Üretimde:950:Gemi:2026-12-23:HO —",
+     "partial:Yolda:50:GEMI:2026-12-06:HO —"
+    ],
+    "once": "Yolda · Gemi · 2026-12-06 → ON_TRACK [HANDOVER_PENDING,DATE_SYNC_MISMATCH]",
+    "sonra": "Üretimde · Gemi · 2026-12-23 → EXPECTED_LATE [EXPECTED_LATE_FOR_TARGET,EX_FACTORY_OVERDUE,STALE_ORDER_NOT_LOADED,DATE_SYNC_MISMATCH]"
+   },
+   {
+    "satir": "4100027/B07",
+    "exFactory": "2026-09-28",
+    "retail": "2026-12-01",
+    "segmentler": [
+     "production:Üretimde:2400:Gemi:2026-12-07:HO —",
+     "partial:Yolda:3600:GEMI:2026-11-06:HO —"
+    ],
+    "once": "Yolda · Gemi · 2026-11-06 → ON_TRACK [HANDOVER_PENDING,DATE_SYNC_MISMATCH]",
+    "sonra": "Üretimde · Gemi · 2026-12-07 → EXPECTED_LATE [EXPECTED_LATE_FOR_TARGET,EX_FACTORY_OVERDUE,STALE_ORDER_NOT_LOADED,DATE_SYNC_MISMATCH]"
+   }
+  ]
+ }
+}

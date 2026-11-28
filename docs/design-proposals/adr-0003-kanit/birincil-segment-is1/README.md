@@ -68,3 +68,21 @@ Blok farkları işaret değiştiriyor, A/A aralığında. Fonksiyon düzeyi (24.
 14 vaka (4 aşama ikilisi × 2 tarih sırası, 3 aşama, aynı aşamada iki parsiyel), kod öneri (1) ile (tarih/vasıta/HO
 STATUS'u veren segmentten). Değişen: Siparişler 4/14, CP 4/14 (main'de bu vakalarda CP = Siparişler). Hepsi geride kalan
 aşamanın daha geç vardığı vakalar (Yükleme+Yol, Yükleme+Gümrük, Yol+Gümrük, Yükleme+Yol+Depoda). 30k fixture'da 0 satır.
+
+## L2 · Electron 44.3.0 (`electron/`)
+
+`ELECTRON_RUN_AS_NODE=1`, `NODE_OPTIONS="--use-openssl-ca --max-old-space-size=3686"`, `--expose-gc`; main `1e101ef` ↔ aday
+`2d2d9ba`; 30k seed 7; her örnek taze süreç (`one.js`): kaynak ayrıştırma (ölçülmez) → CP + Siparişler projeksiyon kurulumu
+(`buildSharedOrderProjectionRowsFromASAS`) → okuma modeli hazırlığı (`prepareCpRows`) → istemci `rebuildCpLogisticCaches`
+(aynı V8; tarayıcı DOM'u ölçülmedi) → birincil seçim tek başına. `run.sh`: 3 ABBA blok + 2 A/A blok. `analyze.js`: blok medyanları.
+
+- Tur 1 (`ham.jsonl`, süreç başına 1 örnek): kurulum −135 / −19 / +81 ms (A/A −15 / −9); prep +68 / +7 / +17 (A/A +24 / −10);
+  istemci +15 / −9 / +52 (A/A 0 / −26). Prep yönü belirsiz → tur 2.
+- Tur 2 (`ham2.jsonl`, süreç başına 7 tekrar medyanı): kurulum −17 / +51 / +34 ms (~1.800 ms; A/A −23 / +223); prep −26 / +9 / −23
+  (~285 ms; A/A −11 / +4); istemci −2 / +1 / +23 (~185 ms; A/A +2 / +6); süreç CPU −404 / −1.184 / −547 ms (A/A +310 / +633);
+  seçim fonksiyonu iki kolda 2,5–5,1 ms. Tekrarlanabilir gerileme yok.
+
+## Karar/risk etkisi ayrıntı (`betikler/prio2.js`, `ham/priority-etki-ayrinti.json`)
+
+Gemi 70 / Uçak 15 / TIR 20 transit kuralı, bugün 28.11. Değişen satır = teslimat sonucu ya da risk sebebi değişen.
+Örnek satırlar JSON'da (4100023/L02, 4100044/K01, 4100025/B07, 4100027/B07, 4100014/H04, 4100026/H04).
