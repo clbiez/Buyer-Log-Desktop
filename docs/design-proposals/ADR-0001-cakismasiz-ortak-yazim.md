@@ -343,7 +343,7 @@ Bir kapının PASS olması bu açıkları kapatmaz.
 | S-A2 | CP paylaşılan alanlarda yazar cihaz değiştirir. Aynı cihazın iki paketi sırasız teslim edilir; `-PC` kopyası enjekte edilir; saat ±1 sa. | `npm test -- cp-shared-fields-handoff-sim` | 3 seed: nedensel son değer her cihazda; açık çakışma 0; özet tek; not yerel. Model sırasız, yinelenen, yarım ve `-PC` teslimi gerçekten üretmiş olmalı |
 | S-A3 | Koleksiyon Aşama 0 simülasyonları | `npm test -- collection-sync-` | todo olmayan tüm testler PASS. **todo'lar (bilinen açıklar) açık kalır, PASS sayılmaz** |
 | S-A4 | OneDrive artefaktları (`-PC` kopyası, dirent) | `npm test -- onedrive-conflict-copies onedrive-hub-dirent` | PASS |
-| S-A5 | İki gerçek `server.js` + ortak Shared Hub klasörü: A kaydı → yayım → B algılama → B projeksiyonu | kit `hub.js` (adr-0003-kanit) | 3 deneme: B projeksiyonunda değer görünür; hata 0 |
+| S-A5 | İki gerçek `server.js` + ortak Shared Hub klasörü: B bootstrap; A → B Supp. FOB, B → A dates; aynı sahip eşzamanlı aynı alan | kit `hub.js` (`final-validation.sh hub`) | B bootstrap `ready`; her senaryoda değer karşı tarafın sorgusunda görünür. Aynı sahip eşzamanlı: iki taraf tek değere yakınsar (deterministik LWW, politika gereği çakışma kaydı yok). Hata 0 |
 | S-A6 | Tam regresyon (Windows, Node 22) | `Buyer Log TEST release` → Full regression | PASS |
 
 #### (b) Gerçek ortam otomasyonu kapıları (Windows runner, paketlenmiş `BuyerLog.exe`)
@@ -364,14 +364,30 @@ Veri: sentetik 30k fixture (seed 7; Ex-factory için yükleme onayı her 4. sat�
 | E-G05 | Del. Type (açık niyet) | tam kurulum yolunda; sonraki Supp. FOB/not Del. Type'ı değiştirmez |
 | E-G06/G07 | Elle düzenlenebilir Ex-factory (PATCH + /batch); otomatik Ex-factory | 2xx, okuma tam kurulumda; otomatikte 409 `AUTOMATIC_DATE_READ_ONLY`, değer korunur |
 | E-G08 | Aynı sunucuya iki istemci, eşzamanlı yazım | 4/4 2xx; iki alan korunur; iki oturum aynı veriyi görür |
-| E-G08b | Bayat istemci: Supp. FOB kaydı başka oturumun yeni notunu ezmemeli | **Açık bulgu (KNOWN).** Aşağıdaki karar maddesine bakın |
+| E-G08b / G08d | Bayat oturum (#1257 istemci sözleşmesi): Supp. FOB kaydı başka oturumun yeni notunu, not kaydı başka oturumun daha yeni Supp. FOB değerini ezmez | 409 `REVISION_CONFLICT` ya da değer korunur. Normal kapı; nihai doğrulamada `strict_known=true` |
 | E-G09/G10 | Yeniden başlatma ve sıfırdan tam kurulum eşitliği | karar demeti ve CP satırları birebir |
 | E-G11 | 503 | kurtarılamayan 0 (toplam > 0 ise WARN) |
 | E-G12 | Bellek | heap sınırı = 3686 ± 96 MB; ana heap tepe < %85; işçi OOM 0; beklenmedik çıkış 0 |
 | E-G13 | Sınırlı soak (15 dk) | kayıtlar 2xx; artımlı birikim = tam okuma; değerler görünür |
 | E-G14 | Kapanış | sunucu süreci 20 sn içinde biter (öksüz süreç 0) |
 
-**Tamamlayıcı kanıt (kapı değil):** Linux üzerinde Electron 44.3.0 ile 110 dk bellek soak'u (kit `soak.js`; §6Q ile aynı yöntem): 503, eşitlik, bekleme süreleri, RSS/heap eğimi. Windows'ta uzun soak bu kapı setinde yoktur.
+**Tamamlayıcı kanıt (kapı değil):** Linux üzerinde Electron 44.3.0 ile 90–120 dk bellek soak'u (kit `soak.js`; §6Q yöntemi): 503, eşitlik, bekleme süreleri, RSS/heap eğimi. Çekişme göstergesiyle (`kit/contention.js`, PSI/steal) ve özel ölçüm slotunda koşulur. Windows'ta uzun soak bu kapı setinde yoktur.
+
+**Tek komut (birleşik main nihai doğrulaması):**
+- Linux + Electron yarısı: `kit/final-validation.sh` (adımlar: `test`, `gate --strict-known`, `shadow`, `hub`, `l2` (önceki main ↔ birleşik), `soak`); adım başına çekişme özeti.
+- Windows yarısı: `Buyer Log Tests` ve `Buyer Log Windows Electron gate` iş akışları, `workflow_dispatch` ile `ref=<SHA>` (kapıda ayrıca `strict_known=true`).
+
+#### Mevcut sonuçlar (2026-11-28; birleşik main değil, ara kanıt)
+
+| Kapı | Sonuç | Kanıt |
+|---|---|---|
+| S-A1 | PASS (tam regresyonda) | Buyer Log Tests run 46114356738 |
+| S-A2 | PASS, 3/3 seed (Linux, Node 22) | `cp-shared-fields-handoff-sim` |
+| S-A3 | todo olmayanlar PASS; todo'lar açık | aynı koşu |
+| S-A5 | B bootstrap düzeldi (6N kök nedeni kit kurulumu); yakınsama ve aynı sahip LWW gözlendi. Düzeltilmiş ölçütle koşu nihai doğrulamada | adr-0003-kanit 6V |
+| S-A6 | PASS: Windows tam regresyon 440 sn; TEMP = runner.temp, önce 1729 sn | run 46114356738 |
+| E-G01…G14 | Tümü PASS (G08b/G08d normal kapı; G08c N/A: demo verisinde DTR dışı satır yok) | run 46120037740 (main 8a29116 + kapı), adr-0003-kanit 6U |
+| Tamamlayıcı soak | **ÖN SONUÇ**: 110 dk, 503 = 0, eşitlik 12/12, plato [Muhtemel]; slot kuralı öncesi, çekişme kaydı yok | adr-0003-kanit 6T |
 
 #### Doğrulanamayan artık risk (otomatikleştirilemez)
 
@@ -388,4 +404,6 @@ Veri: sentetik 30k fixture (seed 7; Ex-factory için yükleme onayı her 4. sat�
 
 Bu belge kararı vermez. (i) seçilirse §14'ün ikinci maddesi bu bölümle değiştirilmiş sayılır. (ii) seçilirse bu kapılar ek kanıttır.
 
-**E-G08b kararı (ürün sahibi):** Bulgu Aşama 0 ve Koleksiyon senkronundan bağımsızdır. CP'de, aynı sunucuda bayat bir istemcinin Supp. FOB kaydı başka bir oturumun yeni notunu siler. Açıklaması olan bir veri kaybıdır. STABLE'dan önce düzeltilmesi ya da açıkça kabul edilmesi gerekir; kabul edilirse gerekçesi buraya yazılır.
+**E-G08b geçmişi:** Bulgu Aşama 0 ve Koleksiyon senkronundan bağımsızdı. CP'de, aynı sunucuda bayat bir istemcinin Supp. FOB kaydı başka bir oturumun yeni notunu siliyordu (Windows run 46110833638'de üretildi). #1257 ile düzeltildi: istemci kırpılmış gövde gönderir; revizyon belirteci yalnız oturumun kendi onaylı yazımıyla ilerler. Kapı artık normal PASS/FAIL kapısıdır.
+
+**Bilgi (ürün kararı, değişiklik önerilmiyor):** Aynı kullanıcının iki makinede aynı CP paylaşılan alanını eşzamanlı düzenlemesinde politika deterministik LWW'dir. Kaybeden değer çakışma listesine düşmez (`tests/sync-owner-lww-v20261009.test.js`; iki sunucu ölçümü 6V).
