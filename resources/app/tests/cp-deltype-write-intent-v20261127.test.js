@@ -97,9 +97,14 @@ test('niyet yalnız kullanıcının Del. Type düzenlemesinde ve geri al / yinel
   assert.ok(at > 0, 'Del. Type branch exists in commitCpEditor');
   const edit = commit.slice(at, at + 400);
   assert.match(edit, /row\._delTypeWrite=\{\};/);
-  assert.match(SOURCE, /if\(historyKeys\.has\('Del\. Type'\)\)row\._delTypeWrite=\{\};/);
+  // BL-028: yinele "Kaynağa dön" eylemini yeniden temizleme niyetiyle uygular; geri al önceki değeri açık niyetle yazar.
+  assert.match(SOURCE, /if\(historyKeys\.has\('Del\. Type'\)\)row\._delTypeWrite=action\.delTypeRevert&&direction==='redo'\?\{clear:true\}:\{\};/);
   assert.match(SOURCE, /\['_pricingManualWrite','_pricingHistoryRestore','_subManufacturerWrite','_delTypeWrite'\]\.includes\(key\)/);
-  assert.equal((SOURCE.match(/_delTypeWrite=\{\}/g) || []).length, 2, 'no other path claims Del. Type intent');
+  // Niyeti yalnız üç açık kullanıcı yolu işaretler: hücre/yapıştırma (commitCpEditor), geri al / yinele, "Kaynağa dön" (BL-028).
+  assert.equal((SOURCE.match(/_delTypeWrite=\{\}/g) || []).length, 1, 'commitCpEditor');
+  assert.equal((SOURCE.match(/_delTypeWrite=action\.delTypeRevert/g) || []).length, 1, 'history apply');
+  assert.equal((SOURCE.match(/_delTypeWrite=\{clear:true\}/g) || []).length, 1, 'revert to source');
+  assert.equal((SOURCE.match(/_delTypeWrite=(?!=)/g) || []).length, 3, 'no other path claims Del. Type intent');
 });
 
 for (const rowSave of [false, true]) {

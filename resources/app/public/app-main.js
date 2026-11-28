@@ -7585,6 +7585,44 @@ function cpEditableDelType(row){
   const production=cpLogisticSegments(row).find(segment=>segment.kind==='production'||segment.kind==='shortage');
   return production?(normalizeTransitDelType(production.delType)||norm(production.delType)||norm(row['Del. Type'])):row?.['Del. Type'];
 }
+/* BL-028 · Satırın kayıtlı (manuel) Del. Type override'ı var mı: sunucunun kayıtlı değeri (_cpStored; sipariş anahtarı
+   geri düşüşü dahil) ya da bu sekmenin henüz onaylanmamış açık düzenlemesi. */
+function cpDelTypeHasOverride(row){
+  // Satır kimliği (model + renk kodu) zorunlu: sunucu kimliksiz temizlemeyi reddeder (sipariş anahtarı diğer renkleri etkiler).
+  if(!row||!norm(row['Model Name'])||!norm(row['C.Code']))return false;
+  const write=row._delTypeWrite;
+  if(write)return !write.clear;
+  // Boş kayıtlı değer ('') zaten varsayılana düşer; satır kaydı onu "değişiklik yok" sayar → eylem sunulmaz.
+  const stored=cpRowStoredOf(row);
+  return Object.hasOwn(stored,'delType')&&String(stored.delType??'')!=='';
+}
+/* BL-028 · "Kaynağa dön / Revert to source": satırın manuel Del. Type override'ını KALDIRIR. Boş ya da "Gemi" kaydetmek
+   değildir ("—" seçeneği bugünkü anlamını korur). Gövde delType:null gönderir; sunucu yalnız bu satırın anahtarını siler ve
+   değer kaynak önceliğiyle (satır → sipariş anahtarı → sistem varsayılanı Gemi) tam kurulumda yeniden hesaplanır. Yerelde
+   üretim bakiyesi tam kurulum gelene kadar sistem varsayılanıyla eşitlenir. Geri al önceki değeri açık niyetle yazar. */
+function revertCpDelTypeToSource(t){
+  if(window.isSavingCpBulk?.()){showToast(appLang==='en'?'A bulk save is still pending. Retry after its result.':'Toplu kayıt sürüyor. Sonucundan sonra yeniden deneyin.');return false;}
+  if(!t||!t.dataset||isAreaFrozen('cp')||!state.cp||!Array.isArray(state.cp.rows))return false;
+  const row=resolveCpEditorRow(t);
+  if(!row)return false;
+  if(row._canEdit===false){showToast(L('Bu sipariş için yalnız görüntüleme yetkiniz var.'));return false;}
+  if(!cpDelTypeHasOverride(row))return false;
+  const id=row._id,prev=cpEditableDelType(row);
+  row._delTypeWrite={clear:true};
+  if(!syncCpProductionLogisticSegment(row,''))row['Del. Type']='Gemi';
+  const next=cpEditableDelType(row);
+  applyFormulas(row); invalidateUnifiedPriorityDecisions('cp-delivery-type-revert'); markDirty(id);
+  pushUndo({id,fields:[{key:'Del. Type',prev,next}],delTypeRevert:true});
+  syncOrderLinePeersFromCpRow(row,['Del. Type'],{render:true});
+  refreshRowEverywhere(id);
+  return true;
+}
+window.revertCpDelTypeToSource=revertCpDelTypeToSource;
+// Menü açılışında (hücre çiziminde değil) sorulur: tetikleyicinin satırı CP'de güncel kimlikle duruyor ve override'ı var mı.
+window.cpDelTypeRevertAvailable=dataset=>{
+  const row=state.cp?.rows?.find(item=>item._id===Number(dataset?.id));
+  return Boolean(row&&row._canEdit!==false&&(dataset.lineKey==null||dataset.lineKey===lineKeyOfRow(row))&&cpDelTypeHasOverride(row));
+};
 function syncCpProductionLogisticSegment(row,nextDelType){
   const production=cpLogisticSegments(row).find(segment=>segment.kind==='production'||segment.kind==='shortage');
   if(!production) return false;
@@ -13143,7 +13181,7 @@ function applyHistoryAction(action, direction, options={}){
     if(snapshot.licensor)historyKeys.add('Licensor');
   }
   if(historyKeys.has('Sub-Manufacturer')&&!action.pricing)row._subManufacturerWrite={};
-  if(historyKeys.has('Del. Type'))row._delTypeWrite={};
+  if(historyKeys.has('Del. Type'))row._delTypeWrite=action.delTypeRevert&&direction==='redo'?{clear:true}:{}; // BL-028: yinele yeniden kaynağa döner
   if(historyKeys.has('Del. Type'))syncCpProductionLogisticSegment(row,row['Del. Type']);
   else if(historyKeys.has('Ex-factory'))syncCpProductionLogisticSegment(row);
   applyFormulas(row);
@@ -16530,7 +16568,8 @@ function syncOverridesFromRow(row){
   state.overrides.notesmap[key]=notes;
   /* Del. Type yalnız açık kullanıcı niyetiyle yazılır. Görünen değer IAS parsiyelinden türetilmiş olabilir; not /
      Supp. FOB gibi ilgisiz bir kayıt override oluşturmaz, mevcut override'ı ya da başkasının değişikliğini ezmez. */
-  if(row._delTypeWrite){const delType=cpEditableDelType(row);if(delType)state.overrides.delmap[key]=delType;}
+  if(row._delTypeWrite?.clear)delete state.overrides.delmap[key]; // BL-028 "Kaynağa dön"
+  else if(row._delTypeWrite){const delType=cpEditableDelType(row);if(delType)state.overrides.delmap[key]=delType;}
   const isDtr=turknorm(row.Licensor)==='DTR';
   if(isDtr){
     row['Sub-Manufacturer']=norm(row.Manufacturer);
@@ -16797,6 +16836,7 @@ function cpRowUnitAssign(target,unit,value){
   if(group==='notes'){target.notes=target.notes||{};CP_ROW_NOTE_PAIRS[name].forEach((field,i)=>{target.notes[field]=value?value[i]:'';});}
   else if(group==='noteColumns'){target.noteColumns=target.noteColumns||{};target.noteColumns[name]=value==null?'':value;}
   else if(group==='dates'){target.dates=target.dates||{};target.dates[name]=value||null;}
+  else if(group==='delType'&&value===null)target.delType=null; // BL-028 "Kaynağa dön": temizleme '' değil null
   else target[group]=value==null?'':value;
   return target;
 }
@@ -17000,7 +17040,7 @@ function cpRowPatchUnits(patch){
     current.notes=patch.notes;
     for(const [name,pair] of Object.entries(CP_ROW_NOTE_PAIRS))if(pair.some(field=>Object.hasOwn(patch.notes,field)))units.push(`notes:${name}`);
   }
-  if(patch.delType!=null){current.delType=String(patch.delType);units.push('delType');}
+  if(Object.hasOwn(patch,'delType')){if(patch.delType!=null)current.delType=String(patch.delType);units.push('delType');} // null: kaynağa dön (BL-028)
   if(patch.subManufacturer!=null){current.subManufacturer=patch.subManufacturer;units.push('subManufacturer');}
   if(Object.hasOwn(patch,'licensor')){current.licensor=patch.licensor;units.push('licensor');}
   if(cpRowIsObject(patch.noteColumns)){current.noteColumns=patch.noteColumns;Object.keys(patch.noteColumns).forEach(id=>units.push(`noteColumns:${id}`));}
@@ -17081,7 +17121,7 @@ function syncOverrideToServer(orderCode,notes,row){
     const restore=row._pricingHistoryRestore,manualWrite=row._pricingManualWrite,subWrite=row._subManufacturerWrite,delWrite=row._delTypeWrite;
     const body=(()=>{
         // Del. Type yalnız açık düzenleme niyetiyle (_delTypeWrite) gönderilir; aksi halde sunucu delmap'i değiştirmez.
-        const body={...lineIdentity(row),notes,delType:delWrite?(cpEditableDelType(row)||undefined):undefined};
+        const body={...lineIdentity(row),notes,delType:delWrite?(delWrite.clear?null:(cpEditableDelType(row)||undefined)):undefined};
         if(turknorm(row.Licensor)!=='DTR'&&(!restore?.licensor||subWrite))body.subManufacturer=norm(row['Sub-Manufacturer']);
         if(row._licensorManual===true&&Object.hasOwn(state.overrides.licensormap||{},overrideSyncKey(row,orderCode)))body.licensor=norm(row.Licensor);
         // An imported (CP update) value is not re-sent as a manual price with a note save.
@@ -17112,11 +17152,16 @@ function syncOverrideToServer(orderCode,notes,row){
     const sent=rowPlan
       ?(rowPlan.skip?Promise.resolve():cpRowSaveSend(row,orderCode,rowPlan.patch,rowPlan.units))
       :enqueueOverrideMutation('orders',`/api/overrides/${orderCode}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:()=>JSON.stringify(cpLegacyBodyWithoutUnchanged(row,body,{subWrite,restore}))});
-    sent.then(()=>{
+    sent.then(data=>{
       if(restore&&row._pricingHistoryRestore===restore)delete row._pricingHistoryRestore;
       if(manualWrite&&row._pricingManualWrite===manualWrite)delete row._pricingManualWrite;
       if(subWrite&&row._subManufacturerWrite===subWrite)delete row._subManufacturerWrite;
       if(delWrite&&row._delTypeWrite===delWrite)delete row._delTypeWrite;
+      // BL-028: satır anahtarı silindi ama sipariş düzeyinde eski bir kayıt hâlâ geçerli (kaynak önceliği). Sonraki veri yenilemesi onu siler.
+      // Satır kaydı çakışması (başkasının değeri korundu) bu durum değildir; kendi uyarısı gösterilir.
+      if(delWrite?.clear&&!(data?.conflicts?.length)&&Object.hasOwn(cpRowStoredOf(row),'delType'))showToast(appLang==='en'
+        ?'This order still has an older order-level Del. Type. The row follows it until the next data refresh removes it.'
+        :'Bu siparişte sipariş düzeyinde eski bir Del. Type kaydı var. Satır, bir sonraki veri yenilemesi onu kaldırana kadar o değeri izler.');
     }).catch(err=>{console.warn('Sunucuya kaydedilemedi:',err.message);if(err.code!=='REVISION_CONFLICT')notifyOverrideSaveError(appLang==='en'?'The change could not be saved to the server.':'Değişiklik sunucuya kaydedilemedi.');});
   });
 }

@@ -42,6 +42,10 @@ const seg = row => (row._logisticSegments || []).map(s => [s.kind, s.delType, is
 test('merkezi kural: yalnız lojistik segment girdisi (Del. Type, Ex-factory) artımlı uygulanmaz', () => {
   assert.equal(patchTouchesLogisticSegments({ delType: 'Uçak' }), true);
   assert.equal(patchTouchesLogisticSegments({ delType: '' }), true, 'clearing is also a change of the input');
+  // BL-028 "Kaynağa dön": null temizleme de segment girdisini değiştirir (satır anahtarı silinir) → tam kurulum.
+  assert.equal(patchTouchesLogisticSegments({ delType: null }), true, 'null clear (revert to source) goes to full build too');
+  assert.equal(patchTouchesLogisticSegments({ model: 'MODEL-1', ccode: 'C01', delType: null }), true);
+  assert.equal(patchTouchesLogisticSegments({ model: 'MODEL-1', ccode: 'C01' }), false, 'identity alone is not a segment input');
   assert.equal(patchTouchesLogisticSegments({ dates: { exFactory: '2026-02-01' } }), true);
   assert.equal(patchTouchesLogisticSegments({ dates: { retailDate: '2026-06-10' } }), false, 'Retail is not a segment input');
   assert.equal(patchTouchesLogisticSegments({ dates: { inStoreDate: '2026-06-20' } }), false, 'In-Store is not a segment input');
