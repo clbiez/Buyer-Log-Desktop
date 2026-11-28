@@ -92,8 +92,25 @@ test('override yoksa eylem hiçbir şey yapmaz (sunulmaz, gönderilmez)', () => 
 
 test('onaylanmamış kendi açık düzenlemesi de override sayılır; bekleyen temizleme sayılmaz', () => {
   const h = harness(partialRow('Uçak'));
-  assert.equal(h.fns.cpDelTypeHasOverride({ _cpStored: {}, _delTypeWrite: {} }), true);
-  assert.equal(h.fns.cpDelTypeHasOverride({ _cpStored: { delType: 'Uçak' }, _delTypeWrite: { clear: true } }), false);
+  const id = { 'Model Name': 'M', 'C.Code': 'C' };
+  assert.equal(h.fns.cpDelTypeHasOverride({ ...id, _cpStored: {}, _delTypeWrite: {} }), true);
+  assert.equal(h.fns.cpDelTypeHasOverride({ ...id, _cpStored: { delType: 'Uçak' }, _delTypeWrite: { clear: true } }), false);
+});
+
+test('satır kimliği yoksa (model ya da renk kodu boş) eylem sunulmaz ve gönderilmez: sunucu kimliksiz null\'u 400 ile reddeder', () => {
+  for (const extra of [{ 'Model Name': '' }, { 'C.Code': '  ' }]) {
+    const row = partialRow('Uçak', extra);
+    const h = harness(row);
+    assert.equal(h.fns.cpDelTypeHasOverride(row), false);
+    assert.equal(h.revert(), false);
+    assert.equal(h.sent.length, 0);
+    assert.equal(Object.hasOwn(row, '_delTypeWrite'), false, 'no sticky clear intent');
+  }
+});
+
+test('boş kayıtlı değer (\'\') için eylem sunulmaz (değer zaten varsayılana düşer)', () => {
+  const h = harness(partialRow('Gemi'));
+  assert.equal(h.fns.cpDelTypeHasOverride({ 'Model Name': 'M', 'C.Code': 'C', _cpStored: { delType: '' } }), false);
 });
 
 test('sipariş düzeyinde eski kayıt kalırsa kullanıcı bilgilendirilir (satır o değeri izler)', async () => {

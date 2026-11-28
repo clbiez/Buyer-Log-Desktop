@@ -107,3 +107,16 @@ Durum: **Uygulandı** (`claude/bl-028-revert-source`, 2026-11-28). İlk tasarım
   - İki durumda da A'nın değeri korundu.
 - "—" hâlâ `"Gemi"` gönderiyor.
 - Kimliksiz `delType:null` PATCH → 400.
+
+### Bağımsız inceleme (tek tur) ve sınırlar
+
+- **Düzeltildi:** Model ya da renk kodu boş satırda eylem sunuluyordu. Sunucu kimliksiz null'ı 400 ile reddediyor ve niyet satırda kalıyordu.
+  - Artık eylem yalnız satır kimliği varken sunulur.
+- **Sınırlandı:** Satır anahtarında boş (`''`) kayıt varsa eylem sunulmaz.
+  - Değer zaten varsayılana düşer.
+  - Satır kaydı CAS'ı `null` ile `''`'yi aynı sayar. CAS normalizasyonu değiştirilmedi.
+- **Bilinen sınır:**
+  - Yalnız sipariş anahtarlı değeri olan satırda da eylem sunulur, çünkü istemci kayıtlı değeri geri düşüşle görür.
+  - Bu satırda geri al, önceki değeri satır anahtarına açıkça yazar (kullanıcının açık isteği). O değer sipariş anahtarı temizliğinden sonra da kalır.
+  - Durum yalnız bir yenileme aralığında oluşur.
+- **Kaynakla doğrulanıp kusur olmadığı görülen bulgu:** "Eşler eski değeri gösterir" iddiası. `rebuildCpLogisticCaches` satırın Del. Type'ını her temizlemede yeniden yazar.

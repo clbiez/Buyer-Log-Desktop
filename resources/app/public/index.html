@@ -2206,7 +2206,7 @@
     const values=['',...DELTYPE_OPTS];
     const en=appLang==='en';
     const revertHtml=window.cpDelTypeRevertAvailable?.(btn.dataset)
-      ?`<div class="delTypeMenuSep" role="separator"></div><button type="button" class="delTypeOption delTypeRevert" role="option" aria-selected="false" data-action="revert" title="${escapeHtml(en?'Remove the manual Del. Type of this row; the value is recalculated from the source (default Sea for the production balance).':'Bu satırın manuel Del. Type kaydını kaldırır; değer kaynaktan yeniden hesaplanır (üretim bakiyesi için varsayılan Gemi).')}">${escapeHtml(en?'Revert to source':'Kaynağa dön')}</button>`
+      ?`<div class="impMenuSep" role="separator"></div><button type="button" class="delTypeOption delTypeRevert" role="option" aria-selected="false" data-action="revert" title="${escapeHtml(en?'Remove the manual Del. Type of this row; the value is recalculated from the source (default Sea for the production balance).':'Bu satırın manuel Del. Type kaydını kaldırır; değer kaynaktan yeniden hesaplanır (üretim bakiyesi için varsayılan Gemi).')}">${escapeHtml(en?'Revert to source':'Kaynağa dön')}</button>`
       :'';
     menu.innerHTML=values.map(v=>`<button type="button" class="delTypeOption" role="option" aria-selected="${v===current}" data-value="${escapeHtml(v)}">${escapeHtml(v?transitDelTypeDisplay(v):'—')}</button>`).join('')+revertHtml;
     document.body.appendChild(menu);

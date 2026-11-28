@@ -7586,10 +7586,13 @@ function cpEditableDelType(row){
 /* BL-028 · Satırın kayıtlı (manuel) Del. Type override'ı var mı: sunucunun kayıtlı değeri (_cpStored; sipariş anahtarı
    geri düşüşü dahil) ya da bu sekmenin henüz onaylanmamış açık düzenlemesi. */
 function cpDelTypeHasOverride(row){
-  if(!row)return false;
+  // Satır kimliği (model + renk kodu) zorunlu: sunucu kimliksiz temizlemeyi reddeder (sipariş anahtarı diğer renkleri etkiler).
+  if(!row||!norm(row['Model Name'])||!norm(row['C.Code']))return false;
   const write=row._delTypeWrite;
   if(write)return !write.clear;
-  return Object.hasOwn(cpRowStoredOf(row),'delType');
+  // Boş kayıtlı değer ('') zaten varsayılana düşer; satır kaydı onu "değişiklik yok" sayar → eylem sunulmaz.
+  const stored=cpRowStoredOf(row);
+  return Object.hasOwn(stored,'delType')&&String(stored.delType??'')!=='';
 }
 /* BL-028 · "Kaynağa dön / Revert to source": satırın manuel Del. Type override'ını KALDIRIR. Boş ya da "Gemi" kaydetmek
    değildir ("—" seçeneği bugünkü anlamını korur). Gövde delType:null gönderir; sunucu yalnız bu satırın anahtarını siler ve
