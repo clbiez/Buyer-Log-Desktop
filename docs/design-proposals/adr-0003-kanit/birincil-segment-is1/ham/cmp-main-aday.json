@@ -1,0 +1,71 @@
+{
+ "cp": {
+  "miktar-0 parsiyel + üretim": {
+   "n": 2331,
+   "ANT": 2316,
+   "DT": 1544
+  },
+  "yalnız üretim": {
+   "n": 17274
+  },
+  "üretim + depoda": {
+   "n": 2707,
+   "STATUS": 2707,
+   "ANT": 2687,
+   "HO": 2707,
+   "DT": 1783
+  },
+  "üretim + yolda/yüklemede": {
+   "n": 2665,
+   "STATUS": 2665,
+   "ANT": 2648,
+   "DT": 1788
+  },
+  "kıtlık + parsiyel": {
+   "n": 5
+  }
+ },
+ "orders": {
+  "miktar-0 parsiyel + üretim": {
+   "n": 2331,
+   "DT": 2280,
+   "ANT": 2280
+  },
+  "yalnız üretim": {
+   "n": 17274
+  },
+  "üretim + depoda": {
+   "n": 2707
+  },
+  "üretim + yolda/yüklemede": {
+   "n": 2665
+  },
+  "kıtlık + parsiyel": {
+   "n": 5
+  }
+ },
+ "cpRawVsRm": {
+  "miktar-0 parsiyel + üretim": {
+   "n": 2331
+  },
+  "yalnız üretim": {
+   "n": 17274
+  },
+  "üretim + depoda": {
+   "n": 2707
+  },
+  "üretim + yolda/yüklemede": {
+   "n": 2665
+  },
+  "kıtlık + parsiyel": {
+   "n": 5,
+   "DT": 3
+  }
+ },
+ "segChanged": 0,
+ "ordersModuleAll": {
+  "n": 30000,
+  "DT": 2280,
+  "ANT": 2280
+ }
+}
