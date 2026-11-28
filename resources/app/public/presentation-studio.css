@@ -88,3 +88,8 @@
 .psC{position:absolute;white-space:pre}.psS{position:absolute;top:0;height:100%;text-align:center}.psP{position:absolute;text-align:center}.psT{position:absolute;top:0;white-space:pre}
 .psPrintFrame{position:fixed;left:-10000px;top:0;width:1px;height:1px;visibility:hidden}
 @media (max-width:900px){.psBody{grid-template-columns:minmax(0,1fr)}.psRail{display:none}.psCanvas{padding:8px 12px 64px}}
+.psAiQuestion{display:block;width:100%;min-height:72px;resize:vertical;margin:8px 0}
+.psAiCats{list-style:none;margin:8px 0;padding:0;display:grid;gap:4px}
+.psAiCats li{display:flex;justify-content:space-between;gap:16px}
+.psAiList{list-style:none;margin:4px 0 8px;padding:0;max-height:180px;overflow:auto;display:grid;gap:2px}
+.psChip .psChipAi{display:inline;width:auto;height:auto;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

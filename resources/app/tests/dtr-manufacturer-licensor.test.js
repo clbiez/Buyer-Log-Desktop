@@ -22,7 +22,8 @@ test('DTR manufacturer resolves order Licensor without a royalty rule or despite
 test('empty license/manufacturer and Non-DTR manufacturers retain rule-based selection', () => {
   assert.equal(business.resolveOrderLicensor('',[],{manufacturer:'Demo Factory'}).displayValue,'');
   assert.equal(business.resolveOrderLicensor('Demo License',[],{manufacturer:''}).displayValue,'');
-  const options={manufacturer:' agency factory ',nonDtrManufacturers:['Agency Factory']};
+  // An unrelated Non-DTR manufacturer (not the licensor's own account) keeps rule-based selection.
+  const options={manufacturer:' third factory ',nonDtrManufacturers:['Third Factory']};
   assert.equal(business.resolveOrderLicensor('Demo License',rules,options).status,'ambiguous');
   assert.equal(business.resolveOrderLicensor('Demo License',[rules[1]],options).displayValue,'Agency');
   assert.equal(business.resolveOrderLicensor('Demo License',[rules[0]],options).status,'manufacturer-conflict');

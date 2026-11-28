@@ -8880,7 +8880,7 @@ async function buildResponse(currentUser = null, options = {}) {
     modelRefresh: sourceFilterRequired ? null : (active.modelRefresh || null),
     lastRefreshResult: active.lastRefreshResult || null,
     pricingRules: Array.isArray(overrides.pricingRules) ? overrides.pricingRules : [],
-    licensorMerges: { split: require('./lib/license-cards').licensorMergesOf(overrides).split },
+    licensorMerges: (({ split, entries }) => ({ split, entries }))(require('./lib/license-cards').licensorMergesOf(overrides)),
     transitRules: Array.isArray(overrides.transitRules) ? overrides.transitRules : [],
     nonDtrManufacturers: BLBusinessRules.normalizeManufacturerList(overrides.nonDtrManufacturers),
     landedMultipliers: overrides.landedMultipliers || { tr: 1.05, overseas: 1.11 },
@@ -10540,6 +10540,27 @@ function recordCpRowPatches({user,before,items}){
         cpRowStored:cpRowStoredLib.pickCpRowStoredMaps(shared,items)}});
   }catch(error){logRuntimeFailure('cpRowPatchLog',error);return null;}
 }
+/* ADR-0003 §6F (#1236 pilotu; 2026-11-27 varsayılan, bayrak kaldırıldı): eski kayıt yolları (PATCH /api/overrides/:kod,
+   /batch, /batch-suppfob) da artımlı uygulanabilir yamalarını aynı günlüğe yazar. Yeni mekanizma değildir: alan kuralı
+   (rowPatchIncrementalSafe), uygulama (applyIncrementalProjectionPatch), zincir ve gerçek nesille doğrulama
+   (settle → verifyRows) satır kaydıyla (cp-row-save) aynıdır. Tek öğe bile güvenli değilse kayıt yapılmaz (record null)
+   ve okuma bugünkü yola (kira) düşer.
+   Sıra satır kaydıyla aynıdır: okuma bağlamı damgası (computeReadContext; paylaşılan revizyonu içerir) YAZIMDAN ÖNCE
+   alınır (legacyCpReadBefore), kayıt yazımın hemen ardından yapılır (recordLegacyCpRowPatches).
+   'importance' yaması kaydedilmez: applyImportanceToRow overrides.importancemap + önem ayarlarını okur, günlüğün kayıtlı
+   bağlamı (notesmap, not sütunları, transit kuralları, cpRowStored) bunları taşımaz; sanal satır doğrulamaya kadar gerçek
+   nesilden farklı olurdu. Satır kaydı (POST /rows) bu alanı yazmadığından bugüne kadar görünmeyen bir boşluktur.
+   Çalışma zamanı anahtarı yoktur: zincir yok / doğrulama uyuşmazlığı (verifyRows) her zaman kira + tam hesaba döner. */
+function legacyCpReadBefore(beforeContext){
+  if(!beforeContext)return null;
+  try{return computeReadContext(null,beforeContext).contextHash;}
+  catch(error){logRuntimeFailure('cpRowPatchLegacy',error);return null;}
+}
+function recordLegacyCpRowPatches(currentUser,readBefore,items){
+  if(readBefore==null||!currentUser)return null;
+  if(!Array.isArray(items)||items.some(item=>item&&item.patch&&Object.prototype.hasOwnProperty.call(item.patch,'importance')))return null;
+  return recordCpRowPatches({user:currentUser,before:readBefore,items});
+}
 
 function assertAutomaticDatesReadOnly(currentUser,items){
   const sourceFields=['shipConfirmationDate','shippingApproval','loadingApprovalDate','Buying Son Onay Tarihi','_exFactoryRevision'];
@@ -10570,9 +10591,11 @@ app.post('/api/overrides/batch', async (req, res) => {
     if(items.some(item=>Object.prototype.hasOwnProperty.call(item?.patch?.dates||{},'exFactory'))&&!Array.isArray(cacheForUser(req.currentUser).asasOrders))await ensureDataLoaded(req.currentUser);
     assertAutomaticDatesReadOnly(req.currentUser,items);
     const beforeContext=writeProjectionContext(req.currentUser);
+    const readBefore=legacyCpReadBefore(beforeContext);
     const saved = patchOrderOverrides(items, requestRevision(req), requestSuppFobRevision(req), { actor: noteActorOf(req.currentUser) });
+    const rowPatch=recordLegacyCpRowPatches(req.currentUser,readBefore,items);
     void sharedRevisionStore.update('cpOverrides',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
-    const pageCachePatchQueued=queueProjectionCacheRowPatches(req.currentUser,beforeContext,items,'rowProjectionCachePatch');
+    const pageCachePatchQueued=queueProjectionCacheRowPatches(req.currentUser,beforeContext,items,'rowProjectionCachePatch',rowPatch);
     userAccess.appendAudit(req.currentUser, 'ORDER_BATCH_UPDATE', 'orders', { orderCodes: items.map(item=>Number(item&&item.orderCode)).filter(Number.isFinite), count: items.length });
     liveEvents.notifyChange('orders', requestClientId(req), { rowPatches: liveRowPatchesFor(items) });
     res.set('ETag', `"${saved.revision}"`);
@@ -10591,13 +10614,15 @@ app.patch('/api/overrides/:orderCode', async (req, res) => {
     if(Object.prototype.hasOwnProperty.call(req.body?.dates||{},'exFactory')&&!Array.isArray(cacheForUser(req.currentUser).asasOrders))await ensureDataLoaded(req.currentUser);
     assertAutomaticDatesReadOnly(req.currentUser,[{orderCode,patch:req.body||{}}]);
     const beforeContext=writeProjectionContext(req.currentUser);
+    const readBefore=legacyCpReadBefore(beforeContext);
     /* İstemci kaynaklı "origin" alanı veri değildir; yama gövdesinden ayıklanır —
        yoksa sipariş kaydına anlamsız bir alan sızar ve canlı yayınla bütün
        cihazlara dağılırdı. */
     const { origin: _ignoredOrigin, ...patchBody } = req.body && typeof req.body === 'object' ? req.body : {};
     const saved = patchOrderOverride(orderCode, patchBody, requestRevision(req), requestSuppFobRevision(req), { actor: noteActorOf(req.currentUser) });
+    const rowPatch=recordLegacyCpRowPatches(req.currentUser,readBefore,[{orderCode,patch:patchBody}]);
     void sharedRevisionStore.update('cpOverrides',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
-    const pageCachePatchQueued=queueProjectionCacheRowPatches(req.currentUser,beforeContext,[{orderCode,patch:patchBody}],'rowProjectionCachePatch');
+    const pageCachePatchQueued=queueProjectionCacheRowPatches(req.currentUser,beforeContext,[{orderCode,patch:patchBody}],'rowProjectionCachePatch',rowPatch);
     userAccess.appendAudit(req.currentUser, 'ORDER_UPDATE', String(orderCode), {
       fields: Object.keys(patchBody).filter(key => !/^expected/.test(key)),
     });
@@ -10816,6 +10841,7 @@ app.post('/api/overrides/batch-suppfob', async (req, res) => {
     if (rejectUnauthorizedOrders(req, res, items.map(item => item && item.orderCode))) return;
     if (rejectSharedOwnerWrites(req, res, items)) return;
     const beforeContext=writeProjectionContext(req.currentUser);
+    const readBefore=legacyCpReadBefore(beforeContext);
     const clean = items.map(item => ({
       orderCode: Number(item && item.orderCode),
       // Satır kimliği: sipariş + model + renk kodu. Gelmezse eski sipariş bazlı anahtar.
@@ -10848,7 +10874,8 @@ app.post('/api/overrides/batch-suppfob', async (req, res) => {
     const validItems = clean.filter(item => Number.isFinite(item.orderCode) && Number.isFinite(item.suppFob));
     const saved = patchSuppFobOverrides(validItems, requestRevision(req), { actor: noteActorOf(req.currentUser) });
     const rowPatches=validItems.map(item=>({orderCode:item.orderCode,patch:{model:item.model,ccode:item.ccode,suppFob:item.suppFob,suppFobMeta:item.suppFobMeta}}));
-    const pageCachePatchQueued=queueProjectionCacheRowPatches(req.currentUser,beforeContext,rowPatches,'suppFobProjectionCachePatch');
+    const rowPatch=recordLegacyCpRowPatches(req.currentUser,readBefore,rowPatches);
+    const pageCachePatchQueued=queueProjectionCacheRowPatches(req.currentUser,beforeContext,rowPatches,'suppFobProjectionCachePatch',rowPatch);
     userAccess.appendAudit(req.currentUser, 'SUPP_FOB_BATCH_UPDATE', 'orders', { orderCodes: validItems.map(item=>item.orderCode), count: validItems.length });
     liveEvents.notifyChange('orders', requestClientId(req), { rowPatches: liveRowPatchesFor(rowPatches) });
     res.set('ETag', `"${saved.revision}"`);
@@ -11069,6 +11096,8 @@ async function getLicenseDiscoveryRows(req){
 require('./lib/license-card-assets').configure({dir:path.join(require('./user-data').SERVER_DATA_ROOT,'license-card-assets'),getSharedSyncRoot:async()=>(await syncSettings.read()).sharedSyncRoot});
 const licenseCardService=require('./lib/license-card-service').createLicenseCardService({
   loadOverrides,saveOverrides,mutate:require('./db').mutateSharedResource,pricing:require('./lib/resource-rule-service'),
+  // Non-DTR manufacturer cards (licensors' TR accounts) are valid merge partners.
+  manufacturers:ov=>require('./lib/email-groups-store').nonDtrManufacturers(ov&&ov.nonDtrManufacturers),
   getDiscoveryRows:profile=>getLicenseDiscoveryRows({currentUser:profile}),discoveryStamp:profile=>String(cacheForUser(profile.id).loadedAt||''),
   publish:(profile,change)=>licenseCardSync.publish({currentUser:profile},change),
   changed:(profile,section,detail,context)=>publishSharedMasterChange(section,{currentUser:profile,headers:{'x-client-id':context?.originClientId||''}},detail),
@@ -11086,7 +11115,7 @@ app.get('/api/pricing-rules', (req, res) => {
   const ov = loadOverrides();
   const revision = Number(ov._revisions && ov._revisions.pricingRules) || 0;
   res.set('ETag', `"${revision}"`);
-  res.json({ rules: Array.isArray(ov.pricingRules) ? ov.pricingRules : [], revision, licensorMerges: { split: require('./lib/license-cards').licensorMergesOf(ov).split } });
+  res.json({ rules: Array.isArray(ov.pricingRules) ? ov.pricingRules : [], revision, licensorMerges: (({ split, entries }) => ({ split, entries }))(require('./lib/license-cards').licensorMergesOf(ov)) });
 });
 app.put('/api/pricing-rules', userAccess.requireArea('source'), userAccess.requirePermission('manageBusinessRules'), async (req, res) => {
   try {

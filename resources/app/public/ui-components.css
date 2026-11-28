@@ -906,7 +906,7 @@ html[data-ui-system="manifest"] .ovBdTone--unknown {background:var(--ui-group-di
 }
 html[data-ui-system="manifest"] .ovBreakdownEmpty {color:var(--ui-text-muted) !important;font-size:var(--ui-font-sm) !important
 }
-html[data-ui-system="manifest"] .ovBdTip {z-index:var(--ui-z-data);background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important;color:var(--ui-text) !important;font-size:var(--ui-font-xs) !important;line-height:1.35
+html[data-ui-system="manifest"] .ovBdTip {z-index:var(--ui-z-data);background:var(--ui-surface) !important;color:var(--ui-text) !important;font-size:var(--ui-font-xs) !important;line-height:1.35
 }
 html[data-ui-system="manifest"] .ovClockManageBtn,html[data-ui-system="manifest"] .ovClockAddBtn,html[data-ui-system="manifest"] .ovClockRemove {background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font:600 var(--ui-font-xs)/1 var(--ui-font-body) !important
 }
@@ -2956,7 +2956,12 @@ html[data-ui-system="manifest"] .topRefreshMenu button {background:var(--ui-surf
 html[data-ui-system="manifest"] .topRefreshMenu button:hover,html[data-ui-system="manifest"] .topRefreshMenu button:focus-visible {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;}
 html[data-ui-system="manifest"] .topRefreshMenu [data-refresh-scope="linked"] {position:relative;}
 html[data-ui-system="manifest"] .topRefreshMenu [data-refresh-scope="linked"]::after {content:"";position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--ui-accent);}
-html[data-ui-system="manifest"] .topRefreshDetail {background:var(--ui-surface);color:var(--ui-text-secondary);border:1px solid var(--ui-group-divider);box-shadow:var(--ui-shadow-overlay);font-size:var(--ui-font-xs);}
+html[data-ui-system="manifest"] .topRefreshDetail {background:var(--ui-surface);color:var(--ui-text-secondary);font-size:var(--ui-font-xs);}
+/* Hover ipuçları geçici, üstte duran yüzeydir: hepsi aynı 1px sınırı ve overlay
+   gölgesini yalnız bu ortak kuraldan alır. Sınırsız beyaz ipucu beyaz tablo
+   zemininde kayboluyordu. .psTip ters renkli (koyu) çiptir; kendi zemini ayırır. */
+html[data-ui-system="manifest"] :is(.topRefreshDetail,.blTip,.kolTextPreviewPopup,.bpaTip,.ovBdTip,.ovCollectionMonthTip,.globalFlowTooltip,.backlogChartTooltip),
+html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetReadonly:hover::after {border:1px solid var(--ui-group-divider) !important;box-shadow:var(--ui-shadow-overlay) !important;}
 html[data-ui-system="manifest"] .topRefreshWhen {font-size:var(--ui-font-2xs);color:var(--ui-text-muted);}
 html[data-ui-system="manifest"] .modelConnScopeLimit {background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-2xs) !important
 }
@@ -5058,7 +5063,7 @@ html[data-ui-system="manifest"] .ovCollectionMonthLegendItem i {background:var(-
 }
 html[data-ui-system="manifest"] .ovCollectionMonthLegendItem:hover {color:var(--ui-text) !important
 }
-html[data-ui-system="manifest"] .ovCollectionMonthTip {z-index:var(--ui-z-popover);background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important;color:var(--ui-text) !important;font-size:var(--ui-font-xs) !important
+html[data-ui-system="manifest"] .ovCollectionMonthTip {z-index:var(--ui-z-popover);background:var(--ui-surface) !important;color:var(--ui-text) !important;font-size:var(--ui-font-xs) !important
 }
 html[data-ui-system="manifest"] .ovCollectionMonthTip>b {font-size:var(--ui-font-xs) !important
 }
@@ -5612,7 +5617,7 @@ html[data-ui-system="manifest"] .tableActionToolbar .tbtn:not(.primary):not(.tab
 html[data-ui-system="manifest"] .tableActionToolbar .toolbarMoreWrap>.tbtn:has(>svg.ic)::after,html[data-ui-system="manifest"] .tableActionToolbar .toolbarMoreWrap>.navActionBtn:has(>svg.ic)::after {
   border-right:0 !important;border-bottom:0 !important
 }
-html[data-ui-system="manifest"] .blTip {z-index:var(--ui-z-tooltip);background:var(--ui-surface) !important;color:var(--ui-text) !important;box-shadow:var(--ui-shadow-overlay) !important;
+html[data-ui-system="manifest"] .blTip {z-index:var(--ui-z-tooltip);background:var(--ui-surface) !important;color:var(--ui-text) !important;
   font-size:var(--ui-font-xs) !important;line-height:1.35;
   transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
@@ -8566,7 +8571,7 @@ html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTab
 }
 html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetReadonly {background-image:none !important
 }
-html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetReadonly:hover::after {z-index:var(--ui-z-sticky);border:0 !important;background:var(--ui-surface) !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-2xs) !important
+html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetReadonly:hover::after {z-index:var(--ui-z-sticky);background:var(--ui-surface) !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-2xs) !important
 }
 html[data-ui-system="manifest"] .kolSpreadsheetHelper {background:var(--ui-surface-soft) !important
 }
@@ -12937,7 +12942,7 @@ html[data-ui-system="manifest"] .bpaBreakBar span {background:var(--ui-accent) !
 }
 html[data-ui-system="manifest"] .bpaBreakBar b {font-size:var(--ui-font-sm) !important
 }
-html[data-ui-system="manifest"] .bpaTip {z-index:var(--ui-z-tooltip);background:var(--ui-surface,var(--ui-surface)) !important;box-shadow:var(--ui-shadow-overlay) !important;color:var(--ui-text) !important;font-size:var(--ui-font-sm) !important
+html[data-ui-system="manifest"] .bpaTip {z-index:var(--ui-z-tooltip);background:var(--ui-surface,var(--ui-surface)) !important;color:var(--ui-text) !important;font-size:var(--ui-font-sm) !important
 }
 html[data-ui-system="manifest"] .bpaTipTitle {font-weight:800 !important
 }
@@ -15766,7 +15771,7 @@ html[data-ui-system="manifest"] .globalFlowLegend .air .gfLegendIcon {fill:var(-
 }
 html[data-ui-system="manifest"] .globalFlowLegend .road .gfLegendIcon {fill:var(--ui-warning)
 }
-html[data-ui-system="manifest"] .globalFlowTooltip {width:244px !important;gap:6px !important;padding:9px 10px !important;box-shadow:var(--ui-shadow-overlay) !important
+html[data-ui-system="manifest"] .globalFlowTooltip {width:244px !important;gap:6px !important;padding:9px 10px !important
 }
 html[data-ui-system="manifest"] .globalFlowTooltip .gfTipHead {display:flex;align-items:center;gap:7px;min-width:0
 }
@@ -16275,6 +16280,8 @@ html[data-ui-system="manifest"] .psThumbPin {background:var(--ui-accent)
 html[data-ui-system="manifest"] .psThumbHdr {background:var(--ui-text-muted)
 }
 html[data-ui-system="manifest"] .psThumbArea {background:color-mix(in srgb,var(--ui-accent) 18%,transparent)
+}
+html[data-ui-system="manifest"] .psChipAi {background:transparent;border:0;padding:0;color:inherit;font:inherit;cursor:pointer;text-decoration:underline dotted
 }
 html[data-ui-system="manifest"] .psArea:hover {background:color-mix(in srgb,var(--ui-accent) 4%,transparent)
 }

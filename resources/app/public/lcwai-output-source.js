@@ -75,5 +75,22 @@
       columns: table.list.map(({ id, label }) => ({ id, label })), ...(table.omitted.length ? { omittedColumns: table.omitted } : {}) },
       data: { title: lang === 'en' ? 'Model catalogue' : 'Model kataloğu', slides: [{ layout: 'gallery', title: lang === 'en' ? 'Models' : 'Modeller', items }], layout: { cardFields, columns: 3, rows: 3, studio: { version: 1, sizing: 'sets', reflow: 'balanced', preset: 'catalog' } } } };
   }
-  return { build, MAX_ROWS };
+  /* Tek satırın TÜM bilgisi, kısaltmasız: canonical alanlar ve tablonun diğer sütunları (build'deki
+     300 karakter / ağır sütun sınırı yok). LCW AI'ın modeli eksiksiz incelemesi içindir (Sunum Stüdyosu
+     "LCW AI ile grupla"); dizi/nesne değer metne çevrilir, boş değer atlanır. */
+  function fullRecord({ module: moduleId, row: raw, readRow = row => row, columns = [], lang = 'tr' } = {}) {
+    const out = [], row = readRow(raw);
+    const textOf = value => (value == null ? '' : typeof value === 'object' ? (Array.isArray(value) ? value.map(textOf).filter(Boolean).join(', ') : JSON.stringify(value)) : String(value));
+    for (const id of C.moduleFields(moduleId)) {
+      let value; try { value = C.canonicalValue(row, moduleId, id); } catch (_) { value = undefined; }
+      const t = textOf(value).trim();
+      if (t) out.push({ id, label: C.label(id, lang), value: t });
+    }
+    for (const col of tableColumns(moduleId, columns)) {
+      let value = ''; try { value = textOf(col.read(raw)).trim(); } catch (_) { value = ''; }
+      if (value) out.push({ id: col.id, label: col.label, value });
+    }
+    return out;
+  }
+  return { build, fullRecord, MAX_ROWS };
 });
