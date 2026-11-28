@@ -282,6 +282,55 @@ test('ANTREPO_DELAY · 0 adetlik Üretimde parsiyelin geçmiş IAS varışı (ü
   }
 });
 
+// ---------- teslimat sonucu: üretim bakiyesinin vasıtası için transit kuralı yoksa parsiyelin bilinen sonucu korunur ----------
+// Kural yalnız Uçak için var; üretim bakiyesi Gemi → üretim hesabı UNKNOWN (kural eksik). Bugün satır parsiyelden
+// (bilinen varış) EXPECTED/ALREADY_LATE görünüyordu: bu sonuç korunur ve MISSING_TRANSIT_RULE eklenir.
+const ONLY_UCAK = [{ id: 'r-ucak', delType: 'Uçak', days: 15 }];
+function decideWith(row, transitRules) {
+  return CRE.analyzeOrder(row, { transitRules, today: ordinal(TODAY), dateOrdinal: ordinal });
+}
+
+test('teslimat · kural yok + depodaki parsiyel Retail\'den sonra varmış: ALREADY_LATE korunur + MISSING_TRANSIT_RULE', () => {
+  // Parsiyel 15.11'de depoya girdi; Retail 10.11 → 5 gün geç, gerçekleşmiş (15.11 ≤ bugün 28.11).
+  const order = { 'Retail Depo Tarih Yıl Ay Gün': '2026-11-10', 'Model Bütçe Tarih Yıl Ay Gün': '2026-11-20' };
+  const { readModel, browser } = threePaths({ order, iasRows: [ias('Depoda', 4000, '2026-11-15', 'Gemi', '2026-10-30')] });
+  for (const [label, row] of [['okuma modeli', readModel], ['istemci', browser]]) {
+    assert.equal(row.STATUS, 'Üretimde', label);
+    const result = decideWith(row, ONLY_UCAK);
+    assert.equal(result.deliveryOutcome, 'ALREADY_LATE', label);
+    assert.ok(result.riskReasons.includes('ALREADY_LATE_FOR_TARGET'), `${label}: ${result.riskReasons}`);
+    assert.ok(result.riskReasons.includes('MISSING_TRANSIT_RULE'), label);
+    assert.equal(result.stage, 'PRODUCTION', `${label}: ana aşama üretim bakiyesi kalır`);
+  }
+});
+
+test('teslimat · kural yok + yoldaki parsiyel Retail\'den sonra varacak: EXPECTED_LATE korunur + MISSING_TRANSIT_RULE', () => {
+  // Parsiyel varışı 20.12 > Retail 10.12, ikisi de gelecekte → gecikmesi bekleniyor.
+  const order = { 'Retail Depo Tarih Yıl Ay Gün': '2026-12-10', 'Model Bütçe Tarih Yıl Ay Gün': '2026-12-20' };
+  const { readModel } = threePaths({ order, iasRows: [ias('Yol Operasyonları', 3000, '2026-12-20', 'Gemi', '2026-11-25')] });
+  const result = decideWith(readModel, ONLY_UCAK);
+  assert.equal(result.deliveryOutcome, 'EXPECTED_LATE');
+  assert.ok(result.riskReasons.includes('EXPECTED_LATE_FOR_TARGET'));
+  assert.ok(result.riskReasons.includes('MISSING_TRANSIT_RULE'));
+});
+
+test('teslimat · kural varken üretim bakiyesi hesabı geçerli (parsiyel sonucu kullanılmaz)', () => {
+  // Gemi 70 kuralı var. Ex-factory 01.11 (geçmiş) → bugün 28.11 + 70 = 06.02.2027 > Retail 10.12 → EXPECTED_LATE,
+  // parsiyel ise zamanında (depoda 15.11 ≤ Retail 10.12) olurdu.
+  const order = { 'Retail Depo Tarih Yıl Ay Gün': '2026-12-10', 'Model Bütçe Tarih Yıl Ay Gün': '2026-12-20' };
+  const { readModel } = threePaths({ order, iasRows: [ias('Depoda', 4000, '2026-11-15', 'Gemi', '2026-10-30')] });
+  const result = decide(readModel);
+  assert.equal(result.deliveryOutcome, 'EXPECTED_LATE');
+  assert.ok(!result.riskReasons.includes('MISSING_TRANSIT_RULE'));
+});
+
+test('teslimat · kural yok + yalnız üretim: parsiyel yok, sonuç bugünkü gibi hesaplanamaz', () => {
+  const { readModel } = threePaths({});
+  const result = decideWith(readModel, ONLY_UCAK);
+  assert.equal(result.deliveryOutcome, 'UNKNOWN');
+  assert.ok(result.riskReasons.includes('MISSING_TRANSIT_RULE'));
+});
+
 // ---------- tek tanım: aynı fonksiyon, sıra bağımsızlığı ----------
 
 const seg = (kind, status, quantity, arrival, extra = {}) => ({ kind, status, quantity, arrival, delType: extra.delType || 'Gemi', handover: extra.handover || null, partialNo: kind === 'partial' ? (extra.no || 1) : null, ...extra });

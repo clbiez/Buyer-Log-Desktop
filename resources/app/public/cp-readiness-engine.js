@@ -342,12 +342,43 @@
 
     /* Teslimat sonucu KANONİK motordan; burada yeniden sınıflandırılmaz. */
     const stageFromStatus = DE.stageOf ? DE.stageOf(status) : 'UNKNOWN';
-    const delivery = DE.analyzeOrder
+    let delivery = DE.analyzeOrder
       ? DE.analyzeOrder(toDeliveryRow(row, transitDays, transitRule, stageFromStatus, cpOperationalFlags && cpOperationalFlags.signals), {
         today, dateOrdinal: ord,
         settings: { targetType: settings.targetType, requireTransitRule: settings.requireTransitRule },
       })
       : null;
+    /* Birincil segment üretim bakiyesiyken (ADR-0003 §6O.c) üretim bakiyesinin vasıtası için transit kuralı
+       yoksa teslimat sonucu hesaplanamaz. Bu durumda sevk edilmiş parsiyelin BİLİNEN varışından hesaplanan
+       sonuç (birincil seçim değişmeden önce satırın gösterdiği sonuç: lojistik akış sırasındaki ilk parsiyel)
+       korunur; kural eksikliği (transitRuleMissing → MISSING_TRANSIT_RULE) de görünür kalır. Kural varken
+       üretim bakiyesi hesabı geçerlidir. Ürün sahibi kararı: birincil segment değişikliği başka segmentin
+       mevcut riskini gizlemez. */
+    if (delivery && delivery.deliveryOutcome === 'UNKNOWN' && delivery.transitRuleMissing
+      && stageFromStatus === 'PRODUCTION' && !context.__partialDeliveryFallback) {
+      const partial = (Array.isArray(row && row._logisticSegments) ? row._logisticSegments : []).find(segment => segment && segment.kind === 'partial');
+      if (partial) {
+        const shipped = analyzeOrder({
+          ...row,
+          [F.status]: partial.status,
+          [F.antArrival]: partial.arrival,
+          [F.delType]: (BR.normalizeTransitDelType && BR.normalizeTransitDelType(partial.delType)) || partial.delType,
+          [F.handover]: partial.handover,
+        }, { ...context, __partialDeliveryFallback: true });
+        if (shipped && shipped.deliveryOutcome && shipped.deliveryOutcome !== 'UNKNOWN') {
+          delivery = {
+            ...delivery,
+            deliveryOutcome: shipped.deliveryOutcome,
+            eta: shipped.eta,
+            etaSource: shipped.etaSource,
+            targetDate: shipped.targetDate,
+            scheduleBufferDays: shipped.scheduleBufferDays,
+            riskCause: shipped.deliveryRiskCause,
+            confidence: shipped.confidence,
+          };
+        }
+      }
+    }
 
     const deliveryOutcome = delivery ? delivery.deliveryOutcome : 'UNKNOWN';
     const stage = delivery ? delivery.stage : stageFromStatus;
